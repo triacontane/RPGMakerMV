@@ -91,8 +91,8 @@
  * YYYY:年 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
  * @default AMHH時 MI分
  *
- * @help ゲーム内時間を実現するプラグインです。
- * 自動、マップ移動、戦闘で時間が経過し、時間と共にマップの色調が変化します。
+ * @help ゲーム内で時刻と天候の概念を表現できるプラグインです。
+ * 自動、マップ移動、戦闘で時間が経過し、時間と共に天候と色調が変化します。
  * これらの時間は調節可能で、またイベント中は時間の進行が停止します。
  * また日付や曜日も記録し、曜日の数や名称を自由に設定できます。
  * 現在日付はフォーマットに従って、画面左上に表示されます。
@@ -271,8 +271,10 @@
     var _Game_Interpreter_command236 = Game_Interpreter.prototype.command236;
     Game_Interpreter.prototype.command236 = function() {
         var result = _Game_Interpreter_command236.call(this);
-        if (!$gameParty.inBattle())
+        if (!$gameParty.inBattle()) {
             $gameSystem.chronus()._weatherType = Game_Chronus.weatherTypes.indexOf(this._params[0]);
+            $gameSystem.chronus()._weatherPower = this._params[1];
+        }
         return result;
     };
 
