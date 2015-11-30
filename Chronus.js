@@ -274,6 +274,7 @@
         if (!$gameParty.inBattle()) {
             $gameSystem.chronus()._weatherType = Game_Chronus.weatherTypes.indexOf(this._params[0]);
             $gameSystem.chronus()._weatherPower = this._params[1];
+            $gameSystem.chronus().refreshTint(true);
         }
         return result;
     };
