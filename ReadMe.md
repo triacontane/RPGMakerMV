@@ -58,7 +58,7 @@ Plugin that adjust picture to graphical
 さらに、ピクチャのファイル名に変数を組み込むことが出来るようになります。連番を含むファイル名などの柔軟な指定に有効です。  
 
 17. [Chronus.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/Chronus.js)  
-ゲーム内時間を実現するプラグインです。自動、マップ移動、戦闘で時間が経過し、時間と共にマップの色調が変化します。  
+ゲーム内で時刻と天候の概念を表現できるプラグインです。自動、マップ移動、戦闘で時間が経過し、時間と共に天候と色調が変化します。  
 
 
 ##ダウンロード方法 How to download

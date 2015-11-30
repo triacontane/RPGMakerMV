@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2015/12/01 天候と時間帯をゲーム変数に格納できるよう機能追加
 // 1.0.0 2015/11/27 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -328,24 +329,13 @@
     };
 
     //=============================================================================
-    // Game_Screen
-    //  色調の変更を即時反映します。
-    //=============================================================================
-    Game_Screen.prototype.toSwiftTint = function() {
-        if (this._toneDuration > 0) {
-            this._tone = this._toneTarget.clone();
-            this._toneDuration = 0;
-        }
-    };
-
-    //=============================================================================
     // Scene_Map
     //  Game_Chronusの更新を追加定義します。
     //=============================================================================
     var _Scene_Map_onMapLoaded = Scene_Map.prototype.onMapLoaded;
     Scene_Map.prototype.onMapLoaded = function() {
         $gameSystem.chronus().refreshTint(true);
-        $gameSystem.chronus().setWeather();
+        $gameSystem.chronus().refreshWeather(true);
         _Scene_Map_onMapLoaded.call(this);
     };
 
@@ -473,19 +463,17 @@ Game_Chronus.prototype.update = function () {
 Game_Chronus.prototype.updateEffect = function () {
     var hour = this.getHour();
     if (this._prevHour !== hour) {
-        this.refreshWeather(false);
+        this.controlWeather(false);
         this.refreshTint(false);
         this._prevHour = this.getHour();
     }
 };
 
 Game_Chronus.prototype.refreshTint = function (swift) {
-    if (arguments.length === 0) swift = false;
-    this.isEnableTint() ? this.setTint(this.getTimeZone()) : $gameScreen.clearTone();
-    if (swift) $gameScreen.toSwiftTint();
+    this.isEnableTint() ? this.setTint(this.getTimeZone(), swift) : $gameScreen.clearTone();
 };
 
-Game_Chronus.prototype.setTint = function (timezone) {
+Game_Chronus.prototype.setTint = function (timezone, swift) {
     var tone = null;
     switch (timezone) {
         case 0:
@@ -513,30 +501,32 @@ Game_Chronus.prototype.setTint = function (timezone) {
         tone[2] > 0 ? tone[2] /= 7 : tone[1] -= 14;
         tone[3] === 0 ? tone[3] = 68 : tone[3] += 14;
     }
-    $gameScreen.startTint(tone, Math.floor(60 * 5 / (this._timeAutoAdd / 10)));
+    $gameScreen.startTint(tone, swift ? 0 : Math.floor(60 * 5 / (this._timeAutoAdd / 10)));
 };
 
-Game_Chronus.prototype.refreshWeather = function (swift) {
-    if (!this.isEnableWeather()) {
-        $gameScreen.changeWeather(0, 0, 0);
-        return;
-    }
-    if (!swift && Math.random() * 10 > this._weatherCounter - 7) {
+Game_Chronus.prototype.controlWeather = function (force) {
+    if (!force && Math.random() * 10 > this._weatherCounter - 7) {
         this._weatherCounter++;
     } else {
         this._weatherCounter = 0;
-        this._weatherType    = 0;
-        this._weatherPower   = 0;
         if (Math.random() * 10 > 7) {
             this._weatherType  = this.isSnowLand() ? 3 : Math.random() * 10 > 6 ? 2 : 1;
             this._weatherPower = Math.floor(Math.random() * 10);
+        } else {
+            this._weatherType  = 0;
+            this._weatherPower = 0;
         }
     }
-    this.setWeather();
+    this.refreshWeather(false);
 };
 
-Game_Chronus.prototype.setWeather = function () {
-    $gameScreen.changeWeather(this.getWeatherType(), this._weatherPower, Math.floor(60 * 5 / (this._timeAutoAdd / 10)));
+Game_Chronus.prototype.refreshWeather = function (swift) {
+    this.isEnableWeather() ? this.setWeather(swift) : $gameScreen.changeWeather(0, 0, 0);
+};
+
+Game_Chronus.prototype.setWeather = function (swift) {
+    $gameScreen.changeWeather(this.getWeatherType(), this._weatherPower,
+        swift ? 0 : Math.floor(60 * 5 / (this._timeAutoAdd / 10)));
 };
 
 Game_Chronus.prototype.disableTint = function () {
@@ -626,22 +616,21 @@ Game_Chronus.prototype.addTime = function (value) {
         this.addDay();
         this._timeMeter -= 60 * 24;
     }
-    this.demandRefresh();
+    this.demandRefresh(false);
 };
 
 Game_Chronus.prototype.setTime = function (hour, minute) {
     var time = hour * 60 + minute;
     if (this._timeMeter > time) this.addDay();
     this._timeMeter = time;
-    this.demandRefresh();
-    this.refreshWeather(true);
-    $gameScreen.toSwiftTint();
+    this.demandRefresh(true);
+
 };
 
 Game_Chronus.prototype.addDay = function (value) {
     if (arguments.length === 0) value = 1;
     this._dayMeter += value;
-    this.demandRefresh();
+    this.demandRefresh(false);
 };
 
 Game_Chronus.prototype.setDay = function (year, month, day) {
@@ -652,15 +641,16 @@ Game_Chronus.prototype.setDay = function (year, month, day) {
     }
     newDay += day - 1;
     this._dayMeter = newDay;
-    this.demandRefresh();
-    this.refreshWeather(true);
-    $gameScreen.toSwiftTint();
+    this.demandRefresh(true);
 };
 
-Game_Chronus.prototype.demandRefresh = function () {
+Game_Chronus.prototype.demandRefresh = function (effectRefreshFlg) {
     this._demandRefresh = true;
-    this.updateEffect();
     this.setGameVariable();
+    if (effectRefreshFlg) {
+        this.refreshTint(true);
+        this.controlWeather(true);
+    }
 };
 
 Game_Chronus.prototype.getDaysOfWeek = function () {
@@ -769,14 +759,13 @@ Game_Chronus.prototype.getDateFormat = function(index) {
 };
 
 Game_Chronus.prototype.getTimeZone = function () {
-    if (this.isHourInRange(0, 4)) return 0;
-    else if (this.isHourInRange(5, 6)) return 1;
-    else if (this.isHourInRange(7, 11)) return 2;
-    else if (this.isHourInRange(12, 16)) return 3;
-    else if (this.isHourInRange(17, 18)) return 4;
-    else if (this.isHourInRange(19, 21)) return 5;
-    else if (this.isHourInRange(22, 24)) return 0;
-    return null;
+    return this.isHourInRange(0, 4)   ? 0 :
+           this.isHourInRange(5, 6)   ? 1 :
+           this.isHourInRange(7, 11)  ? 2 :
+           this.isHourInRange(12, 16) ? 3 :
+           this.isHourInRange(17, 18) ? 4 :
+           this.isHourInRange(19, 21) ? 5 :
+           this.isHourInRange(22, 24) ? 0 : null;
 };
 
 Game_Chronus.prototype.getWeatherTypeId = function () {
