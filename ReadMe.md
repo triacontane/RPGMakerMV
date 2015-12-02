@@ -60,6 +60,8 @@ Plugin that adjust picture to graphical
 17. [Chronus.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/Chronus.js)  
 ゲーム内で時刻と天候の概念を表現できるプラグインです。自動、マップ移動、戦闘で時間が経過し、時間と共に天候と色調が変化します。  
 
+18. [ForceMenu.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ForceMenu.js)  
+負荷テスト用プラグインです。強制的にメニュー画面の開閉を行います。勇気ある方は試してみてください(笑)  
 
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
