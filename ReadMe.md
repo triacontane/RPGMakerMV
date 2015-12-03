@@ -1,7 +1,7 @@
 ##概要 Overview
 RPGツクールMVで動作するプラグイン(javascript)を置いています。  
 どうぞご自由にお使いください。  
-These plugins(javascript) is for RPG Maker MV.  
+These plugins(javascript) are for RPG Maker MV.  
 
 ##プラグインの説明 Description of plugins
 1.  [CustomizeConfigDefault.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CustomizeConfigDefault.js)  
