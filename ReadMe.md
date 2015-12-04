@@ -64,7 +64,7 @@ Plugin that adjust picture to graphical
 負荷テスト用プラグインです。強制的にメニュー画面の開閉を行います。勇気ある方は試してみてください(笑)  
 
 19. [ParallaxesNonBlur.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ParallaxesNonBlur.js)  
-遠景マップがゼロ視差（ファイル名の戦闘に「!」）の場合、ぼかし処理を除去します。その代わり、ゼロ視差の遠景がループ及びスクロールしなくなります。 
+遠景マップが視差ゼロ（ファイル名の先頭に「!」）の場合、ぼかし処理を除去します。その代わり遠景がループ及びスクロールしなくなります。 
 
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
