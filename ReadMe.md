@@ -63,6 +63,9 @@ Plugin that adjust picture to graphical
 18. [ForceMenu.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ForceMenu.js)  
 負荷テスト用プラグインです。強制的にメニュー画面の開閉を行います。勇気ある方は試してみてください(笑)  
 
+19. [ParallaxesNonBlur.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ParallaxesNonBlur.js)  
+遠景マップがゼロ視差（ファイル名の戦闘に「!」）の場合、ぼかし処理を除去します。その代わり、ゼロ視差の遠景がループ及びスクロールしなくなります。 
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
