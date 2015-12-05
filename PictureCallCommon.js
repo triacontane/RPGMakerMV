@@ -109,6 +109,13 @@
         return value;
     };
 
+    PluginManager.getParamNumber = function (pluginName, paramEngName, paramJpgName, min, max) {
+        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
+        if (arguments.length <= 3) min = -Infinity;
+        if (arguments.length <= 4) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     PluginManager.getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
