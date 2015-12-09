@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2015/12/10 戦闘画面でもピクチャを使用できるよう修正
+//                  描画後にデバッグ画面等を開いて変数を修正した場合、再描画で変更が反映されてしまう問題を修正
 // 1.1.2 2015/11/07 描画文字列に半角スペースが含まれていた場合も問題なく実行できるよう修正
 // 1.1.0 2015/11/07 制御文字\C[n] \I[n] \{ \} に対応（\$と表示スピード制御系以外全部）
 // 1.0.1 2015/11/07 RPGツクールMV（日本語版）に合わせてコメントの表記を変更
@@ -101,9 +103,9 @@
     var _Game_Picture_initBasic = Game_Picture.prototype.initBasic;
     Game_Picture.prototype.initBasic = function() {
         _Game_Picture_initBasic.call(this);
-        this._dTextFlg   = false;
-        this._dTextValue = "";
-        this._dTextSize  = 0;
+        this._dTextFlg     = false;
+        this._dTextValue   = "";
+        this._dTextSize    = 0;
     };
 
     var _Game_Picture_show = Game_Picture.prototype.show;
@@ -112,7 +114,7 @@
         if ($gameScreen._dTextFlg) {
             name = "dummy"; // 参照されません
             this._dTextFlg   = true;
-            this._dTextValue = $gameScreen._dTextValue;
+            this._dTextValue = Window_Base.prototype.convertEscapeCharacters.call(null, $gameScreen._dTextValue);
             this._dTextSize  = $gameScreen._dTextSize;
             $gameScreen.clearDTextPicture();
         } else {
@@ -141,7 +143,6 @@
         var window = SceneManager._scene._hiddenWindow; // 制御文字の使用とサイズ計算のための隠しウィンドウ
         if (this.picture()._dTextSize > 0) window.contents.fontSize = this.picture()._dTextSize;
         var textState = {index: 0, x: 0, y: 0, text: this.picture()._dTextValue};
-        textState.text = window.convertEscapeCharacters(textState.text);
         var bitmap = new Bitmap(window.textWidth(textState.text) * 1.5, window.calcTextHeight(textState, false));
         while (textState.text[textState.index]) {
             this.processCharacter(textState, bitmap);
@@ -196,6 +197,19 @@
         this._hiddenWindow.hide();
         this._hiddenWindow.deactivate();
         _Scene_Map_createDisplayObjects.call(this);
+        this.addChild(this._hiddenWindow);
+    };
+
+    //=============================================================================
+    // Scene_Battle
+    //  動的ピクチャ作成用の隠しウィンドウを追加定義します。
+    //=============================================================================
+    var _Scene_Battle_createDisplayObjects = Scene_Battle.prototype.createDisplayObjects;
+    Scene_Battle.prototype.createDisplayObjects = function() {
+        this._hiddenWindow = new Window_Base(1,1,1,1);
+        this._hiddenWindow.hide();
+        this._hiddenWindow.deactivate();
+        _Scene_Battle_createDisplayObjects.call(this);
         this.addChild(this._hiddenWindow);
     };
 })();

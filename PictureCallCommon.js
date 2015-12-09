@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2015/12/10 ピクチャを消去後にマウスオーバーするとエラーになる現象を修正
 // 1.1.0 2015/11/23 コモンイベントを呼び出した対象のピクチャ番号を特定する機能を追加
 //                  設定で透明色を考慮する機能を追加
 //                  トリガーとして「右クリック」や「長押し」を追加
@@ -303,14 +304,14 @@
     Sprite_Picture.prototype.initialize = function(pictureId) {
         _Sprite_Picture_initialize.call(this, pictureId);
         this._triggerHandler    = [];
-        this._triggerHandler[1]        = this.isTriggered.bind(this);
-        this._triggerHandler[2]        = this.isCancelled.bind(this);
-        this._triggerHandler[3]        = this.isLongPressed.bind(this);
-        this._triggerHandler[4]        = this.isOnFocus.bind(this);
-        this._triggerHandler[5]        = this.isOutFocus.bind(this);
-        this._triggerHandler[6]        = this.isReleased.bind(this);
-        this._triggerHandler[7]        = this.isRepeated.bind(this);
-        this._triggerHandler[8]        = this.isPressed.bind(this);
+        this._triggerHandler[1]        = this.isTriggered;
+        this._triggerHandler[2]        = this.isCancelled;
+        this._triggerHandler[3]        = this.isLongPressed;
+        this._triggerHandler[4]        = this.isOnFocus;
+        this._triggerHandler[5]        = this.isOutFocus;
+        this._triggerHandler[6]        = this.isReleased;
+        this._triggerHandler[7]        = this.isRepeated;
+        this._triggerHandler[8]        = this.isPressed;
         this._onMouse                  = false;
         this._outMouse                 = false;
         this._wasOnMouse               = false;
@@ -324,7 +325,7 @@
         this._onMouse  = false;
         this._outMouse = false;
         if (TouchInput.isMoved()) {
-            if (this.isTouchPosInRect() && this.isNotTransparent()) {
+            if (this.isTouchable() && this.isTouchPosInRect() && !this.isTransparent()) {
                 if (!this._wasOnMouse) {
                     this._onMouse    = true;
                     this._wasOnMouse = true;
@@ -342,20 +343,18 @@
         var commandIds = $gameScreen._pictureCidArray[$gameScreen.realPictureId(this._pictureId)];
         if (commandIds == null) return;
         for (var i = 1; i <= this._triggerHandler.length; i++) {
-            if (commandIds[i] != null && this._triggerHandler[i]() && (i === 5 || i === 4 || this.isNotTransparent())) {
+            if (commandIds[i] != null && this._triggerHandler[i].call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
                 $gameTemp._pictureCommonId = commandIds[i];
                 $gameTemp._pictureNum = this._pictureId;
             }
-
         }
     };
 
-    Sprite_Picture.prototype.isNotTransparent = function () {
-        if (!this._transparentConsideration) return true;
+    Sprite_Picture.prototype.isTransparent = function () {
+        if (!this._transparentConsideration) return false;
         var bx = (TouchInput.x - this.x) / this.scale.x + this.anchor.x * this.width;
         var by = (TouchInput.y - this.y) / this.scale.y + this.anchor.y * this.height;
-        var alpha = this.bitmap.getAlphaPixel(bx, by);
-        return alpha !== 0;
+        return this.bitmap.getAlphaPixel(bx, by) === 0;
     };
 
     //=============================================================================
@@ -410,27 +409,27 @@
     };
 
     Sprite_Picture.prototype.isTriggered = function() {
-        return this.isTouchEvent(TouchInput.isTriggered());
+        return this.isTouchEvent(TouchInput.isTriggered);
     };
 
     Sprite_Picture.prototype.isCancelled = function() {
-        return this.isTouchEvent(TouchInput.isCancelled());
+        return this.isTouchEvent(TouchInput.isCancelled);
     };
 
     Sprite_Picture.prototype.isLongPressed = function() {
-        return this.isTouchEvent(TouchInput.isLongPressed());
+        return this.isTouchEvent(TouchInput.isLongPressed);
     };
 
     Sprite_Picture.prototype.isPressed = function() {
-        return this.isTouchEvent(TouchInput.isPressed());
+        return this.isTouchEvent(TouchInput.isPressed);
     };
 
     Sprite_Picture.prototype.isReleased = function() {
-        return this.isTouchEvent(TouchInput.isReleased());
+        return this.isTouchEvent(TouchInput.isReleased);
     };
 
     Sprite_Picture.prototype.isRepeated = function() {
-        return this.isTouchEvent(TouchInput.isRepeated());
+        return this.isTouchEvent(TouchInput.isRepeated);
     };
 
     Sprite_Picture.prototype.isOnFocus = function() {
@@ -441,8 +440,8 @@
         return this._outMouse;
     };
 
-    Sprite_Picture.prototype.isTouchEvent = function(triggerResult) {
-        return this.isTouchable && triggerResult && this.isTouchPosInRect();
+    Sprite_Picture.prototype.isTouchEvent = function(triggerFunc) {
+        return this.isTouchable() && triggerFunc.call(TouchInput) && this.isTouchPosInRect();
     };
 
     //=============================================================================
