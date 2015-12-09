@@ -112,9 +112,10 @@
     Game_Picture.prototype.show = function(name, origin, x, y, scaleX,
                                            scaleY, opacity, blendMode) {
         if ($gameScreen._dTextFlg) {
+            var window = SceneManager._scene._hiddenWindow; // 制御文字の使用とサイズ計算のための隠しウィンドウ
             name = "dummy"; // 参照されません
             this._dTextFlg   = true;
-            this._dTextValue = Window_Base.prototype.convertEscapeCharacters.call(null, $gameScreen._dTextValue);
+            this._dTextValue = window.convertEscapeCharacters($gameScreen._dTextValue);
             this._dTextSize  = $gameScreen._dTextSize;
             $gameScreen.clearDTextPicture();
         } else {
