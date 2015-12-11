@@ -146,13 +146,23 @@
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
         text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            return this.actorName(parseInt(arguments[1]));
+            return PluginManager.actorName(parseInt(arguments[1]));
         }.bind(this));
         text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            return this.partyMemberName(parseInt(arguments[1]));
+            return PluginManager.partyMemberName(parseInt(arguments[1]));
         }.bind(this));
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
         return text;
+    };
+
+    PluginManager.actorName = function(n) {
+        var actor = n >= 1 ? $gameActors.actor(n) : null;
+        return actor ? actor.name() : '';
+    };
+
+    PluginManager.partyMemberName = function(n) {
+        var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
+        return actor ? actor.name() : '';
     };
 
     //=============================================================================
@@ -224,11 +234,13 @@
         var commonId = $gameTemp._pictureCommonId;
         var event = $dataCommonEvents[commonId];
         if (commonId > 0 && !this.isEventRunning() && event) {
+            var gameValueNum = PluginManager.getParamNumber(pluginName,
+                'GameVariablePictureNum', 'ピクチャ番号の変数番号', 0, 5000);
+            if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp._pictureNum);
             this._interpreter.setup(event.list);
-            $gameTemp._pictureCommonId = 0;
-            return true;
         }
-        return false;
+        $gameTemp._pictureCommonId = 0;
+        $gameTemp._pictureNum = 0;
     };
 
     //=============================================================================
@@ -324,6 +336,8 @@
         _Sprite_update.call(this);
         this._onMouse  = false;
         this._outMouse = false;
+        var commandIds = $gameScreen._pictureCidArray[$gameScreen.realPictureId(this._pictureId)];
+        if (commandIds == null || (commandIds[4] == null && commandIds[5] == null)) return;
         if (TouchInput.isMoved()) {
             if (this.isTouchable() && this.isTouchPosInRect() && !this.isTransparent()) {
                 if (!this._wasOnMouse) {
@@ -357,10 +371,6 @@
         return this.bitmap.getAlphaPixel(bx, by) === 0;
     };
 
-    //=============================================================================
-    // Sprite_Picture
-    //  タッチ操作を可能にする共通部分
-    //=============================================================================
     Sprite_Picture.prototype.screenWidth = function() {
         return (this.width || 0) * this.scale.x;
     };
