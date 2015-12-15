@@ -46,8 +46,8 @@
  * @desc ゲーム開始時に同時にデベロッパツールを起動します。(ON/OFF/MINIMIZE)
  * @default OFF
  *
- * @param 常に全面表示
- * @desc ゲーム画面を常に全面に表示します。(ON/OFF)
+ * @param 常に前面表示
+ * @desc ゲーム画面を常に前面に表示します。(ON/OFF)
  * @default OFF
  *
  * @param デベロッパツール表示位置
@@ -84,7 +84,7 @@ var $gameCurrentWindow = null;
 
 (function () {
     var paramName = 'DevToolsManage';
-    var alwaysOnTop = PluginManager.getParamBoolean(paramName, 'AlwaysOnTop', '常に全面表示');
+    var alwaysOnTop = PluginManager.getParamBoolean(paramName, 'AlwaysOnTop', '常に前面表示');
     var startupDevTool = PluginManager.getParamString(paramName, 'StartupDevTool', '開始時に起動').toUpperCase();
     var devToolsPosition = PluginManager.getParamArrayNumber(paramName, 'DevToolsPosition', 'デベロッパツール表示位置');
 
