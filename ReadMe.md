@@ -66,6 +66,9 @@ Plugin that adjust picture to graphical
 19. [ParallaxesNonBlur.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ParallaxesNonBlur.js)  
 遠景マップが視差ゼロ（ファイル名の先頭に「!」）の場合、ぼかし処理を除去します。その代わり遠景がループ及びスクロールしなくなります。 
 
+20. [DevToolsManage.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/DevToolsManage.js)  
+デベロッパツールの挙動を制御できるようになります。また、ゲーム画面を常に全面に表示したり、オンフォーカスでマップをリロードする機能を提供します。  
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
