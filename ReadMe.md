@@ -69,6 +69,9 @@ Plugin that adjust picture to graphical
 20. [DevToolsManage.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/DevToolsManage.js)  
 デベロッパツールの挙動を制御できるようになります。また、ゲーム画面を常に全面に表示したり、オンフォーカスでマップをリロードする機能を提供します。  
 
+21. [PictureAnimation.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureAnimation.js)  
+ピクチャをアニメーションさせます。セルの数やフレーム数、アニメーションパターンを指定できます。  
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
