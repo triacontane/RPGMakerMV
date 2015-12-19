@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2015/12/20 ピクチャのボタン化プラグインとの競合を解消
 // 1.0.2 2015/11/23 競合防止のため、タッチ関連の処理をSprite_Pictureに定義
 // 1.0.1 2015/11/21 ピクチャ番号を出力するよう機能修正
 //                  コンソールにログを出す機能を追加
@@ -55,6 +56,8 @@
  *  ただし、ヘッダのライセンス表示は残してください。
  */
 (function () {
+    // イベントテストでなければ一切の機能を無効
+    if (!DataManager.isEventTest())return;
 
     //=============================================================================
     // Game_Picture
@@ -194,10 +197,10 @@
     };
 
     Sprite_Picture.prototype.isTriggered = function() {
-        return this.isTouchEvent(TouchInput.isTriggered());
+        return this.isTouchEvent(TouchInput.isTriggered);
     };
 
-    Sprite_Picture.prototype.isTouchEvent = function(triggerResult) {
-        return this.isTouchable && triggerResult && this.isTouchPosInRect();
+    Sprite_Picture.prototype.isTouchEvent = function(triggerFunc) {
+        return this.isTouchable() && triggerFunc.call(TouchInput) && this.isTouchPosInRect();
     };
 })();

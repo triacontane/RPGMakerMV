@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2015/12/20 長押しイベント発生時に1秒間のインターバルを設定するに仕様変更
 // 1.1.1 2015/12/10 ピクチャを消去後にマウスオーバーするとエラーになる現象を修正
 // 1.1.0 2015/11/23 コモンイベントを呼び出した対象のピクチャ番号を特定する機能を追加
 //                  設定で透明色を考慮する機能を追加
@@ -26,7 +27,7 @@
  * @default OFF
  *
  * @param ピクチャ番号の変数番号
- * @desc コモンイベント呼び出し時にピクチャ番号を格納するゲーム変数の番号
+ * @desc コモンイベント呼び出し時にピクチャ番号を格納するゲーム変数の番号。
  * @default 0
  *
  * @help ピクチャをクリックすると、指定したコモンイベントが
@@ -126,13 +127,13 @@
     };
 
     PluginManager.getArgString = function (index, args) {
-        return PluginManager.convertEscapeCharacters(args[index]);
+        return this.convertEscapeCharacters(args[index]);
     };
 
     PluginManager.getArgNumber = function (index, args, min, max) {
         if (arguments.length <= 2) min = -Infinity;
         if (arguments.length <= 3) max = Infinity;
-        return (parseInt(PluginManager.convertEscapeCharacters(args[index]), 10) || 0).clamp(min, max);
+        return (parseInt(this.convertEscapeCharacters(args[index]), 10) || 0).clamp(min, max);
     };
 
     PluginManager.convertEscapeCharacters = function(text) {
@@ -146,10 +147,10 @@
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
         text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            return PluginManager.actorName(parseInt(arguments[1]));
+            return this.actorName(parseInt(arguments[1]));
         }.bind(this));
         text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            return PluginManager.partyMemberName(parseInt(arguments[1]));
+            return this.partyMemberName(parseInt(arguments[1]));
         }.bind(this));
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
         return text;
@@ -358,6 +359,7 @@
         if (commandIds == null) return;
         for (var i = 1; i <= this._triggerHandler.length; i++) {
             if (commandIds[i] != null && this._triggerHandler[i].call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
+                if (i === 3) TouchInput._pressedTime = -60;
                 $gameTemp._pictureCommonId = commandIds[i];
                 $gameTemp._pictureNum = this._pictureId;
             }
