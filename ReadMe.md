@@ -72,6 +72,10 @@ Plugin that adjust picture to graphical
 21. [PictureAnimation.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureAnimation.js)  
 ピクチャをアニメーションさせます。セルの数やフレーム数、アニメーションパターンを指定できます。  
 
+22. [ItemNameEscape.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ItemNameEscape.js)  
+データベースの「名称」「説明文」に一部の制御文字が使えるようになります。  
+Plugin of item name escape  
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
