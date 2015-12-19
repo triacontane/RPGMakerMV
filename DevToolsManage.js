@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2015/12/19 F12キーでリセットする機能を追加（F5と同様の動作）
 // 1.0.0 2015/12/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -84,9 +85,6 @@ var $gameCurrentWindow = null;
 
 (function () {
     var paramName = 'DevToolsManage';
-    var alwaysOnTop = PluginManager.getParamBoolean(paramName, 'AlwaysOnTop', '常に前面表示');
-    var startupDevTool = PluginManager.getParamString(paramName, 'StartupDevTool', '開始時に起動').toUpperCase();
-    var devToolsPosition = PluginManager.getParamArrayNumber(paramName, 'DevToolsPosition', 'デベロッパツール表示位置');
 
     PluginManager.getParamBoolean = function(pluginName, paramEngName, paramJpgName) {
         var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
@@ -99,7 +97,7 @@ var $gameCurrentWindow = null;
     };
 
     PluginManager.getParamArrayNumber = function (pluginName, paramEngName, paramJpgName) {
-        var values = PluginManager.getParamArrayString(pluginName, paramEngName, paramJpgName);
+        var values = this.getParamArrayString(pluginName, paramEngName, paramJpgName);
         for (var i = 0; i < values.length; i++) {
             values[i] = parseInt(values[i], 10) || 0;
         }
@@ -116,6 +114,10 @@ var $gameCurrentWindow = null;
         if (value == null) value = this.parameters(pluginName)[paramJpgName];
         return value;
     };
+
+    var alwaysOnTop = PluginManager.getParamBoolean(paramName, 'AlwaysOnTop', '常に前面表示');
+    var startupDevTool = PluginManager.getParamString(paramName, 'StartupDevTool', '開始時に起動');
+    var devToolsPosition = PluginManager.getParamArrayNumber(paramName, 'DevToolsPosition', 'デベロッパツール表示位置');
 
     //=============================================================================
     // SceneManager
@@ -142,8 +144,13 @@ var $gameCurrentWindow = null;
     var _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown = function(event) {
         switch (event.keyCode) {
-            case 119: //F8
+            case 119: // F8
                 event.ctrlKey ? $gameCurrentWindow.closeDevTools() : $gameCurrentWindow.toggleDevTools();
+                break;
+            case 123: // F12
+                if (Utils.isNwjs()) {
+                    location.reload();
+                }
                 break;
             default:
                 _SceneManager_onKeyDown.call(this, event);
@@ -210,7 +217,6 @@ var $gameCurrentWindow = null;
                 var name = DataManager._databaseFiles[i].name;
                 if (name === '$dataSystem') {
                     this._preVersionId = $dataSystem.versionId;
-                    window[name] = null;
                     DataManager.loadDataFile(name, DataManager._databaseFiles[i].src);
                     this._dataSystemLoading = true;
                 }
