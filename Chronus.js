@@ -198,10 +198,14 @@
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
         text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            return this.actorName(parseInt(arguments[1]));
+            var n = parseInt(arguments[1]);
+            var actor = n >= 1 ? $gameActors.actor(n) : null;
+            return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            return this.partyMemberName(parseInt(arguments[1]));
+            var n = parseInt(arguments[1]);
+            var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
+            return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
         return text;

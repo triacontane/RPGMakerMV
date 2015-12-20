@@ -56,6 +56,5 @@
             this._parallaxNonBlur.bitmap = null;
             _SpriteSet_Map_updateParallax.call(this);
         }
-
     };
 })();

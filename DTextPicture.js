@@ -113,7 +113,7 @@
                                            scaleY, opacity, blendMode) {
         if ($gameScreen._dTextFlg) {
             var window = SceneManager._scene._hiddenWindow; // 制御文字の使用とサイズ計算のための隠しウィンドウ
-            name = "dummy"; // 参照されません
+            arguments[0] = Date.now().toString(); // 参照されません
             this._dTextFlg   = true;
             this._dTextValue = window.convertEscapeCharacters($gameScreen._dTextValue);
             this._dTextSize  = $gameScreen._dTextSize;
@@ -123,8 +123,7 @@
             this._dTextValue = "";
             this._dTextSize  = 0;
         }
-        _Game_Picture_show.call(this, name, origin, x, y, scaleX,
-            scaleY, opacity, blendMode);
+        _Game_Picture_show.apply(this, arguments);
     };
 
     //=============================================================================

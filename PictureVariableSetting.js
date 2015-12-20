@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2015/12/20 番号の変数指定の初期値を有効/無効で設定できるよう修正
 // 1.1.0 2015/11/27 ピクチャのファイル名に変数を組み込むことが出来る機能を追加
 // 1.0.0 2015/11/24 初版
 // ----------------------------------------------------------------------------
@@ -17,6 +18,10 @@
 /*:
  * @plugindesc ピクチャの変数設定プラグイン
  * @author トリアコンタン
+ *
+ * @param 初期値
+ * @desc 初期状態での有効/無効の設定値(ON/OFF)
+ * @default OFF
  * 
  * @help ピクチャ関連のイベント命令で番号が「指定された変数の値」になるよう
  * 仕様を変更します。
@@ -50,12 +55,58 @@
  *  ただし、ヘッダのライセンス表示は残してください。
  */
 (function () {
-    PluginManager.getCommandName = function(command) {
+    'use strict';
+    var pluginName = 'PictureVariableSetting';
+
+    //=============================================================================
+    // ローカル関数
+    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
+    //=============================================================================
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getCommandName = function (command) {
         return (command || '').toUpperCase();
     };
 
-    PluginManager.getArgString = function(index, args) {
-        return args[index] || '';
+    var getArgString = function (args, upperFlg) {
+        args = convertEscapeCharacters(args);
+        return upperFlg ? args.toUpperCase() : args;
+    };
+
+    var convertEscapeCharacters = function(text) {
+        if (text == null) text = '';
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var n = parseInt(arguments[1]);
+            var actor = n >= 1 ? $gameActors.actor(n) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var n = parseInt(arguments[1]);
+            var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     //=============================================================================
@@ -66,7 +117,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
-        switch (PluginManager.getCommandName(command)) {
+        switch (getCommandName(command)) {
             case 'P_VARIABLE_VALID':
                 $gameSystem._pictureNumVariable = true;
                 break;
@@ -74,7 +125,7 @@
                 $gameSystem._pictureNumVariable = false;
                 break;
             case 'P_D_FILENAME':
-                $gameScreen._dPictureFileName = PluginManager.getArgString(0, args);
+                $gameScreen._dPictureFileName = getArgString(args[0]);
         }
     };
 
@@ -119,7 +170,7 @@
     var _Game_System_initialize = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.call(this);
-        this._pictureNumVariable = false;
+        this._pictureNumVariable = getParamBoolean('初期値');
     };
 
     //=============================================================================
@@ -140,18 +191,9 @@
     Game_Picture.prototype.show = function(name, origin, x, y, scaleX,
                                            scaleY, opacity, blendMode) {
         if ($gameScreen._dPictureFileName != null) {
-            name = $gameScreen._dPictureFileName;
-            name = name.replace(/\\/g, '\x1b');
-            name = name.replace(/\x1b\x1b/g, '\\');
-            name = name.replace(/\x1bV\[(\d+)\]/gi, function() {
-                return $gameVariables.value(parseInt(arguments[1]));
-            }.bind(this));
-            name = name.replace(/\x1bV\[(\d+)\]/gi, function() {
-                return $gameVariables.value(parseInt(arguments[1]));
-            }.bind(this));
+            arguments[0] = $gameScreen._dPictureFileName;
             $gameScreen._dPictureFileName = null;
         }
-        _Game_Picture_show.call(this, name, origin, x, y, scaleX,
-            scaleY, opacity, blendMode);
+        _Game_Picture_show.apply(this, arguments);
     };
 })();
