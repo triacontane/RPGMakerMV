@@ -76,6 +76,9 @@ Plugin that adjust picture to graphical
 データベースの「名称」「説明文」に一部の制御文字が使えるようになります。  
 Plugin of item name escape  
 
+23. [GameStartEval.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/GameStartEval.js)  
+ゲーム開始時に任意のスクリプトを実行します。Scene_Boot.startのタイミングです。ある程度JavaScriptの知識のある方向けです。  
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
