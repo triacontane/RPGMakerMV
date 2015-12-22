@@ -33,7 +33,7 @@
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
- *  ただし、ヘッダのライセンス表示は残してください。
+ *  このプラグインはもうあなたのものです。
  */
 (function () {
     var parameters = PluginManager.parameters('MapRapid');
@@ -42,7 +42,7 @@
     // Window_Message
     //  制御文字にかかわらずメッセージを一瞬で表示する。
     //=============================================================================
-    if (parameters['showMessageRapid'] == "ON") {
+    if (parameters['showMessageRapid'] === "ON") {
         var _Window_Message_updateMessage = Window_Message.prototype.updateMessage;
         Window_Message.prototype.updateMessage = function() {
             this._lineShowFast = true;
@@ -54,7 +54,7 @@
     // Window_Base
     //  ウィンドウの開閉を一瞬で行います。
     //=============================================================================
-    if (parameters['windowOpenRapid'] == "ON") {
+    if (parameters['windowOpenRapid'] === "ON") {
         var _Window_Base_updateOpen = Window_Base.prototype.updateOpen;
         Window_Base.prototype.updateOpen = function () {
             this._opening && (this.openness = 255);

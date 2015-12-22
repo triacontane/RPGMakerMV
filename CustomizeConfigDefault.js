@@ -52,7 +52,7 @@
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
- *  ただし、ヘッダのライセンス表示は残してください。
+ *  このプラグインはもうあなたのものです。
  */
 (function () {
     var parameters = PluginManager.parameters('CustomizeConfigDefault');

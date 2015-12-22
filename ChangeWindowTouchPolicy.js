@@ -1,5 +1,5 @@
 //=============================================================================
-// GameStartEval.js
+// ChangeWindowTouchPolicy.js
 // ----------------------------------------------------------------------------
 // Copyright (c) 2015 Triacontane
 // This software is released under the MIT License.
@@ -14,24 +14,17 @@
 //=============================================================================
 
 /*:
- * @plugindesc 開始時スクリプト実行プラグイン
+ * @plugindesc ウィンドウタッチ仕様変更プラグイン
  * @author トリアコンタン
  *
- * @param スクリプト1
- * @desc ゲーム開始時に実行するスクリプト
- * @default Input.keyMapper[8] = 'escape';
+ * @param 枠外タッチ動作
+ * @desc ウィンドウの枠外をタッチした場合の動作を選択します。(決定/キャンセル/なし)
+ * @default なし
  *
- * @param スクリプト2
- * @desc ゲーム開始時に実行するスクリプト
- *
- * @param スクリプト3
- * @desc ゲーム開始時に実行するスクリプト
- *
- * @param スクリプト4
- * @desc ゲーム開始時に実行するスクリプト
- *
- * @help ゲーム開始時に任意のスクリプトを実行します。
- * Scene_Boot.startのタイミングです。
+ * @help ウィンドウをタッチもしくはクリックした場合の挙動を変更します。
+ * 1. マウスオーバーで項目にフォーカス
+ * 2. フォーカス状態で1回クリックすると項目決定
+ * 3. ウィンドウの枠外をクリックした場合の動作(カスタマイズ可能)を追加
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -42,7 +35,7 @@
  */
 (function () {
     'use strict';
-    var pluginName = 'GameStartEval';
+    var pluginName = 'ChangeWindowTouchPolicy';
 
     //=============================================================================
     // ローカル関数
@@ -63,32 +56,38 @@
     };
 
     //=============================================================================
-    // Scene_Boot
-    //  ゲーム開始時にスクリプトを実行します。
+    // Window_Selectable
+    //  タッチ周りの仕様を書き換えのため元の処理を上書き
     //=============================================================================
-    var _Scene_Boot_start = Scene_Boot.prototype.start;
-    Scene_Boot.prototype.start = function() {
-        _Scene_Boot_start.call(this);
-        var script = '';
-        var i = 0;
-        while (script != null && i < 100) {
-            script = getParamString('スクリプト' + String(++i));
-            try {
-                eval(script);
-            } catch (e) {
-                if (Utils.isNwjs()) {
-                    var window = require('nw.gui').Window.get();
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
+    Window_Selectable.prototype.processTouch = function() {
+        if (this.isOpenAndActive()) {
+            if ((TouchInput.isMoved() || TouchInput.isTriggered()) && this.isTouchedInsideFrame()) {
+                this.onTouch(TouchInput.isTriggered());
+            } else if (TouchInput.isCancelled()) {
+                if (this.isCancelEnabled()) this.processCancel();
+            } else if (TouchInput.isTriggered()) {
+                switch (getParamString('枠外タッチ動作')) {
+                    case '決定':
+                    case 'OK':
+                        if (this.isOkEnabled()) this.processOk();
+                        break;
+                    case 'キャンセル':
+                    case 'CANCEL':
+                        if (this.isCancelEnabled()) this.processCancel();
+                        break;
                 }
-                console.log('スクリプトの実行中にエラーが発生しました。');
-                console.log('- スクリプト 　: ' + script);
-                console.log('- エラー原因   : ' + e.toString());
-                throw e;
             }
         }
     };
+
+    //=============================================================================
+    // TouchInput
+    //  ポインタ移動時にマウス位置の記録を常に行うように元の処理を上書き
+    //=============================================================================
+    TouchInput._onMouseMove = function(event) {
+        var x = Graphics.pageToCanvasX(event.pageX);
+        var y = Graphics.pageToCanvasY(event.pageY);
+        this._onMove(x, y);
+    }
 })();
 

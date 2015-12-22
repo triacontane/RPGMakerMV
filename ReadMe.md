@@ -79,6 +79,10 @@ Plugin of item name escape
 23. [GameStartEval.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/GameStartEval.js)  
 ゲーム開始時に任意のスクリプトを実行します。Scene_Boot.startのタイミングです。ある程度JavaScriptの知識のある方向けです。  
 
+24. [ChangeWindowTouchPolicy.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ChangeWindowTouchPolicy.js)  
+ウィンドウをタッチした際の仕様を変更します。マウスーオーバーで項目にフォーカス、さらにウィンドウの枠外をクリックした場合の動作を指定できます。  
+
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
