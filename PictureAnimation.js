@@ -280,6 +280,7 @@
         this._fadeDuration      = 0;
         this._fadeDurationCount = 0;
         this._prevCellCount     = 0;
+        this._animationFlg      = false;
     };
 
     /**
@@ -309,7 +310,11 @@
     var _Game_Picture_update = Game_Picture.prototype.update;
     Game_Picture.prototype.update = function() {
         _Game_Picture_update.call(this);
-        this.isFading() ? this.updateFading() : this.updateAnimation();
+        if (this.isFading()) {
+            this.updateFading();
+        } else if(this.isAnimation()) {
+            this.updateAnimation();
+        }
     };
 
     Game_Picture.prototype.updateAnimation = function() {
@@ -318,7 +323,7 @@
         if (this._frameCount === 0) {
             this.addCellCount();
             if (this.cell === 0 && !this._loopFlg) {
-                this._animationType = 0;
+                this._animationFlg  = false;
             }
         }
     };
@@ -347,16 +352,17 @@
 
     Game_Picture.prototype.startAnimation = function(animationType, loopFlg) {
         this._animationType = animationType;
+        this._animationFlg = true;
         this._loopFlg = loopFlg;
     };
 
     Game_Picture.prototype.stopAnimation = function(forceFlg) {
         this._loopFlg = false;
-        if (forceFlg) this._animationType = 0;
+        if (forceFlg) this._animationFlg = false;
     };
 
     Game_Picture.prototype.isAnimation = function() {
-        return this._animationType !== 0;
+        return this._animationFlg;
     };
 
     Game_Picture.prototype.isFading = function() {
