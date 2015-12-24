@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2015/12/24 マップデータが歯抜けになっている場合に発生するエラーを対応
 // 1.0.0 2015/12/20 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -79,11 +80,13 @@
     var _DataManager_onLoad = DataManager.onLoad;
     DataManager.onLoad = function(object) {
         _DataManager_onLoad.apply(this, arguments);
-        if (Array.isArray(object)) {
+        if (Array.isArray(object) && object !== $dataMapInfos) {
             for (var i = 1; i < object.length; i++) {
                 var data = object[i];
-                if (data.name && data.name.match(/\\/g)) data.preName = data.name;
-                if (data.description && data.description.match(/\\/g)) data.preDescription = data.description;
+                if (data != null) {
+                    if (data.name && data.name.match(/\\/g)) data.preName = data.name;
+                    if (data.description && data.description.match(/\\/g)) data.preDescription = data.description;
+                }
             }
         }
     };
@@ -91,8 +94,10 @@
     DataManager.databaseEscape = function() {
         for (var i = 0; i < this._databaseFiles.length; i++) {
             var object = window[this._databaseFiles[i].name];
-            if (Array.isArray(object)) {
-                for (var j = 1; j < object.length; j++) this.convertName(object[j]);
+            if (Array.isArray(object) && object !== $dataMapInfos) {
+                for (var j = 1; j < object.length; j++) {
+                    if (object[j] != null) this.convertName(object[j]);
+                }
             }
         }
     };
