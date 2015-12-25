@@ -263,8 +263,10 @@
             var y = TouchInput.y - this._dy;
             if (Input.isPressed('control')) {
                 var size = getParamNumber(['GridSize', 'グリッドサイズ'], 0, Math.max(this.width, this.height));
-                x % size > size / 2 ? x += size - x % size : x -= x % size;
-                y % size > size / 2 ? y += size - y % size : y -= y % size;
+                if (size !== 0) {
+                    x % size > size / 2 ? x += size - x % size : x -= x % size;
+                    y % size > size / 2 ? y += size - y % size : y -= y % size;
+                }
             }
             this.move(x, y);
             return true;
