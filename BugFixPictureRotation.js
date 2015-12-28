@@ -33,9 +33,9 @@
     'use strict';
 
     Game_Picture.prototype.updateRotation = function() {
-        if (this._rotationSpeed != 0) {
-            this._angle -= this._rotationSpeed / 2;
-        }
+        if (this._rotationSpeed === 0) return;
+        this._angle -= this._rotationSpeed / 2;
+        while (this._angle < 0) this._angle += 360;
+        this._angle %= 360;
     };
 })();
-
