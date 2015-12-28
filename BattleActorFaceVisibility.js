@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2015/12/28 任意のエネミーグラフィック画像を指摘できる機能を追加
+//                  ウィンドウを非表示にする機能を追加
 // 1.1.0 2015/12/27 顔グラフィックの代わりに任意のピクチャ画像を指定できる機能を追加
 // 1.0.1 2015/11/19 サイドビューでも表示されるように仕様変更
 // 1.0.0 2015/11/13 初版
@@ -19,6 +21,10 @@
  * @plugindesc Plugin that to visualize face graphic in battle
  * @author triacontane
  *
+ * @param WindowVisible
+ * @desc Window visible flg(ON/OFF)
+ * @default ON
+ *
  * @help Plugin that to visualize face graphic in battle
  * This plugin is released under the MIT License.
  *
@@ -27,13 +33,22 @@
 /*:ja
  * @plugindesc 戦闘中顔グラフィック表示プラグイン
  * @author トリアコンタン
- * 
+ *
+ * @param ウィンドウ表示
+ * @desc 背景ウィンドウの表示フラグです。(ON/OFF)
+ * @default ON
+ *
  * @help 戦闘中、コマンド選択ウィンドウの上に
  * 顔グラフィックが表示されるようになります。
  *
  * 顔グラフィックを任意のピクチャ画像に差し替えることも可能です。
  * アクターのデータベースのメモ欄に「<face_picture:（拡張子を除いたピクチャのファイル名）>」
- * と入力してください。
+ * と入力してください。制御文字「\V[n]」が利用可能です。
+ *
+ * 顔グラフィックを任意のエネミー画像に差し替えることも可能です。
+ * アクターのデータベースのメモ欄に「<face_enemy_id:（データベース「敵キャラ」のID）>」
+ * と入力してください。制御文字「\V[n]」が利用可能です。
+ *
  * 顔グラフィックより大きいピクチャを指定すると自動で同じサイズに縮小されます。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -44,6 +59,56 @@
  *  このプラグインはもうあなたのものです。
  */
 (function () {
+    'use strict';
+    var pluginName = 'BattleActorFaceVisibility';
+
+    //=============================================================================
+    // ローカル関数
+    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
+    //=============================================================================
+    var convertEscapeCharacters = function(text) {
+        if (text == null) text = '';
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1], 10));
+        }.bind(window));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1], 10));
+        }.bind(window));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var n = parseInt(arguments[1]);
+            var actor = n >= 1 ? $gameActors.actor(n) : null;
+            return actor ? actor.name() : '';
+        }.bind(window));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var n = parseInt(arguments[1]);
+            var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(window));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var parseIntStrict = function(value, errorMessage) {
+        var result = parseInt(value, 10);
+        if (isNaN(result)) throw Error('指定した値[' + value + ']が数値ではありません。' + errorMessage);
+        return result;
+    };
 
     //=============================================================================
     // Scene_Battle
@@ -84,8 +149,9 @@
         Window_Base.prototype.initialize.call(this, x, y, width, height);
         this.hide();
         this.loadImages();  // 非同期処理のためあらかじめロードしておく
-        this._actorId = 0;
         this.createFaceSprite();
+        this.setWindowVisible();
+        this._actorId = 0;
     };
 
     Window_Face.prototype.createFaceSprite = function() {
@@ -98,11 +164,23 @@
         this.addChild(this._faceSprite);
     };
 
+    Window_Face.prototype.setWindowVisible = function() {
+        var visible = getParamBoolean(['WindowVisible','ウィンドウ表示'], 0, 255);
+        if (!visible) {
+            this.opacity = 0;
+            this._faceSprite.y += this.padding;
+        }
+    };
+
     Window_Face.prototype.loadImages = function() {
         $gameParty.members().forEach(function(actor) {
             var meta = actor.actor().meta;
             if (meta != null && meta.face_picture) {
-                ImageManager.loadPicture(meta.face_picture);
+                ImageManager.loadPicture(convertEscapeCharacters(meta.face_picture));
+            } else if (meta != null && meta.face_enemy_id) {
+                var enemyId = parseInt(
+                    convertEscapeCharacters(meta.face_enemy_id), 10).clamp(1, $dataEnemies.length - 1);
+                ImageManager.loadEnemy($dataEnemies[enemyId].battlerName);
             } else {
                 ImageManager.loadFace(actor.faceName());
             }
@@ -126,14 +204,18 @@
     Window_Face.prototype.drawActorFace = function(actor) {
         var meta = actor.actor().meta;
         if (meta != null && meta.face_picture) {
-            this.drawPicture(meta.face_picture);
+            this.drawPicture(meta.face_picture, ImageManager.loadPicture.bind(ImageManager));
+        } else if (meta != null && meta.face_enemy_id) {
+            var enemyId = parseInt(
+                convertEscapeCharacters(meta.face_enemy_id), 10).clamp(1, $dataEnemies.length - 1);
+            this.drawPicture($dataEnemies[enemyId].battlerName, ImageManager.loadEnemy.bind(ImageManager));
         } else {
             this.drawFace(actor);
         }
     };
 
-    Window_Face.prototype.drawPicture = function(fileName) {
-        var bitmap = ImageManager.loadPicture(fileName);
+    Window_Face.prototype.drawPicture = function(fileName, loadHandler) {
+        var bitmap = loadHandler(fileName);
         if (bitmap.isReady()) {
             var scale = Math.min(Window_Base._faceWidth / bitmap.width, Window_Base._faceHeight / bitmap.height, 1.0);
             this._faceSprite.scale.x = scale;

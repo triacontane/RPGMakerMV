@@ -48,7 +48,7 @@
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
- *  ただし、ヘッダのライセンス表示は残してください。
+ *  このプラグインはもうあなたのものです。
  */
 (function() {
     'use strict';
@@ -110,6 +110,12 @@
         if (arguments.length <= 2) min = -Infinity;
         if (arguments.length <= 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    };
+
+    var parseIntStrict = function(value, errorMessage) {
+        var result = parseInt(value, 10);
+        if (isNaN(result)) throw Error('指定した値[' + value + ']が数値ではありません。' + errorMessage);
+        return result;
     };
 
     var convertEscapeCharacters = function(text) {
