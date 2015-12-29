@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2015/12/29 日の値に「1」を設定した場合に日付の表示がおかしくなる不具合を修正
+//                  一部のコードを最適化
 // 1.1.0 2015/12/01 天候と時間帯をゲーム変数に格納できるよう機能追加
 // 1.0.0 2015/11/27 初版
 // ----------------------------------------------------------------------------
@@ -127,86 +129,49 @@
  *  このプラグインはもうあなたのものです。
  */
 (function () {
+    'use strict';
 
     //=============================================================================
     // PluginManager
     //  多言語とnullに対応したパラメータの取得を行います。
     //  このコードは自動生成され、全てのプラグインで同じものが使用されます。
     //=============================================================================
-    PluginManager.getParamString = function (pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        return value == null ? '' : value;
-    };
-
-    PluginManager.getParamNumber = function (pluginName, paramEngName, paramJpgName, min, max) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        if (arguments.length <= 3) min = -Infinity;
-        if (arguments.length <= 4) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    PluginManager.getParamBoolean = function (pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        return (value || '').toUpperCase() == 'ON';
-    };
-
-    PluginManager.getParamArrayString = function (pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamString(pluginName, paramEngName, paramJpgName);
-        return (value || '').split(',');
-    };
-
-    PluginManager.getParamArrayNumber = function (pluginName, paramEngName, paramJpgName) {
-        var values = PluginManager.getParamArrayString(pluginName, paramEngName, paramJpgName);
-        for (var i = 0; i < values.length; i++) {
-            values[i] = parseInt(values[i], 10) || 0;
-        }
-        return values;
-    };
-
-    PluginManager.getParamOther = function (pluginName, paramEngName, paramJpgName) {
-        var value = this.parameters(pluginName)[paramEngName];
-        if (value == null) value = this.parameters(pluginName)[paramJpgName];
-        return value;
-    };
-
-    PluginManager.getCommandName = function (command) {
+    var getCommandName = function (command) {
         return (command || '').toUpperCase();
     };
 
-    PluginManager.checkCommandName = function (command, value) {
-        return this.getCommandName(command) === value;
-    };
-
-    PluginManager.getArgString = function (index, args) {
-        return PluginManager.convertEscapeCharacters(args[index]);
-    };
-
-    PluginManager.getArgNumber = function (index, args, min, max) {
+    var getArgNumber = function (arg, min, max) {
         if (arguments.length <= 2) min = -Infinity;
         if (arguments.length <= 3) max = Infinity;
-        return (parseInt(PluginManager.convertEscapeCharacters(args[index]), 10) || 0).clamp(min, max);
+        return parseIntStrict(convertEscapeCharacters(arg)).clamp(min, max);
     };
 
-    PluginManager.convertEscapeCharacters = function(text) {
+    var parseIntStrict = function(value, errorMessage) {
+        var result = parseInt(value, 10);
+        if (isNaN(result)) throw Error('指定した値[' + value + ']が数値ではありません。' + errorMessage);
+        return result;
+    };
+
+    var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
+            return $gameVariables.value(parseInt(arguments[1], 10));
+        }.bind(window));
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
+            return $gameVariables.value(parseInt(arguments[1], 10));
+        }.bind(window));
         text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
             var n = parseInt(arguments[1]);
             var actor = n >= 1 ? $gameActors.actor(n) : null;
             return actor ? actor.name() : '';
-        }.bind(this));
+        }.bind(window));
         text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
             var n = parseInt(arguments[1]);
             var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
             return actor ? actor.name() : '';
-        }.bind(this));
+        }.bind(window));
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
         return text;
     };
@@ -217,23 +182,41 @@
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
-        _Game_Interpreter_pluginCommand.call(this, command, args);
-        switch (PluginManager.getCommandName(command)) {
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        try {
+            this.pluginCommandChronus(command, args);
+        } catch (e) {
+            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
+                var window = require('nw.gui').Window.get();
+                var devTool = window.showDevTools();
+                devTool.moveTo(0, 0);
+                devTool.resizeTo(Graphics.width, Graphics.height);
+                window.focus();
+            }
+            console.log('プラグインコマンドの実行中にエラーが発生しました。');
+            console.log('- コマンド名 　: ' + command);
+            console.log('- コマンド引数 : ' + args);
+            console.log('- エラー原因   : ' + e.toString());
+        }
+    };
+
+    Game_Interpreter.prototype.pluginCommandChronus = function (command, args) {
+        switch (getCommandName(command)) {
             case 'C_ADD_TIME' :
-                $gameSystem.chronus().addTime(PluginManager.getArgNumber(0, args, 0, 99999));
+                $gameSystem.chronus().addTime(getArgNumber(args[0], 0, 99999));
                 break;
             case 'C_ADD_DAY' :
-                $gameSystem.chronus().addDay(PluginManager.getArgNumber(0, args, 0, 99999));
+                $gameSystem.chronus().addDay(getArgNumber(args[0], 0, 99999));
                 break;
             case 'C_SET_TIME' :
-                var hour = PluginManager.getArgNumber(0, args, 0, 23);
-                var minute = PluginManager.getArgNumber(1, args, 0, 59);
+                var hour = getArgNumber(args[0], 0, 23);
+                var minute = getArgNumber(args[1], 0, 59);
                 $gameSystem.chronus().setTime(hour, minute);
                 break;
             case 'C_SET_DAY' :
-                var year = PluginManager.getArgNumber(0, args, 1, 5000);
-                var month = PluginManager.getArgNumber(1, args, 1, $gameSystem.chronus().getMonthOfYear());
-                var day = PluginManager.getArgNumber(2, args, 1, $gameSystem.chronus().getDaysOfMonth(month));
+                var year = getArgNumber(args[0], 1, 5000);
+                var month = getArgNumber(args[1], 1, $gameSystem.chronus().getMonthOfYear());
+                var day = getArgNumber(args[2], 1, $gameSystem.chronus().getDaysOfMonth(month));
                 $gameSystem.chronus().setDay(year, month, day);
                 break;
             case 'C_STOP' :
@@ -267,7 +250,7 @@
                 $gameSystem.chronus().resetSnowLand();
                 break;
             case 'C_SET_SPEED':
-                $gameSystem.chronus()._timeAutoAdd = PluginManager.getArgNumber(0, args, 0, 99);
+                $gameSystem.chronus()._timeAutoAdd = getArgNumber(args[0], 0, 99);
                 break;
         }
     };
@@ -276,7 +259,7 @@
     Game_Interpreter.prototype.command236 = function() {
         var result = _Game_Interpreter_command236.call(this);
         if (!$gameParty.inBattle()) {
-            $gameSystem.chronus()._weatherType = Game_Chronus.weatherTypes.indexOf(this._params[0]);
+            $gameSystem.chronus()._weatherType = Game_Chronus._weatherTypes.indexOf(this._params[0]);
             $gameSystem.chronus()._weatherPower = this._params[1];
             $gameSystem.chronus().refreshTint(true);
         }
@@ -429,18 +412,18 @@ function Game_Chronus() {
 
 Game_Chronus.prototype             = Object.create(Game_Chronus.prototype);
 Game_Chronus.prototype.constructor = Game_Chronus;
-Game_Chronus.pluginName = 'Chronus';
-Game_Chronus.weatherTypes = ['none', 'rain', 'storm', 'snow'];
+Game_Chronus._pluginName           = 'Chronus';
+Game_Chronus._weatherTypes         = ['none', 'rain', 'storm', 'snow'];
 
 Game_Chronus.prototype.initialize = function () {
     this._timeMeter       = 0;            // 一日の中での時間経過（分単位）60 * 24
     this._dayMeter        = 0;            // ゲーム開始からの累計日数
-    this._timeAutoAdd     = PluginManager.getParamNumber(Game_Chronus.pluginName, null, '自然時間加算', 0, 99);
-    this._timeTransferAdd = PluginManager.getParamNumber(Game_Chronus.pluginName, null, '場所移動時間加算', 0);
-    this._timeBattleAdd   = PluginManager.getParamNumber(Game_Chronus.pluginName, null, '戦闘時間加算(固定)', 0);
-    this._timeTurnAdd     = PluginManager.getParamNumber(Game_Chronus.pluginName, null, '戦闘時間加算(ターン)', 0);
-    this._weekNames       = PluginManager.getParamArrayString(Game_Chronus.pluginName, null, '曜日配列');
-    this._daysOfMonth     = PluginManager.getParamArrayNumber(Game_Chronus.pluginName, null, '月ごとの日数配列');
+    this._timeAutoAdd     = this.getParamNumber('自然時間加算', 0, 99);
+    this._timeTransferAdd = this.getParamNumber('場所移動時間加算', 0);
+    this._timeBattleAdd   = this.getParamNumber('戦闘時間加算(固定)', 0);
+    this._timeTurnAdd     = this.getParamNumber('戦闘時間加算(ターン)', 0);
+    this._weekNames       = this.getParamArrayString('曜日配列');
+    this._daysOfMonth     = this.getParamArrayNumber('月ごとの日数配列');
     this._stop            = true;         // 停止フラグ（全ての加算に対して有効。ただし手動による加算は例外）
     this._disableTint     = false;        // 色調変更禁止フラグ
     this._calendarVisible = false;        // カレンダー表示フラグ
@@ -452,6 +435,51 @@ Game_Chronus.prototype.initialize = function () {
     this._datetime        = null;
     this._demandRefresh   = false;
     this._prevHour        = -1;
+};
+
+Game_Chronus.prototype.getParamString = function(paramNames) {
+    var value = this.getParamOther(paramNames);
+    return value == null ? '' : value;
+};
+
+Game_Chronus.prototype.getParamNumber = function(paramNames, min, max) {
+    var value = this.getParamOther(paramNames);
+    if (arguments.length < 2) min = -Infinity;
+    if (arguments.length < 3) max = Infinity;
+    return (parseInt(value, 10) || 0).clamp(min, max);
+};
+
+Game_Chronus.prototype.getParamBoolean = function(paramNames) {
+    var value = this.getParamOther(paramNames);
+    return (value || '').toUpperCase() == 'ON';
+};
+
+Game_Chronus.prototype.getParamOther = function(paramNames) {
+    if (!Array.isArray(paramNames)) paramNames = [paramNames];
+    for (var i = 0; i < paramNames.length; i++) {
+        var name = PluginManager.parameters(Game_Chronus._pluginName)[paramNames[i]];
+        if (name) return name;
+    }
+    return null;
+};
+
+Game_Chronus.prototype.getParamArrayString = function (paramNames) {
+    var values = this.getParamString(paramNames);
+    return (values || '').split(',');
+};
+
+Game_Chronus.prototype.getParamArrayNumber = function (paramNames, min, max) {
+    var values = this.getParamArrayString(paramNames);
+    if (arguments.length < 2) min = -Infinity;
+    if (arguments.length < 3) max = Infinity;
+    for (var i = 0; i < values.length; i++) values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
+    return values;
+};
+
+Game_Chronus.prototype.parseIntStrict = function(value, errorMessage) {
+    var result = parseInt(value, 10);
+    if (isNaN(result)) throw Error('指定した値[' + value + ']が数値ではありません。' + errorMessage);
+    return result;
 };
 
 Game_Chronus.prototype.update = function () {
@@ -641,8 +669,7 @@ Game_Chronus.prototype.addDay = function (value) {
 };
 
 Game_Chronus.prototype.setDay = function (year, month, day) {
-    var newDay = 0;
-    newDay += (year - 1) * this.getDaysOfYear();
+    var newDay = (year - 1) * this.getDaysOfYear();
     for (var i = 0; i < month - 1; i++) {
         newDay += this._daysOfMonth[i];
     }
@@ -687,7 +714,7 @@ Game_Chronus.prototype.setGameVariable = function () {
 };
 
 Game_Chronus.prototype.setGameVariableSub = function (paramName, value) {
-    var index = PluginManager.getParamNumber(Game_Chronus.pluginName, null, paramName, 0, 5000);
+    var index = this.getParamNumber(paramName, 0, 5000);
     if (index !== 0) $gameVariables.setValue(index, value);
 };
 
@@ -711,7 +738,7 @@ Game_Chronus.prototype.getMonth = function () {
     var days = this._dayMeter % this.getDaysOfYear();
     for (var i = 0; i < this._daysOfMonth.length; i++) {
         days -= this._daysOfMonth[i];
-        if (days <= 0) return i + 1;
+        if (days < 0) return i + 1;
     }
     return null;
 };
@@ -719,7 +746,7 @@ Game_Chronus.prototype.getMonth = function () {
 Game_Chronus.prototype.getDay = function () {
     var days = this._dayMeter % this.getDaysOfYear();
     for (var i = 0; i < this._daysOfMonth.length; i++) {
-        if (days <= this._daysOfMonth[i]) return days + 1;
+        if (days < this._daysOfMonth[i]) return days + 1;
         days -= this._daysOfMonth[i];
     }
     return null;
@@ -734,7 +761,7 @@ Game_Chronus.prototype.getMinute = function () {
 };
 
 Game_Chronus.prototype.getDateFormat = function(index) {
-    var format = PluginManager.getParamString(Game_Chronus.pluginName, null, '日時フォーマット' + String(index));
+    var format = this.getParamString('日時フォーマット' + String(index));
     format = format.replace(/DY/gi, function() {
         return this.getWeekName();
     }.bind(this));
@@ -780,7 +807,7 @@ Game_Chronus.prototype.getWeatherTypeId = function () {
 };
 
 Game_Chronus.prototype.getWeatherType = function () {
-    return Game_Chronus.weatherTypes[this.getWeatherTypeId()];
+    return Game_Chronus._weatherTypes[this.getWeatherTypeId()];
 };
 
 Game_Chronus.prototype.getValuePadding = function(value, digit, padChar) {
