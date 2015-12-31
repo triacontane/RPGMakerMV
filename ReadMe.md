@@ -82,6 +82,12 @@ Plugin of item name escape
 24. [ChangeWindowTouchPolicy.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ChangeWindowTouchPolicy.js)  
 ウィンドウをタッチした際の仕様を変更します。マウスーオーバーで項目にフォーカス、さらにウィンドウの枠外をクリックした場合の動作を指定できます。  
 
+25. [BugFixPictureRotation.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixPictureRotation.js)  
+イベントコマンド「ピクチャの回転」が仕様通りに動作しない（負の値を設定したときに回転しない＋正の値を設定したときの回転方向が仕様と逆）バグを修正します。  
+
+26. [MessageWindowHidden.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowHidden.js)  
+メッセージウィンドウを表示中に指定したボタンを押下することでメッセージウィンドウを消去します。もう一度押すと戻ります。右クリック、Shiftキー、Controlキーの中からトリガーを選択できます。  
+Erase message window (and restore) when triggered  
 
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
