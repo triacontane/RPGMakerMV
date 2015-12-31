@@ -16,21 +16,16 @@
 
 /*:
  * @plugindesc Erase message window
- * @author トリアコンタン
+ * @author triacontane
  *
  * @param TriggerButton
  * @desc Trigger button
- * (lightClick or shift or control)
- * @default lightClick
+ * (light_click or shift or control)
+ * @default light_click
  *
  * @help Erase message window (and restore) when triggered
  *
- * このプラグインにはプラグインコマンドはありません。
- *
- * 利用規約：
- *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
- *  についても制限はありません。
- *  このプラグインはもうあなたのものです。
+ * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc メッセージウィンドウ一時消去プラグイン
@@ -96,11 +91,11 @@
     };
 
     Window_Message.prototype.isTriggeredHidden = function() {
-        var buttonName = getParamString('ボタン名称').toLowerCase();
+        var buttonName = getParamString(['ボタン名称','TriggerButton']).toLowerCase();
         switch (buttonName) {
             case '':
             case '右クリック':
-            case 'lightClick':
+            case 'light_click':
                 return TouchInput.isCancelled();
             case 'ok':
                 return false;
