@@ -89,6 +89,9 @@ Plugin of item name escape
 メッセージウィンドウを表示中に指定したボタンを押下することでメッセージウィンドウを消去します。もう一度押すと戻ります。右クリック、Shiftキー、Controlキーの中からトリガーを選択できます。  
 Erase message window (and restore) when triggered  
 
+27. [DynamicDatabase.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/DynamicDatabase.js)  
+データベースの各項目を動的な値に変更するプラグインです。変数やJavaScriptの関数を使ってより高度なデータベースを構築できます。  
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
