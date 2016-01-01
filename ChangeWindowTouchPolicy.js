@@ -18,8 +18,8 @@
  * @author トリアコンタン
  *
  * @param 枠外タッチ動作
- * @desc ウィンドウの枠外をタッチした場合の動作を選択します。(決定/キャンセル/なし)
- * @default なし
+ * @desc ウィンドウの枠外をタッチした場合の動作を選択します。(決定 or キャンセル or なし)
+ * @default キャンセル
  *
  * @help ウィンドウをタッチもしくはクリックした場合の挙動を変更します。
  * 1. マウスオーバーで項目にフォーカス
@@ -66,13 +66,13 @@
             } else if (TouchInput.isCancelled()) {
                 if (this.isCancelEnabled()) this.processCancel();
             } else if (TouchInput.isTriggered()) {
-                switch (getParamString('枠外タッチ動作')) {
+                switch (getParamString('枠外タッチ動作').toLowerCase()) {
                     case '決定':
-                    case 'OK':
+                    case 'ok':
                         if (this.isOkEnabled()) this.processOk();
                         break;
                     case 'キャンセル':
-                    case 'CANCEL':
+                    case 'cancel':
                         if (this.isCancelEnabled()) this.processCancel();
                         break;
                 }
@@ -88,6 +88,6 @@
         var x = Graphics.pageToCanvasX(event.pageX);
         var y = Graphics.pageToCanvasY(event.pageY);
         this._onMove(x, y);
-    }
+    };
 })();
 
