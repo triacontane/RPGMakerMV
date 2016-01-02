@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/01/02 繰り返しリセットすると警告が出る問題の解消
+//                  ゲームウィンドウを端に寄せる機能(笑)を追加
 // 1.0.1 2015/12/19 F12キーでリセットする機能を追加（F5と同様の動作）
 // 1.0.0 2015/12/12 初版
 // ----------------------------------------------------------------------------
@@ -30,12 +32,22 @@
  * @desc Developer tool's position(X, Y, Width, Height) Separated comma
  * @default 0,0,800,600
  *
- * @help Developer tools management plugin.
- * Run developer tools when error occured.
- * test play when valid.
+ * @param FuncKeyMinimize
+ * @desc デベロッパツールの最小化/復帰の切り替えを行うキーです(F1～F12)。
+ * このキーをCtrlと一緒に押すとデベロッパツールとゲーム画面を閉じます。
+ * @default F8
  *
- * F8 : Toggle minimize/restore
- * Ctrl + F8 : Close developer tools（and game window）
+ * @param FuncKeyReload
+ * @desc 画面のリロードを行うキーです(F1～F12)。デフォルトF5キーと同様の役割を持ちます。
+ * @default F12
+ *
+ * @param FuncKeyMoveEdge
+ * @desc ゲーム画面の左寄せを行うキーです(F1～F12)。
+ * @default F11
+ *
+ * @help Developer tools management plugin.
+ * Run developer tools when error occur.
+ * test play when valid.
  *
  * This plugin is released under the MIT License.
  */
@@ -54,16 +66,32 @@
  * @param デベロッパツール表示位置
  * @desc デベロッパツールの表示座標です。X座標、Y座標、横幅、高さをカンマ区切りで指定します。
  * @default 0,0,800,600
+ *
+ * @param 最小化切替キー
+ * @desc デベロッパツールの最小化/復帰の切り替えを行うキーです(F1～F12)。
+ * このキーをCtrlと一緒に押すとデベロッパツールとゲーム画面を閉じます。
+ * @default F8
+ *
+ * @param リロードキー
+ * @desc 画面のリロードを行うキーです(F1～F12)。デフォルトF5キーと同様の役割を持ちます。
+ * @default F12
+ *
+ * @param 画面の左寄せキー
+ * @desc ゲーム画面の左寄せを行うキーです(F1～F12)。
+ * @default F11
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
- * ゲーム開始時にデベロッパツールが自動で立ち上がる機能や、
- * エラー発生時やアラート表示時に自動でアクティブになる機能を提供します。
+ * 快適な開発支援のために以下の機能を提供します。
+ *
+ * １．ゲーム開始時にデベロッパツールが自動で立ち上がる機能（最小化での起動も可能）
+ * ２．エラー発生時やalert時にデベロッパツールがアクティブになる機能
+ * ３．ゲーム画面を常に前面に表示する機能
+ * ４．ファンクションキーでリロードやゲーム画面の左寄せを行う機能
+ * ５．alertの挙動をデベロッパツールへの出力に変更
+ * ６．テストプレー中にマップやイベントを修正して再保存すると、ゲーム画面に
+ * 　　戻った瞬間に自動でリロードする機能
+ *
  * このプラグインはテストプレー時のみ有効となります。
- *
- * 以下のキー入力で任意で制御することも可能です。
- *
- * F8 : 最小化/復帰の切り替え
- * Ctrl + F8 : 閉じる（連動してゲーム画面も閉じます）
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -73,51 +101,66 @@
  *  このプラグインはもうあなたのものです。
  */
 
-//=============================================================================
-// p
-//  RGSS互換のために定義します。
-//=============================================================================
-p = function(value) {
-    alert(value);
-};
-
+var p = null;
 var $gameCurrentWindow = null;
 
 (function () {
-    var paramName = 'DevToolsManage';
+    'use strict';
+    // テストプレー時以外は一切の機能を無効
+    if (!Utils.isOptionValid('test') || !Utils.isNwjs()) return;
 
-    PluginManager.getParamBoolean = function(pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        return (value || '').toUpperCase() == 'ON';
+    //=============================================================================
+    // p
+    //  RGSS互換のために定義します。
+    //=============================================================================
+    p = function(value) {
+        alert(value);
     };
 
-    PluginManager.getParamString = function (pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
+    var pluginName = 'DevToolsManage';
+
+    //=============================================================================
+    // ローカル関数
+    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
+    //=============================================================================
+    var getParamString = function(paramNames) {
+        var value = getParamOther(paramNames);
         return value == null ? '' : value;
     };
 
-    PluginManager.getParamArrayNumber = function (pluginName, paramEngName, paramJpgName) {
-        var values = this.getParamArrayString(pluginName, paramEngName, paramJpgName);
-        for (var i = 0; i < values.length; i++) {
-            values[i] = parseInt(values[i], 10) || 0;
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
         }
+        return null;
+    };
+
+    var getParamArrayString = function (paramNames) {
+        var values = getParamString(paramNames);
+        return (values || '').split(',');
+    };
+
+    var getParamArrayNumber = function (paramNames, min, max) {
+        var values = getParamArrayString(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        for (var i = 0; i < values.length; i++) values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
         return values;
     };
 
-    PluginManager.getParamArrayString = function (pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamString(pluginName, paramEngName, paramJpgName);
-        return (value || '').split(',');
-    };
-
-    PluginManager.getParamOther = function(pluginName, paramEngName, paramJpgName) {
-        var value = this.parameters(pluginName)[paramEngName];
-        if (value == null) value = this.parameters(pluginName)[paramJpgName];
-        return value;
-    };
-
-    var alwaysOnTop = PluginManager.getParamBoolean(paramName, 'AlwaysOnTop', '常に前面表示');
-    var startupDevTool = PluginManager.getParamString(paramName, 'StartupDevTool', '開始時に起動');
-    var devToolsPosition = PluginManager.getParamArrayNumber(paramName, 'DevToolsPosition', 'デベロッパツール表示位置');
+    var alwaysOnTop      = getParamBoolean(['AlwaysOnTop', '常に前面表示']);
+    var startupDevTool   = getParamString(['StartupDevTool', '開始時に起動']);
+    var devToolsPosition = getParamArrayNumber(['DevToolsPosition', 'デベロッパツール表示位置'], 0, 9999);
+    var funcKeyMinimize  = getParamString(['FuncKeyMinimize', '最小化切替キー']);
+    var funcKeyReload    = getParamString(['FuncKeyReload', 'リロードキー']);
+    var funcKeyMoveEdge  = getParamString(['FuncKeyMoveEdge', '画面の左寄せキー']);
 
     //=============================================================================
     // SceneManager
@@ -144,10 +187,13 @@ var $gameCurrentWindow = null;
     var _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown = function(event) {
         switch (event.keyCode) {
-            case 119: // F8
+            case Input.functionReverseMapper[funcKeyMinimize] :
                 event.ctrlKey ? $gameCurrentWindow.closeDevTools() : $gameCurrentWindow.toggleDevTools();
                 break;
-            case 123: // F12
+            case Input.functionReverseMapper[funcKeyMoveEdge] :
+                $gameCurrentWindow.moveEdge();
+                break;
+            case Input.functionReverseMapper[funcKeyReload] :
                 if (Utils.isNwjs()) {
                     location.reload();
                 }
@@ -159,7 +205,7 @@ var $gameCurrentWindow = null;
     };
 
     SceneManager.isPlayTest = function() {
-        return ($gameTemp ? $gameTemp.isPlaytest() : Utils.isOptionValid('test')) && Utils.isNwjs()
+        return ($gameTemp ? $gameTemp.isPlaytest() : Utils.isOptionValid('test')) && Utils.isNwjs();
     };
 
     SceneManager.getNwjsWindow = function() {
@@ -180,6 +226,21 @@ var $gameCurrentWindow = null;
         } else {
             _Input_wrapNwjsAlert.call(this);
         }
+    };
+
+    Input.functionReverseMapper = {
+        'F1'  : 112,
+        'F2'  : 113,
+        'F3'  : 114,
+        'F4'  : 115,
+        'F5'  : 116,
+        'F6'  : 117,
+        'F7'  : 118,
+        'F8'  : 119,
+        'F9'  : 120,
+        'F10' : 121,
+        'F11' : 122,
+        'F12' : 123
     };
 
     //=============================================================================
@@ -243,6 +304,7 @@ var $gameCurrentWindow = null;
     Game_CurrentWindow.prototype.alwaysOnTop = function() {};
     Game_CurrentWindow.prototype.focus = function() {};
     Game_CurrentWindow.prototype.getWindow = function() {};
+    Game_CurrentWindow.prototype.moveEdge = function() {};
 
     //=============================================================================
     // Game_Nwjs
@@ -264,13 +326,14 @@ var $gameCurrentWindow = null;
         switch (startupDevTool) {
             case 'ON':
             case 'MINIMIZE':
-                this.showDevTools();
+                if (!DataManager.isEventTest()) this.showDevTools();
                 break;
         }
     };
 
     Game_NwjsWindow.prototype.addEventListener = function() {
         var currentWin = this.getWindow();
+        currentWin.removeAllListeners();
         currentWin.on('focus', function() {
             this._onFocus = true;
         }.bind(this));
@@ -300,6 +363,7 @@ var $gameCurrentWindow = null;
     };
 
     Game_NwjsWindow.prototype.addEventListenerDevTools = function(devTool) {
+        devTool.removeAllListeners();
         devTool.on('minimize', function() {
             this._devToolMinimize = true;
             this.focus();
@@ -329,6 +393,11 @@ var $gameCurrentWindow = null;
 
     Game_NwjsWindow.prototype.closeDevTools = function() {
         if (this.getWindow().isDevToolsOpen()) this.getWindow().closeDevTools();
+    };
+
+    Game_NwjsWindow.prototype.moveEdge = function() {
+        this.getWindow().moveTo(0, 0);
+        if (this.getWindow().isDevToolsOpen()) this._devTool.minimize();
     };
 
     Game_NwjsWindow.prototype.focus = function() {
