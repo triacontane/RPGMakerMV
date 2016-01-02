@@ -305,7 +305,7 @@
     //=============================================================================
     Spriteset_Base.prototype.callTouchPictures = function() {
         this._pictureContainer.children.forEach(function(picture) {
-            picture.callTouch();
+            if (picture.hasOwnProperty('callTouch')) picture.callTouch();
         }, this);
     };
 
