@@ -167,13 +167,15 @@
         return actor ? actor.name() : '';
     };
 
-    Object.defineProperty(Object.prototype, 'iterate', {
-        value: function(handler) {
-            Object.keys(this).forEach(function(key, index) {
-                handler.call(this, key, this[key], index);
-            }, this);
-        }
-    });
+    if (!Object.prototype.hasOwnProperty('iterate')) {
+        Object.defineProperty(Object.prototype, 'iterate', {
+            value: function(handler) {
+                Object.keys(this).forEach(function(key, index) {
+                    handler.call(this, key, this[key], index);
+                }, this);
+            }
+        });
+    }
 
     //=============================================================================
     // Game_Interpreter
