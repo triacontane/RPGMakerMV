@@ -167,6 +167,14 @@
         return actor ? actor.name() : '';
     };
 
+    Object.defineProperty(Object.prototype, 'iterate', {
+        value: function(handler) {
+            Object.keys(this).forEach(function(key, index) {
+                handler.call(this, key, this[key], index);
+            }, this);
+        }
+    });
+
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンド[P_CALL_CE]などを追加定義します。
@@ -305,7 +313,21 @@
     //  ピクチャのタッチ状態からのコモンイベント呼び出し予約を追加定義します。
     //=============================================================================
     Spriteset_Base.prototype.callTouchPictures = function() {
-        this._pictureContainer.children.forEach(function(picture) {
+        var containerChildren = this._pictureContainer.children;
+        if (!Array.isArray(containerChildren))  {
+            this._pictureContainer.iterate(function (property) {
+                if (this._pictureContainer[property].hasOwnProperty('children')) {
+                    containerChildren = this._pictureContainer[property].children;
+                    this._callTouchPicturesSub(containerChildren);
+                }
+            }.bind(this));
+        } else {
+            this._callTouchPicturesSub(containerChildren);
+        }
+    };
+
+    Spriteset_Base.prototype._callTouchPicturesSub = function(containerChildren) {
+        containerChildren.forEach(function(picture) {
             if (typeof picture.callTouch === 'function') picture.callTouch();
         }, this);
     };
