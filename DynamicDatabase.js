@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/01/03 iterateとisEmptyが重複定義されないよう対応
 // 1.0.0 2015/12/28 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -59,19 +60,23 @@
     // Object
     //  プロパティの定義
     //=============================================================================
-    Object.defineProperty(Object.prototype, 'iterate', {
-        value: function(handler) {
-            Object.keys(this).forEach(function(key, index) {
-                handler.call(this, key, this[key], index);
-            }, this);
-        }
-    });
+    if (!Object.prototype.hasOwnProperty('iterate')) {
+        Object.defineProperty(Object.prototype, 'iterate', {
+            value : function (handler) {
+                Object.keys(this).forEach(function (key, index) {
+                    handler.call(this, key, this[key], index);
+                }, this);
+            }
+        });
+    }
 
-    Object.defineProperty(Object.prototype, 'isEmpty', {
-        value: function() {
-            return Object.keys(this).length <= 0;
-        }
-    });
+    if (!Object.prototype.hasOwnProperty('isEmpty')) {
+        Object.defineProperty(Object.prototype, 'isEmpty', {
+            value : function () {
+                return Object.keys(this).length <= 0;
+            }
+        });
+    }
 
     Number.prototype.times = function(handler) {
         var i = 0; while(i < this) handler.call(this, i++);
