@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/01/04 セルのパターンを自由に指定できる機能を追加
+//                  セルの最大数を100から200に拡大
 // 1.1.2 2015/12/24 クロスフェードによる画像切替に対応しました
 // 1.1.1 2015/12/21 ピクチャのファイル名を連番方式で指定できる機能を追加
 //                  アニメーションの強制終了の機能を追加
@@ -42,30 +44,33 @@
  *  （パラメータの間は半角スペースで区切る）
  *
  *  PA_INIT or
- *  ピクチャのアニメーション準備 [セル数] [フレーム数] [セル配置方法] [フェード時間] :
+ *  ピクチャのアニメーション準備 [セル数] [フレーム数] [セル配置方法] [フェード時間]
  *  　このコマンドの次に実行される「ピクチャの表示」をアニメーション対象にします。
- *  　セル数　　　：アニメーションするセル画の数
- *  　フレーム数　：アニメーションする間隔のフレーム数
+ *  　セル数　　　：アニメーションするセル画の数（最大200枚）
+ *  　フレーム数　：アニメーションする間隔のフレーム数（最低でも1を設定してください）
  *  　セル配置方向：セルの配置（縦 or 横 or 連番）
- *  　フェード時間：画像切替に掛かるフレーム数（0にすると一瞬で切り替わります）
+ *  　フェード時間：画像切替に掛かるフレーム数（0にするとフェードせず一瞬で切り替わります）
  *  使用例：PA_INIT 4 10 連番 20
  *
  *  PA_START or
- *  ピクチャのアニメーション開始 [ピクチャ番号] [アニメーションタイプ]
+ *  ピクチャのアニメーション開始 [ピクチャ番号] [アニメーションタイプ] [カスタムパターン配列]
  *  　指定したピクチャ番号のピクチャをアニメーションを開始します。
  *  　一周するとアニメーションは自動で止まります。
  *
- *  　アニメーションのタイプは以下の2パターンがあります。
+ *  　アニメーションのタイプは以下の3パターンがあります。
  *  　　例：セル数が 4 の場合
  *  　　　タイプ1: 1→2→3→4→1→2→3→4...
  *  　　　タイプ2: 1→2→3→4→3→2→1→2...
+ *  　　　タイプ3: 好きな順番を配列で指定（セルの最小値は 1 です）
  *  使用例：PA_START 1 2
+ *  　　　　PA_START 1 3 [1,2,1,3,1,4]
  *
  *  PA_START_LOOP or
- *  ピクチャのループアニメーション開始 [ピクチャ番号] [アニメーションタイプ]
+ *  ピクチャのループアニメーション開始 [ピクチャ番号] [アニメーションタイプ] [カスタムパターン配列]
  *  　指定したピクチャ番号のピクチャをアニメーションを開始します。
- *  　終了するまでアニメーションが続きます。
+ *  　明示的に終了するまでアニメーションが続きます。
  *  使用例：PA_START_LOOP 1 2
+ *  　　　　PA_START_LOOP 1 3 [1,2,1,3,1,4]
  *
  *  PA_STOP or
  *  ピクチャのアニメーション終了 [ピクチャ番号]
@@ -81,7 +86,7 @@
  *
  *  PA_SET_CELL or
  *  ピクチャのアニメーションセル設定 [ピクチャ番号] [セル番号] [ウェイトあり]
- *  　アニメーションのセルを直接設定します。（開始位置は 1 です）
+ *  　アニメーションのセルを直接設定します。（セルの最小値は 1 です）
  *  　任意のタイミングでアニメーションしたい場合に有効です。
  *  　ウェイトありを設定すると、クロスフェード中はイベントの実行を待機します。
  *  使用例：PA_SET_CELL 1 3 ウェイトあり
@@ -109,9 +114,22 @@
         return (command || '').toUpperCase();
     };
 
-    var getArgString = function (args, upperFlg) {
-        args = convertEscapeCharacters(args);
-        return upperFlg ? args.toUpperCase() : args;
+    var getArgArrayString = function (args, upperFlg) {
+        var values = getArgString(args, upperFlg);
+        return (values || '').split(',');
+    };
+
+    var getArgArrayNumber = function (args, min, max) {
+        var values = getArgArrayString(args, false);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        for (var i = 0; i < values.length; i++) values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
+        return values;
+    };
+
+    var getArgString = function (arg, upperFlg) {
+        arg = convertEscapeCharacters(arg);
+        return upperFlg ? arg.toUpperCase() : arg;
     };
 
     var getArgNumber = function (arg, min, max) {
@@ -169,11 +187,11 @@
     };
 
     Game_Interpreter.prototype.pluginCommandPictureAnimation = function (command, args) {
-        var pictureNum, animationType, picture, cellNumber, frameNumber, direction, fadeDuration, wait;
+        var pictureNum, animationType, picture, cellNumber, frameNumber, direction, fadeDuration, wait, customArray;
         switch (getCommandName(command)) {
             case 'PA_INIT' :
             case 'ピクチャのアニメーション準備':
-                cellNumber   = getArgNumber(args[0], 1, 99);
+                cellNumber   = getArgNumber(args[0], 1, 200);
                 frameNumber  = getArgNumber(args[1], 1, 9999);
                 direction    = getArgString(args[2], true) || '縦';
                 fadeDuration = getArgNumber(args[3], 0, 9999) || 0;
@@ -181,17 +199,19 @@
                 break;
             case 'PA_START' :
             case 'ピクチャのアニメーション開始':
-                pictureNum    = getArgNumber(args[0], 1, 100);
-                animationType = getArgNumber(args[1], 1, 2);
-                picture       = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
-                if (picture) picture.startAnimation(animationType, false);
+                pictureNum     = getArgNumber(args[0], 1, 100);
+                animationType  = getArgNumber(args[1], 1, 3);
+                customArray    = getArgArrayNumber(args[2], 1, 200);
+                picture        = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
+                if (picture) picture.startAnimation(animationType, false, customArray);
                 break;
             case 'PA_START_LOOP' :
             case 'ピクチャのループアニメーション開始':
-                pictureNum    = getArgNumber(args[0], 1, 100);
-                animationType = getArgNumber(args[1], 1, 2);
-                picture = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
-                if (picture) picture.startAnimation(animationType, true);
+                pictureNum     = getArgNumber(args[0], 1, 100);
+                animationType  = getArgNumber(args[1], 1, 3);
+                customArray    = getArgArrayNumber(args[2], 1, 200);
+                picture        = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
+                if (picture) picture.startAnimation(animationType, true, customArray);
                 break;
             case 'PA_STOP' :
             case 'ピクチャのアニメーション終了':
@@ -208,7 +228,7 @@
             case 'PA_SET_CELL' :
             case 'ピクチャのアニメーションセル設定':
                 pictureNum    = getArgNumber(args[0], 1, 100);
-                cellNumber    = getArgNumber(args[1], 0, 100);
+                cellNumber    = getArgNumber(args[1], 1, 200);
                 wait          = getArgString(args[2]);
                 picture       = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
                 if (picture) {
@@ -275,6 +295,7 @@
         this._cellCount         = 0;
         this._frameCount        = 0;
         this._animationType     = 0;
+        this._customArray       = null;
         this._loopFlg           = false;
         this._direction         = '';
         this._fadeDuration      = 0;
@@ -291,13 +312,19 @@
      */
     Object.defineProperty(Game_Picture.prototype, 'cell', {
         get: function() {
-            if (this._animationType === 2) {
-                return this._cellNumber - 1 - Math.abs(this._cellCount - (this._cellNumber - 1));
+            switch (this._animationType) {
+                case 3:
+                    return (this._customArray[this._cellCount] - 1).clamp(0, this._cellNumber - 1);
+                case 2:
+                    return this._cellNumber - 1 - Math.abs(this._cellCount - (this._cellNumber - 1));
+                case 1:
+                    return this._cellCount;
+                default:
+                    return this._cellCount;
             }
-            return this._cellCount;
         },
         set: function(value) {
-            var newCellCount = value % (this._animationType === 2 ? (this._cellNumber - 1) * 2 : this._cellNumber);
+            var newCellCount = value % this.getCellNumber();
             if (this._cellCount !== newCellCount) {
                 this._prevCellCount     = this.cell;
                 this._fadeDurationCount = this._fadeDuration;
@@ -306,6 +333,19 @@
         },
         configurable: true
     });
+
+    Game_Picture.prototype.getCellNumber = function() {
+        switch (this._animationType) {
+            case 3:
+                return this._customArray.length;
+            case 2:
+                return (this._cellNumber - 1) * 2;
+            case 1:
+                return this._cellNumber;
+            default:
+                return this._cellNumber;
+        }
+    };
 
     var _Game_Picture_update = Game_Picture.prototype.update;
     Game_Picture.prototype.update = function() {
@@ -322,7 +362,7 @@
         this._frameCount = (this._frameCount + 1) % this._frameNumber;
         if (this._frameCount === 0) {
             this.addCellCount();
-            if (this.cell === 0 && !this._loopFlg) {
+            if (this._cellCount === 0 && !this._loopFlg) {
                 this._animationFlg  = false;
             }
         }
@@ -350,8 +390,9 @@
         this._fadeDuration = fadeDuration;
     };
 
-    Game_Picture.prototype.startAnimation = function(animationType, loopFlg) {
+    Game_Picture.prototype.startAnimation = function(animationType, loopFlg, customArray) {
         this._animationType = animationType;
+        this._customArray = customArray;
         this._animationFlg = true;
         this._loopFlg = loopFlg;
     };
@@ -384,7 +425,7 @@
     var _Sprite_Picture_update = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_Picture_update.call(this);
-        if (this.visible && this.isBitmapReady()) {
+        if (this.bitmap != null && this.isBitmapReady()) {
             this.updateAnimation(this, this.picture().cell);
             this.updateFading();
         }
@@ -438,9 +479,10 @@
         var cellNumber = this.picture()._cellNumber;
         var dir = this.picture()._direction;
         if (cellNumber > 1 && (dir === '連番' || dir === 'N')) {
+            var cellDigit = cellNumber.toString().length;
             this._bitmaps = [this.bitmap];
             for (var i = 1; i < cellNumber; i++) {
-                var filename = this._pictureName.substr(0, this._pictureName.length - 2) + i.padZero(2);
+                var filename = this._pictureName.substr(0, this._pictureName.length - cellDigit) + i.padZero(cellDigit);
                 this._bitmaps[i] = ImageManager.loadPicture(filename);
             }
         }
@@ -455,7 +497,7 @@
         if (dir === '連番' || dir === 'N') {
             result = this._bitmaps.every(function(bitmap) {
                 return bitmap.isReady();
-            })
+            });
         } else {
             result = this.bitmap.isReady();
         }
