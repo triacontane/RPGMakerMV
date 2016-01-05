@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/01/06 適用するとスキルやアイテムのヘルプウィンドウが表示されなくなる不具合を修正
 // 1.0.0 2015/11/13 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -173,8 +174,8 @@
 
     Window_FarewellCommand.prototype.windowWidth = function() {
         var bitmap = new Bitmap(1, 1);
-        return Math.max(bitmap.measureTextWidth(parameters['farewellYes'])
-            , bitmap.measureTextWidth(parameters['farewellNo'])) + this.standardPadding() * 2 + 8;
+        return Math.max(bitmap.measureTextWidth(parameters['farewellYes']),
+                bitmap.measureTextWidth(parameters['farewellNo'])) + this.standardPadding() * 2 + 8;
     };
 
     Window_FarewellCommand.prototype.numVisibleRows = function() {
@@ -188,7 +189,9 @@
 
     Window_FarewellCommand.prototype.update = function() {
         Window_Command.prototype.update.call(this);
-        this.visible ? this._helpWindow.setText(parameters['farewellDescription']) : this._helpWindow.clear();
+        if (this.active) {
+            this.visible ? this._helpWindow.setText(parameters['farewellDescription']) : this._helpWindow.clear();
+        }
     };
 
     Window_FarewellCommand.prototype.show = function() {
