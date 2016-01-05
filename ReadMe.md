@@ -92,6 +92,9 @@ Erase message window (and restore) when triggered
 27. [DynamicDatabase.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/DynamicDatabase.js)  
 データベースの各項目を動的な値に変更するプラグインです。変数やJavaScriptの関数を使ってより高度なデータベースを構築できます。  
 
+28. [BugFixParallelEventAndCharacter.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixParallelEventAndCharacter.js)  
+並列処理イベントで対象を「このイベント」にして「移動ルートの指定」「アニメーションの表示」「フキダシアイコンの表示」を実行中にセーブすると、セーブできずファイルが消失する現象を修正します。  
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
