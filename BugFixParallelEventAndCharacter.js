@@ -2,6 +2,7 @@
 // BugFixParallelEventAndCharacter.js
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/01/06 他のイベントを対象に動作指定しても「このイベント」が対象になってしまうバグを修正
 // 1.0.0 2016/01/06 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -27,20 +28,13 @@
 (function () {
     'use strict';
 
-    var _Game_Interpreter_clear = Game_Interpreter.prototype.clear;
-    Game_Interpreter.prototype.clear = function() {
-        _Game_Interpreter_clear.call(this);
-        this._characterId = 0;
-    };
-
     Object.defineProperty(Game_Interpreter.prototype, '_character', {
         get: function() {
             return this.character(this._characterId);
         },
         set: function(character) {
-            if (character == null) return;
-            this._characterId = (character instanceof Game_Player ? -1 : this._eventId);
-        },
-        configurable: false
+            this._characterId = character instanceof Game_Event ? this._characterId = character._eventId :
+                character instanceof Game_Player ? -1 : null;
+        }
     });
 })();
