@@ -95,6 +95,12 @@ Erase message window (and restore) when triggered
 28. [BugFixParallelEventAndCharacter.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixParallelEventAndCharacter.js)  
 並列処理イベントで対象を「このイベント」にして「移動ルートの指定」「アニメーションの表示」「フキダシアイコンの表示」を実行中にセーブすると、セーブできずファイルが消失する現象を修正します。  
 
+29. [PlayerShiftTurn.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PlayerShiftTurn.js)  
+指定されたキー（Shift or Ctrl or Tab）を押している間、プレイヤーを移動させずにその場で方向転換できるようにします。  
+
+30. [FlexibleBattleBgm.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/FlexibleBattleBgm.js)  
+敵グループごとに戦闘BGM設定できるようになります。この設定はシステムの戦闘BGMよりも優先され、設定されていない場合のみシステムの戦闘BGMが演奏されます。  
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
