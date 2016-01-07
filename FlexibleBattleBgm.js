@@ -147,6 +147,10 @@
         }
     };
 
+    //=============================================================================
+    // Game_System
+    //  敵グループごとの戦闘BGMの取得と設定処理を追加定義します。
+    //=============================================================================
     var _Game_System_battleBgm = Game_System.prototype.battleBgm;
     Game_System.prototype.battleBgm = function() {
         var id = $gameTroop._troopId;
