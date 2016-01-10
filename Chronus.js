@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/01/10 カレンダーウィンドウの表示位置をカスタマイズできる機能を追加
 // 1.1.1 2015/12/29 日の値に「1」を設定した場合に日付の表示がおかしくなる不具合を修正
 //                  一部のコードを最適化
 // 1.1.0 2015/12/01 天候と時間帯をゲーム変数に格納できるよう機能追加
@@ -93,6 +94,14 @@
  * YYYY:年 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
  * @default AMHH時 MI分
  *
+ * @param カレンダー表示X座標
+ * @desc カレンダーの表示 X 座標です。
+ * @default 0
+ *
+ * @param カレンダー表示Y座標
+ * @desc カレンダーの表示 Y 座標です。
+ * @default 0
+ *
  * @help ゲーム内で時刻と天候の概念を表現できるプラグインです。
  * 自動、マップ移動、戦闘で時間が経過し、時間と共に天候と色調が変化します。
  * これらの時間は調節可能で、またイベント中は時間の進行が停止します。
@@ -130,12 +139,29 @@
  */
 (function () {
     'use strict';
+    var pluginName = 'Chronus';
 
     //=============================================================================
     // PluginManager
     //  多言語とnullに対応したパラメータの取得を行います。
     //  このコードは自動生成され、全てのプラグインで同じものが使用されます。
     //=============================================================================
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
     var getCommandName = function (command) {
         return (command || '').toUpperCase();
     };
@@ -154,26 +180,7 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1], 10));
-        }.bind(window));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1], 10));
-        }.bind(window));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            var n = parseInt(arguments[1]);
-            var actor = n >= 1 ? $gameActors.actor(n) : null;
-            return actor ? actor.name() : '';
-        }.bind(window));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            var n = parseInt(arguments[1]);
-            var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
-            return actor ? actor.name() : '';
-        }.bind(window));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return text;
+        return Window_Base.prototype.convertEscapeCharacters.call(Window_Base, text);
     };
 
     //=============================================================================
@@ -370,11 +377,13 @@
     Window_Chronus.prototype.initialize = function() {
         var bitmap = new Bitmap();
         var pad = 8;
-        var width = Math.max(bitmap.measureTextWidth(this.chronus().getDateFormat(1))
-            , bitmap.measureTextWidth(this.chronus().getDateFormat(2)));
+        var width = Math.max(bitmap.measureTextWidth(this.chronus().getDateFormat(1)),
+            bitmap.measureTextWidth(this.chronus().getDateFormat(2)));
         Window_Base.prototype.initialize.call(this, 0, 0, width + pad * 2, 28 * 2 + pad * 2);
         this.padding = pad;
         this.contents = new Bitmap(this.width - this.padding * 2, this.height - this.padding * 2);
+        this.x = getParamNumber('カレンダー表示X座標');
+        this.y = getParamNumber('カレンダー表示Y座標');
         this.refresh();
     };
 
@@ -464,8 +473,9 @@ Game_Chronus.prototype.getParamOther = function(paramNames) {
 };
 
 Game_Chronus.prototype.getParamArrayString = function (paramNames) {
-    var values = this.getParamString(paramNames);
-    return (values || '').split(',');
+    var values = this.getParamString(paramNames).split(',');
+    for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
+    return values;
 };
 
 Game_Chronus.prototype.getParamArrayNumber = function (paramNames, min, max) {
