@@ -101,6 +101,9 @@ Erase message window (and restore) when triggered
 30. [FlexibleBattleBgm.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/FlexibleBattleBgm.js)  
 敵グループごとに戦闘BGM設定できるようになります。この設定はシステムの戦闘BGMよりも優先され、設定されていない場合のみシステムの戦闘BGMが演奏されます。  
 
+31. [CharacterGraphicExtend.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CharacterGraphicExtend.js)  
+イベントのグラフィック表示方法を拡張して多彩な表現を可能にします。ピクチャやアイコンをキャラクターグラフィックとして表示する、キャラクターの表示座標をピクセル単位で調整する、など。  
+
 ##ダウンロード方法 How to download
 まとめてダウンロードするには、Download ZIPボタンを押下してください。  
 個別にダウンロードするには、それぞれのファイルをクリックして「Raw」ボタンを右クリックし「名前を付けてリンク先を保存」を選択してください。  
