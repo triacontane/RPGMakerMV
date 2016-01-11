@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/01/11 キャラクターに回転角を設定する機能を追加
+//                  移動ルートの指定のスクリプトから、回転角、拡大率、位置調整ができる機能を追加
 // 1.0.0 2016/01/08 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -26,44 +28,44 @@
  * 指定したページが有効になった場合のグラフィックをピクチャ画像から取得します。
  * 拡張子は不要です。歩行アニメ待機アニメは無効化されます。
  *
- * 例：<CGピクチャ:1,Test>
+ * 例：<CGピクチャ:1,Test> or <CGPicture:1,Test>
  *
  * <CG敵キャラ:（ページ数）,（ファイル名）>
  * 指定したページが有効になった場合のグラフィックを敵キャラ画像から取得します。
  * 拡張子は不要です。歩行アニメ待機アニメは無効化されます。
  *
- * 例：<CG敵キャラ:1,Bat>
+ * 例：<CG敵キャラ:1,Bat> or <CGEnemy:1,Bat>
  *
  * <CGアイコン:（ページ数）,（インデックス）>
  * 指定したページが有効になった場合のグラフィックをアイコン画像から取得します。
  * 歩行アニメ待機アニメは無効化されます。
  *
- * 例：<CGアイコン:1,128>
+ * 例：<CGアイコン:1,128> or <CGIcon:1,128>
  *
  * <CGフェイス:（ページ数）,（ファイル名）（インデックス）>
  * 指定したページが有効になった場合のグラフィックをフェイス画像から取得します。
  * 歩行アニメ待機アニメは無効化されます。
  *
- * 例：<CGフェイス:1,Actor1,4>
+ * 例：<CGフェイス:1,Actor1,4> or <CGFace:1,Actor1,4>
  *
  * <CGタイル:（ページ数）,（横幅）,（高さ）>
  * 指定したページが有効になった場合のグラフィックをタイルマップ画像から取得します。
  * 横幅と高さを指定して本棚やベッドが一つのイベントで表現できます。
  * イベントの画像選択から一番左上のタイルを選択してください。
  *
- * 例：<CGタイル:1,2,2>
+ * 例：<CGタイル:1,2,2> or <CGTile:1,2,2>
  *
  * <CGシフト:（ページ数）,（X座標）,（Y座標）>
  * 指定したページが有効になった場合のグラフィック表示位置を
  * 指定したピクセル分ずらして表示します。
  *
- * 例：<CGシフト:1,16,-16>
+ * 例：<CGシフト:1,16,-16> or <CGShift:1,16,-16>
  *
  * <CGプライオリティ:（ページ数）,（プライオリティ）>
  * 指定したページが有効になった場合の表示優先度を設定します。
  * 1～9までの値を設定できます。
  *
- * 例：<CGプライオリティ:1,6>
+ * 例：<CGプライオリティ:1,6> or <CGPriority:1,6>
  *
  * ※それぞれのプライオリティの値
  * 0 : 下層タイル
@@ -80,13 +82,33 @@
  * 指定したページが有効になった場合のグラフィックの合成方法を設定します。
  * 0:通常 1:加算 2:減算
  *
- * 例：<CG合成方法:1,2>
+ * 例：<CG合成方法:1,2> or <CGBlendType:1,2>
  *
  * <CG拡大率:（ページ数）,（X拡大率）（Y拡大率）>
  * 指定したページが有効になった場合のグラフィックの拡大率を設定します。
  * 負の値を設定すると画像が反転します。
  *
- * 例：<CG拡大率:1,100,-100>
+ * 例：<CG拡大率:1,100,-100> or <CGScale:1,100,-100>
+ *
+ * <CG回転角:（ページ数）,（回転角）>
+ * 指定したページが有効になった場合のグラフィックの回転角を設定します。
+ * 回転の中心は、キャラクターの足下になります。0～360の範囲内で設定してください。
+ *
+ * 例：<CG回転角:1,180> or <CGAngle:1,180>
+ *
+ * 〇スクリプト（高度な設定。移動ルートの指定からスクリプトで実行）
+ *
+ * ・拡大率の設定
+ * this.setScale(（X座標）,（Y座標）);
+ * 例：this.setScale(100, 100);
+ *
+ * ・回転角の設定
+ * this.setAngle(（回転角）);
+ * 例：this.setAngle(180);
+ *
+ * ・ピクセル単位位置の設定
+ * this.shiftPosition(（X座標）,（Y座標）);
+ * 例：this.shiftPosition(24, 24);
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -137,6 +159,7 @@
         this._scaleY          = 100;
         this._tileBlockWidth  = 1;
         this._tileBlockHeight = 1;
+        this._angle           = 0;
         this.setBlendMode(0);
     };
 
@@ -160,6 +183,24 @@
         return this._scaleY;
     };
 
+    Game_CharacterBase.prototype.setScale = function(x, y) {
+        this._scaleX = x;
+        this._scaleY = y;
+    };
+
+    Game_CharacterBase.prototype.angle = function() {
+        return this._angle;
+    };
+
+    Game_CharacterBase.prototype.setAngle = function(angle) {
+        this._angle = angle;
+    };
+
+    Game_CharacterBase.prototype.shiftPosition = function(x, y) {
+        this._additionalX = x;
+        this._additionalY = y;
+    };
+
     Game_CharacterBase.prototype.tileBlockWidth = function() {
         return this._tileBlockWidth;
     };
@@ -172,8 +213,12 @@
         return (this._x - this.tileBlockWidth() / 2 <= x && this._x + this.tileBlockWidth() / 2 >= x) && this._y === y;
     };
 
-    Game_Event.prototype.getMetaCg = function(name) {
-        var params = getArgArrayString(this.event().meta['CG' + name]);
+    Game_Event.prototype.getMetaCg = function(names) {
+        if (!Array.isArray(names)) names = [names];
+        var params = null;
+        names.forEach(function(name) {
+            if (!params || params[0] === '') params = getArgArrayString(this.event().meta['CG' + name]);
+        }.bind(this));
         return params.length > 1 && (getArgNumber(params[0]) === this._pageIndex + 1 || params[0].toUpperCase() === 'A') ?
             params : null;
     };
@@ -182,16 +227,16 @@
     Game_Event.prototype.setupPageSettings = function() {
         this.clearCgInfo();
         _Game_Event_setupPageSettings.apply(this, arguments);
-        var cgParams = this.getMetaCg('シフト');
+        var cgParams = this.getMetaCg(['シフト', 'Shift']);
         if (cgParams) {
             this._additionalX = getArgNumber(cgParams[1]);
             this._additionalY = getArgNumber(cgParams[2]);
         }
-        cgParams = this.getMetaCg('プライオリティ');
+        cgParams = this.getMetaCg(['プライオリティ', 'Priority']);
         if (cgParams) {
             this._customPriority = getArgNumber(cgParams[1], 0, 10);
         }
-        cgParams = this.getMetaCg('合成方法');
+        cgParams = this.getMetaCg(['合成方法', 'BlendType']);
         if (cgParams) {
             switch (cgParams[1]) {
                 case '1' :
@@ -206,17 +251,21 @@
                     this.setBlendMode(0);
             }
         }
-        cgParams = this.getMetaCg('拡大率');
+        cgParams = this.getMetaCg(['拡大率', 'Scale']);
         if (cgParams) {
             this._scaleX = getArgNumber(cgParams[1]);
             this._scaleY = getArgNumber(cgParams[2]);
+        }
+        cgParams = this.getMetaCg(['回転角', 'Angle']);
+        if (cgParams) {
+            this._angle = getArgNumber(cgParams[1], 0, 360);
         }
     };
 
     var _Game_Event_setTileImage = Game_Event.prototype.setTileImage;
     Game_Event.prototype.setTileImage = function(tileId) {
         _Game_Event_setTileImage.apply(this, arguments);
-        var cgParams = this.getMetaCg('タイル');
+        var cgParams = this.getMetaCg(['タイル', 'Tile']);
         if (cgParams) {
             this._tileBlockWidth  = getArgNumber(cgParams[1]);
             this._tileBlockHeight = getArgNumber(cgParams[2]);
@@ -225,21 +274,21 @@
 
     var _Game_Event_setImage = Game_Event.prototype.setImage;
     Game_Event.prototype.setImage = function(characterName, characterIndex) {
-        var cgParams = this.getMetaCg('ピクチャ');
+        var cgParams = this.getMetaCg(['ピクチャ', 'Picture']);
         if (cgParams) {
             this._customResource = 'Picture';
             this._graphicColumns = 1;
             this._graphicRows    = 1;
             arguments[0]         = cgParams[1];
         }
-        cgParams = this.getMetaCg('敵キャラ');
+        cgParams = this.getMetaCg(['敵キャラ', 'Enemy']);
         if (cgParams) {
             this._customResource = 'Enemy';
             this._graphicColumns = 1;
             this._graphicRows    = 1;
             arguments[0]         = cgParams[1];
         }
-        cgParams = this.getMetaCg('アイコン');
+        cgParams = this.getMetaCg(['アイコン', 'Icon']);
         if (cgParams) {
             this._customResource = 'System';
             this._graphicColumns = 16;
@@ -247,7 +296,7 @@
             arguments[0]         = 'IconSet';
             arguments[1]         = getArgNumber(cgParams[1], 0, 16 * 20 -1);
         }
-        cgParams = this.getMetaCg('フェイス');
+        cgParams = this.getMetaCg(['フェイス', 'Face']);
         if (cgParams) {
             this._customResource = 'Face';
             this._graphicColumns = 4;
@@ -277,12 +326,14 @@
     Sprite_Character.prototype.updateBitmap = function() {
         if (this.isImageChanged()) this._customResource = this._character.customResource();
         _Sprite_Character_updateBitmap.apply(this, arguments);
-        this.updateScale();
+        this.updateExtend();
     };
 
-    Sprite_Character.prototype.updateScale = function() {
+    Sprite_Character.prototype.updateExtend = function() {
         this.scale.x = this._character.scaleX() / 100;
         this.scale.y = this._character.scaleY() / 100;
+        var angle = this._character.angle() * Math.PI / 180;
+        if (this.rotation !== angle) this.rotation = angle;
     };
 
     var _Sprite_Character_setFrame = Sprite_Character.prototype.setFrame;

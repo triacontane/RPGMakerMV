@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/01/11 テストプレー時のみ有効にできる設定を追加
+//                  すべてのフェードアウト・フェードインを一瞬で行う機能を追加
 // 1.0.0 2015/11/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -16,13 +18,21 @@
 /*:
  * @plugindesc マップ高速化プラグイン
  * @author トリアコンタン
- * 
+ *
+ * @param testPlayOnly
+ * @desc テストプレー時のみ本プラグインを適用します。
+ * @default OFF
+ *
  * @param showMessageRapid
  * @desc 制御文字にかかわらずメッセージを一瞬で表示する。
  * @default ON
  *
  * @param windowOpenRapid
  * @desc ウィンドウの開閉を一瞬で行います。
+ * @default ON
+ *
+ * @param fadeRapid
+ * @desc フェードイン・フェードアウトを一瞬で行います。
  * @default ON
  *
  * @help マップ上の様々なウェイトを排除してゲームを高速化します。
@@ -36,13 +46,31 @@
  *  このプラグインはもうあなたのものです。
  */
 (function () {
-    var parameters = PluginManager.parameters('MapRapid');
+    var pluginName = 'MapRapid';
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    if (getParamBoolean('testPlayOnly') && !Utils.isOptionValid('test')) {
+        return;
+    }
 
     //=============================================================================
     // Window_Message
     //  制御文字にかかわらずメッセージを一瞬で表示する。
     //=============================================================================
-    if (parameters['showMessageRapid'] === "ON") {
+    if (getParamBoolean('showMessageRapid')) {
         var _Window_Message_updateMessage = Window_Message.prototype.updateMessage;
         Window_Message.prototype.updateMessage = function() {
             this._lineShowFast = true;
@@ -54,17 +82,39 @@
     // Window_Base
     //  ウィンドウの開閉を一瞬で行います。
     //=============================================================================
-    if (parameters['windowOpenRapid'] === "ON") {
+    if (getParamBoolean('windowOpenRapid')) {
         var _Window_Base_updateOpen = Window_Base.prototype.updateOpen;
         Window_Base.prototype.updateOpen = function () {
-            this._opening && (this.openness = 255);
+            if (this._opening) this.openness = 255;
             _Window_Base_updateOpen.call(this);
         };
 
         var _Window_Base_updateClose = Window_Base.prototype.updateClose;
         Window_Base.prototype.updateClose = function () {
-            this._closing && (this.openness = 0);
+            if (this._closing) this.openness = 0;
             _Window_Base_updateClose.call(this);
+        };
+    }
+
+    //=============================================================================
+    // Scene_Base
+    //  フェードアウトを一瞬で行います。
+    //=============================================================================
+    if (getParamBoolean('fadeRapid')) {
+        Scene_Base.prototype.fadeSpeed = function () {
+            return 1;
+        };
+
+        var _Scene_Base_startFadeIn = Scene_Base.prototype.startFadeIn;
+        Scene_Base.prototype.startFadeIn = function(duration, white) {
+            arguments[0] = 1;
+            _Scene_Base_startFadeIn.apply(this, arguments);
+        };
+
+        var _Scene_Base_startFadeOut = Scene_Base.prototype.startFadeOut;
+        Scene_Base.prototype.startFadeOut = function(duration, white) {
+            arguments[0] = 1;
+            _Scene_Base_startFadeOut.apply(this, arguments);
         };
     }
 })();

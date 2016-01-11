@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/01/11 ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能を追加
+//                  タイトル画面を飛ばして最新のセーブファイルをロードする機能を追加
 // 1.0.2 2016/01/02 繰り返しリセットすると警告が出る問題の解消
 //                  ゲームウィンドウを端に寄せる機能(笑)を追加
 // 1.0.1 2015/12/19 F12キーでリセットする機能を追加（F5と同様の動作）
@@ -45,6 +47,15 @@
  * @desc ゲーム画面の左寄せを行うキーです(F1～F12)。
  * @default F11
  *
+ * @param ShowFPS
+ * @desc 初期状態で画面左上にFPSを表示します（FPS/MS/OFF）。
+ * @default OFF
+ *
+ * @param CutTitle
+ * @desc タイトル画面をとばして最新のセーブファイルをロードします。
+ * セーブファイルがなければニューゲームになります。（ON/OFF）
+ * @default OFF
+ *
  * @help Developer tools management plugin.
  * Run developer tools when error occur.
  * test play when valid.
@@ -79,17 +90,28 @@
  * @param 画面の左寄せキー
  * @desc ゲーム画面の左寄せを行うキーです(F1～F12)。
  * @default F11
+ *
+ * @param FPS表示
+ * @desc 初期状態で画面左上にFPSを表示します。（FPS/MS/OFF）
+ * @default OFF
+ *
+ * @param タイトルカット
+ * @desc タイトル画面をとばして最新のセーブファイルをロードします。
+ * セーブファイルがなければニューゲームになります。（ON/OFF）
+ * @default OFF
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * 快適な開発支援のために以下の機能を提供します。
  *
  * １．ゲーム開始時にデベロッパツールが自動で立ち上がる機能（最小化での起動も可能）
- * ２．エラー発生時やalert時にデベロッパツールがアクティブになる機能
+ * ２．エラー発生時やalert時にデベロッパツールが自動でアクティブになる機能
  * ３．ゲーム画面を常に前面に表示する機能
- * ４．ファンクションキーでリロードやゲーム画面の左寄せを行う機能
- * ５．alertの挙動をデベロッパツールへの出力に変更
+ * ４．ファンクションキー（カスタマイズ可能）でリロードやゲーム画面の左寄せを行う機能
+ * ５．alertの挙動をデベロッパツールへのログ出力に変更する機能
  * ６．テストプレー中にマップやイベントを修正して再保存すると、ゲーム画面に
  * 　　戻った瞬間に自動でリロードする機能
+ * ７．ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能
+ * ８．タイトル画面を飛ばして最新のセーブファイルをロードする機能
  *
  * このプラグインはテストプレー時のみ有効となります。
  *
@@ -107,7 +129,10 @@ var $gameCurrentWindow = null;
 (function () {
     'use strict';
     // テストプレー時以外は一切の機能を無効
-    if (!Utils.isOptionValid('test') || !Utils.isNwjs()) return;
+    if (!Utils.isOptionValid('test') || !Utils.isNwjs()) {
+        console.log('DevToolsManage is valid only test play!');
+        return;
+    }
 
     //=============================================================================
     // p
@@ -123,9 +148,9 @@ var $gameCurrentWindow = null;
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    var getParamString = function(paramNames) {
+    var getParamString = function(paramNames, upperFlg) {
         var value = getParamOther(paramNames);
-        return value == null ? '' : value;
+        return value == null ? '' : upperFlg ? value.toUpperCase() : value;
     };
 
     var getParamBoolean = function(paramNames) {
@@ -156,11 +181,13 @@ var $gameCurrentWindow = null;
     };
 
     var alwaysOnTop      = getParamBoolean(['AlwaysOnTop', '常に前面表示']);
-    var startupDevTool   = getParamString(['StartupDevTool', '開始時に起動']);
+    var startupDevTool   = getParamString(['StartupDevTool', '開始時に起動'], true);
     var devToolsPosition = getParamArrayNumber(['DevToolsPosition', 'デベロッパツール表示位置'], 0, 9999);
     var funcKeyMinimize  = getParamString(['FuncKeyMinimize', '最小化切替キー']);
     var funcKeyReload    = getParamString(['FuncKeyReload', 'リロードキー']);
     var funcKeyMoveEdge  = getParamString(['FuncKeyMoveEdge', '画面の左寄せキー']);
+    var showFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
+    var cutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
 
     //=============================================================================
     // SceneManager
@@ -170,6 +197,7 @@ var $gameCurrentWindow = null;
     SceneManager.initialize = function() {
         _SceneManager_initialize.call(this);
         $gameCurrentWindow = SceneManager.getNwjsWindow();
+        Graphics.setFPSMeter(showFPS);
     };
 
     var _SceneManager_catchException = SceneManager.catchException;
@@ -229,18 +257,65 @@ var $gameCurrentWindow = null;
     };
 
     Input.functionReverseMapper = {
-        'F1'  : 112,
-        'F2'  : 113,
-        'F3'  : 114,
-        'F4'  : 115,
-        'F5'  : 116,
-        'F6'  : 117,
-        'F7'  : 118,
-        'F8'  : 119,
-        'F9'  : 120,
-        'F10' : 121,
-        'F11' : 122,
-        'F12' : 123
+        F1  : 112,
+        F2  : 113,
+        F3  : 114,
+        F4  : 115,
+        F5  : 116,
+        F6  : 117,
+        F7  : 118,
+        F8  : 119,
+        F9  : 120,
+        F10 : 121,
+        F11 : 122,
+        F12 : 123
+    };
+
+    //=============================================================================
+    // Graphics
+    //  FPSの表示を設定します。
+    //=============================================================================
+    Graphics.setFPSMeter = function(type) {
+        this.hideFps();
+        switch (type) {
+            case 'FPS':
+                this._switchFPSMeter();
+                break;
+            case 'MS':
+                this._switchFPSMeter();
+                this._switchFPSMeter();
+                break;
+        }
+    };
+
+    //=============================================================================
+    // Scene_Boot
+    //  タイトル画面をとばしてマップ画面に遷移します。
+    //=============================================================================
+    var _Scene_Boot_start = Scene_Boot.prototype.start;
+    Scene_Boot.prototype.start = function() {
+        _Scene_Boot_start.apply(this, arguments);
+        if (cutTitle) this.goToLatestContinue() || this.goToNewGame();
+    };
+
+    Scene_Boot.prototype.goToNewGame = function() {
+        DataManager.setupNewGame();
+        SceneManager.goto(Scene_Map);
+    };
+
+    Scene_Boot.prototype.goToLatestContinue = function() {
+        if (DataManager.isAnySavefileExists()) {
+            if (DataManager.loadGame(DataManager.latestSavefileId())) {
+                Scene_Load.prototype.reloadMapIfUpdated.call(Scene_Load);
+                SceneManager.goto(Scene_Map);
+                $gameSystem.onAfterLoad();
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     };
 
     //=============================================================================
