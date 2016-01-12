@@ -51,8 +51,11 @@
  *  　　1 : クリックした場合
  *      2 : 右クリックした場合
  *      3 : 長押しした場合
- *      4 : マウスを重ねた場合
- *      5 : マウスを放した場合
+ *      4 : マウスをピクチャに重ねた場合
+ *      5 : マウスをピクチャから放した場合
+ *      6 : クリックを解放（リリース）した場合
+ *      7 : クリックした場合（かつ長押しの際の繰り返しを考慮）
+ *      8 :
  *
  *  P_CALL_CE_REMOVE [ピクチャ番号] :
  *      ピクチャとコモンイベントの関連づけを解除します。
@@ -263,6 +266,7 @@
     Game_Screen.prototype.initialize = function() {
         _Game_Screen_initialize.call(this);
         this._pictureCidArray = [];
+        this._clickRectArray = [];
     };
 
     Game_Screen.prototype.setPictureCallCommon = function(pictureId, commonId, trigger) {
