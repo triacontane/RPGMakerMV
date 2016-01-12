@@ -14,6 +14,31 @@
 //=============================================================================
 
 /*:
+ * @plugindesc Region set terrain attribute
+ * @author triacontane
+ *
+ * @param LadderRegionId
+ * @desc Region ID of ladder attribute
+ * @default 0
+ *
+ * @param BushRegionId
+ * @desc Region ID of bush attribute
+ * @default 0
+ *
+ * @param CounterRegionId
+ * @desc Region ID of counter attribute
+ * @default 0
+ *
+ * @param DamageFloorRegionId
+ * @desc Region ID of damage floor attribute
+ * @default 0
+ *
+ * @help Region set terrain attribute
+ * Ladder, Bush, Counter, DamageFloor
+ *
+ * This plugin is released under the MIT License.
+ */
+/*:ja
  * @plugindesc リージョンにタイル属性を付与するプラグイン
  * @author トリアコンタン
  *
@@ -69,26 +94,26 @@
 
     var _Game_Map_isLadder = Game_Map.prototype.isLadder;
     Game_Map.prototype.isLadder = function(x, y) {
-        return _Game_Map_isLadder.apply(this, arguments) ||
-            (this.isValid(x, y) && this.regionId(x, y) === (getParamNumber('梯子リージョンID') || -1));
+        return _Game_Map_isLadder.apply(this, arguments) || (this.isValid(x, y) && this.regionId(x, y) ===
+            (getParamNumber(['梯子リージョンID', 'LadderRegionId']) || -1));
     };
 
     var _Game_Map_isBush = Game_Map.prototype.isBush;
     Game_Map.prototype.isBush = function(x, y) {
-        return _Game_Map_isBush.apply(this, arguments) ||
-            (this.isValid(x, y) && this.regionId(x, y) === (getParamNumber('茂みリージョンID') || -1));
+        return _Game_Map_isBush.apply(this, arguments) || (this.isValid(x, y) && this.regionId(x, y) ===
+            (getParamNumber(['茂みリージョンID', 'BushRegionId']) || -1));
     };
 
     var _Game_Map_isCounter = Game_Map.prototype.isCounter;
     Game_Map.prototype.isCounter = function(x, y) {
-        return _Game_Map_isCounter.apply(this, arguments) ||
-            (this.isValid(x, y) && this.regionId(x, y) === (getParamNumber('カウンターリージョンID') || -1));
+        return _Game_Map_isCounter.apply(this, arguments) || (this.isValid(x, y) && this.regionId(x, y) ===
+            (getParamNumber(['カウンターリージョンID', 'CounterRegionId']) || -1));
     };
 
     var _Game_Map_isDamageFloor = Game_Map.prototype.isDamageFloor;
     Game_Map.prototype.isDamageFloor = function(x, y) {
-        return _Game_Map_isDamageFloor.apply(this, arguments) ||
-            (this.isValid(x, y) && this.regionId(x, y) === (getParamNumber('ダメージ床リージョンID') || -1));
+        return _Game_Map_isDamageFloor.apply(this, arguments) || (this.isValid(x, y) && this.regionId(x, y) ===
+            (getParamNumber(['ダメージ床リージョンID', 'DamageFloorRegionId']) || -1));
     };
 })();
 
