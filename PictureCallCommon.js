@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/01/14 ホイールクリック、ダブルクリックなどトリガーを10種類に拡充
 // 1.1.3 2016/01/02 競合対策
 // 1.1.2 2015/12/20 長押しイベント発生時に1秒間のインターバルを設定するよう仕様変更
 // 1.1.1 2015/12/10 ピクチャを消去後にマウスオーバーするとエラーになる現象を修正
@@ -48,18 +49,22 @@
  *  P_CALL_CE [ピクチャ番号] [コモンイベントID] [トリガー]:
  *      ピクチャがクリックされたときに呼び出されるコモンイベントを関連づけます。
  *  　　トリガーは以下の通りです。(省略すると 1 になります)
- *  　　1 : クリックした場合
- *      2 : 右クリックした場合
- *      3 : 長押しした場合
- *      4 : マウスをピクチャに重ねた場合
- *      5 : マウスをピクチャから放した場合
- *      6 : クリックを解放（リリース）した場合
- *      7 : クリックした場合（かつ長押しの際の繰り返しを考慮）
- *      8 :
+ *  　　1  : クリックした場合
+ *      2  : 右クリックした場合
+ *      3  : 長押しした場合
+ *      4  : マウスをピクチャに重ねた場合
+ *      5  : マウスをピクチャから放した場合
+ *      6  : クリックを解放（リリース）した場合
+ *      7  : クリックした場合（かつ長押しの際の繰り返しを考慮）
+ *      8  : クリックしている間ずっと
+ *      9  : ホイールクリックした場合（PCの場合のみ有効）
+ *      10 : ダブルクリックした場合
+ *  例：P_CALL_CE 1 3 7
  *
  *  P_CALL_CE_REMOVE [ピクチャ番号] :
  *      ピクチャとコモンイベントの関連づけを解除します。
  *      全てのトリガーが削除対象です。
+ *  例：P_CALL_CE_REMOVE 1
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -85,11 +90,16 @@
  *  P_CALL_CE [Picture number] [Common event ID] [Trigger]:
  *      When picture was clicked, assign common event id.
  *  　　Trigger are As below(if omit, It is specified to 1)
- *  　　1 : Left click
- *      2 : Right click
- *      3 : Long click
- *      4 : Mouse over
- *      5 : Mouse out
+ *  　　1  : Left click
+ *      2  : Right click
+ *      3  : Long click
+ *      4  : Mouse over
+ *      5  : Mouse out
+ *      6  : Mouse release
+ *      7  : Mouse repeat click
+ *      8  : Mouse press
+ *      9  : Wheel click
+ *      10 : Double click
  *
  *  P_CALL_CE_REMOVE [Picture number] :
  *      break relation from picture to common event.
@@ -99,75 +109,40 @@
 (function () {
     var pluginName = 'PictureCallCommon';
 
-    //=============================================================================
-    // PluginManager
-    //  多言語とnullに対応したパラメータの取得を行います。
-    //  このコードは自動生成され、全てのプラグインで同じものが使用されます。
-    //=============================================================================
-    PluginManager.getParamBoolean = function(pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
         return (value || '').toUpperCase() == 'ON';
     };
 
-    PluginManager.getParamOther = function(pluginName, paramEngName, paramJpgName) {
-        var value = this.parameters(pluginName)[paramEngName];
-        if (value == null) value = this.parameters(pluginName)[paramJpgName];
-        return value;
-    };
-
-    PluginManager.getParamNumber = function (pluginName, paramEngName, paramJpgName, min, max) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        if (arguments.length <= 3) min = -Infinity;
-        if (arguments.length <= 4) max = Infinity;
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    PluginManager.getCommandName = function(command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
-    PluginManager.checkCommandName = function(command, value) {
-        return this.getCommandName(command) === value;
-    };
-
-    PluginManager.getArgString = function (index, args) {
-        return this.convertEscapeCharacters(args[index]);
-    };
-
-    PluginManager.getArgNumber = function (index, args, min, max) {
+    var getArgNumber = function (arg, min, max) {
         if (arguments.length <= 2) min = -Infinity;
         if (arguments.length <= 3) max = Infinity;
-        return (parseInt(this.convertEscapeCharacters(args[index]), 10) || 0).clamp(min, max);
+        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
     };
 
-    PluginManager.convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            return this.actorName(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            return this.partyMemberName(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return text;
-    };
-
-    PluginManager.actorName = function(n) {
-        var actor = n >= 1 ? $gameActors.actor(n) : null;
-        return actor ? actor.name() : '';
-    };
-
-    PluginManager.partyMemberName = function(n) {
-        var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
-        return actor ? actor.name() : '';
+        return Window_Base.prototype.convertEscapeCharacters.call(Window_Base, text);
     };
 
     if (!Object.prototype.hasOwnProperty('iterate')) {
@@ -190,15 +165,15 @@
         var pictureId;
         var commonId;
         var trigger;
-        switch (PluginManager.getCommandName(command)) {
+        switch (getCommandName(command)) {
             case 'P_CALL_CE' :
-                pictureId = PluginManager.getArgNumber(0, args, 1, 100);
-                commonId  = PluginManager.getArgNumber(1, args, 1, 100);
-                trigger   = PluginManager.getArgNumber(2, args, 1, 8);
+                pictureId = getArgNumber(args[0], 1, 100);
+                commonId  = getArgNumber(args[1], 1, 100);
+                trigger   = getArgNumber(args[2], 1, 8);
                 $gameScreen.setPictureCallCommon(pictureId, commonId, trigger);
                 break;
             case 'P_CALL_CE_REMOVE' :
-                pictureId = PluginManager.getArgNumber(0, args, 1, 100);
+                pictureId = getArgNumber(args[0], 1, 100);
                 $gameScreen.setPictureRemoveCommon(pictureId);
                 break;
         }
@@ -211,9 +186,26 @@
     var _Game_Temp_initialize = Game_Temp.prototype.initialize;
     Game_Temp.prototype.initialize = function() {
         _Game_Temp_initialize.call(this);
-        this._pictureCommonId = 0;
-        this._pictureNum = 0;
+        this.clearPictureCallInfo();
     };
+
+    Game_Temp.prototype.clearPictureCallInfo = function() {
+        this.setPictureCallInfo(0, 0);
+    };
+
+    Game_Temp.prototype.setPictureCallInfo = function(pictureCommonId, pictureNum) {
+        this._pictureCommonId = pictureCommonId;
+        this._pictureNum      = pictureNum;
+    };
+
+    Game_Temp.prototype.pictureCommonId = function() {
+        return this._pictureCommonId;
+    };
+
+    Game_Temp.prototype.pictureNum = function() {
+        return this._pictureNum;
+    };
+
 
     //=============================================================================
     // Game_Map
@@ -230,14 +222,12 @@
         var event    = $dataCommonEvents[commonId];
         var result   = false;
         if (commonId > 0 && !this.isEventRunning() && event) {
-            var gameValueNum = PluginManager.getParamNumber(pluginName,
-                'GameVariablePictureNum', 'ピクチャ番号の変数番号', 0, 5000);
-            if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp._pictureNum);
+            var gameValueNum = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0, 5000);
+            if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp.pictureNum());
             this._interpreter.setup(event.list);
             result = true;
         }
-        $gameTemp._pictureCommonId = 0;
-        $gameTemp._pictureNum = 0;
+        $gameTemp.clearPictureCallInfo();
         return result;
     };
 
@@ -246,16 +236,14 @@
     //  ピクチャがタッチされたときのコモンイベント呼び出し処理を追加定義します。
     //=============================================================================
     Game_Troop.prototype.setupPictureCommonEvent = function() {
-        var commonId = $gameTemp._pictureCommonId;
+        var commonId = $gameTemp.pictureCommonId();
         var event = $dataCommonEvents[commonId];
         if (commonId > 0 && !this.isEventRunning() && event) {
-            var gameValueNum = PluginManager.getParamNumber(pluginName,
-                'GameVariablePictureNum', 'ピクチャ番号の変数番号', 0, 5000);
-            if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp._pictureNum);
+            var gameValueNum = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0, 5000);
+            if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp.pictureNum());
             this._interpreter.setup(event.list);
         }
-        $gameTemp._pictureCommonId = 0;
-        $gameTemp._pictureNum = 0;
+        $gameTemp.clearPictureCallInfo();
     };
 
     //=============================================================================
@@ -266,7 +254,6 @@
     Game_Screen.prototype.initialize = function() {
         _Game_Screen_initialize.call(this);
         this._pictureCidArray = [];
-        this._clickRectArray = [];
     };
 
     Game_Screen.prototype.setPictureCallCommon = function(pictureId, commonId, trigger) {
@@ -278,6 +265,11 @@
     Game_Screen.prototype.setPictureRemoveCommon = function(pictureId) {
         var realPictureId = this.realPictureId(pictureId);
         this._pictureCidArray[realPictureId] = [];
+    };
+
+    Game_Screen.prototype.getPictureCid = function(pictureId) {
+        var realPictureId = this.realPictureId(pictureId);
+        return this._pictureCidArray[realPictureId];
     };
 
     //=============================================================================
@@ -296,7 +288,7 @@
 
     var _Scene_Map_isMapTouchOk = Scene_Map.prototype.isMapTouchOk;
     Scene_Map.prototype.isMapTouchOk = function() {
-        return _Scene_Map_isMapTouchOk.call(this) && $gameTemp._pictureCommonId === 0;
+        return _Scene_Map_isMapTouchOk.call(this) && $gameTemp.pictureCommonId() === 0;
     };
 
     //=============================================================================
@@ -345,7 +337,7 @@
     var _Sprite_Picture_initialize = Sprite_Picture.prototype.initialize;
     Sprite_Picture.prototype.initialize = function(pictureId) {
         _Sprite_Picture_initialize.call(this, pictureId);
-        this._triggerHandler    = [];
+        this._triggerHandler = [];
         this._triggerHandler[1]        = this.isTriggered;
         this._triggerHandler[2]        = this.isCancelled;
         this._triggerHandler[3]        = this.isLongPressed;
@@ -354,11 +346,12 @@
         this._triggerHandler[6]        = this.isReleased;
         this._triggerHandler[7]        = this.isRepeated;
         this._triggerHandler[8]        = this.isPressed;
+        this._triggerHandler[9]        = this.isWheelTriggered;
+        this._triggerHandler[10]       = this.isDoubleTriggered;
         this._onMouse                  = false;
         this._outMouse                 = false;
         this._wasOnMouse               = false;
-        this._transparentConsideration =
-            PluginManager.getParamBoolean(pluginName, 'TransparentConsideration', '透明色を考慮');
+        this._transparentConsideration = getParamBoolean(['TransparentConsideration', '透明色を考慮']);
     };
 
     var _Sprite_update = Sprite_Picture.prototype.update;
@@ -366,7 +359,7 @@
         _Sprite_update.call(this);
         this._onMouse  = false;
         this._outMouse = false;
-        var commandIds = $gameScreen._pictureCidArray[$gameScreen.realPictureId(this._pictureId)];
+        var commandIds = $gameScreen.getPictureCid(this._pictureId);
         if (commandIds == null || (commandIds[4] == null && commandIds[5] == null)) return;
         if (TouchInput.isMoved()) {
             if (this.isTouchable() && this.isTouchPosInRect() && !this.isTransparent()) {
@@ -384,13 +377,12 @@
     };
 
     Sprite_Picture.prototype.callTouch = function() {
-        var commandIds = $gameScreen._pictureCidArray[$gameScreen.realPictureId(this._pictureId)];
+        var commandIds = $gameScreen.getPictureCid(this._pictureId);
         if (commandIds == null) return;
         for (var i = 1; i <= this._triggerHandler.length; i++) {
             if (commandIds[i] != null && this._triggerHandler[i].call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
                 if (i === 3) TouchInput._pressedTime = -60;
-                $gameTemp._pictureCommonId = commandIds[i];
-                $gameTemp._pictureNum = this._pictureId;
+                $gameTemp.setPictureCallInfo(commandIds[i], this._pictureId);
             }
         }
     };
@@ -419,23 +411,19 @@
     };
 
     Sprite_Picture.prototype.minX = function() {
-        var width = this.screenWidth();
-        return Math.min(this.screenX(), this.screenX() + width);
+        return Math.min(this.screenX(), this.screenX() + this.screenWidth());
     };
 
     Sprite_Picture.prototype.minY = function() {
-        var height = this.screenHeight();
-        return Math.min(this.screenY(), this.screenY() + height);
+        return Math.min(this.screenY(), this.screenY() + this.screenHeight());
     };
 
     Sprite_Picture.prototype.maxX = function() {
-        var width = this.screenWidth();
-        return Math.max(this.screenX(), this.screenX() + width);
+        return Math.max(this.screenX(), this.screenX() + this.screenWidth());
     };
 
     Sprite_Picture.prototype.maxY = function() {
-        var height = this.screenHeight();
-        return Math.max(this.screenY(), this.screenY() + height);
+        return Math.max(this.screenY(), this.screenY() + this.screenHeight());
     };
 
     Sprite_Picture.prototype.isTouchPosInRect = function () {
@@ -481,17 +469,74 @@
         return this._outMouse;
     };
 
+    Sprite_Picture.prototype.isWheelTriggered = function() {
+        return this.isTouchEvent(TouchInput.isWheelTriggered);
+    };
+
+    Sprite_Picture.prototype.isDoubleTriggered = function() {
+        return this.isTouchEvent(TouchInput.isDoubleTriggered);
+    };
+
     Sprite_Picture.prototype.isTouchEvent = function(triggerFunc) {
         return this.isTouchable() && triggerFunc.call(TouchInput) && this.isTouchPosInRect();
     };
 
     //=============================================================================
     // TouchInput
-    //  ポインタ移動時にマウス位置の記録を常に行うように元の処理を上書き
+    //  ホイールクリック、ダブルクリック等を実装
     //=============================================================================
+    TouchInput.keyDoubleClickInterval = 300;
+
     TouchInput._onMouseMove = function(event) {
         var x = Graphics.pageToCanvasX(event.pageX);
         var y = Graphics.pageToCanvasY(event.pageY);
         this._onMove(x, y);
+    };
+
+    var _TouchInput_clear = TouchInput.clear;
+    TouchInput.clear = function() {
+        _TouchInput_clear.apply(this, arguments);
+        this._events.wheelTriggered = false;
+        this._events.doubleTriggered = false;
+    };
+
+    var _TouchInput_update = TouchInput.update;
+    TouchInput.update = function() {
+        _TouchInput_update.apply(this, arguments);
+        this._wheelTriggered = this._events.wheelTriggered;
+        this._doubleTriggered = this._events.doubleTriggered;
+        this._events.wheelTriggered = false;
+        this._events.doubleTriggered = false;
+    };
+
+    TouchInput.isWheelTriggered = function() {
+        return this._wheelTriggered;
+    };
+
+    TouchInput.isDoubleTriggered = function() {
+        return this._doubleTriggered;
+    };
+
+    var _TouchInput_onMiddleButtonDown = TouchInput._onMiddleButtonDown;
+    TouchInput._onMiddleButtonDown = function(event) {
+        _TouchInput_onMiddleButtonDown.apply(this, arguments);
+        var x = Graphics.pageToCanvasX(event.pageX);
+        var y = Graphics.pageToCanvasY(event.pageY);
+        if (Graphics.isInsideCanvas(x, y)) {
+            this._onWheelTrigger(x, y);
+        }
+    };
+
+    TouchInput._onWheelTrigger = function(x, y) {
+        this._events.wheelTriggered = true;
+        this._x = x;
+        this._y = y;
+    };
+
+    var _TouchInput_onTrigger = TouchInput._onTrigger;
+    TouchInput._onTrigger = function(x, y) {
+        if (this._date && Date.now() - this._date < this.keyDoubleClickInterval)
+            this._events.doubleTriggered = true;
+        _TouchInput_onTrigger.apply(this, arguments);
     };
 })();

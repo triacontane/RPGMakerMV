@@ -5,7 +5,11 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
-###2016/01/13 : リージョンへのタイル属性付与プラグイン[RegionTerrain.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RegionTerrain.js)を追加しました。
+###2016/01/14 : ピクチャのボタン化プラグイン[PictureCallCommon.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureCallCommon.js)
+を更新しました。  
+1. トリガーにホイールクリックやダブルクリックなどを追加しました。全部で10種類のトリガーから選択できます。
+
+###2016/01/13 : リージョンへのタイル属性付与プラグイン[RegionTerrain.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RegionTerrain.js)を追加しました。  
 1. パラメータに指定したリージョンにタイル属性（梯子、茂み、カウンター、ダメージ床）を付与します。  
 
 ###2016/01/12 : マップ高速化プラグイン[MapRapid.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MapRapid.js)を更新しました。  
