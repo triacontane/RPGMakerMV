@@ -5,8 +5,7 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
-###2016/01/14 : ピクチャのボタン化プラグイン[PictureCallCommon.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureCallCommon.js)
-を更新しました。  
+###2016/01/14 : ピクチャのボタン化プラグイン[PictureCallCommon.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureCallCommon.js)を更新しました。  
 1. トリガーにホイールクリックやダブルクリックなどを追加しました。全部で10種類のトリガーから選択できます。
 
 ###2016/01/13 : リージョンへのタイル属性付与プラグイン[RegionTerrain.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RegionTerrain.js)を追加しました。  
