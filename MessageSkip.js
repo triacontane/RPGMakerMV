@@ -23,9 +23,25 @@
  * @default S
  *
  * @param オートキー
- * @desc メッセージスキップに該当するキー
+ * @desc メッセージオートに該当するキー
  * (キーのアルファベット/shift/control/tab)
  * @default A
+ *
+ * @param スキップアイコン
+ * @desc メッセージスキップ中にウィンドウ右下に表示されるアイコン
+ * @default 140
+ *
+ * @param オートアイコン
+ * @desc メッセージオート中にウィンドウ右下に表示されるアイコン
+ * @default 75
+ *
+ * @param オート待機フレーム
+ * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数
+ * @default 240
+ *
+ * @param イベント終了で解除
+ * @desc イベント終了と共にスキップ、オート状態を解除します。(ON/OFF)
+ * @default ON
  *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
  *
@@ -43,6 +59,18 @@
     var getParamString = function (paramNames, upperFlg) {
         var value = getParamOther(paramNames);
         return value == null ? '' : upperFlg ? value.toUpperCase() : value;
+    };
+
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
     };
 
     var getParamOther = function (paramNames) {
@@ -87,48 +115,114 @@
             autoKeyName = Input.keyMapper[autoKeyCode];
     }
 
+    var _Game_Message_initialize = Game_Message.prototype.initialize;
+    Game_Message.prototype.initialize = function() {
+        _Game_Message_initialize.apply(this, arguments);
+        this.clearSkipInfo();
+        this._autoClearSkip = getParamBoolean('イベント終了で解除');
+    };
+
+    Game_Message.prototype.toggleSkip = function() {
+        this.setSkipFlg(!this._skipFlg);
+        if (this._skipFlg) this._autoFlg = false;
+    };
+
+    Game_Message.prototype.toggleAuto = function() {
+        if (!this._skipFlg) this.setAutoFlg(!this._autoFlg);
+    };
+
+    Game_Message.prototype.skipFlg = function() {
+        return this._skipFlg;
+    };
+
+    Game_Message.prototype.autoFlg = function() {
+        return this._autoFlg;
+    };
+
+    Game_Message.prototype.setSkipFlg = function(value) {
+        this._skipFlg = value;
+    };
+
+    Game_Message.prototype.setAutoFlg = function(value) {
+        this._autoFlg = value;
+    };
+
+    Game_Message.prototype.clearSkipInfo = function() {
+        this._skipFlg = false;
+        this._autoFlg = false;
+    };
+
+    Game_Message.prototype.terminateEvent = function() {
+        if (this._autoClearSkip) this.clearSkipInfo();
+    };
+
+    var _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
+    Game_Interpreter.prototype.terminate = function() {
+        _Game_Interpreter_terminate.apply(this, arguments);
+        $gameMessage.terminateEvent();
+    };
+
     var _Window_Message_initialize = Window_Message.prototype.initialize;
     Window_Message.prototype.initialize = function() {
         _Window_Message_initialize.apply(this, arguments);
         this._icon = new Sprite_Frame(16, 20, ImageManager.loadSystem('IconSet'), -1);
-        this._icon.x = this.width - 48;
-        this._icon.y = this.height - 48;
+        this._icon.x = this.width  - this._icon.width;
+        this._icon.y = this.height - this._icon.height;
+        this._icon.flash = true;
         this.addChild(this._icon);
     };
 
     var _Window_Message_startMessage = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
-        this._messageAutoCount = 60 * 2;
+        this._messageAutoCount = getParamNumber('オート待機フレーム', 1);
+    };
+
+    var _Window_Message_update = Window_Message.prototype.update;
+    Window_Message.prototype.update = function() {
+        this.updateAutoIcon();
+        return _Window_Message_update.apply(this, arguments);
+    };
+
+    Window_Message.prototype.updateAutoIcon = function() {
+        if (this.messageSkip() && this.openness === 255) {
+            this._icon.refresh(getParamNumber('スキップアイコン'));
+            this._icon.flashSpeed = 16;
+        } else if (this.messageAuto() && this.openness === 255) {
+            this._icon.refresh(getParamNumber('オートアイコン'));
+            this._icon.flashSpeed = 2;
+        } else {
+            this._icon.refresh(0);
+        }
     };
 
     var _Window_Message_updateWait = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
-        this.updateMessageSkip();
-        this.updateMessageAuto();
+        this.updateSkipAuto();
         return _Window_Message_updateWait.apply(this, arguments);
     };
 
-    Window_Message.prototype.updateMessageSkip = function() {
+    Window_Message.prototype.updateSkipAuto = function() {
         if (this.isAnySubWindowActive()) {
-            this._messageSkip = false;
-            this._icon.refresh(-1);
+            $gameMessage.clearSkipInfo();
         } else if (this.isTriggeredMessageSkip()) {
-            this._messageSkip = !this._messageSkip;
-            this._icon.refresh(this._messageSkip ? 76 : -1);
+            $gameMessage.toggleSkip();
+        } else if (this.isTriggeredMessageAuto()) {
+            $gameMessage.toggleAuto();
         }
     };
 
-    Window_Message.prototype.updateMessageAuto = function() {
-        if (this.isTriggeredMessageAuto()) {
-            this._messageAuto = (!this._messageSkip && !this._messageAuto);
-            this._icon.refresh(this._messageAuto ? 77 : -1);
-        }
+    Window_Message.prototype.messageAuto = function() {
+        return $gameMessage.autoFlg();
+    };
+
+    Window_Message.prototype.messageSkip = function() {
+        return $gameMessage.skipFlg();
     };
 
     var _Window_Message_updateInput = Window_Message.prototype.updateInput;
     Window_Message.prototype.updateInput = function() {
-        if (this._messageAuto && this._messageAutoCount > 0) this._messageAutoCount--;
+        if (this.messageAuto() && this._messageAutoCount > 0) this._messageAutoCount--;
         return _Window_Message_updateInput.apply(this, arguments);
     };
 
@@ -142,14 +236,14 @@
 
     var _Window_Message_isTriggered = Window_Message.prototype.isTriggered;
     Window_Message.prototype.isTriggered = function() {
-        return _Window_Message_isTriggered.apply(this, arguments) || this._messageSkip ||
-            (this._messageAuto && this._messageAutoCount <= 0);
+        return _Window_Message_isTriggered.apply(this, arguments) || this.messageSkip() ||
+            (this.messageAuto() && this._messageAutoCount <= 0);
     };
 
     var _Window_Message_startPause = Window_Message.prototype.startPause;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
-        if (this._messageSkip) this.startWait(2);
+        if (this.messageSkip()) this.startWait(2);
     };
 
     function Sprite_Frame() {
@@ -164,6 +258,11 @@
         this._column = column;
         this._row = row;
         this.bitmap = bitmap;
+        this.anchor.x = 0.5;
+        this.anchor.y = 0.5;
+        this.flash = false;
+        this.flashSpeed = 2;
+        this._flashAlpha = 0;
         this.refresh(index ? index : 0);
     };
 
@@ -172,6 +271,14 @@
         var w = Math.floor(this.bitmap.width / this._column);
         var h = Math.floor(this.bitmap.height / this._row);
         this.setFrame((index % this._column) * w, Math.floor(index / this._column) * h, w, h);
+    };
+
+    Sprite_Frame.prototype.update = function() {
+        if (this.flash) {
+            if (this._flashAlpha <= -64) this._flashAlpha = 192;
+            this.setBlendColor([255, 255, 255, this._flashAlpha]);
+            this._flashAlpha -= this.flashSpeed;
+        }
     };
 })();
 
