@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/01/16 ウィンドウを最前面に表示できる機能を追加
 // 1.0.0 2015/11/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -32,6 +33,10 @@
  * @param GameVariablesHeight
  * @desc Game variable number that stores the window height
  * @default 4
+ *
+ * @param AlwaysOnTop
+ * @desc Always on top
+ * @default OFF
  *
  * @help Make dynamic empty window in any position.
  * This plugin is released under the MIT License.
@@ -62,6 +67,10 @@
  * @desc 高さを格納するゲーム変数の番号
  * @default 4
  *
+ * @param 最前面に表示
+ * @desc ウィンドウを画面の最前面に表示します。
+ * @default OFF
+ *
  * @help 空のウィンドウを画面上の指定位置に表示します。
  * 最大10個までのウィンドウを表示可能。
  * 表示座標はあらかじめ指定したゲーム変数に格納しておくか、
@@ -88,60 +97,97 @@
  *  このプラグインはもうあなたのものです。
  */
 (function () {
-    var paramName = 'DWindow';
+    var pluginName = 'DWindow';
 
-    PluginManager.getParamNumber = function(pluginName, paramEngName, paramJpgName, min, max) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        if (arguments.length <= 3) min = -Infinity;
-        if (arguments.length <= 4) max = Infinity;
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    PluginManager.getParamOther = function(pluginName, paramEngName, paramJpgName) {
-        var value = this.parameters(pluginName)[paramEngName];
-        if (value == null) value = this.parameters(pluginName)[paramJpgName];
-        return value;
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getArgNumber = function (arg, min, max) {
+        if (arguments.length <= 2) min = -Infinity;
+        if (arguments.length <= 3) max = Infinity;
+        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    };
+
+    var convertEscapeCharacters = function(text) {
+        if (text == null) text = '';
+        var window = SceneManager._scene._windowLayer.children[0];
+        return window ? window.convertEscapeCharacters(text) : text;
     };
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンド[D_WINDOW_DRAW]などを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
+        try {
+            this.pluginCommandDWindow(command, args);
+        } catch (e) {
+            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
+                var window = require('nw.gui').Window.get();
+                var devTool = window.showDevTools();
+                devTool.moveTo(0, 0);
+                devTool.resizeTo(Graphics.width, Graphics.height);
+                window.focus();
+            }
+            console.log('プラグインコマンドの実行中にエラーが発生しました。');
+            console.log('- コマンド名 　: ' + command);
+            console.log('- コマンド引数 : ' + args);
+            console.log('- エラー原因   : ' + e.toString());
+            throw e;
+        }
+    };
+
+    Game_Interpreter.prototype.pluginCommandDWindow = function(command, args) {
         switch (command.toUpperCase()) {
             case 'D_WINDOW_DRAW' :
                 var windowInfo = new Rectangle(0, 0, 0, 0);
                 var number = 0;
                 switch (args.length) {
                     case 1:
-                        number = parseInt(args[0], 10).clamp(1,10) || 1;
-                        var vx = PluginManager.getParamNumber(paramName, 'GameVariablesXPos', 'X座標の変数番号', 0);
+                        number = getArgNumber(args[0], 1, 10);
+                        var vx = getParamNumber(['GameVariablesXPos', 'X座標の変数番号'], 0);
                         windowInfo.x      = $gameVariables.value(vx) || 0;
-                        var vy = PluginManager.getParamNumber(paramName, 'GameVariablesYPos', 'Y座標の変数番号', 0);
+                        var vy = getParamNumber(['GameVariablesYPos', 'Y座標の変数番号'], 0);
                         windowInfo.y      = $gameVariables.value(vy) || 0;
-                        var vw = PluginManager.getParamNumber(paramName, 'GameVariablesWidth', '横幅の変数番号', 0);
+                        var vw = getParamNumber(['GameVariablesWidth', '横幅の変数番号'], 0);
                         windowInfo.width  = $gameVariables.value(vw) || 0;
-                        var vh = PluginManager.getParamNumber(paramName, 'GameVariablesHeight', '高さの変数番号', 0);
+                        var vh = getParamNumber(['GameVariablesHeight', '高さの変数番号'], 0);
                         windowInfo.height = $gameVariables.value(vh) || 0;
                         break;
                     case 5:
-                        number = parseInt(args[0], 10).clamp(1,10) || 1;
-                        windowInfo.x      = parseInt(args[1], 10) || 0;
-                        windowInfo.y      = parseInt(args[2], 10) || 0;
-                        windowInfo.width  = parseInt(args[3], 10) || 0;
-                        windowInfo.height = parseInt(args[4], 10) || 0;
+                        number = getArgNumber(args[0], 1, 10);
+                        windowInfo.x      = getArgNumber(args[1], 0);
+                        windowInfo.y      = getArgNumber(args[2], 0);
+                        windowInfo.width  = getArgNumber(args[3], 0);
+                        windowInfo.height = getArgNumber(args[4], 0);
                         break;
                     default:
-                        alert(command + 'に指定した引数[' + args + 'が不正です。');
-                        return;
-                        break;
+                        throw new Error(command + 'に指定した引数[' + args + 'が不正です。');
                 }
                 $gameMap.setDrawDWindow(number, windowInfo);
                 break;
             case 'D_WINDOW_ERASE' :
-                $gameMap.setEraseDWindow(parseInt(args[0], 10).clamp(1,10) || 1);
+                $gameMap.setEraseDWindow(getArgNumber(args[0], 1, 10));
                 break;
         }
     };
@@ -150,10 +196,10 @@
     // Game_Map
     //  動的ウィンドウ表示用の変数を追加定義します。
     //=============================================================================
-    var _Game_Map_initialize = Game_Map.prototype.initialize;
-    Game_Map.prototype.initialize = function() {
-        _Game_Map_initialize.call(this);
-        this._dWindowInfos = [];
+    var _Game_Map_setup = Game_Map.prototype.setup;
+    Game_Map.prototype.setup = function(mapId) {
+        _Game_Map_setup.apply(this, arguments);
+        if (this._dWindowInfos == null) this._dWindowInfos = [];
     };
 
     Game_Map.prototype.setDrawDWindow = function(number, windowInfo) {
@@ -164,14 +210,20 @@
         this._dWindowInfos[number] = null;
     };
 
-
     //=============================================================================
     // Spriteset_Map
     //  動的ウィンドウの情報を保持し、作成する処理を追加定義します。
     //=============================================================================
+    var _Spriteset_Map_createUpperLayer = Spriteset_Map.prototype.createUpperLayer;
     Spriteset_Map.prototype.createUpperLayer = function() {
-        this.createDynamicWindow();
-        Spriteset_Base.prototype.createUpperLayer.call(this);
+        var top = getParamBoolean(['AlwaysOnTop', '最前面に表示']);
+        if (!top) {
+            this.createDynamicWindow();
+            _Spriteset_Map_createUpperLayer.apply(this, arguments);
+        } else {
+            _Spriteset_Map_createUpperLayer.apply(this, arguments);
+            this.createDynamicWindow();
+        }
     };
 
     Spriteset_Map.prototype.createDynamicWindow = function() {
@@ -179,18 +231,6 @@
         for (var i = 0; i < 10; i++) {
             this._DynamicWindows[i] = new Window_Dynamic(i);
             this.addChild(this._DynamicWindows[i]);
-        }
-    };
-
-    var _Spriteset_Map_update = Spriteset_Map.prototype.update;
-    Spriteset_Map.prototype.update = function() {
-        _Spriteset_Map_update.call(this);
-        this.updateDynamicWindow();
-    };
-
-    Spriteset_Map.prototype.updateDynamicWindow = function() {
-        for (var i = 0; i < 10; i++) {
-            this._DynamicWindows[i].update();
         }
     };
 
