@@ -222,7 +222,7 @@
 
     var _Window_Message_updateInput = Window_Message.prototype.updateInput;
     Window_Message.prototype.updateInput = function() {
-        if (this.messageAuto() && this._messageAutoCount > 0) this._messageAutoCount--;
+        if (this.messageAuto() && this._messageAutoCount > 0 && this.visible) this._messageAutoCount--;
         return _Window_Message_updateInput.apply(this, arguments);
     };
 
