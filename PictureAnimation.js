@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/01/16 同じ画像を指定してピクチャ表示→アニメーション準備→ピクチャ表示の順で実行した
+//                  場合にエラーが発生する現象の修正
 // 1.2.0 2016/01/04 セルのパターンを自由に指定できる機能を追加
 //                  セルの最大数を100から200に拡大
 // 1.1.2 2015/12/24 クロスフェードによる画像切替に対応しました
@@ -140,26 +142,8 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            var n = parseInt(arguments[1]);
-            var actor = n >= 1 ? $gameActors.actor(n) : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            var n = parseInt(arguments[1]);
-            var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return text;
+        var window = SceneManager._scene._windowLayer.children[0];
+        return window ? window.convertEscapeCharacters(text) : text;
     };
 
     //=============================================================================
@@ -183,6 +167,7 @@
             console.log('- コマンド名 　: ' + command);
             console.log('- コマンド引数 : ' + args);
             console.log('- エラー原因   : ' + e.toString());
+            throw e;
         }
     };
 
@@ -302,6 +287,23 @@
         this._fadeDurationCount = 0;
         this._prevCellCount     = 0;
         this._animationFlg      = false;
+    };
+
+    Game_Picture.prototype.direction = function() {
+        return this._direction;
+    };
+
+    Game_Picture.prototype.cellNumber = function() {
+        return this._cellNumber;
+    };
+
+    Game_Picture.prototype.prevCellCount = function() {
+        return this._prevCellCount;
+    };
+
+    Game_Picture.prototype.isMulti = function() {
+        var dir = this.direction();
+        return dir === '連番' || dir === 'N';
     };
 
     /**
@@ -425,9 +427,14 @@
     var _Sprite_Picture_update = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_Picture_update.call(this);
-        if (this.bitmap != null && this.isBitmapReady()) {
-            this.updateAnimation(this, this.picture().cell);
-            this.updateFading();
+        if (this.picture() != null) {
+            if (this.picture().isMulti() && this._bitmaps == null) {
+                this.loadAnimationBitmap();
+            }
+            if (this.isBitmapReady()) {
+                this.updateAnimation(this, this.picture().cell);
+                this.updateFading();
+            }
         }
     };
 
@@ -444,7 +451,7 @@
     Sprite_Picture.prototype.updateFading = function() {
         if (this.picture().isFading()) {
             this._prevSprite.visible = true;
-            this.updateAnimation(this._prevSprite, this.picture()._prevCellCount);
+            this.updateAnimation(this._prevSprite, this.picture().prevCellCount());
             this._prevSprite.opacity = this.picture().prevCellOpacity();
         } else {
             this._prevSprite.visible = false;
@@ -452,7 +459,7 @@
     };
 
     Sprite_Picture.prototype.updateAnimation = function(sprite, cellCount) {
-        switch (this.picture()._direction) {
+        switch (this.picture().direction()) {
             case '連番':
             case 'N':
                 sprite.bitmap = this._bitmaps[cellCount];
@@ -460,13 +467,13 @@
                 break;
             case '縦':
             case 'V':
-                var height = sprite.bitmap.height / this.picture()._cellNumber;
+                var height = sprite.bitmap.height / this.picture().cellNumber();
                 var y      = cellCount * height;
                 sprite.setFrame(0, y, sprite.bitmap.width, height);
                 break;
             case '横':
             case 'H':
-                var width = sprite.bitmap.width / this.picture()._cellNumber;
+                var width = sprite.bitmap.width / this.picture().cellNumber();
                 var x     = cellCount * width;
                 sprite.setFrame(x, 0, width, this.bitmap.height);
                 break;
@@ -476,32 +483,32 @@
     var _Sprite_Picture_loadBitmap = Sprite_Picture.prototype.loadBitmap;
     Sprite_Picture.prototype.loadBitmap = function() {
         _Sprite_Picture_loadBitmap.call(this);
-        var cellNumber = this.picture()._cellNumber;
-        var dir = this.picture()._direction;
-        if (cellNumber > 1 && (dir === '連番' || dir === 'N')) {
-            var cellDigit = cellNumber.toString().length;
-            this._bitmaps = [this.bitmap];
-            for (var i = 1; i < cellNumber; i++) {
-                var filename = this._pictureName.substr(0, this._pictureName.length - cellDigit) + i.padZero(cellDigit);
-                this._bitmaps[i] = ImageManager.loadPicture(filename);
-            }
-        }
         this._prevSprite.bitmap = this.bitmap;
+        this._bitmapReady = false;
+    };
+
+    Sprite_Picture.prototype.loadAnimationBitmap = function() {
+        var cellNumber = this.picture().cellNumber();
+        var cellDigit = cellNumber.toString().length;
+        this._bitmaps = [this.bitmap];
+        for (var i = 1; i < cellNumber; i++) {
+            var filename = this._pictureName.substr(0, this._pictureName.length - cellDigit) + i.padZero(cellDigit);
+            this._bitmaps[i] = ImageManager.loadPicture(filename);
+        }
         this._bitmapReady = false;
     };
 
     Sprite_Picture.prototype.isBitmapReady = function() {
         if (this._bitmapReady) return true;
-        var dir = this.picture()._direction;
         var result;
-        if (dir === '連番' || dir === 'N') {
+        if (this.picture().isMulti()) {
             result = this._bitmaps.every(function(bitmap) {
                 return bitmap.isReady();
             });
         } else {
             result = this.bitmap.isReady();
         }
-        if (result) this._bitmapReady = true;
+        this._bitmapReady = result;
         return result;
     };
 })();
