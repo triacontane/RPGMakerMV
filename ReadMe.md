@@ -5,6 +5,15 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/01/17 : メッセージスキッププラグイン[MessageSkip.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageSkip.js)を追加しました。  
+1. メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。  
+
+###2016/01/16 : 動的ウィンドウプラグイン[DWindow.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/DWindow.js)を更新しました。  
+1. ウィンドウをピクチャより前面に表示できる設定を追加しました。  
+
+###2016/01/16 : ピクチャのアニメーションプラグイン[PictureAnimation.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureAnimation.js)を更新しました。  
+1. 同一のファイル名のピクチャの表示→アニメーション準備→ピクチャの表示（同一ファイル名）で指定するとエラーになる現象を修正しました。  
+
 ###2016/01/14 : ピクチャのボタン化プラグイン[PictureCallCommon.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureCallCommon.js)を更新しました。  
 1. トリガーにホイールクリックやダブルクリックなどを追加しました。全部で10種類のトリガーから選択できます。
 
@@ -160,6 +169,10 @@ Erase message window (and restore) when triggered
 
 32. リージョンへのタイル属性付与プラグイン[RegionTerrain.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RegionTerrain.js)  
 パラメータに指定したリージョンにタイル属性（梯子、茂み、カウンター、ダメージ床）を付与します。  
+
+33. メッセージスキッププラグイン[MessageSkip.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageSkip.js)  
+メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。  
+オートモードの切替に掛かるフレーム数や、イベント終了後もスキップやオートを継続するかが設定できます。  
 
 ##利用規約 Terms of use
 当プラグインはMITライセンスのもとで公開されています。LICENSE.txtもご確認ください。  
