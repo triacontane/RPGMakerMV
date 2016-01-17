@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/01/17 競合対策
 // 1.0.1 2015/11/01 既存コードの再定義方法を修正（内容に変化なし）
 // 1.0.0 2015/11/01 初版
 // ----------------------------------------------------------------------------
@@ -55,7 +56,28 @@
  *  このプラグインはもうあなたのものです。
  */
 (function () {
-    var parameters = PluginManager.parameters('CustomizeConfigDefault');
+    var pluginName = 'CustomizeConfigDefault';
+
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
 
     //=============================================================================
     // ConfigManager
@@ -63,15 +85,12 @@
     //=============================================================================
     var _ConfigManagerApplyData = ConfigManager.applyData;
     ConfigManager.applyData = function(config) {
-        if (config["alwaysDash"] === undefined) {
-            this.alwaysDash = (parameters['alwaysDash'] === "ON");
-            this.commandRemember = (parameters['commandRemember'] === "ON");
-            this.bgmVolume = parseInt(parameters['bgmVolume'], 10).clamp(0, 100) || 0;
-            this.bgsVolume = parseInt(parameters['bgsVolume'], 10).clamp(0, 100) || 0;
-            this.meVolume = parseInt(parameters['meVolume'], 10).clamp(0, 100) || 0;
-            this.seVolume = parseInt(parameters['seVolume'], 10).clamp(0, 100) || 0;
-        } else {
-            _ConfigManagerApplyData.call(this, config);
-        }
+        _ConfigManagerApplyData.apply(this, arguments);
+        if (config.alwaysDash == null)      this.alwaysDash      = getParamBoolean('alwaysDash');
+        if (config.commandRemember == null) this.commandRemember = getParamBoolean('commandRemember');
+        if (config.bgmVolume == null)       this.bgmVolume       = getParamNumber('bgmVolume', 0, 100);
+        if (config.bgsVolume == null)       this.bgsVolume       = getParamNumber('bgsVolume', 0, 100);
+        if (config.meVolume == null)        this.meVolume        = getParamNumber('meVolume', 0, 100);
+        if (config.seVolume == null)        this.seVolume        = getParamNumber('seVolume', 0, 100);
     };
 })();

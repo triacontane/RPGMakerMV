@@ -485,6 +485,7 @@
         _Sprite_Picture_loadBitmap.call(this);
         this._prevSprite.bitmap = this.bitmap;
         this._bitmapReady = false;
+        this._bitmaps = null;
     };
 
     Sprite_Picture.prototype.loadAnimationBitmap = function() {
