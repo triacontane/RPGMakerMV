@@ -154,20 +154,21 @@
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
         try {
-            this.pluginCommandPictureAnimation.call(this, command, args);
+            this.pluginCommandPictureAnimation(command, args);
         } catch (e) {
             if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
                 var window = require('nw.gui').Window.get();
-                var devTool = window.showDevTools();
-                devTool.moveTo(0, 0);
-                devTool.resizeTo(Graphics.width, Graphics.height);
-                window.focus();
+                if (!window.isDevToolsOpen()) {
+                    var devTool = window.showDevTools();
+                    devTool.moveTo(0, 0);
+                    devTool.resizeTo(Graphics.width, Graphics.height);
+                    window.focus();
+                }
             }
             console.log('プラグインコマンドの実行中にエラーが発生しました。');
             console.log('- コマンド名 　: ' + command);
             console.log('- コマンド引数 : ' + args);
             console.log('- エラー原因   : ' + e.toString());
-            throw e;
         }
     };
 
