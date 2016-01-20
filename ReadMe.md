@@ -5,6 +5,9 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/01/20 : 割り込みコモンイベントプラグイン[CommonInterceptor.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CommonInterceptor.js)を追加しました。  
+1. 指定したタイミングでコモンイベントを呼び出します。ニューゲーム時、ロード完了時、メニュー終了時が対象です。  
+
 ###2016/01/18 : オプション任意項目作成プラグイン[CustomizeConfigItem.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CustomizeConfigItem.js)を追加しました。  
 1. オプション画面に任意の項目を追加します。スイッチ項目、数値項目、音量項目、文字項目を自由に追加し、値を変数に同期させます。  
 
@@ -180,6 +183,9 @@ Erase message window (and restore) when triggered
 34. オプション任意項目作成プラグイン[CustomizeConfigItem.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CustomizeConfigItem.js)  
 オプション画面に任意の項目を追加します。  
 スイッチ項目、数値項目、音量項目、文字項目を自由に追加し、値を変数に同期させます。  
+
+35. 割り込みコモンイベントプラグイン[CommonInterceptor.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CommonInterceptor.js)  
+指定したタイミングでコモンイベントを呼び出します。ニューゲーム時、ロード完了時、メニュー終了時が対象です。  
 
 ##利用規約 Terms of use
 当プラグインはMITライセンスのもとで公開されています。LICENSE.txtもご確認ください。  
