@@ -176,6 +176,16 @@
                 pictureId = getArgNumber(args[0], 1, 100);
                 $gameScreen.setPictureRemoveCommon(pictureId);
                 break;
+            case 'P_STROKE' :
+                pictureId = getArgNumber(args[0], 1, 100);
+                commonId  = getArgNumber(args[1], 1, 100);
+                trigger   = getArgNumber(args[2], 1, 8);
+                $gameScreen.setPictureCallCommon(pictureId, commonId, trigger);
+                break;
+            case 'P_STROKE_REMOVE' :
+                pictureId = getArgNumber(args[0], 1, 100);
+                $gameScreen.setPictureRemoveCommon(pictureId);
+                break;
         }
     };
 
@@ -222,7 +232,8 @@
         var event    = $dataCommonEvents[commonId];
         var result   = false;
         if (commonId > 0 && !this.isEventRunning() && event) {
-            var gameValueNum = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0, 5000);
+            var gameValueNum = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'],
+                0, $dataSystem.variables.length);
             if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp.pictureNum());
             this._interpreter.setup(event.list);
             result = true;
@@ -239,7 +250,8 @@
         var commonId = $gameTemp.pictureCommonId();
         var event = $dataCommonEvents[commonId];
         if (commonId > 0 && !this.isEventRunning() && event) {
-            var gameValueNum = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0, 5000);
+            var gameValueNum = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'],
+                0, $dataSystem.variables.length);
             if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp.pictureNum());
             this._interpreter.setup(event.list);
         }
@@ -359,8 +371,6 @@
         _Sprite_update.call(this);
         this._onMouse  = false;
         this._outMouse = false;
-        var commandIds = $gameScreen.getPictureCid(this._pictureId);
-        if (commandIds == null || (commandIds[4] == null && commandIds[5] == null)) return;
         if (TouchInput.isMoved()) {
             if (this.isTouchable() && this.isTouchPosInRect() && !this.isTransparent()) {
                 if (!this._wasOnMouse) {
@@ -385,6 +395,10 @@
                 $gameTemp.setPictureCallInfo(commandIds[i], this._pictureId);
             }
         }
+    };
+
+    Sprite_Picture.prototype.stroke = function() {
+
     };
 
     Sprite_Picture.prototype.isTransparent = function () {

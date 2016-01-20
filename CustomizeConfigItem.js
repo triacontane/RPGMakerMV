@@ -265,7 +265,6 @@
 
     var _ConfigManager_applyData = ConfigManager.applyData;
     ConfigManager.applyData = function(config) {
-        alert('aaa');
         _ConfigManager_applyData.apply(this, arguments);
         this.getCustomParams().iterate(function(symbol, item) {
             if (symbol.contains('Boolean')) {
