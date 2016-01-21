@@ -148,8 +148,8 @@
     };
 
     var getArgNumber = function (arg, min, max) {
-        if (arguments.length <= 2) min = -Infinity;
-        if (arguments.length <= 3) max = Infinity;
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
         return (parseInt(arg, 10) || 0).clamp(min, max);
     };
 

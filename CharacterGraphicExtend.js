@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/01/21 競合対策（YEP_MessageCore.js）
 // 1.1.0 2016/01/11 キャラクターに回転角を設定する機能を追加
 //                  移動ルートの指定のスクリプトから、回転角、拡大率、位置調整ができる機能を追加
 // 1.0.0 2016/01/08 初版
@@ -132,14 +133,31 @@
     };
 
     var getArgNumber = function (arg, min, max) {
-        if (arguments.length <= 2) min = -Infinity;
-        if (arguments.length <= 3) max = Infinity;
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
     };
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        return Window_Base.prototype.convertEscapeCharacters.call(Window_Base, text);
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;

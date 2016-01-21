@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2016/01/21 競合対策（YEP_MessageCore.js）
 // 1.1.2 2016/01/10 カレンダーウィンドウの表示位置をカスタマイズできる機能を追加
 // 1.1.1 2015/12/29 日の値に「1」を設定した場合に日付の表示がおかしくなる不具合を修正
 //                  一部のコードを最適化
@@ -167,8 +168,8 @@
     };
 
     var getArgNumber = function (arg, min, max) {
-        if (arguments.length <= 2) min = -Infinity;
-        if (arguments.length <= 3) max = Infinity;
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
         return parseIntStrict(convertEscapeCharacters(arg)).clamp(min, max);
     };
 
@@ -180,7 +181,8 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        return Window_Base.prototype.convertEscapeCharacters.call(Window_Base, text);
+        var window = SceneManager._scene._windowLayer.children[0];
+        return window ? window.convertEscapeCharacters(text) : text;
     };
 
     //=============================================================================

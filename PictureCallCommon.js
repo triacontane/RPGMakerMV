@@ -6,8 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/01/21 呼び出すコモンイベントの上限を100から1000（DB上の最大値）に修正
+//                  競合対策（YEP_MessageCore.js）
 // 1.2.0 2016/01/14 ホイールクリック、ダブルクリックなどトリガーを10種類に拡充
-// 1.1.3 2016/01/02 競合対策
+// 1.1.3 2016/01/02 競合対策（TDDP_BindPicturesToMap.js）
 // 1.1.2 2015/12/20 長押しイベント発生時に1秒間のインターバルを設定するよう仕様変更
 // 1.1.1 2015/12/10 ピクチャを消去後にマウスオーバーするとエラーになる現象を修正
 // 1.1.0 2015/11/23 コモンイベントを呼び出した対象のピクチャ番号を特定する機能を追加
@@ -135,14 +137,15 @@
     };
 
     var getArgNumber = function (arg, min, max) {
-        if (arguments.length <= 2) min = -Infinity;
-        if (arguments.length <= 3) max = Infinity;
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
     };
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        return Window_Base.prototype.convertEscapeCharacters.call(Window_Base, text);
+        var window = SceneManager._scene._windowLayer.children[0];
+        return window ? window.convertEscapeCharacters(text) : text;
     };
 
     if (!Object.prototype.hasOwnProperty('iterate')) {
@@ -168,8 +171,8 @@
         switch (getCommandName(command)) {
             case 'P_CALL_CE' :
                 pictureId = getArgNumber(args[0], 1, 100);
-                commonId  = getArgNumber(args[1], 1, 100);
-                trigger   = getArgNumber(args[2], 1, 8);
+                commonId  = getArgNumber(args[1], 1, $dataCommonEvents.length - 1);
+                trigger   = getArgNumber(args[2], 1, 10);
                 $gameScreen.setPictureCallCommon(pictureId, commonId, trigger);
                 break;
             case 'P_CALL_CE_REMOVE' :
@@ -177,14 +180,8 @@
                 $gameScreen.setPictureRemoveCommon(pictureId);
                 break;
             case 'P_STROKE' :
-                pictureId = getArgNumber(args[0], 1, 100);
-                commonId  = getArgNumber(args[1], 1, 100);
-                trigger   = getArgNumber(args[2], 1, 8);
-                $gameScreen.setPictureCallCommon(pictureId, commonId, trigger);
                 break;
             case 'P_STROKE_REMOVE' :
-                pictureId = getArgNumber(args[0], 1, 100);
-                $gameScreen.setPictureRemoveCommon(pictureId);
                 break;
         }
     };
@@ -215,7 +212,6 @@
     Game_Temp.prototype.pictureNum = function() {
         return this._pictureNum;
     };
-
 
     //=============================================================================
     // Game_Map
@@ -500,6 +496,22 @@
     //  ホイールクリック、ダブルクリック等を実装
     //=============================================================================
     TouchInput.keyDoubleClickInterval = 300;
+    TouchInput._pressStartX = -1;
+    TouchInput._pressStartY = -1;
+    TouchInput._pressedDistance = 0;
+    TouchInput._prevX = -1;
+    TouchInput._prevY = -1;
+
+    TouchInput.getPressStartPos = function() {
+        return new Position(this._pressStartX, this._pressStartY);
+    };
+
+    Object.defineProperty(TouchInput, 'pressedDistance', {
+        get: function() {
+            return this._pressedDistance;
+        },
+        configurable: true
+    });
 
     TouchInput._onMouseMove = function(event) {
         var x = Graphics.pageToCanvasX(event.pageX);
@@ -551,6 +563,29 @@
     TouchInput._onTrigger = function(x, y) {
         if (this._date && Date.now() - this._date < this.keyDoubleClickInterval)
             this._events.doubleTriggered = true;
+        this._pressStartX = x;
+        this._pressStartY = y;
+        this._pressedDistance = 0;
+        this._prevX = x;
+        this._prevY = y;
         _TouchInput_onTrigger.apply(this, arguments);
+    };
+
+    var _TouchInput_onMove = TouchInput._onMove;
+    TouchInput._onMove = function(x, y) {
+        if (this.isPressed()) this._pressedDistance = Math.abs(this._prevX - x) + Math.abs(this._prevY - y);
+        this._prevX = x;
+        this._prevY = y;
+        _TouchInput_onMove.apply(this, arguments);
+    };
+
+    var _TouchInput_onRelease = TouchInput._onRelease;
+    TouchInput._onRelease = function(x, y) {
+        this._pressStartX = 0;
+        this._pressStartY = 0;
+        this._pressedDistance = 0;
+        this._prevX = x;
+        this._prevY = y;
+        _TouchInput_onRelease.apply(this, arguments);
     };
 })();
