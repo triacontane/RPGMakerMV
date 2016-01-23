@@ -5,8 +5,11 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/01/24 : セーブファイル復元プラグイン[RestoreSaveData.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RestoreSaveData.js)を追加しました。  
+1. 新たに任意のプラグインを導入した際に元のセーブデータがロードできなくなったとき、このプラグインを適用すればロードできるかもしれません。  
+
 ###2016/01/23 : 選択肢のピクチャ表示プラグイン[MessageSelectPicture.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageSelectPicture.js)を追加しました。  
-1.イベントコマンド「選択肢の表示」で選択肢にカーソルを合わせた際に選択肢に対応するピクチャを表示するようにします。  
+1. イベントコマンド「選択肢の表示」で選択肢にカーソルを合わせた際に選択肢に対応するピクチャを表示するようにします。  
 
 ###2016/01/20 : 割り込みコモンイベントプラグイン[CommonInterceptor.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CommonInterceptor.js)を追加しました。  
 1. 指定したタイミングでコモンイベントを呼び出します。ニューゲーム時、ロード完了時、メニュー終了時が対象です。  
