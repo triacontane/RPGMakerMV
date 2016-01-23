@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/01/24 マウス操作でピクチャが更新されない問題を修正
 // 1.0.1 2016/01/24 起動しないバグ修正
 // 1.0.0 2016/01/23 初版
 // ----------------------------------------------------------------------------
@@ -136,21 +137,9 @@
         this._opacity = value;
     };
 
-    var _Window_ChoiceList_cursorUp = Window_ChoiceList.prototype.cursorUp;
-    Window_ChoiceList.prototype.cursorUp = function() {
-        _Window_ChoiceList_cursorUp.apply(this, arguments);
-        this.updateSelectPicture();
-    };
-
-    var _Window_ChoiceList_cursorDown = Window_ChoiceList.prototype.cursorDown;
-    Window_ChoiceList.prototype.cursorDown = function(wrap) {
-        _Window_ChoiceList_cursorDown.apply(this, arguments);
-        this.updateSelectPicture();
-    };
-
-    var _Window_ChoiceList_selectDefault = Window_ChoiceList.prototype.selectDefault;
-    Window_ChoiceList.prototype.selectDefault = function() {
-        _Window_ChoiceList_selectDefault.apply(this, arguments);
+    var _Window_ChoiceList_update = Window_ChoiceList.prototype.update;
+    Window_ChoiceList.prototype.update = function() {
+        _Window_ChoiceList_update.apply(this, arguments);
         this.updateSelectPicture();
     };
 
