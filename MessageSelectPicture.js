@@ -110,7 +110,6 @@
     var _Game_Message_initialize = Game_Message.prototype.initialize;
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.apply(this, arguments);
-        this.clearSkipInfo();
         this.clearSelectPictures();
     };
 
