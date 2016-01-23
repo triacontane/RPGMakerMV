@@ -193,6 +193,9 @@ Erase message window (and restore) when triggered
 36. 選択肢のピクチャ表示プラグイン[MessageSelectPicture.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageSelectPicture.js)  
 イベントコマンド「選択肢の表示」で選択肢にカーソルを合わせた際に選択肢に対応するピクチャを表示するようにします。  
 
+37. セーブファイル復元プラグイン[RestoreSaveData.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RestoreSaveData.js)  
+新たに任意のプラグインを導入した際に元のセーブデータがロードできなくなったとき、このプラグインを適用すればロードできるかもしれません。
+
 ##利用規約 Terms of use
 当プラグインはMITライセンスのもとで公開されています。LICENSE.txtもご確認ください。  
 http://opensource.org/licenses/mit-license.php  
