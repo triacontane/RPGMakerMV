@@ -95,10 +95,10 @@
         backspace : 8, tab : 9, enter : 13, shift : 16, ctrl : 17, alt : 18, pause : 19, esc : 27, space : 32,
         page_up : 33, page_down : 34, end : 35, home : 36, left : 37, right : 38, up : 39, down : 40, insert : 45, delete : 46
     };
-    Number(9).times(function(i) {
+    (9).times(function(i) {
         Input.keyCodeReverseMapper[i] = i + 48;
     });
-    Number(12).times(function(i) {
+    (12).times(function(i) {
         Input.keyCodeReverseMapper['f' + (i + 1)] = i + 112;
     });
 
