@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2016/01/24 空のピクチャを表示しようとした際にエラーが発生する現象を修正
 // 1.2.1 2016/01/16 同じ画像を指定してピクチャ表示→アニメーション準備→ピクチャ表示の順で実行した
 //                  場合にエラーが発生する現象の修正
 // 1.2.0 2016/01/04 セルのパターンを自由に指定できる機能を追加
@@ -428,7 +429,7 @@
     var _Sprite_Picture_update = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_Picture_update.call(this);
-        if (this.picture() != null) {
+        if (this.picture() != null && this.picture().name()) {
             if (this.picture().isMulti() && this._bitmaps == null) {
                 this.loadAnimationBitmap();
             }

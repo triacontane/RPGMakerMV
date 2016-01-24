@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/01/24 ピクチャをなでなでする機能を追加
+//                  トリガーにマウスムーブを追加
+//                  ピクチャが回転しているときに正しく位置を補足できるよう修正
 // 1.2.1 2016/01/21 呼び出すコモンイベントの上限を100から1000（DB上の最大値）に修正
 //                  競合対策（YEP_MessageCore.js）
 // 1.2.0 2016/01/14 ホイールクリック、ダブルクリックなどトリガーを10種類に拡充
@@ -34,6 +37,14 @@
  * @desc コモンイベント呼び出し時にピクチャ番号を格納するゲーム変数の番号。
  * @default 0
  *
+ * @param ポインタX座標の変数番号
+ * @desc マウスカーソルもしくはタッチした位置のX座標を常に格納するゲーム変数の番号
+ * @default 0
+ *
+ * @param ポインタY座標の変数番号
+ * @desc マウスカーソルもしくはタッチした位置のY座標を常に格納するゲーム変数の番号
+ * @default 0
+ *
  * @help ピクチャをクリックすると、指定したコモンイベントが
  * 呼び出されるようになるプラグインコマンドを提供します。
  * このプラグインを利用すれば、javascriptの知識がなくても
@@ -48,10 +59,11 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （引数の間は半角スペースで区切る）
  *
+ *  ピクチャのボタン化 or
  *  P_CALL_CE [ピクチャ番号] [コモンイベントID] [トリガー]:
- *      ピクチャがクリックされたときに呼び出されるコモンイベントを関連づけます。
+ *      ピクチャの領域内でトリガー条件を満たした場合に呼び出されるコモンイベントを関連づけます。
  *  　　トリガーは以下の通りです。(省略すると 1 になります)
- *  　　1  : クリックした場合
+ *      1  : クリックした場合
  *      2  : 右クリックした場合
  *      3  : 長押しした場合
  *      4  : マウスをピクチャに重ねた場合
@@ -61,12 +73,50 @@
  *      8  : クリックしている間ずっと
  *      9  : ホイールクリックした場合（PCの場合のみ有効）
  *      10 : ダブルクリックした場合
- *  例：P_CALL_CE 1 3 7
+ *      11 : マウスを移動した場合
  *
+ *  例：P_CALL_CE 1 3 7
+ *  　：ピクチャのボタン化 \v[1] \v[2] \v[3]
+ *
+ *  ピクチャのボタン化解除 or
  *  P_CALL_CE_REMOVE [ピクチャ番号] :
  *      ピクチャとコモンイベントの関連づけを解除します。
  *      全てのトリガーが削除対象です。
+ *
  *  例：P_CALL_CE_REMOVE 1
+ *  　：ピクチャのボタン化解除 \v[1]
+ *
+ *  ピクチャのなでなで設定 or
+ *  P_STROKE [ピクチャ番号] [変数番号]
+ *  　　指定したピクチャの上でマウスやタッチを動かすと、
+ *  　　速さに応じた値が指定した変数に値が加算されるようになります。
+ *  　　この設定はピクチャを差し替えたり、一時的に非表示にしても有効です。
+ *  　　10秒でだいたい1000くらいまで溜まります。
+ *
+ *  例：P_STROKE 1 2
+ *  　：ピクチャのなでなで設定 \v[1] \v[2] \v[3]
+ *
+ *  ピクチャのなでなで解除 or
+ *  P_STROKE_REMOVE [ピクチャ番号]
+ *  　　指定したピクチャのなでなで設定を解除します。
+ *
+ *  例：P_STROKE_REMOVE 1
+ *  　：ピクチャのなでなで解除 \v[1]
+ *
+ *  ピクチャのポインタ化 or
+ *  P_POINTER [ピクチャ番号]
+ *  　　指定したピクチャがタッチ座標を自動で追従するようになります。
+ *  　　タッチしていないと自動で非表示になります。
+ *
+ *  例：P_POINTER 1
+ *  　：ピクチャのポインタ化 \v[1]
+ *
+ *  ピクチャのポインタ化解除 or
+ *  P_POINTER_REMOVE [ピクチャ番号]
+ *  　　指定したピクチャのポインタ化を解除します。
+ *
+ *  例：P_POINTER_REMOVE 1
+ *  　：ピクチャのポインタ化解除 \v[1]
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -84,6 +134,14 @@
  * @param GameVariablePictureNum
  * @desc Game variable number that stores the picture number when common event called.
  * @default 0
+ *
+ * @param GameVariableTouchX
+ * @desc Game variable number that stores touch x position
+ * @default 0
+ *
+ * @param GameVariableTouchY
+ * @desc Game variable number that stores touch y position
+ * @default 0
  * 
  * @help When clicked picture, call common event.
  *
@@ -92,7 +150,7 @@
  *  P_CALL_CE [Picture number] [Common event ID] [Trigger]:
  *      When picture was clicked, assign common event id.
  *  　　Trigger are As below(if omit, It is specified to 1)
- *  　　1  : Left click
+ *      1  : Left click
  *      2  : Right click
  *      3  : Long click
  *      4  : Mouse over
@@ -102,6 +160,7 @@
  *      8  : Mouse press
  *      9  : Wheel click
  *      10 : Double click
+ *      11 : Mouse move
  *
  *  P_CALL_CE_REMOVE [Picture number] :
  *      break relation from picture to common event.
@@ -109,6 +168,7 @@
  *  This plugin is released under the MIT License.
  */
 (function () {
+    'use strict';
     var pluginName = 'PictureCallCommon';
 
     var getParamOther = function(paramNames) {
@@ -165,23 +225,40 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
-        var pictureId;
-        var commonId;
-        var trigger;
+        var pictureId, commonId, trigger, variableNum;
         switch (getCommandName(command)) {
             case 'P_CALL_CE' :
-                pictureId = getArgNumber(args[0], 1, 100);
+            case 'ピクチャのボタン化':
+                pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
                 commonId  = getArgNumber(args[1], 1, $dataCommonEvents.length - 1);
-                trigger   = getArgNumber(args[2], 1, 10);
+                trigger   = getArgNumber(args[2], 1, 11);
                 $gameScreen.setPictureCallCommon(pictureId, commonId, trigger);
                 break;
             case 'P_CALL_CE_REMOVE' :
-                pictureId = getArgNumber(args[0], 1, 100);
+            case 'ピクチャのボタン化解除':
+                pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
                 $gameScreen.setPictureRemoveCommon(pictureId);
                 break;
             case 'P_STROKE' :
+            case 'ピクチャのなでなで設定':
+                pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
+                variableNum  = getArgNumber(args[1], 1, $dataSystem.variables.length - 1);
+                $gameScreen.setPictureStroke(pictureId, variableNum);
                 break;
             case 'P_STROKE_REMOVE' :
+            case 'ピクチャのなでなで解除':
+                pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
+                $gameScreen.removePictureStroke(pictureId);
+                break;
+            case 'P_POINTER' :
+            case 'ピクチャのポインタ化':
+                pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
+                $gameScreen.setPicturePointer(pictureId);
+                break;
+            case 'P_POINTER_REMOVE' :
+            case 'ピクチャのポインタ化解除':
+                pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
+                $gameScreen.removePicturePointer(pictureId);
                 break;
         }
     };
@@ -262,6 +339,23 @@
     Game_Screen.prototype.initialize = function() {
         _Game_Screen_initialize.call(this);
         this._pictureCidArray = [];
+        this._pictureSidArray = [];
+        this._picturePidArray = [];
+    };
+
+    var _Game_Screen_update = Game_Screen.prototype.update;
+    Game_Screen.prototype.update = function() {
+        _Game_Screen_update.apply(this, arguments);
+        this.updatePointer();
+    };
+
+    Game_Screen.prototype.updatePointer = function() {
+        var paramTouchX = getParamNumber(['GameVariableTouchX', 'ポインタX座標の変数番号'],
+            0, $dataSystem.variables.length);
+        var paramTouchY = getParamNumber(['GameVariableTouchY', 'ポインタY座標の変数番号'],
+            0, $dataSystem.variables.length);
+        if (paramTouchX > 0) $gameVariables.setValue(paramTouchX, TouchInput.x);
+        if (paramTouchY > 0) $gameVariables.setValue(paramTouchY, TouchInput.y);
     };
 
     Game_Screen.prototype.setPictureCallCommon = function(pictureId, commonId, trigger) {
@@ -275,9 +369,39 @@
         this._pictureCidArray[realPictureId] = [];
     };
 
+    Game_Screen.prototype.setPictureStroke = function(pictureId, variableNum) {
+        var realPictureId = this.realPictureId(pictureId);
+        this._pictureSidArray[realPictureId] = variableNum;
+    };
+
+    Game_Screen.prototype.removePictureStroke = function(pictureId) {
+        var realPictureId = this.realPictureId(pictureId);
+        this._pictureSidArray[realPictureId] = null;
+    };
+
+    Game_Screen.prototype.setPicturePointer = function(pictureId) {
+        var realPictureId = this.realPictureId(pictureId);
+        this._picturePidArray[realPictureId] = true;
+    };
+
+    Game_Screen.prototype.removePicturePointer = function(pictureId) {
+        var realPictureId = this.realPictureId(pictureId);
+        this._picturePidArray[realPictureId] = null;
+    };
+
     Game_Screen.prototype.getPictureCid = function(pictureId) {
         var realPictureId = this.realPictureId(pictureId);
         return this._pictureCidArray[realPictureId];
+    };
+
+    Game_Screen.prototype.getPictureSid = function(pictureId) {
+        var realPictureId = this.realPictureId(pictureId);
+        return this._pictureSidArray[realPictureId];
+    };
+
+    Game_Screen.prototype.getPicturePid = function(pictureId) {
+        var realPictureId = this.realPictureId(pictureId);
+        return this._picturePidArray[realPictureId];
     };
 
     //=============================================================================
@@ -356,6 +480,7 @@
         this._triggerHandler[8]        = this.isPressed;
         this._triggerHandler[9]        = this.isWheelTriggered;
         this._triggerHandler[10]       = this.isDoubleTriggered;
+        this._triggerHandler[11]       = this.isMoved;
         this._onMouse                  = false;
         this._outMouse                 = false;
         this._wasOnMouse               = false;
@@ -365,6 +490,12 @@
     var _Sprite_update = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_update.call(this);
+        this.updateMouseMove();
+        this.updateStroke();
+        this.updatePointer();
+    };
+
+    Sprite_Picture.prototype.updateMouseMove = function() {
         this._onMouse  = false;
         this._outMouse = false;
         if (TouchInput.isMoved()) {
@@ -382,25 +513,44 @@
         }
     };
 
-    Sprite_Picture.prototype.callTouch = function() {
-        var commandIds = $gameScreen.getPictureCid(this._pictureId);
-        if (commandIds == null) return;
-        for (var i = 1; i <= this._triggerHandler.length; i++) {
-            if (commandIds[i] != null && this._triggerHandler[i].call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
-                if (i === 3) TouchInput._pressedTime = -60;
-                $gameTemp.setPictureCallInfo(commandIds[i], this._pictureId);
-            }
+    Sprite_Picture.prototype.updateStroke = function() {
+        var strokeNum = $gameScreen.getPictureSid(this._pictureId);
+        if (strokeNum > 0 && TouchInput.isPressed()) {
+            var value = $gameVariables.value(strokeNum);
+            $gameVariables.setValue(strokeNum, value + TouchInput.pressedDistance);
         }
     };
 
-    Sprite_Picture.prototype.stroke = function() {
+    Sprite_Picture.prototype.updatePointer = function() {
+        var strokeNum = $gameScreen.getPicturePid(this._pictureId);
+        if (strokeNum > 0) {
+            this.opacity = TouchInput.isPressed() ? 255 : 0;
+            this.x = TouchInput.x;
+            this.y = TouchInput.y;
+            this.anchor.x = 0.5;
+            this.anchor.y = 0.5;
+        }
+    };
 
+    Sprite_Picture.prototype.callTouch = function() {
+        var commandIds = $gameScreen.getPictureCid(this._pictureId);
+        if (commandIds == null) return;
+        this._triggerHandler.iterate(function(i, handler) {
+            if (handler && commandIds[i] != null && handler.call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
+                if (i === 3) TouchInput._pressedTime = -60;
+                $gameTemp.setPictureCallInfo(commandIds[i], this._pictureId);
+            }
+        }.bind(this));
     };
 
     Sprite_Picture.prototype.isTransparent = function () {
         if (!this._transparentConsideration) return false;
-        var bx = (TouchInput.x - this.x) / this.scale.x + this.anchor.x * this.width;
-        var by = (TouchInput.y - this.y) / this.scale.y + this.anchor.y * this.height;
+        var dx = TouchInput.x - this.x;
+        var dy = TouchInput.y - this.y;
+        var sin = Math.sin(-this.rotation);
+        var cos = Math.cos(-this.rotation);
+        var bx = Math.floor(dx * cos + dy * -sin) / this.scale.x + this.anchor.x * this.width;
+        var by = Math.floor(dx * sin + dy * cos)  / this.scale.y + this.anchor.y * this.height;
         return this.bitmap.getAlphaPixel(bx, by) === 0;
     };
 
@@ -437,10 +587,14 @@
     };
 
     Sprite_Picture.prototype.isTouchPosInRect = function () {
-        var tx = TouchInput.x;
-        var ty = TouchInput.y;
-        return (tx >= this.minX() && tx <= this.maxX() &&
-                ty >= this.minY() && ty <= this.maxY());
+        var dx = TouchInput.x - this.x;
+        var dy = TouchInput.y - this.y;
+        var sin = Math.sin(-this.rotation);
+        var cos = Math.cos(-this.rotation);
+        var rx = this.x + Math.floor(dx * cos + dy * -sin);
+        var ry = this.y + Math.floor(dx * sin + dy * cos);
+        return (rx >= this.minX() && rx <= this.maxX() &&
+                ry >= this.minY() && ry <= this.maxY());
     };
 
     Sprite_Picture.prototype.isTouchable = function() {
@@ -477,6 +631,10 @@
 
     Sprite_Picture.prototype.isOutFocus = function() {
         return this._outMouse;
+    };
+
+    Sprite_Picture.prototype.isMoved = function() {
+        return this.isTouchEvent(TouchInput.isMoved);
     };
 
     Sprite_Picture.prototype.isWheelTriggered = function() {

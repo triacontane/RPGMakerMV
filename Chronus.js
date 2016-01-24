@@ -290,7 +290,7 @@
     };
 
     Game_System.prototype.onBattleEnd = function() {
-        this._chronus.onBattleEnd();
+        this.chronus().onBattleEnd();
     };
 
     //=============================================================================

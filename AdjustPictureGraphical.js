@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/01/24 ピクチャが回転しているときも位置を把握できるよう修正
 // 1.1.0 2015/12/26 グリッドの表示機能とグリッドにスナップ機能を追加
 //                  Ctrl+Cで座標をコピーできる機能を追加
 //                  任意のマップを読み込んでテストする機能を追加
@@ -330,10 +331,14 @@
     };
 
     Sprite_Picture.prototype.isTouchPosInRect = function () {
-        var tx = TouchInput.x;
-        var ty = TouchInput.y;
-        return (tx >= this.minX() && tx <= this.maxX() &&
-        ty >= this.minY() && ty <= this.maxY());
+        var dx = TouchInput.x - this.x;
+        var dy = TouchInput.y - this.y;
+        var sin = Math.sin(-this.rotation);
+        var cos = Math.cos(-this.rotation);
+        var rx = this.x + Math.floor(dx * cos + dy * -sin);
+        var ry = this.y + Math.floor(dx * sin + dy * cos);
+        return (rx >= this.minX() && rx <= this.maxX() &&
+                ry >= this.minY() && ry <= this.maxY());
     };
 
     Sprite_Picture.prototype.isTouchable = function() {

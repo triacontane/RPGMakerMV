@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/01/24 ピクチャの最大表示数を設定できる機能を追加
 // 1.1.1 2015/12/20 番号の変数指定の初期値を有効/無効で設定できるよう修正
 // 1.1.0 2015/11/27 ピクチャのファイル名に変数を組み込むことが出来る機能を追加
 // 1.0.0 2015/11/24 初版
@@ -22,6 +23,11 @@
  * @param 初期値
  * @desc 初期状態での有効/無効の設定値(ON/OFF)
  * @default OFF
+ *
+ * @param ピクチャ表示最大数
+ * @desc ピクチャ表示最大数（デフォルト100個）を設定します。
+ * 変えない場合は何も入力しないでください。
+ * @default
  * 
  * @help ピクチャ関連のイベント命令で番号が「指定された変数の値」になるよう
  * 仕様を変更します。
@@ -67,6 +73,13 @@
         return (value || '').toUpperCase() == 'ON';
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -85,28 +98,16 @@
         return upperFlg ? args.toUpperCase() : args;
     };
 
+    var getArgNumber = function (arg, min, max) {
+        if (arguments.length <= 2) min = -Infinity;
+        if (arguments.length <= 3) max = Infinity;
+        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    };
+
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            var n = parseInt(arguments[1]);
-            var actor = n >= 1 ? $gameActors.actor(n) : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            var n = parseInt(arguments[1]);
-            var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return text;
+        var window = SceneManager._scene._windowLayer.children[0];
+        return window ? window.convertEscapeCharacters(text) : text;
     };
 
     //=============================================================================
@@ -119,13 +120,13 @@
         _Game_Interpreter_pluginCommand.call(this, command, args);
         switch (getCommandName(command)) {
             case 'P_VARIABLE_VALID':
-                $gameSystem._pictureNumVariable = true;
+                $gameSystem.pictureNumVariable = true;
                 break;
             case 'P_VARIABLE_INVALID':
-                $gameSystem._pictureNumVariable = false;
+                $gameSystem.pictureNumVariable = false;
                 break;
             case 'P_D_FILENAME':
-                $gameScreen._dPictureFileName = getArgString(args[0]);
+                $gameScreen.dPictureFileName = getArgString(args[0]);
         }
     };
 
@@ -155,11 +156,15 @@
     };
 
     Game_Interpreter.prototype.transPictureNumber = function(handler) {
-        var oldValue = this._params[0];
-        if ($gameSystem._pictureNumVariable)
-            this._params[0] = (parseInt($gameVariables.value(this._params[0]), 10) || 1).clamp(1, 100);
-        var result = handler();
-        this._params[0] = oldValue;
+        var result;
+        if ($gameSystem.pictureNumVariable) {
+            var oldValue = this._params[0];
+            this._params[0] = $gameVariables.value(this._params[0]).clamp(1, $gameScreen.maxPictures());
+            result = handler();
+            this._params[0] = oldValue;
+        } else {
+            result = handler();
+        }
         return result;
     };
 
@@ -170,7 +175,7 @@
     var _Game_System_initialize = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.call(this);
-        this._pictureNumVariable = getParamBoolean('初期値');
+        this.pictureNumVariable = getParamBoolean('初期値');
     };
 
     //=============================================================================
@@ -180,7 +185,13 @@
     var _Game_Screen_clear = Game_Screen.prototype.clear;
     Game_Screen.prototype.clear = function() {
         _Game_Screen_clear.call(this);
-        this._dPictureFileName = null;
+        this.dPictureFileName = null;
+    };
+
+    var _Game_Screen_maxPictures = Game_Screen.prototype.maxPictures;
+    Game_Screen.prototype.maxPictures = function() {
+        var max = getParamNumber('ピクチャ表示最大数', 0);
+        return max > 0 ? max : _Game_Screen_maxPictures.apply(this, arguments);
     };
 
     //=============================================================================
@@ -190,9 +201,9 @@
     var _Game_Picture_show = Game_Picture.prototype.show;
     Game_Picture.prototype.show = function(name, origin, x, y, scaleX,
                                            scaleY, opacity, blendMode) {
-        if ($gameScreen._dPictureFileName != null) {
-            arguments[0] = $gameScreen._dPictureFileName;
-            $gameScreen._dPictureFileName = null;
+        if ($gameScreen.dPictureFileName != null) {
+            arguments[0] = $gameScreen.dPictureFileName;
+            $gameScreen.dPictureFileName = null;
         }
         _Game_Picture_show.apply(this, arguments);
     };

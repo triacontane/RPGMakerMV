@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2016/01/24 メッセージウィンドウが表示されていないときも非表示にできてしまう現象の修正
 // 1.0.2 2016/01/02 競合対策
 // 1.0.1 2015/12/31 コメント追加＋英語対応（仕様に変化なし）
 // 1.0.0 2015/12/30 初版
@@ -75,7 +76,7 @@
     //=============================================================================
     var _Window_Message_updateWait = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
-        if (this.isTriggeredHidden()) {
+        if (!this.isClosed() && this.isTriggeredHidden()) {
             if (this.visible) {
                 this.hide();
                 this.subWindows().forEach(function(subWindow) {
