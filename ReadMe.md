@@ -5,6 +5,11 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/01/24 : ピクチャのボタン化プラグイン[PictureCallCommon.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureCallCommon.js)を追加しました。  
+1. ピクチャをなでなでする機能を追加  
+2. トリガーにマウスムーブを追加
+3. ピクチャが回転しているときに正しく位置を補足できるよう修正
+
 ###2016/01/24 : セーブファイル復元プラグイン[RestoreSaveData.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RestoreSaveData.js)を追加しました。  
 1. 新たに任意のプラグインを導入した際に元のセーブデータがロードできなくなったとき、このプラグインを適用すればロードできるかもしれません。  
 
