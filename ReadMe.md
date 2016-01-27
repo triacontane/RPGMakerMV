@@ -5,10 +5,15 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/01/28 : 動的文字列ピクチャ生成プラグイン[DTextPicture.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/DTextPicture.js)を修正しました。  
+1. 複数行表示に対応  
+2. 文字列の揃えと背景色を設定する機能を追加  
+3. 変数をゼロ埋めして表示する機能を追加  
+
 ###2016/01/24 : ピクチャのボタン化プラグイン[PictureCallCommon.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureCallCommon.js)を追加しました。  
 1. ピクチャをなでなでする機能を追加  
-2. トリガーにマウスムーブを追加
-3. ピクチャが回転しているときに正しく位置を補足できるよう修正
+2. トリガーにマウスムーブを追加  
+3. ピクチャが回転しているときに正しく位置を補足できるよう修正  
 
 ###2016/01/24 : セーブファイル復元プラグイン[RestoreSaveData.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RestoreSaveData.js)を追加しました。  
 1. 新たに任意のプラグインを導入した際に元のセーブデータがロードできなくなったとき、このプラグインを適用すればロードできるかもしれません。  
