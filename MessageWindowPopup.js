@@ -164,6 +164,10 @@
         return this._messagePopup ? this._messagePopupCharacterId : null;
     };
 
+    //=============================================================================
+    // Game_Map
+    //  イベント起動時に自動設定を適用します。
+    //=============================================================================
     var _Game_Map_setupStartingMapEvent = Game_Map.prototype.setupStartingMapEvent;
     Game_Map.prototype.setupStartingMapEvent = function() {
         var result = _Game_Map_setupStartingMapEvent.apply(this, arguments);
@@ -177,6 +181,10 @@
         return result;
     };
 
+    //=============================================================================
+    // Window_Message
+    //  ポップアップする場合、表示内容により座標とサイズを自動設定します。
+    //=============================================================================
     var _Window_Message_startMessage = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
