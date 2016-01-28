@@ -27,6 +27,11 @@
  * 通常ウィンドウの余白：18
  * @default 8
  *
+ * @param 自動設定
+ * @desc イベント起動時にフキダシの対象が、起動したイベントに自動設定されます。（ON/OFF）
+ * OFFの場合は通常のメッセージウィンドウに設定されます。
+ * @default ON
+ *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
  * キャラクターのマップ上の位置によってはウィンドウが画面上に隠れてしまう
@@ -41,7 +46,7 @@
  * メッセージウィンドウを指定したキャラクターIDの頭上に表示するようにします。
  * プレイヤー : 0 指定したIDのイベント : 1 ～
  *
- * 例：MWP_VALID -1
+ * 例：MWP_VALID 0
  * 　　フキダシウィンドウ有効化 3
  *
  * MWP_INVALID
@@ -67,6 +72,11 @@
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
     };
 
     var getParamOther = function(paramNames) {
@@ -157,7 +167,13 @@
     var _Game_Map_setupStartingMapEvent = Game_Map.prototype.setupStartingMapEvent;
     Game_Map.prototype.setupStartingMapEvent = function() {
         var result = _Game_Map_setupStartingMapEvent.apply(this, arguments);
-        if (result) $gameSystem.setMessagePopup(this._interpreter.eventId());
+        if (result) {
+            if (getParamBoolean('自動設定')) {
+                $gameSystem.setMessagePopup(this._interpreter.eventId());
+            } else {
+                $gameSystem.clearMessagePopup();
+            }
+        }
         return result;
     };
 
