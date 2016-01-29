@@ -5,6 +5,9 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/01/29 : フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)を追加しました。  
+1. メッセージウィンドウを指定したキャラクターの頭上にフキダシで表示するよう変更します。  
+
 ###2016/01/28 : 動的文字列ピクチャ生成プラグイン[DTextPicture.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/DTextPicture.js)を修正しました。  
 1. 複数行表示に対応  
 2. 文字列の揃えと背景色を設定する機能を追加  
@@ -207,7 +210,11 @@ Erase message window (and restore) when triggered
 イベントコマンド「選択肢の表示」で選択肢にカーソルを合わせた際に選択肢に対応するピクチャを表示するようにします。  
 
 37. セーブファイル復元プラグイン[RestoreSaveData.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RestoreSaveData.js)  
-新たに任意のプラグインを導入した際に元のセーブデータがロードできなくなったとき、このプラグインを適用すればロードできるかもしれません。
+新たに任意のプラグインを導入した際に元のセーブデータがロードできなくなったとき、このプラグインを適用すればロードできるかもしれません。  
+
+38. フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)  
+メッセージウィンドウを指定したキャラクターの頭上にフキダシで表示するよう変更します。  
+Change the message window from fixed to popup  
 
 ##利用規約 Terms of use
 当プラグインはMITライセンスのもとで公開されています。LICENSE.txtもご確認ください。  

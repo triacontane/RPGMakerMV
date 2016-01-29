@@ -6,6 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/01/29 高確率で競合するバグを修正
+//                  ポップアップウィンドウがキャラクターの移動に追従するよう修正
+//                  顔グラフィックが見切れないよう修正
+//                  英語対応
 // 1.0.0 2016/01/28 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -14,6 +18,41 @@
 //=============================================================================
 
 /*:
+ * @plugindesc Popup window plugin
+ * @author triacontane
+ *
+ * @param FontSize
+ * @desc Font size of popup window
+ * @default 22
+ *
+ * @param Padding
+ * @desc Padding of popup window
+ * @default 8
+ *
+ * @param AutoPopup
+ * @desc Popup set when event starting（ON/OFF）
+ * @default ON
+ *
+ * @param FaceScale
+ * @desc Scale of face graphic of popup window(1-100%)
+ * @default 75
+ *
+ * @help Change the message window from fixed to popup
+ *
+ * Plugin Command
+ *
+ * MWP_VALID [Character ID]
+ *  Popup window valid
+ *  Player:0 Event:1-
+ * ex:MWP_VALID 0
+ *
+ * MWP_INVALID
+ *  Popup window invalid
+ * ex:MWP_INVALID
+ *
+ * This plugin is released under the MIT License.
+ */
+/*:ja
  * @plugindesc フキダシウィンドウプラグイン
  * @author トリアコンタン
  *
@@ -32,6 +71,10 @@
  * OFFの場合は通常のメッセージウィンドウに設定されます。
  * @default ON
  *
+ * @param フェイス倍率
+ * @desc フキダシウィンドウの顔グラフィック表示倍率(1-100%)
+ * @default 75
+ *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
  * キャラクターのマップ上の位置によってはウィンドウが画面上に隠れてしまう
@@ -43,20 +86,18 @@
  *
  * MWP_VALID
  * フキダシウィンドウ有効化 [キャラクターID] or
- * メッセージウィンドウを指定したキャラクターIDの頭上に表示するようにします。
- * プレイヤー : 0 指定したIDのイベント : 1 ～
+ * 　メッセージウィンドウを指定したキャラクターIDの頭上に表示するようにします。
+ * 　プレイヤー : 0 指定したIDのイベント : 1 ～
  *
  * 例：MWP_VALID 0
  * 　　フキダシウィンドウ有効化 3
  *
  * MWP_INVALID
- * フキダシウィンドウ無効化
- * ウィンドウの表示方法を通常に戻します。
+ * 　フキダシウィンドウ無効化
+ * 　ウィンドウの表示方法を通常に戻します。
  *
  * 例：MWP_INVALID
  * 　　フキダシウィンドウ無効化
- *
- * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -145,23 +186,22 @@
     // Game_System
     //  ポップアップフラグを保持します。
     //=============================================================================
+    var _Game_System_initialize = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
-        this._messagePopupCharacterId = 0;
-        this._messagePopup            = false;
+        _Game_System_initialize.apply(this, arguments);
+        this._messagePopupCharacterId = -1;
     };
 
     Game_System.prototype.setMessagePopup = function(id) {
         this._messagePopupCharacterId = id;
-        this._messagePopup            = true;
     };
 
     Game_System.prototype.clearMessagePopup = function() {
-        this._messagePopupCharacterId = 0;
-        this._messagePopup            = false;
+        this._messagePopupCharacterId = -1;
     };
 
     Game_System.prototype.getMessagePopupId = function() {
-        return this._messagePopup ? this._messagePopupCharacterId : null;
+        return this._messagePopupCharacterId !== -1 ? this._messagePopupCharacterId : null;
     };
 
     //=============================================================================
@@ -172,7 +212,7 @@
     Game_Map.prototype.setupStartingMapEvent = function() {
         var result = _Game_Map_setupStartingMapEvent.apply(this, arguments);
         if (result) {
-            if (getParamBoolean('自動設定')) {
+            if (getParamBoolean(['AutoPopup', '自動設定'])) {
                 $gameSystem.setMessagePopup(this._interpreter.eventId());
             } else {
                 $gameSystem.clearMessagePopup();
@@ -185,40 +225,63 @@
     // Window_Message
     //  ポップアップする場合、表示内容により座標とサイズを自動設定します。
     //=============================================================================
+    var faceScale = getParamNumber(['FaceScale', 'フェイス倍率'], 1, 100);
+    Window_Message._faceHeight = Math.floor(Window_Base._faceHeight * faceScale / 100);
+    Window_Message._faceWidth  = Math.floor(Window_Base._faceWidth  * faceScale / 100);
+
     var _Window_Message_startMessage = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
+        this._targetCharacterId = $gameSystem.getMessagePopupId();
         _Window_Message_startMessage.apply(this, arguments);
-        this.setupPosition();
+        this.setupSize();
     };
 
     var _Window_Message_resetFontSettings = Window_Message.prototype.resetFontSettings;
     Window_Message.prototype.resetFontSettings = function() {
         _Window_Message_resetFontSettings.apply(this, arguments);
         if (this.getPopupTargetCharacter()) {
-            this.contents.fontSize = getParamNumber('フォントサイズ', 1);
+            this.contents.fontSize = getParamNumber(['FontSize', 'フォントサイズ'], 1);
         }
     };
 
     Window_Message.prototype.getPopupTargetCharacter = function() {
-        var id = $gameSystem.getMessagePopupId();
+        var id = this._targetCharacterId;
         if (id == null) return null;
         return id === 0 ? $gamePlayer : $gameMap.event(id);
     };
 
-    Window_Message.prototype.setupPosition = function() {
+    var _Window_Message_update = Window_Message.prototype.update;
+    Window_Message.prototype.update = function() {
+        _Window_Message_update.apply(this, arguments);
+        if (this.openness > 0) this.updatePlacementPopup();
+    };
+
+    var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
+    Window_Message.prototype.updatePlacement = function() {
+        _Window_Message_updatePlacement.apply(this, arguments);
+        this.x = 0;
+        this.updatePlacementPopup();
+    };
+
+    Window_Message.prototype.updatePlacementPopup = function() {
         var character = this.getPopupTargetCharacter();
         if (character) {
-            this.padding = getParamNumber('余白', 1);
-            this.processVirtual();
             this.x = character.screenX() - this.width / 2;
             this.y = character.screenY() - this.height - 56;
+        }
+    };
+
+    Window_Message.prototype.setupSize = function() {
+        if (this.getPopupTargetCharacter()) {
+            this.padding = getParamNumber(['Padding', '余白'], 1);
+            this.processVirtual();
+            this._windowPauseSignSprite.y += 12;
         } else {
             this.padding = this.standardPadding();
             this.width = this.windowWidth();
             this.height = this.windowHeight();
-            this.x = 0;
-            this.updatePlacement();
         }
+        this.updatePlacement();
     };
 
     Window_Message.prototype.processVirtual = function() {
@@ -232,8 +295,7 @@
         }
         virtual.y += virtual.height;
         this.width  = virtual.maxWidth + this.padding * 2;
-        this.height = virtual.y + this.padding * 2;
-        this._windowPauseSignSprite.y += 12;
+        this.height = Math.max(this.getFaceHeight(), virtual.y) + this.padding * 2;
     };
 
     Window_Message.prototype.processVirtualCharacter = function(textState) {
@@ -279,6 +341,39 @@
     Window_Message.prototype.processVirtualDrawIcon = function(iconIndex, textState) {
         textState.x += Window_Base._iconWidth + 4;
         textState.maxWidth = Math.max(textState.maxWidth, textState.x);
+    };
+
+    var _Window_Message_newLineX = Window_Message.prototype.newLineX;
+    Window_Message.prototype.newLineX = function() {
+        if (this.getPopupTargetCharacter()) {
+            return $gameMessage.faceName() === '' ? 0 : Window_Message._faceWidth + 8;
+        } else {
+            return _Window_Message_newLineX.apply(this, arguments);
+        }
+    };
+
+    Window_Message.prototype.getFaceHeight = function() {
+        return $gameMessage.faceName() === '' ? 0 : Window_Message._faceHeight;
+    };
+
+    var _Window_Message_drawFace = Window_Message.prototype.drawFace;
+    Window_Message.prototype.drawFace = function(faceName, faceIndex, x, y, width, height) {
+        if (this.getPopupTargetCharacter()) {
+            width = width || Window_Base._faceWidth;
+            height = height || Window_Base._faceHeight;
+            var bitmap = ImageManager.loadFace(faceName);
+            var pw = Window_Base._faceWidth;
+            var ph = Window_Base._faceHeight;
+            var sw = Math.min(width, pw);
+            var sh = Math.min(height, ph);
+            var dx = Math.floor(x + Math.max(width - pw, 0) / 2);
+            var dy = Math.floor(y + Math.max(height - ph, 0) / 2);
+            var sx = faceIndex % 4 * pw + (pw - sw) / 2;
+            var sy = Math.floor(faceIndex / 4) * ph + (ph - sh) / 2;
+            this.contents.blt(bitmap, sx, sy, sw, sh, dx, dy, Window_Message._faceWidth, Window_Message._faceHeight);
+        } else {
+            _Window_Message_drawFace.apply(this, arguments);
+        }
     };
 })();
 
