@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/01/29 コマンド「D_TEXT_SETTING」の実装が「D_TEST_SETTING」になっていたので修正（笑）
 // 1.2.0 2016/01/27 複数行表示に対応
 //                  文字列の揃えと背景色を設定する機能を追加
 //                  変数をゼロ埋めして表示する機能を追加
@@ -154,7 +155,7 @@
                 var fontSize = getArgNumber(args.pop());
                 $gameScreen.setDTextPicture(getArgString(connectArgs(args), false), fontSize);
                 break;
-            case 'D_TEST_SETTING':
+            case 'D_TEXT_SETTING':
                 switch (getCommandName(args[0])) {
                     case 'ALIGN' :
                         $gameScreen.dTextAlign = isNaN(args[1]) ?
