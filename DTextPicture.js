@@ -83,7 +83,7 @@
     var getArgNumber = function (arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+        return (parseInt(convertEscapeCharacters(arg.toString()), 10) || 0).clamp(min, max);
     };
 
     var getArgString = function (arg, upperFlg) {
@@ -151,7 +151,7 @@
     Game_Interpreter.prototype.pluginCommandDTextPicture = function(command, args) {
         switch (getCommandName(command)) {
             case 'D_TEXT' :
-                if (isNaN(args[args.length - 1])) args.push('28');
+                if (isNaN(args[args.length - 1])) args.push($gameScreen.dTextSize || 28);
                 var fontSize = getArgNumber(args.pop());
                 $gameScreen.setDTextPicture(getArgString(connectArgs(args), false), fontSize);
                 break;
