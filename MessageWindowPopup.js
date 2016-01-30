@@ -463,7 +463,7 @@
     };
 
     Window_ChoiceList.prototype.updatePlacementPopup = function() {
-        if (paramLinkage && this._messageWindow.isOpen()) {
+        if (paramLinkage && this._messageWindow.openness > 0) {
             this.x = this._messageWindow.x;
             this.y = this._messageWindow.y + this._messageWindow.height;
         } else {
@@ -519,7 +519,7 @@
     };
 
     Window_NumberInput.prototype.updatePlacementPopup = function() {
-        if (paramLinkage && this._messageWindow.isOpen()) {
+        if (paramLinkage && this._messageWindow.openness > 0) {
             this.x = this._messageWindow.x;
             this.y = this._messageWindow.y + this._messageWindow.height;
         } else {
