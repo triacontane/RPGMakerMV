@@ -9,6 +9,7 @@
 // 1.1.0 2016/01/29 高確率で競合するバグを修正
 //                  ポップアップウィンドウがキャラクターの移動に追従するよう修正
 //                  顔グラフィックが見切れないよう修正
+//                  実行中のイベントをポップアップ対象にできる機能を追加（-1を指定）
 //                  英語対応
 // 1.0.0 2016/01/28 初版
 // ----------------------------------------------------------------------------
@@ -43,7 +44,7 @@
  *
  * MWP_VALID [Character ID]
  *  Popup window valid
- *  Player:0 Event:1-
+ *  Current event:-1 Player:0 Event:1...
  * ex:MWP_VALID 0
  *
  * MWP_INVALID
@@ -87,7 +88,7 @@
  * MWP_VALID
  * フキダシウィンドウ有効化 [キャラクターID] or
  * 　メッセージウィンドウを指定したキャラクターIDの頭上に表示するようにします。
- * 　プレイヤー : 0 指定したIDのイベント : 1 ～
+ * 　このイベント : -1 プレイヤー : 0 指定したIDのイベント : 1 ～
  *
  * 例：MWP_VALID 0
  * 　　フキダシウィンドウ有効化 3
@@ -173,7 +174,9 @@
         switch (getCommandName(command)) {
             case 'MWP_VALID' :
             case 'フキダシウィンドウ有効化':
-                $gameSystem.setMessagePopup(getArgNumber(args[0]));
+                var eventId = getArgNumber(args[0]);
+                if (eventId === -1) eventId = this.eventId();
+                $gameSystem.setMessagePopup(eventId);
                 break;
             case 'MWP_INVALID':
             case 'フキダシウィンドウ無効化':
