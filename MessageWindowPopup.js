@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/01/31 行間を調整できる機能を追加
 // 1.1.1 2016/01/30 選択肢と数値入力ウィンドウをポップアップと連携するよう修正
 //                  その他微調整と軽微な表示不良修正
 // 1.1.0 2016/01/29 高確率で競合するバグを修正
@@ -43,6 +44,10 @@
  * @param WindowLinkage
  * @desc Select window and Number input window is linkage with popup window(ON/OFF)
  * @default ON
+ *
+ * @param BetweenLines
+ * @desc Between the Lines
+ * @default 4
  *
  * @help Change the message window from fixed to popup
  *
@@ -86,6 +91,10 @@
  * @desc 選択肢ウィンドウと数値入力ウィンドウを
  * ポップアップウィンドウに連動させます。(ON/OFF)
  * @default ON
+ *
+ * @param 行間
+ * @desc 行と行の間のスペースをピクセル単位で設定します。
+ * @default 4
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
@@ -249,10 +258,11 @@
     // Window_Message
     //  ポップアップする場合、表示内容により座標とサイズを自動設定します。
     //=============================================================================
-    var paramFaceScale = getParamNumber(['FaceScale', 'フェイス倍率'], 1, 100);
-    var paramFontSize  = getParamNumber(['FontSize', 'フォントサイズ'], 1);
-    var paramPadding   = getParamNumber(['Padding', '余白'], 1);
-    var paramLinkage   = getParamBoolean(['WindowLinkage', 'ウィンドウ連携']);
+    var paramFaceScale    = getParamNumber(['FaceScale', 'フェイス倍率'], 1, 100);
+    var paramFontSize     = getParamNumber(['FontSize', 'フォントサイズ'], 1);
+    var paramPadding      = getParamNumber(['Padding', '余白'], 1);
+    var paramLinkage      = getParamBoolean(['WindowLinkage', 'ウィンドウ連携']);
+    var paramBetweenLines = getParamNumber(['BetweenLines', '行間'], 0);
 
     Window_Message._faceHeight = Math.floor(Window_Base._faceHeight * paramFaceScale / 100);
     Window_Message._faceWidth  = Math.floor(Window_Base._faceWidth  * paramFaceScale / 100);
@@ -265,6 +275,12 @@
     var _Window_Message_standardPadding = Window_Message.prototype.standardPadding;
     Window_Message.prototype.standardPadding = function() {
         return this.isPopup() ? paramPadding : _Window_Message_standardPadding.apply(this, arguments);
+    };
+
+    var _Window_Message_calcTextHeight = Window_Message.prototype.calcTextHeight;
+    Window_Message.prototype.calcTextHeight = function(textState, all) {
+        var height = _Window_Message_calcTextHeight.apply(this, arguments);
+        return this.isPopup() ? height - 8 + paramBetweenLines : height;
     };
 
     var _Window_Message_startMessage = Window_Message.prototype.startMessage;
