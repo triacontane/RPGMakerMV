@@ -178,7 +178,6 @@ function Game_SoundTest() {
             xhr.onload = function() {
                 if (xhr.status < 400) {
                     window[name] = this._loadCsvData(xhr.responseText);
-                    this.onLoadCsv(window[name]);
                 }
             }.bind(this);
             xhr.onerror = function() {
@@ -204,9 +203,6 @@ function Game_SoundTest() {
                 dataList[dataObject.id] = dataObject;
             }.bind(this));
             return dataList;
-        };
-
-        DataManager.onLoadCsv = function(object) {
         };
 
         DataManager.isLoadedCsv = function() {
@@ -612,6 +608,10 @@ function Game_SoundTest() {
         this.drawAllItems();
     };
 
+    //=============================================================================
+    // Window_BgmSetting
+    //  BGM設定ウィンドウです。
+    //=============================================================================
     function Window_BgmSetting() {
         this.initialize.apply(this, arguments);
     }

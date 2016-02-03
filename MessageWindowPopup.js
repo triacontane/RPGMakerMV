@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2016/02/04 イベント終了時にポップアップ設定をクリアするよう修正
 // 1.1.2 2016/01/31 行間を調整できる機能を追加
 // 1.1.1 2016/01/30 選択肢と数値入力ウィンドウをポップアップと連携するよう修正
 //                  その他微調整と軽微な表示不良修正
@@ -203,6 +204,12 @@
                 $gameSystem.clearMessagePopup();
                 break;
         }
+    };
+
+    var _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
+    Game_Interpreter.prototype.terminate = function() {
+        _Game_Interpreter_terminate.apply(this, arguments);
+        if (this._depth === 0) $gameSystem.clearMessagePopup();
     };
 
     //=============================================================================
