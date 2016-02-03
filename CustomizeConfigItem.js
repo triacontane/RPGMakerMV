@@ -396,20 +396,20 @@
 
     var _Window_Options_processOk = Window_Options.prototype.processOk;
     Window_Options.prototype.processOk = function() {
-        if (!this._valueShift(1)) _Window_Options_processOk.apply(this, arguments);
+        if (!this._shiftValue(1)) _Window_Options_processOk.apply(this, arguments);
     };
 
     var _Window_Options_cursorRight = Window_Options.prototype.cursorRight;
     Window_Options.prototype.cursorRight = function(wrap) {
-        if (!this._valueShift(1)) _Window_Options_cursorRight.apply(this, arguments);
+        if (!this._shiftValue(1)) _Window_Options_cursorRight.apply(this, arguments);
     };
 
     var _Window_Options_cursorLeft = Window_Options.prototype.cursorLeft;
     Window_Options.prototype.cursorLeft = function(wrap) {
-        if (!this._valueShift(-1)) _Window_Options_cursorLeft.apply(this, arguments);
+        if (!this._shiftValue(-1)) _Window_Options_cursorLeft.apply(this, arguments);
     };
 
-    Window_Options.prototype._valueShift = function(sign) {
+    Window_Options.prototype._shiftValue = function(sign) {
         var symbol = this.commandSymbol(this.index());
         var value = this.getConfigValue(symbol);
         if (this.isNumberSymbol(symbol)) {

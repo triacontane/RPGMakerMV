@@ -5,6 +5,12 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/02/03 : バッチ処理プラグイン[BatchProcessManager.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BatchProcessManager.js)を追加しました。  
+1. プラグインコマンドから実行する各種バッチ処理を提供します。必要に応じて他のプラグインと併用してください。  
+
+###2016/02/03 : サウンドテストプラグイン[SceneSoundTest.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SceneSoundTest.js)を追加しました。  
+1. ゲーム中のBGMを視聴できるサウンドテストを実装します。  
+
 ###2016/01/29 : フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)を追加しました。  
 1. メッセージウィンドウを指定したキャラクターの頭上にフキダシで表示するよう変更します。  
 
@@ -215,6 +221,12 @@ Erase message window (and restore) when triggered
 38. フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)  
 メッセージウィンドウを指定したキャラクターの頭上にフキダシで表示するよう変更します。  
 Change the message window from fixed to popup  
+
+39. サウンドテストプラグイン[SceneSoundTest.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SceneSoundTest.js)  
+ゲーム中のBGMを視聴できるサウンドテストを実装します。  
+
+40. バッチ処理プラグイン[BatchProcessManager.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BatchProcessManager.js)  
+プラグインコマンドから実行する各種バッチ処理を提供します。必要に応じて他のプラグインと併用してください。  
 
 ##利用規約 Terms of use
 当プラグインはMITライセンスのもとで公開されています。LICENSE.txtもご確認ください。  
