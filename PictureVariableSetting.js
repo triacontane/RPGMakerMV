@@ -106,6 +106,11 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1])).padZero(arguments[2]);
+        }.bind(this));
         var window = SceneManager._scene._windowLayer.children[0];
         return window ? window.convertEscapeCharacters(text) : text;
     };
