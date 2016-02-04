@@ -5,6 +5,9 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/02/05 : 画像ロード遅延時のエラー修正プラグイン[BugFixImageOnLoad.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixImageOnLoad.js)を追加しました。  
+1. スプライトで画像を指定後、画像のロードが完了する前に画像の指定を解除するとエラーで強制終了する現象の修正。  
+
 ###2016/02/03 : バッチ処理プラグイン[BatchProcessManager.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BatchProcessManager.js)を追加しました。  
 1. プラグインコマンドから実行する各種バッチ処理を提供します。必要に応じて他のプラグインと併用してください。  
 
@@ -227,6 +230,10 @@ Change the message window from fixed to popup
 
 40. バッチ処理プラグイン[BatchProcessManager.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BatchProcessManager.js)  
 プラグインコマンドから実行する各種バッチ処理を提供します。必要に応じて他のプラグインと併用してください。  
+
+41. 画像ロード遅延時のエラー修正プラグイン[BugFixImageOnLoad.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixImageOnLoad.js)  
+スプライトで画像を指定後、画像のロードが完了する前に画像の指定を解除するとエラーで強制終了する現象の修正。  
+具体的には、「ピクチャの表示」→「ウェイト（1フレーム）」→「ピクチャの消去」で発生するエラーの対応です。
 
 ##利用規約 Terms of use
 当プラグインはMITライセンスのもとで公開されています。LICENSE.txtもご確認ください。  
