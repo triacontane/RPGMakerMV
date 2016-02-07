@@ -5,6 +5,9 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/02/07 : ピクチャのアニメーションプラグイン[PictureAnimation.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureAnimation.js)を更新しました。  
+1. 戦闘画面でもピクチャのアニメーションが出来るように修正しました。  
+
 ###2016/02/05 : 画像ロード遅延時のエラー修正プラグイン[BugFixImageOnLoad.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixImageOnLoad.js)を追加しました。  
 1. 「ピクチャの表示」→「ウェイト（1フレーム）」→「ピクチャの消去」で発生するエラーの対応です。  
 

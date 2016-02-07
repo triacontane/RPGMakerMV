@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2016/02/07 戦闘画面でもピクチャのアニメーションができるように修正
 // 1.2.2 2016/01/24 空のピクチャを表示しようとした際にエラーが発生する現象を修正
 // 1.2.1 2016/01/16 同じ画像を指定してピクチャ表示→アニメーション準備→ピクチャ表示の順で実行した
 //                  場合にエラーが発生する現象の修正
@@ -189,7 +190,7 @@
                 pictureNum     = getArgNumber(args[0], 1, 100);
                 animationType  = getArgNumber(args[1], 1, 3);
                 customArray    = getArgArrayNumber(args[2], 1, 200);
-                picture        = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
+                picture        = $gameScreen.picture(pictureNum);
                 if (picture) picture.startAnimation(animationType, false, customArray);
                 break;
             case 'PA_START_LOOP' :
@@ -197,19 +198,19 @@
                 pictureNum     = getArgNumber(args[0], 1, 100);
                 animationType  = getArgNumber(args[1], 1, 3);
                 customArray    = getArgArrayNumber(args[2], 1, 200);
-                picture        = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
+                picture        = $gameScreen.picture(pictureNum);
                 if (picture) picture.startAnimation(animationType, true, customArray);
                 break;
             case 'PA_STOP' :
             case 'ピクチャのアニメーション終了':
                 pictureNum    = getArgNumber(args[0], 1, 100);
-                picture       = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
+                picture       = $gameScreen.picture(pictureNum);
                 if (picture) picture.stopAnimation(false);
                 break;
             case 'PA_STOP_FORCE' :
             case 'ピクチャのアニメーション強制終了':
                 pictureNum    = getArgNumber(args[0], 1, 100);
-                picture       = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
+                picture       = $gameScreen.picture(pictureNum);
                 if (picture) picture.stopAnimation(true);
                 break;
             case 'PA_SET_CELL' :
@@ -217,7 +218,7 @@
                 pictureNum    = getArgNumber(args[0], 1, 100);
                 cellNumber    = getArgNumber(args[1], 1, 200);
                 wait          = getArgString(args[2]);
-                picture       = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
+                picture       = $gameScreen.picture(pictureNum);
                 if (picture) {
                     if (wait === 'ウェイトあり' || wait.toUpperCase() === 'WAIT') this.wait(picture._fadeDuration);
                     picture.cell = cellNumber;
@@ -227,7 +228,7 @@
             case 'ピクチャのアニメーションセル進行':
                 pictureNum    = getArgNumber(args[0], 1, 100);
                 wait          = getArgString(args[1]);
-                picture       = $gameScreen.picture($gameScreen.realPictureId(pictureNum));
+                picture       = $gameScreen.picture(pictureNum);
                 if (picture) {
                     if (wait === 'ウェイトあり' || wait.toUpperCase() === 'WAIT') this.wait(picture._fadeDuration);
                     picture.addCellCount();
@@ -362,7 +363,6 @@
     };
 
     Game_Picture.prototype.updateAnimation = function() {
-        if (!this.isAnimation()) return;
         this._frameCount = (this._frameCount + 1) % this._frameNumber;
         if (this._frameCount === 0) {
             this.addCellCount();
