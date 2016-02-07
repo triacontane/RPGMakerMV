@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/02/07 改行コード（CR+LF）に対応
+//                  英語対応
 // 1.0.0 2016/01/29 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -14,6 +16,76 @@
 //=============================================================================
 
 /*:
+ * @plugindesc Sound test plugin
+ * @author triacontane
+ *
+ * @param CommandName
+ * @desc Command name
+ * @default Sound Test
+ *
+ * @param AddCommandTitle
+ * @desc Add command at title scene(ON/OFF)
+ * @default ON
+ *
+ * @param AddCommandMenu
+ * @desc Add command at menu scene(ON/OFF)
+ * @default ON
+ *
+ * @param NameVolume
+ * @desc Name volume for Bgm setting window
+ * @default Volume
+ *
+ * @param NamePitch
+ * @desc Name pitch for Bgm setting window
+ * @default Pitch
+ *
+ * @param NamePan
+ * @desc Name pan for Bgm setting window
+ * @default Pan
+ *
+ * @param BackPicture
+ * @desc Back ground picture（/img/pictures/）
+ * @default
+ *
+ * @param ReadFormat
+ * @desc read data format(Support CSV only)
+ * @default CSV
+ *
+ * @help Add sound test screen.
+ *
+ * Preparation
+ * Make [/data/SoundTest.csv] UFT-8
+ *
+ * COLUMN      : DESCRIPTION
+ * fileName    : BGM File name
+ * displayName : BGM Display name
+ * description : BGM Description
+ *
+ * ex :
+ * fileName,displayName,description
+ * aaa,bbb,ccc
+ *
+ * Plugin Command
+ *
+ * SOUND_TEST_CALL
+ *   Call sound test scene
+ *   ex : SOUND_TEST_CALL
+ *
+ * SOUND_TEST_LIBERATE_ALL
+ *   All BGM liberate
+ *   ex : SOUND_TEST_LIBERATE_ALL
+ *
+ * SOUND_TEST_TITLE_VALID
+ *   Add command at title scene
+ *   ex : SOUND_TEST_TITLE_VALID
+ *
+ * SOUND_TEST_MENU_VALID
+ *   Add command at menu scene
+ * 　例：SOUND_TEST_MENU_VALID
+ *
+ * This plugin is released under the MIT License.
+ */
+/*:ja
  * @plugindesc サウンドテストプラグイン
  * @author トリアコンタン
  *
@@ -101,8 +173,6 @@
  * 　メニュー画面の項目にサウンドテストが追加されます。
  * 　例：SOUND_TEST_MENU_VALID
  *
- * このプラグインにはプラグインコマンドはありません。
- *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -189,14 +259,14 @@ function Game_SoundTest() {
 
         DataManager._loadCsvData = function(responseText) {
             var dataList = [null];
-            var dataArray = responseText.split('\n');
+            var dataArray = responseText.replace(/\r\n?/g, '\n').split('\n');
             var columns = dataArray.shift().split(this._dataSeparater);
             dataArray.forEach(function(line) {
                 if (line === '') return;
                 var dataObject = {};
                 dataObject.id = dataList.length;
                 line.split(this._dataSeparater).iterate(function(key, data) {
-                    dataObject[columns[key]] = data.replace(/^\"?(.*?)\"?$/, function() {
+                    dataObject[columns[key]] = data.replace(/^\s*\"?(.*?)\"?\s*$/, function() {
                         return arguments[1];
                     });
                 }.bind(this));
@@ -357,7 +427,8 @@ function Game_SoundTest() {
     var _Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function() {
         _Window_TitleCommand_makeCommandList.apply(this, arguments);
-        if ($gameSoundTest.titleCommandVisible) this.addCommand(getParamString('コマンド名称'), 'soundTest');
+        if ($gameSoundTest.titleCommandVisible)
+            this.addCommand(getParamString(['コマンド名称','CommandName']), 'soundTest');
     };
 
     var _Window_TitleCommand_updatePlacement = Window_TitleCommand.prototype.updatePlacement;
@@ -374,7 +445,8 @@ function Game_SoundTest() {
     Window_MenuCommand.prototype.addOriginalCommands = function() {
         _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
         var enabled = this.isSoundTestEnabled();
-        if ($gameSoundTest.menuCommandVisible) this.addCommand(getParamString('コマンド名称'), 'soundTest', enabled);
+        if ($gameSoundTest.menuCommandVisible)
+            this.addCommand(getParamString(['コマンド名称','CommandName']), 'soundTest', enabled);
     };
 
     Window_MenuCommand.prototype.isSoundTestEnabled = function() {
@@ -407,7 +479,7 @@ function Game_SoundTest() {
 
     var _Scene_SoundTest_createBackground = Scene_SoundTest.prototype.createBackground;
     Scene_SoundTest.prototype.createBackground = function() {
-        var background = getParamString('背景ピクチャ');
+        var background = getParamString(['背景ピクチャ', 'BackPicture']);
         if (background) {
             this._backgroundSprite = new Sprite();
             this._backgroundSprite.bitmap = ImageManager.loadPicture(background ,0);
@@ -724,9 +796,9 @@ function Game_SoundTest() {
         return $gameSoundTest.getBgmProperty(symbol);
     };
 
-    var paramVolume = getParamString('音量名称');
-    var paramPitch  = getParamString('ピッチ名称');
-    var paramPan    = getParamString('位相名称');
+    var paramVolume = getParamString(['音量名称','NameVolume']);
+    var paramPitch  = getParamString(['ピッチ名称','NamePitch']);
+    var paramPan    = getParamString(['位相名称','NamePan']);
     //=============================================================================
     // SoundTestManager
     //  サウンドテスト設定ファイルのセーブとロードを定義します。
@@ -774,8 +846,8 @@ function Game_SoundTest() {
     //  $gameSoundTestとして作成され、専用のセーブファイルに保存されます。
     //=============================================================================
     Game_SoundTest.prototype.initialize = function () {
-        this.titleCommandVisible = getParamBoolean('タイトルに追加');
-        this.menuCommandVisible  = getParamBoolean('メニューに追加');
+        this.titleCommandVisible = getParamBoolean(['タイトルに追加','AddCommandTitle']);
+        this.menuCommandVisible  = getParamBoolean(['メニューに追加','AddCommandMenu']);
         this._playedList = {};
         this._prevBgm = null;
         this._prevBgs = null;
