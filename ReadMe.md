@@ -5,6 +5,9 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/02/07 : ステート解除時の変化プラグイン[StateChangeIfRemove.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/StateChangeIfRemove.js)を追加しました。  
+1. ステート解除条件を満たしたときに自動的に別のステートに差し替えます。  
+
 ###2016/02/07 : ピクチャのアニメーションプラグイン[PictureAnimation.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureAnimation.js)を更新しました。  
 1. 戦闘画面でもピクチャのアニメーションが出来るように修正しました。  
 
@@ -236,7 +239,10 @@ Change the message window from fixed to popup
 
 41. 画像ロード遅延時のエラー修正プラグイン[BugFixImageOnLoad.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixImageOnLoad.js)  
 スプライトで画像を指定後、画像のロードが完了する前に画像の指定を解除するとエラーで強制終了する現象の修正。  
-具体的には、「ピクチャの表示」→「ウェイト（1フレーム）」→「ピクチャの消去」で発生するエラーの対応です。
+具体的には、「ピクチャの表示」→「ウェイト（1フレーム）」→「ピクチャの消去」で発生するエラーの対応です。  
+
+42. ステート解除時の変化プラグイン[StateChangeIfRemove.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/StateChangeIfRemove.js)  
+ステート解除条件を満たしたときに自動的に別のステートに差し替えます。  
 
 ##利用規約 Terms of use
 当プラグインはMITライセンスのもとで公開されています。LICENSE.txtもご確認ください。  
