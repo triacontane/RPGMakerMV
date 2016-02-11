@@ -22,6 +22,7 @@
  *
  * メモ欄書式（ステートIDには制御文字を利用できます）
  *
+ * 1. 自動付与ステートの条件
  * <AS上限HP:（HPの割合[百分率]）>
  *     指定したHP(割合)を上回っている（>=）間、対象ステートを付与する。
  * <AS下限HP:（HPの割合[百分率]）>
@@ -40,10 +41,14 @@
  *     指定した武器を装備している間、対象ステートを付与する。
  * <ASスイッチ:（スイッチID）>
  *     指定したスイッチがONになっている間、対象ステートを付与する。
- * <AS味方のみ:>
- *     ステート自動付与の対象を味方のみに設定する。
- * <AS敵のみ:>
- *     ステート自動付与の対象を味方のみに設定する。
+ *
+ * 2. 自動付与ステートの対象
+ * <ASアクター:（アクターID）>
+ *     ステート自動付与の対象を指定したアクターのみに設定する。
+ *     IDの指定がない場合、全てのアクターに有効になる。
+ * <AS敵キャラ:（敵キャラID）>
+ *     ステート自動付与の対象を指定した敵キャラのみに設定する。
+ *     IDの指定がない場合、全ての敵キャラに有効になる。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -157,7 +162,8 @@
     var _Game_Actor_isAutomaticValid = Game_Actor.prototype.isAutomaticValid;
     Game_Actor.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
-        if (this.isStateMetaInfo('敵のみ')) return false;
+        var actorId = this.getStateMetaNumber('アクター', 1, $dataActors.length - 1);
+        if (this.isStateMetaInfo('敵キャラ') || (actorId !== null && actorId !== this._actorId)) return false;
         var weaponId = this.getStateMetaNumber('武器装備', 1, $dataWeapons.length - 1);
         if (weaponId !== null) return this.hasWeapon($dataWeapons[weaponId]);
         var armorId = this.getStateMetaNumber('防具装備', 1, $dataArmors.length - 1);
@@ -178,7 +184,8 @@
     var _Game_Enemy_isAutomaticValid = Game_Enemy.prototype.isAutomaticValid;
     Game_Enemy.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
-        if (this.isStateMetaInfo('味方のみ')) return false;
+        var enemyId = this.getStateMetaNumber('敵キャラ', 1, $dataEnemies.length - 1);
+        if (this.isStateMetaInfo('アクター') || (enemyId !== null && enemyId !== this._enemyId)) return false;
         return _Game_Enemy_isAutomaticValid.apply(this, arguments);
     };
 
