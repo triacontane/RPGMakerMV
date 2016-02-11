@@ -5,6 +5,9 @@ These plugins(javascript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/02/11 : ステート自動付与プラグイン[AutomaticState.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/AutomaticState.js)を追加しました。  
+1. 条件を満たしている間、指定したステートを付与します。  
+
 ###2016/02/07 : ステート解除時の変化プラグイン[StateChangeIfRemove.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/StateChangeIfRemove.js)を追加しました。  
 1. ステート解除条件を満たしたときに自動的に別のステートに差し替えます。  
 
@@ -243,6 +246,11 @@ Change the message window from fixed to popup
 
 42. ステート解除時の変化プラグイン[StateChangeIfRemove.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/StateChangeIfRemove.js)  
 ステート解除条件を満たしたときに自動的に別のステートに差し替えます。  
+強力な毒が時間経過で弱い毒に変化したり、逆に症状が悪化したり、時間経過で戦闘不能になったり……等の設定に有効です。
+
+43. ステート自動付与プラグイン[AutomaticState.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/AutomaticState.js)  
+条件を満たしている間、指定したステートを付与します。  
+条件にはHP、MP、TP、装備品、スイッチが利用でき、特定のアクターや敵キャラのみを対象にすることもできます。  
 
 ##利用規約 Terms of use
 当プラグインはMITライセンスのもとで公開されています。LICENSE.txtもご確認ください。  
