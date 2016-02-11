@@ -1,6 +1,7 @@
+#RPGツクールMV対応プラグイン Plugin for RPGMakerMV
+
 ##概要 Overview
-RPGツクールMVで動作するプラグイン(JavaScript)を置いています。  
-どうぞご自由にお使いください。  
+RPGツクールMVで動作するプラグイン(JavaScript)を置いています。どうぞご自由にお使いください。  
 一部のプラグインは、[ブログ](http://triacontane.blogspot.jp/)にて詳細な紹介を行っています。  
 また、新しいプラグインを[ツイッター](https://twitter.com/triacontane)で告知する場合があります。  
 These plugins(JavaScript) are for RPG Maker MV.  
@@ -52,6 +53,7 @@ These plugins(JavaScript) are for RPG Maker MV.
 要望を出すことも、それを断ることもお互いの自由であり、余計な気遣いは不要と認識しています。  
 
 ##作者連絡先 Contact information
+トリアコンタン(triacontane)  
 [Blog]    : <http://triacontane.blogspot.jp/>  
 [Twitter] : <https://twitter.com/triacontane>  
 [GitHub]  : <https://github.com/triacontane/>  
