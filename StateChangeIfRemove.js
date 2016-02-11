@@ -133,9 +133,19 @@
         return this._states.indexOf(stateId) >= 0;
     };
 
+    //=============================================================================
+    // Game_ActionResult
+    //  ステート付与、解除時のメッセージを抑制します。
+    //=============================================================================
     Game_ActionResult.prototype.deleteRemovedStates = function(stateId) {
         this.removedStates.iterate(function(key, value, index) {
             if (value === stateId) this.removedStates.splice(index, 1);
+        }.bind(this));
+    };
+
+    Game_ActionResult.prototype.deleteAddedStates = function(stateId) {
+        this.addedStates.iterate(function(key, value, index) {
+            if (value === stateId) this.addedStates.splice(index, 1);
         }.bind(this));
     };
 })();

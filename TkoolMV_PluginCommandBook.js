@@ -1007,7 +1007,6 @@
      *  このプラグインで使っている制御文字の拡張を通常のウィンドウにも適用します
      *  製作者 Alec
      */
-    console.log(eval(String(parameters['制御文字の拡張']||'false')));
     if (eval(String(parameters['制御文字の拡張']||'false'))) {
         (function () {
             var Window_Base_convertEscapeCharacters = Window_Base.prototype.convertEscapeCharacters;
