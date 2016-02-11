@@ -1,6 +1,5 @@
-#RPGツクールMV対応プラグイン Plugin for RPGMakerMV
+#RPGツクールMV対応プラグイン
 
-##概要 Overview
 RPGツクールMVで動作するプラグイン(JavaScript)を置いています。どうぞご自由にお使いください。  
 一部のプラグインは、[ブログ](http://triacontane.blogspot.jp/)にて詳細な紹介を行っています。  
 また、新しいプラグインを[ツイッター](https://twitter.com/triacontane)で告知する場合があります。  
