@@ -1,4 +1,4 @@
-##更新履歴 Update record
+##更新履歴（全件） Update record all
 
 ###2016/02/11 : ステート自動付与プラグイン[AutomaticState.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/AutomaticState.js)を追加しました。  
 1. 条件を満たしている間、指定したステートを付与します。  
