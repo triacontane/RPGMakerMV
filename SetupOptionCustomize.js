@@ -99,11 +99,11 @@
         newUrl += (newUrl === location.host ? '?' : '&') + value;
     };
 
-    var newUrl = location.host;
-    console.log('URL : ' + location.href);
-    if (Utils.isOptionValid('CustomizeComplete')) return;
+    var newUrl = '';
+    var alreadyParseSign = 'XzegKSNEZup5ZcQWTf8u';
+    if (Utils.isOptionValid(alreadyParseSign)) return;
 
-    addOption('CustomizeComplete');
+    addOption(alreadyParseSign);
     if (!getParamBoolean('ユーザオプション無効')) {
         addOption(location.search.slice(1));
     }
