@@ -96,7 +96,8 @@
     };
 
     var addOption = function(value) {
-        newUrl += (newUrl === location.host ? '?' : '&') + value;
+        if (!value) return;
+        newUrl += (newUrl === '' ? '?' : '&') + value;
     };
 
     var newUrl = '';
@@ -127,6 +128,7 @@
     if (isParamExist('任意オプション')) {
         addOption(getParamString('任意オプション'));
     }
+    console.log('newUrl');
     location.replace(newUrl);
 })();
 
