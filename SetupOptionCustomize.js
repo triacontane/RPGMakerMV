@@ -49,9 +49,7 @@
  *
  * @help MVの起動オプション（URLクエリパラメータ）を
  * 制作者側で制御できます。
- * ローカル実行時でも起動オプションを自在に変更したり
- * Webで公開した際に勝手にオプションを追加、変更されるのを
- * 防ぐことができます。
+ * ローカル実行時でも起動オプションを自在に変更できます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -101,7 +99,7 @@
     };
 
     var newUrl = '';
-    var alreadyParseSign = 'XzegKSNEZup5ZcQWTf8u';
+    var alreadyParseSign = 'XzegKSNEZup5ZcQWTf8u2';
     if (Utils.isOptionValid(alreadyParseSign)) return;
 
     addOption(alreadyParseSign);
