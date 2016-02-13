@@ -7,14 +7,15 @@ These plugins(JavaScript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/02/13 : 戦闘中顔グラフィック表示プラグイン[BattleActorFaceVisibility.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BattleActorFaceVisibility.js)を修正しました。  
+1. 他のプラグインと併用できるように、ウィンドウの表示位置を調整する機能を追加。  
+
+###2016/02/13 : フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)を修正しました。  
+1. 並列処理のイベントが存在するときにポップアップ設定がクリアされてしまう問題の修正。  
+2. ウィンドウの表示位置を下に表示できる設定を追加。  
+
 ###2016/02/11 : ステート自動付与プラグイン[AutomaticState.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/AutomaticState.js)を追加しました。  
 1. 条件を満たしている間、指定したステートを付与します。  
-
-###2016/02/07 : ステート解除時の変化プラグイン[StateChangeIfRemove.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/StateChangeIfRemove.js)を追加しました。  
-1. ステート解除条件を満たしたときに自動的に別のステートに差し替えます。  
-
-###2016/02/07 : ピクチャのアニメーションプラグイン[PictureAnimation.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PictureAnimation.js)を更新しました。  
-1. 戦闘画面でもピクチャのアニメーションが出来るように修正しました。  
 
 これより以前の履歴は[こちら](./UpdateRecord.md)をご参照ください。  
 

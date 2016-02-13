@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/02/13 並列処理のイベントが存在するときにポップアップ設定がクリアされてしまう
+//                  問題の修正
+//                  ウィンドウの表示位置を下に表示できる設定を追加
 // 1.1.3 2016/02/04 イベント終了時にポップアップ設定をクリアするよう修正
 // 1.1.2 2016/01/31 行間を調整できる機能を追加
 // 1.1.1 2016/01/30 選択肢と数値入力ウィンドウをポップアップと連携するよう修正
@@ -63,6 +66,17 @@
  *  Popup window invalid
  * ex:MWP_INVALID
  *
+ * MWP_SETTING [parameter]
+ *  Popup window setting parameter is...
+ *   POS_UPPER
+ *     Window position fixed upper.
+ *
+ * 　POS_LOWER
+ *     Window position fixed upper.
+ *
+ * 　POS_AUTO
+ *     Window position auto.
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -99,27 +113,41 @@
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
- * キャラクターのマップ上の位置によってはウィンドウが画面上に隠れてしまう
- * 場合もあるので注意してください。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * MWP_VALID
- * フキダシウィンドウ有効化 [キャラクターID] or
+ * MWP_VALID [キャラクターID] or
+ * フキダシウィンドウ有効化 [キャラクターID]
  * 　メッセージウィンドウを指定したキャラクターIDの頭上に表示するようにします。
  * 　プレイヤー : -1 このイベント : 0 指定したIDのイベント : 1 ～
  *
  * 例：MWP_VALID 0
  * 　　フキダシウィンドウ有効化 3
  *
- * MWP_INVALID
- * 　フキダシウィンドウ無効化
+ * MWP_INVALID or
+ * フキダシウィンドウ無効化
  * 　ウィンドウの表示方法を通常に戻します。
  *
  * 例：MWP_INVALID
  * 　　フキダシウィンドウ無効化
+ *
+ * MWP_SETTING [設定内容] or
+ * フキダシウィンドウ設定 [設定内容]
+ * 　フキダシウィンドウの設定を行います。設定内容に以下を入力。
+ * 　POS_UPPER or 位置_上固定
+ * 　　ウィンドウの位置をキャラクターの上で固定します。
+ *
+ * 　POS_LOWER or 位置_下固定
+ * 　　ウィンドウの位置をキャラクターの下で固定します。
+ *
+ * 　POS_AUTO or 位置_自動
+ * 　　通常はキャラクターの上に表示し、ウィンドウが上に見切れる場合のみ
+ * 　　下に表示します。
+ *
+ * 例：MWP_SETTING POS_UPPER
+ * 　　フキダシウィンドウ設定 位置_自動
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -203,13 +231,37 @@
             case 'フキダシウィンドウ無効化':
                 $gameSystem.clearMessagePopup();
                 break;
+            case 'MWP_SETTING' :
+            case 'フキダシウィンドウ設定':
+                switch (getCommandName(args[0])) {
+                    case 'POS_UPPER' :
+                    case '位置_上固定':
+                        $gameSystem.setPopupFixUpper();
+                        break;
+                    case 'POS_LOWER' :
+                    case '位置_下固定':
+                        $gameSystem.setPopupFixLower();
+                        break;
+                    case 'POS_AUTO' :
+                    case '位置_自動':
+                        $gameSystem.setPopupAuto();
+                        break;
+                }
         }
     };
 
     var _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
-        if (this._depth === 0) $gameSystem.clearMessagePopup();
+        if (this._depth === 0 && this.isGameMapInterpreter()) $gameSystem.clearMessagePopup();
+    };
+
+    Game_Interpreter.prototype.setGameMapInterpreter = function() {
+        this._gameMapInterpreter = true;
+    };
+
+    Game_Interpreter.prototype.isGameMapInterpreter = function() {
+        return this._gameMapInterpreter;
     };
 
     //=============================================================================
@@ -220,6 +272,7 @@
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
         this._messagePopupCharacterId = 0;
+        this._messagePopupPosition = null;
     };
 
     Game_System.prototype.setMessagePopup = function(id) {
@@ -232,6 +285,26 @@
 
     Game_System.prototype.getMessagePopupId = function() {
         return this._messagePopupCharacterId !== 0 ? this._messagePopupCharacterId : null;
+    };
+
+    Game_System.prototype.setPopupFixUpper = function() {
+        this._messagePopupPosition = 1;
+    };
+
+    Game_System.prototype.setPopupFixLower = function() {
+        this._messagePopupPosition = 2;
+    };
+
+    Game_System.prototype.setPopupAuto = function() {
+        this._messagePopupPosition = 0;
+    };
+
+    Game_System.prototype.isPopupFixUpper = function() {
+        return this._messagePopupPosition === 1;
+    };
+
+    Game_System.prototype.isPopupFixLower = function() {
+        return this._messagePopupPosition === 2;
     };
 
     //=============================================================================
@@ -249,6 +322,12 @@
             }
         }
         return result;
+    };
+
+    var _Game_Map_setup = Game_Map.prototype.setup;
+    Game_Map.prototype.setup = function(mapId) {
+        _Game_Map_setup.apply(this, arguments);
+        this._interpreter.setGameMapInterpreter();
     };
 
     //=============================================================================
@@ -315,7 +394,7 @@
     var _Window_Message_update = Window_Message.prototype.update;
     Window_Message.prototype.update = function() {
         _Window_Message_update.apply(this, arguments);
-        if (this.openness > 0 && this.isPopup())  this.updatePlacementPopup();
+        if (this.openness > 0 && this.isPopup()) this.updatePlacementPopup();
     };
 
     var _Window_Message_updatePauseSign = Window_Message.prototype._updatePauseSign;
@@ -331,10 +410,24 @@
         if (this.isPopup()) this.updatePlacementPopup();
     };
 
+    Window_Message.prototype.isPopupLower = function() {
+        return $gameSystem.isPopupFixLower() || (!$gameSystem.isPopupFixUpper() && this.y < 0);
+    };
+
     Window_Message.prototype.updatePlacementPopup = function() {
         var character = this.getPopupTargetCharacter();
         this.x = character.screenX() - this.width / 2;
         this.y = character.screenY() - this.height - 56;
+        if (this.isPopupLower()) {
+            this.y = character.screenY() + 8;
+            this._windowPauseSignSprite.rotation = 180 * Math.PI / 180;
+            this._windowPauseSignSprite.y = 12;
+            this._windowPauseSignSprite.anchor.y = 0;
+        } else {
+            this._windowPauseSignSprite.rotation = 0;
+            this._windowPauseSignSprite.y = this.height + 12;
+            this._windowPauseSignSprite.anchor.y = 1.0;
+        }
         var deltaX = 0;
         if (this.x < 0) {
             deltaX = this.x;
@@ -356,10 +449,11 @@
         this.padding = this.standardPadding();
         if (this.getPopupTargetCharacter()) {
             this.processVirtual();
-            this._windowPauseSignSprite.y += 12;
         } else {
             this.width = this.windowWidth();
             this.height = this.windowHeight();
+            this._windowPauseSignSprite.rotation = 0;
+            this._windowPauseSignSprite.anchor.y = 1.0;
         }
         this.updatePlacement();
         this.updateBackground();
