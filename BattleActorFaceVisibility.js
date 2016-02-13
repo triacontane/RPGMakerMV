@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/02/13 他のプラグインと併用できるように、ウィンドウの表示位置を調整する機能を追加
+//                  ウィンドウの表示順をヘルプウィンドウの下に変更
 // 1.1.1 2015/12/28 任意のエネミーグラフィック画像を指摘できる機能を追加
 //                  ウィンドウを非表示にする機能を追加
 // 1.1.0 2015/12/27 顔グラフィックの代わりに任意のピクチャ画像を指定できる機能を追加
@@ -25,6 +27,14 @@
  * @desc Window visible flg(ON/OFF)
  * @default ON
  *
+ * @param WindowXCustom
+ * @desc Window X Position
+ * @default
+ *
+ * @param WindowYCustom
+ * @desc Window Y Position
+ * @default
+ *
  * @help Plugin that to visualize face graphic in battle
  * This plugin is released under the MIT License.
  *
@@ -38,15 +48,25 @@
  * @desc 背景ウィンドウの表示フラグです。(ON/OFF)
  * @default ON
  *
+ * @param ウィンドウX座標
+ * @desc ウィンドウの表示 X 座標です。省略するとデフォルト値になります。
+ * @default
+ *
+ * @param ウィンドウY座標
+ * @desc ウィンドウの表示 X 座標です。省略するとデフォルト値になります。
+ * @default
+ *
  * @help 戦闘中、コマンド選択ウィンドウの上に
  * 顔グラフィックが表示されるようになります。
  *
  * 顔グラフィックを任意のピクチャ画像に差し替えることも可能です。
- * アクターのデータベースのメモ欄に「<face_picture:（拡張子を除いたピクチャのファイル名）>」
+ * アクターのデータベースのメモ欄に
+ * 「<face_picture:（拡張子を除いたピクチャのファイル名）>」
  * と入力してください。制御文字「\V[n]」が利用可能です。
  *
  * 顔グラフィックを任意のエネミー画像に差し替えることも可能です。
- * アクターのデータベースのメモ欄に「<face_enemy_id:（データベース「敵キャラ」のID）>」
+ * アクターのデータベースのメモ欄に
+ * 「<face_enemy_id:（データベース「敵キャラ」のID）>」
  * と入力してください。制御文字「\V[n]」が利用可能です。
  *
  * 顔グラフィックより大きいピクチャを指定すると自動で同じサイズに縮小されます。
@@ -68,31 +88,24 @@
     //=============================================================================
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1], 10));
-        }.bind(window));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1], 10));
-        }.bind(window));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            var n = parseInt(arguments[1]);
-            var actor = n >= 1 ? $gameActors.actor(n) : null;
-            return actor ? actor.name() : '';
-        }.bind(window));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            var n = parseInt(arguments[1]);
-            var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
-            return actor ? actor.name() : '';
-        }.bind(window));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return text;
+        var window = SceneManager._scene._windowLayer.children[0];
+        return window ? window.convertEscapeCharacters(text) : text;
     };
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
         return (value || '').toUpperCase() == 'ON';
+    };
+
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
+    var isParamExist = function(paramNames) {
+        return getParamOther(paramNames) != null;
     };
 
     var getParamOther = function(paramNames) {
@@ -104,10 +117,15 @@
         return null;
     };
 
-    var parseIntStrict = function(value, errorMessage) {
-        var result = parseInt(value, 10);
-        if (isNaN(result)) throw Error('指定した値[' + value + ']が数値ではありません。' + errorMessage);
-        return result;
+    var getArgString = function (arg, upperFlg) {
+        arg = convertEscapeCharacters(arg);
+        return upperFlg ? arg.toUpperCase() : arg;
+    };
+
+    var getArgNumber = function (arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
     };
 
     //=============================================================================
@@ -121,13 +139,15 @@
     };
 
     Scene_Battle.prototype.createFaceWindow = function() {
+        var length = this._windowLayer.children.length, windowIndex = 0;
         this._faceWindow = new Window_Face();
-        this.addWindow(this._faceWindow);
-        // 表示順入れ替え
-        this._windowLayer.removeChild(this._skillWindow);
-        this.addWindow(this._skillWindow);
-        this._windowLayer.removeChild(this._itemWindow);
-        this.addWindow(this._itemWindow);
+        for (var i = 0; i < length; i++) {
+            if (this._windowLayer.children[i] === this._helpWindow) {
+                windowIndex = i;
+                break;
+            }
+        }
+        this._windowLayer.addChildAt(this._faceWindow, windowIndex);
     };
 
     //=============================================================================
@@ -144,8 +164,10 @@
     Window_Face.prototype.initialize = function() {
         var width  = 192;
         var height = Window_Base._faceHeight + this.standardPadding() * 2;
-        var x = 0;
-        var y = Graphics.boxHeight - this.fittingHeight(4) - height;
+        var paramsX = ['ウィンドウX座標','WindowXCustom'];
+        var x = isParamExist(paramsX) ? getParamNumber(paramsX) : 0;
+        var paramsY = ['ウィンドウY座標','WindowYCustom'];
+        var y = isParamExist(paramsY) ? getParamNumber(paramsY) : Graphics.boxHeight - this.fittingHeight(4) - height;
         Window_Base.prototype.initialize.call(this, x, y, width, height);
         this.hide();
         this.loadImages();  // 非同期処理のためあらかじめロードしておく
@@ -165,8 +187,7 @@
     };
 
     Window_Face.prototype.setWindowVisible = function() {
-        var visible = getParamBoolean(['WindowVisible','ウィンドウ表示'], 0, 255);
-        if (!visible) {
+        if (!getParamBoolean(['WindowVisible','ウィンドウ表示'])) {
             this.opacity = 0;
             this._faceSprite.y += this.padding;
         }
@@ -176,10 +197,9 @@
         $gameParty.members().forEach(function(actor) {
             var meta = actor.actor().meta;
             if (meta != null && meta.face_picture) {
-                ImageManager.loadPicture(convertEscapeCharacters(meta.face_picture));
+                ImageManager.loadPicture(getArgString(meta.face_picture));
             } else if (meta != null && meta.face_enemy_id) {
-                var enemyId = parseInt(
-                    convertEscapeCharacters(meta.face_enemy_id), 10).clamp(1, $dataEnemies.length - 1);
+                var enemyId = getArgNumber(meta.face_enemy_id, 1, $dataEnemies.length - 1);
                 ImageManager.loadEnemy($dataEnemies[enemyId].battlerName);
             } else {
                 ImageManager.loadFace(actor.faceName());
@@ -204,10 +224,9 @@
     Window_Face.prototype.drawActorFace = function(actor) {
         var meta = actor.actor().meta;
         if (meta != null && meta.face_picture) {
-            this.drawPicture(meta.face_picture, ImageManager.loadPicture.bind(ImageManager));
+            this.drawPicture(getArgString(meta.face_picture), ImageManager.loadPicture.bind(ImageManager));
         } else if (meta != null && meta.face_enemy_id) {
-            var enemyId = parseInt(
-                convertEscapeCharacters(meta.face_enemy_id), 10).clamp(1, $dataEnemies.length - 1);
+            var enemyId = getArgNumber(meta.face_enemy_id, 1, $dataEnemies.length - 1);
             this.drawPicture($dataEnemies[enemyId].battlerName, ImageManager.loadEnemy.bind(ImageManager));
         } else {
             this.drawFace(actor);
