@@ -279,12 +279,13 @@ var $gameCurrentWindow = null;
     //  FPSの表示を設定します。
     //=============================================================================
     Graphics.setFPSMeter = function(type) {
-        this.hideFps();
         switch (type) {
             case 'FPS':
+                this.hideFps();
                 this._switchFPSMeter();
                 break;
             case 'MS':
+                this.hideFps();
                 this._switchFPSMeter();
                 this._switchFPSMeter();
                 break;

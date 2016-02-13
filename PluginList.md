@@ -183,3 +183,9 @@ Change the message window from fixed to popup
 条件を満たしている間、指定したステートを付与します。  
 条件にはHP、MP、TP、装備品、スイッチが利用でき、特定のアクターや敵キャラのみを対象にすることもできます。  
 
+44. Web実行のテストプレー防止プラグイン[BugFixWebPlayTest.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixWebPlayTest.js)  
+Web実行時にURLに?testと入力して実行することで誰でもテストプレーできてしまう問題を修正。  
+
+45. 起動オプション調整プラグイン[SetupOptionCustomize.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionCustomize.js)  
+MVの起動オプション（URLクエリパラメータ）を制作者側で制御できます。  
+
