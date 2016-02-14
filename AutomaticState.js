@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/02/14 オートステートの追加時にメッセージを表示する仕様を追加
 // 1.0.0 2016/02/08 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -100,13 +101,21 @@
             var stateId = state.id, result = this.isAutomaticValid(state);
             if (result == null) return;
             if (result) {
-                this.addState(stateId);
-                this._result.deleteAddedStates(stateId);
+                if (!this.isStateAffected(stateId) && this.isStateAddable(stateId)) {
+                    this.addState(stateId);
+                    this.showAddedStates();
+                    this._result.deleteAddedStates(stateId);
+                }
             } else {
-                this.removeState(stateId);
-                this._result.deleteRemovedStates(stateId);
+                if (this.isStateAffected(stateId)) {
+                    this.removeState(stateId);
+                    this._result.deleteRemovedStates(stateId);
+                }
             }
         }.bind(this));
+    };
+
+    Game_BattlerBase.prototype.showAddedStates = function() {
     };
 
     Game_BattlerBase.prototype.isAutomaticValid = function(state) {
