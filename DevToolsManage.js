@@ -401,7 +401,9 @@ var $gameCurrentWindow = null;
         this._devToolMinimize = false;
         this._onFocus         = false;
         this.addEventListener();
-        this.setAlwaysOnTop(true);
+        if (alwaysOnTop === 'ON') {
+            this.setAlwaysOnTop(true);
+        }        
         switch (startupDevTool) {
             case 'ON':
             case 'MINIMIZE':
