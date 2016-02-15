@@ -43,7 +43,7 @@
     'use strict';
     // テストプレー時以外は一切の機能を無効
     if (!Utils.isOptionValid('test') || !Utils.isNwjs()) {
-        console.log('BatchProcessManager is valid only test play!');
+        console.log('BatchProcessManager is valid only test play and nw.js.');
         return;
     }
 

@@ -7,6 +7,9 @@ These plugins(JavaScript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/02/15 : 起動オプション無効化プラグイン[SetupOptionInvalid.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionInvalid.js)を追加しました。  
+1. ブラウザ上で指定可能なMVの起動オプション（URLクエリパラメータ）を無効化します。  
+
 ###2016/02/14 : 時刻と天候プラグイン[Chronus.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/Chronus.js)を修正しました。  
 1. アナログ時計を表示する機能を追加しました。  
 2. 現実の時間をゲーム内に反映させる機能を追加しました。  

@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/02/15 モバイル端末での動作が遅くなる不具合を修正
 // 1.0.0 2016/01/15 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -168,7 +169,6 @@
         this._icon = new Sprite_Frame(16, 20, ImageManager.loadSystem('IconSet'), -1);
         this._icon.x = this.width  - this._icon.width;
         this._icon.y = this.height - this._icon.height;
-        this._icon.flash = true;
         this.addChild(this._icon);
     };
 
@@ -188,11 +188,14 @@
         if (this.messageSkip() && this.openness === 255) {
             this._icon.refresh(getParamNumber('スキップアイコン'));
             this._icon.flashSpeed = 16;
+            this._icon.flash = true;
         } else if (this.messageAuto() && this.openness === 255) {
             this._icon.refresh(getParamNumber('オートアイコン'));
             this._icon.flashSpeed = 2;
+            this._icon.flash = true;
         } else {
             this._icon.refresh(0);
+            this._icon.flash = false;
         }
     };
 

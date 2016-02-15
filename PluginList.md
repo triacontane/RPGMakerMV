@@ -189,3 +189,6 @@ Web実行時にURLに?testと入力して実行することで誰でもテスト
 45. 起動オプション調整プラグイン[SetupOptionCustomize.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionCustomize.js)  
 MVの起動オプション（URLクエリパラメータ）を制作者側で制御できます。  
 
+46. 起動オプション無効化プラグイン[SetupOptionInvalid.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionInvalid.js)  
+ブラウザ上で指定可能なMVの起動オプション（URLクエリパラメータ）を無効化します。  
+プレイヤーが勝手にテストプレーやFPS表示が出来ないようにします。例外も指定可能です。  
