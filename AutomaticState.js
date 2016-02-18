@@ -51,6 +51,13 @@
  *     ステート自動付与の対象を指定した敵キャラのみに設定する。
  *     IDの指定がない場合、全ての敵キャラに有効になる。
  *
+ * スクリプト
+ * 自動付与ステートが有効になったときに所定のメッセージを表示する場合
+ * $gameSystem.automaticStateAddMessage = true;
+ *
+ * 自動付与ステートが有効になったときに所定のメッセージを表示しない場合
+ * $gameSystem.automaticStateAddMessage = false;
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -92,6 +99,16 @@
     }
 
     //=============================================================================
+    // Game_System
+    //  自動付与ステートのメッセージ表示フラグを定義します。
+    //=============================================================================
+    var _Game_System_initialize = Game_System.prototype.initialize;
+    Game_System.prototype.initialize = function() {
+        _Game_System_initialize.apply(this, arguments);
+        this.automaticStateAddMessage = null;
+    };
+
+    //=============================================================================
     // Game_BattlerBase
     //  自動付与ステートの更新処理を定義します。
     //=============================================================================
@@ -103,7 +120,7 @@
             if (result) {
                 if (!this.isStateAffected(stateId) && this.isStateAddable(stateId)) {
                     this.addState(stateId);
-                    this.showAddedStates();
+                    if ($gameSystem.automaticStateAddMessage) this.showAddedStates();
                     this._result.deleteAddedStates(stateId);
                 }
             } else {
