@@ -168,7 +168,7 @@
 
     var _Game_Player_executeMove = Game_Player.prototype.executeMove;
     Game_Player.prototype.executeMove = function(direction) {
-        var movePad =this.getMovePad();
+        var movePad = this.getMovePad();
         if (movePad.isActive() && movePad.isDistanceNear()) {
             var turnDir = movePad.getDir4();
             if (turnDir !== 0) this.setDirection(turnDir);

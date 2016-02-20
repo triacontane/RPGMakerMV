@@ -224,12 +224,12 @@
         var param = getParamString(paramBaseName + '%1'.format(i)).split(':');
         if (param.length > 1) {
             try {
-                var data       = {};
-                data.symbol    = symbolType + '%1'.format(i);
-                data.name      = getArgString(param[0]);
-                data.initValue = symbolType === 'Boolean' ? getArgBoolean(param[1]) : getArgNumber(param[1]);
-                data.variable  = getArgNumber(param[2]);
-                data.hidden    = getArgBoolean(param[3]);
+                var data        = {};
+                data.symbol     = symbolType + '%1'.format(i);
+                data.name       = getArgString(param[0]);
+                data.initValue  = symbolType === 'Boolean' ? getArgBoolean(param[1]) : getArgNumber(param[1]);
+                data.variable   = getArgNumber(param[2]);
+                data.hidden     = getArgBoolean(param[3]);
                 switch (symbolType) {
                     case 'Number':
                         data.min    = getArgNumber(param[4]);

@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/02/20 YEP_MessageCore.jsのネームポップをポップアップウィンドウと連動するよう対応
 // 1.2.0 2016/02/13 並列処理のイベントが存在するときにポップアップ設定がクリアされてしまう
 //                  問題の修正
 //                  ウィンドウの表示位置を下に表示できる設定を追加
@@ -113,6 +114,10 @@
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
+ *
+ * YEP_MessageCore.jsのネームポップと併せて使用する場合は、
+ * プラグイン管理画面で当プラグインをYEP_MessageCore.jsより
+ * 下に配置してください。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -650,6 +655,42 @@
 
     Window_NumberInput.prototype.isPopupLinkage = function() {
         return this.isPopup() && paramLinkage;
+    };
+
+    //=============================================================================
+    // Window_NameBox
+    //  メッセージウィンドウに連動して表示位置と余白を調整します。
+    //=============================================================================
+    var _Window_NameBox_refresh = Window_NameBox.prototype.refresh;
+    Window_NameBox.prototype.refresh = function() {
+        this.padding = this.standardPadding();
+        this.width   = this.windowWidth();
+        this.height  = this.windowHeight();
+        return _Window_NameBox_refresh.apply(this, arguments);
+    };
+
+    var _Window_NameBox_standardFontSize = Window_NameBox.prototype.standardFontSize;
+    Window_NameBox.prototype.standardFontSize = function() {
+        return this.isPopup() ? paramFontSize : _Window_NameBox_standardFontSize.apply(this, arguments);
+    };
+
+    var _Window_NameBox_standardPadding = Window_NameBox.prototype.standardPadding;
+    Window_NameBox.prototype.standardPadding = function() {
+        return this.isPopup() ? paramPadding : _Window_NameBox_standardPadding.apply(this, arguments);
+    };
+
+    var _Window_NameBox_lineHeight = Window_NameBox.prototype.lineHeight;
+    Window_NameBox.prototype.lineHeight = function() {
+        return this.isPopup() ? paramFontSize + 8 : _Window_NameBox_lineHeight.apply(this, arguments);
+    };
+
+    Window_NameBox.prototype.isPopup = function() {
+        return this._parentWindow.isPopup();
+    };
+
+    Window_NameBox.prototype.updatePlacementPopup = function() {
+        this.x = this._parentWindow.x;
+        this.y = this._parentWindow.y - this.height;
     };
 })();
 
