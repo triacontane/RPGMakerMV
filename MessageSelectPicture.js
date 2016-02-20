@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/02/20 選択肢拡張プラグイン（MPP_ChoiceEX.js）に対応
 // 1.0.2 2016/01/24 マウス操作でピクチャが更新されない問題を修正
 // 1.0.1 2016/01/24 起動しないバグ修正
 // 1.0.0 2016/01/23 初版
@@ -56,8 +57,8 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        var window = SceneManager._scene._windowLayer.children[0];
-        return window ? window.convertEscapeCharacters(text) : text;
+        var win = SceneManager._scene._windowLayer.children[0];
+        return win ? win.convertEscapeCharacters(text) : text;
     };
 
     var getCommandName = function (command) {
@@ -85,12 +86,12 @@
             this.pluginCommandMessageSelectPicture(command, args);
         } catch (e) {
             if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
+                var win = require('nw.gui').Window.get();
+                if (!win.isDevToolsOpen()) {
+                    var devTool = win.showDevTools();
                     devTool.moveTo(0, 0);
                     devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
+                    win.focus();
                 }
             }
             console.log('プラグインコマンドの実行中にエラーが発生しました。');
@@ -104,7 +105,8 @@
         switch (getCommandName(command)) {
             case '選択肢ピクチャ設定' :
             case 'MSP_SET':
-                $gameMessage.setSelectPictureId(getArgNumber(args[0], 1), getArgNumber(args[1]), 1);
+                $gameMessage.setSelectPictureId(getArgNumber(args[1], 1, $gameScreen.maxPictures()),
+                    getArgNumber(args[0]), 1);
                 break;
         }
     };
@@ -140,13 +142,17 @@
     var _Window_ChoiceList_update = Window_ChoiceList.prototype.update;
     Window_ChoiceList.prototype.update = function() {
         _Window_ChoiceList_update.apply(this, arguments);
-        this.updateSelectPicture();
+        if (this.openness !== 0) this.updateSelectPicture();
     };
 
     Window_ChoiceList.prototype.updateSelectPicture = function() {
+        var visiblyId = -1;
         $gameMessage.getSelectPictures().iterate(function(key, id, index) {
             var picture = $gameScreen.picture(id);
-            if (picture) picture.setOpacity(index === this.index() ? 255 : 0);
+            if (!picture) return;
+            var compareResult = (index === this.index() || visiblyId === id);
+            if (compareResult) visiblyId = id;
+            picture.setOpacity(compareResult ? 255 : 0);
         }.bind(this));
     };
 })();
