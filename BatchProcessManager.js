@@ -181,6 +181,11 @@
         this.saveCsvData('SoundTest.csv', objects);
     };
 
+    BatchProcessManager.deleteAllSaveFile = function() {
+
+        alert(this.getFileNameList('/save/'));
+    };
+
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
@@ -211,6 +216,10 @@
             case 'SOUND_TEST_MAKE_CSV' :
             case 'サウンドテストCSV作成':
                 BatchProcessManager.batchStart('outputSoundTestCsv');
+                break;
+            case 'DELETE_SAVE_DATA' :
+            case 'セーブファイル全削除':
+                BatchProcessManager.batchStart('deleteAllSaveFile');
                 break;
         }
     };

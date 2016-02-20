@@ -448,6 +448,7 @@
                 subWindow.updatePlacementPopup();
             }
         });
+        if (this._nameWindow) this._nameWindow.updatePlacementPopup();
     };
 
     Window_Message.prototype.setupSize = function() {
