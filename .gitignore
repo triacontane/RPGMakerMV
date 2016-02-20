@@ -3,3 +3,5 @@ Common.js
 YEP_MessageCore.js
 _BaseScript.js
 CacheManager.js
+YEP_BattleEngineCore.js
+YEP_X_BattleSysATB.js

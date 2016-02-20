@@ -112,6 +112,11 @@
         this.checkToRemoveStates(_Game_Battler_removeStatesAuto.bind(this), arguments, '自動解除のタイミング');
     };
 
+    var _Game_BattlerBase_updateStateTurnTiming = Game_BattlerBase.prototype.updateStateTurnTiming;
+    Game_BattlerBase.prototype.updateStateTurnTiming = function(timing) {
+        this.checkToRemoveStates(_Game_BattlerBase_updateStateTurnTiming.bind(this), arguments, '自動解除のタイミング');
+    };
+
     Game_Battler.prototype.checkToRemoveStates = function(handler, args, tagName) {
         var prevStates = this.states();
         handler.apply(null, args);
