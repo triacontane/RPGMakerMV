@@ -7,6 +7,22 @@ These plugins(JavaScript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/02/21 : 足音プラグイン[FootstepSound.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/FootstepSound.js)を追加しました。  
+足音効果音を演奏します。  
+リージョン、地形タグ、茂み、ダメージ床、梯子などを条件に指定でき、さらに左右で別の効果音を指定したり、ダッシュと歩行で別の効果音を指定したりできます。  
+
+###2016/02/21 : もどきぷにコンプラグイン[RelativeTouchPad.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RelativeTouchPad.js)を追加しました。  
+マップタッチ移動の代わりにタッチを開始した位置からの相対座標をもとにプレイヤーを移動します。  
+傾きの大きさによって「その場で方向転換」「歩行」「ダッシュ」と変化します。  
+コ〇プラのぷにコンをツクール上で再現します。  
+
+###2016/02/21 : 装備購入時の性能比較改善プラグイン[CompareParamRefine.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CompareParamRefine.js)を追加しました。  
+装備購入時の武器と防具の性能比較を攻撃力や防御力ではなくパラメータの総和で行います。  
+最大HPと最大MPの増減値は設定で、総和から除去することが可能です。  
+
+###2016/02/20 : フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)を修正しました。  
+1. YEP_MessageCore.jsのネームポップをポップアップウィンドウと連動するよう対応。  
+
 ###2016/02/15 : 起動オプション無効化プラグイン[SetupOptionInvalid.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionInvalid.js)を追加しました。  
 1. ブラウザ上で指定可能なMVの起動オプション（URLクエリパラメータ）を無効化します。  
 
@@ -19,16 +35,6 @@ These plugins(JavaScript) are for RPG Maker MV.
 
 ###2016/02/14 : Web実行のテストプレー防止プラグイン[BugFixWebPlayTest.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixWebPlayTest.js)を追加しました。  
 1. Web実行時にURLに?testと入力して実行することで誰でもテストプレーできてしまう問題を修正。  
-
-###2016/02/13 : 戦闘中顔グラフィック表示プラグイン[BattleActorFaceVisibility.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BattleActorFaceVisibility.js)を修正しました。  
-1. 他のプラグインと併用できるように、ウィンドウの表示位置を調整する機能を追加。  
-
-###2016/02/13 : フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)を修正しました。  
-1. 並列処理のイベントが存在するときにポップアップ設定がクリアされてしまう問題の修正。  
-2. ウィンドウの表示位置を下に表示できる設定を追加。  
-
-###2016/02/11 : ステート自動付与プラグイン[AutomaticState.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/AutomaticState.js)を追加しました。  
-1. 条件を満たしている間、指定したステートを付与します。  
 
 これより以前の履歴は[こちら](./UpdateRecord.md)をご参照ください。  
 

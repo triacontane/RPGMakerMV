@@ -192,3 +192,17 @@ MVの起動オプション（URLクエリパラメータ）を制作者側で制
 46. 起動オプション無効化プラグイン[SetupOptionInvalid.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionInvalid.js)  
 ブラウザ上で指定可能なMVの起動オプション（URLクエリパラメータ）を無効化します。  
 プレイヤーが勝手にテストプレーやFPS表示が出来ないようにします。例外も指定可能です。  
+
+47. 足音プラグイン[FootstepSound.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/FootstepSound.js)  
+足音効果音を演奏します。  
+リージョン、地形タグ、茂み、ダメージ床、梯子などを条件に指定でき、さらに左右で別の効果音を指定したり、ダッシュと歩行で別の効果音を指定したりできます。  
+
+48. もどきぷにコンプラグイン[RelativeTouchPad.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RelativeTouchPad.js)  
+マップタッチ移動の代わりにタッチを開始した位置からの相対座標をもとにプレイヤーを移動します。  
+傾きの大きさによって「その場で方向転換」「歩行」「ダッシュ」と変化します。  
+コ〇プラのぷにコンをツクール上で再現します。  
+
+49. 装備購入時の性能比較改善プラグイン[CompareParamRefine.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CompareParamRefine.js)  
+装備購入時の武器と防具の性能比較を攻撃力や防御力ではなくパラメータの総和で行います。  
+最大HPと最大MPの増減値は設定で、総和から除去することが可能です。  
+
