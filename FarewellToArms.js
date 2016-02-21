@@ -90,7 +90,7 @@
     var _BattleManager_displayDefeatMessage = BattleManager.displayDefeatMessage;
     BattleManager.displayDefeatMessage = function() {
         if ($gameParty.isAllDead()) {
-            _BattleManager_displayDefeatMessage.call(this)
+            _BattleManager_displayDefeatMessage.call(this);
         } else {
             $gameMessage.add(parameters['farewellMessage'].format($gameParty.name()));
         }

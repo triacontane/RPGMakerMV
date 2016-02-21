@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/02/21 一般公開用に設定項目を追加
 // 1.0.0 2016/02/19 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -56,8 +57,23 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+
+function Game_Relative_Pad() {
+    this.initialize.apply(this, arguments);
+}
+/* 設定項目 */
+/* 相対タッチ移動を禁止します。 */
+Game_Relative_Pad.disable              = false;
+/* 通常のマップタッチ移動を禁止します。 */
+Game_Relative_Pad.mapTouchDisable      = true;
+/* 歩行せずその場方向転換になる圏内です。 */
+Game_Relative_Pad.distanceNear         = 24;
+/* ダッシュせず歩行になる圏内です。 */
+Game_Relative_Pad.distanceFar          = 144;
+
 (function () {
     var pluginName = 'RelativeTouchPad';
+
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
         return value == null ? '' : value;
@@ -202,7 +218,7 @@
     Game_Player.prototype.updateDashing = function() {
         _Game_Player_updateDashing.apply(this, arguments);
         if (this.getMovePad().isActive()) {
-            this._dashing = this.getMovePad().isDistanceFar();
+            this._dashing = this.getMovePad().isDistanceFar() || ConfigManager.alwaysDash;
         }
     };
 
@@ -214,8 +230,9 @@
     // Scene_Map
     //  マップタッチ移動を禁止します。
     //=============================================================================
+    var _Scene_Map_isMapTouchOk = Scene_Map.prototype.isMapTouchOk;
     Scene_Map.prototype.isMapTouchOk = function() {
-        return false;
+        return _Scene_Map_isMapTouchOk.apply(this, arguments) && !Game_Relative_Pad.mapTouchDisable;
     };
 
     var paramTouchableRect = getParamArrayNumber(['タッチ有効領域', 'TouchableRect'], 0);
@@ -224,9 +241,6 @@
     //  相対タッチパッドを定義します。
     //  $gameTempで作成され、セーブデータには保存されません。
     //=============================================================================
-    function Game_Relative_Pad() {
-        this.initialize.apply(this, arguments);
-    }
     Game_Relative_Pad.prototype.constructor = Game_Relative_Pad;
 
     Game_Relative_Pad.prototype.initialize = function() {
@@ -251,7 +265,8 @@
     };
 
     Game_Relative_Pad.prototype.updateNonActive = function() {
-        if ($gamePlayer.canMove() && TouchInput.isTriggered() && this._inTouchableRect()) {
+        if (!Game_Relative_Pad.disable && $gamePlayer.canMove() &&
+            TouchInput.isTriggered() && this._inTouchableRect()) {
             this.setNeutral();
         }
     };
@@ -354,11 +369,11 @@
     };
 
     Game_Relative_Pad.prototype.isDistanceNear = function() {
-        return this.getDistance() < 24;
+        return this.getDistance() < Game_Relative_Pad.distanceNear;
     };
 
     Game_Relative_Pad.prototype.isDistanceFar = function() {
-        return this.getDistance() > 144;
+        return this.getDistance() > Game_Relative_Pad.distanceFar;
     };
 
     /** @private */
@@ -478,7 +493,7 @@
             var scale                  = this.getMovePad().getDistance() / this._arrowDiagonal;
             this._arrowSprite.scale.x = scale;
             this._arrowSprite.scale.y = scale;
-            this._arrowSprite.opacity = Math.min(255, 255 / scale);
+            this._arrowSprite.opacity = Math.min(255, 255 / (scale / 1.5));
         }
     };
 

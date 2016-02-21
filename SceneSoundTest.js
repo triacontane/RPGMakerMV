@@ -190,6 +190,10 @@ function Game_SoundTest() {
     this.initialize.apply(this, arguments);
 }
 
+function Scene_SoundTest() {
+    this.initialize.apply(this, arguments);
+}
+
 (function () {
     'use strict';
     var pluginName = 'SceneSoundTest';
@@ -457,10 +461,6 @@ function Game_SoundTest() {
     // Scene_SoundTest
     //  サウンドテスト画面を扱うクラスです。
     //=============================================================================
-    function Scene_SoundTest() {
-        this.initialize.apply(this, arguments);
-    }
-
     Scene_SoundTest.prototype = Object.create(Scene_MenuBase.prototype);
     Scene_SoundTest.prototype.constructor = Scene_SoundTest;
 

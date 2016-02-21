@@ -237,6 +237,7 @@ function SensorInput() {
         this.clear();
         this._setupEventHandlers();
     };
+    SensorInput.inputValid = false;
 
     SensorInput.clear = function() {
         this._orientationAbsolute = getParamBoolean(['傾き絶対値取得', 'OrientationAbsolute']);
@@ -256,7 +257,9 @@ function SensorInput() {
 
     SensorInput.update = function() {
         this.updateVariables();
-        this.updateInput();
+        if (SensorInput.inputValid) {
+            this.updateInput();
+        }
     };
 
     /** @private */
