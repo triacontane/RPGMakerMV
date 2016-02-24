@@ -1,0 +1,71 @@
+#==============================================================================
+# ■ マップウィンドウに任意の画像を指定
+#------------------------------------------------------------------------------
+# 　マップウィンドウ背景に任意の画像ファイルを指定できるようになります。
+#
+# ●使い方
+# 1. 背景画像に使用した画像を用意して「Graphics\Pictures」に配置します。
+# 2. 変数「@@back_ground_filename」にファイル名を設定します。
+#
+#-----------------------------------------------------------------------------
+# Copyright (c) 2015 Triacontane
+# This software is released under the MIT License.
+# http:#opensource.org/licenses/mit-license.php
+#-----------------------------------------------------------------------------
+# Version
+# 1.0.0 2016/02/24 ベータ版
+# ----------------------------------------------------------------------------
+# [Blog]   : http://triacontane.blogspot.jp/
+# [Twitter]: https://twitter.com/triacontane/
+# [GitHub] : https://github.com/triacontane/
+#=============================================================================
+
+#==============================================================================
+# ■ Window_MapName
+#------------------------------------------------------------------------------
+# 　マップ名を表示するウィンドウです。
+#==============================================================================
+class Window_MapName
+  #--------------------------------------------------------------------------
+  # ● ここに背景画像として使用したい画像ファイル名を記述してください。
+  #--------------------------------------------------------------------------
+  @@back_ground_filename = ""
+  #--------------------------------------------------------------------------
+  # ● フェードインの更新
+  #--------------------------------------------------------------------------
+  alias mapname_bgimage_update_fadein update_fadein
+  def update_fadein
+    mapname_bgimage_update_fadein
+    @bg_sprite.opacity += 16 if @bg_sprite != nil
+  end
+  #--------------------------------------------------------------------------
+  # ● フェードアウトの更新
+  #--------------------------------------------------------------------------
+  alias mapname_bgimage_update_fadeout update_fadeout
+  def update_fadeout
+    mapname_bgimage_update_fadeout
+    @bg_sprite.opacity -= 16 if @bg_sprite != nil
+  end
+  #--------------------------------------------------------------------------
+  # ● 背景の描画
+  #--------------------------------------------------------------------------
+  alias mapname_bgimage_draw_background draw_background 
+  def draw_background(rect)
+    if @@back_ground_filename == ""
+      mapname_bgimage_draw_background(rect)
+    else
+      @bg_sprite = Sprite.new
+      @bg_sprite.bitmap = Cache.picture(@@back_ground_filename)
+      @bg_sprite.opacity = 0
+      @bg_sprite.x = (self.x + self.width  / 2) - @bg_sprite.bitmap.width  / 2
+      @bg_sprite.y = (self.y + self.height / 2) - @bg_sprite.bitmap.height / 2
+    end
+  end
+  #--------------------------------------------------------------------------
+  # ● 解放
+  #--------------------------------------------------------------------------
+  def dispose
+    super
+    @bg_sprite.dispose if @bg_sprite != nil
+  end
+end
