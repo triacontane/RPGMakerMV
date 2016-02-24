@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/02/24 ゲームのスピードを高速(2倍速)化する機能を追加
+//                  戦闘を勝利扱いで即終了する機能を追加
 // 1.1.0 2016/01/11 ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能を追加
 //                  タイトル画面を飛ばして最新のセーブファイルをロードする機能を追加
 // 1.0.2 2016/01/02 繰り返しリセットすると警告が出る問題の解消
@@ -47,6 +49,10 @@
  * @desc ゲーム画面の左寄せを行うキーです(F1～F12)。
  * @default F11
  *
+ * @param FuncKeyRapidGame
+ * @desc ゲームを高速化するキーです。(F1～F12)。
+ * @default F10
+ *
  * @param ShowFPS
  * @desc 初期状態で画面左上にFPSを表示します（FPS/MS/OFF）。
  * @default OFF
@@ -54,6 +60,10 @@
  * @param CutTitle
  * @desc タイトル画面をとばして最新のセーブファイルをロードします。
  * セーブファイルがなければニューゲームになります。（ON/OFF）
+ * @default OFF
+ *
+ * @param RapidStart
+ * @desc 高速化された状態でゲームを開始します。（ON/OFF）
  * @default OFF
  *
  * @help Developer tools management plugin.
@@ -85,11 +95,20 @@
  *
  * @param リロードキー
  * @desc 画面のリロードを行うキーです(F1～F12)。デフォルトF5キーと同様の役割を持ちます。
+ * 以前のツクールとの後方互換性を持たせるための機能です。
  * @default F12
  *
  * @param 画面の左寄せキー
  * @desc ゲーム画面の左寄せを行うキーです(F1～F12)。
  * @default F11
+ *
+ * @param 高速化切替キー
+ * @desc ゲームを高速化するキーです。(F1～F12)。
+ * @default F10
+ *
+ * @param 強制戦闘勝利キー
+ * @desc 戦闘を勝利で強制終了するキーです。(F1～F12)。
+ * @default F7
  *
  * @param FPS表示
  * @desc 初期状態で画面左上にFPSを表示します。（FPS/MS/OFF）
@@ -99,19 +118,26 @@
  * @desc タイトル画面をとばして最新のセーブファイルをロードします。
  * セーブファイルがなければニューゲームになります。（ON/OFF）
  * @default OFF
+ *
+ * @param 高速開始
+ * @desc 高速化された状態でゲームを開始します。（ON/OFF）
+ * @default OFF
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * 快適な開発支援のために以下の機能を提供します。
  *
- * １．ゲーム開始時にデベロッパツールが自動で立ち上がる機能（最小化での起動も可能）
- * ２．エラー発生時やalert時にデベロッパツールが自動でアクティブになる機能
- * ３．ゲーム画面を常に前面に表示する機能
- * ４．ファンクションキー（カスタマイズ可能）でリロードやゲーム画面の左寄せを行う機能
- * ５．alertの挙動をデベロッパツールへのログ出力に変更する機能
- * ６．テストプレー中にマップやイベントを修正して再保存すると、ゲーム画面に
- * 　　戻った瞬間に自動でリロードする機能
- * ７．ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能
- * ８．タイトル画面を飛ばして最新のセーブファイルをロードする機能
+ * １．　ゲーム開始時にデベロッパツールが自動で立ち上がる機能（最小化での起動も可能）
+ * ２．　エラー発生時やalert時にデベロッパツールが自動でアクティブになる機能
+ * ３．　ゲーム画面を常に前面に表示する機能
+ * ４．　後方互換機能（F12でリロード、pでコンソールに出力）
+ * ５．　alertの挙動をデベロッパツールへのログ出力に変更する機能
+ * ６．　テストプレー中にマップやイベントを修正して再保存すると、ゲーム画面にフォーカスを
+ * 　　　戻した瞬間に最新のマップを自動でリロードする機能
+ * ７．　ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能
+ * ８．　タイトル画面を飛ばして最新のセーブファイルをロードする機能
+ * ９．　ゲームのスピードを高速化する機能
+ * 　　　(マップ上で倍速、フェードアウト、ウィンドウ開閉およびメッセージ表示の高速スキップ)
+ * １０．強制的に敵を全滅させる機能
  *
  * このプラグインはテストプレー時のみ有効となります。
  *
@@ -131,9 +157,6 @@ var $gameCurrentWindow = null;
     // テストプレー時以外は一切の機能を無効
     if (!Utils.isOptionValid('test') || !Utils.isNwjs()) {
         console.log('DevToolsManage is valid only test play!');
-        if (Utils.isMobileDevice()) {
-            Graphics.setFPSMeter(1);
-        }
         return;
     }
 
@@ -189,8 +212,11 @@ var $gameCurrentWindow = null;
     var funcKeyMinimize  = getParamString(['FuncKeyMinimize', '最小化切替キー']);
     var funcKeyReload    = getParamString(['FuncKeyReload', 'リロードキー']);
     var funcKeyMoveEdge  = getParamString(['FuncKeyMoveEdge', '画面の左寄せキー']);
+    var funcKeyRapidGame = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
+    var funcKeyVictory   = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
     var showFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
     var cutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
+    var rapidStart       = getParamBoolean(['RapidStart', '高速開始']);
 
     //=============================================================================
     // SceneManager
@@ -229,10 +255,35 @@ var $gameCurrentWindow = null;
                     location.reload();
                 }
                 break;
+            case Input.functionReverseMapper[funcKeyRapidGame] :
+                this.toggleRapid();
+                break;
+            case Input.functionReverseMapper[funcKeyVictory] :
+                if (this.isCurrentScene(Scene_Battle) && !BattleManager.isBattleAlreadyEnd()) {
+                    $gameTroop.members().forEach(function(enemy) {
+                        enemy.addNewState(enemy.deathStateId());
+                    });
+                    BattleManager.processVictory();
+                }
+                break;
             default:
                 _SceneManager_onKeyDown.call(this, event);
                 break;
         }
+    };
+    SceneManager.originalTitle = null;
+    SceneManager.rapidGame = false;
+
+    SceneManager.isRapid = function() {
+        return SceneManager.rapidGame;
+    };
+
+    SceneManager.toggleRapid = function() {
+        this.rapidGame = !this.rapidGame;
+        if (!this.originalTitle) this.originalTitle = document.title;
+        var bgm = AudioManager.saveBgm();
+        AudioManager.playBgm(bgm, bgm.pos);
+        document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!]' : '');
     };
 
     SceneManager.isPlayTest = function() {
@@ -241,6 +292,30 @@ var $gameCurrentWindow = null;
 
     SceneManager.getNwjsWindow = function() {
         return SceneManager.isPlayTest() ? new Game_NwjsWindow() : new Game_CurrentWindow();
+    };
+
+    SceneManager.isCurrentScene = function(sceneClass) {
+        return this._scene && this._scene.constructor === sceneClass;
+    };
+
+    //=============================================================================
+    // BattleManager
+    //  すでに戦闘が終了しているかを返します。
+    //=============================================================================
+    BattleManager.isBattleAlreadyEnd = function() {
+        return this._phase === 'battleEnd';
+    };
+
+    //=============================================================================
+    // AudioManager
+    //  高速化実行時にBGMのピッチを強制的に最大にします。
+    //=============================================================================
+    var _AudioManager_playBgm = AudioManager.playBgm;
+    AudioManager.playBgm = function(bgm, pos) {
+        var originalPitch = bgm.pitch;
+        if(SceneManager.isRapid()) arguments[0].pitch = 150;
+        _AudioManager_playBgm.apply(this, arguments);
+        this._currentBgm.pitch = originalPitch;
     };
 
     //=============================================================================
@@ -293,12 +368,34 @@ var $gameCurrentWindow = null;
     };
 
     //=============================================================================
+    // Scene_Base
+    //  マップの高速化を提供します。
+    //=============================================================================
+    var _Scene_Base_fadeSpeed = Scene_Base.prototype.fadeSpeed;
+    Scene_Base.prototype.fadeSpeed = function () {
+        return SceneManager.isRapid() ? 1 : _Scene_Base_fadeSpeed.apply(this, arguments);
+    };
+
+    var _Scene_Base_startFadeIn = Scene_Base.prototype.startFadeIn;
+    Scene_Base.prototype.startFadeIn = function(duration, white) {
+        if (SceneManager.isRapid()) arguments[0] = 1;
+        _Scene_Base_startFadeIn.apply(this, arguments);
+    };
+
+    var _Scene_Base_startFadeOut = Scene_Base.prototype.startFadeOut;
+    Scene_Base.prototype.startFadeOut = function(duration, white) {
+        if (SceneManager.isRapid()) arguments[0] = 1;
+        _Scene_Base_startFadeOut.apply(this, arguments);
+    };
+
+    //=============================================================================
     // Scene_Boot
     //  タイトル画面をとばしてマップ画面に遷移します。
     //=============================================================================
     var _Scene_Boot_start = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
+        if (rapidStart) SceneManager.toggleRapid();
         if (cutTitle) this.goToLatestContinue() || this.goToNewGame();
     };
 
@@ -362,6 +459,42 @@ var $gameCurrentWindow = null;
                 }
             }
         }
+    };
+
+    var _Scene_Map_isFastForward = Scene_Map.prototype.isFastForward;
+    Scene_Map.prototype.isFastForward = function() {
+        return _Scene_Map_isFastForward.apply(this, arguments) || SceneManager.rapidGame;
+    };
+
+    //=============================================================================
+    // Window_Base
+    //  ウィンドウの高速開閉を提供します。
+    //=============================================================================
+    var _Window_Base_updateOpen = Window_Base.prototype.updateOpen;
+    Window_Base.prototype.updateOpen = function () {
+        if (SceneManager.isRapid() && this._opening) this.openness = 255;
+        _Window_Base_updateOpen.call(this);
+    };
+
+    var _Window_Base_updateClose = Window_Base.prototype.updateClose;
+    Window_Base.prototype.updateClose = function () {
+        if (SceneManager.isRapid() && this._closing) this.openness = 0;
+        _Window_Base_updateClose.call(this);
+    };
+
+    //=============================================================================
+    // Window_Message
+    //  メッセージの高速化を提供します。
+    //=============================================================================
+    var _Window_Message_isTriggered = Window_Message.prototype.isTriggered;
+    Window_Message.prototype.isTriggered = function() {
+        return _Window_Message_isTriggered.apply(this, arguments) || SceneManager.isRapid();
+    };
+
+    var _Window_Message_startPause = Window_Message.prototype.startPause;
+    Window_Message.prototype.startPause = function() {
+        _Window_Message_startPause.apply(this, arguments);
+        if (SceneManager.isRapid()) this.startWait(1);
     };
 
     //=============================================================================
