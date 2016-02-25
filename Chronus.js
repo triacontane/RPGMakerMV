@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/02/25 実時間表示設定でロードするとエラーが発生する現象の修正
 // 1.2.0 2016/02/14 アナログ時計の表示機能を追加
 //                  現実の時間を反映させる機能の追加
 // 1.1.3 2016/01/21 競合対策（YEP_MessageCore.js）
@@ -199,11 +200,6 @@ function Game_Chronus() {
     'use strict';
     var pluginName = 'Chronus';
 
-    //=============================================================================
-    // PluginManager
-    //  多言語とnullに対応したパラメータの取得を行います。
-    //  このコードは自動生成され、全てのプラグインで同じものが使用されます。
-    //=============================================================================
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
         return value == null ? '' : value;
@@ -223,6 +219,10 @@ function Game_Chronus() {
             if (name) return name;
         }
         return null;
+    };
+
+    var isParamExist = function(paramNames) {
+        return getParamOther(paramNames) != null;
     };
 
     var getParamArrayString = function (paramNames) {
@@ -264,7 +264,7 @@ function Game_Chronus() {
     var _DataManager_extractSaveContents = DataManager.extractSaveContents;
     DataManager.extractSaveContents = function(contents) {
         _DataManager_extractSaveContents.apply(this, arguments);
-        $gameSystem.chronus().onLoad();
+        $gameSystem.onLoad();
     };
 
     //=============================================================================
@@ -533,7 +533,7 @@ function Game_Chronus() {
 
     //=============================================================================
     // Sprite_Chronicle_Clock
-    //  ゲーム内時間情報を描画するウィンドウです。
+    //  アナログ時計表示スプライトクラスです。
     //=============================================================================
     function Sprite_Chronicle_Clock() {
         this.initialize.apply(this, arguments);
@@ -607,8 +607,7 @@ function Game_Chronus() {
     };
 
     Spriteset_Map.prototype.createClockSprite = function() {
-        var fileName = ImageManager.loadPicture(getParamString('文字盤画像ファイル'));
-        this._clockSprite = fileName ? new Sprite_Chronicle_Clock() : new Sprite_Abstract();
+        this._clockSprite = isParamExist('文字盤画像ファイル') ? new Sprite_Chronicle_Clock() : new Sprite_Abstract();
         this.addChild(this._clockSprite);
     };
 
@@ -638,24 +637,18 @@ function Game_Chronus() {
         this._demandRefresh   = false;
         this._prevHour        = -1;
         this._nowDate         = null;
-        this._timeAutoAdd     = 0;
-        this._timeTransferAdd = 0;
-        this._timeBattleAdd   = 0;
-        this._timeTurnAdd     = 0;
-        this._weekNames       = null;
-        this._daysOfMonth     = null;
-        this.onLoad();
-    };
-
-    Game_Chronus.prototype.onLoad = function () {
-        if (!this._nowDate) this._nowDate = new Date();
-        if (!this._frameCount) this._frameCount = 0;
         this._timeAutoAdd     = getParamNumber('自然時間加算', 0, 99);
         this._timeTransferAdd = getParamNumber('場所移動時間加算', 0);
         this._timeBattleAdd   = getParamNumber('戦闘時間加算(固定)', 0);
         this._timeTurnAdd     = getParamNumber('戦闘時間加算(ターン)', 0);
         this._weekNames       = getParamArrayString('曜日配列');
         this._daysOfMonth     = getParamArrayNumber('月ごとの日数配列');
+        this.onLoad();
+    };
+
+    Game_Chronus.prototype.onLoad = function () {
+        this._nowDate = new Date();
+        if (!this._frameCount) this._frameCount = 0;
     };
 
     Game_Chronus.prototype.update = function () {
