@@ -300,7 +300,7 @@
         this.fontFace = sig.face;
         this.fontSize = sig.size;
         this.textColor = sig.color;
-        this.drawText(text, 0, this.height - this.fontSize - 8, this.width - 8, this.fontSize, sig.align);
+        this.drawText(text, 8, this.height - this.fontSize - 8, this.width - 8, this.fontSize, sig.align);
     };
 
     //=============================================================================
