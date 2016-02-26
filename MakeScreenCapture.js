@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/02/25 複数のウィンドウを含む画面で正しくキャプチャできない不具合を修正
+//                  高度な設定項目の追加
 // 1.0.0 2016/02/24 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -23,6 +25,7 @@
  *
  * @param ファイル名
  * @desc 画像のファイル名です。
+ * プラグインコマンドから実行した場合は参照されません。
  * @default image
  *
  * @param 保存形式
@@ -31,16 +34,18 @@
  *
  * @param 連番桁数
  * @desc キャプチャファイルの連番桁数です。
- * 0にすると、同一のファイルを上書きします。
  * @default 2
+ *
+ * @param タイムスタンプ
+ * @desc ONにすると連番の代わりにタイムスタンプを付与します。(ON/OFF)
+ * @default OFF
  *
  * @param 署名
  * @desc 保存時に画像の右下に書き込まれる署名です。
- * コピーライト等の表記に使えます。
  * @default
  *
  * @param 実行間隔
- * @desc キャプチャを定期実行する秒数です。
+ * @desc キャプチャを定期実行する間隔（秒単位）です。
  * 0にすると、定期キャプチャを行いません。
  * @default 0
  *
@@ -55,6 +60,8 @@
  * ・ファンクションキー押下
  * ・一定時間ごと
  * ・プラグインコマンド実行時
+ *
+ * プラグインコマンド以外は、テストプレー時のみ有効になります。
  *
  * 注意！
  * キャプチャピクチャの表示状態はセーブできません。
@@ -75,7 +82,8 @@
  *  例：画面キャプチャピクチャ
  *
  * MSC_SAVE [ファイル名] or 画面キャプチャ保存 [ファイル名]
- *  保持していた画面キャプチャをファイルに保存します。ファイル名は自由に指定できます。
+ *  保持していた画面キャプチャをファイルに保存します。
+ *  ファイル名は自由に指定できます。
  *  拡張子は自動で設定されるので設定不要です。
  *  例：画面キャプチャ保存 image
  *
@@ -87,6 +95,25 @@
 
 (function () {
     'use strict';
+    //=============================================================================
+    // ユーザ書き換え領域 - 開始 -
+    //  高度な設定を記述しています。必要な場合は書き換えてください。
+    //=============================================================================
+    var settings = {
+        /* 署名のフォント情報です */
+        signature: {size:28, face:'GameFont', color:'rgba(255,255,255,1.0)', align:'right'},
+        /* 効果音情報です。ファイル名はマネージャから取得します */
+        se: {volume:90, pitch:100, pan:0},
+        /* ファイルの出力場所です */
+        location:'/captures/',
+        /* jpeg形式で出力したときの品質です(0.1...1.0) */
+        jpegQuality:0.9,
+        /* テストプレー以外での動作を無効にするフラグです */
+        testOnly:true
+    };
+    //=============================================================================
+    // ユーザ書き換え領域 - 終了 -
+    //=============================================================================
     var pluginName = 'MakeScreenCapture';
 
     var getParamString = function(paramNames, upperFlg) {
@@ -99,6 +126,11 @@
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
     };
 
     var getParamOther = function(paramNames) {
@@ -132,6 +164,7 @@
     var paramNumberDigit    = getParamNumber(['NumberDigit', '連番桁数']);
     var paramInterval       = getParamNumber(['Interval', '実行間隔']);
     var paramSeName         = getParamString(['SeName', '効果音']);
+    var paramTimeStamp      = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
 
     //=============================================================================
     // Game_Interpreter
@@ -207,11 +240,16 @@
         _Game_Picture_show.apply(this, arguments);
     };
 
-
+    //=============================================================================
+    // Scene_Base
+    //  定期実行キャプチャを定義します。
+    //=============================================================================
     var _Scene_Base_update = Scene_Base.prototype.update;
     Scene_Base.prototype.update = function() {
         _Scene_Base_update.apply(this, arguments);
-        if(paramInterval !== 0 && Graphics.frameCount % (paramInterval * 60) === 0) SceneManager.takeCapture();
+        var count =  Graphics.frameCount;
+        if (paramInterval !== 0 && Utils.isTestCapture() &&
+            (count + 1) % (paramInterval * 60) === 0) SceneManager.takeCapture();
     };
 
     //=============================================================================
@@ -228,19 +266,41 @@
     };
 
     //=============================================================================
+    // Utils
+    //  テスト用のキャプチャを許可するかどうかを返します。
+    //=============================================================================
+    Utils.isTestCapture = function() {
+        return !settings.testOnly || Utils.isOptionValid('test');
+    };
+
+    //=============================================================================
+    // WindowLayer
+    //  キャプチャ実行時、マスク処理のY座標を修正します。
+    //=============================================================================
+    WindowLayer.captureExecute = false;
+    var _WindowLayer__webglMaskRect = WindowLayer.prototype._webglMaskRect;
+    WindowLayer.prototype._webglMaskRect = function(renderSession, x, y, w, h) {
+        if (WindowLayer.captureExecute) arguments[2] = Graphics.boxHeight - (y + h);
+        _WindowLayer__webglMaskRect.apply(this, arguments);
+    };
+
+    //=============================================================================
     // Bitmap
     //  対象のビットマップを保存します。現状、ローカル環境下でのみ動作します。
     //=============================================================================
     Bitmap.prototype.save = function(fileName) {
-        var data = this._canvas.toDataURL('image/' + (paramFileFormat === 'PNG' ? 'png' : 'jpeg'));
+        var data = this._canvas.toDataURL('image/' + (paramFileFormat === 'PNG' ? 'png' : 'jpeg'), settings.jpegQuality);
         data = data.replace(/^.*,/, '');
         StorageManager.saveImg(fileName, data);
     };
 
     Bitmap.prototype.sign = function(text) {
         if (!text) return;
-        this.fontSize = 32;
-        this.drawText(text, 0, this.height - this.fontSize - 8, this.width - 8, this.fontSize, 'right');
+        var sig = settings.signature;
+        this.fontFace = sig.face;
+        this.fontSize = sig.size;
+        this.textColor = sig.color;
+        this.drawText(text, 0, this.height - this.fontSize - 8, this.width - 8, this.fontSize, sig.align);
     };
 
     //=============================================================================
@@ -268,10 +328,13 @@
     //=============================================================================
     SceneManager.makeCapture = function() {
         if (paramSeName) {
-            var se = {name:paramSeName, volume:90, pitch:100, pan:0};
+            var se = settings.se;
+            se.name = paramSeName;
             AudioManager.playSe(se);
         }
+        WindowLayer.captureExecute = true;
         this._captureBitmap = this.snap();
+        WindowLayer.captureExecute = false;
     };
 
     SceneManager.getCapture = function() {
@@ -281,10 +344,7 @@
     SceneManager.saveCapture = function(fileName, number) {
         if (this._captureBitmap) {
             this._captureBitmap.sign(paramSignature);
-            if (!number) number = SceneManager.captureNumber;
-            if (number >= Math.pow(10, paramNumberDigit)) number = 0;
-            this._captureBitmap.save(StorageManager.getLocalImgFileName(fileName, number));
-            SceneManager.captureNumber = number + 1;
+            this._captureBitmap.save(StorageManager.getLocalImgFileName(fileName));
         }
     };
 
@@ -298,12 +358,10 @@
     SceneManager.onKeyDown = function(event) {
         switch (event.keyCode) {
             case Input.functionReverseMapper[paramFuncKeyCapture] :
-                SceneManager.takeCapture();
-                break;
-            default:
-                _SceneManager_onKeyDown.apply(this, arguments);
+                if (Utils.isTestCapture()) SceneManager.takeCapture();
                 break;
         }
+        _SceneManager_onKeyDown.apply(this, arguments);
     };
 
     //=============================================================================
@@ -333,15 +391,23 @@
     };
 
     StorageManager.localImgFileDirectoryPath = function() {
-        var path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, '/captures/');
+        var path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, settings.location);
         if (path.match(/^\/([A-Z]\:)/)) {
             path = path.slice(1);
         }
         return decodeURIComponent(path);
     };
 
-    StorageManager.getLocalImgFileName = function(fileName, number) {
-        return fileName + (number > 0 ? number.padZero(paramNumberDigit) : '');
+    StorageManager.getLocalImgFileName = function(fileName) {
+        if (paramTimeStamp) {
+            var date = new Date();
+            return fileName + '_' + date.getFullYear() + (date.getMonth() + 1).padZero(2) + date.getDate() +
+                    '_' + date.getHours().padZero(2) + date.getMinutes().padZero(2) + date.getSeconds().padZero(2);
+        } else {
+            var number = SceneManager.captureNumber;
+            if (number >= Math.pow(10, paramNumberDigit)) number = 0;
+            SceneManager.captureNumber = number + 1;
+            return fileName + (number > 0 ? number.padZero(paramNumberDigit) : '');
+        }
     };
 })();
-
