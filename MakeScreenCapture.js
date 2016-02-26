@@ -100,9 +100,9 @@
     //  高度な設定を記述しています。必要な場合は書き換えてください。
     //=============================================================================
     var settings = {
-        /* 署名のフォント情報です */
+        /* 署名のフォント情報です。faceはあらかじめフォントをロードしておかなければ使えません */
         signature: {size:28, face:'GameFont', color:'rgba(255,255,255,1.0)', align:'right'},
-        /* 効果音情報です。ファイル名はマネージャから取得します */
+        /* 効果音情報です。ファイル名はプラグイン管理画面から取得します */
         se: {volume:90, pitch:100, pan:0},
         /* ファイルの出力場所です */
         location:'/captures/',
@@ -300,7 +300,7 @@
         this.fontFace = sig.face;
         this.fontSize = sig.size;
         this.textColor = sig.color;
-        this.drawText(text, 8, this.height - this.fontSize - 8, this.width - 8, this.fontSize, sig.align);
+        this.drawText(text, 8, this.height - this.fontSize - 8, this.width - 8 * 2, this.fontSize, sig.align);
     };
 
     //=============================================================================
