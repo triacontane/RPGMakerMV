@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/02/27 タイトルカットしたときにイベントテスト、戦闘テストが正しく開始されない不具合を修正
 // 1.2.0 2016/02/24 ゲームのスピードを高速(2倍速)化する機能を追加
 //                  戦闘を勝利扱いで即終了する機能を追加
 // 1.1.0 2016/01/11 ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能を追加
@@ -396,7 +397,9 @@ var $gameCurrentWindow = null;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
         if (rapidStart) SceneManager.toggleRapid();
-        if (cutTitle) this.goToLatestContinue() || this.goToNewGame();
+        if (cutTitle && !Utils.isOptionValid('btest') && !Utils.isOptionValid('etest')) {
+            return this.goToLatestContinue() || this.goToNewGame();
+        }
     };
 
     Scene_Boot.prototype.goToNewGame = function() {

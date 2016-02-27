@@ -408,6 +408,7 @@ function Game_Chronus() {
     };
 
     Game_Map.prototype.isChronicleMetaInfo = function(tagName) {
+        if (Utils.isOptionValid('etest') || Utils.isOptionValid('btest')) return false;
         var value = $dataMap.meta['chronus' + tagName];
         if (value != null) return value === 'OFF';
         value = $dataMap.meta['C_' + tagName];

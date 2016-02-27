@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2016/02/23 YEP_MessageCore.jsより上に配置した場合に発生するエラーを修正
+//                  （正常に動作しない点はそのままです）
 // 1.2.2 2016/02/20 YEP_MessageCore.js最新版に対応
 // 1.2.1 2016/02/20 YEP_MessageCore.jsのネームポップをポップアップウィンドウと連動するよう対応
 // 1.2.0 2016/02/13 並列処理のイベントが存在するときにポップアップ設定がクリアされてしまう
@@ -163,6 +165,14 @@
 (function () {
     'use strict';
     var pluginName = 'MessageWindowPopup';
+
+    var checkTypeFunction = function(value) {
+        return checkType(value, 'Function');
+    };
+
+    var checkType = function(value, typeName) {
+        return Object.prototype.toString.call(value).slice(8, -1) === typeName;
+    };
 
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
@@ -445,11 +455,13 @@
         }
         this._windowPauseSignSprite.x = this._width / 2 + deltaX;
         this.subWindows().forEach(function(subWindow) {
-            if (typeof subWindow.updatePlacementPopup === 'function') {
+            if (checkTypeFunction(subWindow.updatePlacementPopup)) {
                 subWindow.updatePlacementPopup();
             }
         });
-        if (this._nameWindow) this._nameWindow.updatePlacementPopup();
+        if (this._nameWindow && checkTypeFunction(this._nameWindow.updatePlacementPopup)) {
+            this._nameWindow.updatePlacementPopup();
+        }
     };
 
     Window_Message.prototype.setupSize = function() {
@@ -663,6 +675,8 @@
     // Window_NameBox
     //  メッセージウィンドウに連動して表示位置と余白を調整します。
     //=============================================================================
+    if (typeof Window_NameBox === 'undefined') return;
+
     var _Window_NameBox_refresh = Window_NameBox.prototype.refresh;
     Window_NameBox.prototype.refresh = function() {
         this.padding = this.standardPadding();
