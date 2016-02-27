@@ -289,19 +289,17 @@
     // Bitmap
     //  対象のビットマップを保存します。現状、ローカル環境下でのみ動作します。
     //=============================================================================
-    Bitmap.prototype.save = function(fileName) {
-        var data = this._canvas.toDataURL('image/' + (paramFileFormat === 'PNG' ? 'png' : 'jpeg'), settings.jpegQuality);
+    Bitmap.prototype.save = function(fileName, format, quality) {
+        var data = this._canvas.toDataURL('image/' + format, quality);
         data = data.replace(/^.*,/, '');
-        StorageManager.saveImg(fileName, data);
+        if (data) StorageManager.saveImg(fileName, data);
     };
 
-    Bitmap.prototype.sign = function(text) {
-        if (!text) return;
-        var sig = settings.signature;
-        this.fontFace = sig.face;
-        this.fontSize = sig.size;
-        this.textColor = sig.color;
-        this.drawText(text, 8, this.height - this.fontSize - 8, this.width - 8 * 2, this.fontSize, sig.align);
+    Bitmap.prototype.sign = function(text, fontInfo) {
+        this.fontFace  = fontInfo.face;
+        this.fontSize  = fontInfo.size;
+        this.textColor = fontInfo.color;
+        this.drawText(text, 8, this.height - this.fontSize - 8, this.width - 8 * 2, this.fontSize, fontInfo.align);
     };
 
     //=============================================================================
@@ -345,8 +343,9 @@
 
     SceneManager.saveCapture = function(fileName) {
         if (this._captureBitmap) {
-            this._captureBitmap.sign(paramSignature);
-            this._captureBitmap.save(StorageManager.getLocalImgFileName(fileName));
+            var format = (paramFileFormat === 'PNG' ? 'png' : 'jpeg');
+            this._captureBitmap.sign(paramSignature, settings.signature);
+            this._captureBitmap.save(StorageManager.getLocalImgFileName(fileName), format, settings.jpegQuality);
         }
     };
 
