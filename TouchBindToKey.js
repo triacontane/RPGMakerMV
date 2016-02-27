@@ -14,15 +14,41 @@
 //=============================================================================
 
 /*:
- * @plugindesc タッチ入力のキーバインドプラグイン
+ * @plugindesc マウス入力のキーバインドプラグイン
  * @author トリアコンタン
  *
- * @param 左クリックで有効になるボタン
- * @desc パラメータ説明
- * @default デフォルト値
+ * @param 左クリックボタン
+ * @desc 左クリックに対応するボタンです。
+ * @default
  *
- * @help タッチおよびマウスクリックを特定のキーに紐付けます。
- * 紐付けた場合、タッチおよびクリックのもともとの動作は無効になります。
+ * @param 中央クリックボタン
+ * @desc 中央（ホイール）クリックに対応するボタンです。
+ * @default
+ *
+ * @param 右クリックボタン
+ * @desc 右クリックに対応するボタンです。
+ * @default
+ *
+ * @help マウスクリックを特定のボタンに紐付けます。
+ * 紐付けた場合、クリックのもともとの動作は無効になります。
+ *
+ * ・パラメータに指定可能な文字列一覧
+ * tab
+ * ok
+ * shift
+ * control
+ * escape
+ * pageup
+ * pagedown
+ * left
+ * up
+ * right
+ * down
+ * debug
+ * menu
+ *
+ * 注意！
+ * 現状、マウス(PC)専用プラグインです。タッチ操作には対応していません。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -36,11 +62,78 @@
     'use strict';
     var pluginName = 'TouchBindToKey';
 
-    var TouchInput_update = TouchInput.update;
+    var getParamString = function(paramNames, lowerFlg) {
+        var value = getParamOther(paramNames);
+        return value == null ? '' : lowerFlg ? value.toLowerCase() : value;
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var paramBindLeft   = getParamString(['BindLeft', '左クリックボタン'], true);
+    var paramBindMiddle = getParamString(['BindMiddle', '中央クリックボタン'], true);
+    var paramBindRight  = getParamString(['BindRight', '右クリックボタン'], true);
+
+    //=============================================================================
+    // TouchInput
+    //  動作をキー入力情報に送信します。
+    //=============================================================================
+    var _TouchInput_update = TouchInput.update;
     TouchInput.update = function() {
-        this._triggered = false;
-        this._cancelled = false;
-        this._released = false;
+        _TouchInput_update.apply(this, arguments);
+        if (paramBindLeft) {
+            this._mousePressed = false;
+            this._released = false;
+            this._triggered = false;
+            this._pressedTime = 0;
+        }
+        if (paramBindRight) {
+            this._cancelled = false;
+        }
+    };
+
+    var _TouchInput__onLeftButtonDown = TouchInput._onLeftButtonDown;
+    TouchInput._onLeftButtonDown = function(event) {
+        _TouchInput__onLeftButtonDown.apply(this, arguments);
+        if (paramBindLeft) Input.setCurrentStateForMouseBind(paramBindLeft, true);
+    };
+
+    var _TouchInput__onMiddleButtonDown = TouchInput._onMiddleButtonDown;
+    TouchInput._onMiddleButtonDown = function(event) {
+        _TouchInput__onMiddleButtonDown.apply(this, arguments);
+        if (paramBindMiddle) Input.setCurrentStateForMouseBind(paramBindMiddle, true);
+    };
+
+    var _TouchInput__onRightButtonDown = TouchInput._onRightButtonDown;
+    TouchInput._onRightButtonDown = function(event) {
+        _TouchInput__onRightButtonDown.apply(this, arguments);
+        if (paramBindRight) Input.setCurrentStateForMouseBind(paramBindRight, true);
+    };
+
+    var _TouchInput__onMouseUp = TouchInput._onMouseUp;
+    TouchInput._onMouseUp = function(event) {
+        _TouchInput__onMouseUp.apply(this, arguments);
+        if (event.button === 0) {
+            if (paramBindLeft)   Input.setCurrentStateForMouseBind(paramBindLeft, false);
+        } else if (event.button === 1) {
+            if (paramBindMiddle) Input.setCurrentStateForMouseBind(paramBindMiddle, false);
+        } else if (event.button === 2) {
+            if (paramBindRight)  Input.setCurrentStateForMouseBind(paramBindRight, false);
+        }
+    };
+
+    //=============================================================================
+    // Input
+    //  TouchInputから送信された情報を受け取ります。
+    //=============================================================================
+    Input.setCurrentStateForMouseBind = function(button, value) {
+        this._currentState[button] = !!value;
     };
 })();
 
