@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/02/26 PrintScreenでもキャプチャできるように修正
 // 1.1.0 2016/02/25 複数のウィンドウを含む画面で正しくキャプチャできない不具合を修正
 //                  高度な設定項目の追加
 // 1.0.0 2016/02/24 初版
@@ -57,7 +58,7 @@
  * ファイルに保存したり、ピクチャとして表示したりできます。
  * キャプチャは以下のタイミングで実行されます。
  *
- * ・ファンクションキー押下
+ * ・ファンクションキー or PrintScreen押下
  * ・一定時間ごと
  * ・プラグインコマンド実行時
  *
@@ -326,6 +327,7 @@
     // SceneManager
     //  ファンクションキーが押下されたときにキャプチャを実行します。
     //=============================================================================
+    SceneManager.captureNumber = 0;
     SceneManager.makeCapture = function() {
         if (paramSeName) {
             var se = settings.se;
@@ -352,7 +354,12 @@
         this.makeCapture();
         this.saveCapture(paramFileName);
     };
-    SceneManager.captureNumber = 0;
+
+    var _SceneManager_setupErrorHandlers = SceneManager.setupErrorHandlers;
+    SceneManager.setupErrorHandlers = function() {
+        _SceneManager_setupErrorHandlers.apply(this, arguments);
+        document.addEventListener('keyup', this.onKeyUpForCapture.bind(this));
+    };
 
     var _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown = function(event) {
@@ -362,6 +369,11 @@
                 break;
         }
         _SceneManager_onKeyDown.apply(this, arguments);
+    };
+
+    SceneManager.onKeyUpForCapture = function(event) {
+        // PrintScreen
+        if (event.keyCode === 44 && Utils.isTestCapture()) SceneManager.takeCapture();
     };
 
     //=============================================================================
