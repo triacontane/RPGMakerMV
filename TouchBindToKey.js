@@ -29,6 +29,10 @@
  * @desc 右クリックに対応するボタンです。
  * @default
  *
+ * @param 元の動作を抑制
+ * @desc もともとマウスに割り当てられていた機能を抑制します。
+ * @default OFF
+ *
  * @help マウスクリックを特定のボタンに紐付けます。
  * 紐付けた場合、クリックのもともとの動作は無効になります。
  *
@@ -67,6 +71,11 @@
         return value == null ? '' : lowerFlg ? value.toLowerCase() : value;
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -79,6 +88,7 @@
     var paramBindLeft   = getParamString(['BindLeft', '左クリックボタン'], true);
     var paramBindMiddle = getParamString(['BindMiddle', '中央クリックボタン'], true);
     var paramBindRight  = getParamString(['BindRight', '右クリックボタン'], true);
+    var paramSuppress   = getParamBoolean(['Suppress', '元の動作を抑制']);
 
     //=============================================================================
     // TouchInput
@@ -87,14 +97,16 @@
     var _TouchInput_update = TouchInput.update;
     TouchInput.update = function() {
         _TouchInput_update.apply(this, arguments);
-        if (paramBindLeft) {
-            this._mousePressed = false;
-            this._released = false;
-            this._triggered = false;
-            this._pressedTime = 0;
-        }
-        if (paramBindRight) {
-            this._cancelled = false;
+        if (paramSuppress) {
+            if (paramBindLeft) {
+                this._mousePressed = false;
+                this._released = false;
+                this._triggered = false;
+                this._pressedTime = 0;
+            }
+            if (paramBindRight) {
+                this._cancelled = false;
+            }
         }
     };
 
