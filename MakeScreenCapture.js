@@ -343,7 +343,7 @@
         return this._captureBitmap || ImageManager.loadEmptyBitmap();
     };
 
-    SceneManager.saveCapture = function(fileName, number) {
+    SceneManager.saveCapture = function(fileName) {
         if (this._captureBitmap) {
             this._captureBitmap.sign(paramSignature);
             this._captureBitmap.save(StorageManager.getLocalImgFileName(fileName));
