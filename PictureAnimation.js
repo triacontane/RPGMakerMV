@@ -124,6 +124,7 @@
 (function () {
     'use strict';
     var settings = {
+        /* maxCellAnimation:セル数の最大値 */
         maxCellAnimation:200
     };
 
@@ -255,9 +256,7 @@
             case 'ピクチャのアニメーションセル変数の設定':
                 pictureNum    = getArgNumber(args[0], 1, $gameScreen.maxPictures());
                 picture       = $gameScreen.picture(pictureNum);
-                if (picture) {
-                    picture.linkToVariable(getArgNumber(args[1]));
-                }
+                if (picture) picture.linkToVariable(getArgNumber(args[1]));
                 break;
         }
     };
