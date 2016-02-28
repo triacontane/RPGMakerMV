@@ -181,19 +181,6 @@ function SensorInput() {
     var paramMotionX = getParamNumber(['X軸加速度変数', 'MotionX'], 0, 5000);
 
     //=============================================================================
-    // Game_Variables
-    //  変数に値を設定しますが、onChangeを実行しません。
-    //=============================================================================
-    Game_Variables.prototype.setValueSilent = function(variableId, value) {
-        if (variableId > 0 && variableId < $dataSystem.variables.length) {
-            if (typeof value === 'number') {
-                value = Math.floor(value);
-            }
-            this._data[variableId] = value;
-        }
-    };
-
-    //=============================================================================
     // SceneManager
     //  センサー情報取得モジュールを初期化および更新します。
     //=============================================================================
@@ -265,12 +252,12 @@ function SensorInput() {
     /** @private */
     SensorInput.updateVariables = function() {
         if (!$gameVariables) return;
-        $gameVariables.setValueSilent(paramOrientationZ, this.getOrientationAlpha());
-        $gameVariables.setValueSilent(paramOrientationX, this.getOrientationBeta());
-        $gameVariables.setValueSilent(paramOrientationY, this.getOrientationGamma());
-        $gameVariables.setValueSilent(paramMotionZ, this.getMotionAlpha());
-        $gameVariables.setValueSilent(paramMotionY, this.getMotionBeta());
-        $gameVariables.setValueSilent(paramMotionX, this.getMotionGamma());
+        $gameVariables._data[paramOrientationZ] = this.getOrientationAlpha();
+        $gameVariables._data[paramOrientationX] = this.getOrientationBeta();
+        $gameVariables._data[paramOrientationY] = this.getOrientationGamma();
+        $gameVariables._data[paramMotionZ] = this.getMotionAlpha();
+        $gameVariables._data[paramMotionY] = this.getMotionBeta();
+        $gameVariables._data[paramMotionX] = this.getMotionGamma();
     };
 
     /** @private */

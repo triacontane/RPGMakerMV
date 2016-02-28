@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2016/02/28 処理の負荷を少し軽減
 // 1.3.1 2016/02/21 トリガーにマウスを押したまま移動を追加
 // 1.3.0 2016/01/24 ピクチャをなでなでする機能を追加
 //                  トリガーにマウスムーブを追加
@@ -357,8 +358,8 @@
             0, $dataSystem.variables.length);
         var paramTouchY = getParamNumber(['GameVariableTouchY', 'ポインタY座標の変数番号'],
             0, $dataSystem.variables.length);
-        if (paramTouchX > 0) $gameVariables.setValue(paramTouchX, TouchInput.x);
-        if (paramTouchY > 0) $gameVariables.setValue(paramTouchY, TouchInput.y);
+        if (paramTouchX > 0) $gameVariables._data[paramTouchX] = TouchInput.x;
+        if (paramTouchY > 0) $gameVariables._data[paramTouchY] = TouchInput.y;
     };
 
     Game_Screen.prototype.setPictureCallCommon = function(pictureId, commonId, trigger) {
