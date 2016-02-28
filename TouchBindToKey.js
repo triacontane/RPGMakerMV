@@ -85,9 +85,9 @@
         return null;
     };
 
-    var paramBindLeft   = getParamString(['BindLeft', '左クリックボタン'], true);
-    var paramBindMiddle = getParamString(['BindMiddle', '中央クリックボタン'], true);
-    var paramBindRight  = getParamString(['BindRight', '右クリックボタン'], true);
+    var paramBindLeft   = getParamString(['BindLeft', '左クリックボタン']);
+    var paramBindMiddle = getParamString(['BindMiddle', '中央クリックボタン']);
+    var paramBindRight  = getParamString(['BindRight', '右クリックボタン']);
     var paramSuppress   = getParamBoolean(['Suppress', '元の動作を抑制']);
 
     //=============================================================================
