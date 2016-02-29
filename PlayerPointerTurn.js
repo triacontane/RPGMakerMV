@@ -25,20 +25,15 @@
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
- *  ただし、ヘッダのライセンス表示は残してください。
+ *  このプラグインはもうあなたのものです。
  */
 (function () {
 
     var _Game_Player_moveByInput = Game_Player.prototype.moveByInput;
     Game_Player.prototype.moveByInput = function() {
-        if (!this.isMoving() && this.canMove()) {
-            var dx = $gameMap.canvasToMapX(TouchInput.x), dy = $gameMap.canvasToMapY(TouchInput.y), dir = 0;
-            if (Math.abs(dx - this.x) > Math.abs(dy - this.y)) {
-                
-            } else {
-
-            }
-
+        if (!this.isMoving() && this.canMove() && TouchInput.isMoved()) {
+            var tx = TouchInput.x, ty = TouchInput.y, sx = this.screenX(), sy = this.screenY();
+            this.setDirection(Math.abs(tx - sx) > Math.abs(ty - sy) ? (tx > sx ? 6 : 4) : (ty > sy ? 2 : 8));
         }
         _Game_Player_moveByInput.apply(this, arguments);
     };
