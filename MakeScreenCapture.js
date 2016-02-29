@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/03/01 pngとjpegの形式ごとのファンクションキーを割り当てるよう修正
 // 1.1.1 2016/02/26 PrintScreenでもキャプチャできるように修正
 // 1.1.0 2016/02/25 複数のウィンドウを含む画面で正しくキャプチャできない不具合を修正
 //                  高度な設定項目の追加
@@ -20,9 +21,15 @@
  * @plugindesc 画面キャプチャ管理プラグイン
  * @author トリアコンタン
  *
- * @param キャプチャキー
+ * @param PNGキャプチャキー
  * @desc キャプチャとファイル保存を行うファンクションキーです。
+ * 保存形式の設定にかかわらずpng形式で出力します。
  * @default F6
+ *
+ * @param JPEGキャプチャキー
+ * @desc キャプチャとファイル保存を行うファンクションキーです。
+ * 保存形式の設定にかかわらずjpeg形式で出力します。
+ * @default F7
  *
  * @param ファイル名
  * @desc 画像のファイル名です。
@@ -117,9 +124,9 @@
     //=============================================================================
     var pluginName = 'MakeScreenCapture';
 
-    var getParamString = function(paramNames, upperFlg) {
+    var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
-        return value == null ? '' : upperFlg ? value.toUpperCase() : value;
+        return value == null ? '' : value;
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -158,14 +165,15 @@
         return window ? window.convertEscapeCharacters(text) : text;
     };
 
-    var paramFuncKeyCapture = getParamString(['FuncKeyCapture', 'キャプチャキー']);
-    var paramFileName       = getParamString(['FileName', 'ファイル名']);
-    var paramFileFormat     = getParamString(['FileFormat', '保存形式'], true);
-    var paramSignature      = getParamString(['Signature', '署名']);
-    var paramNumberDigit    = getParamNumber(['NumberDigit', '連番桁数']);
-    var paramInterval       = getParamNumber(['Interval', '実行間隔']);
-    var paramSeName         = getParamString(['SeName', '効果音']);
-    var paramTimeStamp      = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
+    var paramFuncKeyPngCapture  = getParamString(['FuncKeyPngCapture', 'PNGキャプチャキー']);
+    var paramFuncKeyJpegCapture = getParamString(['FuncKeyJpegCapture', 'JPEGキャプチャキー']);
+    var paramFileName           = getParamString(['FileName', 'ファイル名']);
+    var paramFileFormat         = getParamString(['FileFormat', '保存形式']).toLowerCase();
+    var paramSignature          = getParamString(['Signature', '署名']);
+    var paramNumberDigit        = getParamNumber(['NumberDigit', '連番桁数']);
+    var paramInterval           = getParamNumber(['Interval', '実行間隔']);
+    var paramSeName             = getParamString(['SeName', '効果音']);
+    var paramTimeStamp          = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
 
     //=============================================================================
     // Game_Interpreter
@@ -292,7 +300,7 @@
     Bitmap.prototype.save = function(fileName, format, quality) {
         var data = this._canvas.toDataURL('image/' + format, quality);
         data = data.replace(/^.*,/, '');
-        if (data) StorageManager.saveImg(fileName, data);
+        if (data) StorageManager.saveImg(fileName, format, data);
     };
 
     Bitmap.prototype.sign = function(text, fontInfo) {
@@ -341,17 +349,17 @@
         return this._captureBitmap || ImageManager.loadEmptyBitmap();
     };
 
-    SceneManager.saveCapture = function(fileName) {
+    SceneManager.saveCapture = function(fileName, format) {
         if (this._captureBitmap) {
-            var format = (paramFileFormat === 'PNG' ? 'png' : 'jpeg');
+            if (!format) format = (paramFileFormat === 'png' ? 'png' : 'jpeg');
             this._captureBitmap.sign(paramSignature, settings.signature);
             this._captureBitmap.save(StorageManager.getLocalImgFileName(fileName), format, settings.jpegQuality);
         }
     };
 
-    SceneManager.takeCapture = function() {
+    SceneManager.takeCapture = function(format) {
         this.makeCapture();
-        this.saveCapture(paramFileName);
+        this.saveCapture(paramFileName, format);
     };
 
     var _SceneManager_setupErrorHandlers = SceneManager.setupErrorHandlers;
@@ -363,8 +371,11 @@
     var _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown = function(event) {
         switch (event.keyCode) {
-            case Input.functionReverseMapper[paramFuncKeyCapture] :
-                if (Utils.isTestCapture()) SceneManager.takeCapture();
+            case Input.functionReverseMapper[paramFuncKeyPngCapture] :
+                if (Utils.isTestCapture()) SceneManager.takeCapture('png');
+                break;
+            case Input.functionReverseMapper[paramFuncKeyJpegCapture] :
+                if (Utils.isTestCapture()) SceneManager.takeCapture('jpeg');
                 break;
         }
         _SceneManager_onKeyDown.apply(this, arguments);
@@ -379,9 +390,9 @@
     // StorageManager
     //  イメージファイルを保存します。
     //=============================================================================
-    StorageManager.saveImg = function(fileName, data) {
+    StorageManager.saveImg = function(fileName, format, data) {
         if (this.isLocalMode()) {
-            this.saveImgToLocalFile(fileName + (paramFileFormat === 'PNG' ? '.png' : '.jpeg'), data);
+            this.saveImgToLocalFile(fileName + (format === 'png' ? '.png' : '.jpeg'), data);
         } else {
             this.saveImgToWebStorage(fileName, data);
         }

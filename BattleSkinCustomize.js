@@ -496,14 +496,16 @@
     };
 
     Sprite_IndividualStatus.prototype.drawFace = function(faceName, faceIndex, x, y) {
-        var width  = Window_Base._faceWidth  * settings.items.face.scales;
-        var height = Window_Base._faceHeight * settings.items.face.scales;
         var bitmap = ImageManager.loadFace(faceName);
-        var sw = Window_Base._faceWidth;
-        var sh = Window_Base._faceHeight;
-        var sx = faceIndex % 4 * sw;
-        var sy = Math.floor(faceIndex / 4) * sh;
-        this.contents.blt(bitmap, sx, sy, sw, sh, x, y, width, height);
+        bitmap.addLoadListener(function() {
+            var width  = Window_Base._faceWidth  * settings.items.face.scales;
+            var height = Window_Base._faceHeight * settings.items.face.scales;
+            var sw = Window_Base._faceWidth;
+            var sh = Window_Base._faceHeight;
+            var sx = faceIndex % 4 * sw;
+            var sy = Math.floor(faceIndex / 4) * sh;
+            this.contents.blt(bitmap, sx, sy, sw, sh, x, y, width, height);
+        }.bind(this));
     };
 
     Sprite_IndividualStatus.prototype.getActor = function() {
