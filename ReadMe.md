@@ -7,6 +7,19 @@ These plugins(JavaScript) are for RPG Maker MV.
 
 ##更新履歴 Update record
 
+###2016/03/01 : マウス入力のキーバインドプラグイン[TouchBindToKey.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/TouchBindToKey.js)を追加しました。  
+マウスクリック（左、右、ホイール）を特定のボタンに紐付けます。もともとのマウスの動作を無効化することもできます。PCのみで動作します。  
+
+###2016/03/01 : 画面キャプチャ管理プラグイン[MakeScreenCapture.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js)を追加しました。  
+プレー中のゲーム画面をキャプチャしてファイルに保存したり、ピクチャとして表示したりできます。  
+png、jpegから形式を選んだり、ファイル名に連番やタイムスタンプを付与できます。  
+
+###2016/03/01 : バトル画面オプション追加プラグイン[BattleOptions.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BattleOptions.js)を追加しました。  
+戦闘画面のパーティコマンドにオプションを追加します。各種音量の変更やコマンドの記憶等が設定できます。  
+
+###2016/03/01 : ポインタ追跡プラグイン[PlayerPointerTurn.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PlayerPointerTurn.js)を追加しました。  
+移動可能な場合にプレイヤーがマウスポインタの方を向きます。  
+
 ###2016/02/21 : 足音プラグイン[FootstepSound.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/FootstepSound.js)を追加しました。  
 足音効果音を演奏します。  
 リージョン、地形タグ、茂み、ダメージ床、梯子などを条件に指定でき、さらに左右で別の効果音を指定したり、ダッシュと歩行で別の効果音を指定したりできます。  
@@ -22,19 +35,6 @@ These plugins(JavaScript) are for RPG Maker MV.
 
 ###2016/02/20 : フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)を修正しました。  
 1. YEP_MessageCore.jsのネームポップをポップアップウィンドウと連動するよう対応。  
-
-###2016/02/15 : 起動オプション無効化プラグイン[SetupOptionInvalid.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionInvalid.js)を追加しました。  
-1. ブラウザ上で指定可能なMVの起動オプション（URLクエリパラメータ）を無効化します。  
-
-###2016/02/14 : 時刻と天候プラグイン[Chronus.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/Chronus.js)を修正しました。  
-1. アナログ時計を表示する機能を追加しました。  
-2. 現実の時間をゲーム内に反映させる機能を追加しました。  
-
-###2016/02/14 : 起動オプション調整プラグイン[SetupOptionCustomize.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionCustomize.js)を追加しました。  
-1. MVの起動オプション（URLクエリパラメータ）を制作者側で制御できます。  
-
-###2016/02/14 : Web実行のテストプレー防止プラグイン[BugFixWebPlayTest.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixWebPlayTest.js)を追加しました。  
-1. Web実行時にURLに?testと入力して実行することで誰でもテストプレーできてしまう問題を修正。  
 
 これより以前の履歴は[こちら](./UpdateRecord.md)をご参照ください。  
 

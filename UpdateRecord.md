@@ -1,5 +1,18 @@
 ##更新履歴（全件） Update record all
 
+###2016/02/15 : 起動オプション無効化プラグイン[SetupOptionInvalid.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionInvalid.js)を追加しました。  
+1. ブラウザ上で指定可能なMVの起動オプション（URLクエリパラメータ）を無効化します。  
+
+###2016/02/14 : 時刻と天候プラグイン[Chronus.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/Chronus.js)を修正しました。  
+1. アナログ時計を表示する機能を追加しました。  
+2. 現実の時間をゲーム内に反映させる機能を追加しました。  
+
+###2016/02/14 : 起動オプション調整プラグイン[SetupOptionCustomize.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SetupOptionCustomize.js)を追加しました。  
+1. MVの起動オプション（URLクエリパラメータ）を制作者側で制御できます。  
+
+###2016/02/14 : Web実行のテストプレー防止プラグイン[BugFixWebPlayTest.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixWebPlayTest.js)を追加しました。  
+1. Web実行時にURLに?testと入力して実行することで誰でもテストプレーできてしまう問題を修正。  
+
 ###2016/02/13 : 戦闘中顔グラフィック表示プラグイン[BattleActorFaceVisibility.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BattleActorFaceVisibility.js)を修正しました。  
 1. 他のプラグインと併用できるように、ウィンドウの表示位置を調整する機能を追加。  
 

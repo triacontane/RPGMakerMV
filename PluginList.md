@@ -206,3 +206,16 @@ MVの起動オプション（URLクエリパラメータ）を制作者側で制
 装備購入時の武器と防具の性能比較を攻撃力や防御力ではなくパラメータの総和で行います。  
 最大HPと最大MPの増減値は設定で、総和から除去することが可能です。  
 
+50. マウス入力のキーバインドプラグイン[TouchBindToKey.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/TouchBindToKey.js)  
+マウスクリック（左、右、ホイール）を特定のボタンに紐付けます。もともとのマウスの動作を無効化することもできます。PCのみで動作します。  
+
+51. 画面キャプチャ管理プラグイン[MakeScreenCapture.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js)  
+プレー中のゲーム画面をキャプチャしてファイルに保存したり、ピクチャとして表示したりできます。  
+png、jpegから形式を選んだり、ファイル名に連番やタイムスタンプを付与できます。  
+
+52. バトル画面オプション追加プラグイン[BattleOptions.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BattleOptions.js)  
+戦闘画面のパーティコマンドにオプションを追加します。各種音量の変更やコマンドの記憶等が設定できます。  
+
+53. ポインタ追跡プラグイン[PlayerPointerTurn.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PlayerPointerTurn.js)  
+移動可能な場合にプレイヤーがマウスポインタの方を向きます。  
+
