@@ -33,12 +33,40 @@
 
     var _Game_Player_triggerButtonAction = Game_Player.prototype.triggerButtonAction;
     Game_Player.prototype.triggerButtonAction = function() {
-        if (Input.dir4 !== 0 && !$gameMap.airship().pos(this.x, this.y)) {
-            if (this.getOnOffVehicle()) {
+        if (Input.dir4 === this.direction()) {
+            if (this.getOnOffShip()) {
                 return true;
             }
         }
         return _Game_Player_triggerButtonAction.apply(this, arguments);
+    };
+
+    Game_Player.prototype.getOnOffShip = function() {
+        if (this.isInAirship()) return false;
+        if (this.isInVehicle()) {
+            return this.getOffVehicle();
+        } else {
+            return this.getOnShip();
+        }
+    };
+
+    Game_Player.prototype.getOnShip = function() {
+        var direction = this.direction();
+        var x1 = $gameMap.roundXWithDirection(this.x, direction);
+        var y1 = $gameMap.roundYWithDirection(this.y, direction);
+        if ($gameMap.ship().pos(x1, y1)) {
+            this._vehicleType = 'ship';
+        } else if ($gameMap.boat().pos(x1, y1)) {
+            this._vehicleType = 'boat';
+        }
+        if (this.isInVehicle()) {
+            this._vehicleGettingOn = true;
+            if (!this.isInAirship()) {
+                this.forceMoveForward();
+            }
+            this.gatherFollowers();
+        }
+        return this._vehicleGettingOn;
     };
 })();
 
