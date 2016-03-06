@@ -19,7 +19,7 @@
  *
  * @param スクリプト1
  * @desc ゲーム開始時に実行するスクリプト
- * @default Input.keyMapper[8] = 'escape';
+ * @default
  *
  * @param スクリプト2
  * @desc ゲーム開始時に実行するスクリプト
@@ -69,12 +69,12 @@
     var _Scene_Boot_start = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.call(this);
-        var script = '';
+        var script = 'test';
         var i = 0;
-        while (script != null && i < 100) {
+        while (script && i < 100) {
             script = getParamString('スクリプト' + String(++i));
             try {
-                eval(script);
+                if (script) eval(script);
             } catch (e) {
                 if (Utils.isNwjs()) {
                     var window = require('nw.gui').Window.get();
