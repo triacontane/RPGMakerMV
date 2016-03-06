@@ -490,9 +490,8 @@ function Scene_SoundTest() {
         }
     };
 
-    var _Scene_SoundTest_update = Scene_SoundTest.prototype.update;
     Scene_SoundTest.prototype.update = function() {
-        _Scene_SoundTest_update.apply(this, arguments);
+        Scene_MenuBase.prototype.update.call(this);
         if (this._backgroundLoading && this._backgroundSprite.bitmap.isReady()) {
             this._backgroundSprite.scale.x = Graphics.boxWidth / this._backgroundSprite.width;
             this._backgroundSprite.scale.y = Graphics.boxHeight / this._backgroundSprite.height;
