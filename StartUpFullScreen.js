@@ -114,7 +114,7 @@ function Scene_Terminate() {
     //=============================================================================
     var _Scene_Title_createCommandWindow = Scene_Title.prototype.createCommandWindow;
     Scene_Title.prototype.createCommandWindow = function() {
-        _Scene_Title_createCommandWindow.call(this);
+        _Scene_Title_createCommandWindow.apply(this, arguments);
         if (paramShutdown) this._commandWindow.setHandler('shutdown',  this.commandShutdown.bind(this));
     };
 
@@ -130,13 +130,13 @@ function Scene_Terminate() {
     //=============================================================================
     var _Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function() {
-        _Window_TitleCommand_makeCommandList.call(this);
+        _Window_TitleCommand_makeCommandList.apply(this, arguments);
         if (paramShutdown) this.addCommand(paramShutdown, 'shutdown');
     };
 
     var _Window_TitleCommand_updatePlacement = Window_TitleCommand.prototype.updatePlacement;
     Window_TitleCommand.prototype.updatePlacement = function() {
-        _Window_TitleCommand_updatePlacement.call(this);
+        _Window_TitleCommand_updatePlacement.apply(this, arguments);
         if (paramShutdown) this.y += this.height / 8;
     };
 
