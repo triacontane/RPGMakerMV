@@ -126,7 +126,6 @@
     if (isParamExist('任意オプション')) {
         addOption(getParamString('任意オプション'));
     }
-    console.log('newUrl');
     location.replace(newUrl);
 })();
 
