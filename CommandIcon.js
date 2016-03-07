@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/03/07 オプション画面のレイアウトが崩れる問題を修正
 // 1.0.0 2016/03/06 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -33,6 +34,10 @@
 (function () {
     'use strict';
     Window_Command.prototype.drawText = function(text, x, y, width, align) {
-        this.drawTextEx(text, x, y);
+        if (this instanceof Window_Options) {
+            Window_Base.prototype.drawText.apply(this, arguments);
+        } else {
+            this.drawTextEx(text, x, y);
+        }
     };
 })();
