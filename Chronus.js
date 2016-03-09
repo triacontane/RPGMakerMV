@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2016/03/10 時間帯と時間帯ごとの色調をカスタマイズできるようにユーザ書き換え領域を作成
 // 1.2.2 2016/03/04 本体バージョン1.1.0の未使用素材の削除機能への対応
 // 1.2.1 2016/02/25 実時間表示設定でロードするとエラーが発生する現象の修正
 // 1.2.0 2016/02/14 アナログ時計の表示機能を追加
@@ -197,6 +198,11 @@
  * <C_Tint:OFF> : 色調の変更を一時的に無効化します。
  * <C_Weather:OFF> : 天候を一時的に無効化します。
  *
+ * 高度な設定
+ * ソースコード中の「ユーザ書き換え領域」を参照すると以下を変更できます。
+ *  時間帯の情報(朝が何時から何時まで等)
+ *  時間帯ごとの色調(ただし、悪天候の場合は補正が掛かります)
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -209,6 +215,35 @@ function Game_Chronus() {
 
 (function () {
     'use strict';
+    //=============================================================================
+    // ユーザ書き換え領域 - 開始 -
+    //=============================================================================
+    var settings = {
+        /* timeZone:時間帯 */
+        timeZone:[
+            /* name:時間帯名称 start:開始時刻 end:終了時刻 timeId:時間帯ID */
+            {name:'深夜', start:0,  end:4,  timeId:0},
+            {name:'早朝', start:5,  end:6,  timeId:1},
+            {name:'朝',   start:7,  end:11, timeId:2},
+            {name:'昼',   start:12, end:16, timeId:3},
+            {name:'夕方', start:17, end:18, timeId:4},
+            {name:'夜',   start:19, end:21, timeId:5},
+            {name:'深夜', start:22, end:24, timeId:0},
+        ],
+        /* timeTone:時間帯ごとの色調 */
+        timeTone:[
+            /* timeId:時間帯ID value:色調[赤(-255...255),緑(-255...255),青(-255...255),グレー(0...255)] */
+            {timeId:0, value:[-102, -102, -68, 102]},
+            {timeId:1, value:[-68, -68, 0, 0]},
+            {timeId:2, value:[0, 0, 0, 0]},
+            {timeId:3, value:[34, 34, 34, 0]},
+            {timeId:4, value:[68, -34, -34, 0]},
+            {timeId:5, value:[-68, -68, 0, 68]},
+        ]
+    };
+    //=============================================================================
+    // ユーザ書き換え領域 - 終了 -
+    //=============================================================================
     var pluginName = 'Chronus';
 
     var getParamString = function(paramNames) {
@@ -694,28 +729,14 @@ function Game_Chronus() {
         this.isEnableTint() ? this.setTint(this.getTimeZone(), swift) : $gameScreen.clearTone();
     };
 
-    Game_Chronus.prototype.setTint = function (timezone, swift) {
-        var tone = null;
-        switch (timezone) {
-            case 0:
-                tone = [-102, -102, -68, 102];
-                break;
-            case 1:
-                tone = [-68, -68, 0, 0];
-                break;
-            case 2:
-                tone = [0, 0, 0, 0];
-                break;
-            case 3:
-                tone = [34, 34, 34, 0];
-                break;
-            case 4:
-                tone = [68, -34, -34, 0];
-                break;
-            case 5:
-                tone = [-68, -68, 0, 68];
-                break;
-        }
+    Game_Chronus.prototype.setTint = function (timeId, swift) {
+        var tone = [0, 0, 0, 0];
+        settings.timeTone.forEach(function(toneInfo) {
+            if (toneInfo.timeId === timeId) {
+                tone = toneInfo.value.clone();
+                if (tone.length < 4) throw new Error('色調の値が不正です。:' + tone);
+            }
+        }.bind(this));
         if (this.getWeatherTypeId() !== 0) {
             tone[0] > 0 ? tone[0] /= 7 : tone[0] -= 14;
             tone[1] > 0 ? tone[1] /= 7 : tone[1] -= 14;
@@ -1022,13 +1043,11 @@ function Game_Chronus() {
     };
 
     Game_Chronus.prototype.getTimeZone = function () {
-        return this.isHourInRange(0, 4)   ? 0 :
-               this.isHourInRange(5, 6)   ? 1 :
-               this.isHourInRange(7, 11)  ? 2 :
-               this.isHourInRange(12, 16) ? 3 :
-               this.isHourInRange(17, 18) ? 4 :
-               this.isHourInRange(19, 21) ? 5 :
-               this.isHourInRange(22, 24) ? 0 : null;
+        var timeId = 0;
+        settings.timeZone.forEach(function(zoneInfo) {
+            if (this.isHourInRange(zoneInfo.start, zoneInfo.end)) timeId = zoneInfo.timeId;
+        }.bind(this));
+        return timeId;
     };
 
     Game_Chronus.prototype.getWeatherTypeId = function () {
