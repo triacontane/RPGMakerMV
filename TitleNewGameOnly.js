@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/03/10 セーブが存在する場合、通常のウィンドウを開く機能を追加
 // 1.0.1 2015/11/01 既存コードの再定義方法を修正（内容に変化なし）
 // 1.0.0 2015/10/31 初版
 // ----------------------------------------------------------------------------
@@ -25,6 +26,10 @@
  * @param FontFace
  * @desc スタート文字列のフォント名です。(指定する場合のみ)
  *
+ * @param ContinueEnable
+ * @desc セーブが存在する場合、通常のウィンドウを開きます。(ON/OFF)
+ * @default OFF
+ *
  * @help タイトル画面の選択肢をニューゲームのみにします。
  * 決定ボタンを押すか画面をクリックするとゲームが始まります。
  * 短編などセーブの概念がないゲームでの利用を想定しています。
@@ -37,7 +42,41 @@
  *  このプラグインはもうあなたのものです。
  */
 (function () {
-    var parameters = PluginManager.parameters('TitleNewGameOnly');
+    var pluginName = 'TitleNewGameOnly';
+    //=============================================================================
+    // ユーザ書き換え領域 - 開始 -
+    //=============================================================================
+    var settings = {
+        font:{size:52, bold:false, italic:true, color:'rgba(255,255,255,1.0)'},
+    };
+    //=============================================================================
+    // ユーザ書き換え領域 - 終了 -
+    //=============================================================================
+    var getParamString = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return value == null ? '' : value;
+    };
+
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
 
     //=============================================================================
     // Scene_Title
@@ -45,22 +84,45 @@
     //=============================================================================
     var _Scene_TitleCreate = Scene_Title.prototype.create;
     Scene_Title.prototype.create = function() {
-        _Scene_TitleCreate.call(this);
-        this._commandWindow.hide();
-        this._commandWindow.deactivate();
-        this._seledted = false;
+        _Scene_TitleCreate.apply(this, arguments);
+        this._commandWindow.setHandler('cancel', this.onCancelCommand.bind(this));
         this.createGameStartSprite();
+        this.onCancelCommand();
     };
 
     var _Scene_TitleUpdate = Scene_Title.prototype.update;
     Scene_Title.prototype.update = function() {
-        _Scene_TitleUpdate.call(this);
+        _Scene_TitleUpdate.apply(this, arguments);
+        this.updateNewGameOnly();
+    };
+
+    Scene_Title.prototype.updateNewGameOnly = function() {
+        if (this._commandWindowClose) {
+            this._commandWindow.openness -= 64;
+        }
         if (!this._seledted && this.isTriggered()) {
             SoundManager.playOk();
-            this._gameStartSprite._opacity_shift *= 16;
-            this.commandNewGame();
+            if (this.isContinueEnabled()) {
+                this._commandWindow.activate();
+                this._gameStartSprite.visible = false;
+                this._commandWindowClose = false;
+            } else {
+                this._gameStartSprite.opacity_shift *= 16;
+                this.commandNewGame();
+            }
             this._seledted = true;
         }
+    };
+
+    Scene_Title.prototype.onCancelCommand = function() {
+        this._commandWindow.deactivate();
+        this._seledted = false;
+        this._gameStartSprite.visible = true;
+        this._commandWindowClose = true;
+    };
+
+    Scene_Title.prototype.isContinueEnabled = function() {
+        return getParamBoolean(['ContinueEnable', 'コンティニュー可能']) && DataManager.isAnySavefileExists();
     };
 
     Scene_Title.prototype.createGameStartSprite = function() {
@@ -70,7 +132,12 @@
     };
 
     Scene_Title.prototype.isTriggered = function() {
-        return Input.isTriggered('ok') || TouchInput.isTriggered();
+        return Object.keys(Input.keyMapper).some(function(keyCode) {
+                return Input.isTriggered(Input.keyMapper[keyCode]);
+            }.bind(this)) ||
+            Object.keys(Input.gamepadMapper).some(function(keyCode) {
+                return Input.isTriggered(Input.gamepadMapper[keyCode]);
+            }.bind(this)) || TouchInput.isTriggered();
     };
 
     //=============================================================================
@@ -86,24 +153,25 @@
 
     Sprite_GameStart.prototype.initialize = function() {
         Sprite_Base.prototype.initialize.call(this);
-        this.y = Graphics.height - 160;
-        this._opacity_shift = -2;
+        this.y             = Graphics.height - 160;
+        this.opacity_shift = -2;
     };
 
     Sprite_GameStart.prototype.draw = function() {
-        var height = 52;
-        var fontFace = parameters['FontFace'];
-        var text = parameters['PressStart'];
-
+        var height = settings.font.size;
+        var fontFace = getParamString(['FontFace', 'フォント名']);
+        var text     = getParamString(['PressStart', 'ゲーム開始']);
         this.bitmap = new Bitmap(Graphics.width, height);
         if (fontFace) this.bitmap.fontFace = fontFace;
         this.bitmap.fontSize = height;
-        this.bitmap.fontItalic = true;
+        this.bitmap.fontItalic = settings.font.italic;
+        this.bitmap.fontBold   = settings.font.bold;
+        this.bitmap.textColor  = settings.font.color;
         this.bitmap.drawText(text, 0, 0, Graphics.width, height, 'center');
     };
 
     Sprite_GameStart.prototype.update = function() {
-        this.opacity += this._opacity_shift;
-        (this.opacity <= 128 || this.opacity >= 255) && (this._opacity_shift *= -1);
+        this.opacity += this.opacity_shift;
+        if (this.opacity <= 128 || this.opacity >= 255) this.opacity_shift *= -1;
     };
 })();
