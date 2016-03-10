@@ -18,6 +18,7 @@
  *
  * @param Button Text All
  * @desc 全額ガチャボタンに表示するテキストです。
+ * 機能を使わない場合は空にしてください。
  * @default 全額でガチャを引く
  *
  * @param Get Message Text
@@ -121,6 +122,7 @@
  *
  * @param Button Text All
  * @desc 全額ガチャボタンに表示するテキストです。
+ * 機能を使わない場合は空にしてください。
  * @default 全額でガチャを引く
  *
  * @param Get Message Text
@@ -215,7 +217,7 @@
     var parameters = PluginManager.parameters('Gacha');
     var message = String(parameters['Help Message Text'] || '1回Required Amount\\Gでガチャを引きます');
     var buttonText = String(parameters['Button Text'] || 'ガチャを引く');
-    var buttonTextAll = String(parameters['Button Text All'] || '全額でガチャを引く');
+    var buttonTextAll = String(parameters['Button Text All'] || '');
     var getText = String(parameters['Get Message Text'] || 'GET Item Name');
     var itemDescEnable = !!Number(parameters['Show Item Description'] || 0);
     var effect = Number(parameters['Effect'] || '119');
@@ -669,12 +671,14 @@
     };
 
     Window_GachaCommand.prototype.maxCols = function () {
-        return 3;
+        return buttonTextAll ? 3 : 2;
     };
 
     Window_GachaCommand.prototype.makeCommandList = function () {
         this.addCommand(buttonText, 'gacha', this.canGacha());
-        this.addCommand(buttonTextAll, 'gachaAll', this.canGacha());
+        if (buttonTextAll) {
+            this.addCommand(buttonTextAll, 'gachaAll', this.canGacha());
+        }
         this.addCommand(TextManager.cancel, 'cancel');
     };
 
