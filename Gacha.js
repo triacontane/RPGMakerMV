@@ -527,8 +527,6 @@
                     $gameMessage.add(key + ' × ' + this._itemList[key]);
                 }.bind(this));
                 $gameMessage.add('を手に入れた！');
-                this._itemList = {};
-                this._execCount = 0;
                 this._textShowing = true;
                 return;
             }
@@ -537,6 +535,8 @@
     };
 
     Scene_Gacha.prototype.backToCommand = function () {
+        this._itemList = {};
+        this._execCount = 0;
         this._goldWindow.show();
         this._commandWindow.show();
         this._commandWindow.activate();
