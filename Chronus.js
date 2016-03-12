@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.4 2016/03/13 アナログ時計を指定しないで起動した場合にエラーになる現象の修正
 // 1.2.3 2016/03/10 時間帯と時間帯ごとの色調をカスタマイズできるようにユーザ書き換え領域を作成
 // 1.2.2 2016/03/04 本体バージョン1.1.0の未使用素材の削除機能への対応
 // 1.2.1 2016/02/25 実時間表示設定でロードするとエラーが発生する現象の修正
@@ -561,24 +562,6 @@ function Game_Chronus() {
     };
 
     //=============================================================================
-    // Sprite_Abstract
-    //  時計スプライトを使用しない場合に使用される抽象スプライトクラスです。
-    //=============================================================================
-    function Sprite_Abstract() {
-        this.initialize.apply(this, arguments);
-    }
-
-    Sprite_Abstract.prototype.initialize = function() {
-        this.x = 0;
-        this.y = 0;
-        this.width = 0;
-        this.height = 0;
-    };
-
-    Sprite_Abstract.prototype.update = function() {
-    };
-
-    //=============================================================================
     // Sprite_Chronicle_Clock
     //  アナログ時計表示スプライトクラスです。
     //=============================================================================
@@ -654,8 +637,10 @@ function Game_Chronus() {
     };
 
     Spriteset_Map.prototype.createClockSprite = function() {
-        this._clockSprite = isParamExist('文字盤画像ファイル') ? new Sprite_Chronicle_Clock() : new Sprite_Abstract();
-        this.addChild(this._clockSprite);
+        if (isParamExist('文字盤画像ファイル')) {
+            this._clockSprite = new Sprite_Chronicle_Clock();
+            this.addChild(this._clockSprite);
+        }
     };
 
     //=============================================================================
