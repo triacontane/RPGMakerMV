@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.0 2016/03/13 初版
 // 0.9.0 2016/03/05 ベータ版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -14,7 +15,7 @@
 //=============================================================================
 
 /*:
- * @plugindesc デザインモードプラグイン。
+ * @plugindesc GUI画面デザインプラグイン　
  * パラメータを変更したら「プロジェクトの保存」（Ctrl+S）
  * @author トリアコンタン
  *
@@ -28,9 +29,19 @@
  * 通常は、Ctrl+Sで保存します。
  * @default OFF
  *
+ * @param モバイル版作成
+ * @desc モバイル版のウィンドウ配置を別に作成します。(ON/OFF)
+ * モバイル偽装と併用してください。
+ * @default ON
+ *
+ * @param モバイル偽装
+ * @desc モバイル実行を偽装します。(ON/OFF)
+ * モバイル版のウィンドウ作成やテスト時にONにしてください。
+ * @default OFF
+ *
  * @param ウィンドウ透過
  * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
- * 他のプラグインで同様機能を実現している場合はOFFにしてください。
+ * 他のプラグインで同様機能を実現している場合はOFF。
  * @default OFF
  *
  * @param グリッドサイズ
@@ -38,9 +49,25 @@
  * 0を指定すると非表示になります。
  * @default 48
  *
- * @help 各画面のウィンドウや一部の画像の表示位置を
- * ドラッグ＆ドロップで微調整して画面の外観を
- * グラフィカルに設計できます。
+ * @param パディング
+ * @desc ウィンドウ余白のデフォルト値です。入力した場合、適用されます。デフォルト：18
+ * @default
+ *
+ * @param フォントサイズ
+ * @desc ウィンドウフォントサイズのデフォルト値です。入力した場合、適用されます。デフォルト：28
+ * @default
+ *
+ * @param 行の高さ
+ * @desc ウィンドウの行高のデフォルト値です。入力した場合、適用されます。デフォルト：36
+ * @default
+ *
+ * @param 背景透明度
+ * @desc ウィンドウの背景透明度デフォルト値です。入力した場合、適用されます。デフォルト：192
+ * @default
+ *
+ * @help メニュー画面や戦闘画面など各画面のウィンドウや画像の表示位置を
+ * ドラッグ＆ドロップで微調整して画面の外観をグラフィカルに設計できます。
+ * 横幅、高さ、余白、背景画像なども画面上で変更できます。
  *
  * デフォルトの画面のほかプラグインによって追加された画面についても
  * 位置のカスタマイズが可能です。
@@ -57,24 +84,46 @@
  *   - マウスによる通常のウィンドウ操作は無効になります。
  *   - 他のウィンドウや画面端に自動でスナップします。(Shiftで無効化)
  *   - Ctrlを押していると、グリッドにスナップします。
- *   - Ctrl+Zで位置の変更をアンドゥします。
+ *   - Ctrl+Zで直前の変更を元に戻します。
  *   - Ctrl+Shift+Enterで現在のシーンの変更を全て初期化します。
  *   - ウィンドウ内で右クリックすると、枠の透明/不透明を切り替えます。
+ *   - ウィンドウ内で数字キー(※)を押下すると、各プロパティを変更できます。
  *
  * 4. Ctrl+Sでカスタマイズした位置を保存する。
  *
  * 5. 通常のテストプレー時は「デザインモード」を「OFF」にする。
  *
- * セーブした内容は「data/ContainerPositions.json」に保存されます。
+ * ※数字とプロパティの対応
+ *
+ * 1. ウィンドウの横幅
+ * 2. ウィンドウの高さ(直接指定)
+ * 3. ウィンドウの余白
+ * 4. ウィンドウのフォントサイズ
+ * 5. ウィンドウの1行のあたりの高さ
+ * 6. ウィンドウの背景透明度
+ * 7. ウィンドウの行数
+ * 8. ウィンドウの背景画像ファイル名
+ *
+ * また、任意のピクチャやウィンドウを追加表示することができます。
+ * 詳細はソースコードの「ユーザ書き換え領域」を参照してください。
+ * 追加表示したものも、ドラッグ＆ドロップで位置を調整できます。
+ *
+ * セーブした内容は「data/ContainerProperties.json」に保存されます。
  * JSONエディタ等で編集することも可能です。
  *
- * また、シーンごとに固定表示するピクチャを複数設定することができます。
- * 「img/pictures/」以下のファイルを拡張子なしで指定します。
- * 詳細はソースコードの「ユーザ書き換え領域」を参照してください。
- * ここで表示した画像も、ドラッグ＆ドロップで位置を調整できます。
+ * さらに、モバイル端末用に異なるウィンドウ配置を定義することもできます。
+ * モバイル用の配置情報は「data/ContainerPropertiesMobile.json」に保存されます。
  *
- * 外観を変更する他のプラグインを導入したときに表示がおかしくなった場合は
- * 一旦、Ctrl+Shift+Enterを実行して表示を初期化することを勧めます。
+ * モバイル偽装のオプションを有効にすると、モバイル端末での実行をPC上で
+ * 再現できます。モバイル実行を再現すると音声や動画ファイルの使用形式が
+ * 変化したり、音声ファイルの再生が行われなくなったりする可能性があります。
+ *
+ * 本プラグインで位置を変更したウィンドウは、以後位置を変更することができなくなります。
+ * よって、ゲーム中に動的に位置が変更されるウィンドウに対して本プラグインで
+ * 位置を固定すると正常に表示されなくなる場合があります。
+ *
+ * そういったケースを含め、表示がおかしくなった場合は
+ * 一旦、Ctrl+Shift+Enterを実行して画面中の全てのウィンドウを初期化することを勧めます。
  *
  * 要注意！　追加したピクチャは、デプロイメント時に
  * 未使用ファイルとして除外される可能性があります。
@@ -87,13 +136,14 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-var $dataContainerPositions = null;
+var $dataContainerProperties = null;
 
 (function () {
     'use strict';
     //=============================================================================
     // ユーザ書き換え領域 - 開始 -
     //  pictures : 各画面で表示するピクチャ情報
+    //  windows  : 各画面で表示するウィンドウ情報
     // （ここで指定したファイル名は、デプロイメント時に
     // 　未使用ファイルとして除外される可能性があります）
     // ※コピー＆ペーストしやすくするために最後の項目にもカンマを付与しています。
@@ -106,11 +156,20 @@ var $dataContainerPositions = null;
                 /* file:「img/pictures/」以下のファイルを拡張子なしで指定します */
                 {file:''},
             ],
+            /* windows:シーンに追加表示するウィンドウです。*/
+            windows:[
+                /* lines:表示内容の配列です。 制御文字が利用できます。「\\i[n]」と「\」をひとつ多く指定してください。*/
+                /* 位置を調整後に新しいウィンドウを追加する場合は、必ず「配列の末尾に追加」してください */
+                {lines:[]},
+            ],
         },
         /* メインメニュー画面の追加情報 */
         Scene_Menu:{
             pictures:[
                 {file:''},
+            ],
+            windows:[
+                {lines:[]},
             ],
         },
         /* 戦闘画面の追加情報 */
@@ -118,11 +177,17 @@ var $dataContainerPositions = null;
             pictures:[
                 {file:''},
             ],
+            windows:[
+                {lines:[]},
+            ],
         },
         /* アイテムメニュー画面の追加情報 */
         Scene_Item:{
             pictures:[
                 {file:''},
+            ],
+            windows:[
+                {lines:[]},
             ],
         },
         /* スキルメニュー画面の追加情報 */
@@ -130,11 +195,17 @@ var $dataContainerPositions = null;
             pictures:[
                 {file:''},
             ],
+            windows:[
+                {lines:[]},
+            ],
         },
         /* 装備メニュー画面の追加情報 */
         Scene_Equip:{
             pictures:[
                 {file:''},
+            ],
+            windows:[
+                {lines:[]},
             ],
         },
         /* ステータスメニュー画面の追加情報 */
@@ -142,11 +213,17 @@ var $dataContainerPositions = null;
             pictures:[
                 {file:''},
             ],
+            windows:[
+                {lines:[]},
+            ],
         },
         /* オプション画面の追加情報 */
         Scene_Options:{
             pictures:[
                 {file:''},
+            ],
+            windows:[
+                {lines:[]},
             ],
         },
         /* セーブ画面の追加情報 */
@@ -154,11 +231,17 @@ var $dataContainerPositions = null;
             pictures:[
                 {file:''},
             ],
+            windows:[
+                {lines:[]},
+            ],
         },
         /* ロード画面の追加情報 */
         Scene_Load:{
             pictures:[
                 {file:''},
+            ],
+            windows:[
+                {lines:[]},
             ],
         },
         /* ショップ画面の追加情報 */
@@ -166,17 +249,26 @@ var $dataContainerPositions = null;
             pictures:[
                 {file:''},
             ],
+            windows:[
+                {lines:[]},
+            ],
         },
         /* 名前入力画面の追加情報 */
         Scene_Name:{
             pictures:[
                 {file:''},
             ],
+            windows:[
+                {lines:[]},
+            ],
         },
         /* ゲームオーバー画面の追加情報 */
         Scene_Gameover:{
             pictures:[
                 {file:''},
+            ],
+            windows:[
+                {lines:[]},
             ],
         },
     };
@@ -207,6 +299,23 @@ var $dataContainerPositions = null;
         return null;
     };
 
+    var getArgString = function (arg, upperFlg) {
+        arg = convertEscapeCharacters(arg);
+        return upperFlg ? arg.toUpperCase() : arg;
+    };
+
+    var getArgNumber = function (arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    };
+
+    var convertEscapeCharacters = function(text) {
+        if (text == null) text = '';
+        var window = SceneManager._scene._windowLayer.children[0];
+        return window ? window.convertEscapeCharacters(text) : text;
+    };
+
     var checkTypeFunction = function(value) {
         return checkType(value, 'Function');
     };
@@ -223,144 +332,12 @@ var $dataContainerPositions = null;
     var paramThroughWindow   = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
     var paramAutoSave        = getParamBoolean(['AutoSave', '自動保存']);
     var paramGridSize        = getParamNumber(['GridSize', 'グリッドサイズ'], 0) || 0;
-
-    //=============================================================================
-    // DataManager
-    //  WindowPositions.jsonの読み込み処理を追記します。
-    //=============================================================================
-    DataManager._databaseFileCp = {name: '$dataContainerPositions', src: 'ContainerPositions.json'};
-
-    var _DataManager_loadDatabase = DataManager.loadDatabase;
-    DataManager.loadDatabase = function() {
-        _DataManager_loadDatabase.apply(this, arguments);
-        var errorMessage = this._databaseFileCp.src + 'が見付かりませんでした。';
-        this.loadDataFileAllowError(this._databaseFileCp.name, this._databaseFileCp.src, errorMessage);
-    };
-
-    DataManager.loadDataFileAllowError = function(name, src, errorMessage) {
-        var xhr = new XMLHttpRequest();
-        var url = 'data/' + src;
-        xhr.open('GET', url);
-        xhr.overrideMimeType('application/json');
-        xhr.onload = function() {
-            if (xhr.status < 400) {
-                window[name] = JSON.parse(xhr.responseText);
-                DataManager.onLoad(window[name]);
-            }
-        };
-        xhr.onerror = function() {
-            window[name] = {};
-            console.warn(errorMessage);
-        };
-        window[name] = null;
-        xhr.send();
-    };
-
-    var _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
-    DataManager.isDatabaseLoaded = function() {
-        return _DataManager_isDatabaseLoaded.apply(this, arguments) && window[this._databaseFileCp.name];
-    };
-
-    //=============================================================================
-    // SceneManager
-    //  現在のシーン名を返します。
-    //=============================================================================
-    SceneManager.getSceneName = function() {
-        return getClassName(this._scene);
-    };
-    //=============================================================================
-    // Scene_Base
-    //  ウィンドウ追加時に位置をロードします。
-    //=============================================================================
-    var _Scene_Base_addWindow = Scene_Base.prototype.addWindow;
-    Scene_Base.prototype.addWindow = function(child) {
-        _Scene_Base_addWindow.apply(this, arguments);
-        child.loadContainerInfo(this._windowLayer);
-    };
-
-    var _Scene_Base_addChild = Scene_Base.prototype.addChild;
-    Scene_Base.prototype.addChild = function(child) {
-        _Scene_Base_addChild.apply(this, arguments);
-        child.loadContainerInfo(this);
-    };
-
-    var _Scene_Base_createWindowLayer2 = Scene_Base.prototype.createWindowLayer;
-    Scene_Base.prototype.createWindowLayer = function() {
-        this.createCustomPicture();
-        _Scene_Base_createWindowLayer2.apply(this, arguments);
-    };
-
-    Scene_Base.prototype.createCustomPicture = function() {
-        var setting = settings[getClassName(this)];
-        if (setting) {
-            var pictures = setting.pictures;
-            this._customPictures = [];
-            if (pictures) {
-                pictures.forEach(function(picture) {
-                    if (!picture.file) return;
-                    var sprite = new Sprite();
-                    sprite.bitmap = ImageManager.loadPicture(picture.file, 0);
-                    this._customPictures.push(sprite);
-                    this.addChild(sprite);
-                }.bind(this));
-            }
-        }
-    };
-
-    //=============================================================================
-    // PIXI.DisplayObjectContainer
-    //  表示位置のセーブとロードを行います。
-    //=============================================================================
-    PIXI.DisplayObjectContainer.prototype.loadContainerInfo = function(parentContainer) {
-        var sceneName    = SceneManager.getSceneName();
-        var parentName   = getClassName(parentContainer);
-        var sceneInfo = $dataContainerPositions[sceneName];
-        if (sceneInfo) {
-            var containerInfo = sceneInfo[parentName];
-            var key = [parentContainer.getChildIndex(this), getClassName(this)];
-            if (containerInfo && containerInfo[key]) {
-                this.loadProperty(containerInfo[key]);
-                this._positionCustomized = true;
-            }
-        }
-    };
-
-    PIXI.DisplayObjectContainer.prototype.loadProperty = function(containerInfo) {
-        this.position.x = containerInfo.x;
-        this.position.y = containerInfo.y;
-    };
-
-    Window.prototype.loadProperty = function(containerInfo) {
-        PIXI.DisplayObjectContainer.prototype.loadProperty.apply(this, arguments);
-        this.width = containerInfo.width;
-        this.height = containerInfo.height;
-        this.opacity = containerInfo.opacity;
-    };
-
-    PIXI.DisplayObjectContainer.prototype.saveContainerInfo = function(parentContainer) {
-        var sceneName    = SceneManager.getSceneName();
-        var parentName   = getClassName(parentContainer);
-        if (!$dataContainerPositions[sceneName]) $dataContainerPositions[sceneName] = {};
-        var sceneInfo = $dataContainerPositions[sceneName];
-        if (!sceneInfo[parentName]) sceneInfo[parentName] = {};
-        var containerInfo = sceneInfo[parentName];
-        var key = [parentContainer.getChildIndex(this), getClassName(this)];
-        if (!containerInfo[key]) containerInfo[key] = {};
-        this.saveProperty(containerInfo[key]);
-        if (paramAutoSave) DataManager.saveDataFileWp();
-    };
-
-    PIXI.DisplayObjectContainer.prototype.saveProperty = function(containerInfo) {
-        containerInfo.x = this.x;
-        containerInfo.y = this.y;
-    };
-
-    Window.prototype.saveProperty = function(containerInfo) {
-        PIXI.DisplayObjectContainer.prototype.saveProperty.apply(this, arguments);
-        containerInfo.width   = this.width;
-        containerInfo.height  = this.height;
-        containerInfo.opacity = this.opacity;
-    };
+    var paramPadding         = getParamNumber(['Padding', 'パディング']);
+    var paramFontSize        = getParamNumber(['FontSize', 'フォントサイズ']);
+    var paramLineHeight      = getParamNumber(['LineHeight', '行の高さ']);
+    var paramBackOpacity     = getParamNumber(['LineHeight', '背景透明度']);
+    var paramMobileMake      = getParamBoolean(['MobileMake', 'モバイル版作成']);
+    var paramFakeMobile      = getParamBoolean(['FakeMobile', 'モバイル偽装']);
 
     //=============================================================================
     // Utils
@@ -381,6 +358,23 @@ var $dataContainerPositions = null;
         //=============================================================================
         Input.keyMapper[67] = 'copy';
         Input.keyMapper[83] = 'save';
+        for (var i = 49; i < 57; i++) {
+            Input.keyMapper[i] = 'num' + (i - 48);
+        }
+
+        var _Input__wrapNwjsAlert = Input._wrapNwjsAlert;
+        Input._wrapNwjsAlert = function() {
+            _Input__wrapNwjsAlert.apply(this, arguments);
+            var _prompt = window.prompt;
+            window.prompt = function() {
+                var gui = require('nw.gui');
+                var win = gui.Window.get();
+                var result = _prompt.apply(this, arguments);
+                win.focus();
+                Input.clear();
+                return result;
+            };
+        };
 
         var _Input_isRepeated = Input.isRepeated;
         Input.isRepeated = function(keyName) {
@@ -404,6 +398,8 @@ var $dataContainerPositions = null;
         // SceneManager
         //  ウィンドウポジションをjson形式で保存する処理を追加定義します。
         //=============================================================================
+        SceneManager.controlNumber = 0;
+
         var _SceneManager_initialize = SceneManager.initialize;
         SceneManager.initialize = function() {
             _SceneManager_initialize.call(this);
@@ -412,30 +408,74 @@ var $dataContainerPositions = null;
             this.infoWindow     = '';
             this.infoExtend     = '';
             this._copyCount     = 0;
-            this._infoHelp      = 'Ctrl+マウス:スナップ Ctrl+Z:戻す Ctrl+S:保存 Ctrl+Shift+Enter:リセット ';
+            this._infoHelp      = 'デザインモードで起動しています。 ';
             this._documentTitle = '';
-            this._holdStack     = [];
+            this._changeStack   = [];
+            this.showDevToolsForGdm();
+        };
+
+        SceneManager.showDevToolsForGdm = function() {
+            var nwWin = require('nw.gui').Window.get();
+            if (!nwWin.isDevToolsOpen()) {
+                var devTool = nwWin.showDevTools();
+                devTool.moveTo(0, 0);
+                devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+                nwWin.focus();
+            }
+            this.outputStartLog();
+        };
+
+        SceneManager.outputStartLog = function() {
+            var logValue = [
+                '☆☆☆ようこそ、デザインモードで起動しました。☆☆☆',
+                'デザインモードでは、オブジェクトの配置やプロパティを自由に設定して実際のゲーム画面上から画面設計できます。',
+                '',
+                '--------------------操 作 方 法------------------------------------------------------------------------',
+                'ドラッグ&ドロップ ： ウィンドウや画像を掴んで好きな場所に再配置します。',
+                'Ctrl+マウス ： ウィンドウや画像がグリッドにスナップします。',
+                'Shift+マウス ： ウィンドウや画像がオブジェクトや画面端にスナップしなくなります。',
+                'Ctrl+S ： 全ての変更を保存します。',
+                'Ctrl+C ： 直前に操作した座標をクリップボードにコピーします。',
+                'Ctrl+Z ： 直前に行った操作を元に戻します。',
+                'Ctrl+Shift+Enter ： 表示している画面の配置を全てリセットしてロードし直します。',
+                '右クリック ： ウィンドウの枠の表示/非表示を切り替えます。',
+                '数字キー ： ウィンドウの範囲内で押下すると、以下のとおり対応するプロパティを変更できます。',
+                ' 1. ウィンドウの横幅',
+                ' 2. ウィンドウの高さ(直接指定)',
+                ' 3. ウィンドウの余白',
+                ' 4. ウィンドウのフォントサイズ',
+                ' 5. ウィンドウの1行のあたりの高さ',
+                ' 6. ウィンドウの背景透明度',
+                ' 7. ウィンドウの行数',
+                ' 8. ウィンドウの背景画像ファイル名',
+                '-------------------------------------------------------------------------------------------------------',
+                '以下の操作ログが表示されます。'
+            ];
+            logValue.forEach(function(value) {
+                console.log(value);
+            });
         };
 
         var _SceneManager_onSceneCreate = SceneManager.onSceneCreate;
         SceneManager.onSceneCreate = function() {
             _SceneManager_onSceneCreate.apply(this, arguments);
-            this._holdStack     = [];
+            this._changeStack = [];
         };
 
-        SceneManager.pushHoldStack = function(parent, index, x, y) {
-            var info = {parent:parent, index:index, x:x, y:y};
-            this._holdStack.push(info);
+        SceneManager.pushChangeStack = function(child) {
+            var index = child.parent.getChildIndex(child);
+            var info = {parent:child.parent, index:index};
+            child.saveProperty(info);
+            this._changeStack.push(info);
         };
 
-        SceneManager.popHoldStack = function() {
-            var info = this._holdStack.pop();
+        SceneManager.popChangeStack = function() {
+            var info = this._changeStack.pop();
             if (info) {
                 var child = info.parent.children[info.index];
                 if (child) {
-                    child.position.x = info.x;
-                    child.position.y = info.y;
-                    child.saveContainerInfo(info.parent);
+                    child.loadProperty(info);
+                    child.saveContainerInfo();
                     return true;
                 }
             }
@@ -456,10 +496,10 @@ var $dataContainerPositions = null;
                 var copyValue = '';
                 if (this._copyCount % 2 === 0) {
                     copyValue = this.lastWindowX.toString();
-                    this.setInfoExtend('X座標[' + copyValue + ']をコピーしました。');
+                    this.setInfoExtend('X座標[' + copyValue + ']をクリップボードにコピーしました。', 0);
                 } else {
                     copyValue = this.lastWindowY.toString();
-                    this.setInfoExtend(' Y座標[' + copyValue + ']をコピーしました。');
+                    this.setInfoExtend('Y座標[' + copyValue + ']をクリップボードにコピーしました。', 0);
                 }
                 clipboard.set(copyValue, 'text');
                 this._copyCount++;
@@ -467,17 +507,17 @@ var $dataContainerPositions = null;
             if (Input.isPressed('control') && Input.isTriggered('save')) {
                 SoundManager.playSave();
                 DataManager.saveDataFileWp();
-                this.setInfoExtend('変更を保存しました。');
+                this.setInfoExtend('すべての変更を保存しました。', 0);
             }
             if (Input.isPressed('control') && Input.isTriggered('ok')) {
-                if (this.popHoldStack()) {
+                if (this.popChangeStack()) {
                     SoundManager.playCancel();
-                    this.setInfoExtend('元に戻しました。');
+                    this.setInfoExtend('左記の番号の操作を元に戻しました。', -1);
                     if (paramAutoSave) DataManager.saveDataFileWp();
                 }
             }
             if (Input.isPressed('control') && Input.isPressed('shift') && Input.isPressed('ok')) {
-                $dataContainerPositions[this.getSceneName()] = {};
+                $dataContainerProperties[this.getSceneName()] = {};
                 DataManager.saveDataFileWp();
                 location.reload();
             }
@@ -486,9 +526,13 @@ var $dataContainerPositions = null;
             this._documentTitle = docTitle;
         };
 
-        SceneManager.setInfoExtend = function(value) {
+        SceneManager.setInfoExtend = function(value, add) {
+            this.controlNumber += add;
             this.infoExtend = ' ' + value;
-            console.log(value);
+            console.log(add ? this.controlNumber + (add < 0 ? 1 : 0) + ' : ' + value : value);
+            if (paramAutoSave && add !== 0) {
+                console.log('自動保存により変更が保存されました。');
+            }
         };
 
         //=============================================================================
@@ -534,11 +578,11 @@ var $dataContainerPositions = null;
 
         Scene_Base.prototype.updateDrag = function() {
             var result = this._windowLayer.children.clone().reverse().some(function(container) {
-                return checkTypeFunction(container.processDesign) && container.processDesign(this._windowLayer);
+                return checkTypeFunction(container.processDesign) && container.processDesign();
             }, this);
             if (result) return;
             this.children.clone().reverse().some(function(container) {
-                return checkTypeFunction(container.processDesign) && container.processDesign(this);
+                return checkTypeFunction(container.processDesign) && container.processDesign();
             }, this);
         };
 
@@ -599,24 +643,26 @@ var $dataContainerPositions = null;
             this._positionCustomized = false;
         };
 
-        PIXI.DisplayObjectContainer.prototype.processDesign = function(parentContainer) {
+        PIXI.DisplayObjectContainer.prototype.processDesign = function() {
             var result = false;
             if (!this.moveDisable) {
-                this._parentContainer = parentContainer;
                 if (this.processPosition()) {
                     var info = 'X:[' + this.x + '] Y:[' + this.y + ']';
                     SceneManager.lastWindowX = this.x;
                     SceneManager.lastWindowY = this.y;
                     SceneManager.infoWindow  = info;
-                    SceneManager.infoCopy   = '';
-                    if (!this._holding) console.log(info);
+                    SceneManager.infoCopy    = '';
+                    if (!this._holding) SceneManager.setInfoExtend('位置を変更しました。' + info, 1);
                     result = true;
                 }
                 if (this.processOpacity()) {
-                    SceneManager.setInfoExtend('背景の透明状態を変更しました。');
+                    SceneManager.setInfoExtend('背景の表示/非表示を変更しました。', 1);
                     result = true;
                 }
-                this._parentContainer = null;
+                if (this.processInput()) {
+                    SceneManager.setInfoExtend(this._propLabel + 'の値を' + this._propValue + 'に変更しました。', 1);
+                    result = true;
+                }
             }
             return result;
         };
@@ -649,14 +695,87 @@ var $dataContainerPositions = null;
 
         PIXI.DisplayObjectContainer.prototype.processOpacity = function() {};
 
-        Window.prototype.processOpacity = function() {
+        Window_Base.prototype.processOpacity = function() {
             if (this.isTouchEvent(TouchInput.isCancelled)) {
                 SoundManager.playMiss();
+                SceneManager.pushChangeStack(this);
                 this.opacity = (this.opacity === 255 ? 0 : 255);
-                this.saveContainerInfo(this._parentContainer);
+                this.saveContainerInfo();
                 return true;
             }
             return false;
+        };
+
+        PIXI.DisplayObjectContainer.prototype.processInput = function() {};
+
+        Window_Base.prototype.processInput = function() {
+            if (this.isPreparedEvent()) {
+                var params = [
+                    ['num1', '横幅', 'width', 1, 2000, null],
+                    ['num2', '高さ', 'height', 1, 2000, null],
+                    ['num3', 'パディング', '_customPadding', 1, 100, this.updatePadding.bind(this)],
+                    ['num4', 'フォントサイズ', '_customFontSize', 1, 100, this.resetFontSettings.bind(this)],
+                    ['num5', '行の高さ', '_customLineHeight', 1, 2000, this.setFittingHeight.bind(this)],
+                    ['num6', '背景の透明度', '_customBackOpacity', 0, 255, this.updateBackOpacity.bind(this)],
+                    ['num7', '行数', '_customLineNumber', 0, 999, this.setFittingHeight.bind(this)],
+                    ['num8', '背景画像のファイル名', '_customBackFileName', null, null, this.createBackSprite.bind(this), true]
+                ];
+                return params.some(function(param){
+                    return this.processSetProperty.apply(this, param);
+                }.bind(this));
+            }
+            return false;
+        };
+
+        Window_Base.prototype.setFittingHeight = function() {
+            if (this._customLineNumber) this.height = this.fittingHeight(this._customLineNumber);
+        };
+
+        var _Window_Base_createBackSprite = Window_Base.prototype.createBackSprite;
+        Window_Base.prototype.createBackSprite = function() {
+            _Window_Base_createBackSprite.apply(this, arguments);
+            if (this._customBackSprite && this._customBackSprite.bitmap) {
+                var bitmap = this._customBackSprite.bitmap;
+                bitmap._image.onerror = function() {
+                    this._customBackFileName = '';
+                    this._customBackSprite.bitmap._isLoading = false;
+                    this._customBackSprite.bitmap = null;
+                    this._customBackSprite = null;
+                    SceneManager.popChangeStack();
+                    SceneManager.setInfoExtend('ファイルが見付からなかったので、左記の番号の変更を戻しました。', -1);
+                }.bind(this);
+            }
+        };
+
+        PIXI.DisplayObjectContainer.prototype.processSetProperty = function(
+            keyCode, propLabel, propName, min, max, callBack, stringFlg) {
+            if (this[propName] === undefined) return;
+            if (Input.isTriggered(keyCode)) {
+                var result = window.prompt(propLabel + 'を入力してください。', this[propName].toString());
+                if (result || (stringFlg && result === '')) {
+                    SceneManager.pushChangeStack(this);
+                    this[propName] = stringFlg ? getArgString(result) : getArgNumber(result, min, max);
+                    if (callBack) callBack();
+                    this.reDrawContents();
+                    SoundManager.playMagicEvasion();
+                    this.saveContainerInfo();
+                    this._propLabel = propLabel;
+                    this._propValue = this[propName];
+                    return true;
+                }
+            }
+            return null;
+        };
+
+        PIXI.DisplayObjectContainer.prototype.reDrawContents = function() {};
+
+        Window_Base.prototype.reDrawContents = function() {
+            this.refresh();
+        };
+
+        Window_Selectable.prototype.reDrawContents = function() {
+            Window_Base.prototype.reDrawContents.apply(this, arguments);
+            this.updateCursor();
         };
 
         PIXI.DisplayObjectContainer.prototype.isAnchorChanged = function() {
@@ -671,11 +790,10 @@ var $dataContainerPositions = null;
             this._holding = true;
             this._dx      = TouchInput.x - this.x;
             this._dy      = TouchInput.y - this.y;
-            var index = this._parentContainer.getChildIndex(this);
-            SceneManager.pushHoldStack(this._parentContainer, index, this.x, this.y);
+            SceneManager.pushChangeStack(this);
         };
 
-        Window.prototype.hold = function() {
+        Window_Base.prototype.hold = function() {
             PIXI.DisplayObjectContainer.prototype.hold.call(this);
             this._windowBackSprite.setBlendColor([255,255,255,192]);
             this._windowContentsSprite.setBlendColor([255,128,0,192]);
@@ -688,10 +806,10 @@ var $dataContainerPositions = null;
 
         PIXI.DisplayObjectContainer.prototype.release = function() {
             this._holding = false;
-            this.saveContainerInfo(this._parentContainer);
+            this.saveContainerInfo();
         };
 
-        Window.prototype.release = function() {
+        Window_Base.prototype.release = function() {
             PIXI.DisplayObjectContainer.prototype.release.call(this);
             this._windowBackSprite.setBlendColor([0,0,0,0]);
             this._windowContentsSprite.setBlendColor([0,0,0,0]);
@@ -704,7 +822,7 @@ var $dataContainerPositions = null;
 
         PIXI.DisplayObjectContainer.prototype.updateSnapX = function(x) {
             var minDistanceL = 16, minIndexL = -1, minDistanceR = 16, minIndexR = -1;
-            var children = this._parentContainer.children, endX = x + this.width;
+            var children = this.parent.children, endX = x + this.width;
             for (var i = 0, n = children.length; i < n; i++) {
                 var child = children[i];
                 if (child !== this && this.isSameInstance(child) && child.isTouchable() && child.isOverlapY(this)) {
@@ -731,7 +849,7 @@ var $dataContainerPositions = null;
 
         PIXI.DisplayObjectContainer.prototype.updateSnapY = function(y) {
             var minDistanceU = 16, minIndexU = -1, minDistanceD = 16, minIndexD = -1;
-            var children = this._parentContainer.children, endY = y + this.height;
+            var children = this.parent.children, endY = y + this.height;
             for (var i = 0, n = children.length; i < n; i++) {
                 var child = children[i];
                 if (child !== this && this.isSameInstance(child) && child.isTouchable() && child.isOverlapX(this)) {
@@ -760,7 +878,7 @@ var $dataContainerPositions = null;
             return false;
         };
 
-        Window.prototype.isSameInstance = function(objectContainer) {
+        Window_Base.prototype.isSameInstance = function(objectContainer) {
             return objectContainer instanceof Window;
         };
 
@@ -833,7 +951,7 @@ var $dataContainerPositions = null;
             return false;
         };
 
-        Window.prototype.isTouchable = function() {
+        Window_Base.prototype.isTouchable = function() {
             return (this.opacity > 0 || this.contentsOpacity > 0) && this.visible && this.isOpen();
         };
 
@@ -847,6 +965,10 @@ var $dataContainerPositions = null;
 
         PIXI.DisplayObjectContainer.prototype.isTouchEvent = function(triggerFunc) {
             return this.isTouchable() && triggerFunc.call(TouchInput) && this.isTouchPosInRect();
+        };
+
+        PIXI.DisplayObjectContainer.prototype.isPreparedEvent = function() {
+            return this.isTouchable() && this.isTouchPosInRect();
         };
 
         PIXI.DisplayObjectContainer.prototype.isRangeX = function(x) {
@@ -910,5 +1032,280 @@ var $dataContainerPositions = null;
         WindowLayer.prototype._webglMaskWindow = function(renderSession, window) {};
         WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
     }
+
+    if(paramFakeMobile) {
+        Utils.isMobileDevice = function() {
+            return true;
+        };
+    }
+
+    //=============================================================================
+    // DataManager
+    //  ContainerProperties.jsonの読み込み処理を追記します。
+    //=============================================================================
+    DataManager._databaseFileCp = {name: '$dataContainerProperties', src: 'ContainerProperties.json'};
+    if (paramMobileMake && Utils.isMobileDevice()) {
+        DataManager._databaseFileCp.src = 'ContainerPropertiesMobile.json';
+    }
+
+    var _DataManager_loadDatabase = DataManager.loadDatabase;
+    DataManager.loadDatabase = function() {
+        _DataManager_loadDatabase.apply(this, arguments);
+        var errorMessage = this._databaseFileCp.src + 'が見付かりませんでした。';
+        this.loadDataFileAllowError(this._databaseFileCp.name, this._databaseFileCp.src, errorMessage);
+    };
+
+    DataManager.loadDataFileAllowError = function(name, src, errorMessage) {
+        var xhr = new XMLHttpRequest();
+        var url = 'data/' + src;
+        xhr.open('GET', url);
+        xhr.overrideMimeType('application/json');
+        xhr.onload = function() {
+            if (xhr.status < 400) {
+                window[name] = JSON.parse(xhr.responseText);
+                DataManager.onLoad(window[name]);
+            }
+        };
+        xhr.onerror = function() {
+            window[name] = {};
+            console.warn(errorMessage);
+        };
+        window[name] = null;
+        xhr.send();
+    };
+
+    var _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
+    DataManager.isDatabaseLoaded = function() {
+        return _DataManager_isDatabaseLoaded.apply(this, arguments) && window[this._databaseFileCp.name];
+    };
+
+    //=============================================================================
+    // SceneManager
+    //  現在のシーン名を返します。
+    //=============================================================================
+    SceneManager.getSceneName = function() {
+        return getClassName(this._scene);
+    };
+
+    //=============================================================================
+    // Scene_Base
+    //  ウィンドウ追加時に位置をロードします。
+    //=============================================================================
+    var _Scene_Base_addWindow = Scene_Base.prototype.addWindow;
+    Scene_Base.prototype.addWindow = function(child) {
+        _Scene_Base_addWindow.apply(this, arguments);
+        child.loadContainerInfo();
+    };
+
+    var _Scene_Base_addChild = Scene_Base.prototype.addChild;
+    Scene_Base.prototype.addChild = function(child) {
+        _Scene_Base_addChild.apply(this, arguments);
+        child.loadContainerInfo();
+    };
+
+    var _Scene_Base_createWindowLayer2 = Scene_Base.prototype.createWindowLayer;
+    Scene_Base.prototype.createWindowLayer = function() {
+        this.createCustomPicture();
+        _Scene_Base_createWindowLayer2.apply(this, arguments);
+        this.createCustomWindow();
+    };
+
+    Scene_Base.prototype.createCustomPicture = function() {
+        var setting = settings[getClassName(this)];
+        if (setting) {
+            var pictures = setting.pictures;
+            this._customPictures = [];
+            if (pictures) {
+                pictures.forEach(function(picture) {
+                    if (!picture.file) return;
+                    var sprite = new Sprite();
+                    sprite.bitmap = ImageManager.loadPicture(picture.file, 0);
+                    this._customPictures.push(sprite);
+                    this.addChild(sprite);
+                }.bind(this));
+            }
+        }
+    };
+
+    Scene_Base.prototype.createCustomWindow = function() {
+        var setting = settings[getClassName(this)];
+        if (setting) {
+            var windows = setting.windows;
+            this._customWindows = [];
+            if (windows) {
+                windows.forEach(function(windowItem) {
+                    if (!windowItem.lines || windowItem.lines.length < 1) return;
+                    var win = new Window_Custom(windowItem.lines);
+                    this._customWindows.push(win);
+                    this.addWindow(win);
+                }.bind(this));
+            }
+        }
+    };
+
+    //=============================================================================
+    // PIXI.DisplayObjectContainer
+    //  表示位置のセーブとロードを行います。
+    //=============================================================================
+    PIXI.DisplayObjectContainer.prototype.loadContainerInfo = function() {
+        var sceneName    = SceneManager.getSceneName();
+        var parentName   = getClassName(this.parent);
+        var sceneInfo = $dataContainerProperties[sceneName];
+        if (sceneInfo) {
+            var containerInfo = sceneInfo[parentName];
+            var key = [this.parent.getChildIndex(this), getClassName(this)];
+            if (containerInfo && containerInfo[key]) {
+                this.loadProperty(containerInfo[key]);
+                this._positionCustomized = true;
+            }
+        }
+    };
+
+    PIXI.DisplayObjectContainer.prototype.loadProperty = function(containerInfo) {
+        this.position.x = containerInfo.x;
+        this.position.y = containerInfo.y;
+    };
+
+    Window_Base.prototype.loadProperty = function(containerInfo) {
+        PIXI.DisplayObjectContainer.prototype.loadProperty.apply(this, arguments);
+        this.width   = containerInfo.width;
+        this.height  = containerInfo.height;
+        this.opacity = containerInfo.opacity;
+        this._customFontSize     = containerInfo._customFontSize;
+        this._customPadding      = containerInfo._customPadding;
+        this._customLineHeight   = containerInfo._customLineHeight;
+        this._customBackOpacity  = containerInfo._customBackOpacity;
+        this._customBackFileName = containerInfo._customBackFileName;
+        this.refresh();
+        this.createBackSprite();
+    };
+
+    Window_Selectable.prototype.loadProperty = function(containerInfo) {
+        Window_Base.prototype.loadProperty.apply(this, arguments);
+        this.updateCursor();
+    };
+
+    PIXI.DisplayObjectContainer.prototype.saveContainerInfo = function() {
+        var sceneName    = SceneManager.getSceneName();
+        var parentName   = getClassName(this.parent);
+        if (!$dataContainerProperties[sceneName]) $dataContainerProperties[sceneName] = {};
+        var sceneInfo = $dataContainerProperties[sceneName];
+        if (!sceneInfo[parentName]) sceneInfo[parentName] = {};
+        var containerInfo = sceneInfo[parentName];
+        var key = [this.parent.getChildIndex(this), getClassName(this)];
+        if (!containerInfo[key]) containerInfo[key] = {};
+        this.saveProperty(containerInfo[key]);
+        if (paramAutoSave) {
+            DataManager.saveDataFileWp();
+        }
+    };
+
+    PIXI.DisplayObjectContainer.prototype.saveProperty = function(containerInfo) {
+        containerInfo.x = this.x;
+        containerInfo.y = this.y;
+    };
+
+    Window_Base.prototype.saveProperty = function(containerInfo) {
+        PIXI.DisplayObjectContainer.prototype.saveProperty.apply(this, arguments);
+        containerInfo.width   = this.width;
+        containerInfo.height  = this.height;
+        containerInfo.opacity = this.opacity;
+        containerInfo._customFontSize     = this._customFontSize;
+        containerInfo._customPadding      = this._customPadding;
+        containerInfo._customLineHeight   = this._customLineHeight;
+        containerInfo._customBackOpacity  = this._customBackOpacity;
+        containerInfo._customBackFileName = this._customBackFileName;
+    };
+
+    //=============================================================================
+    // Window_Base
+    //  プロパティの値をカスタマイズします。
+    //=============================================================================
+    var _Window_Base_initialize = Window_Base.prototype.initialize;
+    Window_Base.prototype.initialize = function(x, y, width, height) {
+        _Window_Base_initialize.apply(this, arguments);
+        this._customFontSize    = this.standardFontSize();
+        this._customPadding     = this.standardPadding();
+        this._customLineHeight  = this.lineHeight();
+        this._customLineNumber  = 0;
+        this._customBackOpacity = this.standardBackOpacity();
+        this._customBackSprite  = null;
+        this._customBackFileName = '';
+    };
+
+    Window_Base.prototype.createBackSprite = function() {
+        if (this._customBackFileName) {
+            if (!this._customBackSprite) {
+                this._customBackSprite = new Sprite();
+                this.addChildToBack(this._customBackSprite);
+            }
+            this._customBackSprite.bitmap = ImageManager.loadPicture(this._customBackFileName, 0);
+        } else if (this._customBackSprite) {
+            this.removeChild(this._customBackSprite);
+            this._customBackSprite = null;
+        }
+    };
+
+    var _Window_Selectable_initialize = Window_Selectable.prototype.initialize;
+    Window_Selectable.prototype.initialize = function(x, y, width, height) {
+        _Window_Selectable_initialize.apply(this, arguments);
+        this._customLineNumber  = this.maxRows();
+    };
+
+    var _Window_Base_standardFontSize = Window_Base.prototype.standardFontSize;
+    Window_Base.prototype.standardFontSize = function() {
+        return this._customFontSize ? this._customFontSize :
+            paramFontSize ? paramFontSize : _Window_Base_standardFontSize.apply(this, arguments);
+    };
+
+    var _Window_Base_standardPadding = Window_Base.prototype.standardPadding;
+    Window_Base.prototype.standardPadding = function() {
+        return this._customPadding ? this._customPadding :
+            paramPadding ? paramPadding : _Window_Base_standardPadding.apply(this, arguments);
+    };
+
+    var _Window_Base_lineHeight = Window_Base.prototype.lineHeight;
+    Window_Base.prototype.lineHeight = function() {
+        return this._customLineHeight ? this._customLineHeight :
+            paramLineHeight ? paramLineHeight : _Window_Base_lineHeight.apply(this, arguments);
+    };
+
+    var _Window_Base_standardBackOpacity = Window_Base.prototype.standardBackOpacity;
+    Window_Base.prototype.standardBackOpacity = function() {
+        return this._customBackOpacity ? this._customBackOpacity :
+            paramBackOpacity ? paramBackOpacity : _Window_Base_standardBackOpacity.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Window_Custom
+    //  任意配置可能なウィンドウです。
+    //=============================================================================
+    function Window_Custom() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_Custom.prototype = Object.create(Window_Selectable.prototype);
+    Window_Custom.prototype.constructor = Window_Custom;
+
+    Window_Custom.prototype.initialize = function(lines) {
+        this._lines = lines || [];
+        Window_Selectable.prototype.initialize.call(this, 0, 0, 320, this.fittingHeight(this._lines.length));
+        this.refresh();
+    };
+
+    Window_Custom.prototype.refresh = function() {
+        this.createContents();
+        Window_Selectable.prototype.refresh.apply(this, arguments);
+    };
+
+    Window_Custom.prototype.drawItem = function(index) {
+        var rect = this.itemRectForText(index);
+        this.resetTextColor();
+        this.drawTextEx(this._lines[index], rect.x, rect.y);
+    };
+
+    Window_Custom.prototype.maxItems = function() {
+        return this._lines.length;
+    };
 })();
 
