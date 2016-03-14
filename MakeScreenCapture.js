@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2016/03/15 文章のスクロール表示が正しくキャプチャできない問題を修正
 // 1.1.2 2016/03/01 pngとjpegの形式ごとのファンクションキーを割り当てるよう修正
 // 1.1.1 2016/02/26 PrintScreenでもキャプチャできるように修正
 // 1.1.0 2016/02/25 複数のウィンドウを含む画面で正しくキャプチャできない不具合を修正
@@ -174,6 +175,7 @@
     var paramInterval           = getParamNumber(['Interval', '実行間隔']);
     var paramSeName             = getParamString(['SeName', '効果音']);
     var paramTimeStamp          = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
+    var localCaptureExecute     = false;
 
     //=============================================================================
     // Game_Interpreter
@@ -286,11 +288,20 @@
     // WindowLayer
     //  キャプチャ実行時、マスク処理のY座標を修正します。
     //=============================================================================
-    WindowLayer.captureExecute = false;
     var _WindowLayer__webglMaskRect = WindowLayer.prototype._webglMaskRect;
     WindowLayer.prototype._webglMaskRect = function(renderSession, x, y, w, h) {
-        if (WindowLayer.captureExecute) arguments[2] = Graphics.boxHeight - (y + h);
+        if (localCaptureExecute) arguments[2] = Graphics.boxHeight - (y + h);
         _WindowLayer__webglMaskRect.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Sprite
+    //  キャプチャ実行時、_offset.yの値を逆方向に補正します。
+    //=============================================================================
+    var _Sprite__renderWebGL = Sprite.prototype._renderWebGL;
+    Sprite.prototype._renderWebGL = function(renderSession) {
+        if (localCaptureExecute) this.worldTransform.ty -= this._offset.y * 2;
+        _Sprite__renderWebGL.apply(this, arguments);
     };
 
     //=============================================================================
@@ -340,9 +351,9 @@
             se.name = paramSeName;
             AudioManager.playSe(se);
         }
-        WindowLayer.captureExecute = true;
+        localCaptureExecute = true;
         this._captureBitmap = this.snap();
-        WindowLayer.captureExecute = false;
+        localCaptureExecute = false;
     };
 
     SceneManager.getCapture = function() {

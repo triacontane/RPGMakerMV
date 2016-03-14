@@ -879,7 +879,7 @@ var $dataContainerProperties = null;
         };
 
         Window_Base.prototype.isSameInstance = function(objectContainer) {
-            return objectContainer instanceof Window;
+            return objectContainer instanceof Window_Base;
         };
 
         Sprite.prototype.isSameInstance = function(objectContainer) {
