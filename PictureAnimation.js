@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.3.1 2016/03/15 原点を中央したピクチャにクロスフェードを行うと表示位置がずれる問題を修正
+// 1.3.1 2016/03/15 ピクチャ上に戦闘アニメを表示するプラグイン「PictureOnAnimation」との競合を解消
+//                  原点を中央したピクチャにクロスフェードを行うと表示位置がずれる問題を修正
 // 1.3.0 2016/02/28 セル番号を変数と連動する機能を追加
 //                  処理の負荷を少し軽減
 // 1.2.3 2016/02/07 戦闘画面でもピクチャのアニメーションができるように修正
@@ -214,7 +215,7 @@
                 animationType  = getArgNumber(args[1], 1, 3);
                 customArray    = getArgArrayNumber(args[2], 1, settings.maxCellAnimation);
                 picture        = $gameScreen.picture(pictureNum);
-                if (picture) picture.startAnimation(animationType, false, customArray);
+                if (picture) picture.startAnimationFrame(animationType, false, customArray);
                 break;
             case 'PA_START_LOOP' :
             case 'ピクチャのループアニメーション開始':
@@ -222,19 +223,19 @@
                 animationType  = getArgNumber(args[1], 1, 3);
                 customArray    = getArgArrayNumber(args[2], 1, settings.maxCellAnimation);
                 picture        = $gameScreen.picture(pictureNum);
-                if (picture) picture.startAnimation(animationType, true, customArray);
+                if (picture) picture.startAnimationFrame(animationType, true, customArray);
                 break;
             case 'PA_STOP' :
             case 'ピクチャのアニメーション終了':
                 pictureNum    = getArgNumber(args[0], 1, $gameScreen.maxPictures());
                 picture       = $gameScreen.picture(pictureNum);
-                if (picture) picture.stopAnimation(false);
+                if (picture) picture.stopAnimationFrame(false);
                 break;
             case 'PA_STOP_FORCE' :
             case 'ピクチャのアニメーション強制終了':
                 pictureNum    = getArgNumber(args[0], 1, $gameScreen.maxPictures());
                 picture       = $gameScreen.picture(pictureNum);
-                if (picture) picture.stopAnimation(true);
+                if (picture) picture.stopAnimationFrame(true);
                 break;
             case 'PA_SET_CELL' :
             case 'ピクチャのアニメーションセル設定':
@@ -290,7 +291,7 @@
         _Game_Screen_showPicture.apply(this, arguments);
         var realPictureId = this.realPictureId(pictureId);
         if (this._paCellNumber > 1) {
-            this._pictures[realPictureId].setAnimationInit(
+            this._pictures[realPictureId].setAnimationFrameInit(
                 this._paCellNumber, this._paFrameNumber, this._paDirection, this._paFadeDuration);
             this.clearPicturesAnimation();
         }
@@ -303,10 +304,10 @@
     var _Game_Picture_initialize = Game_Picture.prototype.initialize;
     Game_Picture.prototype.initialize = function() {
         _Game_Picture_initialize.call(this);
-        this.initAnimation();
+        this.initAnimationFrameInfo();
     };
 
-    Game_Picture.prototype.initAnimation = function() {
+    Game_Picture.prototype.initAnimationFrameInfo = function() {
         this._cellNumber        = 1;
         this._frameNumber       = 1;
         this._cellCount         = 0;
@@ -390,8 +391,8 @@
         _Game_Picture_update.call(this);
         if (this.isFading()) {
             this.updateFading();
-        } else if(this.isAnimation()) {
-            this.updateAnimation();
+        } else if(this.isAnimationFrame()) {
+            this.updateAnimationFrame();
         }
     };
 
@@ -399,7 +400,7 @@
         this._linkedVariable = variableNumber.clamp(1, $dataSystem.variables.length);
     };
 
-    Game_Picture.prototype.updateAnimation = function() {
+    Game_Picture.prototype.updateAnimationFrame = function() {
         this._frameCount = (this._frameCount + 1) % this._frameNumber;
         if (this._frameCount === 0) {
             this.addCellCount();
@@ -422,7 +423,7 @@
         this.cell = this._cellCount + 1;
     };
 
-    Game_Picture.prototype.setAnimationInit = function(cellNumber, frameNumber, direction, fadeDuration) {
+    Game_Picture.prototype.setAnimationFrameInit = function(cellNumber, frameNumber, direction, fadeDuration) {
         this._cellNumber   = cellNumber;
         this._frameNumber  = frameNumber;
         this._frameCount   = 0;
@@ -431,19 +432,19 @@
         this._fadeDuration = fadeDuration;
     };
 
-    Game_Picture.prototype.startAnimation = function(animationType, loopFlg, customArray) {
+    Game_Picture.prototype.startAnimationFrame = function(animationType, loopFlg, customArray) {
         this._animationType = animationType;
         this._customArray = customArray;
         this._animationFlg = true;
         this._loopFlg = loopFlg;
     };
 
-    Game_Picture.prototype.stopAnimation = function(forceFlg) {
+    Game_Picture.prototype.stopAnimationFrame = function(forceFlg) {
         this._loopFlg = false;
         if (forceFlg) this._animationFlg = false;
     };
 
-    Game_Picture.prototype.isAnimation = function() {
+    Game_Picture.prototype.isAnimationFrame = function() {
         return this._animationFlg;
     };
 
@@ -473,7 +474,7 @@
                 this.loadAnimationBitmap();
             }
             if (this.isBitmapReady()) {
-                this.updateAnimation(this, this.picture().cell);
+                this.updateAnimationFrame(this, this.picture().cell);
                 if (this.picture().isNeedFade()) this.updateFading();
             }
         }
@@ -496,14 +497,14 @@
         }
         if (this.picture().isFading()) {
             this._prevSprite.visible = true;
-            this.updateAnimation(this._prevSprite, this.picture().prevCellCount());
+            this.updateAnimationFrame(this._prevSprite, this.picture().prevCellCount());
             this._prevSprite.opacity = this.picture().prevCellOpacity();
         } else {
             this._prevSprite.visible = false;
         }
     };
 
-    Sprite_Picture.prototype.updateAnimation = function(sprite, cellCount) {
+    Sprite_Picture.prototype.updateAnimationFrame = function(sprite, cellCount) {
         switch (this.picture().direction()) {
             case '連番':
             case 'N':
