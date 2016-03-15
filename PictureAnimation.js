@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/03/15 原点を中央したピクチャにクロスフェードを行うと表示位置がずれる問題を修正
 // 1.3.0 2016/02/28 セル番号を変数と連動する機能を追加
 //                  処理の負荷を少し軽減
 // 1.2.3 2016/02/07 戦闘画面でもピクチャのアニメーションができるように修正
@@ -546,6 +547,8 @@
         this._prevSprite = new Sprite();
         this._prevSprite.visible = false;
         this._prevSprite.bitmap  = this.bitmap;
+        this._prevSprite.anchor.x = this.anchor.x;
+        this._prevSprite.anchor.y = this.anchor.y;
         this.addChild(this._prevSprite);
     };
 
