@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/03/19 表示中のすべてのピクチャに処理を適用するコマンドを追加
 // 1.1.2 2016/01/24 ピクチャの最大表示数を設定できる機能を追加
 // 1.1.1 2015/12/20 番号の変数指定の初期値を有効/無効で設定できるよう修正
 // 1.1.0 2015/11/27 ピクチャのファイル名に変数を組み込むことが出来る機能を追加
@@ -58,6 +59,16 @@
  *  拡張子は指定しないでください。
  *
  *  例 P_D_FILENAME file\V[1]
+ *
+ *  P_TARGET_ALL :
+ *  以下のイベントコマンドの対象が「表示している全てのピクチャ」になります。
+ *  ・ピクチャの移動
+ *  ・ピクチャの色調変更
+ *  ・ピクチャの回転
+ *  ・ピクチャの消去
+ *  1回実行すると設定はもとに戻ります。
+ *
+ *  例 P_TARGET_ALL
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -136,6 +147,10 @@
                 break;
             case 'P_D_FILENAME':
                 $gameScreen.dPictureFileName = getArgString(args[0]);
+                break;
+            case 'P_TARGET_ALL':
+                $gameScreen.setPictureTargetAll();
+                break;
         }
     };
 
@@ -195,6 +210,67 @@
     Game_Screen.prototype.clear = function() {
         _Game_Screen_clear.call(this);
         this.dPictureFileName = null;
+    };
+
+    Game_Screen.prototype.setPictureTargetAll = function() {
+        this._pictureTargetAll = true;
+    };
+
+    var _Game_Screen_movePicture = Game_Screen.prototype.movePicture;
+    Game_Screen.prototype.movePicture = function(pictureId, origin, x, y, scaleX,
+                                                 scaleY, opacity, blendMode, duration) {
+        if (this._pictureTargetAll) {
+            this.iteratePictures(function(picture) {
+                picture.move(origin, x, y, scaleX, scaleY, opacity, blendMode, duration);
+            }.bind(this));
+            this._pictureTargetAll = false;
+        } else {
+            _Game_Screen_movePicture.apply(this, arguments);
+        }
+    };
+
+    var _Game_Screen_rotatePicture = Game_Screen.prototype.rotatePicture;
+    Game_Screen.prototype.rotatePicture = function(pictureId, speed) {
+        if (this._pictureTargetAll) {
+            this.iteratePictures(function(picture) {
+                picture.rotate(speed);
+            }.bind(this));
+            this._pictureTargetAll = false;
+        } else {
+            _Game_Screen_rotatePicture.apply(this, arguments);
+        }
+    };
+
+    var _Game_Screen_tintPicture = Game_Screen.prototype.tintPicture;
+    Game_Screen.prototype.tintPicture = function(pictureId, tone, duration) {
+        if (this._pictureTargetAll) {
+            this.iteratePictures(function(picture) {
+                picture.tint(tone, duration);
+            }.bind(this));
+            this._pictureTargetAll = false;
+        } else {
+            _Game_Screen_tintPicture.apply(this, arguments);
+        }
+    };
+
+    var _Game_Screen_erasePicture = Game_Screen.prototype.erasePicture;
+    Game_Screen.prototype.erasePicture = function(pictureId) {
+        if (this._pictureTargetAll) {
+            this.iteratePictures(function(picture, pictureId) {
+                var realPictureId = this.realPictureId(pictureId);
+                this._pictures[realPictureId] = null;
+            }.bind(this));
+            this._pictureTargetAll = false;
+        } else {
+            _Game_Screen_erasePicture.apply(this, arguments);
+        }
+    };
+
+    Game_Screen.prototype.iteratePictures = function(callBack) {
+        for (var i = 1, n = this.maxPictures(); i <= n; i++) {
+            var picture = this.picture(i);
+            if (picture) callBack.call(this, picture, i);
+        }
     };
 
     var _Game_Screen_maxPictures = Game_Screen.prototype.maxPictures;
