@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2016/03/19 ゲームのスピード高速化を8倍速まで対応
 // 1.2.1 2016/02/27 タイトルカットしたときにイベントテスト、戦闘テストが正しく開始されない不具合を修正
 // 1.2.0 2016/02/24 ゲームのスピードを高速(2倍速)化する機能を追加
 //                  戦闘を勝利扱いで即終了する機能を追加
@@ -67,6 +68,10 @@
  * @desc 高速化された状態でゲームを開始します。（ON/OFF）
  * @default OFF
  *
+ * @param RapidSpeed
+ * @desc 高速化を実行した際のスピード倍率です。
+ * @default 2
+ *
  * @help Developer tools management plugin.
  * Run developer tools when error occur.
  * test play when valid.
@@ -123,6 +128,11 @@
  * @param 高速開始
  * @desc 高速化された状態でゲームを開始します。（ON/OFF）
  * @default OFF
+ *
+ * @param 高速スピード
+ * @desc 高速化を実行した際のスピード倍率です。
+ * 最大で8倍速まで指定できます。
+ * @default 2
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * 快適な開発支援のために以下の機能を提供します。
@@ -130,13 +140,13 @@
  * １．　ゲーム開始時にデベロッパツールが自動で立ち上がる機能（最小化での起動も可能）
  * ２．　エラー発生時やalert時にデベロッパツールが自動でアクティブになる機能
  * ３．　ゲーム画面を常に前面に表示する機能
- * ４．　後方互換機能（F12でリロード、pでコンソールに出力）
+ * ４．　後方互換機能（F12でリロード、pでコンソール出力）
  * ５．　alertの挙動をデベロッパツールへのログ出力に変更する機能
  * ６．　テストプレー中にマップやイベントを修正して再保存すると、ゲーム画面にフォーカスを
  * 　　　戻した瞬間に最新のマップを自動でリロードする機能
  * ７．　ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能
  * ８．　タイトル画面を飛ばして最新のセーブファイルをロードする機能
- * ９．　ゲームのスピードを高速化する機能
+ * ９．　マップ上でのゲームのスピードを高速化(8倍速まで)する機能
  * 　　　(マップ上で倍速、フェードアウト、ウィンドウ開閉およびメッセージ表示の高速スキップ)
  * １０．強制的に敵を全滅させる機能
  *
@@ -180,6 +190,13 @@ var $gameCurrentWindow = null;
         return value == null ? '' : upperFlg ? value.toUpperCase() : value;
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
         return (value || '').toUpperCase() == 'ON';
@@ -218,6 +235,7 @@ var $gameCurrentWindow = null;
     var showFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
     var cutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
     var rapidStart       = getParamBoolean(['RapidStart', '高速開始']);
+    var rapidSpeed       = getParamNumber(['RapidSpeed', '高速スピード'], 2, 16);
 
     //=============================================================================
     // SceneManager
@@ -284,7 +302,7 @@ var $gameCurrentWindow = null;
         if (!this.originalTitle) this.originalTitle = document.title;
         var bgm = AudioManager.saveBgm();
         AudioManager.playBgm(bgm, bgm.pos);
-        document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!]' : '');
+        document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!] * ' + rapidSpeed  : '');
     };
 
     SceneManager.isPlayTest = function() {
@@ -467,6 +485,16 @@ var $gameCurrentWindow = null;
     var _Scene_Map_isFastForward = Scene_Map.prototype.isFastForward;
     Scene_Map.prototype.isFastForward = function() {
         return _Scene_Map_isFastForward.apply(this, arguments) || SceneManager.rapidGame;
+    };
+
+    var _Scene_Map_updateMainMultiply = Scene_Map.prototype.updateMainMultiply;
+    Scene_Map.prototype.updateMainMultiply = function() {
+        _Scene_Map_updateMainMultiply.apply(this, arguments);
+        if (this.isFastForward()) {
+            for (var i = 2; i <= rapidSpeed; i++) {
+                this.updateMain();
+            }
+        }
     };
 
     //=============================================================================
