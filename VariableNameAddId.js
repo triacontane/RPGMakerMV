@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 ローカル環境以外で動作しないよう修正
 // 1.0.0 2016/03/17 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -44,6 +45,8 @@
  * 何回か動作させ、問題なく動いていることを確認したら、自己責任で
  * バックアップを無効にすることができます。
  *
+ * 開発支援プラグインなので製品版には付属しないことを推奨します。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -57,7 +60,7 @@
     var pluginName = 'VariableNameAddId';
 
     // テストプレー時以外は無効
-    if (!Utils.isOptionValid('test')) return;
+    if (!Utils.isOptionValid('test') || !Utils.isNwjs()) return;
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
