@@ -58,6 +58,13 @@
             2:'',
             3:'',
         },
+        /* captionInfo:注釈ウィンドウの情報です。 */
+        captionInfo:{
+            /* フォントサイズ */
+            fontSize:22,
+            /* 余白 */
+            padding:8
+        },
         /* se:アイコンをクリックした際の効果音情報です。ファイル名はパラメータから取得します。 */
         se:{
             volume:90,
@@ -284,11 +291,11 @@
     };
 
     Window_Caption.prototype.standardPadding = function() {
-        return 8;
+        return settings.captionInfo.padding;
     };
 
     Window_Caption.prototype.standardFontSize = function() {
-        return 22;
+        return settings.captionInfo.fontSize;
     };
 })();
 
