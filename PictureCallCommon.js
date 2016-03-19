@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.3 2016/03/19 トリガー条件を満たした場合に以後のタッチ処理を抑制するパラメータを追加
 // 1.3.2 2016/02/28 処理の負荷を少し軽減
 // 1.3.1 2016/02/21 トリガーにマウスを押したまま移動を追加
 // 1.3.0 2016/01/24 ピクチャをなでなでする機能を追加
@@ -47,9 +48,14 @@
  * @desc マウスカーソルもしくはタッチした位置のY座標を常に格納するゲーム変数の番号
  * @default 0
  *
+ * @param タッチ操作抑制
+ * @desc トリガー条件を満たした際にタッチ情報をクリアします。(ON/OFF)
+ * 他のタッチ操作と動作が重複する場合にONにします。
+ * @default OFF
+ *
  * @help ピクチャをクリックすると、指定したコモンイベントが
  * 呼び出されるようになるプラグインコマンドを提供します。
- * このプラグインを利用すれば、javascriptの知識がなくても
+ * このプラグインを利用すれば、JavaScriptの知識がなくても
  * 誰でも簡単にクリックやタッチを主体にしたゲームを作れます。
  *
  * 注意！
@@ -145,6 +151,10 @@
  * @param GameVariableTouchY
  * @desc Game variable number that stores touch y position
  * @default 0
+ *
+ * @param SuppressTouch
+ * @desc Suppress touch event for others(ON/OFF)
+ * @default OFF
  * 
  * @help When clicked picture, call common event.
  *
@@ -221,6 +231,15 @@
             }
         });
     }
+
+    //=============================================================================
+    // パラメータの取得とバリデーション
+    //=============================================================================
+    var paramGameVariableTouchX       = getParamNumber(['GameVariableTouchX', 'ポインタX座標の変数番号'], 0, 5000);
+    var paramGameVariableTouchY       = getParamNumber(['GameVariableTouchY', 'ポインタY座標の変数番号'], 0, 5000);
+    var paramGameVariablePictNum      = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0, 5000);
+    var paramTransparentConsideration = getParamBoolean(['TransparentConsideration', '透明色を考慮']);
+    var paramSuppressTouch            = getParamBoolean(['SuppressTouch', 'タッチ操作抑制']);
 
     //=============================================================================
     // Game_Interpreter
@@ -309,9 +328,8 @@
         var event    = $dataCommonEvents[commonId];
         var result   = false;
         if (commonId > 0 && !this.isEventRunning() && event) {
-            var gameValueNum = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'],
-                0, $dataSystem.variables.length);
-            if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp.pictureNum());
+            if (paramGameVariablePictNum)
+                $gameVariables._data[paramGameVariablePictNum] = $gameTemp.pictureNum();
             this._interpreter.setup(event.list);
             result = true;
         }
@@ -327,9 +345,8 @@
         var commonId = $gameTemp.pictureCommonId();
         var event = $dataCommonEvents[commonId];
         if (commonId > 0 && !this.isEventRunning() && event) {
-            var gameValueNum = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'],
-                0, $dataSystem.variables.length);
-            if (gameValueNum !== 0) $gameVariables.setValue(gameValueNum, $gameTemp.pictureNum());
+            if (paramGameVariablePictNum)
+                $gameVariables._data[paramGameVariablePictNum] = $gameTemp.pictureNum();
             this._interpreter.setup(event.list);
         }
         $gameTemp.clearPictureCallInfo();
@@ -354,12 +371,10 @@
     };
 
     Game_Screen.prototype.updatePointer = function() {
-        var paramTouchX = getParamNumber(['GameVariableTouchX', 'ポインタX座標の変数番号'],
-            0, $dataSystem.variables.length);
-        var paramTouchY = getParamNumber(['GameVariableTouchY', 'ポインタY座標の変数番号'],
-            0, $dataSystem.variables.length);
-        if (paramTouchX > 0) $gameVariables._data[paramTouchX] = TouchInput.x;
-        if (paramTouchY > 0) $gameVariables._data[paramTouchY] = TouchInput.y;
+        if (paramGameVariableTouchX)
+            $gameVariables._data[paramGameVariableTouchX] = TouchInput.x;
+        if (paramGameVariableTouchY)
+            $gameVariables._data[paramGameVariableTouchY] = TouchInput.y;
     };
 
     Game_Screen.prototype.setPictureCallCommon = function(pictureId, commonId, trigger) {
@@ -420,11 +435,6 @@
 
     Scene_Map.prototype.updateTouchPictures = function() {
         this._spriteset.callTouchPictures();
-    };
-
-    var _Scene_Map_isMapTouchOk = Scene_Map.prototype.isMapTouchOk;
-    Scene_Map.prototype.isMapTouchOk = function() {
-        return _Scene_Map_isMapTouchOk.call(this) && $gameTemp.pictureCommonId() === 0;
     };
 
     //=============================================================================
@@ -489,7 +499,6 @@
         this._onMouse                  = false;
         this._outMouse                 = false;
         this._wasOnMouse               = false;
-        this._transparentConsideration = getParamBoolean(['TransparentConsideration', '透明色を考慮']);
     };
 
     var _Sprite_update = Sprite_Picture.prototype.update;
@@ -539,9 +548,10 @@
 
     Sprite_Picture.prototype.callTouch = function() {
         var commandIds = $gameScreen.getPictureCid(this._pictureId);
-        if (commandIds == null) return;
+        if (!commandIds) return;
         this._triggerHandler.iterate(function(i, handler) {
-            if (handler && commandIds[i] != null && handler.call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
+            if (handler && commandIds[i] && handler.call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
+                if (paramSuppressTouch) TouchInput.suppressEvents();
                 if (i === 3) TouchInput._pressedTime = -60;
                 $gameTemp.setPictureCallInfo(commandIds[i], this._pictureId);
             }
@@ -549,7 +559,7 @@
     };
 
     Sprite_Picture.prototype.isTransparent = function () {
-        if (!this._transparentConsideration) return false;
+        if (!paramTransparentConsideration) return false;
         var dx = TouchInput.x - this.x;
         var dy = TouchInput.y - this.y;
         var sin = Math.sin(-this.rotation);
@@ -603,7 +613,7 @@
     };
 
     Sprite_Picture.prototype.isTouchable = function() {
-        return this.bitmap != null && this.visible && this.scale.x !== 0 && this.scale.y !== 0;
+        return this.bitmap && this.visible && this.scale.x !== 0 && this.scale.y !== 0;
     };
 
     Sprite_Picture.prototype.isTriggered = function() {
@@ -663,15 +673,10 @@
     //  ホイールクリック、ダブルクリック等を実装
     //=============================================================================
     TouchInput.keyDoubleClickInterval = 300;
-    TouchInput._pressStartX = -1;
-    TouchInput._pressStartY = -1;
     TouchInput._pressedDistance = 0;
     TouchInput._prevX = -1;
     TouchInput._prevY = -1;
 
-    TouchInput.getPressStartPos = function() {
-        return new Position(this._pressStartX, this._pressStartY);
-    };
 
     Object.defineProperty(TouchInput, 'pressedDistance', {
         get: function() {
@@ -679,6 +684,14 @@
         },
         configurable: true
     });
+
+    TouchInput.suppressEvents = function() {
+        this._triggered       = false;
+        this._cancelled       = false;
+        this._released        = false;
+        this._wheelTriggered  = false;
+        this._doubleTriggered = false;
+    };
 
     TouchInput._onMouseMove = function(event) {
         var x = Graphics.pageToCanvasX(event.pageX);
@@ -730,8 +743,6 @@
     TouchInput._onTrigger = function(x, y) {
         if (this._date && Date.now() - this._date < this.keyDoubleClickInterval)
             this._events.doubleTriggered = true;
-        this._pressStartX = x;
-        this._pressStartY = y;
         this._pressedDistance = 0;
         this._prevX = x;
         this._prevY = y;
@@ -748,8 +759,6 @@
 
     var _TouchInput_onRelease = TouchInput._onRelease;
     TouchInput._onRelease = function(x, y) {
-        this._pressStartX = 0;
-        this._pressStartY = 0;
         this._pressedDistance = 0;
         this._prevX = x;
         this._prevY = y;
