@@ -160,6 +160,10 @@
         }
     };
 
+    //=============================================================================
+    // Game_System
+    //  アイコン情報の登録と取得を追加します。
+    //=============================================================================
     var _Game_System_initialize = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
