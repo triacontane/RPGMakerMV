@@ -24,6 +24,11 @@
  * @dir audio/se/
  * @type file
  *
+ * @param ウィンドウ透過
+ * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
+ * 他のプラグインで同様機能を実現している場合はOFF。
+ * @default OFF
+ *
  * @help ウィンドウ内に表示されたアイコンをクリック or タッチすると
  * あらかじめ登録しておいた説明が表示されます。
  *
@@ -33,6 +38,8 @@
  *
  * ADD_ICON_DESC [アイコンID] [説明文]
  * アイコン説明追加 [アイコンID] [説明文]
+ *
+ * 例：ADD_ICON_DESC 128 盾のアイコンです。
  *
  * 指定したアイコンIDに説明文を追加します。制御文字が利用できます。
  *
@@ -83,6 +90,11 @@
         return value == null ? '' : value;
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -123,7 +135,11 @@
         return result;
     };
 
-    var paramSeName = getParamString(['SeName', '効果音']);
+    //=============================================================================
+    // パラメータのバリデーション
+    //=============================================================================
+    var paramSeName          = getParamString(['SeName', '効果音']);
+    var paramThroughWindow   = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
 
     //=============================================================================
     // Game_Interpreter
@@ -301,5 +317,25 @@
     Window_Caption.prototype.standardFontSize = function() {
         return settings.captionInfo.fontSize;
     };
+
+    //=============================================================================
+    // ウィンドウを透過して重なり合ったときの表示を自然にします。
+    //=============================================================================
+    if (paramThroughWindow && !WindowLayer.throughWindow) {
+        WindowLayer.throughWindow = true;
+        //=============================================================================
+        //  WindowLayer
+        //   描画前に配列を逆転させます。
+        //=============================================================================
+        var _WindowLayer__renderWebGL = WindowLayer.prototype._renderWebGL;
+        WindowLayer.prototype._renderWebGL = function(renderSession) {
+            this.children.reverse();
+            _WindowLayer__renderWebGL.apply(this, arguments);
+            this.children.reverse();
+        };
+
+        WindowLayer.prototype._webglMaskWindow = function(renderSession, window) {};
+        WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
+    }
 })();
 
