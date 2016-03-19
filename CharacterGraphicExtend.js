@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/03/19 戦闘発生時にイベントを消去しない設定を追加しました。
 // 1.1.2 2016/03/04 本体バージョン1.1.0に合わせてキャラクターの乗算とスクリーンに対応しました。
 // 1.1.1 2016/01/21 競合対策（YEP_MessageCore.js）
 // 1.1.0 2016/01/11 キャラクターに回転角を設定する機能を追加
@@ -20,6 +21,10 @@
 /*:
  * @plugindesc キャラクターグラフィック表示拡張プラグイン
  * @author トリアコンタン
+ *
+ * @param イベント消去無効
+ * @desc エンカウント発生時にイベントを一瞬消去するエフェクトを無効にします。
+ * @default OFF
  *
  * @help イベントのグラフィック表示方法を拡張して多彩な表現を可能にします。
  * イベントのメモ欄に所定の書式で記入してください。
@@ -125,6 +130,21 @@
  */
 (function () {
     'use strict';
+    var pluginName = 'CharacterGraphicExtend';
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() == 'ON';
+    };
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
 
     var getArgArrayString = function (args, upperFlg) {
         var values = getArgString(args, upperFlg).split(',');
@@ -165,6 +185,15 @@
         return text;
     };
 
+    //=============================================================================
+    // パラメータの取得とバリデーション
+    //=============================================================================
+    var paramEventHideInvalid = getParamBoolean(['EventHideInvalid', 'イベント消去無効']);
+
+    //=============================================================================
+    // Game_CharacterBase
+    //  拡張するプロパティを定義します。
+    //=============================================================================
     var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
@@ -236,6 +265,25 @@
         return (this._x - this.tileBlockWidth() / 2 <= x && this._x + this.tileBlockWidth() / 2 >= x) && this._y === y;
     };
 
+    var _Game_CharacterBase_screenX = Game_CharacterBase.prototype.screenX;
+    Game_CharacterBase.prototype.screenX = function() {
+        return _Game_CharacterBase_screenX.apply(this, arguments) + this._additionalX;
+    };
+
+    var _Game_CharacterBase_screenY = Game_CharacterBase.prototype.screenY;
+    Game_CharacterBase.prototype.screenY = function() {
+        return _Game_CharacterBase_screenY.apply(this, arguments) + this._additionalY;
+    };
+
+    var _Game_CharacterBase_screenZ = Game_CharacterBase.prototype.screenZ;
+    Game_CharacterBase.prototype.screenZ = function() {
+        return this._customPriority > 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Game_Event
+    //  拡張するプロパティを定義します。
+    //=============================================================================
     Game_Event.prototype.getMetaCg = function(names) {
         if (!Array.isArray(names)) names = [names];
         var params = null;
@@ -334,21 +382,19 @@
         _Game_Event_setImage.apply(this, arguments);
     };
 
-    var _Game_CharacterBase_screenX = Game_CharacterBase.prototype.screenX;
-    Game_CharacterBase.prototype.screenX = function() {
-        return _Game_CharacterBase_screenX.apply(this, arguments) + this._additionalX;
+    //=============================================================================
+    // Spriteset_Map
+    //  イベントを消去するエフェクトを無効にします。
+    //=============================================================================
+    var _Spriteset_Map_hideCharacters = Spriteset_Map.prototype.hideCharacters;
+    Spriteset_Map.prototype.hideCharacters = function() {
+        if (!paramEventHideInvalid) _Spriteset_Map_hideCharacters.apply(this, arguments);
     };
 
-    var _Game_CharacterBase_screenY = Game_CharacterBase.prototype.screenY;
-    Game_CharacterBase.prototype.screenY = function() {
-        return _Game_CharacterBase_screenY.apply(this, arguments) + this._additionalY;
-    };
-
-    var _Game_CharacterBase_screenZ = Game_CharacterBase.prototype.screenZ;
-    Game_CharacterBase.prototype.screenZ = function() {
-        return this._customPriority > 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
-    };
-
+    //=============================================================================
+    // Sprite_Character
+    //  拡張したプロパティに基づいてエフェクトを反映させます。
+    //=============================================================================
     var _Sprite_Character_updateBitmap = Sprite_Character.prototype.updateBitmap;
     Sprite_Character.prototype.updateBitmap = function() {
         if (this.isImageChanged()) this._customResource = this._character.customResource();
