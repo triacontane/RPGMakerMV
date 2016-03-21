@@ -14,13 +14,54 @@
 //=============================================================================
 
 /*:
+ * @plugindesc Battle special command plugin
+ * @author triacontane
+ *
+ * @param AdditionalPosition
+ * @desc 特殊コマンドの挿入位置です。指定対象の下に挿入されます。
+ * top or attack or skill or guard or item
+ * @default attack
+ *
+ * @param CommandNumber
+ * @desc アクターコマンドの表示行数です。(通常4行)
+ * @default
+ *
+ * @param CommandFlexible
+ * @desc アクターコマンドの表示行数を可変にします。(ON/OFF)
+ * 可変にすると使用可能コマンドがスクロールなしで表示されます。
+ * @default OFF
+ *
+ * @param ThroughWindow
+ * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
+ * 他のプラグインですでに透過表示している場合はOFF
+ * @default OFF
+ *
+ * @help Addition special command for Actor command in battle.
+ *
+ * description skill's note
+ * <SPSkillSpecial>
+ *
+ * Skill's visible condition
+ * description skill's note
+ *
+ * <SPSkillCondStateValid:1>   // State ID[1] Affected
+ * <SPSkillCondStateInvalid:1> // State ID[1] Not affected
+ * <SPSkillCondSwitchOn:1>     // Switch ID[1] ON
+ * <SPSkillCondSwitchOff:1>    // Switch ID[1] OFF
+ * <SPSkillCondScript:value>   // JavaScript[value] is returned true
+ *
+ * No plugin command
+ *
+ * This plugin is released under the MIT License.
+ */
+/*:ja
  * @plugindesc 特殊戦闘コマンド追加プラグイン
  * @author トリアコンタン
  *
  * @param 追加位置
  * @desc 特殊コマンドの挿入位置です。指定対象の下に挿入されます。
  * 先頭 or 攻撃 or スキル or 防御 or アイテム
- * @default attack
+ * @default 攻撃
  *
  * @param コマンド表示行数
  * @desc アクターコマンドの表示行数です。(通常4行)
@@ -52,10 +93,12 @@
  * スキルのメモ欄に以下の通り記述してください。
  * 値には制御文字\v[n]もしくはJavaScript計算式が利用できます。
  *
- * <SPSkillStateValid:1>   // ステートID[1]が有効な場合に表示されます。
- * <SPSkillStateInvalid:1> // ステートID[1]が無効な場合に表示されます。
- * <SPSkillSwitchOn:1>     // スイッチ[1]がONの場合に表示されます。
- * <SPSkillSwitchOff:1>    // スイッチ[1]がOFFな場合に表示されます。
+ * <SPSkillCondStateValid:1>   // ステートID[1]が有効な場合に表示されます。
+ * <SPSkillCondStateInvalid:1> // ステートID[1]が無効な場合に表示されます。
+ * <SPSkillCondSwitchOn:1>     // スイッチ[1]がONの場合に表示されます。
+ * <SPSkillCondSwitchOff:1>    // スイッチ[1]がOFFな場合に表示されます。
+ * <SPSkillCondScript:value>   // valueのJS評価結果がtrueの場合に表示されます。
+ * 例：<SPSkillCondScript:\v[1] > 100> // 変数[1]が100より大きい場合に表示されます。
  *
  * 注意！
  * すべての行動が選択不可になると戦闘の進行が止まりますのでご注意ください。
@@ -103,6 +146,11 @@
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
     };
 
+    var getArgString = function (arg, upperFlg) {
+        arg = convertEscapeCharactersAndEval(arg);
+        return upperFlg ? arg.toUpperCase() : arg;
+    };
+
     var getArgNumber = function (arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
@@ -110,7 +158,7 @@
     };
 
     var convertEscapeCharactersAndEval = function(text) {
-        if (text == null) text = '';
+        if (text === null || text === undefined) text = '';
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
@@ -219,14 +267,16 @@
     };
 
     Game_Actor.prototype.isVisibleSkill = function(skill) {
-        var validStateId = getMetaValue(skill, 'StateValid');
+        var validStateId = getMetaValue(skill, 'CondStateValid');
         if (validStateId) return this.isStateAffected(getArgNumber(validStateId, 1, $dataStates.length - 1));
-        var invalidStateId = getMetaValue(skill, 'StateInvalid');
+        var invalidStateId = getMetaValue(skill, 'CondStateInvalid');
         if (invalidStateId) return !this.isStateAffected(getArgNumber(invalidStateId, 1, $dataStates.length - 1));
-        var switchOn = getMetaValue(skill, 'SwitchOn');
+        var switchOn = getMetaValue(skill, 'CondSwitchOn');
         if (switchOn) return $gameSwitches(getArgNumber(switchOn, 1, $dataSystem.switches.length - 1));
-        var switchOff = getMetaValue(skill, 'SwitchOff');
+        var switchOff = getMetaValue(skill, 'CondSwitchOff');
         if (switchOff) return !$gameSwitches(getArgNumber(switchOff, 1, $dataSystem.switches.length - 1));
+        var scriptValue = getMetaValue(skill, 'CondScript');
+        if (scriptValue) return !!getArgString(scriptValue);
         return true;
     };
 
