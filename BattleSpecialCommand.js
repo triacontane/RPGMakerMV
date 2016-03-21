@@ -38,17 +38,23 @@
  *
  * @help Addition special command for Actor command in battle.
  *
- * description skill's note
- * <SPSkillSpecial>
+ * description skill note
+ * <BSCSpecialCommand>
  *
- * Skill's visible condition
- * description skill's note
+ * Skill visible condition
+ * description skill note
  *
- * <SPSkillCondStateValid:1>   // State ID[1] Affected
- * <SPSkillCondStateInvalid:1> // State ID[1] Not affected
- * <SPSkillCondSwitchOn:1>     // Switch ID[1] ON
- * <SPSkillCondSwitchOff:1>    // Switch ID[1] OFF
- * <SPSkillCondScript:value>   // JavaScript[value] is returned true
+ * <BSCCondStateValid:1>   // State ID[1] Affected
+ * <BSCCondStateInvalid:1> // State ID[1] Not affected
+ * <BSCCondSwitchOn:1>     // Switch ID[1] ON
+ * <BSCCondSwitchOff:1>    // Switch ID[1] OFF
+ * <BSCCondScript:value>   // JavaScript[value] is returned true
+ *
+ * SkillType and items visible condition
+ * description class note
+ * <BSCSkillType1CondStateValid:1> // State ID[1] Affected
+ * <BSCSkillType2CondStateValid:1> // State ID[1] Affected
+ * <BSCItemCondStateValid:1>       // State ID[1] Affected
  *
  * No plugin command
  *
@@ -77,29 +83,45 @@
  * 他のプラグインですでに透過表示している場合はOFF
  * @default OFF
  *
- * @help 戦闘画面のアクターコマンドに特殊コマンドを追加します。
+ * @help 機能1:
+ * 戦闘画面のアクターコマンドに特殊コマンドを追加します。
  * 特殊コマンドとは、スキルウィンドウを介さずに直接実行できるスキルで
  * 通常のスキルとは異なる特別なスキル等の演出に利用できます。
  *
- * スキルのメモ欄に以下の通り記述してください。
- * <SPSkillSpecial>
+ * [スキル]のメモ欄に以下の通り記述してください。
+ * <BSC特殊コマンド>
  *
- * 特殊コマンドに設定したスキルを通常のスキルウィンドウに
+ * ※ 特殊コマンドに設定したスキルを通常のスキルウィンドウに
  * 表示させないようにするには、スキルタイプを「なし」に設定してください。
  *
- * また、特殊スキルを含めたすべてのスキルの表示条件を設定することができます。
- * 攻撃と防御にも適用されます。
+ * 機能2:
+ * 特殊コマンドを含めたすべてのスキルの表示条件を設定することができます。
+ * 非表示に設定されたコマンドは、たとえ使用条件を満たしていても
+ * 使用できなくなります。
+ * 攻撃、防御、アイテム等の基本コマンドにも適用できます。
  *
- * スキルのメモ欄に以下の通り記述してください。
+ * [スキル]のメモ欄に以下の通り記述してください。
  * 値には制御文字\v[n]もしくはJavaScript計算式が利用できます。
  *
- * <SPSkillCondStateValid:1>   // ステートID[1]が有効な場合に表示されます。
- * <SPSkillCondStateInvalid:1> // ステートID[1]が無効な場合に表示されます。
- * <SPSkillCondSwitchOn:1>     // スイッチ[1]がONの場合に表示されます。
- * <SPSkillCondSwitchOff:1>    // スイッチ[1]がOFFな場合に表示されます。
- * <SPSkillCondScript:value>   // valueのJS評価結果がtrueの場合に表示されます。
- * 例：<SPSkillCondScript:\v[1] > 100> // 変数[1]が100より大きい場合に表示されます。
+ * <BSC条件ステート有効:1>   // ステートID[1]が有効な場合に表示されます。
+ * <BSC条件ステート無効:1>   // ステートID[1]が無効な場合に表示されます。
+ * <BSC条件スイッチON:1>     // スイッチ[1]がONの場合に表示されます。
+ * <BSC条件スイッチOFF:1>    // スイッチ[1]がOFFな場合に表示されます。
+ * <BSC条件スクリプト:value> // valueのJS評価結果がtrueの場合に表示されます。
+ * 
+ * 例：<BSC条件スクリプト:\v[1] > 100> // 変数[1]が100より大きければ表示
  *
+ * スキルタイプ(魔法等)やアイテムコマンドの表示を制御する場合は、
+ * [職業]のメモ欄に以下の通り記述してください。
+ * スキル用の記述と同等の条件パターンが使用できます。
+ *
+ * <BSCスキルタイプ1条件ステート有効:1>
+ *     // ステートID[1]が有効な場合にスキルタイプ1が表示されます。
+ * <BSCスキルタイプ2条件ステート有効:1>
+ *     // ステートID[1]が有効な場合にスキルタイプ2が表示されます。
+ * <BSCアイテム条件ステート有効:1>
+ *     // ステートID[1]が有効な場合にアイテムが表示されます。
+ * 
  * 注意！
  * すべての行動が選択不可になると戦闘の進行が止まりますのでご注意ください。
  *
@@ -114,7 +136,7 @@
 (function () {
     'use strict';
     var pluginName = 'BattleSpecialCommand';
-    var metaTagPrefix = 'SPSkill';
+    var metaTagPrefix = 'BSC';
 
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
@@ -146,6 +168,15 @@
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
     };
 
+    var getMetaValues = function(object, names) {
+        if (!Array.isArray(names)) return getMetaValue(object, names);
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
+            if (value !== undefined) return value;
+        }
+        return undefined;
+    };
+
     var getArgString = function (arg, upperFlg) {
         arg = convertEscapeCharactersAndEval(arg);
         return upperFlg ? arg.toUpperCase() : arg;
@@ -167,6 +198,15 @@
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
         return eval(text);
     };
 
@@ -179,8 +219,57 @@
     var paramThroughWindow      = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
 
     //=============================================================================
+    // Game_Actor
+    //  特殊コマンドの追加と、行動の表示判定を追加定義します。
+    //=============================================================================
+    Game_Actor.prototype.specialSkills = function() {
+        return this.skills().filter(function(skill) {
+            return !!getMetaValues(skill, ['特殊コマンド', 'SpecialCommand']);
+        }, this);
+    };
+
+    var _Game_Actor_skills = Game_Actor.prototype.skills;
+    Game_Actor.prototype.skills = function() {
+        return _Game_Actor_skills.apply(this, arguments).filter(function(skill) {
+            return this.isVisibleAction(skill);
+        }, this);
+    };
+
+    Game_Actor.prototype.isVisibleAttack = function() {
+        return this.isVisibleAction($dataSkills[this.attackSkillId()]);
+    };
+
+    Game_Actor.prototype.isVisibleGuard = function() {
+        return this.isVisibleAction($dataSkills[this.guardSkillId()]);
+    };
+
+    Game_Actor.prototype.isVisibleItem = function() {
+        return this.isVisibleAction(this.currentClass(), ['アイテム', 'Item']);
+    };
+
+    Game_Actor.prototype.isVisibleSkillType = function(skillTypeId) {
+        var stringId = skillTypeId.toString();
+        return this.isVisibleAction(this.currentClass(), ['スキルタイプ' + stringId, 'SkillType' + stringId]);
+    };
+
+    Game_Actor.prototype.isVisibleAction = function(data, prefix) {
+        if (arguments.length < 2) prefix = ['', ''];
+        var validStateId    = getMetaValues(data, [prefix[0] + '条件ステート有効', prefix[1] + 'CondStateValid']);
+        if (validStateId)   return this.isStateAffected(getArgNumber(validStateId, 1, $dataStates.length - 1));
+        var invalidStateId  = getMetaValues(data, [prefix[0] + '条件ステート無効', prefix[1] + 'CondStateInvalid']);
+        if (invalidStateId) return !this.isStateAffected(getArgNumber(invalidStateId, 1, $dataStates.length - 1));
+        var switchOn        = getMetaValues(data, [prefix[0] + '条件スイッチON', prefix[1] + 'CondSwitchOn']);
+        if (switchOn)       return $gameSwitches(getArgNumber(switchOn, 1, $dataSystem.switches.length - 1));
+        var switchOff       = getMetaValues(data, [prefix[0] + '条件スイッチOFF', prefix[1] + 'CondSwitchOff']);
+        if (switchOff)      return !$gameSwitches(getArgNumber(switchOff, 1, $dataSystem.switches.length - 1));
+        var scriptValue     = getMetaValues(data, [prefix[0] + '条件スクリプト', prefix[1] + 'CondScript']);
+        if (scriptValue)    return !!getArgString(scriptValue);
+        return true;
+    };
+
+    //=============================================================================
     // Window_ActorCommand
-    //  スペシャルコマンドを追加します。
+    //  特殊コマンドの追加と、行動の表示判定を追加定義します。
     //=============================================================================
     var _Window_ActorCommand_makeCommandList = Window_ActorCommand.prototype.makeCommandList;
     Window_ActorCommand.prototype.makeCommandList = function() {
@@ -222,7 +311,9 @@
 
     var _Window_ActorCommand_addItemCommand = Window_ActorCommand.prototype.addItemCommand;
     Window_ActorCommand.prototype.addItemCommand = function() {
-        _Window_ActorCommand_addItemCommand.apply(this, arguments);
+        if (this._actor.isVisibleItem()) {
+            _Window_ActorCommand_addItemCommand.apply(this, arguments);
+        }
         if (['item', 'アイテム'].contains(paramAdditionalPosition)) this.addSpecialCommand();
     };
 
@@ -231,9 +322,46 @@
         return paramCommandNumber ? paramCommandNumber : _Window_ActorCommand_numVisibleRows.apply(this, arguments);
     };
 
+    Window_ActorCommand.prototype.addCommand = function(name, symbol, enabled, ext) {
+        if (symbol !== 'skill' || this._actor.isVisibleSkillType(ext)) {
+            Window_Command.prototype.addCommand.apply(this, arguments);
+        }
+    };
+
+    var _Window_ActorCommand_selectLast = Window_ActorCommand.prototype.selectLast;
+    Window_ActorCommand.prototype.selectLast = function() {
+        _Window_ActorCommand_selectLast.apply(this, arguments);
+        if (this._actor && ConfigManager.commandRemember) {
+            var symbol = this._actor.lastCommandSymbol();
+            var skill = this._actor.lastBattleSkill();
+            if (skill) {
+                if (symbol === 'skill') this.selectSymbolAndExt(symbol, skill.stypeId);
+                if (symbol === 'special') this.selectSymbolAndExt(symbol, skill.id);
+            }
+        }
+    };
+
+    Window_ActorCommand.prototype.findSymbolAndExt = function(symbol, ext) {
+        for (var i = 0; i < this._list.length; i++) {
+            if (this._list[i].symbol === symbol && this._list[i].ext === ext) {
+                return i;
+            }
+        }
+        return -1;
+    };
+
+    Window_ActorCommand.prototype.selectSymbolAndExt = function(symbol, ext) {
+        var index = this.findSymbolAndExt(symbol, ext);
+        if (index >= 0) {
+            this.select(index);
+        } else {
+            this.select(0);
+        }
+    };
+
     //=============================================================================
     // Scene_Battle
-    //  スペシャルコマンドを選択したときの処理を追加します。
+    //  特殊コマンドを選択したときの処理を追加します。
     //=============================================================================
     var _Scene_Battle_createActorCommandWindow = Scene_Battle.prototype.createActorCommandWindow;
     Scene_Battle.prototype.createActorCommandWindow = function() {
@@ -247,45 +375,6 @@
         action.setSkill(skill.id);
         BattleManager.actor().setLastBattleSkill(skill);
         this.onSelectAction();
-    };
-
-    //=============================================================================
-    // Game_Actor
-    //  特殊スキル判定を追加定義します。
-    //=============================================================================
-    Game_Actor.prototype.specialSkills = function() {
-        return this.skills().filter(function(skill) {
-            return !!getMetaValue(skill, 'Special');
-        }, this);
-    };
-
-    var _Game_Actor_skills = Game_Actor.prototype.skills;
-    Game_Actor.prototype.skills = function() {
-        return _Game_Actor_skills.apply(this, arguments).filter(function(skill) {
-            return this.isVisibleSkill(skill);
-        }, this);
-    };
-
-    Game_Actor.prototype.isVisibleSkill = function(skill) {
-        var validStateId = getMetaValue(skill, 'CondStateValid');
-        if (validStateId) return this.isStateAffected(getArgNumber(validStateId, 1, $dataStates.length - 1));
-        var invalidStateId = getMetaValue(skill, 'CondStateInvalid');
-        if (invalidStateId) return !this.isStateAffected(getArgNumber(invalidStateId, 1, $dataStates.length - 1));
-        var switchOn = getMetaValue(skill, 'CondSwitchOn');
-        if (switchOn) return $gameSwitches(getArgNumber(switchOn, 1, $dataSystem.switches.length - 1));
-        var switchOff = getMetaValue(skill, 'CondSwitchOff');
-        if (switchOff) return !$gameSwitches(getArgNumber(switchOff, 1, $dataSystem.switches.length - 1));
-        var scriptValue = getMetaValue(skill, 'CondScript');
-        if (scriptValue) return !!getArgString(scriptValue);
-        return true;
-    };
-
-    Game_Actor.prototype.isVisibleAttack = function() {
-        return this.isVisibleSkill($dataSkills[this.attackSkillId()]);
-    };
-
-    Game_Actor.prototype.isVisibleGuard = function() {
-        return this.isVisibleSkill($dataSkills[this.guardSkillId()]);
     };
 
     //=============================================================================
