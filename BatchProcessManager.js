@@ -95,7 +95,7 @@
         }
     };
 
-    BatchProcessManager.getFileNameList = function(directly) {
+    BatchProcessManager.getFileNameList = function(directly, IncludeExtension) {
         var fs = require('fs');
         var path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, directly);
         if (path.match(/^\/([A-Z]\:)/)) {
@@ -104,9 +104,11 @@
         var fileList = [];
         var fileNameMap = {};
         fs.readdirSync(path).forEach(function(fileName) {
-            fileName = fileName.replace(/(.*)\..*$/, function() {
-                return arguments[1];
-            });
+            if (!IncludeExtension) {
+                fileName = fileName.replace(/(.*)\..*$/, function() {
+                    return arguments[1];
+                });
+            }
             if (fileNameMap[fileName]) return;
             fileNameMap[fileName] = true;
             fileList.push(fileName);
