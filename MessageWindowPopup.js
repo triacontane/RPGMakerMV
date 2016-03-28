@@ -514,15 +514,15 @@
     var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
-        this._size = [0, 0];
+        this.setSizeForMessagePopup(0, 0);
     };
 
     Game_CharacterBase.prototype.setSizeForMessagePopup = function(width, height) {
         this._size = [width, height];
     };
 
-    Game_CharacterBase.prototype.getSizeForMessagePopup = function() {
-        return this._size;
+    Game_CharacterBase.prototype.getHeightForPopup = function() {
+        return this._size[1];
     };
 
     //=============================================================================
@@ -535,7 +535,9 @@
         _Sprite_Character_updateBitmap.apply(this, arguments);
         if (this._imageChange) {
             this.bitmap.addLoadListener(function() {
-                this._character.setSizeForMessagePopup(this.patternWidth(), this.patternHeight());
+                var width = this.bitmap.width === 1 ? $gameMap.tileWidth() : this.patternWidth();
+                var height = this.bitmap.height === 1 ? $gameMap.tileHeight() : this.patternHeight();
+                this._character.setSizeForMessagePopup(width, height);
             }.bind(this));
             this._imageChange = false;
         }
@@ -588,7 +590,7 @@
     Window_Base.prototype.setPopupPosition = function(character) {
         var pos = $gameSystem.getPopupAdjustPosition();
         this.x = character.screenX() - this.width / 2 + (pos ? pos[0] : 0);
-        this.y = character.screenY() - this.height - (character.getSizeForMessagePopup()[1] + 8) + (pos ? pos[1] : 0);
+        this.y = character.screenY() - this.height - (character.getHeightForPopup() + 8) + (pos ? pos[1] : 0);
         var lowerFlg = this.isPopupLower();
         if (lowerFlg) this.y = character.screenY() + 8;
         this.setPauseSignToTail(lowerFlg);
