@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2016/03/28 データベース情報を簡単に出力する制御文字を追加
 // 1.2.1 2016/01/29 コマンド「D_TEXT_SETTING」の実装が「D_TEST_SETTING」になっていたので修正（笑）
 // 1.2.0 2016/01/27 複数行表示に対応
 //                  文字列の揃えと背景色を設定する機能を追加
@@ -67,7 +68,14 @@
  * \I[n]
  * \{
  * \}
- * \V[n,m](m桁分のゼロ埋め)
+ *
+ * 専用制御文字
+ * \V[n,m](m桁分のゼロ埋めした変数の値)
+ * \item[n]   n 番のアイテム情報（アイコン＋名称）
+ * \weapon[n] n 番の武器情報（アイコン＋名称）
+ * \armor[n]  n 番の防具情報（アイコン＋名称）
+ * \skill[n]  n 番のスキル情報（アイコン＋名称）
+ * \state[n]  n 番のステート情報（アイコン＋名称）
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -104,11 +112,6 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1])).padZero(arguments[2]);
-        }.bind(this));
         var window = SceneManager.getHiddenWindow();
         return window ? window.convertEscapeCharacters(text) : text;
     };
@@ -238,6 +241,35 @@
         }
         $gameScreen.clearDTextPicture();
         _Game_Picture_show.apply(this, arguments);
+    };
+
+    var _Window_Base_convertEscapeCharacters = Window_Base.prototype.convertEscapeCharacters;
+    Window_Base.prototype.convertEscapeCharacters = function(text) {
+        text = _Window_Base_convertEscapeCharacters.call(this, text);
+        text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1])).padZero(arguments[2]);
+        }.bind(this));
+        text = text.replace(/\x1bITEM\[(\d+)\]/gi, function() {
+            var item = $dataItems[getArgNumber(arguments[1], 1, $dataItems.length)];
+            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+        }.bind(this));
+        text = text.replace(/\x1bWEAPON\[(\d+)\]/gi, function() {
+            var item = $dataWeapons[getArgNumber(arguments[1], 1, $dataWeapons.length)];
+            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+        }.bind(this));
+        text = text.replace(/\x1bARMOR\[(\d+)\]/gi, function() {
+            var item = $dataArmors[getArgNumber(arguments[1], 1, $dataArmors.length)];
+            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+        }.bind(this));
+        text = text.replace(/\x1bSKILL\[(\d+)\]/gi, function() {
+            var item = $dataSkills[getArgNumber(arguments[1], 1, $dataSkills.length)];
+            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+        }.bind(this));
+        text = text.replace(/\x1bSTATE\[(\d+)\]/gi, function() {
+            var item = $dataStates[getArgNumber(arguments[1], 1, $dataStates.length)];
+            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+        }.bind(this));
+        return text;
     };
 
     //=============================================================================
