@@ -158,6 +158,7 @@
             var x = parseInt(parameters['map_x'], 10)  || 1;
             var y = parseInt(parameters['map_y'], 10)  || 1;
             $gamePlayer.reserveTransfer(mapId, x, y);
+            DataManager.selectSavefileForNewGame();
         }
     };
 
