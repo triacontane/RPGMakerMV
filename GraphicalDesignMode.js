@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/03/28 一部のウィンドウのプロパティを変更しようとするとエラーが発生する現象の修正
 // 1.0.0 2016/03/13 初版
 // 0.9.0 2016/03/05 ベータ版
 // ----------------------------------------------------------------------------
@@ -731,22 +732,6 @@ var $dataContainerProperties = null;
             if (this._customLineNumber) this.height = this.fittingHeight(this._customLineNumber);
         };
 
-        var _Window_Base_createBackSprite = Window_Base.prototype.createBackSprite;
-        Window_Base.prototype.createBackSprite = function() {
-            _Window_Base_createBackSprite.apply(this, arguments);
-            if (this._customBackSprite && this._customBackSprite.bitmap) {
-                var bitmap = this._customBackSprite.bitmap;
-                bitmap._image.onerror = function() {
-                    this._customBackFileName = '';
-                    this._customBackSprite.bitmap._isLoading = false;
-                    this._customBackSprite.bitmap = null;
-                    this._customBackSprite = null;
-                    SceneManager.popChangeStack();
-                    SceneManager.setInfoExtend('ファイルが見付からなかったので、左記の番号の変更を戻しました。', -1);
-                }.bind(this);
-            }
-        };
-
         PIXI.DisplayObjectContainer.prototype.processSetProperty = function(
             keyCode, propLabel, propName, min, max, callBack, stringFlg) {
             if (this[propName] === undefined) return;
@@ -772,6 +757,8 @@ var $dataContainerProperties = null;
         Window_Base.prototype.reDrawContents = function() {
             this.refresh();
         };
+
+        Window_Base.prototype.refresh = function() {};
 
         Window_Selectable.prototype.reDrawContents = function() {
             Window_Base.prototype.reDrawContents.apply(this, arguments);
@@ -1245,6 +1232,17 @@ var $dataContainerProperties = null;
             this.removeChild(this._customBackSprite);
             this._customBackSprite = null;
         }
+        if (Utils.isDesignMode() && this._customBackSprite && this._customBackSprite.bitmap) {
+            var bitmap = this._customBackSprite.bitmap;
+            bitmap._image.onerror = function() {
+                this._customBackFileName = '';
+                this._customBackSprite.bitmap._isLoading = false;
+                this._customBackSprite.bitmap = null;
+                this._customBackSprite = null;
+                SceneManager.popChangeStack();
+                SceneManager.setInfoExtend('ファイルが見付からなかったので、左記の番号の変更を戻しました。', -1);
+            }.bind(this);
+        }
     };
 
     var _Window_Selectable_initialize = Window_Selectable.prototype.initialize;
@@ -1309,4 +1307,3 @@ var $dataContainerProperties = null;
         return this._lines.length;
     };
 })();
-
