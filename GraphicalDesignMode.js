@@ -130,6 +130,10 @@
  * 未使用ファイルとして除外される可能性があります。
  * その場合、削除されたファイルを入れ直す等の対応が必要です。
  *
+ * 注意！
+ * 他のプラグインの使用状況によってウィンドウの位置やサイズが
+ * 正しく保存されない場合があります。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -614,26 +618,6 @@ var $dataContainerProperties = null;
         // PIXI.DisplayObjectContainer
         //  コンテナをドラッグ＆ドロップします。
         //=============================================================================
-        Object.defineProperty(PIXI.DisplayObjectContainer.prototype, 'x', {
-            get: function() {
-                return  this.position.x;
-            },
-            set: function(value) {
-                if (this._positionCustomized) return;
-                this.position.x = value;
-            }
-        });
-
-        Object.defineProperty(PIXI.DisplayObjectContainer.prototype, 'y', {
-            get: function() {
-                return  this.position.y;
-            },
-            set: function(value) {
-                if (this._positionCustomized) return;
-                this.position.y = value;
-            }
-        });
-
         var _PIXI_DisplayObjectContainer_initialize = PIXI.DisplayObjectContainer.prototype.initialize;
         PIXI.DisplayObjectContainer.prototype.initialize = function(x, y, width, height) {
             _PIXI_DisplayObjectContainer_initialize.apply(this, arguments);
@@ -757,8 +741,6 @@ var $dataContainerProperties = null;
         Window_Base.prototype.reDrawContents = function() {
             this.refresh();
         };
-
-        Window_Base.prototype.refresh = function() {};
 
         Window_Selectable.prototype.reDrawContents = function() {
             Window_Base.prototype.reDrawContents.apply(this, arguments);
@@ -1135,6 +1117,26 @@ var $dataContainerProperties = null;
     // PIXI.DisplayObjectContainer
     //  表示位置のセーブとロードを行います。
     //=============================================================================
+    Object.defineProperty(PIXI.DisplayObjectContainer.prototype, 'x', {
+        get: function() {
+            return  this.position.x;
+        },
+        set: function(value) {
+            if (this._positionCustomized) return;
+            this.position.x = value;
+        }
+    });
+
+    Object.defineProperty(PIXI.DisplayObjectContainer.prototype, 'y', {
+        get: function() {
+            return  this.position.y;
+        },
+        set: function(value) {
+            if (this._positionCustomized) return;
+            this.position.y = value;
+        }
+    });
+    
     PIXI.DisplayObjectContainer.prototype.loadContainerInfo = function() {
         var sceneName    = SceneManager.getSceneName();
         var parentName   = getClassName(this.parent);
@@ -1167,6 +1169,8 @@ var $dataContainerProperties = null;
         this.refresh();
         this.createBackSprite();
     };
+
+    Window_Base.prototype.refresh = function() {};
 
     Window_Selectable.prototype.loadProperty = function(containerInfo) {
         Window_Base.prototype.loadProperty.apply(this, arguments);
