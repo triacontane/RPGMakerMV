@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/03/29 fftfanttさんからご提供いただいたコードを反映させ、アナザーニューゲーム選択時に
+//                  既存のセーブファイルをロードする機能を追加
 // 1.0.1 2015/11/10 プラグイン適用中にセーブできなくなる不具合を修正
 // 1.0.0 2015/11/07 初版
 // ----------------------------------------------------------------------------
@@ -42,6 +44,10 @@
  * @desc デフォルトで選択肢を選択禁止にします。プラグインコマンドで有効化できます。（ON/OFF）
  * @default OFF
  *
+ * @param file_load
+ * @desc アナザーニューゲーム選択時に、ロード画面に遷移して既存セーブデータをロードできるようになります。（ON/OFF）
+ * @default OFF
+ *
  * @help タイトル画面のウィンドウの一番下に、もう一つのニューゲームを追加します。
  * 選択すると、ニューゲームとは別に指定したマップに遷移します。
  * クリア後のおまけやCG回想モード、スタッフクレジット、ミニゲーム、隠し要素など
@@ -66,6 +72,7 @@
  */
 (function () {
     var parameters = PluginManager.parameters('AnotherNewGame');
+    var localExtraStage = false;
 
     //=============================================================================
     // Game_Interpreter
@@ -104,6 +111,12 @@
         _Scene_Title_create.call(this);
     };
 
+    var _Scene_Title_commandContinue = Scene_Title.prototype.commandContinue;
+    Scene_Title.prototype.commandContinue = function() {
+        _Scene_Title_commandContinue.call(this);
+        localExtraStage = false;
+    };
+
     Scene_Title.prototype.loadAngSetting = function() {
         var angInfo = ANGSettingManager.load();
         ANGSettingManager.visible =
@@ -113,16 +126,21 @@
     };
 
     Scene_Title.prototype.commandNewGameSecond = function() {
-        var preMapId = $dataSystem.startMapId;
-        var preStartX = $dataSystem.startX;
-        var preStartY = $dataSystem.startY;
-        $dataSystem.startMapId = parseInt(parameters['map_id'], 10) || 1;
-        $dataSystem.startX     = parseInt(parameters['map_x'], 10)  || 1;
-        $dataSystem.startY     = parseInt(parameters['map_y'], 10)  || 1;
-        this.commandNewGame();
-        $dataSystem.startMapId = preMapId;
-        $dataSystem.startX     = preStartX;
-        $dataSystem.startY     = preStartY;
+        if ((parameters['file_load'] || '').toUpperCase() !== 'ON') {
+            var preMapId = $dataSystem.startMapId;
+            var preStartX = $dataSystem.startX;
+            var preStartY = $dataSystem.startY;
+            $dataSystem.startMapId = parseInt(parameters['map_id'], 10) || 1;
+            $dataSystem.startX     = parseInt(parameters['map_x'], 10)  || 1;
+            $dataSystem.startY     = parseInt(parameters['map_y'], 10)  || 1;
+            this.commandNewGame();
+            $dataSystem.startMapId = preMapId;
+            $dataSystem.startX     = preStartX;
+            $dataSystem.startY     = preStartY;
+        } else {
+            this.commandContinue();
+            localExtraStage = true;
+        }
     };
 
     var _Scene_Title_createCommandWindow = Scene_Title.prototype.createCommandWindow;
@@ -130,6 +148,17 @@
         _Scene_Title_createCommandWindow.call(this);
         if (ANGSettingManager.visible)
             this._commandWindow.setHandler('nameGame2',  this.commandNewGameSecond.bind(this));
+    };
+
+    var _Scene_Load_onLoadSuccess = Scene_Load.prototype.onLoadSuccess;
+    Scene_Load.prototype.onLoadSuccess = function() {
+        _Scene_Load_onLoadSuccess.call(this);
+        if (localExtraStage) {
+            var mapId = parseInt(parameters['map_id'], 10) || 1;
+            var x = parseInt(parameters['map_x'], 10)  || 1;
+            var y = parseInt(parameters['map_y'], 10)  || 1;
+            $gamePlayer.reserveTransfer(mapId, x, y);
+        }
     };
 
     //=============================================================================

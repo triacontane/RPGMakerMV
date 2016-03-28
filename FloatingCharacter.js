@@ -6,7 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.0.0 2016/03/10 初版
+// 1.0.0 2016/03/29 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
@@ -129,11 +129,6 @@
 
     Game_CharacterBase.prototype.screenShadowY = function() {
         return _Game_CharacterBase_screenY.apply(this, arguments) - this.screenY();
-    };
-
-    var _Game_CharacterBase_screenZ = Game_CharacterBase.prototype.screenZ;
-    Game_CharacterBase.prototype.screenZ = function() {
-        return Math.min(_Game_CharacterBase_screenZ.apply(this, arguments) + (this.isFloating() ? 1 : 0), 5);
     };
 
     var _Game_CharacterBase_isOnLadder = Game_CharacterBase.prototype.isOnLadder;
