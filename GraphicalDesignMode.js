@@ -1136,7 +1136,7 @@ var $dataContainerProperties = null;
             this.position.y = value;
         }
     });
-    
+
     PIXI.DisplayObjectContainer.prototype.loadContainerInfo = function() {
         var sceneName    = SceneManager.getSceneName();
         var parentName   = getClassName(this.parent);
