@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/03/31 ゲージ画像を指定できる機能を追加
 // 1.0.0 2016/02/27 えのきふさん提供版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -48,10 +49,6 @@
  * 要注意！　追加した画像は、デプロイメント時に
  * 未使用ファイルとして除外される可能性があります。
  * その場合、削除されたファイルを入れ直す等の対応が必要です。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -113,21 +110,22 @@
                  * zeroPadding:ゼロ埋めフラグ
                  * width:横幅
                  * height:高さ
+                 * image:ゲージ用画像ファイル名（任意のサイズで満タンのゲージと空のゲージと縦に並べてください）
                  */
                 hp:{
                     label:{visible:false, x:4, y:30},
                     value:{visible:true,  x:36, y:30, digit:3, max:true, zeroPadding:true},
-                    gauge:{visible:false, x:168, y:40, width:100, height:8},
+                    gauge:{visible:true, x:168, y:40, width:100, height:8, image:'gauge01'},
                 },
                 mp:{
                     label:{visible:false, x:4, y:62},
                     value:{visible:true,  x:36, y:62, digit:2, max:true, zeroPadding:true},
-                    gauge:{visible:false, x:168, y:72, width:100, height:8},
+                    gauge:{visible:true, x:168, y:72, width:100, height:8, image:'gauge02'},
                 },
                 tp:{
                     label:{visible:false, x:4, y:94},
                     value:{visible:false, x:36, y:94, digit:4, max:true, zeroPadding:true},
-                    gauge:{visible:false, x:168, y:104, width:100, height:8},
+                    gauge:{visible:false, x:168, y:104, width:100, height:8, image:''},
                 },
                 statesIcon:{visible:true,  x:168,  y:32},
                 name      :{visible:false, x:4,   y:0},
@@ -651,6 +649,43 @@
     };
 
     //=============================================================================
+    // Window_ActorStatus
+    //  ステータス表示領域です。
+    //=============================================================================
+    function Sprite_Gauge() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Sprite_Gauge.prototype = Object.create(Sprite.prototype);
+    Sprite_Gauge.prototype.constructor = Sprite_Gauge;
+
+    Sprite_Gauge.prototype.initialize = function(fileName) {
+        Sprite.prototype.initialize.call(this);
+        this._fileName = fileName;
+        this.bitmap = ImageManager.loadPicture(this._fileName, 0);
+        this.createGaugeSprite();
+        this.bitmap.addLoadListener(this.onLoadBitmap.bind(this));
+    };
+
+    Sprite_Gauge.prototype.createGaugeSprite = function() {
+        this._gaugeSprite = new Sprite();
+        this._gaugeSprite.bitmap = this.bitmap;
+        this.addChild(this._gaugeSprite);
+    };
+
+    Sprite_Gauge.prototype.onLoadBitmap = function() {
+        var height = this.bitmap.height / 2;
+        this.setFrame(0, height, this.bitmap.width, height);
+        this._gaugeSprite.setFrame(0, 0, this.bitmap.width, height);
+    };
+
+    Sprite_Gauge.prototype.refresh = function(rate) {
+        this.bitmap.addLoadListener(function() {
+            this._gaugeSprite.setFrame(0, 0, this.bitmap.width * rate, this.bitmap.height / 2);
+        }.bind(this));
+    };
+
+    //=============================================================================
     // Window_BattleSkinCustomize
     //  表示領域ウィンドウのスーパークラスです。
     //=============================================================================
@@ -718,9 +753,13 @@
     Window_BattleSkinCustomize.prototype.drawActorParam = function(actor, paramItem, paramList) {
         var item = paramItem.gauge;
         if (item.visible) {
-            var color1 = paramList.gaugeColor1;
-            var color2 = paramList.gaugeColor2;
-            this.drawGauge(item.x, item.y, item.width, paramList.rate, color1, color2, item.height);
+            if (item.image) {
+                this.drawGaugeImage(item.x, item.y, paramList.rate, item.image, paramList.label);
+            } else {
+                var color1 = paramList.gaugeColor1;
+                var color2 = paramList.gaugeColor2;
+                this.drawGauge(item.x, item.y, item.width, paramList.rate, color1, color2, item.height);
+            }
         }
         item = paramItem.label;
         if (item.visible) {
@@ -751,6 +790,18 @@
             this.drawText('/', x1, y, slashWidth, 'right');
             this.drawText(item.zeroPadding ? max.padZero(item.digit) : max, x2, y, valueWidth, 'right');
         }
+    };
+
+    Window_BattleSkinCustomize.prototype.drawGaugeImage = function(x, y, rate, fileName, label) {
+        if (!this._gaugeSprites) this._gaugeSprites = {};
+        if (!this._gaugeSprites[label]) {
+            var sprite = new Sprite_Gauge(fileName);
+            sprite.x = x;
+            sprite.y = y;
+            this.addChild(sprite);
+            this._gaugeSprites[label] = sprite;
+        }
+        this._gaugeSprites[label].refresh(rate);
     };
 
     Window_BattleSkinCustomize.prototype.drawGauge = function(x, y, width, rate, color1, color2, height) {
@@ -831,7 +882,6 @@
     Window_ActorStatus.prototype.initialize = function(actorIndex) {
         this._actorIndex = actorIndex;
         Window_BattleSkinCustomize.prototype.initialize.call(this, 0, 0, 1, 1);
-        this.refresh();
     };
 
     Window_ActorStatus.prototype.createRect = function(rect) {
