@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/03/31 浮遊中に強制的に待機アニメが設定される仕様を撤廃
 // 1.0.0 2016/03/29 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -162,7 +163,7 @@
         if (!max) max = $gameMap.tileHeight() / 2;
         this._needFloat   = true;
         this._maxAltitude = max;
-        if (waitFlg) this._waitCount = this.maxAltitude();
+        if (waitFlg) this._waitCount = Math.max(this.maxAltitude() - this._altitude, 0);
     };
 
     Game_Player.prototype.float = function(max) {
@@ -194,17 +195,12 @@
     Game_CharacterBase.prototype.updateFloating = function() {
         this._floatingPrev = this.isFloating();
         if (this.isNeedFloat()) {
-            if (this.isLowest()) {
-                this._stepAnimePrev = this._stepAnime;
-            }
             if (this.isHighest()) {
                 this._altitudeAnimeCount++;
-                this.setStepAnime(true);
             }
             this._altitude = Math.min(this._altitude + 1, this.maxAltitude());
         } else {
             if (this.isHighest()) {
-                this.setStepAnime(this._stepAnimePrev);
                 this._altitudeAnimeCount = 0;
             }
             this._altitude = Math.max(this._altitude - 1, 0);

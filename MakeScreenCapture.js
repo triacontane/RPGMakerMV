@@ -116,8 +116,8 @@
         signature: {size:28, face:'GameFont', color:'rgba(255,255,255,1.0)', align:'right'},
         /* 効果音情報です。ファイル名はプラグイン管理画面から取得します */
         se: {volume:90, pitch:100, pan:0},
-        /* ファイルの出力場所です */
-        location:'/captures/',
+        /* ファイルの出力場所です(区切りは「/」で指定してください) */
+        location:'C:/OneDrive/画像/スクリーンショット',
         /* jpeg形式で出力したときの品質です(0.1...1.0) */
         jpegQuality:0.9,
         /* テストプレー以外での動作を無効にするフラグです */
@@ -427,10 +427,15 @@
     };
 
     StorageManager.localImgFileDirectoryPath = function() {
-        var path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, settings.location);
-        if (path.match(/^\/([A-Z]\:)/)) {
-            path = path.slice(1);
+        var path = settings.location;
+        alert(path);
+        if (!path.match(/^[A-Z]\:/)) {
+            path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, path);
+            if (path.match(/^\/([A-Z]\:)/)) {
+                path = path.slice(1);
+            }
         }
+        if (!path.match(/\/$/)) path += '/';
         return decodeURIComponent(path);
     };
 
