@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/03/31 隊列歩行でない場合のフォロワーや画像が指定されていないイベントでも影が表示される不具合を修正
 // 1.0.1 2016/03/31 浮遊中に強制的に待機アニメが設定される仕様を撤廃
 // 1.0.0 2016/03/29 初版
 // ----------------------------------------------------------------------------
@@ -155,6 +156,10 @@
         return this._altitude > 0;
     };
 
+    Game_CharacterBase.prototype.isShadowVisible = function() {
+        return this.isFloating() && (this._characterName || this._tileId);
+    };
+
     Game_CharacterBase.prototype.isNeedFloat = function() {
         return this._needFloat;
     };
@@ -232,11 +237,10 @@
     };
 
     Sprite_Character.prototype.updateFloating = function() {
-        if (this._character.isFloating()) {
+        if (this._character.isShadowVisible()) {
             if (!this._shadowSprite) this.createShadow();
             this._shadowSprite.y = this._character.screenShadowY();
             this._shadowSprite.opacity = this._character.shadowOpacity();
-            this._shadowSprite.visible = this.visible;
         } else {
             if (this._shadowSprite) this.disposeShadow();
         }
