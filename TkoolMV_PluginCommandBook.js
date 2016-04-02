@@ -18,6 +18,11 @@
  * Default: はい
  * @default はい
  *
+ * @param スクリプトに制御文字適用
+ * @desc スクリプト実行時に制御文字を使用できるようにするか(はい/いいえ)
+ * Default: いいえ
+ * @default いいえ
+ *
  * @help
  *  Copyright (c) 2015 Alec
  *  This software is released under the MIT License.
@@ -423,6 +428,169 @@
  *  使用例
  *  ピクチャの回転角設定 1 90
  *  Trimming_Picture \v[1] \v[2]
+ * * ===========================================================================
+ * 文字の連結(English：ConcatenStrings)
+ * 文字を連結し、指定の変数に代入します。
+ * 変数の指定について、イベントエディタのコマンドと同じ#0001なども使用できます。
+ * もちろん\[V]や\JS[X]\JSなどの制御文字も使用可能です。
+ * プラグインコマンドで[文字の連結]もしくは[ConcatenStrings]か[CatStr]を記述して使用します。
+ * 
+ * パラメータ：
+ *  引数1：結果を代入する変数
+ *  引数2：連結する文字1
+ *  引数3：連結する文字2
+ *  引数4：結果が数値として評価できる場合(省略可)
+ *         [0:文字として評価(省略値)  1：数値として評価]
+ * 使用例
+ *  文字の連結 1 /N[1] は天才！ //ハロルドは天才！
+ *  文字の連結 #0001 \JS[$dataMapInfos[1].name]\JS は綺麗 //王都は綺麗
+ *  ConcatenStrings 1 TEST OK //TESTOK
+ *  CatStr 1 2 1 1 // 21(数値)
+ * ===========================================================================
+ * 文字の置換(English：ReplaceStrings)
+ * 文字を置換し、指定の変数に代入します。
+ * 変数の指定について、イベントエディタのコマンドと同じ#0001なども使用できます。
+ * もちろん\[V]や\JS[X]\JSなどの制御文字も使用可能です。
+ * 特殊文字\と置き換えることにより、指定文字の削除も可能です。
+ * プラグインコマンドで[文字の置換]もしくは[ReplaceStrings]か[RepStr]を記述して使用します。
+ * 
+ * パラメータ：
+ *  引数1：結果を代入する変数
+ *  引数2：置換対象の文字列
+ *  引数3：置換前文字
+ *  引数4：置換後文字
+ *  引数5：置換方法(省略可) [前方 後方 全て(省略値)]
+ *                                 or
+ *                          [front back all(省略値)]
+ * 使用例
+ *  文字列の置換 1 ハロルドかっこいいよハロルド ハ Ｈ 全て //ＨロルドかっこいいよＨロルド
+ *  文字列の置換 1 \V[1] ハロルド \ 全て //変数1の文字列からハロルドを取り除く
+ *  ReplaceStrings 1 ハロルドとハロルドがお見合い ハ Ｈ Front //Ｈロルドとハロルドがお見合い
+ *  RepStr 1 ハロルドとハロルドがお見合い ハロルド Ｔレーゼ Back //ハロルドとＴレーゼがお見合い
+ * ===========================================================================
+ * 文字の切取(English：CutString)
+ * 文字を切り取って指定の変数に代入します。
+ * 変数の指定について、イベントエディタのコマンドと同じ#0001なども使用できます。
+ * もちろん\[V]や\JS[X]\JSなどの制御文字も使用可能です。
+ * プラグインコマンドで[文字の切取]もしくは[CutStrings]か[CutStr]を記述して使用します。
+ * 
+ * パラメータ：
+ *  引数1：結果を代入する変数
+ *  引数2：対象の文字列
+ *  引数3：開始位置
+ *  引数4：終了位置(End か 最後 の指定で最後まで切り取り)
+ *  引数5：開始方向(省略可)[前方(省略値)  後方]
+ *                                 or
+ *                         [front(省略値) back]
+ * 使用例
+ *  文字の切取 1 \JS[$dataMap.note]\JS 1 10 前方
+ *  文字の切取 1 \JS[$dataMap.note]\JS 10 最後 後方
+ *  CutStrings 1 \[V] 2 end back
+ *  CutStr 1 \[V] 2 
+ * ===========================================================================
+ * 文字一致カウント(English：CountMatchString)
+ * 文字列内で特定の文字に一致した数をカウントし指定の変数に代入します。
+ * 変数の指定について、イベントエディタのコマンドと同じ#0001なども使用できます。
+ * もちろん\[V]や\JS[X]\JSなどの制御文字も使用可能です。
+ * プラグインコマンドで[文字一致カウント]もしくは[CountMatchString]か[CntStr]を記述して使用します。
+ * 
+ * パラメータ：
+ *  引数1：結果を代入する変数
+ *  引数2：対象の文字列
+ *  引数3：検索する文字
+ *  引数4：比較方法[0:一致したら一致下部分から先を比較(省略値) 1:1文字ずつ比較]
+ * 使用例
+ *  文字一致カウント 1 あああああ ああ 0 //2文字一致
+ *  文字一致カウント 1 あああああ ああ 1 //4文字一致
+ *  CountMatchString 1 \[V] OK
+ *  CntStr 1 \N[1] Ｈロルド 0
+ * ===========================================================================
+ * 文字の検索(English：CountMatchString)
+ * 文字列内で特定の文字を検索し、最初に一致した位置を指定の変数に代入します。
+ * 変数の指定について、イベントエディタのコマンドと同じ#0001なども使用できます。
+ * もちろん\[V]や\JS[X]\JSなどの制御文字も使用可能です。
+ * プラグインコマンドで[文字の検索]もしくは[SearchString]か[SchStr]を記述して使用します。
+ * 
+ * パラメータ：
+ *  引数1：結果を代入する変数
+ *  引数2：対象の文字列
+ *  引数3：検索する文字
+ *  引数4：開始方向(省略可)[前方(省略値)  後方]
+ *                                 or
+ *                         [front(省略値) back]
+ * 使用例
+ *  文字の探索 1 あああああ ああ 前方
+ *  SearchString 1 \[V] test back
+ *  SchStr 1 \N[1] Ｈロルド
+ * ===========================================================================
+ * 文字数カウント(English：CountStringlength)
+ * 文字数をカウントし指定の変数に代入します。
+ * 変数の指定について、イベントエディタのコマンドと同じ#0001なども使用できます。
+ * もちろん\[V]や\JS[X]\JSなどの制御文字も使用可能です。
+ * プラグインコマンドで[文字数カウント]もしくは[CountStringlength]か[CntLen]を記述して使用します。
+ * 
+ * パラメータ：
+ *  引数1：結果を代入する変数
+ *  引数2：対象の文字列
+ * 
+ * 使用例
+ *  文字数カウント 1 \N[1]
+ *  CountStringlength 1 hahaha
+ *  CntLen 1 
+ * ===========================================================================
+ * 文字の反転(English：ReverseString)
+ * 対象の文字列を逆転させ、指定の変数に代入します。
+ * 変数の指定について、イベントエディタのコマンドと同じ#0001なども使用できます。
+ * もちろん\[V]や\JS[X]\JSなどの制御文字も使用可能です。
+ * プラグインコマンドで[文字の反転]もしくは[ReverseString]か[RevStr]を記述して使用します。
+ * パラメータ：
+ *  引数1：結果を代入する変数
+ *  引数2：対象の文字列
+ * 使用例
+ *  文字の反転 1 \N[1]
+ *  ReverseString 1 逆読みできるかな？
+ *  RevStr 1 できると思うよ？
+ * ===========================================================================
+ * 強制セーブ(English：Force_Save)
+ *  セーブ画面を介さずに強制的に状態をセーブします。
+ *  更新されるセーブファイルは、最後にセーブ or ロードしたファイルになります。
+ *  ニューゲームから直接セーブした場合は空きを探しますが、空きがなければ
+ *  もっとも古いファイルを上書きします。
+ * パラメータ：
+ *  なし
+ * 使用例
+ *  強制セーブ
+ *  Force_Save
+ * ===========================================================================
+ * 指定位置にアニメーション表示(English：Show_Animation)
+ *  画面上の座標を指定してアニメーションを再生します。
+ * パラメータ：
+ *  引数1：X座標
+ *  引数2：Y座標
+ *  引数3：アニメーションID
+ *  引数4：ウェイトフラグ（指定する場合「ウェイトあり」）
+ * 使用例
+ *  指定位置にアニメーション表示 320 240 1 ウェイトあり
+ *  Show_Animation \v[1] \v[2] 1
+ * ===========================================================================
+ * 指定位置にループアニメーション表示(English：Show_Loop_Animation)
+ *  画面上の座標を指定してアニメーションを再生します。
+ *  消去するか新たなアニメーションを指定するまでループ再生されます。
+ * パラメータ：
+ *  引数1：X座標
+ *  引数2：Y座標
+ *  引数3：アニメーションID
+ * 使用例
+ *  指定位置にループアニメーション表示 320 240 1
+ *  Show_Loop_Animation \v[1] \v[2] 1
+ * ===========================================================================
+ * ループアニメーション消去(English：Erase_Loop_Animation)
+ *  ループ再生しているアニメーションを消去します。
+ * パラメータ：
+ *  なし
+ * 使用例
+ *  ループアニメーション消去
+ *  Erase_Loop_Animation
  * ===========================================================================
  */
 
@@ -437,6 +605,14 @@
                 return String.fromCharCode(c.charCodeAt(0) - 0xFEE0);
             });
             return text;
+        };
+        var getActorName = function(n) {
+            var actor = n >= 1 ? $gameActors.actor(n) : null;
+            return actor ? actor.name() : '';
+        };
+        var getPartyMemberName = function(n) {
+            var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
+            return actor ? actor.name() : '';
         };
         var prevText = "";
         text = text.replace(/\\/g, '\x1b');
@@ -498,16 +674,6 @@
         }
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
         return text;
-    };
-
-    var getActorName = function(n) {
-        var actor = n >= 1 ? $gameActors.actor(n) : null;
-        return actor ? actor.name() : '';
-    };
-
-    var getPartyMemberName = function(n) {
-        var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
-        return actor ? actor.name() : '';
     };
 
     /**
@@ -774,49 +940,53 @@
 
     Game_Interpreter.prototype.pluginCommandBook_変数の操作 = function(args) {
         args[0]=args[0].replace('#' ,'');
-        var VarId1   = parseInt(args[0],10);
-
+        args[1]=args[1].replace(/set/i,'=');
+        args[1]=args[1].replace(/add/i,'+=');
+        args[1]=args[1].replace(/sub/i,'-=');
+        args[1]=args[1].replace(/mult/i,'*=');
+        args[1]=args[1].replace(/div/i,'/=');
+        args[1]=args[1].replace(/mod/i,'%=');
+        var VarId1 = parseIntStrict(args[0]);
         if(isFinite(args[2]) && args[3]!='1'){
             var Var1 = parseInt(args[2],10);
         } else {
             var Var1 = args[2];
         }
         var Var2 = $gameVariables.value(VarId1);
-        if (!isFinite(VarId1)) return;
-        args[1]=args[1].replace('set','=');
-        args[1]=args[1].replace('add','+=');
-        args[1]=args[1].replace('sub','-=');
-        args[1]=args[1].replace('mult','*=');
-        args[1]=args[1].replace('div','/=');
-        args[1]=args[1].replace('mod','%=');
-        if (args[1]=='=') {
+        switch (args[1]) {
+          case '=':
             $gameVariables.setValue(VarId1,Var1);
-        }
-        if (!isFinite(Var1)) return;
-        if (!isFinite(Var2)) return;
-        Var1 = parseInt(Var1,10);
-        Var2 = parseInt(Var2,10);
-        if (args[1]=='+=') {
+            break;
+          case '+=':
             $gameVariables.setValue(VarId1,Var2+Var1);
-        }
-        if (args[1]=='-=') {
+            break;
+          case '-=':
+            Var1 =parseIntStrict(Var1);
+            Var2 = parseIntStrict(Var2);
             $gameVariables.setValue(VarId1,Var2-Var1);
-        }
-        if (args[1]=='*=') {
+            break;
+          case '*=':
+            Var1 =parseIntStrict(Var1);
+            Var2 = parseIntStrict(Var2);
             $gameVariables.setValue(VarId1,Var2*Var1);
-        }
-        if (args[1]=='/=') {
+            break; 
+          case '/=':
+            Var1 =parseIntStrict(Var1);
+            Var2 = parseIntStrict(Var2);
             $gameVariables.setValue(VarId1,(Var2-(Var2%Var1))/Var1);
-        }
-        if (args[1]=='%=') {
+            break;
+          case '%=':
+            Var1 =parseIntStrict(Var1);
+            Var2 = parseIntStrict(Var2);
             $gameVariables.setValue(VarId1,Var2%Var1);
+            break;
         }
     };
     Game_Interpreter.prototype.pluginCommandBook_ControlVariable = function(args) {
-        this.pluginCommandBook_変数の操作();
+        this.pluginCommandBook_変数の操作(args);
     };
     Game_Interpreter.prototype.pluginCommandBook_ConVar = function(args) {
-        this.pluginCommandBook_変数の操作();
+        this.pluginCommandBook_変数の操作(args);
     };
 
     Game_Interpreter.prototype.pluginCommandBook_タッチ座標の取得 = function(args) {
@@ -996,6 +1166,217 @@
         this.pluginCommandBook_ピクチャの回転角設定(args);
     };
 
+    Game_Interpreter.prototype.pluginCommandBook_文字の連結 = function(args) {
+        args[0]=args[0].replace('#' ,'');
+        var VarId1 = parseIntStrict(args[0]);
+        var Str = String(args[1]) + String(args[2]);
+        if(isFinite(Str) && args[3] == '1') Str = parseInt(Str,10);
+        $gameVariables.setValue(VarId1,Str);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_ConcatenStrings = function(args) {
+        this.pluginCommandBook_文字の連結(args);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_CatStr = function(args) {
+        this.pluginCommandBook_文字の連結(args);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_文字の置換 = function(args) {
+        args[0]=args[0].replace('#' ,'');
+        var VarId1   = parseInt(args[0],10);
+        VarId1 = parseIntStrict(VarId1);
+        var Str = String(args[1]);
+        var Str2 = String(args[2]);
+        var Str3 = String(args[3]);
+        Str = Str.replace(/\x1b/gi);
+        Str2 = Str2.replace(/\x1b/gi);
+        Str3 = Str3.replace(/\x1b/gi);
+        if (args[4] == null) args[4] = '全て';
+        args[4]=args[4].replace(/front/i,'前方');
+        args[4]=args[4].replace(/back/i,'後方');
+        args[4]=args[4].replace(/all/i,'全て');
+        switch (args[4]){
+          case '前方':
+            Str = Str.replace(Str2,Str3);
+            break;
+          case '後方':
+            Str = RvStr(Str);
+            Str2 = RvStr(Str2);
+            Str3 = RvStr(Str3);
+            Str = Str.replace(Str2,Str3);
+            Str = RvStr(Str);
+            break;
+          case '全て':
+          default:               
+            while (Str.indexOf(Str2,0) != -1 ) Str = Str.replace(Str2,Str3); 
+            break;
+        }
+        $gameVariables.setValue(VarId1,Str);
+        function RvStr(st) {
+            var rv = "";
+            for (var i = 0, n = st.length; i < n; i++) rv += st[n - i - 1];
+            return rv;
+        }
+    };
+    Game_Interpreter.prototype.pluginCommandBook_ReplaceStrings = function(args) {
+        this.pluginCommandBook_文字の置換(args);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_RepStr = function(args) {
+        this.pluginCommandBook_文字の置換(args);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_文字の切取 = function(args) {
+        args[0]=args[0].replace('#' ,'');
+        var VarId1 = parseIntStrict(args[0]);
+        var Str = String(args[1]);
+        var Nm1 = parseIntStrict(args[2]);
+        var Nm2 = args[3]
+        if (Nm2.toLowerCase() == 'end' || Nm2 == '最後' ) Nm2 = Str.length;
+        var Nm2 = parseIntStrict(Nm2);
+        if (args[4] == null) args[4] = '前方';
+        args[4]=args[4].replace(/front/i,'前方');
+        args[4]=args[4].replace(/back/i,'後方');
+        switch (args[4]){
+          case '前方':
+          default:
+            Str = Str.substring(Nm1-1,Nm1+Nm2-1);
+            break;
+          case '後方':
+            Str = Str.substring(Str.length-Nm1+1,Str.length-Nm1-Nm2+1);
+            break;
+        }
+        $gameVariables.setValue(VarId1,Str);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_CutStrings = function(args) {
+        this.pluginCommandBook_文字の切取(args);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_CutStr = function(args) {
+        this.pluginCommandBook_文字の切取(args);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_文字一致カウント = function(args) {
+        args[0]=args[0].replace('#' ,'');
+        var VarId1 = parseIntStrict(args[0]);
+        var Str = String(args[1]);
+        var Str2 = String(args[2]);
+        var StrCnt = 0
+        var StrLen
+        if (args[3] == '1') {
+          StrCnt = (Str.match(new RegExp(Str2, "g"))||[]).length;
+        } else {
+          while (Str.indexOf(Str2,0) != -1 ){
+          StrCnt ++
+          StrLen = Str.indexOf(Str2,0) + 1
+          Str = Str.substring(StrLen,Str.length);
+          }
+        }
+        $gameVariables.setValue(VarId1,StrCnt);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_CountMatchString = function(args) {
+        this.pluginCommandBook_文字一致カウント(args);
+    }; 
+    Game_Interpreter.prototype.pluginCommandBook_CntStr = function(args) {
+        this.pluginCommandBook_文字一致カウント(args);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_文字の検索 = function(args) {
+        args[0]=args[0].replace('#' ,'');
+        var VarId1 = parseIntStrict(args[0]);
+        var Str = String(args[1]);
+        var Str2 = String(args[2]);
+        var StrLen
+        if (args[3] == null) args[4] = '前方';
+        args[3]=args[3].replace(/front/i,'前方');
+        args[3]=args[3].replace(/back/i,'後方');
+        switch (args[3]){
+          case '前方':
+          default:
+            StrLen = Str.indexOf(Str2) + 1
+            break;
+          case '後方':
+            StrLen = Str.lastIndexOf(Str2) + 1
+            break;
+        }
+        $gameVariables.setValue(VarId1,StrLen);
+   };
+   Game_Interpreter.prototype.pluginCommandBook_SearchString = function(args) {
+        this.pluginCommandBook_文字の検索(args);
+   };
+   Game_Interpreter.prototype.pluginCommandBook_SchStr = function(args) {
+        this.pluginCommandBook_文字の検索(args);
+   };
+   
+   Game_Interpreter.prototype.pluginCommandBook_文字数カウント = function(args) {
+        args[0]=args[0].replace('#' ,'');
+        var VarId1 = parseIntStrict(args[0]);
+        var Str = String(args[1]);
+        var StrLen = Str.length
+        $gameVariables.setValue(VarId1,StrLen);
+   };
+   Game_Interpreter.prototype.pluginCommandBook_CountStringlength = function(args) {
+        this.pluginCommandBook_文字数カウント(args);
+   };
+   Game_Interpreter.prototype.pluginCommandBook_SchStr = function(args) {
+        this.pluginCommandBook_文字数カウント(args);
+   };
+   
+   Game_Interpreter.prototype.pluginCommandBook_文字の反転 = function(args) {
+        args[0]=args[0].replace('#' ,'');
+        var VarId1 = parseIntStrict(args[0]);
+        var Str = String(args[1]);
+        var RevStr = "";
+        for (var i = 0, n = Str.length; i < n; i++) RevStr += Str[n - i - 1];
+        $gameVariables.setValue(VarId1,RevStr);
+   };
+   
+ Game_Interpreter.prototype.pluginCommandBook_ReverseString = function(args) {
+        this.pluginCommandBook_文字の反転(args);
+   };
+ Game_Interpreter.prototype.pluginCommandBook_RevStr = function(args) {
+        this.pluginCommandBook_文字の反転(args);
+   };
+
+    Game_Interpreter.prototype.pluginCommandBook_強制セーブ = function(args) {
+        $gameSystem.onBeforeSave();
+        if (!DataManager.saveGame(DataManager.lastAccessedSavefileId())) {
+            throw new Error('！！！セーブに失敗しました。セーブファイルは消去されています。！！！');
+        }
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_Force_Save = function(args) {
+        this.pluginCommandBook_強制セーブ(args);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_指定位置にアニメーション表示 = function(args) {
+        var x = parseIntStrict(args[0]);
+        var y = parseIntStrict(args[1]);
+        var id =  parseIntStrict(args[2]);
+        var wait = args[3] && (args[3] === 'ウェイトあり' || args[3].toUpperCase() === 'wait');
+        $gameScreen.startAnimation(x, y, id, false);
+        if (wait) this.wait($dataAnimations[id].frames.length * 4);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_Show_Animation = function(args) {
+        this.pluginCommandBook_指定位置にアニメーション表示(args);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_指定位置にループアニメーション表示 = function(args) {
+        var x = parseIntStrict(args[0]);
+        var y = parseIntStrict(args[1]);
+        var id =  parseIntStrict(args[2]);
+        $gameScreen.startAnimation(x, y, id, true);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_Show_Loop_Animation = function(args) {
+        this.pluginCommandBook_指定位置にループアニメーション表示(args);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_ループアニメーション消去 = function(args) {
+        $gameScreen.animationLoop = false;
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_Erase_Loop_Animation = function(args) {
+        this.pluginCommandBook_ループアニメーション消去(args);
+    };
+
     /*
      * ここからはプラグインコマンドの実装のために必要な関数などを追加する
      */
@@ -1013,6 +1394,74 @@
             Window_Base.prototype.convertEscapeCharacters = function(text) {
                 text = Game_Interpreter.prototype.pluginCommandBook_unescape(text);
                 return Window_Base_convertEscapeCharacters.call(this, text);
+            };
+        })();
+    }
+
+    if (eval(String(parameters['スクリプトに制御文字適用']||'false'))) {
+        (function () {
+            var _Game_Interpreter_command355 = Game_Interpreter.prototype.command355;
+            Game_Interpreter.prototype.command355 = function() {
+                var oldParams = [], i = 0, result, index = this._index;
+                oldParams.push(this._list[index].parameters[0]);
+                this._list[index].parameters[0] = this.pluginCommandBook_unescape(this._list[index].parameters[0]);
+                while (this._list[index + ++i].code === 655) {
+                    oldParams.push(this._list[index + i].parameters[0]);
+                    this._list[index + i].parameters[0] = this.pluginCommandBook_unescape(this._list[index + i].parameters[0]);
+                }
+                try {
+                    result = _Game_Interpreter_command355.apply(this, arguments);
+                } catch(e) {
+                    console.log('スクリプトの実行中にエラーが発生しました。');
+                    console.log('- スクリプト 　: ' + this.currentCommand().parameters[0]);
+                    console.log('- エラー原因   : ' + e.toString());
+                    result = true;
+                }
+                this._list[index].parameters[0] = oldParams.shift();
+                i = 0;
+                while (this._list[index + ++i].code === 655) {
+                    this._list[index + i].parameters[0] = oldParams.shift();
+                }
+                return result;
+            };
+
+            var _Game_Interpreter_command111 = Game_Interpreter.prototype.command111;
+            Game_Interpreter.prototype.command111 = function() {
+                if (this._params[0] === 12) {
+                    var oldParam = this._params[1];
+                    var result;
+                    this._params[1] = this.pluginCommandBook_unescape(this._params[1]);
+                    try {
+                        result = _Game_Interpreter_command111.apply(this, arguments);
+                    } catch(e) {
+                        console.log('スクリプトの実行中にエラーが発生しました。');
+                        console.log('- スクリプト 　: ' + this._params[1]);
+                        console.log('- エラー原因   : ' + e.toString());
+                        result = true;
+                    }
+                    this._params[1] = oldParam;
+                } else {
+                    result = _Game_Interpreter_command111.apply(this, arguments);
+                }
+                return result;
+            };
+
+            var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
+            Game_Character.prototype.processMoveCommand = function(command) {
+                if (command.code === Game_Character.ROUTE_SCRIPT) {
+                    var oldParam = command.parameters[0];
+                    command.parameters[0] = Game_Interpreter.prototype.pluginCommandBook_unescape(command.parameters[0]);
+                    try {
+                        _Game_Character_processMoveCommand.apply(this, arguments);
+                    } catch(e) {
+                        console.log('スクリプトの実行中にエラーが発生しました。');
+                        console.log('- スクリプト 　: ' + command.parameters[0]);
+                        console.log('- エラー原因   : ' + e.toString());
+                    }
+                    command.parameters[0] = oldParam;
+                } else {
+                    _Game_Character_processMoveCommand.apply(this, arguments);
+                }
             };
         })();
     }
@@ -1062,15 +1511,65 @@
         return this._numInputPositionType;
     };
 
+    var _Game_Screen_clear = Game_Screen.prototype.clear;
+    Game_Screen.prototype.clear = function() {
+        _Game_Screen_clear.apply(this, arguments);
+        this.clearAnimation();
+    };
+
+    Game_Screen.prototype.startAnimation = function(x, y, id, loop) {
+        this._animationContainerX = x;
+        this._animationContainerY = y;
+        this._animationId         = id;
+        this._animationLoop       = loop;
+    };
+
+    Game_Screen.prototype.clearAnimation = function() {
+        this._animationContainerX = 0;
+        this._animationContainerY = 0;
+        this._animationId         = 0;
+    };
+
+    Object.defineProperty(Game_Screen.prototype, 'animationContainerX', {
+        get: function() {
+            return this._animationContainerX;
+        },
+        configurable: false
+    });
+
+    Object.defineProperty(Game_Screen.prototype, 'animationContainerY', {
+        get: function() {
+            return this._animationContainerY;
+        },
+        configurable: false
+    });
+
+    Object.defineProperty(Game_Screen.prototype, 'animationId', {
+        get: function() {
+            return this._animationId;
+        },
+        configurable: false
+    });
+
+    Object.defineProperty(Game_Screen.prototype, 'animationLoop', {
+        get: function() {
+            return this._animationLoop;
+        },
+        set: function(value) {
+            this._animationLoop = value;
+        },
+        configurable: false
+    });
+
     var _Game_Screen_clearPictures = Game_Screen.prototype.clearPictures;
     Game_Screen.prototype.clearPictures = function() {
-        _Game_Screen_clearPictures.call(this);
-        this._needsSortPictures = false;
+        _Game_Screen_clearPictures.apply(this, arguments);
+        this.needsSortPictures = false;
     };
 
     var _Game_Picture_initBasic = Game_Picture.prototype.initBasic;
     Game_Picture.prototype.initBasic = function() {
-        _Game_Picture_initBasic.call(this);
+        _Game_Picture_initBasic.apply(this, arguments);
         this._frameX      = 0;
         this._frameY      = 0;
         this._frameWidth  = 0;
@@ -1113,24 +1612,24 @@
     Window_NumberInput.prototype.refresh = function() {
         if (this._number != null) this._number = this._number.clamp(
             $gameMessage._numInputMinValue, $gameMessage._numInputMaxValue);
-        _Window_NumberInput_refresh.call(this);
+        _Window_NumberInput_refresh.apply(this, arguments);
     };
 
     var _Window_NumberInput_start = Window_NumberInput.prototype.start;
     Window_NumberInput.prototype.start = function() {
-        _Window_NumberInput_start.call(this);
+        _Window_NumberInput_start.apply(this, arguments);
         this.updateBackground();
     };
 
     var _Window_NumberInput_processOk = Window_NumberInput.prototype.processOk;
     Window_NumberInput.prototype.processOk = function() {
-        _Window_NumberInput_processOk.call(this);
+        _Window_NumberInput_processOk.apply(this, arguments);
         $gameMessage.clearNumInputRange();
     };
 
     var _Window_NumberInput_updatePlacement = Window_NumberInput.prototype.updatePlacement;
     Window_NumberInput.prototype.updatePlacement = function() {
-        _Window_NumberInput_updatePlacement.call(this);
+        _Window_NumberInput_updatePlacement.apply(this, arguments);
         var positionType = $gameMessage.numInputPositionType();
         this.width = this.windowWidth();
         switch (positionType) {
@@ -1175,7 +1674,7 @@
             var newZ = this.picture().z;
             if (newZ != this.z) {
                 this.z = newZ;
-                $gameScreen._needsSortPictures = true;
+                $gameScreen.needsSortPictures = true;
             }
             this.updateFrame();
         }
@@ -1188,12 +1687,43 @@
         }
     };
 
+    var _Spriteset_Base_createUpperLayer = Spriteset_Base.prototype.createUpperLayer;
+    Spriteset_Base.prototype.createUpperLayer = function() {
+        _Spriteset_Base_createUpperLayer.apply(this, arguments);
+        this.createAnimationContainer();
+    };
+
+    Spriteset_Base.prototype.createAnimationContainer = function() {
+        this._animationContainer = new Sprite_Base();
+        this._animationId = 0;
+        this.addChild(this._animationContainer);
+    };
+
     var _Spriteset_Base_update = Spriteset_Base.prototype.update;
     Spriteset_Base.prototype.update = function() {
         _Spriteset_Base_update.call(this);
-        if ($gameScreen._needsSortPictures) {
+        if ($gameScreen.needsSortPictures) {
             this.sortPictures();
-            $gameScreen._needsSortPictures = false;
+            $gameScreen.needsSortPictures = false;
+        }
+        this.updateAnimationContainer();
+    };
+
+    Spriteset_Base.prototype.updateAnimationContainer = function() {
+        var id = $gameScreen.animationId;
+        if (id > 0 && id < $dataAnimations.length) {
+            this._animationContainer.x = $gameScreen.animationContainerX;
+            this._animationContainer.y = $gameScreen.animationContainerY;
+            this._animationContainer.startAnimation($dataAnimations[id], false, 0);
+            this._animationId = id;
+            $gameScreen.clearAnimation();
+        }
+        if (!this._animationContainer.isAnimationPlaying() && this._animationId > 0) {
+            if ($gameScreen.animationLoop) {
+                this._animationContainer.startAnimation($dataAnimations[this._animationId], false, 0);
+            } else {
+                this._animationId = 0;
+            }
         }
     };
 

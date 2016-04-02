@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/04/01 コマンド追加位置を細かく指定できる機能を追加
 // 1.0.0 2016/03/21 えのきふさん提供版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -40,6 +41,14 @@
  *
  * description skill note
  * <BSCSpecialCommand>
+ *     
+ * if additional position...
+ * description skill note
+ * <BSCAddPosition:top>    // Add special command under top
+ * <BSCAddPosition:attack> // Add special command under attack
+ * <BSCAddPosition:skill>  // Add special command under skill
+ * <BSCAddPosition:guard>  // Add special command under guard
+ * <BSCAddPosition:item>   // Add special command under item
  *
  * Skill visible condition
  * description skill note
@@ -66,6 +75,7 @@
  *
  * @param 追加位置
  * @desc 特殊コマンドの挿入位置です。指定対象の下に挿入されます。
+ * スキルごとに追加位置を指定していない場合のみ有効です。
  * 先頭 or 攻撃 or スキル or 防御 or アイテム
  * @default 攻撃
  *
@@ -94,6 +104,14 @@
  * ※ 特殊コマンドに設定したスキルを通常のスキルウィンドウに
  * 表示させないようにするには、スキルタイプを「なし」に設定してください。
  *
+ * 特殊コマンドが追加される位置を細かく指定したい場合は
+ * [スキル]のメモ欄に以下の通り記述してください。
+ * <BSC追加位置:先頭>     // 先頭に追加されます。
+ * <BSC追加位置:攻撃>     // 攻撃の下に追加されます。
+ * <BSC追加位置:スキル>   // スキルの下に追加されます。
+ * <BSC追加位置:防御>     // 防御の下に追加されます。
+ * <BSC追加位置:アイテム> // アイテムの下に追加されます。
+ * 
  * 機能2:
  * 特殊コマンドを含めたすべてのコマンドの表示条件を設定することができます。
  * 非表示に設定されたコマンドは、たとえ使用条件を満たしていても
@@ -125,7 +143,17 @@
  * 注意！
  * すべての行動が選択不可になると戦闘の進行が止まりますのでご注意ください。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * プラグインコマンド詳細
+ *  イベントコマンド「プラグインコマンド」から実行。
+ *  （パラメータの間は半角スペースで区切る）
+ *
+ *  ・[BSC_コマンド入れ替え]通常の4コマンドの表示順を任意で入れ替えます。
+ *   BSC_コマンド入れ替え 攻撃 アイテム 防御 スキル
+ *   BSC_REPLACEMENT_COMMAND item guard skill attack
+ *
+ *  ・[BSC_コマンドリセット]通常の4コマンドの表示順をデフォルトに戻します。
+ *   BSC_コマンドリセット
+ *   BSC_RESET_COMMAND
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -141,6 +169,10 @@
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
         return value == null ? '' : value;
+    };
+
+    var getCommandName = function (command) {
+        return (command || '').toUpperCase();
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -178,17 +210,17 @@
     };
 
     var getArgString = function (arg, upperFlg) {
-        arg = convertEscapeCharactersAndEval(arg);
+        arg = convertEscapeCharactersAndEval(arg, false);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
     var getArgNumber = function (arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharactersAndEval(arg), 10) || 0).clamp(min, max);
+        return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
     };
 
-    var convertEscapeCharactersAndEval = function(text) {
+    var convertEscapeCharactersAndEval = function(text, evalFlg) {
         if (text === null || text === undefined) text = '';
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
@@ -207,7 +239,7 @@
             return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return eval(text);
+        return evalFlg ? eval(text) : text;
     };
 
     //=============================================================================
@@ -218,6 +250,61 @@
     var paramCommandFlexible    = getParamBoolean(['CommandFlexible', 'コマンド表示行数可変']);
     var paramThroughWindow      = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
 
+    //=============================================================================
+    // Game_Interpreter
+    //  プラグインコマンドを追加定義します。
+    //=============================================================================
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        try {
+            this.pluginCommandBattleSpecialCommand(command, args);
+        } catch (e) {
+            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
+                var window = require('nw.gui').Window.get();
+                var devTool = window.showDevTools();
+                devTool.moveTo(0, 0);
+                devTool.resizeTo(Graphics.width, Graphics.height);
+                window.focus();
+            }
+            console.log('プラグインコマンドの実行中にエラーが発生しました。');
+            console.log('- コマンド名 　: ' + command);
+            console.log('- コマンド引数 : ' + args);
+            console.log('- エラー原因   : ' + e.toString());
+        }
+    };
+
+    Game_Interpreter.prototype.pluginCommandBattleSpecialCommand = function (command, args) {
+        switch (getCommandName(command)) {
+            case 'BSC_コマンド入れ替え' :
+            case 'BSC_REPLACEMENT_COMMAND' :
+                var actorCommands = [];
+                args.forEach(function (arg) {
+                    if (arg) actorCommands.push(getArgString(arg).toLowerCase());
+                }.bind(this));
+                $gameSystem.setReplacementCommands(actorCommands);
+                break;
+            case 'BSC_コマンドリセット' :
+            case 'BSC_RESET_COMMAND' :
+                $gameSystem.setReplacementCommands(null);
+                break;
+        }
+    };
+
+    var _Game_System_initialize = Game_System.prototype.initialize;
+    Game_System.prototype.initialize = function() {
+        _Game_System_initialize.apply(this, arguments);
+        this._replacementCommands = null;
+    };
+
+    Game_System.prototype.setReplacementCommands = function(value) {
+        if (Array.isArray(value) || value === null) this._replacementCommands = value;
+    };
+
+    Game_System.prototype.getReplacementCommands = function() {
+        return this._replacementCommands;
+    };
+    
     //=============================================================================
     // Game_Actor
     //  特殊コマンドの追加と、行動の表示判定を追加定義します。
@@ -271,34 +358,71 @@
     // Window_ActorCommand
     //  特殊コマンドの追加と、行動の表示判定を追加定義します。
     //=============================================================================
+    Window_ActorCommand._commandNameTop    = ['top', '先頭'];
+    Window_ActorCommand._commandNameAttack = ['attack', '攻撃'];
+    Window_ActorCommand._commandNameSkill  = ['skill', 'スキル'];
+    Window_ActorCommand._commandNameGuard  = ['guard', '防御'];
+    Window_ActorCommand._commandNameItem   = ['item', 'アイテム'];
+
     var _Window_ActorCommand_makeCommandList = Window_ActorCommand.prototype.makeCommandList;
     Window_ActorCommand.prototype.makeCommandList = function() {
-        _Window_ActorCommand_makeCommandList.apply(this, arguments);
+        if (this._actor) {
+            this.addSpecialCommand(Window_ActorCommand._commandNameTop);
+        }
+        var commands = $gameSystem.getReplacementCommands();
+        if (commands) {
+            if (this._actor) {
+                commands.forEach(function (command) {
+                    if (Window_ActorCommand._commandNameAttack.contains(command)) {
+                        this.addAttackCommand();
+                    }
+                    if (Window_ActorCommand._commandNameSkill.contains(command)) {
+                        this.addSkillCommands();
+                    }
+                    if (Window_ActorCommand._commandNameGuard.contains(command)) {
+                        this.addGuardCommand();
+                    }
+                    if (Window_ActorCommand._commandNameItem.contains(command)) {
+                        this.addItemCommand();
+                    }
+                }.bind(this));
+            }
+        } else {
+            _Window_ActorCommand_makeCommandList.apply(this, arguments);
+        }
         if (this._list.length > 0 && paramCommandFlexible) {
             this.height = this.fittingHeight(this._list.length);
             this.y = Graphics.boxHeight - this.height;
         }
     };
 
-    Window_ActorCommand.prototype.addSpecialCommand = function() {
+    Window_ActorCommand.prototype.addSpecialCommand = function(positionNames) {
+        if (positionNames.contains(paramAdditionalPosition)) this.addSpecialCommandSub();
+        this.addSpecialCommandSub(positionNames);
+    };
+
+    Window_ActorCommand.prototype.addSpecialCommandSub = function(positionNames) {
+        if (!positionNames) positionNames = [''];
         this._actor.specialSkills().forEach(function(skill) {
-            this.addCommand(skill.name, 'special', this._actor.canUse(skill), skill.id);
+            var addPosition = (getMetaValues(skill, ['追加位置', 'AddPosition']) || '').toLowerCase();
+            if (positionNames.contains(addPosition)) {
+                this.addCommand(skill.name, 'special', this._actor.canUse(skill), skill.id);
+            }
         }.bind(this));
     };
 
     var _Window_ActorCommand_addAttackCommand = Window_ActorCommand.prototype.addAttackCommand;
     Window_ActorCommand.prototype.addAttackCommand = function() {
-        if (['top', '先頭'].contains(paramAdditionalPosition)) this.addSpecialCommand();
         if (this._actor.isVisibleAttack()) {
             _Window_ActorCommand_addAttackCommand.apply(this, arguments);
         }
-        if (['attack', '攻撃'].contains(paramAdditionalPosition)) this.addSpecialCommand();
+        this.addSpecialCommand(Window_ActorCommand._commandNameAttack);
     };
 
     var _Window_ActorCommand_addSkillCommands = Window_ActorCommand.prototype.addSkillCommands;
     Window_ActorCommand.prototype.addSkillCommands = function() {
         _Window_ActorCommand_addSkillCommands.apply(this, arguments);
-        if (['skill', 'スキル'].contains(paramAdditionalPosition)) this.addSpecialCommand();
+        this.addSpecialCommand(Window_ActorCommand._commandNameSkill);
     };
 
     var _Window_ActorCommand_addGuardCommand = Window_ActorCommand.prototype.addGuardCommand;
@@ -306,7 +430,7 @@
         if (this._actor.isVisibleGuard()) {
             _Window_ActorCommand_addGuardCommand.apply(this, arguments);
         }
-        if (['guard', '防御'].contains(paramAdditionalPosition)) this.addSpecialCommand();
+        this.addSpecialCommand(Window_ActorCommand._commandNameGuard);
     };
 
     var _Window_ActorCommand_addItemCommand = Window_ActorCommand.prototype.addItemCommand;
@@ -314,7 +438,7 @@
         if (this._actor.isVisibleItem()) {
             _Window_ActorCommand_addItemCommand.apply(this, arguments);
         }
-        if (['item', 'アイテム'].contains(paramAdditionalPosition)) this.addSpecialCommand();
+        this.addSpecialCommand(Window_ActorCommand._commandNameItem);
     };
 
     var _Window_ActorCommand_numVisibleRows = Window_ActorCommand.prototype.numVisibleRows;
