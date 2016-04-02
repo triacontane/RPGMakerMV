@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/04/02 liply_memoryleak_patch.jsとの競合を解消
 // 1.0.1 2016/03/28 一部のウィンドウのプロパティを変更しようとするとエラーが発生する現象の修正
 // 1.0.0 2016/03/13 初版
 // 0.9.0 2016/03/05 ベータ版
@@ -600,14 +601,16 @@ var $dataContainerProperties = null;
         Scene_Base.prototype.createGridSprite = function() {
             var size = paramGridSize;
             if (size === 0) return;
+            var width = Graphics.boxWidth;
+            var height = Graphics.boxHeight;
             this._gridSprite = new Sprite();
-            this._gridSprite.setFrame(0, 0, this.width, this.height);
-            var bitmap = new Bitmap(this.width, this.height);
-            for (var x = 0; x < this.width; x += size) {
-                bitmap.fillRect(x, 0, 1, this.height, 'rgba(255,255,255,1.0)');
+            this._gridSprite.setFrame(0, 0, width, height);
+            var bitmap = new Bitmap(width, height);
+            for (var x = 0; x < width; x += size) {
+                bitmap.fillRect(x, 0, 1, height, 'rgba(255,255,255,1.0)');
             }
-            for (var y = 0; y < this.height; y += size) {
-                bitmap.fillRect(0, y, this.width, 1, 'rgba(255,255,255,1.0)');
+            for (var y = 0; y < height; y += size) {
+                bitmap.fillRect(0, y, width, 1, 'rgba(255,255,255,1.0)');
             }
             this._gridSprite.bitmap = bitmap;
             this._gridSprite.moveDisable = true;
