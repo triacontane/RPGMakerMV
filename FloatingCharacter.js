@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/04/06 本プラグインを適用していないセーブデータをロードしたときも、正しく動作するよう修正
 // 1.1.0 2016/04/03 一定以上の高度の場合のみ通行可能になる地形タグとリージョンを指定できる機能を追加
 //                  着地可能な場合のみ着地する機能を追加、指定されたキャラクターが浮遊中かどうかの判定を追加
 // 1.0.2 2016/03/31 隊列歩行でない場合のフォロワーや画像が指定されていないイベントでも影が表示される不具合を修正
@@ -233,14 +234,18 @@
     var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
+        this.initFloatingInfo();
+    };
+    Game_CharacterBase.prototype.isLowest      = Game_Vehicle.prototype.isLowest;
+    Game_CharacterBase.prototype.isHighest     = Game_Vehicle.prototype.isHighest;
+    Game_CharacterBase.prototype.shadowOpacity = Game_Vehicle.prototype.shadowOpacity;
+
+    Game_CharacterBase.prototype.initFloatingInfo = function() {
         this._altitude           = 0;
         this._altitudeAnimeCount = 0;
         this._maxAltitude        = 0;
         this._needFloat          = false;
     };
-    Game_CharacterBase.prototype.isLowest      = Game_Vehicle.prototype.isLowest;
-    Game_CharacterBase.prototype.isHighest     = Game_Vehicle.prototype.isHighest;
-    Game_CharacterBase.prototype.shadowOpacity = Game_Vehicle.prototype.shadowOpacity;
 
     var _Game_CharacterBase_isMapPassable = Game_CharacterBase.prototype.isMapPassable;
     Game_CharacterBase.prototype.isMapPassable = function(x, y, d) {
@@ -313,6 +318,9 @@
     };
 
     Game_CharacterBase.prototype.float = function(waitFlg, max) {
+        if (!this.hasOwnProperty('_altitude') || isNaN(this._altitude)) {
+            this.initFloatingInfo();
+        }
         if (!max) max = $gameMap.tileHeight() / 2;
         this._needFloat   = true;
         this._maxAltitude = max;

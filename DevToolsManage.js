@@ -116,6 +116,10 @@
  * @desc 戦闘を勝利で強制終了するキーです。(F1～F12)。
  * @default F7
  *
+ * @param 処理時間計測キー
+ * @desc 処理時間を計測してログに書き込むキーです。(F1～F12)。
+ * @default F6
+ *
  * @param FPS表示
  * @desc 初期状態で画面左上にFPSを表示します。（FPS/MS/OFF）
  * @default OFF
@@ -232,6 +236,7 @@ var $gameCurrentWindow = null;
     var funcKeyMoveEdge  = getParamString(['FuncKeyMoveEdge', '画面の左寄せキー']);
     var funcKeyRapidGame = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
     var funcKeyVictory   = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
+    var funcKeyCheck     = getParamString(['FuncKeyCheck', '処理時間計測キー']);
     var showFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
     var cutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
     var rapidStart       = getParamBoolean(['RapidStart', '高速開始']);
@@ -241,11 +246,19 @@ var $gameCurrentWindow = null;
     // SceneManager
     //  状況に応じてデベロッパツールを自動制御します。
     //=============================================================================
+    SceneManager._processTimeStack = [];
     var _SceneManager_initialize = SceneManager.initialize;
     SceneManager.initialize = function() {
         _SceneManager_initialize.call(this);
         $gameCurrentWindow = SceneManager.getNwjsWindow();
         Graphics.setFPSMeter(showFPS);
+    };
+
+    var _SceneManager_updateMain = SceneManager.updateMain;
+    SceneManager.updateMain = function() {
+        _SceneManager_updateMain.apply(this, arguments);
+        var newTime = this._getTimeInMs();
+        this._processTimeStack.push(newTime - this._currentTime);
     };
 
     var _SceneManager_catchException = SceneManager.catchException;
@@ -390,6 +403,7 @@ var $gameCurrentWindow = null;
     // Scene_Base
     //  マップの高速化を提供します。
     //=============================================================================
+    
     var _Scene_Base_fadeSpeed = Scene_Base.prototype.fadeSpeed;
     Scene_Base.prototype.fadeSpeed = function () {
         return SceneManager.isRapid() ? 1 : _Scene_Base_fadeSpeed.apply(this, arguments);
