@@ -6,7 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.3.4 2016/04/08 高速でマウスオーバーとマウスアウトを繰り返した場合にイベントが正しく取得できない問題を修正
+// 1.3.4 2016/04/08 ピクチャが隣接する状態でマウスオーバーとマウスアウトが正しく機能しない場合がある問題を修正
 // 1.3.3 2016/03/19 トリガー条件を満たした場合に以後のタッチ処理を抑制するパラメータを追加
 // 1.3.2 2016/02/28 処理の負荷を少し軽減
 // 1.3.1 2016/02/21 トリガーにマウスを押したまま移動を追加
@@ -472,9 +472,11 @@
     };
 
     Spriteset_Base.prototype._callTouchPicturesSub = function(containerChildren) {
-        containerChildren.forEach(function(picture) {
+        for (var i = 0, n = containerChildren.length; i < n; i++) {
+            var picture = containerChildren[i];
             if (typeof picture.callTouch === 'function') picture.callTouch();
-        }, this);
+            if ($gameTemp.pictureCommonId() > 0) break;
+        }
     };
 
     //=============================================================================
@@ -511,8 +513,6 @@
     };
 
     Sprite_Picture.prototype.updateMouseMove = function() {
-        this._onMouse  = false;
-        this._outMouse = false;
         if (this.isTouchable() && this.isTouchPosInRect() && !this.isTransparent()) {
             if (!this._wasOnMouse) {
                 this._onMouse    = true;
@@ -553,6 +553,8 @@
             if (handler && commandIds[i] && handler.call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
                 if (paramSuppressTouch) TouchInput.suppressEvents();
                 if (i === 3) TouchInput._pressedTime = -60;
+                if (i === 4) this._onMouse  = false;
+                if (i === 5) this._outMouse = false;
                 $gameTemp.setPictureCallInfo(commandIds[i], this._pictureId);
             }
         }
