@@ -206,7 +206,7 @@
     Game_Interpreter.prototype.command311 = function() {
         if (!$gameSystem.isSuppressAutoPopup()) {
             var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.startDamagePopup(value, false, false);
+            $gamePlayer.startDamagePopup(-value, false, false);
         }
         return _Game_Interpreter_command311.apply(this, arguments);
     };
@@ -215,7 +215,7 @@
     Game_Interpreter.prototype.command312 = function() {
         if (!$gameSystem.isSuppressAutoPopup()) {
             var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.startDamagePopup(value, false, true);
+            $gamePlayer.startDamagePopup(-value, false, true);
         }
         return _Game_Interpreter_command312.apply(this, arguments);
     };
@@ -224,7 +224,7 @@
     Game_Interpreter.prototype.command326 = function() {
         if (!$gameSystem.isSuppressAutoPopup()) {
             var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.startDamagePopup(value, false, false);
+            $gamePlayer.startDamagePopup(-value, false, false);
         }
         return _Game_Interpreter_command326.apply(this, arguments);
     };
