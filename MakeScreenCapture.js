@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.5 2016/04/10 画像の出力先を管理画面のパラメータとして設定できるよう修正
 // 1.1.4 2016/03/31 画像の出力先を絶対パスで指定できるよう修正
 // 1.1.3 2016/03/15 文章のスクロール表示が正しくキャプチャできない問題を修正
 // 1.1.2 2016/03/01 pngとjpegの形式ごとのファンクションキーを割り当てるよう修正
@@ -37,6 +38,11 @@
  * @desc 画像のファイル名です。
  * プラグインコマンドから実行した場合は参照されません。
  * @default image
+ *
+ * @param 出力場所
+ * @desc ファイルの出力パスです。相対パス、絶対パスが利用できます。
+ * 区切り文字は「/」もしくは「\」で指定してください。
+ * @default /captures
  *
  * @param 保存形式
  * @desc 画像の保存形式です。(png/jpeg)
@@ -121,8 +127,6 @@
         signature: {size:28, face:'GameFont', color:'rgba(255,255,255,1.0)', align:'right'},
         /* 効果音情報です。ファイル名はプラグイン管理画面から取得します */
         se: {volume:90, pitch:100, pan:0},
-        /* ファイルの出力場所です(区切りは「/」で指定してください) */
-        location:'/captures',
         /* jpeg形式で出力したときの品質です(0.1...1.0) */
         jpegQuality:0.9,
         /* テストプレー以外での動作を無効にするフラグです */
@@ -177,6 +181,7 @@
     var paramFuncKeyPngCapture  = getParamString(['FuncKeyPngCapture', 'PNGキャプチャキー']);
     var paramFuncKeyJpegCapture = getParamString(['FuncKeyJpegCapture', 'JPEGキャプチャキー']);
     var paramFileName           = getParamString(['FileName', 'ファイル名']);
+    var paramLocation           = getParamString(['Location', '出力場所']);
     var paramFileFormat         = getParamString(['FileFormat', '保存形式']).toLowerCase();
     var paramSignature          = getParamString(['Signature', '署名']);
     var paramNumberDigit        = getParamNumber(['NumberDigit', '連番桁数']);
@@ -432,8 +437,7 @@
     };
 
     StorageManager.localImgFileDirectoryPath = function() {
-        var path = settings.location;
-        alert(path);
+        var path = paramLocation;
         if (!path.match(/^[A-Z]\:/)) {
             path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, path);
             if (path.match(/^\/([A-Z]\:)/)) {
@@ -447,7 +451,7 @@
     StorageManager.getLocalImgFileName = function(fileName) {
         if (paramTimeStamp) {
             var date = new Date();
-            return fileName + '_' + date.getFullYear() + (date.getMonth() + 1).padZero(2) + date.getDate() +
+            return fileName + '_' + date.getFullYear() + (date.getMonth() + 1).padZero(2) + date.getDate().padZero(2) +
                     '_' + date.getHours().padZero(2) + date.getMinutes().padZero(2) + date.getSeconds().padZero(2);
         } else {
             var number = SceneManager.captureNumber;
