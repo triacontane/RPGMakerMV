@@ -9,7 +9,7 @@ http://opensource.org/licenses/mit-license.php
 より品質を高めるため、あるいはご自身の環境に合わせるための改変はむしろ推奨します。  
 ただし、すべてご自身の責任のもとで行ってください。  
 
-なお、バグ修正プラグインにはライセンス表示はありません。公式が正式に修正した場合、そちらの適用を推奨します。  
+なお、バグ修正プラグインにはライセンス表示はありません。一切の制限なしで利用できます。公式が正式に修正した場合、そちらの適用を推奨します。  
 
 ##プラグインの説明 Description of plugins
 プラグインの一覧とそれぞれの説明です。下にあるものほど新しいプラグインです。  
@@ -218,4 +218,39 @@ png、jpegから形式を選んだり、ファイル名に連番やタイムス�
 
 53. ポインタ追跡プラグイン[PlayerPointerTurn.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PlayerPointerTurn.js)  
 移動可能な場合にプレイヤーがマウスポインタの方を向きます。  
+
+54. キャラクターのダメージポッププラグイン[CharacterPopupDamage.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CharacterPopupDamage.js)  
+マップ画面でイベントやプレイヤーに数字をポップアップさせる機能を提供します。マップ上でのダメージや回復の演出に利用できます。演出は戦闘時のものと同一です。  
+
+55. 戦闘BGM継続演奏プラグイン[BattleBgmContinue.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BattleBgmContinue.js)  
+戦闘BGMを演奏する際に、前回と同じ戦闘BGMであれば、前回演奏の終了時から演奏を再開します。  
+
+56. FilefoxのdrawTextエラー修正プラグイン[BugFixBitmapMaxWidth.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BugFixBitmapMaxWidth.js)  
+FilefoxでBitmap.prototype.drawTextの引数「maxWidth」に負の値が設定された場合に発生するUnknownErrorを回避します。  
+
+57. 最大セーブファイル数変更プラグイン[CustomizeMaxSaveFile.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CustomizeMaxSaveFile.js)  
+最大セーブファイル数をパラメータで指定した値に変更します。  
+
+58. イベント高速化禁止プラグイン[DisableFastForward.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/DisableFastForward.js)  
+決定ボタンやマウスをクリックし続けた場合のイベントの高速スキップを無効化できます。プラグインコマンドから禁止/許可の設定ができます。設定値はセーブデータに保存されます。  
+
+59. キャラクターの浮遊プラグイン[FloatingCharacter.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/FloatingCharacter.js)  
+マップ上でプレイヤーやイベント等のキャラクターを浮遊させます。演出のほか地形タグやリージョンが通行可能になったり、ダメージ床を無視したりできます。  
+
+60. メッセージ速度調整プラグイン[MessageSpeedCustomize.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageSpeedCustomize.js)  
+メッセージ表示速度を指定した変数の値をもとに調整できるようになります。「オプション任意項目作成プラグイン」と組み合わせてオプション項目にすることもできます。  
+
+61. タイトル画面変更プラグイン[TitleImageChange.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/TitleImageChange.js)  
+ゲームの進行度に応じてタイトル画面の画像を変更します。進行度には任意の変数が指定でき、全セーブデータの中の最大値が反映されます。  
+
+62. 装備変更時の変数操作プラグイン[TriggerOnEquipAndState.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/TriggerOnEquipAndState.js)  
+装備またはステートの着脱時に、変数およびスイッチを操作できるようになります。着脱時に、スイッチの場合はON/OFFが切り替わり、変数の場合は値が増減します。  
+操作対象および設定値には制御文字およびJavaScript計算式を利用できます。  
+
+63. 変数名およびコモンイベント名のID自動付与プラグイン[TitleImageChange.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/TitleImageChange.js)  
+テストプレー開始時にスイッチ、変数、コモンイベントの名称の先頭にIDを自動付与して再保存します。MVのエディタには変数やコモンイベントにIDが表示されないので見にくいと思っている方はこちらをご利用ください。  
+
+64. GUI画面デザインプラグイン[GraphicalDesignMode.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/GraphicalDesignMode.js)  
+メニュー画面や戦闘画面など各画面のウィンドウや画像の表示位置をドラッグ＆ドロップで微調整して画面の外観をグラフィカルに設計できます。横幅、高さ、余白、背景画像なども画面上で変更できます。  
+
 
