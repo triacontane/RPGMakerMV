@@ -46,6 +46,7 @@
  *
  * ※公開中の「オプション任意項目作成プラグイン」と組み合わせれば
  * 対象の変数をオプション画面から操作できます。
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CustomizeConfigItem.js
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -80,6 +81,10 @@
     //=============================================================================
     var paramVariableSpeed  = getParamNumber(['VariableSpeed', '表示速度変数'], 1, 5000);
 
+    //=============================================================================
+    // Window_Message
+    //  メッセージの表示間隔を調整します。
+    //=============================================================================
     var _Window_Message_updateMessage = Window_Message.prototype.updateMessage;
     Window_Message.prototype.updateMessage = function() {
         var speed = $gameVariables.value(paramVariableSpeed);
