@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/04/14 処理を適用するピクチャを範囲指定もしくは複数指定する機能を追加
 // 1.2.0 2016/03/19 表示中のすべてのピクチャに処理を適用するコマンドを追加
 // 1.1.2 2016/01/24 ピクチャの最大表示数を設定できる機能を追加
 // 1.1.1 2015/12/20 番号の変数指定の初期値を有効/無効で設定できるよう修正
@@ -48,7 +49,8 @@
  * 未使用ファイルとして除外される可能性があります。
  * その場合、削除されたファイルを入れ直す等の対応が必要です。
  *
- * ３．以下のイベントコマンドの対象が「表示している全てのピクチャ」になります。
+ * ３．以下のイベントコマンドの対象が「複数のピクチャ」になります。
+ * 　　詳細は各プラグインコマンドの説明を確認してください。
  *  ・ピクチャの移動
  *  ・ピクチャの色調変更
  *  ・ピクチャの回転
@@ -75,6 +77,18 @@
  *  1回実行すると設定はもとに戻ります。
  *  例 P_TARGET_ALL
  *
+ *  P_TARGET_RANGE [開始番号] [終了番号] :
+ *  ピクチャ関連のイベントコマンドの対象を
+ *  「開始番号から終了番号までのピクチャ」に変更します。
+ *  1回実行すると設定はもとに戻ります。
+ *  例 P_TARGET_RANGE 3 5 // 3番から5番までの表示しているピクチャが対象
+ *
+ *  P_TARGET_MULTI [ピクチャ番号] :
+ *  ピクチャ関連のイベントコマンドの対象を
+ *  「指定したすべてのピクチャ」に変更します。カンマで区切ってください。
+ *  1回実行すると設定はもとに戻ります。
+ *  例 P_TARGET_MULTI 3,5,6,\v[1] // 3番、5番、6番、変数「1」番のピクチャが対象
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -100,6 +114,7 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -113,20 +128,40 @@
         return (command || '').toUpperCase();
     };
 
-    var getArgString = function (args, upperFlg) {
-        args = convertEscapeCharacters(args);
-        return upperFlg ? args.toUpperCase() : args;
+    var getArgString = function (arg, upperFlg) {
+        arg = convertEscapeCharactersAndEval(arg, false);
+        return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1])).padZero(arguments[2]);
-        }.bind(this));
+    var getArgNumber = function (arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
+    };
+
+    var getArgArrayString = function (args, upperFlg) {
+        var values = getArgString(args, upperFlg).split(',');
+        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
+        return values;
+    };
+
+    var getArgArrayNumber = function (args, min, max) {
+        var values = getArgArrayString(args, false);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        for (var i = 0; i < values.length; i++) values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
+        return values;
+    };
+
+    var convertEscapeCharactersAndEval = function(text, evalFlg) {
+        if (text === null || text === undefined) text = '';
         var window = SceneManager._scene._windowLayer.children[0];
-        return window ? window.convertEscapeCharacters(text) : text;
+        if (window) {
+            var result = window.convertEscapeCharacters(text);
+            return evalFlg ? eval(result) : result;
+        } else {
+            return text;
+        }
     };
 
     //=============================================================================
@@ -149,6 +184,12 @@
                 break;
             case 'P_TARGET_ALL':
                 $gameScreen.setPictureTargetAll();
+                break;
+            case 'P_TARGET_RANGE':
+                $gameScreen.setPictureTargetRange(getArgNumber(args[0], 1), getArgNumber(args[1], 1));
+                break;
+            case 'P_TARGET_MULTI':
+                $gameScreen.setPictureTargetMulti(getArgArrayNumber(args[0], 1));
                 break;
         }
     };
@@ -209,20 +250,34 @@
     Game_Screen.prototype.clear = function() {
         _Game_Screen_clear.call(this);
         this.dPictureFileName = null;
+        this._pictureTargetStart = null;
+        this._pictureTargetEnd = null;
+        this._pictureTargetNumbers = null;
     };
 
     Game_Screen.prototype.setPictureTargetAll = function() {
-        this._pictureTargetAll = true;
+        this._pictureTargetAll = 1;
+    };
+
+    Game_Screen.prototype.setPictureTargetRange = function(start, end) {
+        this._pictureTargetAll = 2;
+        this._pictureTargetStart = start;
+        this._pictureTargetEnd = end;
+    };
+
+    Game_Screen.prototype.setPictureTargetMulti = function(args) {
+        this._pictureTargetAll = 3;
+        this._pictureTargetNumbers = args;
     };
 
     var _Game_Screen_movePicture = Game_Screen.prototype.movePicture;
     Game_Screen.prototype.movePicture = function(pictureId, origin, x, y, scaleX,
                                                  scaleY, opacity, blendMode, duration) {
-        if (this._pictureTargetAll) {
+        if (this._pictureTargetAll > 0) {
             this.iteratePictures(function(picture) {
                 picture.move(origin, x, y, scaleX, scaleY, opacity, blendMode, duration);
             }.bind(this));
-            this._pictureTargetAll = false;
+            this._pictureTargetAll = 0;
         } else {
             _Game_Screen_movePicture.apply(this, arguments);
         }
@@ -230,11 +285,11 @@
 
     var _Game_Screen_rotatePicture = Game_Screen.prototype.rotatePicture;
     Game_Screen.prototype.rotatePicture = function(pictureId, speed) {
-        if (this._pictureTargetAll) {
+        if (this._pictureTargetAll > 0) {
             this.iteratePictures(function(picture) {
                 picture.rotate(speed);
             }.bind(this));
-            this._pictureTargetAll = false;
+            this._pictureTargetAll = 0;
         } else {
             _Game_Screen_rotatePicture.apply(this, arguments);
         }
@@ -242,11 +297,11 @@
 
     var _Game_Screen_tintPicture = Game_Screen.prototype.tintPicture;
     Game_Screen.prototype.tintPicture = function(pictureId, tone, duration) {
-        if (this._pictureTargetAll) {
+        if (this._pictureTargetAll > 0) {
             this.iteratePictures(function(picture) {
                 picture.tint(tone, duration);
             }.bind(this));
-            this._pictureTargetAll = false;
+            this._pictureTargetAll = 0;
         } else {
             _Game_Screen_tintPicture.apply(this, arguments);
         }
@@ -259,7 +314,7 @@
                 var realPictureId = this.realPictureId(pictureId);
                 this._pictures[realPictureId] = null;
             }.bind(this));
-            this._pictureTargetAll = false;
+            this._pictureTargetAll = 0;
         } else {
             _Game_Screen_erasePicture.apply(this, arguments);
         }
@@ -268,7 +323,20 @@
     Game_Screen.prototype.iteratePictures = function(callBack) {
         for (var i = 1, n = this.maxPictures(); i <= n; i++) {
             var picture = this.picture(i);
-            if (picture) callBack.call(this, picture, i);
+            if (picture && this.isTargetPicture(i)) {
+                callBack.call(this, picture, i);
+            }
+        }
+    };
+
+    Game_Screen.prototype.isTargetPicture = function(number) {
+        switch (this._pictureTargetAll) {
+            case 2:
+                return this._pictureTargetStart <= number && this._pictureTargetEnd >= number;
+            case 3:
+                return this._pictureTargetNumbers.contains(number);
+            default:
+                return true;
         }
     };
 
