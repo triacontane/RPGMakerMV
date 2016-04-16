@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2016/04/16 戦闘中にメンバーが入れ替わった場合にエラーが発生する場合がある問題を修正
 // 1.1.2 2016/02/13 他のプラグインと併用できるように、ウィンドウの表示位置を調整する機能を追加
 //                  ウィンドウの表示順をヘルプウィンドウの下に変更
 // 1.1.1 2015/12/28 任意のエネミーグラフィック画像を指摘できる機能を追加
@@ -170,7 +171,6 @@
         var y = isParamExist(paramsY) ? getParamNumber(paramsY) : Graphics.boxHeight - this.fittingHeight(4) - height;
         Window_Base.prototype.initialize.call(this, x, y, width, height);
         this.hide();
-        this.loadImages();  // 非同期処理のためあらかじめロードしておく
         this.createFaceSprite();
         this.setWindowVisible();
         this._actorId = 0;
@@ -191,20 +191,6 @@
             this.opacity = 0;
             this._faceSprite.y += this.padding;
         }
-    };
-
-    Window_Face.prototype.loadImages = function() {
-        $gameParty.members().forEach(function(actor) {
-            var meta = actor.actor().meta;
-            if (meta != null && meta.face_picture) {
-                ImageManager.loadPicture(getArgString(meta.face_picture));
-            } else if (meta != null && meta.face_enemy_id) {
-                var enemyId = getArgNumber(meta.face_enemy_id, 1, $dataEnemies.length - 1);
-                ImageManager.loadEnemy($dataEnemies[enemyId].battlerName);
-            } else {
-                ImageManager.loadFace(actor.faceName());
-            }
-        }, this);
     };
 
     Window_Face.prototype.update = function() {
@@ -235,27 +221,23 @@
 
     Window_Face.prototype.drawPicture = function(fileName, loadHandler) {
         var bitmap = loadHandler(fileName);
-        if (bitmap.isReady()) {
+        bitmap.addLoadListener(function() {
             var scale = Math.min(Window_Base._faceWidth / bitmap.width, Window_Base._faceHeight / bitmap.height, 1.0);
             this._faceSprite.scale.x = scale;
             this._faceSprite.scale.y = scale;
             this._faceSprite.bitmap  = bitmap;
-        } else {
-            throw new Error('何らかの原因で画像' + fileName + 'のロードに失敗しました。');
-        }
+        }.bind(this));
     };
 
     Window_Face.prototype.drawFace = function(actor) {
         var bitmap = ImageManager.loadFace(actor.faceName());
-        if (bitmap.isReady()) {
+        bitmap.addLoadListener(function() {
             this._faceSprite.scale.x = 1.0;
             this._faceSprite.scale.y = 1.0;
             this._faceSprite.bitmap  = bitmap;
             var sx = actor.faceIndex() % 4 * Window_Base._faceWidth;
             var sy = Math.floor(actor.faceIndex() / 4) * Window_Base._faceHeight;
             this._faceSprite.setFrame(sx, sy, Window_Base._faceWidth, Window_Base._faceHeight);
-        } else {
-            throw new Error('何らかの原因で画像' + actor.faceName() + 'のロードに失敗しました。');
-        }
+        }.bind(this));
     };
 })();
