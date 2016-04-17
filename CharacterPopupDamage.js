@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/04/17 ポップアップ無効化のプラグインコマンドが機能していなかった問題を修正
 // 1.0.1 2016/04/10 HPの増減との連動で増やすと減らすが逆に解釈されていたのを修正
 // 1.0.0 2016/04/09 初版
 // ----------------------------------------------------------------------------
@@ -194,11 +195,11 @@
                 break;
             case 'CPD_VALID' :
             case 'ポップアップ有効化':
-                this.setSuppressAutoPopup(false);
+                $gameSystem.setSuppressAutoPopup(false);
                 break;
             case 'CPD_INVALID' :
             case 'ポップアップ無効化':
-                this.setSuppressAutoPopup(true);
+                $gameSystem.setSuppressAutoPopup(true);
                 break;
         }
     };
