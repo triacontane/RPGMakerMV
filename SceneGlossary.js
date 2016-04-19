@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/04/20 カテゴリごとに分類して表示できる機能を追加
 // 1.0.0 2016/04/17 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -17,9 +18,13 @@
  * @plugindesc Glossary Plugin
  * @author triacontane
  *
+ * @param UseCategory
+ * @desc 用語をカテゴリごとに分けて表示します。
+ * @default OFF
+ *
  * @param CommandName
  * @desc メニュー画面に表示されるコマンド名です。空欄にすると追加されなくなります。
- * @default 用語辞典
+ * @default Glossary
  *
  * @param ItemType
  * @desc 用語扱いとするアイテムの隠しアイテムタイプ（A or B）
@@ -39,7 +44,11 @@
  *
  * @param HelpText
  * @desc 画面上のヘルプ画面に表示するテキストです。未指定の場合、ヘルプウィンドウは非表示になります。
- * @default ゲーム中に登場する用語を解説しています。
+ * @default Select the Words
+ *
+ * @param HelpText2
+ * @desc 用語カテゴリ選択時のヘルプ画面に表示するテキストです。
+ * @default Select the category
  *
  * @param AutoResizePicture
  * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
@@ -75,12 +84,15 @@
  *
  * @help ゲームに登場する用語を閲覧できる画面を追加します。
  * 用語を解説する画像およびテキスト説明がウィンドウに表示されます。
- * 用語は「隠しアイテム」としてアイテムのデータベースにあからじめ
- * 登録しておきます。
+ * 用語は「隠しアイテム」としてアイテムのデータベースにあからじめ登録しておきます。
  *
- * 用語は対象アイテムを取得することで閲覧可能になるほか、
- * 文章の表示の命令中で同一単語が出現した場合に自動的に
- * 登録する機能もあります。
+ * 用語は対象アイテムを取得することで閲覧可能になるほか、文章の表示の命令中で
+ * 同一単語が出現した場合に自動的に登録する機能もあります。
+ *
+ * 用語はすべてを一つのウィンドウで表示する方式と
+ * カテゴリごとに分類して表示する方式が選択できます。
+ * パラメータから表示方法を選択してください。
+ * カテゴリごとに表示する場合はメモ欄に「<SGカテゴリ:カテゴリ名>」を指定してください。
  *
  * メニュー画面およびプラグインコマンドから用語集画面に遷移できます。
  *
@@ -93,6 +105,7 @@
  *
  * 3.「メモ欄」に以下の通り記述(不要な項目は省略可能)
  * <SGDescription:説明文>    // 用語の説明文
+ * <SGCategory:カテゴリ名>   // 用語の属するカテゴリの名称
  * <SGPicture:ファイル名>    // 用語のピクチャのファイル名
  * <SGPicturePosition:text>  // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
@@ -116,6 +129,10 @@
  * @plugindesc ゲーム内用語辞典プラグイン
  * @author トリアコンタン
  *
+ * @param カテゴリ分類
+ * @desc 用語をカテゴリごとに分けて表示します。
+ * @default OFF
+ * 
  * @param コマンド名称
  * @desc メニュー画面に表示されるコマンド名です。空欄にすると追加されなくなります。
  * @default 用語辞典
@@ -137,8 +154,12 @@
  * @default 240
  *
  * @param ヘルプテキスト
- * @desc 画面上のヘルプ画面に表示するテキストです。未指定の場合、ヘルプウィンドウは非表示になります。
+ * @desc 用語リスト選択時のヘルプ画面に表示するテキストです。未指定の場合、ヘルプウィンドウは非表示になります。
  * @default ゲーム中に登場する用語を解説しています。
+ *
+ * @param ヘルプテキスト2
+ * @desc 用語カテゴリ選択時のヘルプ画面に表示するテキストです。
+ * @default カテゴリを選択してください。
  *
  * @param 画像の自動縮小
  * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
@@ -174,12 +195,15 @@
  *
  * @help ゲームに登場する用語を閲覧できる画面を追加します。
  * 用語を解説する画像およびテキスト説明がウィンドウに表示されます。
- * 用語は「隠しアイテム」としてアイテムのデータベースにあからじめ
- * 登録しておきます。
+ * 用語は「隠しアイテム」としてアイテムのデータベースにあからじめ登録しておきます。
  *
- * 用語は対象アイテムを取得することで閲覧可能になるほか、
- * 文章の表示の命令中で同一単語が出現した場合に自動的に
- * 登録する機能もあります。
+ * 用語は対象アイテムを取得することで閲覧可能になるほか、文章の表示の命令中で
+ * 同一単語が出現した場合に自動的に登録する機能もあります。
+ *
+ * 用語はすべてを一つのウィンドウで表示する方式と
+ * カテゴリごとに分類して表示する方式が選択できます。
+ * パラメータから表示方法を選択してください。
+ * カテゴリごとに表示する場合はメモ欄に「<SGカテゴリ:XXX>」を指定してください。
  *
  * メニュー画面およびプラグインコマンドから用語集画面に遷移できます。
  *
@@ -192,6 +216,7 @@
  * 
  * 3.「メモ欄」に以下の通り記述(不要な項目は省略可能)
  * <SG説明:説明文>           // 用語の説明文
+ * <SGカテゴリ:カテゴリ名>   // 用語の属するカテゴリの名称
  * <SGピクチャ:ファイル名>   // 用語のピクチャのファイル名
  * <SGピクチャ位置:text>     // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
@@ -296,8 +321,10 @@ function Scene_Glossary() {
     var paramFontSize          = getParamNumber(['FontSize', 'フォントサイズ'], 0);
     var paramAutoResizePicture = getParamBoolean(['AutoResizePicture', '画像の自動縮小']);
     var paramHelpText          = getParamString(['HelpText', 'ヘルプテキスト']);
+    var paramHelpTextCategory  = getParamString(['HelpText2', 'ヘルプテキスト2']);
     var paramPicturePosition   = getParamString(['PicturePosition', '画像の表示位置']).toLowerCase();
     var paramPictureAlign      = getParamString(['PictureAlign', '画像の揃え']).toLowerCase();
+    var paramUseCategory       = getParamBoolean(['UseCategory', 'カテゴリ分類']);
 
     //=============================================================================
     // Game_Interpreter
@@ -346,10 +373,25 @@ function Scene_Glossary() {
         return item.itypeId === paramItemType === 'B' ? 3 : 2 && getMetaValues(item, ['説明', 'Description']) !== undefined;
     };
 
+    Game_Party.prototype.getGlossaryCategory = function(item) {
+        return getMetaValues(item, ['カテゴリ', 'Category']);
+    };
+
     Game_Party.prototype.getAllGlossaryList = function() {
         return $dataItems.filter(function(item) {
             return item && this.isGlossaryItem(item);
         }.bind(this));
+    };
+
+    Game_Party.prototype.getAllGlossaryCategory = function() {
+        var list = [];
+        this.items().forEach(function (item) {
+            var category = this.getGlossaryCategory(item);
+            if (category && list.indexOf(category) < 0) {
+                list.push(category);
+            }
+        }.bind(this));
+        return list;
     };
 
     Game_Party.prototype.gainGlossaryFromText = function(text) {
@@ -384,7 +426,7 @@ function Scene_Glossary() {
 
     //=============================================================================
     // Scene_Menu
-    //  サウンドテスト画面の呼び出しを追加します。
+    //  用語集画面の呼び出しを追加します。
     //=============================================================================
     var _Scene_Menu_createCommandWindow = Scene_Menu.prototype.createCommandWindow;
     Scene_Menu.prototype.createCommandWindow = function() {
@@ -398,7 +440,7 @@ function Scene_Glossary() {
 
     //=============================================================================
     // Window_MenuCommand
-    //  サウンドテスト画面の呼び出しの選択肢を追加定義します。
+    //  用語集画面の呼び出しの選択肢を追加定義します。
     //=============================================================================
     var _Window_MenuCommand_addOriginalCommands = Window_MenuCommand.prototype.addOriginalCommands;
     Window_MenuCommand.prototype.addOriginalCommands = function() {
@@ -431,16 +473,8 @@ function Scene_Glossary() {
         this.createHelpWindow();
         this.createGlossaryWindow();
         this.createGlossaryListWindow();
-    };
-
-    Scene_Glossary.prototype.createHelpWindow = function() {
-        Scene_MenuBase.prototype.createHelpWindow.call(this);
-        if (paramHelpText) {
-            this.updateHelp();
-        } else {
-            this._helpWindow.visible = false;
-            this._helpWindow.height  = 0;
-        }
+        this.createGlossaryCategoryWindow();
+        this.setInitActivateWindow();
     };
 
     Scene_Glossary.prototype.createGlossaryWindow = function() {
@@ -450,9 +484,15 @@ function Scene_Glossary() {
 
     Scene_Glossary.prototype.createGlossaryListWindow = function() {
         this._glossaryListWindow = new Window_GlossaryList(this._glossaryWindow);
-        this._glossaryListWindow.setHandler('cancel', this.escapeScene.bind(this));
-        this._glossaryListWindow.activate();
+        this._glossaryListWindow.setHandler('cancel', this.onCancelGlossaryList.bind(this));
         this.addWindow(this._glossaryListWindow);
+    };
+
+    Scene_Glossary.prototype.createGlossaryCategoryWindow = function() {
+        this._glossaryCategoryWindow = new Window_GlossaryCategory(this._glossaryListWindow);
+        this._glossaryCategoryWindow.setHandler('cancel', this.escapeScene.bind(this));
+        this._glossaryCategoryWindow.setHandler('ok',     this.onOkGlossaryCategory.bind(this));
+        this.addWindow(this._glossaryCategoryWindow);
     };
 
     Scene_Glossary.prototype.createBackground = function() {
@@ -470,12 +510,107 @@ function Scene_Glossary() {
         }
     };
 
-    Scene_Glossary.prototype.updateHelp = function() {
-        this._helpWindow.setText(paramHelpText);
+    Scene_Glossary.prototype.updateHelp = function(helpText) {
+        if (paramHelpText) {
+            this._helpWindow.setText(helpText);
+        } else {
+            this._helpWindow.visible = false;
+            this._helpWindow.height  = 0;
+        }
+    };
+
+    Scene_Glossary.prototype.setInitActivateWindow = function() {
+        if (paramUseCategory) {
+            this.activateCategoryWindow();
+        } else {
+            this.activateListWindow();
+        }
+    };
+
+    Scene_Glossary.prototype.onOkGlossaryCategory = function() {
+        if (this._glossaryCategoryWindow.item()) {
+            this.activateListWindow();
+        }
+    };
+
+    Scene_Glossary.prototype.onCancelGlossaryList = function() {
+        if (paramUseCategory) {
+            this.activateCategoryWindow();
+        } else {
+            this.escapeScene();
+        }
+    };
+
+    Scene_Glossary.prototype.activateCategoryWindow = function() {
+        this._glossaryCategoryWindow.activate();
+        this._glossaryCategoryWindow.show();
+        this._glossaryListWindow.deactivate();
+        this._glossaryListWindow.hide();
+        this._glossaryListWindow.select(-1);
+        this.updateHelp(paramHelpTextCategory);
+    };
+
+    Scene_Glossary.prototype.activateListWindow = function() {
+        this._glossaryListWindow.activate();
+        this._glossaryListWindow.show();
+        this._glossaryCategoryWindow.deactivate();
+        this._glossaryCategoryWindow.hide();
+        this._glossaryListWindow.select(0);
+        this.updateHelp(paramHelpText);
     };
 
     Scene_Glossary.prototype.escapeScene = function() {
         this.popScene();
+    };
+
+    //=============================================================================
+    // Window_GlossaryCategory
+    //  用語集カテゴリウィンドウです。
+    //=============================================================================
+    function Window_GlossaryCategory() {
+        this.initialize.apply(this, arguments);
+    }
+    Window_GlossaryCategory.prototype = Object.create(Window_Selectable.prototype);
+    Window_GlossaryCategory.prototype.constructor = Window_GlossaryCategory;
+
+    Window_GlossaryCategory.prototype.initialize = function(glWindow) {
+        this._glossaryListWindow = glWindow;
+        Window_Selectable.prototype.initialize.call(this, glWindow.x, glWindow.y, glWindow.width, glWindow.height);
+        this._data = [];
+        this.refresh();
+        this.select(0);
+    };
+
+    Window_GlossaryCategory.prototype.maxItems = function() {
+        return this._data ? this._data.length : 1;
+    };
+
+    Window_GlossaryCategory.prototype.item = function() {
+        var index = this.index();
+        return this._data && index >= 0 ? this._data[index] : null;
+    };
+
+    Window_GlossaryCategory.prototype.makeItemList = function() {
+        this._data = $gameParty.getAllGlossaryCategory();
+    };
+
+    Window_GlossaryCategory.prototype.select = function(index) {
+        Window_Selectable.prototype.select.apply(this, arguments);
+        this._glossaryListWindow.setCategory(this.item());
+    };
+
+    Window_GlossaryCategory.prototype.refresh = function() {
+        this.makeItemList();
+        this.createContents();
+        this.drawAllItems();
+    };
+
+    Window_GlossaryCategory.prototype.drawItem = function(index) {
+        var text = this._data[index];
+        if (text) {
+            var rect = this.itemRect(index);
+            this.drawTextEx(text, rect.x + this.textPadding(), rect.y);
+        }
     };
 
     //=============================================================================
@@ -492,7 +627,6 @@ function Scene_Glossary() {
         this._glossaryWindow = gWindow;
         Window_ItemList.prototype.initialize.call(this, 0, gWindow.y, paramGlossaryListWidth, gWindow.height);
         this.refresh();
-        this.select(0);
     };
 
     Window_GlossaryList.prototype.maxCols = function() {
@@ -517,11 +651,15 @@ function Scene_Glossary() {
     };
 
     Window_GlossaryList.prototype.includes = function(item) {
-        return DataManager.isItem(item) && $gameParty.isGlossaryItem(item);
+        return DataManager.isItem(item) && $gameParty.isGlossaryItem(item) && this.isCategoryMatch(item);
+    };
+
+    Window_GlossaryList.prototype.isCategoryMatch = function(item) {
+        return !paramUseCategory || this._category === $gameParty.getGlossaryCategory(item);
     };
 
     Window_GlossaryList.prototype.select = function(index) {
-        Window_Selectable.prototype.select.apply(this, arguments);
+        Window_ItemList.prototype.select.apply(this, arguments);
         this._glossaryWindow.refresh(this.item());
     };
 
