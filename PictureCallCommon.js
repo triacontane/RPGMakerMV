@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.5 2016/04/20 リファクタリングによりピクチャの優先順位が逆転していたのをもとに戻した
 // 1.3.4 2016/04/08 ピクチャが隣接する状態でマウスオーバーとマウスアウトが正しく機能しない場合がある問題を修正
 // 1.3.3 2016/03/19 トリガー条件を満たした場合に以後のタッチ処理を抑制するパラメータを追加
 // 1.3.2 2016/02/28 処理の負荷を少し軽減
@@ -472,7 +473,7 @@
     };
 
     Spriteset_Base.prototype._callTouchPicturesSub = function(containerChildren) {
-        for (var i = 0, n = containerChildren.length; i < n; i++) {
+        for (var i = containerChildren.length - 1; i >= 0; i--) {
             var picture = containerChildren[i];
             if (typeof picture.callTouch === 'function') picture.callTouch();
             if ($gameTemp.pictureCommonId() > 0) break;
