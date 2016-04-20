@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/04/21 複数ページ送りをタッチ操作に対応
 // 1.2.0 2016/04/20 自動登録の対象外にするタグを追加
 //                  ひとつの用語に対して複数のページを表示できる機能を追加
 //                  用語が存在しない状態で決定ボタンを押すとフリーズする問題を修正
@@ -861,6 +862,21 @@ function Scene_Glossary() {
             scale = Math.min(mw / bitmap.width, mh / bitmap.height, 1);
         }
         return scale;
+    };
+
+    Window_Glossary.prototype.update = function() {
+        Window_Base.prototype.update.call(this);
+        this.processTouch();
+    };
+
+    Window_Glossary.prototype.processTouch = function() {
+        if (!TouchInput.isTriggered()) return;
+        var x = this.canvasToLocalX(TouchInput.x);
+        var y = this.canvasToLocalY(TouchInput.y);
+        if (y >= 0 && y <= this.height) {
+            if (x >= 0 && x < this.width / 2)          this.cursorLeft(false);
+            if (x >= this.width / 2 && x < this.width) this.cursorRight(false);
+        }
     };
 
     Window_Glossary.prototype._refreshArrows = function() {
