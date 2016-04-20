@@ -7,6 +7,7 @@
 // ----------------------------------------------------------------------------
 // Version
 // 1.2.1 2016/04/21 複数ページ送りをタッチ操作に対応
+//                  アイテムタイプの判定が無条件で有効になってしまう不具合を修正
 // 1.2.0 2016/04/20 自動登録の対象外にするタグを追加
 //                  ひとつの用語に対して複数のページを表示できる機能を追加
 //                  用語が存在しない状態で決定ボタンを押すとフリーズする問題を修正
@@ -399,7 +400,8 @@ function Scene_Glossary() {
     //  用語集アイテムの管理を追加定義します。
     //=============================================================================
     Game_Party.prototype.isGlossaryItem = function(item) {
-        return item.itypeId === paramItemType === 'B' ? 3 : 2 && getMetaValues(item, ['説明', 'Description']) !== undefined;
+        var iTypeId = (paramItemType === 'B' ? 4 : 3);
+        return item.itypeId === iTypeId && getMetaValues(item, ['説明', 'Description']) !== undefined;
     };
 
     Game_Party.prototype.getGlossaryCategory = function(item) {
