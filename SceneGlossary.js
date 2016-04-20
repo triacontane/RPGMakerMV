@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/04/20 自動登録の対象外にするタグを追加
+//                  ひとつの用語に対して複数のページを表示できる機能を追加
+//                  用語が存在しない状態で決定ボタンを押すとフリーズする問題を修正
 // 1.1.0 2016/04/20 カテゴリごとに分類して表示できる機能を追加
 // 1.0.0 2016/04/17 初版
 // ----------------------------------------------------------------------------
@@ -107,12 +110,23 @@
  *   説明文およびカテゴリ名には制御文字が使用できます。
  * <SGDescription:説明文>    // 用語の説明文
  * <SGCategory:カテゴリ名>   // 用語の属するカテゴリの名称
+ * <SGManual>                // 用語を自動登録の対象から除外する
  * <SGPicture:ファイル名>    // 用語のピクチャのファイル名
  * <SGPicturePosition:text>  // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
  * <SGPictureScale:0.5>      // ピクチャの拡大率
  * <SGPictureAlign:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
+ *
+ * さらに、一つの用語で複数のページを使用することができます。
+ * ページは方向キーの左右で切り替えます。
+ * <SGDescription2:説明文>   // 2ページ目の用語の説明文
+ * <SGPicture2:ファイル名>   // 2ページ目の用語のピクチャのファイル名
+ * <SGPicturePosition2:text> // 2ページ目のピクチャの表示位置
+ *
+ * 3ページ目以降も同様で、最大99ページまで指定できます。
+ * 複数のページ表示する場合の1ページ目には「1」をつけないでください。
+ * NG:<SGDescription1:説明文>
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -200,6 +214,7 @@
  *
  * 用語は対象アイテムを取得することで閲覧可能になるほか、文章の表示の命令中で
  * 同一単語が出現した場合に自動的に登録する機能もあります。
+ * （特定の用語を自動登録の対象外に指定することも可能です）
  *
  * 用語はすべてを一つのウィンドウで表示する方式と
  * カテゴリごとに分類して表示する方式が選択できます。
@@ -218,12 +233,23 @@
  * 3.「メモ欄」に以下の通り記述(不要な項目は省略可能)
  * <SG説明:説明文>           // 用語の説明文
  * <SGカテゴリ:カテゴリ名>   // 用語の属するカテゴリの名称
+ * <SG手動>                  // 用語を自動登録の対象から除外する
  * <SGピクチャ:ファイル名>   // 用語のピクチャのファイル名
  * <SGピクチャ位置:text>     // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
  * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
  * <SGピクチャ揃え:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
+ *
+ * さらに、一つの用語で複数のページを使用することができます。
+ * ページは方向キーの左右で切り替えます。
+ * <SG説明2:説明文>          // 2ページ目の用語の説明文
+ * <SGピクチャ2:ファイル名>  // 2ページ目の用語のピクチャのファイル名
+ * <SGピクチャ位置2:text>    // 2ページ目のピクチャの表示位置
+ *
+ * 3ページ目以降も同様で、最大99ページまで指定できます。
+ * 複数のページ表示する場合の1ページ目には「1」をつけないでください。
+ * NG:<SGDescription1:説明文>
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -285,10 +311,11 @@ function Scene_Glossary() {
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
     };
 
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
+    var getMetaValues = function(object, names, index) {
+        var footer = index > 0 ? String(index + 1) : '';
+        if (!Array.isArray(names)) return getMetaValue(object, names + footer);
         for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
+            var value = getMetaValue(object, names[i] + footer);
             if (value !== undefined) return value;
         }
         return undefined;
@@ -388,7 +415,7 @@ function Scene_Glossary() {
         var list = [];
         this.items().forEach(function (item) {
             var category = this.getGlossaryCategory(item);
-            if (category && list.indexOf(category) < 0) {
+            if (category && list.indexOf(category) === -1) {
                 list.push(category);
             }
         }.bind(this));
@@ -397,10 +424,14 @@ function Scene_Glossary() {
 
     Game_Party.prototype.gainGlossaryFromText = function(text) {
         this.getAllGlossaryList().forEach(function(item) {
-            if (!this.hasItem(item) && text.indexOf(item.name) !== -1) {
+            if (!this.hasItem(item) && this.isAutoGlossaryWord(item) && text.indexOf(item.name) !== -1) {
                 this.gainGlossary(item);
             }
         }.bind(this));
+    };
+
+    Game_Party.prototype.isAutoGlossaryWord = function(item) {
+        return !getMetaValues(item, ['手動', 'Manual']);
     };
 
     Game_Party.prototype.gainGlossaryAll = function() {
@@ -457,7 +488,7 @@ function Scene_Glossary() {
     // Window_EventItem
     //  用語集アイテムをアイテム選択の候補から除外します。
     //=============================================================================
-    var _Window_EventItem_includes =Window_EventItem.prototype.includes;
+    var _Window_EventItem_includes = Window_EventItem.prototype.includes;
     Window_EventItem.prototype.includes = function(item) {
         return _Window_EventItem_includes.apply(this, arguments) && !$gameParty.isGlossaryItem(item);
     };
@@ -529,9 +560,7 @@ function Scene_Glossary() {
     };
 
     Scene_Glossary.prototype.onOkGlossaryCategory = function() {
-        if (this._glossaryCategoryWindow.item()) {
-            this.activateListWindow();
-        }
+        this.activateListWindow();
     };
 
     Scene_Glossary.prototype.onCancelGlossaryList = function() {
@@ -547,7 +576,7 @@ function Scene_Glossary() {
         this._glossaryCategoryWindow.show();
         this._glossaryListWindow.deactivate();
         this._glossaryListWindow.hide();
-        this._glossaryListWindow.select(-1);
+        this._glossaryListWindow.deselect();
         this.updateHelp(paramHelpTextCategory);
     };
 
@@ -577,7 +606,7 @@ function Scene_Glossary() {
     Window_GlossaryCategory.prototype.initialize = function(glWindow) {
         this._glossaryListWindow = glWindow;
         Window_Selectable.prototype.initialize.call(this, glWindow.x, glWindow.y, glWindow.width, glWindow.height);
-        this._data = [];
+        this._data = null;
         this.refresh();
         this.select(0);
     };
@@ -589,6 +618,10 @@ function Scene_Glossary() {
     Window_GlossaryCategory.prototype.item = function() {
         var index = this.index();
         return this._data && index >= 0 ? this._data[index] : null;
+    };
+
+    Window_GlossaryCategory.prototype.isCurrentItemEnabled = function() {
+        return !!this.item();
     };
 
     Window_GlossaryCategory.prototype.makeItemList = function() {
@@ -664,6 +697,14 @@ function Scene_Glossary() {
         this._glossaryWindow.refresh(this.item());
     };
 
+    Window_GlossaryList.prototype.cursorRight = function(wrap) {
+        this._glossaryWindow.cursorRight(wrap);
+    };
+
+    Window_GlossaryList.prototype.cursorLeft = function(wrap) {
+        this._glossaryWindow.cursorLeft(wrap);
+    };
+
     //=============================================================================
     // Window_Glossary
     //  用語集ウィンドウです。
@@ -677,6 +718,9 @@ function Scene_Glossary() {
     Window_Glossary.prototype.initialize = function(x, y) {
         var height = Graphics.boxHeight - y;
         var width  = Graphics.boxWidth  - x;
+        this._maxPages  = 1;
+        this._itemData = null;
+        this._pageIndex = 0;
         Window_Base.prototype.initialize.call(this, x, y, width, height);
     };
 
@@ -684,20 +728,69 @@ function Scene_Glossary() {
         return paramFontSize ? paramFontSize : Window_Base.prototype.standardFontFace();
     };
 
+    Window_Glossary.prototype.calcMaxPages = function(depth) {
+        if (!depth) depth = 0;
+        var item = this._itemData;
+        var exist = !!getMetaValues(item, ['ピクチャ', 'Picture'], depth) ||
+            !!getMetaValues(item, ['説明', 'Description'], depth);
+        return (exist && depth < 100) ? this.calcMaxPages(depth + 1) : depth;
+    };
+
     Window_Glossary.prototype.refresh = function(item) {
-        this.contents.clear();
-        if (!item) return;
-        var pictureName = getMetaValues(item, ['ピクチャ', 'Picture']);
-        if (pictureName) {
-            var bitmap = ImageManager.loadPicture(pictureName, 0);
-            bitmap.addLoadListener(this.drawItem.bind(this, item, bitmap));
-        } else {
-            this.drawItem(item, null);
+        this._itemData = item;
+        this._maxPages = item ? this.calcMaxPages() : 1;
+        this.drawItem(0, true);
+    };
+
+    Window_Glossary.prototype.cursorRight = function(wrap) {
+        if (this._maxPages === 1) return;
+        if (this.canMoveRight()) {
+            this.drawItem(this._pageIndex + 1);
+        } else if (wrap) {
+            this.drawItem(0);
         }
     };
 
-    Window_Glossary.prototype.drawItem = function(item, bitmap) {
-        var text = getMetaValues(item, ['説明', 'Description']);
+    Window_Glossary.prototype.cursorLeft = function(wrap) {
+        if (this._maxPages === 1) return;
+        if (this.canMoveLeft()) {
+            this.drawItem(this._pageIndex - 1);
+        } else if (wrap) {
+            this.drawItem(this._maxPages - 1);
+        }
+    };
+
+    Window_Glossary.prototype.canMoveLeft = function() {
+        return this._pageIndex > 0;
+    };
+
+    Window_Glossary.prototype.canMoveRight = function() {
+        return this._pageIndex < this._maxPages - 1;
+    };
+
+    Window_Glossary.prototype.drawItem = function(index, noSound) {
+        this.contents.clear();
+        this._pageIndex = index;
+        this.updateArrows();
+        if (!this._itemData) return;
+        var pictureName = getMetaValues(this._itemData, ['ピクチャ', 'Picture'], index);
+        if (pictureName) {
+            var bitmap = ImageManager.loadPicture(pictureName, 0);
+            bitmap.addLoadListener(this.drawItemSub.bind(this, bitmap));
+        } else {
+            this.drawItemSub(null);
+        }
+        if (!noSound) SoundManager.playCursor();
+    };
+
+    Window_Glossary.prototype.updateArrows = function() {
+        this.downArrowVisible = this.canMoveLeft();
+        this.upArrowVisible   = this.canMoveRight();
+    };
+
+    Window_Glossary.prototype.drawItemSub = function(bitmap) {
+        var item  = this._itemData;
+        var text = getMetaValues(item, ['説明', 'Description'], this._pageIndex);
         switch (this.getPicturePosition(item)) {
             case 'top':
                 this.drawPicture(item, bitmap, text, 0);
@@ -715,12 +808,12 @@ function Scene_Glossary() {
     };
 
     Window_Glossary.prototype.getPicturePosition = function(item) {
-        var position = getMetaValues(item, ['ピクチャ位置', 'PicturePosition']);
+        var position = getMetaValues(item, ['ピクチャ位置', 'PicturePosition'], this._pageIndex);
         return position ? position.toLowerCase() : paramPicturePosition;
     };
 
     Window_Glossary.prototype.getPictureAlign = function(item) {
-        var align = getMetaValues(item, ['ピクチャ揃え', 'PictureAlign']);
+        var align = getMetaValues(item, ['ピクチャ揃え', 'PictureAlign'], this._pageIndex);
         return align ? align.toLowerCase() : paramPictureAlign;
     };
 
@@ -759,7 +852,7 @@ function Scene_Glossary() {
 
     Window_Glossary.prototype.getPictureScale = function(item, bitmap, text) {
         var scale = 1;
-        var metaValue = getMetaValues(item, ['ピクチャ拡大率', 'PictureScale']);
+        var metaValue = getMetaValues(item, ['ピクチャ拡大率', 'PictureScale'], this._pageIndex);
         if (metaValue) {
             scale = getArgNumber(metaValue);
         } else if(paramAutoResizePicture) {
@@ -768,6 +861,18 @@ function Scene_Glossary() {
             scale = Math.min(mw / bitmap.width, mh / bitmap.height, 1);
         }
         return scale;
+    };
+
+    Window_Glossary.prototype._refreshArrows = function() {
+        Window.prototype._refreshArrows.call(this);
+        var w = this._width;
+        var h = this._height;
+        var p = 24;
+        var q = p/2;
+        this._downArrowSprite.rotation = 90 * Math.PI / 180;
+        this._downArrowSprite.move(q, h/2);
+        this._upArrowSprite.rotation = 90 * Math.PI / 180;
+        this._upArrowSprite.move(w-q, h/2);
     };
 })();
 
