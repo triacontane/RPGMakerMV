@@ -236,7 +236,6 @@ var $gameCurrentWindow = null;
     var funcKeyMoveEdge  = getParamString(['FuncKeyMoveEdge', '画面の左寄せキー']);
     var funcKeyRapidGame = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
     var funcKeyVictory   = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
-    var funcKeyCheck     = getParamString(['FuncKeyCheck', '処理時間計測キー']);
     var showFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
     var cutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
     var rapidStart       = getParamBoolean(['RapidStart', '高速開始']);
@@ -246,7 +245,6 @@ var $gameCurrentWindow = null;
     // SceneManager
     //  状況に応じてデベロッパツールを自動制御します。
     //=============================================================================
-    SceneManager._processTimeStack = [];
     var _SceneManager_initialize = SceneManager.initialize;
     SceneManager.initialize = function() {
         _SceneManager_initialize.call(this);
@@ -258,7 +256,6 @@ var $gameCurrentWindow = null;
     SceneManager.updateMain = function() {
         _SceneManager_updateMain.apply(this, arguments);
         var newTime = this._getTimeInMs();
-        this._processTimeStack.push(newTime - this._currentTime);
     };
 
     var _SceneManager_catchException = SceneManager.catchException;
