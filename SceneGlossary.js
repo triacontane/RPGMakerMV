@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/04/23 用語の種別ごとに、複数の用語画面を作成できる機能を追加
+//                  用語をアイテムとして使用できる機能を追加
 // 1.2.1 2016/04/21 複数ページ送りをタッチ操作に対応
 //                  アイテムタイプの判定が無条件で有効になってしまう不具合を修正
 // 1.2.0 2016/04/20 自動登録の対象外にするタグを追加
@@ -31,6 +33,18 @@
  * @desc メニュー画面に表示されるコマンド名です。空欄にすると追加されなくなります。
  * @default Glossary
  *
+ * @param CommandName2
+ * @desc メニュー画面に表示される2つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
+ * @param CommandName3
+ * @desc メニュー画面に表示される3つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
+ * @param CommandName4
+ * @desc メニュー画面に表示される4つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
  * @param ItemType
  * @desc 用語扱いとするアイテムの隠しアイテムタイプ（A or B）
  * @default A
@@ -54,6 +68,10 @@
  * @param HelpText2
  * @desc 用語カテゴリ選択時のヘルプ画面に表示するテキストです。
  * @default Select the category
+ *
+ * @param UsableItem
+ * @desc 用語選択中に対象の用語を「アイテム」として使用できるようになります。
+ * @default OFF
  *
  * @param AutoResizePicture
  * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
@@ -130,12 +148,27 @@
  * 複数ページ表示する場合の1ページ目には「1」をつけないでください。
  * NG:<SGDescription1:説明文>
  *
+ * 「CommandName2」のパラメータに内容を設定すると、
+ * メニュー画面に二つ目の用語画面を追加できます。
+ * 二つ目の用語画面に用語を登録したい場合は、以下のタグが必要です。
+ *
+ * <SGType:2>   // 用語の属する種別番号
+ *
+ * 「CommandName3」および「CommandName4」も同様です。
+ * 「プラグインコマンド」から呼び出す場合、コマンド名の後に
+ * 種別を指定してください。
+ *
+ * 「アイテム使用」のパラメータをONにすると、用語をアイテムとして使用できます。
+ * 通常はOFFで問題ありませんが、使い方次第です。
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * GLOSSARY_GAIN_ALL or 用語集全取得
+ * GLOSSARY_GAIN_ALL or 用語集全取得 [種別]
  *  データベースに登録している全ての用語を取得状態にします。
+ *  種別を省略すると、自動で「1」になります。
+ * 例：GLOSSARY_GAIN_ALL 2
  *
  * GLOSSARY_CALL or 用語集画面の呼び出し
  *  用語集画面を呼び出します。
@@ -153,6 +186,18 @@
  * @param コマンド名称
  * @desc メニュー画面に表示されるコマンド名です。空欄にすると追加されなくなります。
  * @default 用語辞典
+ *
+ * @param コマンド名称2
+ * @desc メニュー画面に表示される2つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
+ * @param コマンド名称3
+ * @desc メニュー画面に表示される3つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
+ * @param コマンド名称4
+ * @desc メニュー画面に表示される4つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
  * 
  * @param アイテムタイプ
  * @desc 用語扱いとするアイテムの隠しアイテムタイプ（A or B）
@@ -177,6 +222,10 @@
  * @param ヘルプテキスト2
  * @desc 用語カテゴリ選択時のヘルプ画面に表示するテキストです。
  * @default カテゴリを選択してください。
+ *
+ * @param アイテム使用
+ * @desc 用語選択中に対象の用語を「アイテム」として使用できるようになります。
+ * @default OFF
  *
  * @param 画像の自動縮小
  * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
@@ -253,12 +302,27 @@
  * 複数ページ表示する場合の1ページ目には「1」をつけないでください。
  * NG:<SG説明1:説明文>
  *
+ * 「コマンド名称2」のパラメータに内容を設定すると、
+ * メニュー画面に二つ目の用語画面を追加できます。
+ * 二つ目の用語画面に用語を登録したい場合は、以下のタグが必要です。
+ *
+ * <SG種別:2>   // 用語の属する種別番号
+ *
+ * 「コマンド名称3」および「コマンド名称4」も同様です。
+ * 「プラグインコマンド」から呼び出す場合、コマンド名の後に
+ * 種別を指定してください。
+ *
+ * 「アイテム使用」のパラメータをONにすると、用語をアイテムとして使用できます。
+ * 通常はOFFで問題ありませんが、使い方次第です。
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * GLOSSARY_GAIN_ALL or 用語集全取得
+ * GLOSSARY_GAIN_ALL or 用語集全取得 [種別]
  *  データベースに登録している全ての用語を取得状態にします。
+ *  種別を省略すると、自動で「1」になります。
+ * 例：GLOSSARY_GAIN_ALL 2
  *
  * GLOSSARY_CALL or 用語集画面の呼び出し
  *  用語集画面を呼び出します。
@@ -330,7 +394,9 @@ function Scene_Glossary() {
     };
 
     var convertEscapeCharactersAndEval = function(text, evalFlg) {
-        if (text === null || text === undefined) text = '';
+        if (text === null || text === undefined) {
+            text = evalFlg ? '0' : '';
+        }
         var window = SceneManager._scene._windowLayer.children[0];
         if (window) {
             var result = window.convertEscapeCharacters(text);
@@ -343,7 +409,12 @@ function Scene_Glossary() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramCommandName       = getParamString(['CommandName', 'コマンド名称']);
+    var paramCommandNames = [];
+    for (var i = 0; i < 4; i++) {
+        var idString = (i > 0 ? String(i + 1) : '');
+        paramCommandNames[i] = getParamString(['CommandName' + idString, 'コマンド名称' + idString]);
+    }
+    var paramCommandNamesMax   = paramCommandNames.length;
     var paramBackPicture       = getParamString(['BackPicture', '背景ピクチャ']);
     var paramItemType          = getParamString(['ItemType', 'アイテムタイプ']).toUpperCase();
     var paramAutoAddition      = getParamBoolean(['AutoAddition', '自動登録']);
@@ -355,6 +426,7 @@ function Scene_Glossary() {
     var paramPicturePosition   = getParamString(['PicturePosition', '画像の表示位置']).toLowerCase();
     var paramPictureAlign      = getParamString(['PictureAlign', '画像の揃え']).toLowerCase();
     var paramUseCategory       = getParamBoolean(['UseCategory', 'カテゴリ分類']);
+    var paramUsableItem        = getParamBoolean(['UsableItem', 'アイテム使用']);
 
     //=============================================================================
     // Game_Interpreter
@@ -386,6 +458,7 @@ function Scene_Glossary() {
         switch (getCommandName(command)) {
             case 'GLOSSARY_CALL' :
             case '用語集画面の呼び出し' :
+                $gameTemp.setGlossaryType(getArgNumber(args[0], 1));
                 SceneManager.push(Scene_Glossary);
                 break;
             case 'GLOSSARY_GAIN_ALL' :
@@ -404,6 +477,12 @@ function Scene_Glossary() {
         return item.itypeId === iTypeId && getMetaValues(item, ['説明', 'Description']) !== undefined;
     };
 
+    Game_Party.prototype.isSameGlossaryType = function(item) {
+        var type = $gameTemp.getGlossaryType();
+        var itemType = getArgNumber(getMetaValues(item, ['種別', 'Type']));
+        return type > 1 ? itemType === type : !itemType || itemType === type;
+    };
+
     Game_Party.prototype.getGlossaryCategory = function(item) {
         return getMetaValues(item, ['カテゴリ', 'Category']);
     };
@@ -418,7 +497,7 @@ function Scene_Glossary() {
         var list = [];
         this.items().forEach(function (item) {
             var category = this.getGlossaryCategory(item);
-            if (category && list.indexOf(category) === -1) {
+            if (category && this.isSameGlossaryType(item) && list.indexOf(category) === -1) {
                 list.push(category);
             }
         }.bind(this));
@@ -460,16 +539,39 @@ function Scene_Glossary() {
     };
 
     //=============================================================================
+    // Game_Temp
+    //  用語集画面の種別を追加定義します。
+    //=============================================================================
+    var _Game_Temp_initialize = Game_Temp.prototype.initialize;
+    Game_Temp.prototype.initialize = function() {
+        _Game_Temp_initialize.apply(this, arguments);
+        this._glossaryType = 0;
+    };
+
+    Game_Temp.prototype.setGlossaryType = function(type) {
+        this._glossaryType = type;
+    };
+
+    Game_Temp.prototype.getGlossaryType = function() {
+        return this._glossaryType;
+    };
+
+    //=============================================================================
     // Scene_Menu
     //  用語集画面の呼び出しを追加します。
     //=============================================================================
     var _Scene_Menu_createCommandWindow = Scene_Menu.prototype.createCommandWindow;
     Scene_Menu.prototype.createCommandWindow = function() {
         _Scene_Menu_createCommandWindow.apply(this, arguments);
-        if (paramCommandName) this._commandWindow.setHandler('glossary', this.commandGlossary.bind(this));
+        for (var i = 0; i < paramCommandNamesMax; i++) {
+            if (paramCommandNames[i]) {
+                this._commandWindow.setHandler('glossary' + String(i), this.commandGlossary.bind(this, i + 1));
+            }
+        }
     };
 
-    Scene_Menu.prototype.commandGlossary = function() {
+    Scene_Menu.prototype.commandGlossary = function(type) {
+        $gameTemp.setGlossaryType(type);
         SceneManager.push(Scene_Glossary);
     };
 
@@ -480,10 +582,14 @@ function Scene_Glossary() {
     var _Window_MenuCommand_addOriginalCommands = Window_MenuCommand.prototype.addOriginalCommands;
     Window_MenuCommand.prototype.addOriginalCommands = function() {
         _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
-        if (paramCommandName) this.addCommand(paramCommandName, 'glossary', this.isGlossaryEnabled());
+        for (var i = 0; i < paramCommandNamesMax; i++) {
+            if (paramCommandNames[i]) {
+                this.addCommand(paramCommandNames[i], 'glossary' + String(i), this.isGlossaryEnabled(i));
+            }
+        }
     };
 
-    Window_MenuCommand.prototype.isGlossaryEnabled = function() {
+    Window_MenuCommand.prototype.isGlossaryEnabled = function(i) {
         return true;
     };
 
@@ -500,15 +606,16 @@ function Scene_Glossary() {
     // Scene_Glossary
     //  用語集画面を扱うクラスです。
     //=============================================================================
-    Scene_Glossary.prototype = Object.create(Scene_MenuBase.prototype);
+    Scene_Glossary.prototype = Object.create(Scene_ItemBase.prototype);
     Scene_Glossary.prototype.constructor = Scene_Glossary;
 
     Scene_Glossary.prototype.create = function() {
-        Scene_MenuBase.prototype.create.call(this);
+        Scene_ItemBase.prototype.create.call(this);
         this.createHelpWindow();
         this.createGlossaryWindow();
         this.createGlossaryListWindow();
         this.createGlossaryCategoryWindow();
+        this.createActorWindow();
         this.setInitActivateWindow();
     };
 
@@ -520,6 +627,10 @@ function Scene_Glossary() {
     Scene_Glossary.prototype.createGlossaryListWindow = function() {
         this._glossaryListWindow = new Window_GlossaryList(this._glossaryWindow);
         this._glossaryListWindow.setHandler('cancel', this.onCancelGlossaryList.bind(this));
+        if (paramUsableItem) {
+            this._glossaryListWindow.setHandler('ok', this.onItemOk.bind(this));
+        }
+        this._itemWindow = this._glossaryListWindow;
         this.addWindow(this._glossaryListWindow);
     };
 
@@ -541,7 +652,7 @@ function Scene_Glossary() {
             this._backgroundSprite = sprite;
             this.addChild(this._backgroundSprite);
         } else {
-            Scene_MenuBase.prototype.createBackground.call(this);
+            Scene_ItemBase.prototype.createBackground.call(this);
         }
     };
 
@@ -565,6 +676,21 @@ function Scene_Glossary() {
     Scene_Glossary.prototype.onOkGlossaryCategory = function() {
         this.activateListWindow();
     };
+
+    Scene_Glossary.prototype.onItemOk = function() {
+        $gameParty.setLastItem(this.item());
+        this.determineItem();
+    };
+
+    Scene_Glossary.prototype.playSeForItem = function() {
+        SoundManager.playUseItem();
+    };
+
+    Scene_Glossary.prototype.isCursorLeft = function() {
+        return true;
+    };
+
+    Scene_Glossary.prototype.user = Scene_Item.prototype.user;
 
     Scene_Glossary.prototype.onCancelGlossaryList = function() {
         if (paramUseCategory) {
@@ -683,12 +809,19 @@ function Scene_Glossary() {
             var iconBoxWidth = item.iconIndex > 0 ? Window_Base._iconWidth + 4 : 0;
             this.resetTextColor();
             this.drawIcon(item.iconIndex, x + 2, y + 2);
+            this.changePaintOpacity(this.isEnabled(item));
             this.drawText(item.name, x + iconBoxWidth, y, width - iconBoxWidth);
+            this.changePaintOpacity(1);
         }
     };
 
+    Window_GlossaryList.prototype.isEnabled = function(item) {
+        return paramUsableItem ? Window_ItemList.prototype.isEnabled.call(this, item) : true;
+    };
+
     Window_GlossaryList.prototype.includes = function(item) {
-        return DataManager.isItem(item) && $gameParty.isGlossaryItem(item) && this.isCategoryMatch(item);
+        return DataManager.isItem(item) && $gameParty.isGlossaryItem(item) &&
+            this.isCategoryMatch(item) && $gameParty.isSameGlossaryType(item);
     };
 
     Window_GlossaryList.prototype.isCategoryMatch = function(item) {
