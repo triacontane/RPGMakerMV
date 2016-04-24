@@ -7,6 +7,8 @@
 // ----------------------------------------------------------------------------
 // Version
 // 1.0.1 2016/04/25 色相が0以外の画像がすべて0で表示されてしまう問題を修正
+//                  色相に関する制約の説明を追加
+//                  ブラウザプレー時、戦闘アニメの表示速度が著しく低下する問題を修正
 //                  バトルテストとイベントテストが実行できなくなる問題を修正
 // 1.0.0 2016/04/23 初版
 // ----------------------------------------------------------------------------
@@ -210,6 +212,26 @@ var $dataMaterials = null;
         } else {
             localLoadComplete = true;
         }
+    };
+
+    var _ImageManager_loadNormalBitmap = ImageManager.loadNormalBitmap;
+    ImageManager.loadNormalBitmap = function(path, hue) {
+        var bitmap = _ImageManager_loadNormalBitmap.apply(this, arguments);
+        if (!bitmap.isReady()) bitmap._isNeedLagDraw = false;
+        return bitmap;
+    };
+
+    var _ImageManager_isReady = ImageManager.isReady;
+    ImageManager.isReady = function() {
+        var result = _ImageManager_isReady.apply(this, arguments);
+        if (result) return true;
+        for (var key in this._cache) {
+            var bitmap = this._cache[key];
+            if (!bitmap.isReady() && !bitmap._isNeedLagDraw) {
+                return false;
+            }
+        }
+        return true;
     };
 
     //=============================================================================
