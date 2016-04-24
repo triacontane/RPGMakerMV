@@ -52,6 +52,23 @@
         this.addChild(sprite);
     };
 
+    Spriteset_Map.prototype.createDrawSprite = function() {
+        var sprite = new Sprite();
+        var bitmap = new Bitmap(Graphics.boxWidth, Graphics.boxHeight);
+        // 円を描きます。Bitmapクラスのメソッドはツクールのcore.jsで定義されています。
+        bitmap.drawCircle(100, 100, 100, 'rgba(255,255,255,0.5)');
+        // 線を描きます。こちらはHTML5のメソッドを直接使用しています。
+        var context = bitmap._context;
+        context.beginPath();
+        context.moveTo(0,0);
+        context.lineTo(Graphics.boxWidth / 2, Graphics.boxHeight);
+        context.lineTo(Graphics.boxWidth, Graphics.boxHeight / 2);
+        context.lineTo(0, 0);
+        context.stroke();
+        sprite.bitmap = bitmap;
+        SceneManager._scene.addChild(sprite);
+    };
+
     Spriteset_Map.prototype.makeDrawBitmap = function() {
         var bitmap = new Bitmap(Graphics.boxWidth, Graphics.boxHeight);
         // 円を描きます。Bitmapクラスのメソッドはツクールのcore.jsで定義されています。
