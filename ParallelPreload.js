@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/04/25 色相が0以外の画像がすべて0で表示されてしまう問題を修正
+//                  バトルテストとイベントテストが実行できなくなる問題を修正
 // 1.0.0 2016/04/23 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -48,6 +50,13 @@
  *
  * また、スマートフォン等メモリに限りがあるデバイスで実行する場合、
  * 大量の画像のプリロードは動作不良の原因となります。
+ *
+ * プリロードできるのは、色相が0の画像データのみです。
+ * どうしても色相を変えた画像をロードしたい場合は「MV_Project.json」を
+ * 該当箇所を以下の通り直接編集する必要があります。
+ *
+ * 例：色相が「100」の「Bat.png」をプリロードしたい場合
+ * "Bat" -> "Bat:100"
  *
  * 注意！
  * 本プラグインは画像のロードしか行いません。
@@ -99,7 +108,7 @@ var $dataMaterials = null;
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramMaterialListData = getParamString(['MaterialListData', '素材一覧データ']);
+    var paramMaterialListData = getParamString(['MaterialListData', '素材一覧データ']) + '.json';
     var paramLoadInterval     = getParamNumber(['LoadInterval', 'ロード間隔']);
 
     var localLoadComplete     = false;
@@ -110,9 +119,17 @@ var $dataMaterials = null;
     //  ロード対象素材スタックの作成を追加定義します。
     //=============================================================================
     DataManager._databaseFiles.push(
-        {name: '$dataMaterials', src: paramMaterialListData + '.json'}
+        {name: '$dataMaterials', src: paramMaterialListData}
     );
     DataManager.materialFilePaths = [];
+
+    var _DataManager_loadDataFile = DataManager.loadDataFile;
+    DataManager.loadDataFile = function(name, src) {
+        if (name === '$dataMaterials' && (this.isBattleTest() || this.isEventTest())) {
+            arguments[1] = paramMaterialListData;
+        }
+        _DataManager_loadDataFile.apply(this, arguments);
+    };
 
     var _DataManager_onLoad = DataManager.onLoad;
     DataManager.onLoad = function(object) {
@@ -176,8 +193,12 @@ var $dataMaterials = null;
             if (Utils.isOptionValid('test')) {
                 console.log('Loaded:' + filePathInfo[0] + '/' + filePathInfo[1]);
             }
-            var bitmap = this[loadHandler](filePathInfo[1], 0);
+            var key = filePathInfo[1].split(':');
+            var hue = key.length > 1 ? parseInt(key[1], 10) : 0;
+            var bitmap = this[loadHandler](key[0], hue);
             if (bitmap.isReady()) return;
+            bitmap._isNeedLagDraw = true;
+            bitmap._lagDrawHue = hue;
             if (Utils.isNwjs()) {
                 localIntervalCount = paramLoadInterval;
             } else {
@@ -195,23 +216,28 @@ var $dataMaterials = null;
     // Bitmap
     //  ロードと描画のタイミングを分離します。
     //=============================================================================
+    var _Bitmap__onLoad = Bitmap.prototype._onLoad;
     Bitmap.prototype._onLoad = function() {
-        this._isLoading = false;
-        this._isDraw = false;
-        this.resize(this._image.width, this._image.height);
-        this._callLoadListeners();
+        if (!this._isNeedLagDraw) {
+            _Bitmap__onLoad.apply(this, arguments);
+        } else {
+            this._isLoading = false;
+            this.resize(this._image.width, this._image.height);
+            this._callLoadListeners();
+        }
     };
 
     Bitmap.prototype.drawImage = function() {
         this._context.drawImage(this._image, 0, 0);
+        if (this._lagDrawHue !== 0) {
+            this.rotateHue(this._lagDrawHue);
+        }
         this._setDirty();
-        this._isDraw = true;
+        this._isNeedLagDraw = false;
     };
 
     Bitmap.prototype.drawImageIfNeed = function() {
-        if (this._image && this.isReady() && !this._isDraw) {
-            this.drawImage();
-        }
+        if (this._isNeedLagDraw) this.drawImage();
     };
 
     var _Bitmap_blt = Bitmap.prototype.blt;
