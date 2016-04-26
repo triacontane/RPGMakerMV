@@ -162,6 +162,14 @@
  * 「アイテム使用」のパラメータをONにすると、用語をアイテムとして使用できます。
  * 通常はOFFで問題ありませんが、使い方次第です。
  *
+ * 「YEP_MainMenuManager.js」と連携して、コマンドの表示制御を行うには
+ * 「コマンド名称」の項目を空にした上で「YEP_MainMenuManager.js」の
+ * パラメータを以下の通り設定してください。
+ *
+ * Menu X Name      : 'Glossary1'
+ * Menu X Symbol    : glossary1
+ * Menu X Main Bind : this.commandGlossary.bind(this, 1)
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
@@ -321,7 +329,7 @@
  * パラメータを以下の通り設定してください。
  *
  * Menu X Name      : '用語辞典1'
- * Menu X Symbol    : 'glossary1'
+ * Menu X Symbol    : glossary1
  * Menu X Main Bind : this.commandGlossary.bind(this, 1)
  *
  * プラグインコマンド詳細
