@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/04/28 音声素材の並列プリロードに対応
+//                  他のプラグインの影響等で、特定のシーンでプリロードが止まってしまう問題を修正
 // 1.0.1 2016/04/25 色相が0以外の画像がすべて0で表示されてしまう問題を修正
 //                  色相に関する制約の説明を追加
 //                  ブラウザプレー時、戦闘アニメの表示速度が著しく低下する問題を修正
@@ -33,11 +35,10 @@
  * 可能な限り負荷を分散、軽減するように設計されています。
  *
  * ロードする素材の一覧はfftfantt氏制作の「素材一覧用JSON作成プログラム」を
- * 使用してください。
+ * 使用してください。(2016/04/28時点でMITライセンス)
  * 同プログラムから必要な素材の一覧が作成されたJSONファイル
  * 「MV_Project.json」を作成して「/data」以下に配置します。
- * 作成する際は、「拡張子をつける」およびオーディオ関連のチェックボックスを
- * 外してください。
+ * 作成する際は、「拡張子をつける」チェックを外してください。
  *
  * ・使い方
  * https://github.com/fftfantt/RPGMakerMV/wiki/JSON_Maker_for_MV
@@ -63,10 +64,7 @@
  * ダウンロード時間なので、よほどのことがなければ色相の変更は不要です。
  *
  * 注意！
- * 本プラグインは画像のロードしか行いません。
- * 音声ファイルについては対象外となっています。
- *
- * また、このプラグインを適用したゲームをモバイルネットワークでプレーすると、
+ * このプラグインを適用したゲームをモバイルネットワークでプレーすると、
  * 通信量が膨大になる恐れがあります。必要に応じて注意喚起ください。
  *
  * 利用規約：
@@ -128,7 +126,7 @@ var $dataMaterials = null;
     DataManager._databaseFiles.push(
         {name: '$dataMaterials', src: paramMaterialListData}
     );
-    DataManager.materialFilePaths = [];
+    DataManager.materialFilePaths = null;
 
     var _DataManager_loadDataFile = DataManager.loadDataFile;
     DataManager.loadDataFile = function(name, src) {
@@ -147,6 +145,7 @@ var $dataMaterials = null;
     };
 
     DataManager.initParallelPreload = function() {
+        this.materialFilePaths = [];
         $dataMaterials.iterate(function (key, value) {
             for (var i = 0, n = value.length; i < n; i++) {
                 this.materialFilePaths.push([key, value[i]]);
@@ -154,19 +153,64 @@ var $dataMaterials = null;
         }.bind(this));
     };
 
-    //=============================================================================
-    // Scene_Base
-    //  ロード処理を実行します。
-    //=============================================================================
-    var _Scene_Base_update = Scene_Base.prototype.update;
-    Scene_Base.prototype.update = function() {
-        _Scene_Base_update.apply(this, arguments);
-        if (!localLoadComplete) this.updateParallelPreload();
+    DataManager.loadMaterial = function() {
+        var filePathInfo = this.materialFilePaths.shift();
+        if (filePathInfo) {
+            if (Utils.isOptionValid('test')) {
+                console.log('Load material : ' + filePathInfo[0] + '/' + filePathInfo[1]);
+            }
+            var loadImageHandler = ImageManager.loadHandlers[filePathInfo[0]];
+            if (loadImageHandler) this.loadImage(loadImageHandler, filePathInfo);
+            var loadAudioHandler = AudioManager.loadHandlers[filePathInfo[0]];
+            if (loadAudioHandler) this.loadAudio(loadAudioHandler, filePathInfo);
+        } else {
+            localLoadComplete = true;
+        }
     };
 
-    Scene_Base.prototype.updateParallelPreload = function() {
+    DataManager.loadImage = function(loadHandler, filePathInfo) {
+        var key = filePathInfo[1].split(':');
+        var hue = key.length > 1 ? parseInt(key[1], 10) : 0;
+        var bitmap = ImageManager[loadHandler](key[0], hue);
+        if (bitmap.isReady()) return;
+        bitmap._isNeedLagDraw = true;
+        bitmap._lagDrawHue = hue;
+        if (Utils.isNwjs()) {
+            localIntervalCount = paramLoadInterval;
+        } else {
+            localIntervalCount = Infinity;
+            bitmap.addLoadListener(function () {
+                localIntervalCount = paramLoadInterval;
+            }.bind(this));
+        }
+    };
+
+    DataManager.loadAudio = function(loadHandler, filePathInfo) {
+        if (AudioManager.shouldUseHtml5Audio() || Utils.isNwjs()) return;
+        var audio = AudioManager[loadHandler](filePathInfo[0], filePathInfo[1]);
+        if (Utils.isNwjs()) {
+            localIntervalCount = paramLoadInterval;
+        } else {
+            localIntervalCount = Infinity;
+            audio.addLoadListener(function () {
+                localIntervalCount = paramLoadInterval;
+            }.bind(this));
+        }
+    };
+
+    //=============================================================================
+    // SceneManager
+    //  ロード処理を実行します。
+    //=============================================================================
+    var _SceneManager_updateScene = SceneManager.updateScene;
+    SceneManager.updateScene = function() {
+        _SceneManager_updateScene.apply(this, arguments);
+        if (!localLoadComplete && DataManager.materialFilePaths) this.updateParallelPreload();
+    };
+
+    SceneManager.updateParallelPreload = function() {
         while (localIntervalCount <= 0 && !localLoadComplete) {
-            ImageManager.loadMaterial();
+            DataManager.loadMaterial();
         }
         localIntervalCount--;
     };
@@ -192,33 +236,6 @@ var $dataMaterials = null;
         titles2      : 'loadTitle2'
     };
 
-    ImageManager.loadMaterial = function() {
-        var filePathInfo = DataManager.materialFilePaths.shift();
-        if (filePathInfo) {
-            var loadHandler = this.loadHandlers[filePathInfo[0]];
-            if (!loadHandler) return;
-            if (Utils.isOptionValid('test')) {
-                console.log('Loaded:' + filePathInfo[0] + '/' + filePathInfo[1]);
-            }
-            var key = filePathInfo[1].split(':');
-            var hue = key.length > 1 ? parseInt(key[1], 10) : 0;
-            var bitmap = this[loadHandler](key[0], hue);
-            if (bitmap.isReady()) return;
-            bitmap._isNeedLagDraw = true;
-            bitmap._lagDrawHue = hue;
-            if (Utils.isNwjs()) {
-                localIntervalCount = paramLoadInterval;
-            } else {
-                localIntervalCount = Infinity;
-                bitmap.addLoadListener(function () {
-                    localIntervalCount = paramLoadInterval;
-                }.bind(this));
-            }
-        } else {
-            localLoadComplete = true;
-        }
-    };
-
     var _ImageManager_loadNormalBitmap = ImageManager.loadNormalBitmap;
     ImageManager.loadNormalBitmap = function(path, hue) {
         var bitmap = _ImageManager_loadNormalBitmap.apply(this, arguments);
@@ -237,6 +254,17 @@ var $dataMaterials = null;
             }
         }
         return true;
+    };
+
+    //=============================================================================
+    // AudioManager
+    //  ロード用のメソッド名を定義します。
+    //=============================================================================
+    AudioManager.loadHandlers = {
+        bgm : 'createBuffer',
+        bgs : 'createBuffer',
+        se  : 'createBuffer',
+        me  : 'createBuffer'
     };
 
     //=============================================================================
