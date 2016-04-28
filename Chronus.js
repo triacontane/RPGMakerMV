@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.5 2016/04/29 createUpperLayerによる競合対策
 // 1.2.4 2016/03/13 アナログ時計を指定しないで起動した場合にエラーになる現象の修正
 // 1.2.3 2016/03/10 時間帯と時間帯ごとの色調をカスタマイズできるようにユーザ書き換え領域を作成
 // 1.2.2 2016/03/04 本体バージョン1.1.0の未使用素材の削除機能への対応
@@ -630,10 +631,10 @@ function Game_Chronus() {
     // Spriteset_Map
     //  アナログ時計の画像を追加定義します。
     //=============================================================================
-    var _Spriteset_Map_createUpperLayer = Spriteset_Map.prototype.createUpperLayer;
-    Spriteset_Map.prototype.createUpperLayer = function() {
-        _Spriteset_Map_createUpperLayer.apply(this, arguments);
-        this.createClockSprite();
+    var _Spriteset_Base_createUpperLayer = Spriteset_Base.prototype.createUpperLayer;
+    Spriteset_Base.prototype.createUpperLayer = function() {
+        _Spriteset_Base_createUpperLayer.apply(this, arguments);
+        if (this instanceof Spriteset_Map) this.createClockSprite();
     };
 
     Spriteset_Map.prototype.createClockSprite = function() {

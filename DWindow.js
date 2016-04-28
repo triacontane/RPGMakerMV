@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/04/29 createUpperLayerによる競合対策
 // 1.1.0 2016/01/16 ウィンドウを最前面に表示できる機能を追加
 // 1.0.0 2015/11/12 初版
 // ----------------------------------------------------------------------------
@@ -214,14 +215,15 @@
     // Spriteset_Map
     //  動的ウィンドウの情報を保持し、作成する処理を追加定義します。
     //=============================================================================
-    var _Spriteset_Map_createUpperLayer = Spriteset_Map.prototype.createUpperLayer;
-    Spriteset_Map.prototype.createUpperLayer = function() {
+    var _Spriteset_Base_createUpperLayer = Spriteset_Base.prototype.createUpperLayer;
+    Spriteset_Base.prototype.createUpperLayer = function() {
+        if (!this instanceof Spriteset_Map) return;
         var top = getParamBoolean(['AlwaysOnTop', '最前面に表示']);
         if (!top) {
             this.createDynamicWindow();
-            _Spriteset_Map_createUpperLayer.apply(this, arguments);
+            _Spriteset_Base_createUpperLayer.apply(this, arguments);
         } else {
-            _Spriteset_Map_createUpperLayer.apply(this, arguments);
+            _Spriteset_Base_createUpperLayer.apply(this, arguments);
             this.createDynamicWindow();
         }
     };

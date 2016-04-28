@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2016/04/29 createUpperLayerによる競合対策
 // 1.0.2 2016/03/04 本体バージョン1.1.0の未使用素材の削除機能への対応
 // 1.0.1 2016/02/21 一般公開用に設定項目を追加
 // 1.0.0 2016/02/19 初版
@@ -393,10 +394,10 @@ Game_Relative_Pad.distanceFar          = 144;
     // Spriteset_Map
     //  相対タッチパッドの画像を追加定義します。
     //=============================================================================
-    var _Spriteset_Map_createUpperLayer = Spriteset_Map.prototype.createUpperLayer;
-    Spriteset_Map.prototype.createUpperLayer = function() {
-        _Spriteset_Map_createUpperLayer.apply(this, arguments);
-        this.createRelativePad();
+    var _Spriteset_Base_createUpperLayer = Spriteset_Base.prototype.createUpperLayer;
+    Spriteset_Base.prototype.createUpperLayer = function() {
+        _Spriteset_Base_createUpperLayer.apply(this, arguments);
+        if (this instanceof Spriteset_Map) this.createRelativePad();
     };
 
     Spriteset_Map.prototype.createRelativePad = function() {

@@ -864,7 +864,7 @@
         });
     };
     Game_Interpreter.prototype.pluginCommandBook_Init_Switches = function(args) {
-        this.pluginCommandBook_pluginCommandBook_スイッチの初期化(args);
+        this.pluginCommandBook_スイッチの初期化(args);
     };
 
     Game_Interpreter.prototype.pluginCommandBook_変数の初期化 = function(args) {
@@ -880,14 +880,14 @@
         });
     };
     Game_Interpreter.prototype.pluginCommandBook_Init_Variables = function(args) {
-        this.pluginCommandBook_pluginCommandBook_変数の初期化(args);
+        this.pluginCommandBook_変数の初期化(args);
     };
 
     Game_Interpreter.prototype.pluginCommandBook_セルフスイッチの初期化 = function(args) {
         $gameSelfSwitches.clear();
     };
     Game_Interpreter.prototype.pluginCommandBook_Init_Self_Switch = function(args) {
-        this.pluginCommandBook_pluginCommandBook_セルフスイッチの初期化(args);
+        this.pluginCommandBook_セルフスイッチの初期化(args);
     };
 
     Game_Interpreter.prototype.pluginCommandBook_セルフスイッチの遠隔操作 = function(args) {
