@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/04/29 項目をクリックしたときに項目値が循環するよう修正
 // 1.0.0 2016/01/17 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -396,35 +397,43 @@
 
     var _Window_Options_processOk = Window_Options.prototype.processOk;
     Window_Options.prototype.processOk = function() {
-        if (!this._shiftValue(1)) _Window_Options_processOk.apply(this, arguments);
+        if (!this._shiftValue(1, true)) _Window_Options_processOk.apply(this, arguments);
     };
 
     var _Window_Options_cursorRight = Window_Options.prototype.cursorRight;
     Window_Options.prototype.cursorRight = function(wrap) {
-        if (!this._shiftValue(1)) _Window_Options_cursorRight.apply(this, arguments);
+        if (!this._shiftValue(1, false)) _Window_Options_cursorRight.apply(this, arguments);
     };
 
     var _Window_Options_cursorLeft = Window_Options.prototype.cursorLeft;
     Window_Options.prototype.cursorLeft = function(wrap) {
-        if (!this._shiftValue(-1)) _Window_Options_cursorLeft.apply(this, arguments);
+        if (!this._shiftValue(-1, false)) _Window_Options_cursorLeft.apply(this, arguments);
     };
 
-    Window_Options.prototype._shiftValue = function(sign) {
+    Window_Options.prototype._shiftValue = function(sign, loopFlg) {
         var symbol = this.commandSymbol(this.index());
         var value = this.getConfigValue(symbol);
         if (this.isNumberSymbol(symbol)) {
             value += this.numberOffset(symbol) * sign;
-            value = value.clamp(this._customParams[symbol].min, this._customParams[symbol].max);
-            this.changeValue(symbol, value);
+            this.changeValue(symbol, this._clampValue(value, symbol, loopFlg));
             return true;
         }
         if (this.isStringSymbol(symbol)) {
             value += sign;
-            value = value.clamp(this._customParams[symbol].min, this._customParams[symbol].max);
-            this.changeValue(symbol, value);
+            this.changeValue(symbol, this._clampValue(value, symbol, loopFlg));
             return true;
         }
         return false;
+    };
+
+    Window_Options.prototype._clampValue = function(value, symbol, loopFlg) {
+        var maxValue = this._customParams[symbol].max;
+        var minValue = this._customParams[symbol].min;
+        if (loopFlg) {
+            if (value > maxValue) value = minValue;
+            if (value < minValue) value = maxValue;
+        }
+        return value.clamp(this._customParams[symbol].min, this._customParams[symbol].max);
     };
 
     Window_Options.prototype.numberOffset = function(symbol) {
