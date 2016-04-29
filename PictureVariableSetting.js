@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/04/29 ピクチャを指定した角度まで回転させるコマンドを追加
 // 1.2.1 2016/04/14 処理を適用するピクチャを範囲指定もしくは複数指定する機能を追加
 // 1.2.0 2016/03/19 表示中のすべてのピクチャに処理を適用するコマンドを追加
 // 1.1.2 2016/01/24 ピクチャの最大表示数を設定できる機能を追加
@@ -65,29 +66,43 @@
  *  ※ 一度有効に設定したら、無効にするまでずっとそのままです。
  *  例 P_VARIABLE_VALID
  *
- *  P_D_FILENAME [ファイル名] :
+ *  P_D_FILENAME [ファイル名]
  *  次に表示するピクチャのファイル名に変数を含めることができます。
  *  変数は「文章の表示」と同様の書式\V[n]で組み込んでください。
  *  拡張子は指定しないでください。
  *  例 P_D_FILENAME file\V[1]
  *
- *  P_TARGET_ALL :
+ *  P_TARGET_ALL
  *  ピクチャ関連のイベントコマンドの対象を
  *  「表示している全てのピクチャ」に変更します。
  *  1回実行すると設定はもとに戻ります。
  *  例 P_TARGET_ALL
  *
- *  P_TARGET_RANGE [開始番号] [終了番号] :
+ *  P_TARGET_RANGE [開始番号] [終了番号]
  *  ピクチャ関連のイベントコマンドの対象を
  *  「開始番号から終了番号までのピクチャ」に変更します。
  *  1回実行すると設定はもとに戻ります。
  *  例 P_TARGET_RANGE 3 5 // 3番から5番までの表示しているピクチャが対象
  *
- *  P_TARGET_MULTI [ピクチャ番号] :
+ *  P_TARGET_MULTI [ピクチャ番号]
  *  ピクチャ関連のイベントコマンドの対象を
  *  「指定したすべてのピクチャ」に変更します。カンマで区切ってください。
  *  1回実行すると設定はもとに戻ります。
  *  例 P_TARGET_MULTI 3,5,6,\v[1] // 3番、5番、6番、変数「1」番のピクチャが対象
+ *
+ *  P_SPIN [ピクチャ番号] [角度] [時間(フレーム)] [完了までウェイト]
+ *  対象のピクチャを指定した角度(degree)まで回転させます。正の値が時計回りです。
+ *  時間を0にすると即座に指定した角度に設定されます。
+ *  このコマンドには「P_TARGET_ALL」等が適用されます。
+ *  一番後ろに「WAIT」と付けると、回転が完了するまでウェイトします。
+ *  例 P_SPIN 1 90 60 WAIT
+ *  -> ピクチャ番号「1」を60フレーム掛けて90度回転させる。
+ *
+ *  P_SPIN_RELATIVE [ピクチャ番号] [角度] [時間(フレーム)] [完了までウェイト]
+ *  対象のピクチャを現在の角度を基準に、指定した角度のぶんだけ回転させます。
+ *  それ以外は「P_SPIN」と同様です。
+ *  例 P_SPIN_RELATIVE \v[1] -90 0
+ *  -> 変数「1」の値のピクチャを、現在の角度から-90度まで即座に回転させる。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -190,6 +205,16 @@
                 break;
             case 'P_TARGET_MULTI':
                 $gameScreen.setPictureTargetMulti(getArgArrayNumber(args[0], 1));
+                break;
+            case 'P_SPIN':
+                var spinDuration = getArgNumber(args[2], 0);
+                $gameScreen.spinPicture(getArgNumber(args[0], 1), getArgNumber(args[1]), spinDuration);
+                if(args[3]) this.wait(spinDuration);
+                break;
+            case 'P_SPIN_RELATIVE':
+                var spinRelativeDuration = getArgNumber(args[2], 0);
+                $gameScreen.spinPictureRelative(getArgNumber(args[0], 1), getArgNumber(args[1]), spinRelativeDuration);
+                if(args[3]) this.wait(spinRelativeDuration);
                 break;
         }
     };
@@ -320,6 +345,34 @@
         }
     };
 
+    Game_Screen.prototype.spinPicture = function(pictureId, rotation, duration) {
+        if (this._pictureTargetAll > 0) {
+            this.iteratePictures(function(picture) {
+                picture.spin(rotation, duration);
+            }.bind(this));
+            this._pictureTargetAll = 0;
+        } else {
+            var picture = this.picture(pictureId);
+            if (picture) {
+                picture.spin(rotation, duration);
+            }
+        }
+    };
+
+    Game_Screen.prototype.spinPictureRelative = function(pictureId, relativeRotation, duration) {
+        if (this._pictureTargetAll > 0) {
+            this.iteratePictures(function(picture) {
+                picture.spinRelative(relativeRotation, duration);
+            }.bind(this));
+            this._pictureTargetAll = 0;
+        } else {
+            var picture = this.picture(pictureId);
+            if (picture) {
+                picture.spinRelative(relativeRotation, duration);
+            }
+        }
+    };
+
     Game_Screen.prototype.iteratePictures = function(callBack) {
         for (var i = 1, n = this.maxPictures(); i <= n; i++) {
             var picture = this.picture(i);
@@ -359,4 +412,34 @@
         }
         _Game_Picture_show.apply(this, arguments);
     };
+
+    Game_Picture.prototype.spin = function(targetRotation, duration) {
+        this._targetRotation = targetRotation;
+        this._angle = (this._angle % 360);
+        if (duration === 0) {
+            this._angle = this._targetRotation;
+        } else {
+            this._spinDuration = duration;
+        }
+    };
+
+    Game_Picture.prototype.spinRelative = function(targetRelativeRotation, duration) {
+        this._angle = (this._angle % 360);
+        this.spin(this._angle + targetRelativeRotation, duration);
+    };
+
+    var _Game_Picture_update = Game_Picture.prototype.update;
+    Game_Picture.prototype.update = function() {
+        _Game_Picture_update.apply(this, arguments);
+        this.updateSpin();
+    };
+
+    Game_Picture.prototype.updateSpin = function() {
+        if (this._spinDuration > 0) {
+            var d = this._spinDuration;
+            this._angle = (this._angle * (d - 1) + this._targetRotation) / d;
+            this._spinDuration--;
+        }
+    };
+
 })();
