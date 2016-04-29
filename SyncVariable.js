@@ -57,7 +57,7 @@
  * パラメータ「ユーザID」に別の値を設定して再実行してください。
  *
  * ログに「登録が完了しました。...」が表示されれば登録成功です。
- * 認証情報ファイルが「data/SyncVariable.rpgdata」が作成されます。
+ * 認証情報ファイル「data/SyncVariable.rpgdata」が作成されます。
  *
  * 3. あとはゲームを開始すれば指定範囲の変数やスイッチが同期される状態になります。
  *
@@ -204,14 +204,14 @@ function SyncManager() {
     //=============================================================================
     Game_Switches.prototype.getSyncData = function() {
         var syncData = {};
-        for(var i = paramSyncSwitchStart; i < paramSyncSwitchEnd; i++) {
+        for(var i = paramSyncSwitchStart; i < paramSyncSwitchEnd + 1; i++) {
             syncData[i] = this.value(i);
         }
         return syncData;
     };
 
     Game_Switches.prototype.setSyncData = function(syncData) {
-        for(var i = paramSyncSwitchStart; i < paramSyncSwitchEnd; i++) {
+        for(var i = paramSyncSwitchStart; i < paramSyncSwitchEnd + 1; i++) {
             this.setValue(i, syncData[i]);
         }
     };
@@ -230,14 +230,14 @@ function SyncManager() {
     //=============================================================================
     Game_Variables.prototype.getSyncData = function() {
         var syncData = {};
-        for(var i = paramSyncVariableStart; i < paramSyncVariableEnd; i++) {
+        for(var i = paramSyncVariableStart; i < paramSyncVariableEnd + 1; i++) {
             syncData[i] = this.value(i);
         }
         return syncData;
     };
 
     Game_Variables.prototype.setSyncData = function(syncData) {
-        for(var i = paramSyncVariableStart; i < paramSyncVariableEnd; i++) {
+        for(var i = paramSyncVariableStart; i < paramSyncVariableEnd + 1; i++) {
             this.setValue(i, syncData[i]);
         }
     };
@@ -256,12 +256,14 @@ function SyncManager() {
     //=============================================================================
     SyncManager._milkCocoaUrl   = 'https://cdn.mlkcca.com/v2.0.0/milkcocoa.js';
     SyncManager._milkCocoaApiId = 'leadinlmv4lo.mlkcca.com';
+    SyncManager._loadListeners  = [];
     SyncManager.authFileName    = 'SyncVariable.rpgdata';
     SyncManager.userId          = paramUserId;
     SyncManager.needUpload      = false;
     SyncManager.needDownload    = false;
     SyncManager.isDownloaded    = false;
     SyncManager.isExecute       = false;
+    SyncManager._authFile       = null;
 
     SyncManager.initialize = function() {
         this._milkCocoa = new MilkCocoa(this._milkCocoaApiId);
@@ -271,6 +273,22 @@ function SyncManager() {
         this._online    = true;
         this._authority = false;
         if (!DataManager.isEventTest()) this.loadAuthData();
+        this._callLoadListeners();
+    };
+
+    SyncManager.addLoadListener = function(listener) {
+        if (!this._online) {
+            this._loadListeners.push(listener);
+        } else {
+            listener();
+        }
+    };
+
+    SyncManager._callLoadListeners = function() {
+        while (this._loadListeners.length > 0) {
+            var listener = this._loadListeners.shift();
+            listener();
+        }
     };
 
     SyncManager.canUse = function() {
@@ -323,14 +341,16 @@ function SyncManager() {
     };
 
     SyncManager.getAuthData = function(onComplete) {
-        if (!this._online) return;
         this._authData.get(SyncManager.userId, onComplete);
     };
 
     SyncManager.loadAuthData = function(onComplete, onError) {
-        var file = this.loadAuthFile();
+        this.loadAuthFile(this.onLoadAuthData.bind(this, onComplete, onError));
+    };
+
+    SyncManager.onLoadAuthData = function(onComplete, onError) {
         this.getAuthData(function (err, datum) {
-            if (!err && datum.pass === file.pass) {
+            if (!err && datum.value.pass === SyncManager._authFile.pass) {
                 console.log('認証に成功しました。');
                 this._authority = true;
                 if (onComplete) onComplete();
@@ -342,43 +362,65 @@ function SyncManager() {
         }.bind(this));
     };
 
-    SyncManager.deleteAuthData = function() {
-        SyncManager.showDevTools();
-        this.loadAuthData(function () {
-            this._authData.remove(SyncManager.userId, function () {
-                StorageManager.removeSyncVariableAuthFile();
-                this.terminate('対象のユーザ情報を削除しました。:' + SyncManager.userId);
-            }.bind(this), function () {
-                this.terminate('対象のユーザ情報を削除できませんでした。:' + SyncManager.userId);
-            }.bind(this));
-        }.bind(this), function () {
-            this.terminate('ユーザ情報の認証に失敗しました。すでに削除済みか、認証が不正です。:' + SyncManager.userId);
-        }.bind(this));
-    };
-
     SyncManager.makeAuthData = function(pass) {
-        SyncManager.showDevTools();
-        if (!paramUserId) this.terminate('パラメータ「ユーザID」を指定してください。');
-        this.getAuthData(function (err, datum) {
-            if (err) {
-                this._authData.set(SyncManager.userId, {pass:pass}, function () {
-                    this.terminate('登録が完了しました。パスワードは削除の際に必要なので控えておいてください。:' + pass);
-                    this.makeAuthFile(pass, false);
-                }.bind(this));
-            } else {
-                this.terminate('その名称のユーザはすでに登録されています。');
-            }
+        this.addLoadListener(function () {
+            this.showDevTools();
+            if (!paramUserId) this.terminate('パラメータ「ユーザID」を指定してください。');
+            this.getAuthData(function (err, datum) {
+                if (err) {
+                    this._authData.set(SyncManager.userId, {pass:pass}, function () {
+                        StorageManager.saveSyncVariableAuthFile(JsonEx.stringify({pass:pass}));
+                        this.uploadVariables();
+                        this.terminate('登録が完了しました。パスワードは削除の際に必要なので控えておいてください。:' + pass);
+                    }.bind(this));
+                } else {
+                    this.terminate('その名称のユーザはすでに登録されています。');
+                }
+            }.bind(this));
         }.bind(this));
     };
 
-    SyncManager.makeAuthFile = function(pass, terminate) {
-        SyncManager.showDevTools();
-        StorageManager.saveSyncVariableAuthFile(JsonEx.stringify({pass:pass}));
-        if (terminate) SyncManager.terminate('認証ファイルの再作成が完了しました。');
+    SyncManager.makeAuthFile = function(pass) {
+        this.addLoadListener(function () {
+            SyncManager.showDevTools();
+            StorageManager.saveSyncVariableAuthFile(JsonEx.stringify({pass:pass}));
+            SyncManager.terminate('認証ファイルの再作成が完了しました。');
+        }.bind(this));
     };
 
-    SyncManager.loadAuthFile = function() {
-        return StorageManager.loadSyncVariableAuthFile();
+    SyncManager.deleteAuthData = function() {
+        this.addLoadListener(function () {
+            this.showDevTools();
+            this.loadAuthData(function () {
+                this._authData.remove(SyncManager.userId, function () {
+                    StorageManager.removeSyncVariableAuthFile();
+                    this._mainData.remove(SyncManager.userId);
+                    this.terminate('対象のユーザ情報を削除しました。:' + SyncManager.userId);
+                }.bind(this), function () {
+                    this.terminate('対象のユーザ情報を削除できませんでした。:' + SyncManager.userId);
+                }.bind(this));
+            }.bind(this), function () {
+                this.terminate('ユーザ情報の認証に失敗しました。すでに削除済みか、認証が不正です。:' + SyncManager.userId);
+            }.bind(this));
+        }.bind(this));
+    };
+
+    SyncManager.loadAuthFile = function(onLoad) {
+        var xhr = new XMLHttpRequest();
+        var url = 'data/' + SyncManager.authFileName;
+        xhr.open('GET', url);
+        xhr.overrideMimeType('application/json');
+        xhr.onload = function() {
+            if (xhr.status < 400) {
+                var json = LZString.decompressFromBase64(xhr.responseText);
+                SyncManager._authFile = JsonEx.parse(json);
+                onLoad();
+            }
+        };
+        xhr.onerror = function() {
+            DataManager._errorUrl = DataManager._errorUrl || url;
+        };
+        xhr.send();
     };
 
     SyncManager.terminate = function(message) {
