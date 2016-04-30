@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/04/30 アクターと敵キャラ限定のオートステートが一部正しく機能していなかった問題を修正
 // 1.0.1 2016/02/14 オートステートの追加時にメッセージを表示する仕様を追加
 // 1.0.0 2016/02/08 初版
 // ----------------------------------------------------------------------------
@@ -188,8 +189,8 @@
     var _Game_Actor_isAutomaticValid = Game_Actor.prototype.isAutomaticValid;
     Game_Actor.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
-        var actorId = this.getStateMetaNumber('アクター', 1, $dataActors.length - 1);
-        if (this.isStateMetaInfo('敵キャラ') || (actorId !== null && actorId !== this._actorId)) return false;
+        var actorId = this.getStateMetaNumber('アクター', 0, $dataActors.length - 1);
+        if (this.isStateMetaInfo('敵キャラ') || (actorId > 0 && actorId !== this._actorId)) return false;
         var weaponId = this.getStateMetaNumber('武器装備', 1, $dataWeapons.length - 1);
         if (weaponId !== null) return this.hasWeapon($dataWeapons[weaponId]);
         var armorId = this.getStateMetaNumber('防具装備', 1, $dataArmors.length - 1);
@@ -210,8 +211,8 @@
     var _Game_Enemy_isAutomaticValid = Game_Enemy.prototype.isAutomaticValid;
     Game_Enemy.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
-        var enemyId = this.getStateMetaNumber('敵キャラ', 1, $dataEnemies.length - 1);
-        if (this.isStateMetaInfo('アクター') || (enemyId !== null && enemyId !== this._enemyId)) return false;
+        var enemyId = this.getStateMetaNumber('敵キャラ', 0, $dataEnemies.length - 1);
+        if (this.isStateMetaInfo('アクター') || (enemyId > 0 && enemyId !== this._enemyId)) return false;
         return _Game_Enemy_isAutomaticValid.apply(this, arguments);
     };
 
