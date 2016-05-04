@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/05/04 もともと武器や防具が表示されなくなってしまう不具合を修正
 // 1.0.0 2016/05/03 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -64,7 +65,7 @@
     //=============================================================================
     var _Window_ItemList_includes = Window_ItemList.prototype.includes;
     Window_ItemList.prototype.includes = function(item) {
-        var result = _Window_ItemList_includes.apply(item);
+        var result = _Window_ItemList_includes.apply(this, arguments);
         switch (this._category) {
             case 'weapon':
                 if (DataManager.isArmor(item) && item.etypeId === paramEquipTypeId) result = true;
