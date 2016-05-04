@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/05/04 スクリプトのその場実行機能を追加
+//                  モバイル偽装機能を追加
+//                  コードのリファクタリング
 // 1.2.2 2016/03/19 ゲームのスピード高速化を8倍速まで対応
 // 1.2.1 2016/02/27 タイトルカットしたときにイベントテスト、戦闘テストが正しく開始されない不具合を修正
 // 1.2.0 2016/02/24 ゲームのスピードを高速(2倍速)化する機能を追加
@@ -55,6 +58,10 @@
  * @desc ゲームを高速化するキーです。(F1～F12)。
  * @default F10
  *
+ * @param FuncKeyScript
+ * @desc スクリプト実行用のウィンドウをポップアップするキーです。(F1～F12)。
+ * @default F6
+ *
  * @param ShowFPS
  * @desc 初期状態で画面左上にFPSを表示します（FPS/MS/OFF）。
  * @default OFF
@@ -71,6 +78,11 @@
  * @param RapidSpeed
  * @desc 高速化を実行した際のスピード倍率です。
  * @default 2
+ *
+ * @param FakeMobile
+ * @desc モバイル実行を偽装します。(ON/OFF)
+ * モバイル版で異なるUIを使用する場合の表示確認ができます。
+ * @default OFF
  *
  * @help Developer tools management plugin.
  * Run developer tools when error occur.
@@ -116,8 +128,8 @@
  * @desc 戦闘を勝利で強制終了するキーです。(F1～F12)。
  * @default F7
  *
- * @param 処理時間計測キー
- * @desc 処理時間を計測してログに書き込むキーです。(F1～F12)。
+ * @param スクリプト実行キー
+ * @desc スクリプト実行用のウィンドウをポップアップするキーです。(F1～F12)。
  * @default F6
  *
  * @param FPS表示
@@ -137,24 +149,33 @@
  * @desc 高速化を実行した際のスピード倍率です。
  * 最大で8倍速まで指定できます。
  * @default 2
+ *
+ * @param モバイル偽装
+ * @desc モバイル実行を偽装します。(ON/OFF)
+ * @default OFF
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * 快適な開発支援のために以下の機能を提供します。
  *
- * １．　ゲーム開始時にデベロッパツールが自動で立ち上がる機能（最小化での起動も可能）
- * ２．　エラー発生時やalert時にデベロッパツールが自動でアクティブになる機能
- * ３．　ゲーム画面を常に前面に表示する機能
- * ４．　後方互換機能（F12でリロード、pでコンソール出力）
- * ５．　alertの挙動をデベロッパツールへのログ出力に変更する機能
- * ６．　テストプレー中にマップやイベントを修正して再保存すると、ゲーム画面にフォーカスを
- * 　　　戻した瞬間に最新のマップを自動でリロードする機能
- * ７．　ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能
- * ８．　タイトル画面を飛ばして最新のセーブファイルをロードする機能
- * ９．　マップ上でのゲームのスピードを高速化(8倍速まで)する機能
- * 　　　(マップ上で倍速、フェードアウト、ウィンドウ開閉およびメッセージ表示の高速スキップ)
- * １０．強制的に敵を全滅させる機能
+ * 1. ゲーム開始時にデベロッパツールが自動で立ち上がる機能（最小化での起動も可能）
+ * 2. エラー発生時やalert時にデベロッパツールが自動でアクティブになる機能
+ * 3. ゲーム画面を常に前面に表示する機能
+ * 4. 後方互換機能（F12でリロード、pでコンソール出力）
+ * 5. alertの挙動をデベロッパツールへのログ出力に変更する機能
+ * 6. テストプレー中にマップやイベントを修正して再保存すると、ゲーム画面に
+ *    フォーカスを戻した瞬間に最新のマップを自動でリロードする機能
+ * 7. ゲーム開始時にFPS表示（FPS表示/MS表示に対応）を有効にする機能
+ * 8. タイトル画面を飛ばして最新のセーブファイルをロードする機能
+ * 9. マップ上でのゲームのスピードを高速化(8倍速まで)する機能
+ *    (マップ上で高速、フェードアウト、メッセージ表示の高速スキップ)
+ * 10.強制的に敵を全滅させる機能
+ * 11.スクリプトをその場で実行して結果を得る機能
+ *    (実行したスクリプトはクリップボードに格納されます)
+ * 12.モバイル実行を偽装する機能
+ *    (モバイル用のUIの表示確認ができます。
+ *     オーディオが演奏されない制約があります)
  *
- * このプラグインはテストプレー時のみ有効となります。
+ * このプラグインはローカル環境でのテストプレー時のみ有効となります。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -165,7 +186,6 @@
  */
 
 var p = null;
-var $gameCurrentWindow = null;
 
 (function () {
     'use strict';
@@ -174,6 +194,7 @@ var $gameCurrentWindow = null;
         console.log('DevToolsManage is valid only test play!');
         return;
     }
+    var pluginName = 'DevToolsManage';
 
     //=============================================================================
     // p
@@ -183,15 +204,13 @@ var $gameCurrentWindow = null;
         alert(value);
     };
 
-    var pluginName = 'DevToolsManage';
-
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
     var getParamString = function(paramNames, upperFlg) {
         var value = getParamOther(paramNames);
-        return value == null ? '' : upperFlg ? value.toUpperCase() : value;
+        return value === null ? '' : upperFlg ? value.toUpperCase() : value;
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -203,7 +222,7 @@ var $gameCurrentWindow = null;
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() == 'ON';
+        return (value || '').toUpperCase() === 'ON';
     };
 
     var getParamOther = function(paramNames) {
@@ -236,10 +255,21 @@ var $gameCurrentWindow = null;
     var funcKeyMoveEdge  = getParamString(['FuncKeyMoveEdge', '画面の左寄せキー']);
     var funcKeyRapidGame = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
     var funcKeyVictory   = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
+    var funcKeyScript    = getParamString(['FuncKeyScript', 'スクリプト実行キー']);
     var showFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
     var cutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
     var rapidStart       = getParamBoolean(['RapidStart', '高速開始']);
     var rapidSpeed       = getParamNumber(['RapidSpeed', '高速スピード'], 2, 16);
+    var fakeMobile       = getParamBoolean(['FakeMobile', 'モバイル偽装']);
+
+    //=============================================================================
+    // Utils
+    //  モバイルモードを偽装します。
+    //=============================================================================
+    var _Utils_isMobileDevice = Utils.isMobileDevice;
+    Utils.isMobileDevice = function() {
+        return _Utils_isMobileDevice.apply(this, arguments) || fakeMobile;
+    };
 
     //=============================================================================
     // SceneManager
@@ -247,90 +277,106 @@ var $gameCurrentWindow = null;
     //=============================================================================
     var _SceneManager_initialize = SceneManager.initialize;
     SceneManager.initialize = function() {
-        _SceneManager_initialize.call(this);
-        $gameCurrentWindow = SceneManager.getNwjsWindow();
+        _SceneManager_initialize.apply(this, arguments);
+        this._nwJsGui = new Controller_NwJs();
         Graphics.setFPSMeter(showFPS);
     };
 
-    var _SceneManager_updateMain = SceneManager.updateMain;
-    SceneManager.updateMain = function() {
-        _SceneManager_updateMain.apply(this, arguments);
-        var newTime = this._getTimeInMs();
+    SceneManager.getNwJs = function() {
+        return this._nwJsGui;
     };
 
     var _SceneManager_catchException = SceneManager.catchException;
     SceneManager.catchException = function(e) {
-        $gameCurrentWindow.showDevTools(false);
-        _SceneManager_catchException.call(this, e);
+        this._nwJsGui.showDevTools(false);
+        _SceneManager_catchException.apply(this, arguments);
     };
 
     var _SceneManager_onError = SceneManager.onError;
     SceneManager.onError = function(e) {
-        $gameCurrentWindow.showDevTools(false);
-        _SceneManager_onError.call(this, e);
+        this._nwJsGui.showDevTools(false);
+        _SceneManager_onError.apply(this, arguments);
     };
 
     var _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown = function(event) {
         switch (event.keyCode) {
             case Input.functionReverseMapper[funcKeyMinimize] :
-                event.ctrlKey ? $gameCurrentWindow.closeDevTools() : $gameCurrentWindow.toggleDevTools();
+                if (event.ctrlKey) {
+                    this._nwJsGui.closeDevTools();
+                } else {
+                    this._nwJsGui.toggleDevTools();
+                }
                 break;
             case Input.functionReverseMapper[funcKeyMoveEdge] :
-                $gameCurrentWindow.moveEdge();
+                this._nwJsGui.moveEdge();
                 break;
             case Input.functionReverseMapper[funcKeyReload] :
-                if (Utils.isNwjs()) {
-                    location.reload();
-                }
+                location.reload();
                 break;
             case Input.functionReverseMapper[funcKeyRapidGame] :
                 this.toggleRapid();
                 break;
             case Input.functionReverseMapper[funcKeyVictory] :
-                if (this.isCurrentScene(Scene_Battle) && !BattleManager.isBattleAlreadyEnd()) {
-                    $gameTroop.members().forEach(function(enemy) {
-                        enemy.addNewState(enemy.deathStateId());
-                    });
-                    BattleManager.processVictory();
-                }
+                BattleManager.forceVictory();
+                break;
+            case Input.functionReverseMapper[funcKeyScript] :
+                this.showScriptDialog();
                 break;
             default:
-                _SceneManager_onKeyDown.call(this, event);
+                _SceneManager_onKeyDown.apply(this, arguments);
                 break;
         }
     };
     SceneManager.originalTitle = null;
-    SceneManager.rapidGame = false;
+    SceneManager._rapidGame = false;
 
     SceneManager.isRapid = function() {
-        return SceneManager.rapidGame;
+        return SceneManager._rapidGame;
     };
 
     SceneManager.toggleRapid = function() {
-        this.rapidGame = !this.rapidGame;
+        this._rapidGame = !this._rapidGame;
         if (!this.originalTitle) this.originalTitle = document.title;
         var bgm = AudioManager.saveBgm();
         AudioManager.playBgm(bgm, bgm.pos);
         document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!] * ' + rapidSpeed  : '');
     };
 
-    SceneManager.isPlayTest = function() {
-        return ($gameTemp ? $gameTemp.isPlaytest() : Utils.isOptionValid('test')) && Utils.isNwjs();
-    };
-
-    SceneManager.getNwjsWindow = function() {
-        return SceneManager.isPlayTest() ? new Game_NwjsWindow() : new Game_CurrentWindow();
-    };
-
     SceneManager.isCurrentScene = function(sceneClass) {
         return this._scene && this._scene.constructor === sceneClass;
     };
 
+    SceneManager.showScriptDialog = function() {
+        var scriptString = window.prompt('実行したいスクリプトを入力してください。', this._nwJsGui.readClipboard());
+        if (scriptString !== '') {
+            this._nwJsGui.showDevTools();
+            this._nwJsGui.writeClipboard(scriptString);
+            try {
+                var result = eval(scriptString);
+                SoundManager.playOk();
+                console.log('Execute Script : ' + scriptString);
+                console.log('Execute Result : ' + result);
+            } catch (e) {
+                SoundManager.playBuzzer();
+                console.error(e.stack);
+            }
+        }
+    };
+
     //=============================================================================
     // BattleManager
-    //  すでに戦闘が終了しているかを返します。
+    //  強制勝利を追加定義します。
     //=============================================================================
+    BattleManager.forceVictory = function() {
+        if (SceneManager.isCurrentScene(Scene_Battle) && !this.isBattleAlreadyEnd()) {
+            $gameTroop.members().forEach(function(enemy) {
+                enemy.addNewState(enemy.deathStateId());
+            });
+            this.processVictory();
+        }
+    };
+
     BattleManager.isBattleAlreadyEnd = function() {
         return this._phase === 'battleEnd';
     };
@@ -353,14 +399,20 @@ var $gameCurrentWindow = null;
     //=============================================================================
     var _Input_wrapNwjsAlert = Input._wrapNwjsAlert;
     Input._wrapNwjsAlert = function() {
-        if (SceneManager.isPlayTest()) {
-            window.alert = function() {
-                console.log(arguments[0]);
-                $gameCurrentWindow.showDevTools(false);
-            };
-        } else {
-            _Input_wrapNwjsAlert.call(this);
-        }
+        _Input_wrapNwjsAlert.apply(this, arguments);
+        var _prompt = window.prompt;
+        window.prompt = function() {
+            var gui = require('nw.gui');
+            var win = gui.Window.get();
+            var result = _prompt.apply(this, arguments);
+            win.focus();
+            Input.clear();
+            return result;
+        };
+        window.alert = function() {
+            console.log(arguments[0]);
+            SceneManager.getNwJs().showDevTools();
+        };
     };
 
     Input.functionReverseMapper = {
@@ -457,8 +509,8 @@ var $gameCurrentWindow = null;
     //=============================================================================
     var _Scene_Map_create = Scene_Map.prototype.create;
     Scene_Map.prototype.create = function() {
-        _Scene_Map_create.call(this);
-        $gameCurrentWindow._onFocus = false;
+        _Scene_Map_create.apply(this, arguments);
+        SceneManager.getNwJs().setOnFocus(false);
     };
 
     var _Scene_Map_update = Scene_Map.prototype.update;
@@ -476,12 +528,12 @@ var $gameCurrentWindow = null;
                 return;
             }
         }
-        _Scene_Map_update.call(this);
+        _Scene_Map_update.apply(this, arguments);
     };
 
     Scene_Map.prototype.updateMapReload = function() {
-        if ($gameCurrentWindow._onFocus && $gamePlayer.canMove()) {
-            $gameCurrentWindow._onFocus = false;
+        if (SceneManager.getNwJs().isOnFocus() && $gamePlayer.canMove()) {
+            SceneManager.getNwJs().setOnFocus(false);
             for (var i = 0; i < DataManager._databaseFiles.length; i++) {
                 var name = DataManager._databaseFiles[i].name;
                 if (name === '$dataSystem') {
@@ -495,7 +547,7 @@ var $gameCurrentWindow = null;
 
     var _Scene_Map_isFastForward = Scene_Map.prototype.isFastForward;
     Scene_Map.prototype.isFastForward = function() {
-        return _Scene_Map_isFastForward.apply(this, arguments) || SceneManager.rapidGame;
+        return _Scene_Map_isFastForward.apply(this, arguments) || SceneManager.isRapid();
     };
 
     var _Scene_Map_updateMainMultiply = Scene_Map.prototype.updateMainMultiply;
@@ -515,13 +567,13 @@ var $gameCurrentWindow = null;
     var _Window_Base_updateOpen = Window_Base.prototype.updateOpen;
     Window_Base.prototype.updateOpen = function () {
         if (SceneManager.isRapid() && this._opening) this.openness = 255;
-        _Window_Base_updateOpen.call(this);
+        _Window_Base_updateOpen.apply(this, arguments);
     };
 
     var _Window_Base_updateClose = Window_Base.prototype.updateClose;
     Window_Base.prototype.updateClose = function () {
         if (SceneManager.isRapid() && this._closing) this.openness = 0;
-        _Window_Base_updateClose.call(this);
+        _Window_Base_updateClose.apply(this, arguments);
     };
 
     //=============================================================================
@@ -540,43 +592,21 @@ var $gameCurrentWindow = null;
     };
 
     //=============================================================================
-    // Game_CurrentWindow
-    // カレントウィンドウを扱うクラスです。
+    // Controller_NwJs
+    //  Nw.jsのAPI呼び出しを管理します。
     //=============================================================================
-    function Game_CurrentWindow() {
+    function Controller_NwJs() {
         this.initialize.apply(this, arguments);
     }
-    Game_CurrentWindow.prototype = Object.create(Game_CurrentWindow.prototype);
-    Game_CurrentWindow.prototype.constructor = Game_CurrentWindow;
-    Game_CurrentWindow.prototype.initialize = function() {
-        this._devTool         = null;
-        this._devToolMinimize = false;
-        this._onFocus         = false;
-    };
-    Game_CurrentWindow.prototype.showDevTools = function() {};
-    Game_CurrentWindow.prototype.closeDevTools = function() {};
-    Game_CurrentWindow.prototype.alwaysOnTop = function() {};
-    Game_CurrentWindow.prototype.focus = function() {};
-    Game_CurrentWindow.prototype.getWindow = function() {};
-    Game_CurrentWindow.prototype.moveEdge = function() {};
+    Controller_NwJs.prototype.constructor = Controller_NwJs;
 
-    //=============================================================================
-    // Game_Nwjs
-    //  nw.jsで実行した場合のカレントウィンドウを扱うクラスです。
-    // ゲーム開始時に作成されますが保存はされません。
-    //=============================================================================
-    function Game_NwjsWindow() {
-        this.initialize.apply(this, arguments);
-    }
-    Game_NwjsWindow.prototype = Object.create(Game_CurrentWindow.prototype);
-    Game_NwjsWindow.prototype.constructor = Game_NwjsWindow;
-
-    Game_NwjsWindow.prototype.initialize = function() {
+    Controller_NwJs.prototype.initialize = function() {
+        this._nwGui = require('nw.gui');
         this._devTool         = null;
         this._devToolMinimize = false;
         this._onFocus         = false;
         this.addEventListener();
-        if (alwaysOnTop === 'ON') {
+        if (alwaysOnTop) {
             this.setAlwaysOnTop(true);
         }        
         switch (startupDevTool) {
@@ -587,7 +617,15 @@ var $gameCurrentWindow = null;
         }
     };
 
-    Game_NwjsWindow.prototype.addEventListener = function() {
+    Controller_NwJs.prototype.setOnFocus = function(value) {
+        this._onFocus = value;
+    };
+
+    Controller_NwJs.prototype.isOnFocus = function() {
+        return this._onFocus;
+    };
+
+    Controller_NwJs.prototype.addEventListener = function() {
         var currentWin = this.getWindow();
         currentWin.removeAllListeners();
         currentWin.on('focus', function() {
@@ -595,19 +633,28 @@ var $gameCurrentWindow = null;
         }.bind(this));
     };
 
-    Game_NwjsWindow.prototype.getWindow = function() {
-        return require('nw.gui').Window.get();
+    Controller_NwJs.prototype.getWindow = function() {
+        return this._nwGui.Window.get();
     };
 
-    Game_NwjsWindow.prototype.setAlwaysOnTop = function(value) {
+    Controller_NwJs.prototype.getClipboard = function() {
+        return this._nwGui.Clipboard.get();
+    };
+
+    Controller_NwJs.prototype.setAlwaysOnTop = function(value) {
         this.getWindow().setAlwaysOnTop(value);
     };
 
-    Game_NwjsWindow.prototype.showDevTools = function() {
+    Controller_NwJs.prototype.showDevTools = function() {
         if (!this.getWindow().isDevToolsOpen() || !this._devTool) {
             var devTool = this.getWindow().showDevTools();
-            devTool.moveTo(devToolsPosition[0], devToolsPosition[1]);
-            devTool.resizeTo(devToolsPosition[2], devToolsPosition[3]);
+            if (devToolsPosition && devToolsPosition.length >= 4) {
+                devTool.moveTo(devToolsPosition[0], devToolsPosition[1]);
+                devTool.resizeTo(devToolsPosition[2], devToolsPosition[3]);
+            } else {
+                devTool.moveTo(0, 0);
+                devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+            }
             if (!this._devTool) {
                 this.addEventListenerDevTools(devTool);
                 this._devTool = devTool;
@@ -618,7 +665,7 @@ var $gameCurrentWindow = null;
         this.focus();
     };
 
-    Game_NwjsWindow.prototype.addEventListenerDevTools = function(devTool) {
+    Controller_NwJs.prototype.addEventListenerDevTools = function(devTool) {
         devTool.removeAllListeners();
         devTool.on('minimize', function() {
             this._devToolMinimize = true;
@@ -638,7 +685,7 @@ var $gameCurrentWindow = null;
         }.bind(this));
     };
 
-    Game_NwjsWindow.prototype.toggleDevTools = function() {
+    Controller_NwJs.prototype.toggleDevTools = function() {
         if (this._devTool) {
             this._devToolMinimize ? this._devTool.restore() : this._devTool.minimize();
             this.focus();
@@ -647,16 +694,27 @@ var $gameCurrentWindow = null;
         }
     };
 
-    Game_NwjsWindow.prototype.closeDevTools = function() {
+    Controller_NwJs.prototype.closeDevTools = function() {
         if (this.getWindow().isDevToolsOpen()) this.getWindow().closeDevTools();
     };
 
-    Game_NwjsWindow.prototype.moveEdge = function() {
+    Controller_NwJs.prototype.moveEdge = function() {
         this.getWindow().moveTo(0, 0);
         if (this.getWindow().isDevToolsOpen()) this._devTool.minimize();
     };
 
-    Game_NwjsWindow.prototype.focus = function() {
+    Controller_NwJs.prototype.focus = function() {
         this.getWindow().focus();
+    };
+
+    Controller_NwJs.prototype.readClipboard = function(mode) {
+        if (!mode) mode = 'text';
+        return this.getClipboard().get(mode);
+    };
+
+    Controller_NwJs.prototype.writeClipboard = function(copyValue, mode) {
+        if (!mode) mode = 'text';
+        if (mode === 'text') copyValue = copyValue.toString();
+        this.getClipboard().set(copyValue, mode);
     };
 })();
