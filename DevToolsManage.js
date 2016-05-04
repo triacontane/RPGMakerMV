@@ -350,7 +350,7 @@ var p = null;
     };
 
     SceneManager.showScriptDialog = function() {
-        var scriptString = this._nwJsGui.prompt('実行したいスクリプトを入力してください。', this._nwJsGui.readClipboard());
+        var scriptString = window.prompt('実行したいスクリプトを入力してください。', this._nwJsGui.readClipboard());
         if (scriptString !== null && scriptString !== '') {
             this._nwJsGui.showDevTools();
             this._nwJsGui.writeClipboard(scriptString);
@@ -402,6 +402,10 @@ var p = null;
     var _Input_wrapNwjsAlert = Input._wrapNwjsAlert;
     Input._wrapNwjsAlert = function() {
         _Input_wrapNwjsAlert.apply(this, arguments);
+        var _window_prompt = window.prompt;
+        window.prompt = function(value, defaultValue) {
+            return SceneManager.getNwJs().prompt(value, defaultValue, _window_prompt);
+        };
         window.alert = function(value) {
             console.log(value);
             SceneManager.getNwJs().showDevTools();
@@ -638,13 +642,13 @@ var p = null;
         this.getWindow().setAlwaysOnTop(value);
     };
 
-    Controller_NwJs.prototype.prompt = function(value, defaultValue) {
+    Controller_NwJs.prototype.prompt = function(value, defaultValue, aliasPrompt) {
         var win = this.getWindow();
         if (alwaysOnTop) {
             this._devTool.setAlwaysOnTop(false);
             win.setAlwaysOnTop(false);
         }
-        var result = window.prompt(value, defaultValue);
+        var result = aliasPrompt.call(window, value, defaultValue);
         if (alwaysOnTop) {
             this._devTool.setAlwaysOnTop(true);
             win.setAlwaysOnTop(true);
