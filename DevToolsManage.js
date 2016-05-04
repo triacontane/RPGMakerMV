@@ -152,6 +152,7 @@
  *
  * @param モバイル偽装
  * @desc モバイル実行を偽装します。(ON/OFF)
+ * モバイル版で異なるUIを使用する場合の表示確認ができます。
  * @default OFF
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
@@ -201,7 +202,8 @@ var p = null;
     //  RGSS互換のために定義します。
     //=============================================================================
     p = function(value) {
-        alert(value);
+        console.log(value);
+        SceneManager.getNwJs().showDevTools();
     };
 
     //=============================================================================
@@ -348,8 +350,8 @@ var p = null;
     };
 
     SceneManager.showScriptDialog = function() {
-        var scriptString = window.prompt('実行したいスクリプトを入力してください。', this._nwJsGui.readClipboard());
-        if (scriptString !== '') {
+        var scriptString = this._nwJsGui.prompt('実行したいスクリプトを入力してください。', this._nwJsGui.readClipboard());
+        if (scriptString !== null && scriptString !== '') {
             this._nwJsGui.showDevTools();
             this._nwJsGui.writeClipboard(scriptString);
             try {
@@ -400,17 +402,8 @@ var p = null;
     var _Input_wrapNwjsAlert = Input._wrapNwjsAlert;
     Input._wrapNwjsAlert = function() {
         _Input_wrapNwjsAlert.apply(this, arguments);
-        var _prompt = window.prompt;
-        window.prompt = function() {
-            var gui = require('nw.gui');
-            var win = gui.Window.get();
-            var result = _prompt.apply(this, arguments);
-            win.focus();
-            Input.clear();
-            return result;
-        };
-        window.alert = function() {
-            console.log(arguments[0]);
+        window.alert = function(value) {
+            console.log(value);
             SceneManager.getNwJs().showDevTools();
         };
     };
@@ -608,7 +601,7 @@ var p = null;
         this.addEventListener();
         if (alwaysOnTop) {
             this.setAlwaysOnTop(true);
-        }        
+        }
         switch (startupDevTool) {
             case 'ON':
             case 'MINIMIZE':
@@ -643,6 +636,20 @@ var p = null;
 
     Controller_NwJs.prototype.setAlwaysOnTop = function(value) {
         this.getWindow().setAlwaysOnTop(value);
+    };
+
+    Controller_NwJs.prototype.prompt = function(value, defaultValue) {
+        var win = this.getWindow();
+        this._devTool.setAlwaysOnTop(false);
+        win.setAlwaysOnTop(false);
+        var result = window.prompt(value, defaultValue);
+        if (alwaysOnTop) {
+            this._devTool.setAlwaysOnTop(true);
+            win.setAlwaysOnTop(true);
+        }
+        win.focus();
+        Input.clear();
+        return result;
     };
 
     Controller_NwJs.prototype.showDevTools = function() {
