@@ -640,8 +640,10 @@ var p = null;
 
     Controller_NwJs.prototype.prompt = function(value, defaultValue) {
         var win = this.getWindow();
-        this._devTool.setAlwaysOnTop(false);
-        win.setAlwaysOnTop(false);
+        if (alwaysOnTop) {
+            this._devTool.setAlwaysOnTop(false);
+            win.setAlwaysOnTop(false);
+        }
         var result = window.prompt(value, defaultValue);
         if (alwaysOnTop) {
             this._devTool.setAlwaysOnTop(true);
