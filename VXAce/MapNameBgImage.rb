@@ -15,7 +15,7 @@
 #-----------------------------------------------------------------------------
 # Copyright (c) 2016 Triacontane
 # This software is released under the MIT License.
-# http:#opensource.org/licenses/mit-license.php
+# http://opensource.org/licenses/mit-license.php
 #-----------------------------------------------------------------------------
 # Version
 # 1.0.0 2016/02/24 ベータ版
