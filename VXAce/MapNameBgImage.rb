@@ -1,5 +1,6 @@
 #==============================================================================
 # ■ マップウィンドウに任意の画像を指定
+#  MapNameBgImage.rb
 #------------------------------------------------------------------------------
 # 　マップウィンドウ背景に任意の画像ファイルを指定できるようになります。
 #
@@ -7,8 +8,12 @@
 # 1. 背景画像に使用したい画像を用意して「Graphics\Pictures」に配置します。
 # 2. ユーザ定義領域(下記)の変数「@@back_ground_filename」にファイル名を設定します。
 #
+# ●利用規約
+#  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）についても
+#  制限はありません。
+#  このスクリプトはもうあなたのものです。
 #-----------------------------------------------------------------------------
-# Copyright (c) 2015 Triacontane
+# Copyright (c) 2016 Triacontane
 # This software is released under the MIT License.
 # http:#opensource.org/licenses/mit-license.php
 #-----------------------------------------------------------------------------
@@ -30,7 +35,7 @@ class Window_MapName
   # ● ユーザ定義領域 Start
   # ここに背景画像として使用したい画像ファイル名を記述してください。
   #--------------------------------------------------------------------------
-  @@back_ground_filename = ""
+  @@back_ground_filename = "backgroud.png"
   #--------------------------------------------------------------------------
   # ● ユーザ定義領域 End
   #--------------------------------------------------------------------------
@@ -53,7 +58,7 @@ class Window_MapName
   #--------------------------------------------------------------------------
   # ● 背景の描画
   #--------------------------------------------------------------------------
-  alias mapname_bgimage_draw_background draw_background 
+  alias mapname_bgimage_draw_background draw_background
   def draw_background(rect)
     if @@back_ground_filename == ""
       mapname_bgimage_draw_background(rect)
@@ -63,6 +68,7 @@ class Window_MapName
       @bg_sprite.opacity = 0
       @bg_sprite.x = (self.x + self.width  / 2) - @bg_sprite.bitmap.width  / 2
       @bg_sprite.y = (self.y + self.height / 2) - @bg_sprite.bitmap.height / 2
+      @bg_sprite.z = self.z - 1
     end
   end
   #--------------------------------------------------------------------------
