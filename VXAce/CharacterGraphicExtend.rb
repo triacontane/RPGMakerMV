@@ -21,6 +21,8 @@
 # http://opensource.org/licenses/mit-license.php
 #-----------------------------------------------------------------------------
 # Version
+# 1.0.1 2016/05/05 スクリプトを適用していないセーブデータをロードすると
+#                  エラーが発生する不具合を修正
 # 1.0.0 2016/05/04 初版
 # ----------------------------------------------------------------------------
 # [Blog]   : http://triacontane.blogspot.jp/
@@ -50,14 +52,14 @@ class Game_CharacterBase
   #--------------------------------------------------------------------------
   alias cge_screen_x screen_x
   def screen_x
-    cge_screen_x + @adjustment_x
+    cge_screen_x + (@adjustment_x ? @adjustment_x : 0)
   end
   #--------------------------------------------------------------------------
   # ● 画面 Y 座標の取得
   #--------------------------------------------------------------------------
   alias cge_screen_y screen_y
   def screen_y
-    cge_screen_y + @adjustment_y
+    cge_screen_y + (@adjustment_y ? @adjustment_y : 0)
   end
   #--------------------------------------------------------------------------
   # ● 回転
@@ -76,6 +78,6 @@ class Sprite_Character
   alias cge_update_other update_other
   def update_other
     cge_update_other
-    self.angle = @character.angle
+    self.angle = (@character.angle ? @character.angle : 0)
   end
 end
