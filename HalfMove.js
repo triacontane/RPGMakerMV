@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/05/08 ループするマップの境界値にいる場合に一部の通行可能判定が誤っていたのを修正
+//                  メモ欄にてイベントごとに半歩移動の可否を設定できる機能を追加
 // 1.0.0 2016/05/06 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -41,6 +43,9 @@
  *
  * ・HalfMoveEnable
  * Enable half move.
+ *
+ * Note(Event Editor)
+ * <HMHalfDisable> -> Disable half move.
  *
  * This plugin is released under the MIT License.
  */
@@ -80,6 +85,13 @@
  * ・HalfMoveEnable
  * 禁止していた半歩移動をもとに戻します。
  *
+ * イベントごとに半歩移動の可否を設定することができます。
+ * イベントのメモ欄に以下の通り記述してください。
+ *
+ * 対象イベントが半歩移動しなくなります。
+ * <HM半歩禁止>
+ * <HMHalfDisable>
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -89,6 +101,7 @@
 (function () {
     'use strict';
     var pluginName = 'HalfMove';
+    var metaTagPrefix = 'HM';
 
     var getCommandName = function (command) {
         return (command || '').toUpperCase();
@@ -106,6 +119,20 @@
             if (name) return name;
         }
         return null;
+    };
+
+    var getMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + (name ? name : '');
+        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
+    };
+
+    var getMetaValues = function(object, names) {
+        if (!Array.isArray(names)) return getMetaValue(object, names);
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
+            if (value !== undefined) return value;
+        }
+        return undefined;
     };
 
     //=============================================================================
@@ -245,6 +272,12 @@
     // Game_CharacterBase
     //  半歩移動の判定処理を追加定義します。
     //=============================================================================
+    var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
+    Game_CharacterBase.prototype.initMembers = function() {
+        _Game_CharacterBase_initMembers.apply(this, arguments);
+        this._HalfDisable    = false;
+    };
+
     var _Game_CharacterBase_isMapPassable = Game_CharacterBase.prototype.isMapPassable;
     Game_CharacterBase.prototype.isMapPassable = function(x, y, d) {
         var alias = _Game_CharacterBase_isMapPassable.bind(this);
@@ -289,12 +322,12 @@
     };
 
     Game_CharacterBase.prototype.isHalfPosX = function(x) {
-        if (!x) x = this._x;
+        if (x === undefined) x = this._x;
         return $gameMap.isHalfPos(x);
     };
 
     Game_CharacterBase.prototype.isHalfPosY = function(y) {
-        if (!y) y = this._y;
+        if (y === undefined) y = this._y;
         return $gameMap.isHalfPos(y);
     };
 
@@ -397,10 +430,6 @@
     Game_CharacterBase.prototype.resetPrevPos = function() {
         this._prevX = undefined;
         this._prevY = undefined;
-    };
-
-    Game_CharacterBase.prototype.isHalfMove = function() {
-        return null;
     };
 
     var _Game_CharacterBase_checkEventTriggerTouchFront = Game_CharacterBase.prototype.checkEventTriggerTouchFront;
@@ -518,6 +547,12 @@
     // Game_Event
     //  半歩移動用の接触処理を定義します。
     //=============================================================================
+    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    Game_Event.prototype.initialize = function(mapId, eventId) {
+        _Game_Event_initialize.apply(this, arguments);
+        this._HalfDisable    = getMetaValues(this.event(), ['HalfDisable', '半歩禁止']);
+    };
+
     var _Game_Event_isCollidedWithPlayerCharacters = Game_Event.prototype.isCollidedWithPlayerCharacters;
     Game_Event.prototype.isCollidedWithPlayerCharacters = function(x, y) {
         var alias = _Game_Event_isCollidedWithPlayerCharacters.bind(this);
@@ -558,11 +593,20 @@
     };
 
     //=============================================================================
+    // Game_CharacterBase
+    //  禁止フラグを確認します。
+    //=============================================================================
+    Game_CharacterBase.prototype.isHalfMove = function() {
+        return !this._HalfDisable && $gameSystem.canHalfMove();
+    };
+
+    //=============================================================================
     // Game_Character
     //  移動ルート強制中は半歩移動を無効にします。
     //=============================================================================
     Game_Character.prototype.isHalfMove = function() {
-        return ($gameSystem.canHalfMove() && (!this._moveRouteForcing || !paramDisableForcing)) || this.isHalfPosX() || this.isHalfPosY();
+        return (Game_CharacterBase.prototype.isHalfMove.call(this) && (!this._moveRouteForcing || !paramDisableForcing)) ||
+            this.isHalfPosX() || this.isHalfPosY();
     };
 
     //=============================================================================

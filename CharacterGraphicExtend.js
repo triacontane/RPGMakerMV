@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/05/08 HalfMove.jsとの競合を解消
 // 1.2.0 2016/03/19 戦闘発生時にイベントを消去しない設定を追加しました。
 // 1.1.2 2016/03/04 本体バージョン1.1.0に合わせてキャラクターの乗算とスクリーンに対応しました。
 // 1.1.1 2016/01/21 競合対策（YEP_MessageCore.js）
@@ -261,8 +262,13 @@
         return this._tileBlockHeight;
     };
 
+    var _Game_CharacterBase_pos = Game_CharacterBase.prototype.pos;
     Game_CharacterBase.prototype.pos = function(x, y) {
-        return (this._x - this.tileBlockWidth() / 2 <= x && this._x + this.tileBlockWidth() / 2 >= x) && this._y === y;
+        if (this.tileBlockWidth() >= 2) {
+            return (this._x - this.tileBlockWidth() / 2 <= x && this._x + this.tileBlockWidth() / 2 >= x) && this._y === y;
+        } else {
+            return _Game_CharacterBase_pos.apply(this, arguments);
+        }
     };
 
     var _Game_CharacterBase_screenX = Game_CharacterBase.prototype.screenX;
