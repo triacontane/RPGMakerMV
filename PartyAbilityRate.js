@@ -92,7 +92,6 @@
         this.traitObjects().forEach(function (traitObject) {
             var metaValue = getMetaValues(traitObject, abilityNames);
             if (metaValue) result = getArgNumber(metaValue, result);
-            alert(metaValue + ':' + result);
         }.bind(this));
         return result;
     };
