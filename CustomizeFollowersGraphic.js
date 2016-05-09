@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/05/09 向きとアニメパターンを直接設定する機能を追加
 // 1.0.0 2016/05/07 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -41,6 +42,13 @@
  * ・フォロワーの透明状態(true/false)を設定します。
  * $gamePlayer.followers().setTransparent(true);
  *
+ * ・フォロワーの向き(2, 4, 6, 8)を設定します。
+ *  すでに向き固定されている場合、無効です。
+ * $gamePlayer.followers().setDirection(2);
+ *
+ * ・フォロワーのアニメパターン(0-3)を設定します。
+ * $gamePlayer.followers().setPattern(0);
+ *
  * ・フォロワーの変更内容を全て消去します。
  * $gamePlayer.followers().clearProperty();
  *
@@ -73,6 +81,8 @@
         this._stepAnime    = undefined;
         this._directionFix = undefined;
         this._transparent  = undefined;
+        this._direction    = undefined;
+        this._pattern      = undefined;
     };
 
     Game_Followers.prototype.setPropertyForChild = function(follower) {
@@ -96,6 +106,12 @@
         }
         if (this._transparent !== undefined) {
             follower.setTransparent(this._transparent);
+        }
+        if (this._direction !== undefined) {
+            follower.setDirection(this._direction);
+        }
+        if (this._pattern !== undefined) {
+            follower.setPattern(this._pattern);
         }
     };
 
@@ -125,6 +141,14 @@
 
     Game_Followers.prototype.setTransparent = function(transparent) {
         this._transparent = !!transparent;
+    };
+
+    Game_Followers.prototype.setDirection = function(direction) {
+        this._direction = direction.clamp(1, 9);
+    };
+
+    Game_Followers.prototype.setPattern = function(pattern) {
+        this._pattern = pattern.clamp(0, 3);
     };
 
     //=============================================================================
