@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/05/11 ウィンドウの位置指定方法を少し変更（見た目上はそのまま）
 // 1.0.1 2016/02/07 改行コード（CR+LF）に対応
 //                  英語対応
 // 1.0.0 2016/01/29 初版
@@ -500,7 +501,7 @@ function Scene_SoundTest() {
     };
 
     Scene_SoundTest.prototype.createBgmListWindow = function() {
-        var wy = this._helpWindow.height;
+        var wy = this._helpWindow.y + this._helpWindow.height;
         var wh = Graphics.boxHeight - wy;
         this._bgmListWindow = new Window_BgmList(0, wy, 320, wh);
         this._bgmListWindow.setHelpWindow(this._helpWindow);
@@ -513,7 +514,7 @@ function Scene_SoundTest() {
     };
 
     Scene_SoundTest.prototype.createBgmSettingWindow = function() {
-        this._bgmSettingWindow = new Window_BgmSetting(this._bgmListWindow.width, this._helpWindow.height);
+        this._bgmSettingWindow = new Window_BgmSetting(this._bgmListWindow.width, this._bgmListWindow.y);
         this._bgmSettingWindow.setHandler('cancel', this.activateBgmList.bind(this));
         this._bgmSettingWindow.setHandler('touchInside', this.activateBgmSetting.bind(this));
         this._bgmSettingWindow.deactivate();
