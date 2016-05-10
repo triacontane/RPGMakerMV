@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/05/11 タイルの上半分のみ通行不可にできるような地形タグとリージョンIDの指定を追加
+//                  歩数の増加およびエンカウント歩数とダメージ床を通常の歩数に合わせて調整できる機能を追加
 // 1.1.0 2016/05/08 イベントごとに「すり抜け禁止」の可否を設定できる機能を追加
 //                  トリガー関係の機能を拡張
 //                  斜め移動時に減速する設定を追加
@@ -46,6 +48,18 @@
  * @param TriggerExpansion
  * @desc プライオリティが「通常キャラと同じ」イベントの起動領域を左右に半マス分だけ拡張します。
  * @default OFF
+ *
+ * @param AdjustmentRealStep
+ * @desc 歩数が増加するタイミングが2歩につき1歩分となります。エンカウント歩数とダメージ床のタイミングも調整されます。
+ * @default OFF
+ *
+ * @param UpperNpTerrainTag
+ * @desc 上半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param UpperNpRegionId
+ * @desc 上半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
  *
  * @help Moving distance in half.
  *
@@ -91,6 +105,18 @@
  * @param トリガー拡大
  * @desc プライオリティが「通常キャラと同じ」イベントの起動領域を左右に半マス分だけ拡張します。
  * @default OFF
+ *
+ * @param 実歩数調整
+ * @desc 歩数が増加するタイミングが2歩につき1歩分となります。エンカウント歩数とダメージ床のタイミングも調整されます。
+ * @default OFF
+ *
+ * @param 上半分移動不可地形
+ * @desc 上半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param 上半分移動不可Region
+ * @desc 上半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
  *
  * @help キャラクターの移動単位が1タイルの半分になります。
  * 半歩移動が有効なら、乗り物以外は全て半歩移動になります。
@@ -147,6 +173,13 @@
         return (value || '').toUpperCase() === 'ON';
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     var getParamOther = function (paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -179,12 +212,15 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramDirection8Move   = getParamBoolean(['Direction8Move', '8方向移動']);
-    var paramEventThrough     = getParamBoolean(['EventThrough', 'イベントすり抜け']);
-    var paramDisableForcing   = getParamBoolean(['DisableForcing', '強制中無効']);
-    var paramAvoidCorner      = getParamBoolean(['AvoidCorner', '角回避']);
-    var paramDiagonalSlow     = getParamBoolean(['DiagonalSlow', '斜め移動中減速']);
-    var paramTriggerExpansion = getParamBoolean(['TriggerExpansion', 'トリガー拡大']);
+    var paramDirection8Move     = getParamBoolean(['Direction8Move', '8方向移動']);
+    var paramEventThrough       = getParamBoolean(['EventThrough', 'イベントすり抜け']);
+    var paramDisableForcing     = getParamBoolean(['DisableForcing', '強制中無効']);
+    var paramAvoidCorner        = getParamBoolean(['AvoidCorner', '角回避']);
+    var paramDiagonalSlow       = getParamBoolean(['DiagonalSlow', '斜め移動中減速']);
+    var paramTriggerExpansion   = getParamBoolean(['TriggerExpansion', 'トリガー拡大']);
+    var paramAdjustmentRealStep = getParamBoolean(['AdjustmentRealStep', '実歩数調整']);
+    var paramUpperNpTerrainTag  = getParamNumber(['UpperNpTerrainTag', '上半分移動不可地形'], 0);
+    var paramUpperNpRegionId    = getParamNumber(['UpperNpRegionId', '上半分移動不可Region'], 0);
 
     //=============================================================================
     // ローカル変数
@@ -306,6 +342,10 @@
         return _Game_Map_roundXWithDirection.apply(this, arguments);
     };
 
+    Game_Map.prototype.roundNoHalfYWithDirection = function(x, d) {
+        return _Game_Map_roundYWithDirection.apply(this, arguments);
+    };
+
     Game_Map.prototype.isHalfPos = function(value) {
         return value !== Math.floor(value);
     };
@@ -321,6 +361,11 @@
         return this.events().filter(function(event) {
             return event.posUnitNt(x, y);
         });
+    };
+
+    Game_Map.prototype.isUpperNp = function(x, y) {
+        return (paramUpperNpTerrainTag > 0 && paramUpperNpTerrainTag === this.terrainTag(x, y)) ||
+            (paramUpperNpRegionId > 0 && paramUpperNpRegionId === this.regionId(x, y));
     };
 
     //=============================================================================
@@ -367,7 +412,7 @@
             }
         } else if (this.isHalfPosX(x)) {
             if (d === 2) {
-                var y2      = $gameMap.roundYWithDirection(y, d);
+                var y2      = $gameMap.roundNoHalfYWithDirection(y, d);
                 var xLeft2  = $gameMap.roundHalfXWithDirection(x, 4);
                 var xRight2 = $gameMap.roundHalfXWithDirection(x, 6);
                 if (alias(xLeft2, y2, 10-d) && alias(xRight2, y2, 10-d)) {
@@ -385,7 +430,41 @@
                 result = alias(x, y, d);
             }
         }
+        result = result && !this.isUpperNp(x, y, d);
         localHalfPositionCount = halfPositionCount;
+        return result;
+    };
+
+    Game_CharacterBase.prototype.isUpperNp = function(x, y, d) {
+        var result = false;
+        if (d === 8) {
+            if (!this.isHalfPosY(y)) {
+                if (this.isHalfPosX(x)) {
+                    var xLeft1  = $gameMap.roundHalfXWithDirection(x, 4);
+                    var xRight1 = $gameMap.roundHalfXWithDirection(x, 6);
+                    result = $gameMap.isUpperNp(xLeft1, y) || $gameMap.isUpperNp(xRight1, y);
+                } else {
+                    result = $gameMap.isUpperNp(x, y);
+                }
+            }
+        } else if (d === 4 || d === 6) {
+            if (!this.isHalfPosY(x) && this.isHalfPosX(y)) {
+                var x1  = $gameMap.roundNoHalfXWithDirection(x, d);
+                var y1  = $gameMap.roundHalfYWithDirection(y, 2);
+                return $gameMap.isUpperNp(x1, y1);
+            }
+        } else {
+            var y2  = $gameMap.roundNoHalfYWithDirection(y, d);
+            if (!this.isHalfPosY(y)) {
+                if (this.isHalfPosX(x)) {
+                    var xLeft2  = $gameMap.roundHalfXWithDirection(x, 4);
+                    var xRight2 = $gameMap.roundHalfXWithDirection(x, 6);
+                    result = $gameMap.isUpperNp(xLeft2, y2) || $gameMap.isUpperNp(xRight2, y2);
+                } else {
+                    result = $gameMap.isUpperNp(x, y2);
+                }
+            }
+        }
         return result;
     };
 
@@ -535,6 +614,33 @@
     Game_Player.prototype.locate = function(x, y) {
         _Game_Player_locate.apply(this, arguments);
         this.resetPrevPos();
+    };
+
+    var _Game_Player_increaseSteps = Game_Player.prototype.increaseSteps;
+    Game_Player.prototype.increaseSteps = function() {
+        if (this._realStep === undefined) this._realStep = 0;
+        this._realStep += (this.isHalfMove() ? Game_Map.tileUnit : 1);
+        if (this.isHalfStep()) {
+            Game_Character.prototype.increaseSteps.call(this);
+        } else {
+            _Game_Player_increaseSteps.apply(this, arguments);
+        }
+    };
+
+    var _Game_Player_updateEncounterCount = Game_Player.prototype.updateEncounterCount;
+    Game_Player.prototype.updateEncounterCount = function() {
+        if (!this.isHalfStep()) {
+            _Game_Player_updateEncounterCount.apply(this, arguments);
+        }
+    };
+
+    Game_Player.prototype.isHalfStep = function() {
+        return paramAdjustmentRealStep && this._realStep && Math.floor(this._realStep) !== this._realStep;
+    };
+
+    var _Game_Player_isOnDamageFloor = Game_Player.prototype.isOnDamageFloor;
+    Game_Player.prototype.isOnDamageFloor = function() {
+        return !this.isHalfStep() && _Game_Player_isOnDamageFloor.apply(this ,arguments);
     };
 
     var _Game_Player_checkEventTriggerThere = Game_Player.prototype.checkEventTriggerThere;
