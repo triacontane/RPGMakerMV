@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2016/05/11 クロスフェードを指定していた場合に2回目のアニメ表示でエラーになる場合がある問題を修正
 // 1.3.1 2016/03/15 ピクチャ上に戦闘アニメを表示するプラグイン「PictureOnAnimation」との競合を解消
 //                  原点を中央したピクチャにクロスフェードを行うと表示位置がずれる問題を修正
 // 1.3.0 2016/02/28 セル番号を変数と連動する機能を追加
@@ -469,8 +470,8 @@
     var _Sprite_Picture_update = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_Picture_update.call(this);
-        if (this.picture() != null && this.picture().name()) {
-            if (this.picture().isMulti() && this._bitmaps == null) {
+        if (this.picture() && this.picture().name()) {
+            if (this.picture().isMulti() && !this._bitmaps) {
                 this.loadAnimationBitmap();
             }
             if (this.isBitmapReady()) {
@@ -483,17 +484,20 @@
     var _Sprite_Picture_updateBitmap = Sprite_Picture.prototype.updateBitmap;
     Sprite_Picture.prototype.updateBitmap = function() {
         _Sprite_Picture_updateBitmap.call(this);
-        if (this.picture() == null) {
+        if (!this.picture()) {
             this._bitmaps = null;
-            if (this._prevSprite != null) {
+            if (this._prevSprite) {
                 this._prevSprite.bitmap = null;
             }
         }
     };
 
     Sprite_Picture.prototype.updateFading = function() {
-        if (this._prevSprite == null) {
+        if (!this._prevSprite) {
             this.makePrevSprite();
+        }
+        if (!this._prevSprite.bitmap) {
+            this.makePrevBitmap();
         }
         if (this.picture().isFading()) {
             this._prevSprite.visible = true;
@@ -547,13 +551,17 @@
     Sprite_Picture.prototype.makePrevSprite = function() {
         this._prevSprite = new Sprite();
         this._prevSprite.visible = false;
-        this._prevSprite.bitmap  = this.bitmap;
-        this._prevSprite.anchor.x = this.anchor.x;
-        this._prevSprite.anchor.y = this.anchor.y;
         this.addChild(this._prevSprite);
     };
 
+    Sprite_Picture.prototype.makePrevBitmap = function() {
+        this._prevSprite.bitmap  = this.bitmap;
+        this._prevSprite.anchor.x = this.anchor.x;
+        this._prevSprite.anchor.y = this.anchor.y;
+    };
+
     Sprite_Picture.prototype.isBitmapReady = function() {
+        if (!this.bitmap) return false;
         if (this._bitmapReady) return true;
         var result;
         if (this.picture().isMulti()) {
