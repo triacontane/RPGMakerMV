@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.2.0 2018/04/23 署名に任意の画像ファイルを利用できるようになりました。
+// 1.2.1 2016/05/11 定期実行キャプチャを行ったときに拡張子の表示がおかしくなる問題を修正
+// 1.2.0 2016/04/23 署名に任意の画像ファイルを利用できるようになりました。
 //                  細部のリファクタリング
 // 1.1.5 2016/04/10 画像の出力先を管理画面のパラメータとして設定できるよう修正
 // 1.1.4 2016/03/31 画像の出力先を絶対パスで指定できるよう修正
@@ -295,7 +296,7 @@
         _Scene_Base_update.apply(this, arguments);
         var count =  Graphics.frameCount;
         if (paramInterval !== 0 && Utils.isTestCapture() &&
-            (count + 1) % (paramInterval * 60) === 0) SceneManager.takeCapture();
+            (count + 1) % (paramInterval * 60) === 0) SceneManager.takeCapture(paramFileFormat);
     };
 
     //=============================================================================
