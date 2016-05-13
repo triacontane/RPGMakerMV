@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/05/14 本体バージョン1.2.0で実行するとエラーになる現象を修正
 // 1.0.0 2015/12/05 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -31,7 +32,7 @@
 
     var _SpriteSet_Map_createParallax = Spriteset_Map.prototype.createParallax;
     Spriteset_Map.prototype.createParallax = function() {
-        _SpriteSet_Map_createParallax.call(this);
+        _SpriteSet_Map_createParallax.apply(this, arguments);
         this._parallaxNonBlur = new Sprite();
         this._baseSprite.addChild(this._parallaxNonBlur);
     };
@@ -41,10 +42,10 @@
         this._parallax.visible = !$gameMap._parallaxZero;
         this._parallaxNonBlur.visible = $gameMap._parallaxZero;
         if ($gameMap._parallaxZero) {
-            this._parallax.bitmap = null;
             if (this._parallaxName !== $gameMap.parallaxName()) {
                 this._parallaxName = $gameMap.parallaxName();
                 this._parallaxNonBlur.bitmap = ImageManager.loadParallax(this._parallaxName);
+                this._parallax.bitmap = new Bitmap();
             }
             if (this._parallaxNonBlur.bitmap) {
                 this._parallaxNonBlur.x = 0;
@@ -54,7 +55,7 @@
             }
         } else {
             this._parallaxNonBlur.bitmap = null;
-            _SpriteSet_Map_updateParallax.call(this);
+            _SpriteSet_Map_updateParallax.apply(this, arguments);
         }
     };
 })();
