@@ -45,7 +45,7 @@
             if (this._parallaxName !== $gameMap.parallaxName()) {
                 this._parallaxName = $gameMap.parallaxName();
                 this._parallaxNonBlur.bitmap = ImageManager.loadParallax(this._parallaxName);
-                this._parallax.bitmap = new Bitmap();
+                this._parallax.bitmap = ImageManager.loadEmptyBitmap();
             }
             if (this._parallaxNonBlur.bitmap) {
                 this._parallaxNonBlur.x = 0;
