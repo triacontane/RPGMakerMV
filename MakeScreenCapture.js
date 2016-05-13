@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2016/05/13 プラグインコマンドから出力したときに拡張子の表示がおかしくなる問題を修正
 // 1.2.1 2016/05/11 定期実行キャプチャを行ったときに拡張子の表示がおかしくなる問題を修正
 // 1.2.0 2016/04/23 署名に任意の画像ファイルを利用できるようになりました。
 //                  細部のリファクタリング
@@ -251,7 +252,7 @@
                 break;
             case 'MSC_SAVE' :
             case '画面キャプチャ保存':
-                SceneManager.saveCapture(getArgString(args[0]));
+                SceneManager.saveCapture(getArgString(args[0]) || paramFileName, paramFileFormat);
                 break;
         }
     };
