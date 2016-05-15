@@ -49,7 +49,10 @@
  * @desc エラー情報の詳細(スタックトレース)を出力します。
  * @default ON
  *
- * @help エラー画面の表示を分かりやすく改善します。
+ * @help エラー画面の表示を改善します。固定メッセージと連絡先のハイパーリンクを
+ * 指定できるほか、エラーの詳細情報（スタックトレース）も表示されるようになります。
+ * またURL用にエンコードされて表示される全角文字列をもとの文字列に
+ * デコードして表示します。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -105,11 +108,7 @@
     var _SceneManager_catchException = SceneManager.catchException;
     SceneManager.catchException = function(e) {
         _SceneManager_catchException.apply(this, arguments);
-        if (e instanceof Error) {
-            Graphics.printErrorDetail(e);
-        } else {
-            Graphics.printErrorDetail(e);
-        }
+        Graphics.printErrorDetail(e);
     };
 
     //=============================================================================
