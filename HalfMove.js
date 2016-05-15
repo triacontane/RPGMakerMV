@@ -800,9 +800,7 @@
     Game_Player.prototype.startMapEvent = function(x, y, triggers, normal) {
         if (normal && this.isHalfMove()) {
             var d = this.direction();
-            var x2 = $gameMap.roundHalfXWithDirection(this.x, d);
-            var y2 = $gameMap.roundHalfYWithDirection(this.y, d);
-            if (this.isCollidedWithCharacters(x2, y2) || this.isCounterFace()) {
+            if (!this.canPass(this.x, this.y, d)) {
                 _Game_Player_startMapEvent2.apply(this, arguments);
                 arguments[0] = $gameMap.roundHalfXWithDirection(x, 10 - d);
                 arguments[1] = $gameMap.roundHalfYWithDirection(y, 10 - d);
@@ -882,13 +880,6 @@
 
     Game_Player.prototype.collideToEvent = function(target) {
         target.setCollidedFromPlayer(true);
-    };
-
-    Game_Player.prototype.isCounterFace = function() {
-        var d = this.direction();
-        var x2 = $gameMap.roundNoHalfXWithDirection(this.x, d);
-        var y2 = $gameMap.roundNoHalfYWithDirection(this.y, d);
-        return $gameMap.isCounter(x2, y2);
     };
 
     //=============================================================================
