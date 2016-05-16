@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/05/16 特徴と効果にデータIDの定義を追加
 // 1.0.1 2016/01/03 iterateとisEmptyが重複定義されないよう対応
 // 1.0.0 2015/12/28 初版
 // ----------------------------------------------------------------------------
@@ -191,12 +192,14 @@ DynamicDatabaseManager.makeDynamicDatabase = function() {
 DynamicDatabaseManager._setColumnMapperDynamic = function() {
     this._getMaxLength('effects').times(function(i) {
         this._columnMapperCoomon['effects_%1_code'.format(i)]   = '使用効果%1_タイプ'.format(i + 1);
+        this._columnMapperCoomon['effects_%1_dataId'.format(i)] = '使用効果%1_データID'.format(i + 1);
         this._columnMapperCoomon['effects_%1_value1'.format(i)] = '使用効果%1_内容1'.format(i + 1);
         this._columnMapperCoomon['effects_%1_value2'.format(i)] = '使用効果%1_内容2'.format(i + 1);
     }.bind(this));
     this._getMaxLength('traits').times(function(i) {
-        this._columnMapperCoomon['traits_%1_code'.format(i)]  = '特徴%1_タイプ'.format(i + 1);
-        this._columnMapperCoomon['traits_%1_value'.format(i)] = '特徴%1_内容'.format(i + 1);
+        this._columnMapperCoomon['traits_%1_code'.format(i)]   = '特徴%1_タイプ'.format(i + 1);
+        this._columnMapperCoomon['traits_%1_dataId'.format(i)] = '特徴%1_データID'.format(i + 1);
+        this._columnMapperCoomon['traits_%1_value'.format(i)]  = '特徴%1_内容'.format(i + 1);
     }.bind(this));
     this._getMaxLength('actions').times(function(i) {
         this._columnMapperEnemies['actions_%1_conditionParam1'.format(i)] = '行動%1_条件1'.format(i + 1);
