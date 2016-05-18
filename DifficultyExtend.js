@@ -180,7 +180,7 @@ var Vitsuno = Vitsuno || {};
 
     //=============================================================================
     // SceneManager
-    //  初期設定時に変数を設定します。
+    //  初期設定時にスイッチと変数を設定します。
     //=============================================================================
     var _SceneManager_setDifficultyMutable = SceneManager.setDifficultyMutable;
     SceneManager.setDifficultyMutable = function() {
@@ -208,7 +208,7 @@ var Vitsuno = Vitsuno || {};
 
     //=============================================================================
     // Game_BattlerBase
-    //  弱点属性を適用させます。
+    //  弱点および耐性属性の補正を適用させます。
     //=============================================================================
     var _Game_BattlerBase_elementRate = Game_BattlerBase.prototype.elementRate;
     Game_BattlerBase.prototype.elementRate = function(elementId) {
