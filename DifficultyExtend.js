@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/05/18 弱点・耐性倍率の小数点が無視されていた問題を修正
 // 1.0.0 2016/05/18 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -151,6 +152,13 @@ var Vitsuno = Vitsuno || {};
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamFloat = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseFloat(value) || 0).clamp(min, max);
+    };
+
     var getParamOther = function (paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -169,9 +177,9 @@ var Vitsuno = Vitsuno || {};
     var paramResistElementRates = [];
     for (var i = 1; i <= 8; i++) {
         var idString = String(i);
-        paramDiffIdSwitches[i]     = getParamNumber(['DiffIdSwitch_'      + idString, '難易度IDスイッチ_' + idString], 0, 5000);
-        paramWeakElementRates[i]   = getParamNumber(['WeakElementRate_'   + idString, '難易度ID弱点倍率_' + idString], 0, 5000);
-        paramResistElementRates[i] = getParamNumber(['ResistElementRate_' + idString, '難易度ID耐性倍率_' + idString], 0, 5000);
+        paramDiffIdSwitches[i]     = getParamNumber(['DiffIdSwitch_'     + idString, '難易度IDスイッチ_' + idString], 0, 5000);
+        paramWeakElementRates[i]   = getParamFloat(['WeakElementRate_'   + idString, '難易度ID弱点倍率_' + idString], 0, 5000);
+        paramResistElementRates[i] = getParamFloat(['ResistElementRate_' + idString, '難易度ID耐性倍率_' + idString], 0, 5000);
     }
 
     if (!Vitsuno.Difficulty) {
