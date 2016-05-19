@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/05/20 トリガー領域を上下左右で細かく指定できる機能を追加
+//                  英名のプラグインコマンドが正しく機能していなかった問題を修正
 // 1.3.0 2016/05/16 タイルの下半分のみ通行不可にできるような地形タグとリージョンIDの指定を追加
 //                  イベントごとにトリガー拡大を設定できる機能を追加
 // 1.2.0 2016/05/11 タイルの上半分のみ通行不可にできるような地形タグとリージョンIDの指定を追加
@@ -74,10 +76,10 @@
  * @help Moving distance in half.
  *
  * Plugin command
- * ・HalfMoveDisable
+ * ・HALF_MOVE_DISABLE
  * Disable half move.
  *
- * ・HalfMoveEnable
+ * ・HALF_MOVE_ENABLE
  * Enable half move.
  *
  * Note(Event Editor)
@@ -146,12 +148,12 @@
  *  （パラメータの間は半角スペースで区切る）
  *
  * ・半歩移動禁止
- * ・HalfMoveDisable
+ * ・HALF_MOVE_DISABLE
  * 半歩移動を一時的に禁止します。この情報はセーブデータに含まれます。
  * 特定のイベント等で禁止したい場合等に使用します。
  *
  * ・半歩移動許可
- * ・HalfMoveEnable
+ * ・HALF_MOVE_ENABLE
  * 禁止していた半歩移動をもとに戻します。
  *
  * イベントごとの拡張機能を利用するには、
@@ -165,14 +167,6 @@
  * <HMすり抜け禁止>
  * <HMThroughDisable>
  *
- * 対象イベントの領域が拡大します。半歩移動の場合、場所移動等のイベントを並べると
- * 間に入ったときに起動しないので、このタグで起動領域を拡張してください。
- * この機能はイベントのグラフィックには影響を与えません。
- * <HM横幅:2>   // イベントの横方向のサイズが2マスになります。
- * <HMWidth:2>  // イベントの横方向のサイズが2マスになります。
- * <HM高さ:3>   // イベントの縦方向のサイズが3マスになります。
- * <HMHeight:3> // イベントの縦方向のサイズが3マスになります。
- *
  * 対象イベントのトリガー拡大の有無を個別に設定します。
  * 設定がない場合は、パラメータ「トリガー拡大」の値が適用されます。
  * <HMトリガー拡大:ON>
@@ -184,6 +178,19 @@
  *
  * 上記以外の場合
  * 　上下左右に半マスずつ起動可能領域が拡張されます。
+ *
+ * 上の設定を無視して、個別に領域を設定したい場合は以下のとおり記述してください。
+ * // 下、左、右、上方向にそれぞれ1マス、2マス、3マス、4マス拡大されます。
+ * <HM拡大領域:1,2.3,4>
+ *
+ * // 下、左、右、上方向にそれぞれ0.5マス、1マス、1マス、0.5マス拡大されます。
+ * <HM拡大領域:0.5,1.1,0.5>
+ *
+ * 対象イベントの領域が拡大する以下のタグは廃止になりました。
+ * <HM横幅:2>
+ * <HMWidth:2>
+ * <HM高さ:3>
+ * <HMHeight:3>
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -241,8 +248,35 @@
         return (parseInt(arg,  10) || 0).clamp(min, max);
     };
 
+    var getArgArrayFloat = function (args, min, max) {
+        var values = getArgArrayString(args, false);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        for (var i = 0; i < values.length; i++) values[i] = (parseFloat(values[i], 10) || 0).clamp(min, max);
+        return values;
+    };
+
+    var getArgArrayString = function (args, upperFlg) {
+        var values = getArgString(args, upperFlg).split(',');
+        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
+        return values;
+    };
+
+    var getArgString = function (arg, upperFlg) {
+        arg = convertEscapeCharacters(arg, false);
+        return upperFlg ? arg.toUpperCase() : arg;
+    };
+
     var getArgBoolean = function(arg) {
         return (arg || '').toUpperCase() === 'ON';
+    };
+
+    var convertEscapeCharacters = function(text) {
+        if (text === null || text === undefined) {
+            text = '';
+        }
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
     //=============================================================================
@@ -294,11 +328,11 @@
     Game_Interpreter.prototype.pluginCommandHalfMove = function (command, args) {
         switch (getCommandName(command)) {
             case '半歩移動禁止' :
-            case 'HalfMoveDisable':
+            case 'HALF_MOVE_DISABLE':
                 $gameSystem.setEnableHalfMove(false);
                 break;
             case '半歩移動許可' :
-            case 'HalfMoveEnable':
+            case 'HALF_MOVE_ENABLE':
                 $gameSystem.setEnableHalfMove(true);
                 break;
         }
@@ -388,12 +422,6 @@
         return value !== Math.floor(value);
     };
 
-    Game_Map.prototype.eventsXyUnit = function(x, y) {
-        return this.events().filter(function(event) {
-            return event.posUnit(x, y);
-        });
-    };
-
     Game_Map.prototype.eventsXyUnitNt = function(x, y) {
         return this.events().filter(function(event) {
             return event.posUnitNt(x, y);
@@ -455,7 +483,9 @@
         var halfPositionCount = localHalfPositionCount;
         localHalfPositionCount = 0;
         if (!this.isHalfMove()) {
-            result = alias(x, y, d);
+            var x5  = $gameMap.roundXWithDirection(x, d);
+            var y5  = $gameMap.roundYWithDirection(y, d);
+            result = alias(x, y, d) && !$gameMap.isLowerNp(x5, y5);
         } else if (this.isHalfPosX(x) && this.isHalfPosY(y)) {
             if (d === 8) {
                 var y1      = $gameMap.roundHalfYWithDirection(y, d);
@@ -787,7 +817,7 @@
     Game_Player.prototype.startMapEvent = function(x, y, triggers, normal) {
         _Game_Player_startMapEvent.apply(this, arguments);
         if (!$gameMap.isEventRunning()) {
-            $gameMap.eventsXyUnit(x, y).forEach(function(event) {
+            $gameMap.events().forEach(function(event) {
                 if (event.isTriggerExpansion(x, y) && event.isTriggerIn(triggers) &&
                     event.isNormalPriority() === normal && (event.isCollidedFromPlayer() || !event.isNormalPriority())) {
                     event.start();
@@ -897,6 +927,23 @@
         this._triggerExpansion = metaValue ? getArgBoolean(metaValue) : paramTriggerExpansion;
     };
 
+    var _Game_Event_setupPage = Game_Event.prototype.setupPage;
+    Game_Event.prototype.setupPage = function() {
+        _Game_Event_setupPage.apply(this, arguments);
+        this._expansionArea = this.getExpansionArea();
+    };
+
+    Game_Event.prototype.getExpansionArea = function() {
+        var metaValue = getMetaValues(this.event(), ['ExpansionArea', '拡大領域']);
+        if (metaValue) {
+            return getArgArrayFloat(metaValue, 0);
+        } else if(this.isNormalPriority() && !this.isThroughDisable()) {
+            return [0, 0.5, 0.5, 0];
+        } else {
+            return [0.5, 0.5, 0.5, 0.5];
+        }
+    };
+
     var _Game_Event_isCollidedWithEvents = Game_Event.prototype.isCollidedWithEvents;
     Game_Event.prototype.isCollidedWithEvents = function(x, y) {
         var result = _Game_Event_isCollidedWithEvents.apply(this, arguments);
@@ -949,8 +996,20 @@
     };
 
     Game_Event.prototype.isTriggerExpansion = function(x, y) {
-        return this._triggerExpansion && this.posUnit(x, y) && (this.isNormalPriority() &&
-            this.isThroughDisable() ? this.y === y : true);
+        return this._triggerExpansion && this.isInExpansionArea(x, y);
+    };
+
+    Game_Event.prototype.isInExpansionArea = function(x, y) {
+        if (this.y + this._expansionArea[0] < y) {
+            return false;
+        } else if (this.x - this._expansionArea[1] > x) {
+            return false;
+        } else if (this.x + this._expansionArea[2] < x) {
+            return false;
+        } else if (this.y - this._expansionArea[3] > y) {
+            return false;
+        }
+        return true;
     };
 
     Game_Event.prototype.isCollidedFromPlayer = function() {
