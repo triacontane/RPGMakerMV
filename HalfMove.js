@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2016/05/20 ダメージ床や茂みで上半分のみ接している場合は無効にするよう変更
 // 1.4.0 2016/05/20 トリガー領域を上下左右で細かく指定できる機能を追加
 //                  英名のプラグインコマンドが正しく機能していなかった問題を修正
 // 1.3.0 2016/05/16 タイルの下半分のみ通行不可にできるような地形タグとリージョンIDの指定を追加
@@ -85,10 +86,9 @@
  * Note(Event Editor)
  * <HMHalfDisable> -> Disable half move.
  * <HMThroughDisable> -> Disable half through.
- * <HMWidth:2> -> Expansion event size(width)
- * <HMHeight:2> -> Expansion event size(height)
  * <HMTriggerExpansion:ON> -> Expansion trigger area ON
  * <HMTriggerExpansion:OFF> -> Expansion trigger area OFF
+ * <HMExpansionArea:1,1.1,1> -> Expansion trigger area(down,left,right,up)
  *
  * This plugin is released under the MIT License.
  */
@@ -172,20 +172,21 @@
  * <HMトリガー拡大:ON>
  * <HMトリガー拡大:OFF>
  *
- * ・トリガー拡大に関する仕様
+ * ・トリガー拡大をONにした場合の仕様
  * プライオリティが「通常キャラと同じ」かつイベントすり抜けが有効な場合
  * 　左右に半マスずつ起動可能領域が拡張されます。
  *
- * 上記以外の場合
- * 　上下左右に半マスずつ起動可能領域が拡張されます。
- *
- * 上の設定を無視して、個別に領域を設定したい場合は以下のとおり記述してください。
- * // 下、左、右、上方向にそれぞれ1マス、2マス、3マス、4マス拡大されます。
+ * 上記以外の場合、個別にトリガー領域を設定することができます。
+ * 以下のとおり記述してください。
+ * // 下、左、右、上方向にそれぞれ1マス、2マス、3マス、4マス拡大したい場合
  * <HM拡大領域:1,2.3,4>
  *
- * // 下、左、右、上方向にそれぞれ0.5マス、1マス、1マス、0.5マス拡大されます。
+ * // 下、左、右、上方向にそれぞれ0.5マス、1マス、1マス、0.5マス拡大したい場合
  * <HM拡大領域:0.5,1.1,0.5>
  *
+ * 何も記述しないと、上下左右に半マスずつトリガー領域が拡張されます。
+ *
+ * 注意！
  * 対象イベントの領域が拡大する以下のタグは廃止になりました。
  * <HM横幅:2>
  * <HMWidth:2>
@@ -446,7 +447,6 @@
             result = result || this.checkLayeredTilesFlags(x - Game_Map.tileUnit, y, bit);
         } else if (this.isHalfPos(y)) {
             result = this.checkLayeredTilesFlags(x, y + Game_Map.tileUnit, bit);
-            result = result || this.checkLayeredTilesFlags(x, y - Game_Map.tileUnit, bit);
         } else {
             result = _Game_Map_checkLayeredTilesFlags.apply(this, arguments);
         }
@@ -704,9 +704,7 @@
         return result;
     };
 
-    Game_CharacterBase.prototype.collideToEvent = function(target) {
-
-    };
+    Game_CharacterBase.prototype.collideToEvent = function(target) {};
 
     Game_CharacterBase.prototype.getPrevX = function() {
         return this._prevX !== undefined ? this._prevX : this._x;
@@ -935,10 +933,10 @@
 
     Game_Event.prototype.getExpansionArea = function() {
         var metaValue = getMetaValues(this.event(), ['ExpansionArea', '拡大領域']);
-        if (metaValue) {
-            return getArgArrayFloat(metaValue, 0);
-        } else if(this.isNormalPriority() && !this.isThroughDisable()) {
+        if(this.isNormalPriority() && !this.isThroughDisable()) {
             return [0, 0.5, 0.5, 0];
+        } else if (metaValue) {
+            return getArgArrayFloat(metaValue, 0);
         } else {
             return [0.5, 0.5, 0.5, 0.5];
         }
