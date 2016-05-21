@@ -2,74 +2,12 @@
 
 RPGツクールMVで動作するプラグイン(JavaScript)を置いています。どうぞご自由にお使いください。  
 一部のプラグインは、[ブログ](http://triacontane.blogspot.jp/)にて詳細な紹介を行っています。  
-また、新しいプラグインを[ツイッター](https://twitter.com/triacontane)で告知する場合があります。  
+また、最新のプラグインを[ツイッター](https://twitter.com/triacontane)で告知する場合があります。  
 These plugins(JavaScript) are for RPG Maker MV.  
 
-##更新履歴 Update record
-
-###2016/03/01 : マウス入力のキーバインドプラグイン[TouchBindToKey.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/TouchBindToKey.js)を追加しました。  
-マウスクリック（左、右、ホイール）を特定のボタンに紐付けます。もともとのマウスの動作を無効化することもできます。PCのみで動作します。  
-
-###2016/03/01 : 画面キャプチャ管理プラグイン[MakeScreenCapture.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js)を追加しました。  
-プレー中のゲーム画面をキャプチャしてファイルに保存したり、ピクチャとして表示したりできます。  
-png、jpegから形式を選んだり、ファイル名に連番やタイムスタンプを付与できます。  
-
-###2016/03/01 : バトル画面オプション追加プラグイン[BattleOptions.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BattleOptions.js)を追加しました。  
-戦闘画面のパーティコマンドにオプションを追加します。各種音量の変更やコマンドの記憶等が設定できます。  
-
-###2016/03/01 : ポインタ追跡プラグイン[PlayerPointerTurn.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/PlayerPointerTurn.js)を追加しました。  
-移動可能な場合にプレイヤーがマウスポインタの方を向きます。  
-
-###2016/02/21 : 足音プラグイン[FootstepSound.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/FootstepSound.js)を追加しました。  
-足音効果音を演奏します。  
-リージョン、地形タグ、茂み、ダメージ床、梯子などを条件に指定でき、さらに左右で別の効果音を指定したり、ダッシュと歩行で別の効果音を指定したりできます。  
-
-###2016/02/21 : もどきぷにコンプラグイン[RelativeTouchPad.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/RelativeTouchPad.js)を追加しました。  
-マップタッチ移動の代わりにタッチを開始した位置からの相対座標をもとにプレイヤーを移動します。  
-傾きの大きさによって「その場で方向転換」「歩行」「ダッシュ」と変化します。  
-コ〇プラのぷにコンをツクール上で再現します。  
-
-###2016/02/21 : 装備購入時の性能比較改善プラグイン[CompareParamRefine.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CompareParamRefine.js)を追加しました。  
-装備購入時の武器と防具の性能比較を攻撃力や防御力ではなくパラメータの総和で行います。  
-最大HPと最大MPの増減値は設定で、総和から除去することが可能です。  
-
-###2016/02/20 : フキダシウィンドウプラグイン[MessageWindowPopup.js](https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MessageWindowPopup.js)を修正しました。  
-1. YEP_MessageCore.jsのネームポップをポップアップウィンドウと連動するよう対応。  
-
-これより以前の履歴は[こちら](./UpdateRecord.md)をご参照ください。  
-
-##プラグイン一覧 Plugin list
-[こちら](./PluginList.md)で公開しています。  
-
 ##使い方 How to use
-
-###ダウンロード方法
-まとめてダウンロードするには、[トップページ](https://github.com/triacontane/RPGMakerMV)の「Download ZIP」ボタンからZipファイルをダウンロードできます。  
-個別にダウンロードするには、[こちら](./PluginList.md)からファイルを選択して「右クリック」→「名前を付けてリンク先を保存」です。*ファイル名は変更しないでください。*  
-
-###プロジェクトへ適用するには
-プロジェクトフォルダの「\js\plugins」以下にJSファイルを配置して、RPGツクールMVのプラグイン管理（F10）から有効化してください。  
-使用前に「ヘルプ」ボタンから使い方を確認してください。  
-イベントテストから実行するプラグインを使う場合は、実行前に「プロジェクトの保存」を行ってください。  
-
-###制御文字について
-全てのプラグインにおいて「プラグインコマンド」および「メモ欄への記述」のパラメータには*制御文字*が利用できます。  
-制御文字の書式は文章の表示と同じです。変数やアクターの名前などを動的に設定できるのでぜひご活用ください。  
-
-###問題が発生した場合
-バグや予想外の動作を発見した場合、以下の手順で再確認してください。  
-
-1. プラグインを再ダウンロードして確認する。  
-2. 新規プロジェクトに当該プラグインのみを有効にして確認する。  
-
-それでも問題が解決しない場合、下記の作者連絡先までご一報ください。  
-差し支えなければ、プロジェクト一式をどこかにアップロードして頂けると、原因の特定が早まります。  
-ただし、解決をお約束することはできません。  
-
-##リクエストや要望について About request
-随時、受け付けています。ツイッターやブログのコメント、GithubのIssues等を通じてご一報ください。  
-ただし、対応可否や対応時期については一切お約束できません。  
-要望を出すことも、それを断ることもお互いの自由であり、余計な気遣いは不要と認識しています。  
+こちらの[ドキュメント](https://docs.google.com/spreadsheets/d/1BnTyJr3Z1WoW4FMKtvKaICl4SQ5ehL5RxTDSV81oVQc/edit#gid=30581402)を通して必要なプラグインを探してください。  
+数は少ないですが、VXAce用のスクリプトも公開しています。  
 
 ##作者連絡先 Contact information
 トリアコンタン(triacontane)  

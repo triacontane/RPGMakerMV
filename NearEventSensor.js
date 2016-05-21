@@ -95,8 +95,9 @@
     Game_Event.prototype.checkFlash = function() {
         var list = this.list();
         // イベントが空でないこと、マップイベント実行中でないこと、フラッシュ中でないこと、プレイヤーとの距離が3以内
-        (list && list.length > 1 && !$gameMap.isEventRunning() && !this.isFlash() && this.isVeryNearThePlayer()) &&
+        if (list && list.length > 1 && !$gameMap.isEventRunning() && !this.isFlash() && this.isVeryNearThePlayer()) {
             this.startFlash([255,255,255,128], 60);
+        }
     };
 
     Game_Event.prototype.isVeryNearThePlayer = function() {
