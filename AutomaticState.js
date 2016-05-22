@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/05/22 複数の条件を適用できるよう修正
 // 1.0.2 2016/04/30 アクターと敵キャラ限定のオートステートが一部正しく機能していなかった問題を修正
 // 1.0.1 2016/02/14 オートステートの追加時にメッセージを表示する仕様を追加
 // 1.0.0 2016/02/08 初版
@@ -51,6 +52,9 @@
  * <AS敵キャラ:（敵キャラID）>
  *     ステート自動付与の対象を指定した敵キャラのみに設定する。
  *     IDの指定がない場合、全ての敵キャラに有効になる。
+ *
+ * 複数の条件が指定された場合は、全ての条件を満たした場合のみ
+ * ステートが付与されます。
  *
  * スクリプト
  * 自動付与ステートが有効になったときに所定のメッセージを表示する場合
@@ -116,8 +120,9 @@
     Game_BattlerBase.prototype.updateAutomaticState = function() {
         $dataStates.forEach(function(state) {
             if (state == null || state.meta.isEmpty()) return;
-            var stateId = state.id, result = this.isAutomaticValid(state);
-            if (result == null) return;
+            var stateId = state.id;
+            var result = this.isAutomaticValid(state);
+            if (result === null) return;
             if (result) {
                 if (!this.isStateAffected(stateId) && this.isStateAddable(stateId)) {
                     this.addState(stateId);
@@ -136,23 +141,65 @@
     Game_BattlerBase.prototype.showAddedStates = function() {
     };
 
-    Game_BattlerBase.prototype.isAutomaticValid = function(state) {
+    Game_BattlerBase.prototype.isAutomaticValid = function(state, result) {
         this._automaticTargetState = state;
         var switchId = this.getStateMetaNumber('スイッチ', 1, $dataSystem.switches.length - 1);
-        if (switchId !== null) return $gameSwitches.value(switchId);
+        if (switchId !== null) {
+            if ($gameSwitches.value(switchId)) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
         var upperLimitHp = this.getStateMetaNumber('上限HP', 0, 100);
-        if (upperLimitHp !== null) return this.hpRate() * 100 >= upperLimitHp;
+        if (upperLimitHp !== null) {
+            if (this.hpRate() * 100 >= upperLimitHp) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
         var lowerLimitHp = this.getStateMetaNumber('下限HP', 0, 100);
-        if (lowerLimitHp !== null) return this.hpRate() * 100 <= lowerLimitHp;
+        if (lowerLimitHp !== null) {
+            if (this.hpRate() * 100 <= lowerLimitHp) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
         var upperLimitMp = this.getStateMetaNumber('上限MP', 0, 100);
-        if (upperLimitMp !== null) return this.mpRate() * 100 >= upperLimitMp;
+        if (upperLimitMp !== null) {
+            if (this.mpRate() * 100 >= upperLimitMp) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
         var lowerLimitMp = this.getStateMetaNumber('下限MP', 0, 100);
-        if (lowerLimitMp !== null) return this.mmp > 0 && this.mpRate() * 100 <= lowerLimitMp;
+        if (lowerLimitMp !== null) {
+            if (this.mmp > 0 && this.mpRate() * 100 <= lowerLimitMp) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
         var upperLimitTp = this.getStateMetaNumber('上限TP', 0, 100);
-        if (upperLimitTp !== null) return this.tpRate() * 100 >= upperLimitTp;
+        if (upperLimitTp !== null) {
+            if (this.tpRate() * 100 >= upperLimitTp) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
         var lowerLimitTp = this.getStateMetaNumber('下限TP', 0, 100);
-        if (lowerLimitTp !== null) return this.tpRate() * 100 <= lowerLimitTp;
-        return null;
+        if (lowerLimitTp !== null) {
+            if (this.tpRate() * 100 <= lowerLimitTp) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
+        return result;
     };
 
     Game_BattlerBase.prototype.getStateMetaNumber = function(tagName, min, max) {
@@ -186,16 +233,28 @@
     // Game_Actor
     //  自動付与ステートの更新処理を定義します。
     //=============================================================================
-    var _Game_Actor_isAutomaticValid = Game_Actor.prototype.isAutomaticValid;
     Game_Actor.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
+        var result = null;
         var actorId = this.getStateMetaNumber('アクター', 0, $dataActors.length - 1);
         if (this.isStateMetaInfo('敵キャラ') || (actorId > 0 && actorId !== this._actorId)) return false;
         var weaponId = this.getStateMetaNumber('武器装備', 1, $dataWeapons.length - 1);
-        if (weaponId !== null) return this.hasWeapon($dataWeapons[weaponId]);
+        if (weaponId !== null) {
+            if (this.hasWeapon($dataWeapons[weaponId])) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
         var armorId = this.getStateMetaNumber('防具装備', 1, $dataArmors.length - 1);
-        if (armorId !== null) return this.hasArmor($dataArmors[armorId]);
-        return _Game_Actor_isAutomaticValid.apply(this, arguments);
+        if (armorId !== null) {
+            if (this.hasArmor($dataArmors[armorId])) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
+        return Game_BattlerBase.prototype.isAutomaticValid.call(this, state, result);
     };
 
     var _Game_Actor_changeEquip = Game_Actor.prototype.changeEquip;
@@ -208,12 +267,11 @@
     // Game_Enemy
     //  自動付与ステートの更新処理を定義します。
     //=============================================================================
-    var _Game_Enemy_isAutomaticValid = Game_Enemy.prototype.isAutomaticValid;
     Game_Enemy.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
         var enemyId = this.getStateMetaNumber('敵キャラ', 0, $dataEnemies.length - 1);
         if (this.isStateMetaInfo('アクター') || (enemyId > 0 && enemyId !== this._enemyId)) return false;
-        return _Game_Enemy_isAutomaticValid.apply(this, arguments);
+        return Game_BattlerBase.prototype.isAutomaticValid.call(this, state, null);
     };
 
     //=============================================================================
