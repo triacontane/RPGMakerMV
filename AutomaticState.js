@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/05/23 条件式で割合を算出する際に端数を切り捨てるよう修正
 // 1.1.0 2016/05/22 複数の条件を適用できるよう修正
 // 1.0.2 2016/04/30 アクターと敵キャラ限定のオートステートが一部正しく機能していなかった問題を修正
 // 1.0.1 2016/02/14 オートステートの追加時にメッセージを表示する仕様を追加
@@ -153,7 +154,7 @@
         }
         var upperLimitHp = this.getStateMetaNumber('上限HP', 0, 100);
         if (upperLimitHp !== null) {
-            if (this.hpRate() * 100 >= upperLimitHp) {
+            if (Math.floor(this.hpRate() * 100) >= upperLimitHp) {
                 result = true;
             } else {
                 return false;
@@ -161,7 +162,7 @@
         }
         var lowerLimitHp = this.getStateMetaNumber('下限HP', 0, 100);
         if (lowerLimitHp !== null) {
-            if (this.hpRate() * 100 <= lowerLimitHp) {
+            if (Math.floor(this.hpRate() * 100) <= lowerLimitHp) {
                 result = true;
             } else {
                 return false;
@@ -169,7 +170,7 @@
         }
         var upperLimitMp = this.getStateMetaNumber('上限MP', 0, 100);
         if (upperLimitMp !== null) {
-            if (this.mpRate() * 100 >= upperLimitMp) {
+            if (Math.floor(this.mpRate() * 100) >= upperLimitMp) {
                 result = true;
             } else {
                 return false;
@@ -177,7 +178,7 @@
         }
         var lowerLimitMp = this.getStateMetaNumber('下限MP', 0, 100);
         if (lowerLimitMp !== null) {
-            if (this.mmp > 0 && this.mpRate() * 100 <= lowerLimitMp) {
+            if (Math.floor(his.mmp > 0 && this.mpRate()) * 100 <= lowerLimitMp) {
                 result = true;
             } else {
                 return false;
@@ -185,7 +186,7 @@
         }
         var upperLimitTp = this.getStateMetaNumber('上限TP', 0, 100);
         if (upperLimitTp !== null) {
-            if (this.tpRate() * 100 >= upperLimitTp) {
+            if (Math.floor(this.tpRate() * 100) >= upperLimitTp) {
                 result = true;
             } else {
                 return false;
@@ -193,7 +194,7 @@
         }
         var lowerLimitTp = this.getStateMetaNumber('下限TP', 0, 100);
         if (lowerLimitTp !== null) {
-            if (this.tpRate() * 100 <= lowerLimitTp) {
+            if (Math.floor(this.tpRate() * 100) <= lowerLimitTp) {
                 result = true;
             } else {
                 return false;
