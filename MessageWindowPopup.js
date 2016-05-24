@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/05/25 フォロワーにフキダシを表示できる機能を追加
 // 1.3.0 2016/03/21 ウィンドウの表示位置をキャラクターの高さに合わせて自動調整するよう修正
 //                  ポップアップウィンドウ専用のウィンドウスキンを使用する機能を追加
 //                  位置とサイズを微調整する機能を追加
@@ -164,6 +165,7 @@
  * フキダシウィンドウ有効化 [キャラクターID]
  * 　メッセージウィンドウを指定したキャラクターIDの頭上に表示するようにします。
  * 　プレイヤー : -1 このイベント : 0 指定したIDのイベント : 1 ～
+ *   フォロワー : -2, -3, -4
  *
  * 例：MWP_VALID 0
  * 　　フキダシウィンドウ有効化 3
@@ -690,7 +692,15 @@
 
     Window_Message.prototype.getPopupTargetCharacter = function() {
         var id = this._targetCharacterId;
-        return id == null ? null : id === -1 ? $gamePlayer : $gameMap.event(id);
+        if (id < -1) {
+            return $gamePlayer.followers().follower((id * -1) - 2);
+        } else if (id === -1) {
+            return $gamePlayer;
+        } else if (id > -1) {
+            return $gameMap.event(id);
+        } else {
+            return null;
+        }
     };
 
     Window_Message.prototype.isPopup = function() {
@@ -705,8 +715,8 @@
 
     var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
     Window_Message.prototype.updatePlacement = function() {
-        _Window_Message_updatePlacement.apply(this, arguments);
         this.x = 0;
+        _Window_Message_updatePlacement.apply(this, arguments);
         if (this.isPopup()) this.updatePlacementPopup();
     };
 
