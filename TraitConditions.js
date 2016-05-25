@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/05/25 スクリプトに「>」「<」を使えるように修正
 // 1.0.0 2016/05/18 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -23,7 +24,10 @@
  * <TC1スイッチ:10>   // スイッチ[10]がONの場合、1番目の特徴が有効になる
  * <TC1ステート:4>    // ステート[4]が有効な場合、1番目の特徴が有効になる
  * <TC1スクリプト:式> // [式]の評価結果がtrueの場合、1番目の特徴が有効になる
- * 例：<TC1スクリプト:\v[1] > 10> // 変数[1]が10より大きい場合
+ * 例：<TC1スクリプト:\v[1] &gt 10> // 変数[1]が10より大きい場合
+ * タグに使用される記号は以下の通り変換されます。
+ * &lt; → <
+ * &gt; → >
  *
  * 2番目以降の特徴も同様に設定可能です。
  *
@@ -38,6 +42,10 @@
 (function () {
     'use strict';
     var metaTagPrefix = 'TC';
+    var metaTagDisConvert = {
+        "&lt;": "<",
+        "&gt;": ">"
+    };
 
     var getArgString = function (arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
@@ -68,6 +76,9 @@
         if (text === null || text === undefined) {
             text = '';
         }
+        text = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
+            return metaTagDisConvert[value];
+        }.bind(this));
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
