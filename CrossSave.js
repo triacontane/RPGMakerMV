@@ -157,7 +157,8 @@ function CrossSaveManager() {
         SIZE_ERR: 'セーブデータの容量が大きすぎます。',
         NO_DATA : '指定したパスワードのセーブデータが見付かりませんでした。',
         FILE_ERR: 'ロードしたファイルが破損していました。',
-        WAITING : '通信中です。しばらくお待ちください。'
+        WAITING : '通信中です。しばらくお待ちください。',
+        UNKNOWN : '原因不明のエラーで処理が失敗しました。'
     };
 
     var getCommandName = function(command) {
@@ -1035,8 +1036,14 @@ function CrossSaveManager() {
     };
 
     CrossSaveManager.setMainData = function(param, data) {
-        this._mainData.set(paramUserId + ':' + this._password + ':' + param, data,
-            this.onProcessSuccess.bind(this, null),
+        this._mainData.set(paramUserId + ':' + this._password + ':' + param, data, function(err) {
+            if (!err) {
+                this.onProcessSuccess();
+            } else {
+                this.outLog(err);
+                this.onProcessFailure(localMessage.UNKNOWN);
+            }
+        }.bind(this),
             this.onProcessFailure.bind(this, localMessage.REJECT)
         );
         this._processCount++;
