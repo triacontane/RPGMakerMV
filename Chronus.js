@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.6 2016/05/30 曜日に「Y」を含む文字列を指定できないバグを修正
 // 1.2.5 2016/04/29 createUpperLayerによる競合対策
 // 1.2.4 2016/03/13 アナログ時計を指定しないで起動した場合にエラーになる現象の修正
 // 1.2.3 2016/03/10 時間帯と時間帯ごとの色調をカスタマイズできるようにユーザ書き換え領域を作成
@@ -998,10 +999,7 @@ function Game_Chronus() {
 
     Game_Chronus.prototype.getDateFormat = function(index) {
         var format = getParamString('日時フォーマット' + String(index));
-        format = format.replace(/DY/gi, function() {
-            return this.getWeekName();
-        }.bind(this));
-        format = format.replace(/(Y+)/gi, function() {
+        format = format.replace(/(YYYY)/gi, function() {
             return this.getValuePadding(this.getYear(), arguments[1].length);
         }.bind(this));
         format = format.replace(/MM/gi, function() {
@@ -1024,6 +1022,9 @@ function Game_Chronus() {
         }.bind(this));
         format = format.replace(/MI/gi, function() {
             return this.getValuePadding(this.getMinute(), 2);
+        }.bind(this));
+        format = format.replace(/DY/gi, function() {
+            return this.getWeekName();
         }.bind(this));
         return format;
     };
