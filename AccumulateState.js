@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/05/31 戦闘テスト以外で戦闘に入るとエラーになる場合がある問題を修正
 // 1.0.0 2016/05/28 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -344,6 +345,7 @@
 
     Sprite_AccumulateState.prototype.update = function() {
         var actor = this.getActor();
+        if (!actor) return;
         if (this._actor !== actor) {
             this._actor = actor;
             this.refresh();

@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/05/31 ウィンドウが重なったときに裏側のウィンドウのアイコンに反応する不具合を修正
 // 1.0.0 2016/03/16 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -196,6 +197,19 @@
     };
 
     //=============================================================================
+    // Scene_Base
+    //  ウィンドウのアイコンタッチを検出します。
+    //=============================================================================
+    var _Scene_Base_updateChildren = Scene_Base.prototype.updateChildren;
+    Scene_Base.prototype.updateChildren = function() {
+        _Scene_Base_updateChildren.apply(this, arguments);
+        if (!this._windowLayer) return;
+        this._windowLayer.children.some(function(windowObject) {
+            return windowObject.updateIconTouch();
+        });
+    };
+
+    //=============================================================================
     // Window_Base
     //  drawIconの位置を記憶してクリックされた場合にキャプションを表示します。
     //=============================================================================
@@ -213,22 +227,15 @@
 
     Window_Base.prototype.addIconRect = function(iconIndex, x, y) {
         var rect = new Rectangle(x, y, Window_Base._iconWidth, Window_Base._iconHeight);
-        var iconInfo = {index:iconIndex, rect:rect};
-        this._iconRects[rect.x + ':' + rect.y] = (iconInfo);
-    };
-
-    var _Window_Base_update = Window_Base.prototype.update;
-    Window_Base.prototype.update = function() {
-        _Window_Base_update.apply(this, arguments);
-        this.updateIconTouch();
+        this._iconRects[rect.x + ':' + rect.y] = {index:iconIndex, rect:rect};
     };
 
     Window_Base.prototype.updateIconTouch = function() {
         if (this.isAnyTriggered() && this._captionWindow) {
             this.eraseCaption();
-            return;
+            return false;
         }
-        if (!TouchInput.isTriggered() || !this.isTouchedInsideFrame()) return;
+        if (!TouchInput.isTriggered() || !this.isTouchedInsideFrame()) return false;
         var tx = this.canvasToLocalX(TouchInput.x) - this.padding;
         var ty = this.canvasToLocalY(TouchInput.y) - this.padding;
         for (var propName in this._iconRects) {
@@ -239,6 +246,7 @@
                 if (text) this.popupCaption(text);
             }
         }
+        return true;
     };
 
     Window_Base.prototype.popupCaption = function(text) {
