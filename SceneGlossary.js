@@ -6,6 +6,11 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/05/31 テキストと画像を重ねて表示する設定を追加
+//                  新語が自動登録された場合にスイッチや変数を操作する機能を追加
+//                  アイテムを使用する際に確認ウィンドウを表示する機能を追加
+//                  新語の自動登録に制御文字を使えるよう修正
+//                  収集率を画面左下に表示できる機能を追加
 // 1.3.1 2016/04/26 ピクチャ名を変数で指定できる機能を追加
 // 1.3.0 2016/04/23 用語の種別ごとに、複数の用語画面を作成できる機能を追加
 //                  用語をアイテムとして使用できる機能を追加
@@ -94,6 +99,34 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param ConfirmMessage
+ * @desc 用語アイテムを使用する際に確認メッセージが表示されるようになります。
+ * @default OFF
+ *
+ * @param SwitchAutoAdd
+ * @desc 用語アイテムの自動登録が行われた際に指定した番号のスイッチがONになります。何らかの通知を行いたい場合に指定します。
+ * @default 0
+ *
+ * @param VariableAutoAdd
+ * @desc 用語アイテムの自動登録が行われた際に指定した番号の変数にアイテムIDが設定されます。
+ * @default 0
+ *
+ * @param ConfirmUse
+ * @desc 確認メッセージで使う場合のメッセージです。
+ * @default Use
+ *
+ * @param ConfirmNoUse
+ * @desc 確認メッセージで使わない場合のメッセージです。
+ * @default No Use
+ *
+ * @param CompleteView
+ * @desc カテゴリごとの収集率を表示します。
+ * @default OFF
+ *
+ * @param CompleteMessage
+ * @desc 収集率を表示する文言です。「%1」が収集率に変換されます。
+ * @default Complete \c[2]%1\c[0] \%
+ *
  * @noteParam SGピクチャ
  * @noteRequire 1
  * @noteDir img/pictures/
@@ -135,6 +168,7 @@
  * <SGPicture:ファイル名>    // 用語のピクチャのファイル名
  * <SGPicturePosition:text>  // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
+ *  under:テキストの下
  * <SGPictureScale:0.5>      // ピクチャの拡大率
  * <SGPictureAlign:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
@@ -256,6 +290,34 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param 確認メッセージ
+ * @desc 用語アイテムを使用する際に確認メッセージが表示されるようになります。
+ * @default OFF
+ *
+ * @param 自動登録IDスイッチ
+ * @desc 用語アイテムの自動登録が行われた際に指定した番号のスイッチがONになります。何らかの通知を行いたい場合に指定します。
+ * @default 0
+ *
+ * @param 自動登録ID変数
+ * @desc 用語アイテムの自動登録が行われた際に指定した番号の変数にアイテムIDが設定されます。
+ * @default 0
+ *
+ * @param 確認_使う
+ * @desc 確認メッセージで使う場合のメッセージです。
+ * @default 使う
+ *
+ * @param 確認_使わない
+ * @desc 確認メッセージで使わない場合のメッセージです。
+ * @default やめる
+ * 
+ * @param 収集率表示
+ * @desc カテゴリごとの収集率を表示します。コンプリートの目安です。
+ * @default OFF
+ *
+ * @param 収集率メッセージ
+ * @desc 収集率を表示する文言です。「%1」が収集率に変換されます。
+ * @default 収集率 \c[2]%1\c[0] ％
+ *
  * @noteParam SGピクチャ
  * @noteRequire 1
  * @noteDir img/pictures/
@@ -297,6 +359,7 @@
  * <SGピクチャ:ファイル名>   // 用語のピクチャのファイル名
  * <SGピクチャ位置:text>     // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
+ *  under:テキストの下
  * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
  * <SGピクチャ揃え:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
@@ -354,12 +417,12 @@ function Scene_Glossary() {
     this.initialize.apply(this, arguments);
 }
 
-(function () {
+(function() {
     'use strict';
-    var pluginName = 'SceneGlossary';
+    var pluginName    = 'SceneGlossary';
     var metaTagPrefix = 'SG';
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
@@ -404,13 +467,13 @@ function Scene_Glossary() {
         return undefined;
     };
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return convertEscapeCharactersAndEval(arg, true).clamp(min, max);
     };
 
-    var getArgString = function (arg, upperFlg) {
+    var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharactersAndEval(arg, false);
         return upperFlg ? arg.toUpperCase() : arg;
     };
@@ -433,7 +496,7 @@ function Scene_Glossary() {
     //=============================================================================
     var paramCommandNames = [];
     for (var i = 0; i < 4; i++) {
-        var idString = (i > 0 ? String(i + 1) : '');
+        var idString         = (i > 0 ? String(i + 1) : '');
         paramCommandNames[i] = getParamString(['CommandName' + idString, 'コマンド名称' + idString]);
     }
     var paramCommandNamesMax   = paramCommandNames.length;
@@ -449,13 +512,20 @@ function Scene_Glossary() {
     var paramPictureAlign      = getParamString(['PictureAlign', '画像の揃え']).toLowerCase();
     var paramUseCategory       = getParamBoolean(['UseCategory', 'カテゴリ分類']);
     var paramUsableItem        = getParamBoolean(['UsableItem', 'アイテム使用']);
+    var paramConfirmMessage    = getParamBoolean(['ConfirmMessage', '確認メッセージ']);
+    var paramSwitchAutoAdd     = getParamNumber(['SwitchAutoAdd', '自動登録IDスイッチ']);
+    var paramVariableAutoAdd   = getParamNumber(['VariableAutoAdd', '自動登録ID変数']);
+    var paramConfirmUse        = getParamString(['ConfirmUse', '確認_使う']);
+    var paramConfirmNoUse      = getParamString(['ConfirmNoUse', '確認_使わない']);
+    var paramCompleteView      = getParamBoolean(['CompleteView', '収集率表示']);
+    var paramCompleteMessage   = getParamString(['CompleteMessage', '収集率メッセージ']);
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandSceneGlossary(command, args);
@@ -476,7 +546,7 @@ function Scene_Glossary() {
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandSceneGlossary = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandSceneGlossary = function(command, args) {
         switch (getCommandName(command)) {
             case 'GLOSSARY_CALL' :
             case '用語集画面の呼び出し' :
@@ -500,7 +570,7 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.isSameGlossaryType = function(item) {
-        var type = $gameTemp.getGlossaryType();
+        var type     = $gameTemp.getGlossaryType();
         var itemType = getArgNumber(getMetaValues(item, ['種別', 'Type']));
         return type > 1 ? itemType === type : !itemType || itemType === type;
     };
@@ -515,11 +585,22 @@ function Scene_Glossary() {
         }.bind(this));
     };
 
+    Game_Party.prototype.getHasGlossaryPercent = function(categoryName) {
+        var hasCount = 0, allCount = 0;
+        this.getAllGlossaryList().forEach(function(item) {
+            if (this.isSameGlossaryType(item) && (!categoryName || this.getGlossaryCategory(item) === categoryName)) {
+                if (this.hasItem(item)) hasCount++;
+                allCount++;
+            }
+        }.bind(this));
+        return Math.floor(hasCount / allCount * 100);
+    };
+
     Game_Party.prototype.getAllGlossaryCategory = function() {
         var list = [];
-        this.items().forEach(function (item) {
+        this.items().forEach(function(item) {
             var category = this.getGlossaryCategory(item);
-            if (category && this.isSameGlossaryType(item) && list.indexOf(category) === -1) {
+            if (category && this.isSameGlossaryType(item) && !list.contains(category)) {
                 list.push(category);
             }
         }.bind(this));
@@ -528,7 +609,9 @@ function Scene_Glossary() {
 
     Game_Party.prototype.gainGlossaryFromText = function(text) {
         this.getAllGlossaryList().forEach(function(item) {
-            if (!this.hasItem(item) && this.isAutoGlossaryWord(item) && text.indexOf(item.name) !== -1) {
+            if (!this.hasItem(item) && this.isAutoGlossaryWord(item) && text.contains(item.name)) {
+                if (paramSwitchAutoAdd > 0) $gameSwitches.setValue(paramSwitchAutoAdd, true);
+                if (paramVariableAutoAdd > 0) $gameVariables.setValue(paramVariableAutoAdd, item.id);
                 this.gainGlossary(item);
             }
         }.bind(this));
@@ -547,24 +630,14 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.gainGlossary = function(item) {
-        this.gainItem(item, 1 , false);
-    };
-
-    //=============================================================================
-    // Game_Message
-    //  メッセージに登場した単語を用語集に加えます。
-    //=============================================================================
-    var _Game_Message_add = Game_Message.prototype.add;
-    Game_Message.prototype.add = function(text) {
-        _Game_Message_add.apply(this, arguments);
-        if (paramAutoAddition) $gameParty.gainGlossaryFromText(text);
+        this.gainItem(item, 1, false);
     };
 
     //=============================================================================
     // Game_Temp
     //  用語集画面の種別を追加定義します。
     //=============================================================================
-    var _Game_Temp_initialize = Game_Temp.prototype.initialize;
+    var _Game_Temp_initialize      = Game_Temp.prototype.initialize;
     Game_Temp.prototype.initialize = function() {
         _Game_Temp_initialize.apply(this, arguments);
         this._glossaryType = 0;
@@ -582,7 +655,7 @@ function Scene_Glossary() {
     // Scene_Menu
     //  用語集画面の呼び出しを追加します。
     //=============================================================================
-    var _Scene_Menu_createCommandWindow = Scene_Menu.prototype.createCommandWindow;
+    var _Scene_Menu_createCommandWindow      = Scene_Menu.prototype.createCommandWindow;
     Scene_Menu.prototype.createCommandWindow = function() {
         _Scene_Menu_createCommandWindow.apply(this, arguments);
         for (var i = 0; i < paramCommandNamesMax; i++) {
@@ -601,7 +674,7 @@ function Scene_Glossary() {
     // Window_MenuCommand
     //  用語集画面の呼び出しの選択肢を追加定義します。
     //=============================================================================
-    var _Window_MenuCommand_addOriginalCommands = Window_MenuCommand.prototype.addOriginalCommands;
+    var _Window_MenuCommand_addOriginalCommands      = Window_MenuCommand.prototype.addOriginalCommands;
     Window_MenuCommand.prototype.addOriginalCommands = function() {
         _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
         for (var i = 0; i < paramCommandNamesMax; i++) {
@@ -619,16 +692,36 @@ function Scene_Glossary() {
     // Window_EventItem
     //  用語集アイテムをアイテム選択の候補から除外します。
     //=============================================================================
-    var _Window_EventItem_includes = Window_EventItem.prototype.includes;
+    var _Window_EventItem_includes      = Window_EventItem.prototype.includes;
     Window_EventItem.prototype.includes = function(item) {
         return _Window_EventItem_includes.apply(this, arguments) && !$gameParty.isGlossaryItem(item);
+    };
+
+    //=============================================================================
+    // Window_Message
+    //  メッセージに登場した単語を用語集に加えます。
+    //=============================================================================
+    var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
+    Window_Message.prototype.startMessage = function() {
+        _Window_Message_startMessage.apply(this, arguments);
+        if (paramAutoAddition) $gameParty.gainGlossaryFromText(this._textState.text);
+    };
+
+    //=============================================================================
+    // Window_ScrollText
+    //  メッセージに登場した単語を用語集に加えます。
+    //=============================================================================
+    var _Window_ScrollText_startMessage      = Window_ScrollText.prototype.startMessage;
+    Window_ScrollText.prototype.startMessage = function() {
+        _Window_ScrollText_startMessage.apply(this, arguments);
+        if (paramAutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._text));
     };
 
     //=============================================================================
     // Scene_Glossary
     //  用語集画面を扱うクラスです。
     //=============================================================================
-    Scene_Glossary.prototype = Object.create(Scene_ItemBase.prototype);
+    Scene_Glossary.prototype             = Object.create(Scene_ItemBase.prototype);
     Scene_Glossary.prototype.constructor = Scene_Glossary;
 
     Scene_Glossary.prototype.create = function() {
@@ -637,6 +730,8 @@ function Scene_Glossary() {
         this.createGlossaryWindow();
         this.createGlossaryListWindow();
         this.createGlossaryCategoryWindow();
+        this.createGlossaryCompleteWindow();
+        this.createConfirmWindow();
         this.createActorWindow();
         this.setInitActivateWindow();
     };
@@ -650,7 +745,7 @@ function Scene_Glossary() {
         this._glossaryListWindow = new Window_GlossaryList(this._glossaryWindow);
         this._glossaryListWindow.setHandler('cancel', this.onCancelGlossaryList.bind(this));
         if (paramUsableItem) {
-            this._glossaryListWindow.setHandler('ok', this.onItemOk.bind(this));
+            this._glossaryListWindow.setHandler('ok', this.onOkGlossaryList.bind(this));
         }
         this._itemWindow = this._glossaryListWindow;
         this.addWindow(this._glossaryListWindow);
@@ -659,15 +754,29 @@ function Scene_Glossary() {
     Scene_Glossary.prototype.createGlossaryCategoryWindow = function() {
         this._glossaryCategoryWindow = new Window_GlossaryCategory(this._glossaryListWindow);
         this._glossaryCategoryWindow.setHandler('cancel', this.escapeScene.bind(this));
-        this._glossaryCategoryWindow.setHandler('ok',     this.onOkGlossaryCategory.bind(this));
+        this._glossaryCategoryWindow.setHandler('ok', this.onOkGlossaryCategory.bind(this));
         this.addWindow(this._glossaryCategoryWindow);
+    };
+
+    Scene_Glossary.prototype.createConfirmWindow = function() {
+        this._confirmWindow = new Window_GlossaryConfirm(this._glossaryListWindow);
+        this._confirmWindow.setHandler('cancel', this.activateListWindow.bind(this));
+        this._confirmWindow.setHandler('use', this.onItemOk.bind(this));
+        this._confirmWindow.setHandler('noUse', this.activateListWindow.bind(this));
+        this.addWindow(this._confirmWindow);
+    };
+
+    Scene_Glossary.prototype.createGlossaryCompleteWindow = function() {
+        this._glossaryCompleteWindow = new Window_GlossaryComplete(this._glossaryListWindow);
+        if (!paramCompleteView) this._glossaryCompleteWindow.hide();
+        this.addWindow(this._glossaryCompleteWindow);
     };
 
     Scene_Glossary.prototype.createBackground = function() {
         if (paramBackPicture) {
-            var sprite = new Sprite();
-            sprite.bitmap = ImageManager.loadPicture(paramBackPicture ,0);
-            sprite.bitmap.addLoadListener(function () {
+            var sprite    = new Sprite();
+            sprite.bitmap = ImageManager.loadPicture(paramBackPicture, 0);
+            sprite.bitmap.addLoadListener(function() {
                 sprite.scale.x = Graphics.boxWidth / sprite.width;
                 sprite.scale.y = Graphics.boxHeight / sprite.height;
             }.bind(this));
@@ -689,17 +798,27 @@ function Scene_Glossary() {
 
     Scene_Glossary.prototype.setInitActivateWindow = function() {
         if (paramUseCategory) {
-            this.activateCategoryWindow();
+            this.activateCategoryWindow(true);
         } else {
-            this.activateListWindow();
+            this.activateListWindow(true);
         }
     };
 
     Scene_Glossary.prototype.onOkGlossaryCategory = function() {
-        this.activateListWindow();
+        this.activateListWindow(true);
+    };
+
+    Scene_Glossary.prototype.onOkGlossaryList = function() {
+        if (paramConfirmMessage) {
+            this.activateConfirmWindow();
+        } else {
+            this.onItemOk();
+        }
     };
 
     Scene_Glossary.prototype.onItemOk = function() {
+        this._confirmWindow.hide();
+        this._confirmWindow.deactivate();
         $gameParty.setLastItem(this.item());
         this.determineItem();
     };
@@ -722,22 +841,37 @@ function Scene_Glossary() {
         }
     };
 
-    Scene_Glossary.prototype.activateCategoryWindow = function() {
+    Scene_Glossary.prototype.activateCategoryWindow = function(indexInit) {
         this._glossaryCategoryWindow.activate();
         this._glossaryCategoryWindow.show();
+        if (indexInit) this._glossaryCategoryWindow.select(0);
         this._glossaryListWindow.deactivate();
         this._glossaryListWindow.hide();
         this._glossaryListWindow.deselect();
+        this._glossaryCompleteWindow.clear();
+        this._confirmWindow.hide();
+        this._confirmWindow.deactivate();
         this.updateHelp(paramHelpTextCategory);
     };
 
-    Scene_Glossary.prototype.activateListWindow = function() {
+    Scene_Glossary.prototype.activateListWindow = function(indexInit) {
         this._glossaryListWindow.activate();
         this._glossaryListWindow.show();
+        if (indexInit) this._glossaryListWindow.select(0);
         this._glossaryCategoryWindow.deactivate();
         this._glossaryCategoryWindow.hide();
-        this._glossaryListWindow.select(0);
+        this._glossaryCompleteWindow.refresh();
+        this._confirmWindow.hide();
+        this._confirmWindow.deactivate();
         this.updateHelp(paramHelpText);
+    };
+
+    Scene_Glossary.prototype.activateConfirmWindow = function() {
+        this._glossaryListWindow.deactivate();
+        this._confirmWindow.updatePlacement();
+        this._confirmWindow.select(0);
+        this._confirmWindow.show();
+        this._confirmWindow.activate();
     };
 
     Scene_Glossary.prototype.escapeScene = function() {
@@ -751,7 +885,8 @@ function Scene_Glossary() {
     function Window_GlossaryCategory() {
         this.initialize.apply(this, arguments);
     }
-    Window_GlossaryCategory.prototype = Object.create(Window_Selectable.prototype);
+
+    Window_GlossaryCategory.prototype             = Object.create(Window_Selectable.prototype);
     Window_GlossaryCategory.prototype.constructor = Window_GlossaryCategory;
 
     Window_GlossaryCategory.prototype.initialize = function(glWindow) {
@@ -759,7 +894,6 @@ function Scene_Glossary() {
         Window_Selectable.prototype.initialize.call(this, glWindow.x, glWindow.y, glWindow.width, glWindow.height);
         this._data = null;
         this.refresh();
-        this.select(0);
     };
 
     Window_GlossaryCategory.prototype.maxItems = function() {
@@ -805,12 +939,14 @@ function Scene_Glossary() {
     function Window_GlossaryList() {
         this.initialize.apply(this, arguments);
     }
-    Window_GlossaryList.prototype = Object.create(Window_ItemList.prototype);
+
+    Window_GlossaryList.prototype             = Object.create(Window_ItemList.prototype);
     Window_GlossaryList.prototype.constructor = Window_GlossaryList;
 
     Window_GlossaryList.prototype.initialize = function(gWindow) {
         this._glossaryWindow = gWindow;
-        Window_ItemList.prototype.initialize.call(this, 0, gWindow.y, paramGlossaryListWidth, gWindow.height);
+        var height           = gWindow.height - (paramCompleteView ? this.lineHeight() + this.standardPadding() * 2 : 0);
+        Window_ItemList.prototype.initialize.call(this, 0, gWindow.y, paramGlossaryListWidth, height);
         this.refresh();
     };
 
@@ -863,6 +999,70 @@ function Scene_Glossary() {
         this._glossaryWindow.cursorLeft(wrap);
     };
 
+    Window_GlossaryList.prototype.getCategory = function() {
+        return this._category !== 'none' ? this._category : null;
+    };
+
+    //=============================================================================
+    // Window_GlossaryConfirm
+    //  用語集確認ウィンドウです。
+    //=============================================================================
+    function Window_GlossaryConfirm() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_GlossaryConfirm.prototype             = Object.create(Window_Command.prototype);
+    Window_GlossaryConfirm.prototype.constructor = Window_GlossaryConfirm;
+
+    Window_GlossaryConfirm.prototype.initialize = function(listWindow) {
+        this._listWindow = listWindow;
+        Window_Command.prototype.initialize.call(this, 0, 0);
+    };
+
+    Window_GlossaryConfirm.prototype.windowWidth = function() {
+        return 120;
+    };
+
+    Window_GlossaryConfirm.prototype.updatePlacement = function() {
+        this.x = this._listWindow.x + 64;
+        this.y = this._listWindow.y + this._listWindow.index() * this._listWindow.itemHeight() + 32;
+    };
+
+    Window_GlossaryConfirm.prototype.makeCommandList = function() {
+        this.addCommand(paramConfirmUse, 'use');
+        this.addCommand(paramConfirmNoUse, 'noUse');
+    };
+
+    //=============================================================================
+    // Window_Glossary
+    //  用語集ウィンドウです。
+    //=============================================================================
+    function Window_GlossaryComplete() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_GlossaryComplete.prototype             = Object.create(Window_Base.prototype);
+    Window_GlossaryComplete.prototype.constructor = Window_GlossaryComplete;
+
+    Window_GlossaryComplete.prototype.initialize = function(listWindow) {
+        var x            = listWindow.x;
+        var y            = listWindow.y + listWindow.height;
+        var width        = listWindow.width;
+        var height       = Graphics.boxHeight - y;
+        this._listWindow = listWindow;
+        Window_Base.prototype.initialize.call(this, x, y, width, height);
+    };
+
+    Window_GlossaryComplete.prototype.clear = function() {
+        this.contents.clear();
+    };
+
+    Window_GlossaryComplete.prototype.refresh = function() {
+        this.clear();
+        var percent = $gameParty.getHasGlossaryPercent(this._listWindow.getCategory());
+        this.drawTextEx(paramCompleteMessage.format(percent.padZero(3)), 0, 0);
+    };
+
     //=============================================================================
     // Window_Glossary
     //  用語集ウィンドウです。
@@ -870,14 +1070,15 @@ function Scene_Glossary() {
     function Window_Glossary() {
         this.initialize.apply(this, arguments);
     }
-    Window_Glossary.prototype = Object.create(Window_Base.prototype);
+
+    Window_Glossary.prototype             = Object.create(Window_Base.prototype);
     Window_Glossary.prototype.constructor = Window_Glossary;
 
     Window_Glossary.prototype.initialize = function(x, y) {
-        var height = Graphics.boxHeight - y;
-        var width  = Graphics.boxWidth  - x;
+        var height      = Graphics.boxHeight - y;
+        var width       = Graphics.boxWidth - x;
         this._maxPages  = 1;
-        this._itemData = null;
+        this._itemData  = null;
         this._pageIndex = 0;
         Window_Base.prototype.initialize.call(this, x, y, width, height);
     };
@@ -888,9 +1089,8 @@ function Scene_Glossary() {
 
     Window_Glossary.prototype.calcMaxPages = function(depth) {
         if (!depth) depth = 0;
-        var item = this._itemData;
-        var exist = !!getMetaValues(item, ['ピクチャ', 'Picture'], depth) ||
-            !!getMetaValues(item, ['説明', 'Description'], depth);
+        var item  = this._itemData;
+        var exist = !!getMetaValues(item, ['ピクチャ', 'Picture'], depth) || !!getMetaValues(item, ['説明', 'Description'], depth);
         return (exist && depth < 100) ? this.calcMaxPages(depth + 1) : depth;
     };
 
@@ -947,9 +1147,13 @@ function Scene_Glossary() {
     };
 
     Window_Glossary.prototype.drawItemSub = function(bitmap) {
-        var item  = this._itemData;
+        var item = this._itemData;
         var text = getMetaValues(item, ['説明', 'Description'], this._pageIndex);
         switch (this.getPicturePosition(item)) {
+            case 'under':
+                this.drawPicture(item, bitmap, text, 0);
+                this.drawItemText(text, 0);
+                break;
             case 'top':
                 this.drawPicture(item, bitmap, text, 0);
                 this.drawItemText(text, this.calcItemPictureHeight(item, bitmap, text));
@@ -976,7 +1180,7 @@ function Scene_Glossary() {
     };
 
     Window_Glossary.prototype.calcItemTextHeight = function(text) {
-        var textState = {index: 0, x: 0, y: 0, left:0, text:text};
+        var textState = {index: 0, x: 0, y: 0, left: 0, text: text};
         return this.calcTextHeight(textState, true) + 4;
     };
 
@@ -991,9 +1195,9 @@ function Scene_Glossary() {
     Window_Glossary.prototype.drawPicture = function(item, bitmap, text, y) {
         if (!bitmap) return;
         var scale = this.getPictureScale(item, bitmap, text);
-        var dw = bitmap.width  * scale;
-        var dy = bitmap.height * scale;
-        var x = 0;
+        var dw    = bitmap.width * scale;
+        var dy    = bitmap.height * scale;
+        var x     = 0;
         switch (this.getPictureAlign(item)) {
             case 'left':
                 x = 0;
@@ -1009,14 +1213,14 @@ function Scene_Glossary() {
     };
 
     Window_Glossary.prototype.getPictureScale = function(item, bitmap, text) {
-        var scale = 1;
+        var scale     = 1;
         var metaValue = getMetaValues(item, ['ピクチャ拡大率', 'PictureScale'], this._pageIndex);
         if (metaValue) {
             scale = getArgNumber(metaValue);
-        } else if(paramAutoResizePicture) {
+        } else if (paramAutoResizePicture) {
             var mw = this.contentsWidth();
             var mh = this.contentsHeight() - this.calcItemTextHeight(text);
-            scale = Math.min(mw / bitmap.width, mh / bitmap.height, 1);
+            scale  = Math.min(mw / bitmap.width, mh / bitmap.height, 1);
         }
         return scale;
     };
@@ -1038,14 +1242,14 @@ function Scene_Glossary() {
 
     Window_Glossary.prototype._refreshArrows = function() {
         Window.prototype._refreshArrows.call(this);
-        var w = this._width;
-        var h = this._height;
-        var p = 24;
-        var q = p/2;
+        var w                          = this._width;
+        var h                          = this._height;
+        var p                          = 24;
+        var q                          = p / 2;
         this._downArrowSprite.rotation = 90 * Math.PI / 180;
-        this._downArrowSprite.move(q, h/2);
+        this._downArrowSprite.move(q, h / 2);
         this._upArrowSprite.rotation = 90 * Math.PI / 180;
-        this._upArrowSprite.move(w-q, h/2);
+        this._upArrowSprite.move(w - q, h / 2);
     };
 })();
 
