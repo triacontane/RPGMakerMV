@@ -54,6 +54,10 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param 認証ファイル形式
+ * @desc 認証ファイルの形式をJSON形式で作成します。ブラウザで実行時にファイルをうまく読み込めない場合、ONにしてください。
+ * @default OFF
+ *
  * @help セーブデータをサーバ上にアップロード/ダウンロードして
  * 異なるプラットフォーム間で共有します。
  *
@@ -221,6 +225,7 @@ function CrossSaveManager() {
     var paramAddCommandTitle = getParamBoolean(['AddCommandTitle', 'タイトルに追加']);
     var paramAddCommandFile  = getParamBoolean(['AddCommandFile', 'ファイルに追加']);
     var paramBackPicture     = getParamString(['BackPicture', '背景ピクチャ']);
+    var paramAuthFileFormat  = getParamBoolean(['AuthFileFormat', '認証ファイル形式']);
 
     //=============================================================================
     // Game_Interpreter
@@ -956,8 +961,8 @@ function CrossSaveManager() {
         xhr.overrideMimeType('application/json');
         xhr.onload  = function() {
             if (xhr.status < 400) {
-                var json                   = LZString.decompressFromBase64(xhr.responseText);
-                CrossSaveManager._authFile = JsonEx.parse(json);
+                var data                   = LZString.decompressFromBase64(xhr.responseText);
+                CrossSaveManager._authFile = JsonEx.parse(paramAuthFileFormat ? xhr.responseText : data);
                 onLoad();
             }
         };
@@ -1107,17 +1112,7 @@ function CrossSaveManager() {
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath);
         }
-        fs.writeFileSync(filePath, data);
-    };
-
-    StorageManager.loadCrossSaveAuthFile = function() {
-        var data     = null;
-        var fs       = require('fs');
-        var filePath = this.authFileDirectoryPath() + CrossSaveManager.authFileName;
-        if (fs.existsSync(filePath)) {
-            data = fs.readFileSync(filePath, {encoding: 'utf8'});
-        }
-        return LZString.decompressFromBase64(data);
+        fs.writeFileSync(filePath, paramAuthFileFormat ? json : data);
     };
 
     StorageManager.removeCrossSaveAuthFile = function() {
