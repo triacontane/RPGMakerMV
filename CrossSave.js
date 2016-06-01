@@ -19,7 +19,7 @@
  * @author トリアコンタン
  * 
  * @param ユーザID
- * @desc 本プラグインを利用するためのユーザIDです。MilkcocoaのユーザIDではありません。
+ * @desc 本プラグインを利用するためのユーザIDです。MilkcocoaのユーザIDではありません。12文字以下で指定してください。
  * @default
  *
  * @param ロード名称
@@ -910,6 +910,7 @@ function CrossSaveManager() {
         this.addLoadListener(function() {
             this.showDevTools();
             if (!paramUserId) this.terminate('パラメータ「ユーザID」を指定してください。');
+            if (paramUserId.length > 12) this.terminate('パラメータ「ユーザID」は12文字以下で指定してください。');
             this.getAuthData(function(err) {
                 if (err) {
                     this._authData.set(paramUserId, {pass: pass}, function() {
