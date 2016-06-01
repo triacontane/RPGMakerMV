@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2016/06/02 YEP_MessageCore.jsとのウィンドウ位置に関する競合を解消
 // 1.3.1 2016/05/25 フォロワーにフキダシを表示できる機能を追加
 // 1.3.0 2016/03/21 ウィンドウの表示位置をキャラクターの高さに合わせて自動調整するよう修正
 //                  ポップアップウィンドウ専用のウィンドウスキンを使用する機能を追加
@@ -715,7 +716,9 @@
 
     var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
     Window_Message.prototype.updatePlacement = function() {
-        this.x = 0;
+        if (typeof Yanfly === 'undefined' || !Yanfly.Message) {
+            this.x = 0;
+        }
         _Window_Message_updatePlacement.apply(this, arguments);
         if (this.isPopup()) this.updatePlacementPopup();
     };
