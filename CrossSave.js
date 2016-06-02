@@ -56,7 +56,7 @@
  * @type file
  *
  * @param 認証ファイル形式
- * @desc 認証ファイルの形式をJSON形式で作成します。ブラウザで実行時にファイルをうまく読み込めない場合、ONにしてください。
+ * @desc 認証ファイルの形式をJSON形式で作成します。ブラウザ実行時にファイルをうまく読み込めない場合、ONにしてください。
  * @default OFF
  *
  * @help セーブデータをサーバ上にアップロード/ダウンロードして
@@ -76,12 +76,13 @@
  * 長期的な保管場所としてサーバ上にファイルを保存するのは
  * 避けてください。
  *
- * BssS(Backend as a service)にMilkcocoa(https://mlkcca.com/)を使用していますが、
+ * BaaS(Backend as a service)にMilkcocoa(https://mlkcca.com/)を使用していますが、
  * 新規に利用登録する必要はなく通常利用する上で意識する必要はありません。
  * 詳細は「使用方法」を参照してください。
  *
  * ・使用方法
  * 1. パラメータ「ユーザID」に任意の文字列を設定する。
+ *    入力できるのは12文字までです。
  * 例：triacontane
  *
  * 2. プロジェクトを保存(Ctrl+S)する。
@@ -142,6 +143,12 @@
  *
  * 2. 本プラグインは試験運用中です。利用状況によっては
  * サービスの運用を停止せざるを得ない場合があります。
+ * 
+ * 3. 認証ファイルとはセキュリティを担保するものではなく
+ * 共有スペース内で同一のユーザIDが使用されないように区切る
+ * ためのものです。
+ * 他のサービスで使っているパスワードを流用することは
+ * 止めてください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -826,7 +833,7 @@ function CrossSaveManager() {
     // CrossSaveManager
     //  クロスセーブのためにMilkCocoaとの通信を行います。
     //=============================================================================
-    CrossSaveManager.authFileName    = 'CrossSave.rpgdata';
+    CrossSaveManager.authFileName    = (paramAuthFileFormat ? 'CrossSave.json' : 'CrossSave.rpgdata');
     CrossSaveManager.timeOutSecond   = 10;
     CrossSaveManager._milkCocoaUrl   = 'https://cdn.rawgit.com/triacontane/RPGMakerMV/master/milkcocoa.js';
     CrossSaveManager._milkCocoaApiId = 'leadiomt9dk1.mlkcca.com';

@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/06/02 認証ファイルの形式をJSONでも作成できるよう修正
 // 1.1.0 2016/05/25 Milkcocoa側のAPI更新によりローカル環境で実行できなくなっていた問題を修正
 // 1.0.0 2016/04/29 初版
 // ----------------------------------------------------------------------------
@@ -37,18 +38,23 @@
  * @param 同期終了スイッチ番号
  * @desc 同期対象になるスイッチの番号の終了位置です。
  * @default 0
+ * 
+ * @param 認証ファイル形式
+ * @desc 認証ファイルの形式をJSON形式で作成します。ブラウザ実行時にファイルをうまく読み込めない場合、ONにしてください。
+ * @default OFF
  *
  * @help ゲームをプレーしている全てのユーザ間で指定範囲内のスイッチ、変数の値を
  * 同期し、共有できるようになります。
  * オンライン要素が存在するゲームで使えるほか、作者が任意のタイミングで
  * プレイヤーのデータの変数・スイッチを操作できます。
  *
- * BssS(Backend as a service)にMilkcocoa(https://mlkcca.com/)を使用していますが、
+ * BaaS(Backend as a service)にMilkcocoa(https://mlkcca.com/)を使用していますが、
  * 新規に利用登録する必要はなく通常利用する上で意識する必要はありません。
  * 詳細は「使用方法」を参照してください。
  *
  * ・使用方法
  * 1. パラメータ「ユーザID」に任意の文字列を設定する。
+ *    入力できるのは12文字までです。
  * 例：triacontane
  *
  * 2. プロジェクトを保存(Ctrl+S)する。
@@ -91,6 +97,12 @@
  *
  * 2. 本プラグインは試験運用中です。利用状況によっては
  * サービスの運用を停止せざるを得ない場合があります。
+ * 
+ * 3. 認証ファイルとはセキュリティを担保するものではなく
+ * 共有スペース内で同一のユーザIDが使用されないように区切る
+ * ためのものです。
+ * 他のサービスで使っているパスワードを流用することは
+ * 止めてください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -131,6 +143,11 @@ function SyncManager() {
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
+
     var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharactersAndEval(arg, false);
         return upperFlg ? arg.toUpperCase() : arg;
@@ -157,6 +174,7 @@ function SyncManager() {
     var paramSyncVariableEnd   = getParamNumber(['SyncVariableEnd', '同期終了変数番号'], 0, 5000);
     var paramSyncSwitchStart   = getParamNumber(['SyncSwitchStart', '同期開始スイッチ番号'], 0, 5000);
     var paramSyncSwitchEnd     = getParamNumber(['SyncSwitchEnd', '同期終了スイッチ番号'], 0, 5000);
+    var paramAuthFileFormat    = getParamBoolean(['AuthFileFormat', '認証ファイル形式']);
 
     //=============================================================================
     // Game_Interpreter
@@ -260,7 +278,7 @@ function SyncManager() {
     SyncManager._milkCocoaUrl   = 'https://cdn.rawgit.com/triacontane/RPGMakerMV/master/milkcocoa.js';
     SyncManager._milkCocoaApiId = 'leadinlmv4lo.mlkcca.com';
     SyncManager._loadListeners  = [];
-    SyncManager.authFileName    = 'SyncVariable.rpgdata';
+    SyncManager.authFileName    = (paramAuthFileFormat ? 'SyncVariable.json' : 'SyncVariable.rpgdata');
     SyncManager.userId          = paramUserId;
     SyncManager.needUpload      = false;
     SyncManager.needDownload    = false;
@@ -374,7 +392,8 @@ function SyncManager() {
         this.addLoadListener(function() {
             this.showDevTools();
             if (!paramUserId) this.terminate('パラメータ「ユーザID」を指定してください。');
-            this.getAuthData(function(err, datum) {
+            if (paramUserId.length > 12) this.terminate('パラメータ「ユーザID」は12文字以下で指定してください。');
+            this.getAuthData(function(err) {
                 if (err) {
                     this._authData.set(this.userId, {pass: pass}, function() {
                         StorageManager.saveSyncVariableAuthFile(JsonEx.stringify({pass: pass}));
@@ -420,8 +439,8 @@ function SyncManager() {
         xhr.overrideMimeType('application/json');
         xhr.onload  = function() {
             if (xhr.status < 400) {
-                var json              = LZString.decompressFromBase64(xhr.responseText);
-                SyncManager._authFile = JsonEx.parse(json);
+                var data              = LZString.decompressFromBase64(xhr.responseText);
+                SyncManager._authFile = JsonEx.parse(paramAuthFileFormat ? xhr.responseText : data);
                 onLoad();
             }
         };
@@ -486,17 +505,7 @@ function SyncManager() {
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath);
         }
-        fs.writeFileSync(filePath, data);
-    };
-
-    StorageManager.loadSyncVariableAuthFile = function() {
-        var data     = null;
-        var fs       = require('fs');
-        var filePath = this.authFileDirectoryPath() + SyncManager.authFileName;
-        if (fs.existsSync(filePath)) {
-            data = fs.readFileSync(filePath, {encoding: 'utf8'});
-        }
-        return LZString.decompressFromBase64(data);
+        fs.writeFileSync(filePath, paramAuthFileFormat ? json : data);
     };
 
     StorageManager.removeSyncVariableAuthFile = function() {
