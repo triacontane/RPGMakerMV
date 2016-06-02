@@ -42,10 +42,6 @@
 (function () {
     'use strict';
     var metaTagPrefix = 'TC';
-    var metaTagDisConvert = {
-        "&lt;": "<",
-        "&gt;": ">"
-    };
 
     var getArgString = function (arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
@@ -76,6 +72,10 @@
         if (text === null || text === undefined) {
             text = '';
         }
+        var metaTagDisConvert = {
+            "&lt;": "<",
+            "&gt;": ">"
+        };
         text = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
             return metaTagDisConvert[value];
         }.bind(this));

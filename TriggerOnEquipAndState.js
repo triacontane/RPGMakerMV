@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/06/03 スクリプトに「>」「<」を使えるように修正
 // 1.0.0 2016/04/03 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -70,20 +71,27 @@
 
     var convertEscapeCharactersAndEval = function(text, evalFlg) {
         if (text === null || text === undefined) text = '';
+        var metaTagDisConvert = {
+            "&lt;": "<",
+            "&gt;": ">"
+        };
+        text = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
+            return metaTagDisConvert[value];
+        }.bind(this));
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
+            return $gameVariables.value(parseInt(arguments[1], 10));
         }.bind(this));
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
+            return $gameVariables.value(parseInt(arguments[1], 10));
         }.bind(this));
         text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            var actor = parseInt(arguments[1], 10) >= 1 ? $gameActors.actor(parseInt(arguments[1], 10)) : null;
             return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            var actor = parseInt(arguments[1], 10) >= 1 ? $gameParty.members()[parseInt(arguments[1], 10) - 1] : null;
             return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
@@ -149,7 +157,7 @@
     };
 
     Game_Actor.prototype.getVariableIdForToes = function(target, max) {
-        var actorId = this._actorId;
+        var actorId = this._actorId; // used in eval
         return eval(getArgString(target)).clamp(1, max);
     };
 })();
