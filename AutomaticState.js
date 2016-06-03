@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/06/03 スペルミス修正
 // 1.1.1 2016/05/23 条件式で割合を算出する際に端数を切り捨てるよう修正
 // 1.1.0 2016/05/22 複数の条件を適用できるよう修正
 // 1.0.2 2016/04/30 アクターと敵キャラ限定のオートステートが一部正しく機能していなかった問題を修正
@@ -178,7 +179,7 @@
         }
         var lowerLimitMp = this.getStateMetaNumber('下限MP', 0, 100);
         if (lowerLimitMp !== null) {
-            if (Math.floor(his.mmp > 0 && this.mpRate()) * 100 <= lowerLimitMp) {
+            if (Math.floor(this.mmp > 0 && this.mpRate()) * 100 <= lowerLimitMp) {
                 result = true;
             } else {
                 return false;
