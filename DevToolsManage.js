@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/06/03 メニューバーからデバッグ用のコマンドを実行できる機能を追加
+//                  ゲーム画面の更新を停止し、一時的にフリーズする機能を追加
+//                  セーブデータのエンコード・デコード機能を追加
 // 1.3.0 2016/05/04 スクリプトのその場実行機能を追加
 //                  モバイル偽装機能を追加
 //                  コードのリファクタリング
@@ -83,6 +86,14 @@
  * @desc モバイル実行を偽装します。(ON/OFF)
  * モバイル版で異なるUIを使用する場合の表示確認ができます。
  * @default OFF
+ *
+ * @param MenuBarVisible
+ * @desc メニューバーを表示し各種デバッグコマンドを実行できます。(ON/OFF)
+ * @default ON
+ *
+ * @param ClickMenu
+ * @desc クリックメニューから各種デバッグコマンドを実行できます。(-1;無効 0:左 1:ホイール 2:右)
+ * @default 2
  *
  * @help Developer tools management plugin.
  * Run developer tools when error occur.
