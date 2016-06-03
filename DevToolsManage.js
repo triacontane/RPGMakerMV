@@ -118,19 +118,23 @@
  *
  * @param 画面の左寄せキー
  * @desc ゲーム画面の左寄せを行うキーです(F1～F12)。
- * @default F11
+ * @default
  *
  * @param 高速化切替キー
- * @desc ゲームを高速化するキーです。(F1～F12)。
- * @default F10
+ * @desc ゲームの高速化を切り替えるキーです。(F1～F12)。
+ * @default
  *
  * @param 強制戦闘勝利キー
- * @desc 戦闘を勝利で強制終了するキーです。(F1～F12)。
- * @default F7
+ * @desc 戦闘を勝利扱いで強制終了するキーです。(F1～F12)。
+ * @default
  *
  * @param スクリプト実行キー
  * @desc スクリプト実行用のウィンドウをポップアップするキーです。(F1～F12)。
- * @default F6
+ * @default
+ *
+ * @param フリーズキー
+ * @desc 画面の更新を一時停止します。(F1～F12)。
+ * @default
  *
  * @param FPS表示
  * @desc 初期状態で画面左上にFPSを表示します。（FPS/MS/OFF）
@@ -154,6 +158,14 @@
  * @desc モバイル実行を偽装します。(ON/OFF)
  * モバイル版で異なるUIを使用する場合の表示確認ができます。
  * @default OFF
+ *
+ * @param メニューバー表示
+ * @desc メニューバーを表示し各種デバッグコマンドを実行できます。(ON/OFF)
+ * @default ON
+ *
+ * @param クリックメニュー
+ * @desc クリックメニューから各種デバッグコマンドを実行できます。(-1;無効 0:左 1:ホイール 2:右)
+ * @default 2
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * 快適な開発支援のために以下の機能を提供します。
@@ -175,6 +187,20 @@
  * 12.モバイル実行を偽装する機能
  *    (モバイル用のUIの表示確認ができます。
  *     オーディオが演奏されない制約があります)
+ * 13.ゲーム画面の更新を一時的に停止する機能
+ * 14.セーブデータのエンコード・デコード機能(※1)
+ *
+ * ※1 セーブデータのエンコード・デコード機能について
+ * セーブファイルをJSON形式に変換してJSONエディタ等で編集可能にします。
+ * 編集したファイルを再度、セーブファイルに戻すこともできます。
+ * スクリプト実行機能またはイベントコマンドのテスト機能で
+ * 以下のスクリプトを実行してください。
+ *
+ * DataManager.decodeSaveGame(id); // id:セーブファイルID
+ * Base64でエンコーディングされたセーブファイルをJSON形式に戻します。
+ *
+ * DataManager.encodeSaveGame(id); // id:セーブファイルID
+ * JSON形式のセーブデータを再度Base64でエンコーディングして保存します。
  *
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
  *
@@ -188,7 +214,7 @@
 
 var p = null;
 
-(function () {
+(function() {
     'use strict';
     // テストプレー時以外は一切の機能を無効
     if (!Utils.isOptionValid('test') || !Utils.isNwjs()) {
@@ -236,12 +262,12 @@ var p = null;
         return null;
     };
 
-    var getParamArrayString = function (paramNames) {
+    var getParamArrayString = function(paramNames) {
         var values = getParamString(paramNames);
         return (values || '').split(',');
     };
 
-    var getParamArrayNumber = function (paramNames, min, max) {
+    var getParamArrayNumber = function(paramNames, min, max) {
         var values = getParamArrayString(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
@@ -249,89 +275,133 @@ var p = null;
         return values;
     };
 
-    var alwaysOnTop      = getParamBoolean(['AlwaysOnTop', '常に前面表示']);
-    var startupDevTool   = getParamString(['StartupDevTool', '開始時に起動'], true);
-    var devToolsPosition = getParamArrayNumber(['DevToolsPosition', 'デベロッパツール表示位置'], 0, 9999);
-    var funcKeyMinimize  = getParamString(['FuncKeyMinimize', '最小化切替キー']);
-    var funcKeyReload    = getParamString(['FuncKeyReload', 'リロードキー']);
-    var funcKeyMoveEdge  = getParamString(['FuncKeyMoveEdge', '画面の左寄せキー']);
-    var funcKeyRapidGame = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
-    var funcKeyVictory   = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
-    var funcKeyScript    = getParamString(['FuncKeyScript', 'スクリプト実行キー']);
-    var showFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
-    var cutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
-    var rapidStart       = getParamBoolean(['RapidStart', '高速開始']);
-    var rapidSpeed       = getParamNumber(['RapidSpeed', '高速スピード'], 2, 16);
-    var fakeMobile       = getParamBoolean(['FakeMobile', 'モバイル偽装']);
+    var paramAlwaysOnTop      = getParamBoolean(['AlwaysOnTop', '常に前面表示']);
+    var paramStartupDevTool   = getParamString(['StartupDevTool', '開始時に起動'], true);
+    var paramDevToolsPosition = getParamArrayNumber(['DevToolsPosition', 'デベロッパツール表示位置'], 0, 9999);
+    var paramFuncKeyMinimize  = getParamString(['FuncKeyMinimize', '最小化切替キー']);
+    var paramFuncKeyReload    = getParamString(['FuncKeyReload', 'リロードキー']);
+    var paramFuncKeyMoveEdge  = getParamString(['FuncKeyMoveEdge', '画面の左寄せキー']);
+    var paramFuncKeyRapidGame = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
+    var paramFuncKeyVictory   = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
+    var paramFuncKeyScript    = getParamString(['FuncKeyScript', 'スクリプト実行キー']);
+    var paramFuncKeyFreeze    = getParamString(['FuncKeyFreeze', 'フリーズキー']);
+    var paramShowFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
+    var paramCutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
+    var paramRapidStart       = getParamBoolean(['RapidStart', '高速開始']);
+    var paramRapidSpeed       = getParamNumber(['RapidSpeed', '高速スピード'], 2, 16);
+    var paramFakeMobile       = getParamBoolean(['FakeMobile', 'モバイル偽装']);
+    var paramMenuBarVisible   = getParamBoolean(['MenuBarVisible', 'メニューバー表示']);
+    var paramClickMenu        = getParamNumber(['ClickMenu', 'クリックメニュー'], -1);
 
     //=============================================================================
     // Utils
     //  モバイルモードを偽装します。
     //=============================================================================
     var _Utils_isMobileDevice = Utils.isMobileDevice;
-    Utils.isMobileDevice = function() {
-        return _Utils_isMobileDevice.apply(this, arguments) || fakeMobile;
+    Utils.isMobileDevice      = function() {
+        return _Utils_isMobileDevice.apply(this, arguments) || paramFakeMobile;
     };
 
     //=============================================================================
     // SceneManager
     //  状況に応じてデベロッパツールを自動制御します。
     //=============================================================================
+    SceneManager.devCommands = [
+        {code: 101, name: 'DEVツール最小化', key: paramFuncKeyMinimize},
+        {code: 102, name: '画面左寄せ', key: paramFuncKeyMoveEdge},
+        {code: 103, name: 'リロード', key: paramFuncKeyReload},
+        {code: 104, name: '高速モード切替', key: paramFuncKeyRapidGame},
+        {code: 105, name: '戦闘強制勝利', key: paramFuncKeyVictory},
+        {code: 106, name: '任意スクリプト実行', key: paramFuncKeyScript},
+        {code: 107, name: '画面フリーズ', key: paramFuncKeyFreeze}
+    ];
+
     var _SceneManager_initialize = SceneManager.initialize;
-    SceneManager.initialize = function() {
+    SceneManager.initialize      = function() {
         _SceneManager_initialize.apply(this, arguments);
         this._nwJsGui = new Controller_NwJs();
-        Graphics.setFPSMeter(showFPS);
+        this._freeze  = false;
+        Graphics.setFPSMeter(paramShowFPS);
     };
 
     SceneManager.getNwJs = function() {
         return this._nwJsGui;
     };
 
+    SceneManager.toggleFreeze = function() {
+        Input.clear();
+        this._freeze = !this._freeze;
+    };
+
     var _SceneManager_catchException = SceneManager.catchException;
-    SceneManager.catchException = function(e) {
+    SceneManager.catchException      = function(e) {
         this._nwJsGui.showDevTools(false);
         _SceneManager_catchException.apply(this, arguments);
     };
 
     var _SceneManager_onError = SceneManager.onError;
-    SceneManager.onError = function(e) {
+    SceneManager.onError      = function(e) {
         this._nwJsGui.showDevTools(false);
         _SceneManager_onError.apply(this, arguments);
     };
 
     var _SceneManager_onKeyDown = SceneManager.onKeyDown;
-    SceneManager.onKeyDown = function(event) {
-        switch (event.keyCode) {
-            case Input.functionReverseMapper[funcKeyMinimize] :
-                if (event.ctrlKey) {
-                    this._nwJsGui.closeDevTools();
-                } else {
-                    this._nwJsGui.toggleDevTools();
-                }
-                break;
-            case Input.functionReverseMapper[funcKeyMoveEdge] :
-                this._nwJsGui.moveEdge();
-                break;
-            case Input.functionReverseMapper[funcKeyReload] :
-                location.reload();
-                break;
-            case Input.functionReverseMapper[funcKeyRapidGame] :
-                this.toggleRapid();
-                break;
-            case Input.functionReverseMapper[funcKeyVictory] :
-                BattleManager.forceVictory();
-                break;
-            case Input.functionReverseMapper[funcKeyScript] :
-                this.showScriptDialog();
-                break;
-            default:
-                _SceneManager_onKeyDown.apply(this, arguments);
-                break;
+    SceneManager.onKeyDown      = function(event) {
+        _SceneManager_onKeyDown.apply(this, arguments);
+        this.onKeyDownForDevToolManage(event);
+    };
+
+    SceneManager.onKeyDownForDevToolManage = function(event) {
+        var commandCode = null;
+        this.devCommands.some(function(commandInfo) {
+            if (Input.functionReverseMapper[commandInfo.key] === event.keyCode) {
+                commandCode = commandInfo.code;
+                return true;
+            }
+            return false;
+        });
+        if (commandCode) this.executeDevCommand(commandCode, event);
+    };
+
+    SceneManager.executeDevCommand = function(code) {
+        var command = this['executeDevCommand' + code];
+        if (command) command.call(SceneManager, event);
+    };
+
+    SceneManager.executeDevCommand101 = function(event) {
+        if (event && event.ctrlKey) {
+            this._nwJsGui.closeDevTools();
+        } else {
+            this._nwJsGui.toggleDevTools();
         }
     };
+
+    SceneManager.executeDevCommand102 = function() {
+        this._nwJsGui.moveEdge();
+    };
+
+    SceneManager.executeDevCommand103 = function() {
+        location.reload();
+    };
+
+    SceneManager.executeDevCommand104 = function() {
+        this.toggleRapid();
+    };
+
+    SceneManager.executeDevCommand105 = function() {
+        BattleManager.forceVictory();
+    };
+
+    SceneManager.executeDevCommand106 = function() {
+        this.showScriptDialog();
+    };
+
+    SceneManager.executeDevCommand107 = function() {
+        this.toggleFreeze();
+    };
+
     SceneManager.originalTitle = null;
-    SceneManager._rapidGame = false;
+    SceneManager._rapidGame    = false;
 
     SceneManager.isRapid = function() {
         return SceneManager._rapidGame;
@@ -342,7 +412,7 @@ var p = null;
         if (!this.originalTitle) this.originalTitle = document.title;
         var bgm = AudioManager.saveBgm();
         AudioManager.playBgm(bgm, bgm.pos);
-        document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!] * ' + rapidSpeed  : '');
+        document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!] * ' + paramRapidSpeed : '');
     };
 
     SceneManager.isCurrentScene = function(sceneClass) {
@@ -361,9 +431,30 @@ var p = null;
                 console.log('Execute Result : ' + result);
             } catch (e) {
                 SoundManager.playBuzzer();
+                console.log('Error Script : ' + scriptString);
                 console.error(e.stack);
             }
         }
+    };
+
+    var _SceneManager_initNwjs = SceneManager.initNwjs;
+    SceneManager.initNwjs      = function() {
+        _SceneManager_initNwjs.apply(this, arguments);
+        if (paramMenuBarVisible) {
+            var gui = require('nw.gui');
+            var win = gui.Window.get();
+            if (!win.menu) {
+                win.y -= 20;
+                win.height += 20;
+            }
+            win.menu = new gui.Menu({type: 'menubar'});
+        }
+    };
+
+    var _SceneManager_updateScene = SceneManager.updateScene;
+    SceneManager.updateScene      = function() {
+        if (this._freeze) return;
+        _SceneManager_updateScene.apply(this, arguments);
     };
 
     //=============================================================================
@@ -388,11 +479,57 @@ var p = null;
     //  高速化実行時にBGMのピッチを強制的に最大にします。
     //=============================================================================
     var _AudioManager_playBgm = AudioManager.playBgm;
-    AudioManager.playBgm = function(bgm, pos) {
+    AudioManager.playBgm      = function(bgm, pos) {
         var originalPitch = bgm.pitch;
-        if(SceneManager.isRapid()) arguments[0].pitch = 150;
+        if (SceneManager.isRapid()) arguments[0].pitch = 150;
         _AudioManager_playBgm.apply(this, arguments);
         this._currentBgm.pitch = originalPitch;
+    };
+
+    //=============================================================================
+    // DataManager
+    //  セーブデータのエンコード・デコードを実施します。
+    //=============================================================================
+    DataManager.decodeSaveGame = function(savefileId) {
+        if (this.isThisGameFile(savefileId)) {
+            var json = StorageManager.load(savefileId);
+            StorageManager.saveToLocalFileJson(savefileId, json);
+        } else {
+            throw new Error('有効なセーブファイルが見付かりません。');
+        }
+    };
+
+    DataManager.encodeSaveGame = function(savefileId) {
+        var json = StorageManager.loadFromLocalFileJson(savefileId);
+        if (json) {
+            StorageManager.save(savefileId, json);
+        } else {
+            throw new Error('有効なセーブファイルが見付かりません。');
+        }
+    };
+
+    //=============================================================================
+    // StorageManager
+    //  jsonセーブファイルの読み込みと書き込みを行います。
+    //=============================================================================
+    StorageManager.saveToLocalFileJson = function(savefileId, json) {
+        var fs       = require('fs');
+        var dirPath  = this.localFileDirectoryPath();
+        var filePath = dirPath + 'file%1.json'.format(savefileId);
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath);
+        }
+        fs.writeFileSync(filePath, json);
+    };
+
+    StorageManager.loadFromLocalFileJson = function(savefileId) {
+        var json     = null;
+        var fs       = require('fs');
+        var filePath = this.localFileDirectoryPath() + 'file%1.json'.format(savefileId);
+        if (fs.existsSync(filePath)) {
+            json = fs.readFileSync(filePath, {encoding: 'utf8'});
+        }
+        return json;
     };
 
     //=============================================================================
@@ -400,31 +537,31 @@ var p = null;
     //  alertを再定義してコンソール出力にします。
     //=============================================================================
     var _Input_wrapNwjsAlert = Input._wrapNwjsAlert;
-    Input._wrapNwjsAlert = function() {
+    Input._wrapNwjsAlert     = function() {
         _Input_wrapNwjsAlert.apply(this, arguments);
         var _window_prompt = window.prompt;
-        window.prompt = function(value, defaultValue) {
+        window.prompt      = function(value, defaultValue) {
             return SceneManager.getNwJs().prompt(value, defaultValue, _window_prompt);
         };
-        window.alert = function(value) {
+        window.alert       = function(value) {
             console.log(value);
             SceneManager.getNwJs().showDevTools();
         };
     };
 
     Input.functionReverseMapper = {
-        F1  : 112,
-        F2  : 113,
-        F3  : 114,
-        F4  : 115,
-        F5  : 116,
-        F6  : 117,
-        F7  : 118,
-        F8  : 119,
-        F9  : 120,
-        F10 : 121,
-        F11 : 122,
-        F12 : 123
+        F1 : 112,
+        F2 : 113,
+        F3 : 114,
+        F4 : 115,
+        F5 : 116,
+        F6 : 117,
+        F7 : 118,
+        F8 : 119,
+        F9 : 120,
+        F10: 121,
+        F11: 122,
+        F12: 123
     };
 
     //=============================================================================
@@ -449,19 +586,19 @@ var p = null;
     // Scene_Base
     //  マップの高速化を提供します。
     //=============================================================================
-    
-    var _Scene_Base_fadeSpeed = Scene_Base.prototype.fadeSpeed;
-    Scene_Base.prototype.fadeSpeed = function () {
+
+    var _Scene_Base_fadeSpeed      = Scene_Base.prototype.fadeSpeed;
+    Scene_Base.prototype.fadeSpeed = function() {
         return SceneManager.isRapid() ? 1 : _Scene_Base_fadeSpeed.apply(this, arguments);
     };
 
-    var _Scene_Base_startFadeIn = Scene_Base.prototype.startFadeIn;
+    var _Scene_Base_startFadeIn      = Scene_Base.prototype.startFadeIn;
     Scene_Base.prototype.startFadeIn = function(duration, white) {
         if (SceneManager.isRapid()) arguments[0] = 1;
         _Scene_Base_startFadeIn.apply(this, arguments);
     };
 
-    var _Scene_Base_startFadeOut = Scene_Base.prototype.startFadeOut;
+    var _Scene_Base_startFadeOut      = Scene_Base.prototype.startFadeOut;
     Scene_Base.prototype.startFadeOut = function(duration, white) {
         if (SceneManager.isRapid()) arguments[0] = 1;
         _Scene_Base_startFadeOut.apply(this, arguments);
@@ -471,11 +608,11 @@ var p = null;
     // Scene_Boot
     //  タイトル画面をとばしてマップ画面に遷移します。
     //=============================================================================
-    var _Scene_Boot_start = Scene_Boot.prototype.start;
+    var _Scene_Boot_start      = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
-        if (rapidStart) SceneManager.toggleRapid();
-        if (cutTitle && !Utils.isOptionValid('btest') && !Utils.isOptionValid('etest')) {
+        if (paramRapidStart) SceneManager.toggleRapid();
+        if (paramCutTitle && !Utils.isOptionValid('btest') && !Utils.isOptionValid('etest')) {
             return this.goToLatestContinue() || this.goToNewGame();
         }
     };
@@ -488,7 +625,7 @@ var p = null;
     Scene_Boot.prototype.goToLatestContinue = function() {
         if (DataManager.isAnySavefileExists()) {
             if (DataManager.loadGame(DataManager.latestSavefileId())) {
-                Scene_Load.prototype.reloadMapIfUpdated.call(Scene_Load);
+                this.reloadMapIfUpdated();
                 SceneManager.goto(Scene_Map);
                 $gameSystem.onAfterLoad();
                 return true;
@@ -499,24 +636,25 @@ var p = null;
             return false;
         }
     };
+    Scene_Boot.prototype.reloadMapIfUpdated = Scene_Load.prototype.reloadMapIfUpdated;
 
     //=============================================================================
     // Scene_Map
     //  オンフォーカス時、ゲームが再保存されていればリロードする
     //=============================================================================
-    var _Scene_Map_create = Scene_Map.prototype.create;
+    var _Scene_Map_create      = Scene_Map.prototype.create;
     Scene_Map.prototype.create = function() {
         _Scene_Map_create.apply(this, arguments);
         SceneManager.getNwJs().setOnFocus(false);
     };
 
-    var _Scene_Map_update = Scene_Map.prototype.update;
+    var _Scene_Map_update      = Scene_Map.prototype.update;
     Scene_Map.prototype.update = function() {
         this.updateMapReload();
         if (this._dataSystemLoading) {
             if (DataManager.isDatabaseLoaded()) {
                 this._dataSystemLoading = false;
-                if (this._preVersionId != $dataSystem.versionId) {
+                if (this._preVersionId !== $dataSystem.versionId) {
                     $gamePlayer.reserveTransfer(
                         $gameMap.mapId(), $gamePlayer.x, $gamePlayer.y, $gamePlayer.direction(), 2);
                     $gamePlayer._needsMapReload = true;
@@ -542,16 +680,16 @@ var p = null;
         }
     };
 
-    var _Scene_Map_isFastForward = Scene_Map.prototype.isFastForward;
+    var _Scene_Map_isFastForward      = Scene_Map.prototype.isFastForward;
     Scene_Map.prototype.isFastForward = function() {
         return _Scene_Map_isFastForward.apply(this, arguments) || SceneManager.isRapid();
     };
 
-    var _Scene_Map_updateMainMultiply = Scene_Map.prototype.updateMainMultiply;
+    var _Scene_Map_updateMainMultiply      = Scene_Map.prototype.updateMainMultiply;
     Scene_Map.prototype.updateMainMultiply = function() {
         _Scene_Map_updateMainMultiply.apply(this, arguments);
         if (this.isFastForward()) {
-            for (var i = 2; i <= rapidSpeed; i++) {
+            for (var i = 2; i <= paramRapidSpeed; i++) {
                 this.updateMain();
             }
         }
@@ -561,14 +699,14 @@ var p = null;
     // Window_Base
     //  ウィンドウの高速開閉を提供します。
     //=============================================================================
-    var _Window_Base_updateOpen = Window_Base.prototype.updateOpen;
-    Window_Base.prototype.updateOpen = function () {
+    var _Window_Base_updateOpen      = Window_Base.prototype.updateOpen;
+    Window_Base.prototype.updateOpen = function() {
         if (SceneManager.isRapid() && this._opening) this.openness = 255;
         _Window_Base_updateOpen.apply(this, arguments);
     };
 
-    var _Window_Base_updateClose = Window_Base.prototype.updateClose;
-    Window_Base.prototype.updateClose = function () {
+    var _Window_Base_updateClose      = Window_Base.prototype.updateClose;
+    Window_Base.prototype.updateClose = function() {
         if (SceneManager.isRapid() && this._closing) this.openness = 0;
         _Window_Base_updateClose.apply(this, arguments);
     };
@@ -577,12 +715,12 @@ var p = null;
     // Window_Message
     //  メッセージの高速化を提供します。
     //=============================================================================
-    var _Window_Message_isTriggered = Window_Message.prototype.isTriggered;
+    var _Window_Message_isTriggered      = Window_Message.prototype.isTriggered;
     Window_Message.prototype.isTriggered = function() {
         return _Window_Message_isTriggered.apply(this, arguments) || SceneManager.isRapid();
     };
 
-    var _Window_Message_startPause = Window_Message.prototype.startPause;
+    var _Window_Message_startPause      = Window_Message.prototype.startPause;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
         if (SceneManager.isRapid()) this.startWait(1);
@@ -595,23 +733,67 @@ var p = null;
     function Controller_NwJs() {
         this.initialize.apply(this, arguments);
     }
+
     Controller_NwJs.prototype.constructor = Controller_NwJs;
 
     Controller_NwJs.prototype.initialize = function() {
-        this._nwGui = require('nw.gui');
+        this._nwGui           = require('nw.gui');
         this._devTool         = null;
         this._devToolMinimize = false;
         this._onFocus         = false;
+        this._menuBar         = this.getWindow().menu;
+        this._menuClick       = null;
+        this.initSetting();
+    };
+
+    Controller_NwJs.prototype.initSetting = function() {
+        if (paramMenuBarVisible) this.addMenuItem(this._menuBar);
+        this.initClickMenu();
         this.addEventListener();
-        if (alwaysOnTop) {
+        if (paramAlwaysOnTop) {
             this.setAlwaysOnTop(true);
         }
-        switch (startupDevTool) {
+        switch (paramStartupDevTool) {
             case 'ON':
             case 'MINIMIZE':
                 if (!DataManager.isEventTest()) this.showDevTools();
                 break;
         }
+        this.setMenuBar(this._menuBar);
+    };
+
+    Controller_NwJs.prototype.initClickMenu = function() {
+        this._menuClick = new this._nwGui.Menu();
+        this.addMenuItem(this._menuClick);
+    };
+
+    Controller_NwJs.prototype.setMenuBar = function(menu) {
+        this.getWindow().menu = menu;
+    };
+
+    Controller_NwJs.prototype.addMenuItem = function(menu) {
+        var gui = this._nwGui;
+        this.sortDevCommands().forEach(function(commandInfo) {
+            var menuItem   = new gui.MenuItem(
+                {label: commandInfo.name + (commandInfo.key ? '(' + commandInfo.key + ')' : '')}
+            );
+            menuItem.click = function() {
+                SceneManager.executeDevCommand(commandInfo.code);
+            };
+            menu.append(menuItem);
+        });
+    };
+
+    Controller_NwJs.prototype.sortDevCommands = function() {
+        return SceneManager.devCommands.sort(function(a, b) {
+            if (a.key && b.key) {
+                return Input.functionReverseMapper[a.key] - Input.functionReverseMapper[b.key];
+            } else if (a.key || b.key) {
+                return a.key ? -1 : 1;
+            } else {
+                return a.code - b.code;
+            }
+        });
     };
 
     Controller_NwJs.prototype.setOnFocus = function(value) {
@@ -627,6 +809,11 @@ var p = null;
         currentWin.removeAllListeners();
         currentWin.on('focus', function() {
             this._onFocus = true;
+        }.bind(this));
+        document.addEventListener('mousedown', function(event) {
+            if (event.button === paramClickMenu) {
+                this._menuClick.popup(event.pageX, event.pageY);
+            }
         }.bind(this));
     };
 
@@ -644,12 +831,12 @@ var p = null;
 
     Controller_NwJs.prototype.prompt = function(value, defaultValue, aliasPrompt) {
         var win = this.getWindow();
-        if (alwaysOnTop) {
+        if (paramAlwaysOnTop) {
             this._devTool.setAlwaysOnTop(false);
             win.setAlwaysOnTop(false);
         }
         var result = aliasPrompt.call(window, value, defaultValue);
-        if (alwaysOnTop) {
+        if (paramAlwaysOnTop) {
             this._devTool.setAlwaysOnTop(true);
             win.setAlwaysOnTop(true);
         }
@@ -661,9 +848,9 @@ var p = null;
     Controller_NwJs.prototype.showDevTools = function() {
         if (!this.getWindow().isDevToolsOpen() || !this._devTool) {
             var devTool = this.getWindow().showDevTools();
-            if (devToolsPosition && devToolsPosition.length >= 4) {
-                devTool.moveTo(devToolsPosition[0], devToolsPosition[1]);
-                devTool.resizeTo(devToolsPosition[2], devToolsPosition[3]);
+            if (paramDevToolsPosition && paramDevToolsPosition.length >= 4) {
+                devTool.moveTo(paramDevToolsPosition[0], paramDevToolsPosition[1]);
+                devTool.resizeTo(paramDevToolsPosition[2], paramDevToolsPosition[3]);
             } else {
                 devTool.moveTo(0, 0);
                 devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
@@ -689,9 +876,9 @@ var p = null;
             this.focus();
         }.bind(this));
         devTool.on('loaded', function() {
-            this._devTool.setAlwaysOnTop(alwaysOnTop);
-            this.setAlwaysOnTop(alwaysOnTop);
-            if (startupDevTool === 'MINIMIZE') this._devTool.minimize();
+            this._devTool.setAlwaysOnTop(paramAlwaysOnTop);
+            this.setAlwaysOnTop(paramAlwaysOnTop);
+            if (paramStartupDevTool === 'MINIMIZE') this._devTool.minimize();
         }.bind(this));
         devTool.on('closed', function() {
             this.getWindow().close();

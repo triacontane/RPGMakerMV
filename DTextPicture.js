@@ -250,7 +250,7 @@
     Window_Base.prototype.convertEscapeCharacters = function(text) {
         text = _Window_Base_convertEscapeCharacters.call(this, text);
         text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1])).padZero(arguments[2]);
+            return $gameVariables.value(parseInt(arguments[1], 10)).padZero(arguments[2]);
         }.bind(this));
         text = text.replace(/\x1bITEM\[(\d+)\]/gi, function() {
             var item = $dataItems[getArgNumber(arguments[1], 1, $dataItems.length)];
