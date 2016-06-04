@@ -374,7 +374,7 @@ var p = null;
         if (commandCode) this.executeDevCommand(commandCode, event);
     };
 
-    SceneManager.executeDevCommand = function(code) {
+    SceneManager.executeDevCommand = function(code, event) {
         var command = this['executeDevCommand' + code];
         if (command) command.call(SceneManager, event);
     };
