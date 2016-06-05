@@ -143,7 +143,6 @@
 
     DataManager.saveOnlyGradeVariable = function() {
         var saveFileId = this.lastAccessedSavefileId();
-        alert(saveFileId);
         var globalInfo = this.loadGlobalInfo() || [];
         globalInfo[saveFileId] = this.makeSavefileInfo();
         this.saveGlobalInfo(globalInfo);
