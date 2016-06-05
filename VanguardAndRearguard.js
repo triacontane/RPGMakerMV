@@ -16,6 +16,76 @@
 //=============================================================================
 
 /*:
+ * @plugindesc Vanguard and rearguard
+ * @author triacontane
+ *
+ * @param VanguardStateId
+ * @desc State ID of vanguard.
+ * @default 2
+ *
+ * @param RearguardStateId
+ * @desc State ID of rearguard.
+ * @default 3
+ *
+ * @param ChangeInMenu
+ * @desc Changeable formation in menu screen.
+ * @default ON
+ *
+ * @param RearDefense
+ * @desc Rearguard member never targeting, if vanguard member alive.
+ * @default OFF
+ *
+ * @param SkillIdChange
+ * @desc Skill ID of formation change.
+ * @default 0
+ *
+ * @param RearguardOffsetX
+ * @desc Offset X Position of rearguard.
+ * @default 48
+ *
+ * @param RearguardOffsetY
+ * @desc Offset Y Position of rearguard.
+ * @default 0
+ *
+ * @param ChangeSpeed
+ * @desc Move speed of formation change.
+ * @default 8
+ *
+ * @help 戦闘に「前衛」「後衛」の概念を追加します。
+ * 「前衛」時のステートと「後衛」時のステートを指定したうえで
+ * 「特徴」欄などを使って「前衛」と「後衛」それぞれの特殊効果を設定してください。
+ *
+ * 「前衛」「後衛」に指定されたステートは、解除条件を満たしても解除されません。
+ * 変更するには以下のいずれかの方法を選択します。
+ *
+ * ・メニュー画面の「並び替え」で同じキャラクターを選択する。
+ * ・戦闘画面で「チェンジ」コマンドを実行する。
+ * ・イベントから対象ステートを付与する。
+ *
+ * 戦闘中のチェンジを有効した場合、チェンジ用スキルの対象を「使用者」にして
+ * さらにメモ欄に以下の通り設定してください。
+ * (既存スキル「防御」をコピーすることをオススメします)
+ * <VARChange>
+ *
+ * 上記メモ欄はチェンジ以外のスキルでも有効です。
+ * スキル使用者をチェンジ対象にしたい場合はメモ欄に以下の通り設定してください。
+ * <VARUserChange>
+ *
+ * 前衛のみ、後衛のみを対象にしたスキルを作成したい場合、
+ * スキルのメモ欄に以下の通り設定してください。
+ * <VAROnlyVanguard> // 前衛のみ対象スキル
+ * <VAROnlyRearguard> // 後衛のみ対象スキル
+ *
+ * ただし、メニュー画面から使用する場合は無効です。
+ *
+ * 敵キャラの初期配置を後衛にしたい場合、メモ欄に以下の通り設定してください。
+ * <VARRearguard>
+ *
+ * このプラグインにはプラグインコマンドはありません。
+ *
+ * This plugin is released under the MIT License.
+ */
+/*:ja
  * @plugindesc 前衛後衛プラグイン
  * @author トリアコンタン
  *
