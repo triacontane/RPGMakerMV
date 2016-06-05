@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/06/05 セーブデータに歯抜けがある場合にエラーが発生する問題を修正
+//                  進行状況のみをセーブする機能を追加
 // 1.0.0 2016/04/06 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -65,6 +67,10 @@
  * 3. タイトル1の画像
  * 4. デフォルトのタイトル画像
  *
+ * ゲームデータをセーブせず進行状況のみをセーブしたい場合は、
+ * イベントコマンドの「スクリプト」から以下を実行してください。
+ * DataManager.saveOnlyGradeVariable();
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -111,6 +117,10 @@
     paramTitleImages.push(getParamString(['TitleImage2', 'タイトル2の画像']));
     paramTitleImages.push(getParamString(['TitleImage1', 'タイトル1の画像']));
 
+    //=============================================================================
+    // DataManager
+    //  ゲーム進行状況を保存します。
+    //=============================================================================
     var _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
     DataManager.makeSavefileInfo = function() {
         var info = _DataManager_makeSavefileInfo.apply(this, arguments);
@@ -123,7 +133,7 @@
         var gradeVariable = 0;
         if (globalInfo) {
             for (var i = 1; i < globalInfo.length; i++) {
-                if (globalInfo[i].gradeVariable > gradeVariable) {
+                if (globalInfo[i] && globalInfo[i].gradeVariable > gradeVariable) {
                     gradeVariable = globalInfo[i].gradeVariable;
                 }
             }
@@ -131,6 +141,18 @@
         return gradeVariable;
     };
 
+    DataManager.saveOnlyGradeVariable = function() {
+        var saveFileId = this.lastAccessedSavefileId();
+        alert(saveFileId);
+        var globalInfo = this.loadGlobalInfo() || [];
+        globalInfo[saveFileId] = this.makeSavefileInfo();
+        this.saveGlobalInfo(globalInfo);
+    };
+
+    //=============================================================================
+    // Scene_Title
+    //  進行状況が一定以上の場合、タイトル画像を差し替えます。
+    //=============================================================================
     var _Scene_Title_initialize = Scene_Title.prototype.initialize;
     Scene_Title.prototype.initialize = function() {
         _Scene_Title_initialize.apply(this, arguments);
