@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/06/07 戦闘不能時に隊列ステートが解除される不具合を修正
+//                  前衛メンバーが生存している限り、後衛メンバーが狙われなくなる機能を追加
 // 1.0.0 2016/06/05 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -28,6 +30,10 @@
  * @param メニューチェンジ可能
  * @desc メニュー画面で前衛・後衛の切り替えが可能になります。
  * @default ON
+ *
+ * @param 後衛防御
+ * @desc 前衛メンバーが生存している限り、後衛メンバーが狙われなくなります。
+ * @default OFF
  *
  * @param チェンジスキルID
  * @desc 戦闘中の前衛・後衛切り替えコマンドで実行されるスキルIDです。0を指定すると戦闘中はチェンジ不可となります。
@@ -133,6 +139,7 @@
     var paramRearguardOffsetX = getParamNumber(['RearguardOffsetX', '後衛時X補正'], 0);
     var paramRearguardOffsetY = getParamNumber(['RearguardOffsetY', '後衛時Y補正'], 0);
     var paramChangeSpeed      = getParamNumber(['ChangeSpeed', 'チェンジ速度'], 1);
+    var paramRearDefense      = getParamBoolean(['RearDefense', '後衛防御']);
 
     //=============================================================================
     // Game_BattlerBase
@@ -144,6 +151,13 @@
         if (!this.isVanguard() && !this.isRearguard()) {
             this.setFormationState(true);
         }
+    };
+
+    var _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
+    Game_BattlerBase.prototype.die = function() {
+        var prevVanguard = this.isVanguard();
+        _Game_BattlerBase_die.apply(this, arguments);
+        this.setFormationState(prevVanguard);
     };
 
     Game_BattlerBase.prototype.setFormationState = function(vanguardFlg) {
@@ -187,10 +201,6 @@
 
     Game_BattlerBase.prototype.getFormationOffsetY = function() {
         return this.isRearguard() ? paramRearguardOffsetY : 0;
-    };
-
-    Game_Enemy.prototype.getFormationOffsetX = function() {
-        return Game_BattlerBase.prototype.getFormationOffsetX.call(this) * ($gameSystem.isSideView() ? -1 : 1);
     };
 
     //=============================================================================
@@ -245,6 +255,28 @@
             this.setFormationState(false);
         }
     };
+
+    Game_Enemy.prototype.getFormationOffsetX = function() {
+        return Game_BattlerBase.prototype.getFormationOffsetX.call(this) * ($gameSystem.isSideView() ? -1 : 1);
+    };
+
+    //=============================================================================
+    // Game_Unit
+    //  前衛メンバーのみを生存メンバーとして扱う仕様に変更します。
+    //=============================================================================
+    if (paramRearDefense) {
+        var _Game_Unit_aliveMembers = Game_Unit.prototype.aliveMembers;
+        Game_Unit.prototype.aliveMembers = function() {
+            var members = this.vanguardMembers();
+            return members.length > 0 ? members : _Game_Unit_aliveMembers.apply(this, arguments);
+        };
+
+        Game_Unit.prototype.vanguardMembers = function() {
+            return _Game_Unit_aliveMembers.apply(this, arguments).filter(function(member) {
+                return member.isVanguard();
+            });
+        };
+    }
 
     //=============================================================================
     // Game_Action
