@@ -287,7 +287,7 @@
             );
             menuItem.click = function() {
                 SceneManager.executeMenuCommand(commandInfo.code, commandInfo.param);
-            }.bind(this);
+            };
             menu.append(menuItem);
         });
     };
