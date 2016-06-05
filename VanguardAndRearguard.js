@@ -153,7 +153,7 @@
         }
     };
 
-    var _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
+    var _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
         var prevVanguard = this.isVanguard();
         _Game_BattlerBase_die.apply(this, arguments);
@@ -248,7 +248,7 @@
     // Game_Enemy
     //  前衛・後衛ステートの初期値を設定します。
     //=============================================================================
-    var _Game_Enemy_setup = Game_Enemy.prototype.setup;
+    var _Game_Enemy_setup      = Game_Enemy.prototype.setup;
     Game_Enemy.prototype.setup = function(enemyId, x, y) {
         _Game_Enemy_setup.apply(this, arguments);
         if (getMetaValues(this.enemy(), ['Rearguard', '後衛'])) {
@@ -265,7 +265,7 @@
     //  前衛メンバーのみを生存メンバーとして扱う仕様に変更します。
     //=============================================================================
     if (paramRearDefense) {
-        var _Game_Unit_aliveMembers = Game_Unit.prototype.aliveMembers;
+        var _Game_Unit_aliveMembers      = Game_Unit.prototype.aliveMembers;
         Game_Unit.prototype.aliveMembers = function() {
             var members = this.vanguardMembers();
             return members.length > 0 ? members : _Game_Unit_aliveMembers.apply(this, arguments);
