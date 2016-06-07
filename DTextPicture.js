@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/06/07 描画文字が半角英数字のみかつフォントを未指定の場合に文字が描画されない不具合を修正
 // 1.3.0 2016/06/03 制御文字\oc[c] \ow[n]に対応
 // 1.2.2 2016/03/28 データベース情報を簡単に出力する制御文字を追加
 // 1.2.1 2016/01/29 コマンド「D_TEXT_SETTING」の実装が「D_TEST_SETTING」になっていたので修正（笑）
@@ -157,7 +158,7 @@
     Game_Interpreter.prototype.pluginCommandDTextPicture = function(command, args) {
         switch (getCommandName(command)) {
             case 'D_TEXT' :
-                if (isNaN(args[args.length - 1])) args.push($gameScreen.dTextSize || 28);
+                if (isNaN(args[args.length - 1]) || args.length === 1) args.push($gameScreen.dTextSize || 28);
                 var fontSize = getArgNumber(args.pop());
                 $gameScreen.setDTextPicture(getArgString(connectArgs(args), false), fontSize);
                 break;
