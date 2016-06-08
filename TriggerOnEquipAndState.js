@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/06/08 一つの装備で複数のスイッチ、変数を操作できるよう修正
 // 1.0.1 2016/06/03 スクリプトに「>」「<」を使えるように修正
 // 1.0.0 2016/04/03 初版
 // ----------------------------------------------------------------------------
@@ -33,6 +34,10 @@
  *
  * ・変数に設定される値です。
  *  <TOES変数設定値:3> // 装備時に3加算され、解除すると3減算されます。
+ *
+ * ・一度に二つ以上のスイッチや変数を操作したい場合は項目名の後ろに
+ * 　数字を追加してください。(3以降も同様)
+ *  <TOESスイッチ対象2:5>        // 5番のスイッチも操作対象
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -142,18 +147,33 @@
     };
 
     Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign) {
-        var switchTarget = getMetaValues(item, ['スイッチ対象', 'SwitchTarget']);
+        var index = 1;
+        while(index) {
+            if (this.controlVariable(item, addedSign, index === 1 ? '' : String(index))) {
+                index++;
+            } else {
+                index = 0;
+            }
+        }
+    };
+
+    Game_Actor.prototype.controlVariable = function(item, addedSign, indexString) {
+        var switchTarget = getMetaValues(item, ['スイッチ対象' + indexString, 'SwitchTarget' + indexString]);
+        var result = false;
         if (switchTarget) {
             var switchId = this.getVariableIdForToes(switchTarget, $dataSystem.switches.length - 1);
             $gameSwitches.setValue(switchId, addedSign);
+            result = true;
         }
-        var variableTarget = getMetaValues(item, ['変数対象', 'VariableTarget']);
+        var variableTarget = getMetaValues(item, ['変数対象' + indexString, 'VariableTarget' + indexString]);
         if (variableTarget) {
             var variableId = this.getVariableIdForToes(variableTarget, $dataSystem.variables.length - 1);
-            var variableValue = getMetaValues(item, ['変数設定値', 'VariableValue']);
+            var variableValue = getMetaValues(item, ['変数設定値' + indexString, 'VariableValue' + indexString]);
             var resultValue = (variableValue ? getArgNumber(variableValue) : 1) * (addedSign ? 1 : -1);
             $gameVariables.setValue(variableId, $gameVariables.value(variableId) + resultValue);
+            result = true;
         }
+        return result;
     };
 
     Game_Actor.prototype.getVariableIdForToes = function(target, max) {
