@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2016/06/08 PD_8DirDash.jsと組み合わせて斜め移動グラフィックを反映するよう修正
 // 1.4.1 2016/05/20 ダメージ床や茂みで上半分のみ接している場合は無効にするよう変更
 // 1.4.0 2016/05/20 トリガー領域を上下左右で細かく指定できる機能を追加
 //                  英名のプラグインコマンドが正しく機能していなかった問題を修正
@@ -192,6 +193,13 @@
  * <HMWidth:2>
  * <HM高さ:3>
  * <HMHeight:3>
+ *
+ * PD_8DirDash.jsと組み合わせると、半歩移動に
+ * グラフィック変更を伴う8方向移動機能が反映されます。
+ *
+ * 配布元：http://pixeldog.x.fc2.com/material_script.html
+ *
+ * 当該プラグインを使用する場合は、配布元の規約をご確認ください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -629,7 +637,9 @@
 
     Game_CharacterBase.prototype.moveDiagonallyForRetry = function(horizon, vertical) {
         if (this.isMovementSucceeded()) return;
+        var prevDirection = this.direction();
         this.moveDiagonally(horizon, vertical);
+        if (!this.isMovementSucceeded()) this.setDirection(prevDirection);
     };
 
     var _Game_CharacterBase_moveDiagonally = Game_CharacterBase.prototype.moveDiagonally;
