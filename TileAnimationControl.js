@@ -136,8 +136,8 @@
     //  アニメーション頻度を調整します。
     //=============================================================================
     Tilemap._animationFrequency = 1;
-    
-    var _Tilemap_update = Tilemap.prototype.update;
+
+    var _Tilemap_update      = Tilemap.prototype.update;
     Tilemap.prototype.update = function() {
         _Tilemap_update.apply(this, arguments);
         var freq = Tilemap._animationFrequency;
@@ -150,10 +150,10 @@
     // Game_Map
     //  タイルセットから頻度情報を取得します。
     //=============================================================================
-    var _Game_Map_setup = Game_Map.prototype.setup;
+    var _Game_Map_setup      = Game_Map.prototype.setup;
     Game_Map.prototype.setup = function(mapId) {
         _Game_Map_setup.apply(this, arguments);
-        var animationFrequency = getMetaValues(this.tileset(), ['アニメーション頻度', 'AnimationFrequency']);
+        var animationFrequency      = getMetaValues(this.tileset(), ['アニメーション頻度', 'AnimationFrequency']);
         Tilemap._animationFrequency = (animationFrequency ? getArgNumber(animationFrequency, 0) : 1);
     };
 })();
