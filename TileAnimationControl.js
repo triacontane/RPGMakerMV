@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/06/12 より軽量化できるよう設計を見直し
 // 1.0.0 2016/06/11 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -141,9 +142,17 @@
     Tilemap.prototype.update = function() {
         _Tilemap_update.apply(this, arguments);
         var freq = Tilemap._animationFrequency;
-        if (freq === 0 || Graphics.frameCount % freq > 0) {
+        if (freq === 0) {
+            this.animationCount = NaN;
+        } else if (Graphics.frameCount % freq > 0) {
             this.animationCount--;
         }
+    };
+
+    var _Tilemap__drawAutotile = Tilemap.prototype._drawAutotile;
+    Tilemap.prototype._drawAutotile = function(bitmap, tileId, dx, dy) {
+        if (Tilemap._animationFrequency === 0) this._animationFrame = 0;
+        _Tilemap__drawAutotile.apply(this, arguments);
     };
 
     //=============================================================================
