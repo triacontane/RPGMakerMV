@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2016/06/14 YEP_CoreEngine.jsと併用したときにウィンドウ高さ補正が効かなくなる問題を修正
 // 1.4.0 2016/06/03 メニューバーからデバッグ用のコマンドを実行できる機能を追加
 //                  ゲーム画面の更新を停止し、一時的にフリーズする機能を追加
 //                  セーブデータのエンコード・デコード機能を追加
@@ -305,12 +306,23 @@ var p = null;
     var paramClickMenu        = getParamNumber(['ClickMenu', 'クリックメニュー'], -1);
 
     //=============================================================================
+    // ローカル変数
+    //=============================================================================
+    var localWindowHeight = 0;
+
+    //=============================================================================
     // Utils
     //  モバイルモードを偽装します。
     //=============================================================================
     var _Utils_isMobileDevice = Utils.isMobileDevice;
     Utils.isMobileDevice      = function() {
         return _Utils_isMobileDevice.apply(this, arguments) || paramFakeMobile;
+    };
+
+    var _Graphics__createAllElements = Graphics._createAllElements;
+    Graphics._createAllElements      = function() {
+        _Graphics__createAllElements.apply(this, arguments);
+        console.log(document.body);
     };
 
     //=============================================================================
@@ -458,7 +470,20 @@ var p = null;
                 win.y -= 20;
                 win.height += 20;
             }
-            win.menu = new gui.Menu({type: 'menubar'});
+            win.menu          = new gui.Menu({type: 'menubar'});
+            localWindowHeight = win.height;
+        }
+    };
+
+    var _SceneManager_run = SceneManager.run;
+    SceneManager.run      = function(sceneClass) {
+        _SceneManager_run.apply(this, arguments);
+        if (paramMenuBarVisible) {
+            var gui = require('nw.gui');
+            var win = gui.Window.get();
+            if (win.height !== localWindowHeight) {
+                win.height = localWindowHeight;
+            }
         }
     };
 

@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/06/14 YEP_CoreEngine.jsと併用したときにウィンドウ高さ補正が効かなくなる問題を修正
 // 1.0.0 2016/06/04 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -180,6 +181,11 @@
         };
     }
 
+    //=============================================================================
+    // ローカル変数
+    //=============================================================================
+    var localWindowHeight = 0;
+
     Input.functionReverseMapper = {
         F1 : 112,
         F2 : 113,
@@ -237,7 +243,18 @@
             menuBar.createMacBuiltin('Game', option);
         }
         this.addMenuItem(menuBar);
-        win.menu = menuBar;
+        win.menu          = menuBar;
+        localWindowHeight = win.height;
+    };
+
+    var _SceneManager_run = SceneManager.run;
+    SceneManager.run      = function(sceneClass) {
+        _SceneManager_run.apply(this, arguments);
+        var gui = require('nw.gui');
+        var win = gui.Window.get();
+        if (win.height !== localWindowHeight) {
+            win.height = localWindowHeight;
+        }
     };
 
     SceneManager.initClickMenu = function() {
