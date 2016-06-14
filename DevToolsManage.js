@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2016/06/14 SceneManager.initializeでエラーが発生した際にエラー内容を確認できない問題を修正
 // 1.4.1 2016/06/14 YEP_CoreEngine.jsと併用したときにウィンドウ高さ補正が効かなくなる問題を修正
 // 1.4.0 2016/06/03 メニューバーからデバッグ用のコマンドを実行できる機能を追加
 //                  ゲーム画面の更新を停止し、一時的にフリーズする機能を追加
@@ -358,13 +359,13 @@ var p = null;
 
     var _SceneManager_catchException = SceneManager.catchException;
     SceneManager.catchException      = function(e) {
-        this._nwJsGui.showDevTools(false);
+        if (this._nwJsGui) this._nwJsGui.showDevTools(false);
         _SceneManager_catchException.apply(this, arguments);
     };
 
     var _SceneManager_onError = SceneManager.onError;
     SceneManager.onError      = function(e) {
-        this._nwJsGui.showDevTools(false);
+        if (this._nwJsGui) this._nwJsGui.showDevTools(false);
         _SceneManager_onError.apply(this, arguments);
     };
 
@@ -383,7 +384,7 @@ var p = null;
             }
             return false;
         });
-        if (commandCode) this.executeDevCommand(commandCode, event);
+        if (commandCode && this._nwJsGui) this.executeDevCommand(commandCode, event);
     };
 
     SceneManager.executeDevCommand = function(code, event) {
