@@ -184,7 +184,7 @@
     //=============================================================================
     // ローカル変数
     //=============================================================================
-    var localWindowHeight = 0;
+    var localIsAddMenuBar = false;
 
     Input.functionReverseMapper = {
         F1 : 112,
@@ -235,16 +235,14 @@
         var gui = require('nw.gui');
         var win = gui.Window.get();
         if (!win.menu) {
-            win.y -= paramWindowHeight;
-            win.height += paramWindowHeight;
+            localIsAddMenuBar = true;
         }
         var menuBar = new gui.Menu({type: 'menubar'});
         if (process.platform === 'darwin') {
             menuBar.createMacBuiltin('Game', option);
         }
         this.addMenuItem(menuBar);
-        win.menu          = menuBar;
-        localWindowHeight = win.height;
+        win.menu = menuBar;
     };
 
     var _SceneManager_run = SceneManager.run;
@@ -252,8 +250,9 @@
         _SceneManager_run.apply(this, arguments);
         var gui = require('nw.gui');
         var win = gui.Window.get();
-        if (win.height !== localWindowHeight) {
-            win.height = localWindowHeight;
+        if (localIsAddMenuBar) {
+            win.y -= paramWindowHeight;
+            win.height += paramWindowHeight;
         }
     };
 
