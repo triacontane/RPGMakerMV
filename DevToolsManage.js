@@ -230,7 +230,7 @@ var p = null;
 (function() {
     'use strict';
     // テストプレー時以外は一切の機能を無効
-    if (!Utils.isOptionValid('test') || !Utils.isNwjs()) {
+    if (!(Utils.isOptionValid('test') || SceneManager.isBattleTest() || SceneManager.isEventTest()) || !Utils.isNwjs()) {
         console.log('DevToolsManage is valid only test play!');
         return;
     }
@@ -309,7 +309,7 @@ var p = null;
     //=============================================================================
     // ローカル変数
     //=============================================================================
-    var localWindowHeight = 0;
+    var localIsAddMenuBar = false;
 
     //=============================================================================
     // Utils
@@ -468,11 +468,9 @@ var p = null;
             var gui = require('nw.gui');
             var win = gui.Window.get();
             if (!win.menu) {
-                win.y -= 20;
-                win.height += 20;
+                localIsAddMenuBar = true;
             }
-            win.menu          = new gui.Menu({type: 'menubar'});
-            localWindowHeight = win.height;
+            win.menu = new gui.Menu({type: 'menubar'});
         }
     };
 
@@ -482,8 +480,9 @@ var p = null;
         if (paramMenuBarVisible) {
             var gui = require('nw.gui');
             var win = gui.Window.get();
-            if (win.height !== localWindowHeight) {
-                win.height = localWindowHeight;
+            if (localIsAddMenuBar) {
+                win.y -= 20;
+                win.height += 20;
             }
         }
     };
