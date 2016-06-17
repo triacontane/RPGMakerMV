@@ -180,8 +180,9 @@
 
     var _DataManager_loadGame = DataManager.loadGame;
     DataManager.loadGame      = function(saveFileId) {
-        _DataManager_loadGame.apply(this, arguments);
+        var result = _DataManager_loadGame.apply(this, arguments);
         SceneManager.setTriggerSwitch(paramContinue);
+        return result;
     };
 
     //=============================================================================
