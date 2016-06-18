@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/06/18 アクター加入時に前衛ステートを強制設定する処理を追加
 // 1.1.0 2016/06/06 戦闘不能時に隊列ステートが解除される不具合を修正
 //                  前衛メンバーが生存している限り、後衛メンバーが狙われなくなる機能を追加
 // 1.0.0 2016/06/05 初版
@@ -306,6 +307,14 @@
     // Game_Actor
     //  チェンジ用のモーションを定義します。
     //=============================================================================
+    var _Game_Actor_setup = Game_Actor.prototype.setup;
+    Game_Actor.prototype.setup = function(actorId) {
+        _Game_Actor_setup.apply(this, arguments);
+        if (!this.isVanguard() && !this.isRearguard()) {
+            this.setFormationState(true);
+        }
+    };
+
     var _Game_Actor_performAction      = Game_Actor.prototype.performAction;
     Game_Actor.prototype.performAction = function(action) {
         _Game_Actor_performAction.apply(this, arguments);

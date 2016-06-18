@@ -280,53 +280,53 @@ function MovieManager() {
     Game_Interpreter.prototype.pluginCommandMovieManager = function(command, args) {
         var waitTime = 0;
         switch (getCommandName(command)) {
-            case '設定_ループ' :
+            case '設定_ループ':
             case 'SETTING_LOOP':
                 MovieManager.setLoop(getArgBoolean(args[0]));
                 break;
-            case '設定_画面に合わせる' :
+            case '設定_画面に合わせる':
             case 'SETTING_FIT_SCREEN':
                 MovieManager.setScaleFitScreen(getArgBoolean(args[0]));
                 break;
-            case '設定_再生速度' :
+            case '設定_再生速度':
             case 'SETTING_PLAY_RATE':
                 MovieManager.setPlaybackRate(getArgFloat(args[0], 0));
                 break;
-            case '設定_再生位置' :
+            case '設定_再生位置':
             case 'SETTING_CURRENT_TIME':
                 MovieManager.setCurrentTime(getArgFloat(args[0], 0));
                 break;
-            case '移動_不透明度' :
+            case '移動_不透明度':
             case 'MOVE_OPACITY':
                 waitTime = getArgNumber(args[1], 0);
                 MovieManager.moveOpacity(getArgNumber(args[0], 0, 256), waitTime);
                 if (getArgBoolean(args[2])) this.wait(waitTime);
                 break;
-            case '移動_座標' :
+            case '移動_座標':
             case 'MOVE_POSITION':
                 waitTime = getArgNumber(args[2], 0);
                 MovieManager.movePosition(getArgNumber(args[0]), getArgNumber(args[1]), waitTime);
                 if (getArgBoolean(args[3])) this.wait(waitTime);
                 break;
-            case '移動_拡大率' :
+            case '移動_拡大率':
             case 'MOVE_SCALE':
                 waitTime = getArgNumber(args[2], 0);
                 MovieManager.moveScale(getArgNumber(args[0]), getArgNumber(args[1]), waitTime);
                 if (getArgBoolean(args[3])) this.wait(waitTime);
                 break;
-            case '停止' :
+            case '停止':
             case 'STOP':
                 MovieManager.stop();
                 break;
-            case 'ウェイト' :
+            case 'ウェイト':
             case 'WAIT':
                 this.setWaitMode('video');
                 break;
-            case '一時停止' :
+            case '一時停止':
             case 'PAUSE':
                 MovieManager.pause();
                 break;
-            case '再生' :
+            case '再生':
             case 'PLAY':
                 MovieManager.play();
                 break;

@@ -155,6 +155,18 @@
         return null;
     };
 
+    Game_Battler.prototype.getData = function() {
+        return null;
+    };
+
+    Game_Actor.prototype.getData = function() {
+        return this.actor();
+    };
+
+    Game_Enemy.prototype.getData = function() {
+        return this.enemy();
+    };
+
     //=============================================================================
     // Game_Player
     //  動的歩行グラフィックを適用します。
