@@ -48,7 +48,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc バトラー表示拡張プラグイン
+ * @plugindesc バトラーグラフィック表示拡張プラグイン
  * @author トリアコンタン
  *
  * @help ステート有効時のバトラー画像の表現方法を拡張します。
