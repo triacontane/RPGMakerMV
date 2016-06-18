@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/06/17 敵を倒したときにグラフィックが消滅しない不具合を修正
+//                  武器グラフィックにも不透明度と合成方法を適用するよう修正
 // 1.0.0 2016/06/17 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -355,10 +357,12 @@
             battler.refreshGraphicInfo();
         }
         battler.updateFloating();
-        this.updateOpacity();
+        if (!this.isNeedDeadEffect()) {
+            this.updateOpacity();
+            this.updateTone();
+            this.updateBlendMode();
+        }
         this.updateScale();
-        this.updateTone();
-        this.updateBlendMode();
     };
 
     Sprite_Battler.prototype.updateScale = function() {
@@ -386,6 +390,10 @@
         return this;
     };
 
+    Sprite_Battler.prototype.isNeedDeadEffect = function() {
+        return false;
+    };
+
     //=============================================================================
     // Sprite_Actor
     //  ステートによるエフェクトを反映させます。
@@ -399,6 +407,16 @@
         var altitude         = this._battler.getAltitude();
         this._mainSprite.y   = altitude;
         this._weaponSprite.y = altitude;
+    };
+
+    Sprite_Actor.prototype.updateOpacity = function() {
+        Sprite_Battler.prototype.updateOpacity.call(this);
+        this._weaponSprite.opacity = this._battler.getOpacity();
+    };
+
+    Sprite_Actor.prototype.updateBlendMode = function() {
+        Sprite_Battler.prototype.updateBlendMode.call(this);
+        this._weaponSprite.blendMode = this._battler.getBlendMode();
     };
 
     var _Sprite_Actor_motionSpeed      = Sprite_Actor.prototype.motionSpeed;
@@ -417,6 +435,10 @@
             sprite.scale.x = 1 / battler.getScaleX();
             sprite.scale.y = 1 / battler.getScaleY();
         });
+    };
+
+    Sprite_Enemy.prototype.isNeedDeadEffect = function() {
+        return this._battler && !this._battler.isAlive();
     };
 })();
 
