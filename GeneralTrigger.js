@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/06/22 最強装備を選択した場合にエラーが発生する問題を修正
 // 1.0.1 2016/06/17 ロードが失敗するバグを修正
 // 1.0.0 2016/06/14 初版
 // ----------------------------------------------------------------------------
@@ -219,6 +220,7 @@
     var _Game_Party_gainItem      = Game_Party.prototype.gainItem;
     Game_Party.prototype.gainItem = function(item, amount, includeEquip) {
         _Game_Party_gainItem.apply(this, arguments);
+        if (!item) return;
         switch (this.itemContainer(item)) {
             case this._items:
                 SceneManager.setTriggerSwitch(paramGainItem);
