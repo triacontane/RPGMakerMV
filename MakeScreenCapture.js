@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2016/06/23 著名に画像とテキストを両方使えるよう修正
 // 1.2.2 2016/05/13 プラグインコマンドから出力したときに拡張子の表示がおかしくなる問題を修正
 // 1.2.1 2016/05/11 定期実行キャプチャを行ったときに拡張子の表示がおかしくなる問題を修正
 // 1.2.0 2016/04/23 署名に任意の画像ファイルを利用できるようになりました。
@@ -419,6 +420,7 @@
                 var image = ImageManager.loadPicture(paramSignatureImage, 0);
                 image.addLoadListener(function () {
                     this._captureBitmap.signImage(image, signature);
+                    this._captureBitmap.sign(paramSignature, signature);
                     this._captureBitmap.save(fileFullName, format, settings.jpegQuality);
                 }.bind(this));
             } else {
