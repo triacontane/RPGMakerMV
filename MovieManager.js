@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/06/24 メニューを開いたときに最後に表示していたムービーが写り込む不具合を修正
 // 1.0.0 2016/06/09 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -144,8 +145,10 @@ function MovieManager() {
     var _Bitmap_snap = Bitmap.snap;
     Bitmap.snap      = function(stage) {
         var bitmap = _Bitmap_snap.apply(this, arguments);
-        var video  = Graphics.getVideo();
-        bitmap.context.drawImage(video, video.x, video.y, video.width, video.height);
+        if (Graphics.isVideoPlaying()) {
+            var video  = Graphics.getVideo();
+            bitmap.context.drawImage(video, video.x, video.y, video.width, video.height);
+        }
         return bitmap;
     };
 
