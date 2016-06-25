@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/06/25 エラー発生時のリンク先を別画面で開くよう修正
 // 1.0.0 2016/05/14 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -147,7 +148,7 @@
         style.color            = 'white';
         style.textAlign        = 'left';
         style.fontSize         = '18px';
-        hyperLink.innerHTML = '<a href="' + paramHyperLink + '">' + paramHyperLink + '</a>';
+        hyperLink.innerHTML = '<a href="' + paramHyperLink + '" target="_blank">' + paramHyperLink + '</a>';
         this._errorPrinter.appendChild(hyperLink);
     };
 
