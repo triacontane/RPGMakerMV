@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/06/28 D_TEXT実行後に画像を指定してピクチャを表示した場合は画像を優先表示するよう仕様変更
 // 1.3.1 2016/06/07 描画文字が半角英数字のみかつフォントを未指定の場合に文字が描画されない不具合を修正
 // 1.3.0 2016/06/03 制御文字\oc[c] \ow[n]に対応
 // 1.2.2 2016/03/28 データベース情報を簡単に出力する制御文字を追加
@@ -36,6 +37,10 @@
  *  3 : イベントコマンド「ピクチャの表示」で「画像」を未選択に指定。
  * ※ 1の時点ではピクチャは表示されないので必ずセットで呼び出してください。
  * ※ ピクチャ表示前にD_TEXTを複数回実行すると、複数行表示できます。
+ *
+ * ※ ver1.4.0より、[D_TEXT]実行後に「ピクチャの表示」で「画像」を指定した場合は
+ *    動的文字列ピクチャ生成を保留として通常通り「画像」ピクチャが表示されるように
+ *    挙動が変更になりました。
  *
  * プラグインコマンド詳細
  *   イベントコマンド「プラグインコマンド」から実行。
@@ -232,7 +237,7 @@
     var _Game_Picture_show = Game_Picture.prototype.show;
     Game_Picture.prototype.show = function(name, origin, x, y, scaleX,
                                            scaleY, opacity, blendMode) {
-        if ($gameScreen.isSettingDText()) {
+        if ($gameScreen.isSettingDText() && !name) {
             arguments[0] = Date.now().toString();
             var textValue = "";
             this.dTextInfo = $gameScreen.getDTextPictureInfo();
@@ -240,10 +245,10 @@
                 textValue +=  text + '\n';
             }.bind(this));
             this.dTextInfo.value = textValue;
+            $gameScreen.clearDTextPicture();
         } else {
             this.dTextInfo = null;
         }
-        $gameScreen.clearDTextPicture();
         _Game_Picture_show.apply(this, arguments);
     };
 
