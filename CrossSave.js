@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2016/06/28 ゲーム中にネットワークが切断された場合にエラーになる現象を修正
 // 1.0.2 2016/06/02 認証ファイルの形式をJSONでも作成できるよう修正
 // 1.0.1 2016/05/29 ヘルプの記述ミスを修正
 // 1.0.0 2016/05/23 初版
@@ -699,11 +700,13 @@ function CrossSaveManager() {
 
     Scene_Password.prototype.updateBusy = function() {
         if (CrossSaveManager.isBusy()) {
+            CrossSaveManager.suppressOnError = true;
             this._processFrame++;
             if (this._processFrame > 60 * CrossSaveManager.timeOutSecond) {
                 this.onProcessError(localMessage.TIME_OUT);
             }
         } else {
+            CrossSaveManager.suppressOnError = false;
             var message = CrossSaveManager.getResultMessage();
             if (!message) {
                 this.onProcessComplete();
@@ -835,6 +838,7 @@ function CrossSaveManager() {
     //=============================================================================
     CrossSaveManager.authFileName    = (paramAuthFileFormat ? 'CrossSave.json' : 'CrossSave.rpgdata');
     CrossSaveManager.timeOutSecond   = 10;
+    CrossSaveManager.suppressOnError = false;
     CrossSaveManager._milkCocoaUrl   = 'https://cdn.rawgit.com/triacontane/RPGMakerMV/master/milkcocoa.js';
     CrossSaveManager._milkCocoaApiId = 'leadiomt9dk1.mlkcca.com';
     CrossSaveManager._loadListeners  = [];
@@ -1051,11 +1055,11 @@ function CrossSaveManager() {
     };
 
     CrossSaveManager.setMainData = function(param, data) {
-        this._mainData.set(paramUserId + ':' + this._password + ':' + param, data, function(err) {
-            if (!err) {
+        this._mainData.set(paramUserId + ':' + this._password + ':' + param, data, function(errorInfo) {
+            if (!errorInfo) {
                 this.onProcessSuccess();
             } else {
-                this.outLog(err);
+                this.outLog(errorInfo);
                 this.onProcessFailure(localMessage.UNKNOWN);
             }
         }.bind(this),
@@ -1065,12 +1069,12 @@ function CrossSaveManager() {
     };
 
     CrossSaveManager.getMainData = function(param, onComplete, errorMessage) {
-        this._mainData.get(paramUserId + ':' + this._password + ':' + param, function(err, datum) {
-            if (!err) {
+        this._mainData.get(paramUserId + ':' + this._password + ':' + param, function(errorInfo, datum) {
+            if (!errorInfo) {
                 this.onProcessSuccess();
                 onComplete(datum, param);
             } else {
-                this.outLog(err);
+                this.outLog(errorInfo);
                 this.onProcessFailure(errorMessage);
             }
         }.bind(this));
@@ -1163,6 +1167,12 @@ function CrossSaveManager() {
     SceneManager.initialize      = function() {
         PluginManager.loadOnlineScript(CrossSaveManager._milkCocoaUrl, CrossSaveManager.initialize.bind(CrossSaveManager));
         _SceneManager_initialize.apply(this, arguments);
+    };
+
+    var _SceneManager_onError    = SceneManager.onError;
+    SceneManager.onError         = function(e) {
+        if (CrossSaveManager.suppressOnError) return;
+        _SceneManager_onError.apply(this, arguments);
     };
 
     //=============================================================================

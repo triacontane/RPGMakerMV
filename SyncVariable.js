@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/06/28 ゲーム中にネットワークが切断された場合にエラーになる現象を修正
 // 1.1.1 2016/06/02 認証ファイルの形式をJSONでも作成できるよう修正
 // 1.1.0 2016/05/25 Milkcocoa側のAPI更新によりローカル環境で実行できなくなっていた問題を修正
 // 1.0.0 2016/04/29 初版
@@ -284,6 +285,7 @@ function SyncManager() {
     SyncManager.needDownload    = false;
     SyncManager.isDownloaded    = false;
     SyncManager.isExecute       = false;
+    SyncManager.suppressOnError = false;
     SyncManager._authFile       = null;
 
     SyncManager.initialize = function() {
@@ -331,14 +333,19 @@ function SyncManager() {
                 this.needDownload = false;
                 this._coolDown    = 60;
                 this.downloadVariables();
+                SyncManager.suppressOnError = true;
             }
             if (this.needUpload && this.isDownloaded) {
                 this.needUpload = false;
                 this._coolDown  = 60;
                 this.uploadVariables();
+                SyncManager.suppressOnError = true;
             }
         } else {
             this._coolDown--;
+            if (this._coolDown === 0) {
+                SyncManager.suppressOnError = false;
+            }
         }
     };
 
@@ -554,6 +561,12 @@ function SyncManager() {
     SceneManager.updateMain      = function() {
         _SceneManager_updateMain.apply(this, arguments);
         SyncManager.update();
+    };
+
+    var _SceneManager_onError    = SceneManager.onError;
+    SceneManager.onError         = function(e) {
+        if (SyncManager.suppressOnError) return;
+        _SceneManager_onError.apply(this, arguments);
     };
 })();
 
