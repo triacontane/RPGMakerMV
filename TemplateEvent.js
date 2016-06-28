@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/06/28 固有イベントのページ数がテンプレートイベントのページ数より少ない場合に発生するエラーを修正
 // 1.0.0 2016/06/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -316,8 +317,8 @@ var $dataTemplateEvents = null;
     var _Game_Event_setupPageSettings      = Game_Event.prototype.setupPageSettings;
     Game_Event.prototype.setupPageSettings = function() {
         _Game_Event_setupPageSettings.apply(this, arguments);
-        if (!paramReplaceGraphic) {
-            var page  = this.getOriginalPages()[this._pageIndex];
+        var page  = this.getOriginalPages()[this._pageIndex];
+        if (!paramReplaceGraphic && page) {
             var image = page.image;
             if (image.tileId > 0) {
                 this.setTileImage(image.tileId);
@@ -347,7 +348,7 @@ var $dataTemplateEvents = null;
 
     var _Game_Event_event      = Game_Event.prototype.event;
     Game_Event.prototype.event = function() {
-        return this._templateId ? $dataTemplateEvents[this._templateId] : _Game_Event_event.apply(this, arguments);
+        return this.hasTemplate() ? $dataTemplateEvents[this._templateId] : _Game_Event_event.apply(this, arguments);
     };
 
     Game_Event.prototype.getOriginalPages = function() {
