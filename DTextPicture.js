@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2016/06/29 制御文字「\{」で文字サイズを大きくした際、元のサイズに戻さないと正しいサイズで表示されない問題を修正
 // 1.4.0 2016/06/28 D_TEXT実行後に画像を指定してピクチャを表示した場合は画像を優先表示するよう仕様変更
 // 1.3.1 2016/06/07 描画文字が半角英数字のみかつフォントを未指定の場合に文字が描画されない不具合を修正
 // 1.3.0 2016/06/03 制御文字\oc[c] \ow[n]に対応
@@ -298,15 +299,20 @@
     Sprite_Picture.prototype.makeDynamicBitmap = function() {
         this.textWidths = [];
         this.hiddenWindow = SceneManager.getHiddenWindow();
-        if (this.dTextInfo.font) this.hiddenWindow.contents.fontFace = this.dTextInfo.font;
-        if (this.dTextInfo.size > 0) this.hiddenWindow.contents.fontSize = this.dTextInfo.size;
+        this.resetFontSettings();
         var bitmapVirtual = new Bitmap_Virtual();
         this._processText(bitmapVirtual);
+        this.resetFontSettings();
         this.bitmap = new Bitmap(bitmapVirtual.width, bitmapVirtual.height);
         if (this.dTextInfo.font) this.bitmap.fontFace = this.dTextInfo.font;
         if (this.dTextInfo.color) this.bitmap.fillAll(this.dTextInfo.color);
         this._processText(this.bitmap);
         this.hiddenWindow = null;
+    };
+
+    Sprite_Picture.prototype.resetFontSettings = function() {
+        if (this.dTextInfo.font) this.hiddenWindow.contents.fontFace = this.dTextInfo.font;
+        if (this.dTextInfo.size > 0) this.hiddenWindow.contents.fontSize = this.dTextInfo.size;
     };
 
     Sprite_Picture.prototype._processText = function(bitmap) {
