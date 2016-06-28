@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/06/29 タッチ移動でマップの境界線に移動した際に画面をスクロールする機能を追加
+//                  半歩移動プラグインとの競合を解消
+//                  コードのリファクタリング
 // 1.0.0 2015/11/18 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -17,8 +20,20 @@
  * @plugindesc マップの画面単位スクロールプラグイン
  * @author トリアコンタン
  * 
- * @help マップ画面のスクロールを一画面単位で行う方式に変更します
- * （FCやGBのゼルダの伝説のような感じです）
+ * @param スクロール速度
+ * @desc 画面をスクロールする速度です。(6-8)
+ * @default 7
+ *
+ * @param タッチ移動スクロール
+ * @desc タッチ移動で境界線に移動した際に自動で一歩前進します。
+ * @default ON
+ * 
+ * @help マップ画面のスクロールをプレイヤーと同期せず
+ * プレイヤーが画面外に出たら一画面分をスクロールする方式に
+ * 変更します。（FCやGBのゼルダの伝説のような感じです）
+ *
+ * また、タッチ移動で画面端まで移動して、かつ移動後に画面外を向いている場合は
+ * 自動で一歩前進して画面をスクロールさせることができます。
  *
  * 注意！
  * イベントコマンドの画面のスクロールで画面を動かしたら元の位置に戻してください。
@@ -37,21 +52,50 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(function() {
+    'use strict';
+    var pluginName = 'GridScrollMap';
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
+
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var paramScrollSpeed     = getParamNumber(['ScrollSpeed', 'スクロール速度'], 6, 8);
+    var paramTouchMoveScroll = getParamBoolean(['TouchMoveScroll', 'タッチ移動スクロール']);
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンド[GRID_SCROLL_INVALID]などを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
         switch (command.toUpperCase()) {
             case 'GRID_SCROLL_INVALID' :
-                $gameMap._gridFlg = false;
+                $gameMap.setGridScroll(false);
                 break;
             case 'GRID_SCROLL_VALID' :
-                $gameMap._gridFlg = true;
+                $gameMap.setGridScroll(true);
                 break;
         }
     };
@@ -60,30 +104,69 @@
     // Game_Map
     //  画面単位スクロール機能を提供します。
     //=============================================================================
-    var _Game_Map_initialize = Game_Map.prototype.initialize;
+    var _Game_Map_initialize      = Game_Map.prototype.initialize;
     Game_Map.prototype.initialize = function() {
-        _Game_Map_initialize.call(this);
+        _Game_Map_initialize.apply(this, arguments);
         this._gridFlg = true;
     };
 
-    var _Game_Player_updateScroll = Game_Player.prototype.updateScroll;
-    Game_Player.prototype.updateScroll = function(lastScrolledX, lastScrolledY) {
-        if (!$gameMap._gridFlg) {
-            _Game_Player_updateScroll.call(this, lastScrolledX, lastScrolledY);
-            return;
-        }
-        if (this.isStopping() && !$gameMap.isScrolling()) {
-            $gameMap.updateGridScroll(this.scrolledX(), this.scrolledY(), lastScrolledX, lastScrolledY);
-        }
+    Game_Map.prototype.isGridScroll = function() {
+        return this._gridFlg;
     };
 
-    Game_Map.prototype.updateGridScroll = function(scrolledX, scrolledY, lastScrolledX, lastScrolledY) {
-        var screenTileX = this.screenTileX();
-        var screenTileY = this.screenTileY();
-        if (scrolledY > screenTileY - 1)                this.startScroll(2, screenTileY, 7);
-        if (scrolledY < 0 && scrolledY < lastScrolledY) this.startScroll(8, screenTileY, 7);
-        if (scrolledX > screenTileX - 1)                this.startScroll(6, screenTileX, 7);
-        if (scrolledX < 0)                              this.startScroll(4, screenTileX, 7);
+    Game_Map.prototype.setGridScroll = function(value) {
+        this._gridFlg = !!value;
+    };
+
+    Game_Map.prototype.updateGridScroll = function(scrolledX, scrolledY) {
+        if (this.isNeedGridScrollDown(scrolledY)) this.startGridScroll(2);
+        if (this.isNeedGridScrollUp(scrolledY)) this.startGridScroll(8);
+        if (this.isNeedGridScrollRight(scrolledX)) this.startGridScroll(6);
+        if (this.isNeedGridScrollLeft(scrolledX)) this.startGridScroll(4);
+    };
+
+    Game_Map.prototype.startGridScroll = function(direction) {
+        var distance = (direction === 4 || direction === 6 ? this.screenTileX() : this.screenTileY());
+        this.startScroll(direction, distance, paramScrollSpeed);
+    };
+
+    Game_Map.prototype.isNeedGridScrollDown = function(scrolledY) {
+        return scrolledY >= this.screenTileY();
+    };
+
+    Game_Map.prototype.isNeedGridScrollRight = function(scrolledX) {
+        return scrolledX >= this.screenTileX();
+    };
+
+    Game_Map.prototype.isNeedGridScrollUp = function(scrolledY) {
+        return scrolledY <= -1;
+    };
+
+    Game_Map.prototype.isNeedGridScrollLeft = function(scrolledX) {
+        return scrolledX <= -1;
+    };
+
+    Game_Map.prototype.isGridMoveForTouch = function(scrolledX, scrolledY, direction) {
+        return (this.isNeedTouchGridScrollDown(scrolledY) && direction === 2) ||
+            (this.isNeedTouchGridScrollUp(scrolledY) && direction === 8) ||
+            (this.isNeedTouchGridScrollRight(scrolledX) && direction === 6) ||
+            (this.isNeedTouchGridScrollLeft(scrolledX) && direction === 4);
+    };
+
+    Game_Map.prototype.isNeedTouchGridScrollDown = function(scrolledY) {
+        return scrolledY === this.screenTileY() - 1;
+    };
+
+    Game_Map.prototype.isNeedTouchGridScrollRight = function(scrolledX) {
+        return scrolledX === this.screenTileX() - 1;
+    };
+
+    Game_Map.prototype.isNeedTouchGridScrollUp = function(scrolledY) {
+        return scrolledY === 0;
+    };
+
+    Game_Map.prototype.isNeedTouchGridScrollLeft = function(scrolledX) {
+        return scrolledX === 0;
     };
 
     //=============================================================================
@@ -91,18 +174,44 @@
     //  スクロール時のプレイヤーの移動を禁止します。
     //  場所移動時に画面位置を調整します。
     //=============================================================================
-    var _Game_Player_canMove = Game_Player.prototype.canMove;
+    var _Game_Player_updateScroll      = Game_Player.prototype.updateScroll;
+    Game_Player.prototype.updateScroll = function(lastScrolledX, lastScrolledY) {
+        if (!$gameMap.isGridScroll()) {
+            _Game_Player_updateScroll.apply(this, arguments);
+            return;
+        }
+        if (this.isStopping() && !$gameMap.isScrolling()) {
+            $gameMap.updateGridScroll(this.scrolledX(), this.scrolledY());
+        }
+    };
+
+    var _Game_Player_canMove      = Game_Player.prototype.canMove;
     Game_Player.prototype.canMove = function() {
-        if ($gameMap._gridFlg && $gameMap.isScrolling()) {
+        if ($gameMap.isGridScroll() && $gameMap.isScrolling()) {
             return false;
         }
         return _Game_Player_canMove.call(this);
     };
 
-    var _Game_Player_locate = Game_Player.prototype.locate;
+    var _Game_Player_locate      = Game_Player.prototype.locate;
     Game_Player.prototype.locate = function(x, y) {
-        _Game_Player_locate.call(this, x, y);
-        if ($gameMap._gridFlg)
+        _Game_Player_locate.apply(this, arguments);
+        if ($gameMap.isGridScroll())
             $gameMap.setDisplayPos(x - x.mod($gameMap.screenTileX()), y - y.mod($gameMap.screenTileY()));
+    };
+
+    var _Game_Player_moveByInput      = Game_Player.prototype.moveByInput;
+    Game_Player.prototype.moveByInput = function() {
+        var prevDestinationValid = $gameTemp.isDestinationValid();
+        _Game_Player_moveByInput.apply(this, arguments);
+        if (paramTouchMoveScroll && prevDestinationValid && !this.isMoving()) {
+            this.moveByTouchEnd();
+        }
+    };
+
+    Game_Player.prototype.moveByTouchEnd = function() {
+        if ($gameMap.isGridMoveForTouch(this.scrolledX(), this.scrolledY(), this.direction())) {
+            this.executeMove(this.direction());
+        }
     };
 })();
