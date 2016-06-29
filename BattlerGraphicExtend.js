@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/06/29 YEP_X_AnimatedSVEnemies.jsとの間で発生していた競合を解消
 // 1.0.1 2016/06/17 敵を倒したときにグラフィックが消滅しない不具合を修正
 //                  武器グラフィックにも不透明度と合成方法を適用するよう修正
 // 1.0.0 2016/06/17 初版
@@ -228,7 +229,7 @@
     Game_BattlerBase.prototype.refreshFloating = function() {
         var result = this.getStateMetaValuesForBge(['高度', 'Altitude']);
         if (!result) {
-            if (this.isFloating()) this.landingBattler();
+            if (this.isFloatingBattler()) this.landingBattler();
             return;
         }
         var altitude = getArgNumber(result, 0);
@@ -268,7 +269,7 @@
     };
 
     Game_BattlerBase.prototype.getAltitude = function() {
-        return this.isFloating() ? Math.floor(Math.sin(this._altitudeAnimeCount / 16) * 5) - this._altitude : 0;
+        return this.isFloatingBattler() ? Math.floor(Math.sin(this._altitudeAnimeCount / 16) * 5) - this._altitude : 0;
     };
 
     Game_BattlerBase.prototype.getOpacity = function() {
@@ -295,7 +296,7 @@
         return this._motionRate / 100;
     };
 
-    Game_BattlerBase.prototype.isFloating = function() {
+    Game_BattlerBase.prototype.isFloatingBattler = function() {
         return this._altitude > 0;
     };
 
@@ -321,7 +322,7 @@
     };
 
     Game_BattlerBase.prototype.updateFloating = function() {
-        this._floatingPrev = this.isFloating();
+        this._floatingPrev = this.isFloatingBattler();
         if (this.isNeedFloat()) {
             if (this.isHighest()) {
                 this._altitudeAnimeCount++;
