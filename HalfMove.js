@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.3 2016/06/30 タッチ操作によるマップ移動でイベント起動できない場合がある問題を修正
 // 1.4.2 2016/06/08 PD_8DirDash.jsと組み合わせて斜め移動グラフィックを反映するよう修正
 // 1.4.1 2016/05/20 ダメージ床や茂みで上半分のみ接している場合は無効にするよう変更
 // 1.4.0 2016/05/20 トリガー領域を上下左右で細かく指定できる機能を追加
@@ -750,6 +751,19 @@
     };
 
     //=============================================================================
+    // Game_Character
+    //  タッチ移動の動作を調整します。
+    //=============================================================================
+    var _Game_Character_findDirectionTo = Game_Character.prototype.findDirectionTo;
+    Game_Character.prototype.findDirectionTo = function(goalX, goalY) {
+        var halfPositionCount = localHalfPositionCount;
+        localHalfPositionCount = 0;
+        var result = _Game_Character_findDirectionTo.apply(this, arguments);
+        localHalfPositionCount = halfPositionCount;
+        return result;
+    };
+
+    //=============================================================================
     // Game_Player
     //  8方向移動に対応させます。
     //=============================================================================
@@ -847,6 +861,28 @@
         } else {
             _Game_Player_startMapEvent2.apply(this, arguments);
         }
+    };
+
+    var _Game_Player_triggerTouchAction = Game_Player.prototype.triggerTouchAction;
+    Game_Player.prototype.triggerTouchAction = function() {
+        var result = _Game_Player_triggerTouchAction.apply(this, arguments);
+        if (!result && $gameTemp.isDestinationValid()) {
+            var direction = this.direction();
+            var x1 = this.x;
+            var y1 = this.y;
+            var x2 = $gameMap.roundHalfXWithDirection(x1, direction);
+            var y2 = $gameMap.roundHalfYWithDirection(y1, direction);
+            var x3 = $gameMap.roundXWithDirection(x2, direction);
+            var y3 = $gameMap.roundYWithDirection(y2, direction);
+            var destX = $gameTemp.destinationX();
+            var destY = $gameTemp.destinationY();
+            if (Math.abs(destX - x2) <= Game_Map.tileUnit && Math.abs(destY - y2) <= Game_Map.tileUnit) {
+                return this.triggerTouchActionD2(x2, y2);
+            } else if (Math.abs(destX - x3) <= Game_Map.tileUnit && Math.abs(destY - y3) <= Game_Map.tileUnit) {
+                return this.triggerTouchActionD3(x2, y2);
+            }
+        }
+        return result;
     };
 
     Game_Player.prototype.isStartingPreparedMapEvent = function(x, y) {
