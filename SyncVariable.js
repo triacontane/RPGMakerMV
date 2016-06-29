@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2016/06/29 追加でネットワークエラー対応
 // 1.1.2 2016/06/28 ゲーム中にネットワークが切断された場合にエラーになる現象を修正
 // 1.1.1 2016/06/02 認証ファイルの形式をJSONでも作成できるよう修正
 // 1.1.0 2016/05/25 Milkcocoa側のAPI更新によりローカル環境で実行できなくなっていた問題を修正
@@ -333,20 +334,24 @@ function SyncManager() {
                 this.needDownload = false;
                 this._coolDown    = 60;
                 this.downloadVariables();
-                SyncManager.suppressOnError = true;
+                this.setSuppressOnError();
             }
             if (this.needUpload && this.isDownloaded) {
                 this.needUpload = false;
                 this._coolDown  = 60;
                 this.uploadVariables();
-                SyncManager.suppressOnError = true;
+                this.setSuppressOnError();
             }
         } else {
             this._coolDown--;
-            if (this._coolDown === 0) {
-                SyncManager.suppressOnError = false;
-            }
         }
+    };
+
+    SyncManager.setSuppressOnError = function() {
+        this.suppressOnError = true;
+        setTimeout(function() {
+            this.suppressOnError = false;
+        }.bind(this), 100);
     };
 
     SyncManager.uploadVariables = function() {
@@ -375,6 +380,7 @@ function SyncManager() {
 
     SyncManager.getAuthData = function(onComplete) {
         this._authData.get(this.userId, onComplete);
+        this.setSuppressOnError();
     };
 
     SyncManager.loadAuthData = function(onComplete, onError) {
@@ -563,8 +569,8 @@ function SyncManager() {
         SyncManager.update();
     };
 
-    var _SceneManager_onError    = SceneManager.onError;
-    SceneManager.onError         = function(e) {
+    var _SceneManager_onError = SceneManager.onError;
+    SceneManager.onError      = function(e) {
         if (SyncManager.suppressOnError) return;
         _SceneManager_onError.apply(this, arguments);
     };

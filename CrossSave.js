@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.4 2016/06/29 追加でネットワークエラー対応
 // 1.0.3 2016/06/28 ゲーム中にネットワークが切断された場合にエラーになる現象を修正
 // 1.0.2 2016/06/02 認証ファイルの形式をJSONでも作成できるよう修正
 // 1.0.1 2016/05/29 ヘルプの記述ミスを修正
@@ -700,13 +701,11 @@ function CrossSaveManager() {
 
     Scene_Password.prototype.updateBusy = function() {
         if (CrossSaveManager.isBusy()) {
-            CrossSaveManager.suppressOnError = true;
             this._processFrame++;
             if (this._processFrame > 60 * CrossSaveManager.timeOutSecond) {
                 this.onProcessError(localMessage.TIME_OUT);
             }
         } else {
-            CrossSaveManager.suppressOnError = false;
             var message = CrossSaveManager.getResultMessage();
             if (!message) {
                 this.onProcessComplete();
@@ -902,7 +901,15 @@ function CrossSaveManager() {
     };
 
     CrossSaveManager.getAuthData = function(onComplete) {
+        this.setSuppressOnError();
         this._authData.get(paramUserId, onComplete);
+    };
+
+    CrossSaveManager.setSuppressOnError = function() {
+        this.suppressOnError = true;
+        setTimeout(function() {
+            this.suppressOnError = false;
+        }.bind(this), 100);
     };
 
     CrossSaveManager.loadAuthData = function(onComplete, onError) {
@@ -1029,6 +1036,7 @@ function CrossSaveManager() {
             this.setMainData(i, {data: saveGameBase64.substr(i * fragmentLength, fragmentLength)});
         }
         this.setMainData('Length', {data: dataNumber});
+        this.setSuppressOnError();
         return true;
     };
 
@@ -1040,6 +1048,7 @@ function CrossSaveManager() {
         }
         this.resetResultMessage();
         this.getMainData('Length', this.loadDataContents.bind(this), localMessage.NO_DATA);
+        this.setSuppressOnError();
     };
 
     CrossSaveManager.loadDataContents = function(datum) {
@@ -1056,13 +1065,13 @@ function CrossSaveManager() {
 
     CrossSaveManager.setMainData = function(param, data) {
         this._mainData.set(paramUserId + ':' + this._password + ':' + param, data, function(errorInfo) {
-            if (!errorInfo) {
-                this.onProcessSuccess();
-            } else {
-                this.outLog(errorInfo);
-                this.onProcessFailure(localMessage.UNKNOWN);
-            }
-        }.bind(this),
+                if (!errorInfo) {
+                    this.onProcessSuccess();
+                } else {
+                    this.outLog(errorInfo);
+                    this.onProcessFailure(localMessage.UNKNOWN);
+                }
+            }.bind(this),
             this.onProcessFailure.bind(this, localMessage.REJECT)
         );
         this._processCount++;
@@ -1169,8 +1178,8 @@ function CrossSaveManager() {
         _SceneManager_initialize.apply(this, arguments);
     };
 
-    var _SceneManager_onError    = SceneManager.onError;
-    SceneManager.onError         = function(e) {
+    var _SceneManager_onError = SceneManager.onError;
+    SceneManager.onError      = function(e) {
         if (CrossSaveManager.suppressOnError) return;
         _SceneManager_onError.apply(this, arguments);
     };
