@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.4 2016/07/22 YEP_MessageCore.jsのネーム表示ウィンドウと連携する機能を追加
 // 1.0.3 2016/01/24 メッセージウィンドウが表示されていないときも非表示にできてしまう現象の修正
 // 1.0.2 2016/01/02 競合対策
 // 1.0.1 2015/12/31 コメント追加＋英語対応（仕様に変化なし）
@@ -80,18 +81,32 @@
             if (this.visible) {
                 this.hide();
                 this.subWindows().forEach(function(subWindow) {
-                    subWindow.prevVisible = subWindow.visible;
-                    subWindow.hide();
-                });
+                    this.hideSubWindow(subWindow);
+                }.bind(this));
+                if (this.hasNameWindow()) this.hideSubWindow(this._nameWindow);
             } else {
                 this.show();
                 this.subWindows().forEach(function(subWindow) {
-                    if (subWindow.prevVisible) subWindow.show();
-                    subWindow.prevVisible = undefined;
-                });
+                    this.showSubWindow(subWindow);
+                }.bind(this));
+                if (this.hasNameWindow()) this.showSubWindow(this._nameWindow);
             }
         }
         return _Window_Message_updateWait.call(this);
+    };
+
+    Window_Message.prototype.hideSubWindow = function(subWindow) {
+        subWindow.prevVisible = subWindow.visible;
+        subWindow.hide();
+    };
+
+    Window_Message.prototype.showSubWindow = function(subWindow) {
+        if (subWindow.prevVisible) subWindow.show();
+        subWindow.prevVisible = undefined;
+    };
+
+    Window_Message.prototype.hasNameWindow = function() {
+        return this._nameWindow && typeof Window_NameBox !== 'undefined';
     };
 
     Window_Message.prototype.isTriggeredHidden = function() {
