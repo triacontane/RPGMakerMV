@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.4 2016/07/02 半歩位置にいる場合に地形タグとリージョンIDの取得値が0になってしまう不具合を修正
 // 1.4.3 2016/06/30 タッチ操作によるマップ移動でイベント起動できない場合がある問題を修正
 // 1.4.2 2016/06/08 PD_8DirDash.jsと組み合わせて斜め移動グラフィックを反映するよう修正
 // 1.4.1 2016/05/20 ダメージ床や茂みで上半分のみ接している場合は無効にするよう変更
@@ -462,6 +463,28 @@
         return result;
     };
 
+    var _Game_Map_terrainTag = Game_Map.prototype.terrainTag;
+    Game_Map.prototype.terrainTag = function(x, y) {
+        if (this.isHalfPos(x)) {
+            return this.terrainTag(x - Game_Map.tileUnit, y) || this.terrainTag(x + Game_Map.tileUnit, y);
+        }
+        if (this.isHalfPos(y)) {
+            return this.terrainTag(x, y - Game_Map.tileUnit) || this.terrainTag(x, y + Game_Map.tileUnit);
+        }
+        return _Game_Map_terrainTag.apply(this, arguments);
+    };
+
+    var _Game_Map_regionId = Game_Map.prototype.regionId;
+    Game_Map.prototype.regionId = function(x, y) {
+        if (this.isHalfPos(x)) {
+            return this.regionId(x - Game_Map.tileUnit, y) || this.regionId(x + Game_Map.tileUnit, y);
+        }
+        if (this.isHalfPos(y)) {
+            return this.regionId(x, y - Game_Map.tileUnit) || this.regionId(x, y + Game_Map.tileUnit);
+        }
+        return _Game_Map_regionId.apply(this, arguments);
+    };
+
     //=============================================================================
     // Game_CharacterBase
     //  半歩移動の判定処理を追加定義します。
@@ -874,11 +897,11 @@
             var y2 = $gameMap.roundHalfYWithDirection(y1, direction);
             var x3 = $gameMap.roundXWithDirection(x2, direction);
             var y3 = $gameMap.roundYWithDirection(y2, direction);
-            var destX = $gameTemp.destinationX();
-            var destY = $gameTemp.destinationY();
-            if (Math.abs(destX - x2) <= Game_Map.tileUnit && Math.abs(destY - y2) <= Game_Map.tileUnit) {
+            var destinationX = $gameTemp.destinationX();
+            var destinationY = $gameTemp.destinationY();
+            if (Math.abs(destinationX - x2) <= Game_Map.tileUnit && Math.abs(destinationY - y2) <= Game_Map.tileUnit) {
                 return this.triggerTouchActionD2(x2, y2);
-            } else if (Math.abs(destX - x3) <= Game_Map.tileUnit && Math.abs(destY - y3) <= Game_Map.tileUnit) {
+            } else if (Math.abs(destinationX - x3) <= Game_Map.tileUnit && Math.abs(destinationY - y3) <= Game_Map.tileUnit) {
                 return this.triggerTouchActionD3(x2, y2);
             }
         }

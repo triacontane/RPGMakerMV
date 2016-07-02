@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/06/25 スクリプトの常駐実行機能を追加
 // 1.4.2 2016/06/14 SceneManager.initializeでエラーが発生した際にエラー内容を確認できない問題を修正
 // 1.4.1 2016/06/14 YEP_CoreEngine.jsと併用したときにウィンドウ高さ補正が効かなくなる問題を修正
 // 1.4.0 2016/06/03 メニューバーからデバッグ用のコマンドを実行できる機能を追加
@@ -142,7 +143,7 @@
  * @default
  *
  * @param スクリプト実行キー
- * @desc スクリプト実行用のウィンドウをポップアップするキーです。(F1～F12)。
+ * @desc スクリプト実行用のウィンドウをポップアップするキーです。Ctrlキーと一緒に押下すると常駐実行します。(F1～F12)。
  * @default
  *
  * @param フリーズキー
@@ -197,6 +198,9 @@
  * 10.強制的に敵を全滅させる機能
  * 11.スクリプトをその場で実行して結果を得る機能
  *    (実行したスクリプトはクリップボードに格納されます)
+ *    さらに、Ctrl+ショートカットキーでスクリプトを常駐実行させることができます。
+ *    入力したスクリプトを毎フレーム実行し続けて、結果が変化したときのみ
+ *    結果をログに出力します。
  * 12.モバイル実行を偽装する機能
  *    (モバイル用のUIの表示確認ができます。
  *     オーディオが演奏されない制約があります)
@@ -330,7 +334,7 @@ var p = null;
     // SceneManager
     //  状況に応じてデベロッパツールを自動制御します。
     //=============================================================================
-    SceneManager.devCommands = [
+    SceneManager.devCommands       = [
         {code: 101, name: 'DEVツール最小化', key: paramFuncKeyMinimize},
         {code: 102, name: '画面左寄せ', key: paramFuncKeyMoveEdge},
         {code: 103, name: 'リロード', key: paramFuncKeyReload},
@@ -339,6 +343,10 @@ var p = null;
         {code: 106, name: '任意スクリプト実行', key: paramFuncKeyScript},
         {code: 107, name: '画面フリーズ', key: paramFuncKeyFreeze}
     ];
+    SceneManager.originalTitle     = null;
+    SceneManager._rapidGame        = false;
+    SceneManager._lastScriptString = null;
+    SceneManager._lastScriptResult = null;
 
     var _SceneManager_initialize = SceneManager.initialize;
     SceneManager.initialize      = function() {
@@ -416,16 +424,13 @@ var p = null;
         BattleManager.forceVictory();
     };
 
-    SceneManager.executeDevCommand106 = function() {
-        this.showScriptDialog();
+    SceneManager.executeDevCommand106 = function(event) {
+        this.showScriptDialog(event && event.ctrlKey);
     };
 
     SceneManager.executeDevCommand107 = function() {
         this.toggleFreeze();
     };
-
-    SceneManager.originalTitle = null;
-    SceneManager._rapidGame    = false;
 
     SceneManager.isRapid = function() {
         return SceneManager._rapidGame;
@@ -443,22 +448,38 @@ var p = null;
         return this._scene && this._scene.constructor === sceneClass;
     };
 
-    SceneManager.showScriptDialog = function() {
-        var scriptString = window.prompt('実行したいスクリプトを入力してください。', this._nwJsGui.readClipboard());
+    SceneManager.showScriptDialog = function(ctrlFlg) {
+        var promptValue  = (ctrlFlg ? '常駐' : '') + '実行したいスクリプトを入力してください。';
+        var scriptString = window.prompt(promptValue, this._nwJsGui.readClipboard());
         if (scriptString !== null && scriptString !== '') {
             this._nwJsGui.showDevTools();
             this._nwJsGui.writeClipboard(scriptString);
-            try {
-                var result = eval(scriptString);
+            this.executeScript(scriptString);
+            if (ctrlFlg) this._lastScriptString = scriptString;
+        }
+    };
+
+    SceneManager.executeScript = function(scriptString) {
+        var result = null;
+        try {
+            result = eval(scriptString);
+            if (!this._lastScriptString) {
                 SoundManager.playOk();
                 console.log('Execute Script : ' + scriptString);
-                console.log('Execute Result : ' + result);
-            } catch (e) {
+                console.log('Execute Result : ');
+            }
+        } catch (e) {
+            if (!this._lastScriptString) {
                 SoundManager.playBuzzer();
                 console.log('Error Script : ' + scriptString);
                 console.error(e.stack);
             }
+            result = e.toString();
         }
+        if (!this._lastScriptString || result !== this._lastScriptResult) {
+            console.log(result);
+        }
+        this._lastScriptResult = result;
     };
 
     var _SceneManager_initNwjs = SceneManager.initNwjs;
@@ -490,6 +511,9 @@ var p = null;
     var _SceneManager_updateScene = SceneManager.updateScene;
     SceneManager.updateScene      = function() {
         if (this._freeze) return;
+        if (this._lastScriptString) {
+            this.executeScript(this._lastScriptString);
+        }
         _SceneManager_updateScene.apply(this, arguments);
     };
 
@@ -923,7 +947,11 @@ var p = null;
 
     Controller_NwJs.prototype.toggleDevTools = function() {
         if (this._devTool) {
-            this._devToolMinimize ? this._devTool.restore() : this._devTool.minimize();
+            if (this._devToolMinimize) {
+                this._devTool.restore();
+            } else {
+                this._devTool.minimize();
+            }
             this.focus();
         } else {
             this.showDevTools(false);
