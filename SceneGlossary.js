@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2016/07/03 戦闘画面のアイテム選択ウィンドウに用語集アイテムが表示されていた問題を修正
 // 1.4.0 2016/05/31 テキストと画像を重ねて表示する設定を追加
 //                  新語が自動登録された場合にスイッチや変数を操作する機能を追加
 //                  アイテムを使用する際に確認ウィンドウを表示する機能を追加
@@ -684,7 +685,7 @@ function Scene_Glossary() {
         }
     };
 
-    Window_MenuCommand.prototype.isGlossaryEnabled = function(i) {
+    Window_MenuCommand.prototype.isGlossaryEnabled = function() {
         return true;
     };
 
@@ -695,6 +696,15 @@ function Scene_Glossary() {
     var _Window_EventItem_includes      = Window_EventItem.prototype.includes;
     Window_EventItem.prototype.includes = function(item) {
         return _Window_EventItem_includes.apply(this, arguments) && !$gameParty.isGlossaryItem(item);
+    };
+
+    //=============================================================================
+    // Window_BattleItem
+    //  用語集アイテムをアイテム選択の候補から除外します。
+    //=============================================================================
+    var _Window_BattleItem_includes = Window_BattleItem.prototype.includes;
+    Window_BattleItem.prototype.includes = function(item) {
+        return _Window_BattleItem_includes.apply(this, arguments) && !$gameParty.isGlossaryItem(item);
     };
 
     //=============================================================================
