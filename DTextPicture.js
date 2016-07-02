@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2016/07/02 スクリプトからダイレクトで実行した場合も制御文字が反映されるよう修正（ただし余分にエスケープする必要あり）
 // 1.4.1 2016/06/29 制御文字「\{」で文字サイズを大きくした際、元のサイズに戻さないと正しいサイズで表示されない問題を修正
 // 1.4.0 2016/06/28 D_TEXT実行後に画像を指定してピクチャを表示した場合は画像を優先表示するよう仕様変更
 // 1.3.1 2016/06/07 描画文字が半角英数字のみかつフォントを未指定の場合に文字が描画されない不具合を修正
@@ -166,7 +167,7 @@
             case 'D_TEXT' :
                 if (isNaN(args[args.length - 1]) || args.length === 1) args.push($gameScreen.dTextSize || 28);
                 var fontSize = getArgNumber(args.pop());
-                $gameScreen.setDTextPicture(getArgString(connectArgs(args), false), fontSize);
+                $gameScreen.setDTextPicture(connectArgs(args), fontSize);
                 break;
             case 'D_TEXT_SETTING':
                 switch (getCommandName(args[0])) {
@@ -205,7 +206,7 @@
 
     Game_Screen.prototype.setDTextPicture = function(value, size) {
         if (!this.dTextValue) this.dTextValue = [];
-        this.dTextValue.push(value);
+        this.dTextValue.push(getArgString(value, false));
         this.dTextSize = size;
     };
 
