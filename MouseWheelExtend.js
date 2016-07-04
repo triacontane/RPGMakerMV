@@ -29,6 +29,23 @@
  * @desc マウスホイールのクリックに決定ボタンと同等の機能を持たせます。
  * @default ON
  *
+ * @param WheelCancel
+ * @desc マウスホイールのクリックにキャンセルボタンと同等の機能を持たせます。
+ * @default OFF
+ *
+ * @param WheelSwitch
+ * @desc マウスホイールのクリックで任意のスイッチをONにします。マップ画面でのみ有効です。
+ * @default 0
+ *
+ * @param ScrollDirection
+ * @desc マウスホイールのスクロールに十字キーと同等の機能を持たせます。
+ * @default OFF
+ *
+ * @param ScrollVariable
+ * @desc マウスホイールのスクロールで任意の変数に値を設定します。
+ * 下:2 左:4 右:6 上:8　マップ画面でのみ有効です。
+ * @default 0
+ *
  * @param SensitivityY
  * @desc マウスホイールの縦回転の感度です。通常はこのままでOKです。
  * @default 20
@@ -38,7 +55,10 @@
  * @default 20
  *
  * @help あまり使用されていないマウスホイールの機能を拡張します。
- * 以下の3つの機能があり、個別に使用可否を設定できます。
+ * 個別に使用可否を設定できます。
+ * マウスホイールのない環境（スマートフォン、一部のPC）では意味がないので
+ * 注意してください。マウスによっては左右スクロールがない or 正しく取得できない
+ * 場合があります。
  *
  * ・メッセージ送り
  * マウスホイールを手前に回転させてメッセージ送りをします。戻すことはできません。
@@ -46,8 +66,20 @@
  * ・カーソル移動
  * マウスホイールを動かしてウィンドウのカーソルを移動します。
  *
- * ・クリックで決定
- * マウスホイールのクリックに決定ボタンと同等の機能を持たせます。
+ * ・クリックで決定、キャンセル
+ * マウスホイールのクリックに決定、キャンセルボタンと同等の機能を持たせます。
+ * 両方指定すると決定ボタンが優先されます。
+ *
+ * ・クリックでスイッチ
+ * マウスホイールのクリックで任意のスイッチをONにします。マップ画面でのみ有効です。
+ * コモンイベントのトリガー等に使用できます。
+ *
+ * ・スクロールで十字キー
+ * マウスホイールのスクロールに十字キーと同等の機能を持たせます。
+ *
+ * ・スクロールで変数
+ * マウスホイールのスクロールで任意の変数に値を設定します。
+ * 下:2 左:4 右:6 上:8　マップ画面でのみ有効です。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -69,6 +101,23 @@
  * @desc マウスホイールのクリックに決定ボタンと同等の機能を持たせます。
  * @default ON
  *
+ * @param クリックでキャンセル
+ * @desc マウスホイールのクリックにキャンセルボタンと同等の機能を持たせます。
+ * @default OFF
+ *
+ * @param クリックでスイッチ
+ * @desc マウスホイールのクリックで任意のスイッチをONにします。マップ画面でのみ有効です。
+ * @default 0
+ *
+ * @param スクロールで十字キー
+ * @desc マウスホイールのスクロールに十字キーと同等の機能を持たせます。
+ * @default OFF
+ *
+ * @param スクロールで変数
+ * @desc マウスホイールのスクロールで任意の変数に値を設定します。
+ * 下:2 左:4 右:6 上:8　マップ画面でのみ有効です。
+ * @default 0
+ *
  * @param 感度Y
  * @desc マウスホイールの縦回転の感度です。通常はこのままでOKです。
  * @default 20
@@ -78,7 +127,10 @@
  * @default 20
  *
  * @help あまり使用されていないマウスホイールの機能を拡張します。
- * 以下の3つの機能があり、個別に使用可否を設定できます。
+ * 個別に使用可否を設定できます。
+ * マウスホイールのない環境（スマートフォン、一部のPC）では意味がないので
+ * 注意してください。マウスによっては左右スクロールがない or 正しく取得できない
+ * 場合があります。
  *
  * ・メッセージ送り
  * マウスホイールを手前に回転させてメッセージ送りをします。戻すことはできません。
@@ -86,8 +138,20 @@
  * ・カーソル移動
  * マウスホイールを動かしてウィンドウのカーソルを移動します。
  *
- * ・クリックで決定
- * マウスホイールのクリックに決定ボタンと同等の機能を持たせます。
+ * ・クリックで決定、キャンセル
+ * マウスホイールのクリックに決定、キャンセルボタンと同等の機能を持たせます。
+ * 両方指定すると決定ボタンが優先されます。
+ *
+ * ・クリックでスイッチ
+ * マウスホイールのクリックで任意のスイッチをONにします。マップ画面でのみ有効です。
+ * コモンイベントのトリガー等に使用できます。
+ *
+ * ・スクロールで十字キー
+ * マウスホイールのスクロールに十字キーと同等の機能を持たせます。
+ *
+ * ・スクロールで変数
+ * マウスホイールのスクロールで任意の変数に値を設定します。
+ * 下:2 左:4 右:6 上:8　マップ画面でのみ有効です。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -125,12 +189,49 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramCursorMove    = getParamBoolean(['CursorMove', 'カーソル移動']);
-    var paramMessageScroll = getParamBoolean(['MessageScroll', 'メッセージ送り']);
-    var paramWheelOk       = getParamBoolean(['WheelOk', 'クリックで決定']);
-    var paramSensitivityY  = getParamNumber(['SensitivityY', '感度Y'], 1);
-    var paramSensitivityX  = getParamNumber(['SensitivityX', '感度X'], 1);
+    var paramCursorMove      = getParamBoolean(['CursorMove', 'カーソル移動']);
+    var paramMessageScroll   = getParamBoolean(['MessageScroll', 'メッセージ送り']);
+    var paramWheelOk         = getParamBoolean(['WheelOk', 'クリックで決定']);
+    var paramWheelCancel     = getParamBoolean(['WheelCancel', 'クリックでキャンセル']);
+    var paramWheelSwitch     = getParamNumber(['WheelSwitch', 'クリックでスイッチ'], 0);
+    var paramScrollDirection = getParamBoolean(['ScrollDirection', 'スクロールで十字キー']);
+    var paramScrollVariable  = getParamNumber(['ScrollVariable', 'スクロールで変数'], 0);
+    var paramSensitivityY    = getParamNumber(['SensitivityY', '感度Y'], 1);
+    var paramSensitivityX    = getParamNumber(['SensitivityX', '感度X'], 1);
 
+    var _Game_Map_update = Game_Map.prototype.update;
+    Game_Map.prototype.update = function(sceneActive) {
+        _Game_Map_update.apply(this, arguments);
+        this.updateWheelTrigger();
+    };
+
+    Game_Map.prototype.updateWheelTrigger = function() {
+        if (paramWheelSwitch) {
+            if (TouchInput.isMiddleTriggered()) {
+                $gameSwitches.setValue(paramWheelSwitch, true);
+            }
+        }
+        if (paramScrollVariable) {
+            var prevValue = $gameVariables.value(paramScrollVariable);
+            var value = 0;
+            if (TouchInput.wheelX >= paramSensitivityX) {
+                value = 4;
+            }
+            if (TouchInput.wheelX <= -paramSensitivityX) {
+                value = 6;
+            }
+            if (TouchInput.wheelY >= paramSensitivityY) {
+                value = 2;
+            }
+            if (TouchInput.wheelY <= -paramSensitivityY) {
+                value = 8;
+            }
+            if (prevValue !== value) {
+                $gameVariables.setValue(paramScrollVariable, value);
+            }
+        }
+    };
+    
     if (paramMessageScroll) {
         //=============================================================================
         // Window_Message
@@ -172,28 +273,127 @@
         };
     }
 
-    if (paramWheelOk) {
-        //=============================================================================
-        // TouchInput
-        //  ホイールクリックを決定ボタンにリンクします。
-        //=============================================================================
-        var _TouchInput__onMiddleButtonDown = TouchInput._onMiddleButtonDown;
-        TouchInput._onMiddleButtonDown      = function(event) {
-            _TouchInput__onMiddleButtonDown.apply(this, arguments);
-            Input.setCurrentStateForWheelExtend(true);
-        };
 
-        var _TouchInput__onMouseUp = TouchInput._onMouseUp;
-        TouchInput._onMouseUp      = function(event) {
-            _TouchInput__onMouseUp.apply(this, arguments);
-            if (event.button === 1) {
-                Input.setCurrentStateForWheelExtend(false);
+    //=============================================================================
+    // TouchInput
+    //  ホイールクリックを決定ボタンにリンクします。
+    //=============================================================================
+    var _TouchInput__onMiddleButtonDown = TouchInput._onMiddleButtonDown;
+    TouchInput._onMiddleButtonDown      = function(event) {
+        _TouchInput__onMiddleButtonDown.apply(this, arguments);
+        if (paramWheelOk) {
+            Input.setCurrentStateForWheelExtendOk(true);
+        } else if (paramWheelCancel) {
+            Input.setCurrentStateForWheelExtendCancel(true);
+        }
+        this._middleTriggered = true;
+    };
+
+    var _TouchInput__onMouseUp = TouchInput._onMouseUp;
+    TouchInput._onMouseUp      = function(event) {
+        _TouchInput__onMouseUp.apply(this, arguments);
+        if (event.button === 1) {
+            if (paramWheelOk) {
+                Input.setCurrentStateForWheelExtendOk(false);
+            } else if (paramWheelCancel) {
+                Input.setCurrentStateForWheelExtendCancel(false);
+            }
+            this._middleTriggered = false;
+        }
+    };
+
+    TouchInput.isMiddleTriggered = function() {
+        return this._middleTriggered;
+    };
+
+    if (paramScrollDirection) {
+        TouchInput._wheelValidFrame = 12;
+        
+        var _TouchInput__onWheel = TouchInput._onWheel;
+        TouchInput._onWheel      = function(event) {
+            _TouchInput__onWheel.apply(this, arguments);
+            if (event.deltaY <= -paramSensitivityY) {
+                this._wheelUp = TouchInput._wheelValidFrame;
+                Input.setCurrentStateForWheelExtendUp(true);
+            }
+            if (event.deltaY >= paramSensitivityY) {
+                this._wheelDown = TouchInput._wheelValidFrame;
+                Input.setCurrentStateForWheelExtendDown(true);
+            }
+            if (event.deltaX <= -paramSensitivityX) {
+                this._wheelRight = TouchInput._wheelValidFrame;
+                Input.setCurrentStateForWheelExtendRight(true);
+            }
+            if (event.deltaX >= paramSensitivityX) {
+                this._wheelLeft = TouchInput._wheelValidFrame;
+                Input.setCurrentStateForWheelExtendLeft(true);
             }
         };
 
-        Input.setCurrentStateForWheelExtend = function(value) {
-            this._currentState[this.keyMapper[13]] = !!value;
+        var _TouchInput_update = TouchInput.update;
+        TouchInput.update = function() {
+            _TouchInput_update.apply(this, arguments);
+            this.updateWheelDirection();
+        };
+
+        TouchInput.updateWheelDirection = function() {
+            if (this._wheelUp > 0) {
+                this._wheelUp--;
+                if (this._wheelUp <= 0) {
+                    Input.setCurrentStateForWheelExtendUp(false);
+                }
+            }
+            if (this._wheelDown > 0) {
+                this._wheelDown--;
+                if (this._wheelDown <= 0) {
+                    Input.setCurrentStateForWheelExtendDown(false);
+                }
+            }
+            if (this._wheelRight > 0) {
+                this._wheelRight--;
+                if (this._wheelRight <= 0) {
+                    Input.setCurrentStateForWheelExtendRight(false);
+                }
+            }
+            if (this._wheelLeft > 0) {
+                this._wheelLeft--;
+                if (this._wheelLeft <= 0) {
+                    Input.setCurrentStateForWheelExtendLeft(false);
+                }
+            }
         };
     }
+
+    //=============================================================================
+    // Input
+    //  マウスホイールの情報をキー入力に変換します。
+    //=============================================================================
+    Input.setCurrentStateForWheelExtendOk = function(value) {
+        this.setCurrentStateForWheelExtend(13, value);
+    };
+
+    Input.setCurrentStateForWheelExtendCancel = function(value) {
+        this.setCurrentStateForWheelExtend(27, value);
+    };
+
+    Input.setCurrentStateForWheelExtendDown = function(value) {
+        this.setCurrentStateForWheelExtend(40, value);
+    };
+
+    Input.setCurrentStateForWheelExtendLeft = function(value) {
+        this.setCurrentStateForWheelExtend(37, value);
+    };
+
+    Input.setCurrentStateForWheelExtendRight = function(value) {
+        this.setCurrentStateForWheelExtend(39, value);
+    };
+
+    Input.setCurrentStateForWheelExtendUp = function(value) {
+        this.setCurrentStateForWheelExtend(38, value);
+    };
+
+    Input.setCurrentStateForWheelExtend = function(code, value) {
+        this._currentState[this.keyMapper[code]] = !!value;
+    };
 })();
 
