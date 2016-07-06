@@ -351,7 +351,7 @@ function SyncManager() {
         this.suppressOnError = true;
         setTimeout(function() {
             this.suppressOnError = false;
-        }.bind(this), 100);
+        }.bind(this), 1000);
     };
 
     SyncManager.uploadVariables = function() {
