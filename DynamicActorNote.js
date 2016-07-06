@@ -117,14 +117,7 @@
         return result;
     };
 
-    DataManager.deleteMetadata = function(data) {
-        if (data.hasOwnProperty('meta')) {
-            delete data.meta;
-        }
-    };
-
     DataManager.rewriteMetadata = function(targetData, srcData) {
-        this.deleteMetadata(targetData);
         if (!targetData.originalNote) targetData.originalNote = targetData.note;
         targetData.note = srcData.originalNote ? srcData.originalNote : srcData.note;
         this.extractMetadata(targetData);
