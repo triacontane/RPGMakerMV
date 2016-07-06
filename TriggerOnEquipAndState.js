@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/07/06 戦闘メンバーのみ有効になる設定を追加
 // 1.1.0 2016/06/08 一つの装備で複数のスイッチ、変数を操作できるよう修正
 // 1.0.1 2016/06/03 スクリプトに「>」「<」を使えるように修正
 // 1.0.0 2016/04/03 初版
@@ -18,6 +19,10 @@
 /*:
  * @plugindesc 装備変更時の変数操作プラグイン
  * @author トリアコンタン
+ *
+ * @param 戦闘メンバーのみ
+ * @desc 変数やスイッチが変動する対象となるアクターが戦闘メンバーに限定されます。
+ * @default OFF
  *
  * @help 装備またはステートの着脱時に、変数およびスイッチを操作できるようになります。
  * 着脱時に、スイッチの場合はON/OFFが切り替わり、変数の場合は値が増減します。
@@ -53,7 +58,22 @@
 
 (function () {
     'use strict';
+    var pluginName    = 'TriggerOnEquipAndState';
     var metaTagPrefix = 'TOES';
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
 
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
@@ -110,6 +130,11 @@
     };
 
     //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var paramBattleMemberOnly = getParamBoolean(['BattleMemberOnly', '戦闘メンバーのみ']);
+
+    //=============================================================================
     // Game_Actor
     //  装備及びステートが変更された際のスイッチ、変数制御を追加定義します。
     //=============================================================================
@@ -131,7 +156,7 @@
         _Game_Actor_initEquips.apply(this, arguments);
         this._equips.forEach(function (equip) {
             if (equip._itemId !== 0) {
-                this.onChangeEquipAndState(equip.object(), true);
+                this.onChangeEquipAndState(equip.object(), true, true);
             }
         }.bind(this));
     };
@@ -152,7 +177,8 @@
         _Game_BattlerBase_eraseState.apply(this, arguments);
     };
 
-    Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign) {
+    Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign, force) {
+        if (paramBattleMemberOnly && !$gameParty.battleMembers().contains(this) && !force) return;
         var index = 1;
         while(index) {
             if (this.controlVariable(item, addedSign, index === 1 ? '' : String(index))) {
@@ -184,7 +210,14 @@
 
     Game_Actor.prototype.getVariableIdForToes = function(target, max) {
         var actorId = this._actorId; // used in eval
-        return eval(getArgString(target)).clamp(1, max);
+        var result = 0;
+        try {
+            result = eval(getArgString(target)).clamp(1, max);
+        } catch(e) {
+            console.error(e.toString());
+            console.log(e.stack);
+        }
+        return result;
     };
 })();
 
