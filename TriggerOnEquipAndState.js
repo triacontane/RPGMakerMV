@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/07/07 1.2.0が初期装備に対応していなかった問題を修正
 // 1.2.0 2016/07/06 戦闘メンバーのみ有効になる設定を追加
 // 1.1.0 2016/06/08 一つの装備で複数のスイッチ、変数を操作できるよう修正
 // 1.0.1 2016/06/03 スクリプトに「>」「<」を使えるように修正
@@ -135,8 +136,36 @@
     var paramBattleMemberOnly = getParamBoolean(['BattleMemberOnly', '戦闘メンバーのみ']);
 
     //=============================================================================
+    // Game_Party
+    //  変数設定が必要かどうかを返します。
+    //=============================================================================
+    Game_Party.prototype.isNeedControlVariable = function(actor) {
+        return !paramBattleMemberOnly || (this.battleMembers().contains(actor) || this.size() < this.maxBattleMembers());
+    };
+
+    //=============================================================================
     // Game_Actor
-    //  装備及びステートが変更された際のスイッチ、変数制御を追加定義します。
+    //  ステートが変更された際のスイッチ、変数制御を追加定義します。
+    //=============================================================================
+    var _Game_BattlerBase_addNewState = Game_BattlerBase.prototype.addNewState;
+    Game_BattlerBase.prototype.addNewState = function(stateId) {
+        if (this instanceof Game_Actor && !this._states.contains(stateId)) {
+            this.onChangeEquipAndState($dataStates[stateId], true);
+        }
+        _Game_BattlerBase_addNewState.apply(this, arguments);
+    };
+
+    var _Game_BattlerBase_eraseState = Game_BattlerBase.prototype.eraseState;
+    Game_BattlerBase.prototype.eraseState = function(stateId) {
+        if (this instanceof Game_Actor && this._states.contains(stateId)) {
+            this.onChangeEquipAndState($dataStates[stateId], false);
+        }
+        _Game_BattlerBase_eraseState.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Game_Actor
+    //  装備が変更された際のスイッチ、変数制御を追加定義します。
     //=============================================================================
     var _Game_Actor_changeEquip = Game_Actor.prototype.changeEquip;
     Game_Actor.prototype.changeEquip = function(slotId, item) {
@@ -156,29 +185,13 @@
         _Game_Actor_initEquips.apply(this, arguments);
         this._equips.forEach(function (equip) {
             if (equip._itemId !== 0) {
-                this.onChangeEquipAndState(equip.object(), true, true);
+                this.onChangeEquipAndState(equip.object(), true);
             }
         }.bind(this));
     };
 
-    var _Game_BattlerBase_addNewState = Game_BattlerBase.prototype.addNewState;
-    Game_BattlerBase.prototype.addNewState = function(stateId) {
-        if (this instanceof Game_Actor && !this._states.contains(stateId)) {
-            this.onChangeEquipAndState($dataStates[stateId], true);
-        }
-        _Game_BattlerBase_addNewState.apply(this, arguments);
-    };
-
-    var _Game_BattlerBase_eraseState = Game_BattlerBase.prototype.eraseState;
-    Game_BattlerBase.prototype.eraseState = function(stateId) {
-        if (this instanceof Game_Actor && this._states.contains(stateId)) {
-            this.onChangeEquipAndState($dataStates[stateId], false);
-        }
-        _Game_BattlerBase_eraseState.apply(this, arguments);
-    };
-
-    Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign, force) {
-        if (paramBattleMemberOnly && !$gameParty.battleMembers().contains(this) && !force) return;
+    Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign) {
+        if (!$gameParty.isNeedControlVariable(this)) return;
         var index = 1;
         while(index) {
             if (this.controlVariable(item, addedSign, index === 1 ? '' : String(index))) {
