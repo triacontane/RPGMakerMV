@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/09 ポップアップに任意の画像を指定できるようになりました。
+//                  フラッシュするフレーム数を指定できるようになりました。
 // 1.0.0 2016/07/06 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -18,48 +20,66 @@
  * @author トリアコンタン
  *
  * @param クリティカル
- * @desc クリティカル発生時のポップアップです。
+ * @desc クリティカル発生時のポップアップメッセージまたはファイル名です。
  * @default CRITICAL!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param クリティカルカラー
  * @desc クリティカル発生時の文字のフラッシュ色です。R(赤),G(緑),B(青),A(強さ)の順番でカンマ(,)区切りで指定してください。
  * @default 255,0,0,255
  *
  * @param 回避
- * @desc 回避発生時のポップアップです。
+ * @desc 回避発生時のポップアップメッセージまたはファイル名です。
  * @default Avoid!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param 回避カラー
  * @desc 回避発生時の文字のフラッシュ色です。
  * @default 0,128,255,255
  *
  * @param 魔法反射
- * @desc 魔法反射時のポップアップです。
+ * @desc 魔法反射時のポップアップメッセージまたはファイル名です。
  * @default Reflection!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param 魔法反射カラー
  * @desc 魔法反射発生時の文字のフラッシュ色です。
  * @default 0,128,255,255
  * 
  * @param 反撃
- * @desc 反撃時のポップアップです。
+ * @desc 反撃時のポップアップメッセージまたはファイル名です。
  * @default Counter!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param 反撃カラー
  * @desc 反撃発生時の文字のフラッシュ色です。
  * @default 0,128,255,255
  * 
  * @param 弱点
- * @desc 弱点時のポップアップです。
+ * @desc 弱点時のポップアップメッセージまたはファイル名です。
  * @default Weakness!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param 弱点カラー
  * @desc 弱点発生時の文字のフラッシュ色です。
  * @default 0,255,128,255
  * 
  * @param 耐性
- * @desc 弱点時のポップアップです。
+ * @desc 弱点時のポップアップメッセージまたはファイル名です。
  * @default Resistance!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param 耐性カラー
  * @desc 耐性発生時の文字のフラッシュ色です。
@@ -73,6 +93,10 @@
  * @desc ポップアップメッセージの最大幅です。
  * @default 240
  *
+ * @param フラッシュ時間
+ * @desc フラッシュカラーがフェードアウトするまでのフレーム数です。
+ * @default 60
+ *
  * @param X座標補正
  * @desc X座標の補正値です。
  * @default 0
@@ -81,19 +105,30 @@
  * @desc Y座標の補正値です。
  * @default -40
  *
+ * @param 画像使用
+ * @desc 各種ポップアップに任意のピクチャ(img/pictures)を使用します。メッセージの代わりにファイル名を入力してください。
+ * @default OFF
+ *
+ * @noteParam BEPメッセージ
+ * @noteRequire 1
+ * @noteDir img/pictures/
+ * @noteType file
+ * @noteData items
+ *
  * @help 戦闘中、様々な状況でメッセージをポップアップします。
- * パラメータに指定できるタイミングのほかに、ステートが付加されたタイミングでも
- * メッセージを表示できます。
+ * ポップアップするのは、動的に作成した文字列もしくは用意したピクチャです。
+ * また、ポップアップ時にフラッシュカラーを指定することができます。
  * フラッシュカラーの指定は「赤」「緑」「青」「強さ」の順番で
  * カンマ区切りで指定してください。
  *
  * ステートのメモ欄に以下の通り指定してください。
  * <BEPメッセージ:state>       # 付加時にメッセージ「state」が表示されます。
+ *                             # 画像使用が有効な場合はファイル名を指定します。
  * <BEPカラー:255,255,255,255> # 付加時のフラッシュカラーを指定します。
  *
  * さらに、プラグインコマンドから任意の文字列を自由にポップアップできます。
- * バトルイベントのみ使用可能です。
- * 
+ * このコマンドはバトルイベントのみ使用可能です。
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
@@ -103,6 +138,8 @@
  *
  * BEP使用者ポップアップ message 255,0,0,255 # 行動の使用者にmessageがポップ。
  * BEP_USER_POPUP message 255,0,0,255        # 上と同じ
+ *
+ * ※画像使用が有効な場合はファイル名を指定します。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -131,6 +168,11 @@
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
         return value === null ? '' : value;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -216,8 +258,10 @@
     var paramResistanceColor = getParamArrayNumber(['ResistanceColor', '耐性カラー'], 0, 256);
     var paramFontSize        = getParamNumber(['FontSize', 'フォントサイズ'], 16, 128);
     var paramMaxWidth        = getParamNumber(['MaxWidth', 'メッセージ最大幅'], 1);
+    var paramFlashDuration   = getParamNumber(['FlashDuration', 'フラッシュ時間'], 1);
     var paramOffsetX         = getParamNumber(['OffsetX', 'X座標補正']);
     var paramOffsetY         = getParamNumber(['OffsetY', 'Y座標補正']);
+    var paramUsingPicture    = getParamBoolean(['UsingPicture', '画像使用']);
 
     //=============================================================================
     // Game_Interpreter
@@ -430,9 +474,8 @@
     Sprite_PopupMessage.prototype.constructor = Sprite_PopupMessage;
 
     Sprite_PopupMessage.prototype.setup = function(target) {
-        var bitmap      = new Bitmap(paramMaxWidth, paramFontSize);
-        bitmap.fontSize = paramFontSize;
-        bitmap.drawText(target.getMessagePopupText(), 0, 0, bitmap.width, bitmap.height, 'center');
+        var text = target.getMessagePopupText();
+        var bitmap = paramUsingPicture ? this.setupStaticText(text) : this.setupDynamicText(text);
         var sprite     = this.createChildSprite();
         sprite.bitmap  = bitmap;
         sprite.dy      = 0;
@@ -442,9 +485,20 @@
         }
     };
 
+    Sprite_PopupMessage.prototype.setupDynamicText = function(text) {
+        var bitmap      = new Bitmap(paramMaxWidth, paramFontSize);
+        bitmap.fontSize = paramFontSize;
+        bitmap.drawText(text, 0, 0, bitmap.width, bitmap.height, 'center');
+        return bitmap;
+    };
+
+    Sprite_PopupMessage.prototype.setupStaticText = function(text) {
+        return ImageManager.loadPicture(text, 0);
+    };
+
     Sprite_PopupMessage.prototype.setupFlashEffect = function(flashColor) {
         this._flashColor    = flashColor.clone();
-        this._flashDuration = 60;
+        this._flashDuration = paramFlashDuration;
     };
 })();
 
