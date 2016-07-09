@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.7 2016/07/10 自然時間加算が0の場合に色調や天候の変化が正しく行われない問題を修正
 // 1.2.6 2016/05/30 曜日に「Y」を含む文字列を指定できないバグを修正
 // 1.2.5 2016/04/29 createUpperLayerによる競合対策
 // 1.2.4 2016/03/13 アナログ時計を指定しないで起動した場合にエラーになる現象の修正
@@ -231,7 +232,7 @@ function Game_Chronus() {
             {name:'昼',   start:12, end:16, timeId:3},
             {name:'夕方', start:17, end:18, timeId:4},
             {name:'夜',   start:19, end:21, timeId:5},
-            {name:'深夜', start:22, end:24, timeId:0},
+            {name:'深夜', start:22, end:24, timeId:0}
         ],
         /* timeTone:時間帯ごとの色調 */
         timeTone:[
@@ -241,7 +242,7 @@ function Game_Chronus() {
             {timeId:2, value:[0, 0, 0, 0]},
             {timeId:3, value:[34, 34, 34, 0]},
             {timeId:4, value:[68, -34, -34, 0]},
-            {timeId:5, value:[-68, -68, 0, 68]},
+            {timeId:5, value:[-68, -68, 0, 68]}
         ]
     };
     //=============================================================================
@@ -341,7 +342,6 @@ function Game_Chronus() {
     };
 
     Game_Interpreter.prototype.pluginCommandChronus = function (command, args) {
-
         switch (getCommandName(command)) {
             case 'C_ADD_TIME' :
                 $gameSystem.chronus().addTime(getArgNumber(args[0], 0, 99999));
@@ -713,7 +713,11 @@ function Game_Chronus() {
     };
 
     Game_Chronus.prototype.refreshTint = function (swift) {
-        this.isEnableTint() ? this.setTint(this.getTimeZone(), swift) : $gameScreen.clearTone();
+        if (this.isEnableTint()) {
+            this.setTint(this.getTimeZone(), swift);
+        } else {
+            $gameScreen.clearTone();
+        }
     };
 
     Game_Chronus.prototype.setTint = function (timeId, swift) {
@@ -725,10 +729,10 @@ function Game_Chronus() {
             }
         }.bind(this));
         if (this.getWeatherTypeId() !== 0) {
-            tone[0] > 0 ? tone[0] /= 7 : tone[0] -= 14;
-            tone[1] > 0 ? tone[1] /= 7 : tone[1] -= 14;
-            tone[2] > 0 ? tone[2] /= 7 : tone[1] -= 14;
-            tone[3] === 0 ? tone[3] = 68 : tone[3] += 14;
+            tone[0] = tone[0] > 0 ? tone[0] / 7 : tone[0] - 14;
+            tone[1] = tone[1] > 0 ? tone[1] / 7 : tone[1] - 14;
+            tone[2] = tone[2] > 0 ? tone[2] / 7 : tone[1] - 14;
+            tone[3] = tone[3] === 0 ? 68 : tone[3] + 14;
         }
         $gameScreen.startTint(tone, swift ? 0 : this.getEffectDuration());
     };
@@ -762,7 +766,11 @@ function Game_Chronus() {
     };
 
     Game_Chronus.prototype.refreshWeather = function (swift) {
-        this.isEnableWeather() ? this.setScreenWeather(swift) : $gameScreen.changeWeather(0, 0, 0);
+        if (this.isEnableWeather()) {
+            this.setScreenWeather(swift);
+        } else {
+            $gameScreen.changeWeather(0, 0, 0);
+        }
     };
 
     Game_Chronus.prototype.setScreenWeather = function (swift) {
@@ -770,7 +778,7 @@ function Game_Chronus() {
     };
 
     Game_Chronus.prototype.getEffectDuration = function () {
-        return this.isRealTime() ? 600 : Math.floor(60 * 5 / (this._timeAutoAdd / 10));
+        return this.isRealTime() ? 600 : this._timeAutoAdd === 0 ? 1 : Math.floor(60 * 5 / (this._timeAutoAdd / 10));
     };
 
     Game_Chronus.prototype.disableTint = function () {
@@ -932,7 +940,9 @@ function Game_Chronus() {
 
     Game_Chronus.prototype.getDaysOfYear = function () {
         var result = 0;
-        this._daysOfMonth.forEach(function(days) {result += days});
+        this._daysOfMonth.forEach(function(days) {
+            result += days;
+        });
         return result;
     };
 
