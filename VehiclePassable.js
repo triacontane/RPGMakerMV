@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/09 飛行船の通行不可、通行可能に対応
 // 1.0.0 2016/06/17 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -47,6 +48,14 @@
  *
  * @param 大型船不可地形タグ
  * @desc 大型船で通行不可になる地形タグです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @default 4,5,6
+ *
+ * @param 飛行船不可リージョン
+ * @desc 飛行船で通行不可になるリージョンです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @default 4,5,6
+ *
+ * @param 飛行船不可地形タグ
+ * @desc 飛行船で通行不可になる地形タグです。カンマ(,)区切りで指定してください。例「1,2,3」
  * @default 4,5,6
  *
  * @help 乗り物の通行判定を拡張します。
@@ -114,6 +123,26 @@
     var paramAirShipNonPassableRegions     = getParamArrayNumber(['AirShipNonPassableRegions', '飛行船不可リージョン'], 0);
     var paramAirShipNonPassableTerrainTags = getParamArrayNumber(['AirShipNonPassableTerrainTags', '飛行船不可地形タグ'], 0);
 
+    //=============================================================================
+    // Game_CharacterBase
+    //  飛行専用の通行可能判定を事前に定義します。
+    //=============================================================================
+    var _Game_CharacterBase_canPass = Game_CharacterBase.prototype.canPass;
+    Game_CharacterBase.prototype.canPass = function(x, y, d) {
+        if (this instanceof Game_Player && this.isInAirship()) {
+            var x2 = $gameMap.roundXWithDirection(this.x, d);
+            var y2 = $gameMap.roundYWithDirection(this.y, d);
+            if (!$gameMap.isAirShipPassable(x2, y2) && !this.isDebugThrough()) {
+                return false;
+            }
+        }
+        return _Game_CharacterBase_canPass.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Game_Map
+    //  乗り物用の通行可能判定を独自に定義します。
+    //=============================================================================
     var _Game_Map_isBoatPassable      = Game_Map.prototype.isBoatPassable;
     Game_Map.prototype.isBoatPassable = function(x, y) {
         var result       = _Game_Map_isBoatPassable.apply(this, arguments);
