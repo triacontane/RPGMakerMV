@@ -35,10 +35,6 @@
     'use strict';
     var pluginName = 'PlayerShiftTurn';
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
         return value == null ? '' : value;
@@ -53,9 +49,18 @@
         return null;
     };
 
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var paramButtonName = getParamString(['ButtonName', 'ボタン名称']).toLowerCase();
+
+    //=============================================================================
+    // Game_Player
+    //  指定したボタンが押されていた場合にプレイヤーを移動させずに向きだけ変更します。
+    //=============================================================================
     var _Game_Player_executeMove = Game_Player.prototype.executeMove;
     Game_Player.prototype.executeMove = function(direction) {
-        if (Input.isPressed(getParamString('ボタン名称').toLowerCase())) {
+        if (Input.isPressed(paramButtonName)) {
             if (direction === Input.dir4) {
                 this.setDirection(direction);
             }
