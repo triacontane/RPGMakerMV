@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/07/09 8方向移動系（かつキャラクターの向きは4方向）のプラグインとの競合を解消
 // 1.0.0 2016/01/06 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -55,7 +56,9 @@
     var _Game_Player_executeMove = Game_Player.prototype.executeMove;
     Game_Player.prototype.executeMove = function(direction) {
         if (Input.isPressed(getParamString('ボタン名称').toLowerCase())) {
-            this.setDirection(direction);
+            if (direction === Input.dir4) {
+                this.setDirection(direction);
+            }
         } else {
             _Game_Player_executeMove.apply(this, arguments);
         }
