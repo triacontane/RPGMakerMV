@@ -518,7 +518,7 @@
     };
 
     Sprite_PopupMessage.prototype.setupDynamicText = function(text) {
-        var bitmap      = new Bitmap(paramMaxWidth, paramFontSize);
+        var bitmap      = new Bitmap(paramMaxWidth, paramFontSize + 8);
         bitmap.fontSize = paramFontSize;
         bitmap.drawText(text, 0, 0, bitmap.width, bitmap.height, 'center');
         return bitmap;
