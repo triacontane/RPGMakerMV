@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/11 メッセージウィンドウのみ位置変更を一時的に無効化するプラグインコマンドを追加
 // 1.0.2 2016/04/02 liply_memoryleak_patch.jsとの競合を解消
 // 1.0.1 2016/03/28 一部のウィンドウのプロパティを変更しようとするとエラーが発生する現象の修正
 // 1.0.0 2016/03/13 初版
@@ -135,7 +136,21 @@
  * 他のプラグインの使用状況によってウィンドウの位置やサイズが
  * 正しく保存されない場合があります。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * プラグインコマンド詳細
+ *  イベントコマンド「プラグインコマンド」から実行。
+ *  （パラメータの間は半角スペースで区切る）
+ *
+ * GDM解除_メッセージウィンドウ
+ * GDM_UNLOCK_MESSAGE_WINDOW
+ *  メッセージウィンドウの位置変更を一時的に解除します。
+ *  プラグインで変更した座標が無効になり
+ *  イベント「メッセージ表示」で指定したウィンドウ位置が有効になります。
+ *
+ * GDM_LOCK_MESSAGE_WINDOW
+ * GDM固定_メッセージウィンドウ
+ *  メッセージウィンドウの位置変更を再度、有効にします。
+ *  プラグインで変更した座標が有効になり
+ *  イベント「メッセージ表示」で指定したウィンドウ位置は無視されます。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -282,6 +297,7 @@ var $dataContainerProperties = null;
     // ユーザ書き換え領域 - 終了 -
     //=============================================================================
     var pluginName = 'GraphicalDesignMode';
+    var metaTagPrefix = 'GDM';
 
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
@@ -332,6 +348,10 @@ var $dataContainerProperties = null;
 
     var getClassName = function(object) {
         return object.constructor.toString().replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
+    };
+
+    var getCommandName = function(command) {
+        return (command || '').toUpperCase();
     };
 
     var paramDesignMode      = getParamBoolean(['DesignMode', 'デザインモード']);
@@ -624,11 +644,11 @@ var $dataContainerProperties = null;
         var _PIXI_DisplayObjectContainer_initialize = PIXI.DisplayObjectContainer.prototype.initialize;
         PIXI.DisplayObjectContainer.prototype.initialize = function(x, y, width, height) {
             _PIXI_DisplayObjectContainer_initialize.apply(this, arguments);
-            this._holding            = false;
-            this._dx                 = 0;
-            this._dy                 = 0;
-            this.moveDisable         = false;
-            this._positionCustomized = false;
+            this._holding      = false;
+            this._dx           = 0;
+            this._dy           = 0;
+            this.moveDisable   = false;
+            this._positionLock = false;
         };
 
         PIXI.DisplayObjectContainer.prototype.processDesign = function() {
@@ -670,9 +690,9 @@ var $dataContainerProperties = null;
                     x = this.updateSnapX(x);
                     y = this.updateSnapY(y);
                 }
-                this.position.x = x;
-                this.position.y = y;
-                this._positionCustomized = true;
+                this.position.x    = x;
+                this.position.y    = y;
+                this._positionLock = true;
                 return true;
             } else if (this._holding) {
                 this.release();
@@ -1013,6 +1033,46 @@ var $dataContainerProperties = null;
     }
 
     //=============================================================================
+    // Game_Interpreter
+    //  プラグインコマンドを追加定義します。
+    //=============================================================================
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        if (!command.match(new RegExp('^' + metaTagPrefix))) return;
+        try {
+            this.pluginCommandGraphicalDesignMode(command.replace(metaTagPrefix, ''), args);
+        } catch (e) {
+            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
+                var window = require('nw.gui').Window.get();
+                if (!window.isDevToolsOpen()) {
+                    var devTool = window.showDevTools();
+                    devTool.moveTo(0, 0);
+                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+                    window.focus();
+                }
+            }
+            console.log('プラグインコマンドの実行中にエラーが発生しました。');
+            console.log('- コマンド名 　: ' + command);
+            console.log('- コマンド引数 : ' + args);
+            console.log('- エラー原因   : ' + e.stack || e.toString());
+        }
+    };
+
+    Game_Interpreter.prototype.pluginCommandGraphicalDesignMode = function(command, args) {
+        switch (getCommandName(command)) {
+            case '解除_メッセージウィンドウ' :
+            case '_UNLOCK_MESSAGE_WINDOW':
+                SceneManager._scene._messageWindow.unlockPosition();
+                break;
+            case '固定_メッセージウィンドウ' :
+            case '_LOCK_MESSAGE_WINDOW':
+                SceneManager._scene._messageWindow.lockPosition();
+                break;
+        }
+    };
+
+    //=============================================================================
     // DataManager
     //  ContainerProperties.jsonの読み込み処理を追記します。
     //=============================================================================
@@ -1125,7 +1185,7 @@ var $dataContainerProperties = null;
             return  this.position.x;
         },
         set: function(value) {
-            if (this._positionCustomized) return;
+            if (this._positionLock) return;
             this.position.x = value;
         }
     });
@@ -1135,7 +1195,7 @@ var $dataContainerProperties = null;
             return  this.position.y;
         },
         set: function(value) {
-            if (this._positionCustomized) return;
+            if (this._positionLock) return;
             this.position.y = value;
         }
     });
@@ -1149,8 +1209,24 @@ var $dataContainerProperties = null;
             var key = [this.parent.getChildIndex(this), getClassName(this)];
             if (containerInfo && containerInfo[key]) {
                 this.loadProperty(containerInfo[key]);
-                this._positionCustomized = true;
+                this._positionLock = true;
             }
+        }
+    };
+
+    PIXI.DisplayObjectContainer.prototype.unlockPosition = function() {
+        this._positionLock    = false;
+        this._customPositionX = this.position.x;
+        this._customPositionY = this.position.y;
+    };
+
+    PIXI.DisplayObjectContainer.prototype.lockPosition = function() {
+        this._positionLock = true;
+        if (this._customPositionX) {
+            this.position.x = this._customPositionX;
+        }
+        if (this._customPositionY) {
+            this.position.y = this._customPositionY;
         }
     };
 
