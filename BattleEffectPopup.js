@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/07/10 行動失敗時(Miss!)も任意の文字または画像に置き換えられるようになりました。
 // 1.1.0 2016/07/09 ポップアップに任意の画像を指定できるようになりました。
 //                  フラッシュするフレーム数を指定できるようになりました。
 // 1.0.0 2016/07/06 初版
@@ -20,14 +21,14 @@
  * @author トリアコンタン
  *
  * @param クリティカル
- * @desc クリティカル発生時のポップアップメッセージまたはファイル名です。
+ * @desc クリティカル発生時のポップアップメッセージまたはファイル名です。(img/pictures/)拡張子不要
  * @default CRITICAL!
  * @require 1
  * @dir img/pictures/
  * @type file
  *
  * @param クリティカルカラー
- * @desc クリティカル発生時の文字のフラッシュ色です。R(赤),G(緑),B(青),A(強さ)の順番でカンマ(,)区切りで指定してください。
+ * @desc クリティカル発生時の文字のフラッシュ色です。R(赤),G(緑),B(青),A(強さ)の順番でカンマ(,)区切りで指定。
  * @default 255,0,0,255
  *
  * @param 回避
@@ -40,6 +41,17 @@
  * @param 回避カラー
  * @desc 回避発生時の文字のフラッシュ色です。
  * @default 0,128,255,255
+ *
+ * @param ミス
+ * @desc ミス発生時のポップアップメッセージまたはファイル名です。通常のMissは表示されなくなります。
+ * @default Miss!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param ミスカラー
+ * @desc ミス発生時の文字のフラッシュ色です。
+ * @default 0,0,0,0
  *
  * @param 魔法反射
  * @desc 魔法反射時のポップアップメッセージまたはファイル名です。
@@ -248,6 +260,8 @@
     var paramCriticalColor   = getParamArrayNumber(['CriticalColor', 'クリティカルカラー'], 0, 256);
     var paramAvoid           = getParamString(['Avoid', '回避']);
     var paramAvoidColor      = getParamArrayNumber(['AvoidColor', '回避カラー'], 0, 256);
+    var paramMiss            = getParamString(['Miss', 'ミス']);
+    var paramMissColor       = getParamArrayNumber(['MissColor', 'ミスカラー'], 0, 256);
     var paramReflection      = getParamString(['Reflection', '魔法反射']);
     var paramReflectionColor = getParamArrayNumber(['ReflectionColor', '魔法反射カラー'], 0, 256);
     var paramCounter         = getParamString(['Counter', '反撃']);
@@ -383,6 +397,12 @@
         }
     };
 
+    var _Window_BattleLog_displayMiss = Window_BattleLog.prototype.displayMiss;
+    Window_BattleLog.prototype.displayMiss = function(target) {
+        _Window_BattleLog_displayMiss.apply(this, arguments);
+        this.pushPopupMessage(target, paramMiss, paramMissColor);
+    };
+
     var _Window_BattleLog_displayEvasion      = Window_BattleLog.prototype.displayEvasion;
     Window_BattleLog.prototype.displayEvasion = function(target) {
         _Window_BattleLog_displayEvasion.apply(this, arguments);
@@ -457,7 +477,7 @@
     var _Sprite_Damage_setup      = Sprite_Damage.prototype.setup;
     Sprite_Damage.prototype.setup = function(target) {
         var result = target.result();
-        if (!result.evaded || !paramAvoid) {
+        if ((!result.evaded || !paramAvoid) && (!result.missed || !paramMiss)) {
             _Sprite_Damage_setup.apply(this, arguments);
         }
     };
