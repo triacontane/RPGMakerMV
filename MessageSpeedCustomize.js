@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/12 文章の表示中に決定キーもしくは左クリックで文章を瞬間表示する機能を追加
 // 1.0.0 2016/04/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -21,6 +22,10 @@
  * @desc Variable number of Message speed
  * @default 1
  *
+ * @param RapidShow
+ * @desc Rapid show if triggered(ON/OFF)
+ * @default OFF
+ *
  * @help Customize for message speed
  * 0    : Rapid
  * 1    : Normal
@@ -35,6 +40,10 @@
  * @param 表示速度変数
  * @desc メッセージ表示速度を格納する変数の番号
  * @default 1
+ *
+ * @param 瞬間表示
+ * @desc 文章の表示中に決定ボタンや左クリックで文章を瞬間表示します。(ON/OFF)
+ * @default OFF
  *
  * @help メッセージ表示速度を調整します。
  * パラメータで指定した番号の変数に対して以下の値を代入してください。
@@ -67,6 +76,11 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -80,22 +94,37 @@
     // パラメータの取得と整形
     //=============================================================================
     var paramVariableSpeed  = getParamNumber(['VariableSpeed', '表示速度変数'], 1, 5000);
+    var paramRapidShow      = getParamBoolean(['RapidShow', '瞬間表示']);
 
     //=============================================================================
     // Window_Message
     //  メッセージの表示間隔を調整します。
     //=============================================================================
+    var _Window_Message_updateWait = Window_Message.prototype.updateWait;
+    Window_Message.prototype.updateWait = function() {
+        if (paramRapidShow && this._textState && this.isTriggered()) {
+            this._showAll = true;
+        }
+        return _Window_Message_updateWait.apply(this, arguments);
+    };
+
     var _Window_Message_updateMessage = Window_Message.prototype.updateMessage;
     Window_Message.prototype.updateMessage = function() {
         var speed = $gameVariables.value(paramVariableSpeed);
         if (this._textState) {
-            if (speed <= 0) {
+            if (speed <= 0 || this._showAll) {
                 this._showFast = true;
             } else {
                 this._waitCount = speed - 1;
             }
         }
         return _Window_Message_updateMessage.apply(this, arguments);
+    };
+
+    var _Window_Message_onEndOfText = Window_Message.prototype.onEndOfText;
+    Window_Message.prototype.onEndOfText = function() {
+        _Window_Message_onEndOfText.apply(this, arguments);
+        this._showAll = false;
     };
 })();
 
