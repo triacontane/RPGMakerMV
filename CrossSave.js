@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.6 2016/07/12 ネットワークセーブの限界容量を緩和
 // 1.0.5 2016/07/02 「ファイルに追加」が無効な場合にセーブ画面でのカーソル初期位置がひとつずれる問題の修正
 // 1.0.4 2016/06/29 追加でネットワークエラー対応
 // 1.0.3 2016/06/28 ゲーム中にネットワークが切断された場合にエラーになる現象を修正
@@ -844,7 +845,7 @@ function CrossSaveManager() {
     CrossSaveManager._loadListeners  = [];
     CrossSaveManager._authFile       = null;
     CrossSaveManager._fragmentLength = 4000;
-    CrossSaveManager._limitFragment  = 10;
+    CrossSaveManager._limitFragment  = 20;
 
     CrossSaveManager.initialize = function() {
         this._milkCocoa     = new MilkCocoa(this._milkCocoaApiId);

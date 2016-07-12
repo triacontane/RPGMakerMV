@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/07/12 Z座標を指定しているプラグインとの競合を解消するかもしれない
 // 1.2.0 2016/07/10 行動失敗時(Miss!)も任意の文字または画像に置き換えられるようになりました。
 // 1.1.0 2016/07/09 ポップアップに任意の画像を指定できるようになりました。
 //                  フラッシュするフレーム数を指定できるようになりました。
@@ -467,6 +468,8 @@
                 sprite.x   = this.x + this.messageOffsetX();
                 sprite.y   = this.y + this.messageOffsetY();
                 sprite.setup(this._battler);
+                if (this.z > 0) sprite.z = this.z + 10;
+                if (this._mainSprite && this._mainSprite.z > 0) sprite.z = this._mainSprite.z + 10;
                 this._damages.push(sprite);
                 this.parent.addChild(sprite);
             }
