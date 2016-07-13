@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/07/14 1.3.0で敵を倒した際にエラーになる現象の修正
 // 1.3.0 2016/07/14 対象アクターがパーティから外れた場合にスイッチをOFFにする仕様を追加
 // 1.2.1 2016/07/07 1.2.0が初期装備に対応していなかった問題を修正
 // 1.2.0 2016/07/06 戦闘メンバーのみ有効になる設定を追加
@@ -232,7 +233,7 @@
 
     var _Game_BattlerBase_clearStates      = Game_BattlerBase.prototype.clearStates;
     Game_BattlerBase.prototype.clearStates = function() {
-        if (this._states) {
+        if (this instanceof Game_Actor && this._states) {
             this._states.forEach(function(stateId) {
                 this.onChangeEquipAndState($dataStates[stateId], false);
             }.bind(this));
