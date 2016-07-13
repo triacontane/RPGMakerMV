@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/07/14 対象アクターがパーティから外れた場合に
 // 1.2.1 2016/07/07 1.2.0が初期装備に対応していなかった問題を修正
 // 1.2.0 2016/07/06 戦闘メンバーのみ有効になる設定を追加
 // 1.1.0 2016/06/08 一つの装備で複数のスイッチ、変数を操作できるよう修正
@@ -28,6 +29,9 @@
  * @help 装備またはステートの着脱時に、変数およびスイッチを操作できるようになります。
  * 着脱時に、スイッチの場合はON/OFFが切り替わり、変数の場合は値が増減します。
  * 操作対象および設定値には制御文字およびJavaScript計算式を利用できます。
+ *
+ * 対象となっているアクターがパーティから外れた場合、スイッチはOFFになります。
+ * (ver1.3.0以降の仕様)
  *
  * [アイテム]および[ステート]のメモ欄に以下の通り記述してください。
  *
@@ -57,7 +61,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(function() {
     'use strict';
     var pluginName    = 'TriggerOnEquipAndState';
     var metaTagPrefix = 'TOES';
@@ -90,12 +94,12 @@
         return undefined;
     };
 
-    var getArgString = function (arg, upperFlg) {
+    var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharactersAndEval(arg, false);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
@@ -107,6 +111,7 @@
             "&lt;": "<",
             "&gt;": ">"
         };
+
         text = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
             return metaTagDisConvert[value];
         }.bind(this));
@@ -143,11 +148,73 @@
         return !paramBattleMemberOnly || (this.battleMembers().contains(actor) || this.size() < this.maxBattleMembers());
     };
 
+    Game_Party.prototype.getMembersNeedControl = function() {
+        return paramBattleMemberOnly ? this.battleMembers() : this.members();
+    };
+
+    Game_Party.prototype.getReserveMembers = function() {
+        var battleMembers = this.battleMembers();
+        return this.members().filter(function(actor) {
+            return !battleMembers.contains(actor);
+        });
+    };
+
+    var _Game_Party_setupStartingMembers      = Game_Party.prototype.setupStartingMembers;
+    Game_Party.prototype.setupStartingMembers = function() {
+        _Game_Party_setupStartingMembers.apply(this, arguments);
+        this.getMembersNeedControl().forEach(function(actor) {
+            actor.onChangeMember(true);
+        });
+    };
+
+    var _Game_Party_addActor      = Game_Party.prototype.addActor;
+    Game_Party.prototype.addActor = function(actorId) {
+        _Game_Party_addActor.apply(this, arguments);
+        var actor = $gameActors.actor(actorId);
+        if (this.getMembersNeedControl().contains(actor)) {
+            actor.onChangeMember(true);
+        }
+    };
+
+    var _Game_Party_removeActor      = Game_Party.prototype.removeActor;
+    Game_Party.prototype.removeActor = function(actorId) {
+        var actor = $gameActors.actor(actorId);
+        if (this.getMembersNeedControl().contains(actor)) {
+            actor.onChangeMember(false);
+        }
+        var reserveMembers = this.getReserveMembers();
+        _Game_Party_removeActor.apply(this, arguments);
+        if (paramBattleMemberOnly) {
+            var members = this.battleMembers();
+            reserveMembers.forEach(function(actor) {
+                if (members.contains(actor)) {
+                    actor.onChangeMember(true);
+                }
+            });
+        }
+    };
+
+    var _Game_Party_swapOrder      = Game_Party.prototype.swapOrder;
+    Game_Party.prototype.swapOrder = function(index1, index2) {
+        var prevMembers = this.getMembersNeedControl();
+        var actors      = [$gameActors.actor(this._actors[index1]), $gameActors.actor(this._actors[index2])];
+        _Game_Party_swapOrder.apply(this, arguments);
+        var members = this.getMembersNeedControl();
+        actors.forEach(function(actor) {
+            if (prevMembers.contains(actor) && !members.contains(actor)) {
+                actor.onChangeMember(false);
+            }
+            if (members.contains(actor) && !prevMembers.contains(actor)) {
+                actor.onChangeMember(true);
+            }
+        });
+    };
+
     //=============================================================================
     // Game_Actor
     //  ステートが変更された際のスイッチ、変数制御を追加定義します。
     //=============================================================================
-    var _Game_BattlerBase_addNewState = Game_BattlerBase.prototype.addNewState;
+    var _Game_BattlerBase_addNewState      = Game_BattlerBase.prototype.addNewState;
     Game_BattlerBase.prototype.addNewState = function(stateId) {
         if (this instanceof Game_Actor && !this._states.contains(stateId)) {
             this.onChangeEquipAndState($dataStates[stateId], true);
@@ -155,7 +222,7 @@
         _Game_BattlerBase_addNewState.apply(this, arguments);
     };
 
-    var _Game_BattlerBase_eraseState = Game_BattlerBase.prototype.eraseState;
+    var _Game_BattlerBase_eraseState      = Game_BattlerBase.prototype.eraseState;
     Game_BattlerBase.prototype.eraseState = function(stateId) {
         if (this instanceof Game_Actor && this._states.contains(stateId)) {
             this.onChangeEquipAndState($dataStates[stateId], false);
@@ -163,11 +230,21 @@
         _Game_BattlerBase_eraseState.apply(this, arguments);
     };
 
+    var _Game_BattlerBase_clearStates      = Game_BattlerBase.prototype.clearStates;
+    Game_BattlerBase.prototype.clearStates = function() {
+        if (this._states) {
+            this._states.forEach(function(stateId) {
+                this.onChangeEquipAndState($dataStates[stateId], false);
+            }.bind(this));
+        }
+        _Game_BattlerBase_clearStates.apply(this, arguments);
+    };
+
     //=============================================================================
     // Game_Actor
     //  装備が変更された際のスイッチ、変数制御を追加定義します。
     //=============================================================================
-    var _Game_Actor_changeEquip = Game_Actor.prototype.changeEquip;
+    var _Game_Actor_changeEquip      = Game_Actor.prototype.changeEquip;
     Game_Actor.prototype.changeEquip = function(slotId, item) {
         var prevItem = new Game_Item(this._equips[slotId].object());
         _Game_Actor_changeEquip.apply(this, arguments);
@@ -180,20 +257,21 @@
         }
     };
 
-    var _Game_Actor_initEquips = Game_Actor.prototype.initEquips;
-    Game_Actor.prototype.initEquips = function(equips) {
-        _Game_Actor_initEquips.apply(this, arguments);
-        this._equips.forEach(function (equip) {
-            if (equip._itemId !== 0) {
-                this.onChangeEquipAndState(equip.object(), true);
+    Game_Actor.prototype.onChangeMember = function(addedSign) {
+        this.equips().forEach(function(equip) {
+            if (equip && equip.id !== 0) {
+                this.onChangeEquipAndState(equip, addedSign, true);
             }
+        }.bind(this));
+        this._states.forEach(function(stateId) {
+            this.onChangeEquipAndState($dataStates[stateId], addedSign, true);
         }.bind(this));
     };
 
-    Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign) {
-        if (!$gameParty.isNeedControlVariable(this)) return;
+    Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign, force) {
+        if (!$gameParty.isNeedControlVariable(this) && !force) return;
         var index = 1;
-        while(index) {
+        while (index) {
             if (this.controlVariable(item, addedSign, index === 1 ? '' : String(index))) {
                 index++;
             } else {
@@ -204,7 +282,7 @@
 
     Game_Actor.prototype.controlVariable = function(item, addedSign, indexString) {
         var switchTarget = getMetaValues(item, ['スイッチ対象' + indexString, 'SwitchTarget' + indexString]);
-        var result = false;
+        var result       = false;
         if (switchTarget) {
             var switchId = this.getVariableIdForToes(switchTarget, $dataSystem.switches.length - 1);
             $gameSwitches.setValue(switchId, addedSign);
@@ -212,9 +290,9 @@
         }
         var variableTarget = getMetaValues(item, ['変数対象' + indexString, 'VariableTarget' + indexString]);
         if (variableTarget) {
-            var variableId = this.getVariableIdForToes(variableTarget, $dataSystem.variables.length - 1);
+            var variableId    = this.getVariableIdForToes(variableTarget, $dataSystem.variables.length - 1);
             var variableValue = getMetaValues(item, ['変数設定値' + indexString, 'VariableValue' + indexString]);
-            var resultValue = (variableValue ? getArgNumber(variableValue) : 1) * (addedSign ? 1 : -1);
+            var resultValue   = (variableValue ? getArgNumber(variableValue) : 1) * (addedSign ? 1 : -1);
             $gameVariables.setValue(variableId, $gameVariables.value(variableId) + resultValue);
             result = true;
         }
@@ -223,10 +301,10 @@
 
     Game_Actor.prototype.getVariableIdForToes = function(target, max) {
         var actorId = this._actorId; // used in eval
-        var result = 0;
+        var result  = 0;
         try {
             result = eval(getArgString(target)).clamp(1, max);
-        } catch(e) {
+        } catch (e) {
             console.error(e.toString());
             console.log(e.stack);
         }
