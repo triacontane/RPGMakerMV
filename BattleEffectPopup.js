@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2016/07/13 1.2.2の修正が不完全だったのを対応
 // 1.2.2 2016/07/13 YEP_BattleEngineCore.jsと併用したときに、Missが重複して表示される現象を修正
 // 1.2.1 2016/07/12 Z座標を指定しているプラグインとの競合を解消するかもしれない
 // 1.2.0 2016/07/10 行動失敗時(Miss!)も任意の文字または画像に置き換えられるようになりました。
@@ -499,6 +500,9 @@
     Sprite_Damage.prototype.setup = function(target) {
         var result = target.shiftDamagePopup ? target.shiftDamagePopup() : target.result();
         if ((!result.evaded || !paramAvoid) && (!result.missed || !paramMiss)) {
+            if (target.shiftDamagePopup) {
+                target._damagePopup.unshift(result);
+            }
             _Sprite_Damage_setup.apply(this, arguments);
         }
     };
