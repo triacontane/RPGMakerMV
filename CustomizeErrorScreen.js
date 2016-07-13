@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/07/13 表記方法を少しだけ変更
 // 1.1.0 2016/07/13 ローカル実行時、エラー情報のパスを出力しないよう修正
 // 1.0.1 2016/06/25 エラー発生時のリンク先を別画面で開くよう修正
 // 1.0.0 2016/05/14 初版
@@ -132,9 +133,8 @@
             if (paramOutputDetail) {
                 var stack = String(e.stack) || '';
                 if (Utils.isNwjs()) {
-                    stack = stack.replace(/\(.*js\//g, ' : ');
+                    stack = stack.replace(/file:.*js\//g, '');
                     stack = stack.replace(/ at /g, '<br/>');
-                    stack = stack.replace(/\)/g, '');
                 }
                 this._makeStackTrace(stack);
             }
