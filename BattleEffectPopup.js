@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/07/14 アクターと敵キャラの通常ダメージにも専用のフラッシュ色を指定できるようになりました。
 // 1.2.3 2016/07/13 1.2.2の修正が不完全だったのを対応
 // 1.2.2 2016/07/13 YEP_BattleEngineCore.jsと併用したときに、Missが重複して表示される現象を修正
 // 1.2.1 2016/07/12 Z座標を指定しているプラグインとの競合を解消するかもしれない
@@ -100,6 +101,14 @@
  * @desc 耐性発生時の文字のフラッシュ色です。
  * @default 0,0,128,255
  *
+ * @param 味方ダメージカラー
+ * @desc アクターダメージのフラッシュ色です。
+ * @default 0,0,0,0
+ *
+ * @param 敵ダメージカラー
+ * @desc 敵キャラダメージのフラッシュ色です。
+ * @default 0,0,0,0
+ *
  * @param フォントサイズ
  * @desc ポップアップのフォントサイズです。
  * @default 42
@@ -148,6 +157,7 @@
  * フラッシュカラーの指定は「赤」「緑」「青」「強さ」の順番で
  * カンマ区切りで指定してください。
  *
+ * ステート付与時にメッセージをポップアップをしたい場合
  * ステートのメモ欄に以下の通り指定してください。
  * <BEPメッセージ:state>       # 付加時にメッセージ「state」が表示されます。
  *                             # 画像使用が有効な場合はファイル名を指定します。
@@ -276,26 +286,28 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramCritical        = getParamString(['Critical', 'クリティカル']);
-    var paramCriticalColor   = getParamArrayNumber(['CriticalColor', 'クリティカルカラー'], 0, 256);
-    var paramAvoid           = getParamString(['Avoid', '回避']);
-    var paramAvoidColor      = getParamArrayNumber(['AvoidColor', '回避カラー'], 0, 256);
-    var paramMiss            = getParamString(['Miss', 'ミス']);
-    var paramMissColor       = getParamArrayNumber(['MissColor', 'ミスカラー'], 0, 256);
-    var paramReflection      = getParamString(['Reflection', '魔法反射']);
-    var paramReflectionColor = getParamArrayNumber(['ReflectionColor', '魔法反射カラー'], 0, 256);
-    var paramCounter         = getParamString(['Counter', '反撃']);
-    var paramCounterColor    = getParamArrayNumber(['CounterColor', '反撃カラー'], 0, 256);
-    var paramWeakness        = getParamString(['Weakness', '弱点']);
-    var paramWeaknessColor   = getParamArrayNumber(['WeaknessColor', '弱点カラー'], 0, 256);
-    var paramResistance      = getParamString(['Resistance', '耐性']);
-    var paramResistanceColor = getParamArrayNumber(['ResistanceColor', '耐性カラー'], 0, 256);
-    var paramFontSize        = getParamNumber(['FontSize', 'フォントサイズ'], 16, 128);
-    var paramMaxWidth        = getParamNumber(['MaxWidth', 'メッセージ最大幅'], 1);
-    var paramFlashDuration   = getParamNumber(['FlashDuration', 'フラッシュ時間'], 1);
-    var paramOffsetX         = getParamNumber(['OffsetX', 'X座標補正']);
-    var paramOffsetY         = getParamNumber(['OffsetY', 'Y座標補正']);
-    var paramUsingPicture    = getParamBoolean(['UsingPicture', '画像使用']);
+    var paramCritical         = getParamString(['Critical', 'クリティカル']);
+    var paramCriticalColor    = getParamArrayNumber(['CriticalColor', 'クリティカルカラー'], 0, 256);
+    var paramAvoid            = getParamString(['Avoid', '回避']);
+    var paramAvoidColor       = getParamArrayNumber(['AvoidColor', '回避カラー'], 0, 256);
+    var paramMiss             = getParamString(['Miss', 'ミス']);
+    var paramMissColor        = getParamArrayNumber(['MissColor', 'ミスカラー'], 0, 256);
+    var paramReflection       = getParamString(['Reflection', '魔法反射']);
+    var paramReflectionColor  = getParamArrayNumber(['ReflectionColor', '魔法反射カラー'], 0, 256);
+    var paramCounter          = getParamString(['Counter', '反撃']);
+    var paramCounterColor     = getParamArrayNumber(['CounterColor', '反撃カラー'], 0, 256);
+    var paramWeakness         = getParamString(['Weakness', '弱点']);
+    var paramWeaknessColor    = getParamArrayNumber(['WeaknessColor', '弱点カラー'], 0, 256);
+    var paramResistance       = getParamString(['Resistance', '耐性']);
+    var paramResistanceColor  = getParamArrayNumber(['ResistanceColor', '耐性カラー'], 0, 256);
+    var paramActorDamageColor = getParamArrayNumber(['ActorDamageColor', '味方ダメージカラー'], 0, 256);
+    var paramEnemyDamageColor = getParamArrayNumber(['EnemyDamageColor', '敵ダメージカラー'], 0, 256);
+    var paramFontSize         = getParamNumber(['FontSize', 'フォントサイズ'], 16, 128);
+    var paramMaxWidth         = getParamNumber(['MaxWidth', 'メッセージ最大幅'], 1);
+    var paramFlashDuration    = getParamNumber(['FlashDuration', 'フラッシュ時間'], 1);
+    var paramOffsetX          = getParamNumber(['OffsetX', 'X座標補正']);
+    var paramOffsetY          = getParamNumber(['OffsetY', 'Y座標補正']);
+    var paramUsingPicture     = getParamBoolean(['UsingPicture', '画像使用']);
 
     //=============================================================================
     // Game_Interpreter
@@ -358,7 +370,7 @@
 
     //=============================================================================
     // Game_Battler
-    //  ポップアップメッセージをリクエストに応答します。
+    //  ポップアップメッセージのリクエストに応答します。
     //=============================================================================
     Game_Battler.prototype.clearMessagePopup = function() {
         this._messagePopup = false;
@@ -417,7 +429,7 @@
         }
     };
 
-    var _Window_BattleLog_displayMiss = Window_BattleLog.prototype.displayMiss;
+    var _Window_BattleLog_displayMiss      = Window_BattleLog.prototype.displayMiss;
     Window_BattleLog.prototype.displayMiss = function(target) {
         _Window_BattleLog_displayMiss.apply(this, arguments);
         this.pushPopupMessage(target, paramMiss, paramMissColor);
@@ -505,6 +517,15 @@
             }
             _Sprite_Damage_setup.apply(this, arguments);
         }
+        if (!result.missed && !result.evaded && result.hpAffected) {
+            var color = target instanceof Game_Actor ? paramActorDamageColor : paramEnemyDamageColor;
+            if (color && color.length > 0) this.setupFlashEffect(color);
+        }
+    };
+
+    Sprite_Damage.prototype.setupFlashEffect = function(flashColor, duration) {
+        this._flashColor    = flashColor.clone();
+        this._flashDuration = duration || paramFlashDuration;
     };
 
     //=============================================================================
@@ -519,8 +540,8 @@
     Sprite_PopupMessage.prototype.constructor = Sprite_PopupMessage;
 
     Sprite_PopupMessage.prototype.setup = function(target) {
-        var text = target.getMessagePopupText();
-        var bitmap = paramUsingPicture ? this.setupStaticText(text) : this.setupDynamicText(text);
+        var text       = target.getMessagePopupText();
+        var bitmap     = paramUsingPicture ? this.setupStaticText(text) : this.setupDynamicText(text);
         var sprite     = this.createChildSprite();
         sprite.bitmap  = bitmap;
         sprite.dy      = 0;
@@ -537,13 +558,8 @@
         return bitmap;
     };
 
-    Sprite_PopupMessage.prototype.setupStaticText = function(text) {
-        return ImageManager.loadPicture(text, 0);
-    };
-
-    Sprite_PopupMessage.prototype.setupFlashEffect = function(flashColor) {
-        this._flashColor    = flashColor.clone();
-        this._flashDuration = paramFlashDuration;
+    Sprite_PopupMessage.prototype.setupStaticText = function(textPicture) {
+        return ImageManager.loadPicture(textPicture, 0);
     };
 })();
 
