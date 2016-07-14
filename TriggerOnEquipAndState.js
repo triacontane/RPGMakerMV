@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2016/07/14 「武器(防具)の増減」によって装備が外れた場合に対応
 // 1.3.1 2016/07/14 1.3.0で敵を倒した際にエラーになる現象の修正
 // 1.3.0 2016/07/14 対象アクターがパーティから外れた場合にスイッチをOFFにする仕様を追加
 // 1.2.1 2016/07/07 1.2.0が初期装備に対応していなかった問題を修正
@@ -256,6 +257,15 @@
         if (newItem._itemId !== 0 && newItem._itemId !== prevItem._itemId) {
             this.onChangeEquipAndState(newItem.object(), true);
         }
+    };
+
+    var _Game_Actor_discardEquip = Game_Actor.prototype.discardEquip;
+    Game_Actor.prototype.discardEquip = function(item) {
+        var slotId = this.equips().indexOf(item);
+        if (slotId >= 0) {
+            this.onChangeEquipAndState(item, false);
+        }
+        _Game_Actor_discardEquip.apply(this, arguments);
     };
 
     Game_Actor.prototype.onChangeMember = function(addedSign) {
