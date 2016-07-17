@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/07/17 余白とフォントサイズの変更が、画面切り替え後に元に戻ってしまう問題を修正
 // 1.1.0 2016/07/11 メッセージウィンドウのみ位置変更を一時的に無効化するプラグインコマンドを追加
 // 1.0.2 2016/04/02 liply_memoryleak_patch.jsとの競合を解消
 // 1.0.1 2016/03/28 一部のウィンドウのプロパティを変更しようとするとエラーが発生する現象の修正
@@ -1245,6 +1246,9 @@ var $dataContainerProperties = null;
         this._customLineHeight   = containerInfo._customLineHeight;
         this._customBackOpacity  = containerInfo._customBackOpacity;
         this._customBackFileName = containerInfo._customBackFileName;
+        this.updatePadding();
+        this.resetFontSettings();
+        this.updateBackOpacity();
         this.refresh();
         this.createBackSprite();
     };
