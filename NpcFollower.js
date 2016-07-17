@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/07/17 セーブデータをロードした際のエラーになる現象の修正
 // 1.0.0 2016/07/14 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -173,7 +174,7 @@
         return !this._npcs;
     };
 
-    Game_Player.prototype.initNpcIfNeed = function() {
+    Game_Party.prototype.initNpcIfNeed = function() {
         if (this.isNpcInvalid()) {
             this.initNpc();
             $gamePlayer.followers().initNpc();
