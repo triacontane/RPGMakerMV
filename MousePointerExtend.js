@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/18 形状の種類と独自画像の最大数を3から5に拡張
 // 1.0.0 2016/07/17 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -41,6 +42,22 @@
  * @desc 形状タイプ3が有効になるスイッチ番号です。
  * @default 0
  *
+ * @param PointerType4
+ * @desc スイッチ4がONになった場合のマウス形状です。
+ * @default auto
+ *
+ * @param PointerSwitch4
+ * @desc 形状タイプ4が有効になるスイッチ番号です。
+ * @default 0
+ *
+ * @param PointerType5
+ * @desc スイッチ5がONになった場合のマウス形状です。
+ * @default auto
+ *
+ * @param PointerSwitch5
+ * @desc 形状タイプ5が有効になるスイッチ番号です。
+ * @default 0
+ *
  * @param DefaultType
  * @desc デフォルトのマウス形状です。
  * @default auto
@@ -60,6 +77,20 @@
  * @type file
  *
  * @param CustomImage3
+ * @desc マウスポインタに使用する画像ファイル名(/img/picture/)です。正方形の32*32程度の画像を用意してください。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param CustomImage4
+ * @desc マウスポインタに使用する画像ファイル名(/img/picture/)です。正方形の32*32程度の画像を用意してください。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param CustomImage5
  * @desc マウスポインタに使用する画像ファイル名(/img/picture/)です。正方形の32*32程度の画像を用意してください。
  * @default
  * @require 1
@@ -134,6 +165,22 @@
  * @desc 形状タイプ3が有効になるスイッチ番号です。
  * @default 0
  *
+ * @param 形状タイプ4
+ * @desc スイッチ4がONになった場合のマウス形状です。
+ * @default auto
+ *
+ * @param スイッチ4
+ * @desc 形状タイプ4が有効になるスイッチ番号です。
+ * @default 0
+ *
+ * @param 形状タイプ5
+ * @desc スイッチ5がONになった場合のマウス形状です。
+ * @default auto
+ *
+ * @param スイッチ5
+ * @desc 形状タイプ5が有効になるスイッチ番号です。
+ * @default 0
+ *
  * @param デフォルト形状タイプ
  * @desc デフォルトのマウス形状です。
  * @default auto
@@ -153,6 +200,20 @@
  * @type file
  *
  * @param 独自画像3
+ * @desc マウスポインタに使用する画像ファイル名(/img/picture/)です。正方形の32*32程度の画像を用意してください。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param 独自画像4
+ * @desc マウスポインタに使用する画像ファイル名(/img/picture/)です。正方形の32*32程度の画像を用意してください。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param 独自画像5
  * @desc マウスポインタに使用する画像ファイル名(/img/picture/)です。正方形の32*32程度の画像を用意してください。
  * @default
  * @require 1
@@ -187,8 +248,8 @@
  * スイッチ条件を満たしたのに画像が表示されない場合は、ファイルパスが間違っているか
  * 指定した画像をアイコンとして利用できないかのどちらかの可能性が高いです。
  *
- * 形状変化用のスイッチは3つまで指定可能で複数の条件を満たした場合は
- * 「1」→「2」→「3」の優先度になります。
+ * 形状変化用のスイッチは複数指定可能で複数の条件を満たした場合は
+ * より数字の小さい方（「1」→「2」→「3」...の順番）が優先されます。
  *
  * また、「キー入力で消去」を有効にするとキーもしくはパッド入力により
  * ポインタを一時的に画面から消去できます。
@@ -238,12 +299,12 @@
     //=============================================================================
     var paramPointerTypes    = {};
     var paramPointerSwitches = {};
-    for (var i = 1; i < 4; i++) {
+    for (var i = 1; i < 6; i++) {
         paramPointerTypes[i]    = getParamString(['PointerType' + i, '形状タイプ' + i]);
         paramPointerSwitches[i] = getParamNumber(['PointerSwitch' + i, 'スイッチ' + i]);
     }
     var paramCustomImages = {};
-    for (var j = 1; j < 4; j++) {
+    for (var j = 1; j < 6; j++) {
         paramCustomImages[j] = getParamString(['CustomImage' + j, '独自画像' + j]);
     }
     var paramDefaultType  = getParamString(['DefaultType', 'デフォルト形状タイプ']);
@@ -319,7 +380,7 @@
 
     Graphics._setPointerTypeCustom = function(type, index) {
         if (type === 'url' + index && paramCustomImages[index]) {
-            this._PointerType = 'url(img/pictures/' + paramCustomImages[index] + '), pointer';
+            this._PointerType = 'url(img/pictures/' + paramCustomImages[index] + '), auto';
         }
     };
 
