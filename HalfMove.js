@@ -91,7 +91,7 @@
  * <HMThroughDisable> -> Disable half through.
  * <HMTriggerExpansion:ON> -> Expansion trigger area ON
  * <HMTriggerExpansion:OFF> -> Expansion trigger area OFF
- * <HMExpansionArea:1,1.1,1> -> Expansion trigger area(down,left,right,up)
+ * <HMExpansionArea:1,1,1,1> -> Expansion trigger area(down,left,right,up)
  *
  * This plugin is released under the MIT License.
  */
@@ -182,10 +182,10 @@
  * 上記以外の場合、個別にトリガー領域を設定することができます。
  * 以下のとおり記述してください。
  * // 下、左、右、上方向にそれぞれ1マス、2マス、3マス、4マス拡大したい場合
- * <HM拡大領域:1,2.3,4>
+ * <HM拡大領域:1,2,3,4>
  *
  * // 下、左、右、上方向にそれぞれ0.5マス、1マス、1マス、0.5マス拡大したい場合
- * <HM拡大領域:0.5,1.1,0.5>
+ * <HM拡大領域:0.5,1,1,0.5>
  *
  * 何も記述しないと、上下左右に半マスずつトリガー領域が拡張されます。
  *
