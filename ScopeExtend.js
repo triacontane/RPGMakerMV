@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/20 ターゲットの中から重複を除外できる機能を追加
 // 1.0.0 2016/06/20 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -20,7 +21,7 @@
  * @help データベースのスキルの効果範囲を拡張します。
  * スキルのメモ欄に以下の通り入力してください。
  *
- * <SE敵味方>
+ * <SE敵味方> <SEEnemiesAndAllies>
  * 効果範囲が敵味方に拡大されます。詳細は以下の通りです。
  *
  * もともとの効果範囲に合わせて以下の通り拡大されます。
@@ -33,13 +34,16 @@
  * ・味方全体（戦闘不能）：死亡している敵全体が追加
  * ・使用者：生存している敵単体がランダムで一人追加
  *
- * <SE使用者追加>
+ * <SE使用者追加> <SEAdditionUser>
  * 元々の選択範囲に使用者が追加されます。
  *
- * <SE使用者除外>
+ * <SE使用者除外> <SERemoveUser>
  * 元々の選択範囲から使用者が除外されます。
  *
- * <SEランダム>
+ * <SE重複除外> <SERemoveDuplication>
+ * 元々の選択範囲から重複ターゲットが除外されます。
+ *
+ * <SEランダム> <SERandom>
  * 元々の選択範囲の中からランダムで一人だけが選択されます。
  * 狙われ率の影響しない純粋なランダムです。
  *
@@ -81,9 +85,14 @@
                 targets.push(this.subject());
             }
         }
-        if (this.isScopeExtendInfo(['使用者除外', 'RemoveUser'])) {
+        if (this.isScopeExtendInfo(['使用者除外', 'RemoveUser', '使用者削除'])) {
             targets = targets.filter(function(target) {
                 return target !== this.subject();
+            }.bind(this));
+        }
+        if (this.isScopeExtendInfo(['重複除外', 'RemoveDuplication', '重複削除'])) {
+            targets = targets.filter(function(target, i) {
+                return targets.indexOf(target) === i;
             }.bind(this));
         }
         if (this.isScopeExtendInfo(['ランダム', 'Random'])) {
