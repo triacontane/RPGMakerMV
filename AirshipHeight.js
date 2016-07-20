@@ -52,7 +52,7 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramVariableNumber = getParamNumber(['VariableNumber', '変数番号']);
+    var paramVariableNumber = getParamNumber(['VariableNumber', '変数番号'], 1);
 
   Game_Vehicle.prototype.maxAltitude = function() {
     return $gameVariables.value(paramVariableNumber);
