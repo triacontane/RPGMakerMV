@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/07/20 戦闘画面以外では動作しないパラメータを追加しました。
 // 1.0.0 2016/07/20 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -16,6 +17,10 @@
 /*:
  * @plugindesc KeepSkillCostPlugin
  * @author triacontane
+ *
+ * @param BattleOnly
+ * @desc ターン終了時の消費が戦闘画面でのみ有効になります。
+ * @default ON
  *
  * @help スキルの使用有無に拘わらず所持しているだけでターン終了後に
  * 規定のコストを消費するスキルが作成できるようになります。
@@ -36,6 +41,10 @@
 /*:ja
  * @plugindesc スキルコスト維持プラグイン
  * @author トリアコンタン
+ *
+ * @param 戦闘画面のみ有効
+ * @desc ターン終了時の消費が戦闘画面でのみ有効になります。
+ * @default ON
  *
  * @help スキルの使用有無に拘わらず所持しているだけでターン終了後に
  * 規定のコストを消費するスキルが作成できるようになります。
@@ -59,7 +68,22 @@
 
 (function() {
     'use strict';
+    var pluginName    = 'KeepSkillCost';
     var metaTagPrefix = 'KSC_';
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
 
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
@@ -88,13 +112,18 @@
     };
 
     //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var paramBattleOnly = getParamBoolean(['BattleOnly', '戦闘画面のみ有効']);
+
+    //=============================================================================
     // Game_Battler
     //  ターン終了時にスキルごとに定められたコストを消費します。
     //=============================================================================
     var _Game_Battler_onTurnEnd = Game_Battler.prototype.onTurnEnd;
     Game_Battler.prototype.onTurnEnd = function() {
         _Game_Battler_onTurnEnd.apply(this, arguments);
-        if (this.isAlive()) this.consumeKeepCost();
+        if (this.isAlive() && (!paramBattleOnly || $gameParty.inBattle())) this.consumeKeepCost();
     };
 
     Game_Battler.prototype.consumeKeepCost = function() {
