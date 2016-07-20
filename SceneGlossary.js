@@ -396,6 +396,11 @@
  * Menu X Symbol    : glossary1
  * Menu X Main Bind : this.commandGlossary.bind(this, 1)
  *
+ * 通常アイテムのメモ欄に以下の通り設定するとアイテム画面から
+ * 辞書画面に直接遷移できます。特定のアイテムの解説等に活用できます。
+ *
+ * <SG用語:100> # 選択してShiftキーを押すと辞書画面に遷移します。
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
@@ -672,6 +677,12 @@ function Scene_Glossary() {
     };
 
     //=============================================================================
+    // Scene_Item
+    //  アイテム画面から用語集画面へ直接遷移します。
+    //=============================================================================
+
+
+    //=============================================================================
     // Window_MenuCommand
     //  用語集画面の呼び出しの選択肢を追加定義します。
     //=============================================================================
@@ -702,7 +713,7 @@ function Scene_Glossary() {
     // Window_BattleItem
     //  用語集アイテムをアイテム選択の候補から除外します。
     //=============================================================================
-    var _Window_BattleItem_includes = Window_BattleItem.prototype.includes;
+    var _Window_BattleItem_includes      = Window_BattleItem.prototype.includes;
     Window_BattleItem.prototype.includes = function(item) {
         return _Window_BattleItem_includes.apply(this, arguments) && !$gameParty.isGlossaryItem(item);
     };
@@ -1252,10 +1263,11 @@ function Scene_Glossary() {
 
     Window_Glossary.prototype._refreshArrows = function() {
         Window.prototype._refreshArrows.call(this);
-        var w                          = this._width;
-        var h                          = this._height;
-        var p                          = 24;
-        var q                          = p / 2;
+        var w = this._width;
+        var h = this._height;
+        var p = 24;
+        var q = p / 2;
+
         this._downArrowSprite.rotation = 90 * Math.PI / 180;
         this._downArrowSprite.move(q, h / 2);
         this._upArrowSprite.rotation = 90 * Math.PI / 180;
