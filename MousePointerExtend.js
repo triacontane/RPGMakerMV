@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/07/20 独自画像をpictures以外のフォルダに格納できる機能を追加
 // 1.1.0 2016/07/18 形状の種類と独自画像の最大数を3から5に拡張
 // 1.0.0 2016/07/17 初版
 // ----------------------------------------------------------------------------
@@ -100,6 +101,10 @@
  * @param ErasePointer
  * @desc キーもしくはパッド入力によりポインタを一時的に消去します。マウスを動かすと再び出現します。
  * @default ON
+ *
+ * @param PointerPath
+ * @desc カーソル用の独自画像を/pictures/以外に配置したい場合にパス名を指定してください。区切り文字[/]は不要。
+ * @default
  *
  * @help マウスポインタの形状や表示可否を拡張します。
  * スイッチ条件に応じた多彩な形状変化や、独自画像のポインタ利用
@@ -226,6 +231,10 @@
  * @desc キーもしくはパッド入力によりポインタを一時的に消去します。マウスを動かすと再び出現します。
  * @default ON
  *
+ * @param ポインタファイルパス
+ * @desc カーソル用の独自画像を/pictures/以外に配置したい場合にパス名を指定してください。区切り文字[/]は不要。
+ * @default
+ *
  * @help マウスポインタの形状や表示可否を拡張します。
  * スイッチ条件に応じた多彩な形状変化や、独自画像のポインタ利用
  * 何らかのキー・パッド入力で非表示化する機能を提供します。
@@ -251,6 +260,8 @@
  *
  * スイッチ条件を満たしたのに画像が表示されない場合は、ファイルパスが間違っているか
  * 指定した画像をアイコンとして利用できないかのどちらかの可能性が高いです。
+ * アニメーションカーソル(.ani)は使用できません。
+ * また、gifファイルは使用できますがアニメーションしません。
  *
  * 形状変化用のスイッチは複数指定可能で複数の条件を満たした場合は
  * より数字の小さい方（「1」→「2」→「3」...の順番）が優先されます。
@@ -313,6 +324,7 @@
     }
     var paramDefaultType  = getParamString(['DefaultType', 'デフォルト形状タイプ']);
     var paramErasePointer = getParamBoolean(['ErasePointer', 'キー入力で消去']);
+    var paramPointerPath  = getParamString(['PointerPath', 'ポインタファイルパス']);
 
     //=============================================================================
     // SceneManager
@@ -384,7 +396,7 @@
 
     Graphics._setPointerTypeCustom = function(type, index) {
         if (type === 'url' + index && paramCustomImages[index]) {
-            this._PointerType = 'url(img/pictures/' + paramCustomImages[index] + '), auto';
+            this._PointerType = 'url(img/' + (paramPointerPath || 'pictures') + '/' + paramCustomImages[index] + '), default';
         }
     };
 
