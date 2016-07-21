@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.5 2016/07/22 イベントの複数同時起動を抑制する設定を追加
 // 1.4.4 2016/07/02 半歩位置にいる場合に地形タグとリージョンIDの取得値が0になってしまう不具合を修正
 // 1.4.3 2016/06/30 タッチ操作によるマップ移動でイベント起動できない場合がある問題を修正
 // 1.4.2 2016/06/08 PD_8DirDash.jsと組み合わせて斜め移動グラフィックを反映するよう修正
@@ -77,6 +78,10 @@
  * @desc 下半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
  *
+ * @param MultiStartDisable
+ * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
+ * @default OFF
+ *
  * @help Moving distance in half.
  *
  * Plugin command
@@ -142,6 +147,10 @@
  * @param 下半分移動不可Region
  * @desc 下半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
+ *
+ * @param イベント複数起動防止
+ * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
+ * @default OFF
  *
  * @help キャラクターの移動単位が1タイルの半分になります。
  * 半歩移動が有効なら、乗り物以外は全て半歩移動になります。
@@ -314,6 +323,7 @@
     var paramUpperNpRegionId    = getParamNumber(['UpperNpRegionId', '上半分移動不可Region'], 0);
     var paramLowerCpTerrainTag  = getParamNumber(['LowerNpTerrainTag', '下半分移動不可地形'], 0);
     var paramLowerCpRegionId    = getParamNumber(['LowerNpRegionId', '下半分移動不可Region'], 0);
+    var paramMultiStartDisable  = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
 
     //=============================================================================
     // ローカル変数
@@ -872,11 +882,13 @@
     Game_Player.prototype.startMapEvent = function(x, y, triggers, normal) {
         _Game_Player_startMapEvent.apply(this, arguments);
         if (!$gameMap.isEventRunning()) {
-            $gameMap.events().forEach(function(event) {
+            $gameMap.events().some(function(event) {
                 if (event.isTriggerExpansion(x, y) && event.isTriggerIn(triggers) &&
                     event.isNormalPriority() === normal && (event.isCollidedFromPlayer() || !event.isNormalPriority())) {
                     event.start();
+                    if (event.isStarting() && paramMultiStartDisable) return true;
                 }
+                return false;
             });
         }
     };
