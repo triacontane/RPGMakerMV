@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/07/21 イベント処理中も時間が経過する設定を追加
 // 1.2.7 2016/07/10 自然時間加算が0の場合に色調や天候の変化が正しく行われない問題を修正
 // 1.2.6 2016/05/30 曜日に「Y」を含む文字列を指定できないバグを修正
 // 1.2.5 2016/04/29 createUpperLayerによる競合対策
@@ -144,6 +145,10 @@
  * @desc アナログ時計の表示Y座標です。画像の中心座標を指定してください。
  * @default 156
  *
+ * @param イベント中時間経過
+ * @desc イベント実行中も時間経過するようになります。(ON/OFF)
+ * @default OFF
+ *
  * @help ゲーム内で時刻と天候の概念を表現できるプラグインです。
  * 自動、マップ移動、戦闘で時間が経過し、時間と共に天候と色調が変化します。
  * これらの時間は調節可能で、またイベント中は時間の進行が停止します。
@@ -269,6 +274,11 @@ function Game_Chronus() {
             if (name) return name;
         }
         return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
     };
 
     var isParamExist = function(paramNames) {
@@ -700,7 +710,7 @@ function Game_Chronus() {
     };
 
     Game_Chronus.prototype.isTimeStop = function() {
-        return this.isStop() || $gameMap.isEventRunning();
+        return this.isStop() || (!getParamBoolean('イベント中時間経過') && $gameMap.isEventRunning());
     };
 
     Game_Chronus.prototype.updateEffect = function () {
