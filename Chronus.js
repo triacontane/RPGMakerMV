@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/07/23 イベント処理中の時間経過有無をイベントごとに設定できるよう変更
+//                  一部コードのリファクタリング
 // 1.3.0 2016/07/21 イベント処理中も時間が経過する設定を追加
 // 1.2.7 2016/07/10 自然時間加算が0の場合に色調や天候の変化が正しく行われない問題を修正
 // 1.2.6 2016/05/30 曜日に「Y」を含む文字列を指定できないバグを修正
@@ -19,7 +21,7 @@
 // 1.1.3 2016/01/21 競合対策（YEP_MessageCore.js）
 // 1.1.2 2016/01/10 カレンダーウィンドウの表示位置をカスタマイズできる機能を追加
 // 1.1.1 2015/12/29 日の値に「1」を設定した場合に日付の表示がおかしくなる不具合を修正
-//                  一部のコードを最適化
+//                  一部コードのリファクタリング
 // 1.1.0 2015/12/01 天候と時間帯をゲーム変数に格納できるよう機能追加
 // 1.0.0 2015/11/27 初版
 // ----------------------------------------------------------------------------
@@ -203,9 +205,18 @@
  *  タイトルセットおよびマップのメモ欄に以下を入力すると、
  *  一時的に天候と色調変化を自動で無効化できます。
  *  屋内マップやイベントシーンなどで一時的に無効化したい場合に利用できます。
+ *  設定はマップのメモ欄が優先されます。
  *
- * <C_Tint:OFF> : 色調の変更を一時的に無効化します。
- * <C_Weather:OFF> : 天候を一時的に無効化します。
+ * <C_Tint:OFF>    # 色調の変更を一時的に無効化します。
+ * <C_色調:OFF>    # 同上
+ * <C_Weather:OFF> # 天候を一時的に無効化します。
+ * <C_天候:OFF>    # 同上
+ *
+ * イベント実行中にも時間経過するかどうかをイベントごとに設定できます。
+ * この設定はパラメータの設定よりも優先されます。
+ * イベントのメモ欄に以下を入力してください。
+ * <C_時間経過:ON> # イベント実行中に時間経過します。(ON/OFF)
+ * <C_NoStop:ON>   # 同上
  *
  * 高度な設定
  * ソースコード中の「ユーザ書き換え領域」を参照すると以下を変更できます。
@@ -254,6 +265,7 @@ function Game_Chronus() {
     // ユーザ書き換え領域 - 終了 -
     //=============================================================================
     var pluginName = 'Chronus';
+    var metaTagPrefix = 'C_';
 
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
@@ -321,6 +333,24 @@ function Game_Chronus() {
         return window ? window.convertEscapeCharacters(text) : text;
     };
 
+    var getArgBoolean = function(arg) {
+        return (arg || '').toUpperCase() === 'ON';
+    };
+
+    var getMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + (name ? name : '');
+        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
+    };
+
+    var getMetaValues = function(object, names) {
+        if (!Array.isArray(names)) return getMetaValue(object, names);
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
+            if (value !== undefined) return value;
+        }
+        return undefined;
+    };
+
     var _DataManager_extractSaveContents = DataManager.extractSaveContents;
     DataManager.extractSaveContents = function(contents) {
         _DataManager_extractSaveContents.apply(this, arguments);
@@ -334,8 +364,10 @@ function Game_Chronus() {
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
+        var commandPrefix = new RegExp('^' + metaTagPrefix);
+        if (!command.match(commandPrefix)) return;
         try {
-            this.pluginCommandChronus(command, args);
+            this.pluginCommandChronus(command.replace(commandPrefix, ''), args);
         } catch (e) {
             if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
                 var window = require('nw.gui').Window.get();
@@ -353,66 +385,66 @@ function Game_Chronus() {
 
     Game_Interpreter.prototype.pluginCommandChronus = function (command, args) {
         switch (getCommandName(command)) {
-            case 'C_ADD_TIME' :
+            case 'ADD_TIME' :
                 $gameSystem.chronus().addTime(getArgNumber(args[0], 0, 99999));
                 break;
-            case 'C_ADD_DAY' :
+            case 'ADD_DAY' :
                 $gameSystem.chronus().addDay(getArgNumber(args[0], 0, 99999));
                 break;
-            case 'C_SET_TIME' :
+            case 'SET_TIME' :
                 var hour = getArgNumber(args[0], 0, 23);
                 var minute = getArgNumber(args[1], 0, 59);
                 $gameSystem.chronus().setTime(hour, minute);
                 break;
-            case 'C_SET_DAY' :
+            case 'SET_DAY' :
                 var year = getArgNumber(args[0], 1, 5000);
                 var month = getArgNumber(args[1], 1, $gameSystem.chronus().getMonthOfYear());
                 var day = getArgNumber(args[2], 1, $gameSystem.chronus().getDaysOfMonth(month));
                 $gameSystem.chronus().setDay(year, month, day);
                 break;
-            case 'C_STOP' :
+            case 'STOP' :
                 $gameSystem.chronus().stop();
                 break;
-            case 'C_START' :
+            case 'START' :
                 $gameSystem.chronus().start();
                 break;
-            case 'C_SHOW' :
+            case 'SHOW' :
                 $gameSystem.chronus().showCalendar();
                 break;
-            case 'C_HIDE' :
+            case 'HIDE' :
                 $gameSystem.chronus().hideCalendar();
                 break;
-            case 'C_DISABLE_TINT':
+            case 'DISABLE_TINT':
                 $gameSystem.chronus().disableTint();
                 break;
-            case 'C_ENABLE_TINT':
+            case 'ENABLE_TINT':
                 $gameSystem.chronus().enableTint();
                 break;
-            case 'C_DISABLE_WEATHER':
+            case 'DISABLE_WEATHER':
                 $gameSystem.chronus().disableWeather();
                 break;
-            case 'C_ENABLE_WEATHER':
+            case 'ENABLE_WEATHER':
                 $gameSystem.chronus().enableWeather();
                 break;
-            case 'C_SET_SNOW_LAND':
+            case 'SET_SNOW_LAND':
                 $gameSystem.chronus().setSnowLand();
                 break;
-            case 'C_RESET_SNOW_LAND':
+            case 'RESET_SNOW_LAND':
                 $gameSystem.chronus().resetSnowLand();
                 break;
-            case 'C_SET_SPEED':
+            case 'SET_SPEED':
                 $gameSystem.chronus().setTimeAutoAdd(getArgNumber(args[0], 0, 99));
                 break;
-            case 'C_SHOW_CLOCK':
+            case 'SHOW_CLOCK':
                 $gameSystem.chronus().showClock();
                 break;
-            case 'C_HIDE_CLOCK':
+            case 'HIDE_CLOCK':
                 $gameSystem.chronus().hideClock();
                 break;
-            case 'C_SET_TIME_REAL':
+            case 'SET_TIME_REAL':
                 $gameSystem.chronus().setTimeReal();
                 break;
-            case 'C_SET_TIME_VIRTUAL':
+            case 'SET_TIME_VIRTUAL':
                 $gameSystem.chronus().setTimeVirtual();
                 break;
         }
@@ -459,24 +491,38 @@ function Game_Chronus() {
     //  マップ及びタイルセットから、色調変化無効フラグを取得します。
     //=============================================================================
     Game_Map.prototype.isDisableTint = function() {
-        return this.isChronicleMetaInfo('Tint');
+        return !this.isChronicleMetaInfo(['Tint', '色調']);
     };
 
     Game_Map.prototype.isDisableWeather = function() {
-        return this.isChronicleMetaInfo('Weather');
+        return !this.isChronicleMetaInfo(['Weather', '天候']);
     };
 
-    Game_Map.prototype.isChronicleMetaInfo = function(tagName) {
-        if (Utils.isOptionValid('etest') || Utils.isOptionValid('btest')) return false;
-        var value = $dataMap.meta['chronus' + tagName];
-        if (value != null) return value === 'OFF';
-        value = $dataMap.meta['C_' + tagName];
-        if (value != null) return value === 'OFF';
-        value = $dataTilesets[$dataMap.tilesetId].meta['chronus' + tagName];
-        if (value != null) return value === 'OFF';
-        value = $dataTilesets[$dataMap.tilesetId].meta['C_' + tagName];
-        if (value != null) return value === 'OFF';
-        return false;
+    Game_Map.prototype.isChronicleMetaInfo = function(tagNames) {
+        if (DataManager.isBattleTest() || DataManager.isEventTest()) return false;
+        var metaValue1 = getMetaValues($dataMap, tagNames);
+        if (metaValue1 != null) return getArgBoolean(metaValue1);
+        var metaValue2 = getMetaValues($dataTilesets[$dataMap.tilesetId], tagNames);
+        if (metaValue2 != null) return getArgBoolean(metaValue2);
+        return true;
+    };
+
+    Game_Map.prototype.isTimeStopEventRunning = function() {
+        if (this.isEventRunning()) {
+            if (!this._isTimeStopEventRunning) this._isTimeStopEventRunning = this.getTimeStopEventRunning();
+        } else {
+            this._isTimeStopEventRunning = false;
+        }
+        return this._isTimeStopEventRunning;
+    };
+
+    Game_Map.prototype.getTimeStopEventRunning = function() {
+        var stop = getMetaValues(this.event(this._interpreter.eventId()).event(), ['時間経過', 'NoStop']);
+        if (stop) {
+            return !getArgBoolean(stop);
+        } else {
+            return !getParamBoolean('イベント中時間経過');
+        }
     };
 
     //=============================================================================
@@ -710,7 +756,7 @@ function Game_Chronus() {
     };
 
     Game_Chronus.prototype.isTimeStop = function() {
-        return this.isStop() || (!getParamBoolean('イベント中時間経過') && $gameMap.isEventRunning());
+        return this.isStop() || $gameMap.isTimeStopEventRunning();
     };
 
     Game_Chronus.prototype.updateEffect = function () {
