@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/07/24 複数行「\>」が指定されている場合もデフォルトと同じ動作をするよう修正
 // 1.1.1 2016/07/23 制御文字「\>\<」が指定されている場合、そちらを優先するよう修正
 // 1.1.0 2016/07/12 文章の表示中に決定キーもしくは左クリックで文章を瞬間表示する機能を追加
 // 1.0.0 2016/04/12 初版
@@ -120,6 +121,12 @@
             }
         }
         return _Window_Message_updateMessage.apply(this, arguments);
+    };
+
+    var _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
+    Window_Message.prototype.processEscapeCharacter = function(code, textState) {
+        if (code === '>') this._waitCount = 0;
+        _Window_Message_processEscapeCharacter.apply(this, arguments);
     };
 
     var _Window_Message_onEndOfText = Window_Message.prototype.onEndOfText;
