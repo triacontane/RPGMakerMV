@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/07/23 制御文字「\>\<」が指定されている場合、そちらを優先するよう修正
 // 1.1.0 2016/07/12 文章の表示中に決定キーもしくは左クリックで文章を瞬間表示する機能を追加
 // 1.0.0 2016/04/12 初版
 // ----------------------------------------------------------------------------
@@ -111,7 +112,7 @@
     var _Window_Message_updateMessage = Window_Message.prototype.updateMessage;
     Window_Message.prototype.updateMessage = function() {
         var speed = $gameVariables.value(paramVariableSpeed);
-        if (this._textState) {
+        if (this._textState && !this._lineShowFast) {
             if (speed <= 0 || this._showAll) {
                 this._showFast = true;
             } else {
