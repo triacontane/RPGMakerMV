@@ -38,5 +38,5 @@
     var _Game_TimerUpdate = Game_Timer.prototype.update;
     Game_Timer.prototype.update = function(sceneActive) {
         if (!$gameMap.isEventRunning()) _Game_TimerUpdate.call(this, sceneActive);
-    }
+    };
 })();

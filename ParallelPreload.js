@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/07/23 コードのリファクタリングとヘルプの修正
 // 1.1.1 2016/04/29 ログ出力を無効化するパラメータを追加
 // 1.1.0 2016/04/28 音声素材の並列プリロードに対応
 //                  他のプラグインの影響等で、特定のシーンでプリロードが止まってしまう問題を修正
@@ -55,8 +56,11 @@
  * そのため、大量の画像を指定するとロード完了までに時間が掛かり
  * 効果が薄くなります。
  *
- * また、スマートフォン等メモリに限りがあるデバイスで実行する場合、
- * 大量の画像のプリロードは動作不良の原因となります。
+ * chromeでプレーする場合、大量に画像をロードすると処理速度が著しく低下します。
+ * （本プラグインなしでも一定時間プレーすると発生する本体側の問題です）
+ * その場合、下記を参考に対策プラグインの導入をお願いします。(本体ver1.2.0の場合)
+ *
+ * http://fanblogs.jp/tabirpglab/archive/422/0
  *
  * プリロードできるのは、色相が0の画像データのみです。
  * どうしても色相を変えた画像をロードしたい場合は「MV_Project.json」を
@@ -64,9 +68,6 @@
  *
  * 例：色相が「100」の「Bat.png」をプリロードしたい場合
  * "Bat" -> "Bat:100"
- *
- * なお、ブラウザプレーの場合、ローディング時間の大半は画像の
- * ダウンロード時間なので、よほどのことがなければ色相の変更は不要です。
  *
  * 注意！
  * このプラグインを適用したゲームをモバイルネットワークでプレーすると、
@@ -197,7 +198,7 @@ var $dataMaterials = null;
     };
 
     DataManager.loadAudio = function(loadHandler, filePathInfo) {
-        if (AudioManager.shouldUseHtml5Audio() || Utils.isNwjs()) return;
+        if (AudioManager.shouldUseHtml5Audio()) return;
         var audio = AudioManager[loadHandler](filePathInfo[0], filePathInfo[1]);
         if (Utils.isNwjs()) {
             localIntervalCount = paramLoadInterval;
@@ -259,6 +260,7 @@ var $dataMaterials = null;
         var result = _ImageManager_isReady.apply(this, arguments);
         if (result) return true;
         for (var key in this._cache) {
+            if (!this._cache.hasOwnProperty(key)) continue;
             var bitmap = this._cache[key];
             if (!bitmap.isReady() && !bitmap._isNeedLagDraw) {
                 return false;
