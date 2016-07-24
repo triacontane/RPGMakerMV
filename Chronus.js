@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2016/07/24 1.3.1でロード時にエラーになる問題の修正
 // 1.3.1 2016/07/23 イベント処理中の時間経過有無をイベントごとに設定できるよう変更
 //                  一部コードのリファクタリング
 // 1.3.0 2016/07/21 イベント処理中も時間が経過する設定を追加
@@ -517,7 +518,9 @@ function Game_Chronus() {
     };
 
     Game_Map.prototype.getTimeStopEventRunning = function() {
-        var stop = getMetaValues(this.event(this._interpreter.eventId()).event(), ['時間経過', 'NoStop']);
+        var event = this.event(this._interpreter.eventId());
+        if (!event) return false;
+        var stop = getMetaValues(event.event(), ['時間経過', 'NoStop']);
         if (stop) {
             return !getArgBoolean(stop);
         } else {
