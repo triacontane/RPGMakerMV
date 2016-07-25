@@ -6,7 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.0.0 2016/06/25 初版
+// 1.0.0 2016/07/26 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
@@ -271,6 +271,10 @@
         return result;
     };
 
+    //=============================================================================
+    // Game_Player
+    //  雑魚敵の設定処理をします。
+    //=============================================================================
     var _Game_Player_executeEncounter      = Game_Player.prototype.executeEncounter;
     Game_Player.prototype.executeEncounter = function() {
         var result = _Game_Player_executeEncounter.apply(this, arguments);
