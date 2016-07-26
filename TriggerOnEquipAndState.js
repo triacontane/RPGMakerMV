@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/07/27 スイッチにも設定値タグを付けられるよう修正
 // 1.3.2 2016/07/14 「武器(防具)の増減」によって装備が外れた場合に対応
 // 1.3.1 2016/07/14 1.3.0で敵を倒した際にエラーになる現象の修正
 // 1.3.0 2016/07/14 対象アクターがパーティから外れた場合にスイッチをOFFにする仕様を追加
@@ -44,6 +45,10 @@
  * 通常の制御文字やJavaScript計算式に加えて「actorId」と記述すると、
  * 装備やステートが変更された対象のアクターIDに変換されます。
  *
+ * ・スイッチに設定される値です。（省略時はONになります）
+ *  <TOESスイッチ設定値:ON>  // 装備時にスイッチがONになり、解除するとOFFになります。
+ *  <TOESスイッチ設定値:OFF> // 装備時にスイッチがOFFになり、解除するとONになります。
+ *
  * ・変数に設定される値です。
  *  <TOES変数設定値:3> // 装備時に3加算され、解除すると3減算されます。
  *
@@ -54,6 +59,7 @@
  *
  *  注意！
  *  指定する際は、番号に歯抜けがないようにしてください。
+ *  以下はダメです。
  *  <TOESスイッチ対象:3>   // 3番のスイッチが操作対象
  *  <TOESスイッチ対象3:5>  // 動作しない
  *
@@ -105,6 +111,10 @@
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
+    };
+
+    var getArgBoolean = function(arg) {
+        return (arg || '').toUpperCase() === 'ON';
     };
 
     var convertEscapeCharactersAndEval = function(text, evalFlg) {
@@ -296,7 +306,8 @@
         var result       = false;
         if (switchTarget) {
             var switchId = this.getVariableIdForToes(switchTarget, $dataSystem.switches.length - 1);
-            $gameSwitches.setValue(switchId, addedSign);
+            var switchValue = getMetaValues(item, ['スイッチ設定値' + indexString, 'SwitchValue' + indexString]);
+            $gameSwitches.setValue(switchId, switchValue ? !(getArgBoolean(switchValue) ^ addedSign) : addedSign);
             result = true;
         }
         var variableTarget = getMetaValues(item, ['変数対象' + indexString, 'VariableTarget' + indexString]);
