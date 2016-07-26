@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/26 リトライ後のメニュー画面でコモンイベントを実行するアイテム・スキルを実行すると正常に動作しない問題を修正
+//                  リトライ後のメニュー画面でゲーム終了を選択できないように修正
+//                  リトライ回数をカウントして、スクリプトから取得できる機能を追加
 // 1.0.0 2016/07/26 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -60,6 +63,7 @@
  * @help 戦闘でゲームオーバーになったあとのゲームオーバー画面でリトライ可能になります。
  * 雑魚敵とボス敵とでリトライ可能かどうかを分けることができます。
  * リトライを選択すると一度だけメニュー画面を開いた後で、再戦することができます。
+ * メニュー画面ではセーブ及びコモンイベントを実行するアイテム、スキルの使用ができません。
  *
  * 雑魚敵かボス敵かは以下の通り判定されます。
  *
@@ -82,6 +86,10 @@
  * RB_RETRY_ENABLE  # 同上
  * RB_強制リトライ  # 戦闘中に使用すると強制的にリトライします。
  * RB_FORCE_RETRY   # 同上
+ *
+ * スクリプト詳細
+ *  イベントコマンド「変数の操作」から実行
+ * $gameSystem.getRetryCount(); # リトライ回数を取得して変数に保持します。
  *
  * This plugin is released under the MIT License.
  */
@@ -132,6 +140,7 @@
  * @help 戦闘でゲームオーバーになったあとのゲームオーバー画面でリトライ可能になります。
  * 雑魚敵とボス敵とでリトライ可能かどうかを分けることができます。
  * リトライを選択すると一度だけメニュー画面を開いた後で、再戦することができます。
+ * メニュー画面ではセーブ及びコモンイベントを実行するアイテム、スキルの使用ができません。
  *
  * 雑魚敵かボス敵かは以下の通り判定されます。
  *
@@ -154,6 +163,10 @@
  * RB_RETRY_ENABLE  # 同上
  * RB_強制リトライ  # 戦闘中に使用すると強制的にリトライします。
  * RB_FORCE_RETRY   # 同上
+ *
+ * スクリプト詳細
+ *  イベントコマンド「変数の操作」から実行
+ * $gameSystem.getRetryCount(); # リトライ回数を取得して変数に保持します。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -292,6 +305,7 @@
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
         this._retryDisable = false;
+        this._retryCount   = 0;
     };
 
     Game_System.prototype.setRetryDisable = function(value) {
@@ -302,6 +316,29 @@
         return this._retryDisable;
     };
 
+    Game_System.prototype.addRetryCount = function() {
+        this._retryCount = this.getRetryCount() + 1;
+    };
+
+    Game_System.prototype.getRetryCount = function() {
+        return this._retryCount || 0;
+    };
+
+    //=============================================================================
+    // Game_BattlerBase
+    //  リトライ時はコモンイベント使用を含むアイテムを使用禁止にします。
+    //=============================================================================
+    var _Scene_ItemBase_meetsUsableItemConditions        = Game_BattlerBase.prototype.meetsUsableItemConditions;
+    Game_BattlerBase.prototype.meetsUsableItemConditions = function(item) {
+        return _Scene_ItemBase_meetsUsableItemConditions.apply(this, arguments) && !(SceneManager.isSceneRetry() && this.isCommonEventItemOf(item));
+    };
+
+    Game_BattlerBase.prototype.isCommonEventItemOf = function(item) {
+        return item.effects.some(function(effect) {
+            return effect.code === Game_Action.EFFECT_COMMON_EVENT;
+        });
+    };
+
     //=============================================================================
     // BattleManager
     //  リトライ関連処理を追加定義します。
@@ -310,6 +347,7 @@
         SoundManager.playBattleStart();
         $gameTemp.clearCommonEvent();
         $gameTroop.setup($gameTroop.troop().id);
+        $gameSystem.addRetryCount();
     };
 
     BattleManager.setBossBattle = function(value) {
@@ -383,6 +421,11 @@
     var _Window_MenuCommand_isSaveEnabled      = Window_MenuCommand.prototype.isSaveEnabled;
     Window_MenuCommand.prototype.isSaveEnabled = function() {
         return _Window_MenuCommand_isSaveEnabled.apply(this, arguments) && !SceneManager.isSceneRetry();
+    };
+
+    var _Window_MenuCommand_isGameEndEnabled      = Window_MenuCommand.prototype.isGameEndEnabled;
+    Window_MenuCommand.prototype.isGameEndEnabled = function() {
+        return _Window_MenuCommand_isGameEndEnabled.apply(this, arguments) && !SceneManager.isSceneRetry();
     };
 
     //=============================================================================
@@ -504,6 +547,15 @@
     };
 
     //=============================================================================
+    // Scene_Base
+    //  リトライ状態からの再ゲームオーバーを禁止します。
+    //=============================================================================
+    var _Scene_Base_checkGameover      = Scene_Base.prototype.checkGameover;
+    Scene_Base.prototype.checkGameover = function() {
+        return !SceneManager.isSceneRetry() && _Scene_Base_checkGameover.apply(this, arguments);
+    };
+
+    //=============================================================================
     // Scene_Load
     //  ロード時にゲームオーバーMEを止めます。
     //=============================================================================
@@ -523,7 +575,7 @@
         this.initialize.apply(this, arguments);
     }
 
-    Scene_BattleReturn.prototype = Object.create(Scene_Gameover.prototype);
+    Scene_BattleReturn.prototype             = Object.create(Scene_Gameover.prototype);
     Scene_BattleReturn.prototype.constructor = Scene_BattleReturn;
 
     Scene_BattleReturn.prototype.create = function() {
