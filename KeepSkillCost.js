@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/07/29 HPとMPの維持コストのポップアップがスキルごとに個別に出力されていた問題を修正
 // 1.1.0 2016/07/29 YEP_SkillCore.jsと組み合わせてウィンドウにコストを表示できる機能を追加
 // 1.0.1 2016/07/20 戦闘画面以外では動作しないパラメータを追加しました。
 // 1.0.0 2016/07/20 初版
@@ -80,7 +81,7 @@ var Imported = Imported || {};
 (function() {
     'use strict';
     var setting = {
-        textColorCostHp:14,
+        textColorCostHp:0,
         textColorCostMp:6,
         textColorCostTp:5
     };
@@ -143,6 +144,8 @@ var Imported = Imported || {};
     };
 
     Game_Battler.prototype.consumeKeepCost = function() {
+        this._costHpSum = 0;
+        this._costMpSum = 0;
         this.skills().forEach(function(skill) {
             this.consumeKeepCostHp(skill);
             this.consumeKeepCostMp(skill);
@@ -150,16 +153,18 @@ var Imported = Imported || {};
             this.consumeKeepCostVariable(skill);
             this.consumeKeepCostGold(skill);
         }.bind(this));
+        if (this._costHpSum !== 0) this.gainHp(-(Math.min(this._costHpSum, this.maxSlipDamage())));
+        if (this._costMpSum !== 0) this.gainMp(-this._costMpSum);
     };
 
     Game_Battler.prototype.consumeKeepCostHp = function(skill) {
         var cost = this.getKeepCostOf(skill, ['HP']);
-        if (cost) this.gainHp(-(Math.min(cost, this.maxSlipDamage())));
+        if (cost) this._costHpSum += cost;
     };
 
     Game_Battler.prototype.consumeKeepCostMp = function(skill) {
         var cost = this.getKeepCostOf(skill, ['MP']);
-        if (cost) this.gainMp(-cost);
+        if (cost) this._costMpSum += cost;
     };
 
     Game_Battler.prototype.consumeKeepCostTp = function(skill) {
