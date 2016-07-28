@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/07/29 ヘルプと実装の記述が食い違っていたので修正
 // 1.1.0 2016/07/28 変換後の倍率を自由に設定できる機能を追加
 // 1.0.0 2016/07/27 初版
 // ----------------------------------------------------------------------------
@@ -131,13 +132,13 @@
         this.traitObjects().some(function(data) {
             var value1 = getMetaValue(data, String(originalParamId));
             if (value1) realParamId = getArgNumberWithEval(value1, 0, 7);
-            var value2 = getMetaValue(data, String(originalParamId) + 'Rate');
+            var value2 = getMetaValue(data, 'Rate' + String(originalParamId));
             try {
                 if (value2) realParamRate = getArgNumberWithEval(value2, 0) / 100;
             } catch (e) {
                 console.log(e.stack);
             }
-            return !!value2;
+            return !!value1;
         });
         return realParamId >= 0 ? Math.floor(originalFunction(realParamId) * realParamRate) : originalFunction(originalParamId);
     };
