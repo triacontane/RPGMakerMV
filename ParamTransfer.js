@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/28 変換後の倍率を自由に設定できる機能を追加
 // 1.0.0 2016/07/27 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -32,8 +33,13 @@
  *
  * 特徴を有するデータベースのメモ欄に以下の通り記述してください。
  * 数字は上の記述を参照してください。
- * <PT0:1> # 最大HPの値を最大MPに変換します。
- * <PT1:0> # 最大MPの値を最大HPに変換します。
+ * <PT0:1> # 最大HPの値が最大MPで上書きされます。
+ * <PT1:0> # 最大MPの値が最大HPで上書きされます。
+ *
+ * 変換した上でさらにn倍したい場合は以下の通り記述してください。
+ * 倍率には制御文字\v[n]およびJavaScript計算式が利用できます。
+ * <PT0:1>
+ * <PTRate0:\v[1]+50> # 最大HPの値が最大MPの変数[1]の値 + 50%の値で上書きされます。
  *
  * 変換されるのはベースパラメータで、装備品やバフによる加算は
  * 含まれません。
@@ -59,8 +65,13 @@
  *
  * 特徴を有するデータベースのメモ欄に以下の通り記述してください。
  * 数字は上の記述を参照してください。
- * <PT0:1> # 最大HPの値を最大MPに変換します。
- * <PT1:0> # 最大MPの値を最大HPに変換します。
+ * <PT0:1> # 最大HPの値が最大MPで上書きされます。
+ * <PT1:0> # 最大MPの値が最大HPで上書きされます。
+ *
+ * 変換した上でさらにn倍したい場合は以下の通り記述してください。
+ * 倍率には制御文字\v[n]およびJavaScript計算式が利用できます。
+ * <PT0:1>
+ * <PTRate0:\v[1]+50> # 最大HPの値が最大MPの変数[1]の値 + 50%の値で上書きされます。
  *
  * 変換されるのはベースパラメータで、装備品やバフによる加算は
  * 含まれません。
@@ -90,8 +101,24 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1], 10));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1], 10));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1], 10) >= 1 ? $gameActors.actor(parseInt(arguments[1], 10)) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1], 10) >= 1 ? $gameParty.members()[parseInt(arguments[1], 10) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     //=============================================================================
@@ -100,12 +127,19 @@
     //=============================================================================
     Game_BattlerBase.prototype.getTransParam = function(originalParamId, originalFunction) {
         var realParamId = -1;
+        var realParamRate = 1;
         this.traitObjects().some(function(data) {
-            var value = getMetaValue(data, String(originalParamId));
-            if (value) realParamId = getArgNumberWithEval(value, 0, 7);
-            return !!value;
+            var value1 = getMetaValue(data, String(originalParamId));
+            if (value1) realParamId = getArgNumberWithEval(value1, 0, 7);
+            var value2 = getMetaValue(data, String(originalParamId) + 'Rate');
+            try {
+                if (value2) realParamRate = getArgNumberWithEval(value2, 0) / 100;
+            } catch (e) {
+                console.log(e.stack);
+            }
+            return !!value2;
         });
-        return realParamId >= 0 ? originalFunction(realParamId) : originalFunction(originalParamId);
+        return realParamId >= 0 ? Math.floor(originalFunction(realParamId) * realParamRate) : originalFunction(originalParamId);
     };
 
     //=============================================================================
