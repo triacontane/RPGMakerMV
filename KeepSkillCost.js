@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/07/29 YEP_SkillCore.jsと組み合わせてウィンドウにコストを表示できる機能を追加
 // 1.0.1 2016/07/20 戦闘画面以外では動作しないパラメータを追加しました。
 // 1.0.0 2016/07/20 初版
 // ----------------------------------------------------------------------------
@@ -34,6 +35,10 @@
  * <KSC_VariableNumber:5> # ターン終了後に変数[5]の値を[10]減算する。
  * <KSC_VariableValue:10> # 上とセットで使用する。
  *
+ * YEP_SkillCore.jsと組み合わせると、スキルウィンドウに維持コストが
+ * 出力されるようになります。当プラグインを下に配置してください。
+ * ただし、出力される維持コストはHP,MP,TPのみです。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -58,6 +63,10 @@
  * <KSC_変数番号:5> # ターン終了後に変数[5]の値を[10]減算する。
  * <KSC_変数値:10>  # 上とセットで使用する。
  *
+ * YEP_SkillCore.jsと組み合わせると、スキルウィンドウに維持コストが
+ * 出力されるようになります。当プラグインを下に配置してください。
+ * ただし、出力される維持コストはHP,MP,TPのみです。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -66,8 +75,15 @@
  *  このプラグインはもうあなたのものです。
  */
 
+var Imported = Imported || {};
+
 (function() {
     'use strict';
+    var setting = {
+        textColorCostHp:14,
+        textColorCostMp:6,
+        textColorCostTp:5
+    };
     var pluginName    = 'KeepSkillCost';
     var metaTagPrefix = 'KSC_';
 
@@ -137,28 +153,32 @@
     };
 
     Game_Battler.prototype.consumeKeepCostHp = function(skill) {
-        var cost = getMetaValues(skill, ['HP']);
-        if (cost) this.gainHp(-(Math.min(getArgNumber(cost), this.maxSlipDamage())));
+        var cost = this.getKeepCostOf(skill, ['HP']);
+        if (cost) this.gainHp(-(Math.min(cost, this.maxSlipDamage())));
     };
 
     Game_Battler.prototype.consumeKeepCostMp = function(skill) {
-        var cost = getMetaValues(skill, ['MP']);
-        if (cost) this.gainMp(-getArgNumber(cost));
+        var cost = this.getKeepCostOf(skill, ['MP']);
+        if (cost) this.gainMp(-cost);
     };
 
     Game_Battler.prototype.consumeKeepCostTp = function(skill) {
-        var cost = getMetaValues(skill, ['TP']);
-        if (cost) this.gainSilentTp(-getArgNumber(cost));
+        var cost = this.getKeepCostOf(skill, ['TP']);
+        if (cost) this.gainSilentTp(-cost);
     };
 
     Game_Battler.prototype.consumeKeepCostVariable = function(skill) {
-        var cost1 = getMetaValues(skill, ['変数番号', 'VariableNumber']);
-        var cost2 = getMetaValues(skill, ['変数値', 'VariableValue']);
+        var cost1 = this.getKeepCostOf(skill, ['変数番号', 'VariableNumber']);
+        var cost2 = this.getKeepCostOf(skill, ['変数値', 'VariableValue']);
         if (cost1 && cost2) {
-            var number = getArgNumber(cost1);
-            var value = $gameVariables.value(number);
-            $gameVariables.setValue(number, value - getArgNumber(cost2));
+            var value = $gameVariables.value(cost1);
+            $gameVariables.setValue(cost1, value - cost2);
         }
+    };
+
+    Game_Battler.prototype.getKeepCostOf = function(skill, params) {
+        var cost = getMetaValues(skill, params);
+        return cost ? getArgNumber(cost) : 0;
     };
 
     //=============================================================================
@@ -166,8 +186,8 @@
     //  ターン終了時にスキルごとに定められたコストを消費します。
     //=============================================================================
     Game_Actor.prototype.consumeKeepCostGold = function(skill) {
-        var cost = getMetaValues(skill, ['お金', 'Gold']);
-        if (cost) $gameParty.loseGold(getArgNumber(cost));
+        var cost = this.getKeepCostOf(skill, ['お金', 'Gold']);
+        if (cost) $gameParty.loseGold(cost);
     };
 
     //=============================================================================
@@ -183,6 +203,95 @@
         return actionList.map(function(action) {
             return $dataSkills[action.skillId];
         });
+    };
+
+    if (!Imported.YEP_SkillCore) return;
+
+    //=============================================================================
+    // Window_SkillList
+    //  YEP_SkillCore.jsと組み合わせて維持コストを出力します。
+    //=============================================================================
+    var _Window_SkillList_drawSkillCost = Window_SkillList.prototype.drawSkillCost;
+    Window_SkillList.prototype.drawSkillCost = function(skill, wx, wy, width) {
+        this._keepCostExist = false;
+        var dw = width;
+        dw = this.drawKeepTpCost(skill, wx, wy, dw);
+        dw = this.drawKeepMpCost(skill, wx, wy, dw);
+        dw = this.drawKeepHpCost(skill, wx, wy, dw);
+        if (this._keepCostExist) {
+            dw = this.drawCostSlash(skill, wx, wy, dw);
+        }
+        arguments[3] = dw;
+        return _Window_SkillList_drawSkillCost.apply(this, arguments);
+    };
+
+    Window_SkillList.prototype.drawCostSlash = function(skill, wx, wy, dw) {
+        this.contents.fontSize = Yanfly.Param.SCCMpFontSize;
+        var text = '/';
+        this.drawText(text, wx, wy, dw, 'right');
+        dw -= this.textWidth(text);
+        this.resetFontSettings();
+        return dw;
+    };
+
+    Window_SkillList.prototype.drawKeepTpCost = function(skill, wx, wy, dw) {
+        var cost = this._actor.getKeepCostOf(skill, ['TP']);
+        if (cost <= 0) return dw;
+        this._keepCostExist = true;
+        if (Yanfly.Icon.Tp > 0) {
+            var iw = wx + dw - Window_Base._iconWidth;
+            this.drawIcon(Yanfly.Icon.Tp, iw, wy + 2);
+            dw -= Window_Base._iconWidth + 2;
+        }
+        this.changeTextColor(this.textColor(setting.textColorCostTp));
+        var fmt = Yanfly.Param.SCCTpFormat;
+        var text = fmt.format(Yanfly.Util.toGroup(cost),
+            TextManager.tpA);
+        this.contents.fontSize = Yanfly.Param.SCCTpFontSize;
+        this.drawText(text, wx, wy, dw, 'right');
+        var returnWidth = dw - this.textWidth(text) - Yanfly.Param.SCCCostPadding;
+        this.resetFontSettings();
+        return returnWidth;
+    };
+
+    Window_SkillList.prototype.drawKeepMpCost = function(skill, wx, wy, dw) {
+        var cost = this._actor.getKeepCostOf(skill, ['MP']);
+        if (cost <= 0) return dw;
+        this._keepCostExist = true;
+        if (Yanfly.Icon.Tp > 0) {
+            var iw = wx + dw - Window_Base._iconWidth;
+            this.drawIcon(Yanfly.Icon.Tp, iw, wy + 2);
+            dw -= Window_Base._iconWidth + 2;
+        }
+        this.changeTextColor(this.textColor(setting.textColorCostMp));
+        var fmt = Yanfly.Param.SCCMpFormat;
+        var text = fmt.format(Yanfly.Util.toGroup(cost),
+            TextManager.mpA);
+        this.contents.fontSize = Yanfly.Param.SCCMpFontSize;
+        this.drawText(text, wx, wy, dw, 'right');
+        var returnWidth = dw - this.textWidth(text) - Yanfly.Param.SCCCostPadding;
+        this.resetFontSettings();
+        return returnWidth;
+    };
+
+    Window_SkillList.prototype.drawKeepHpCost = function(skill, wx, wy, dw) {
+        var cost = this._actor.getKeepCostOf(skill, ['HP']);
+        if (cost <= 0) return dw;
+        this._keepCostExist = true;
+        if (Yanfly.Icon.Hp > 0) {
+            var iw = wx + dw - Window_Base._iconWidth;
+            this.drawIcon(Yanfly.Icon.Hp, iw, wy + 2);
+            dw -= Window_Base._iconWidth + 2;
+        }
+        this.changeTextColor(this.textColor(setting.textColorCostHp));
+        var fmt = Yanfly.Param.SCCHpFormat;
+        var text = fmt.format(Yanfly.Util.toGroup(cost),
+            TextManager.hpA);
+        this.contents.fontSize = Yanfly.Param.SCCHpFontSize;
+        this.drawText(text, wx, wy, dw, 'right');
+        var returnWidth = dw - this.textWidth(text) - Yanfly.Param.SCCCostPadding;
+        this.resetFontSettings();
+        return returnWidth;
     };
 })();
 
