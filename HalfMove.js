@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.6 2016/07/30 場所移動やイベント位置の設定で半歩位置に移動できるよう修正
 // 1.4.5 2016/07/22 イベントの複数同時起動を抑制する設定を追加
 // 1.4.4 2016/07/02 半歩位置にいる場合に地形タグとリージョンIDの取得値が0になってしまう不具合を修正
 // 1.4.3 2016/06/30 タッチ操作によるマップ移動でイベント起動できない場合がある問題を修正
@@ -218,6 +219,11 @@
  * 配布元：公式サンプルゲーム「ニナと鍵守の勇者」に収録
  *
  * OverpassTile.jsを当プラグインより上に定義してください。
+ *
+ * FloatVariables.jsと組み合わせると半歩位置に場所移動したり
+ * イベント位置を設定したりできます。
+ *
+ * 配布元：
  *
  * 他のプラグインと併用する場合は、それぞれの配布元の規約や注意事項を
  * あらかじめご確認ください。
@@ -791,6 +797,15 @@
 
     Game_CharacterBase.prototype.getDistanceForHalfMove = function(character) {
         return $gameMap.distance(this.x, this.y, character.x, character.y);
+    };
+
+    var _Game_CharacterBase_setPosition = Game_CharacterBase.prototype.setPosition;
+    Game_CharacterBase.prototype.setPosition = function(x, y) {
+        _Game_CharacterBase_setPosition.apply(this, arguments);
+        if (this.isHalfMove()) {
+            this._x = x;
+            this._y = y;
+        }
     };
 
     //=============================================================================
