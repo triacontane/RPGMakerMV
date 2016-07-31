@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/07/31 パラメータ名の変換ミス修正(敷居値→閾値)
+//                  隊列歩行時のフォロワーの高度がデフォルト値で固定になっていた問題の修正
 // 1.1.1 2016/04/06 本プラグインを適用していないセーブデータをロードしたときも、正しく動作するよう修正
 // 1.1.0 2016/04/03 一定以上の高度の場合のみ通行可能になる地形タグとリージョンを指定できる機能を追加
 //                  着地可能な場合のみ着地する機能を追加、指定されたキャラクターが浮遊中かどうかの判定を追加
@@ -111,8 +113,8 @@
  * 例：1,2,3
  * @default
  *
- * @param 高度敷居値
- * @desc 一定高度以上の条件となる敷居値です。
+ * @param 高度閾値
+ * @desc 一定高度以上の条件となる閾値です。
  * @default 48
  *
  * @help キャラクターを浮遊させます。
@@ -212,7 +214,7 @@
     var paramRegionId            = getParamArrayNumber(['通行可能リージョン', 'RegionId']);
     var paramHighestTerrainTags  = getParamArrayNumber(['高度通行地形タグ', 'HighestTerrainTags']);
     var paramHighestRegionId     = getParamArrayNumber(['高度通行リージョン', 'HighestRegionId']);
-    var paramHighestThreshold    = getParamNumber(['高度敷居値', 'HighestThreshold']);
+    var paramHighestThreshold    = getParamNumber(['高度閾値', 'HighestThreshold']);
 
     //=============================================================================
     // Game_Interpreter
@@ -327,10 +329,10 @@
         if (waitFlg) this._waitCount = Math.max(this.maxAltitude() - this._altitude, 0);
     };
 
-    Game_Player.prototype.float = function(max) {
+    Game_Player.prototype.float = function(waitFlg, max) {
         Game_CharacterBase.prototype.float.apply(this, arguments);
         this.followers().forEach(function(follower) {
-            follower.float(max);
+            follower.float(waitFlg, max);
             follower._altitude = -follower._memberIndex * 4;
         }.bind(this));
     };
@@ -370,7 +372,7 @@
             }
             this._altitude = Math.max(this._altitude - 1, 0);
         }
-        if (this._floatingPrev != this.isFloating()) {
+        if (this._floatingPrev !== this.isFloating()) {
             this.refreshBushDepth();
         }
     };

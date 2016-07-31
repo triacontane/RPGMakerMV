@@ -45,7 +45,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc スキルコスト維持プラグイン
+ * @plugindesc スキル維持コストプラグイン
  * @author トリアコンタン
  *
  * @param 戦闘画面のみ有効
