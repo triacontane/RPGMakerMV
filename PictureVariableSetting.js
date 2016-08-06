@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/08/06 ピクチャを画面のシェイクと連動しないようにするコマンドを追加
 // 1.4.0 2016/06/23 ピクチャをシェイクさせるコマンドを追加
 // 1.3.0 2016/04/29 ピクチャを指定した角度まで回転させるコマンドを追加
 // 1.2.1 2016/04/14 処理を適用するピクチャを範囲指定もしくは複数指定する機能を追加
@@ -121,6 +122,17 @@
  *  このコマンドには「P_TARGET_ALL」等が適用されます。
  *　例 P_STOP_SHAKE \v[1]
  *  -> 変数「1」の値のピクチャのシェイクを止めます。
+ *
+ *  P_OUT_OF_SCREEN_SHAKE_ON [ピクチャ番号]
+ *  対象のピクチャが画面のシェイクと連動しないようになります。
+ *  メッセージウィンドウ等と同じ扱いになります。
+ *  例 P_OUT_OF_SCREEN_SHAKE_ON 1
+ *  -> ピクチャ番号「1」が画面のシェイクと連動しないようになります。
+ *
+ *  P_OUT_OF_SCREEN_SHAKE_OFF [ピクチャ番号]
+ *  対象のピクチャが画面のシェイクと再度、連動するようになります。
+ *  例 P_OUT_OF_SCREEN_SHAKE_OFF 1
+ *  -> ピクチャ番号「1」が画面のシェイクと再度、連動するようになります。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -243,6 +255,12 @@
                 break;
             case 'P_STOP_SHAKE':
                 $gameScreen.shakePicture(getArgNumber(args[0], 1), 0, 0, 0, 0);
+                break;
+            case 'P_OUT_OF_SCREEN_SHAKE_ON':
+                $gameScreen.setOutOfScreenShakePicture(getArgNumber(args[0], 1), true);
+                break;
+            case 'P_OUT_OF_SCREEN_SHAKE_OFF':
+                $gameScreen.setOutOfScreenShakePicture(getArgNumber(args[0], 1), false);
                 break;
         }
     };
@@ -415,6 +433,20 @@
         }
     };
 
+    Game_Screen.prototype.setOutOfScreenShakePicture = function(pictureId, value) {
+        if (this._pictureTargetAll > 0) {
+            this.iteratePictures(function(picture) {
+                picture.setOutOfScreenShake(value);
+            }.bind(this));
+            this._pictureTargetAll = 0;
+        } else {
+            var picture = this.picture(pictureId);
+            if (picture) {
+                picture.setOutOfScreenShake(value);
+            }
+        }
+    };
+
     Game_Screen.prototype.iteratePictures = function(callBack) {
         for (var i = 1, n = this.maxPictures(); i <= n; i++) {
             var picture = this.picture(i);
@@ -457,12 +489,17 @@
 
     var _Game_Picture_x      = Game_Picture.prototype.x;
     Game_Picture.prototype.x = function() {
-        return _Game_Picture_x.apply(this, arguments) + this.getShakeX();
+        return _Game_Picture_x.apply(this, arguments) + this.getShakeX() -
+            (this._outOfScreenShake ? $gameScreen.shake() : 0);
     };
 
     var _Game_Picture_y      = Game_Picture.prototype.y;
     Game_Picture.prototype.y = function() {
         return _Game_Picture_y.apply(this, arguments) + this.getShakeY();
+    };
+
+    Game_Picture.prototype.setOutOfScreenShake = function(value) {
+        this._outOfScreenShake = !!value;
     };
 
     Game_Picture.prototype.spin = function(targetRotation, duration) {
