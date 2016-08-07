@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/08/07 YEP_AutoPassiveStates.jsとの競合を解消
 // 1.1.0 2016/07/01 バトラーを指定した色で点滅させる機能を追加
 // 1.0.2 2016/06/29 YEP_X_AnimatedSVEnemies.jsとの間で発生していた競合を解消
 // 1.0.1 2016/06/17 敵を倒したときにグラフィックが消滅しない不具合を修正
@@ -235,6 +236,7 @@
     };
 
     Game_BattlerBase.prototype.refreshGraphicInfo = function() {
+        if (!this._actorId && !this._enemyId) return;
         this.refreshFloating();
         this.refreshOpacity();
         this.refreshScaleX();
