@@ -83,7 +83,7 @@
     var _Game_Action_executeHpDamage = Game_Action.prototype.executeHpDamage;
     Game_Action.prototype.executeHpDamage = function(target, value) {
         _Game_Action_executeHpDamage.apply(this, arguments);
-        if (target.isDead()) this.executeKillBonus();
+        if (target.hp === 0) this.executeKillBonus();
     };
 
     Game_Action.prototype.executeKillBonus = function() {
