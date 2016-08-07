@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/08/06 まだ確認していない用語の文字色を変えられる機能を追加
 // 1.4.1 2016/07/03 戦闘画面のアイテム選択ウィンドウに用語集アイテムが表示されていた問題を修正
 // 1.4.0 2016/05/31 テキストと画像を重ねて表示する設定を追加
 //                  新語が自動登録された場合にスイッチや変数を操作する機能を追加
@@ -127,6 +128,10 @@
  * @param CompleteMessage
  * @desc 収集率を表示する文言です。「%1」が収集率に変換されます。
  * @default Complete \c[2]%1\c[0] \%
+ *
+ * @param NewGlossaryColor
+ * @desc 新着用語を明示するためのカラーです。システムカラーから選択してください。
+ * @default 2
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -318,6 +323,10 @@
  * @param 収集率メッセージ
  * @desc 収集率を表示する文言です。「%1」が収集率に変換されます。
  * @default 収集率 \c[2]%1\c[0] ％
+ *
+ * @param 新着用語カラー
+ * @desc 新着用語を明示するためのカラーです。システムカラーから選択してください。
+ * @default 2
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -525,6 +534,7 @@ function Scene_Glossary() {
     var paramConfirmNoUse      = getParamString(['ConfirmNoUse', '確認_使わない']);
     var paramCompleteView      = getParamBoolean(['CompleteView', '収集率表示']);
     var paramCompleteMessage   = getParamString(['CompleteMessage', '収集率メッセージ']);
+    var paramNewGlossaryColor  = getParamNumber(['NewGlossaryColor', '新着用語カラー']);
 
     //=============================================================================
     // Game_Interpreter
@@ -639,6 +649,19 @@ function Scene_Glossary() {
         this.gainItem(item, 1, false);
     };
 
+    Game_Party.prototype.setConfirmedGlossaryItem = function(item) {
+        if (!this._confirmedGlossaryItems) this._confirmedGlossaryItems = [];
+        if (!this._confirmedGlossaryItems.contains(item.id)) {
+            this._confirmedGlossaryItems.push(item.id);
+            return true;
+        }
+        return false;
+    };
+
+    Game_Party.prototype.isConfirmedGlossaryItem = function(item) {
+        return this._confirmedGlossaryItems ? this._confirmedGlossaryItems.contains(item.id) : false;
+    };
+
     //=============================================================================
     // Game_Temp
     //  用語集画面の種別を追加定義します。
@@ -675,12 +698,6 @@ function Scene_Glossary() {
         $gameTemp.setGlossaryType(type);
         SceneManager.push(Scene_Glossary);
     };
-
-    //=============================================================================
-    // Scene_Item
-    //  アイテム画面から用語集画面へ直接遷移します。
-    //=============================================================================
-
 
     //=============================================================================
     // Window_MenuCommand
@@ -986,12 +1003,18 @@ function Scene_Glossary() {
     Window_GlossaryList.prototype.drawItemName = function(item, x, y, width) {
         if (item) {
             var iconBoxWidth = item.iconIndex > 0 ? Window_Base._iconWidth + 4 : 0;
-            this.resetTextColor();
             this.drawIcon(item.iconIndex, x + 2, y + 2);
-            this.changePaintOpacity(this.isEnabled(item));
+            this.setGlossaryColor(item);
             this.drawText(item.name, x + iconBoxWidth, y, width - iconBoxWidth);
             this.changePaintOpacity(1);
+            this.resetTextColor();
         }
+    };
+
+    Window_GlossaryList.prototype.setGlossaryColor = function(item) {
+        this.changePaintOpacity(this.isEnabled(item));
+        var colorIndex = $gameParty.isConfirmedGlossaryItem(item) ? 0 : paramNewGlossaryColor;
+        this.changeTextColor(this.textColor(colorIndex));
     };
 
     Window_GlossaryList.prototype.isEnabled = function(item) {
@@ -1008,6 +1031,11 @@ function Scene_Glossary() {
     };
 
     Window_GlossaryList.prototype.select = function(index) {
+        var prevItem = this.item();
+        if (prevItem) {
+            var result = $gameParty.setConfirmedGlossaryItem(prevItem);
+            if (result) this.refresh();
+        }
         Window_ItemList.prototype.select.apply(this, arguments);
         this._glossaryWindow.refresh(this.item());
     };
