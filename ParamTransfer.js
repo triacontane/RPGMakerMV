@@ -72,7 +72,14 @@
  * 変換した上でさらにn倍したい場合は以下の通り記述してください。
  * 倍率には制御文字\v[n]およびJavaScript計算式が利用できます。
  * <PT0:1>
- * <PTRate0:\v[1]+50> # 最大HPの値が最大MPの「変数[1]の値 + 50%」の倍率の値で上書きされます。
+ * <PTRate0:\v[1]+50> # 最大HPの値が最大MPの「変数[1]の値 + 50%」の倍率の値で
+ *                      上書きされます。
+ *
+ * 変換先を同じ値に指定すると、単にパラメータを指定した条件でn倍できます。
+ * 計算式中で「battler」と入力すると対象のバトラー情報を参照できます。
+ * <PT2:2>
+ * <PTRate2:100 + battler.tp> # 攻撃力の値が現在のTPにより変動します。
+ *                              (TP100で攻撃力2倍)
  *
  * 変換されるのはベースパラメータで、装備品やバフによる加算は
  * 含まれません。
@@ -98,6 +105,11 @@
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(eval(convertEscapeCharacters(arg)), 10) || 0).clamp(min, max);
+    };
+
+    var getArgString = function(arg, upperFlg) {
+        arg = convertEscapeCharacters(arg);
+        return upperFlg ? arg.toUpperCase() : arg;
     };
 
     var convertEscapeCharacters = function(text) {
@@ -129,12 +141,13 @@
     Game_BattlerBase.prototype.getTransParam = function(originalParamId, originalFunction) {
         var realParamId = -1;
         var realParamRate = 1;
+        var battler = this;
         this.traitObjects().some(function(data) {
             var value1 = getMetaValue(data, String(originalParamId));
             if (value1) realParamId = getArgNumberWithEval(value1, 0, 7);
             var value2 = getMetaValue(data, 'Rate' + String(originalParamId));
             try {
-                if (value2) realParamRate = getArgNumberWithEval(value2, 0) / 100;
+                if (value2) realParamRate = eval(getArgString(value2)) / 100;
             } catch (e) {
                 console.log(e.stack);
             }

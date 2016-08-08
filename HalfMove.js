@@ -814,10 +814,11 @@
     //=============================================================================
     var _Game_Character_findDirectionTo = Game_Character.prototype.findDirectionTo;
     Game_Character.prototype.findDirectionTo = function(goalX, goalY) {
-        var halfPositionCount = localHalfPositionCount;
-        localHalfPositionCount = 0;
         var result = _Game_Character_findDirectionTo.apply(this, arguments);
-        localHalfPositionCount = halfPositionCount;
+        if (result + this._prevFindDirection === 10) {
+            $gameTemp.clearDestination();
+        }
+        this._prevFindDirection = result;
         return result;
     };
 
