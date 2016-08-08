@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.7 2016/08/08 タッチ操作時にたまに同じ場所を延々とループしてしまう現象の修正
 // 1.4.6 2016/07/30 場所移動やイベント位置の設定で半歩位置に移動できるよう修正
 // 1.4.5 2016/07/22 イベントの複数同時起動を抑制する設定を追加
 // 1.4.4 2016/07/02 半歩位置にいる場合に地形タグとリージョンIDの取得値が0になってしまう不具合を修正
@@ -814,11 +815,9 @@
     //=============================================================================
     var _Game_Character_findDirectionTo = Game_Character.prototype.findDirectionTo;
     Game_Character.prototype.findDirectionTo = function(goalX, goalY) {
+        localHalfPositionCount++;
         var result = _Game_Character_findDirectionTo.apply(this, arguments);
-        if (result + this._prevFindDirection === 10) {
-            $gameTemp.clearDestination();
-        }
-        this._prevFindDirection = result;
+        localHalfPositionCount--;
         return result;
     };
 
@@ -1171,8 +1170,8 @@
     //  移動ルート強制中は半歩移動を無効にします。
     //=============================================================================
     Game_Character.prototype.isHalfMove = function() {
-        return (Game_CharacterBase.prototype.isHalfMove.call(this) && (!this._moveRouteForcing || !paramDisableForcing)) ||
-            this.isHalfPosX() || this.isHalfPosY();
+        return (Game_CharacterBase.prototype.isHalfMove.call(this) &&
+            (!this._moveRouteForcing || !paramDisableForcing)) || this.isHalfPosX() || this.isHalfPosY();
     };
 
     //=============================================================================
