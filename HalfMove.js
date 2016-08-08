@@ -800,7 +800,7 @@
         return $gameMap.distance(this.x, this.y, character.x, character.y);
     };
 
-    var _Game_CharacterBase_setPosition = Game_CharacterBase.prototype.setPosition;
+    var _Game_CharacterBase_setPosition          = Game_CharacterBase.prototype.setPosition;
     Game_CharacterBase.prototype.setPosition = function(x, y) {
         _Game_CharacterBase_setPosition.apply(this, arguments);
         if (this.isHalfMove()) {
