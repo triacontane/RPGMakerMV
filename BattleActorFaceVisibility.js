@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/08/08 顔グラフィック以外を表示したときに縮小するかどうかを選択するパラメータを追加
 // 1.1.3 2016/04/16 戦闘中にメンバーが入れ替わった場合にエラーが発生する場合がある問題を修正
 // 1.1.2 2016/02/13 他のプラグインと併用できるように、ウィンドウの表示位置を調整する機能を追加
 //                  ウィンドウの表示順をヘルプウィンドウの下に変更
@@ -36,6 +37,10 @@
  * @desc Window Y Position
  * @default
  *
+ * @param Reduction
+ * @desc Reduction picture or enemy image(ON/OFF)
+ * @default ON
+ *
  * @help Plugin that to visualize face graphic in battle
  * This plugin is released under the MIT License.
  *
@@ -56,6 +61,10 @@
  * @param ウィンドウY座標
  * @desc ウィンドウの表示 X 座標です。省略するとデフォルト値になります。
  * @default
+ *
+ * @param 縮小表示
+ * @desc ピクチャ及び敵キャラ画像をウィンドウサイズに合わせて縮小表示します。(ON/OFF)
+ * @default ON
  *
  * @help 戦闘中、コマンド選択ウィンドウの上に
  * 顔グラフィックが表示されるようになります。
@@ -196,12 +205,12 @@
     Window_Face.prototype.update = function() {
         Window_Base.prototype.update.call(this);
         var actor = BattleManager.actor();
-        if (actor && this._actorId != actor.actorId()) {
+        if (actor && this._actorId !== actor.actorId()) {
             this.drawActorFace(actor);
             this._actorId = actor.actorId();
             this.show();
         }
-        if (actor == null && this._actorId != 0) {
+        if (actor == null && this._actorId !== 0) {
             this._actorId = 0;
             this.hide();
         }
@@ -222,7 +231,12 @@
     Window_Face.prototype.drawPicture = function(fileName, loadHandler) {
         var bitmap = loadHandler(fileName);
         bitmap.addLoadListener(function() {
-            var scale = Math.min(Window_Base._faceWidth / bitmap.width, Window_Base._faceHeight / bitmap.height, 1.0);
+            var scale;
+            if (getParamBoolean(['縮小表示', 'Reduction'])) {
+                scale = Math.min(Window_Base._faceWidth / bitmap.width, Window_Base._faceHeight / bitmap.height, 1.0);
+            } else {
+                scale = 1.0;
+            }
             this._faceSprite.scale.x = scale;
             this._faceSprite.scale.y = scale;
             this._faceSprite.bitmap  = bitmap;
