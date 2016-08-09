@@ -230,9 +230,7 @@
             }
         }.bind(this));
         for (var i = 0; i < this._characterSprites.length; i++) {
-            var sprite = this._characterSprites[i];
-            if (!sprite) p (i + ':' + this._characterSprites.length);
-            if (sprite.isCharacterExtinct()) {
+            if (this._characterSprites[i].isCharacterExtinct()) {
                 this.removePrefabEvent(i);
                 i--;
             }
