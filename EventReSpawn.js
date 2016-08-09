@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/08/09 イベント生成後にメニューを開いて戻ってくるとエラーが発生する現象の修正
 // 1.0.0 2016/08/08 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -160,10 +161,16 @@
     Game_PrefabEvent.prototype = Object.create(Game_Event.prototype);
 
     Game_PrefabEvent.prototype.initialize = function(mapId, eventId, originalEventId, x, y) {
-        $dataMap.events[eventId] = $dataMap.events[originalEventId];
+        this._originalEventId = originalEventId;
+        this._eventId = eventId;
+        this.linkEventData();
         Game_Event.prototype.initialize.call(this, mapId, eventId);
         this.locate(x, y);
         this._spritePrepared = false;
+    };
+
+    Game_PrefabEvent.prototype.linkEventData = function() {
+        $dataMap.events[this._eventId] = $dataMap.events[this._originalEventId];
     };
 
     Game_PrefabEvent.prototype.isPrefab = function() {
@@ -226,18 +233,18 @@
     Spriteset_Map.prototype.updatePrefabEvent = function() {
         $gameMap.getPrefabEvents().forEach(function(event) {
             if (!event.isSpritePrepared()) {
-                this.makePrefabEvent(event);
+                this.makePrefabEventSprite(event);
             }
         }.bind(this));
         for (var i = 0; i < this._characterSprites.length; i++) {
             if (this._characterSprites[i].isCharacterExtinct()) {
-                this.removePrefabEvent(i);
+                this.removePrefabEventSprite(i);
                 i--;
             }
         }
     };
 
-    Spriteset_Map.prototype.makePrefabEvent = function(event) {
+    Spriteset_Map.prototype.makePrefabEventSprite = function(event) {
         event.setSpritePrepared();
         var sprite = new Sprite_Character(event);
         sprite.spriteId = this._prefabSpriteId;
@@ -245,7 +252,7 @@
         this._tilemap.addChild(sprite);
     };
 
-    Spriteset_Map.prototype.removePrefabEvent = function(index) {
+    Spriteset_Map.prototype.removePrefabEventSprite = function(index) {
         var sprite = this._characterSprites[index];
         this._characterSprites.splice(index, 1);
         this._tilemap.removeChild(sprite);
@@ -259,6 +266,16 @@
     Scene_Map.prototype.create = function() {
         $gameMap.resetSelfSwitchForPrefabEvent();
         _Scene_Map_create.apply(this, arguments);
+    };
+
+    var _DataManager_onLoad = DataManager.onLoad;
+    DataManager.onLoad = function(object) {
+        _DataManager_onLoad.apply(this, arguments);
+        if (object === $dataMap) {
+            $gameMap.getPrefabEvents().forEach(function(prefabEvent) {
+                prefabEvent.linkEventData();
+            });
+        }
     };
 })();
 
