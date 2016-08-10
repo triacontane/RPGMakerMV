@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2016/08/05 本体v1.3.0対応（1.2.0では使えなくなります）
 // 1.0.0 2016/06/25 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -91,12 +92,12 @@
         try {
             result = _ImageManager_isReady.apply(this, arguments);
         } catch (e) {
-            for (var key in this._cache) {
-                if (!this._cache.hasOwnProperty(key)) continue;
-                var bitmap = this._cache[key];
+            for (var key in this.cache._inner) {
+                if (!this.cache._inner.hasOwnProperty(key)) continue;
+                var bitmap = this.cache._inner[key].item;
                 if (bitmap.isError()) {
                     bitmap.eraseError();
-                    this._cache[key] = new Bitmap();
+                    this.cache.setItem(key, new Bitmap());
                 }
             }
             result = _ImageManager_isReady.apply(this, arguments);

@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2016/08/05 本体v1.3.0対応（1.2.0では使えなくなります）
+//                  素材のプリロード時に発生するエラー(対象が存在しない等)を抑制するよう仕様変更
 // 1.1.2 2016/07/23 コードのリファクタリングとヘルプの修正
 // 1.1.1 2016/04/29 ログ出力を無効化するパラメータを追加
 // 1.1.0 2016/04/28 音声素材の並列プリロードに対応
@@ -259,14 +261,33 @@ var $dataMaterials = null;
     ImageManager.isReady = function() {
         var result = _ImageManager_isReady.apply(this, arguments);
         if (result) return true;
-        for (var key in this._cache) {
-            if (!this._cache.hasOwnProperty(key)) continue;
-            var bitmap = this._cache[key];
+        for (var key in this.cache._inner) {
+            if (!this.cache._inner.hasOwnProperty(key)) continue;
+            var bitmap = this.cache._inner[key].item;
             if (!bitmap.isReady() && !bitmap._isNeedLagDraw) {
                 return false;
             }
         }
         return true;
+    };
+
+    var _ImageManager_isReady2 = ImageManager.isReady;
+    ImageManager.isReady      = function() {
+        var result = false;
+        try {
+            result = _ImageManager_isReady2.apply(this, arguments);
+        } catch (e) {
+            for (var key in this.cache._inner) {
+                if (!this.cache._inner.hasOwnProperty(key)) continue;
+                var bitmap = this.cache._inner[key].item;
+                if (bitmap.isError() && bitmap._isNeedLagDraw) {
+                    bitmap.eraseError();
+                    delete this.cache._inner[key];
+                }
+            }
+            result = _ImageManager_isReady2.apply(this, arguments);
+        }
+        return result;
     };
 
     //=============================================================================
@@ -305,13 +326,30 @@ var $dataMaterials = null;
     };
 
     Bitmap.prototype.drawImageIfNeed = function() {
-        if (this._isNeedLagDraw) this.drawImage();
+        if (this._isNeedLagDraw) {
+            if (this.isReady()) {
+                this.drawImage();
+            } else {
+                this._isNeedLagDraw = false;
+            }
+        }
     };
 
     var _Bitmap_blt = Bitmap.prototype.blt;
     Bitmap.prototype.blt = function(source, sx, sy, sw, sh, dx, dy, dw, dh) {
         source.drawImageIfNeed();
         _Bitmap_blt.apply(this, arguments);
+    };
+
+    var _Bitmap_bltImage = Bitmap.prototype.bltImage;
+    Bitmap.prototype.bltImage = function(source, sx, sy, sw, sh, dx, dy, dw, dh) {
+        source.drawImageIfNeed();
+        _Bitmap_bltImage.apply(this, arguments);
+    };
+
+    Bitmap.prototype.eraseError = function() {
+        this._hasError  = false;
+        this._isLoading = false;
     };
 
     //=============================================================================
@@ -332,6 +370,20 @@ var $dataMaterials = null;
     TilingSprite.prototype._onBitmapLoad = function() {
         if (this._bitmap) this._bitmap.drawImageIfNeed();
         _TilingSprite__onBitmapLoad.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Spriteset_Map
+    //  タイルセットはすぐに描画します。
+    //=============================================================================
+    var _Spriteset_Map_loadTileset = Spriteset_Map.prototype.loadTileset;
+    Spriteset_Map.prototype.loadTileset = function() {
+        _Spriteset_Map_loadTileset.apply(this, arguments);
+        if (this._tileset) {
+            this._tilemap.bitmaps.forEach(function(bitmap) {
+                bitmap.drawImageIfNeed();
+            });
+        }
     };
 })();
 
