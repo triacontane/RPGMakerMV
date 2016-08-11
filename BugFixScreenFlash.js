@@ -39,9 +39,7 @@
     'use strict';
 
     ScreenSprite.prototype._renderWebGL = function(renderer) {
-        if (this._bitmap) {
-            this._bitmap.checkDirty();
-        }
+        this._bitmap.checkDirty();
         PIXI.Sprite.prototype._renderWebGL.call(this, renderer);
     };
 })();
