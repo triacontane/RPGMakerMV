@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/08/11 動的イベント生成中にセーブした場合にロードできなくなる不具合を修正
 // 1.1.0 2016/08/10 テンプレートイベントプラグインとの連携で、テンプレートマップからイベントを生成する機能を追加
 //                  生成場所を条件付きランダムで設定できる機能を追加
 // 1.0.1 2016/08/09 イベント生成後にメニューを開いて戻ってくるとエラーが発生する現象の修正
@@ -65,6 +66,10 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+
+function Game_PrefabEvent() {
+    this.initialize.apply(this, arguments);
+}
 
 (function() {
     'use strict';
@@ -293,12 +298,8 @@
     // Game_PrefabEvent
     //  動的に生成されるイベントオブジェクトです。
     //=============================================================================
-    function Game_PrefabEvent() {
-        this.initialize.apply(this, arguments);
-    }
-
-    Game_PrefabEvent.prototype.constructor = Game_PrefabEvent;
     Game_PrefabEvent.prototype             = Object.create(Game_Event.prototype);
+    Game_PrefabEvent.prototype.constructor = Game_PrefabEvent;
 
     Game_PrefabEvent.prototype.initialize = function(mapId, eventId, originalEventId, x, y, isTemplate) {
         this._originalEventId = originalEventId;
