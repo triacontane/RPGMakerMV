@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.8 2016/08/12 イベントすり抜けがOFF、トリガー拡張がONの場合に、縦に半歩ずれた状態でイベントが起動できない現象を修正
 // 1.4.7 2016/08/08 タッチ操作時にたまに同じ場所を延々とループしてしまう現象の修正
 // 1.4.6 2016/07/30 場所移動やイベント位置の設定で半歩位置に移動できるよう修正
 // 1.4.5 2016/07/22 イベントの複数同時起動を抑制する設定を追加
@@ -781,11 +782,11 @@
     };
 
     Game_CharacterBase.prototype.isHalfThrough = function(y) {
-        return this.isThroughDisable() && this.y !== y;
+        return this.isThroughEnable() && this.y !== y;
     };
 
-    Game_CharacterBase.prototype.isThroughDisable = function() {
-        return paramEventThrough && !this._throughDisable;
+    Game_CharacterBase.prototype.isThroughEnable = function() {
+        return (this._throughDisable != null ? !this._throughDisable : paramEventThrough);
     };
 
     var _Game_CharacterBase_checkEventTriggerTouchFront = Game_CharacterBase.prototype.checkEventTriggerTouchFront;
@@ -1039,7 +1040,7 @@
 
     Game_Event.prototype.getExpansionArea = function() {
         var metaValue = getMetaValues(this.event(), ['ExpansionArea', '拡大領域']);
-        if(this.isNormalPriority() && !this.isThroughDisable()) {
+        if(this.isNormalPriority() && !this.isThroughEnable()) {
             return [0, 0.5, 0.5, 0];
         } else if (metaValue) {
             return getArgArrayFloat(metaValue, 0);
