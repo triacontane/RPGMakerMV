@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.9 2016/08/14 半歩位置にいる場合にタイル依存の戦闘背景の設定が正しく機能しない現象を修正
 // 1.4.8 2016/08/12 イベントすり抜けがOFF、トリガー拡張がONの場合に、縦に半歩ずれた状態でイベントが起動できない現象を修正
 // 1.4.7 2016/08/08 タッチ操作時にたまに同じ場所を延々とループしてしまう現象の修正
 // 1.4.6 2016/07/30 場所移動やイベント位置の設定で半歩位置に移動できるよう修正
@@ -493,24 +494,38 @@
 
     var _Game_Map_terrainTag = Game_Map.prototype.terrainTag;
     Game_Map.prototype.terrainTag = function(x, y) {
+        var tu = Game_Map.tileUnit;
         if (this.isHalfPos(x)) {
-            return this.terrainTag(x - Game_Map.tileUnit, y) || this.terrainTag(x + Game_Map.tileUnit, y);
+            return this.terrainTag(x - tu, y) || this.terrainTag(x + tu, y);
         }
         if (this.isHalfPos(y)) {
-            return this.terrainTag(x, y - Game_Map.tileUnit) || this.terrainTag(x, y + Game_Map.tileUnit);
+            return this.terrainTag(x, y + tu) || this.terrainTag(x, y - tu);
         }
         return _Game_Map_terrainTag.apply(this, arguments);
     };
 
     var _Game_Map_regionId = Game_Map.prototype.regionId;
     Game_Map.prototype.regionId = function(x, y) {
+        var tu = Game_Map.tileUnit;
         if (this.isHalfPos(x)) {
-            return this.regionId(x - Game_Map.tileUnit, y) || this.regionId(x + Game_Map.tileUnit, y);
+            return this.regionId(x - tu, y) || this.regionId(x + tu, y);
         }
         if (this.isHalfPos(y)) {
-            return this.regionId(x, y - Game_Map.tileUnit) || this.regionId(x, y + Game_Map.tileUnit);
+            return this.regionId(x, y + tu) || this.regionId(x, y - tu);
         }
         return _Game_Map_regionId.apply(this, arguments);
+    };
+
+    var _Game_Map_autotileType = Game_Map.prototype.autotileType;
+    Game_Map.prototype.autotileType = function(x, y, z) {
+        var tu = Game_Map.tileUnit;
+        if (this.isHalfPos(x)) {
+            return this.autotileType(x - tu, y, z) || this.autotileType(x + tu, y, z);
+        }
+        if (this.isHalfPos(y)) {
+            return this.autotileType(x, y + tu, z) || this.autotileType(x, y - tu, z);
+        }
+        return _Game_Map_autotileType.apply(this, arguments);
     };
 
     //=============================================================================
