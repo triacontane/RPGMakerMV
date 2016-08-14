@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/08/14 スイッチ項目、音量項目の初期値が無効になっていた問題を修正
 // 1.1.0 2016/04/29 項目をクリックしたときに項目値が循環するよう修正
 // 1.0.0 2016/01/17 初版
 // ----------------------------------------------------------------------------
@@ -22,42 +23,42 @@
  * -------------------------------------------------------
  * @param スイッチ項目1
  * @desc 項目の情報です。以下の順で指定します。
- * 名称,初期値,スイッチ番号,隠しフラグ
+ * 名称,初期値(ON/OFF),スイッチ番号,隠しフラグ
  * @default スイッチ項目1:OFF:0:OFF
  *
  * @param 数値項目1
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値:変数番号:隠しフラグ:最小値:最大値:変化値
+ * 名称:初期値(数値):変数番号:隠しフラグ:最小値:最大値:変化値
  * @default 数値項目1:0:0:OFF:0:10:1
  *
  * @param 音量項目1
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値:変数番号:隠しフラグ
+ * 名称:初期値(数値(0...100)):変数番号:隠しフラグ
  * @default 音量項目1:0:0:OFF
  *
  * @param 文字項目1
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値:変数番号:隠しフラグ:文字の配列
+ * 名称:初期値(Index(数値)):変数番号:隠しフラグ:文字の配列
  * @default 文字項目1:0:0:OFF:EASY, NORMAL, HARD, VERY HARD
  *
  * @param スイッチ項目2
  * @desc 項目の情報です。以下の順で指定します。
- * 名称,初期値,スイッチ番号,隠しフラグ
+ * 名称,初期値(ON/OFF),スイッチ番号,隠しフラグ
  * @default スイッチ項目2:OFF:0:OFF
  *
  * @param 数値項目2
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値:変数番号:隠しフラグ:最小値:最大値:変化値
+ * 名称:初期値(数値):変数番号:隠しフラグ:最小値:最大値:変化値
  * @default 数値項目2:0:0:OFF:0:10:1
  *
  * @param 音量項目2
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値:変数番号:隠しフラグ
+ * 名称:初期値(数値(0...100)):変数番号:隠しフラグ
  * @default 音量項目2:0:0:OFF
  *
  * @param 文字項目2
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値:変数番号:隠しフラグ:文字の配列
+ * 名称:初期値(Index(数値)):変数番号:隠しフラグ:文字の配列
  * @default 文字項目2:0:0:OFF:EASY, NORMAL, HARD, VERY HARD
  * --------------------------------------------------------
  *
@@ -168,6 +169,10 @@
         });
     }
 
+    //=============================================================================
+    // Game_Interpreter
+    //  プラグインコマンドを追加定義します。
+    //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
@@ -199,6 +204,10 @@
         }
     };
 
+    //=============================================================================
+    // ConfigManager
+    //  追加項目の設定値や初期値を管理します。
+    //=============================================================================
     ConfigManager.customParams = null;
     ConfigManager.hiddenInfo = {};
 
@@ -269,9 +278,9 @@
         _ConfigManager_applyData.apply(this, arguments);
         this.getCustomParams().iterate(function(symbol, item) {
             if (symbol.contains('Boolean')) {
-                this[symbol] = this.readFlag(config, symbol);
+                this[symbol] = this.readFlagCustom(config, symbol, item);
             } else if (symbol.contains('Volume')) {
-                this[symbol] = this.readVolume(config, symbol);
+                this[symbol] = this.readVolumeCustom(config, symbol, item);
             } else {
                 this[symbol] = this.readOther(config, symbol, item);
             }
@@ -290,6 +299,22 @@
         var value = config[name];
         if (value !== undefined) {
             return Number(value).clamp(item.min, item.max);
+        } else {
+            return item.initValue;
+        }
+    };
+
+    ConfigManager.readFlagCustom = function(config, name, item) {
+        if (config[name] !== undefined) {
+            return this.readFlag(config, name);
+        } else {
+            return item.initValue;
+        }
+    };
+
+    ConfigManager.readVolumeCustom = function(config, name, item) {
+        if (config[name] !== undefined) {
+            return this.readVolume(config, name);
         } else {
             return item.initValue;
         }
@@ -323,18 +348,26 @@
         }.bind(this));
     };
 
-    var _Game_Map_refresh = Game_Map.prototype.refresh;
-    Game_Map.prototype.refresh = function() {
-        _Game_Map_refresh.apply(this, arguments);
-        ConfigManager.importCustomParams();
-    };
-
     var _ConfigManager_save = ConfigManager.save;
     ConfigManager.save = function() {
         _ConfigManager_save.apply(this, arguments);
         this.exportCustomParams();
     };
 
+    //=============================================================================
+    // Game_Map
+    //  リフレッシュ時にオプション値を同期します。
+    //=============================================================================
+    var _Game_Map_refresh = Game_Map.prototype.refresh;
+    Game_Map.prototype.refresh = function() {
+        _Game_Map_refresh.apply(this, arguments);
+        ConfigManager.importCustomParams();
+    };
+
+    //=============================================================================
+    // DataManager
+    //  セーブ時とロード時にオプション値を同期します。
+    //=============================================================================
     var _DataManager_setupNewGame = DataManager.setupNewGame;
     DataManager.setupNewGame = function() {
         _DataManager_setupNewGame.apply(this, arguments);
@@ -348,6 +381,10 @@
         return result;
     };
 
+    //=============================================================================
+    // Window_Options
+    //  追加項目を描画します。
+    //=============================================================================
     var _Window_Options_initialize = Window_Options.prototype.initialize;
     Window_Options.prototype.initialize = function() {
         this._customParams = ConfigManager.getCustomParams();
