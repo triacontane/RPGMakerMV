@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2016/08/14 コアスクリプトのバージョンを出力するようにしました。
 // 1.5.0 2016/06/25 スクリプトの常駐実行機能を追加
 // 1.4.2 2016/06/14 SceneManager.initializeでエラーが発生した際にエラー内容を確認できない問題を修正
 // 1.4.1 2016/06/14 YEP_CoreEngine.jsと併用したときにウィンドウ高さ補正が効かなくなる問題を修正
@@ -233,16 +234,20 @@ var p = null;
 
 (function() {
     'use strict';
+    var pluginName = 'DevToolsManage';
     // テストプレー時以外は一切の機能を無効
     if (!(Utils.isOptionValid('test') || SceneManager.isBattleTest() || SceneManager.isEventTest()) || !Utils.isNwjs()) {
-        console.log('DevToolsManage is valid only test play!');
+        console.log(pluginName + ' is valid only test play!');
         return;
     }
-    var pluginName = 'DevToolsManage';
+    console.log('=========================Start Up ' + pluginName + '=========================');
+    console.log('RPG Maker Name    : ' + Utils.RPGMAKER_NAME);
+    console.log('RPG Maker Version : ' + Utils.RPGMAKER_VERSION);
+    console.log('=========================================================================');
 
     //=============================================================================
     // p
-    //  RGSS互換のために定義します。
+    //  ログ出力をより短い関数名で実現します。(RGSS互換)
     //=============================================================================
     p = function(value) {
         console.log(value);
@@ -327,6 +332,7 @@ var p = null;
     var _Graphics__createAllElements = Graphics._createAllElements;
     Graphics._createAllElements      = function() {
         _Graphics__createAllElements.apply(this, arguments);
+        console.log('output body for check layout by ' + pluginName);
         console.log(document.body);
     };
 
@@ -673,7 +679,9 @@ var p = null;
         _Scene_Boot_start.apply(this, arguments);
         if (paramRapidStart) SceneManager.toggleRapid();
         if (paramCutTitle && !Utils.isOptionValid('btest') && !Utils.isOptionValid('etest')) {
-            return this.goToLatestContinue() || this.goToNewGame();
+            if (!this.goToLatestContinue()) {
+                this.goToNewGame();
+            }
         }
     };
 

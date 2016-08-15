@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/08/12 キャラクターを切り替えたときにグラフィックが切り替わらない問題を修正
 // 1.0.0 2016/07/19 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -277,7 +278,9 @@
     var _Window_Status_refresh      = Window_Status.prototype.refresh;
     Window_Status.prototype.refresh = function() {
         _Window_Status_refresh.apply(this, arguments);
-        if (this._actor) this._bustSprite.refresh(this._actor);
+        if (this._actor) {
+            this._bustSprite.refresh(this._actor);
+        }
     };
 
     //=============================================================================
@@ -298,6 +301,7 @@
         this.anchor.x = 0.5;
         this.anchor.y = 1.0;
         this._actor   = null;
+        this._equipSprites = [];
     };
 
     Sprite_Bust.prototype.refresh = function(actor) {
@@ -309,18 +313,30 @@
 
     Sprite_Bust.prototype.drawMain = function() {
         var imageFileName = this._actor.getBustImageName();
-        if (imageFileName) this.bitmap = ImageManager.loadPicture(getArgString(imageFileName), 0);
+        this.bitmap = (imageFileName ? ImageManager.loadPicture(getArgString(imageFileName), 0) : null);
     };
 
     Sprite_Bust.prototype.drawAnimation = function() {
         this._animationId = this._actor.getBustAnimationId();
-        if (this.isNeedAnimation()) this.startAnimation();
+        if (this.isNeedAnimation()) {
+            this.startAnimation();
+        } else {
+            this.stopAnimation();
+        }
     };
 
     Sprite_Bust.prototype.drawEquips = function() {
+        this.clearEquips();
         this._actor.equips().forEach(function(equip) {
             if (equip) this.makeEquipSprite(equip);
         }.bind(this));
+    };
+
+    Sprite_Bust.prototype.clearEquips = function() {
+        this._equipSprites.forEach(function(sprite) {
+            this.removeChild(sprite);
+        }.bind(this));
+        this._equipSprites = [];
     };
 
     Sprite_Bust.prototype.makeEquipSprite = function(equip) {
@@ -335,6 +351,7 @@
             var yStr        = getMetaValues(equip, ['PosY', '座標Y']);
             sprite.y        = yStr ? getArgNumber(yStr) : 0;
             this.addChild(sprite);
+            this._equipSprites.push(sprite);
         }
     };
 
@@ -365,6 +382,15 @@
         } else {
             return false;
         }
+    };
+
+    Sprite_Base.prototype.stopAnimation = function() {
+        if (this._animationSprites.length > 0) {
+            this._animationSprites.forEach(function(animation) {
+                animation.remove();
+            });
+        }
+        this._animationSprites = [];
     };
 })();
 
