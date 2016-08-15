@@ -41,7 +41,7 @@
     // Game_Message
     // きのこからたけのこへの変換を追加定義します。
     //=============================================================================
-    var _Game_Message_prototype_add = Game_Message.prototype.add
+    var _Game_Message_prototype_add = Game_Message.prototype.add;
     Game_Message.prototype.add = function (text) {
         text = convertTakenokoKinoko(text);
         _Game_Message_prototype_add.call(this, text);
