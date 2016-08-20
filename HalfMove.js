@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2016/08/20 左半分のみ、右半分のみを通行不可にする機能を追加
 // 1.5.0 2016/08/16 イベント同士の位置の重複を許可する設定を追加
 // 1.4.9 2016/08/14 半歩位置にいる場合にタイル依存の戦闘背景の設定が正しく機能しない現象を修正
 // 1.4.8 2016/08/12 イベントすり抜けがOFF、トリガー拡張がONの場合に、縦に半歩ずれた状態でイベントが起動できない現象を修正
@@ -83,6 +84,22 @@
  * @desc 下半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
  *
+ * @param RightNpTerrainTag
+ * @desc 右半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param RightNpRegionId
+ * @desc 右半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param LeftNpTerrainTag
+ * @desc 左半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param LeftNpRegionId
+ * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
+ *
  * @param MultiStartDisable
  * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
  * @default OFF
@@ -126,7 +143,7 @@
  * @default OFF
  *
  * @param 角回避
- * @desc 直進中にマップの角に引っ掛かった場合、斜め移動に切り替えて再試行します。進行方向に起動可能なイベントがある場合は無効です。
+ * @desc 直進中にマップの角に引っ掛かった場合、斜め移動に切り替えて再試行します。進行方向に起動可能なイベントがある場合は無効。
  * @default ON
  *
  * @param 斜め移動中減速
@@ -155,6 +172,22 @@
  *
  * @param 下半分移動不可Region
  * @desc 下半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param 右半分移動不可地形
+ * @desc 右半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param 右半分移動不可Region
+ * @desc 右半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param 左半分移動不可地形
+ * @desc 左半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param 左半分移動不可Region
+ * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
  *
  * @param イベント複数起動防止
@@ -339,8 +372,12 @@
     var paramAdjustmentRealStep = getParamBoolean(['AdjustmentRealStep', '実歩数調整']);
     var paramUpperNpTerrainTag  = getParamNumber(['UpperNpTerrainTag', '上半分移動不可地形'], 0);
     var paramUpperNpRegionId    = getParamNumber(['UpperNpRegionId', '上半分移動不可Region'], 0);
-    var paramLowerCpTerrainTag  = getParamNumber(['LowerNpTerrainTag', '下半分移動不可地形'], 0);
-    var paramLowerCpRegionId    = getParamNumber(['LowerNpRegionId', '下半分移動不可Region'], 0);
+    var paramLowerNpTerrainTag  = getParamNumber(['LowerNpTerrainTag', '下半分移動不可地形'], 0);
+    var paramLowerNpRegionId    = getParamNumber(['LowerNpRegionId', '下半分移動不可Region'], 0);
+    var paramRightNpTerrainTag  = getParamNumber(['RightNpTerrainTag', '右半分移動不可地形'], 0);
+    var paramRightNpRegionId    = getParamNumber(['RightNpRegionId', '右半分移動不可Region'], 0);
+    var paramLeftNpTerrainTag   = getParamNumber(['LeftNpTerrainTag', '左半分移動不可地形'], 0);
+    var paramLeftNpRegionId     = getParamNumber(['LeftNpRegionId', '左半分移動不可Region'], 0);
     var paramMultiStartDisable  = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
     var paramEventOverlap       = getParamBoolean(['EventOverlap', 'イベント位置重複OK']);
 
@@ -484,8 +521,18 @@
     };
 
     Game_Map.prototype.isLowerNp = function(x, y) {
-        return (paramLowerCpTerrainTag > 0 && paramLowerCpTerrainTag === this.terrainTag(x, y)) ||
-            (paramLowerCpRegionId > 0 && paramLowerCpRegionId === this.regionId(x, y));
+        return (paramLowerNpTerrainTag > 0 && paramLowerNpTerrainTag === this.terrainTag(x, y)) ||
+            (paramLowerNpRegionId > 0 && paramLowerNpRegionId === this.regionId(x, y));
+    };
+
+    Game_Map.prototype.isRightNp = function(x, y) {
+        return (paramRightNpTerrainTag > 0 && paramRightNpTerrainTag === this.terrainTag(x, y)) ||
+            (paramRightNpRegionId > 0 && paramRightNpRegionId === this.regionId(x, y));
+    };
+
+    Game_Map.prototype.isLeftNp = function(x, y) {
+        return (paramLeftNpTerrainTag > 0 && paramLeftNpTerrainTag === this.terrainTag(x, y)) ||
+            (paramLeftNpRegionId > 0 && paramLeftNpRegionId === this.regionId(x, y));
     };
 
     var _Game_Map_checkLayeredTilesFlags      = Game_Map.prototype.checkLayeredTilesFlags;
@@ -603,7 +650,8 @@
             }
         }
         if (this.isHalfMove()) {
-            result = result && !this.isUpperNoPassable(x, y, d) && !this.isLowerNoPassable(x, y, d);
+            result = result && !this.isUpperNoPassable(x, y, d) && !this.isLowerNoPassable(x, y, d) &&
+                    !this.isRightNoPassable(x, y, d) && !this.isLeftNoPassable(x, y, d);
         }
         localHalfPositionCount = halfPositionCount;
         return result;
@@ -669,6 +717,50 @@
                 } else {
                     result = $gameMap.isLowerNp(x, y2);
                 }
+            }
+        }
+        return result;
+    };
+
+    Game_CharacterBase.prototype.isRightNoPassable = function(x, y, d) {
+        var result = false, x1, y1;
+        if ((d === 4 && !this.isHalfPosX(x)) || (d === 6 && this.isHalfPosX(x))) {
+            x1 = $gameMap.roundHalfXWithDirection(x, d);
+            if (this.isHalfPosY(y)) {
+                y1     = $gameMap.roundHalfYWithDirection(y, 2);
+                result = $gameMap.isRightNp(x1, y1);
+            } else {
+                result = $gameMap.isRightNp(x1, y);
+            }
+        } else if ((d === 2 && !this.isHalfPosY(y) || (d === 8 && this.isHalfPosY(y)))) {
+            y1 = $gameMap.roundHalfYWithDirection(y, d);
+            if (this.isHalfPosX(x)) {
+                x1 = $gameMap.roundHalfXWithDirection(x, 4);
+                result = $gameMap.isRightNp(x1, y1);
+            } else {
+                result = $gameMap.isRightNp(x, y1);
+            }
+        }
+        return result;
+    };
+
+    Game_CharacterBase.prototype.isLeftNoPassable = function(x, y, d) {
+        var result = false, x1, y1;
+        if ((d === 4 && this.isHalfPosX(x)) || (d === 6 && !this.isHalfPosX(x))) {
+            x1 = $gameMap.roundHalfXWithDirection(x, d);
+            if (this.isHalfPosY(y)) {
+                y1     = $gameMap.roundHalfYWithDirection(y, 2);
+                result = $gameMap.isLeftNp(x1, y1);
+            } else {
+                result = $gameMap.isLeftNp(x1, y);
+            }
+        } else if ((d === 2 && !this.isHalfPosY(y) || (d === 8 && this.isHalfPosY(y)))) {
+            y1 = $gameMap.roundHalfYWithDirection(y, d);
+            if (this.isHalfPosX(x)) {
+                x1 = $gameMap.roundHalfXWithDirection(x, 6);
+                result = $gameMap.isLeftNp(x1, y1);
+            } else {
+                result = $gameMap.isLeftNp(x, y1);
             }
         }
         return result;
