@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
 // 1.1.3 2016/08/05 本体v1.3.0にて表示される警告を抑制
 // 1.1.2 2016/07/20 一部のウィンドウでプロパティロード後にコンテンツが再作成されない問題を修正
 // 1.1.1 2016/07/17 余白とフォントサイズの変更が、画面切り替え後に元に戻ってしまう問題を修正
@@ -1016,16 +1017,10 @@ var $dataContainerProperties = null;
         WindowLayer.throughWindow = true;
         //=============================================================================
         //  WindowLayer
-        //   描画前に配列を逆転させます。
+        //   ウィンドウのマスク処理を除去します。
         //=============================================================================
-        var _WindowLayer__renderWebGL = WindowLayer.prototype._renderWebGL;
-        WindowLayer.prototype._renderWebGL = function(renderSession) {
-            this.children.reverse();
-            _WindowLayer__renderWebGL.apply(this, arguments);
-            this.children.reverse();
-        };
+        WindowLayer.prototype._maskWindow = function(window) {};
 
-        WindowLayer.prototype._webglMaskWindow = function(renderSession, window) {};
         WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
     }
 

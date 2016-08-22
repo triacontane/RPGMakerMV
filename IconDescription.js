@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
 // 1.0.1 2016/05/31 ウィンドウが重なったときに裏側のウィンドウのアイコンに反応する不具合を修正
 // 1.0.0 2016/03/16 初版
 // ----------------------------------------------------------------------------
@@ -333,16 +334,10 @@
         WindowLayer.throughWindow = true;
         //=============================================================================
         //  WindowLayer
-        //   描画前に配列を逆転させます。
+        //   ウィンドウのマスク処理を除去します。
         //=============================================================================
-        var _WindowLayer__renderWebGL = WindowLayer.prototype._renderWebGL;
-        WindowLayer.prototype._renderWebGL = function(renderSession) {
-            this.children.reverse();
-            _WindowLayer__renderWebGL.apply(this, arguments);
-            this.children.reverse();
-        };
+        WindowLayer.prototype._maskWindow = function(window) {};
 
-        WindowLayer.prototype._webglMaskWindow = function(renderSession, window) {};
         WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
     }
 })();

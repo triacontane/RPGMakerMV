@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
 // 1.3.3 2016/07/02 ポップアップ有効時は選択肢の最大表示数が8になるよう修正
 // 1.3.2 2016/06/02 YEP_MessageCore.jsとのウィンドウ位置に関する競合を解消
 // 1.3.1 2016/05/25 フォロワーにフキダシを表示できる機能を追加
@@ -994,16 +995,10 @@
         WindowLayer.throughWindow = true;
         //=============================================================================
         //  WindowLayer
-        //   描画前に配列を逆転させます。
+        //   ウィンドウのマスク処理を除去します。
         //=============================================================================
-        var _WindowLayer__renderWebGL = WindowLayer.prototype._renderWebGL;
-        WindowLayer.prototype._renderWebGL = function(renderSession) {
-            this.children.reverse();
-            _WindowLayer__renderWebGL.apply(this, arguments);
-            this.children.reverse();
-        };
+        WindowLayer.prototype._maskWindow = function(window) {};
 
-        WindowLayer.prototype._webglMaskWindow = function(renderSession, window) {};
         WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
     }
 })();

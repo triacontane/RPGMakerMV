@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
 // 1.0.1 2016/04/01 コマンド追加位置を細かく指定できる機能を追加
 // 1.0.0 2016/03/21 えのきふさん提供版
 // ----------------------------------------------------------------------------
@@ -508,16 +509,10 @@
         WindowLayer.throughWindow = true;
         //=============================================================================
         //  WindowLayer
-        //   描画前に配列を逆転させます。
+        //   ウィンドウのマスク処理を除去します。
         //=============================================================================
-        var _WindowLayer__renderWebGL = WindowLayer.prototype._renderWebGL;
-        WindowLayer.prototype._renderWebGL = function(renderSession) {
-            this.children.reverse();
-            _WindowLayer__renderWebGL.apply(this, arguments);
-            this.children.reverse();
-        };
+        WindowLayer.prototype._maskWindow = function(window) {};
 
-        WindowLayer.prototype._webglMaskWindow = function(renderSession, window) {};
         WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
     }
 })();
