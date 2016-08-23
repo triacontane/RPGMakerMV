@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/08/23 プラグインコマンドが小文字でも機能するよう修正
 // 1.1.0 2016/08/23 一度ロックを解除したあとで再度、ロック状態に戻すプラグインコマンドを追加
 // 1.0.0 2016/07/20 初版
 // ----------------------------------------------------------------------------
@@ -69,44 +70,40 @@
 
     //=============================================================================
     // Game_Interpreter
-    //  メッセージオブジェクトにインタプリタを受け渡します。
+    //  プラグインコマンドを追加定義します。
     //=============================================================================
-        //=============================================================================
-        // Game_Interpreter
-        //  プラグインコマンドを追加定義します。
-        //=============================================================================
-        var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
-        Game_Interpreter.prototype.pluginCommand = function(command, args) {
-            _Game_Interpreter_pluginCommand.apply(this, arguments);
-            var commandPrefix = new RegExp('^' + metaTagPrefix);
-            if (!command.match(commandPrefix)) return;
-            try {
-                this.pluginCommandMessageUnlockBusy(command.replace(commandPrefix, ''), args);
-            } catch (e) {
-                if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                    var window = require('nw.gui').Window.get();
-                    if (!window.isDevToolsOpen()) {
-                        var devTool = window.showDevTools();
-                        devTool.moveTo(0, 0);
-                        devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                        window.focus();
-                    }
+    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        var commandPrefix = new RegExp('^' + metaTagPrefix, 'i');
+        if (!command.match(commandPrefix)) return;
+        try {
+            this.pluginCommandMessageUnlockBusy(command.replace(commandPrefix, ''), args);
+        } catch (e) {
+            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
+                var window = require('nw.gui').Window.get();
+                if (!window.isDevToolsOpen()) {
+                    var devTool = window.showDevTools();
+                    devTool.moveTo(0, 0);
+                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+                    window.focus();
                 }
-                console.log('プラグインコマンドの実行中にエラーが発生しました。');
-                console.log('- コマンド名 　: ' + command);
-                console.log('- コマンド引数 : ' + args);
-                console.log('- エラー原因   : ' + e.stack || e.toString());
             }
-        };
+            console.log('プラグインコマンドの実行中にエラーが発生しました。');
+            console.log('- コマンド名 　: ' + command);
+            console.log('- コマンド引数 : ' + args);
+            console.log('- エラー原因   : ' + e.stack || e.toString());
+        }
+    };
 
-        Game_Interpreter.prototype.pluginCommandMessageUnlockBusy = function(command, args) {
-            switch (getCommandName(command)) {
-                case '再ウェイト' :
-                case 'RE_WAIT' :
-                    if ($gameMessage.isBusy()) this.setWaitMode('message');
-                    break;
-            }
-        };
+    Game_Interpreter.prototype.pluginCommandMessageUnlockBusy = function(command, args) {
+        switch (getCommandName(command)) {
+            case '再ウェイト' :
+            case 'RE_WAIT' :
+                if ($gameMessage.isBusy()) this.setWaitMode('message');
+                break;
+        }
+    };
 
     var _Game_Interpreter_command101 = Game_Interpreter.prototype.command101;
     Game_Interpreter.prototype.command101 = function() {
