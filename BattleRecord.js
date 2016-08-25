@@ -68,7 +68,7 @@
  *
  * アクターごとに以下の要素を記録できます。
  *
- * ・スキルごとの使用回数
+ * ・スキルごとの使用回数(戦闘中のみカウント)
  * ・敵キャラごとの撃破回数
  * ・与えたダメージの合計
  * ・与えたダメージの最大
@@ -195,8 +195,10 @@
     var _Game_Action_testApply      = Game_Action.prototype.testApply;
     Game_Action.prototype.testApply = function(target) {
         var result = _Game_Action_testApply.apply(this, arguments);
-        if (result && !BattleManager.isAlreadySkillCount) {
-            this.subject().recordSkillUseCounter(this.item().id);
+        if (result && !BattleManager.isAlreadySkillCount && $gameParty.inBattle()) {
+            if (this.isSkill()) {
+                this.subject().recordSkillUseCounter(this.item().id);
+            }
             BattleManager.isAlreadySkillCount = true;
         }
         return result;
