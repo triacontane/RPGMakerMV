@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/08/25 選択肢の表示中はウィンドウを非表示にできないよう仕様変更
 // 1.0.4 2016/07/22 YEP_MessageCore.jsのネーム表示ウィンドウと連携する機能を追加
 // 1.0.3 2016/01/24 メッセージウィンドウが表示されていないときも非表示にできてしまう現象の修正
 // 1.0.2 2016/01/02 競合対策
@@ -77,7 +78,7 @@
     //=============================================================================
     var _Window_Message_updateWait = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
-        if (!this.isClosed() && this.isTriggeredHidden()) {
+        if (!this.isClosed() && this.isTriggeredHidden() && !$gameMessage.isChoice()) {
             if (this.visible) {
                 this.hide();
                 this.subWindows().forEach(function(subWindow) {
@@ -126,7 +127,7 @@
     var _Window_Message_updateInput = Window_Message.prototype.updateInput;
     Window_Message.prototype.updateInput = function() {
         if (!this.visible) return true;
-        return _Window_Message_updateInput.call(this);
+        return _Window_Message_updateInput.apply(this, arguments);
     };
 
     //=============================================================================
@@ -136,19 +137,19 @@
     var _Window_ChoiceList_update = Window_ChoiceList.prototype.update;
     Window_ChoiceList.prototype.update = function() {
         if (!this.visible) return;
-        return _Window_ChoiceList_update.call(this);
+        _Window_ChoiceList_update.apply(this, arguments);
     };
 
     var _Window_NumberInput_update = Window_NumberInput.prototype.update;
     Window_NumberInput.prototype.update = function() {
         if (!this.visible) return;
-        return _Window_NumberInput_update.call(this);
+        _Window_NumberInput_update.apply(this, arguments);
     };
 
     var _Window_EventItem_update = Window_EventItem.prototype.update;
     Window_EventItem.prototype.update = function() {
         if (!this.visible) return;
-        return _Window_EventItem_update.call(this);
+        _Window_EventItem_update.apply(this, arguments);
     };
 })();
 
