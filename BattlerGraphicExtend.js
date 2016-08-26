@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/08/27 消滅エフェクトが機能しない競合を抑えるために条件を一部変更
 // 1.1.1 2016/08/07 YEP_AutoPassiveStates.jsとの競合を解消
 // 1.1.0 2016/07/01 バトラーを指定した色で点滅させる機能を追加
 // 1.0.2 2016/06/29 YEP_X_AnimatedSVEnemies.jsとの間で発生していた競合を解消
@@ -500,7 +501,7 @@
     };
 
     Sprite_Enemy.prototype.isNeedDeadEffect = function() {
-        return this._battler && !this._battler.isAlive();
+        return !this._appeared;
     };
 })();
 
