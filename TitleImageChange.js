@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/08/27 進行状況に応じてタイトルBGMを変更できる機能を追加
 // 1.1.0 2016/06/05 セーブデータに歯抜けがある場合にエラーが発生する問題を修正
 //                  進行状況のみをセーブする機能を追加
 // 1.0.0 2016/04/06 初版
@@ -34,6 +35,13 @@
  * @dir img/titles1/
  * @type file
  *
+ * @param タイトル1のBGM
+ * @desc 進行度変数の値がタイトル1の進行度以上のときに演奏されるBGM(audio/bgm)のファイル名です。
+ * @default
+ * @require 1
+ * @dir audio/bgm/
+ * @type file
+ *
  * @param タイトル2の進行度
  * @desc 進行度変数の値がこの値以上ならタイトル2の画像が表示されます。
  * @default 2
@@ -43,6 +51,13 @@
  * @default
  * @require 1
  * @dir img/titles1/
+ * @type file
+ *
+ * @param タイトル2のBGM
+ * @desc 進行度変数の値がタイトル2の進行度以上のときに演奏されるBGM(audio/bgm)のファイル名です。
+ * @default
+ * @require 1
+ * @dir audio/bgm/
  * @type file
  *
  * @param タイトル3の進行度
@@ -56,16 +71,23 @@
  * @dir img/titles1/
  * @type file
  *
- * @help ゲームの進行度に応じてタイトル画面の画像を変更します。
+ * @param タイトル3のBGM
+ * @desc 進行度変数の値がタイトル3の進行度以上のときに演奏されるBGM(audio/bgm)のファイル名です。
+ * @default
+ * @require 1
+ * @dir audio/bgm/
+ * @type file
+ *
+ * @help ゲームの進行度に応じてタイトル画面の画像およびBGMを変更します。
  * 進行度には任意の変数が指定でき、全セーブデータの中の最大値が反映されます。
  *
  * タイトル画像は最大3つまで指定可能で、複数の条件を満たした場合は
  * 以下のような優先順位になります。
  *
- * 1. タイトル3の画像
- * 2. タイトル2の画像
- * 3. タイトル1の画像
- * 4. デフォルトのタイトル画像
+ * 1. タイトル3の画像およびBGM
+ * 2. タイトル2の画像およびBGM
+ * 3. タイトル1の画像およびBGM
+ * 4. デフォルトのタイトル画像およびBGM
  *
  * ゲームデータをセーブせず進行状況のみをセーブしたい場合は、
  * イベントコマンドの「スクリプト」から以下を実行してください。
@@ -116,6 +138,10 @@
     paramTitleImages.push(getParamString(['TitleImage3', 'タイトル3の画像']));
     paramTitleImages.push(getParamString(['TitleImage2', 'タイトル2の画像']));
     paramTitleImages.push(getParamString(['TitleImage1', 'タイトル1の画像']));
+    var paramTitleBgms = [];
+    paramTitleBgms.push(getParamString(['TitleBgm3', 'タイトル3のBGM']));
+    paramTitleBgms.push(getParamString(['TitleBgm2', 'タイトル2のBGM']));
+    paramTitleBgms.push(getParamString(['TitleBgm1', 'タイトル1のBGM']));
 
     //=============================================================================
     // DataManager
@@ -156,6 +182,7 @@
     Scene_Title.prototype.initialize = function() {
         _Scene_Title_initialize.apply(this, arguments);
         this.changeTitleImage();
+        this.changeTitleBgm();
     };
 
     Scene_Title.prototype.changeTitleImage = function() {
@@ -163,6 +190,16 @@
         for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
             if (paramTitleImages[i] && gradeVariable >= paramTitleGrades[i]) {
                 $dataSystem.title1Name = paramTitleImages[i];
+                break;
+            }
+        }
+    };
+
+    Scene_Title.prototype.changeTitleBgm = function() {
+        var gradeVariable = DataManager.getMaxGradeVariable();
+        for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
+            if (paramTitleBgms[i] && gradeVariable >= paramTitleGrades[i]) {
+                $dataSystem.titleBgm.name = paramTitleBgms[i];
                 break;
             }
         }
