@@ -37,10 +37,11 @@
 
 (function() {
     'use strict';
-
-    ScreenSprite.prototype._renderWebGL = function(renderer) {
-        this._bitmap.checkDirty();
-        PIXI.Sprite.prototype._renderWebGL.call(this, renderer);
-    };
+    if (Utils.RPGMAKER_VERSION === '1.3.0') {
+        ScreenSprite.prototype._renderWebGL = function(renderer) {
+            this._bitmap.checkDirty();
+            PIXI.Sprite.prototype._renderWebGL.call(this, renderer);
+        };
+    }
 })();
 
