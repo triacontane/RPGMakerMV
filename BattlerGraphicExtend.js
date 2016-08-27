@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2016/08/27 YEP_X_ActSeqPack2.jsとの競合を解消
 // 1.1.2 2016/08/27 消滅エフェクトが機能しない競合を抑えるために条件を一部変更
 // 1.1.1 2016/08/07 YEP_AutoPassiveStates.jsとの競合を解消
 // 1.1.0 2016/07/01 バトラーを指定した色で点滅させる機能を追加
@@ -116,7 +117,6 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'BattlerGraphicExtend';
     var metaTagPrefix = 'BGE';
 
     var getArgArrayString = function(args, upperFlg) {
@@ -404,7 +404,7 @@
         }
         battler.updateFloating();
         if (!this.isNeedDeadEffect()) {
-            this.updateOpacity();
+            this.updateOpacityForBge();
             this.updateTone();
             this.updateBlendMode();
             this.updateBlendColor();
@@ -418,7 +418,7 @@
         this.scale.y = battler.getScaleY();
     };
 
-    Sprite_Battler.prototype.updateOpacity = function() {
+    Sprite_Battler.prototype.updateOpacityForBge = function() {
         var sprite     = this.getMainSprite();
         sprite.opacity = this._battler.getOpacity();
     };
