@@ -25,6 +25,10 @@
  * @desc ボタン名に指定された以外のボタンを使いたい場合はここにキーコードを直接記述してください。
  * @default 0
  *
+ * @param ChangePage
+ * @desc ウィンドウの右下に表示されるページ切り替えサイン文字列です。制御文字が使用できます。
+ * @default Push Shift
+ *
  * @help ヘルプウィンドウに2ページ目を追加して好きな情報を表示できます。
  * 指定されたキーで入れ替えます。
  *
@@ -51,6 +55,10 @@
  * @param キーコード
  * @desc ボタン名に指定された以外のボタンを使いたい場合はここにキーコードを直接記述してください。
  * @default 0
+ *
+ * @param ページ切り替え
+ * @desc ウィンドウの右下に表示されるページ切り替えサイン文字列です。制御文字が使用できます。
+ * @default Push Shift
  *
  * @help ヘルプウィンドウに2ページ目を追加して好きな情報を表示できます。
  * 指定されたキーで入れ替えます。
@@ -127,9 +135,8 @@
     //=============================================================================
     var paramButtonName = getParamString(['ButtonName', 'ボタン名']);
     var paramKeyCode    = getParamNumber(['KeyCode', 'キーコード']);
-    if (paramKeyCode) {
-        Input.keyMapper[paramKeyCode] = pluginName;
-    }
+    if (paramKeyCode) Input.keyMapper[paramKeyCode] = pluginName;
+    var paramChangePage = getParamString(['ChangePage', 'ページ切り替え']);
 
     //=============================================================================
     // Window_Help
@@ -137,11 +144,11 @@
     //=============================================================================
     var _Window_Help_setItem = Window_Help.prototype.setItem;
     Window_Help.prototype.setItem = function(item) {
-        _Window_Help_setItem.apply(this, arguments);
         this._anotherText = null;
+        if (item) this.setAnother(item);
+        _Window_Help_setItem.apply(this, arguments);
         this._originalText = this._text;
         this._anotherTextVisible = false;
-        if (item) this.setAnother(item);
     };
 
     Window_Help.prototype.setAnother = function(item) {
@@ -164,6 +171,15 @@
         var value = getMetaValues(item, ['説明','Description']);
         if (value) {
             this._anotherText = getArgString(value);
+        }
+    };
+
+    var _Window_Help_refresh = Window_Help.prototype.refresh;
+    Window_Help.prototype.refresh = function() {
+        _Window_Help_refresh.apply(this, arguments);
+        if (paramChangePage && this._anotherText) {
+            var width = this.drawTextEx(paramChangePage, 0, this.contents.height);
+            this.drawTextEx(paramChangePage, this.contentsWidth() - width, this.contentsHeight() - this.lineHeight());
         }
     };
 
