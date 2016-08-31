@@ -38,15 +38,15 @@
  *
  * @param StartupDevTool
  * @desc It will start the developer tools at the start of the game.(ON/OFF/MINIMIZE)
- * @default OFF
+ * @default ON
  *
  * @param AlwaysOnTop
  * @desc Game screen always on top.(ON/OFF)
  * @default OFF
  *
  * @param DevToolsPosition
- * @desc Developer tool's position(X, Y, Width, Height) Separated comma
- * @default 0,0,800,600
+ * @desc Developer tool's position(X, Y, Width, Height) Separated comma(ex:0,0,800,600)
+ * @default
  *
  * @param FuncKeyMinimize
  * @desc デベロッパツールの最小化/復帰の切り替えを行うキーです(F1～F12)。
@@ -106,12 +106,12 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc デベロッパツール管理プラグイン
+ * @plugindesc 総合開発支援プラグイン
  * @author トリアコンタン
  *
  * @param 開始時に起動
  * @desc ゲーム開始時に同時にデベロッパツールを起動します。(ON/OFF/MINIMIZE)
- * @default OFF
+ * @default ON
  *
  * @param 常に前面表示
  * @desc ゲーム画面を常に前面に表示します。(ON/OFF)
@@ -119,7 +119,7 @@
  *
  * @param デベロッパツール表示位置
  * @desc デベロッパツールの表示座標です。X座標、Y座標、横幅、高さをカンマ区切りで指定します。
- * @default 0,0,800,600
+ * @default
  *
  * @param 最小化切替キー
  * @desc デベロッパツールの最小化/復帰の切り替えを行うキーです(F1～F12)。
@@ -250,7 +250,12 @@ var p = null;
     //  ログ出力をより短い関数名で実現します。(RGSS互換)
     //=============================================================================
     p = function(value) {
-        console.log(value);
+        var n = arguments.length, str = '';
+        for (var i = 0; i < n; i++) {
+            str += arguments[i];
+            if (i < n)  str += ':';
+        }
+        console.log(str);
         SceneManager.getNwJs().showDevTools();
     };
 
@@ -824,7 +829,7 @@ var p = null;
         switch (paramStartupDevTool) {
             case 'ON':
             case 'MINIMIZE':
-                if (!DataManager.isEventTest()) this.showDevTools();
+                this.showDevTools();
                 break;
         }
         this.setMenuBar(this._menuBar);

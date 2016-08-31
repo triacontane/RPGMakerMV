@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2016/09/01 すり抜けOFF時のイベントからの接触による起動が正しく行われるよう修正
 // 1.6.0 2016/08/20 左半分のみ、右半分のみを通行不可にする機能を追加
 // 1.5.0 2016/08/16 イベント同士の位置の重複を許可する設定を追加
 // 1.4.9 2016/08/14 半歩位置にいる場合にタイル依存の戦闘背景の設定が正しく機能しない現象を修正
@@ -875,14 +876,14 @@
         var result = false;
         events.forEach(function(event) {
             if (event.isNormalPriority() && !event.isHalfThrough(y)) {
-                this.collideToEvent(event);
+                this.collidedToEvent(event);
                 result = true;
             }
         }.bind(this));
         return result;
     };
 
-    Game_CharacterBase.prototype.collideToEvent = function(target) {};
+    Game_CharacterBase.prototype.collidedToEvent = function(target) {};
 
     Game_CharacterBase.prototype.getPrevX = function() {
         return this._prevX !== undefined ? this._prevX : this._x;
@@ -994,7 +995,13 @@
 
     var _Game_Player_getInputDirection      = Game_Player.prototype.getInputDirection;
     Game_Player.prototype.getInputDirection = function() {
-        return paramDirection8Move ? Input.dir8 : _Game_Player_getInputDirection.apply(this, arguments);
+        var result = paramDirection8Move ? Input.dir8 : _Game_Player_getInputDirection.apply(this, arguments);
+        if (result === 0) {
+            this._firstInputDir = 0;
+        } else if (result % 2 === 0 && this._firstInputDir === 0) {
+            this._firstInputDir = result;
+        }
+        return result;
     };
 
     var _Game_Player_executeMove      = Game_Player.prototype.executeMove;
@@ -1101,17 +1108,27 @@
     Game_Player.prototype.executeDiagonalMove = function(d) {
         var horizon  = d / 3 <= 1 ? d + 3 : d - 3;
         var vertical = d % 3 === 0 ? d - 1 : d + 1;
+        localHalfPositionCount++;
         var x2       = $gameMap.roundXWithDirection(this.x, horizon);
         var y2       = $gameMap.roundYWithDirection(this.y, vertical);
-        if (this.isCollidedWithCharacters(x2, this.y) || this.isCollidedWithCharacters(this.x, y2)) {
+        localHalfPositionCount--;
+        if ((this.isCollidedWithCharacters(x2, this.y) || this.isCollidedWithCharacters(this.x, y2)) &&
+            !this.isDebugThrough()) {
             return;
         }
         this.moveDiagonally(horizon, vertical);
-        if (!this.isMovementSucceeded()) {
-            this.moveStraight(horizon);
+        if (this._firstInputDir === horizon) {
+            this.moveStraightForRetry(vertical);
+            this.moveStraightForRetry(horizon);
+        } else {
+            this.moveStraightForRetry(horizon);
+            this.moveStraightForRetry(vertical);
         }
+    };
+
+    Game_Player.prototype.moveStraightForRetry = function(d) {
         if (!this.isMovementSucceeded()) {
-            this.moveStraight(vertical);
+            this.moveStraight(d);
         }
     };
 
@@ -1129,7 +1146,7 @@
         return Game_CharacterBase.prototype.isCollidedWithEventsForHalfMove.call(this, x, y);
     };
 
-    Game_Player.prototype.collideToEvent = function(target) {
+    Game_Player.prototype.collidedToEvent = function(target) {
         target.setCollidedFromPlayer(true);
     };
 
@@ -1177,13 +1194,23 @@
         return !paramEventOverlap || this.isNormalPriority();
     };
 
+    var _Game_Event_isCollidedWithPlayerCharacters = Game_Event.prototype.isCollidedWithPlayerCharacters;
+    Game_Event.prototype.isCollidedWithPlayerCharacters = function(x, y) {
+        var result = _Game_Event_isCollidedWithPlayerCharacters.apply(this, arguments);
+        if (!result && !this.isHalfThrough($gamePlayer.y)) {
+            var tu = Game_Map.tileUnit;
+            result = $gamePlayer.isCollided(x, y - tu) || $gamePlayer.isCollided(x, y + tu);
+        }
+        this.setCollidedFromPlayer(result);
+        return result;
+    };
+
     var _Game_Event_checkEventTriggerTouch      = Game_Event.prototype.checkEventTriggerTouch;
     Game_Event.prototype.checkEventTriggerTouch = function(x, y) {
         _Game_Event_checkEventTriggerTouch.apply(this, arguments);
         if ($gameMap.isEventRunning()) return;
         if (this._trigger === 2 && $gamePlayer.posUnit(x, y)) {
-            if (this.isTriggerExpansion(x, y) && !this.isJumping() && this.isNormalPriority() &&
-                this.getDistanceForHalfMove($gamePlayer) <= 1) {
+            if (this.isTriggerExpansion(x, y) && !this.isJumping() && this.isNormalPriority() && this.isCollidedFromPlayer()) {
                 this.start();
             }
         }
