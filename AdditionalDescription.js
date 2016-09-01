@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/09/01 マウス操作、タッチ操作でも切り替えられる機能を追加
+//                  切り替え中にキャンセルしたときに描画内容が一部残ってしまう不具合を修正
 // 1.0.0 2016/09/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -29,12 +31,18 @@
  * @desc ウィンドウの右下に表示されるページ切り替えサイン文字列です。制御文字が使用できます。
  * @default Push Shift
  *
+ * @param ValidTouch
+ * @desc ヘルプウィンドウをタッチ or 左クリックすることでもウィンドウを切り替えることができます。
+ * @default ON
+ *
  * @help ヘルプウィンドウに2ページ目を追加して好きな情報を表示できます。
  * 指定されたキーで入れ替えます。
  *
  * アイテム・スキルのデータベースのメモ欄に以下の通り記述してください。
  * <AD説明:sampleText>         # 文字列「sampleText」が表示されます。
+ * <ADDescription:sampleText>  # 同上
  * <ADスクリプト:sampleScript> #「sampleScript」の評価結果が表示されます。
+ * <ADScript:sampleScript>     # 同上
  *
  * いずれも制御文字が一通り使用できます。
  * また、スクリプト中では「item」というローカル変数で対象データを参照できます。
@@ -60,12 +68,18 @@
  * @desc ウィンドウの右下に表示されるページ切り替えサイン文字列です。制御文字が使用できます。
  * @default Push Shift
  *
+ * @param タッチ操作有効
+ * @desc ヘルプウィンドウをタッチ or 左クリックすることでもウィンドウを切り替えることができます。
+ * @default ON
+ *
  * @help ヘルプウィンドウに2ページ目を追加して好きな情報を表示できます。
  * 指定されたキーで入れ替えます。
  *
  * アイテム・スキルのデータベースのメモ欄に以下の通り記述してください。
  * <AD説明:sampleText>         # 文字列「sampleText」が表示されます。
+ * <ADDescription:sampleText>  # 同上
  * <ADスクリプト:sampleScript> #「sampleScript」の評価結果が表示されます。
+ * <ADScript:sampleScript>     # 同上
  *
  * いずれも制御文字が一通り使用できます。
  * また、スクリプト中では「item」というローカル変数で対象データを参照できます。
@@ -105,6 +119,11 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
+
     var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
@@ -137,27 +156,33 @@
     var paramKeyCode    = getParamNumber(['KeyCode', 'キーコード']);
     if (paramKeyCode) Input.keyMapper[paramKeyCode] = pluginName;
     var paramChangePage = getParamString(['ChangePage', 'ページ切り替え']);
+    var paramValidTouch = getParamBoolean(['ValidTouch', 'タッチ操作有効']);
 
     //=============================================================================
     // Window_Help
     //  追加ヘルプ情報の保持と表示
     //=============================================================================
-    var _Window_Help_setItem = Window_Help.prototype.setItem;
+    var _Window_Help_setItem      = Window_Help.prototype.setItem;
     Window_Help.prototype.setItem = function(item) {
         this._anotherText = null;
-        if (item) this.setAnother(item);
+        this._item        = item;
+        this._itemExist   = true;
+        if (item) this.setAnother();
         _Window_Help_setItem.apply(this, arguments);
-        this._originalText = this._text;
+        this._originalText       = this._text;
         this._anotherTextVisible = false;
+        this._item               = null;
+        this._itemExist          = false;
     };
 
-    Window_Help.prototype.setAnother = function(item) {
-        this.setAnotherDescription(item);
-        if (this._anotherText === null) this.setAnotherScript(item);
+    Window_Help.prototype.setAnother = function() {
+        this.setAnotherDescription();
+        if (this._anotherText === null) this.setAnotherScript();
     };
 
-    Window_Help.prototype.setAnotherScript = function(item) {
-        var value = getMetaValues(item, ['スクリプト','Script']);
+    Window_Help.prototype.setAnotherScript = function() {
+        var item  = this._item;
+        var value = getMetaValues(item, ['スクリプト', 'Script']);
         if (value) {
             try {
                 this._anotherText = String(eval(getArgString(value)));
@@ -167,42 +192,57 @@
         }
     };
 
-    Window_Help.prototype.setAnotherDescription = function(item) {
-        var value = getMetaValues(item, ['説明','Description']);
+    Window_Help.prototype.setAnotherDescription = function() {
+        var item  = this._item;
+        var value = getMetaValues(item, ['説明', 'Description']);
         if (value) {
             this._anotherText = getArgString(value);
         }
     };
 
-    var _Window_Help_refresh = Window_Help.prototype.refresh;
+    var _Window_Help_refresh      = Window_Help.prototype.refresh;
     Window_Help.prototype.refresh = function() {
         _Window_Help_refresh.apply(this, arguments);
-        if (paramChangePage && this._anotherText) {
+        if (paramChangePage && this._anotherText && this._itemExist) {
             var width = this.drawTextEx(paramChangePage, 0, this.contents.height);
             this.drawTextEx(paramChangePage, this.contentsWidth() - width, this.contentsHeight() - this.lineHeight());
+        } else {
+            this._anotherText  = null;
+            this._originalText = null;
         }
     };
 
-    var _Window_Help_update = Window_Help.prototype.update;
+    var _Window_Help_update      = Window_Help.prototype.update;
     Window_Help.prototype.update = function() {
         if (this.hasOwnProperty('update')) {
             _Window_Help_update.apply(this, arguments);
         } else {
             Window_Base.prototype.update.call(this);
         }
-        this.updateAnotherDesc();
+        if (this.isOpen() && this.visible) {
+            this.updateAnotherDesc();
+        }
     };
 
     Window_Help.prototype.updateAnotherDesc = function() {
-        if (this._anotherText && Input.isTriggered(this.getToggleDescButtonName())) {
+        if (this._anotherText && this.isAnotherTriggered()) {
             SoundManager.playCursor();
             this._anotherTextVisible = !this._anotherTextVisible;
+            this._itemExist = true;
             this.setText(this._anotherTextVisible ? this._anotherText : this._originalText);
+            this._itemExist = false;
         }
+    };
+
+    Window_Help.prototype.isAnotherTriggered = function() {
+        return Input.isTriggered(this.getToggleDescButtonName()) ||
+            (this.isTouchedInsideFrame() && TouchInput.isTriggered() && paramValidTouch);
     };
 
     Window_Help.prototype.getToggleDescButtonName = function() {
         return paramKeyCode ? pluginName : paramButtonName;
     };
+
+    Window_Help.prototype.isTouchedInsideFrame = Window_Selectable.prototype.isTouchedInsideFrame;
 })();
 
