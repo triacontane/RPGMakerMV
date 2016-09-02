@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/09/02 プラグイン未適用のデータをロード後に攻撃かアイテム入手すると強制終了する問題を修正
 // 1.1.0 2016/08/27 取得可能な項目を大幅に増やしました。
 //                  アクター全員の合計値を容易に取得できるようにしました。
 // 1.0.0 2016/08/25 初版
@@ -243,15 +244,18 @@
     };
 
     Game_BattlerBase.prototype.recordSkillUseCounter = function(skillId) {
-        this._useSkillCounter[skillId] = this.getSkillUseCounter(skillId) + 1;
+        var prevCount = this.getSkillUseCounter(skillId);
+        this._useSkillCounter[skillId] = prevCount + 1;
     };
 
     Game_BattlerBase.prototype.recordItemUseCounter = function(itemId) {
-        this._useItemCounter[itemId] = this.getItemUseCounter(itemId) + 1;
+        var prevCount = this.getItemUseCounter(itemId);
+        this._useItemCounter[itemId] = prevCount + 1;
     };
 
     Game_BattlerBase.prototype.recordKillEnemyCounter = function(enemyId) {
-        this._killEnemyCounter[enemyId] = this.getKillEnemyCounter(enemyId) + 1;
+        var prevCount = this.getKillEnemyCounter(enemyId);
+        this._killEnemyCounter[enemyId] = prevCount + 1;
     };
 
     Game_BattlerBase.prototype.getSkillUseCounter = function(skillId) {
@@ -438,7 +442,8 @@
     };
 
     Game_Party.prototype.recordGainItemSum = function(itemId, amount) {
-        this._gainItemSum[itemId] = this.getGainItemSum(itemId) + amount;
+        var prevAmount = this.getGainItemSum(itemId);
+        this._gainItemSum[itemId] = prevAmount + amount;
     };
 
     Game_Party.prototype.getGainItemSum = function(itemId) {
@@ -447,7 +452,8 @@
     };
 
     Game_Party.prototype.recordGainWeaponSum = function(weaponId, amount) {
-        this._gainWeaponSum[weaponId] = this.getGainWeaponSum(weaponId) + amount;
+        var prevAmount = this.getGainWeaponSum(weaponId);
+        this._gainWeaponSum[weaponId] = prevAmount + amount;
     };
 
     Game_Party.prototype.getGainWeaponSum = function(weaponId) {
@@ -456,7 +462,8 @@
     };
 
     Game_Party.prototype.recordGainArmorSum = function(armorId, amount) {
-        this._gainArmorSum[armorId] = this.getGainArmorSum(armorId) + amount;
+        var prevAmount = this.getGainArmorSum(armorId);
+        this._gainArmorSum[armorId] = prevAmount + amount;
     };
 
     Game_Party.prototype.getGainArmorSum = function(armorId) {
