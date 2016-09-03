@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.2 2016/09/03 斜め移動の移動先にイベントがある場合、縦横移動に切り替わらない問題を修正
 // 1.6.1 2016/09/01 すり抜けOFF時のイベントからの接触による起動が正しく行われるよう修正
 // 1.6.0 2016/08/20 左半分のみ、右半分のみを通行不可にする機能を追加
 // 1.5.0 2016/08/16 イベント同士の位置の重複を許可する設定を追加
@@ -1108,14 +1109,6 @@
     Game_Player.prototype.executeDiagonalMove = function(d) {
         var horizon  = d / 3 <= 1 ? d + 3 : d - 3;
         var vertical = d % 3 === 0 ? d - 1 : d + 1;
-        localHalfPositionCount++;
-        var x2       = $gameMap.roundXWithDirection(this.x, horizon);
-        var y2       = $gameMap.roundYWithDirection(this.y, vertical);
-        localHalfPositionCount--;
-        if ((this.isCollidedWithCharacters(x2, this.y) || this.isCollidedWithCharacters(this.x, y2)) &&
-            !this.isDebugThrough()) {
-            return;
-        }
         this.moveDiagonally(horizon, vertical);
         if (this._firstInputDir === horizon) {
             this.moveStraightForRetry(vertical);
@@ -1209,8 +1202,8 @@
     Game_Event.prototype.checkEventTriggerTouch = function(x, y) {
         _Game_Event_checkEventTriggerTouch.apply(this, arguments);
         if ($gameMap.isEventRunning()) return;
-        if (this._trigger === 2 && $gamePlayer.posUnit(x, y)) {
-            if (this.isTriggerExpansion(x, y) && !this.isJumping() && this.isNormalPriority() && this.isCollidedFromPlayer()) {
+        if (this._trigger === 2 && $gamePlayer.posUnit(x, y) && this.isTriggerExpansion(x, y)) {
+            if (!this.isJumping() && this.isNormalPriority() && this.isCollidedFromPlayer()) {
                 this.start();
             }
         }
