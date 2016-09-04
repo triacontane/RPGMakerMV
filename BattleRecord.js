@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/09/04 1.1.1の修正に一部不足があったものを追加修正
 // 1.1.1 2016/09/02 プラグイン未適用のデータをロード後に攻撃かアイテム入手すると強制終了する問題を修正
 // 1.1.0 2016/08/27 取得可能な項目を大幅に増やしました。
 //                  アクター全員の合計値を容易に取得できるようにしました。
@@ -286,6 +287,7 @@
     };
 
     Game_BattlerBase.prototype.getSumRecord = function(counterArray) {
+        if (!counterArray) return 0;
         return counterArray.reduce(function(sumValue, value) {
             return sumValue + value;
         }, 0);
