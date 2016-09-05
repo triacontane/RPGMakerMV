@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/09/06 敵グループ内で同じIDの敵キャラ全員を対象にできるスコープを追加
 // 1.1.0 2016/07/20 ターゲットの中から重複を除外できる機能を追加
 // 1.0.0 2016/06/20 初版
 // ----------------------------------------------------------------------------
@@ -46,6 +47,10 @@
  * <SEランダム> <SERandom>
  * 元々の選択範囲の中からランダムで一人だけが選択されます。
  * 狙われ率の影響しない純粋なランダムです。
+ *
+ * <SEグループ> <SEGroup>
+ * 敵グループ内に、指定した敵単体と同じIDの敵キャラがいる場合、全員選択されます。
+ * 味方の場合は味方全員が無条件で選択されます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -97,6 +102,17 @@
         }
         if (this.isScopeExtendInfo(['ランダム', 'Random'])) {
             targets = [targets[Math.floor(Math.random() * targets.length)]];
+        }
+        if (this.isScopeExtendInfo(['グループ', 'Group'])) {
+            var newTargets, prevTarget = targets[0];
+            if (prevTarget.isActor()) {
+                newTargets = prevTarget.friendsUnit().members();
+            } else {
+                newTargets = prevTarget.friendsUnit().members().filter(function(member) {
+                    return prevTarget.enemyId() === member.enemyId();
+                });
+            }
+            targets = newTargets;
         }
         arguments[0] = targets;
         return _Game_Action_repeatTargets.apply(this, arguments);

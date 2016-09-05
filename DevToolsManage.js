@@ -251,11 +251,15 @@ var p = null;
     //=============================================================================
     p = function(value) {
         var n = arguments.length, str = '';
-        for (var i = 0; i < n; i++) {
-            str += arguments[i];
-            if (i < n)  str += ':';
+        if (n === 1) {
+            console.log(value);
+        } else {
+            for (var i = 0; i < n; i++) {
+                str += arguments[i];
+                if (i < n)  str += ':';
+            }
+            console.log(str);
         }
-        console.log(str);
         SceneManager.getNwJs().showDevTools();
     };
 
