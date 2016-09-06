@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/09/06 場所移動時、生成イベントを引き継いでしまう不具合を修正
+//                  プラグインコマンド実行時にイベントIDを0にすることで「このイベント」を複製できる機能を追加
 // 1.1.1 2016/08/11 動的イベント生成中にセーブした場合にロードできなくなる不具合を修正
 // 1.1.0 2016/08/10 テンプレートイベントプラグインとの連携で、テンプレートマップからイベントを生成する機能を追加
 //                  生成場所を条件付きランダムで設定できる機能を追加
@@ -33,6 +35,8 @@
  * ERS_生成 1 5 10 # イベントID[1]のイベントをコピーしてX[5] Y[10]に配置
  * ERS_MAKE 1 5 10 # 同上
  *
+ * イベントIDを「0」にすると実行中のイベント（このイベント）を複製します。
+ *
  * 生成位置をランダムにすることもできます。ただのランダムではなく
  * 以下の補助条件を指定したうえでのランダムです。
  *  a. 通行可能かどうか(0:判定なし 1:通行可能タイルのみ)
@@ -45,6 +49,8 @@
  * ERS_MAKE_RANDOM 1 1 2 3 5 4  # 同上
  * ※ 通行可能かつ画面外かつプレイヤーもしくはイベントが存在せず
  *    地形タグが「5」でリージョンが「4」の位置の中からランダム
+ *
+ * イベントIDを「0」にすると実行中のイベント（このイベント）を複製します。
  *
  * ・他プラグインとの連携
  * テンプレートイベントプラグイン「TemplateEvent.js」と組み合わせると
@@ -125,7 +131,7 @@ function Game_PrefabEvent() {
             case 'MAKE' :
                 var x = getArgNumber(args[1], 1);
                 var y = getArgNumber(args[2], 1);
-                $gameMap.spawnEvent(getArgNumber(args[0], 1), x, y, extend);
+                $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args[0]), x, y, extend);
                 break;
             case 'ランダム生成' :
             case 'MAKE_RANDOM' :
@@ -135,7 +141,7 @@ function Game_PrefabEvent() {
                 conditionMap.collided   = getArgNumber(args[3], 0);
                 conditionMap.terrainTag = getArgNumber(args[4], 0);
                 conditionMap.regionId   = getArgNumber(args[5], 0);
-                $gameMap.spawnEventRandom(getArgNumber(args[0], 1), conditionMap, extend);
+                $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0]), conditionMap, extend);
                 break;
             case 'テンプレート生成' :
             case 'MAKE_TEMPLATE' :
@@ -146,6 +152,11 @@ function Game_PrefabEvent() {
                 this.pluginCommandEventReSpawn('MAKE_RANDOM', args, true);
                 break;
         }
+    };
+
+    Game_Interpreter.prototype.getEventIdForEventReSpawn = function(arg) {
+        var id = getArgNumber(arg, 0);
+        return id > 0 ? id : this._eventId;
     };
 
     //=============================================================================
@@ -203,7 +214,7 @@ function Game_PrefabEvent() {
     Game_Map.prototype.eraseEvent = function(eventId) {
         _Game_Map_eraseEvent.apply(this, arguments);
         if (this._events[eventId].isExtinct()) {
-            this._events[eventId] = undefined;
+            delete this._events[eventId];
         }
     };
 
@@ -418,7 +429,7 @@ function Game_PrefabEvent() {
     var _DataManager_onLoad = DataManager.onLoad;
     DataManager.onLoad      = function(object) {
         _DataManager_onLoad.apply(this, arguments);
-        if (object === $dataMap && $gameMap) $gameMap.restoreLinkPrefabEvents();
+        if (object === $dataMap && $gameMap && !$gamePlayer.isTransferring()) $gameMap.restoreLinkPrefabEvents();
     };
 })();
 

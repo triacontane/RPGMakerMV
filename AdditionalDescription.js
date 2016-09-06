@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/09/06 親のウィンドウがアクティブなときのみ操作できるよう修正
 // 1.1.0 2016/09/01 マウス操作、タッチ操作でも切り替えられる機能を追加
 //                  切り替え中にキャンセルしたときに描画内容が一部残ってしまう不具合を修正
 // 1.0.0 2016/09/01 初版
@@ -159,9 +160,25 @@
     var paramValidTouch = getParamBoolean(['ValidTouch', 'タッチ操作有効']);
 
     //=============================================================================
+    // Window_Selectable
+    //  自分自身への参照をヘルプウィンドウに渡します。
+    //=============================================================================
+    var _Window_Selectable_setHelpWindow = Window_Selectable.prototype.setHelpWindow;
+    Window_Selectable.prototype.setHelpWindow = function(helpWindow) {
+        _Window_Selectable_setHelpWindow.apply(this, arguments);
+        this._helpWindow.setParentWindow(this);
+    };
+
+    //=============================================================================
     // Window_Help
     //  追加ヘルプ情報の保持と表示
     //=============================================================================
+    var _Window_Help_initialize = Window_Help.prototype.initialize;
+    Window_Help.prototype.initialize = function(numLines) {
+        _Window_Help_initialize.apply(this, arguments);
+        this._parentWindows = [];
+    };
+
     var _Window_Help_setItem      = Window_Help.prototype.setItem;
     Window_Help.prototype.setItem = function(item) {
         this._anotherText = null;
@@ -173,6 +190,12 @@
         this._anotherTextVisible = false;
         this._item               = null;
         this._itemExist          = false;
+    };
+
+    Window_Help.prototype.setParentWindow = function(parentWindow) {
+        if (!this._parentWindows.contains(parentWindow)) {
+            this._parentWindows.push(parentWindow);
+        }
     };
 
     Window_Help.prototype.setAnother = function() {
@@ -225,7 +248,7 @@
     };
 
     Window_Help.prototype.updateAnotherDesc = function() {
-        if (this._anotherText && this.isAnotherTriggered()) {
+        if (this._anotherText && this.isAnotherTriggered() && this.isAnyParentActive()) {
             SoundManager.playCursor();
             this._anotherTextVisible = !this._anotherTextVisible;
             this._itemExist = true;
@@ -237,6 +260,12 @@
     Window_Help.prototype.isAnotherTriggered = function() {
         return Input.isTriggered(this.getToggleDescButtonName()) ||
             (this.isTouchedInsideFrame() && TouchInput.isTriggered() && paramValidTouch);
+    };
+
+    Window_Help.prototype.isAnyParentActive = function() {
+        return this._parentWindows.some(function(win) {
+            return win.active;
+        });
     };
 
     Window_Help.prototype.getToggleDescButtonName = function() {
