@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2016/09/07 同じ説明文のアイテムが連続していたときに切り替えメッセージが表示されない問題を修正
 // 1.1.1 2016/09/06 親のウィンドウがアクティブなときのみ操作できるよう修正
 // 1.1.0 2016/09/01 マウス操作、タッチ操作でも切り替えられる機能を追加
 //                  切り替え中にキャンセルしたときに描画内容が一部残ってしまう不具合を修正
@@ -192,6 +193,14 @@
         this._itemExist          = false;
     };
 
+    var _Window_Help_setText = Window_Help.prototype.setText;
+    Window_Help.prototype.setText = function(text) {
+        if (this._text === text) {
+            this.refresh();
+        }
+        _Window_Help_setText.apply(this, arguments);
+    };
+
     Window_Help.prototype.setParentWindow = function(parentWindow) {
         if (!this._parentWindows.contains(parentWindow)) {
             this._parentWindows.push(parentWindow);
@@ -226,6 +235,10 @@
     var _Window_Help_refresh      = Window_Help.prototype.refresh;
     Window_Help.prototype.refresh = function() {
         _Window_Help_refresh.apply(this, arguments);
+        this.refreshChangePage();
+    };
+
+    Window_Help.prototype.refreshChangePage = function() {
         if (paramChangePage && this._anotherText && this._itemExist) {
             var width = this.drawTextEx(paramChangePage, 0, this.contents.height);
             this.drawTextEx(paramChangePage, this.contentsWidth() - width, this.contentsHeight() - this.lineHeight());
