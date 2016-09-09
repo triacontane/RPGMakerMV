@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2016/09/10 VE_BasicModule.jsとの競合を解消
 // 1.0.2 2016/04/17 ポップアップ無効化のプラグインコマンドが機能していなかった問題を修正
 // 1.0.1 2016/04/10 HPの増減との連動で増やすと減らすが逆に解釈されていたのを修正
 // 1.0.0 2016/04/09 初版
@@ -352,7 +353,7 @@
             var sprite = new Sprite_Damage();
             sprite.x = this.x + this.damageOffsetX();
             sprite.y = this.y + this.damageOffsetY();
-            sprite.z = 9;
+            if (!sprite.z) sprite.z = 9;
             sprite.setupCharacter(this._character);
             if (!this._damages) this._damages = [];
             this._damages.push(sprite);
