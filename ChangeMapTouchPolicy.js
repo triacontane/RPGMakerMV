@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/09/11 レベル「簡易」の時の押し続け判定を変更
 // 1.0.0 2015/11/18 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -193,7 +194,7 @@
     };
 
     Scene_Map.prototype.processMapTouchLevel2 = function() {
-        if (TouchInput.isTriggered() || ($gameTemp._moveStart && TouchInput.isPressed())) {
+        if (TouchInput.isTriggered() || TouchInput.isLongPressed()) {
             var px = $gamePlayer.x;
             var py = $gamePlayer.y;
             var deltaX = $gameMap.deltaX($gameMap.canvasToMapX(TouchInput.x), px);
@@ -257,5 +258,5 @@
         var x = Graphics.pageToCanvasX(event.pageX);
         var y = Graphics.pageToCanvasY(event.pageY);
         this._onMove(x, y);
-    }
+    };
 })();
