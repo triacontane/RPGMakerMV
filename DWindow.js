@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/09/13 ウィンドウの不透明度を調整できる機能を追加
 // 1.2.0 2016/07/16 ウィンドウをピクチャの間に差し込むことのできる機能を追加
 // 1.1.1 2016/04/29 createUpperLayerによる競合対策
 // 1.1.0 2016/01/16 ウィンドウを最前面に表示できる機能を追加
@@ -96,14 +97,18 @@
  *   イベントコマンド「プラグインコマンド」から実行。
  *   （引数の間は半角スペースで区切る）
  *
- *  D_WINDOW_DRAW [ウィンドウ番号] : ウィンドウを表示
- *  例1(座標を変数指定)：D_WINDOW_DRAW 1
- *  例2(座標を直接指定)：D_WINDOW_DRAW 1 20 20 320 80
+ *  D_WINDOW_DRAW [ウィンドウ番号] [不透明度] : ウィンドウを表示
+ *  例1(座標を変数指定)：D_WINDOW_DRAW 1 255
+ *  例2(座標を直接指定)：D_WINDOW_DRAW 1 20 20 320 80 255
  *  ※ ウィンドウ番号には1-10までの値を指定してください。
+ *  最後に指定する値を不透明度(0-255)です。
  *
  *  D_WINDOW_ERASE [ウィンドウ番号] : ウィンドウを削除
  *  例：D_WINDOW_ERASE 1
  *  ※ ウィンドウ番号には1-10までの値を指定してください。
+ *
+ *  D_WINDOW_OPACITY [ウィンドウ番号] [不透明度] [時間(f)]
+ *  既に表示しているウィンドウの不透明度を指定した時間で変化させます。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -182,24 +187,28 @@
     };
 
     Game_Interpreter.prototype.pluginCommandDWindow = function(command, args) {
+        var windowInfo = {};
+        var number     = 0;
         switch (command.toUpperCase()) {
             case 'D_WINDOW_DRAW' :
-                var windowInfo = new Rectangle(0, 0, 0, 0);
-                var number     = 0;
                 switch (args.length) {
                     case 1:
-                        number            = getArgNumber(args[0], 1, 10);
-                        windowInfo.x      = $gameVariables.value(paramGameVariablesXPos) || 0;
-                        windowInfo.y      = $gameVariables.value(paramGameVariablesYPos) || 0;
-                        windowInfo.width  = $gameVariables.value(paramGameVariablesWidth) || 0;
-                        windowInfo.height = $gameVariables.value(paramGameVariablesHeight) || 0;
+                    case 2:
+                        number             = getArgNumber(args[0], 1, 10);
+                        windowInfo.x       = $gameVariables.value(paramGameVariablesXPos) || 0;
+                        windowInfo.y       = $gameVariables.value(paramGameVariablesYPos) || 0;
+                        windowInfo.width   = $gameVariables.value(paramGameVariablesWidth) || 0;
+                        windowInfo.height  = $gameVariables.value(paramGameVariablesHeight) || 0;
+                        windowInfo.opacity = args.length > 1 ? getArgNumber(args[1], 0, 255) : 255;
                         break;
                     case 5:
-                        number            = getArgNumber(args[0], 1, 10);
-                        windowInfo.x      = getArgNumber(args[1], 0);
-                        windowInfo.y      = getArgNumber(args[2], 0);
-                        windowInfo.width  = getArgNumber(args[3], 0);
-                        windowInfo.height = getArgNumber(args[4], 0);
+                    case 6:
+                        number             = getArgNumber(args[0], 1, 10);
+                        windowInfo.x       = getArgNumber(args[1], 0);
+                        windowInfo.y       = getArgNumber(args[2], 0);
+                        windowInfo.width   = getArgNumber(args[3], 0);
+                        windowInfo.height  = getArgNumber(args[4], 0);
+                        windowInfo.opacity = args.length > 5 ? getArgNumber(args[5], 0, 255) : 255;
                         break;
                     default:
                         throw new Error(command + 'に指定した引数[' + args + 'が不正です。');
@@ -207,7 +216,14 @@
                 $gameMap.setDrawDWindow(number, windowInfo);
                 break;
             case 'D_WINDOW_ERASE' :
-                $gameMap.setEraseDWindow(getArgNumber(args[0], 1, 10));
+                number = getArgNumber(args[0], 1, 10);
+                $gameMap.setEraseDWindow(number);
+                break;
+            case 'D_WINDOW_OPACITY' :
+                number                   = getArgNumber(args[0], 1, 10);
+                windowInfo.targetOpacity = getArgNumber(args[1], 0, 255);
+                windowInfo.duration      = getArgNumber(args[2], 1);
+                $gameMap.setOpacityDWindow(number, windowInfo);
                 break;
         }
     };
@@ -219,15 +235,40 @@
     var _Game_Map_setup      = Game_Map.prototype.setup;
     Game_Map.prototype.setup = function(mapId) {
         _Game_Map_setup.apply(this, arguments);
-        if (this._dWindowInfos == null) this._dWindowInfos = [];
+        if (!this.dWindowInfos) this.dWindowInfos = [];
     };
 
     Game_Map.prototype.setDrawDWindow = function(number, windowInfo) {
-        this._dWindowInfos[number] = windowInfo;
+        this.dWindowInfos[number] = windowInfo;
     };
 
     Game_Map.prototype.setEraseDWindow = function(number) {
-        this._dWindowInfos[number] = null;
+        this.dWindowInfos[number] = null;
+    };
+
+    Game_Map.prototype.setOpacityDWindow = function(number, windowInfo) {
+        if (this.dWindowInfos[number]) {
+            this.dWindowInfos[number].targetOpacity = windowInfo.targetOpacity;
+            this.dWindowInfos[number].duration      = windowInfo.duration;
+        }
+    };
+
+    var _Game_Map_update      = Game_Map.prototype.update;
+    Game_Map.prototype.update = function(sceneActive) {
+        _Game_Map_update.apply(this, arguments);
+        this.updateDynamicWindow();
+    };
+
+    Game_Map.prototype.updateDynamicWindow = function() {
+        if (!this.dWindowInfos) return;
+        for (var i = 0, n = this.dWindowInfos.length; i < n; i++) {
+            var info = this.dWindowInfos[i];
+            if (info && info.duration > 0) {
+                var d        = info.duration;
+                info.opacity = (info.opacity * (d - 1) + info.targetOpacity) / d;
+                info.duration--;
+            }
+        }
     };
 
     //=============================================================================
@@ -281,7 +322,11 @@
     };
 
     Window_Dynamic.prototype.windowInfo = function() {
-        return $gameMap._dWindowInfos[this._windowNumber];
+        return $gameMap.dWindowInfos[this._windowNumber];
+    };
+
+    Window_Dynamic.prototype.windowOpacity = function() {
+        return $gameMap.dWindowInfos[this._windowNumber].opacity;
     };
 
     Window_Dynamic.prototype.update = function() {
@@ -291,8 +336,13 @@
             if (info.x !== this.x || info.y !== this.y || info.width !== this.width || info.height !== this.height)
                 this.move(info.x, info.y, info.width, info.height);
             this.show();
+            this.updateOpacity();
         } else {
             this.hide();
         }
+    };
+
+    Window_Dynamic.prototype.updateOpacity = function() {
+        this.opacity = this.windowOpacity();
     };
 })();
