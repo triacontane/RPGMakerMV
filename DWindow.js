@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/09/13 前回の修正で戦闘画面に入るとエラーが発生する問題を修正
 // 1.3.0 2016/09/13 ウィンドウの不透明度を調整できる機能を追加
 // 1.2.0 2016/07/16 ウィンドウをピクチャの間に差し込むことのできる機能を追加
 // 1.1.1 2016/04/29 createUpperLayerによる競合対策
@@ -277,7 +278,10 @@
     //=============================================================================
     var _Spriteset_Base_createUpperLayer      = Spriteset_Base.prototype.createUpperLayer;
     Spriteset_Base.prototype.createUpperLayer = function() {
-        if (!(this instanceof Spriteset_Map)) return;
+        if (!(this instanceof Spriteset_Map)) {
+            _Spriteset_Base_createUpperLayer.apply(this, arguments);
+            return;
+        }
         if (!paramAlwaysOnTop && paramIncludePicture === 0) {
             this.createDynamicWindow();
             _Spriteset_Base_createUpperLayer.apply(this, arguments);
