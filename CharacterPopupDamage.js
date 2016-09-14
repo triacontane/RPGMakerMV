@@ -7,7 +7,7 @@
 // ----------------------------------------------------------------------------
 // Version
 // 1.1.0 2016/09/14 MPダメージ用に専用効果音を指定できる機能を追加
-//                  HP、MP、TPで個別に出力可否を設定できる機能を追加
+//                  HP、MP、TP、増加、減少の条件で個別に出力可否を設定できる機能を追加
 // 1.0.3 2016/09/10 VE_BasicModule.jsとの競合を解消
 // 1.0.2 2016/04/17 ポップアップ無効化のプラグインコマンドが機能していなかった問題を修正
 // 1.0.1 2016/04/10 HPの増減との連動で増やすと減らすが逆に解釈されていたのを修正
@@ -46,6 +46,14 @@
  * @desc TPの増減を自動ポップアップの対象にします。(ON/OFF)
  * @default ON
  *
+ * @param 増加自動ポップアップ
+ * @desc パラメータの増加を自動ポップアップの対象にします。(ON/OFF)
+ * @default ON
+ *
+ * @param 減少自動ポップアップ
+ * @desc パラメータの減少を自動ポップアップの対象にします。(ON/OFF)
+ * @default ON
+ *
  * @param MPダメージ音
  * @desc MPダメージ時の効果音ファイル名を別途指定(audio/se)します。何も指定しないとHPと同じになります。
  * @default
@@ -57,6 +65,7 @@
  *
  * また「HPの増減」等のイベントコマンド実行時に自動で変化量をポップアップする機能や、
  * ダメージ床を通過した際に自動でポップアップする機能も用意されています。
+ * パラメータにより、HPのみや増加のみといった条件指定もできます。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -114,12 +123,12 @@
 (function() {
     'use strict';
     var pluginName = 'CharacterPopupDamage';
-    var settings = {
+    var settings   = {
         /* MPダメージ専用効果音(ファイル名はパラメータで指定) */
-        mpDamageSe:{
-            volume:90,
-            pitch:100,
-            pan:0
+        mpDamageSe: {
+            volume: 90,
+            pitch : 100,
+            pan   : 0
         }
     };
 
@@ -173,13 +182,15 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramPlaySe     = getParamBoolean(['PlaySe', '効果音演奏']);
-    var paramOffsetX    = getParamNumber(['OffsetX', 'X座標補正']);
-    var paramOffsetY    = getParamNumber(['OffsetY', 'Y座標補正']);
-    var paramTpAutoPop  = getParamBoolean(['TPAutoPop', 'TP自動ポップアップ']);
-    var paramMpAutoPop  = getParamBoolean(['MPAutoPop', 'MP自動ポップアップ']);
-    var paramHpAutoPop  = getParamBoolean(['HPAutoPop', 'HP自動ポップアップ']);
-    var paramMpDamageSe = getParamString(['MPDamageSe', 'MPダメージ音']);
+    var paramPlaySe          = getParamBoolean(['PlaySe', '効果音演奏']);
+    var paramOffsetX         = getParamNumber(['OffsetX', 'X座標補正']);
+    var paramOffsetY         = getParamNumber(['OffsetY', 'Y座標補正']);
+    var paramTpAutoPop       = getParamBoolean(['TPAutoPop', 'TP自動ポップアップ']);
+    var paramMpAutoPop       = getParamBoolean(['MPAutoPop', 'MP自動ポップアップ']);
+    var paramHpAutoPop       = getParamBoolean(['HPAutoPop', 'HP自動ポップアップ']);
+    var paramIncreaseAutoPop = getParamBoolean(['IncreaseAutoPop', '増加自動ポップアップ']);
+    var paramDecreaseAutoPop = getParamBoolean(['DecreaseAutoPop', '減少自動ポップアップ']);
+    var paramMpDamageSe      = getParamString(['MPDamageSe', 'MPダメージ音']);
 
     //=============================================================================
     // Game_Interpreter
@@ -337,6 +348,7 @@
     };
 
     Game_CharacterBase.prototype.startDamagePopup = function(value, critical, mpFlg) {
+        if ((!paramIncreaseAutoPop && value < 0) || (!paramDecreaseAutoPop && value > 0)) return;
         this._damagePopup = true;
         if (!this._damageInfo) this._damageInfo = [];
         var damageInfo = {value: value, critical: critical, mpFlg: mpFlg};
