@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/09/14 MPダメージ用に専用効果音を指定できる機能を追加
+//                  HP、MP、TPで個別に出力可否を設定できる機能を追加
 // 1.0.3 2016/09/10 VE_BasicModule.jsとの競合を解消
 // 1.0.2 2016/04/17 ポップアップ無効化のプラグインコマンドが機能していなかった問題を修正
 // 1.0.1 2016/04/10 HPの増減との連動で増やすと減らすが逆に解釈されていたのを修正
@@ -31,6 +33,22 @@
  * @param Y座標補正
  * @desc ポップアップ位置のY座標を補正します。
  * @default 0
+ *
+ * @param HP自動ポップアップ
+ * @desc HPの増減を自動ポップアップの対象にします。(ON/OFF)
+ * @default ON
+ *
+ * @param MP自動ポップアップ
+ * @desc MPの増減を自動ポップアップの対象にします。(ON/OFF)
+ * @default ON
+ *
+ * @param TP自動ポップアップ
+ * @desc TPの増減を自動ポップアップの対象にします。(ON/OFF)
+ * @default ON
+ *
+ * @param MPダメージ音
+ * @desc MPダメージ時の効果音ファイル名を別途指定(audio/se)します。何も指定しないとHPと同じになります。
+ * @default
  *
  * @help マップ画面でイベントやプレイヤーに数字をポップアップさせる機能を提供します。
  * マップ上でのダメージや回復の演出に利用できます。演出は戦闘時のものと同一です。
@@ -93,11 +111,19 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(function() {
     'use strict';
     var pluginName = 'CharacterPopupDamage';
+    var settings = {
+        /* MPダメージ専用効果音(ファイル名はパラメータで指定) */
+        mpDamageSe:{
+            volume:90,
+            pitch:100,
+            pan:0
+        }
+    };
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
@@ -113,6 +139,11 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamString = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return value === null ? '' : value;
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -122,7 +153,7 @@
         return null;
     };
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
@@ -142,16 +173,20 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramPlaySe  = getParamBoolean(['PlaySe', '効果音演奏']);
-    var paramOffsetX = getParamNumber(['OffsetX', 'X座標補正']);
-    var paramOffsetY = getParamNumber(['OffsetY', 'Y座標補正']);
+    var paramPlaySe     = getParamBoolean(['PlaySe', '効果音演奏']);
+    var paramOffsetX    = getParamNumber(['OffsetX', 'X座標補正']);
+    var paramOffsetY    = getParamNumber(['OffsetY', 'Y座標補正']);
+    var paramTpAutoPop  = getParamBoolean(['TPAutoPop', 'TP自動ポップアップ']);
+    var paramMpAutoPop  = getParamBoolean(['MPAutoPop', 'MP自動ポップアップ']);
+    var paramHpAutoPop  = getParamBoolean(['HPAutoPop', 'HP自動ポップアップ']);
+    var paramMpDamageSe = getParamString(['MPDamageSe', 'MPダメージ音']);
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandCharacterPopupDamage(command, args);
@@ -172,7 +207,7 @@
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandCharacterPopupDamage = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandCharacterPopupDamage = function(command, args) {
         switch (getCommandName(command)) {
             case 'CPD_DAMAGE' :
             case 'ポップアップダメージ':
@@ -205,34 +240,34 @@
         }
     };
 
-    var _Game_Interpreter_command311 = Game_Interpreter.prototype.command311;
+    var _Game_Interpreter_command311      = Game_Interpreter.prototype.command311;
     Game_Interpreter.prototype.command311 = function() {
-        if (!$gameSystem.isSuppressAutoPopup()) {
+        if (!$gameSystem.isSuppressAutoPopup() && paramHpAutoPop) {
             var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.startDamagePopup(-value, false, false);
+            $gamePlayer.popupDamage(-value, false);
         }
         return _Game_Interpreter_command311.apply(this, arguments);
     };
 
-    var _Game_Interpreter_command312 = Game_Interpreter.prototype.command312;
+    var _Game_Interpreter_command312      = Game_Interpreter.prototype.command312;
     Game_Interpreter.prototype.command312 = function() {
-        if (!$gameSystem.isSuppressAutoPopup()) {
+        if (!$gameSystem.isSuppressAutoPopup() && paramMpAutoPop) {
             var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.startDamagePopup(-value, false, true);
+            $gamePlayer.popupMpDamage(-value, false);
         }
         return _Game_Interpreter_command312.apply(this, arguments);
     };
 
-    var _Game_Interpreter_command326 = Game_Interpreter.prototype.command326;
+    var _Game_Interpreter_command326      = Game_Interpreter.prototype.command326;
     Game_Interpreter.prototype.command326 = function() {
-        if (!$gameSystem.isSuppressAutoPopup()) {
+        if (!$gameSystem.isSuppressAutoPopup() && paramTpAutoPop) {
             var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.startDamagePopup(-value, false, false);
+            $gamePlayer.popupDamage(-value, false);
         }
         return _Game_Interpreter_command326.apply(this, arguments);
     };
 
-    Game_Interpreter.prototype.callCharacterPopup = function (args, callBackFunc, extend) {
+    Game_Interpreter.prototype.callCharacterPopup = function(args, callBackFunc, extend) {
         var character = this.character(getArgNumber(args[0], -1));
         if (character) callBackFunc.apply(character, extend);
     };
@@ -241,7 +276,7 @@
     // Game_Actor
     //  ダメージ床によるポップアップを処理します。
     //=============================================================================
-    var _Game_Actor_executeFloorDamage = Game_Actor.prototype.executeFloorDamage;
+    var _Game_Actor_executeFloorDamage      = Game_Actor.prototype.executeFloorDamage;
     Game_Actor.prototype.executeFloorDamage = function() {
         var prevHp = this.hp;
         var prevMp = this.mp;
@@ -249,11 +284,11 @@
         _Game_Actor_executeFloorDamage.apply(this, arguments);
         if (!$gameSystem.isSuppressAutoPopup() && this === $gameParty.members()[0]) {
             var hpDamage = prevHp - this.hp;
-            if (hpDamage !== 0) $gamePlayer.popupDamage(hpDamage, false);
+            if (hpDamage !== 0 && paramHpAutoPop) $gamePlayer.popupDamage(hpDamage, false);
             var mpDamage = prevMp - this.mp;
-            if (mpDamage !== 0) $gamePlayer.popupMpDamage(mpDamage, false);
+            if (mpDamage !== 0 && paramMpAutoPop) $gamePlayer.popupMpDamage(mpDamage, false);
             var tpDamage = prevTp - this.tp;
-            if (tpDamage !== 0) $gamePlayer.popupDamage(tpDamage, false);
+            if (tpDamage !== 0 && paramTpAutoPop) $gamePlayer.popupDamage(tpDamage, false);
         }
     };
 
@@ -261,7 +296,7 @@
     // Game_System
     //  オートポップアップの有効フラグを追加定義します。
     //=============================================================================
-    var _Game_System_initialize = Game_System.prototype.initialize;
+    var _Game_System_initialize      = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
         this._suppressAutoPopup = false;
@@ -304,7 +339,7 @@
     Game_CharacterBase.prototype.startDamagePopup = function(value, critical, mpFlg) {
         this._damagePopup = true;
         if (!this._damageInfo) this._damageInfo = [];
-        var damageInfo = {value:value, critical:critical, mpFlg:mpFlg};
+        var damageInfo = {value: value, critical: critical, mpFlg: mpFlg};
         if (paramPlaySe) this.playPopupSe(damageInfo);
         this._damageInfo.push(damageInfo);
     };
@@ -314,6 +349,9 @@
             SoundManager.playMiss();
         } else if (damageInfo.value < 0) {
             SoundManager.playRecovery();
+        } else if (damageInfo.mpFlg && paramMpDamageSe) {
+            settings.mpDamageSe.name = paramMpDamageSe;
+            AudioManager.playStaticSe(settings.mpDamageSe);
         } else if (this === $gamePlayer) {
             SoundManager.playActorDamage();
         } else {
@@ -329,7 +367,7 @@
     // Sprite_Character
     //  ダメージをポップアップします。
     //=============================================================================
-    var _Sprite_Character_update = Sprite_Character.prototype.update;
+    var _Sprite_Character_update      = Sprite_Character.prototype.update;
     Sprite_Character.prototype.update = function() {
         _Sprite_Character_update.apply(this, arguments);
         this.updateDamagePopup();
@@ -351,8 +389,8 @@
     Sprite_Character.prototype.setupDamagePopup = function() {
         if (this._character.isDamagePopupRequested()) {
             var sprite = new Sprite_Damage();
-            sprite.x = this.x + this.damageOffsetX();
-            sprite.y = this.y + this.damageOffsetY();
+            sprite.x   = this.x + this.damageOffsetX();
+            sprite.y   = this.y + this.damageOffsetY();
             if (!sprite.z) sprite.z = 9;
             sprite.setupCharacter(this._character);
             if (!this._damages) this._damages = [];
@@ -387,12 +425,12 @@
     };
 
     Sprite_Damage.prototype.createMissForCharacter = function() {
-        var w = this.digitWidth();
-        var h = this.digitHeight();
+        var w      = this.digitWidth();
+        var h      = this.digitHeight();
         var sprite = this.createChildSprite();
         sprite.setFrame(0, 4 * h, 4 * w, h);
         sprite.dy = 0;
-        sprite.x = w / 2;
+        sprite.x  = w / 2;
     };
 })();
 
