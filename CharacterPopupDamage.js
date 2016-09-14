@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/09/15 最新の修正で自動ポップアップの設定が手動に影響していた問題を修正
 // 1.1.0 2016/09/14 MPダメージ用に専用効果音を指定できる機能を追加
 //                  HP、MP、TP、増加、減少の条件で個別に出力可否を設定できる機能を追加
 // 1.0.3 2016/09/10 VE_BasicModule.jsとの競合を解消
@@ -253,27 +254,27 @@
 
     var _Game_Interpreter_command311      = Game_Interpreter.prototype.command311;
     Game_Interpreter.prototype.command311 = function() {
-        if (!$gameSystem.isSuppressAutoPopup() && paramHpAutoPop) {
-            var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.popupDamage(-value, false);
+        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
+        if ($gameSystem.isNeedAutoHpPopup(value)) {
+            $gamePlayer.popupDamage(value, false);
         }
         return _Game_Interpreter_command311.apply(this, arguments);
     };
 
     var _Game_Interpreter_command312      = Game_Interpreter.prototype.command312;
     Game_Interpreter.prototype.command312 = function() {
-        if (!$gameSystem.isSuppressAutoPopup() && paramMpAutoPop) {
-            var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.popupMpDamage(-value, false);
+        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
+        if ($gameSystem.isNeedAutoMpPopup(value)) {
+            $gamePlayer.popupMpDamage(value, false);
         }
         return _Game_Interpreter_command312.apply(this, arguments);
     };
 
     var _Game_Interpreter_command326      = Game_Interpreter.prototype.command326;
     Game_Interpreter.prototype.command326 = function() {
-        if (!$gameSystem.isSuppressAutoPopup() && paramTpAutoPop) {
-            var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
-            $gamePlayer.popupDamage(-value, false);
+        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
+        if ($gameSystem.isNeedAutoTpPopup(value)) {
+            $gamePlayer.popupDamage(value, false);
         }
         return _Game_Interpreter_command326.apply(this, arguments);
     };
@@ -293,13 +294,13 @@
         var prevMp = this.mp;
         var prevTp = this.tp;
         _Game_Actor_executeFloorDamage.apply(this, arguments);
-        if (!$gameSystem.isSuppressAutoPopup() && this === $gameParty.members()[0]) {
+        if (this === $gameParty.members()[0]) {
             var hpDamage = prevHp - this.hp;
-            if (hpDamage !== 0 && paramHpAutoPop) $gamePlayer.popupDamage(hpDamage, false);
+            if (hpDamage !== 0 && $gameSystem.isNeedAutoHpPopup(hpDamage)) $gamePlayer.popupDamage(hpDamage, false);
             var mpDamage = prevMp - this.mp;
-            if (mpDamage !== 0 && paramMpAutoPop) $gamePlayer.popupMpDamage(mpDamage, false);
+            if (mpDamage !== 0 && $gameSystem.isNeedAutoMpPopup(mpDamage)) $gamePlayer.popupMpDamage(mpDamage, false);
             var tpDamage = prevTp - this.tp;
-            if (tpDamage !== 0 && paramTpAutoPop) $gamePlayer.popupDamage(tpDamage, false);
+            if (tpDamage !== 0 && $gameSystem.isNeedAutoTpPopup(tpDamage)) $gamePlayer.popupDamage(tpDamage, false);
         }
     };
 
@@ -319,6 +320,23 @@
 
     Game_System.prototype.isSuppressAutoPopup = function() {
         return this._suppressAutoPopup;
+    };
+
+    Game_System.prototype.isNeedAutoHpPopup = function(value) {
+        return paramHpAutoPop && this.isNeedAutoPopup(value);
+    };
+
+    Game_System.prototype.isNeedAutoMpPopup = function(value) {
+        return paramMpAutoPop && this.isNeedAutoPopup(value);
+    };
+
+    Game_System.prototype.isNeedAutoTpPopup = function(value) {
+        return paramTpAutoPop && this.isNeedAutoPopup(value);
+    };
+
+    Game_System.prototype.isNeedAutoPopup = function(value) {
+        return !$gameSystem.isSuppressAutoPopup() &&
+            ((paramIncreaseAutoPop && value < 0) || (paramDecreaseAutoPop && value > 0));
     };
 
     //=============================================================================
@@ -348,7 +366,6 @@
     };
 
     Game_CharacterBase.prototype.startDamagePopup = function(value, critical, mpFlg) {
-        if ((!paramIncreaseAutoPop && value < 0) || (!paramDecreaseAutoPop && value > 0)) return;
         this._damagePopup = true;
         if (!this._damageInfo) this._damageInfo = [];
         var damageInfo = {value: value, critical: critical, mpFlg: mpFlg};

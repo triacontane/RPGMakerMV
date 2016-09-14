@@ -1,7 +1,7 @@
 //=============================================================================
 // NobleMushroom.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 KADOKAWA
+// Copyright (c) 2016 DOWANGO Co., Ltd
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
