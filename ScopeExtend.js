@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/09/15 敵N回ランダムのスキルに対して5回以上の繰り返しを指定できる機能を追加
 // 1.2.0 2016/09/06 敵グループ内で同じIDの敵キャラ全員を対象にできるスコープを追加
 // 1.1.0 2016/07/20 ターゲットの中から重複を除外できる機能を追加
 // 1.0.0 2016/06/20 初版
@@ -52,6 +53,11 @@
  * 敵グループ内に、指定した敵単体と同じIDの敵キャラがいる場合、全員選択されます。
  * 味方の場合は味方全員が無条件で選択されます。
  *
+ * <SEランダム回数:5> <SERandomNum:5>
+ * 「敵N体ランダム」を効果範囲にしたスキルに対して、
+ * もともとの設定上限(4回)を超えて、5回以上実行したい場合に指定します。
+ * 回数の指定には制御文字\v[n]およびJavaScript計算式が利用できます。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -63,6 +69,12 @@
 (function() {
     'use strict';
     var metaTagPrefix = 'SE';
+
+    var getArgNumberWithEval = function(arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(eval(convertEscapeCharacters(arg)), 10) || 0).clamp(min, max);
+    };
 
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
@@ -78,6 +90,16 @@
         return undefined;
     };
 
+    var convertEscapeCharacters = function(text) {
+        if (text == null) text = '';
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+    };
+
+    //=============================================================================
+    // Game_Action
+    //  効果範囲をメモ欄の記述に基づいて拡張します。
+    //=============================================================================
     var _Game_Action_repeatTargets = Game_Action.prototype.repeatTargets;
     Game_Action.prototype.repeatTargets = function(targets) {
         if (this.isScopeExtendInfo(['敵味方', 'EnemiesAndAllies'])) {
@@ -116,6 +138,13 @@
         }
         arguments[0] = targets;
         return _Game_Action_repeatTargets.apply(this, arguments);
+    };
+
+    var _Game_Action_numTargets = Game_Action.prototype.numTargets;
+    Game_Action.prototype.numTargets = function() {
+        var metaValue = getMetaValues(this.item(), ['RandomNum', 'ランダム回数']);
+        return this.isForRandom() && metaValue ? getArgNumberWithEval(metaValue, 1) :
+            _Game_Action_numTargets.apply(this, arguments);
     };
 
     Game_Action.prototype.targetsForAll = function(targets) {
