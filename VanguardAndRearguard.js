@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/09/15 特定のキャラクターに対するチェンジを禁止する設定を追加
+//                  前衛(あるいは後衛)のバトラーが全員戦闘不能で敗北になるような設定を追加
 // 1.1.1 2016/06/18 アクター加入時に前衛ステートを強制設定する処理を追加
 // 1.1.0 2016/06/06 戦闘不能時に隊列ステートが解除される不具合を修正
 //                  前衛メンバーが生存している限り、後衛メンバーが狙われなくなる機能を追加
@@ -55,6 +57,9 @@
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
  * 「特徴」欄などを使って「前衛」と「後衛」それぞれの特殊効果を設定してください。
+ * 優先度は「0」に設定することを推奨します。
+ * [SV]モーションおよび[SV]重ね合わせが優先度のもっとも高いステートのものが
+ * 優先されるというMVの仕様のためです。
  *
  * 「前衛」「後衛」に指定されたステートは、解除条件を満たしても解除されません。
  * 変更するには以下のいずれかの方法を選択します。
@@ -74,15 +79,24 @@
  *
  * 前衛のみ、後衛のみを対象にしたスキルを作成したい場合、
  * スキルのメモ欄に以下の通り設定してください。
- * <VAROnlyVanguard> // 前衛のみ対象スキル
- * <VAROnlyRearguard> // 後衛のみ対象スキル
+ * <VAROnlyVanguard>  # 前衛のみ対象スキル
+ * <VAROnlyRearguard> # 後衛のみ対象スキル
  *
  * ただし、メニュー画面から使用する場合は無効です。
  *
  * 敵キャラの初期配置を後衛にしたい場合、メモ欄に以下の通り設定してください。
  * <VARRearguard>
  *
- * このプラグインにはプラグインコマンドはありません。
+ * 前衛後衛のチェンジを禁止して前衛か後衛で固定したい場合、
+ * アクターおよび敵キャラのメモ欄に以下の通り設定してください。
+ * <VARChangeDisable> # 対象バトラーに対するチェンジは禁止されます。
+ *
+ * プラグインコマンド詳細
+ *  イベントコマンド「プラグインコマンド」から実行。
+ *  （パラメータの間は半角スペースで区切る）
+ *
+ * VAR_SET_DEFEAT_CONDITION 1 # 敵味方の敗北条件を変更します。
+ *  0:通常 1:前衛が全員戦闘不能で敗北 2:後衛が全員戦闘不能で敗北
  *
  * This plugin is released under the MIT License.
  */
@@ -125,6 +139,9 @@
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
  * 「特徴」欄などを使って「前衛」と「後衛」それぞれの特殊効果を設定してください。
+ * 優先度は「0」に設定することを推奨します。
+ * [SV]モーションおよび[SV]重ね合わせが優先度のもっとも高いステートのものが
+ * 優先されるというMVの仕様のためです。
  *
  * 「前衛」「後衛」に指定されたステートは、解除条件を満たしても解除されません。
  * 変更するには以下のいずれかの方法を選択します。
@@ -144,15 +161,26 @@
  *
  * 前衛のみ、後衛のみを対象にしたスキルを作成したい場合、
  * スキルのメモ欄に以下の通り設定してください。
- * <VAR前衛のみ> // 前衛のみ対象スキル
- * <VAR後衛のみ> // 後衛のみ対象スキル
+ * <VAR前衛のみ> # 前衛のみ対象スキル
+ * <VAR後衛のみ> # 後衛のみ対象スキル
  *
  * ただし、メニュー画面から使用する場合は無効です。
  *
  * 敵キャラの初期配置を後衛にしたい場合、メモ欄に以下の通り設定してください。
  * <VAR後衛>
  *
- * このプラグインにはプラグインコマンドはありません。
+ * 前衛後衛のチェンジを禁止して前衛か後衛で固定したい場合、
+ * アクターおよび敵キャラのメモ欄に以下の通り設定してください。
+ * <VARチェンジ禁止>  # 対象バトラーに対するチェンジは禁止されます。
+ * <VARChangeDisable> # 同上
+ *
+ * プラグインコマンド詳細
+ *  イベントコマンド「プラグインコマンド」から実行。
+ *  （パラメータの間は半角スペースで区切る）
+ *
+ * VAR_敗北条件設定 1         # 敵味方の敗北条件を変更します。
+ * VAR_SET_DEFEAT_CONDITION 1 # 同上
+ *  0:通常 1:前衛が全員戦闘不能で敗北 2:後衛が全員戦闘不能で敗北
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -164,6 +192,10 @@
     'use strict';
     var pluginName    = 'VanguardAndRearguard';
     var metaTagPrefix = 'VAR';
+
+    var getCommandName = function(command) {
+        return (command || '').toUpperCase();
+    };
 
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
@@ -200,6 +232,18 @@
         return undefined;
     };
 
+    var getArgNumber = function(arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    };
+
+    var convertEscapeCharacters = function(text) {
+        if (text == null) text = '';
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
@@ -211,6 +255,44 @@
     var paramRearguardOffsetY = getParamNumber(['RearguardOffsetY', '後衛時Y補正'], 0);
     var paramChangeSpeed      = getParamNumber(['ChangeSpeed', 'チェンジ速度'], 1);
     var paramRearDefense      = getParamBoolean(['RearDefense', '後衛防御']);
+
+    //=============================================================================
+    // Game_Interpreter
+    //  プラグインコマンドを追加定義します。
+    //=============================================================================
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        if (!command.match(new RegExp('^' + metaTagPrefix))) return;
+        try {
+            this.pluginCommandVanguardAndRearguard(command.replace(metaTagPrefix, ''), args);
+        } catch (e) {
+            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
+                var window = require('nw.gui').Window.get();
+                if (!window.isDevToolsOpen()) {
+                    var devTool = window.showDevTools();
+                    devTool.moveTo(0, 0);
+                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+                    window.focus();
+                }
+            }
+            console.log('プラグインコマンドの実行中にエラーが発生しました。');
+            console.log('- コマンド名 　: ' + command);
+            console.log('- コマンド引数 : ' + args);
+            console.log('- エラー原因   : ' + e.stack || e.toString());
+        }
+    };
+
+    Game_Interpreter.prototype.pluginCommandVanguardAndRearguard = function(command, args) {
+        switch (getCommandName(command)) {
+            case '_敗北条件設定' :
+            case '_SET_DEFEAT_CONDITION' :
+                var condition = getArgNumber(args[0], 0, 2);
+                $gameParty.setDefeatCondition(condition);
+                $gameTroop.setDefeatCondition(condition);
+                break;
+        }
+    };
 
     //=============================================================================
     // Game_BattlerBase
@@ -243,7 +325,11 @@
     };
 
     Game_BattlerBase.prototype.changeFormationState = function() {
-        this.setFormationState(!this.isVanguard());
+        if (this.isChangeableFormationState()) {
+            this.setFormationState(!this.isVanguard());
+            return true;
+        }
+        return false;
     };
 
     Game_BattlerBase.prototype.isVanguard = function() {
@@ -272,6 +358,14 @@
 
     Game_BattlerBase.prototype.getFormationOffsetY = function() {
         return this.isRearguard() ? paramRearguardOffsetY : 0;
+    };
+
+    Game_BattlerBase.prototype.isChangeableFormationState = function() {
+        var battler = (this.isActor() ? this.actor() : this.isEnemy() ? this.enemy() : null);
+        if (battler) {
+            return !getMetaValues(battler, ['チェンジ禁止', 'ChangeDisable']);
+        }
+        return false;
     };
 
     //=============================================================================
@@ -307,7 +401,7 @@
     // Game_Actor
     //  チェンジ用のモーションを定義します。
     //=============================================================================
-    var _Game_Actor_setup = Game_Actor.prototype.setup;
+    var _Game_Actor_setup      = Game_Actor.prototype.setup;
     Game_Actor.prototype.setup = function(actorId) {
         _Game_Actor_setup.apply(this, arguments);
         if (!this.isVanguard() && !this.isRearguard()) {
@@ -343,19 +437,46 @@
     // Game_Unit
     //  前衛メンバーのみを生存メンバーとして扱う仕様に変更します。
     //=============================================================================
+    var _Game_Unit_aliveMembers = Game_Unit.prototype.aliveMembers;
     if (paramRearDefense) {
-        var _Game_Unit_aliveMembers      = Game_Unit.prototype.aliveMembers;
         Game_Unit.prototype.aliveMembers = function() {
             var members = this.vanguardMembers();
             return members.length > 0 ? members : _Game_Unit_aliveMembers.apply(this, arguments);
         };
-
-        Game_Unit.prototype.vanguardMembers = function() {
-            return _Game_Unit_aliveMembers.apply(this, arguments).filter(function(member) {
-                return member.isVanguard();
-            });
-        };
     }
+
+    Game_Unit.prototype.vanguardMembers = function() {
+        return _Game_Unit_aliveMembers.apply(this, arguments).filter(function(member) {
+            return member.isVanguard();
+        });
+    };
+
+    Game_Unit.prototype.rearguardMembers = function() {
+        return _Game_Unit_aliveMembers.apply(this, arguments).filter(function(member) {
+            return member.isRearguard();
+        });
+    };
+
+    Game_Unit.prototype.setDefeatCondition = function(value) {
+        this._defeatCondition = value;
+    };
+
+    Game_Unit.prototype.getDefeatCondition = function() {
+        return this._defeatCondition || 0;
+    };
+
+    var _Game_Unit_isAllDead      = Game_Unit.prototype.isAllDead;
+    Game_Unit.prototype.isAllDead = function() {
+        var defeatCondition = this.getDefeatCondition();
+        switch (defeatCondition) {
+            case 2:
+                return this.rearguardMembers().length === 0;
+            case 1:
+                return this.vanguardMembers().length === 0;
+            default :
+                return _Game_Unit_isAllDead.apply(this, arguments);
+        }
+    };
 
     //=============================================================================
     // Game_Action
@@ -373,12 +494,16 @@
     Game_Action.prototype.applyItemUserEffect = function(target) {
         _Game_Action_applyItemUserEffect.apply(this, arguments);
         if (getMetaValues(this.item(), ['Change', 'チェンジ'])) {
-            target.changeFormationState();
-            this.makeSuccess(target);
+            var result1 = target.changeFormationState();
+            if (result1) {
+                this.makeSuccess(target);
+            }
         }
         if (getMetaValues(this.item(), ['UserChange', '使用者チェンジ'])) {
-            this.subject().changeFormationState();
-            this.makeSuccess(target);
+            var result2 = this.subject().changeFormationState();
+            if (result2) {
+                this.makeSuccess(target);
+            }
         }
     };
 
@@ -463,7 +588,11 @@
 
     Window_ActorCommand.prototype.addChangeCommand = function() {
         var skill = $dataSkills[paramSkillIdChange];
-        this.addCommand(skill ? skill.name : 'Change', 'change', true);
+        this.addCommand(skill ? skill.name : 'Change', 'change', this.isChangeEnabled());
+    };
+
+    Window_ActorCommand.prototype.isChangeEnabled = function() {
+        return this._actor ? this._actor.isChangeableFormationState() : false;
     };
 
     //=============================================================================
