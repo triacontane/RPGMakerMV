@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/09/16 完全スキップがONかつセーブデータが存在しない場合にゲームを開始できない問題を修正
 // 1.1.0 2016/09/16 ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップできる機能を追加
 // 1.0.0 2016/05/22 初版
 // ----------------------------------------------------------------------------
@@ -187,7 +188,14 @@
             Scene_Load.prototype.reloadMapIfUpdated.call(this);
             SceneManager.goto(Scene_Map);
             $gameSystem.onAfterLoad();
+        } else if (paramCompletelySkip){
+            this.goToNewGame();
         }
+    };
+
+    Scene_Boot.prototype.goToNewGame = function() {
+        DataManager.setupNewGame();
+        SceneManager.goto(Scene_Map);
     };
 
     //=============================================================================
