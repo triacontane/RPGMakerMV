@@ -17,6 +17,10 @@
  * @plugindesc EventItemConditionPlugin
  * @author triacontane
  *
+ * @param DefaultVisible
+ * @desc メモ欄が指定されていないアイテムの表示可否です。OFFにするとメモ欄に指定がないアイテムは表示されません。
+ * @default ON
+ *
  * @help イベントコマンド「アイテム選択の処理」において
  * 表示可否の条件をアイテムごとに設定できます。
  * 対象アイテムのメモ欄に以下の通り設定してください。
@@ -33,6 +37,10 @@
 /*:ja
  * @plugindesc アイテム選択の表示条件プラグイン
  * @author トリアコンタン
+ *
+ * @param デフォルト表示可否
+ * @desc メモ欄が指定されていないアイテムの表示可否です。OFFにするとメモ欄に指定がないアイテムは表示されません。
+ * @default ON
  *
  * @help イベントコマンド「アイテム選択の処理」において
  * 表示可否の条件をアイテムごとに設定できます。
@@ -57,7 +65,22 @@
 
 (function() {
     'use strict';
+    var pluginName    = 'EventItemCondition';
     var metaTagPrefix = 'EIC';
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
 
     var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
@@ -98,6 +121,11 @@
     };
 
     //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var paramDefaultVisible = getParamBoolean(['DefaultVisible', 'デフォルト表示可否']);
+
+    //=============================================================================
     // Window_EventItem
     //  アイテム選択ウィンドウに条件を設定します。
     //=============================================================================
@@ -105,7 +133,9 @@
     Window_EventItem.prototype.includes = function(item) {
         var result = _Window_EventItem_includes.apply(this, arguments);
         if (result) {
+            this._existCondition = false;
             result = this.isOkEventItemSwitch(item) && this.isOkEventItemScript(item);
+            if (!this._existCondition) result = paramDefaultVisible;
         }
         return result;
     };
@@ -113,6 +143,7 @@
     Window_EventItem.prototype.isOkEventItemSwitch = function(item) {
         var metaValue = getMetaValues(item, ['スイッチ', 'Switch']);
         if (metaValue) {
+            this._existCondition = true;
             return $gameSwitches.value(getArgNumber(metaValue, 1));
         }
         return true;
@@ -121,6 +152,7 @@
     Window_EventItem.prototype.isOkEventItemScript = function(item) {
         var metaValue = getMetaValues(item, ['スクリプト', 'Script']);
         if (metaValue) {
+            this._existCondition = true;
             return eval(getArgString(metaValue));
         }
         return true;
