@@ -37,6 +37,10 @@
  * @desc 5番のフォントセットです。
  * @default
  *
+ * @param DefaultFont
+ * @desc デフォルトで使用されるフォント番号です。(1-5)
+ * @default 0
+ *
  * @help 文章の表示中でフォントを変更します。
  * fontsフォルダに入っているものではなく、ユーザ環境にインストール
  * されているフォントから選択されるのでロードの必要はありません。
@@ -78,6 +82,10 @@
  * @desc 5番のフォントセットです。
  * @default
  *
+ * @param デフォルトフォント
+ * @desc デフォルトで使用されるフォント番号です。0を指定するとデフォルトフォンが未指定になります。
+ * @default 0
+ *
  * @help 文章の表示中でフォントを変更します。
  * fontsフォルダに入っているものではなく、ユーザ環境にインストール
  * されているフォントから選択されるのでロードの必要はありません。
@@ -111,6 +119,13 @@
         return value === null ? '' : value;
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -127,6 +142,7 @@
     for (var i = 1; i < 6; i++) {
         paramFonts[i] = getParamString(['Font' + i, 'フォント' + i]);
     }
+    var paramDefaultFont = getParamNumber(['DefaultFont', 'デフォルトフォント'], 0, 5);
 
     var _Window_Message_processEscapeCharacter      = Window_Message.prototype.processEscapeCharacter;
     Window_Message.prototype.processEscapeCharacter = function(code, textState) {
@@ -142,6 +158,12 @@
     Window_Message.prototype.changeFontFace = function(fontIndex) {
         var fonts = paramFonts[fontIndex];
         this.contents.fontFace = (fonts ? fonts + ',' : '') + this.standardFontFace();
+    };
+
+    var _Window_Message_standardFontFace = Window_Message.prototype.standardFontFace;
+    Window_Message.prototype.standardFontFace = function() {
+        var fonts = paramFonts[paramDefaultFont];
+        return (fonts ? fonts + ',' : '') + _Window_Message_standardFontFace.apply(this, arguments);
     };
 })();
 
