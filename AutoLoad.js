@@ -14,12 +14,43 @@
 //=============================================================================
 
 /*:
+ * @plugindesc Auto load plugin
+ * @author triacontane
+ *
+ * @param PlaySe
+ * @desc セーブ成功時にシステム効果音を演奏します。
+ * @default ON
+ *
+ * @param CompletelySkip
+ * @desc ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップします。タイトル画面が常に表示されなくなります。
+ * @default OFF
+ *
+ * @help セーブファイルが存在する場合、タイトル画面をスキップします。
+ * また、セーブ画面を経由せずに最後にアクセスしたセーブファイルに
+ * 直接セーブするプラグインコマンドを提供します。
+ *
+ * プラグインコマンド詳細
+ *  イベントコマンド「プラグインコマンド」から実行。
+ *  （パラメータの間は半角スペースで区切る）
+ *
+ * 最後にアクセスしたセーブファイルIDに直接セーブします。
+ * AL_オートセーブ
+ * AL_AUTO_SAVE
+ * 例:AL_オートセーブ
+ *
+ * This plugin is released under the MIT License.
+ */
+/*:ja
  * @plugindesc 自動ロードプラグイン
  * @author トリアコンタン
  *
  * @param 効果音演奏
  * @desc セーブ成功時にシステム効果音を演奏します。
  * @default ON
+ *
+ * @param 完全スキップ
+ * @desc ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップします。タイトル画面が存在しないゲームを作成できます。
+ * @default OFF
  *
  * @help セーブファイルが存在する場合、タイトル画面をスキップします。
  * また、セーブ画面を経由せずに最後にアクセスしたセーブファイルに
@@ -40,12 +71,12 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(function() {
     'use strict';
-    var pluginName = 'AutoLoad';
+    var pluginName    = 'AutoLoad';
     var metaTagPrefix = 'AL';
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
@@ -66,14 +97,15 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramPlaySe = getParamBoolean(['PlaySe', '効果音演奏']);
+    var paramPlaySe         = getParamBoolean(['PlaySe', '効果音演奏']);
+    var paramCompletelySkip = getParamBoolean(['CompletelySkip', '完全スキップ']);
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandAutoLoad(command, args);
@@ -94,7 +126,7 @@
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandAutoLoad = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandAutoLoad = function(command, args) {
         switch (getCommandName(command)) {
             case metaTagPrefix + 'オートセーブ' :
             case metaTagPrefix + '_AUTO_SAVE' :
@@ -122,14 +154,14 @@
     //=============================================================================
     DataManager.autoSaveGame = function() {
         var saveFileId = this.lastAccessedSavefileId();
-        var result = this.saveGame(saveFileId);
+        var result     = this.saveGame(saveFileId);
         if (result) StorageManager.cleanBackup(saveFileId);
         return result;
     };
 
     DataManager.autoLoadGame = function() {
         var saveFileId = this.latestSavefileId();
-        var result = false;
+        var result     = false;
         if (this.isAnySavefileExists()) {
             result = this.loadGame(saveFileId);
         }
@@ -140,7 +172,7 @@
     // Scene_Boot
     //  タイトル画面をとばしてマップ画面に遷移します。
     //=============================================================================
-    var _Scene_Boot_start = Scene_Boot.prototype.start;
+    var _Scene_Boot_start      = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
         if (!DataManager.isBattleTest() && !DataManager.isEventTest()) {
@@ -151,10 +183,18 @@
     Scene_Boot.prototype.goToAutoLoad = function() {
         var result = DataManager.autoLoadGame();
         if (result) {
-            Scene_Load.prototype.reloadMapIfUpdated.call(Scene_Load);
+            Scene_Load.prototype.reloadMapIfUpdated.call(this);
             SceneManager.goto(Scene_Map);
             $gameSystem.onAfterLoad();
         }
     };
+
+    //=============================================================================
+    // Scene_Title
+    //  完全スキップの場合にScene_Bootで上書きします。
+    //=============================================================================
+    if (paramCompletelySkip) {
+        Scene_Title = Scene_Boot;
+    }
 })();
 
