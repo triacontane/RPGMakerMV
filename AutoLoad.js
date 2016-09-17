@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/09/17 マップ画面を使った独自のタイトル画面が作成できる機能を追加
 // 1.1.1 2016/09/16 完全スキップがONかつセーブデータが存在しない場合にゲームを開始できない問題を修正
 // 1.1.0 2016/09/16 ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップできる機能を追加
 // 1.0.0 2016/05/22 初版
@@ -24,48 +25,88 @@
  * @default ON
  *
  * @param CompletelySkip
- * @desc ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップします。タイトル画面が常に表示されなくなります。
+ * @desc ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップします。
  * @default OFF
  *
- * @help セーブファイルが存在する場合、タイトル画面をスキップします。
- * また、セーブ画面を経由せずに最後にアクセスしたセーブファイルに
+ * @param TitleMapID
+ * @desc 独自にタイトル画面用のマップを作成する場合に指定するマップIDです。
+ * @default 0
+ *
+ * @help 以下の機能でタイトル画面の仕様を変更します。
+ * マップ画面を使ったオリジナルタイトル画面などが作れます。
+ *
+ * １．セーブファイルが存在する場合、タイトル画面をスキップします。
+ *
+ * ２．セーブ画面を経由せずに最後にアクセスしたセーブファイルに
  * 直接セーブするプラグインコマンドを提供します。
+ *
+ * ３．設定次第で通常のタイトル画面を完全にスキップできます。
+ * 「タイトルに戻る」場合もニューゲームか最新のセーブファイルを
+ * ロードするようになります。
+ *
+ * ４．特定のマップをオリジナルタイトル画面として定義できます。
+ * マップや遠景などを使って独自のタイトル画面を演出できます。
+ * 以下の手順を踏んでください。
+ *
+ * ４－１．「タイトルマップID」にタイトル用マップのマップIDを設定する。
+ * ４－２．タイトル用マップのイベントでタイトル処理を実装する。
+ * ４－３．プラグインコマンド「AL_MOVE_LAST_SAVEPOINT」で最後セーブ地点に移動する。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * 最後にアクセスしたセーブファイルIDに直接セーブします。
- * AL_オートセーブ
- * AL_AUTO_SAVE
- * 例:AL_オートセーブ
+ * AL_オートセーブ         # 最後にアクセスしたセーブIDにセーブします。
+ * AL_AUTO_SAVE            # 同上
+ * AL_最終セーブ地点へ移動 # 最後にセーブした場所へ移動します。
+ * AL_MOVE_LAST_SAVEPOINT  # 同上
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc 自動ロードプラグイン
+ * @plugindesc タイトル画面仕様変更プラグイン
  * @author トリアコンタン
  *
  * @param 効果音演奏
- * @desc セーブ成功時にシステム効果音を演奏します。
+ * @desc オートセーブ成功時にシステム効果音を演奏します。
  * @default ON
  *
  * @param 完全スキップ
- * @desc ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップします。タイトル画面が存在しないゲームを作成できます。
+ * @desc ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップします。
  * @default OFF
  *
- * @help セーブファイルが存在する場合、タイトル画面をスキップします。
- * また、セーブ画面を経由せずに最後にアクセスしたセーブファイルに
+ * @param タイトルマップID
+ * @desc 独自にタイトル画面用のマップを作成する場合に指定するマップIDです。
+ * @default 0
+ *
+ * @help 以下の機能でタイトル画面の仕様を変更します。
+ * マップ画面を使ったオリジナルタイトル画面などが作れます。
+ *
+ * １．セーブファイルが存在する場合、タイトル画面をスキップします。
+ *
+ * ２．セーブ画面を経由せずに最後にアクセスしたセーブファイルに
  * 直接セーブするプラグインコマンドを提供します。
+ *
+ * ３．設定次第で通常のタイトル画面を完全にスキップできます。
+ * 「タイトルに戻る」場合もニューゲームか最新のセーブファイルを
+ * ロードするようになります。
+ *
+ * ４．特定のマップをオリジナルタイトル画面として定義できます。
+ * マップや遠景などを使って独自のタイトル画面を演出できます。
+ * 以下の手順を踏んでください。
+ *
+ * ４－１．「タイトルマップID」にタイトル用マップのマップIDを設定する。
+ * ４－２．タイトル用マップのイベントでタイトル処理を実装する。
+ * ４－３．プラグインコマンド「AL_MOVE_LAST_SAVEPOINT」で最後セーブ地点に移動する。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * 最後にアクセスしたセーブファイルIDに直接セーブします。
- * AL_オートセーブ
- * AL_AUTO_SAVE
- * 例:AL_オートセーブ
+ * AL_オートセーブ         # 最後にアクセスしたセーブIDにセーブします。
+ * AL_AUTO_SAVE            # 同上
+ * AL_最終セーブ地点へ移動 # 最後にセーブした場所へ移動します。
+ * AL_MOVE_LAST_SAVEPOINT  # 同上
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -87,6 +128,13 @@
         return (value || '').toUpperCase() === 'ON';
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -101,6 +149,7 @@
     //=============================================================================
     var paramPlaySe         = getParamBoolean(['PlaySe', '効果音演奏']);
     var paramCompletelySkip = getParamBoolean(['CompletelySkip', '完全スキップ']);
+    var paramTitleMapId     = getParamNumber(['TitleMapID', 'タイトルマップID'], 0);
 
     //=============================================================================
     // Game_Interpreter
@@ -109,8 +158,10 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
+        var commandPrefix = new RegExp('^' + metaTagPrefix);
+        if (!command.match(commandPrefix)) return;
         try {
-            this.pluginCommandAutoLoad(command, args);
+            this.pluginCommandAutoLoad(command.replace(commandPrefix, ''), args);
         } catch (e) {
             if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
                 var window = require('nw.gui').Window.get();
@@ -128,12 +179,17 @@
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandAutoLoad = function(command, args) {
+    Game_Interpreter.prototype.pluginCommandAutoLoad = function(command) {
         switch (getCommandName(command)) {
-            case metaTagPrefix + 'オートセーブ' :
-            case metaTagPrefix + '_AUTO_SAVE' :
+            case '_オートセーブ' :
+            case '_AUTO_SAVE' :
                 this._index++;
                 $gameSystem.autoSave();
+                break;
+            case '_最終セーブ地点へ移動' :
+            case '_MOVE_LAST_SAVEPOINT' :
+                $gamePlayer.moveLastSavePoint();
+                this.setWaitMode('transfer');
                 break;
         }
     };
@@ -148,6 +204,29 @@
         if (result && paramPlaySe) {
             SoundManager.playSave();
         }
+    };
+
+    var _Game_System_onBeforeSave      = Game_System.prototype.onBeforeSave;
+    Game_System.prototype.onBeforeSave = function() {
+        _Game_System_onBeforeSave.apply(this, arguments);
+        $gamePlayer.setLastSavePoint();
+    };
+
+    //=============================================================================
+    // Game_Player
+    //  セーブ時点での状態を保持します。
+    //=============================================================================
+    Game_Player.prototype.setLastSavePoint = function() {
+        this._lastSaveMapId       = $gameMap.mapId();
+        this._lastSaveX           = this.x;
+        this._lastSaveY           = this.y;
+        this._lastSaveTransparent = this.isTransparent();
+    };
+
+    Game_Player.prototype.moveLastSavePoint = function() {
+        this.setTransparent(this._lastSaveTransparent);
+        this.reserveTransfer(this._lastSaveMapId, this._lastSaveX, this._lastSaveY, this.direction(), 0);
+        $gameSystem.onAfterLoad();
     };
 
     //=============================================================================
@@ -187,9 +266,13 @@
         if (result) {
             Scene_Load.prototype.reloadMapIfUpdated.call(this);
             SceneManager.goto(Scene_Map);
-            $gameSystem.onAfterLoad();
-        } else if (paramCompletelySkip){
+            if (!paramTitleMapId) $gameSystem.onAfterLoad();
+        } else if (paramCompletelySkip || paramTitleMapId > 0) {
             this.goToNewGame();
+        }
+        if (paramTitleMapId > 0) {
+            $gamePlayer.reserveTransfer(paramTitleMapId, 0, 0);
+            $gamePlayer.setTransparent(true);
         }
     };
 
@@ -202,7 +285,7 @@
     // Scene_Title
     //  完全スキップの場合にScene_Bootで上書きします。
     //=============================================================================
-    if (paramCompletelySkip) {
+    if (paramCompletelySkip || paramTitleMapId > 0) {
         Scene_Title = Scene_Boot;
     }
 })();
