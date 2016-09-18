@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/09/18 YEP_EquipCore.jsとの競合を解消
 // 1.2.0 2016/09/17 マップ画面を使った独自のタイトル画面が作成できる機能を追加
 // 1.1.1 2016/09/16 完全スキップがONかつセーブデータが存在しない場合にゲームを開始できない問題を修正
 // 1.1.0 2016/09/16 ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップできる機能を追加
@@ -60,6 +61,8 @@
  * AL_AUTO_SAVE            # 同上
  * AL_最終セーブ地点へ移動 # 最後にセーブした場所へ移動します。
  * AL_MOVE_LAST_SAVEPOINT  # 同上
+ * AL_ニューゲーム         # データベース上のパーティの初期位置へ移動します。
+ * AL_NEW_GAME             # 同上
  *
  * This plugin is released under the MIT License.
  */
@@ -107,6 +110,8 @@
  * AL_AUTO_SAVE            # 同上
  * AL_最終セーブ地点へ移動 # 最後にセーブした場所へ移動します。
  * AL_MOVE_LAST_SAVEPOINT  # 同上
+ * AL_初期位置へ移動       # データベース上のパーティの初期位置へ移動します。
+ * AL_MOVE_INITIAL_POINT   # 同上
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -186,6 +191,11 @@
                 this._index++;
                 $gameSystem.autoSave();
                 break;
+            case '_初期位置へ移動' :
+            case '_MOVE_INITIAL_POINT' :
+                $gamePlayer.moveInitialPoint();
+                this.setWaitMode('transfer');
+                break;
             case '_最終セーブ地点へ移動' :
             case '_MOVE_LAST_SAVEPOINT' :
                 $gamePlayer.moveLastSavePoint();
@@ -224,15 +234,35 @@
     };
 
     Game_Player.prototype.moveLastSavePoint = function() {
-        this.setTransparent(this._lastSaveTransparent);
-        this.reserveTransfer(this._lastSaveMapId, this._lastSaveX, this._lastSaveY, this.direction(), 0);
-        $gameSystem.onAfterLoad();
+        if (this.isExistLastSavePoint()) {
+            this.setTransparent(this._lastSaveTransparent);
+            this.reserveTransfer(this._lastSaveMapId, this._lastSaveX, this._lastSaveY, this.direction(), 0);
+            $gameSystem.onAfterLoad();
+        }
+    };
+
+    Game_Player.prototype.moveInitialPoint = function() {
+        $gamePlayer.reserveTransfer($dataSystem.startMapId,
+            $dataSystem.startX, $dataSystem.startY, this.direction(), 0);
+        this.setTransparent($dataSystem.optTransparent);
+    };
+
+    Game_Player.prototype.isExistLastSavePoint = function() {
+        return !!this._lastSaveMapId;
     };
 
     //=============================================================================
     // DataManager
     //  自動セーブ処理を追加定義します。
     //=============================================================================
+    var _DataManager_loadDatabase = DataManager.loadDatabase;
+    DataManager.loadDatabase = function() {
+        if (this.processEquipNotetags1 !== undefined) {
+            Yanfly._loaded_YEP_EquipCore = false;
+        }
+        _DataManager_loadDatabase.apply(this, arguments);
+    };
+
     DataManager.autoSaveGame = function() {
         var saveFileId = this.lastAccessedSavefileId();
         var result     = this.saveGame(saveFileId);
