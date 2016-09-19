@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/09/20 画面サイズ変更およびモバイル用の画面サイズ設定を追加
 // 1.0.0 2016/08/16 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -61,6 +62,26 @@
  * @desc 選択肢の接頭辞です。(0:使用しない 1:アルファベット 2:数字)
  * @default 0
  *
+ * @param 画面横サイズ
+ * @desc 横方向の画面サイズです。0を指定すると変更しません。
+ * @default 0
+ *
+ * @param 画面縦サイズ
+ * @desc 縦方向の画面サイズです。0を指定すると変更しません。
+ * @default 0
+ *
+ * @param モバイル画面横サイズ
+ * @desc スマホ等を使用した場合の横方向の画面サイズです。0を指定すると変更しません。
+ * @default 0
+ *
+ * @param モバイル画面縦サイズ
+ * @desc スマホ等を使用した場合の縦方向の画面サイズです。0を指定すると変更しません。
+ * @default 0
+ *
+ * @param モバイルモード
+ * @desc PC上でもモバイルモードで実行します。主にテスト用に使用するオプションですが音が鳴らない制約があります。
+ * @default OFF
+ *
  * @help RPGツクールMVでサウンドノベルを手軽に作成するためのベースプラグインです。
  * 適用すると、メッセージウィンドウの表示が画面全体になり
  * 表示したメッセージが消去されず画面に蓄積されるようになります。
@@ -71,7 +92,8 @@
  * ・ノベルウィンドウに蓄積されているメッセージが切り替わったとき
  * ・場所移動した直後
  *
- * タイトル画面でコンティニューを選択すると、自動でオートセーブがロードされます。
+ * タイトル画面でコンティニューを選択すると自動でオートセーブがロードされます。
+ * 現在のバージョンでは、セーブはオートセーブのみの仕様となります。
  *
  * 制御文字詳細
  *  文章中に含めることで効果を発揮します。
@@ -186,17 +208,22 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramInitialViewType  = getParamNumber(['InitialViewType', '表示タイプ初期値'], 0);
-    var paramTitleViewType    = getParamNumber(['TitleViewType', 'タイトル表示タイプ'], 0);
-    var paramVariableSpeed    = getParamNumber(['VariableSpeed', '表示速度変数'], 1, 5000);
-    var paramRapidShowClick   = getParamBoolean(['RapidShowClick', 'クリック瞬間表示']);
-    var paramInitialSpeed     = getParamNumber(['InitialSpeed', '表示速度初期値'], 0);
-    var paramWaitByCommand    = getParamBoolean(['WaitByCommand', 'コマンド単位ウェイト']);
-    var paramAutoWordWrap     = getParamBoolean(['AutoWordWrap', '自動改行']);
-    var paramRelativeFontSize = getParamNumber(['RelativeFontSize', '相対フォントサイズ'], 1, 5000);
-    var paramViewMincho       = getParamBoolean(['ViewMincho', '明朝体表示']);
-    var paramViewGothic       = getParamBoolean(['ViewGothic', 'ゴシック体表示']);
-    var paramSelectionPrefix  = getParamNumber(['SelectionPrefix', '選択肢接頭辞'], 0, 2);
+    var paramInitialViewType    = getParamNumber(['InitialViewType', '表示タイプ初期値'], 0);
+    var paramTitleViewType      = getParamNumber(['TitleViewType', 'タイトル表示タイプ'], 0);
+    var paramVariableSpeed      = getParamNumber(['VariableSpeed', '表示速度変数'], 1, 5000);
+    var paramRapidShowClick     = getParamBoolean(['RapidShowClick', 'クリック瞬間表示']);
+    var paramInitialSpeed       = getParamNumber(['InitialSpeed', '表示速度初期値'], 0);
+    var paramWaitByCommand      = getParamBoolean(['WaitByCommand', 'コマンド単位ウェイト']);
+    var paramAutoWordWrap       = getParamBoolean(['AutoWordWrap', '自動改行']);
+    var paramRelativeFontSize   = getParamNumber(['RelativeFontSize', '相対フォントサイズ'], 1, 5000);
+    var paramViewMincho         = getParamBoolean(['ViewMincho', '明朝体表示']);
+    var paramViewGothic         = getParamBoolean(['ViewGothic', 'ゴシック体表示']);
+    var paramSelectionPrefix    = getParamNumber(['SelectionPrefix', '選択肢接頭辞'], 0, 2);
+    var paramScreenWidth        = getParamNumber(['ScreenWidth', '画面横サイズ'], 0);
+    var paramScreenHeight       = getParamNumber(['ScreenHeight', '画面縦サイズ'], 0);
+    var paramScreenWidthMobile  = getParamNumber(['ScreenWidthMobile', 'モバイル画面横サイズ'], 0);
+    var paramScreenHeightMobile = getParamNumber(['ScreenHeightMobile', 'モバイル画面縦サイズ'], 0);
+    var paramMobileMode         = getParamBoolean(['MobileMode', 'モバイルモード']);
 
     //=============================================================================
     // インタフェースの定義
@@ -213,6 +240,11 @@
     Utils.spliceString = function(originalString, index, howMany, addString) {
         if (howMany < 0) howMany = 0;
         return (originalString.slice(0, index) + addString + originalString.slice(index + howMany));
+    };
+
+    var _Utils_isMobileDevice = Utils.isMobileDevice;
+    Utils.isMobileDevice = function() {
+        return paramMobileMode || _Utils_isMobileDevice.apply(this, arguments);
     };
 
     //=============================================================================
@@ -396,6 +428,37 @@
     };
 
     //=============================================================================
+    // SceneManager
+    //  画面サイズを再設定します。
+    //=============================================================================
+    var _SceneManager_initGraphics = SceneManager.initGraphics;
+    SceneManager.initGraphics      = function() {
+        this.setScreenSize();
+        _SceneManager_initGraphics.apply(this, arguments);
+    };
+
+    SceneManager.setScreenSize = function() {
+        var width, height;
+        if (Utils.isMobileDevice()) {
+            width  = paramScreenWidthMobile || paramScreenWidth;
+            height = paramScreenHeightMobile || paramScreenHeight;
+        } else {
+            width  = paramScreenWidth;
+            height = paramScreenHeight;
+        }
+        this._screenWidth  = width || this._screenWidth;
+        this._screenHeight = height || this._screenHeight;
+        this._boxWidth     = width || this._boxWidth;
+        this._boxHeight    = height || this._boxHeight;
+        if (width || height) {
+            var dw = this._screenWidth - window.innerWidth;
+            var dh = this._screenHeight - window.innerHeight;
+            window.moveBy(-dw / 2, -dh / 2);
+            window.resizeBy(dw, dh);
+        }
+    };
+
+    //=============================================================================
     // DataManager
     //  オートセーブを追加定義します。
     //=============================================================================
@@ -452,7 +515,7 @@
         Window_NumberInput = _InterfaceWindow_NumberInput;
     };
 
-    var _Scene_Map_start = Scene_Map.prototype.start;
+    var _Scene_Map_start      = Scene_Map.prototype.start;
     Scene_Map.prototype.start = function() {
         _Scene_Map_start.apply(this, arguments);
         $gameSystem.executeAutoSave();
@@ -498,7 +561,7 @@
         this.initialize.apply(this, arguments);
     }
 
-    Scene_AutoLoad.prototype = Object.create(Scene_Load.prototype);
+    Scene_AutoLoad.prototype             = Object.create(Scene_Load.prototype);
     Scene_AutoLoad.prototype.constructor = Scene_AutoLoad;
 
     Scene_AutoLoad.prototype.create = function() {
@@ -602,8 +665,8 @@
     Window_NovelMessage.prototype             = Object.create(Window_Message.prototype);
     Window_NovelMessage.prototype.constructor = Window_Message;
 
-    Window_NovelMessage.fontFaceMincho = '"ヒラギノ明朝 ProN W3","Hiragino Mincho ProN","ＭＳ Ｐ明朝","MS PMincho"';
-    Window_NovelMessage.fontFaceGothic = '"ヒラギノゴシック ProN W3","Hiragino Gothic ProN","ＭＳ Ｐゴシック","MS PGothic"';
+    Window_NovelMessage.fontFaceMincho = 'ヒラギノ明朝 ProN W3, Hiragino Mincho ProN, ＭＳ Ｐ明朝, MS PMincho';
+    Window_NovelMessage.fontFaceGothic = 'ヒラギノゴシック ProN W3, Hiragino Gothic ProN, ＭＳ Ｐゴシック, MS PGothic';
 
     Window_NovelMessage.prototype.windowWidth = function() {
         return Graphics.boxWidth;
@@ -621,7 +684,7 @@
         var fontFace = '';
         if (paramViewMincho) fontFace += Window_NovelMessage.fontFaceMincho;
         if (paramViewGothic) fontFace += Window_NovelMessage.fontFaceGothic;
-        return fontFace + Window_Base.prototype.standardFontFace.call(this);
+        return fontFace + ',' + Window_Base.prototype.standardFontFace.call(this);
     };
 
     Window_NovelMessage.prototype.startInput = function() {
