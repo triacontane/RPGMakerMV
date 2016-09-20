@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2016/09/20 説明文の文字に「>」「<」を表示できるようエスケープ処理を追加
 // 1.1.2 2016/09/07 同じ説明文のアイテムが連続していたときに切り替えメッセージが表示されない問題を修正
 // 1.1.1 2016/09/06 親のウィンドウがアクティブなときのみ操作できるよう修正
 // 1.1.0 2016/09/01 マウス操作、タッチ操作でも切り替えられる機能を追加
@@ -49,6 +50,10 @@
  * いずれも制御文字が一通り使用できます。
  * また、スクリプト中では「item」というローカル変数で対象データを参照できます。
  * 消費MPや価格などのデータベース情報を動的に表示できます。
+ *
+ * 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
+ * < → &lt;
+ * > → &gt;
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -147,6 +152,13 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
+        var metaTagDisConvert = {
+            '&lt;': '<',
+            '&gt;': '>'
+        };
+        text = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
+            return metaTagDisConvert[value];
+        }.bind(this));
         var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };

@@ -120,10 +120,9 @@
     var convertEscapeCharactersAndEval = function(text, evalFlg) {
         if (text === null || text === undefined) text = '';
         var metaTagDisConvert = {
-            "&lt;": "<",
-            "&gt;": ">"
+            '&lt;': '<',
+            '&gt;': '>'
         };
-
         text = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
             return metaTagDisConvert[value];
         }.bind(this));
