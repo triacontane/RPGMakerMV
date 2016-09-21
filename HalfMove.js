@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.3 2016/09/21 半歩移動中、上方向にある小型船、大型船に乗船できない不具合を修正
 // 1.6.2 2016/09/03 斜め移動の移動先にイベントがある場合、縦横移動に切り替わらない問題を修正
 // 1.6.1 2016/09/01 すり抜けOFF時のイベントからの接触による起動が正しく行われるよう修正
 // 1.6.0 2016/08/20 左半分のみ、右半分のみを通行不可にする機能を追加
@@ -1141,6 +1142,17 @@
 
     Game_Player.prototype.collidedToEvent = function(target) {
         target.setCollidedFromPlayer(true);
+    };
+
+    var _Game_Player_getOnVehicle = Game_Player.prototype.getOnVehicle;
+    Game_Player.prototype.getOnVehicle = function() {
+        var result = _Game_Player_getOnVehicle.apply(this, arguments);
+        if (!result && this.isHalfMove()) {
+            localHalfPositionCount++;
+            result = _Game_Player_getOnVehicle.apply(this, arguments);
+            localHalfPositionCount--;
+        }
+        return result;
     };
 
     //=============================================================================
