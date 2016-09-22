@@ -6,6 +6,11 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/09/22 セーブファイルをひとつしか作成できない制約を解消
+//                  オートセーブを単独で動作するよう修正
+//                  イベント中にセーブやロードができるポーズメニューを追加
+//                  クイックセーブ＆ロード機能を追加
+//                  セーブファイルに表示できるチャプター表示機能を追加
 // 1.1.0 2016/09/20 画面サイズ変更およびモバイル用の画面サイズ設定を追加
 // 1.0.0 2016/08/16 初版
 // ----------------------------------------------------------------------------
@@ -82,18 +87,54 @@
  * @desc PC上でもモバイルモードで実行します。主にテスト用に使用するオプションですが音が鳴らない制約があります。
  * @default OFF
  *
+ * @param オートセーブ
+ * @desc 進行状況が自動でセーブされるようになります。ミニゲームとしてサウンドノベルを利用する場合などはOFFを推奨します。
+ * @default ON
+ *
+ * @param ポーズ可能
+ * @desc 表示タイプがノベルならイベント実行中にキャンセルボタンでポーズメニューが表示され、セーブやロードができます。
+ * @default ON
+ *
+ * @param オートセーブ名称
+ * @desc セーブ画面に表示されるオートセーブ名称です。
+ * @default オートセーブ
+ *
+ * @param ロードコマンド
+ * @desc ポーズメニューの「ロード」のコマンド名称です。
+ * @default ロード
+ *
+ * @param Qセーブコマンド
+ * @desc ポーズメニューの「クイックセーブ」のコマンド名称です。
+ * @default クイックセーブ
+ *
+ * @param Qロードコマンド
+ * @desc ポーズメニューの「クイックロード」のコマンド名称です。
+ * @default クイックロード
+ *
  * @help RPGツクールMVでサウンドノベルを手軽に作成するためのベースプラグインです。
  * 適用すると、メッセージウィンドウの表示が画面全体になり
  * 表示したメッセージが消去されず画面に蓄積されるようになります。
  *
- * また、本プラグインを適用するとオートセーブされるようになります。
+ * ノベルウィンドウを表示中にキャンセルボタンまたは右クリック（マルチタッチ）すると
+ * イベントの進行が停止し、ポーズメニューが表示されます。ポーズメニューからは
+ * 以下が可能です。
+ *
+ * ・セーブ
+ * ・ロード
+ * ・クイックセーブ（前回ロードしたデータに再度セーブ）
+ * ・クイックロード（最新のデータをロード）
+ * ・タイトルへ（タイトル画面に戻る）
+ * ・やめる（イベントに戻る）
+ *
+ * また、オートセーブを有効にすると進行状況が自動でセーブされるようになります。
+ * オートセーブ機能は、ノベルウィンドウとは別に単独で動作可能です。
  * セーブされるタイミングは以下の通りです。
  *
- * ・ノベルウィンドウに蓄積されているメッセージが切り替わったとき
+ * ・ノベルウィンドウが閉じられたとき（通常ウィンドウの場合はセーブされません）
  * ・場所移動した直後
- *
- * タイトル画面でコンティニューを選択すると自動でオートセーブがロードされます。
- * 現在のバージョンでは、セーブはオートセーブのみの仕様となります。
+ * ・メニューや戦闘からマップに戻った直後
+ * ・「チャプター」を変更した直後
+ * ・任意のタイミング（プラグインコマンド実行）
  *
  * 制御文字詳細
  *  文章中に含めることで効果を発揮します。
@@ -105,19 +146,24 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * NM_タイプ変更 1    # メッセージの表示タイプを変更します。(設定は場所移動後に反映)
- * NM_CHANGE_TYPE 1   # 同上
- * NM_再ウェイト      # 制御文字[\UL]で解除した入力待ちを再度有効にします。
- * NM_RE_WAIT         # 同上
- * NM_閉じる          # ウィンドウを明示的に閉じます。
- * NM_CLOSE           # 同上
- * NM_設定固定        # ウィンドウの表示設定を現在の設定で固定します。
- *                      固定された状態では以後の文章の表示での設定は無視されます。
- * NM_SETTING_FIXED   # 同上
- * NM_設定固定解除    # ウィンドウの表示設定固定を元に戻します。
- * NM_SETTING_RELEASE # 同上
- * NM_名前入力 1      # アクターID[1]の名前を入力するポップアップを表示します。
- * NM_INPUT_NAME 1    # 同上
+ * NM_タイプ変更 1     # メッセージの表示タイプを変更します。
+ *                       設定は場所移動後に反映されます。
+ * NM_CHANGE_TYPE 1    # 同上
+ * NM_再ウェイト       # 制御文字[\UL]で解除した入力待ちを再度有効にします。
+ * NM_RE_WAIT          # 同上
+ * NM_閉じる           # ウィンドウを明示的に閉じます。
+ * NM_CLOSE            # 同上
+ * NM_設定固定         # ウィンドウの表示設定を現在の設定で固定します。
+ *                       固定された状態では以後の文章の表示での設定は無視されます。
+ * NM_SETTING_FIXED    # 同上
+ * NM_設定固定解除     # ウィンドウの表示設定固定を元に戻します。
+ * NM_SETTING_RELEASE  # 同上
+ * NM_名前入力 1       # アクターID[1]の名前を入力するポップアップを表示します。
+ * NM_INPUT_NAME 1     # 同上
+ * NM_チャプター設定 A # セーブファイルに出力するチャプタータイトルを設定します。
+ * NM_SET_CHAPTER A    # 同上
+ * NM_オートセーブ     # オートセーブを実行します。
+ * NM_AUTO_SAVE        # 同上
  *
  * プラグインコマンド詳細
  *
@@ -183,6 +229,11 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamString = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return value === null ? '' : value;
+    };
+
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
         return (value || '').toUpperCase() === 'ON';
@@ -224,6 +275,12 @@
     var paramScreenWidthMobile  = getParamNumber(['ScreenWidthMobile', 'モバイル画面横サイズ'], 0);
     var paramScreenHeightMobile = getParamNumber(['ScreenHeightMobile', 'モバイル画面縦サイズ'], 0);
     var paramMobileMode         = getParamBoolean(['MobileMode', 'モバイルモード']);
+    var paramAutoSave           = getParamBoolean(['AutoSave', 'オートセーブ']);
+    var paramCanPause           = getParamBoolean(['CanPause', 'ポーズ可能']);
+    var paramNameAutoSave       = getParamString(['NameAutoSave', 'オートセーブ名称']);
+    var paramCommandLoad        = getParamString(['CommandLoad', 'ロードコマンド']);
+    var paramCommandQuickLoad   = getParamString(['CommandQuickSave', 'Qロードコマンド']);
+    var paramCommandQuickSave   = getParamString(['CommandQuickLoad', 'Qセーブコマンド']);
 
     //=============================================================================
     // インタフェースの定義
@@ -243,7 +300,7 @@
     };
 
     var _Utils_isMobileDevice = Utils.isMobileDevice;
-    Utils.isMobileDevice = function() {
+    Utils.isMobileDevice      = function() {
         return paramMobileMode || _Utils_isMobileDevice.apply(this, arguments);
     };
 
@@ -300,6 +357,15 @@
             case 'INPUT_NAME' :
                 $gameMessage.popupNameInputPrompt(getArgNumber(args[0], 1), getArgString(args[1]));
                 break;
+            case 'チャプター設定' :
+            case 'SET_CHAPTER' :
+                $gameSystem.setChapterTitle(getArgString(args[0]));
+                $gameSystem.executeAutoSave();
+                break;
+            case 'オートセーブ' :
+            case 'AUTO_SAVE' :
+                $gameSystem.executeAutoSave();
+                break;
         }
     };
 
@@ -311,6 +377,12 @@
         _Game_Interpreter_command101.apply(this, arguments);
     };
 
+    var _Game_Interpreter_update      = Game_Interpreter.prototype.update;
+    Game_Interpreter.prototype.update = function() {
+        if ($gameMessage.isPause()) return;
+        _Game_Interpreter_update.apply(this, arguments);
+    };
+
     //=============================================================================
     // Game_System
     //  全画面ウィンドウの有効フラグを管理します。
@@ -320,6 +392,7 @@
         _Game_System_initialize.apply(this, arguments);
         this._messageViewType = paramInitialViewType;
         this._messageSetting  = null;
+        this._chapterTitle    = '';
     };
 
     Game_System.prototype.getMessageType = function() {
@@ -331,28 +404,43 @@
     };
 
     Game_System.prototype.setMessageSettingFixed = function(value) {
-        if (!value) {
-            this._messageSetting = null;
-            return;
-        }
-        var newMes      = new Game_Message();
-        var originalMes = $gameMessage;
-        newMes.setFaceImage(originalMes.prevFaceName, originalMes.prevFaceIndex);
-        newMes.setBackground(originalMes.prevBackGroudType);
-        newMes.setPositionType(originalMes.prevPositionType);
-        this._messageSetting = newMes;
+        this._messageSetting = !!value;
     };
 
-    Game_System.prototype.getMessageSetting = function() {
+    Game_System.prototype.isMessageSettingFixed = function() {
         return this._messageSetting;
+    };
+
+    Game_System.prototype.setFaceImage = function(faceName, faceIndex) {
+        if (!this.isMessageSettingFixed()) {
+            this._faceName = faceName;
+            this._faceIndex = faceIndex;
+        }
+    };
+
+    Game_System.prototype.setBackground = function(background) {
+        if (!this.isMessageSettingFixed()) {
+            this._background = background;
+        }
+    };
+
+    Game_System.prototype.setPositionType = function(positionType) {
+        if (!this.isMessageSettingFixed()) {
+            this._positionType = positionType;
+        }
     };
 
     Game_System.prototype.executeAutoSave = function() {
         this.onBeforeSave();
-        var result = DataManager.saveGameAuto();
-        if (!result) {
-            console.error('Auto save failed for any reasons.');
-        }
+        DataManager.saveGameAuto();
+    };
+
+    Game_System.prototype.getChapterTitle = function() {
+        return this._chapterTitle || '';
+    };
+
+    Game_System.prototype.setChapterTitle = function(value) {
+        this._chapterTitle = value;
     };
 
     //=============================================================================
@@ -361,13 +449,17 @@
     //=============================================================================
     var _Game_Message_clear      = Game_Message.prototype.clear;
     Game_Message.prototype.clear = function() {
-        this.prevFaceName      = this._faceName;
-        this.prevFaceIndex     = this._faceIndex;
-        this.prevBackGroudType = this._background;
-        this.prevPositionType  = this._positionType;
         _Game_Message_clear.apply(this, arguments);
         this._interpreter = null;
         this._closeForce  = false;
+    };
+
+    Game_Message.prototype.setPause = function(value) {
+        this._pauseing = !!value;
+    };
+
+    Game_Message.prototype.isPause = function() {
+        return !!this._pauseing;
     };
 
     Game_Message.prototype.setInterpreter = function(interpreter) {
@@ -394,24 +486,42 @@
         return this._closeForce;
     };
 
+    var _Game_Message_setFaceImage = Game_Message.prototype.setFaceImage;
+    Game_Message.prototype.setFaceImage = function(faceName, faceIndex) {
+        _Game_Message_setFaceImage.apply(this, arguments);
+        $gameSystem.setFaceImage(faceName, faceIndex);
+    };
+
+    var _Game_Message_setBackground = Game_Message.prototype.setBackground;
+    Game_Message.prototype.setBackground = function(background) {
+        _Game_Message_setBackground.apply(this, arguments);
+        $gameSystem.setBackground(background);
+    };
+
+    var _Game_Message_setPositionType = Game_Message.prototype.setPositionType;
+    Game_Message.prototype.setPositionType = function(positionType) {
+        _Game_Message_setPositionType.apply(this, arguments);
+        $gameSystem.setPositionType(positionType);
+    };
+
     var _Game_Message_faceName      = Game_Message.prototype.faceName;
     Game_Message.prototype.faceName = function() {
-        return _Game_Message_faceName.apply($gameSystem.getMessageSetting() || this, arguments);
+        return _Game_Message_faceName.apply($gameSystem.isMessageSettingFixed() ? $gameSystem : this, arguments);
     };
 
     var _Game_Message_faceIndex      = Game_Message.prototype.faceIndex;
     Game_Message.prototype.faceIndex = function() {
-        return _Game_Message_faceIndex.apply($gameSystem.getMessageSetting() || this, arguments);
+        return _Game_Message_faceIndex.apply($gameSystem.isMessageSettingFixed() ? $gameSystem : this, arguments);
     };
 
     var _Game_Message_background      = Game_Message.prototype.background;
     Game_Message.prototype.background = function() {
-        return _Game_Message_background.apply($gameSystem.getMessageSetting() || this, arguments);
+        return _Game_Message_background.apply($gameSystem.isMessageSettingFixed() ? $gameSystem : this, arguments);
     };
 
     var _Game_Message_positionType      = Game_Message.prototype.positionType;
     Game_Message.prototype.positionType = function() {
-        return _Game_Message_positionType.apply($gameSystem.getMessageSetting() || this, arguments);
+        return _Game_Message_positionType.apply($gameSystem.isMessageSettingFixed() ? $gameSystem : this, arguments);
     };
 
     Game_Message.prototype.popupNameInputPrompt = function(actorId, message) {
@@ -431,6 +541,12 @@
     // SceneManager
     //  画面サイズを再設定します。
     //=============================================================================
+    var _SceneManager_initialize = SceneManager.initialize;
+    SceneManager.initialize      = function() {
+        _SceneManager_initialize.apply(this, arguments);
+        StorageManager.makeSaveDirectly();
+    };
+
     var _SceneManager_initGraphics = SceneManager.initGraphics;
     SceneManager.initGraphics      = function() {
         this.setScreenSize();
@@ -462,33 +578,338 @@
     // DataManager
     //  オートセーブを追加定義します。
     //=============================================================================
+    DataManager._isShiftAutoSave = false;
+
     var _DataManager_createGameObjects = DataManager.createGameObjects;
     DataManager.createGameObjects      = function() {
         _DataManager_createGameObjects.apply(this, arguments);
         $gameVariables.setValue(paramVariableSpeed, paramInitialSpeed);
     };
 
-    DataManager.getAutoSaveNumber = function() {
+    var _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
+    DataManager.makeSavefileInfo = function() {
+        var info = _DataManager_makeSavefileInfo.apply(this, arguments);
+        info.chapter = $gameSystem.getChapterTitle();
+        return info;
+    };
+
+    DataManager.getAutoSaveId = function() {
         return this.maxSavefiles() + 1;
     };
 
-    DataManager.saveGameAuto = function() {
-        return this.saveGame(this.getAutoSaveNumber());
+    DataManager.shiftAutoSave = function(saveFileId) {
+        this._isShiftAutoSave = true;
+        var result            = this.saveGame(saveFileId);
+        this._isShiftAutoSave = false;
+        return result;
     };
 
-    DataManager.loadGameAuto = function() {
-        return this.loadGame(this.getAutoSaveNumber());
+    DataManager.saveGameAuto = function() {
+        var lastAccessedId = this._lastAccessedId;
+        this._autoSaving   = true;
+        this.saveGameWithoutRescue(this.getAutoSaveId());
+        this._autoSaving     = false;
+        this._lastAccessedId = lastAccessedId;
+    };
+
+    var _DataManager_latestSavefileId = DataManager.latestSavefileId;
+    DataManager.latestSavefileId      = function() {
+        var id = _DataManager_latestSavefileId.apply(this, arguments);
+        if (id === this.getAutoSaveId()) {
+            id = 0;
+        }
+        return id;
+    };
+
+    var _DataManager_loadGame = DataManager.loadGame;
+    DataManager.loadGame      = function(savefileId) {
+        var lastAccessedId = this._lastAccessedId;
+        if (savefileId === 0) {
+            arguments[0] = this.getAutoSaveId();
+        }
+        var result = _DataManager_loadGame.apply(this, arguments);
+        if (this._lastAccessedId === this.getAutoSaveId()) {
+            this._lastAccessedId = lastAccessedId;
+        }
+        return result;
+    };
+
+    DataManager.loadGameReserve = function() {
+        return this.loadGame(this._revereLoadFileId);
+    };
+
+    DataManager.reserveLoad = function(savefileId) {
+        if (savefileId === 0) {
+            savefileId = this.getAutoSaveId();
+        }
+        var result = this.isThisGameFile(savefileId);
+        if (result) {
+            this._revereLoadFileId = savefileId;
+        }
+        return result;
+    };
+
+    DataManager.isShiftAutoSave = function() {
+        return this._isShiftAutoSave;
+    };
+
+    DataManager.isAutoSaving = function() {
+        return this._autoSaving;
+    };
+
+    //=============================================================================
+    // StorageManager
+    //  オートセーブ時にjson文字列を保持します。
+    //=============================================================================
+    StorageManager._autoSaveJson = null;
+
+    var _StorageManager_save = StorageManager.save;
+    StorageManager.save      = function(savefileId, json) {
+        if (this.isAutoSave(savefileId)) {
+            this._autoSaveJson = json;
+            if (!paramAutoSave) return;
+        }
+        if (DataManager.isShiftAutoSave() && savefileId > 0) {
+            arguments[1] = this._autoSaveJson;
+        }
+        _StorageManager_save.apply(this, arguments);
+    };
+
+    var _StorageManager_saveToLocalFile = StorageManager.saveToLocalFile;
+    StorageManager.saveToLocalFile      = function(savefileId, json) {
+        if (DataManager.isAutoSaving()) {
+            var data     = LZString.compressToBase64(json);
+            var fs       = require('fs');
+            var filePath = this.localFilePath(savefileId);
+            fs.writeFile(filePath, data, null, function(err) {
+                if (!err) return;
+                console.log(err.stack);
+                this.makeSaveDirectly();
+            }.bind(this));
+        } else {
+            _StorageManager_saveToLocalFile.apply(this, arguments);
+        }
+    };
+
+    StorageManager.isAutoSave = function(savefileId) {
+        return savefileId === DataManager.getAutoSaveId();
+    };
+
+    StorageManager.isGlobalSave = function(savefileId) {
+        return savefileId === 0;
+    };
+
+    StorageManager.makeSaveDirectly = function() {
+        if (this.isLocalMode()) {
+            var fs      = require('fs');
+            var dirPath = this.localFileDirectoryPath();
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath);
+            }
+        }
+    };
+
+    //=============================================================================
+    // Scene_AutoLoad
+    //  オートロード画面を追加定義します。
+    //=============================================================================
+    function Scene_AutoLoad() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Scene_AutoLoad.prototype             = Object.create(Scene_Load.prototype);
+    Scene_AutoLoad.prototype.constructor = Scene_AutoLoad;
+
+    Scene_AutoLoad.prototype.create = function() {
+    };
+
+    Scene_AutoLoad.prototype.start = function() {
+        this.executeAutoLoad();
+    };
+
+    Scene_AutoLoad.prototype.onLoadSuccess = function() {
+        this.reloadMapIfUpdated();
+        SceneManager.goto(Scene_Map);
+        $gameSystem.onAfterLoad();
+    };
+
+    Scene_AutoLoad.prototype.executeAutoLoad = function() {
+        if (DataManager.loadGameReserve()) {
+            this.onLoadSuccess();
+        } else {
+            SoundManager.playBuzzer();
+            SceneManager.goto(Scene_Map);
+        }
+    };
+
+    //=============================================================================
+    // Scene_Title
+    //  フラグによってコマンドウィンドウのクラスを変更します。
+    //=============================================================================
+    var _Scene_Title_createCommandWindow      = Scene_Title.prototype.createCommandWindow;
+    Scene_Title.prototype.createCommandWindow = function() {
+        this.changeImplementationWindowCommand(paramTitleViewType);
+        _Scene_Title_createCommandWindow.apply(this, arguments);
+        this.restoreImplementationWindowCommand();
+    };
+
+    Scene_Title.prototype.changeImplementationWindowCommand = function(type) {
+        var classWindow_TitleCommand;
+        switch (type) {
+            case 1 :
+                classWindow_TitleCommand = Window_NovelTitleCommand;
+                break;
+            default :
+                classWindow_TitleCommand = _InterfaceWindow_TitleCommand;
+        }
+        Window_TitleCommand = classWindow_TitleCommand;
+    };
+
+    Scene_Title.prototype.restoreImplementationWindowCommand = function() {
+        Window_TitleCommand = _InterfaceWindow_TitleCommand;
+    };
+
+    //=============================================================================
+    // Scene_Load
+    //  フラグによってコマンドウィンドウのクラスを変更します。
+    //=============================================================================
+    Scene_Load.prototype.savefileId = function() {
+        return Scene_File.prototype.savefileId.apply(this, arguments) - (paramAutoSave ? 1 : 0);
+    };
+
+    var _Scene_Load_firstSavefileIndex      = Scene_Load.prototype.firstSavefileIndex;
+    Scene_Load.prototype.firstSavefileIndex = function() {
+        return _Scene_Load_firstSavefileIndex.apply(this, arguments) + (paramAutoSave ? 1 : 0);
     };
 
     //=============================================================================
     // Scene_Map
     //  フラグによってメッセージウィンドウのクラスを変更します。
     //=============================================================================
+    Scene_Map.symbolSave = 'save';
+    Scene_Map.symbolLoad = 'load';
+
+    var _Scene_Map_createDisplayObjects      = Scene_Map.prototype.createDisplayObjects;
+    Scene_Map.prototype.createDisplayObjects = function() {
+        _Scene_Map_createDisplayObjects.apply(this, arguments);
+        if ($gameSystem.getMessageType() && paramCanPause) {
+            this.createPauseWindow();
+        }
+    };
+
+    Scene_Map.prototype.createPauseWindow = function() {
+        this._pauseWindow = new Window_PauseMenu();
+        this._pauseWindow.setHandler(Scene_Map.symbolSave, this.callSave.bind(this));
+        this._pauseWindow.setHandler(Scene_Map.symbolLoad, this.callLoad.bind(this));
+        this._pauseWindow.setHandler('quickSave', this.callQuickSave.bind(this));
+        this._pauseWindow.setHandler('quickLoad', this.callQuickLoad.bind(this));
+        this._pauseWindow.setHandler('toTitle', this.callToTitle.bind(this));
+        this._pauseWindow.setHandler('cancel', this.offPause.bind(this));
+        this.addWindow(this._pauseWindow);
+    };
+
+    Scene_Map.prototype.createListWindow = function() {
+        var x                = 0;
+        var y                = 0;
+        var width            = Graphics.boxWidth;
+        var height           = Graphics.boxHeight - y;
+        this._fileListWindow = new Window_SavefileList(x, y, width, height);
+        this.addWindow(this._fileListWindow);
+        this._fileListWindow.openness = 0;
+        this._fileListWindow.hide();
+    };
+
+    Scene_Map.prototype.callSave = function() {
+        this._fileMode = Scene_Map.symbolSave;
+        this.setupFileListWindow();
+    };
+
+    Scene_Map.prototype.callLoad = function() {
+        this._fileMode = Scene_Map.symbolLoad;
+        this.setupFileListWindow();
+    };
+
+    Scene_Map.prototype.callQuickSave = function() {
+        this.processSave(DataManager.lastAccessedSavefileId());
+        this._pauseWindow.activate();
+    };
+
+    Scene_Map.prototype.callQuickLoad = function() {
+        this.processLoad(DataManager.latestSavefileId());
+        this._pauseWindow.activate();
+    };
+
+    Scene_Map.prototype.callToTitle = function() {
+        SceneManager.goto(Scene_Title);
+    };
+
+    Scene_Map.prototype.isFileModeSave = function() {
+        return this._fileMode === Scene_Map.symbolSave;
+    };
+
+    Scene_Map.prototype.setupFileListWindow = function() {
+        if (!this._fileListWindow) {
+            this.createListWindow();
+        }
+        this._fileListWindow.setHandler('ok', this.onFileListWindowOk.bind(this));
+        this._fileListWindow.setHandler('cancel', this.closeListWindow.bind(this));
+        this._fileListWindow.setupForMapSave(this.firstSavefileIndex(), this._fileMode);
+        this._pauseWindow.deactivate();
+    };
+
+    Scene_Map.prototype.firstSavefileIndex = function() {
+        if (this.isFileModeSave()) {
+            return Scene_Save.prototype.firstSavefileIndex.apply(this, arguments);
+        } else {
+            return Scene_Load.prototype.firstSavefileIndex.apply(this, arguments);
+        }
+    };
+
+    Scene_Map.prototype.onFileListWindowOk = function() {
+        if (this.isFileModeSave()) {
+            this.processSave(this.savefileId());
+        } else {
+            this.processLoad(this.savefileId());
+        }
+        this.closeListWindow();
+    };
+
+    Scene_Map.prototype.processSave = function(saveFileId) {
+        if (DataManager.shiftAutoSave(saveFileId)) {
+            SoundManager.playSave();
+            StorageManager.cleanBackup(saveFileId);
+        } else {
+            SoundManager.playBuzzer();
+        }
+    };
+
+    Scene_Map.prototype.processLoad = function(saveFileId) {
+        if (DataManager.reserveLoad(saveFileId)) {
+            SoundManager.playLoad();
+            this.fadeOutAll();
+            SceneManager.goto(Scene_AutoLoad);
+            $gameMessage.setPause(true);
+        } else {
+            SoundManager.playBuzzer();
+        }
+    };
+
+    Scene_Map.prototype.savefileId = function() {
+        return this._fileListWindow.getSaveFileId();
+    };
+
+    Scene_Map.prototype.closeListWindow = function() {
+        this._fileListWindow.close();
+        this._fileListWindow.deactivate();
+        this._pauseWindow.activate();
+    };
+
     var _Scene_Map_createMessageWindow      = Scene_Map.prototype.createMessageWindow;
     Scene_Map.prototype.createMessageWindow = function() {
         this.changeImplementationWindowMessage($gameSystem.getMessageType());
         _Scene_Map_createMessageWindow.apply(this, arguments);
         this.restoreImplementationWindowMessage();
+        this._messageWindow.setPauseHandler(this.onPause.bind(this), null);
     };
 
     Scene_Map.prototype.changeImplementationWindowMessage = function(type) {
@@ -521,74 +942,94 @@
         $gameSystem.executeAutoSave();
     };
 
-    //=============================================================================
-    // Scene_Title
-    //  フラグによってコマンドウィンドウのクラスを変更します。
-    //=============================================================================
-    var _Scene_Title_createCommandWindow      = Scene_Title.prototype.createCommandWindow;
-    Scene_Title.prototype.createCommandWindow = function() {
-        this.changeImplementationWindowCommand(paramTitleViewType);
-        _Scene_Title_createCommandWindow.apply(this, arguments);
-        this.restoreImplementationWindowCommand();
+    Scene_Map.prototype.onPause = function() {
+        Input.clear();
+        $gameMessage.setPause(true);
+        this._pauseWindow.show();
+        this._pauseWindow.open();
+        this._pauseWindow.activate();
+        this._messageWindow.keepActivationSubWindow();
     };
 
-    Scene_Title.prototype.changeImplementationWindowCommand = function(type) {
-        var classWindow_TitleCommand;
-        switch (type) {
-            case 1 :
-                classWindow_TitleCommand = Window_NovelTitleCommand;
-                break;
-            default :
-                classWindow_TitleCommand = _InterfaceWindow_TitleCommand;
-        }
-        Window_TitleCommand = classWindow_TitleCommand;
-    };
-
-    Scene_Title.prototype.restoreImplementationWindowCommand = function() {
-        Window_TitleCommand = _InterfaceWindow_TitleCommand;
-    };
-
-    Scene_Title.prototype.commandContinue = function() {
-        this.fadeOutAll();
-        SceneManager.push(Scene_AutoLoad);
+    Scene_Map.prototype.offPause = function() {
+        Input.clear();
+        $gameMessage.setPause(false);
+        this._pauseWindow.close();
+        this._pauseWindow.deactivate();
+        this._messageWindow.restoreActivationSubWindow();
     };
 
     //=============================================================================
-    // Scene_AutoLoad
-    //  オートロード画面を追加定義します。
+    // Window_SavefileList
+    //  セーブファイルリスト画面
     //=============================================================================
-    function Scene_AutoLoad() {
-        this.initialize.apply(this, arguments);
-    }
-
-    Scene_AutoLoad.prototype             = Object.create(Scene_Load.prototype);
-    Scene_AutoLoad.prototype.constructor = Scene_AutoLoad;
-
-    Scene_AutoLoad.prototype.create = function() {
+    Window_SavefileList.prototype.isModeLoad = function() {
+        return this._mode === 'load';
     };
 
-    Scene_AutoLoad.prototype.start = function() {
-        this.executeAutoLoad();
+    Window_SavefileList.prototype.isNeedAutoSave = function() {
+        return this.isModeLoad() && paramAutoSave;
     };
 
-    Scene_AutoLoad.prototype.onLoadSuccess = function() {
-        this.fadeOutAll();
-        this.reloadMapIfUpdated();
-        SceneManager.goto(Scene_Map);
-        this._loadSuccess = true;
+    Window_SavefileList.prototype.setupForMapSave = function(index, mode) {
+        this.setMode(mode);
+        this.select(index);
+        this.setTopRow(index - 2);
+        this.changePaintOpacity(true);
+        this.backOpacity = 240;
+        this.refresh();
+        this.show();
+        this.open();
+        this.activate();
     };
 
-    Scene_AutoLoad.prototype.executeAutoLoad = function() {
-        if (DataManager.loadGameAuto()) {
-            this.onLoadSuccess();
+    var _Window_SavefileList_maxItems      = Window_SavefileList.prototype.maxItems;
+    Window_SavefileList.prototype.maxItems = function() {
+        return _Window_SavefileList_maxItems.apply(this, arguments) + (this.isNeedAutoSave() ? 1 : 0);
+    };
+
+    var _Window_SavefileList_drawItem      = Window_SavefileList.prototype.drawItem;
+    Window_SavefileList.prototype.drawItem = function(index) {
+        if (index > 0 || !this.isNeedAutoSave()) {
+            if (this.isNeedAutoSave()) arguments[0]--;
+            _Window_SavefileList_drawItem.apply(this, arguments);
         } else {
-            this.onLoadFailure();
+            var rect = this.itemRectForText(-1);
+            var autoSaveId = DataManager.getAutoSaveId();
+            var valid = DataManager.isThisGameFile(autoSaveId);
+            var info = DataManager.loadSavefileInfo(autoSaveId);
+            this.resetTextColor();
+            if (this._mode === 'load') {
+                this.changePaintOpacity(valid);
+            }
+            this.drawText(paramNameAutoSave, rect.x, rect.y, 180);
+            if (info) {
+                this.changePaintOpacity(valid);
+                this.drawContents(info, rect, valid);
+                this.changePaintOpacity(true);
+            }
+        }
+    };
+
+    Window_SavefileList.prototype.itemRectForText = function(index) {
+        return Window_Selectable.prototype.itemRectForText.call(this, index + (this.isNeedAutoSave() ? 1 : 0));
+    };
+
+    Window_SavefileList.prototype.getSaveFileId = function() {
+        return this.index() + 1 - (this.isNeedAutoSave() ? 1 : 0);
+    };
+
+    var _Window_SavefileList_drawGameTitle = Window_SavefileList.prototype.drawGameTitle;
+    Window_SavefileList.prototype.drawGameTitle = function(info, x, y, width) {
+        _Window_SavefileList_drawGameTitle.apply(this, arguments);
+        if (info.chapter) {
+            this.drawText(info.chapter, x, y, width, 'right');
         }
     };
 
     //=============================================================================
     // Window_Message
-    //  ノベルメッセージ表示用のクラスです。
+    //  メッセージの表示速度などを調整します。
     //=============================================================================
     var _Window_Message_updateWait      = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
@@ -652,6 +1093,59 @@
 
     Window_Message.prototype.isNovelWindow = function() {
         return false;
+    };
+
+    Window_Message.prototype.isNormalMessageWindow = function() {
+        return true;
+    };
+
+    Window_Message.prototype.setPauseHandler = function(handler, args) {
+        this._pauseHandler = [handler, args];
+    };
+
+    Window_Message.prototype.callPauseHandler = function() {
+        var handler = this._pauseHandler;
+        if (handler) {
+            handler[0].apply(this, handler[1]);
+        }
+    };
+
+    var _Window_Message_update      = Window_Message.prototype.update;
+    Window_Message.prototype.update = function() {
+        if (paramCanPause && !this.isNormalMessageWindow() && !$gameMessage.isPause()) this.checkInputPause();
+        if ($gameMessage.isPause()) return;
+        _Window_Message_update.apply(this, arguments);
+    };
+
+    Window_Message.prototype.checkInputPause = function() {
+        if ($gameMap.isEventRunning() && Input.isTriggered('escape') || TouchInput.isCancelled()) {
+            SoundManager.playOk();
+            this.callPauseHandler();
+        }
+    };
+
+    Window_Message.prototype.keepActivationSubWindow = function() {
+        this._keepActivation = [];
+        this.subWindows().forEach(function(subWindow) {
+            this._keepActivation.push(subWindow.active);
+            subWindow.deactivate();
+        }.bind(this));
+    };
+
+    Window_Message.prototype.restoreActivationSubWindow = function() {
+        this.subWindows().forEach(function(subWindow) {
+            var active = this._keepActivation.shift();
+            if (active) {
+                subWindow.activate();
+            } else {
+                subWindow.deactivate();
+            }
+        }.bind(this));
+    };
+
+    var _Window_Message_isTriggered      = Window_Message.prototype.isTriggered;
+    Window_Message.prototype.isTriggered = function() {
+        return _Window_Message_isTriggered.apply(this, arguments) || TouchInput.wheelY >= 1;
     };
 
     //=============================================================================
@@ -832,6 +1326,10 @@
         return true;
     };
 
+    Window_NovelMessage.prototype.isNormalMessageWindow = function() {
+        return false;
+    };
+
     //=============================================================================
     // Window_NovelChoiceList
     //  ノベルウィンドウ用のコマンド表示クラスです。
@@ -930,6 +1428,11 @@
         _InterfaceWindow_ChoiceList.prototype.callOkHandler.apply(this, arguments);
     };
 
+    Window_NovelChoiceList.prototype.callCancelHandler = function() {
+        this._messageWindow.clearDumpMessage();
+        _InterfaceWindow_ChoiceList.prototype.callCancelHandler.apply(this, arguments);
+    };
+
     Window_NovelChoiceList.prototype.textPadding = function() {
         return 24;
     };
@@ -990,6 +1493,47 @@
 
     Window_NovelTitleCommand.prototype.standardFontSize = Window_NovelMessage.prototype.standardFontSize;
     Window_NovelTitleCommand.prototype.standardFontFace = Window_NovelMessage.prototype.standardFontFace;
+
+    //=============================================================================
+    // Window_PauseMenu
+    //  ノベルメッセージ表示用のクラスです。
+    //=============================================================================
+    function Window_PauseMenu() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_PauseMenu.prototype             = Object.create(Window_Command.prototype);
+    Window_PauseMenu.prototype.constructor = Window_PauseMenu;
+
+    Window_PauseMenu.prototype.initialize = function() {
+        var x = (Graphics.boxWidth - this.windowWidth()) / 2;
+        var y = (Graphics.boxHeight - this.windowHeight()) / 2;
+        Window_Command.prototype.initialize.call(this, x, y);
+        this.openness = 0;
+        this.hide();
+    };
+
+    Window_PauseMenu.prototype.windowWidth = function() {
+        return 240;
+    };
+
+    Window_PauseMenu.prototype.numVisibleRows = function() {
+        return 6;
+    };
+
+    Window_PauseMenu.prototype.makeCommandList = function() {
+        this.addCommand(TextManager.save, 'save');
+        this.addCommand(paramCommandLoad, 'load');
+        this.addCommand(paramCommandQuickSave, 'quickSave');
+        this.addCommand(paramCommandQuickLoad, 'quickLoad');
+        this.addCommand(TextManager.toTitle, 'toTitle');
+        this.addCommand(TextManager.cancel, 'cancel');
+    };
+
+    Window_PauseMenu.prototype.playOkSound = function() {
+        if (this.index() === 2 || this.index() === 3) return;
+        Window_Selectable.prototype.playOkSound.apply(this, arguments);
+    };
 
     //=============================================================================
     // ウィンドウを透過して重なり合ったときの表示を自然にします。
