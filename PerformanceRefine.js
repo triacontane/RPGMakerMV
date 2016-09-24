@@ -50,5 +50,13 @@
         _SceneManager_onSceneCreate.apply(this, arguments);
         console.timeEnd(this.calcTimeName);
     };
+
+    var _Scene_Map_createDisplayObjects = Scene_Map.prototype.createDisplayObjects;
+    Scene_Map.prototype.createDisplayObjects = function() {
+        var methodName = getClassName(this) + '.createDisplayObjects()';
+        console.time(methodName);
+        _Scene_Map_createDisplayObjects.apply(this, arguments);
+        console.timeEnd(methodName);
+    };
 })();
 
