@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2016/09/28 アイコンサイズをフォントサイズに合わせて自動で拡縮できる機能を追加
+//                  操作対象のウィンドウにフォーカスしたときに枠の色を変えて明示する機能を追加
+//                  数値項目のプロパティを設定する際にJavaScript計算式を適用できる機能を追加
 // 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
 // 1.1.3 2016/08/05 本体v1.3.0にて表示される警告を抑制
 // 1.1.2 2016/07/20 一部のウィンドウでプロパティロード後にコンテンツが再作成されない問題を修正
@@ -72,6 +75,10 @@
  * @desc ウィンドウの背景透明度デフォルト値です。入力した場合、適用されます。デフォルト：192
  * @default
  *
+ * @param アイコンサイズ調整
+ * @desc フォントサイズが変更された場合にアイコンのサイズを自動で調整します。
+ * @default OFF
+ *
  * @help メニュー画面や戦闘画面など各画面のウィンドウや画像の表示位置を
  * ドラッグ＆ドロップで微調整して画面の外観をグラフィカルに設計できます。
  * 横幅、高さ、余白、背景画像なども画面上で変更できます。
@@ -102,14 +109,18 @@
  *
  * ※数字とプロパティの対応
  *
- * 1. ウィンドウの横幅
- * 2. ウィンドウの高さ(直接指定)
- * 3. ウィンドウの余白
- * 4. ウィンドウのフォントサイズ
- * 5. ウィンドウの1行のあたりの高さ
- * 6. ウィンドウの背景透明度
- * 7. ウィンドウの行数
+ * 1. ウィンドウの横幅(※1)
+ * 2. ウィンドウの高さ(直接指定)(※1)
+ * 3. ウィンドウの余白(※2)
+ * 4. ウィンドウのフォントサイズ(※2)
+ * 5. ウィンドウの1行のあたりの高さ(※2)
+ * 6. ウィンドウの背景透明度(※2)
+ * 7. ウィンドウの行数(※2)
  * 8. ウィンドウの背景画像ファイル名
+ *
+ * ※1 JS計算式を適用できます。計算式は入力したその場で1回だけ評価されます。
+ * ※2 JS計算式を適用できます。計算式は保存され、画面表示のたびに再評価されます。
+ * 分からない場合、今まで通り数値を設定すれば問題ありません。
  *
  * また、任意のピクチャやウィンドウを追加表示することができます。
  * 詳細はソースコードの「ユーザ書き換え領域」を参照してください。
@@ -163,7 +174,7 @@
  */
 var $dataContainerProperties = null;
 
-(function () {
+(function() {
     'use strict';
     //=============================================================================
     // ユーザ書き換え領域 - 開始 -
@@ -175,133 +186,134 @@ var $dataContainerProperties = null;
     //=============================================================================
     var settings = {
         /* タイトル画面の追加情報 */
-        Scene_Title:{
+        Scene_Title   : {
             /* pictures:シーンに追加表示する画像です。無条件で表示されます。 */
-            pictures:[
+            pictures: [
                 /* file:「img/pictures/」以下のファイルを拡張子なしで指定します */
-                {file:''},
+                {file: ''},
             ],
             /* windows:シーンに追加表示するウィンドウです。*/
-            windows:[
+            windows : [
                 /* lines:表示内容の配列です。 制御文字が利用できます。「\\i[n]」と「\」をひとつ多く指定してください。*/
                 /* 位置を調整後に新しいウィンドウを追加する場合は、必ず「配列の末尾に追加」してください */
-                {lines:[]},
+                {lines: []},
             ],
         },
         /* メインメニュー画面の追加情報 */
-        Scene_Menu:{
-            pictures:[
-                {file:''},
+        Scene_Menu    : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* 戦闘画面の追加情報 */
-        Scene_Battle:{
-            pictures:[
-                {file:''},
+        Scene_Battle  : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* アイテムメニュー画面の追加情報 */
-        Scene_Item:{
-            pictures:[
-                {file:''},
+        Scene_Item    : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* スキルメニュー画面の追加情報 */
-        Scene_Skill:{
-            pictures:[
-                {file:''},
+        Scene_Skill   : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* 装備メニュー画面の追加情報 */
-        Scene_Equip:{
-            pictures:[
-                {file:''},
+        Scene_Equip   : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* ステータスメニュー画面の追加情報 */
-        Scene_Status:{
-            pictures:[
-                {file:''},
+        Scene_Status  : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* オプション画面の追加情報 */
-        Scene_Options:{
-            pictures:[
-                {file:''},
+        Scene_Options : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* セーブ画面の追加情報 */
-        Scene_Save:{
-            pictures:[
-                {file:''},
+        Scene_Save    : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* ロード画面の追加情報 */
-        Scene_Load:{
-            pictures:[
-                {file:''},
+        Scene_Load    : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* ショップ画面の追加情報 */
-        Scene_Shop:{
-            pictures:[
-                {file:''},
+        Scene_Shop    : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* 名前入力画面の追加情報 */
-        Scene_Name:{
-            pictures:[
-                {file:''},
+        Scene_Name    : {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
         /* ゲームオーバー画面の追加情報 */
-        Scene_Gameover:{
-            pictures:[
-                {file:''},
+        Scene_Gameover: {
+            pictures: [
+                {file: ''},
             ],
-            windows:[
-                {lines:[]},
+            windows : [
+                {lines: []},
             ],
         },
     };
     //=============================================================================
     // ユーザ書き換え領域 - 終了 -
     //=============================================================================
-    var pluginName = 'GraphicalDesignMode';
+    var pluginName    = 'GraphicalDesignMode';
     var metaTagPrefix = 'GDM';
+    var version       = '2.1.0';
 
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
@@ -325,15 +337,15 @@ var $dataContainerProperties = null;
         return null;
     };
 
-    var getArgString = function (arg, upperFlg) {
+    var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgEval = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+        return (eval(convertEscapeCharacters(arg)) || 0).clamp(min, max);
     };
 
     var convertEscapeCharacters = function(text) {
@@ -358,16 +370,17 @@ var $dataContainerProperties = null;
         return (command || '').toUpperCase();
     };
 
-    var paramDesignMode      = getParamBoolean(['DesignMode', 'デザインモード']);
-    var paramThroughWindow   = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
-    var paramAutoSave        = getParamBoolean(['AutoSave', '自動保存']);
-    var paramGridSize        = getParamNumber(['GridSize', 'グリッドサイズ'], 0) || 0;
-    var paramPadding         = getParamNumber(['Padding', 'パディング']);
-    var paramFontSize        = getParamNumber(['FontSize', 'フォントサイズ']);
-    var paramLineHeight      = getParamNumber(['LineHeight', '行の高さ']);
-    var paramBackOpacity     = getParamNumber(['LineHeight', '背景透明度']);
-    var paramMobileMake      = getParamBoolean(['MobileMake', 'モバイル版作成']);
-    var paramFakeMobile      = getParamBoolean(['FakeMobile', 'モバイル偽装']);
+    var paramDesignMode    = getParamBoolean(['DesignMode', 'デザインモード']);
+    var paramThroughWindow = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
+    var paramAutoSave      = getParamBoolean(['AutoSave', '自動保存']);
+    var paramGridSize      = getParamNumber(['GridSize', 'グリッドサイズ'], 0) || 0;
+    var paramPadding       = getParamNumber(['Padding', 'パディング']);
+    var paramFontSize      = getParamNumber(['FontSize', 'フォントサイズ']);
+    var paramLineHeight    = getParamNumber(['LineHeight', '行の高さ']);
+    var paramBackOpacity   = getParamNumber(['LineHeight', '背景透明度']);
+    var paramMobileMake    = getParamBoolean(['MobileMake', 'モバイル版作成']);
+    var paramFakeMobile    = getParamBoolean(['FakeMobile', 'モバイル偽装']);
+    var paramIconSizeScale = getParamBoolean(['IconSizeScale', 'アイコンサイズ調整']);
 
     //=============================================================================
     // Utils
@@ -393,12 +406,12 @@ var $dataContainerProperties = null;
         }
 
         var _Input__wrapNwjsAlert = Input._wrapNwjsAlert;
-        Input._wrapNwjsAlert = function() {
+        Input._wrapNwjsAlert      = function() {
             _Input__wrapNwjsAlert.apply(this, arguments);
-            var _prompt = window.prompt;
+            var _prompt   = window.prompt;
             window.prompt = function() {
-                var gui = require('nw.gui');
-                var win = gui.Window.get();
+                var gui    = require('nw.gui');
+                var win    = gui.Window.get();
                 var result = _prompt.apply(this, arguments);
                 win.focus();
                 Input.clear();
@@ -407,7 +420,7 @@ var $dataContainerProperties = null;
         };
 
         var _Input_isRepeated = Input.isRepeated;
-        Input.isRepeated = function(keyName) {
+        Input.isRepeated      = function(keyName) {
             if (keyName === 'ok' && this.isPressed('control')) {
                 return false;
             }
@@ -431,7 +444,7 @@ var $dataContainerProperties = null;
         SceneManager.controlNumber = 0;
 
         var _SceneManager_initialize = SceneManager.initialize;
-        SceneManager.initialize = function() {
+        SceneManager.initialize      = function() {
             _SceneManager_initialize.call(this);
             this.lastWindowX    = null;
             this.lastWindowY    = null;
@@ -457,7 +470,7 @@ var $dataContainerProperties = null;
 
         SceneManager.outputStartLog = function() {
             var logValue = [
-                '☆☆☆ようこそ、デザインモードで起動しました。☆☆☆',
+                '☆☆☆ようこそ、デザインモード(ver' + version + ')で起動しました。☆☆☆',
                 'デザインモードでは、オブジェクトの配置やプロパティを自由に設定して実際のゲーム画面上から画面設計できます。',
                 '',
                 '--------------------操 作 方 法----------------------------------------------------------------------',
@@ -470,14 +483,17 @@ var $dataContainerProperties = null;
                 'Ctrl+Shift+Enter ： 表示している画面の配置を全てリセットしてロードし直します。',
                 '右クリック ： ウィンドウの枠の表示/非表示を切り替えます。',
                 '数字キー ： ウィンドウの範囲内で押下すると、以下のとおり対応するプロパティを変更できます。',
-                ' 1. ウィンドウの横幅',
-                ' 2. ウィンドウの高さ(直接指定)',
-                ' 3. ウィンドウの余白',
-                ' 4. ウィンドウのフォントサイズ',
-                ' 5. ウィンドウの1行のあたりの高さ',
-                ' 6. ウィンドウの背景透明度',
-                ' 7. ウィンドウの行数',
+                ' 1. ウィンドウの横幅(※1)',
+                ' 2. ウィンドウの高さ(直接指定)(※1)',
+                ' 3. ウィンドウの余白(※2)',
+                ' 4. ウィンドウのフォントサイズ(※2)',
+                ' 5. ウィンドウの1行のあたりの高さ(※2)',
+                ' 6. ウィンドウの背景透明度(※2)',
+                ' 7. ウィンドウの行数(※2)',
                 ' 8. ウィンドウの背景画像ファイル名',
+                '※1 JS計算式を適用できます。計算式は入力したその場で1回だけ評価されます。',
+                '※2 JS計算式を適用できます。計算式は保存され、画面表示のたびに再評価されます。',
+                '分からない場合、今まで通り数値を設定すれば問題ありません。',
                 '-----------------------------------------------------------------------------------------------------',
                 '以下の操作ログが表示されます。'
             ];
@@ -487,14 +503,14 @@ var $dataContainerProperties = null;
         };
 
         var _SceneManager_onSceneCreate = SceneManager.onSceneCreate;
-        SceneManager.onSceneCreate = function() {
+        SceneManager.onSceneCreate      = function() {
             _SceneManager_onSceneCreate.apply(this, arguments);
             this._changeStack = [];
         };
 
         SceneManager.pushChangeStack = function(child) {
             var index = child.parent.getChildIndex(child);
-            var info = {parent:child.parent, index:index};
+            var info  = {parent: child.parent, index: index};
             child.saveProperty(info);
             this._changeStack.push(info);
         };
@@ -513,7 +529,7 @@ var $dataContainerProperties = null;
         };
 
         var _SceneManager_update = SceneManager.updateMain;
-        SceneManager.updateMain = function() {
+        SceneManager.updateMain  = function() {
             _SceneManager_update.apply(this, arguments);
             this.updateDragInfo();
         };
@@ -551,8 +567,8 @@ var $dataContainerProperties = null;
                 DataManager.saveDataFileWp();
                 location.reload();
             }
-            var docTitle = this._infoHelp + this.infoWindow + this.infoExtend;
-            document.title = docTitle;
+            var docTitle        = this._infoHelp + this.infoWindow + this.infoExtend;
+            document.title      = docTitle;
             this._documentTitle = docTitle;
         };
 
@@ -578,9 +594,9 @@ var $dataContainerProperties = null;
         //  ウィンドウポジションをjson形式で保存する処理を追加定義します。
         //=============================================================================
         StorageManager.saveToLocalDataFile = function(fileName, json) {
-            var data = JSON.stringify(json);
-            var fs = require('fs');
-            var dirPath = this.localDataFileDirectoryPath();
+            var data     = JSON.stringify(json);
+            var fs       = require('fs');
+            var dirPath  = this.localDataFileDirectoryPath();
             var filePath = dirPath + fileName;
             if (!fs.existsSync(dirPath)) {
                 fs.mkdirSync(dirPath);
@@ -600,13 +616,15 @@ var $dataContainerProperties = null;
         // Scene_Base
         //  ウィンドウをドラッグ＆ドロップします。
         //=============================================================================
-        var _Scene_Base_update = Scene_Base.prototype.update;
+        var _Scene_Base_update      = Scene_Base.prototype.update;
         Scene_Base.prototype.update = function() {
             _Scene_Base_update.apply(this, arguments);
             if (this._windowLayer) this.updateDrag();
         };
 
         Scene_Base.prototype.updateDrag = function() {
+            this._windowLayer.isFrameChanged = false;
+            
             var result = this._windowLayer.children.clone().reverse().some(function(container) {
                 return checkTypeFunction(container.processDesign) && container.processDesign();
             }, this);
@@ -616,7 +634,7 @@ var $dataContainerProperties = null;
             }, this);
         };
 
-        var _Scene_Base_createWindowLayer = Scene_Base.prototype.createWindowLayer;
+        var _Scene_Base_createWindowLayer      = Scene_Base.prototype.createWindowLayer;
         Scene_Base.prototype.createWindowLayer = function() {
             if (!(this instanceof Scene_Boot) && !(this instanceof Scene_Map)) this.createGridSprite();
             _Scene_Base_createWindowLayer.apply(this, arguments);
@@ -625,8 +643,8 @@ var $dataContainerProperties = null;
         Scene_Base.prototype.createGridSprite = function() {
             var size = paramGridSize;
             if (size === 0) return;
-            var width = Graphics.boxWidth;
-            var height = Graphics.boxHeight;
+            var width        = Graphics.boxWidth;
+            var height       = Graphics.boxHeight;
             this._gridSprite = new Sprite();
             this._gridSprite.setFrame(0, 0, width, height);
             var bitmap = new Bitmap(width, height);
@@ -636,17 +654,17 @@ var $dataContainerProperties = null;
             for (var y = 0; y < height; y += size) {
                 bitmap.fillRect(0, y, width, 1, 'rgba(255,255,255,1.0)');
             }
-            this._gridSprite.bitmap = bitmap;
+            this._gridSprite.bitmap      = bitmap;
             this._gridSprite.moveDisable = true;
             this.addChild(this._gridSprite);
         };
 
         //=============================================================================
-        // PIXI.Container
+        // PIXI.Container およびそのサブクラス
         //  コンテナをドラッグ＆ドロップします。
         //=============================================================================
         var _PIXI_DisplayObjectContainer_initialize = PIXI.Container.prototype.initialize;
-        PIXI.Container.prototype.initialize = function(x, y, width, height) {
+        PIXI.Container.prototype.initialize         = function(x, y, width, height) {
             _PIXI_DisplayObjectContainer_initialize.apply(this, arguments);
             this._holding      = false;
             this._dx           = 0;
@@ -659,7 +677,7 @@ var $dataContainerProperties = null;
             var result = false;
             if (!this.moveDisable) {
                 if (this.processPosition()) {
-                    var info = 'X:[' + this.x + '] Y:[' + this.y + ']';
+                    var info                 = 'X:[' + this.x + '] Y:[' + this.y + ']';
                     SceneManager.lastWindowX = this.x;
                     SceneManager.lastWindowY = this.y;
                     SceneManager.infoWindow  = info;
@@ -675,6 +693,7 @@ var $dataContainerProperties = null;
                     SceneManager.setInfoExtend(this._propLabel + 'の値を' + this._propValue + 'に変更しました。', 1);
                     result = true;
                 }
+                this.processFrameChange();
             }
             return result;
         };
@@ -705,6 +724,18 @@ var $dataContainerProperties = null;
             return false;
         };
 
+        PIXI.Container.prototype.processFrameChange = function() {};
+
+        Window_Base.prototype.processFrameChange = function() {
+            if (this._holding || !TouchInput.isMoved()) return;
+            if (this.isPreparedEvent() && !this.parent.isFrameChanged) {
+                this._windowFrameSprite.setBlendColor([255, 128, 0, 192]);
+                this.parent.isFrameChanged = true;
+            } else {
+                this._windowFrameSprite.setBlendColor([0, 0, 0, 0]);
+            }
+        };
+
         PIXI.Container.prototype.processOpacity = function() {};
 
         Window_Base.prototype.processOpacity = function() {
@@ -725,14 +756,14 @@ var $dataContainerProperties = null;
                 var params = [
                     ['num1', '横幅', 'width', 1, 2000, null],
                     ['num2', '高さ', 'height', 1, 2000, null],
-                    ['num3', 'パディング', '_customPadding', 1, 100, this.updatePadding.bind(this)],
-                    ['num4', 'フォントサイズ', '_customFontSize', 1, 100, this.resetFontSettings.bind(this)],
-                    ['num5', '行の高さ', '_customLineHeight', 1, 2000, this.setFittingHeight.bind(this)],
-                    ['num6', '背景の透明度', '_customBackOpacity', 0, 255, this.updateBackOpacity.bind(this)],
-                    ['num7', '行数', '_customLineNumber', 0, 999, this.setFittingHeight.bind(this)],
+                    ['num3', 'パディング', '_customPadding', 1, 100, this.updatePadding.bind(this), true],
+                    ['num4', 'フォントサイズ', '_customFontSize', 1, 100, this.resetFontSettings.bind(this), true],
+                    ['num5', '行の高さ', '_customLineHeight', 1, 2000, this.setFittingHeight.bind(this), true],
+                    ['num6', '背景の透明度', '_customBackOpacity', 0, 255, this.updateBackOpacity.bind(this), true],
+                    ['num7', '行数', '_customLineNumber', 0, 999, this.setFittingHeight.bind(this), true],
                     ['num8', '背景画像のファイル名', '_customBackFileName', null, null, this.createBackSprite.bind(this), true]
                 ];
-                return params.some(function(param){
+                return params.some(function(param) {
                     return this.processSetProperty.apply(this, param);
                 }.bind(this));
             }
@@ -743,14 +774,15 @@ var $dataContainerProperties = null;
             if (this._customLineNumber) this.height = this.fittingHeight(this._customLineNumber);
         };
 
-        PIXI.Container.prototype.processSetProperty = function(
-            keyCode, propLabel, propName, min, max, callBack, stringFlg) {
+        PIXI.Container.prototype.processSetProperty = function(keyCode, propLabel, propName, min, max,
+                                                               callBack, stringFlg) {
             if (this[propName] === undefined) return null;
             if (Input.isTriggered(keyCode)) {
                 var result = window.prompt(propLabel + 'を入力してください。', this[propName].toString());
                 if (result || (stringFlg && result === '')) {
+                    this._windowFrameSprite.setBlendColor([0, 0, 0, 0]);
                     SceneManager.pushChangeStack(this);
-                    this[propName] = stringFlg ? getArgString(result) : getArgNumber(result, min, max);
+                    this[propName] = stringFlg ? getArgString(result) : getArgEval(result, min, max);
                     if (callBack) callBack();
                     this.reDrawContents();
                     SoundManager.playMagicEvasion();
@@ -766,6 +798,7 @@ var $dataContainerProperties = null;
         PIXI.Container.prototype.reDrawContents = function() {};
 
         Window_Base.prototype.reDrawContents = function() {
+            this.createContents();
             this.refresh();
         };
 
@@ -791,13 +824,13 @@ var $dataContainerProperties = null;
 
         Window_Base.prototype.hold = function() {
             PIXI.Container.prototype.hold.call(this);
-            this._windowBackSprite.setBlendColor([255,255,255,192]);
-            this._windowContentsSprite.setBlendColor([255,128,0,192]);
+            this._windowBackSprite.setBlendColor([255, 255, 255, 192]);
+            this._windowContentsSprite.setBlendColor([255, 128, 0, 192]);
         };
 
         Sprite.prototype.hold = function() {
             PIXI.Container.prototype.hold.call(this);
-            this.setBlendColor([255,255,255,192]);
+            this.setBlendColor([255, 255, 255, 192]);
         };
 
         PIXI.Container.prototype.release = function() {
@@ -807,30 +840,30 @@ var $dataContainerProperties = null;
 
         Window_Base.prototype.release = function() {
             PIXI.Container.prototype.release.call(this);
-            this._windowBackSprite.setBlendColor([0,0,0,0]);
-            this._windowContentsSprite.setBlendColor([0,0,0,0]);
+            this._windowBackSprite.setBlendColor([0, 0, 0, 0]);
+            this._windowContentsSprite.setBlendColor([0, 0, 0, 0]);
         };
 
         Sprite.prototype.release = function() {
             PIXI.Container.prototype.release.call(this);
-            this.setBlendColor([0,0,0,0]);
+            this.setBlendColor([0, 0, 0, 0]);
         };
 
         PIXI.Container.prototype.updateSnapX = function(x) {
             var minDistanceL = 16, minIndexL = -1, minDistanceR = 16, minIndexR = -1;
-            var children = this.parent.children, endX = x + this.width;
+            var children     = this.parent.children, endX = x + this.width;
             for (var i = 0, n = children.length; i < n; i++) {
                 var child = children[i];
                 if (child !== this && this.isSameInstance(child) && child.isTouchable() && child.isOverlapY(this)) {
                     var distanceL = Math.abs(x - child.endX);
-                    if (minDistanceL > distanceL)  {
+                    if (minDistanceL > distanceL) {
                         minDistanceL = distanceL;
-                        minIndexL = i;
+                        minIndexL    = i;
                     }
                     var distanceR = Math.abs(endX - child.x);
-                    if (minDistanceR > distanceR)  {
+                    if (minDistanceR > distanceR) {
                         minDistanceR = distanceR;
-                        minIndexR = i;
+                        minIndexR    = i;
                     }
                 }
             }
@@ -845,19 +878,19 @@ var $dataContainerProperties = null;
 
         PIXI.Container.prototype.updateSnapY = function(y) {
             var minDistanceU = 16, minIndexU = -1, minDistanceD = 16, minIndexD = -1;
-            var children = this.parent.children, endY = y + this.height;
+            var children     = this.parent.children, endY = y + this.height;
             for (var i = 0, n = children.length; i < n; i++) {
                 var child = children[i];
                 if (child !== this && this.isSameInstance(child) && child.isTouchable() && child.isOverlapX(this)) {
                     var distanceU = Math.abs(y - child.endY);
-                    if (minDistanceU > distanceU)  {
+                    if (minDistanceU > distanceU) {
                         minDistanceU = distanceU;
-                        minIndexU = i;
+                        minIndexU    = i;
                     }
                     var distanceD = Math.abs(endY - child.y);
-                    if (minDistanceD > distanceD)  {
+                    if (minDistanceD > distanceD) {
                         minDistanceD = distanceD;
-                        minIndexD = i;
+                        minIndexD    = i;
                     }
                 }
             }
@@ -889,25 +922,25 @@ var $dataContainerProperties = null;
             ty >= this.y && ty <= this.endY);
         };
 
-        Sprite.prototype.isTouchPosInRect = function () {
+        Sprite.prototype.isTouchPosInRect = function() {
             if (this.isTransparent()) return false;
-            var dx = TouchInput.x - this.x;
-            var dy = TouchInput.y - this.y;
+            var dx  = TouchInput.x - this.x;
+            var dy  = TouchInput.y - this.y;
             var sin = Math.sin(-this.rotation);
             var cos = Math.cos(-this.rotation);
-            var rx = this.x + Math.floor(dx * cos + dy * -sin);
-            var ry = this.y + Math.floor(dx * sin + dy * cos);
+            var rx  = this.x + Math.floor(dx * cos + dy * -sin);
+            var ry  = this.y + Math.floor(dx * sin + dy * cos);
             return (rx >= this.minX() && rx <= this.maxX() &&
             ry >= this.minY() && ry <= this.maxY());
         };
 
-        Sprite.prototype.isTransparent = function () {
-            var dx = TouchInput.x - this.x;
-            var dy = TouchInput.y - this.y;
+        Sprite.prototype.isTransparent = function() {
+            var dx  = TouchInput.x - this.x;
+            var dy  = TouchInput.y - this.y;
             var sin = Math.sin(-this.rotation);
             var cos = Math.cos(-this.rotation);
-            var bx = Math.floor(dx * cos + dy * -sin) / this.scale.x + this.anchor.x * this.width;
-            var by = Math.floor(dx * sin + dy * cos)  / this.scale.y + this.anchor.y * this.height;
+            var bx  = Math.floor(dx * cos + dy * -sin) / this.scale.x + this.anchor.x * this.width;
+            var by  = Math.floor(dx * sin + dy * cos) / this.scale.y + this.anchor.y * this.height;
             return this.bitmap.getAlphaPixel(bx, by) === 0;
         };
 
@@ -984,20 +1017,20 @@ var $dataContainerProperties = null;
         };
 
         Object.defineProperty(PIXI.Container.prototype, 'endX', {
-            get: function() {
+            get         : function() {
                 return this.x + this.width;
             },
-            set: function(value) {
+            set         : function(value) {
                 this.x = value - this.width;
             },
             configurable: true
         });
 
         Object.defineProperty(PIXI.Container.prototype, 'endY', {
-            get: function() {
+            get         : function() {
                 return this.y + this.height;
             },
-            set: function(value) {
+            set         : function(value) {
                 this.y = value - this.height;
             },
             configurable: true
@@ -1024,7 +1057,7 @@ var $dataContainerProperties = null;
         WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
     }
 
-    if(paramFakeMobile) {
+    if (paramFakeMobile) {
         Utils.isMobileDevice = function() {
             return true;
         };
@@ -1080,7 +1113,7 @@ var $dataContainerProperties = null;
     }
 
     var _DataManager_loadDatabase = DataManager.loadDatabase;
-    DataManager.loadDatabase = function() {
+    DataManager.loadDatabase      = function() {
         _DataManager_loadDatabase.apply(this, arguments);
         var errorMessage = this._databaseFileCp.src + 'が見付かりませんでした。';
         this.loadDataFileAllowError(this._databaseFileCp.name, this._databaseFileCp.src, errorMessage);
@@ -1091,13 +1124,13 @@ var $dataContainerProperties = null;
         var url = 'data/' + src;
         xhr.open('GET', url);
         xhr.overrideMimeType('application/json');
-        xhr.onload = function() {
+        xhr.onload   = function() {
             if (xhr.status < 400) {
                 window[name] = JSON.parse(xhr.responseText);
                 DataManager.onLoad(window[name]);
             }
         };
-        xhr.onerror = function() {
+        xhr.onerror  = function() {
             window[name] = {};
             console.warn(errorMessage);
         };
@@ -1106,7 +1139,7 @@ var $dataContainerProperties = null;
     };
 
     var _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
-    DataManager.isDatabaseLoaded = function() {
+    DataManager.isDatabaseLoaded      = function() {
         return _DataManager_isDatabaseLoaded.apply(this, arguments) && window[this._databaseFileCp.name];
     };
 
@@ -1122,19 +1155,19 @@ var $dataContainerProperties = null;
     // Scene_Base
     //  ウィンドウ追加時に位置をロードします。
     //=============================================================================
-    var _Scene_Base_addWindow = Scene_Base.prototype.addWindow;
+    var _Scene_Base_addWindow      = Scene_Base.prototype.addWindow;
     Scene_Base.prototype.addWindow = function(child) {
         _Scene_Base_addWindow.apply(this, arguments);
         child.loadContainerInfo();
     };
 
-    var _Scene_Base_addChild = Scene_Base.prototype.addChild;
+    var _Scene_Base_addChild      = Scene_Base.prototype.addChild;
     Scene_Base.prototype.addChild = function(child) {
         _Scene_Base_addChild.apply(this, arguments);
         child.loadContainerInfo();
     };
 
-    var _Scene_Base_createWindowLayer2 = Scene_Base.prototype.createWindowLayer;
+    var _Scene_Base_createWindowLayer2     = Scene_Base.prototype.createWindowLayer;
     Scene_Base.prototype.createWindowLayer = function() {
         this.createCustomPicture();
         _Scene_Base_createWindowLayer2.apply(this, arguments);
@@ -1144,12 +1177,12 @@ var $dataContainerProperties = null;
     Scene_Base.prototype.createCustomPicture = function() {
         var setting = settings[getClassName(this)];
         if (setting) {
-            var pictures = setting.pictures;
+            var pictures         = setting.pictures;
             this._customPictures = [];
             if (pictures) {
                 pictures.forEach(function(picture) {
                     if (!picture.file) return;
-                    var sprite = new Sprite();
+                    var sprite    = new Sprite();
                     sprite.bitmap = ImageManager.loadPicture(picture.file, 0);
                     this._customPictures.push(sprite);
                     this.addChild(sprite);
@@ -1161,7 +1194,7 @@ var $dataContainerProperties = null;
     Scene_Base.prototype.createCustomWindow = function() {
         var setting = settings[getClassName(this)];
         if (setting) {
-            var windows = setting.windows;
+            var windows         = setting.windows;
             this._customWindows = [];
             if (windows) {
                 windows.forEach(function(windowItem) {
@@ -1180,7 +1213,7 @@ var $dataContainerProperties = null;
     //=============================================================================
     Object.defineProperty(PIXI.Container.prototype, 'x', {
         get: function() {
-            return  this.position.x;
+            return this.position.x;
         },
         set: function(value) {
             if (this._positionLock) return;
@@ -1190,7 +1223,7 @@ var $dataContainerProperties = null;
 
     Object.defineProperty(PIXI.Container.prototype, 'y', {
         get: function() {
-            return  this.position.y;
+            return this.position.y;
         },
         set: function(value) {
             if (this._positionLock) return;
@@ -1199,12 +1232,12 @@ var $dataContainerProperties = null;
     });
 
     PIXI.Container.prototype.loadContainerInfo = function() {
-        var sceneName    = SceneManager.getSceneName();
-        var parentName   = getClassName(this.parent);
-        var sceneInfo = $dataContainerProperties[sceneName];
+        var sceneName  = SceneManager.getSceneName();
+        var parentName = getClassName(this.parent);
+        var sceneInfo  = $dataContainerProperties[sceneName];
         if (sceneInfo) {
             var containerInfo = sceneInfo[parentName];
-            var key = [this.parent.getChildIndex(this), getClassName(this)];
+            var key           = [this.parent.getChildIndex(this), getClassName(this)];
             if (containerInfo && containerInfo[key]) {
                 this.loadProperty(containerInfo[key]);
                 this._positionLock = true;
@@ -1235,9 +1268,9 @@ var $dataContainerProperties = null;
 
     Window_Base.prototype.loadProperty = function(containerInfo) {
         PIXI.Container.prototype.loadProperty.apply(this, arguments);
-        this.width   = containerInfo.width;
-        this.height  = containerInfo.height;
-        this.opacity = containerInfo.opacity;
+        this.width               = containerInfo.width;
+        this.height              = containerInfo.height;
+        this.opacity             = containerInfo.opacity;
         this._customFontSize     = containerInfo._customFontSize;
         this._customPadding      = containerInfo._customPadding;
         this._customLineHeight   = containerInfo._customLineHeight;
@@ -1259,13 +1292,13 @@ var $dataContainerProperties = null;
     };
 
     PIXI.Container.prototype.saveContainerInfo = function() {
-        var sceneName    = SceneManager.getSceneName();
-        var parentName   = getClassName(this.parent);
+        var sceneName  = SceneManager.getSceneName();
+        var parentName = getClassName(this.parent);
         if (!$dataContainerProperties[sceneName]) $dataContainerProperties[sceneName] = {};
         var sceneInfo = $dataContainerProperties[sceneName];
         if (!sceneInfo[parentName]) sceneInfo[parentName] = {};
         var containerInfo = sceneInfo[parentName];
-        var key = [this.parent.getChildIndex(this), getClassName(this)];
+        var key           = [this.parent.getChildIndex(this), getClassName(this)];
         if (!containerInfo[key]) containerInfo[key] = {};
         this.saveProperty(containerInfo[key]);
         if (paramAutoSave) {
@@ -1280,9 +1313,9 @@ var $dataContainerProperties = null;
 
     Window_Base.prototype.saveProperty = function(containerInfo) {
         PIXI.Container.prototype.saveProperty.apply(this, arguments);
-        containerInfo.width   = this.width;
-        containerInfo.height  = this.height;
-        containerInfo.opacity = this.opacity;
+        containerInfo.width               = this.width;
+        containerInfo.height              = this.height;
+        containerInfo.opacity             = this.opacity;
         containerInfo._customFontSize     = this._customFontSize;
         containerInfo._customPadding      = this._customPadding;
         containerInfo._customLineHeight   = this._customLineHeight;
@@ -1294,15 +1327,15 @@ var $dataContainerProperties = null;
     // Window_Base
     //  プロパティの値をカスタマイズします。
     //=============================================================================
-    var _Window_Base_initialize = Window_Base.prototype.initialize;
+    var _Window_Base_initialize      = Window_Base.prototype.initialize;
     Window_Base.prototype.initialize = function(x, y, width, height) {
         _Window_Base_initialize.apply(this, arguments);
-        this._customFontSize    = this.standardFontSize();
-        this._customPadding     = this.standardPadding();
-        this._customLineHeight  = this.lineHeight();
-        this._customLineNumber  = 0;
-        this._customBackOpacity = this.standardBackOpacity();
-        this._customBackSprite  = null;
+        this._customFontSize     = this.standardFontSize();
+        this._customPadding      = this.standardPadding();
+        this._customLineHeight   = this.lineHeight();
+        this._customLineNumber   = 0;
+        this._customBackOpacity  = this.standardBackOpacity();
+        this._customBackSprite   = null;
         this._customBackFileName = '';
     };
 
@@ -1318,46 +1351,111 @@ var $dataContainerProperties = null;
             this._customBackSprite = null;
         }
         if (Utils.isDesignMode() && this._customBackSprite && this._customBackSprite.bitmap) {
-            var bitmap = this._customBackSprite.bitmap;
+            var bitmap            = this._customBackSprite.bitmap;
             bitmap._image.onerror = function() {
-                this._customBackFileName = '';
+                this._customBackFileName                 = '';
                 this._customBackSprite.bitmap._isLoading = false;
-                this._customBackSprite.bitmap = null;
-                this._customBackSprite = null;
+                this._customBackSprite.bitmap            = null;
+                this._customBackSprite                   = null;
                 SceneManager.popChangeStack();
                 SceneManager.setInfoExtend('ファイルが見付からなかったので、左記の番号の変更を戻しました。', -1);
             }.bind(this);
         }
     };
 
-    var _Window_Selectable_initialize = Window_Selectable.prototype.initialize;
+    var _Window_Selectable_initialize      = Window_Selectable.prototype.initialize;
     Window_Selectable.prototype.initialize = function(x, y, width, height) {
         _Window_Selectable_initialize.apply(this, arguments);
-        this._customLineNumber  = this.maxRows();
+        this._customLineNumber = this.maxRows();
     };
 
-    var _Window_Base_standardFontSize = Window_Base.prototype.standardFontSize;
+    var _Window_Base_standardFontSize      = Window_Base.prototype.standardFontSize;
     Window_Base.prototype.standardFontSize = function() {
-        return this._customFontSize ? this._customFontSize :
+        return this._customFontSize ? eval(this._customFontSize) :
             paramFontSize ? paramFontSize : _Window_Base_standardFontSize.apply(this, arguments);
     };
 
-    var _Window_Base_standardPadding = Window_Base.prototype.standardPadding;
+    var _Window_Base_standardPadding      = Window_Base.prototype.standardPadding;
     Window_Base.prototype.standardPadding = function() {
-        return this._customPadding ? this._customPadding :
+        return this._customPadding ? eval(this._customPadding) :
             paramPadding ? paramPadding : _Window_Base_standardPadding.apply(this, arguments);
     };
 
-    var _Window_Base_lineHeight = Window_Base.prototype.lineHeight;
+    var _Window_Base_lineHeight      = Window_Base.prototype.lineHeight;
     Window_Base.prototype.lineHeight = function() {
-        return this._customLineHeight ? this._customLineHeight :
+        return this._customLineHeight ? eval(this._customLineHeight) :
             paramLineHeight ? paramLineHeight : _Window_Base_lineHeight.apply(this, arguments);
     };
 
-    var _Window_Base_standardBackOpacity = Window_Base.prototype.standardBackOpacity;
+    var _Window_Base_standardBackOpacity      = Window_Base.prototype.standardBackOpacity;
     Window_Base.prototype.standardBackOpacity = function() {
-        return this._customBackOpacity ? this._customBackOpacity :
+        return this._customBackOpacity ? eval(this._customBackOpacity) :
             paramBackOpacity ? paramBackOpacity : _Window_Base_standardBackOpacity.apply(this, arguments);
+    };
+
+    Window_Base._iconSrcWidth  = Window_Base._iconWidth;
+    Window_Base._iconSrcHeight = Window_Base._iconHeight;
+
+    Window_Base.prototype.getIconScale = function() {
+        var defaultFontSize = _Window_Base_standardFontSize.apply(this, arguments);
+        var fontSize        = this.contents.fontSize;
+        return paramIconSizeScale && defaultFontSize !== fontSize ? fontSize / defaultFontSize : null;
+    };
+
+    Window_Base.prototype.changeIconSize = function() {
+        var iconScale = this.getIconScale();
+        if (iconScale) {
+            Window_Base._iconWidth *= iconScale;
+            Window_Base._iconHeight *= iconScale;
+        }
+    };
+
+    Window_Base.prototype.restoreIconSize = function() {
+        var iconScale = this.getIconScale();
+        if (iconScale) {
+            Window_Base._iconWidth  = Window_Base._iconSrcWidth;
+            Window_Base._iconHeight = Window_Base._iconSrcHeight;
+        }
+    };
+
+    var _Window_Base_drawActorIcons      = Window_Base.prototype.drawActorIcons;
+    Window_Base.prototype.drawActorIcons = function(actor, x, y, width) {
+        this.changeIconSize();
+        _Window_Base_drawActorIcons.apply(this, arguments);
+        this.restoreIconSize();
+    };
+
+    var _Window_Base_drawItemName      = Window_Base.prototype.drawItemName;
+    Window_Base.prototype.drawItemName = function(item, x, y, width) {
+        this.changeIconSize();
+        _Window_Base_drawItemName.apply(this, arguments);
+        this.restoreIconSize();
+    };
+
+    var _Window_Base_processDrawIcon      = Window_Base.prototype.processDrawIcon;
+    Window_Base.prototype.processDrawIcon = function(iconIndex, textState) {
+        this.changeIconSize();
+        _Window_Base_processDrawIcon.apply(this, arguments);
+        this.restoreIconSize();
+    };
+
+    var _Window_Base_drawIcon      = Window_Base.prototype.drawIcon;
+    Window_Base.prototype.drawIcon = function(iconIndex, x, y) {
+        var iconScale = this.getIconScale();
+        if (iconScale) {
+            var bitmap = ImageManager.loadSystem('IconSet');
+            var pw     = Window_Base._iconSrcWidth;
+            var ph     = Window_Base._iconSrcHeight;
+            var sx     = iconIndex % 16 * pw;
+            var sy     = Math.floor(iconIndex / 16) * ph;
+            var dw     = Math.floor(pw * iconScale);
+            var dh     = Math.floor(ph * iconScale);
+            var dx     = x;
+            var dy     = y + (this.lineHeight() - dh) / 2 - 2;
+            this.contents.blt(bitmap, sx, sy, pw, ph, dx, dy, dw, dh);
+        } else {
+            _Window_Base_drawIcon.apply(this, arguments);
+        }
     };
 
     //=============================================================================
@@ -1368,7 +1466,7 @@ var $dataContainerProperties = null;
         this.initialize.apply(this, arguments);
     }
 
-    Window_Custom.prototype = Object.create(Window_Selectable.prototype);
+    Window_Custom.prototype             = Object.create(Window_Selectable.prototype);
     Window_Custom.prototype.constructor = Window_Custom;
 
     Window_Custom.prototype.initialize = function(lines) {
