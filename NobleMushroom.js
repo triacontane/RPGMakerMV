@@ -6,6 +6,11 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/09/28 ウィンドウ枠を自由に調整できる機能を追加
+//                  ウィンドウの枠外をクリックしたときに文章を進めない設定を追加
+//                  フォント名を指定できる機能を追加（デバイスにインストールされているフォントを使用します）
+//                  明朝体、ゴシック体をどちらも使わない場合にフォントが小さく表示されてしまう問題を修正
+//                  Edgeでフォントが小さく表示されてしまう問題を修正
 // 1.2.0 2016/09/22 セーブファイルをひとつしか作成できない制約を解消
 //                  オートセーブを単独で動作するよう修正
 //                  イベント中にセーブやロードができるポーズメニューを追加
@@ -47,6 +52,10 @@
  * @desc 文章の表示中に決定ボタンや左クリックで文章を瞬間表示します。(ON/OFF)
  * @default ON
  *
+ * @param クリック範囲限定
+ * @desc マウス関連の操作がメッセージウィンドウの枠内の場合でのみ有効になります。(ON/OFF)
+ * @default OFF
+ *
  * @param 自動改行
  * @desc 文章がウィンドウ枠に収まらない場合に自動で改行します。(ON/OFF)
  * @default ON
@@ -56,12 +65,16 @@
  * @default 6
  *
  * @param 明朝体表示
- * @desc デバイスに明朝体系フォントがインストールされていれば優先的に使用します。(ON/OFF)
+ * @desc 明朝体系フォントがデバイスにインストールされていれば優先的に使用します。(ON/OFF)
  * @default ON
  *
  * @param ゴシック体表示
- * @desc デバイスにゴシック体系フォントがインストールされていれば優先的に使用します。(ON/OFF)
+ * @desc ゴシック体系フォントがデバイスにインストールされていれば優先的に使用します。(ON/OFF)
  * @default OFF
+ *
+ * @param 固有フォント表示
+ * @desc 指定されたフォントがデバイスにインストールされていれば優先的に使用します。(複数指定する場合はカンマ区切り)
+ * @default
  *
  * @param 選択肢接頭辞
  * @desc 選択肢の接頭辞です。(0:使用しない 1:アルファベット 2:数字)
@@ -164,6 +177,8 @@
  * NM_SET_CHAPTER A    # 同上
  * NM_オートセーブ     # オートセーブを実行します。
  * NM_AUTO_SAVE        # 同上
+ * NM_ノベルウィンドウ位置設定 0 0 600 300 # ウィンドウの矩形を設定します。
+ * NM_SET_RECT_NOVEL_WINDOW 0 0 600 300    # 同上
  *
  * プラグインコマンド詳細
  *
@@ -192,6 +207,10 @@
  * 入力値を空欄にする、もしくはキャンセルした場合、名前は変更されません。
  * (例)
  * NM_名前入力 1 名前を入力してください。
+ *
+ * ・NM_ノベルウィンドウ位置設定 or NM_SET_RECT_NOVEL_WINDOW
+ * 通常は画面全体に表示されるノベルウィンドウの表示位置(X, Y, 横幅, 高さ)を
+ * 指定できます。引数を指定しないと、デフォルトサイズに戻ります。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -263,12 +282,14 @@
     var paramTitleViewType      = getParamNumber(['TitleViewType', 'タイトル表示タイプ'], 0);
     var paramVariableSpeed      = getParamNumber(['VariableSpeed', '表示速度変数'], 1, 5000);
     var paramRapidShowClick     = getParamBoolean(['RapidShowClick', 'クリック瞬間表示']);
+    var paramClickInFrame       = getParamBoolean(['ClickInFrame', 'クリック範囲限定']);
     var paramInitialSpeed       = getParamNumber(['InitialSpeed', '表示速度初期値'], 0);
     var paramWaitByCommand      = getParamBoolean(['WaitByCommand', 'コマンド単位ウェイト']);
     var paramAutoWordWrap       = getParamBoolean(['AutoWordWrap', '自動改行']);
     var paramRelativeFontSize   = getParamNumber(['RelativeFontSize', '相対フォントサイズ'], 1, 5000);
     var paramViewMincho         = getParamBoolean(['ViewMincho', '明朝体表示']);
     var paramViewGothic         = getParamBoolean(['ViewGothic', 'ゴシック体表示']);
+    var paramViewCustomFont     = getParamString(['ViewCustomFont', '固有フォント表示']);
     var paramSelectionPrefix    = getParamNumber(['SelectionPrefix', '選択肢接頭辞'], 0, 2);
     var paramScreenWidth        = getParamNumber(['ScreenWidth', '画面横サイズ'], 0);
     var paramScreenHeight       = getParamNumber(['ScreenHeight', '画面縦サイズ'], 0);
@@ -302,6 +323,22 @@
     var _Utils_isMobileDevice = Utils.isMobileDevice;
     Utils.isMobileDevice      = function() {
         return paramMobileMode || _Utils_isMobileDevice.apply(this, arguments);
+    };
+
+    Utils.isMsEdge = function() {
+        var r = /edge/i;
+        return !!navigator.userAgent.match(r);
+    };
+
+    //=============================================================================
+    // TouchInput
+    //  ホイール回転時に座標を記録
+    //=============================================================================
+    var _TouchInput__onWheel = TouchInput._onWheel;
+    TouchInput._onWheel = function(event) {
+        _TouchInput__onWheel.apply(this, arguments);
+        this._x = Graphics.pageToCanvasX(event.pageX);
+        this._y = Graphics.pageToCanvasY(event.pageY);
     };
 
     //=============================================================================
@@ -366,6 +403,20 @@
             case 'AUTO_SAVE' :
                 $gameSystem.executeAutoSave();
                 break;
+            case 'ノベルウィンドウ位置設定' :
+            case 'SET_RECT_NOVEL_WINDOW' :
+                var rect;
+                if (args.length > 0) {
+                    rect = [];
+                    rect[0] = getArgNumber(args[0], 0);
+                    rect[1] = getArgNumber(args[1], 0);
+                    rect[2] = getArgNumber(args[2], 1);
+                    rect[3] = getArgNumber(args[3], 1);
+                } else {
+                    rect = null;
+                }
+                $gameSystem.setNovelWindowRectangle.apply($gameSystem, rect);
+                break;
         }
     };
 
@@ -390,9 +441,23 @@
     var _Game_System_initialize      = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
-        this._messageViewType = paramInitialViewType;
-        this._messageSetting  = null;
-        this._chapterTitle    = '';
+        this._messageViewType      = paramInitialViewType;
+        this._messageSetting       = null;
+        this._chapterTitle         = '';
+        this._novelWindowRectangle = null;
+    };
+
+    Game_System.prototype.getNovelWindowRectangle = function() {
+        return this._novelWindowRectangle;
+    };
+
+    Game_System.prototype.setNovelWindowRectangle = function(x, y, width, height) {
+        if (arguments.length === 0) {
+            this._novelWindowRectangle = null;
+        } else {
+            this._novelWindowRectangle = new Rectangle(x, y, width, height);
+        }
+
     };
 
     Game_System.prototype.getMessageType = function() {
@@ -413,7 +478,7 @@
 
     Game_System.prototype.setFaceImage = function(faceName, faceIndex) {
         if (!this.isMessageSettingFixed()) {
-            this._faceName = faceName;
+            this._faceName  = faceName;
             this._faceIndex = faceIndex;
         }
     };
@@ -486,19 +551,19 @@
         return this._closeForce;
     };
 
-    var _Game_Message_setFaceImage = Game_Message.prototype.setFaceImage;
+    var _Game_Message_setFaceImage      = Game_Message.prototype.setFaceImage;
     Game_Message.prototype.setFaceImage = function(faceName, faceIndex) {
         _Game_Message_setFaceImage.apply(this, arguments);
         $gameSystem.setFaceImage(faceName, faceIndex);
     };
 
-    var _Game_Message_setBackground = Game_Message.prototype.setBackground;
+    var _Game_Message_setBackground      = Game_Message.prototype.setBackground;
     Game_Message.prototype.setBackground = function(background) {
         _Game_Message_setBackground.apply(this, arguments);
         $gameSystem.setBackground(background);
     };
 
-    var _Game_Message_setPositionType = Game_Message.prototype.setPositionType;
+    var _Game_Message_setPositionType      = Game_Message.prototype.setPositionType;
     Game_Message.prototype.setPositionType = function(positionType) {
         _Game_Message_setPositionType.apply(this, arguments);
         $gameSystem.setPositionType(positionType);
@@ -587,8 +652,8 @@
     };
 
     var _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
-    DataManager.makeSavefileInfo = function() {
-        var info = _DataManager_makeSavefileInfo.apply(this, arguments);
+    DataManager.makeSavefileInfo      = function() {
+        var info     = _DataManager_makeSavefileInfo.apply(this, arguments);
         info.chapter = $gameSystem.getChapterTitle();
         return info;
     };
@@ -994,10 +1059,10 @@
             if (this.isNeedAutoSave()) arguments[0]--;
             _Window_SavefileList_drawItem.apply(this, arguments);
         } else {
-            var rect = this.itemRectForText(-1);
+            var rect       = this.itemRectForText(-1);
             var autoSaveId = DataManager.getAutoSaveId();
-            var valid = DataManager.isThisGameFile(autoSaveId);
-            var info = DataManager.loadSavefileInfo(autoSaveId);
+            var valid      = DataManager.isThisGameFile(autoSaveId);
+            var info       = DataManager.loadSavefileInfo(autoSaveId);
             this.resetTextColor();
             if (this._mode === 'load') {
                 this.changePaintOpacity(valid);
@@ -1019,7 +1084,7 @@
         return this.index() + 1 - (this.isNeedAutoSave() ? 1 : 0);
     };
 
-    var _Window_SavefileList_drawGameTitle = Window_SavefileList.prototype.drawGameTitle;
+    var _Window_SavefileList_drawGameTitle      = Window_SavefileList.prototype.drawGameTitle;
     Window_SavefileList.prototype.drawGameTitle = function(info, x, y, width) {
         _Window_SavefileList_drawGameTitle.apply(this, arguments);
         if (info.chapter) {
@@ -1118,7 +1183,8 @@
     };
 
     Window_Message.prototype.checkInputPause = function() {
-        if ($gameMap.isEventRunning() && Input.isTriggered('escape') || TouchInput.isCancelled()) {
+        if ($gameMap.isEventRunning() && Input.isTriggered('escape') || (TouchInput.isCancelled() &&
+            this.isTouchedInsideFrame())) {
             SoundManager.playOk();
             this.callPauseHandler();
         }
@@ -1145,7 +1211,15 @@
 
     var _Window_Message_isTriggered      = Window_Message.prototype.isTriggered;
     Window_Message.prototype.isTriggered = function() {
-        return _Window_Message_isTriggered.apply(this, arguments) || TouchInput.wheelY >= 1;
+        var result = _Window_Message_isTriggered.apply(this, arguments);
+        if (!Input.isRepeated('ok') && !Input.isRepeated('cancel')) {
+            result = (result || TouchInput.wheelY >= 1) && this.isTouchedInsideFrame();
+        }
+        return result;
+    };
+
+    Window_Message.prototype.isTouchedInsideFrame = function() {
+        return !paramClickInFrame || Window_Selectable.prototype.isTouchedInsideFrame.apply(this, arguments);
     };
 
     //=============================================================================
@@ -1159,8 +1233,8 @@
     Window_NovelMessage.prototype             = Object.create(Window_Message.prototype);
     Window_NovelMessage.prototype.constructor = Window_Message;
 
-    Window_NovelMessage.fontFaceMincho = 'ヒラギノ明朝 ProN W3, Hiragino Mincho ProN, ＭＳ Ｐ明朝, MS PMincho';
-    Window_NovelMessage.fontFaceGothic = 'ヒラギノゴシック ProN W3, Hiragino Gothic ProN, ＭＳ Ｐゴシック, MS PGothic';
+    Window_NovelMessage.fontFaceMincho = '"ヒラギノ明朝 ProN W3","Hiragino Mincho ProN","ＭＳ Ｐ明朝","MS PMincho",';
+    Window_NovelMessage.fontFaceGothic = '"ヒラギノゴシック ProN W3","Hiragino Gothic ProN","ＭＳ Ｐゴシック","MS PGothic",';
 
     Window_NovelMessage.prototype.windowWidth = function() {
         return Graphics.boxWidth;
@@ -1176,9 +1250,14 @@
 
     Window_NovelMessage.prototype.standardFontFace = function() {
         var fontFace = '';
+        if (paramViewCustomFont) {
+            fontFace += paramViewCustomFont;
+            if (fontFace[fontFace.length - 1] !== ',') fontFace += ',';
+        }
         if (paramViewMincho) fontFace += Window_NovelMessage.fontFaceMincho;
         if (paramViewGothic) fontFace += Window_NovelMessage.fontFaceGothic;
-        return fontFace + ',' + Window_Base.prototype.standardFontFace.call(this);
+        fontFace += Window_Base.prototype.standardFontFace.call(this);
+        return fontFace;
     };
 
     Window_NovelMessage.prototype.startInput = function() {
@@ -1217,6 +1296,20 @@
             this.clearFlags();
             this.loadMessageFace();
             this.open();
+        }
+    };
+
+    Window_NovelMessage.prototype.updatePlacement = function() {
+        var rectangle  = $gameSystem.getNovelWindowRectangle();
+        var prevWidth  = this.width;
+        var prevHeight = this.height;
+        if (rectangle) {
+            this.move(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        } else {
+            this.move(0, 0, this.windowWidth(), this.windowHeight());
+        }
+        if (prevWidth !== this.width || prevHeight !== this.height) {
+            this.createContents();
         }
     };
 
@@ -1301,9 +1394,9 @@
 
     Window_NovelMessage.prototype.getNovelChoiceTop = function() {
         if (this._textState) {
-            return this._textState.y + this._textState.height + this.padding;
+            return this.y + this._textState.y + this._textState.height + this.padding;
         } else {
-            return 0;
+            return this.y;
         }
     };
 
@@ -1345,20 +1438,27 @@
     Window_NovelChoiceList.prototype.constructor = Window_NovelChoiceList;
 
     Window_NovelChoiceList.prototype.updatePlacement = function() {
-        var y = this._messageWindow.getNovelChoiceTop();
-        this.move(0, y, this.windowWidth(), this.windowHeight());
+        this.move(this.windowX(), this.windowY(), this.windowWidth(), this.windowHeight());
     };
 
     Window_NovelChoiceList.prototype.standardFontSize    = Window_NovelMessage.prototype.standardFontSize;
     Window_NovelChoiceList.prototype.standardFontFace    = Window_NovelMessage.prototype.standardFontFace;
     Window_NovelChoiceList.prototype.processAutoWordWrap = Window_NovelMessage.prototype.processAutoWordWrap;
 
+    Window_NovelChoiceList.prototype.windowX = function() {
+        return this._messageWindow.x;
+    };
+
+    Window_NovelChoiceList.prototype.windowY = function() {
+        return this._messageWindow.getNovelChoiceTop();
+    };
+
     Window_NovelChoiceList.prototype.windowWidth = function() {
-        return Graphics.boxWidth;
+        return this._messageWindow.width;
     };
 
     Window_NovelChoiceList.prototype.windowHeight = function() {
-        return Graphics.boxHeight;
+        return this._messageWindow.height;
     };
 
     Window_NovelChoiceList.prototype.contentsHeight = function() {
@@ -1496,7 +1596,7 @@
 
     //=============================================================================
     // Window_PauseMenu
-    //  ノベルメッセージ表示用のクラスです。
+    //  イベント中ポーズメニュー表示用のクラスです。
     //=============================================================================
     function Window_PauseMenu() {
         this.initialize.apply(this, arguments);

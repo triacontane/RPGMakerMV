@@ -235,6 +235,7 @@ var p = null;
 (function() {
     'use strict';
     var pluginName = 'DevToolsManage';
+    console.log(navigator.userAgent);
     // テストプレー時以外は一切の機能を無効
     if (!(Utils.isOptionValid('test') || SceneManager.isBattleTest() || SceneManager.isEventTest()) || !Utils.isNwjs()) {
         console.log(pluginName + ' is valid only test play!');
