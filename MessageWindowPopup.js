@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2016/09/29 キャラクターの位置によってはネームポップが一部見切れてしまう現象を修正
 // 2.0.1 2016/08/25 フォントサイズを\{で変更して\}で戻さなかった場合の文字サイズがおかしくなっていた現象を修正
 // 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
 // 1.3.3 2016/07/02 ポップアップ有効時は選択肢の最大表示数が8になるよう修正
@@ -727,7 +728,11 @@
     };
 
     Window_Message.prototype.isPopupLower = function() {
-        return $gameSystem.isPopupFixLower() || (!$gameSystem.isPopupFixUpper() && this.y < 0);
+        return $gameSystem.isPopupFixLower() || (!$gameSystem.isPopupFixUpper() && this.getWindowTopY() < 0);
+    };
+
+    Window_Message.prototype.getWindowTopY = function() {
+        return this.y - (this._nameWindow && this._nameWindow.visible ? this._nameWindow.height : 0);
     };
 
     Window_Message.prototype.updatePlacementPopup = function() {
