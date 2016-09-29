@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/09/29 使用者に対して無効なスキルを設定できる機能を追加
+//                  アクター用と敵キャラ用とでメモ欄を分岐
 // 1.0.0 2016/09/29 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -26,12 +28,18 @@
  * 適用環境では使用できません。
  *
  * スキルのメモ欄に以下の通り指定してください。
- * <RTS_有効ID:2,3>   # ID[2][3]のアクターor敵キャラにのみ使用できます。
- * <RTS_ValidID:2,3>  # 同上
- * <RTS_無効ID:5>     # ID[5]のアクターor敵キャラに使用できません。
- * <RTS_InvalidID:5>  # 同上
- * <RTS_スクリプト:s> # スクリプト[s]を実行した結果が[true]だと使用できません。
- * <RTS_Script:s>     # 同上
+ * <RTS_有効アクターID:2,3> # ID[2][3]のアクターにのみ使用できます。
+ * <RTS_ValidActorID:2,3>   # 同上
+ * <RTS_無効アクターID:5>   # ID[5]のアクターに使用できません。
+ * <RTS_InvalidActorID:5>   # 同上
+ * <RTS_有効敵キャラID:2,3> # ID[2][3]の敵キャラにのみ使用できます。
+ * <RTS_ValidEnemyID:2,3>   # 同上
+ * <RTS_無効敵キャラID:5>   # ID[5]の敵キャラに使用できません。
+ * <RTS_InvalidEnemyID:5>   # 同上
+ * <RTS_使用者無効>         # スキルの使用者には使用できません。
+ * <RTS_UserInvalid>        # 同上
+ * <RTS_スクリプト:s>       # スクリプト[s]を実行結果が[true]だと使用できません。
+ * <RTS_Script:s>           # 同上
  *
  * スクリプト中では以下のローカル変数が使用できます。
  * battler : 対象バトラー
@@ -64,12 +72,18 @@
  * 適用環境では使用できません。
  *
  * スキルのメモ欄に以下の通り指定してください。
- * <RTS_有効ID:2,3>   # ID[2][3]のアクターor敵キャラにのみ使用できます。
- * <RTS_ValidID:2,3>  # 同上
- * <RTS_無効ID:5>     # ID[5]のアクターor敵キャラに使用できません。
- * <RTS_InvalidID:5>  # 同上
- * <RTS_スクリプト:s> # スクリプト[s]を実行した結果が[true]だと使用できません。
- * <RTS_Script:s>     # 同上
+ * <RTS_有効アクターID:2,3> # ID[2][3]のアクターにのみ使用できます。
+ * <RTS_ValidActorID:2,3>   # 同上
+ * <RTS_無効アクターID:5>   # ID[5]のアクターに使用できません。
+ * <RTS_InvalidActorID:5>   # 同上
+ * <RTS_有効敵キャラID:2,3> # ID[2][3]の敵キャラにのみ使用できます。
+ * <RTS_ValidEnemyID:2,3>   # 同上
+ * <RTS_無効敵キャラID:5>   # ID[5]の敵キャラに使用できません。
+ * <RTS_InvalidEnemyID:5>   # 同上
+ * <RTS_使用者無効>         # スキルの使用者には使用できません。
+ * <RTS_UserInvalid>        # 同上
+ * <RTS_スクリプト:s>       # スクリプト[s]を実行結果が[true]だと使用できません。
+ * <RTS_Script:s>           # 同上
  *
  * スクリプト中では以下のローカル変数が使用できます。
  * battler : 対象バトラー
@@ -136,10 +150,11 @@
             '&lt;': '<',
             '&gt;': '>'
         };
-        text                  = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
+
+        text            = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
             return metaTagDisConvert[value];
         }.bind(this));
-        var windowLayer       = SceneManager._scene._windowLayer;
+        var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
@@ -147,15 +162,8 @@
     // Game_BattlerBase
     //  スキルやアイテムの対象として選択可能かどうかを返します。
     //=============================================================================
-    Game_BattlerBase.prototype.canSelectTarget = function(item) {
-        var validId   = getMetaValues(item, ['有効ID', 'ValidID']);
-        var battlerId = this.getBattlerIdForRestrictionTarget();
-        var battler   = this;
-        if (validId && !getArgArrayNumber(validId).contains(battlerId)) {
-            return false;
-        }
-        var invalidId = getMetaValues(item, ['無効ID', 'InvalidID']);
-        if (invalidId && getArgArrayNumber(invalidId).contains(battlerId)) {
+    Game_BattlerBase.prototype.canSelectTarget = function(item, user) {
+        if (getMetaValues(item, ['使用者無効', 'UserInvalid']) && user === this) {
             return false;
         }
         var scriptValue = getMetaValues(item, ['スクリプト', 'Script']);
@@ -167,16 +175,36 @@
         });
     };
 
-    Game_BattlerBase.prototype.getBattlerIdForRestrictionTarget = function() {
-        return 0;
+    Game_Actor.prototype.canSelectTarget = function(item, user) {
+        var result = Game_BattlerBase.prototype.canSelectTarget.apply(this, arguments);
+        if (result) {
+            var actorId = this.actorId();
+            var validId = getMetaValues(item, ['有効アクターID', 'ValidActorID']);
+            if (validId && !getArgArrayNumber(validId).contains(actorId)) {
+                return false;
+            }
+            var invalidId = getMetaValues(item, ['無効アクターID', 'InvalidActorID']);
+            if (invalidId && getArgArrayNumber(invalidId).contains(actorId)) {
+                return false;
+            }
+        }
+        return result;
     };
 
-    Game_Actor.prototype.getBattlerIdForRestrictionTarget = function() {
-        return this.actorId();
-    };
-
-    Game_Enemy.prototype.getBattlerIdForRestrictionTarget = function() {
-        return this.enemyId();
+    Game_Enemy.prototype.canSelectTarget = function(item, user) {
+        var result = Game_BattlerBase.prototype.canSelectTarget.apply(this, arguments);
+        if (result) {
+            var enemyId = this.enemyId();
+            var validId = getMetaValues(item, ['有効敵キャラID', 'ValidEnemyID']);
+            if (validId && !getArgArrayNumber(validId).contains(enemyId)) {
+                return false;
+            }
+            var invalidId = getMetaValues(item, ['無効敵キャラID', 'InvalidEnemyID']);
+            if (invalidId && getArgArrayNumber(invalidId).contains(enemyId)) {
+                return false;
+            }
+        }
+        return result;
     };
 
     //=============================================================================
@@ -208,10 +236,14 @@
         var action  = BattleManager.getTargetAction();
         if (action) {
             members = members.filter(function(member) {
-                return member.canSelectTarget(action.item());
+                return member.canSelectTarget(action.item(), action.subject());
             });
         }
         return members;
+    };
+
+    Game_Party.prototype.getSkillUser = function() {
+        return SceneManager.isCurrentSceneItem() ? null : this.menuActor();
     };
 
     //=============================================================================
@@ -224,7 +256,7 @@
         var action  = BattleManager.getTargetAction();
         if (action) {
             members = members.filter(function(member) {
-                return member.canSelectTarget(action.item());
+                return member.canSelectTarget(action.item(), action.subject());
             });
         }
         return members;
@@ -243,6 +275,14 @@
     };
 
     //=============================================================================
+    // SceneManager
+    //  アイテム画面かどうかを判定します。
+    //=============================================================================
+    SceneManager.isCurrentSceneItem = function() {
+        return this._scene instanceof Scene_Item;
+    };
+
+    //=============================================================================
     // Scene_ItemBase
     //  アイテム効果の対象から無効なアクターを除外します。
     //=============================================================================
@@ -250,7 +290,7 @@
     Scene_ItemBase.prototype.itemTargetActors = function() {
         var members = _Scene_ItemBase_itemTargetActors.apply(this, arguments);
         return members.filter(function(member) {
-            return member.canSelectTarget(this.item());
+            return member.canSelectTarget(this.item(), $gameParty.getSkillUser());
         }, this);
     };
 
@@ -258,8 +298,8 @@
     // Window_Selectable
     //  対象アクターに対してスキルを使用可能か判定します。
     //=============================================================================
-    Window_Selectable.prototype.canSelectSkillTarget = function(item, index) {
-        return this.getMember(index).canSelectTarget(item);
+    Window_Selectable.prototype.canSelectSkillTarget = function(item, index, user) {
+        return this.getMember(index).canSelectTarget(item, user);
     };
 
     //=============================================================================
@@ -280,7 +320,8 @@
 
     Window_BattleActor.prototype.canSelectSkillTarget = function(index) {
         var action = BattleManager.inputtingAction();
-        return !action || Window_Selectable.prototype.canSelectSkillTarget.call(this, action.item(), index);
+        return !action || Window_Selectable.prototype.canSelectSkillTarget.call(this,
+                action.item(), index, action.subject());
     };
 
     Window_BattleActor.prototype.getMember = function(index) {
@@ -337,7 +378,8 @@
 
     Window_MenuActor.prototype.canSelectSkillTarget = function(index) {
         var item = this._targetItem;
-        return !item || Window_Selectable.prototype.canSelectSkillTarget.call(this, item, index);
+        return !item || Window_Selectable.prototype.canSelectSkillTarget.call(this,
+                item, index, $gameParty.getSkillUser());
     };
 
     Window_MenuActor.prototype.isCurrentItemEnabled = Window_BattleActor.prototype.isCurrentItemEnabled;
