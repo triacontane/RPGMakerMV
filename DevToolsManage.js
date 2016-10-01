@@ -339,11 +339,61 @@ var p = null;
         return _Utils_isMobileDevice.apply(this, arguments) || paramFakeMobile;
     };
 
+    //=============================================================================
+    // Graphics
+    //  FPSの表示を設定します。
+    //=============================================================================
+    Graphics.setFPSMeter = function(type) {
+        switch (type) {
+            case 'FPS':
+                this.hideFps();
+                this._switchFPSMeter();
+                break;
+            case 'MS':
+                this.hideFps();
+                this._switchFPSMeter();
+                this._switchFPSMeter();
+                break;
+        }
+    };
+
     var _Graphics__createAllElements = Graphics._createAllElements;
     Graphics._createAllElements      = function() {
         _Graphics__createAllElements.apply(this, arguments);
         console.log('output body for check layout by ' + pluginName);
         console.log(document.body);
+    };
+
+    //=============================================================================
+    // Input
+    //  alertを再定義してコンソール出力にします。
+    //=============================================================================
+    var _Input_wrapNwjsAlert = Input._wrapNwjsAlert;
+    Input._wrapNwjsAlert     = function() {
+        _Input_wrapNwjsAlert.apply(this, arguments);
+        var _window_prompt = window.prompt;
+        window.prompt      = function(value, defaultValue) {
+            return SceneManager.getNwJs().prompt(value, defaultValue, _window_prompt);
+        };
+        window.alert       = function(value) {
+            console.log(value);
+            SceneManager.getNwJs().showDevTools();
+        };
+    };
+
+    Input.functionReverseMapper = {
+        F1 : 112,
+        F2 : 113,
+        F3 : 114,
+        F4 : 115,
+        F5 : 116,
+        F6 : 117,
+        F7 : 118,
+        F8 : 119,
+        F9 : 120,
+        F10: 121,
+        F11: 122,
+        F12: 123
     };
 
     //=============================================================================
@@ -606,56 +656,6 @@ var p = null;
             json = fs.readFileSync(filePath, {encoding: 'utf8'});
         }
         return json;
-    };
-
-    //=============================================================================
-    // Input
-    //  alertを再定義してコンソール出力にします。
-    //=============================================================================
-    var _Input_wrapNwjsAlert = Input._wrapNwjsAlert;
-    Input._wrapNwjsAlert     = function() {
-        _Input_wrapNwjsAlert.apply(this, arguments);
-        var _window_prompt = window.prompt;
-        window.prompt      = function(value, defaultValue) {
-            return SceneManager.getNwJs().prompt(value, defaultValue, _window_prompt);
-        };
-        window.alert       = function(value) {
-            console.log(value);
-            SceneManager.getNwJs().showDevTools();
-        };
-    };
-
-    Input.functionReverseMapper = {
-        F1 : 112,
-        F2 : 113,
-        F3 : 114,
-        F4 : 115,
-        F5 : 116,
-        F6 : 117,
-        F7 : 118,
-        F8 : 119,
-        F9 : 120,
-        F10: 121,
-        F11: 122,
-        F12: 123
-    };
-
-    //=============================================================================
-    // Graphics
-    //  FPSの表示を設定します。
-    //=============================================================================
-    Graphics.setFPSMeter = function(type) {
-        switch (type) {
-            case 'FPS':
-                this.hideFps();
-                this._switchFPSMeter();
-                break;
-            case 'MS':
-                this.hideFps();
-                this._switchFPSMeter();
-                this._switchFPSMeter();
-                break;
-        }
     };
 
     //=============================================================================
