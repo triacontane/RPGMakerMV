@@ -55,7 +55,7 @@
  * @default OFF
  *
  * @param キャプチャ作成無効
- * @desc キャプチャ作成を無効にします。(ON/OFF)
+ * @desc キャプチャ作成を無効にします。キャプチャ作成はメニュー画面などを開いた際に使われます。(ON/OFF)
  * @default OFF
  *
  * @param 色調変更無効
@@ -166,18 +166,6 @@
                 s = s + c;
             }
             return s;
-        }
-    });
-
-    Object.defineProperty(String.prototype, 'padZeroSuffix', {
-        value: function(length) {
-            return this.padSuffix(length, '0');
-        }
-    });
-
-    Object.defineProperty(Number.prototype, 'padZeroSuffix', {
-        value: function(length) {
-            return String(this).padZeroSuffix(length);
         }
     });
 

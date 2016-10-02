@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/10/02 メモ欄の適用範囲をステートから特徴を有するデータベース項目に拡張しました。
 // 1.1.3 2016/08/27 YEP_X_ActSeqPack2.jsとの競合を解消
 // 1.1.2 2016/08/27 消滅エフェクトが機能しない競合を抑えるために条件を一部変更
 // 1.1.1 2016/08/07 YEP_AutoPassiveStates.jsとの競合を解消
@@ -24,10 +25,10 @@
  * @plugindesc Battler graphic extend
  * @author triacontane
  *
- * @help ステート有効時のバトラー画像の表現方法を拡張します。
+ * @help 戦闘中のバトラー画像の表現方法を拡張します。
  * 宙に浮かせたり、色調やサイズを変えたり、多彩な表現が可能です。
  *
- * ステートのメモ欄に以下の通り記述してください。
+ * 特徴を有するデータベースのメモ欄に以下の通り記述してください。
  *
  * バトラーを浮遊させます。この設定はアクターのみ有効です。
  * <BGEAltitude:n> n:Altitude(pixel)
@@ -67,10 +68,10 @@
  * @plugindesc バトラーグラフィック表示拡張プラグイン
  * @author トリアコンタン
  *
- * @help ステート有効時のバトラー画像の表現方法を拡張します。
+ * @help 戦闘中のバトラー画像の表現方法を拡張します。
  * 宙に浮かせたり、色調やサイズを変えたり、多彩な表現が可能です。
  *
- * ステートのメモ欄に以下の通り記述してください。
+ * 特徴を有するデータベースのメモ欄に以下の通り記述してください。
  *
  * バトラーを浮遊させます。この設定はアクターのみ有効です。
  * <BGE高度:n> n:高度(ピクセル)
@@ -218,14 +219,17 @@
     };
 
     Game_BattlerBase.prototype.getStateMetaValuesForBge = function(names) {
-        var priority = 0;
+        var priority = -1;
         var result   = null;
-        this.states().forEach(function(state) {
-            if (priority <= state.priority) {
-                result = getMetaValues(state, names);
-                if (result) priority = state.priority;
+        this.traitObjects().forEach(function(traitObject) {
+            if (priority <= (traitObject.priority || 0)) {
+                var metaValue = getMetaValues(traitObject, names);
+                if (metaValue) {
+                    result   = metaValue;
+                    priority = traitObject.priority || 0;
+                }
             }
-        });
+        }, this);
         return result;
     };
 
@@ -382,7 +386,7 @@
     // Sprite_Battler
     //  ステートによるエフェクトを反映させます。
     //=============================================================================
-    var _Sprite_Battler_initMembers = Sprite_Battler.prototype.initMembers;
+    var _Sprite_Battler_initMembers      = Sprite_Battler.prototype.initMembers;
     Sprite_Battler.prototype.initMembers = function() {
         _Sprite_Battler_initMembers.apply(this, arguments);
         this._frameCount     = 0;
@@ -435,14 +439,14 @@
 
     Sprite_Battler.prototype.updateBlendColor = function() {
         var sprite = this.getMainSprite();
-        var color = this._battler.getBlendColor();
+        var color  = this._battler.getBlendColor();
         if (!color.equals(this._prevBlendColor)) {
             this._prevBlendColor = color;
             this._frameCount     = 0;
         }
         var realBlendColor = color.clone();
-        var interval = this._battler.getBlendColorInterval();
-        realBlendColor[3] = color[3] / 2 + Math.floor(color[3] * (Math.sin(this._frameCount / interval) + 1) / 4);
+        var interval       = this._battler.getBlendColorInterval();
+        realBlendColor[3]  = color[3] / 2 + Math.floor(color[3] * (Math.sin(this._frameCount / interval) + 1) / 4);
         if (!Utils.isMobileDevice() || this._frameCount % 8 === 0) {
             sprite.setBlendColor(realBlendColor);
         }
