@@ -469,8 +469,14 @@
         return this._mainSprite;
     };
 
+    var _Sprite_Actor_updatePosition = Sprite_Actor.prototype.hasOwnProperty('updatePosition') ?
+        Sprite_Actor.prototype.updatePosition : null;
     Sprite_Actor.prototype.updatePosition = function() {
-        Sprite_Battler.prototype.updatePosition.call(this);
+        if (_Sprite_Actor_updatePosition) {
+            _Sprite_Actor_updatePosition.apply(this, arguments);
+        } else {
+            Sprite_Battler.prototype.updatePosition.call(this);
+        }
         var altitude         = this._battler.getAltitude();
         this._mainSprite.y   = altitude;
         this._weaponSprite.y = altitude;

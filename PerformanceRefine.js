@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/10/05 セーブが失敗する不具合を修正
 // 1.0.0 2016/10/02 初版
 // 0.0.1 2016/09/19 作成途中
 // ----------------------------------------------------------------------------
@@ -280,7 +281,7 @@
 
     var _SceneManager_changeScene = SceneManager.changeScene;
     SceneManager.changeScene      = function() {
-        if (this.isSceneChanging() && !this.isCurrentSceneBusy()) {
+        if (this.isSceneChanging() && !this.isCurrentSceneBusy() && this._nextScene) {
             var methodName = (paramOutputMethodName ? 'SceneManager.changeScene() to ' : 'シーン遷移 to ') +
                 getClassName(this._nextScene);
             this.calculatePerformance(_SceneManager_changeScene.bind(this), methodName, paramOtherLogInterval, false);
@@ -325,7 +326,7 @@
     var _DataManager_saveGame = DataManager.saveGame;
     DataManager.saveGame      = function(savefileId) {
         var methodName = paramOutputMethodName ? 'DataManager.saveGame()' : 'データセーブ';
-        SceneManager.calculatePerformance(_DataManager_saveGame.bind(this, savefileId),
+        return SceneManager.calculatePerformance(_DataManager_saveGame.bind(this, savefileId),
             methodName, paramOtherLogInterval, false);
     };
 })();

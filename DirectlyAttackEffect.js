@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/10/05 常時残像を有効にする設定の追加
+//                  BattlerGraphicExtend.jsとの連携を強化
 // 1.0.0 2016/09/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -35,6 +37,10 @@
  *
  * @param NoAfterimage
  * @desc ONにすると残像表示が無効になります。競合やパフォーマンス対策になります。
+ * @default OFF
+ *
+ * @param AlwaysAfterimage
+ * @desc ONにすると戦闘中は常に残像が表示されます。他のプラグインとの連携がしやすくなります。
  * @default OFF
  *
  * @help スキル実行時にターゲットまで近寄ってから実行します。
@@ -166,6 +172,10 @@
  *
  * @param 残像不使用
  * @desc ONにすると残像表示が無効になります。競合やパフォーマンス対策になります。
+ * @default OFF
+ *
+ * @param 常時残像使用
+ * @desc ONにすると戦闘中は常に残像が表示されます。他のプラグインとの連携がしやすくなります。
  * @default OFF
  *
  * @help スキル実行時にターゲットまで近寄ってから実行します。
@@ -362,11 +372,12 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramAltitude     = getParamNumber(['Altitude', '高度'], 0);
-    var paramDuration     = getParamNumber(['Duration', 'フレーム数'], 1);
-    var paramValidActor   = getParamBoolean(['ValidActor', 'アクターに適用']);
-    var paramValidEnemy   = getParamBoolean(['ValidEnemy', '敵キャラに適用']);
-    var paramNoAfterimage = getParamBoolean(['NoAfterimage', '残像不使用']);
+    var paramAltitude         = getParamNumber(['Altitude', '高度'], 0);
+    var paramDuration         = getParamNumber(['Duration', 'フレーム数'], 1);
+    var paramValidActor       = getParamBoolean(['ValidActor', 'アクターに適用']);
+    var paramValidEnemy       = getParamBoolean(['ValidEnemy', '敵キャラに適用']);
+    var paramNoAfterimage     = getParamBoolean(['NoAfterimage', '残像不使用']);
+    var paramAlwaysAfterimage = getParamBoolean(['AlwaysAfterimage', '常時残像使用']);
 
     //=============================================================================
     // Game_Battler
@@ -629,7 +640,11 @@
         this._afterimageSprites        = [];
         this._afterimageLocus          = [];
         this._afterimageViaibleCounter = 0;
-        this._visibaleAfterimage       = false;
+        this.setVisibleAfterImage(false);
+    };
+
+    Sprite_Battler.prototype.setVisibleAfterImage = function(value) {
+        this._visibleAfterimage = value || paramAlwaysAfterimage;
     };
 
     var _Sprite_Battler_setBattler      = Sprite_Battler.prototype.setBattler;
@@ -728,7 +743,7 @@
         } else {
             this.setPriorityMostFront();
             if (additionalInfo.afterimage && !paramNoAfterimage) {
-                this._visibaleAfterimage = true;
+                this.setVisibleAfterImage(true);
             }
         }
     };
@@ -777,10 +792,11 @@
             if (this.isAttackMotionHidden()) this.opacity = this.getAttackMotionOpacity();
             if (this._attackDuration === 0) {
                 this.onMoveEnd();
-                this._visibaleAfterimage = false;
                 if (this._attackX === 0 && this._attackY === 0) {
                     this._spriteSet.resetBattlerOrder();
                 }
+                this._attackEndFrame = Graphics.frameCount;
+                this.setVisibleAfterImage(false);
             }
         }
     };
@@ -804,11 +820,11 @@
     };
 
     Sprite_Battler.prototype.updateAfterimages = function() {
-        this._afterimageLocus.unshift([this.x, this.y]);
+        this._afterimageLocus.unshift([this.getRealX(), this.getRealY()]);
         var interval = this.getAfterimageInterval();
         var numbers  = this.getAfterimageNumbers();
         var counter  = this._afterimageViaibleCounter;
-        if (this._afterimageLocus.length % interval === 0 && counter < numbers && this._visibaleAfterimage) {
+        if (this._afterimageLocus.length % interval === 0 && counter < numbers && this._visibleAfterimage) {
             this._afterimageSprites[counter].visible = true;
             this._afterimageViaibleCounter++;
         }
@@ -820,13 +836,22 @@
         }
     };
 
+    Sprite_Battler.prototype.getRealX = function() {
+        return this.x;
+    };
+
+    Sprite_Battler.prototype.getRealY = function() {
+        return this.y;
+    };
+
     Sprite_Battler.prototype.updateAfterimage = function(afterimage) {
         if (!afterimage.visible) return;
         var afterimageIndex = afterimage.getAfterimageIndex();
         var interval        = this.getAfterimageInterval();
-        var x               = this._afterimageLocus[afterimageIndex * interval][0];
-        var y               = this._afterimageLocus[afterimageIndex * interval][1];
-        if (!this._visibaleAfterimage && x === this.x && y === this.y && afterimage.visible) {
+        var frameDelay      = Math.min(afterimageIndex * interval, this._afterimageLocus.length - 1);
+        var x               = this._afterimageLocus[frameDelay][0];
+        var y               = this._afterimageLocus[frameDelay][1];
+        if (!this._visibleAfterimage && Graphics.frameCount - this._attackEndFrame > frameDelay && afterimage.visible) {
             afterimage.visible = false;
             this._afterimageViaibleCounter--;
         }
@@ -842,7 +867,7 @@
     };
 
     Sprite_Battler.prototype.isVisibleAfterimage = function() {
-        return !this.isAfterImage() && (this._visibaleAfterimage || this._afterimageViaibleCounter > 0);
+        return !this.isAfterImage() && (this._visibleAfterimage || this._afterimageViaibleCounter > 0);
     };
 
     Sprite_Battler.prototype.getAttackAltitude = function() {
@@ -898,8 +923,14 @@
     // Sprite_Actor
     //  ターゲットへの直接攻撃演出を追加定義します。
     //=============================================================================
+    var _Sprite_Actor_updatePosition = Sprite_Actor.prototype.hasOwnProperty('updatePosition') ?
+        Sprite_Actor.prototype.updatePosition : null;
     Sprite_Actor.prototype.updatePosition = function() {
-        Sprite_Battler.prototype.updatePosition.call(this);
+        if (_Sprite_Actor_updatePosition) {
+            _Sprite_Actor_updatePosition.apply(this, arguments);
+        } else {
+            Sprite_Battler.prototype.updatePosition.call(this);
+        }
         var altitude = this.getAttackAltitude();
         if (altitude >= 0) {
             this._shadowSprite.y       = this.getAttackAltitude();
@@ -919,6 +950,14 @@
     Sprite_Actor.prototype.stepForward = function() {
         if (this._battler.hasDirectoryAttack()) return;
         _Sprite_Actor_stepForward.apply(this, arguments);
+    };
+
+    Sprite_Actor.prototype.getRealX = function() {
+        return Sprite_Battler.prototype.getRealX.apply(this, arguments) + this._mainSprite.x;
+    };
+
+    Sprite_Actor.prototype.getRealY = function() {
+        return Sprite_Battler.prototype.getRealY.apply(this, arguments) + this._mainSprite.y * this.scale.y;
     };
 
     //=============================================================================
@@ -980,14 +1019,22 @@
     Sprite_AfterimageActor.prototype.update = function() {
         if (this._battler) {
             this.updateMain();
-            this.updateOpacity();
+            this.updateProperty();
         } else {
             this.bitmap = null;
         }
     };
 
-    Sprite_AfterimageActor.prototype.updateOpacity = function() {
-        this.opacity = this._originalSprite.opacity * this._opacityRate;
+    Sprite_AfterimageActor.prototype.updateProperty = function() {
+        this.opacity   = this._originalSprite.opacity * this._opacityRate;
+        this.scale.x   = this._originalSprite.scale.x;
+        this.scale.y   = this._originalSprite.scale.y;
+        this.blendMode = this._originalSprite.blendMode;
+        this.setColorTone(this._originalSprite.getColorTone());
+        this.setBlendColor(this._originalSprite.getBlendColor());
+        if (paramAlwaysAfterimage) {
+            this.visible = (this.x !== this._originalSprite.getRealX() || this.y !== this._originalSprite.getRealY());
+        }
     };
 
     Sprite_AfterimageActor.prototype.setOriginalSprite = function(originalSprite) {
@@ -1020,7 +1067,7 @@
     };
 
     Sprite_AfterimageEnemy.prototype.update             = Sprite_AfterimageActor.prototype.update;
-    Sprite_AfterimageEnemy.prototype.updateOpacity      = Sprite_AfterimageActor.prototype.updateOpacity;
+    Sprite_AfterimageEnemy.prototype.updateProperty     = Sprite_AfterimageActor.prototype.updateProperty;
     Sprite_AfterimageEnemy.prototype.setOriginalSprite  = Sprite_AfterimageActor.prototype.setOriginalSprite;
     Sprite_AfterimageEnemy.prototype.setAfterimageIndex = Sprite_AfterimageActor.prototype.setAfterimageIndex;
     Sprite_AfterimageEnemy.prototype.getAfterimageIndex = Sprite_AfterimageActor.prototype.getAfterimageIndex;
