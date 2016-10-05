@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/10/06 装備画面とスキル画面にも画像を表示できる機能を追加
 // 1.0.1 2016/08/12 キャラクターを切り替えたときにグラフィックが切り替わらない問題を修正
 // 1.0.0 2016/07/19 初版
 // ----------------------------------------------------------------------------
@@ -26,12 +27,32 @@
  * @desc バストアップ画像を表示するY座標(足下原点)です。
  * @default 620
  *
+ * @param EquipBustImageX
+ * @desc 装備画面でバストアップ画像を表示するX座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
+ * @param EquipBustImageY
+ * @desc 装備画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
+ * @param SkillBustImageX
+ * @desc スキル画面でバストアップ画像を表示するX座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
+ * @param SkillBustImageY
+ * @desc スキル画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
  * @param UnderContents
  * @desc ONにするとステータス等の下に画像が表示されます。(ON/OFF)
  * @default ON
  *
  * @help ステータス画面にアクターごとのバストアップ画像を表示します。
  * 足下を原点として表示位置を自由に調整できます。
+ *
+ * 装備画面とスキル画面にも同一のバストアップ画像を表示できますが
+ * デフォルト画面サイズではスペースがないので、使用する場合は必要に応じて
+ * 画面サイズを変更してください。
  *
  * アクターのメモ欄に以下の通り指定してください。
  *
@@ -73,12 +94,32 @@
  * @desc バストアップ画像を表示するY座標(足下原点)です。
  * @default 620
  *
+ * @param 装備_画像X座標
+ * @desc 装備画面でバストアップ画像を表示するX座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
+ * @param 装備_画像Y座標
+ * @desc 装備画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
+ * @param スキル_画像X座標
+ * @desc スキル画面でバストアップ画像を表示するX座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
+ * @param スキル_画像Y座標
+ * @desc スキル画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
  * @param コンテンツの下に表示
  * @desc ONにするとステータス等の下に画像が表示されます。(ON/OFF)
  * @default ON
  *
  * @help ステータス画面にアクターごとのバストアップ画像を表示します。
  * 足下を原点として表示位置を自由に調整できます。
+ *
+ * 装備画面とスキル画面にも同一のバストアップ画像を表示できますが
+ * デフォルト画面サイズではスペースがないので、使用する場合は必要に応じて
+ * 画面サイズを変更してください。
  *
  * アクターのメモ欄に以下の通り指定してください。
  *
@@ -184,9 +225,13 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramBustImageX    = getParamNumber(['BustImageX', '画像X座標']);
-    var paramBustImageY    = getParamNumber(['BustImageY', '画像Y座標']);
-    var paramUnderContents = getParamBoolean(['UnderContents', 'コンテンツの下に表示']);
+    var paramBustImageX      = getParamNumber(['BustImageX', '画像X座標']);
+    var paramBustImageY      = getParamNumber(['BustImageY', '画像Y座標']);
+    var paramEquipBustImageX = getParamNumber(['EquipBustImageX', '装備_画像X座標']);
+    var paramEquipBustImageY = getParamNumber(['EquipBustImageY', '装備_画像Y座標']);
+    var paramSkillBustImageX = getParamNumber(['SkillBustImageX', 'スキル_画像X座標']);
+    var paramSkillBustImageY = getParamNumber(['SkillBustImageY', 'スキル_画像Y座標']);
+    var paramUnderContents   = getParamBoolean(['UnderContents', 'コンテンツの下に表示']);
 
     //=============================================================================
     // Game_Interpreter
@@ -260,27 +305,83 @@
     };
 
     //=============================================================================
-    // Window_Status
+    // Window_Base
     //  バスト画像表示用スプライトを追加定義します。
     //=============================================================================
-    var _Window_Status_initialize      = Window_Status.prototype.initialize;
-    Window_Status.prototype.initialize = function() {
-        this._bustSprite = null;
-        _Window_Status_initialize.apply(this, arguments);
+    var _Window_Base_initialize      = Window_Base.prototype.initialize;
+    Window_Base.prototype.initialize = function() {
+        if (this.isNeedBust()) this._bustSprite = null;
+        _Window_Base_initialize.apply(this, arguments);
     };
 
-    Window_Status.prototype._createAllParts = function() {
+    Window_Base.prototype._createAllParts = function() {
         Window.prototype._createAllParts.call(this);
+        if (this.isNeedBust()) this.createBustSprite();
+    };
+
+    Window_Base.prototype.isNeedBust = function() {
+        return this.getBustPosition() !== null;
+    };
+
+    Window_Base.prototype.createBustSprite = function() {
         this._bustSprite = new Sprite_Bust();
         this.addChildAt(this._bustSprite, paramUnderContents ? 2 : 3);
     };
 
+    Window_Base.prototype.setBustPosition = function(x, y) {
+        this._bustSprite.move(x - this.x, y - this.y);
+    };
+
+    Window_Base.prototype.getBustPosition = function() {
+        return null;
+    };
+
+    Window_Base.prototype.refreshBust = function() {
+        if (this._actor && this.isNeedBust()) {
+            this.setBustPosition.apply(this, this.getBustPosition());
+            this._bustSprite.refresh(this._actor);
+        }
+    };
+
+    //=============================================================================
+    // Window_Status
+    //  バスト画像表示用スプライトを追加定義します。
+    //=============================================================================
     var _Window_Status_refresh      = Window_Status.prototype.refresh;
     Window_Status.prototype.refresh = function() {
         _Window_Status_refresh.apply(this, arguments);
-        if (this._actor) {
-            this._bustSprite.refresh(this._actor);
-        }
+        this.refreshBust();
+    };
+
+    Window_Status.prototype.getBustPosition = function() {
+        return [paramBustImageX, paramBustImageY];
+    };
+
+    //=============================================================================
+    // Window_EquipItem
+    //  バスト画像表示用スプライトを追加定義します。
+    //=============================================================================
+    Window_EquipItem.prototype.refresh = function() {
+        Window_ItemList.prototype.refresh.apply(this, arguments);
+        this.refreshBust();
+    };
+
+    Window_EquipItem.prototype.getBustPosition = function() {
+        return [paramEquipBustImageX, paramEquipBustImageY];
+    };
+
+    //=============================================================================
+    // Window_SkillList
+    //  バスト画像表示用スプライトを追加定義します。
+    //=============================================================================
+    var _Window_SkillList_refresh = Window_SkillList.prototype.refresh;
+    Window_SkillList.prototype.refresh = function() {
+        _Window_SkillList_refresh.apply(this, arguments);
+        this.refreshBust();
+    };
+
+    Window_SkillList.prototype.getBustPosition = function() {
+        return [paramSkillBustImageX, paramSkillBustImageY];
     };
 
     //=============================================================================
@@ -296,11 +397,9 @@
 
     Sprite_Bust.prototype.initialize = function() {
         Sprite_Base.prototype.initialize.call(this);
-        this.x        = paramBustImageX;
-        this.y        = paramBustImageY;
-        this.anchor.x = 0.5;
-        this.anchor.y = 1.0;
-        this._actor   = null;
+        this.anchor.x      = 0.5;
+        this.anchor.y      = 1.0;
+        this._actor        = null;
         this._equipSprites = [];
     };
 
@@ -313,11 +412,14 @@
 
     Sprite_Bust.prototype.drawMain = function() {
         var imageFileName = this._actor.getBustImageName();
-        this.bitmap = (imageFileName ? ImageManager.loadPicture(getArgString(imageFileName), 0) : null);
+        this.bitmap       = (imageFileName ? ImageManager.loadPicture(getArgString(imageFileName), 0) : null);
     };
 
     Sprite_Bust.prototype.drawAnimation = function() {
-        this._animationId = this._actor.getBustAnimationId();
+        var animationId = this._actor.getBustAnimationId();
+        if (this._animationId === animationId && this.isAnyAnimationExist()) return;
+        this._animationId = animationId;
+        if (this.isAnyAnimationExist()) return;
         if (this.isNeedAnimation()) {
             this.startAnimation();
         } else {
