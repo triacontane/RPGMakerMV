@@ -789,7 +789,7 @@
             this._attackY = (this._attackY * (d - 1) + this._targetAttackY) / d;
             this._attackZ = (this._attackZ * (d - 1) + this._targetAttackZ) / d;
             this._attackDuration--;
-            if (this.isAttackMotionHidden()) this.opacity = this.getAttackMotionOpacity();
+            if (this.isAttackMotionHidden()) this.getMainSprite().opacity = this.getAttackMotionOpacity();
             if (this._attackDuration === 0) {
                 this.onMoveEnd();
                 if (this._attackX === 0 && this._attackY === 0) {
