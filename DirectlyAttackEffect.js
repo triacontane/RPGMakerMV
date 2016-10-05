@@ -960,6 +960,10 @@
         return Sprite_Battler.prototype.getRealY.apply(this, arguments) + this._mainSprite.y * this.scale.y;
     };
 
+    Sprite_Actor.prototype.getMainSprite = function() {
+        return this._mainSprite;
+    };
+
     //=============================================================================
     // Sprite_Enemy
     //  ターゲットへの直接攻撃演出を追加定義します。
@@ -974,6 +978,10 @@
 
     Sprite_Enemy.prototype.getEnemyReverseX = function(x) {
         return Graphics.width - Sprite_Battler.prototype.getEnemyReverseX.apply(this, arguments);
+    };
+
+    Sprite_Enemy.prototype.getMainSprite = function() {
+        return this;
     };
 
     //=============================================================================
@@ -1026,12 +1034,12 @@
     };
 
     Sprite_AfterimageActor.prototype.updateProperty = function() {
-        this.opacity   = this._originalSprite.opacity * this._opacityRate;
         this.scale.x   = this._originalSprite.scale.x;
         this.scale.y   = this._originalSprite.scale.y;
-        this.blendMode = this._originalSprite.blendMode;
-        this.setColorTone(this._originalSprite.getColorTone());
-        this.setBlendColor(this._originalSprite.getBlendColor());
+        this.opacity   = this._originalMainSprite.opacity * this._opacityRate;
+        this.blendMode = this._originalMainSprite.blendMode;
+        this.setColorTone(this._originalMainSprite.getColorTone());
+        this.setBlendColor(this._originalMainSprite.getBlendColor());
         if (paramAlwaysAfterimage) {
             this.visible = (this.x !== this._originalSprite.getRealX() || this.y !== this._originalSprite.getRealY());
         }
@@ -1039,6 +1047,7 @@
 
     Sprite_AfterimageActor.prototype.setOriginalSprite = function(originalSprite) {
         this._originalSprite = originalSprite;
+        this._originalMainSprite = originalSprite.getMainSprite();
     };
 
     Sprite_AfterimageActor.prototype.isAfterImage = function() {
