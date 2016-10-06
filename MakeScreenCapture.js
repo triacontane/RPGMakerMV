@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/10/06 パラメータに環境変数を使えるように修正
 // 1.3.0 2016/06/24 WEBP形式のショートカットキーを追加
 // 1.2.3 2016/06/23 著名に画像とテキストを両方使えるよう修正
 // 1.2.2 2016/05/13 プラグインコマンドから出力したときに拡張子の表示がおかしくなる問題を修正
@@ -104,7 +105,10 @@
  *
  * プラグインコマンド以外は、テストプレー時のみ有効になります。
  *
- * キャプチャの際に著名を自動で埋め込むことができます。
+ * キャプチャしたファイルの保存場所は絶対パス、相対パスいずれも指定できるほか、
+ * OSの環境変数（%USERPROFILE%など）にも対応しています。
+ *
+ * また、キャプチャの際に著名を自動で埋め込むことができます。
  * 著名は文字列で指定できるほか、任意の画像も指定可能です。
  * （両方指定すると画像が優先されます）
  *
@@ -216,7 +220,10 @@
  *
  * プラグインコマンド以外は、テストプレー時のみ有効になります。
  *
- * キャプチャの際に著名を自動で埋め込むことができます。
+ * キャプチャしたファイルの保存場所は絶対パス、相対パスいずれも指定できるほか、
+ * OSの環境変数（%USERPROFILE%など）にも対応しています。
+ *
+ * また、キャプチャの際に著名を自動で埋め込むことができます。
  * 著名は文字列で指定できるほか、任意の画像も指定可能です。
  * （両方指定すると画像が優先されます）
  *
@@ -296,7 +303,7 @@
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
             var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
+            if (name) return Utiles.isNwjs() ? convertEnvironmentVariable(name) : name;
         }
         return null;
     };
@@ -308,6 +315,14 @@
     var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
+    };
+
+    var convertEnvironmentVariable = function(text) {
+        if (text == null) text = '';
+        text = text.replace(/\%(\w+)\%/gi, function() {
+            return process.env[arguments[1]] || '';
+        }.bind(this));
+        return text;
     };
 
     var convertEscapeCharacters = function(text) {
