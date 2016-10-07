@@ -303,7 +303,7 @@
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
             var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return Utiles.isNwjs() ? convertEnvironmentVariable(name) : name;
+            if (name) return Utils.isNwjs() ? convertEnvironmentVariable(name) : name;
         }
         return null;
     };

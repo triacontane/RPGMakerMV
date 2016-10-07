@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/10/08 装備品画像にZ座標を付与できるよう修正
 // 1.1.0 2016/10/06 装備画面とスキル画面にも画像を表示できる機能を追加
 // 1.0.1 2016/08/12 キャラクターを切り替えたときにグラフィックが切り替わらない問題を修正
 // 1.0.0 2016/07/19 初版
@@ -68,6 +69,10 @@
  * <SBIImage:item>  # /img/pictures/item.pngが表示されます。
  * <SBIPosX:30>     # 装備品画像のX座標を[30]に設定します。
  * <SBIPosY:30>     # 装備品画像のY座標を[30]に設定します。
+ * <SBIPosZ:3>      # 装備品画像のZ座標を[3]に設定します。
+ *
+ * Z座標が大きい値ほど手前に表示されます。指定しない場合は[1]になります。
+ * アクター画像のZ座標は[0]で固定です。
  *
  * プラグインコマンドの実行により画像や動画を変更することもできます。
  * ストーリーの進行によって差し替えたい場合に使用します。
@@ -140,6 +145,11 @@
  * <SBI座標X:30>    # 装備品画像のX座標を[30]に設定します。
  * <SBIPosY:30>     # 装備品画像のY座標を[30]に設定します。
  * <SBI座標Y:30>    # 装備品画像のY座標を[30]に設定します。
+ * <SBIPosZ:3>      # 装備品画像のZ座標を[3]に設定します。
+ * <SBI座標Z:3>     # 装備品画像のZ座標を[3]に設定します。
+ *
+ * Z座標が大きい値ほど手前に表示されます。指定しない場合は[1]になります。
+ * アクター画像のZ座標は[0]で固定です。
  *
  * プラグインコマンドの実行により画像や動画を変更することもできます。
  * ストーリーの進行によって差し替えたい場合に使用します。
@@ -320,12 +330,15 @@
     };
 
     Window_Base.prototype.isNeedBust = function() {
-        return this.getBustPosition() !== null;
+        var pos = this.getBustPosition();
+        return pos !== null && (pos[0] !== 0 || pos[1] !== 0);
     };
 
     Window_Base.prototype.createBustSprite = function() {
-        this._bustSprite = new Sprite_Bust();
-        this.addChildAt(this._bustSprite, paramUnderContents ? 2 : 3);
+        this._bustContainer = new Sprite();
+        this._bustSprite    = new Sprite_Bust();
+        this._bustContainer.addChild(this._bustSprite);
+        this.addChildAt(this._bustContainer, paramUnderContents ? 2 : 3);
     };
 
     Window_Base.prototype.setBustPosition = function(x, y) {
@@ -374,7 +387,7 @@
     // Window_SkillList
     //  バスト画像表示用スプライトを追加定義します。
     //=============================================================================
-    var _Window_SkillList_refresh = Window_SkillList.prototype.refresh;
+    var _Window_SkillList_refresh      = Window_SkillList.prototype.refresh;
     Window_SkillList.prototype.refresh = function() {
         _Window_SkillList_refresh.apply(this, arguments);
         this.refreshBust();
@@ -401,6 +414,7 @@
         this.anchor.y      = 1.0;
         this._actor        = null;
         this._equipSprites = [];
+        this.z             = 0;
     };
 
     Sprite_Bust.prototype.refresh = function(actor) {
@@ -432,13 +446,28 @@
         this._actor.equips().forEach(function(equip) {
             if (equip) this.makeEquipSprite(equip);
         }.bind(this));
+        this.sortEquips();
     };
 
     Sprite_Bust.prototype.clearEquips = function() {
         this._equipSprites.forEach(function(sprite) {
-            this.removeChild(sprite);
+            this.parent.removeChild(sprite);
         }.bind(this));
         this._equipSprites = [];
+    };
+
+    Sprite_Bust.prototype.sortEquips = function() {
+        this.parent.children.sort(this._compareChildOrder.bind(this));
+    };
+
+    Sprite_Bust.prototype._compareChildOrder = function(a, b) {
+        if (a.z !== b.z) {
+            return a.z - b.z;
+        } else if (a.y !== b.y) {
+            return a.y - b.y;
+        } else {
+            return a.spriteId - b.spriteId;
+        }
     };
 
     Sprite_Bust.prototype.makeEquipSprite = function(equip) {
@@ -449,10 +478,12 @@
             sprite.anchor.y = 0.5;
             sprite.bitmap   = ImageManager.loadPicture(getArgString(itemFileName), 0);
             var xStr        = getMetaValues(equip, ['PosX', '座標X']);
-            sprite.x        = xStr ? getArgNumber(xStr) : 0;
+            sprite.x        = this.x + (xStr ? getArgNumber(xStr) : 0);
             var yStr        = getMetaValues(equip, ['PosY', '座標Y']);
-            sprite.y        = yStr ? getArgNumber(yStr) : 0;
-            this.addChild(sprite);
+            sprite.y        = this.y + (yStr ? getArgNumber(yStr) : 0);
+            var zStr        = getMetaValues(equip, ['PosZ', '座標Z']);
+            sprite.z        = zStr !== undefined ? getArgNumber(zStr) : 1;
+            this.parent.addChild(sprite);
             this._equipSprites.push(sprite);
         }
     };
