@@ -27,35 +27,35 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * SOUND_TEST_MAKE_CSV or
- * サウンドテストCSV作成
+ * BPM_SOUND_TEST_MAKE_CSV or
+ * BPM_サウンドテストCSV作成
  * 　サウンドテストプラグイン(SceneSoundTest.js)で使用する
  *   CSVファイルのひな形を出力します。
  * 　必要な列とBGMごとの行が出力され、あとは説明と表示名を入力するだけです。
- * 　例：SOUND_TEST_MAKE_CSV
+ * 　例：BPM_SOUND_TEST_MAKE_CSV
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(function() {
     'use strict';
+    var pluginName    = 'BatchProcessManager';
+    var metaTagPrefix = 'BPM_';
     // テストプレー時以外は一切の機能を無効
-    if (!Utils.isOptionValid('test') || !Utils.isNwjs()) {
-        console.log('BatchProcessManager is valid only test play and nw.js.');
+    if (!StorageManager.isLocalMode()) {
+        console.log(pluginName + 'is valid only local mode.');
         return;
     }
 
-    var pluginName = 'BatchProcessManager';
-
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
     if (!Object.prototype.hasOwnProperty('isEmpty')) {
         Object.defineProperty(Object.prototype, 'isEmpty', {
-            value : function () {
+            value: function() {
                 return Object.keys(this).length <= 0;
             }
         });
@@ -96,12 +96,12 @@
     };
 
     BatchProcessManager.getFileNameList = function(directly, IncludeExtension) {
-        var fs = require('fs');
+        var fs   = require('fs');
         var path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, directly);
         if (path.match(/^\/([A-Z]\:)/)) {
             path = path.slice(1);
         }
-        var fileList = [];
+        var fileList    = [];
         var fileNameMap = {};
         fs.readdirSync(path).forEach(function(fileName) {
             if (!IncludeExtension) {
@@ -130,7 +130,7 @@
                 });
                 outText = this._parseCsvText(outText);
             }
-            columns.forEach(function (column) {
+            columns.forEach(function(column) {
                 outText += Object.prototype.toString.call(data[column]) !== 'Number' ? '"' + data[column] + '",' : data[column] + ',';
             });
             outText = this._parseCsvText(outText);
@@ -147,8 +147,8 @@
     };
 
     StorageManager.saveToLocalTextFile = function(fileName, text) {
-        var fs = require('fs');
-        var dirPath = this.localDataDirectoryPath();
+        var fs       = require('fs');
+        var dirPath  = this.localDataDirectoryPath();
         var filePath = dirPath + fileName;
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath);
@@ -172,10 +172,10 @@
 
     BatchProcessManager.outputSoundTestCsv = function() {
         var fileList = this.getFileNameListAudioBgm();
-        var objects = [];
-        fileList.forEach(function (fileName) {
-            var data = {};
-            data.fileName = fileName;
+        var objects  = [];
+        fileList.forEach(function(fileName) {
+            var data         = {};
+            data.fileName    = fileName;
             data.displayName = fileName;
             data.description = '　';
             objects.push(data);
@@ -192,28 +192,31 @@
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
+        var commandPrefix = new RegExp('^' + metaTagPrefix);
+        if (!command.match(commandPrefix)) return;
         try {
-            this.pluginCommandBatchProcessManager(command, args);
+            this.pluginCommandBatchProcessManager(command.replace(commandPrefix, ''), args);
         } catch (e) {
             if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window  = require('nw.gui').Window.get();
-                var devTool = window.showDevTools();
-                devTool.moveTo(0, 0);
-                devTool.resizeTo(Graphics.width, Graphics.height);
-                window.focus();
+                var window = require('nw.gui').Window.get();
+                if (!window.isDevToolsOpen()) {
+                    var devTool = window.showDevTools();
+                    devTool.moveTo(0, 0);
+                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+                    window.focus();
+                }
             }
             console.log('プラグインコマンドの実行中にエラーが発生しました。');
             console.log('- コマンド名 　: ' + command);
             console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-            throw e;
+            console.log('- エラー原因   : ' + e.stack || e.toString());
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandBatchProcessManager = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandBatchProcessManager = function(command, args) {
         switch (getCommandName(command)) {
             case 'SOUND_TEST_MAKE_CSV' :
             case 'サウンドテストCSV作成':
