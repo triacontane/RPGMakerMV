@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2016/10/10 設定項目をすべて非表示にした場合、リストから選択後、ゲームが止まってしまう問題を修正
 // 1.0.2 2016/05/11 ウィンドウの位置指定方法を少し変更（見た目上はそのまま）
 // 1.0.1 2016/02/07 改行コード（CR+LF）に対応
 //                  英語対応
@@ -206,7 +207,7 @@ function Scene_SoundTest() {
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() == 'ON';
+        return (value || '').toUpperCase() === 'ON';
     };
 
     var getParamOther = function(paramNames) {
@@ -346,7 +347,7 @@ function Scene_SoundTest() {
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandSceneSoundTest = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandSceneSoundTest = function (command) {
         switch (getCommandName(command)) {
             case 'SOUND_TEST_CALL' :
             case 'サウンドテスト画面の呼び出し' :
@@ -541,10 +542,13 @@ function Scene_SoundTest() {
     };
 
     Scene_SoundTest.prototype.activateBgmSetting = function() {
-        if (SoundTestManager.isSettingEmpty()) return;
-        this._bgmListWindow.deactivate();
-        this._bgmSettingWindow.activate();
-        this._bgmSettingWindow.select(0);
+        if (!SoundTestManager.isSettingEmpty()) {
+            this._bgmListWindow.deactivate();
+            this._bgmSettingWindow.activate();
+            this._bgmSettingWindow.select(0);
+        } else {
+            this.activateBgmList();
+        }
     };
 
     Scene_SoundTest.prototype.activateBgmList = function() {
