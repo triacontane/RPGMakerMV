@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/10/10 行動パターンが何も設定されていない敵キャラが行動しようとするとエラーになる問題を修正
 // 1.0.1 2016/10/10 タイミングが「スキル使用時」「ターン開始時」以外のものについて、対象者にも効果が適用されていた問題を修正
 // 1.0.0 2016/09/25 初版
 // ----------------------------------------------------------------------------
@@ -411,7 +412,9 @@
     };
 
     Game_Action.prototype.isValidSideEffect = function() {
-        if (!this._applyForSideEffect) {
+        if (!this.item()) {
+            return false;
+        } else if (!this._applyForSideEffect) {
             return true;
         } else {
             return (this._successForSideEffect || !getMetaValues(this.item(), ['HitOnly', '成功時のみ'])) &&
