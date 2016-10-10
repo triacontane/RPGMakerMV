@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/10/10 タイミングが「スキル使用時」「ターン開始時」以外のものについて、対象者にも効果が適用されていた問題を修正
 // 1.0.0 2016/09/25 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -269,11 +270,9 @@
                 effects[i].sideEffect = true;
             }
         }
-        if (numbersOnUsing.length + numbersOnStart.length > 0) {
-            data.effects = effects.filter(function(effect) {
-                return !effect.sideEffect;
-            });
-        }
+        data.effects = effects.filter(function(effect) {
+            return !effect.sideEffect;
+        });
         data.sideEffectOnInput  = sideEffectOnInput;
         data.sideEffectOnBefore = sideEffectOnBefore;
         data.sideEffectOnUsing  = sideEffectOnUsing;
