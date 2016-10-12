@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/10/13 画像を指定した矩形でトリミングして表示できる機能を追加
 // 1.2.0 2016/10/08 装備品画像にZ座標を付与できるよう修正
 // 1.1.0 2016/10/06 装備画面とスキル画面にも画像を表示できる機能を追加
 // 1.0.1 2016/08/12 キャラクターを切り替えたときにグラフィックが切り替わらない問題を修正
@@ -70,6 +71,8 @@
  * <SBIPosX:30>     # 装備品画像のX座標を[30]に設定します。
  * <SBIPosY:30>     # 装備品画像のY座標を[30]に設定します。
  * <SBIPosZ:3>      # 装備品画像のZ座標を[3]に設定します。
+ * <SBIRect:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
+ *                       # 切り出して（トリミング）表示します。(カンマ区切り)
  *
  * Z座標が大きい値ほど手前に表示されます。指定しない場合は[1]になります。
  * アクター画像のZ座標は[0]で固定です。
@@ -147,6 +150,8 @@
  * <SBI座標Y:30>    # 装備品画像のY座標を[30]に設定します。
  * <SBIPosZ:3>      # 装備品画像のZ座標を[3]に設定します。
  * <SBI座標Z:3>     # 装備品画像のZ座標を[3]に設定します。
+ * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
+ * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
  *
  * Z座標が大きい値ほど手前に表示されます。指定しない場合は[1]になります。
  * アクター画像のZ座標は[0]で固定です。
@@ -226,6 +231,20 @@
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
+    var getArgArrayString = function(args, upperFlg) {
+        var values = getArgString(args, upperFlg).split(',');
+        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
+        return values;
+    };
+
+    var getArgArrayEval = function(args, min, max) {
+        var values = getArgArrayString(args, false);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        for (var i = 0; i < values.length; i++) values[i] = eval(values[i]).clamp(min, max);
+        return values;
+    };
+
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
         var windowLayer = SceneManager._scene._windowLayer;
@@ -302,6 +321,12 @@
 
     Game_Actor.prototype.getBustImageName = function() {
         return this._bustImageName || getMetaValues(this.actor(), ['画像', 'Image']);
+    };
+
+    Game_Actor.prototype.getBustImageRect = function() {
+        var rectString = getMetaValues(this.actor(), ['矩形', 'Rect']);
+        var rect       = rectString ? getArgArrayEval(rectString, 0) : null;
+        return rect ? new Rectangle(rect[0], rect[1], rect[2], rect[3]) : null;
     };
 
     Game_Actor.prototype.setBustAnimationId = function(value) {
@@ -425,8 +450,12 @@
     };
 
     Sprite_Bust.prototype.drawMain = function() {
-        var imageFileName = this._actor.getBustImageName();
-        this.bitmap       = (imageFileName ? ImageManager.loadPicture(getArgString(imageFileName), 0) : null);
+        var fileName = this._actor.getBustImageName();
+        this.bitmap  = (fileName ? ImageManager.loadPicture(getArgString(fileName), 0) : null);
+        var rect     = this._actor.getBustImageRect();
+        if (rect) {
+            this.setFrame(rect.x, rect.y, rect.width, rect.height);
+        }
     };
 
     Sprite_Bust.prototype.drawAnimation = function() {
