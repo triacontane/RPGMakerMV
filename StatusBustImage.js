@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/10/13 装備品の画像がトリミングの対象外になっていたのを修正
 // 1.3.0 2016/10/13 画像を指定した矩形でトリミングして表示できる機能を追加
 // 1.2.0 2016/10/08 装備品画像にZ座標を付与できるよう修正
 // 1.1.0 2016/10/06 装備画面とスキル画面にも画像を表示できる機能を追加
@@ -59,6 +60,8 @@
  * アクターのメモ欄に以下の通り指定してください。
  *
  * <SBIImage:file>  # /img/pictures/file.pngが表示されます。
+ * <SBIRect:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
+ *                       # 切り出して（トリミング）表示します。(カンマ区切り)
  *
  * さらに動画(データベースのアニメーション)を再生することもできます。
  * 画像の上に重ねてまばたき等を表現するのに使用します。
@@ -133,6 +136,8 @@
  *
  * <SBI画像:file>   # /img/pictures/file.pngが表示されます。
  * <SBIImage:file>  # /img/pictures/file.pngが表示されます。
+ * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
+ * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
  *
  * さらに動画(データベースのアニメーション)を再生することもできます。
  * 画像の上に重ねてまばたき等を表現するのに使用します。
@@ -512,6 +517,11 @@
             sprite.y        = this.y + (yStr ? getArgNumber(yStr) : 0);
             var zStr        = getMetaValues(equip, ['PosZ', '座標Z']);
             sprite.z        = zStr !== undefined ? getArgNumber(zStr) : 1;
+            var rectString = getMetaValues(equip, ['矩形', 'Rect']);
+            if (rectString) {
+                var rect = getArgArrayEval(rectString, 0);
+                sprite.setFrame(rect[0], rect[1], rect[2], rect[3]);
+            }
             this.parent.addChild(sprite);
             this._equipSprites.push(sprite);
         }
