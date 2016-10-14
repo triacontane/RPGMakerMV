@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/10/14 ダメージのポップアップを抑制する機能を追加
 // 1.0.0 2016/10/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -21,6 +22,10 @@
  * @desc コマンドやステータスのウィンドウを画面上部に配置して、メッセージによって隠れないようにします。
  * @default ON
  *
+ * @param SuppressPopup
+ * @desc ダメージのポップアップを非表示にします。
+ * @default OFF
+ *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -35,6 +40,10 @@
  * @desc コマンドやステータスのウィンドウを画面上部に配置して、メッセージによって隠れないようにします。
  * @default ON
  *
+ * @param ポップアップ抑制
+ * @desc ダメージのポップアップを非表示にします。
+ * @default OFF
+ *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -47,7 +56,7 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'BattleLogToMessage';
+    var pluginName = 'BattleLogToMessage';
 
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
@@ -67,7 +76,12 @@
     // パラメータの取得と整形
     //=============================================================================
     var paramStatusPosUpper = getParamBoolean(['StatusPosUpper', 'ステータス上部配置']);
+    var paramSuppressPopup  = getParamBoolean(['SuppressPopup', 'ポップアップ抑制']);
 
+    //=============================================================================
+    // Scene_Battle
+    //  ウィンドウのレイアウトを変更します。
+    //=============================================================================
     var _Scene_Battle_createAllWindows      = Scene_Battle.prototype.createAllWindows;
     Scene_Battle.prototype.createAllWindows = function() {
         _Scene_Battle_createAllWindows.apply(this, arguments);
@@ -99,6 +113,10 @@
         _Scene_Battle_updateWindowPositions.apply(this, arguments);
     };
 
+    //=============================================================================
+    // Window_BattleLog
+    //  ウィンドウのレイアウトを変更します。
+    //=============================================================================
     var _Window_BattleLog_initialize      = Window_BattleLog.prototype.initialize;
     Window_BattleLog.prototype.initialize = function() {
         _Window_BattleLog_initialize.apply(this, arguments);
@@ -118,5 +136,14 @@
     };
 
     Window_BattleLog.prototype.drawBackground = function() {};
+
+    //=============================================================================
+    // Game_Battler
+    //  ダメージポップアップを抑制します。
+    //=============================================================================
+    var _Game_Battler_startDamagePopup = Game_Battler.prototype.startDamagePopup;
+    Game_Battler.prototype.startDamagePopup = function() {
+        if (!paramSuppressPopup) _Game_Battler_startDamagePopup.apply(this, arguments);
+    };
 })();
 
