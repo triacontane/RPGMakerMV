@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/10/18 メッセージスピードの調整機能と、行動終了後に追加ウェイトする機能を追加
 // 1.1.0 2016/10/14 ダメージのポップアップを抑制する機能を追加
 // 1.0.0 2016/10/12 初版
 // ----------------------------------------------------------------------------
@@ -26,6 +27,14 @@
  * @desc ダメージのポップアップを非表示にします。
  * @default OFF
  *
+ * @param MessageSpeed
+ * @desc メッセージスピードを指定した番号の変数から取得するよう変更します。変数値(0:ウェイトなし 1:通常 2以上:遅くなる)
+ * @default 0
+ *
+ * @param WaitForEndAction
+ * @desc 行動終了後、メッセージをクリアする前に指定したフレーム数だけウェイトを掛けます。
+ * @default 0
+ *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -43,6 +52,14 @@
  * @param ポップアップ抑制
  * @desc ダメージのポップアップを非表示にします。
  * @default OFF
+ *
+ * @param メッセージ速度変数
+ * @desc メッセージスピードを指定した番号の変数から取得するよう変更します。変数の値がフレーム値になります。
+ * @default 0
+ *
+ * @param 行動終了後ウェイト
+ * @desc 行動終了後、メッセージをクリアする前に指定したフレーム数だけウェイトを掛けます。
+ * @default 0
  *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
@@ -67,6 +84,13 @@
         return null;
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
         return (value || '').toUpperCase() === 'ON';
@@ -75,8 +99,10 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramStatusPosUpper = getParamBoolean(['StatusPosUpper', 'ステータス上部配置']);
-    var paramSuppressPopup  = getParamBoolean(['SuppressPopup', 'ポップアップ抑制']);
+    var paramStatusPosUpper   = getParamBoolean(['StatusPosUpper', 'ステータス上部配置']);
+    var paramSuppressPopup    = getParamBoolean(['SuppressPopup', 'ポップアップ抑制']);
+    var paramMessageSpeed     = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
+    var paramWaitForEndAction = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
 
     //=============================================================================
     // Scene_Battle
@@ -135,13 +161,31 @@
         _Window_BattleLog_update.apply(this, arguments);
     };
 
+    var _Window_BattleLog_messageSpeed = Window_BattleLog.prototype.messageSpeed;
+    Window_BattleLog.prototype.messageSpeed = function() {
+        return (paramMessageSpeed ? $gameVariables.value(paramMessageSpeed) :
+            _Window_BattleLog_messageSpeed.apply(this, arguments));
+    };
+
+    Window_BattleLog.prototype.waitForCustom = function(waitCount) {
+        this._waitCount = waitCount;
+    };
+
+    var _Window_BattleLog_endAction      = Window_BattleLog.prototype.endAction;
+    Window_BattleLog.prototype.endAction = function(subject) {
+        if (paramWaitForEndAction) {
+            this.push('waitForCustom', paramWaitForEndAction);
+        }
+        _Window_BattleLog_endAction.apply(this, arguments);
+    };
+
     Window_BattleLog.prototype.drawBackground = function() {};
 
     //=============================================================================
     // Game_Battler
     //  ダメージポップアップを抑制します。
     //=============================================================================
-    var _Game_Battler_startDamagePopup = Game_Battler.prototype.startDamagePopup;
+    var _Game_Battler_startDamagePopup      = Game_Battler.prototype.startDamagePopup;
     Game_Battler.prototype.startDamagePopup = function() {
         if (!paramSuppressPopup) _Game_Battler_startDamagePopup.apply(this, arguments);
     };
