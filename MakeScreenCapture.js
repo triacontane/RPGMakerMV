@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/10/20 本体バージョン1.3.2でエラーが発生していたのを修正
 // 1.4.0 2016/10/06 パラメータに環境変数を使えるように修正
 // 1.3.0 2016/06/24 WEBP形式のショートカットキーを追加
 // 1.2.3 2016/06/23 著名に画像とテキストを両方使えるよう修正
@@ -319,7 +320,7 @@
 
     var convertEnvironmentVariable = function(text) {
         if (text == null) text = '';
-        text = text.replace(/\%(\w+)\%/gi, function() {
+        text = text.replace(/%(\w+)%/gi, function() {
             return process.env[arguments[1]] || '';
         }.bind(this));
         return text;
@@ -347,7 +348,6 @@
     var paramInterval           = getParamNumber(['Interval', '実行間隔']);
     var paramSeName             = getParamString(['SeName', '効果音']);
     var paramTimeStamp          = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
-    var localCaptureExecute     = false;
 
     //=============================================================================
     // Game_Interpreter
@@ -457,26 +457,6 @@
     };
 
     //=============================================================================
-    // WindowLayer
-    //  キャプチャ実行時、マスク処理のY座標を修正します。
-    //=============================================================================
-    var _WindowLayer__webglMaskRect      = WindowLayer.prototype._webglMaskRect;
-    WindowLayer.prototype._webglMaskRect = function(renderSession, x, y, w, h) {
-        if (localCaptureExecute) arguments[2] = Graphics.boxHeight - (y + h);
-        _WindowLayer__webglMaskRect.apply(this, arguments);
-    };
-
-    //=============================================================================
-    // Sprite
-    //  キャプチャ実行時、_offset.yの値を逆方向に補正します。
-    //=============================================================================
-    var _Sprite__renderWebGL      = Sprite.prototype._renderWebGL;
-    Sprite.prototype._renderWebGL = function(renderSession) {
-        if (localCaptureExecute) this.worldTransform.ty -= this._offset.y * 2;
-        _Sprite__renderWebGL.apply(this, arguments);
-    };
-
-    //=============================================================================
     // Bitmap
     //  対象のビットマップを保存します。現状、ローカル環境下でのみ動作します。
     //=============================================================================
@@ -536,9 +516,7 @@
             se.name = paramSeName;
             AudioManager.playSe(se);
         }
-        localCaptureExecute = true;
         this._captureBitmap = this.snap();
-        localCaptureExecute = false;
     };
 
     SceneManager.getCapture = function() {

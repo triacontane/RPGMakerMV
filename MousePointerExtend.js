@@ -345,6 +345,7 @@
                     result = paramPointerTypes[i];
                     return true;
                 }
+                return false;
             });
         }
         if (result) Graphics.setPointerType(result.toLowerCase());
