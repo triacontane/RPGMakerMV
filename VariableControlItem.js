@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/10/21 加算と代入を別々のメモ欄で設定できるよう変更
 // 1.0.0 2016/10/21 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -22,13 +23,18 @@
  *
  * アイテムもしくはスキルのメモ欄に以下の通り指定してください。
  *
- * <VCIVarNumber:3> # 変数番号[3]に値を設定します。
- * <VCIVarValue:5>  # 指定した変数に値[5]を代入します。
+ * <VCI変数番号:3>  # 変数番号[3]に値を設定します。
+ * <VCIVarNumber:3> # 同上
+ * <VCI代入値:5>    # 指定した変数に値[5]を代入します。
+ * <VCISetValue:5>  # 同上
+ * <VCI加算値:5>    # 指定した変数に値[5]を加算します。
+ * <VCIAddValue:5>  # 同上
+ * ※加算値に負の値を指定すると減算になります。
  *
- * 変数値は、制御文字を適用した上でJavaScript計算式として評価されます。
- * たとえば、アイテムの使用で変数[1]に[5]を加算したい場合は以下の通り設定します。
- * <VCIVarNumber:1>
- * <VCIVarValue:\v[1] + 5> # 変数[1]の値に[5]を加算した結果を変数[1]に設定
+ * 設定値は、制御文字を適用した上でJavaScript計算式として評価されます。
+ * たとえば、アイテムの使用で変数[1]に[5]を乗算したい場合は以下の通り設定します。
+ * <VCI変数番号:1>
+ * <VCI代入値:\v[1] * 5> # 変数[1]の値に[5]を乗算した結果を変数[1]に設定
  *
  * このプラグインにはプラグインコマンドはありません。
  */
@@ -43,13 +49,16 @@
  *
  * <VCI変数番号:3>  # 変数番号[3]に値を設定します。
  * <VCIVarNumber:3> # 同上
- * <VCI変数値:5>    # 指定した変数に値[5]を代入します。
- * <VCIVarValue:5>  # 同上
+ * <VCI代入値:5>    # 指定した変数に値[5]を代入します。
+ * <VCISetValue:5>  # 同上
+ * <VCI加算値:5>    # 指定した変数に値[5]を加算します。
+ * <VCIAddValue:5>  # 同上
+ * ※加算値に負の値を指定すると減算になります。
  *
- * 変数値は、制御文字を適用した上でJavaScript計算式として評価されます。
- * たとえば、アイテムの使用で変数[1]に[5]を加算したい場合は以下の通り設定します。
+ * 設定値は、制御文字を適用した上でJavaScript計算式として評価されます。
+ * たとえば、アイテムの使用で変数[1]に[5]を乗算したい場合は以下の通り設定します。
  * <VCI変数番号:1>
- * <VCI変数値:\v[1] + 5> # 変数[1]の値に[5]を加算した結果を変数[1]に設定
+ * <VCI代入値:\v[1] * 5> # 変数[1]の値に[5]を乗算した結果を変数[1]に設定
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -106,10 +115,19 @@
     };
 
     Game_Action.prototype.applyVariableControl = function() {
-        var varNumber = getMetaValues(this.item(), ['VarNumber', '変数番号']);
-        var operand   = getMetaValues(this.item(), ['VarValue', '変数値']);
-        if (varNumber && operand) {
-            $gameVariables.setValue(getArgNumber(varNumber, 0), getArgEval(operand));
+        var varNumberStr = getMetaValues(this.item(), ['VarNumber', '変数番号']);
+        if (varNumberStr) {
+            var varNumber = getArgNumber(varNumberStr, 0);
+            var setValue   = getMetaValues(this.item(), ['SetValue', '代入値']);
+            if (setValue) {
+                $gameVariables.setValue(varNumber, getArgEval(setValue));
+                return;
+            }
+            var addValue   = getMetaValues(this.item(), ['AddValue', '加算値']);
+            if (addValue) {
+                var originalValue = $gameVariables.value(varNumber);
+                $gameVariables.setValue(varNumber, originalValue + getArgEval(addValue));
+            }
         }
     };
 })();
