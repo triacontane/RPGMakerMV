@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2016/10/22 デフォルト以外で制御文字と見なされる記述（\aaa[333]や\d<test>）を枠幅の計算から除外するよう修正
 // 2.0.2 2016/09/29 キャラクターの位置によってはネームポップが一部見切れてしまう現象を修正
 // 2.0.1 2016/08/25 フォントサイズを\{で変更して\}で戻さなかった場合の文字サイズがおかしくなっていた現象を修正
 // 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
@@ -829,6 +830,11 @@
             case '}':
                 this.makeFontSmaller();
                 break;
+            default:
+                this.obtainEscapeParam(textState);
+                if (this.obtainEscapeString) {
+                    this.obtainEscapeString(textState);
+                }
         }
     };
 
