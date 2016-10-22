@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.0.0 2016/10/21 作成途中
+// 0.2.0 2016/10/22 文章の表示設定をバックログに反映する仕様を追加
+// 0.1.0 2016/10/21 作成途中
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
@@ -74,13 +75,13 @@ function Game_BackLog() {
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_setup = Game_Interpreter.prototype.setup;
+    var _Game_Interpreter_setup      = Game_Interpreter.prototype.setup;
     Game_Interpreter.prototype.setup = function(list, eventId) {
         _Game_Interpreter_setup.apply(this, arguments);
         $gameSystem.clearBackLogs();
     };
 
-    var _Game_Interpreter_updateWaitCount = Game_Interpreter.prototype.updateWaitCount;
+    var _Game_Interpreter_updateWaitCount      = Game_Interpreter.prototype.updateWaitCount;
     Game_Interpreter.prototype.updateWaitCount = function() {
         var result = _Game_Interpreter_updateWaitCount.apply(this, arguments);
         if (result) {
@@ -188,7 +189,7 @@ function Game_BackLog() {
     // Game_Message
     //  バックログ表示中フラグを管理します。
     //=============================================================================
-    var _Game_Message_initialize = Game_Message.prototype.initialize;
+    var _Game_Message_initialize      = Game_Message.prototype.initialize;
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.apply(this, arguments);
         this._backLogViewing = false;
@@ -202,12 +203,22 @@ function Game_BackLog() {
         return this._backLogViewing;
     };
 
+    Game_Message.prototype.startBackLog = function(backLog) {
+        this.clear();
+        this.add(backLog.getText());
+        this.setBackLogViewing(true);
+        var setting = backLog.getSetting();
+        this.setBackground(setting.background());
+        this.setPositionType(setting.positionType());
+        this.setFaceImage(setting.faceName(), setting.faceIndex());
+    };
+
     //=============================================================================
     // AudioManager
     //  演奏した効果音を記録します。
     //=============================================================================
     var _AudioManager_playSe = AudioManager.playSe;
-    AudioManager.playSe = function(se) {
+    AudioManager.playSe      = function(se) {
         if ($gameMap.isEventRunning() && !$gameMessage.isBackLogViewing()) {
             $gameSystem.addBackLogSound(se);
         }
@@ -281,10 +292,8 @@ function Game_BackLog() {
         var backLog = $gameSystem.getBackLog(index);
         if (backLog) {
             this.pause = false;
-            $gameMessage.clear();
-            $gameMessage.add(backLog.getText());
+            $gameMessage.startBackLog(backLog);
             this._backLogDepth = index;
-            $gameMessage.setBackLogViewing(true);
             $gameScreen.setBackLogPictures(backLog.getPictures());
             backLog.getSounds().forEach(function(sound) {
                 AudioManager.playSe(sound);
@@ -309,6 +318,7 @@ function Game_BackLog() {
         this._text     = text;
         this._pictures = [];
         this._sounds   = [];
+        this._setting  = JsonEx.makeDeepCopy($gameMessage);
     };
 
     Game_BackLog.prototype.setPictures = function(pictures) {
@@ -329,6 +339,10 @@ function Game_BackLog() {
 
     Game_BackLog.prototype.getSounds = function() {
         return this._sounds;
+    };
+
+    Game_BackLog.prototype.getSetting = function() {
+        return this._setting;
     };
 })();
 
