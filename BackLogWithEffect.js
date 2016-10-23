@@ -137,7 +137,7 @@ function Game_BackLog() {
     };
 
     Game_System.prototype.getBackLog = function(index) {
-        return this.getBackLogs()[index];
+        return index === -1 ? this._latestLog : this.getBackLogs()[index];
     };
 
     Game_System.prototype.clearBackLogs = function() {
@@ -149,6 +149,7 @@ function Game_BackLog() {
         backLog.setPictures($gameScreen.getPicturesCopy());
         backLog.setSounds(this._sounds);
         this.getBackLogs().unshift(backLog);
+        this._latestLog = backLog;
         this.clearBackLogSound();
     };
 
@@ -232,7 +233,7 @@ function Game_BackLog() {
     var _Window_Message_initMembers      = Window_Message.prototype.initMembers;
     Window_Message.prototype.initMembers = function() {
         _Window_Message_initMembers.apply(this, arguments);
-        this._backLogDepth = 0;
+        this._backLogDepth = -1;
     };
 
     var _Window_Message_onEndOfText      = Window_Message.prototype.onEndOfText;
@@ -246,7 +247,7 @@ function Game_BackLog() {
     var _Window_Message_terminateMessage      = Window_Message.prototype.terminateMessage;
     Window_Message.prototype.terminateMessage = function() {
         _Window_Message_terminateMessage.apply(this, arguments);
-        if (!this.isBackLogActive()) {
+        if (!this.isBackLogActive() && $gameMessage.isBackLogViewing()) {
             $gameMessage.setBackLogViewing(false);
             $gameScreen.restorePictures();
         }
@@ -272,17 +273,20 @@ function Game_BackLog() {
         }
         if (!this.isAnySubWindowActive() && this.pause) {
             if (this.isTriggeredBackLogForward()) {
-                this.startBackLog(this._backLogDepth + 1);
+                this.startBackLog(this._backLogDepth === -1 ? 1 : this._backLogDepth + 1);
             }
             if (this.isTriggeredBackLogReturn()) {
                 this.startBackLog(this._backLogDepth - 1);
+            }
+            if (this.isTriggeredBackLogAbort() && this.isBackLogActive()) {
+                this.startBackLog(-1);
             }
         }
         return result;
     };
 
     Window_Message.prototype.processNormalCharacter = function(textState) {
-        if (paramBackLogColor && $gameMessage.isBackLogViewing()) {
+        if (paramBackLogColor && this._backLogDepth >= 0) {
             this.changeTextColor(this.textColor(paramBackLogColor));
         }
         Window_Base.prototype.processNormalCharacter.apply(this, arguments);
@@ -295,10 +299,19 @@ function Game_BackLog() {
             $gameMessage.startBackLog(backLog);
             this._backLogDepth = index;
             $gameScreen.setBackLogPictures(backLog.getPictures());
-            backLog.getSounds().forEach(function(sound) {
-                AudioManager.playSe(sound);
-            });
+            if (index >= 0) {
+                this.playBackLogSounds(backLog.getSounds());
+            }
+            return true;
         }
+        return false;
+    };
+
+    Window_Message.prototype.playBackLogSounds = function(sounds) {
+        if (!sounds) return;
+        sounds.forEach(function(sound) {
+            AudioManager.playSe(sound);
+        });
     };
 
     Window_Message.prototype.isTriggeredBackLogForward = function() {
@@ -307,6 +320,19 @@ function Game_BackLog() {
 
     Window_Message.prototype.isTriggeredBackLogReturn = function() {
         return TouchInput.wheelY > 0 || Input.isTriggered('down') || this.isTriggered();
+    };
+
+    Window_Message.prototype.isTriggeredBackLogAbort = function() {
+        return Input.isTriggered('left') || Input.isTriggered('cancel') || TouchInput.isCancelled();
+    };
+
+    var _Window_Message_isTriggered = Window_Message.prototype.isTriggered;
+    Window_Message.prototype.isTriggered = function() {
+        var result = _Window_Message_isTriggered.apply(this, arguments);
+        if (Input.isRepeated('cancel') && (!Input.isRepeated('ok') && !TouchInput.isRepeated())) {
+            return false;
+        }
+        return result;
     };
 
     //=============================================================================
