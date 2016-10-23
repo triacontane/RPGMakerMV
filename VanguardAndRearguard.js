@@ -182,6 +182,15 @@
  * VAR_SET_DEFEAT_CONDITION 1 # 同上
  *  0:通常 1:前衛が全員戦闘不能で敗北 2:後衛が全員戦闘不能で敗北
  *
+ * スクリプト
+ *  イベントコマンド「スクリプト」もしくは「条件分岐」のスクリプトから実行。
+ *
+ * 敵グループ内に前衛メンバーが存在しているかどうかの判定
+ * $gameTroop.members().some(function(enemy) { return enemy.isVanguard(); });
+ *
+ * 敵グループ内に前衛メンバーが生存しているかどうかの判定
+ * $gameTroop.aliveMembers().some(function(enemy) { return enemy.isVanguard(); });
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。

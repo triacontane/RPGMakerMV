@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/10/23 制御文字で表示した変数の内容をリアルタイム更新できる機能を追加
 // 1.4.2 2016/07/02 スクリプトからダイレクトで実行した場合も制御文字が反映されるよう修正（ただし余分にエスケープする必要あり）
 // 1.4.1 2016/06/29 制御文字「\{」で文字サイズを大きくした際、元のサイズに戻さないと正しいサイズで表示されない問題を修正
 // 1.4.0 2016/06/28 D_TEXT実行後に画像を指定してピクチャを表示した場合は画像を優先表示するよう仕様変更
@@ -66,6 +67,13 @@
  *      D_TEXT_SETTING BG_COLOR #336699
  *      D_TEXT_SETTING BG_COLOR rgba(255,255,255,0.5)
  *
+ *  D_TEXT_SETTING REAL_TIME ON : 制御文字で表示した変数のリアルタイム表示を可能にする
+ *
+ *  例：D_TEXT_SETTING REAL_TIME ON
+ *
+ *  リアルタイム表示を有効にしておくと、ピクチャの表示後に変数の値が変化したとき
+ *  自動でピクチャの内容も更新されます。
+ *
  * これらの設定はD_TEXTと同様、ピクチャを表示する前に行ってください。
  *
  * 対応制御文字一覧（イベントコマンド「文章の表示」と同一です）
@@ -93,24 +101,28 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(function() {
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg.toString()), 10) || 0).clamp(min, max);
     };
 
-    var getArgString = function (arg, upperFlg) {
+    var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var connectArgs = function (args, startIndex, endIndex) {
+    var getArgBoolean = function(arg) {
+        return (arg || '').toUpperCase() === 'ON';
+    };
+
+    var connectArgs = function(args, startIndex, endIndex) {
         if (arguments.length < 2) startIndex = 0;
         if (arguments.length < 3) endIndex = args.length;
         var text = '';
@@ -127,17 +139,39 @@
         return window ? window.convertEscapeCharacters(text) : text;
     };
 
+    var getUsingVariables = function(text) {
+        var usingVariables = [];
+
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
+            var number = parseInt(arguments[1], 10);
+            usingVariables.push(number);
+            return $gameVariables.value(number).padZero(arguments[2]);
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            var number = parseInt(arguments[1], 10);
+            usingVariables.push(number);
+            return $gameVariables.value(number);
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            var number = parseInt(arguments[1], 10);
+            usingVariables.push(number);
+            return $gameVariables.value(number);
+        }.bind(this));
+        return usingVariables;
+    };
+
     SceneManager.getHiddenWindow = function() {
         return this._scene._hiddenWindow;
     };
-
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンド[D_TEXT]を追加定義します。
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandDTextPicture(command, args);
@@ -159,7 +193,7 @@
     };
 
     Game_Interpreter.textAlignMapper = {
-        LEFT:0, CENTER:1, RIGHT:2, 左:0, 中央:1, 右:2
+        LEFT: 0, CENTER: 1, RIGHT: 2, 左: 0, 中央: 1, 右: 2
     };
 
     Game_Interpreter.prototype.pluginCommandDTextPicture = function(command, args) {
@@ -179,7 +213,10 @@
                         $gameScreen.dTextBackColor = getArgString(connectArgs(args, 1));
                         break;
                     case 'FONT':
-                        $gameScreen.setFont(getArgString(args[1]));
+                        $gameScreen.setDtextFont(getArgString(args[1]));
+                        break;
+                    case 'REAL_TIME' :
+                        $gameScreen.dTextRealTime = getArgBoolean(args[1]);
                         break;
                 }
                 break;
@@ -187,66 +224,102 @@
     };
 
     //=============================================================================
+    // Game_Variables
+    //  値を変更した変数の履歴を取得します。
+    //=============================================================================
+    var _Game_Variables_setValue      = Game_Variables.prototype.setValue;
+    Game_Variables.prototype.setValue = function(variableId, value) {
+        if (this.value(variableId) !== value) {
+            this._changedVariables = this.getChangedVariables();
+            if (!this._changedVariables.contains(variableId)) {
+                this._changedVariables.push(variableId);
+            }
+        }
+        _Game_Variables_setValue.apply(this, arguments);
+    };
+
+    Game_Variables.prototype.getChangedVariables = function() {
+        return this._changedVariables || [];
+    };
+
+    Game_Variables.prototype.clearChangedVariables = function() {
+        return this._changedVariables = [];
+    };
+
+    //=============================================================================
     // Game_Screen
     //  動的ピクチャ用のプロパティを追加定義します。
     //=============================================================================
-    var _Game_Screen_clear = Game_Screen.prototype.clear;
+    var _Game_Screen_clear      = Game_Screen.prototype.clear;
     Game_Screen.prototype.clear = function() {
         _Game_Screen_clear.call(this);
         this.clearDTextPicture();
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
-        this.dTextValue = null;
-        this.dTextSize  = 0;
-        this.dTextAlign = 0;
-        this.dTextBackColor = null;
-        this.dTextFont = null;
+        this.dTextValue      = null;
+        this.dTextOriginal   = null;
+        this.dTextRealTime   = null;
+        this.dTextSize       = 0;
+        this.dTextAlign      = 0;
+        this.dTextBackColor  = null;
+        this.dTextFont       = null;
+        this.dUsingVariables = null;
     };
 
     Game_Screen.prototype.setDTextPicture = function(value, size) {
-        if (!this.dTextValue) this.dTextValue = [];
-        this.dTextValue.push(getArgString(value, false));
-        this.dTextSize = size;
+        this.dUsingVariables = (this.dUsingVariables || []).concat(getUsingVariables(value));
+        this.dTextValue      = (this.dTextValue || '') + getArgString(value, false) + '\n';
+        this.dTextOriginal   = (this.dTextOriginal || '') + value + '\n';
+        this.dTextSize       = size;
     };
 
     Game_Screen.prototype.getDTextPictureInfo = function() {
-        return {value:this.dTextValue, size:this.dTextSize, align:this.dTextAlign,
-            color:this.dTextBackColor, font:this.dTextFont};
+        return {
+            value         : this.dTextValue,
+            size          : this.dTextSize,
+            align         : this.dTextAlign,
+            color         : this.dTextBackColor,
+            font          : this.dTextFont,
+            usingVariables: this.dUsingVariables,
+            realTime      : this.dTextRealTime,
+            originalValue : this.dTextOriginal
+        };
     };
 
     Game_Screen.prototype.isSettingDText = function() {
         return !!this.dTextValue;
     };
 
-    Game_Screen.prototype.setFont = function(name) {
+    Game_Screen.prototype.setDtextFont = function(name) {
         if (Graphics.isFontLoaded(name)) {
             this.dTextFont = name;
         }
+    };
+
+    var _Game_Screen_updatePictures      = Game_Screen.prototype.updatePictures;
+    Game_Screen.prototype.updatePictures = function() {
+        _Game_Screen_updatePictures.apply(this, arguments);
+        $gameVariables.clearChangedVariables();
     };
 
     //=============================================================================
     // Game_Picture
     //  動的ピクチャ用のプロパティを追加定義し、表示処理を動的ピクチャ対応に変更します。
     //=============================================================================
-    var _Game_Picture_initBasic = Game_Picture.prototype.initBasic;
+    var _Game_Picture_initBasic      = Game_Picture.prototype.initBasic;
     Game_Picture.prototype.initBasic = function() {
         _Game_Picture_initBasic.call(this);
         this.dTextValue = null;
-        this.dTextInfo = null;
+        this.dTextInfo  = null;
     };
 
-    var _Game_Picture_show = Game_Picture.prototype.show;
+    var _Game_Picture_show      = Game_Picture.prototype.show;
     Game_Picture.prototype.show = function(name, origin, x, y, scaleX,
                                            scaleY, opacity, blendMode) {
         if ($gameScreen.isSettingDText() && !name) {
-            arguments[0] = Date.now().toString();
-            var textValue = "";
+            arguments[0]   = Date.now().toString();
             this.dTextInfo = $gameScreen.getDTextPictureInfo();
-            this.dTextInfo.value.forEach(function(text) {
-                textValue +=  text + '\n';
-            }.bind(this));
-            this.dTextInfo.value = textValue;
             $gameScreen.clearDTextPicture();
         } else {
             this.dTextInfo = null;
@@ -254,7 +327,28 @@
         _Game_Picture_show.apply(this, arguments);
     };
 
-    var _Window_Base_convertEscapeCharacters = Window_Base.prototype.convertEscapeCharacters;
+    var _Game_Picture_update      = Game_Picture.prototype.update;
+    Game_Picture.prototype.update = function() {
+        _Game_Picture_update.apply(this, arguments);
+        if (this.dTextInfo && this.dTextInfo.realTime) {
+            this.updateDTextVariable();
+        }
+    };
+
+    Game_Picture.prototype.updateDTextVariable = function() {
+        $gameVariables.getChangedVariables().forEach(function(variableId) {
+            if (this.dTextInfo.usingVariables.contains(variableId)) {
+                this._name = Date.now().toString();
+                this.dTextInfo.value = getArgString(this.dTextInfo.originalValue, false);
+            }
+        }, this);
+    };
+
+    //=============================================================================
+    // Window_Base
+    //  文字列変換処理に追加制御文字を設定します。
+    //=============================================================================
+    var _Window_Base_convertEscapeCharacters      = Window_Base.prototype.convertEscapeCharacters;
     Window_Base.prototype.convertEscapeCharacters = function(text) {
         text = _Window_Base_convertEscapeCharacters.call(this, text);
         text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
@@ -287,18 +381,18 @@
     // Sprite_Picture
     //  画像の動的生成を追加定義します。
     //=============================================================================
-    var _Sprite_Picture_loadBitmap = Sprite_Picture.prototype.loadBitmap;
+    var _Sprite_Picture_loadBitmap      = Sprite_Picture.prototype.loadBitmap;
     Sprite_Picture.prototype.loadBitmap = function() {
         this.dTextInfo = this.picture().dTextInfo;
         if (this.dTextInfo) {
             this.makeDynamicBitmap();
         } else {
-            _Sprite_Picture_loadBitmap.call(this);
+            _Sprite_Picture_loadBitmap.apply(this, arguments);
         }
     };
 
     Sprite_Picture.prototype.makeDynamicBitmap = function() {
-        this.textWidths = [];
+        this.textWidths   = [];
         this.hiddenWindow = SceneManager.getHiddenWindow();
         this.resetFontSettings();
         var bitmapVirtual = new Bitmap_Virtual();
@@ -317,7 +411,7 @@
     };
 
     Sprite_Picture.prototype._processText = function(bitmap) {
-        var textState = {index: 0, x: 0, y: 0, text: this.dTextInfo.value, left:0, line:-1, height:0};
+        var textState = {index: 0, x: 0, y: 0, text: this.dTextInfo.value, left: 0, line: -1, height: 0};
         this._processNewLine(textState, bitmap);
         textState.height = this.hiddenWindow.calcTextHeight(textState, false);
         textState.index  = 0;
@@ -354,7 +448,7 @@
                     }
                     break;
                 case 'OC':
-                    var param = this.hiddenWindow.obtainEscapeParamString(textState);
+                    var param           = this.hiddenWindow.obtainEscapeParamString(textState);
                     bitmap.outlineColor = param;
                     break;
                 case 'OW':
@@ -366,6 +460,7 @@
         } else {
             var c = textState.text[textState.index++];
             var w = this.hiddenWindow.textWidth(c);
+
             bitmap.fontSize = this.hiddenWindow.contents.fontSize;
             bitmap.drawText(c, textState.x, textState.y, w * 2, textState.height, "left");
             textState.x += w;
@@ -383,10 +478,10 @@
 
     Sprite_Picture.prototype._processDrawIcon = function(iconIndex, textState, bitmap) {
         var iconBitmap = ImageManager.loadSystem('IconSet');
-        var pw = Window_Base._iconWidth;
-        var ph = Window_Base._iconHeight;
-        var sx = iconIndex % 16 * pw;
-        var sy = Math.floor(iconIndex / 16) * ph;
+        var pw         = Window_Base._iconWidth;
+        var ph         = Window_Base._iconHeight;
+        var sx         = iconIndex % 16 * pw;
+        var sy         = Math.floor(iconIndex / 16) * ph;
         bitmap.blt(iconBitmap, sx, sy, pw, ph, textState.x + 2, textState.y + (textState.height - ph) / 2);
         textState.x += Window_Base._iconWidth + 4;
     };
@@ -395,9 +490,9 @@
     // Scene_Map
     //  動的ピクチャ作成用の隠しウィンドウを追加定義します。
     //=============================================================================
-    var _Scene_Map_createDisplayObjects = Scene_Map.prototype.createDisplayObjects;
+    var _Scene_Map_createDisplayObjects      = Scene_Map.prototype.createDisplayObjects;
     Scene_Map.prototype.createDisplayObjects = function() {
-        this._hiddenWindow = new Window_Base(1,1,1,1);
+        this._hiddenWindow = new Window_Base(1, 1, 1, 1);
         this._hiddenWindow.hide();
         this._hiddenWindow.deactivate();
         _Scene_Map_createDisplayObjects.call(this);
@@ -408,9 +503,9 @@
     // Scene_Battle
     //  動的ピクチャ作成用の隠しウィンドウを追加定義します。
     //=============================================================================
-    var _Scene_Battle_createDisplayObjects = Scene_Battle.prototype.createDisplayObjects;
+    var _Scene_Battle_createDisplayObjects      = Scene_Battle.prototype.createDisplayObjects;
     Scene_Battle.prototype.createDisplayObjects = function() {
-        this._hiddenWindow = new Window_Base(1,1,1,1);
+        this._hiddenWindow = new Window_Base(1, 1, 1, 1);
         this._hiddenWindow.hide();
         this._hiddenWindow.deactivate();
         _Scene_Battle_createDisplayObjects.call(this);
@@ -427,7 +522,7 @@
 
     Bitmap_Virtual.prototype.initialize = function() {
         this.window = SceneManager.getHiddenWindow();
-        this.width = 0;
+        this.width  = 0;
         this.height = 0;
     };
 
@@ -442,10 +537,22 @@
     };
 
     //=============================================================================
-    // Window_Base
-    //  文字列パラメータの取得
+    // Window_Hidden
+    //  文字描画用の隠しウィンドウ
     //=============================================================================
-    Window_Base.prototype.obtainEscapeParamString = function(textState) {
+    function Window_Hidden() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_Hidden.prototype             = Object.create(Window_Base.prototype);
+    Window_Hidden.prototype.constructor = Window_Hidden;
+
+    Window_Hidden.prototype._createAllParts = function() {
+        this._windowContentsSprite = new Sprite();
+        this.addChild(this._windowContentsSprite);
+    };
+
+    Window_Hidden.prototype.obtainEscapeParamString = function(textState) {
         var arr = /^\[.+?\]/.exec(textState.text.slice(textState.index));
         if (arr) {
             textState.index += arr[0].length;
