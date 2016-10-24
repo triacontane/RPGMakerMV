@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2016/10/25 後衛の敵キャラが逃走したときに位置が元に戻ってしまう現象を修正
 // 1.2.1 2016/10/25 前衛・後衛の位置補正値に負の値を設定できるよう修正
 // 1.2.0 2016/09/15 特定のキャラクターに対するチェンジを禁止する設定を追加
 //                  前衛(あるいは後衛)のバトラーが全員戦闘不能で敗北になるような設定を追加
@@ -405,6 +406,13 @@
         if (!action.isChange()) {
             _Game_Battler_performActionStart.apply(this, arguments);
         }
+    };
+
+    var _Game_Battler_escape = Game_Battler.prototype.escape;
+    Game_Battler.prototype.escape = function() {
+        var prevVanguard = this.isVanguard();
+        _Game_Battler_escape.apply(this, arguments);
+        this.setFormationState(prevVanguard);
     };
 
     //=============================================================================

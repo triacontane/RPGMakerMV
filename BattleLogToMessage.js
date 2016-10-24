@@ -104,6 +104,37 @@
     var paramMessageSpeed     = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
     var paramWaitForEndAction = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
 
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        var commandPrefix = new RegExp('^' + metaTagPrefix);
+        if (!command.match(commandPrefix)) return;
+        try {
+            this.pluginCommandBackLogWithEffect(command.replace(commandPrefix, ''), args);
+        } catch (e) {
+            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
+                var window = require('nw.gui').Window.get();
+                if (!window.isDevToolsOpen()) {
+                    var devTool = window.showDevTools();
+                    devTool.moveTo(0, 0);
+                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+                    window.focus();
+                }
+            }
+            console.log('プラグインコマンドの実行中にエラーが発生しました。');
+            console.log('- コマンド名 　: ' + command);
+            console.log('- コマンド引数 : ' + args);
+            console.log('- エラー原因   : ' + e.stack || e.toString());
+        }
+    };
+
+    Game_Interpreter.prototype.pluginCommandBackLogWithEffect = function(command, args) {
+        switch (getCommandName(command)) {
+            case 'XXXXX' :
+                break;
+        }
+    };
+
     //=============================================================================
     // Scene_Battle
     //  ウィンドウのレイアウトを変更します。
