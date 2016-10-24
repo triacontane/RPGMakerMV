@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/10/25 前衛・後衛の位置補正値に負の値を設定できるよう修正
 // 1.2.0 2016/09/15 特定のキャラクターに対するチェンジを禁止する設定を追加
 //                  前衛(あるいは後衛)のバトラーが全員戦闘不能で敗北になるような設定を追加
 // 1.1.1 2016/06/18 アクター加入時に前衛ステートを強制設定する処理を追加
@@ -260,8 +261,8 @@
     var paramRearguardStateId = getParamNumber(['RearguardStateId', '後衛ステートID'], 2);
     var paramChangeInMenu     = getParamBoolean(['ChangeInMenu', 'メニューチェンジ可能'], 1);
     var paramSkillIdChange    = getParamNumber(['SkillIdChange', 'チェンジスキルID'], 0);
-    var paramRearguardOffsetX = getParamNumber(['RearguardOffsetX', '後衛時X補正'], 0);
-    var paramRearguardOffsetY = getParamNumber(['RearguardOffsetY', '後衛時Y補正'], 0);
+    var paramRearguardOffsetX = getParamNumber(['RearguardOffsetX', '後衛時X補正']);
+    var paramRearguardOffsetY = getParamNumber(['RearguardOffsetY', '後衛時Y補正']);
     var paramChangeSpeed      = getParamNumber(['ChangeSpeed', 'チェンジ速度'], 1);
     var paramRearDefense      = getParamBoolean(['RearDefense', '後衛防御']);
 
