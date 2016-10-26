@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2016/10/26 背景ピクチャを設定したときに、もともとマップ背景を透過表示できる機能を追加
 // 1.5.0 2016/08/06 まだ確認していない用語の文字色を変えられる機能を追加
 // 1.4.1 2016/07/03 戦闘画面のアイテム選択ウィンドウに用語集アイテムが表示されていた問題を修正
 // 1.4.0 2016/05/31 テキストと画像を重ねて表示する設定を追加
@@ -100,6 +101,10 @@
  * @require 1
  * @dir img/pictures/
  * @type file
+ *
+ * @param ThroughBackPicture
+ * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
+ * @default OFF
  *
  * @param ConfirmMessage
  * @desc 用語アイテムを使用する際に確認メッセージが表示されるようになります。
@@ -295,6 +300,10 @@
  * @require 1
  * @dir img/pictures/
  * @type file
+ *
+ * @param 背景ピクチャ透過
+ * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
+ * @default OFF
  *
  * @param 確認メッセージ
  * @desc 用語アイテムを使用する際に確認メッセージが表示されるようになります。
@@ -514,27 +523,28 @@ function Scene_Glossary() {
         var idString         = (i > 0 ? String(i + 1) : '');
         paramCommandNames[i] = getParamString(['CommandName' + idString, 'コマンド名称' + idString]);
     }
-    var paramCommandNamesMax   = paramCommandNames.length;
-    var paramBackPicture       = getParamString(['BackPicture', '背景ピクチャ']);
-    var paramItemType          = getParamString(['ItemType', 'アイテムタイプ']).toUpperCase();
-    var paramAutoAddition      = getParamBoolean(['AutoAddition', '自動登録']);
-    var paramGlossaryListWidth = getParamNumber(['GlossaryListWidth', '用語集リスト横幅'], 1);
-    var paramFontSize          = getParamNumber(['FontSize', 'フォントサイズ'], 0);
-    var paramAutoResizePicture = getParamBoolean(['AutoResizePicture', '画像の自動縮小']);
-    var paramHelpText          = getParamString(['HelpText', 'ヘルプテキスト']);
-    var paramHelpTextCategory  = getParamString(['HelpText2', 'ヘルプテキスト2']);
-    var paramPicturePosition   = getParamString(['PicturePosition', '画像の表示位置']).toLowerCase();
-    var paramPictureAlign      = getParamString(['PictureAlign', '画像の揃え']).toLowerCase();
-    var paramUseCategory       = getParamBoolean(['UseCategory', 'カテゴリ分類']);
-    var paramUsableItem        = getParamBoolean(['UsableItem', 'アイテム使用']);
-    var paramConfirmMessage    = getParamBoolean(['ConfirmMessage', '確認メッセージ']);
-    var paramSwitchAutoAdd     = getParamNumber(['SwitchAutoAdd', '自動登録IDスイッチ']);
-    var paramVariableAutoAdd   = getParamNumber(['VariableAutoAdd', '自動登録ID変数']);
-    var paramConfirmUse        = getParamString(['ConfirmUse', '確認_使う']);
-    var paramConfirmNoUse      = getParamString(['ConfirmNoUse', '確認_使わない']);
-    var paramCompleteView      = getParamBoolean(['CompleteView', '収集率表示']);
-    var paramCompleteMessage   = getParamString(['CompleteMessage', '収集率メッセージ']);
-    var paramNewGlossaryColor  = getParamNumber(['NewGlossaryColor', '新着用語カラー']);
+    var paramCommandNamesMax    = paramCommandNames.length;
+    var paramBackPicture        = getParamString(['BackPicture', '背景ピクチャ']);
+    var paramItemType           = getParamString(['ItemType', 'アイテムタイプ']).toUpperCase();
+    var paramAutoAddition       = getParamBoolean(['AutoAddition', '自動登録']);
+    var paramGlossaryListWidth  = getParamNumber(['GlossaryListWidth', '用語集リスト横幅'], 1);
+    var paramFontSize           = getParamNumber(['FontSize', 'フォントサイズ'], 0);
+    var paramAutoResizePicture  = getParamBoolean(['AutoResizePicture', '画像の自動縮小']);
+    var paramHelpText           = getParamString(['HelpText', 'ヘルプテキスト']);
+    var paramHelpTextCategory   = getParamString(['HelpText2', 'ヘルプテキスト2']);
+    var paramPicturePosition    = getParamString(['PicturePosition', '画像の表示位置']).toLowerCase();
+    var paramPictureAlign       = getParamString(['PictureAlign', '画像の揃え']).toLowerCase();
+    var paramUseCategory        = getParamBoolean(['UseCategory', 'カテゴリ分類']);
+    var paramUsableItem         = getParamBoolean(['UsableItem', 'アイテム使用']);
+    var paramConfirmMessage     = getParamBoolean(['ConfirmMessage', '確認メッセージ']);
+    var paramSwitchAutoAdd      = getParamNumber(['SwitchAutoAdd', '自動登録IDスイッチ']);
+    var paramVariableAutoAdd    = getParamNumber(['VariableAutoAdd', '自動登録ID変数']);
+    var paramConfirmUse         = getParamString(['ConfirmUse', '確認_使う']);
+    var paramConfirmNoUse       = getParamString(['ConfirmNoUse', '確認_使わない']);
+    var paramCompleteView       = getParamBoolean(['CompleteView', '収集率表示']);
+    var paramCompleteMessage    = getParamString(['CompleteMessage', '収集率メッセージ']);
+    var paramNewGlossaryColor   = getParamNumber(['NewGlossaryColor', '新着用語カラー']);
+    var paramThroughBackPicture = getParamBoolean(['ThroughBackPicture', '背景ピクチャ透過']);
 
     //=============================================================================
     // Game_Interpreter
@@ -812,6 +822,9 @@ function Scene_Glossary() {
 
     Scene_Glossary.prototype.createBackground = function() {
         if (paramBackPicture) {
+            if (paramThroughBackPicture) {
+                Scene_ItemBase.prototype.createBackground.apply(this, arguments);
+            }
             var sprite    = new Sprite();
             sprite.bitmap = ImageManager.loadPicture(paramBackPicture, 0);
             sprite.bitmap.addLoadListener(function() {
@@ -821,7 +834,7 @@ function Scene_Glossary() {
             this._backgroundSprite = sprite;
             this.addChild(this._backgroundSprite);
         } else {
-            Scene_ItemBase.prototype.createBackground.call(this);
+            Scene_ItemBase.prototype.createBackground.apply(this, arguments);
         }
     };
 
