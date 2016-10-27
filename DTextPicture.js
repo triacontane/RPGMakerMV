@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2016/10/27 1.5.0でアウトラインカラーを指定するとエラーになっていた現象を修正
 // 1.5.0 2016/10/23 制御文字で表示した変数の内容をリアルタイム更新できる機能を追加
 // 1.4.2 2016/07/02 スクリプトからダイレクトで実行した場合も制御文字が反映されるよう修正（ただし余分にエスケープする必要あり）
 // 1.4.1 2016/06/29 制御文字「\{」で文字サイズを大きくした際、元のサイズに戻さないと正しいサイズで表示されない問題を修正
@@ -160,10 +161,6 @@
             return $gameVariables.value(number);
         }.bind(this));
         return usingVariables;
-    };
-
-    SceneManager.getHiddenWindow = function() {
-        return this._scene._hiddenWindow;
     };
 
     //=============================================================================
@@ -345,6 +342,14 @@
     };
 
     //=============================================================================
+    // SceneManager
+    //  文字描画用の隠しウィンドウを取得します。
+    //=============================================================================
+    SceneManager.getHiddenWindow = function() {
+        return this._scene._hiddenWindow;
+    };
+
+    //=============================================================================
     // Window_Base
     //  文字列変換処理に追加制御文字を設定します。
     //=============================================================================
@@ -448,8 +453,7 @@
                     }
                     break;
                 case 'OC':
-                    var param           = this.hiddenWindow.obtainEscapeParamString(textState);
-                    bitmap.outlineColor = param;
+                    bitmap.outlineColor = this.hiddenWindow.obtainEscapeParamString(textState);
                     break;
                 case 'OW':
                     bitmap.outlineWidth = this.hiddenWindow.obtainEscapeParam(textState);
@@ -492,7 +496,7 @@
     //=============================================================================
     var _Scene_Map_createDisplayObjects      = Scene_Map.prototype.createDisplayObjects;
     Scene_Map.prototype.createDisplayObjects = function() {
-        this._hiddenWindow = new Window_Base(1, 1, 1, 1);
+        this._hiddenWindow = new Window_Hidden(1, 1, 1, 1);
         this._hiddenWindow.hide();
         this._hiddenWindow.deactivate();
         _Scene_Map_createDisplayObjects.call(this);
@@ -505,7 +509,7 @@
     //=============================================================================
     var _Scene_Battle_createDisplayObjects      = Scene_Battle.prototype.createDisplayObjects;
     Scene_Battle.prototype.createDisplayObjects = function() {
-        this._hiddenWindow = new Window_Base(1, 1, 1, 1);
+        this._hiddenWindow = new Window_Hidden(1, 1, 1, 1);
         this._hiddenWindow.hide();
         this._hiddenWindow.deactivate();
         _Scene_Battle_createDisplayObjects.call(this);
@@ -543,14 +547,20 @@
     function Window_Hidden() {
         this.initialize.apply(this, arguments);
     }
+    Window_Hidden.prototype.backOpacity = null;
 
     Window_Hidden.prototype             = Object.create(Window_Base.prototype);
     Window_Hidden.prototype.constructor = Window_Hidden;
 
     Window_Hidden.prototype._createAllParts = function() {
+        this._windowBackSprite = {};
         this._windowContentsSprite = new Sprite();
         this.addChild(this._windowContentsSprite);
     };
+
+    Window_Hidden.prototype._refreshAllParts = function() {};
+
+    Window_Hidden.prototype.updateTransform = function() {};
 
     Window_Hidden.prototype.obtainEscapeParamString = function(textState) {
         var arr = /^\[.+?\]/.exec(textState.text.slice(textState.index));
