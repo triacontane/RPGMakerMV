@@ -209,12 +209,13 @@
     //  ロードポイントに移動する処理を追加定義します。
     //=============================================================================
     Game_Player.prototype.moveLoadPoint = function() {
-        if (!$gameSystem.isLoadPointDisable()) {
-            var mapId = $gameVariables.value(paramMapIdVariable);
-            var x     = $gameVariables.value(paramMapXVariable);
-            var y     = $gameVariables.value(paramMapYVariable);
-            var d     = $gameVariables.value(paramDirectionVariable);
-            this.reserveTransfer(mapId, x, y, d);
+        if ($gameSystem.isLoadPointDisable()) return;
+        var mapId = $gameVariables.value(paramMapIdVariable);
+        var x     = $gameVariables.value(paramMapXVariable);
+        var y     = $gameVariables.value(paramMapYVariable);
+        var d     = $gameVariables.value(paramDirectionVariable);
+        this.reserveTransfer(mapId, x, y, d);
+        if ($gameMap.mapId() !== mapId) {
             this.requestMapReload();
         }
     };
