@@ -128,7 +128,7 @@
     var paramMapIdVariable     = getParamNumber(['MapIDVariable', 'マップID変数'], 1);
     var paramMapXVariable      = getParamNumber(['MapXVariable', 'X座標変数'], 1);
     var paramMapYVariable      = getParamNumber(['MapYVariable', 'Y座標変数'], 1);
-    var paramDirectionVariable = getParamNumber(['DirectionVariable', '向き変数'], 2);
+    var paramDirectionVariable = getParamNumber(['DirectionVariable', '向き変数'], 1);
 
     //=============================================================================
     // Game_Interpreter
