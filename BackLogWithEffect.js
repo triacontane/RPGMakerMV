@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 0.3.0 2016/10/30 リピート再生機能を追加
 // 0.2.0 2016/10/22 文章の表示設定をバックログに反映する仕様を追加
 // 0.1.0 2016/10/21 作成途中
 // ----------------------------------------------------------------------------
@@ -22,12 +23,44 @@
  * @desc バックログのテキストカラーです。
  * @default 2
  *
+ * @param リピートアイコン
+ * @desc 音声のリピート再生用のアイコンインデックスです。
+ * @default 74
+ *
+ * @param リピートX座標
+ * @desc リピート再生用のアイコンのX座標です。メッセージウィンドウに対する相対位置です。pw:メッセージウィンドウの横幅
+ * @default pw - 64
+ *
+ * @param リピートY座標
+ * @desc リピート再生用のアイコンのY座標です。メッセージウィンドウに対する相対位置です。ph:メッセージウィンドウの高さ
+ * @default ph - 32
+ *
+ * @param リピートキーコード
+ * @desc リピート再生用のキーコードです。
+ * @default 82
+ *
+ * @param ループアイコンON
+ * @desc 音声のループ再生が有効な状態のアイコンインデックスです。
+ * @default 75
+ *
+ * @param ループアイコンOFF
+ * @desc 音声のループ再生が無効な状態のアイコンインデックスです。
+ * @default 16
+ *
+ * @param ループアイコンX座標
+ * @desc ループ再生用のアイコンのX座標です。メッセージウィンドウに対する相対位置です。pw:メッセージウィンドウの横幅
+ * @default pw - 32
+ *
+ * @param ループアイコンY座標
+ * @desc ループ再生用のアイコンのY座標です。メッセージウィンドウに対する相対位置です。ph:メッセージウィンドウの高さ
+ * @default ph - 32
+ *
+ * @param ループキーコード
+ * @desc ループ再生用のキーコードです。
+ * @default 76
+ *
  * @help メッセージにバックログを実行します。
  * 音声再生機能およびピクチャの復元機能を同時に備えます。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -57,6 +90,11 @@ function Game_BackLog() {
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamString = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return value === null ? '' : value;
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -69,11 +107,27 @@ function Game_BackLog() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramBackLogColor = getParamNumber(['BackLogColor', 'バックログ文字色'], 0);
+    var paramBackLogColor  = getParamNumber(['BackLogColor', 'バックログ文字色'], 0);
+    var paramRepeatIcon    = getParamNumber(['RepeatIcon', 'リピートアイコン'], 0);
+    var paramRepeatIconX   = getParamString(['RepeatIconX', 'リピートX座標']);
+    var paramRepeatIconY   = getParamString(['RepeatIconY', 'リピートY座標']);
+    var paramRepeatKeyCode = getParamNumber(['RepeatKeyCode', 'リピートキーコード'], 0);
+    var paramLoopIconOff   = getParamNumber(['LoopIconOFF', 'ループアイコンOFF'], 0);
+    var paramLoopIconOn    = getParamNumber(['LoopIconON', 'ループアイコンON'], 0);
+    var paramLoopIconX     = getParamString(['LoopIconX', 'ループアイコンX座標']);
+    var paramLoopIconY     = getParamString(['LoopIconX', 'ループアイコンY座標']);
+    var paramLoopKeyCode   = getParamNumber(['LoopKeyCode', 'ループキーコード'], 0);
+
+    var _Input_initialize = Input.initialize;
+    Input.initialize      = function() {
+        _Input_initialize.apply(this, arguments);
+        if (paramRepeatKeyCode) this.keyMapper[paramRepeatKeyCode] = 'sound_repeat';
+        if (paramLoopKeyCode) this.keyMapper[paramLoopKeyCode] = 'sound_loop';
+    };
 
     //=============================================================================
     // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
+    //  バックログ効果音を初期化します。
     //=============================================================================
     var _Game_Interpreter_setup      = Game_Interpreter.prototype.setup;
     Game_Interpreter.prototype.setup = function(list, eventId) {
@@ -88,37 +142,6 @@ function Game_BackLog() {
             $gameSystem.clearBackLogSound();
         }
         return result;
-    };
-
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var commandPrefix = new RegExp('^' + metaTagPrefix);
-        if (!command.match(commandPrefix)) return;
-        try {
-            this.pluginCommandBackLogWithEffect(command.replace(commandPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
-    };
-
-    Game_Interpreter.prototype.pluginCommandBackLogWithEffect = function(command, args) {
-        switch (getCommandName(command)) {
-            case 'XXXXX' :
-                break;
-        }
     };
 
     //=============================================================================
@@ -193,7 +216,8 @@ function Game_BackLog() {
     var _Game_Message_initialize      = Game_Message.prototype.initialize;
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.apply(this, arguments);
-        this._backLogViewing = false;
+        this._backLogViewing   = false;
+        this._backLogSoundLoop = false;
     };
 
     Game_Message.prototype.setBackLogViewing = function(value) {
@@ -204,8 +228,21 @@ function Game_BackLog() {
         return this._backLogViewing;
     };
 
+    Game_Message.prototype.clearBackLogSoundLoop = function() {
+        this._backLogSoundLoop = false;
+    };
+
+    Game_Message.prototype.toggleBackLogSoundLoop = function() {
+        this._backLogSoundLoop = !this._backLogSoundLoop;
+    };
+
+    Game_Message.prototype.isBackLogSoundLoop = function() {
+        return this._backLogSoundLoop;
+    };
+
     Game_Message.prototype.startBackLog = function(backLog) {
         this.clear();
+        this.clearBackLogSoundLoop();
         this.add(backLog.getText());
         this.setBackLogViewing(true);
         var setting = backLog.getSetting();
@@ -230,6 +267,21 @@ function Game_BackLog() {
     // Window_Message
     //  バックログを実装します。
     //=============================================================================
+    var _Window_Message_initialize      = Window_Message.prototype.initialize;
+    Window_Message.prototype.initialize = function() {
+        _Window_Message_initialize.apply(this, arguments);
+        this.createSubSprites();
+    };
+
+    Window_Message.prototype.createSubSprites = function() {
+        this._repeatIcon = new Sprite_RepeatIcon();
+        this._loopIcon   = new Sprite_LoopIcon();
+        this.addChild(this._repeatIcon);
+        this.addChild(this._loopIcon);
+        this._repeatIcon.setPosition();
+        this._loopIcon.setPosition();
+    };
+
     var _Window_Message_initMembers      = Window_Message.prototype.initMembers;
     Window_Message.prototype.initMembers = function() {
         _Window_Message_initMembers.apply(this, arguments);
@@ -249,12 +301,13 @@ function Game_BackLog() {
         _Window_Message_terminateMessage.apply(this, arguments);
         if (!this.isBackLogActive() && $gameMessage.isBackLogViewing()) {
             $gameMessage.setBackLogViewing(false);
+            this._backLogDepth = -1;
             $gameScreen.restorePictures();
         }
     };
 
     Window_Message.prototype.isBackLogActive = function() {
-        return this._backLogDepth > 0;
+        return this._backLogDepth >= 0;
     };
 
     var _Window_Message_updateShowFast      = Window_Message.prototype.updateShowFast;
@@ -272,21 +325,43 @@ function Game_BackLog() {
             result = _Window_Message_updateInput.apply(this, arguments);
         }
         if (!this.isAnySubWindowActive() && this.pause) {
-            if (this.isTriggeredBackLogForward()) {
-                this.startBackLog(this._backLogDepth === -1 ? 1 : this._backLogDepth + 1);
-            }
-            if (this.isTriggeredBackLogReturn()) {
-                this.startBackLog(this._backLogDepth - 1);
-            }
-            if (this.isTriggeredBackLogAbort() && this.isBackLogActive()) {
-                this.startBackLog(-1);
-            }
+            this.updateBackLogInput();
         }
         return result;
     };
 
+    Window_Message.prototype.updateBackLogInput = function() {
+        if ($gameMessage.isBackLogViewing()) {
+            if (this.updateBackLogSoundIcon()) return;
+        }
+        if (this.isTriggeredBackLogForward()) {
+            this.startBackLog(this._backLogDepth === -1 ? 1 : this._backLogDepth + 1);
+        }
+        if (this.isTriggeredBackLogReturn()) {
+            this.startBackLog(this._backLogDepth - 1);
+        }
+        if (this.isTriggeredBackLogAbort() && this.isBackLogActive()) {
+            this.startBackLog(-1);
+        }
+    };
+
+    Window_Message.prototype.updateBackLogSoundIcon = function() {
+        var localX = this.canvasToLocalX(TouchInput.x) - this.x;
+        var localY = this.canvasToLocalX(TouchInput.y) - this.y;
+        if (this._repeatIcon.isTriggered(localX, localY)) {
+            var backLog = $gameSystem.getBackLog(this._backLogDepth);
+            this.playBackLogSounds(backLog.getSounds());
+            return true;
+        }
+        if (this._loopIcon.isTriggered(localX, localY)) {
+            $gameMessage.toggleBackLogSoundLoop();
+            return true;
+        }
+        return false;
+    };
+
     Window_Message.prototype.processNormalCharacter = function(textState) {
-        if (paramBackLogColor && this._backLogDepth >= 0) {
+        if (paramBackLogColor && this.isBackLogActive()) {
             this.changeTextColor(this.textColor(paramBackLogColor));
         }
         Window_Base.prototype.processNormalCharacter.apply(this, arguments);
@@ -308,6 +383,7 @@ function Game_BackLog() {
     };
 
     Window_Message.prototype.playBackLogSounds = function(sounds) {
+        AudioManager.stopSe();
         if (!sounds) return;
         sounds.forEach(function(sound) {
             AudioManager.playSe(sound);
@@ -326,7 +402,7 @@ function Game_BackLog() {
         return Input.isTriggered('left') || Input.isTriggered('cancel') || TouchInput.isCancelled();
     };
 
-    var _Window_Message_isTriggered = Window_Message.prototype.isTriggered;
+    var _Window_Message_isTriggered      = Window_Message.prototype.isTriggered;
     Window_Message.prototype.isTriggered = function() {
         var result = _Window_Message_isTriggered.apply(this, arguments);
         if (Input.isRepeated('cancel') && (!Input.isRepeated('ok') && !TouchInput.isRepeated())) {
@@ -369,6 +445,133 @@ function Game_BackLog() {
 
     Game_BackLog.prototype.getSetting = function() {
         return this._setting;
+    };
+
+    //=============================================================================
+    // Sprite_SoundIcon
+    //  サウンドアイコンを扱うクラスです。
+    //=============================================================================
+    function Sprite_SoundIcon() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Sprite_SoundIcon.prototype             = Object.create(Sprite_StateIcon.prototype);
+    Sprite_SoundIcon.prototype.constructor = Sprite_SoundIcon;
+
+    Sprite_SoundIcon.prototype.initialize = function() {
+        Sprite_StateIcon.prototype.initialize.apply(this, arguments);
+        this.visible = false;
+    };
+
+    Sprite_SoundIcon.prototype.setPosition = function() {
+        var pw = this.parent.width, ph = this.parent.height;
+        var x  = Number(eval(this.getXFormula()));
+        var y  = Number(eval(this.getYFormula()));
+        this.move(x, y);
+    };
+
+    Sprite_SoundIcon.prototype.getXFormula = function() {
+        return 0;
+    };
+
+    Sprite_SoundIcon.prototype.getYFormula = function() {
+        return 0;
+    };
+
+    Sprite_SoundIcon.prototype.getIconIndex = function() {
+        return 0;
+    };
+
+    Sprite_SoundIcon.prototype.update = function() {
+        Sprite.prototype.update.call(this);
+        this.updateIndex();
+        this.updateVisible();
+        this.updateFrame();
+    };
+
+    Sprite_SoundIcon.prototype.updateIndex = function() {
+        this._iconIndex = this.getIconIndex();
+    };
+
+    Sprite_SoundIcon.prototype.updateVisible = function() {
+        this.visible = this.parent.isBackLogActive();
+    };
+
+    Sprite_SoundIcon.prototype.isTriggered = function(targetX, targetY) {
+        var realX = targetX + this._frame.width * this.anchor.x;
+        var realY = targetY + this._frame.height * this.anchor.y;
+        if (TouchInput.isTriggered() && this.isInSprite(realX, realY)) {
+            return true;
+        }
+        if (this.isTriggeredAnyKey()) {
+            return true;
+        }
+        return false;
+    };
+
+    Sprite_SoundIcon.prototype.isInSprite = function(targetX, targetY) {
+        return this.x <= targetX && this.x + this._frame.width >= targetX &&
+            this.y <= targetY && this.y + this._frame.height >= targetY;
+    };
+
+    Sprite_SoundIcon.prototype.isTriggeredAnyKey = function() {
+        return this.getKeyTriggers().some(function(keyName) {
+            return Input.isTriggered(keyName);
+        });
+    };
+
+    //=============================================================================
+    // Sprite_RepeatIcon
+    //  リピートアイコンを扱うクラスです。
+    //=============================================================================
+    function Sprite_RepeatIcon() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Sprite_RepeatIcon.prototype             = Object.create(Sprite_SoundIcon.prototype);
+    Sprite_RepeatIcon.prototype.constructor = Sprite_RepeatIcon;
+
+    Sprite_RepeatIcon.prototype.getXFormula = function() {
+        return paramRepeatIconX;
+    };
+
+    Sprite_RepeatIcon.prototype.getYFormula = function() {
+        return paramRepeatIconY;
+    };
+
+    Sprite_RepeatIcon.prototype.getIconIndex = function() {
+        return paramRepeatIcon;
+    };
+
+    Sprite_RepeatIcon.prototype.getKeyTriggers = function() {
+        return ['right', 'sound_repeat'];
+    };
+
+    //=============================================================================
+    // Sprite_LoopIcon
+    //  サウンドアイコンを扱うクラスです。
+    //=============================================================================
+    function Sprite_LoopIcon() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Sprite_LoopIcon.prototype             = Object.create(Sprite_SoundIcon.prototype);
+    Sprite_LoopIcon.prototype.constructor = Sprite_LoopIcon;
+
+    Sprite_LoopIcon.prototype.getXFormula = function() {
+        return paramLoopIconX;
+    };
+
+    Sprite_LoopIcon.prototype.getYFormula = function() {
+        return paramLoopIconY;
+    };
+
+    Sprite_LoopIcon.prototype.getIconIndex = function() {
+        return $gameMessage.isBackLogSoundLoop() ? paramLoopIconOn : paramLoopIconOff;
+    };
+
+    Sprite_LoopIcon.prototype.getKeyTriggers = function() {
+        return ['pageup', 'sound_loop'];
     };
 })();
 
