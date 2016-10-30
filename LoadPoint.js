@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/10/30 少しリファクタリング
 // 1.0.0 2016/10/29 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -103,7 +104,8 @@
     var metaTagPrefix = 'LP_';
 
     var getCommandName = function(command) {
-        return (command || '').toUpperCase();
+        var realCommand = (command || '').toUpperCase();
+        return realCommand.replace(new RegExp('^' + metaTagPrefix), '');
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -137,28 +139,10 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var commandPrefix = new RegExp('^' + metaTagPrefix);
-        if (!command.match(commandPrefix)) return;
-        try {
-            this.pluginCommandLoadPoint(command.replace(commandPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.executePluginCommandLoadPoint(command, args);
     };
 
-    Game_Interpreter.prototype.pluginCommandLoadPoint = function(command) {
+    Game_Interpreter.prototype.executePluginCommandLoadPoint = function(command) {
         switch (getCommandName(command)) {
             case '無効化' :
             case 'INVALID':
