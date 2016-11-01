@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/11/01 結果が空文字の場合に0が設定されないよう修正
 // 1.0.0 2016/10/27 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -126,8 +127,8 @@
  * @default ON
  *
  * @help 指定範囲内の変数、スイッチを参照しようとした際に、
- * 「変数名称」及び「スイッチ名称」をJavaScriptとして評価した結果を返すようにします。
- * JavaScript中では式の簡略化のために以下のローカル変数が利用できます。
+ * 「変数名称」及び「スイッチ名称」をJavaScriptとして実行した結果を返すよう
+ * 変更します。JavaScript中では式の簡略化のために以下のローカル変数が利用できます。
  *
  * v(n)      # [n]番の変数の値
  * s(n)      # [n]番のスイッチの値
@@ -172,8 +173,8 @@
  * 通常、イベントのページを決定する処理は、いずれかのスイッチもしくは変数が
  * 変更されたときにのみ実行されます。本プラグインでは、パフォーマンス上の理由から
  * その仕様を維持します。
- * もし、指定している条件がスイッチおよび変数と完全に無関係な場合(設定例3のケース等)
- * イベントのメモ欄に以下の通り入力すると、そのイベントのみ
+ * もし、指定している条件がスイッチおよび変数と完全に無関係な場合
+ * (設定例3のケース等)イベントのメモ欄に以下の通り入力すると、そのイベントのみ
  * 常にページの条件チェックを行うように変更できます。
  *
  * <DV常時リフレッシュ>
@@ -249,7 +250,7 @@
     var _Game_Variables_value      = Game_Variables.prototype.value;
     Game_Variables.prototype.value = function(variableId) {
         if (variableId >= paramDynamicVariableStart && variableId <= paramDynamicVariableEnd) {
-            return this.getDynamicValue($dataSystem.variables[variableId]) || 0;
+            return this.getDynamicValue($dataSystem.variables[variableId]);
         } else {
             return _Game_Variables_value.apply(this, arguments);
         }
@@ -290,7 +291,7 @@
                 return eval(dynamicScript);
             } catch (e) {
                 console.error(e.message);
-                return null;
+                return 0;
             }
         } else {
             return eval(dynamicScript);
