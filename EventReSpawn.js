@@ -129,8 +129,8 @@ function Game_PrefabEvent() {
         switch (getCommandName(command)) {
             case '生成' :
             case 'MAKE' :
-                var x = getArgNumber(args[1], 1);
-                var y = getArgNumber(args[2], 1);
+                var x = getArgNumber(args[1]);
+                var y = getArgNumber(args[2]);
                 $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args[0]), x, y, extend);
                 break;
             case 'ランダム生成' :
