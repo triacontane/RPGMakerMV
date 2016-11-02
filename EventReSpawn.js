@@ -50,6 +50,21 @@
  * ※ 通行可能かつ画面外かつプレイヤーもしくはイベントが存在せず
  *    地形タグが「5」でリージョンが「4」の位置の中からランダム
  *
+ * また特に、a.b.c.の条件指定がやりにくかったため文章による指定も可能にしました。
+ * 上記の条件は以下のように書き換えることができます。（順番入れ替えは不可）
+ *
+ * ERS_ランダム生成 1 通行可能タイルのみ 画面外 両方 5 4
+ * ERS_MAKE_RANDOM 1 passonly offscreen both 5 4
+ *
+ * 以下は同じ意味で用いることが出来る同義語リストです。
+ * 判定なし 条件なし none
+ * 通行可能タイルのみ 通行のみ passonly
+ * 画面内 onscreen screen
+ * 画面外 offscreen
+ * プレイヤー player
+ * イベント event
+ * 両方 both
+ *
  * イベントIDを「0」にすると実行中のイベント（このイベント）を複製します。
  *
  * ・他プラグインとの連携
@@ -88,13 +103,33 @@ function Game_PrefabEvent() {
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+        return (parseInt(convertEscapeCharacters(arg), 10) || makeRandomCompatible[arg] || 0).clamp(min, max);
     };
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
         var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+    };
+
+    var makeRandomCompatible = {
+        none: 0,
+        判定なし: 0,
+        条件なし: 0,
+        passonly: 1,
+        通行可能タイルのみ: 1,
+        通行のみ: 1,
+        screen: 1,
+        onscreen: 1,
+        画面内: 1,
+        offscreen: 2,
+        画面外: 2,
+        player: 1,
+        プレイヤー: 1,
+        event: 2,
+        イベント: 2,
+        both: 3,
+        両方: 3,
     };
 
     //=============================================================================
