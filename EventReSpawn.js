@@ -266,13 +266,13 @@ function Game_PrefabEvent() {
     Game_Map.prototype.isErsCheckInnerScreen = function(x, y) {
         var ax = this.adjustX(x);
         var ay = this.adjustY(y);
-        return ax >= 0 && ay >= 0 && ax <= this.screenTileX() && ay <= this.screenTileY();
+        return ax >= 0 && ay >= 0 && ax <= this.screenTileX() - 1 && ay <= this.screenTileY() - 1;
     };
 
     Game_Map.prototype.isErsCheckOuterScreen = function(x, y) {
         var ax = this.adjustX(x);
         var ay = this.adjustY(y);
-        return ax < -1 || ay < -1 || ax > this.screenTileX() + 1 || ay > this.screenTileY() + 1;
+        return ax < -1 || ay < -1 || ax > this.screenTileX() || ay > this.screenTileY();
     };
 
     Game_Map.prototype.isErsCheckCollidedSomeone = function(type, x, y) {
