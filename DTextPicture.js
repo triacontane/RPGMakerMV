@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2016/11/03 インストールされているフォントをピクチャのフォントとして利用できる機能を追加
 // 1.5.1 2016/10/27 1.5.0でアウトラインカラーを指定するとエラーになっていた現象を修正
 // 1.5.0 2016/10/23 制御文字で表示した変数の内容をリアルタイム更新できる機能を追加
 // 1.4.2 2016/07/02 スクリプトからダイレクトで実行した場合も制御文字が反映されるよう修正（ただし余分にエスケープする必要あり）
@@ -213,7 +214,8 @@
                         $gameScreen.dTextBackColor = getArgString(connectArgs(args, 1));
                         break;
                     case 'FONT':
-                        $gameScreen.setDtextFont(getArgString(args[1]));
+                        args.shift();
+                        $gameScreen.setDtextFont(getArgString(connectArgs(args)));
                         break;
                     case 'REAL_TIME' :
                         $gameScreen.dTextRealTime = getArgBoolean(args[1]);
@@ -292,9 +294,7 @@
     };
 
     Game_Screen.prototype.setDtextFont = function(name) {
-        if (Graphics.isFontLoaded(name)) {
-            this.dTextFont = name;
-        }
+        this.dTextFont = name;
     };
 
     var _Game_Screen_updatePictures      = Game_Screen.prototype.updatePictures;
@@ -402,20 +402,17 @@
     Sprite_Picture.prototype.makeDynamicBitmap = function() {
         this.textWidths   = [];
         this.hiddenWindow = SceneManager.getHiddenWindow();
-        this.resetFontSettings();
+        this.hiddenWindow.resetFontSettings(this.dTextInfo);
         var bitmapVirtual = new Bitmap_Virtual();
         this._processText(bitmapVirtual);
-        this.resetFontSettings();
+        this.hiddenWindow.resetFontSettings(this.dTextInfo);
         this.bitmap = new Bitmap(bitmapVirtual.width, bitmapVirtual.height);
-        if (this.dTextInfo.font) this.bitmap.fontFace = this.dTextInfo.font;
-        if (this.dTextInfo.color) this.bitmap.fillAll(this.dTextInfo.color);
+        this.bitmap.fontFace = this.hiddenWindow.contents.fontFace;
+        if (this.dTextInfo.color) {
+            this.bitmap.fillAll(this.dTextInfo.color);
+        }
         this._processText(this.bitmap);
         this.hiddenWindow = null;
-    };
-
-    Sprite_Picture.prototype.resetFontSettings = function() {
-        if (this.dTextInfo.font) this.hiddenWindow.contents.fontFace = this.dTextInfo.font;
-        if (this.dTextInfo.size > 0) this.hiddenWindow.contents.fontSize = this.dTextInfo.size;
     };
 
     Sprite_Picture.prototype._processText = function(bitmap) {
@@ -564,6 +561,17 @@
     Window_Hidden.prototype._refreshAllParts = function() {};
 
     Window_Hidden.prototype.updateTransform = function() {};
+
+    Window_Hidden.prototype.resetFontSettings = function(dTextInfo) {
+        if (dTextInfo) {
+            var customFont = dTextInfo.font ? dTextInfo.font + ',' : '';
+            this.contents.fontFace = customFont + this.standardFontFace();
+            this.contents.fontSize = dTextInfo.size || this.standardFontSize();
+        } else {
+            Window_Base.prototype.resetFontSettings.apply(this, arguments);
+        }
+
+    };
 
     Window_Hidden.prototype.obtainEscapeParamString = function(textState) {
         var arr = /^\[.+?\]/.exec(textState.text.slice(textState.index));
