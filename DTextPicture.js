@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2016/11/03 一通りの競合対策
 // 1.6.0 2016/11/03 インストールされているフォントをピクチャのフォントとして利用できる機能を追加
 // 1.5.1 2016/10/27 1.5.0でアウトラインカラーを指定するとエラーになっていた現象を修正
 // 1.5.0 2016/10/23 制御文字で表示した変数の内容をリアルタイム更新できる機能を追加
@@ -338,7 +339,7 @@
     Game_Picture.prototype.updateDTextVariable = function() {
         $gameVariables.getChangedVariables().forEach(function(variableId) {
             if (this.dTextInfo.usingVariables.contains(variableId)) {
-                this._name = Date.now().toString();
+                this._name           = Date.now().toString();
                 this.dTextInfo.value = getArgString(this.dTextInfo.originalValue, false);
             }
         }, this);
@@ -406,7 +407,7 @@
         var bitmapVirtual = new Bitmap_Virtual();
         this._processText(bitmapVirtual);
         this.hiddenWindow.resetFontSettings(this.dTextInfo);
-        this.bitmap = new Bitmap(bitmapVirtual.width, bitmapVirtual.height);
+        this.bitmap          = new Bitmap(bitmapVirtual.width, bitmapVirtual.height);
         this.bitmap.fontFace = this.hiddenWindow.contents.fontFace;
         if (this.dTextInfo.color) {
             this.bitmap.fillAll(this.dTextInfo.color);
@@ -547,24 +548,36 @@
     function Window_Hidden() {
         this.initialize.apply(this, arguments);
     }
+
     Window_Hidden.prototype.backOpacity = null;
 
     Window_Hidden.prototype             = Object.create(Window_Base.prototype);
     Window_Hidden.prototype.constructor = Window_Hidden;
 
     Window_Hidden.prototype._createAllParts = function() {
-        this._windowBackSprite = {};
-        this._windowContentsSprite = new Sprite();
+        this._windowBackSprite      = {};
+        this._windowSpriteContainer = {};
+        this._windowContentsSprite  = new Sprite();
         this.addChild(this._windowContentsSprite);
     };
 
     Window_Hidden.prototype._refreshAllParts = function() {};
 
+    Window_Hidden.prototype._refreshBack = function() {};
+
+    Window_Hidden.prototype._refreshFrame = function() {};
+
+    Window_Hidden.prototype._refreshCursor = function() {};
+
+    Window_Hidden.prototype._refreshArrows = function() {};
+
+    Window_Hidden.prototype._refreshPauseSign = function() {};
+
     Window_Hidden.prototype.updateTransform = function() {};
 
     Window_Hidden.prototype.resetFontSettings = function(dTextInfo) {
         if (dTextInfo) {
-            var customFont = dTextInfo.font ? dTextInfo.font + ',' : '';
+            var customFont         = dTextInfo.font ? dTextInfo.font + ',' : '';
             this.contents.fontFace = customFont + this.standardFontFace();
             this.contents.fontSize = dTextInfo.size || this.standardFontSize();
         } else {
