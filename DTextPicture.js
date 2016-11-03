@@ -350,7 +350,10 @@
     //  文字描画用の隠しウィンドウを取得します。
     //=============================================================================
     SceneManager.getHiddenWindow = function() {
-        return this._scene._hiddenWindow;
+        if (!this._hiddenWindow) {
+            this._hiddenWindow = new Window_Hidden(1, 1, 1, 1);
+        }
+        return this._hiddenWindow;
     };
 
     //=============================================================================
@@ -489,32 +492,6 @@
         var sy         = Math.floor(iconIndex / 16) * ph;
         bitmap.blt(iconBitmap, sx, sy, pw, ph, textState.x + 2, textState.y + (textState.height - ph) / 2);
         textState.x += Window_Base._iconWidth + 4;
-    };
-
-    //=============================================================================
-    // Scene_Map
-    //  動的ピクチャ作成用の隠しウィンドウを追加定義します。
-    //=============================================================================
-    var _Scene_Map_createDisplayObjects      = Scene_Map.prototype.createDisplayObjects;
-    Scene_Map.prototype.createDisplayObjects = function() {
-        this._hiddenWindow = new Window_Hidden(1, 1, 1, 1);
-        this._hiddenWindow.hide();
-        this._hiddenWindow.deactivate();
-        _Scene_Map_createDisplayObjects.call(this);
-        this.addChild(this._hiddenWindow);
-    };
-
-    //=============================================================================
-    // Scene_Battle
-    //  動的ピクチャ作成用の隠しウィンドウを追加定義します。
-    //=============================================================================
-    var _Scene_Battle_createDisplayObjects      = Scene_Battle.prototype.createDisplayObjects;
-    Scene_Battle.prototype.createDisplayObjects = function() {
-        this._hiddenWindow = new Window_Hidden(1, 1, 1, 1);
-        this._hiddenWindow.hide();
-        this._hiddenWindow.deactivate();
-        _Scene_Battle_createDisplayObjects.call(this);
-        this.addChild(this._hiddenWindow);
     };
 
     //=============================================================================
