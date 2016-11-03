@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 0.4.0 2016/11/03 ループ再生機能を追加
 // 0.3.0 2016/10/30 リピート再生機能を追加
 // 0.2.0 2016/10/22 文章の表示設定をバックログに反映する仕様を追加
 // 0.1.0 2016/10/21 作成途中
@@ -64,10 +65,6 @@
  *
  * このプラグインにはプラグインコマンドはありません。
  *
- * 利用規約：
- *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
- *  についても制限はありません。
- *  このプラグインはもうあなたのものです。
  */
 
 function Game_BackLog() {
@@ -263,6 +260,12 @@ function Game_BackLog() {
         _AudioManager_playSe.apply(this, arguments);
     };
 
+    AudioManager.isPlayingAnySe = function() {
+        return this._seBuffers.some(function(audio) {
+            return audio.isPlaying();
+        });
+    };
+
     //=============================================================================
     // Window_Message
     //  バックログを実装します。
@@ -332,6 +335,7 @@ function Game_BackLog() {
 
     Window_Message.prototype.updateBackLogInput = function() {
         if ($gameMessage.isBackLogViewing()) {
+            if ($gameMessage.isBackLogSoundLoop()) this.updateLoopSound();
             if (this.updateBackLogSoundIcon()) return;
         }
         if (this.isTriggeredBackLogForward()) {
@@ -345,12 +349,17 @@ function Game_BackLog() {
         }
     };
 
+    Window_Message.prototype.updateLoopSound = function() {
+        if (!AudioManager.isPlayingAnySe()) {
+            this.playBackLogLatestSound();
+        }
+    };
+
     Window_Message.prototype.updateBackLogSoundIcon = function() {
         var localX = this.canvasToLocalX(TouchInput.x) - this.x;
         var localY = this.canvasToLocalX(TouchInput.y) - this.y;
         if (this._repeatIcon.isTriggered(localX, localY)) {
-            var backLog = $gameSystem.getBackLog(this._backLogDepth);
-            this.playBackLogSounds(backLog.getSounds());
+            this.playBackLogLatestSound();
             return true;
         }
         if (this._loopIcon.isTriggered(localX, localY)) {
@@ -358,6 +367,11 @@ function Game_BackLog() {
             return true;
         }
         return false;
+    };
+
+    Window_Message.prototype.playBackLogLatestSound = function() {
+        var backLog = $gameSystem.getBackLog(this._backLogDepth);
+        this.playBackLogSounds(backLog.getSounds());
     };
 
     Window_Message.prototype.processNormalCharacter = function(textState) {
@@ -549,7 +563,7 @@ function Game_BackLog() {
 
     //=============================================================================
     // Sprite_LoopIcon
-    //  サウンドアイコンを扱うクラスです。
+    //  ループアイコンを扱うクラスです。
     //=============================================================================
     function Sprite_LoopIcon() {
         this.initialize.apply(this, arguments);
