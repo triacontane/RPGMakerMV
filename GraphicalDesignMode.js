@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2016/11/03 ウィンドウごとに使用するフォントを設定できる機能を追加
 // 2.1.0 2016/09/28 アイコンサイズをフォントサイズに合わせて自動で拡縮できる機能を追加
 //                  操作対象のウィンドウにフォーカスしたときに枠の色を変えて明示する機能を追加
 //                  数値項目のプロパティを設定する際にJavaScript計算式を適用できる機能を追加
@@ -117,10 +118,13 @@
  * 6. ウィンドウの背景透明度(※2)
  * 7. ウィンドウの行数(※2)
  * 8. ウィンドウの背景画像ファイル名
+ * 9. ウィンドウのフォント名(※3)
  *
  * ※1 JS計算式を適用できます。計算式は入力したその場で1回だけ評価されます。
  * ※2 JS計算式を適用できます。計算式は保存され、画面表示のたびに再評価されます。
  * 分からない場合、今まで通り数値を設定すれば問題ありません。
+ * ※3 フォントをロードする必要があります。「フォントロードプラグイン」をお使いください。
+ * 入手先：raw.githubusercontent.com/triacontane/RPGMakerMV/master/FontLoad.js
  *
  * また、任意のピクチャやウィンドウを追加表示することができます。
  * 詳細はソースコードの「ユーザ書き換え領域」を参照してください。
@@ -401,7 +405,7 @@ var $dataContainerProperties = null;
         //=============================================================================
         Input.keyMapper[67] = 'copy';
         Input.keyMapper[83] = 'save';
-        for (var i = 49; i < 57; i++) {
+        for (var i = 49; i < 58; i++) {
             Input.keyMapper[i] = 'num' + (i - 48);
         }
 
@@ -491,9 +495,12 @@ var $dataContainerProperties = null;
                 ' 6. ウィンドウの背景透明度(※2)',
                 ' 7. ウィンドウの行数(※2)',
                 ' 8. ウィンドウの背景画像ファイル名',
+                ' 9. ウィンドウのフォント名(※3)',
                 '※1 JS計算式を適用できます。計算式は入力したその場で1回だけ評価されます。',
                 '※2 JS計算式を適用できます。計算式は保存され、画面表示のたびに再評価されます。',
                 '分からない場合、今まで通り数値を設定すれば問題ありません。',
+                '※3 あらかじめフォントをロードする必要があります。「フォントロードプラグイン」をお使いください。',
+                '入手先：raw.githubusercontent.com/triacontane/RPGMakerMV/master/FontLoad.js',
                 '-----------------------------------------------------------------------------------------------------',
                 '以下の操作ログが表示されます。'
             ];
@@ -624,7 +631,7 @@ var $dataContainerProperties = null;
 
         Scene_Base.prototype.updateDrag = function() {
             this._windowLayer.isFrameChanged = false;
-            
+
             var result = this._windowLayer.children.clone().reverse().some(function(container) {
                 return checkTypeFunction(container.processDesign) && container.processDesign();
             }, this);
@@ -761,7 +768,8 @@ var $dataContainerProperties = null;
                     ['num5', '行の高さ', '_customLineHeight', 1, 2000, this.setFittingHeight.bind(this), true],
                     ['num6', '背景の透明度', '_customBackOpacity', 0, 255, this.updateBackOpacity.bind(this), true],
                     ['num7', '行数', '_customLineNumber', 0, 999, this.setFittingHeight.bind(this), true],
-                    ['num8', '背景画像のファイル名', '_customBackFileName', null, null, this.createBackSprite.bind(this), true]
+                    ['num8', '背景画像のファイル名', '_customBackFileName', null, null, this.createBackSprite.bind(this), true],
+                    ['num9', 'フォント名', '_customFontFace', null, null, this.resetFontSettings.bind(this), true]
                 ];
                 return params.some(function(param) {
                     return this.processSetProperty.apply(this, param);
@@ -774,8 +782,8 @@ var $dataContainerProperties = null;
             if (this._customLineNumber) this.height = this.fittingHeight(this._customLineNumber);
         };
 
-        PIXI.Container.prototype.processSetProperty = function(keyCode, propLabel, propName, min, max,
-                                                               callBack, stringFlg) {
+        Window_Base.prototype.processSetProperty = function(keyCode, propLabel, propName, min, max,
+                                                            callBack, stringFlg) {
             if (this[propName] === undefined) return null;
             if (Input.isTriggered(keyCode)) {
                 var result = window.prompt(propLabel + 'を入力してください。', this[propName].toString());
@@ -794,8 +802,6 @@ var $dataContainerProperties = null;
             }
             return null;
         };
-
-        PIXI.Container.prototype.reDrawContents = function() {};
 
         Window_Base.prototype.reDrawContents = function() {
             this.createContents();
@@ -1276,6 +1282,7 @@ var $dataContainerProperties = null;
         this._customLineHeight   = containerInfo._customLineHeight;
         this._customBackOpacity  = containerInfo._customBackOpacity;
         this._customBackFileName = containerInfo._customBackFileName;
+        this._customFontFace     = containerInfo._customFontFace;
         this.updatePadding();
         this.resetFontSettings();
         this.updateBackOpacity();
@@ -1321,6 +1328,7 @@ var $dataContainerProperties = null;
         containerInfo._customLineHeight   = this._customLineHeight;
         containerInfo._customBackOpacity  = this._customBackOpacity;
         containerInfo._customBackFileName = this._customBackFileName;
+        containerInfo._customFontFace     = this._customFontFace;
     };
 
     //=============================================================================
@@ -1337,6 +1345,7 @@ var $dataContainerProperties = null;
         this._customBackOpacity  = this.standardBackOpacity();
         this._customBackSprite   = null;
         this._customBackFileName = '';
+        this._customFontFace     = '';
     };
 
     Window_Base.prototype.createBackSprite = function() {
@@ -1367,6 +1376,11 @@ var $dataContainerProperties = null;
     Window_Selectable.prototype.initialize = function(x, y, width, height) {
         _Window_Selectable_initialize.apply(this, arguments);
         this._customLineNumber = this.maxRows();
+    };
+
+    var _Window_Base_standardFontFace      = Window_Base.prototype.standardFontFace;
+    Window_Base.prototype.standardFontFace = function() {
+        return this._customFontFace ? this._customFontFace : _Window_Base_standardFontFace.apply(this, arguments);
     };
 
     var _Window_Base_standardFontSize      = Window_Base.prototype.standardFontSize;
