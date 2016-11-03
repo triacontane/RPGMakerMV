@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/11/03 オートセーブなど最大数以上のIDに対してセーブするプラグインとの競合に対応
 // 1.0.0 2016/03/19 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -69,6 +70,15 @@
     var _DataManager_maxSavefiles = DataManager.maxSavefiles;
     DataManager.maxSavefiles = function() {
         return paramSaveFileNumber ? paramSaveFileNumber : _DataManager_maxSavefiles.apply(this, arguments);
+    };
+
+    var _DataManager_isThisGameFile = DataManager.isThisGameFile;
+    DataManager.isThisGameFile = function(savefileId) {
+        if (savefileId > this.maxSavefiles()) {
+            return false;
+        } else {
+            return _DataManager_isThisGameFile.apply(this, arguments);
+        }
     };
 })();
 
