@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2016/11/04 指定範囲外のスイッチの値を正しく返していなかった問題を修正
 // 1.0.1 2016/11/01 結果が空文字の場合に0が設定されないよう修正
 // 1.0.0 2016/10/27 初版
 // ----------------------------------------------------------------------------
@@ -302,7 +303,7 @@
     // Game_Switches
     //  動的スイッチの取得処理を追加定義します。
     //=============================================================================
-    var _Game_Switches_value      = Game_Variables.prototype.value;
+    var _Game_Switches_value      = Game_Switches.prototype.value;
     Game_Switches.prototype.value = function(switchId) {
         if (switchId >= paramDynamicSwitchStart && switchId <= paramDynamicSwitchEnd) {
             return !!this.getDynamicValue($dataSystem.switches[switchId]);
