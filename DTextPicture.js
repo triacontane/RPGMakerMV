@@ -108,6 +108,7 @@
  *  このプラグインはもうあなたのものです。
  */
 (function() {
+    'use strict';
 
     var getCommandName = function(command) {
         return (command || '').toUpperCase();
