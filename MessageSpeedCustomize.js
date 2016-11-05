@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/11/05 ノベルゲーム総合プラグインから、メッセージ表示速度を調整する制御文字を流用
 // 1.1.2 2016/07/24 複数行「\>」が指定されている場合もデフォルトと同じ動作をするよう修正
 // 1.1.1 2016/07/23 制御文字「\>\<」が指定されている場合、そちらを優先するよう修正
 // 1.1.0 2016/07/12 文章の表示中に決定キーもしくは左クリックで文章を瞬間表示する機能を追加
@@ -59,6 +60,10 @@
  * 対象の変数をオプション画面から操作できます。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CustomizeConfigItem.js
  *
+ * 制御文字「\ms[n]」を利用すると、そのメッセージ中のみ表示速度を
+ * 任意の値に設定することができます。一時的にメッセージ表示速度を変更したい場合に
+ * 有効です。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -102,6 +107,13 @@
     // Window_Message
     //  メッセージの表示間隔を調整します。
     //=============================================================================
+    var _Window_Message_clearFlags      = Window_Message.prototype.clearFlags;
+    Window_Message.prototype.clearFlags = function() {
+        _Window_Message_clearFlags.apply(this, arguments);
+        this._tempMessageSpeed = null;
+        this._showAll = false;
+    };
+
     var _Window_Message_updateWait = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
         if (paramRapidShow && this._textState && this.isTriggered()) {
@@ -112,7 +124,7 @@
 
     var _Window_Message_updateMessage = Window_Message.prototype.updateMessage;
     Window_Message.prototype.updateMessage = function() {
-        var speed = $gameVariables.value(paramVariableSpeed);
+        var speed = this.getMessageSpeed();
         if (this._textState && !this._lineShowFast) {
             if (speed <= 0 || this._showAll) {
                 this._showFast = true;
@@ -123,16 +135,29 @@
         return _Window_Message_updateMessage.apply(this, arguments);
     };
 
+    Window_Message.prototype.getMessageSpeed = function() {
+        return this._tempMessageSpeed !== null ? this._tempMessageSpeed : $gameVariables.value(paramVariableSpeed);
+    };
+
+    Window_Message.prototype.setTempMessageSpeed = function(speed) {
+        if (speed >= 0) {
+            this._tempMessageSpeed = speed;
+            if (speed > 0) this._showFast = false;
+        } else {
+            this._tempMessageSpeed = null;
+        }
+    };
+
     var _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
     Window_Message.prototype.processEscapeCharacter = function(code, textState) {
         if (code === '>') this._waitCount = 0;
-        _Window_Message_processEscapeCharacter.apply(this, arguments);
-    };
-
-    var _Window_Message_onEndOfText = Window_Message.prototype.onEndOfText;
-    Window_Message.prototype.onEndOfText = function() {
-        _Window_Message_onEndOfText.apply(this, arguments);
-        this._showAll = false;
+        switch (code) {
+            case 'MS':
+                this.setTempMessageSpeed(this.obtainEscapeParam(textState));
+                break;
+            default:
+                _Window_Message_processEscapeCharacter.apply(this, arguments);
+        }
     };
 })();
 
