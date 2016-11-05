@@ -1664,7 +1664,7 @@
     var _Sprite_Picture_initialize = Sprite_Picture.prototype.initialize;
     Sprite_Picture.prototype.initialize = function(pictureId) {
         _Sprite_Picture_initialize.apply(this, arguments);
-        this.z = 0;
+        this.z = 100;
     };
 
     var _Sprite_Picture_update = Sprite_Picture.prototype.update;
@@ -1672,7 +1672,7 @@
         _Sprite_Picture_update.call(this);
         if (this.visible) {
             var newZ = this.picture().z;
-            if (newZ != this.z) {
+            if (newZ !== undefined && newZ !== this.z) {
                 this.z = newZ;
                 $gameScreen.needsSortPictures = true;
             }
