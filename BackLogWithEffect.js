@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 0.5.0 2016/11/08 バックログ再生時に無視する制御文字を指定できる機能を追加
 // 0.4.0 2016/11/03 ループ再生機能を追加
 // 0.3.0 2016/10/30 リピート再生機能を追加
 // 0.2.0 2016/10/22 文章の表示設定をバックログに反映する仕様を追加
@@ -60,6 +61,10 @@
  * @desc ループ再生用のキーコードです。
  * @default 76
  *
+ * @param 無効制御文字
+ * @desc バックログが有効な場合に無視する制御文字です。複数ある場合は半角スペースで区切ってください。
+ * @default . !
+ *
  * @help メッセージにバックログを実行します。
  * 音声再生機能およびピクチャの復元機能を同時に備えます。
  *
@@ -92,6 +97,12 @@ function Game_BackLog() {
         return value === null ? '' : value;
     };
 
+    var getParamArrayString = function(paramNames) {
+        var values = getParamString(paramNames).split(' ');
+        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
+        return values;
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -104,16 +115,17 @@ function Game_BackLog() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramBackLogColor  = getParamNumber(['BackLogColor', 'バックログ文字色'], 0);
-    var paramRepeatIcon    = getParamNumber(['RepeatIcon', 'リピートアイコン'], 0);
-    var paramRepeatIconX   = getParamString(['RepeatIconX', 'リピートX座標']);
-    var paramRepeatIconY   = getParamString(['RepeatIconY', 'リピートY座標']);
-    var paramRepeatKeyCode = getParamNumber(['RepeatKeyCode', 'リピートキーコード'], 0);
-    var paramLoopIconOff   = getParamNumber(['LoopIconOFF', 'ループアイコンOFF'], 0);
-    var paramLoopIconOn    = getParamNumber(['LoopIconON', 'ループアイコンON'], 0);
-    var paramLoopIconX     = getParamString(['LoopIconX', 'ループアイコンX座標']);
-    var paramLoopIconY     = getParamString(['LoopIconX', 'ループアイコンY座標']);
-    var paramLoopKeyCode   = getParamNumber(['LoopKeyCode', 'ループキーコード'], 0);
+    var paramBackLogColor      = getParamNumber(['BackLogColor', 'バックログ文字色'], 0);
+    var paramRepeatIcon        = getParamNumber(['RepeatIcon', 'リピートアイコン'], 0);
+    var paramRepeatIconX       = getParamString(['RepeatIconX', 'リピートX座標']);
+    var paramRepeatIconY       = getParamString(['RepeatIconY', 'リピートY座標']);
+    var paramRepeatKeyCode     = getParamNumber(['RepeatKeyCode', 'リピートキーコード'], 0);
+    var paramLoopIconOff       = getParamNumber(['LoopIconOFF', 'ループアイコンOFF'], 0);
+    var paramLoopIconOn        = getParamNumber(['LoopIconON', 'ループアイコンON'], 0);
+    var paramLoopIconX         = getParamString(['LoopIconX', 'ループアイコンX座標']);
+    var paramLoopIconY         = getParamString(['LoopIconX', 'ループアイコンY座標']);
+    var paramLoopKeyCode       = getParamNumber(['LoopKeyCode', 'ループキーコード'], 0);
+    var paramInvalidEscapeCode = getParamArrayString(['InvalidEscapeCode', '無効制御文字']);
 
     var _Input_initialize = Input.initialize;
     Input.initialize      = function() {
@@ -356,8 +368,8 @@ function Game_BackLog() {
     };
 
     Window_Message.prototype.updateBackLogSoundIcon = function() {
-        var localX = this.canvasToLocalX(TouchInput.x) - this.x;
-        var localY = this.canvasToLocalX(TouchInput.y) - this.y;
+        var localX = this.canvasToLocalX(TouchInput.x);
+        var localY = this.canvasToLocalY(TouchInput.y);
         if (this._repeatIcon.isTriggered(localX, localY)) {
             this.playBackLogLatestSound();
             return true;
@@ -423,6 +435,12 @@ function Game_BackLog() {
             return false;
         }
         return result;
+    };
+
+    var _Window_Message_processEscapeCharacter      = Window_Message.prototype.processEscapeCharacter;
+    Window_Message.prototype.processEscapeCharacter = function(code, textState) {
+        if (this.isBackLogActive() && paramInvalidEscapeCode.contains(code)) return;
+        _Window_Message_processEscapeCharacter.apply(this, arguments);
     };
 
     //=============================================================================
