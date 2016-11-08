@@ -96,7 +96,7 @@ var $dataTitleMap = null;
 
     //=============================================================================
     // Scene_Boot
-    //  テンプレートイベントマップをロードしてグローバル変数に保持します。
+    //  遠景設定マップをロードしてグローバル変数に保持します。
     //=============================================================================
     var _Scene_Boot_create      = Scene_Boot.prototype.create;
     Scene_Boot.prototype.create = function() {
@@ -119,7 +119,7 @@ var $dataTitleMap = null;
 
     //=============================================================================
     // Scene_Title
-    //  テンプレートイベントマップをロードしてグローバル変数に保持します。
+    //  タイトル画面に遠景表示を追加します。
     //=============================================================================
     var _Scene_Title_createBackground      = Scene_Title.prototype.createBackground;
     Scene_Title.prototype.createBackground = function() {
@@ -145,18 +145,22 @@ var $dataTitleMap = null;
         this.addChild(this._parallax);
     };
 
+    Scene_Title.prototype.setupParallax = function() {
+        var data            = $dataTitleMap;
+        this._parallaxName  = data.parallaxName || '';
+        this._parallaxZero  = ImageManager.isZeroParallax(this._parallaxName);
+        this._parallaxLoopX = data.parallaxLoopX;
+        this._parallaxLoopY = data.parallaxLoopY;
+        this._parallaxSx    = data.parallaxSx;
+        this._parallaxSy    = data.parallaxSy;
+        this._parallaxX     = 0;
+        this._parallaxY     = 0;
+    };
+
     var _Scene_Title_update = Scene_Title.prototype.update;
     Scene_Title.prototype.update = function() {
         _Scene_Title_update.apply(this, arguments);
         this.updateParallax();
-    };
-
-    Scene_Title.prototype.getTileWidth = function() {
-        return Game_Map.prototype.tileWidth.call(null);
-    };
-
-    Scene_Title.prototype.getHalfTileWidth = function() {
-        return this.getTileWidth() / 2;
     };
 
     Scene_Title.prototype.updateParallax = function() {
@@ -172,16 +176,12 @@ var $dataTitleMap = null;
         }
     };
 
-    Scene_Title.prototype.setupParallax = function() {
-        var data            = $dataTitleMap;
-        this._parallaxName  = data.parallaxName || '';
-        this._parallaxZero  = ImageManager.isZeroParallax(this._parallaxName);
-        this._parallaxLoopX = data.parallaxLoopX;
-        this._parallaxLoopY = data.parallaxLoopY;
-        this._parallaxSx    = data.parallaxSx;
-        this._parallaxSy    = data.parallaxSy;
-        this._parallaxX     = 0;
-        this._parallaxY     = 0;
+    Scene_Title.prototype.getTileWidth = function() {
+        return Game_Map.prototype.tileWidth.call(null);
+    };
+
+    Scene_Title.prototype.getHalfTileWidth = function() {
+        return this.getTileWidth() / 2;
     };
 
     Scene_Title.prototype.parallaxOx = function() {
