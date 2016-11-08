@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/11/08 動的イベント生成中に同一マップに場所移動するとエラーが発生する現象を修正
 // 1.3.0 2016/11/03 ランダム生成機能で各種引数で文字で設定できる機能を追加＋境界値まわりのバグ修正（by くらむぼん氏）
 // 1.2.0 2016/09/06 場所移動時、生成イベントを引き継いでしまう不具合を修正
 //                  プラグインコマンド実行時にイベントIDを0にすることで「このイベント」を複製できる機能を追加
@@ -465,7 +466,13 @@ function Game_PrefabEvent() {
     var _DataManager_onLoad = DataManager.onLoad;
     DataManager.onLoad      = function(object) {
         _DataManager_onLoad.apply(this, arguments);
-        if (object === $dataMap && $gameMap && !$gamePlayer.isTransferring()) $gameMap.restoreLinkPrefabEvents();
+        if (object === $dataMap && $gameMap) this.restoreLinkPrefabEvents();
+    };
+
+    DataManager.restoreLinkPrefabEvents = function() {
+        if (!$gamePlayer.isTransferring() || $gameMap.mapId() === $gamePlayer.newMapId()) {
+            $gameMap.restoreLinkPrefabEvents();
+        }
     };
 })();
 

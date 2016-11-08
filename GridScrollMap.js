@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/11/08 スクロール中のみ指定したスイッチをONにできる機能を追加
 // 1.1.0 2016/06/29 タッチ移動でマップの境界線に移動した際に画面をスクロールする機能を追加
 //                  半歩移動プラグインとの競合を解消
 //                  コードのリファクタリング
@@ -27,6 +28,10 @@
  * @param タッチ移動スクロール
  * @desc タッチ移動で境界線に移動した際に自動で一歩前進します。
  * @default ON
+ *
+ * @param トリガースイッチ番号
+ * @desc スクロール開始と共に指定した番号のスイッチをONにすることができます。スクロールが終了すると自動でOFFに戻ります。
+ * @default 0
  * 
  * @help マップ画面のスクロールをプレイヤーと同期せず
  * プレイヤーが画面外に出たら一画面分をスクロールする方式に
@@ -82,6 +87,7 @@
     //=============================================================================
     var paramScrollSpeed     = getParamNumber(['ScrollSpeed', 'スクロール速度'], 6, 8);
     var paramTouchMoveScroll = getParamBoolean(['TouchMoveScroll', 'タッチ移動スクロール']);
+    var paramTriggerSwitch   = getParamNumber(['TriggerSwitch', 'トリガースイッチ番号'], 0);
 
     //=============================================================================
     // Game_Interpreter
@@ -123,11 +129,25 @@
         if (this.isNeedGridScrollUp(scrolledY)) this.startGridScroll(8);
         if (this.isNeedGridScrollRight(scrolledX)) this.startGridScroll(6);
         if (this.isNeedGridScrollLeft(scrolledX)) this.startGridScroll(4);
+        if (this.isSwitchForGridScroll() && !this.isScrolling()) {
+            this.setSwitchForGridScroll(false);
+        }
     };
 
     Game_Map.prototype.startGridScroll = function(direction) {
         var distance = (direction === 4 || direction === 6 ? this.screenTileX() : this.screenTileY());
+        this.setSwitchForGridScroll(true);
         this.startScroll(direction, distance, paramScrollSpeed);
+    };
+
+    Game_Map.prototype.setSwitchForGridScroll = function(value) {
+        if (paramTriggerSwitch) {
+            $gameSwitches.setValue(paramTriggerSwitch, value);
+        }
+    };
+
+    Game_Map.prototype.isSwitchForGridScroll = function() {
+        return paramTriggerSwitch && $gameSwitches.value(paramTriggerSwitch);
     };
 
     Game_Map.prototype.isNeedGridScrollDown = function(scrolledY) {
