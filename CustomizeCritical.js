@@ -138,13 +138,23 @@
         return formula ? damage : _Game_Action_applyCritical.apply(this, arguments);
     };
 
+    Game_Action.prototype.applyJudgment = function(target) {
+        var result = target.result();
+        result.unlockProperty();
+        result.clear();
+        result.used = this.testApply(target);
+        result.missed = (result.used && Math.random() >= this.itemHit(target));
+        result.evaded = (!result.missed && Math.random() < this.itemEva(target));
+        if (result.isHit()) {
+            result.critical = (Math.random() < this.itemCri(target));
+        }
+        result.lockProperty();
+    };
+
     var _Game_Action_apply = Game_Action.prototype.apply;
     Game_Action.prototype.apply = function(target) {
         _Game_Action_apply.apply(this, arguments);
-        var result = target.result();
-        if (!result.isHit()) {
-            target.result().setCritical(false);
-        }
+        target.result().unlockProperty();
     };
 
     //=============================================================================
@@ -172,8 +182,44 @@
             return this._critical;
         },
         set: function(value) {
-            if (!this._criticalLock) {
+            if (!this._propertyLock) {
                 this._critical = !!value;
+            }
+        },
+        configurable: true
+    });
+
+    Object.defineProperty(Game_ActionResult.prototype, 'used', {
+        get: function() {
+            return this._used;
+        },
+        set: function(value) {
+            if (!this._propertyLock) {
+                this._used = !!value;
+            }
+        },
+        configurable: true
+    });
+
+    Object.defineProperty(Game_ActionResult.prototype, 'missed', {
+        get: function() {
+            return this._missed;
+        },
+        set: function(value) {
+            if (!this._propertyLock) {
+                this._missed = !!value;
+            }
+        },
+        configurable: true
+    });
+
+    Object.defineProperty(Game_ActionResult.prototype, 'evaded', {
+        get: function() {
+            return this._evaded;
+        },
+        set: function(value) {
+            if (!this._propertyLock) {
+                this._evaded = !!value;
             }
         },
         configurable: true
@@ -181,15 +227,20 @@
 
     var _Game_ActionResult_initialize = Game_ActionResult.prototype.initialize;
     Game_ActionResult.prototype.initialize = function() {
-        this._critical = false;
-        this._criticalLock = true;
         _Game_ActionResult_initialize.apply(this, arguments);
+        this._critical     = false;
+        this._evaded       = false;
+        this._missed       = false;
+        this._used         = false;
+        this._propertyLock = false;
     };
 
-    Game_ActionResult.prototype.setCritical = function(value) {
-        this._criticalLock = false;
-        this.critical = value;
-        this._criticalLock = true;
+    Game_ActionResult.prototype.lockProperty = function() {
+        this._propertyLock = true;
+    };
+
+    Game_ActionResult.prototype.unlockProperty = function() {
+        this._propertyLock = false;
     };
 
     //=============================================================================
@@ -198,13 +249,13 @@
     //=============================================================================
     var _BattleManager_refreshStatus = BattleManager.refreshStatus;
     BattleManager.refreshStatus = function() {
-        this.refreshCritical();
+        this.refreshJudgment();
         _BattleManager_refreshStatus.apply(this, arguments);
     };
 
-    BattleManager.refreshCritical = function() {
+    BattleManager.refreshJudgment = function() {
         this._targets.forEach(function (target) {
-            target.result().setCritical(Math.random() < this._action.itemCri(target));
+            this._action.applyJudgment(target);
         }.bind(this));
     };
 

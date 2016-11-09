@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/11/10 連絡先のリンクを開く際に、既定のブラウザで開くよう変更
 // 1.1.1 2016/07/13 表記方法を少しだけ変更
 // 1.1.0 2016/07/13 ローカル実行時、エラー情報のパスを出力しないよう修正
 // 1.0.1 2016/06/25 エラー発生時のリンク先を別画面で開くよう修正
@@ -65,7 +66,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(function() {
     'use strict';
     var pluginName = 'CustomizeErrorScreen';
 
@@ -100,7 +101,7 @@
     //  エラー情報の出力処理を追加します。
     //=============================================================================
     var _SceneManager_onError = SceneManager.onError;
-    SceneManager.onError = function(e) {
+    SceneManager.onError      = function(e) {
         _SceneManager_onError.apply(this, arguments);
         try {
             Graphics.printErrorDetail(e, decodeURIComponent(e.filename));
@@ -109,7 +110,7 @@
     };
 
     var _SceneManager_catchException = SceneManager.catchException;
-    SceneManager.catchException = function(e) {
+    SceneManager.catchException      = function(e) {
         _SceneManager_catchException.apply(this, arguments);
         Graphics.printErrorDetail(e);
     };
@@ -119,7 +120,7 @@
     //  エラー情報を出力します。
     //=============================================================================
     var _Graphics__makeErrorHtml = Graphics._makeErrorHtml;
-    Graphics._makeErrorHtml = function(name, message) {
+    Graphics._makeErrorHtml      = function(name, message) {
         arguments[1] = decodeURIComponent(message);
         return _Graphics__makeErrorHtml.apply(this, arguments);
     };
@@ -142,28 +143,47 @@
     };
 
     Graphics._makeMainMessage = function() {
-        var mainMessage = document.createElement('div');
-        var style = mainMessage.style;
-        style.color            = 'white';
-        style.textAlign        = 'left';
-        style.fontSize         = '18px';
+        var mainMessage       = document.createElement('div');
+        var style             = mainMessage.style;
+        style.color           = 'white';
+        style.textAlign       = 'left';
+        style.fontSize        = '18px';
         mainMessage.innerHTML = '<hr>' + paramMainMessage;
         this._errorPrinter.appendChild(mainMessage);
     };
 
     Graphics._makeHyperLink = function() {
-        var hyperLink = document.createElement('div');
-        var style = hyperLink.style;
-        style.color            = 'white';
-        style.textAlign        = 'left';
-        style.fontSize         = '18px';
-        hyperLink.innerHTML = '<a href="' + paramHyperLink + '" target="_blank">' + paramHyperLink + '</a>';
+        var hyperLink            = document.createElement('a');
+        var style                = hyperLink.style;
+        style.color              = 'blue';
+        style.textAlign          = 'left';
+        style.fontSize           = '20px';
+        style['text-decoration'] = 'underline';
+        style.cursor             = 'pointer';
+        hyperLink.addEventListener('click', this._openUrl.bind(this, paramHyperLink));
+        hyperLink.innerHTML = paramHyperLink;
         this._errorPrinter.appendChild(hyperLink);
     };
 
+    Graphics._openUrl = function(url) {
+        if (!Utils.isNwjs()) {
+            window.open(url);
+            return;
+        }
+        var exec = require('child_process').exec;
+        switch (process.platform) {
+            case 'win32':
+                exec('rundll32.exe url.dll,FileProtocolHandler  "' + url + '"');
+                break;
+            default:
+                exec('open "' + url + '"');
+                break;
+        }
+    };
+
     Graphics._makeStackTrace = function(stack) {
-        var stackTrace = document.createElement('div');
-        var style = stackTrace.style;
+        var stackTrace         = document.createElement('div');
+        var style              = stackTrace.style;
         style.color            = 'white';
         style.textAlign        = 'left';
         style.fontSize         = '18px';
@@ -171,18 +191,18 @@
         style.webkitUserSelect = 'text';
         style.msUserSelect     = 'text';
         style.mozUserSelect    = 'text';
-        stackTrace.innerHTML = '<br><hr>' + stack + '<hr>';
+        stackTrace.innerHTML   = '<br><hr>' + stack + '<hr>';
         this._errorPrinter.appendChild(stackTrace);
     };
 
     Graphics._setErrorPrinterStyle = function() {
-        this._errorPrinter.width = this._width * 0.9;
+        this._errorPrinter.width  = this._width * 0.9;
         this._errorPrinter.height = this._height * 0.9;
-        var style = this._errorPrinter.style;
-        style.textAlign = 'center';
-        style.textShadow = '1px 1px 3px #000';
-        style.fontSize = '22px';
-        style.zIndex = 99;
+        var style                 = this._errorPrinter.style;
+        style.textAlign           = 'center';
+        style.textShadow          = '1px 1px 3px #000';
+        style.fontSize            = '22px';
+        style.zIndex              = 99;
         this._centerElement(this._errorPrinter);
     };
 })();
