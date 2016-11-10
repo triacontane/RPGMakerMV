@@ -115,6 +115,7 @@ var $dataTitleMap = null;
 
     Scene_Boot.prototype.onParallaxMapLoaded = function() {
         $dataTitleMap = $dataMap;
+        $dataMap      = null;
     };
 
     //=============================================================================
@@ -129,7 +130,7 @@ var $dataTitleMap = null;
         _Scene_Title_createBackground.apply(this, arguments);
     };
 
-    var _Scene_Title_createForeground = Scene_Title.prototype.createForeground;
+    var _Scene_Title_createForeground      = Scene_Title.prototype.createForeground;
     Scene_Title.prototype.createForeground = function() {
         if (paramViewForeground) {
             this.createParallax();
@@ -157,7 +158,7 @@ var $dataTitleMap = null;
         this._parallaxY     = 0;
     };
 
-    var _Scene_Title_update = Scene_Title.prototype.update;
+    var _Scene_Title_update      = Scene_Title.prototype.update;
     Scene_Title.prototype.update = function() {
         _Scene_Title_update.apply(this, arguments);
         this.updateParallax();
