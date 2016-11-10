@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/11/11 オートセーブ有効時、一定の手順を踏むとセーブデータをロードできなくなる不具合を修正
+//                  選択肢表示後、直後にメッセージ表示がない場合でもウィンドウを閉じないよう修正
 // 1.3.0 2016/09/28 ウィンドウ枠を自由に調整できる機能を追加
 //                  ウィンドウの枠外をクリックしたときに文章を進めない設定を追加
 //                  フォント名を指定できる機能を追加（デバイスにインストールされているフォントを使用します）
@@ -670,28 +672,23 @@
     };
 
     DataManager.saveGameAuto = function() {
-        var lastAccessedId = this._lastAccessedId;
-        this._autoSaving   = true;
+        var lastAccessedId    = this._lastAccessedId;
+        this._processAutoSave = true;
         this.saveGameWithoutRescue(this.getAutoSaveId());
-        this._autoSaving     = false;
-        this._lastAccessedId = lastAccessedId;
+        this._processAutoSave = false;
+        this._lastAccessedId  = lastAccessedId;
     };
 
     var _DataManager_latestSavefileId = DataManager.latestSavefileId;
     DataManager.latestSavefileId      = function() {
         var id = _DataManager_latestSavefileId.apply(this, arguments);
-        if (id === this.getAutoSaveId()) {
-            id = 0;
-        }
-        return id;
+        return this.convertToGlobalFileId(id);
     };
 
     var _DataManager_loadGame = DataManager.loadGame;
     DataManager.loadGame      = function(savefileId) {
         var lastAccessedId = this._lastAccessedId;
-        if (savefileId === 0) {
-            arguments[0] = this.getAutoSaveId();
-        }
+        arguments[0] = this.convertToAutoSaveId(savefileId);
         var result = _DataManager_loadGame.apply(this, arguments);
         if (this._lastAccessedId === this.getAutoSaveId()) {
             this._lastAccessedId = lastAccessedId;
@@ -700,26 +697,32 @@
     };
 
     DataManager.loadGameReserve = function() {
-        return this.loadGame(this._revereLoadFileId);
+        return this.loadGame(this._resvereLoadFileId);
     };
 
     DataManager.reserveLoad = function(savefileId) {
-        if (savefileId === 0) {
-            savefileId = this.getAutoSaveId();
-        }
+        savefileId = this.convertToAutoSaveId(savefileId);
         var result = this.isThisGameFile(savefileId);
         if (result) {
-            this._revereLoadFileId = savefileId;
+            this._resvereLoadFileId = savefileId;
         }
         return result;
+    };
+
+    DataManager.convertToAutoSaveId = function(savefileId) {
+        return savefileId === 0 ? this.getAutoSaveId() : savefileId;
+    };
+
+    DataManager.convertToGlobalFileId = function(savefileId) {
+        return savefileId === this.getAutoSaveId() ? 0 : savefileId;
     };
 
     DataManager.isShiftAutoSave = function() {
         return this._isShiftAutoSave;
     };
 
-    DataManager.isAutoSaving = function() {
-        return this._autoSaving;
+    DataManager.isProcessAutoSave = function() {
+        return this._processAutoSave;
     };
 
     //=============================================================================
@@ -742,7 +745,7 @@
 
     var _StorageManager_saveToLocalFile = StorageManager.saveToLocalFile;
     StorageManager.saveToLocalFile      = function(savefileId, json) {
-        if (DataManager.isAutoSaving()) {
+        if (DataManager.isProcessAutoSave() && this.isAutoSave(savefileId)) {
             var data     = LZString.compressToBase64(json);
             var fs       = require('fs');
             var filePath = this.localFilePath(savefileId);
@@ -1329,6 +1332,10 @@
         this._prevTextState = (!this._windowClosing ? this._textState : null);
     };
 
+    Window_NovelMessage.prototype.clearDumpMessage = function() {
+        this._prevTextState = null;
+    };
+
     Window_NovelMessage.prototype.startPause = function() {
         _InterfaceWindow_Message.prototype.startPause.apply(this, arguments);
         var position = this._signPositionNewLine ? this._signPositionNewLine : this.getPauseSignSpritePosition();
@@ -1400,19 +1407,19 @@
         }
     };
 
-    Window_NovelMessage.prototype.clearDumpMessage = function() {
-        this.setWindowClosing();
-        this.dumpMessage();
-    };
-
     Window_NovelMessage.prototype.setWindowClosing = function() {
         this._windowClosing = true;
     };
 
     Window_NovelMessage.prototype.closeForce = function() {
+        this.commitMessage();
+        this.setWindowClosing();
+        this.close();
+    };
+
+    Window_NovelMessage.prototype.commitMessage = function() {
         $gameSystem.executeAutoSave();
         this.clearDumpMessage();
-        this.close();
     };
 
     Window_NovelMessage.prototype.isNovelWindow = function() {
@@ -1421,6 +1428,10 @@
 
     Window_NovelMessage.prototype.isNormalMessageWindow = function() {
         return false;
+    };
+
+    Window_NovelMessage.prototype.doesContinue = function() {
+        return Window_Message.prototype.doesContinue.apply(this, arguments) || !this._windowClosing;
     };
 
     //=============================================================================
@@ -1524,12 +1535,12 @@
     };
 
     Window_NovelChoiceList.prototype.callOkHandler = function() {
-        this._messageWindow.clearDumpMessage();
+        this._messageWindow.commitMessage();
         _InterfaceWindow_ChoiceList.prototype.callOkHandler.apply(this, arguments);
     };
 
     Window_NovelChoiceList.prototype.callCancelHandler = function() {
-        this._messageWindow.clearDumpMessage();
+        this._messageWindow.commitMessage();
         _InterfaceWindow_ChoiceList.prototype.callCancelHandler.apply(this, arguments);
     };
 
@@ -1559,7 +1570,7 @@
     };
 
     Window_NovelNumberInput.prototype.processOk = function() {
-        this._messageWindow.clearDumpMessage();
+        this._messageWindow.commitMessage();
         _InterfaceWindow_NumberInput.prototype.processOk.apply(this, arguments);
     };
 
