@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2016/11/12 Macの場合、Ctrlキーの代わりにoptionキーを使用するようヘルプを追記
 // 2.2.0 2016/11/03 ウィンドウごとに使用するフォントを設定できる機能を追加
 // 2.1.0 2016/09/28 アイコンサイズをフォントサイズに合わせて自動で拡縮できる機能を追加
 //                  操作対象のウィンドウにフォーカスしたときに枠の色を変えて明示する機能を追加
@@ -98,7 +99,7 @@
  * 3. マウスでオブジェクトを掴んで好きな場所に配置する。
  *   - マウスによる通常のウィンドウ操作は無効になります。
  *   - 他のウィンドウや画面端に自動でスナップします。(Shiftで無効化)
- *   - Ctrlを押していると、グリッドにスナップします。
+ *   - Ctrlを押していると、グリッドにスナップします。(Macの場合はoptionキー)
  *   - Ctrl+Zで直前の変更を元に戻します。
  *   - Ctrl+Shift+Enterで現在のシーンの変更を全て初期化します。
  *   - ウィンドウ内で右クリックすると、枠の透明/不透明を切り替えます。
@@ -125,6 +126,7 @@
  * 分からない場合、今まで通り数値を設定すれば問題ありません。
  * ※3 フォントをロードする必要があります。「フォントロードプラグイン」をお使いください。
  * 入手先：raw.githubusercontent.com/triacontane/RPGMakerMV/master/FontLoad.js
+ * ※4 Macの場合、Ctrlキーはoptionキーで代用してください。（commandキーでは反応しません）
  *
  * また、任意のピクチャやウィンドウを追加表示することができます。
  * 詳細はソースコードの「ユーザ書き換え領域」を参照してください。
@@ -479,7 +481,7 @@ var $dataContainerProperties = null;
                 '',
                 '--------------------操 作 方 法----------------------------------------------------------------------',
                 'ドラッグ&ドロップ ： ウィンドウや画像を掴んで好きな場所に再配置します。',
-                'Ctrl+マウス ： ウィンドウや画像がグリッドにスナップします。',
+                'Ctrl+マウス ： ウィンドウや画像がグリッドにスナップします。(Macの場合はoptionキー)',
                 'Shift+マウス ： ウィンドウや画像がオブジェクトや画面端にスナップしなくなります。',
                 'Ctrl+S ： 全ての変更を保存します。',
                 'Ctrl+C ： 直前に操作した座標をクリップボードにコピーします。',
@@ -501,6 +503,7 @@ var $dataContainerProperties = null;
                 '分からない場合、今まで通り数値を設定すれば問題ありません。',
                 '※3 あらかじめフォントをロードする必要があります。「フォントロードプラグイン」をお使いください。',
                 '入手先：raw.githubusercontent.com/triacontane/RPGMakerMV/master/FontLoad.js',
+                '※4 Macの場合、Ctrlキーはoptionキーで代用してください。（commandキーでは反応しません）',
                 '-----------------------------------------------------------------------------------------------------',
                 '以下の操作ログが表示されます。'
             ];
@@ -1023,22 +1026,24 @@ var $dataContainerProperties = null;
         };
 
         Object.defineProperty(PIXI.Container.prototype, 'endX', {
-            get         : function() {
+            get: function() {
                 return this.x + this.width;
             },
-            set         : function(value) {
+            set: function(value) {
                 this.x = value - this.width;
             },
+
             configurable: true
         });
 
         Object.defineProperty(PIXI.Container.prototype, 'endY', {
-            get         : function() {
+            get: function() {
                 return this.y + this.height;
             },
-            set         : function(value) {
+            set: function(value) {
                 this.y = value - this.height;
             },
+
             configurable: true
         });
 
