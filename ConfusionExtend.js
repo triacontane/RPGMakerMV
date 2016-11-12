@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/11/12 裏切り機能と味方対象スキルの対象を反転させる機能を追加
 // 1.0.0 2016/08/13 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -52,11 +53,24 @@
  * <CEターゲット:0> # 単体スキルの対象を[0]番目のキャラクターに指定します。
  *                    メモ欄の指定がない場合はランダムで決定されます。
  *
+ * ・追加機能
+ * 裏切り機能を有効にすると対象のステートが有効になっているバトラーが
+ * 相手の攻撃対象から外れ、さらにそのバトラー以外が戦闘不能になると
+ * 全滅扱いになります。
+ *
+ * 特徴を有するデータベースのメモ欄に、以下の通り記述してください。
+ * <CE裏切り>    # 対象バトラーが味方から外れます。
+ * <CEBetrayal>  # 同上
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 混乱ステート拡張プラグイン
  * @author トリアコンタン
+ *
+ * @param 味方対象スキルの対象
+ * @desc ONにすると行動制約が「味方を攻撃」の場合に味方対象のスキルを使用すると、敵を対象にします。
+ * @default OFF
  *
  * @help 混乱系（行動制約のプルダウンの選択値が「1」～「3」）ステートの
  * 指定内容を拡張し、通常攻撃ではなくスキル（複数指定可能）を指定したり
@@ -93,6 +107,15 @@
  * <CEターゲット:0> # 単体スキルの対象を[0]番目のキャラクターに指定します。
  *                    メモ欄の指定がない場合はランダムで決定されます。
  *
+ * ・追加機能
+ * 裏切り機能を有効にすると対象のステートが有効になっているバトラーが
+ * 相手の攻撃対象から外れ、さらにそのバトラー以外が戦闘不能になると
+ * 全滅扱いになります。
+ *
+ * 特徴を有するデータベースのメモ欄に、以下の通り記述してください。
+ * <CE裏切り>    # 対象バトラーが味方から外れます。
+ * <CEBetrayal>  # 同上
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -103,7 +126,22 @@
 
 (function() {
     'use strict';
+    var pluginName    = 'ConfusionExtend';
     var metaTagPrefix = 'CE';
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
 
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
@@ -132,15 +170,46 @@
     };
 
     //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var paramTargetFriendSkill = getParamBoolean(['TargetFriendSkill', '味方対象スキルの対象']);
+
+    //=============================================================================
     // Game_BattlerBase
     //  行動制約が有効なステートデータを取得します。
     //=============================================================================
-    Game_BattlerBase.prototype.getRestrictState = function() {
+    Game_BattlerBase.prototype.getRestrictStates = function() {
         var restriction = this.restriction();
-        if (restriction === 0 || restriction >= 4) return null;
+        if (restriction === 0 || restriction >= 4) return [];
         return this.states().filter(function(state) {
             return state.restriction === restriction;
-        })[0];
+        });
+    };
+
+    Game_BattlerBase.prototype.getRestrictState = function() {
+        return this.getRestrictStates().sort(this.compareOrderStatePriority.bind(this))[0];
+    };
+
+    Game_BattlerBase.prototype.compareOrderStatePriority = function(stateA, stateB) {
+        return stateA.priority - stateB.priority;
+    };
+
+    Game_BattlerBase.prototype.isBetrayer = function() {
+        return this.traitObjects().some(function(traitObject) {
+            return getMetaValues(traitObject, ['裏切り', 'Betrayal']);
+        });
+    };
+
+    //=============================================================================
+    // Game_Unit
+    //  裏切り機能を追加します。
+    //=============================================================================
+    var _Game_Unit_aliveMembers = Game_Unit.prototype.aliveMembers;
+    Game_Unit.prototype.aliveMembers = function() {
+        var members = _Game_Unit_aliveMembers.apply(this, arguments);
+        return members.filter(function(member) {
+            return !member.isBetrayer();
+        });
     };
 
     //=============================================================================
@@ -150,18 +219,8 @@
     var _Game_Action_setConfusion      = Game_Action.prototype.setConfusion;
     Game_Action.prototype.setConfusion = function() {
         _Game_Action_setConfusion.apply(this, arguments);
-        var state = this.subject().getRestrictState();
-        if (!state) return;
-        var skillIds = [], i = 1;
-        while (i) {
-            var value = getMetaValues(state, ['スキル' + i, 'Skill' + i]);
-            if (value) {
-                skillIds.push(getArgNumber(value, 1));
-                i++;
-            } else {
-                i = null;
-            }
-        }
+        var skillIds = this.getConfusionSkills();
+        if (!skillIds) return;
         skillIds = skillIds.filter(function(skillId) {
             return this.subject().canUse($dataSkills[skillId]);
         }.bind(this));
@@ -172,13 +231,38 @@
         }
     };
 
+    Game_Action.prototype.getConfusionSkills = function() {
+        var state = this.getRestrictState();
+        if (!state) return null;
+        var skillIds = [], i = 1;
+        while (i) {
+            var value = getMetaValues(state, ['スキル' + i, 'Skill' + i]);
+            if (value) {
+                skillIds.push(getArgNumber(value, 1));
+                i++;
+            } else {
+                i = (i > 10 ? null : i + 1);
+            }
+        }
+        return skillIds;
+    };
+
+    Game_Action.prototype.getRestrictState = function() {
+        return this.subject().getRestrictState();
+    };
+
+    Game_Action.prototype.isExistConfusionSkill = function() {
+        var skillIds = this.getConfusionSkills();
+        return skillIds && skillIds.length > 0;
+    };
+
     Game_Action.prototype.setConfusionSkill = function(skillIds) {
         var skillId = skillIds[Math.randomInt(skillIds.length)];
         this.setSkill(skillId);
     };
 
     Game_Action.prototype.setConfusionSpareSkill = function() {
-        var state = this.subject().getRestrictState();
+        var state = this.getRestrictState();
         var value = getMetaValues(state, ['予備スキル', 'SpareSkill']);
         if (value) {
             var skillId = getArgNumber(value, 1);
@@ -197,14 +281,14 @@
     var _Game_Action_confusionTarget = Game_Action.prototype.confusionTarget;
     Game_Action.prototype.confusionTarget = function() {
         var target = _Game_Action_confusionTarget.apply(this, arguments);
-        if (this.item().id !== this.subject().attackSkillId()) {
-            target = this.confusionTargetsCustom();
+        if (this.isExistConfusionSkill()) {
+            target = this.confusionSkillTarget();
         }
         return target;
     };
 
-    Game_Action.prototype.confusionTargetsCustom = function() {
-        var state = this.subject().getRestrictState();
+    Game_Action.prototype.confusionSkillTarget = function() {
+        var state = this.getRestrictState();
         var value = getMetaValues(state, ['ターゲット', 'Target']);
         if (value) {
             this._targetIndex = getArgNumber(value, 0);
@@ -212,17 +296,23 @@
         if (this.isForUser()) {
             return this.subject();
         }
+        return this.isConfusionSkillTargetForFriend() ? this.targetsForFriends() : this.targetsForOpponents();
+    };
+
+    Game_Action.prototype.isConfusionSkillTargetForFriend = function() {
         switch (this.subject().confusionLevel()) {
             case 1:
-                return this.targetsForOpponents();
+                return this.isConfusionSkillTargetReverse();
             case 2:
-                if (Math.randomInt(2) === 0) {
-                    return this.targetsForOpponents();
-                }
-                return this.targetsForFriends();
-            default:
-                return this.targetsForFriends();
+                return Math.randomInt(2) === 0;
+            case 3:
+                return !this.isConfusionSkillTargetReverse();
         }
+        return false;
+    };
+
+    Game_Action.prototype.isConfusionSkillTargetReverse = function() {
+        return paramTargetFriendSkill && this.isForFriend();
     };
 })();
 

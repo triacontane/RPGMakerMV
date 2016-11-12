@@ -173,7 +173,7 @@
         var exec = require('child_process').exec;
         switch (process.platform) {
             case 'win32':
-                exec('rundll32.exe url.dll,FileProtocolHandler  "' + url + '"');
+                exec('rundll32.exe url.dll,FileProtocolHandler "' + url + '"');
                 break;
             default:
                 exec('open "' + url + '"');
