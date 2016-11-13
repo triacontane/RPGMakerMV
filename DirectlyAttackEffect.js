@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/11/13 設定次第で、戦闘終了後にセーブできなくなる場合がある不具合を修正
 // 1.1.0 2016/10/05 常時残像を有効にする設定の追加
 //                  BattlerGraphicExtend.jsとの連携を強化
 // 1.0.0 2016/09/01 初版
@@ -386,6 +387,10 @@
     var _Game_Battler_initMembers      = Game_Battler.prototype.initMembers;
     Game_Battler.prototype.initMembers = function() {
         _Game_Battler_initMembers.apply(this, arguments);
+        this.initDirectlyAttack();
+    };
+
+    Game_Battler.prototype.initDirectlyAttack = function() {
         this._directlyAttackInfo     = null;
         this._directlyReturnInfo     = null;
         this._directlyAdditionalInfo = null;
@@ -540,6 +545,18 @@
         var info = this._directlyAdditionalInfo;
         return Game_Battler.prototype.hasDirectoryAttack.apply(this, arguments) &&
             ((!info.actorOnly && paramValidEnemy) || info.enemyOnly);
+    };
+
+    //=============================================================================
+    // BattleManager
+    //  戦闘終了後に直接攻撃用の参照を破棄します。
+    //=============================================================================
+    var _BattleManager_endAction = BattleManager.endBattle;
+    BattleManager.endBattle = function(result) {
+        _BattleManager_endAction.apply(this, arguments);
+        $gameParty.battleMembers().forEach(function(member) {
+            member.initDirectlyAttack();
+        });
     };
 
     //=============================================================================
