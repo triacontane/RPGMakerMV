@@ -267,19 +267,19 @@
     AudioManager.playBgs      = function(bgs, pos) {
         this._stopAllBgs = false;
         if (Array.isArray(bgs)) {
-            this.playAllBgs();
+            this.playAllBgs(bgs);
         } else {
             _AudioManager_playBgs.apply(this, arguments);
         }
         this._stopAllBgs = true;
     };
 
-    AudioManager.playAllBgs = function(bgsArray, pos) {
+    AudioManager.playAllBgs = function(bgsArray) {
         this.stopAllBgs();
         var prevIndex      = this._bgsLineIndex;
         this._bgsLineIndex = 1;
         bgsArray.forEach(function(bgs) {
-            _AudioManager_playBgs.call(this, bgs, pos);
+            _AudioManager_playBgs.call(this, bgs, null);
             this._bgsLineIndex++;
         }, this);
         this._bgsLineIndex = prevIndex;
@@ -298,6 +298,8 @@
     AudioManager.stopBgs      = function() {
         if (!this._stopAllBgs) {
             _AudioManager_stopBgs.apply(this, arguments);
+        } else {
+            this.stopAllBgs();
         }
     };
 
