@@ -79,11 +79,6 @@ function Game_BackLog() {
 (function() {
     'use strict';
     var pluginName    = 'BackLogWithEffect';
-    var metaTagPrefix = 'BackLogWithEffect';
-
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
 
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
@@ -274,8 +269,16 @@ function Game_BackLog() {
 
     AudioManager.isPlayingAnySe = function() {
         return this._seBuffers.some(function(audio) {
-            return audio.isPlaying();
+            return audio.isExist();
         });
+    };
+
+    //=============================================================================
+    // WebAudio
+    //  演奏が要求済みかどうかを返します。
+    //=============================================================================
+    WebAudio.prototype.isExist = function() {
+        return !!this._autoPlay;
     };
 
     //=============================================================================
