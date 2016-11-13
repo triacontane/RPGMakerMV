@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2016/11/13 戦闘中に強制終了する場合がある不具合を修正
 // 1.1.0 2016/09/29 使用者に対して無効なスキルを設定できる機能を追加
 //                  アクター用と敵キャラ用とでメモ欄を分岐
 // 1.0.0 2016/09/29 初版
@@ -233,11 +234,14 @@
     var _Game_Party_members      = Game_Party.prototype.members;
     Game_Party.prototype.members = function() {
         var members = _Game_Party_members.apply(this, arguments);
+        if (this._needOriginalMember) return members;
         var action  = BattleManager.getTargetAction();
         if (action) {
+            this._needOriginalMember = true;
             members = members.filter(function(member) {
                 return member.canSelectTarget(action.item(), action.subject());
             });
+            this._needOriginalMember = false;
         }
         return members;
     };
@@ -253,11 +257,14 @@
     var _Game_Troop_members      = Game_Troop.prototype.members;
     Game_Troop.prototype.members = function() {
         var members = _Game_Troop_members.apply(this, arguments);
+        if (this._needOriginalMember) return members;
         var action  = BattleManager.getTargetAction();
         if (action) {
+            this._needOriginalMember = true;
             members = members.filter(function(member) {
                 return member.canSelectTarget(action.item(), action.subject());
             });
+            this._needOriginalMember = false;
         }
         return members;
     };
