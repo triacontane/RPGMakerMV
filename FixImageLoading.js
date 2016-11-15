@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/11/15 本体バージョン1.3.0以降で発生していた警告を抑制
 // 1.0.0 2016/05/02 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -44,13 +45,13 @@
                     this.setFrame(0, 0, 0, 0);
                 }
                 value.addLoadListener(function () {
-                    if (!this._bitmap) return;
+                    if (!this._bitmap || !value) return;
                     this._bitmap = value;
                     this._onBitmapLoad();
                 }.bind(this));
             } else {
                 this._bitmap = value;
-                this.texture.setFrame(Rectangle.emptyRectangle);
+                this.texture.frame = Rectangle.emptyRectangle;
             }
         },
         configurable: true
