@@ -6,7 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.1.0 2016/11/15 本体バージョン1.3.0以降で発生していた警告を抑制
+// 1.1.0 2016/11/16 liply_GC.jsとの競合を解消 by 奏 ねこま様
 // 1.0.0 2016/05/02 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -40,18 +40,21 @@
         set: function(value) {
             if (this._bitmap === value) return;
             if (value) {
+                value.__liply_attachedToScene = true;               // added by nekoma
                 if (!this._bitmap) {
                     this._bitmap = value;
+                    this._bitmap.__liply_attachedToScene = false;   // added by nekoma
                     this.setFrame(0, 0, 0, 0);
                 }
                 value.addLoadListener(function () {
-                    if (!this._bitmap || !value) return;
+                    if (!this._bitmap) return;
                     this._bitmap = value;
+                    this._bitmap.__liply_attachedToScene = false;   // added by nekoma
                     this._onBitmapLoad();
                 }.bind(this));
             } else {
                 this._bitmap = value;
-                this.texture.frame = Rectangle.emptyRectangle;
+                this.texture.frame = Rectangle.emptyRectangle;      // modified by nekoma
             }
         },
         configurable: true
