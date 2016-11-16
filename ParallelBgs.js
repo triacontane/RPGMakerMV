@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/11/16 BGSをプレーしていない状態でセーブ＆ロードするとエラーになる現象の修正
 // 1.0.0 2016/11/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -275,6 +276,7 @@
 
     var _AudioManager_playBgs = AudioManager.playBgs;
     AudioManager.playBgs      = function(bgs, pos) {
+        if (!bgs) return;
         this._stopAllBgs = false;
         if (Array.isArray(bgs)) {
             this.playAllBgs(bgs);
