@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/11/17 YEP_CoreEngine.jsで画面サイズを変更すると、位置の不整合が起きる現象に対応
 // 1.0.0 2016/10/27 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -87,7 +88,7 @@
 
     Sprite_Enemy.prototype.adjustAnchorForBigEnemy = function() {
         if (this.bitmap.height) {
-            this.anchor.y = 1.0 - ((Graphics.boxHeight - this.y) / this.bitmap.height);
+            this.anchor.y = 1.0 - ((Graphics.boxHeight - this._homeY) / this.bitmap.height);
         }
     };
 })();
