@@ -320,6 +320,18 @@
     };
 
     //=============================================================================
+    // Game_Player
+    //  計測対象のメソッドです。
+    //=============================================================================
+    var _Game_Player_performTransfer = Game_Player.prototype.performTransfer;
+    Game_Player.prototype.performTransfer = function() {
+        var methodName = paramOutputMethodName ? getClassName(this) + '.createDisplayObjects()' :
+            '場所移動';
+        SceneManager.calculatePerformance(_Game_Player_performTransfer.bind(this),
+            methodName, paramOtherLogInterval, false);
+    };
+
+    //=============================================================================
     // DataManager
     //  計測対象のメソッドです。
     //=============================================================================

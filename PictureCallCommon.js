@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/11/19 ピクチャクリック時にコモンイベントではなくスイッチをONにできる機能を追加
 // 1.4.0 2016/08/20 ピクチャごとに透明色を考慮するかどうかを設定できる機能を追加
 //                  プラグインを適用していないセーブデータをロードした場合に発生するエラーを修正
 // 1.3.5 2016/04/20 リファクタリングによりピクチャの優先順位が逆転していたのをもとに戻した
@@ -38,7 +39,7 @@
  *
  * @param 透明色を考慮
  * @desc クリックされた箇所が透明色だった場合は、クリックを無効にする。
- * @default OFF
+ * @default ON
  *
  * @param ピクチャ番号の変数番号
  * @desc コモンイベント呼び出し時にピクチャ番号を格納するゲーム変数の番号。
@@ -58,7 +59,7 @@
  * @default OFF
  *
  * @help ピクチャをクリックすると、指定したコモンイベントが
- * 呼び出されるようになるプラグインコマンドを提供します。
+ * 呼び出される、もしくは任意のスイッチをONにするプラグインコマンドを提供します。
  * このプラグインを利用すれば、JavaScriptの知識がなくても
  * 誰でも簡単にクリックやタッチを主体にしたゲームを作れます。
  *
@@ -94,9 +95,14 @@
  *  例：P_CALL_CE 1 3 7 ON
  *  　：ピクチャのボタン化 \v[1] \v[2] \v[3] OFF
  *
+ *  ピクチャのスイッチ化 or
+ *  P_CALL_SWITCH [ピクチャ番号] [スイッチID] [トリガー] [透明色を考慮]:
+ *  　　ピクチャの領域内でトリガー条件を満たした場合に、任意のスイッチをONにします。
+ *  　　トリガーの設定などは、ピクチャのボタン化と同一です。
+ *
  *  ピクチャのボタン化解除 or
  *  P_CALL_CE_REMOVE [ピクチャ番号] :
- *      ピクチャとコモンイベントの関連づけを解除します。
+ *      ピクチャとコモンイベントもしくはスイッチの関連づけを解除します。
  *      全てのトリガーが削除対象です。
  *
  *  例：P_CALL_CE_REMOVE 1
@@ -145,7 +151,7 @@
  *
  * @param TransparentConsideration
  * @desc if click position is transparent, click is disabled.
- * @default OFF
+ * @default ON
  *
  * @param GameVariablePictureNum
  * @desc Game variable number that stores the picture number when common event called.
@@ -246,9 +252,9 @@
     //=============================================================================
     // パラメータの取得とバリデーション
     //=============================================================================
-    var paramGameVariableTouchX       = getParamNumber(['GameVariableTouchX', 'ポインタX座標の変数番号'], 0, 5000);
-    var paramGameVariableTouchY       = getParamNumber(['GameVariableTouchY', 'ポインタY座標の変数番号'], 0, 5000);
-    var paramGameVariablePictNum      = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0, 5000);
+    var paramGameVariableTouchX       = getParamNumber(['GameVariableTouchX', 'ポインタX座標の変数番号'], 0);
+    var paramGameVariableTouchY       = getParamNumber(['GameVariableTouchY', 'ポインタY座標の変数番号'], 0);
+    var paramGameVariablePictNum      = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0);
     var paramTransparentConsideration = getParamBoolean(['TransparentConsideration', '透明色を考慮']);
     var paramSuppressTouch            = getParamBoolean(['SuppressTouch', 'タッチ操作抑制']);
 
@@ -258,16 +264,24 @@
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.call(this, command, args);
-        var pictureId, commonId, trigger, variableNum, transparent;
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        var pictureId, commonId, trigger, variableNum, transparent, switchId;
         switch (getCommandName(command)) {
             case 'P_CALL_CE' :
             case 'ピクチャのボタン化':
                 pictureId   = getArgNumber(args[0], 1, $gameScreen.maxPictures());
                 commonId    = getArgNumber(args[1], 1, $dataCommonEvents.length - 1);
-                trigger     = getArgNumber(args[2], 1, 12);
+                trigger     = getArgNumber(args[2], 1);
                 transparent = (args.length > 3 ? getArgBoolean(args[3]) : null);
                 $gameScreen.setPictureCallCommon(pictureId, commonId, trigger, transparent);
+                break;
+            case 'P_CALL_SWITCH' :
+            case 'ピクチャのスイッチ化':
+                pictureId   = getArgNumber(args[0], 1, $gameScreen.maxPictures());
+                switchId    = getArgNumber(args[1], 1) * -1;
+                trigger     = getArgNumber(args[2], 1);
+                transparent = (args.length > 3 ? getArgBoolean(args[3]) : null);
+                $gameScreen.setPictureCallCommon(pictureId, switchId, trigger, transparent);
                 break;
             case 'P_CALL_CE_REMOVE' :
             case 'ピクチャのボタン化解除':
@@ -326,6 +340,16 @@
     };
 
     //=============================================================================
+    // Game_System
+    //  ロード時にピクチャ関連メンバを初期化します。
+    //=============================================================================
+    var _Game_System_onAfterLoad      = Game_System.prototype.onAfterLoad;
+    Game_System.prototype.onAfterLoad = function() {
+        _Game_System_onAfterLoad.apply(this, arguments);
+        $gameScreen.initPictureArray();
+    };
+
+    //=============================================================================
     // Game_Map
     //  ピクチャがタッチされたときのコモンイベント呼び出し処理を追加定義します。
     //=============================================================================
@@ -336,12 +360,14 @@
     };
 
     Game_Map.prototype.setupPictureCommonEvent = function() {
-        var commonId = $gameTemp._pictureCommonId;
+        $gameTemp.setSwitchForPicture();
+        var commonId = $gameTemp.pictureCommonId();
         var event    = $dataCommonEvents[commonId];
         var result   = false;
         if (commonId > 0 && !this.isEventRunning() && event) {
-            if (paramGameVariablePictNum)
+            if (paramGameVariablePictNum) {
                 $gameVariables._data[paramGameVariablePictNum] = $gameTemp.pictureNum();
+            }
             this._interpreter.setup(event.list);
             result = true;
         }
@@ -353,16 +379,7 @@
     // Game_Troop
     //  ピクチャがタッチされたときのコモンイベント呼び出し処理を追加定義します。
     //=============================================================================
-    Game_Troop.prototype.setupPictureCommonEvent = function() {
-        var commonId = $gameTemp.pictureCommonId();
-        var event    = $dataCommonEvents[commonId];
-        if (commonId > 0 && !this.isEventRunning() && event) {
-            if (paramGameVariablePictNum)
-                $gameVariables._data[paramGameVariablePictNum] = $gameTemp.pictureNum();
-            this._interpreter.setup(event.list);
-        }
-        $gameTemp.clearPictureCallInfo();
-    };
+    Game_Troop.prototype.setupPictureCommonEvent = Game_Map.prototype.setupPictureCommonEvent;
 
     //=============================================================================
     // Game_Screen
@@ -375,14 +392,10 @@
     };
 
     Game_Screen.prototype.initPictureArray = function() {
-        this._pictureCidArray = [];
-        this._pictureSidArray = [];
-        this._picturePidArray = [];
-        this._pictureTransparentArray = [];
-    };
-
-    Game_Screen.prototype.isPreparePictureArray = function() {
-        return !!this._pictureCidArray && !!this._pictureSidArray && !!this._picturePidArray;
+        this._pictureCidArray         = this._pictureCidArray || [];
+        this._pictureSidArray         = this._pictureSidArray || [];
+        this._picturePidArray         = this._picturePidArray || [];
+        this._pictureTransparentArray = this._pictureTransparentArray || [];
     };
 
     var _Game_Screen_update      = Game_Screen.prototype.update;
@@ -398,60 +411,47 @@
             $gameVariables._data[paramGameVariableTouchY] = TouchInput.y;
     };
 
-    Game_Screen.prototype.setPictureCallCommon = function(pictureId, commonId, trigger, transparent) {
+    Game_Screen.prototype.setPictureCallCommon = function(pictureId, commonOrSwitchId, trigger, transparent) {
         var realPictureId = this.realPictureId(pictureId);
         if (this._pictureCidArray[realPictureId] == null) this._pictureCidArray[realPictureId] = [];
-        this._pictureCidArray[realPictureId][trigger] = commonId;
-        this._pictureTransparentArray[realPictureId] = transparent;
+        this._pictureCidArray[realPictureId][trigger] = commonOrSwitchId;
+        this._pictureTransparentArray[realPictureId]  = transparent;
     };
 
     Game_Screen.prototype.setPictureRemoveCommon = function(pictureId) {
-        var realPictureId                    = this.realPictureId(pictureId);
-        this._pictureCidArray[realPictureId] = [];
+        this._pictureCidArray[this.realPictureId(pictureId)] = [];
     };
 
     Game_Screen.prototype.setPictureStroke = function(pictureId, variableNum) {
-        var realPictureId                    = this.realPictureId(pictureId);
-        this._pictureSidArray[realPictureId] = variableNum;
+        this._pictureSidArray[this.realPictureId(pictureId)] = variableNum;
     };
 
     Game_Screen.prototype.removePictureStroke = function(pictureId) {
-        var realPictureId                    = this.realPictureId(pictureId);
-        this._pictureSidArray[realPictureId] = null;
+        this._pictureSidArray[this.realPictureId(pictureId)] = null;
     };
 
     Game_Screen.prototype.setPicturePointer = function(pictureId) {
-        var realPictureId                    = this.realPictureId(pictureId);
-        this._picturePidArray[realPictureId] = true;
+        this._picturePidArray[this.realPictureId(pictureId)] = true;
     };
 
     Game_Screen.prototype.removePicturePointer = function(pictureId) {
-        var realPictureId                    = this.realPictureId(pictureId);
-        this._picturePidArray[realPictureId] = null;
+        this._picturePidArray[this.realPictureId(pictureId)] = null;
     };
 
     Game_Screen.prototype.getPictureCid = function(pictureId) {
-        var realPictureId = this.realPictureId(pictureId);
-        if (!this.isPreparePictureArray()) this.initPictureArray();
-        return this._pictureCidArray[realPictureId];
+        return this._pictureCidArray[this.realPictureId(pictureId)];
     };
 
     Game_Screen.prototype.getPictureSid = function(pictureId) {
-        var realPictureId = this.realPictureId(pictureId);
-        if (!this.isPreparePictureArray()) this.initPictureArray();
-        return this._pictureSidArray[realPictureId];
+        return this._pictureSidArray[this.realPictureId(pictureId)];
     };
 
     Game_Screen.prototype.getPicturePid = function(pictureId) {
-        var realPictureId = this.realPictureId(pictureId);
-        if (!this.isPreparePictureArray()) this.initPictureArray();
-        return this._picturePidArray[realPictureId];
+        return this._picturePidArray[this.realPictureId(pictureId)];
     };
 
     Game_Screen.prototype.getPictureTransparent = function(pictureId) {
-        var realPictureId = this.realPictureId(pictureId);
-        if (!this.isPreparePictureArray()) this.initPictureArray();
-        return this._pictureTransparentArray[realPictureId];
+        return this._pictureTransparentArray[this.realPictureId(pictureId)];
     };
 
     //=============================================================================
@@ -580,14 +580,43 @@
         if (!commandIds) return;
         for (var i = 0, n = this._triggerHandler.length; i < n; i++) {
             var handler = this._triggerHandler[i];
-            if (handler && commandIds[i] && handler.call(this) && (i === 5 || i === 4 || !this.isTransparent())) {
-                if (paramSuppressTouch) TouchInput.suppressEvents();
-                if (i === 3) TouchInput._pressedTime = -60;
-                if (i === 4) this._onMouse = false;
-                if (i === 5) this._outMouse = false;
-                $gameTemp.setPictureCallInfo(commandIds[i], this._pictureId);
+            if (handler && commandIds[i] && handler.call(this) && (this.triggerIsFocus(i) || !this.isTransparent())) {
+                this.fireTouchEvent(commandIds, i);
             }
         }
+    };
+
+    Sprite_Picture.prototype.fireTouchEvent = function(commandIds, i) {
+        if (paramSuppressTouch) TouchInput.suppressEvents();
+        if (this.triggerIsLongPressed(i)) TouchInput._pressedTime = -60;
+        if (this.triggerIsOnFocus(i)) this._onMouse = false;
+        if (this.triggerIsOutFocus(i)) this._outMouse = false;
+        var commonOrSwitchId = commandIds[i];
+        if (this.isNeedSetSwitch(commonOrSwitchId)) {
+            $gameSwitches.setValue(commonOrSwitchId * -1, true);
+        } else {
+            $gameTemp.setPictureCallInfo(commonOrSwitchId, this._pictureId);
+        }
+    };
+
+    Sprite_Picture.prototype.isNeedSetSwitch = function(commandId) {
+        return commandId < 0;
+    };
+
+    Sprite_Picture.prototype.triggerIsLongPressed = function(triggerId) {
+        return triggerId === 3;
+    };
+
+    Sprite_Picture.prototype.triggerIsOnFocus = function(triggerId) {
+        return triggerId === 4;
+    };
+
+    Sprite_Picture.prototype.triggerIsOutFocus = function(triggerId) {
+        return triggerId === 5;
+    };
+
+    Sprite_Picture.prototype.triggerIsFocus = function(triggerId) {
+        return this.triggerIsOnFocus(triggerId) || this.triggerIsOutFocus(triggerId);
     };
 
     Sprite_Picture.prototype.isTransparent = function() {
