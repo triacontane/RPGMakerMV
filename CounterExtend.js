@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/11/20 特定のスキルによる反撃や反撃条件を細かく指定できる機能を追加
 // 1.0.0 2016/11/15 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -17,25 +18,136 @@
  * @plugindesc CounterExtendPlugin
  * @author triacontane
  *
- * @help 魔法攻撃を受けた場合もカウンターが発動するようになります。
+ * @param PayCounterCost
+ * @desc 固有スキルによる反撃がコスト消費するかどうかを設定します。(ON/OFF)
+ * @default OFF
+ *
+ * @param FailureCostShortage
+ * @desc 固有スキルによる反撃がコスト不足の場合、反撃は行いません。(ON/OFF)
+ * @default OFF
+ *
+ * @help 反撃の仕様を拡張します。
+ * 魔法に対する反撃や、特定のスキルを使った反撃、
+ * 特定の条件下でのみ発動する反撃などが作成できます。
+ *
+ * 具体的な機能詳細は以下の通りです。
+ *
+ * 機能詳細
+ *
+ * 1. 魔法攻撃を受けた場合もカウンターが発動するようになります。
+ * 特徴を有するメモ欄(※1)に以下の通り入力してください。
+ *
+ * <CE_魔法反撃:50>      # 魔法攻撃を受けた場合に50%の確率で反撃します。
+ * <CE_MagicCounter:50>  # 同上
+ *
+ * ※1 アクター、職業、武器、防具、ステートが該当します。
+ *
+ * 数値を指定しない場合は、物理攻撃と同様の反撃率が適用されます。
+ *
+ * <CE_魔法反撃>     # 魔法攻撃を受けた場合にもともとの反撃率で反撃します。
+ * <CE_MagicCounter> # 同上
+ *
+ * 2. 反撃時のスキルを個別に設定することができます。
  * 特徴を有するメモ欄に以下の通り入力してください。
  *
- * <CE_魔法反撃>      # 魔法攻撃を受けた場合も反撃します。
- * <CE_MagicCounter>  # 同上
+ * <CE_反撃スキルID:\v[1]>    # 反撃時に変数[1]のIDのスキルを使用します。
+ * <CE_CounterSkillId:\v[1]>  # 同上
+ * <CE_魔法反撃スキルID:3>    # 魔法反撃時にID[3]のスキルを使用します。
+ * <CE_MagicCounterSkillId:3> # 同上
  *
- * このプラグインにはプラグインコマンドはありません。
+ * 3. 反撃条件をJavaScript計算式の評価結果を利用できます。
+ * 反撃条件を満たさない場合は反撃は実行されません。
+ * 特徴を有するメモ欄に以下の通り入力してください。
+ *
+ * <CE_反撃条件:v(1) &lt; 100>    # 変数[1]が100より小さければ反撃します。
+ * <CE_CounterCond:v(1) &lt; 100> # 同上(※2)
+ * <CE_魔法反撃条件:s(1)>         # スイッチ[1]がONなら魔法反撃します。
+ * <CE_MagicCounterCond:s(1)>     # 同上
+ *
+ * 実行したスキルの情報はローカル変数「skill」で参照できます。
+ * <CE_反撃条件:skill.id === 10>              # スキルIDが[10]なら反撃します。
+ * <CE_反撃条件:skill.damage.elementId === 3> # スキル属性が[3]なら反撃します。
+ *
+ * 対象のバトラー情報は「this」で、相手のバトラー情報は「target」で参照できます。
+ * <CE_反撃条件:this.hpRate() &lt; 0.5> # 自分のHPが50%を下回ると反撃します。
+ *
+ * ※2 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
+ * < → &lt;
+ * > → &gt;
+ *
+ * 4. 反撃実行時に専用のアニメーションIDを再生します。
+ * 特徴を有するメモ欄に以下の通り入力してください。
+ * <CE_反撃アニメID:20>       # 反撃実行前にアニメーション[20]を再生します。
+ * <CE_CounterAnimationId:20> # 同上
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc カウンター拡張プラグイン
+ * @plugindesc 反撃拡張プラグイン
  * @author トリアコンタン
  *
- * @help 魔法攻撃を受けた場合もカウンターが発動するようになります。
+ * @param 反撃コスト消費
+ * @desc 固有スキルによる反撃がコスト消費するかどうかを設定します。(ON/OFF)
+ * @default OFF
+ *
+ * @param コスト不足で失敗
+ * @desc 固有スキルによる反撃がコスト不足の場合、反撃は行いません。(ON/OFF)
+ * @default OFF
+ *
+ * @help 反撃の仕様を拡張します。
+ * 魔法に対する反撃や、特定のスキルを使った反撃、
+ * 特定の条件下でのみ発動する反撃などが作成できます。
+ *
+ * 具体的な機能詳細は以下の通りです。
+ *
+ * 機能詳細
+ *
+ * 1. 魔法攻撃を受けた場合もカウンターが発動するようになります。
+ * 特徴を有するメモ欄(※1)に以下の通り入力してください。
+ *
+ * <CE_魔法反撃:50>      # 魔法攻撃を受けた場合に50%の確率で反撃します。
+ * <CE_MagicCounter:50>  # 同上
+ *
+ * ※1 アクター、職業、武器、防具、ステートが該当します。
+ *
+ * 数値を指定しない場合は、物理攻撃と同様の反撃率が適用されます。
+ *
+ * <CE_魔法反撃>     # 魔法攻撃を受けた場合にもともとの反撃率で反撃します。
+ * <CE_MagicCounter> # 同上
+ *
+ * 2. 反撃時のスキルを個別に設定することができます。
  * 特徴を有するメモ欄に以下の通り入力してください。
  *
- * <CE_魔法反撃>      # 魔法攻撃を受けた場合も反撃します。
- * <CE_MagicCounter>  # 同上
+ * <CE_反撃スキルID:\v[1]>    # 反撃時に変数[1]のIDのスキルを使用します。
+ * <CE_CounterSkillId:\v[1]>  # 同上
+ * <CE_魔法反撃スキルID:3>    # 魔法反撃時にID[3]のスキルを使用します。
+ * <CE_MagicCounterSkillId:3> # 同上
+ *
+ * 3. 反撃条件をJavaScript計算式の評価結果を利用できます。
+ * 反撃条件を満たさない場合は反撃は実行されません。
+ * 特定のスキルに対してのみ反撃したり、特定の条件下でのみ反撃したりできます。
+ * 特徴を有するメモ欄に以下の通り入力してください。
+ *
+ * <CE_反撃条件:v(1) &lt; 100>    # 変数[1]が100より小さければ反撃します。
+ * <CE_CounterCond:v(1) &lt; 100> # 同上(※2)
+ * <CE_魔法反撃条件:s(1)>         # スイッチ[1]がONなら魔法反撃します。
+ * <CE_MagicCounterCond:s(1)>     # 同上
+ *
+ * 実行したスキルの情報はローカル変数「skill」で参照できます。
+ * <CE_反撃条件:skill.id === 10>              # スキルIDが[10]なら反撃します。
+ * <CE_反撃条件:skill.damage.elementId === 3> # スキル属性が[3]なら反撃します。
+ *
+ * 対象のバトラー情報は「this」で、相手のバトラー情報は「target」で参照できます。
+ * <CE_反撃条件:this.hpRate() &lt; 0.5> # 自分のHPが50%を下回ると反撃します。
+ *
+ * ※2 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
+ * < → &lt;
+ * > → &gt;
+ *
+ * 4. 反撃実行時に専用のアニメーションIDを再生します。
+ * 特徴を有するメモ欄に以下の通り入力してください。
+ * <CE_反撃アニメID:20>       # 反撃実行前にアニメーション[20]を再生します。
+ * <CE_CounterAnimationId:20> # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -45,9 +157,37 @@
  *  このプラグインはもうあなたのものです。
  */
 
+var Imported = Imported || {};
+
 (function() {
     'use strict';
+    var pluginName    = 'CounterExtend';
     var metaTagPrefix = 'CE_';
+
+    var getParamOther = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON';
+    };
+
+    var getArgEval = function(arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (eval(convertEscapeCharacters(arg)) || 0).clamp(min, max);
+    };
+
+    var getArgString = function(arg, upperFlg) {
+        arg = convertEscapeCharacters(arg);
+        return upperFlg ? arg.toUpperCase() : arg;
+    };
 
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
@@ -63,6 +203,25 @@
         return undefined;
     };
 
+    var convertEscapeCharacters = function(text) {
+        if (text == null) text = '';
+        var metaTagDisConvert = {
+            '&lt;': '<',
+            '&gt;': '>'
+        };
+        text                  = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
+            return metaTagDisConvert[value];
+        }.bind(this));
+        var windowLayer       = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+    };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var paramPayCounterCost      = getParamBoolean(['PayCounterCost', '反撃コスト消費']);
+    var paramFailureCostShortage = getParamBoolean(['FailureCostShortage', 'コスト不足で失敗']);
+
     //=============================================================================
     // Game_BattlerBase
     //  行動制約が有効なステートデータを取得します。
@@ -73,19 +232,163 @@
         });
     };
 
+    Game_BattlerBase.prototype.getMagicCounterRate = function() {
+        return this.traitObjects().reduce(function(prevValue, traitObject) {
+            var metaValue = getMetaValues(traitObject, ['魔法反撃', 'MagicCounter']);
+            return metaValue ? Math.max(getArgEval(metaValue) / 100, prevValue) : prevValue;
+        }, 0);
+    };
+
+    Game_BattlerBase.prototype.getCounterAnimationId = function() {
+        var counterAnimationId = 0;
+        this.traitObjects().some(function(traitObject) {
+            var metaValue = getMetaValues(traitObject, ['反撃アニメID', 'CounterAnimationId']);
+            if (metaValue) {
+                counterAnimationId = getArgEval(metaValue, 1);
+                return true;
+            }
+            return false;
+        }.bind(this));
+        return counterAnimationId;
+    };
+
+    Game_BattlerBase.prototype.reserveCounterSkillId = function(names) {
+        this._reserveCounterSkillId = 0;
+        this.traitObjects().some(function(traitObject) {
+            var metaValue = getMetaValues(traitObject, names);
+            if (metaValue) {
+                this._reserveCounterSkillId = getArgEval(metaValue, 1);
+                return true;
+            }
+            return false;
+        }.bind(this));
+        return this._reserveCounterSkillId;
+    };
+
+    Game_BattlerBase.prototype.getCounterCustomRate = function(names, action, target) {
+        if (!target.canPaySkillCostForCounter()) return 0;
+        var counterCondition;
+        this.traitObjects().some(function(traitObject) {
+            var metaValue = getMetaValues(traitObject, names);
+            if (metaValue) {
+                counterCondition = getArgString(metaValue);
+                return true;
+            }
+            return false;
+        }.bind(this));
+        return counterCondition ? this.executeCounterScript(counterCondition, action, target) : 1;
+    };
+
+    Game_BattlerBase.prototype.executeCounterScript = function(counterCondition, action, target) {
+        var skill = action.item();
+        var v     = $gameVariables.value.bind($gameVariables);
+        var s     = $gameSwitches.value.bind($gameSwitches);
+        var result;
+        try {
+            result = !!eval(counterCondition);
+        } catch (e) {
+            console.error(e.toString());
+            throw new Error('反撃条件計算式の評価に失敗しました。式：' + counterCondition);
+        }
+        return result ? 1 : 0;
+    };
+
+    Game_BattlerBase.prototype.getCounterSkillId = function() {
+        return this.isReserveCounterSkill() ? this._reserveCounterSkillId : this.attackSkillId();
+    };
+
+    Game_BattlerBase.prototype.isReserveCounterSkill = function() {
+        return !!this._reserveCounterSkillId;
+    };
+
+    Game_BattlerBase.prototype.canPaySkillCostForCounter = function() {
+        return !paramFailureCostShortage || !this._reserveCounterSkillId ||
+            this.canPaySkillCost($dataSkills[this._reserveCounterSkillId]);
+    };
+
     //=============================================================================
     // Game_Action
     //  魔法反撃を可能にします。
     //=============================================================================
-    var _Game_Action_itemCnt = Game_Action.prototype.itemCnt;
+    var _Game_Action_itemCnt      = Game_Action.prototype.itemCnt;
     Game_Action.prototype.itemCnt = function(target) {
         var cnt = _Game_Action_itemCnt.apply(this, arguments);
-        if (cnt > 0) return cnt;
+        if (this.isMagical()) {
+            return this.itemMagicCnt(target);
+        } else {
+            target.reserveCounterSkillId(['反撃スキルID', 'CounterSkillId']);
+            return target.getCounterCustomRate(['反撃条件', 'CounterCond'], this, target) * cnt;
+        }
+    };
+
+    Game_Action.prototype.itemMagicCnt = function(target) {
         if (target.isValidMagicCounter() && this.isMagical() && target.canMove()) {
-            return target.cnt;
+            target.reserveCounterSkillId(['魔法反撃スキルID', 'MagicCounterSkillId']);
+            return target.getCounterCustomRate(['魔法反撃条件', 'MagicCounterCond'], this, target) *
+                (target.getMagicCounterRate() || target.cnt);
         } else {
             return 0;
         }
+    };
+
+    Game_Action.prototype.setCounterSkill = function() {
+        this.setSkill(this.subject().getCounterSkillId());
+    };
+
+    //=============================================================================
+    // BattleManager
+    //  スキルによる反撃を実装します。
+    //=============================================================================
+    var _BattleManager_invokeCounterAttack = BattleManager.invokeCounterAttack;
+    BattleManager.invokeCounterAttack      = function(subject, target) {
+        if (!target.isReserveCounterSkill()) {
+            _BattleManager_invokeCounterAttack.apply(this, arguments);
+        } else {
+            var action = new Game_Action(target);
+            action.setCounterSkill();
+            if (paramPayCounterCost) target.useItem(action.item());
+            action.apply(subject);
+            this._logWindow.displaySkillCounter(target, action, [subject]);
+            this._logWindow.displayActionResults(target, subject);
+        }
+    };
+
+    //=============================================================================
+    // Window_BattleLog
+    //  スキルによる反撃を演出します。
+    //=============================================================================
+    Window_BattleLog.prototype.displaySkillCounter = function(subject, action, targets) {
+        var item             = action.item();
+        var counterAnimation = subject.getCounterAnimationId();
+        if (counterAnimation) {
+            this.push('showAnimation', subject, [subject], counterAnimation);
+            this.push('waitForAnimation');
+        }
+        if (!Imported.YEP_BattleEngineCore) {
+            this.push('addText', TextManager.counterAttack.format(subject.name()));
+        }
+        this.push('performAction', subject, action);
+        this.push('showAnimation', subject, targets.clone(), item.animationId);
+        this.push('waitForAnimation');
+        this.displayAction(subject, item);
+    };
+
+    var _Window_BattleLog_updateWaitMode      = Window_BattleLog.prototype.updateWaitMode;
+    Window_BattleLog.prototype.updateWaitMode = function() {
+        var waiting = false;
+        switch (this._waitMode) {
+            case 'animation':
+                waiting = this._spriteset.isAnimationPlaying();
+                break;
+        }
+        if (!waiting) {
+            waiting = _Window_BattleLog_updateWaitMode.apply(this, arguments);
+        }
+        return waiting;
+    };
+
+    Window_BattleLog.prototype.waitForAnimation = function() {
+        this.setWaitMode('animation');
     };
 })();
 
