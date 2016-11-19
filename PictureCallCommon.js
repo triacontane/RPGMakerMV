@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2016/11/20 1.5.0で混入した不要なコードを削除
 // 1.5.0 2016/11/19 ピクチャクリック時にコモンイベントではなくスイッチをONにできる機能を追加
 // 1.4.0 2016/08/20 ピクチャごとに透明色を考慮するかどうかを設定できる機能を追加
 //                  プラグインを適用していないセーブデータをロードした場合に発生するエラーを修正
@@ -360,7 +361,6 @@
     };
 
     Game_Map.prototype.setupPictureCommonEvent = function() {
-        $gameTemp.setSwitchForPicture();
         var commonId = $gameTemp.pictureCommonId();
         var event    = $dataCommonEvents[commonId];
         var result   = false;
