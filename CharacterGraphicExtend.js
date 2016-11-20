@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/11/21 複数のページに対して別々の画像を割り当てる機能を追加しました。
 // 1.3.0 2016/07/16 以下の機能を追加しました。
 //                  遠景をイベントグラフィックとして利用可能
 //                  イベント画像の原点を変更する機能、イベント画像の画面表示位置を絶対値指定する機能
@@ -32,7 +33,7 @@
  *
  * @help イベントのグラフィック表示方法を拡張して多彩な表現を可能にします。
  * イベントのメモ欄に所定の書式で記入してください。
- * 項目の間はカンマで区切ってください。引数には文章の表示と同じ制御文字が使用できます。
+ * 項目はカンマで区切ってください。引数には文章の表示と同じ制御文字が使用できます。
  * また、ページ数に「A」と入力すると全てのページが対象になります。
  *
  * <CGピクチャ:（ページ数）,（ファイル名）>
@@ -40,6 +41,13 @@
  * 拡張子は不要です。歩行アニメ待機アニメは無効化されます。
  *
  * 例：<CGピクチャ:1,Test> or <CGPicture:1,Test>
+ *
+ * 〇追加機能
+ * 複数のページに対して別々の画像を割り当てたい場合は
+ * ページごとにタグを作成してください。
+ * 以下の例だと1ページ目ではaaa.pngが、2ページ目ではbbb.pngが使用されます。
+ * 他のタグも同様です。
+ * 例：<CGピクチャ:1,aaa><CGピクチャ:2,bbb>
  *
  * <CG敵キャラ:（ページ数）,（ファイル名）>
  * 指定したページが有効になった場合のグラフィックを敵キャラ画像から取得します。
@@ -217,6 +225,30 @@
     // Game_CharacterBase
     //  拡張するプロパティを定義します。
     //=============================================================================
+    var _DataManager_extractMetadata = DataManager.extractMetadata;
+    DataManager.extractMetadata = function(data) {
+        _DataManager_extractMetadata.apply(this, arguments);
+        this.extractMetadataArray(data);
+    };
+
+    DataManager.extractMetadataArray = function(data) {
+        var re = /<([^<>:]+)(:?)([^>]*)>/g;
+        data.metaArray = {};
+        var match = true;
+        while (match) {
+            match = re.exec(data.note);
+            if (match) {
+                var metaName = match[1];
+                data.metaArray[metaName] = data.metaArray[metaName] || [];
+                data.metaArray[metaName].push(match[2] === ':' ? match[3] : true);
+            }
+        }
+    };
+
+    //=============================================================================
+    // Game_CharacterBase
+    //  拡張するプロパティを定義します。
+    //=============================================================================
     var _Game_CharacterBase_initMembers      = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
@@ -334,7 +366,7 @@
     };
 
     var _Game_CharacterBase_screenZ      = Game_CharacterBase.prototype.screenZ;
-    Game_CharacterBase.prototype.screenZ = function() {
+    Game_CharacterBase.prototype.screenZ  = function() {
         return this._customPriority > 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
     };
 
@@ -350,12 +382,33 @@
 
     Game_Event.prototype.getMetaCg = function(names) {
         if (!Array.isArray(names)) names = [names];
-        var params = null;
-        names.forEach(function(name) {
-            if (!params || params[0] === '') params = getArgArrayString(this.event().meta['CG' + name]);
+        var metaParams = this.getMetaParameter(names);
+        if (!metaParams) return null;
+        var result = null;
+        metaParams.some(function(metaParam) {
+            var params = getArgArrayString(metaParam);
+            if (this.isValidCgeParam(params)) {
+                result = params;
+            }
+            return result;
         }.bind(this));
-        return params.length > 1 && (getArgNumber(params[0]) === this._pageIndex + 1 || params[0].toUpperCase() === 'A') ?
-            params : null;
+        return result;
+    };
+
+    Game_Event.prototype.getMetaParameter = function(names) {
+        var metaParams = null;
+        names.some(function(name) {
+            if (!metaParams || metaParams[0] === '') {
+                metaParams = this.event().metaArray['CG' + name];
+            }
+            return metaParams;
+        }.bind(this));
+        return metaParams;
+    };
+
+    Game_Event.prototype.isValidCgeParam = function(params) {
+        var pageIndex = getArgNumber(params[0]);
+        return params.length > 1 && (pageIndex === this._pageIndex + 1 || params[0].toUpperCase() === 'A');
     };
 
     var _Game_Event_setupPageSettings      = Game_Event.prototype.setupPageSettings;
