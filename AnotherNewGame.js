@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/11/22 アナザーニューゲームを選択した際に、フェードアウトしなくなる設定を追加
 // 1.1.0 2016/03/29 fftfanttさんからご提供いただいたコードを反映させ、アナザーニューゲーム選択時に
 //                  既存のセーブファイルをロードする機能を追加
 // 1.0.1 2015/11/10 プラグイン適用中にセーブできなくなる不具合を修正
@@ -46,6 +47,10 @@
  *
  * @param file_load
  * @desc アナザーニューゲーム選択時に、ロード画面に遷移して既存セーブデータをロードできるようになります。（ON/OFF）
+ * @default OFF
+ *
+ * @param no_fadeout
+ * @desc アナザーニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
  * @default OFF
  *
  * @help タイトル画面のウィンドウの一番下に、もう一つのニューゲームを追加します。
@@ -126,6 +131,9 @@
     };
 
     Scene_Title.prototype.commandNewGameSecond = function() {
+        if ((parameters['no_fadeout'] || '').toUpperCase() === 'ON') {
+            this._noFadeout = true;
+        }
         if ((parameters['file_load'] || '').toUpperCase() !== 'ON') {
             var preMapId = $dataSystem.startMapId;
             var preStartX = $dataSystem.startX;
@@ -150,6 +158,16 @@
             this._commandWindow.setHandler('nameGame2',  this.commandNewGameSecond.bind(this));
     };
 
+    Scene_Title.prototype.fadeOutAll = function() {
+        if (!this._noFadeout) {
+            Scene_Base.prototype.fadeOutAll.apply(this, arguments);
+        }
+    };
+
+    //=============================================================================
+    // Scene_Load
+    //  ロード成功時にアナザーポイントに移動します。
+    //=============================================================================
     var _Scene_Load_onLoadSuccess = Scene_Load.prototype.onLoadSuccess;
     Scene_Load.prototype.onLoadSuccess = function() {
         _Scene_Load_onLoadSuccess.call(this);
