@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/11/23 遠景のスクロール速度がマップとずれていた問題を修正
+//                  ニューゲーム時にスクロール位置を引き継ぐ設定を追加
+//                  ニューゲーム選択時にフェードアウトしなくなる設定を追加
 // 1.0.0 2016/11/09 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -23,6 +26,14 @@
  *
  * @param ViewForeground
  * @desc もともとのタイトル画面より上に表示します。霧のような演出に使えます。
+ * @default OFF
+ *
+ * @param InheritScroll
+ * @desc ニューゲーム時に遠景のスクロール状態を引き継ぎます。
+ * @default OFF
+ *
+ * @param NoFadeout
+ * @desc ニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
  * @default OFF
  *
  * @help タイトル画面に追加で遠景を指定できます。
@@ -45,6 +56,14 @@
  *
  * @param 近景表示
  * @desc もともとのタイトル画面より上に表示します。霧のような演出に使えます。
+ * @default OFF
+ *
+ * @param スクロール引き継ぎ
+ * @desc ニューゲーム時に遠景のスクロール状態を引き継ぎます。
+ * @default OFF
+ *
+ * @param フェードアウト無効
+ * @desc ニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
  * @default OFF
  *
  * @help タイトル画面に追加で遠景を指定できます。
@@ -93,6 +112,36 @@ var $dataTitleMap = null;
     //=============================================================================
     var paramParallaxSettingMapId = getParamNumber(['ParallaxSettingMapId', '遠景設定マップID'], 0);
     var paramViewForeground       = getParamBoolean(['ViewForeground', '近景表示']);
+    var paramInheritScroll        = getParamBoolean(['InheritScroll', 'スクロール引き継ぎ']);
+    var paramNoFadeout            = getParamBoolean(['NoFadeout', 'フェードアウト無効']);
+
+    //=============================================================================
+    // ローカル変数
+    //=============================================================================
+    var localParallaxX = 0;
+    var localParallaxY = 0;
+
+    //=============================================================================
+    // Game_Map
+    //  タイトル遠景のスクロール状態を引き継ぎます。
+    //=============================================================================
+    var _Game_Map_setDisplayPos      = Game_Map.prototype.setDisplayPos;
+    Game_Map.prototype.setDisplayPos = function(x, y) {
+        _Game_Map_setDisplayPos.apply(this, arguments);
+        this.inheritParallaxOrigin();
+    };
+
+    Game_Map.prototype.inheritParallaxOrigin = function() {
+        if (!paramInheritScroll) return;
+        if (localParallaxX) {
+            this._parallaxX += localParallaxX;
+            localParallaxX  = 0;
+        }
+        if (localParallaxY) {
+            this._parallaxY += localParallaxY;
+            localParallaxY  = 0;
+        }
+    };
 
     //=============================================================================
     // Scene_Boot
@@ -166,10 +215,10 @@ var $dataTitleMap = null;
 
     Scene_Title.prototype.updateParallax = function() {
         if (this._parallaxLoopX) {
-            this._parallaxX += this._parallaxSx / this.getHalfTileWidth();
+            this._parallaxX += this._parallaxSx / (this.getTileWidth() * 2);
         }
         if (this._parallaxLoopY) {
-            this._parallaxY += this._parallaxSy / this.getHalfTileWidth();
+            this._parallaxY += this._parallaxSy / (this.getTileWidth() * 2);
         }
         if (this._parallax.bitmap) {
             this._parallax.origin.x = this.parallaxOx();
@@ -202,6 +251,34 @@ var $dataTitleMap = null;
             return this._parallaxY * this.getHalfTileWidth();
         } else {
             return 0;
+        }
+    };
+
+    var _Scene_Title_commandNewGame      = Scene_Title.prototype.commandNewGame;
+    Scene_Title.prototype.commandNewGame = function() {
+        if (paramNoFadeout) {
+            this._noFadeout = true;
+        }
+        _Scene_Title_commandNewGame.apply(this, arguments);
+        this.keepParallaxOrigin();
+    };
+
+    var _Scene_Title_commandNewGameSecond      = Scene_Title.prototype.commandNewGameSecond;
+    Scene_Title.prototype.commandNewGameSecond = function() {
+        if (_Scene_Title_commandNewGameSecond) _Scene_Title_commandNewGameSecond.apply(this, arguments);
+        this.keepParallaxOrigin();
+    };
+
+    Scene_Title.prototype.keepParallaxOrigin = function() {
+        if (paramInheritScroll) {
+            localParallaxX = this._parallaxX;
+            localParallaxY = this._parallaxY;
+        }
+    };
+
+    Scene_Title.prototype.fadeOutAll = function() {
+        if (!this._noFadeout) {
+            Scene_Base.prototype.fadeOutAll.apply(this, arguments);
         }
     };
 })();

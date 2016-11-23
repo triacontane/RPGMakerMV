@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/11/23 遠景タイトルプラグイン（ParallaxTitle.js）と連携する設定を追加
 // 1.2.0 2016/11/22 アナザーニューゲームを選択した際に、フェードアウトしなくなる設定を追加
 // 1.1.0 2016/03/29 fftfanttさんからご提供いただいたコードを反映させ、アナザーニューゲーム選択時に
 //                  既存のセーブファイルをロードする機能を追加
@@ -130,7 +131,9 @@
             angInfo['enable'] !== undefined ? angInfo['enable'] : parameters['disable'].toUpperCase() !== "ON";
     };
 
+    var _Scene_Title_commandNewGameSecond = Scene_Title.prototype.commandNewGameSecond;
     Scene_Title.prototype.commandNewGameSecond = function() {
+        if (_Scene_Title_commandNewGameSecond) _Scene_Title_commandNewGameSecond.apply(this, arguments);
         if ((parameters['no_fadeout'] || '').toUpperCase() === 'ON') {
             this._noFadeout = true;
         }
