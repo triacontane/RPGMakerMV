@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2016/11/25 メッセージウィンドウの背景の表示可否を固定にできる機能を追加しました。
 // 2.2.1 2016/11/12 Macの場合、Ctrlキーの代わりにoptionキーを使用するようヘルプを追記
 // 2.2.0 2016/11/03 ウィンドウごとに使用するフォントを設定できる機能を追加
 // 2.1.0 2016/09/28 アイコンサイズをフォントサイズに合わせて自動で拡縮できる機能を追加
@@ -79,6 +80,10 @@
  *
  * @param アイコンサイズ調整
  * @desc フォントサイズが変更された場合にアイコンのサイズを自動で調整します。
+ * @default OFF
+ *
+ * @param 背景表示可否固定
+ * @desc メッセージウィンドウ等でイベント命令ごとに指定する背景の表示設定を無視して、プラグインの設定値で固定します。
  * @default OFF
  *
  * @help メニュー画面や戦闘画面など各画面のウィンドウや画像の表示位置を
@@ -319,7 +324,7 @@ var $dataContainerProperties = null;
     //=============================================================================
     var pluginName    = 'GraphicalDesignMode';
     var metaTagPrefix = 'GDM';
-    var version       = '2.1.0';
+    var version       = '2.3.0';
 
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
@@ -376,17 +381,18 @@ var $dataContainerProperties = null;
         return (command || '').toUpperCase();
     };
 
-    var paramDesignMode    = getParamBoolean(['DesignMode', 'デザインモード']);
-    var paramThroughWindow = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
-    var paramAutoSave      = getParamBoolean(['AutoSave', '自動保存']);
-    var paramGridSize      = getParamNumber(['GridSize', 'グリッドサイズ'], 0) || 0;
-    var paramPadding       = getParamNumber(['Padding', 'パディング']);
-    var paramFontSize      = getParamNumber(['FontSize', 'フォントサイズ']);
-    var paramLineHeight    = getParamNumber(['LineHeight', '行の高さ']);
-    var paramBackOpacity   = getParamNumber(['LineHeight', '背景透明度']);
-    var paramMobileMake    = getParamBoolean(['MobileMake', 'モバイル版作成']);
-    var paramFakeMobile    = getParamBoolean(['FakeMobile', 'モバイル偽装']);
-    var paramIconSizeScale = getParamBoolean(['IconSizeScale', 'アイコンサイズ調整']);
+    var paramDesignMode      = getParamBoolean(['DesignMode', 'デザインモード']);
+    var paramThroughWindow   = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
+    var paramAutoSave        = getParamBoolean(['AutoSave', '自動保存']);
+    var paramGridSize        = getParamNumber(['GridSize', 'グリッドサイズ'], 0) || 0;
+    var paramPadding         = getParamNumber(['Padding', 'パディング']);
+    var paramFontSize        = getParamNumber(['FontSize', 'フォントサイズ']);
+    var paramLineHeight      = getParamNumber(['LineHeight', '行の高さ']);
+    var paramBackOpacity     = getParamNumber(['LineHeight', '背景透明度']);
+    var paramMobileMake      = getParamBoolean(['MobileMake', 'モバイル版作成']);
+    var paramFakeMobile      = getParamBoolean(['FakeMobile', 'モバイル偽装']);
+    var paramIconSizeScale   = getParamBoolean(['IconSizeScale', 'アイコンサイズ調整']);
+    var paramBackgroundFixed = getParamBoolean(['BackgroundFixed', '背景表示可否固定']);
 
     //=============================================================================
     // Utils
@@ -1474,6 +1480,13 @@ var $dataContainerProperties = null;
             this.contents.blt(bitmap, sx, sy, pw, ph, dx, dy, dw, dh);
         } else {
             _Window_Base_drawIcon.apply(this, arguments);
+        }
+    };
+
+    var _Window_Base_setBackgroundType      = Window_Base.prototype.setBackgroundType;
+    Window_Base.prototype.setBackgroundType = function(type) {
+        if (!paramBackgroundFixed) {
+            _Window_Base_setBackgroundType.apply(this, arguments);
         }
     };
 
