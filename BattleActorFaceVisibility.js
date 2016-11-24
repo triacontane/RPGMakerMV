@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2016/11/24 現在のHPの割合によって表示するグラフィックを変更する機能を追加
 // 1.2.0 2016/08/08 顔グラフィック以外を表示したときに縮小するかどうかを選択するパラメータを追加
 // 1.1.3 2016/04/16 戦闘中にメンバーが入れ替わった場合にエラーが発生する場合がある問題を修正
 // 1.1.2 2016/02/13 他のプラグインと併用できるように、ウィンドウの表示位置を調整する機能を追加
@@ -81,6 +82,13 @@
  *
  * 顔グラフィックより大きいピクチャを指定すると自動で同じサイズに縮小されます。
  *
+ * さらに、追加機能として現在のアクターのHPにより表示する顔グラフィックを
+ * 変化させることができます。指定可能な値は10%単位で、データベースに
+ * 別のアクターを作成して、そこにメモ欄を記述することで実現できます。
+ *
+ * <face_actor_hp80:5> # HPが80%を下回った場合アクターID[5]のグラフィックを適用
+ * <face_actor_hp30:6> # HPが30%を下回った場合アクターID[6]のグラフィックを適用
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -104,7 +112,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() == 'ON';
+        return (value || '').toUpperCase() === 'ON';
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -204,7 +212,7 @@
 
     Window_Face.prototype.update = function() {
         Window_Base.prototype.update.call(this);
-        var actor = BattleManager.actor();
+        var actor = this.getRealActor();
         if (actor && this._actorId !== actor.actorId()) {
             this.drawActorFace(actor);
             this._actorId = actor.actorId();
@@ -214,6 +222,20 @@
             this._actorId = 0;
             this.hide();
         }
+    };
+
+    Window_Face.prototype.getRealActor = function() {
+        var actor = BattleManager.actor();
+        if (!actor) return null;
+        var meta = actor.actor().meta;
+        for (var i = 1; i < 10; i++) {
+            var customActorId = meta['face_actor_hp' + (i * 10)];
+            if (customActorId && actor.hpRate() < (i / 10)) {
+                actor = $gameActors.actor(customActorId);
+                break;
+            }
+        }
+        return actor;
     };
 
     Window_Face.prototype.drawActorFace = function(actor) {
