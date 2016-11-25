@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/11/25 割合の指定に100%を指定できるよう修正
 // 1.3.0 2016/11/24 現在のHPの割合によって表示するグラフィックを変更する機能を追加
 // 1.2.0 2016/08/08 顔グラフィック以外を表示したときに縮小するかどうかを選択するパラメータを追加
 // 1.1.3 2016/04/16 戦闘中にメンバーが入れ替わった場合にエラーが発生する場合がある問題を修正
@@ -228,7 +229,7 @@
         var actor = BattleManager.actor();
         if (!actor) return null;
         var meta = actor.actor().meta;
-        for (var i = 1; i < 10; i++) {
+        for (var i = 1; i <= 10; i++) {
             var customActorId = meta['face_actor_hp' + (i * 10)];
             if (customActorId && actor.hpRate() < (i / 10)) {
                 actor = $gameActors.actor(customActorId);
