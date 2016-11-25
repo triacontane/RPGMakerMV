@@ -87,8 +87,8 @@
  * 変化させることができます。指定可能な値は10%単位で、データベースに
  * 別のアクターを作成して、そこにメモ欄を記述することで実現できます。
  *
- * <face_actor_hp80:5> # HPが80%を下回った場合アクターID[5]のグラフィックを適用
- * <face_actor_hp30:6> # HPが30%を下回った場合アクターID[6]のグラフィックを適用
+ * <face_actor_hp80:5> # HPが80%以下の場合アクターID[5]のグラフィックを適用
+ * <face_actor_hp30:6> # HPが30%以下の場合アクターID[6]のグラフィックを適用
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -231,7 +231,7 @@
         var meta = actor.actor().meta;
         for (var i = 1; i <= 10; i++) {
             var customActorId = meta['face_actor_hp' + (i * 10)];
-            if (customActorId && actor.hpRate() < (i / 10)) {
+            if (customActorId && actor.hpRate() <= (i / 10)) {
                 actor = $gameActors.actor(customActorId);
                 break;
             }
