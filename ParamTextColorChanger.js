@@ -51,7 +51,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc HPテキストカラー変更プラグイン
+ * @plugindesc パラメータテキストカラー変更プラグイン
  * @author トリアコンタン
  *
  * @param HpThresholds
@@ -78,7 +78,7 @@
  * @desc 対応する閾値の割合以下のTPテキストカラーをシステムカラーのIDで指定します。
  * @default 0
  *
- * @help HP、MPおよびTPの数値を表示する際に
+ * @help HP、MPおよびTPの数値をウィンドウに表示する際に
  * 残量によって表示色を変更することができます。
  *
  * 値は10%単位で指定可能です。
