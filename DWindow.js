@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2016/11/27 createUpperLayerの再定義方法を修正し、競合を解消（by 奏 ねこま様）
 // 1.3.1 2016/09/13 前回の修正で戦闘画面に入るとエラーが発生する問題を修正
 // 1.3.0 2016/09/13 ウィンドウの不透明度を調整できる機能を追加
 // 1.2.0 2016/07/16 ウィンドウをピクチャの間に差し込むことのできる機能を追加
@@ -276,17 +277,13 @@
     // Spriteset_Map
     //  動的ウィンドウの情報を保持し、作成する処理を追加定義します。
     //=============================================================================
-    var _Spriteset_Base_createUpperLayer      = Spriteset_Base.prototype.createUpperLayer;
-    Spriteset_Base.prototype.createUpperLayer = function() {
-        if (!(this instanceof Spriteset_Map)) {
-            _Spriteset_Base_createUpperLayer.apply(this, arguments);
-            return;
-        }
+    var _Spriteset_Map_createUpperLayer      = Spriteset_Map.prototype.createUpperLayer;
+    Spriteset_Map.prototype.createUpperLayer = function() {
         if (!paramAlwaysOnTop && paramIncludePicture === 0) {
             this.createDynamicWindow();
-            _Spriteset_Base_createUpperLayer.apply(this, arguments);
+            _Spriteset_Map_createUpperLayer.apply(this, arguments);
         } else {
-            _Spriteset_Base_createUpperLayer.apply(this, arguments);
+            _Spriteset_Map_createUpperLayer.apply(this, arguments);
             this.createDynamicWindow();
         }
     };
