@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/11/27 反撃スキルIDを複数設定できる機能を追加。条件に応じたスキルで反撃します。
 // 1.1.0 2016/11/20 特定のスキルによる反撃や反撃条件を細かく指定できる機能を追加
 // 1.0.0 2016/11/15 初版
 // ----------------------------------------------------------------------------
@@ -134,8 +135,8 @@
  * <CE_MagicCounterCond:s(1)>     # 同上
  *
  * 実行したスキルの情報はローカル変数「skill」で参照できます。
- * <CE_反撃条件:skill.id === 10>              # スキルIDが[10]なら反撃します。
- * <CE_反撃条件:skill.damage.elementId === 3> # スキル属性が[3]なら反撃します。
+ * <CE_反撃条件:skill.id === 10> # スキルIDが[10]なら反撃します。
+ * <CE_反撃条件:elementId === 3> # スキル属性IDが[3]なら反撃します。
  *
  * 対象のバトラー情報は「this」で、相手のバトラー情報は「target」で参照できます。
  * <CE_反撃条件:this.hpRate() &lt; 0.5> # 自分のHPが50%を下回ると反撃します。
@@ -144,7 +145,19 @@
  * < → &lt;
  * > → &gt;
  *
- * 4. 反撃実行時に専用のアニメーションIDを再生します。
+ * 4. 複数の反撃スキルおよび反撃条件を設定できます。
+ * 複数定義する場合は、末尾に「_1」を付与してください。
+ * <CE_反撃スキルID:4>   # スイッチ[1]がONならスキルID[4]で反撃
+ * <CE_反撃条件:s(1)>    #
+ * <CE_反撃スキルID_1:5> # スイッチ[2]がONならスキルID[5]で反撃
+ * <CE_反撃条件_1:s(2)>  #
+ * <CE_反撃スキルID_2:6> # スイッチ[3]がONならスキルID[6]で反撃
+ * <CE_反撃条件_2:s(3)>  #
+ *
+ * 複数の条件を一度に満たした場合は、インデックスの小さい方が
+ * 優先して使用されます。
+ *
+ * 5. 反撃実行時に専用のアニメーションIDを再生します。
  * 特徴を有するメモ欄に以下の通り入力してください。
  * <CE_反撃アニメID:20>       # 反撃実行前にアニメーション[20]を再生します。
  * <CE_CounterAnimationId:20> # 同上
@@ -161,66 +174,68 @@ var Imported = Imported || {};
 
 (function() {
     'use strict';
-    var pluginName    = 'CounterExtend';
-    var metaTagPrefix = 'CE_';
+    const pluginName    = 'CounterExtend';
+    const metaTagPrefix = 'CE_';
 
-    var getParamOther = function(paramNames) {
+    const getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (let i = 0; i < paramNames.length; i++) {
+            const name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return null;
     };
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
+    const getParamBoolean = function(paramNames) {
+        const value = getParamOther(paramNames);
         return (value || '').toUpperCase() === 'ON';
     };
 
-    var getArgEval = function(arg, min, max) {
+    const getArgEval = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (eval(convertEscapeCharacters(arg)) || 0).clamp(min, max);
     };
 
-    var getArgString = function(arg, upperFlg) {
+    const getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
+    const getMetaValue = function(object, name) {
+        const metaTagName = metaTagPrefix + (name ? name : '');
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
     };
 
-    var getMetaValues = function(object, names) {
+    const getMetaValues = function(object, names) {
         if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
+        for (let i = 0, n = names.length; i < n; i++) {
+            const value = getMetaValue(object, names[i]);
             if (value !== undefined) return value;
         }
         return undefined;
     };
 
-    var convertEscapeCharacters = function(text) {
+    const convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        var metaTagDisConvert = {
+        const metaTagDisConvert = {
             '&lt;': '<',
             '&gt;': '>'
         };
-        text                  = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
+
+        text = text.replace(/&gt;|&lt;/gi, function(value) {
             return metaTagDisConvert[value];
         }.bind(this));
-        var windowLayer       = SceneManager._scene._windowLayer;
+
+        const windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramPayCounterCost      = getParamBoolean(['PayCounterCost', '反撃コスト消費']);
-    var paramFailureCostShortage = getParamBoolean(['FailureCostShortage', 'コスト不足で失敗']);
+    const paramPayCounterCost      = getParamBoolean(['PayCounterCost', '反撃コスト消費']);
+    const paramFailureCostShortage = getParamBoolean(['FailureCostShortage', 'コスト不足で失敗']);
 
     //=============================================================================
     // Game_BattlerBase
@@ -234,15 +249,15 @@ var Imported = Imported || {};
 
     Game_BattlerBase.prototype.getMagicCounterRate = function() {
         return this.traitObjects().reduce(function(prevValue, traitObject) {
-            var metaValue = getMetaValues(traitObject, ['魔法反撃', 'MagicCounter']);
+            const metaValue = getMetaValues(traitObject, ['魔法反撃', 'MagicCounter']);
             return metaValue ? Math.max(getArgEval(metaValue) / 100, prevValue) : prevValue;
         }, 0);
     };
 
     Game_BattlerBase.prototype.getCounterAnimationId = function() {
-        var counterAnimationId = 0;
+        let counterAnimationId = 0;
         this.traitObjects().some(function(traitObject) {
-            var metaValue = getMetaValues(traitObject, ['反撃アニメID', 'CounterAnimationId']);
+            const metaValue = getMetaValues(traitObject, ['反撃アニメID', 'CounterAnimationId']);
             if (metaValue) {
                 counterAnimationId = getArgEval(metaValue, 1);
                 return true;
@@ -255,7 +270,7 @@ var Imported = Imported || {};
     Game_BattlerBase.prototype.reserveCounterSkillId = function(names) {
         this._reserveCounterSkillId = 0;
         this.traitObjects().some(function(traitObject) {
-            var metaValue = getMetaValues(traitObject, names);
+            const metaValue = getMetaValues(traitObject, names);
             if (metaValue) {
                 this._reserveCounterSkillId = getArgEval(metaValue, 1);
                 return true;
@@ -267,9 +282,9 @@ var Imported = Imported || {};
 
     Game_BattlerBase.prototype.getCounterCustomRate = function(names, action, target) {
         if (!target.canPaySkillCostForCounter()) return 0;
-        var counterCondition;
+        let counterCondition;
         this.traitObjects().some(function(traitObject) {
-            var metaValue = getMetaValues(traitObject, names);
+            const metaValue = getMetaValues(traitObject, names);
             if (metaValue) {
                 counterCondition = getArgString(metaValue);
                 return true;
@@ -280,15 +295,19 @@ var Imported = Imported || {};
     };
 
     Game_BattlerBase.prototype.executeCounterScript = function(counterCondition, action, target) {
-        var skill = action.item();
-        var v     = $gameVariables.value.bind($gameVariables);
-        var s     = $gameSwitches.value.bind($gameSwitches);
-        var result;
+        const skill     = action.item();
+        const v         = $gameVariables.value.bind($gameVariables);
+        const s         = $gameSwitches.value.bind($gameSwitches);
+        const elementId = skill.damage.elementId;
+        let result;
         try {
             result = !!eval(counterCondition);
+            if ($gameTemp.isPlaytest()) {
+                console.log('Execute Script:' + counterCondition);
+            }
         } catch (e) {
             console.error(e.toString());
-            throw new Error('反撃条件計算式の評価に失敗しました。式：' + counterCondition);
+            throw new Error('反撃条件計算式の評価に失敗しました。式:' + counterCondition);
         }
         return result ? 1 : 0;
     };
@@ -310,25 +329,51 @@ var Imported = Imported || {};
     // Game_Action
     //  魔法反撃を可能にします。
     //=============================================================================
-    var _Game_Action_itemCnt      = Game_Action.prototype.itemCnt;
+    const _Game_Action_itemCnt    = Game_Action.prototype.itemCnt;
     Game_Action.prototype.itemCnt = function(target) {
-        var cnt = _Game_Action_itemCnt.apply(this, arguments);
+        const cnt = _Game_Action_itemCnt.apply(this, arguments);
         if (this.isMagical()) {
             return this.itemMagicCnt(target);
         } else {
-            target.reserveCounterSkillId(['反撃スキルID', 'CounterSkillId']);
-            return target.getCounterCustomRate(['反撃条件', 'CounterCond'], this, target) * cnt;
+            const rate = this.reserveTargetCounterSkillId(target, false, 0);
+            return rate * cnt;
         }
     };
 
     Game_Action.prototype.itemMagicCnt = function(target) {
         if (target.isValidMagicCounter() && this.isMagical() && target.canMove()) {
-            target.reserveCounterSkillId(['魔法反撃スキルID', 'MagicCounterSkillId']);
-            return target.getCounterCustomRate(['魔法反撃条件', 'MagicCounterCond'], this, target) *
-                (target.getMagicCounterRate() || target.cnt);
+            const rate = this.reserveTargetCounterSkillId(target, true, 0);
+            return rate * (target.getMagicCounterRate() || target.cnt);
         } else {
             return 0;
         }
+    };
+
+    Game_Action.prototype.reserveTargetCounterSkillId = function(target, magicFlg, depth) {
+        const skillMetaNames = this.getMetaNamesForCounterExtend(['反撃スキルID', 'CounterSkillId'], magicFlg, depth);
+        const counterSkill   = target.reserveCounterSkillId(skillMetaNames);
+        if (counterSkill === 0 && depth > 0) {
+            return 0;
+        }
+        const rateMetaNames = this.getMetaNamesForCounterExtend(['反撃条件', 'CounterCond'], magicFlg, depth);
+        const counterRate   = target.getCounterCustomRate(rateMetaNames, this, target);
+        if (counterRate > 0 || depth > 100) {
+            return counterRate;
+        } else {
+            return this.reserveTargetCounterSkillId(target, magicFlg, depth + 1);
+        }
+    };
+
+    Game_Action.prototype.getMetaNamesForCounterExtend = function(names, magicFlg, depth) {
+        if (depth > 0) {
+            names[0] = names[0] + '_' + String(depth);
+            names[1] = names[1] + '_' + String(depth);
+        }
+        if (magicFlg) {
+            names[0] = '魔法' + names[0];
+            names[1] = 'Magic' + names[1];
+        }
+        return names;
     };
 
     Game_Action.prototype.setCounterSkill = function() {
@@ -339,12 +384,12 @@ var Imported = Imported || {};
     // BattleManager
     //  スキルによる反撃を実装します。
     //=============================================================================
-    var _BattleManager_invokeCounterAttack = BattleManager.invokeCounterAttack;
-    BattleManager.invokeCounterAttack      = function(subject, target) {
+    const _BattleManager_invokeCounterAttack = BattleManager.invokeCounterAttack;
+    BattleManager.invokeCounterAttack        = function(subject, target) {
         if (!target.isReserveCounterSkill()) {
             _BattleManager_invokeCounterAttack.apply(this, arguments);
         } else {
-            var action = new Game_Action(target);
+            const action = new Game_Action(target);
             action.setCounterSkill();
             if (paramPayCounterCost) target.useItem(action.item());
             action.apply(subject);
@@ -358,8 +403,8 @@ var Imported = Imported || {};
     //  スキルによる反撃を演出します。
     //=============================================================================
     Window_BattleLog.prototype.displaySkillCounter = function(subject, action, targets) {
-        var item             = action.item();
-        var counterAnimation = subject.getCounterAnimationId();
+        const item             = action.item();
+        const counterAnimation = subject.getCounterAnimationId();
         if (counterAnimation) {
             this.push('showAnimation', subject, [subject], counterAnimation);
             this.push('waitForAnimation');
@@ -373,9 +418,9 @@ var Imported = Imported || {};
         this.displayAction(subject, item);
     };
 
-    var _Window_BattleLog_updateWaitMode      = Window_BattleLog.prototype.updateWaitMode;
+    const _Window_BattleLog_updateWaitMode    = Window_BattleLog.prototype.updateWaitMode;
     Window_BattleLog.prototype.updateWaitMode = function() {
-        var waiting = false;
+        let waiting = false;
         switch (this._waitMode) {
             case 'animation':
                 waiting = this._spriteset.isAnimationPlaying();
