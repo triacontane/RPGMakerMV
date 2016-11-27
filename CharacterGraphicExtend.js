@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2016/11/27 T_dashMotion.jsとの競合を解決
 // 1.4.0 2016/11/21 複数のページに対して別々の画像を割り当てる機能を追加しました。
 // 1.3.0 2016/07/16 以下の機能を追加しました。
 //                  遠景をイベントグラフィックとして利用可能
@@ -517,6 +518,24 @@
         if (this.isImageChanged()) this._customResource = this._character.customResource();
         _Sprite_Character_updateBitmap.apply(this, arguments);
         this.updateExtend();
+    };
+
+    var _Sprite_Character_update = Sprite_Character.prototype.update;
+    Sprite_Character.prototype.update = function() {
+        _Sprite_Character_update.apply(this, arguments);
+        if (this.updateDashMotion) {
+            this.resolveConflictForDashMotion();
+        }
+    };
+
+    Sprite_Character.prototype.resolveConflictForDashMotion = function() {
+        if (this._character.scaleY() !== 100) {
+            this.scale.y = this._character.scaleY() / 100 * this.scale.y;
+        }
+        if (this._character.angle() !== 0) {
+            var angle = this._character.angle() * Math.PI / 180;
+            if (this.rotation !== angle) this.rotation = angle;
+        }
     };
 
     Sprite_Character.prototype.updateExtend = function() {
