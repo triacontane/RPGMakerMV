@@ -275,6 +275,7 @@
             args = convertAllArguments(args);
             this.makeDownloader(args);
             this[pluginCommand](args);
+            this._downloader = null;
         }
     };
 

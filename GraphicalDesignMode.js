@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2016/11/30 RPGアツマールで画面がNowLoadingから進まなくなる場合がある問題を修正しました。
 // 2.3.0 2016/11/25 メッセージウィンドウの背景の表示可否を固定にできる機能を追加しました。
 // 2.2.1 2016/11/12 Macの場合、Ctrlキーの代わりにoptionキーを使用するようヘルプを追記
 // 2.2.0 2016/11/03 ウィンドウごとに使用するフォントを設定できる機能を追加
@@ -44,8 +45,8 @@
  *
  * @param モバイル版作成
  * @desc モバイル版のウィンドウ配置を別に作成します。(ON/OFF)
- * モバイル偽装と併用してください。
- * @default ON
+ * モバイル版とPC版とでウィンドウ配置を変えたい場合のみONにしてください。
+ * @default OFF
  *
  * @param モバイル偽装
  * @desc モバイル実行を偽装します。(ON/OFF)
@@ -324,7 +325,11 @@ var $dataContainerProperties = null;
     //=============================================================================
     var pluginName    = 'GraphicalDesignMode';
     var metaTagPrefix = 'GDM';
-    var version       = '2.3.0';
+
+    if (!Utils.RPGMAKER_VERSION || Utils.RPGMAKER_VERSION.match(/^1\.2./)) {
+        console.error('!!!このプラグインは本体バージョン1.3系以降でないと使用できません。!!!');
+        return;
+    }
 
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
@@ -482,7 +487,7 @@ var $dataContainerProperties = null;
 
         SceneManager.outputStartLog = function() {
             var logValue = [
-                '☆☆☆ようこそ、デザインモード(ver' + version + ')で起動しました。☆☆☆',
+                '☆☆☆ようこそ、デザインモードで起動しました。☆☆☆',
                 'デザインモードでは、オブジェクトの配置やプロパティを自由に設定して実際のゲーム画面上から画面設計できます。',
                 '',
                 '--------------------操 作 方 法----------------------------------------------------------------------',
@@ -1145,15 +1150,22 @@ var $dataContainerProperties = null;
             if (xhr.status < 400) {
                 window[name] = JSON.parse(xhr.responseText);
                 DataManager.onLoad(window[name]);
+            } else {
+                DataManager.onDataFileNotFound(name, errorMessage);
             }
         };
         xhr.onerror  = function() {
-            window[name] = {};
-            console.warn(errorMessage);
+            DataManager.onDataFileNotFound(name, errorMessage);
         };
         window[name] = null;
         xhr.send();
     };
+
+    DataManager.onDataFileNotFound = function(name, errorMessage) {
+        window[name] = {};
+        console.warn(errorMessage);
+    };
+
 
     var _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
     DataManager.isDatabaseLoaded      = function() {
