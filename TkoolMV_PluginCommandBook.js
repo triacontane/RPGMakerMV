@@ -209,16 +209,11 @@
  *  Shutdown
  * ===========================================================================
  * ウェブサイト起動(English:Startup_Website)
- *  別ウィンドウで指定されたURLのウェブサイトを起動します。
- *  この操作はブラウザ実行、スマホ実行では無効です。
+ *  既定のブラウザもしくは起動中のブラウザで、指定されたURLのウェブサイトを起動します。
  *  製作者 トリアコンタン
  *
  *  パラメータ
  *  　表示したいサイトのURL
- *  　ウィンドウのX座標（指定しなかった場合は0）
- *  　ウィンドウのY座標（指定しなかった場合は0）
- *  　ウィンドウの横幅（指定しなかった場合はゲーム画面と同じサイズ）
- *  　ウィンドウの高さ（指定しなかった場合はゲーム画面と同じサイズ）
  *
  *  使用例
  *  ウェブサイト起動 https://www.google.co.jp/
@@ -594,19 +589,19 @@
  * ===========================================================================
  */
 
-(function(){
+(function() {
     'use strict';
-    
+
     //制御文字の拡張
     Game_Interpreter.prototype.pluginCommandBook_unescape = function(text) {
         //全角数字を半角数字に変換する
-        var wstringToString = function(text) {
+        var wstringToString    = function(text) {
             text = text.replace(/[０-９]/g, function(c) {
                 return String.fromCharCode(c.charCodeAt(0) - 0xFEE0);
             });
             return text;
         };
-        var getActorName = function(n) {
+        var getActorName       = function(n) {
             var actor = n >= 1 ? $gameActors.actor(n) : null;
             return actor ? actor.name() : '';
         };
@@ -614,60 +609,60 @@
             var actor = n >= 1 ? $gameParty.members()[n - 1] : null;
             return actor ? actor.name() : '';
         };
-        var prevText = "";
-        text = text.replace(/\\/g, '\x1b');
+        var prevText           = "";
+        text                   = text.replace(/\\/g, '\x1b');
         while (prevText != text) {
             prevText = text;
-            text = text.replace(/\x1b\x1b/g, '\\');
-            text = text.replace(/\x1bV\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1b\x1b/g, '\\');
+            text     = text.replace(/\x1bV\[([０-９\d]+)\]/gi, function() {
                 return $gameVariables.value(parseInt(wstringToString(arguments[1]), 10));
             }.bind(this));
-            text = text.replace(/\x1bN\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bN\[([０-９\d]+)\]/gi, function() {
                 return getActorName(parseInt(wstringToString(arguments[1]), 10));
             }.bind(this));
-            text = text.replace(/\x1bP\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bP\[([０-９\d]+)\]/gi, function() {
                 return getPartyMemberName(parseInt(wstringToString(arguments[1]), 10));
             }.bind(this));
-            text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-            text = text.replace(/\x1bIn\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+            text     = text.replace(/\x1bIn\[([０-９\d]+)\]/gi, function() {
                 return $dataItems[parseInt(wstringToString(arguments[1]), 10)].name;
             }.bind(this));
-            text = text.replace(/\x1bNi\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bNi\[([０-９\d]+)\]/gi, function() {
                 return $dataItems[parseInt(wstringToString(arguments[1]), 10)].name;
             }.bind(this));
-            text = text.replace(/\x1bIp\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bIp\[([０-９\d]+)\]/gi, function() {
                 return $dataItems[parseInt(wstringToString(arguments[1]), 10)].price;
             }.bind(this));
-            text = text.replace(/\x1bPi\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bPi\[([０-９\d]+)\]/gi, function() {
                 return $dataItems[parseInt(wstringToString(arguments[1]), 10)].price;
             }.bind(this));
-            text = text.replace(/\x1bSn\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bSn\[([０-９\d]+)\]/gi, function() {
                 return $dataSkills[parseInt(wstringToString(arguments[1]), 10)].name;
             }.bind(this));
-            text = text.replace(/\x1bNs\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bNs\[([０-９\d]+)\]/gi, function() {
                 return $dataSkills[parseInt(wstringToString(arguments[1]), 10)].name;
             }.bind(this));
-            text = text.replace(/\x1bNc\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bNc\[([０-９\d]+)\]/gi, function() {
                 return $dataClasses[parseInt(wstringToString(arguments[1]), 10)].name;
             }.bind(this));
-            text = text.replace(/\x1bNt\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bNt\[([０-９\d]+)\]/gi, function() {
                 return $dataStates[parseInt(wstringToString(arguments[1]), 10)].name;
             }.bind(this));
-            text = text.replace(/\x1bNw\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bNw\[([０-９\d]+)\]/gi, function() {
                 return $dataWeapons[parseInt(wstringToString(arguments[1]), 10)].name;
             }.bind(this));
-            text = text.replace(/\x1bNa\[([０-９\d]+)\]/gi, function() {
+            text     = text.replace(/\x1bNa\[([０-９\d]+)\]/gi, function() {
                 return $dataArmors[parseInt(wstringToString(arguments[1]), 10)].name;
             }.bind(this));
-            text = text.replace(/\x1bJs\[(.*)\]\x1bJs/gi, function() {
-                try{
+            text     = text.replace(/\x1bJs\[(.*)\]\x1bJs/gi, function() {
+                try {
                     var value = eval(arguments[1]);
-                    if (value != null){return value}else{
+                    if (value != null) {return value} else {
                         console.log('制御文字 \\JS のパラメータでエラー  詳細：評価値が無い(null or undefined)');
                         return 0;
                     }
-                } catch(ex){
-                    console.log( '制御文字 \\JS のパラメータでエラー  詳細： ' + ex.toString());
+                } catch (ex) {
+                    console.log('制御文字 \\JS のパラメータでエラー  詳細： ' + ex.toString());
                     return 0;
                 }
             }.bind(this));
@@ -696,7 +691,7 @@
     var parameters = PluginManager.parameters('TkoolMV_PluginCommandBook');
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
 
         if (command.length == 0) {
@@ -711,7 +706,7 @@
         var methodName = 'pluginCommandBook_' + command;
         if (typeof this[methodName] === 'function') {
             // 引数パラメータの制御文字での変換
-            for (var i=0; i<args.length; i++) {
+            for (var i = 0; i < args.length; i++) {
                 args[i] = Game_Interpreter.prototype.pluginCommandBook_unescape(args[i]);
             }
             try {
@@ -745,7 +740,7 @@
      */
     Game_Interpreter.prototype.pluginCommandBook_名前の変更 = function(args) {
         var actorId = args[0]; // アクターID
-        var name = args[1]; // 名前
+        var name    = args[1]; // 名前
         $gameActors.actor(actorId).setName(name);
     };
 
@@ -776,11 +771,11 @@
      *  呼び出し元スキル取得 1　　（変数0001にコモンイベントを呼び出したスキルIDを入れる
      */
     Game_Interpreter.prototype.pluginCommandBook_呼び出し元スキル取得 = function(args) {
-        if (eval(String(parameters['呼び出し元スキルの記録を使わない']||'false'))) {
+        if (eval(String(parameters['呼び出し元スキルの記録を使わない'] || 'false'))) {
             window.alert("「呼び出し元スキル取得」を使うにはプラグインマネージャーから「TkoolMV_PluginCommandBook.js」の「呼び出し元スキルの記録を使わない」を「はい」してください");
             return;
         }
-        var varId = parseInt(args[0]); // 変数ID
+        var varId   = parseInt(args[0]); // 変数ID
         var skillId = 0;
         if ($gameParty.inBattle()) {
             skillId = BattleManager._subject.lastBattleSkill().id;
@@ -806,12 +801,12 @@
      */
     Game_Interpreter.prototype.pluginCommandBook_レベルの変更 = function(args) {
         var actorId = parseInt(args[0], 10);
-        var level = parseInt(args[1], 10) || 1;
-        var show = {"表示":true,"非表示":false,"はい":true,"いいえ":false}[args[2]||'表示'];
-        show = show === null ? false : show;
+        var level   = parseInt(args[1], 10) || 1;
+        var show    = {"表示": true, "非表示": false, "はい": true, "いいえ": false}[args[2] || '表示'];
+        show        = show === null ? false : show;
         console.log(show);
         if (actorId == 0) {
-            $gameParty.members().forEach(function(actor){
+            $gameParty.members().forEach(function(actor) {
                 var exp = actor.expForLevel(level);
                 actor.changeExp(exp, show);
             });
@@ -825,8 +820,8 @@
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_バイブレーション = function(args) {
-        if(Utils.isMobileDevice() && typeof navigator.vibrate === 'function') {
+    Game_Interpreter.prototype.pluginCommandBook_バイブレーション  = function(args) {
+        if (Utils.isMobileDevice() && typeof navigator.vibrate === 'function') {
             var frame = parseIntStrict(args[0]);
             navigator.vibrate(Math.floor(frame * 1000 / 60));
             var wait = (args[1] || '').toUpperCase();
@@ -837,24 +832,24 @@
         this.pluginCommandBook_バイブレーション(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_指定位置の通行判定取得 = function(args) {
-        var x = parseIntStrict(args[1]);
-        var y = parseIntStrict(args[2]);
+    Game_Interpreter.prototype.pluginCommandBook_指定位置の通行判定取得       = function(args) {
+        var x     = parseIntStrict(args[1]);
+        var y     = parseIntStrict(args[2]);
         var value = 0;
         value += $gamePlayer.isMapPassable(x, y, 8) ? 1000 : 0;
-        value += $gamePlayer.isMapPassable(x, y, 6) ? 100  : 0;
-        value += $gamePlayer.isMapPassable(x, y, 2) ? 10   : 0;
-        value += $gamePlayer.isMapPassable(x, y, 4) ? 1    : 0;
+        value += $gamePlayer.isMapPassable(x, y, 6) ? 100 : 0;
+        value += $gamePlayer.isMapPassable(x, y, 2) ? 10 : 0;
+        value += $gamePlayer.isMapPassable(x, y, 4) ? 1 : 0;
         $gameVariables.setValue(args[0], value);
     };
     Game_Interpreter.prototype.pluginCommandBook_Get_Location_Pass = function(args) {
         this.pluginCommandBook_指定位置の通行判定取得(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_スイッチの初期化 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_スイッチの初期化      = function(args) {
         var exceptionValues = [];
         args.forEach(function(arg) {
-            arg = parseIntStrict(arg);
+            arg                  = parseIntStrict(arg);
             exceptionValues[arg] = $gameSwitches.value(arg);
         });
         $gameSwitches.clear();
@@ -867,10 +862,10 @@
         this.pluginCommandBook_スイッチの初期化(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_変数の初期化 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_変数の初期化         = function(args) {
         var exceptionValues = [];
         args.forEach(function(arg) {
-            arg = parseIntStrict(arg);
+            arg                  = parseIntStrict(arg);
             exceptionValues[arg] = $gameVariables.value(arg);
         });
         $gameVariables.clear();
@@ -883,32 +878,32 @@
         this.pluginCommandBook_変数の初期化(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_セルフスイッチの初期化 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_セルフスイッチの初期化      = function(args) {
         $gameSelfSwitches.clear();
     };
     Game_Interpreter.prototype.pluginCommandBook_Init_Self_Switch = function(args) {
         this.pluginCommandBook_セルフスイッチの初期化(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_セルフスイッチの遠隔操作 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_セルフスイッチの遠隔操作               = function(args) {
         var mapId   = Math.max(parseIntStrict(args[0]), 1);
         var eventId = Math.max(parseIntStrict(args[1]), 1);
-        var type  = args[2].toUpperCase();
-        var value = args[3].toUpperCase();
+        var type    = args[2].toUpperCase();
+        var value   = args[3].toUpperCase();
         $gameSelfSwitches.setValue([mapId, eventId, type], value === 'ON');
     };
     Game_Interpreter.prototype.pluginCommandBook_Remote_Control_Self_Switch = function(args) {
         this.pluginCommandBook_セルフスイッチの遠隔操作(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_ピクチャの読み込み = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_ピクチャの読み込み    = function(args) {
         ImageManager.loadPicture(args[0], 0);
     };
     Game_Interpreter.prototype.pluginCommandBook_Load_Picture = function(args) {
         this.pluginCommandBook_ピクチャの読み込み();
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_戦闘アニメの読み込み = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_戦闘アニメの読み込み     = function(args) {
         var hue = parseInt(args[1], 10).clamp(0, 360);
         ImageManager.loadAnimation(args[0], hue);
     };
@@ -916,80 +911,84 @@
         this.pluginCommandBook_戦闘アニメの読み込み(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_シャットダウン = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_シャットダウン  = function(args) {
         SceneManager.terminate();
     };
     Game_Interpreter.prototype.pluginCommandBook_Shutdown = function(args) {
         this.pluginCommandBook_シャットダウン(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_ウェブサイト起動 = function(args) {
-        if (Utils.isNwjs()) {
-            var newWindow = require('nw.gui').Window.open(args[0]);
-            var x = parseInt(args[1], 10) || 0;
-            var y = parseInt(args[2], 10) || 0;
-            var width = parseInt(args[3], 10) || Graphics.width;
-            var height = parseInt(args[4], 10) || Graphics.height;
-            newWindow.moveTo(x, y);
-            newWindow.resizeTo(width, height);
+    Game_Interpreter.prototype.pluginCommandBook_ウェブサイト起動        = function(args) {
+        if (!Utils.isNwjs()) {
+            window.open(args[0]);
+            return;
+        }
+        var exec = require('child_process').exec;
+        switch (process.platform) {
+            case 'win32':
+                exec('rundll32.exe url.dll,FileProtocolHandler "' + args[0] + '"');
+                break;
+            default:
+                exec('open "' + args[0] + '"');
+                break;
         }
     };
     Game_Interpreter.prototype.pluginCommandBook_Startup_Website = function(args) {
         this.pluginCommandBook_ウェブサイト起動(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_変数の操作 = function(args) {
-        args[0]=args[0].replace('#' ,'');
-        args[1]=args[1].replace(/set/i,'=');
-        args[1]=args[1].replace(/add/i,'+=');
-        args[1]=args[1].replace(/sub/i,'-=');
-        args[1]=args[1].replace(/mult/i,'*=');
-        args[1]=args[1].replace(/div/i,'/=');
-        args[1]=args[1].replace(/mod/i,'%=');
+    Game_Interpreter.prototype.pluginCommandBook_変数の操作           = function(args) {
+        args[0]    = args[0].replace('#', '');
+        args[1]    = args[1].replace(/set/i, '=');
+        args[1]    = args[1].replace(/add/i, '+=');
+        args[1]    = args[1].replace(/sub/i, '-=');
+        args[1]    = args[1].replace(/mult/i, '*=');
+        args[1]    = args[1].replace(/div/i, '/=');
+        args[1]    = args[1].replace(/mod/i, '%=');
         var VarId1 = parseIntStrict(args[0]);
-        if(isFinite(args[2]) && args[3]!='1'){
-            var Var1 = parseInt(args[2],10);
+        if (isFinite(args[2]) && args[3] != '1') {
+            var Var1 = parseInt(args[2], 10);
         } else {
             var Var1 = args[2];
         }
         var Var2 = $gameVariables.value(VarId1);
         switch (args[1]) {
-          case '=':
-            $gameVariables.setValue(VarId1,Var1);
-            break;
-          case '+=':
-            $gameVariables.setValue(VarId1,Var2+Var1);
-            break;
-          case '-=':
-            Var1 =parseIntStrict(Var1);
-            Var2 = parseIntStrict(Var2);
-            $gameVariables.setValue(VarId1,Var2-Var1);
-            break;
-          case '*=':
-            Var1 =parseIntStrict(Var1);
-            Var2 = parseIntStrict(Var2);
-            $gameVariables.setValue(VarId1,Var2*Var1);
-            break; 
-          case '/=':
-            Var1 =parseIntStrict(Var1);
-            Var2 = parseIntStrict(Var2);
-            $gameVariables.setValue(VarId1,(Var2-(Var2%Var1))/Var1);
-            break;
-          case '%=':
-            Var1 =parseIntStrict(Var1);
-            Var2 = parseIntStrict(Var2);
-            $gameVariables.setValue(VarId1,Var2%Var1);
-            break;
+            case '=':
+                $gameVariables.setValue(VarId1, Var1);
+                break;
+            case '+=':
+                $gameVariables.setValue(VarId1, Var2 + Var1);
+                break;
+            case '-=':
+                Var1 = parseIntStrict(Var1);
+                Var2 = parseIntStrict(Var2);
+                $gameVariables.setValue(VarId1, Var2 - Var1);
+                break;
+            case '*=':
+                Var1 = parseIntStrict(Var1);
+                Var2 = parseIntStrict(Var2);
+                $gameVariables.setValue(VarId1, Var2 * Var1);
+                break;
+            case '/=':
+                Var1 = parseIntStrict(Var1);
+                Var2 = parseIntStrict(Var2);
+                $gameVariables.setValue(VarId1, (Var2 - (Var2 % Var1)) / Var1);
+                break;
+            case '%=':
+                Var1 = parseIntStrict(Var1);
+                Var2 = parseIntStrict(Var2);
+                $gameVariables.setValue(VarId1, Var2 % Var1);
+                break;
         }
     };
     Game_Interpreter.prototype.pluginCommandBook_ControlVariable = function(args) {
         this.pluginCommandBook_変数の操作(args);
     };
-    Game_Interpreter.prototype.pluginCommandBook_ConVar = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_ConVar          = function(args) {
         this.pluginCommandBook_変数の操作(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_タッチ座標の取得 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_タッチ座標の取得       = function(args) {
         var x, y;
         if (TouchInput.isPressed()) {
             if (args[2] === 'マップ座標' || args[2] === 'Map') {
@@ -1010,14 +1009,14 @@
         this.pluginCommandBook_タッチ座標の取得(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_マップタッチ禁止の変更 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_マップタッチ禁止の変更      = function(args) {
         $gameSystem._mapTouchDisable = (args[0] === '禁止' || args[0] === 'Disable');
     };
     Game_Interpreter.prototype.pluginCommandBook_Change_Map_Touch = function(args) {
         this.pluginCommandBook_マップタッチ禁止の変更(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_マップタッチ移動中判定 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_マップタッチ移動中判定          = function(args) {
         $gameSwitches.setValue(parseIntStrict(args[0]), $gameTemp.isDestinationValid());
     };
     Game_Interpreter.prototype.pluginCommandBook_Get_Map_Touch_Moving = function(args) {
@@ -1034,12 +1033,12 @@
 
     Game_Interpreter.prototype.pluginCommandBook_ピクチャの移動 = function(args) {
         var pictureId = parseInt(args[0], 10);
-        var origin = args[1] === '左上' || args[1] === 'Upper_Left' ? 0 : 1;
-        var x = parseIntStrict(args[2]);
-        var y = parseIntStrict(args[3]);
-        var scaleX = parseIntStrict(args[4]);
-        var scaleY = parseIntStrict(args[5]);
-        var opacity = parseIntStrict(args[6]);
+        var origin    = args[1] === '左上' || args[1] === 'Upper_Left' ? 0 : 1;
+        var x         = parseIntStrict(args[2]);
+        var y         = parseIntStrict(args[3]);
+        var scaleX    = parseIntStrict(args[4]);
+        var scaleY    = parseIntStrict(args[5]);
+        var opacity   = parseIntStrict(args[6]);
         var blendMode;
         switch ((args[7] || '').toUpperCase()) {
             case '加算':
@@ -1064,15 +1063,15 @@
         this.pluginCommandBook_ピクチャの移動(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_数値入力範囲の設定 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_数値入力範囲の設定            = function(args) {
         $gameMessage.setNumInputRange(
             parseIntStrict(args[0]).clamp(0, 99999999),
             parseIntStrict(args[1]).clamp(0, 99999999));
     };
-    Game_Interpreter.prototype.pluginCommandBook_Set_Input_Num_Range = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_Set_Input_Num_Range  = function(args) {
         this.pluginCommandBook_数値入力範囲の設定(args);
     };
-    Game_Interpreter.prototype.pluginCommandBook_数値入力ウィンドウの設定 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_数値入力ウィンドウの設定         = function(args) {
         var background;
         switch (args[0].toUpperCase()) {
             case 'ウィンドウ':
@@ -1088,7 +1087,7 @@
                 background = 2;
                 break;
             default:
-                throw new Error('背景に指定した値['+ args[0] +']が不正です。');
+                throw new Error('背景に指定した値[' + args[0] + ']が不正です。');
         }
         var position;
         switch (args[1].toUpperCase()) {
@@ -1105,7 +1104,7 @@
                 position = 2;
                 break;
             default:
-                throw new Error('位置に指定した値['+ args[1] +']が不正です。');
+                throw new Error('位置に指定した値[' + args[1] + ']が不正です。');
         }
         $gameMessage.setNumInputBackground(background);
         $gameMessage.setNumInputPositionType(position);
@@ -1114,14 +1113,14 @@
         this.pluginCommandBook_数値入力ウィンドウの設定(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_数値入力有効桁の設定 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_数値入力有効桁の設定                = function(args) {
         $gameMessage._numInputValidDigit = parseIntStrict(args[0]).clamp(1, 8);
     };
     Game_Interpreter.prototype.pluginCommandBook_Set_Num_Input_Valid_Digit = function(args) {
         this.pluginCommandBook_数値入力有効桁の設定(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_ピクチャの有効判定 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_ピクチャの有効判定         = function(args) {
         var picture = $gameScreen.picture($gameScreen.realPictureId(parseIntStrict(args[1])));
         $gameSwitches.setValue(parseIntStrict(args[0]), picture != null);
     };
@@ -1129,7 +1128,7 @@
         this.pluginCommandBook_ピクチャの有効判定(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_ピクチャの表示優先度設定 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_ピクチャの表示優先度設定         = function(args) {
         var picture = $gameScreen.picture($gameScreen.realPictureId(parseIntStrict(args[0])));
         if (picture) {
             picture.setZ(parseIntStrict(args[1]));
@@ -1141,7 +1140,7 @@
         this.pluginCommandBook_ピクチャの表示優先度設定(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_ピクチャのトリミング = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_ピクチャのトリミング       = function(args) {
         var picture = $gameScreen.picture($gameScreen.realPictureId(parseIntStrict(args[0])));
         if (picture) {
             picture.setFrameDirect(parseIntStrict(args[1]), parseIntStrict(args[2]),
@@ -1154,7 +1153,7 @@
         this.pluginCommandBook_ピクチャのトリミング(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_ピクチャの回転角設定 = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_ピクチャの回転角設定    = function(args) {
         var picture = $gameScreen.picture($gameScreen.realPictureId(parseIntStrict(args[0])));
         if (picture) {
             picture.setAngleDirect(parseIntStrict(args[1]));
@@ -1166,51 +1165,51 @@
         this.pluginCommandBook_ピクチャの回転角設定(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_文字の連結 = function(args) {
-        args[0]=args[0].replace('#' ,'');
+    Game_Interpreter.prototype.pluginCommandBook_文字の連結           = function(args) {
+        args[0]    = args[0].replace('#', '');
         var VarId1 = parseIntStrict(args[0]);
-        var Str = String(args[1]) + String(args[2]);
-        if(isFinite(Str) && args[3] == '1') Str = parseInt(Str,10);
-        $gameVariables.setValue(VarId1,Str);
+        var Str    = String(args[1]) + String(args[2]);
+        if (isFinite(Str) && args[3] == '1') Str = parseInt(Str, 10);
+        $gameVariables.setValue(VarId1, Str);
     };
     Game_Interpreter.prototype.pluginCommandBook_ConcatenStrings = function(args) {
         this.pluginCommandBook_文字の連結(args);
     };
-    Game_Interpreter.prototype.pluginCommandBook_CatStr = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_CatStr          = function(args) {
         this.pluginCommandBook_文字の連結(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_文字の置換 = function(args) {
-        args[0]=args[0].replace('#' ,'');
-        var VarId1   = parseInt(args[0],10);
-        VarId1 = parseIntStrict(VarId1);
-        var Str = String(args[1]);
-        var Str2 = String(args[2]);
-        var Str3 = String(args[3]);
-        Str = Str.replace(/\x1b/gi);
-        Str2 = Str2.replace(/\x1b/gi);
-        Str3 = Str3.replace(/\x1b/gi);
+    Game_Interpreter.prototype.pluginCommandBook_文字の置換          = function(args) {
+        args[0]    = args[0].replace('#', '');
+        var VarId1 = parseInt(args[0], 10);
+        VarId1     = parseIntStrict(VarId1);
+        var Str    = String(args[1]);
+        var Str2   = String(args[2]);
+        var Str3   = String(args[3]);
+        Str        = Str.replace(/\x1b/gi);
+        Str2       = Str2.replace(/\x1b/gi);
+        Str3       = Str3.replace(/\x1b/gi);
         if (args[4] == null) args[4] = '全て';
-        args[4]=args[4].replace(/front/i,'前方');
-        args[4]=args[4].replace(/back/i,'後方');
-        args[4]=args[4].replace(/all/i,'全て');
-        switch (args[4]){
-          case '前方':
-            Str = Str.replace(Str2,Str3);
-            break;
-          case '後方':
-            Str = RvStr(Str);
-            Str2 = RvStr(Str2);
-            Str3 = RvStr(Str3);
-            Str = Str.replace(Str2,Str3);
-            Str = RvStr(Str);
-            break;
-          case '全て':
-          default:               
-            while (Str.indexOf(Str2,0) != -1 ) Str = Str.replace(Str2,Str3); 
-            break;
+        args[4] = args[4].replace(/front/i, '前方');
+        args[4] = args[4].replace(/back/i, '後方');
+        args[4] = args[4].replace(/all/i, '全て');
+        switch (args[4]) {
+            case '前方':
+                Str = Str.replace(Str2, Str3);
+                break;
+            case '後方':
+                Str  = RvStr(Str);
+                Str2 = RvStr(Str2);
+                Str3 = RvStr(Str3);
+                Str  = Str.replace(Str2, Str3);
+                Str  = RvStr(Str);
+                break;
+            case '全て':
+            default:
+                while (Str.indexOf(Str2, 0) != -1) Str = Str.replace(Str2, Str3);
+                break;
         }
-        $gameVariables.setValue(VarId1,Str);
+        $gameVariables.setValue(VarId1, Str);
         function RvStr(st) {
             var rv = "";
             for (var i = 0, n = st.length; i < n; i++) rv += st[n - i - 1];
@@ -1220,119 +1219,118 @@
     Game_Interpreter.prototype.pluginCommandBook_ReplaceStrings = function(args) {
         this.pluginCommandBook_文字の置換(args);
     };
-    Game_Interpreter.prototype.pluginCommandBook_RepStr = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_RepStr         = function(args) {
         this.pluginCommandBook_文字の置換(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_文字の切取 = function(args) {
-        args[0]=args[0].replace('#' ,'');
+    Game_Interpreter.prototype.pluginCommandBook_文字の切取            = function(args) {
+        args[0]    = args[0].replace('#', '');
         var VarId1 = parseIntStrict(args[0]);
-        var Str = String(args[1]);
-        var Nm1 = parseIntStrict(args[2]);
-        var Nm2 = args[3]
-        if (Nm2.toLowerCase() == 'end' || Nm2 == '最後' ) Nm2 = Str.length;
+        var Str    = String(args[1]);
+        var Nm1    = parseIntStrict(args[2]);
+        var Nm2    = args[3]
+        if (Nm2.toLowerCase() == 'end' || Nm2 == '最後') Nm2 = Str.length;
         var Nm2 = parseIntStrict(Nm2);
         if (args[4] == null) args[4] = '前方';
-        args[4]=args[4].replace(/front/i,'前方');
-        args[4]=args[4].replace(/back/i,'後方');
-        switch (args[4]){
-          case '前方':
-          default:
-            Str = Str.substring(Nm1-1,Nm1+Nm2-1);
-            break;
-          case '後方':
-            Str = Str.substring(Str.length-Nm1+1,Str.length-Nm1-Nm2+1);
-            break;
+        args[4] = args[4].replace(/front/i, '前方');
+        args[4] = args[4].replace(/back/i, '後方');
+        switch (args[4]) {
+            case '前方':
+            default:
+                Str = Str.substring(Nm1 - 1, Nm1 + Nm2 - 1);
+                break;
+            case '後方':
+                Str = Str.substring(Str.length - Nm1 + 1, Str.length - Nm1 - Nm2 + 1);
+                break;
         }
-        $gameVariables.setValue(VarId1,Str);
+        $gameVariables.setValue(VarId1, Str);
     };
-    Game_Interpreter.prototype.pluginCommandBook_CutStrings = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_CutStrings       = function(args) {
         this.pluginCommandBook_文字の切取(args);
     };
-    Game_Interpreter.prototype.pluginCommandBook_CutStr = function(args) {
+    Game_Interpreter.prototype.pluginCommandBook_CutStr           = function(args) {
         this.pluginCommandBook_文字の切取(args);
     };
-    Game_Interpreter.prototype.pluginCommandBook_文字一致カウント = function(args) {
-        args[0]=args[0].replace('#' ,'');
+    Game_Interpreter.prototype.pluginCommandBook_文字一致カウント         = function(args) {
+        args[0]    = args[0].replace('#', '');
         var VarId1 = parseIntStrict(args[0]);
-        var Str = String(args[1]);
-        var Str2 = String(args[2]);
+        var Str    = String(args[1]);
+        var Str2   = String(args[2]);
         var StrCnt = 0
         var StrLen
         if (args[3] == '1') {
-          StrCnt = (Str.match(new RegExp(Str2, "g"))||[]).length;
+            StrCnt = (Str.match(new RegExp(Str2, "g")) || []).length;
         } else {
-          while (Str.indexOf(Str2,0) != -1 ){
-          StrCnt ++
-          StrLen = Str.indexOf(Str2,0) + 1
-          Str = Str.substring(StrLen,Str.length);
-          }
+            while (Str.indexOf(Str2, 0) != -1) {
+                StrCnt++
+                StrLen = Str.indexOf(Str2, 0) + 1
+                Str    = Str.substring(StrLen, Str.length);
+            }
         }
-        $gameVariables.setValue(VarId1,StrCnt);
+        $gameVariables.setValue(VarId1, StrCnt);
     };
     Game_Interpreter.prototype.pluginCommandBook_CountMatchString = function(args) {
         this.pluginCommandBook_文字一致カウント(args);
-    }; 
-    Game_Interpreter.prototype.pluginCommandBook_CntStr = function(args) {
+    };
+    Game_Interpreter.prototype.pluginCommandBook_CntStr           = function(args) {
         this.pluginCommandBook_文字一致カウント(args);
     };
 
-    Game_Interpreter.prototype.pluginCommandBook_文字の検索 = function(args) {
-        args[0]=args[0].replace('#' ,'');
+    Game_Interpreter.prototype.pluginCommandBook_文字の検索        = function(args) {
+        args[0]    = args[0].replace('#', '');
         var VarId1 = parseIntStrict(args[0]);
-        var Str = String(args[1]);
-        var Str2 = String(args[2]);
+        var Str    = String(args[1]);
+        var Str2   = String(args[2]);
         var StrLen
         if (args[3] == null) args[4] = '前方';
-        args[3]=args[3].replace(/front/i,'前方');
-        args[3]=args[3].replace(/back/i,'後方');
-        switch (args[3]){
-          case '前方':
-          default:
-            StrLen = Str.indexOf(Str2) + 1
-            break;
-          case '後方':
-            StrLen = Str.lastIndexOf(Str2) + 1
-            break;
+        args[3] = args[3].replace(/front/i, '前方');
+        args[3] = args[3].replace(/back/i, '後方');
+        switch (args[3]) {
+            case '前方':
+            default:
+                StrLen = Str.indexOf(Str2) + 1
+                break;
+            case '後方':
+                StrLen = Str.lastIndexOf(Str2) + 1
+                break;
         }
-        $gameVariables.setValue(VarId1,StrLen);
-   };
-   Game_Interpreter.prototype.pluginCommandBook_SearchString = function(args) {
+        $gameVariables.setValue(VarId1, StrLen);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_SearchString = function(args) {
         this.pluginCommandBook_文字の検索(args);
-   };
-   Game_Interpreter.prototype.pluginCommandBook_SchStr = function(args) {
+    };
+    Game_Interpreter.prototype.pluginCommandBook_SchStr       = function(args) {
         this.pluginCommandBook_文字の検索(args);
-   };
-   
-   Game_Interpreter.prototype.pluginCommandBook_文字数カウント = function(args) {
-        args[0]=args[0].replace('#' ,'');
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_文字数カウント           = function(args) {
+        args[0]    = args[0].replace('#', '');
         var VarId1 = parseIntStrict(args[0]);
-        var Str = String(args[1]);
-        var StrLen = Str.length
-        $gameVariables.setValue(VarId1,StrLen);
-   };
-   Game_Interpreter.prototype.pluginCommandBook_CountStringlength = function(args) {
+        var Str    = String(args[1]);
+        var StrLen = Str.length;
+        $gameVariables.setValue(VarId1, StrLen);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_CountStringlength = function(args) {
         this.pluginCommandBook_文字数カウント(args);
-   };
-   Game_Interpreter.prototype.pluginCommandBook_SchStr = function(args) {
+    };
+    Game_Interpreter.prototype.pluginCommandBook_SchStr            = function(args) {
         this.pluginCommandBook_文字数カウント(args);
-   };
-   
-   Game_Interpreter.prototype.pluginCommandBook_文字の反転 = function(args) {
-        args[0]=args[0].replace('#' ,'');
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_文字の反転         = function(args) {
+        args[0]    = args[0].replace('#', '');
         var VarId1 = parseIntStrict(args[0]);
-        var Str = String(args[1]);
+        var Str    = String(args[1]);
         var RevStr = "";
         for (var i = 0, n = Str.length; i < n; i++) RevStr += Str[n - i - 1];
-        $gameVariables.setValue(VarId1,RevStr);
-   };
-   
- Game_Interpreter.prototype.pluginCommandBook_ReverseString = function(args) {
+        $gameVariables.setValue(VarId1, RevStr);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_ReverseString = function(args) {
         this.pluginCommandBook_文字の反転(args);
-   };
- Game_Interpreter.prototype.pluginCommandBook_RevStr = function(args) {
+    };
+    Game_Interpreter.prototype.pluginCommandBook_RevStr        = function(args) {
         this.pluginCommandBook_文字の反転(args);
-   };
+    };
 
     Game_Interpreter.prototype.pluginCommandBook_強制セーブ = function(args) {
         $gameSystem.onBeforeSave();
@@ -1346,9 +1344,9 @@
     };
 
     Game_Interpreter.prototype.pluginCommandBook_指定位置にアニメーション表示 = function(args) {
-        var x = parseIntStrict(args[0]);
-        var y = parseIntStrict(args[1]);
-        var id =  parseIntStrict(args[2]);
+        var x    = parseIntStrict(args[0]);
+        var y    = parseIntStrict(args[1]);
+        var id   = parseIntStrict(args[2]);
         var wait = args[3] && (args[3] === 'ウェイトあり' || args[3].toUpperCase() === 'wait');
         $gameScreen.startAnimation(x, y, id, false);
         if (wait) this.wait($dataAnimations[id].frames.length * 4);
@@ -1359,9 +1357,9 @@
     };
 
     Game_Interpreter.prototype.pluginCommandBook_指定位置にループアニメーション表示 = function(args) {
-        var x = parseIntStrict(args[0]);
-        var y = parseIntStrict(args[1]);
-        var id =  parseIntStrict(args[2]);
+        var x  = parseIntStrict(args[0]);
+        var y  = parseIntStrict(args[1]);
+        var id = parseIntStrict(args[2]);
         $gameScreen.startAnimation(x, y, id, true);
     };
 
@@ -1377,10 +1375,38 @@
         this.pluginCommandBook_ループアニメーション消去(args);
     };
 
+    Game_Interpreter.prototype.pluginCommandBook_バッチ実行         = function(args) {
+        if (!Utils.isNwjs()) return;
+        var path = require('path');
+        var base = path.dirname(process.mainModule.filename);
+        var exec = require('child_process').exec;
+        exec(base + '/' + args[0]);
+    };
+    Game_Interpreter.prototype.pluginCommandBook_Execute_Batch = function(args) {
+        this.pluginCommandBook_バッチ実行(args);
+    };
+
+    Game_Interpreter.prototype.pluginCommandBook_File_Download = function(args) {
+        if (!Utils.isNwjs()) return;
+        var fileName     = 'TraitConditions.js';
+        var url          = 'https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/' + fileName;
+        var path         = require('path');
+        var projectBase  = path.dirname(process.mainModule.filename);
+        var downloadPath = path.join(projectBase, 'js/plugins/') + fileName;
+        var childProcess = require('child_process');
+        var command      = 'bitsadmin.exe /TRANSFER PLUGIN_DOWNLOAD ' + url + ' ' + downloadPath;
+        console.log('ExecuteCommand : ' + command);
+        childProcess.exec(command, function(error, stdout, stderr) {
+            console.log(stdout);
+            console.log(stderr);
+            if (error) console.error(error);
+        });
+    };
+
     /*
      * ここからはプラグインコマンドの実装のために必要な関数などを追加する
      */
-    var はい = true;
+    var はい  = true;
     var いいえ = false;
 
     /*
@@ -1388,9 +1414,9 @@
      *  このプラグインで使っている制御文字の拡張を通常のウィンドウにも適用します
      *  製作者 Alec
      */
-    if (eval(String(parameters['制御文字の拡張']||'false'))) {
-        (function () {
-            var Window_Base_convertEscapeCharacters = Window_Base.prototype.convertEscapeCharacters;
+    if (eval(String(parameters['制御文字の拡張'] || 'false'))) {
+        (function() {
+            var Window_Base_convertEscapeCharacters       = Window_Base.prototype.convertEscapeCharacters;
             Window_Base.prototype.convertEscapeCharacters = function(text) {
                 text = Game_Interpreter.prototype.pluginCommandBook_unescape(text);
                 return Window_Base_convertEscapeCharacters.call(this, text);
@@ -1398,9 +1424,9 @@
         })();
     }
 
-    if (eval(String(parameters['スクリプトに制御文字適用']||'false'))) {
-        (function () {
-            var _Game_Interpreter_command355 = Game_Interpreter.prototype.command355;
+    if (eval(String(parameters['スクリプトに制御文字適用'] || 'false'))) {
+        (function() {
+            var _Game_Interpreter_command355      = Game_Interpreter.prototype.command355;
             Game_Interpreter.prototype.command355 = function() {
                 var oldParams = [], i = 0, result, index = this._index;
                 oldParams.push(this._list[index].parameters[0]);
@@ -1411,29 +1437,29 @@
                 }
                 try {
                     result = _Game_Interpreter_command355.apply(this, arguments);
-                } catch(e) {
+                } catch (e) {
                     console.log('スクリプトの実行中にエラーが発生しました。');
                     console.log('- スクリプト 　: ' + this.currentCommand().parameters[0]);
                     console.log('- エラー原因   : ' + e.toString());
                     result = true;
                 }
                 this._list[index].parameters[0] = oldParams.shift();
-                i = 0;
+                i                               = 0;
                 while (this._list[index + ++i].code === 655) {
                     this._list[index + i].parameters[0] = oldParams.shift();
                 }
                 return result;
             };
 
-            var _Game_Interpreter_command111 = Game_Interpreter.prototype.command111;
+            var _Game_Interpreter_command111      = Game_Interpreter.prototype.command111;
             Game_Interpreter.prototype.command111 = function() {
                 if (this._params[0] === 12) {
-                    var oldParam = this._params[1];
+                    var oldParam    = this._params[1];
                     var result;
                     this._params[1] = this.pluginCommandBook_unescape(this._params[1]);
                     try {
                         result = _Game_Interpreter_command111.apply(this, arguments);
-                    } catch(e) {
+                    } catch (e) {
                         console.log('スクリプトの実行中にエラーが発生しました。');
                         console.log('- スクリプト 　: ' + this._params[1]);
                         console.log('- エラー原因   : ' + e.toString());
@@ -1446,14 +1472,14 @@
                 return result;
             };
 
-            var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
+            var _Game_Character_processMoveCommand      = Game_Character.prototype.processMoveCommand;
             Game_Character.prototype.processMoveCommand = function(command) {
                 if (command.code === Game_Character.ROUTE_SCRIPT) {
-                    var oldParam = command.parameters[0];
+                    var oldParam          = command.parameters[0];
                     command.parameters[0] = Game_Interpreter.prototype.pluginCommandBook_unescape(command.parameters[0]);
                     try {
                         _Game_Character_processMoveCommand.apply(this, arguments);
-                    } catch(e) {
+                    } catch (e) {
                         console.log('スクリプトの実行中にエラーが発生しました。');
                         console.log('- スクリプト 　: ' + command.parameters[0]);
                         console.log('- エラー原因   : ' + e.toString());
@@ -1469,24 +1495,24 @@
     //=============================================================================
     // Gameクラス定義領域
     //=============================================================================
-    var _Game_System_initialize = Game_System.prototype.initialize;
+    var _Game_System_initialize      = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.call(this);
         this._mapTouchDisable = false;
     };
 
-    var _Game_Message_initialize= Game_Message.prototype.initialize;
+    var _Game_Message_initialize      = Game_Message.prototype.initialize;
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.call(this);
-        this._numInputBackground = 0;
+        this._numInputBackground   = 0;
         this._numInputPositionType = 1;
-        this._numInputValidDigit = 1;
+        this._numInputValidDigit   = 1;
         this.clearNumInputRange();
     };
 
     Game_Message.prototype.clearNumInputRange = function() {
-        this._numInputMaxValue = Infinity;
-        this._numInputMinValue = -Infinity;
+        this._numInputMaxValue   = Infinity;
+        this._numInputMinValue   = -Infinity;
         this._numInputValidDigit = 1;
     };
 
@@ -1511,7 +1537,7 @@
         return this._numInputPositionType;
     };
 
-    var _Game_Screen_clear = Game_Screen.prototype.clear;
+    var _Game_Screen_clear      = Game_Screen.prototype.clear;
     Game_Screen.prototype.clear = function() {
         _Game_Screen_clear.apply(this, arguments);
         this.clearAnimation();
@@ -1531,43 +1557,43 @@
     };
 
     Object.defineProperty(Game_Screen.prototype, 'animationContainerX', {
-        get: function() {
+        get         : function() {
             return this._animationContainerX;
         },
         configurable: false
     });
 
     Object.defineProperty(Game_Screen.prototype, 'animationContainerY', {
-        get: function() {
+        get         : function() {
             return this._animationContainerY;
         },
         configurable: false
     });
 
     Object.defineProperty(Game_Screen.prototype, 'animationId', {
-        get: function() {
+        get         : function() {
             return this._animationId;
         },
         configurable: false
     });
 
     Object.defineProperty(Game_Screen.prototype, 'animationLoop', {
-        get: function() {
+        get         : function() {
             return this._animationLoop;
         },
-        set: function(value) {
+        set         : function(value) {
             this._animationLoop = value;
         },
         configurable: false
     });
 
-    var _Game_Screen_clearPictures = Game_Screen.prototype.clearPictures;
+    var _Game_Screen_clearPictures      = Game_Screen.prototype.clearPictures;
     Game_Screen.prototype.clearPictures = function() {
         _Game_Screen_clearPictures.apply(this, arguments);
         this.needsSortPictures = false;
     };
 
-    var _Game_Picture_initBasic = Game_Picture.prototype.initBasic;
+    var _Game_Picture_initBasic      = Game_Picture.prototype.initBasic;
     Game_Picture.prototype.initBasic = function() {
         _Game_Picture_initBasic.apply(this, arguments);
         this._frameX      = 0;
@@ -1582,9 +1608,9 @@
     };
 
     Game_Picture.prototype.setFrameDirect = function(x, y, width, height) {
-        this._frameX = x;
-        this._frameY = y;
-        this._frameWidth = width;
+        this._frameX      = x;
+        this._frameY      = y;
+        this._frameWidth  = width;
         this._frameHeight = height;
     };
 
@@ -1594,13 +1620,13 @@
 
     Game_Picture.prototype.setAngleDirect = function(value) {
         this._rotationSpeed = 0;
-        this._angle = value % 360;
+        this._angle         = value % 360;
     };
 
     //=============================================================================
     // Sceneクラス定義領域
     //=============================================================================
-    var _Scene_Map_isMapTouchOk = Scene_Map.prototype.isMapTouchOk;
+    var _Scene_Map_isMapTouchOk      = Scene_Map.prototype.isMapTouchOk;
     Scene_Map.prototype.isMapTouchOk = function() {
         return (!$gameSystem._mapTouchDisable || $gameTemp.isDestinationValid()) && _Scene_Map_isMapTouchOk.call(this);
     };
@@ -1608,30 +1634,30 @@
     //=============================================================================
     // Windowクラス定義領域
     //=============================================================================
-    var _Window_NumberInput_refresh = Window_NumberInput.prototype.refresh;
+    var _Window_NumberInput_refresh      = Window_NumberInput.prototype.refresh;
     Window_NumberInput.prototype.refresh = function() {
         if (this._number != null) this._number = this._number.clamp(
             $gameMessage._numInputMinValue, $gameMessage._numInputMaxValue);
         _Window_NumberInput_refresh.apply(this, arguments);
     };
 
-    var _Window_NumberInput_start = Window_NumberInput.prototype.start;
+    var _Window_NumberInput_start      = Window_NumberInput.prototype.start;
     Window_NumberInput.prototype.start = function() {
         _Window_NumberInput_start.apply(this, arguments);
         this.updateBackground();
     };
 
-    var _Window_NumberInput_processOk = Window_NumberInput.prototype.processOk;
+    var _Window_NumberInput_processOk      = Window_NumberInput.prototype.processOk;
     Window_NumberInput.prototype.processOk = function() {
         _Window_NumberInput_processOk.apply(this, arguments);
         $gameMessage.clearNumInputRange();
     };
 
-    var _Window_NumberInput_updatePlacement = Window_NumberInput.prototype.updatePlacement;
+    var _Window_NumberInput_updatePlacement      = Window_NumberInput.prototype.updatePlacement;
     Window_NumberInput.prototype.updatePlacement = function() {
         _Window_NumberInput_updatePlacement.apply(this, arguments);
         var positionType = $gameMessage.numInputPositionType();
-        this.width = this.windowWidth();
+        this.width       = this.windowWidth();
         switch (positionType) {
             case 0:
                 this.x = 0;
@@ -1645,7 +1671,7 @@
         }
     };
 
-    var _Window_NumberInput_changeDigit = Window_NumberInput.prototype.changeDigit;
+    var _Window_NumberInput_changeDigit      = Window_NumberInput.prototype.changeDigit;
     Window_NumberInput.prototype.changeDigit = function(up) {
         if (this.maxItems() - this.index() < $gameMessage._numInputValidDigit) {
             return;
@@ -1661,19 +1687,19 @@
     //=============================================================================
     // Spriteクラス定義領域
     //=============================================================================
-    var _Sprite_Picture_initialize = Sprite_Picture.prototype.initialize;
+    var _Sprite_Picture_initialize      = Sprite_Picture.prototype.initialize;
     Sprite_Picture.prototype.initialize = function(pictureId) {
         _Sprite_Picture_initialize.apply(this, arguments);
         this.z = 100;
     };
 
-    var _Sprite_Picture_update = Sprite_Picture.prototype.update;
+    var _Sprite_Picture_update      = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_Picture_update.call(this);
         if (this.visible) {
             var newZ = this.picture().z;
             if (newZ !== undefined && newZ !== this.z) {
-                this.z = newZ;
+                this.z                        = newZ;
                 $gameScreen.needsSortPictures = true;
             }
             this.updateFrame();
@@ -1687,7 +1713,7 @@
         }
     };
 
-    var _Spriteset_Base_createUpperLayer = Spriteset_Base.prototype.createUpperLayer;
+    var _Spriteset_Base_createUpperLayer      = Spriteset_Base.prototype.createUpperLayer;
     Spriteset_Base.prototype.createUpperLayer = function() {
         _Spriteset_Base_createUpperLayer.apply(this, arguments);
         this.createAnimationContainer();
@@ -1695,11 +1721,11 @@
 
     Spriteset_Base.prototype.createAnimationContainer = function() {
         this._animationContainer = new Sprite_Base();
-        this._animationId = 0;
+        this._animationId        = 0;
         this.addChild(this._animationContainer);
     };
 
-    var _Spriteset_Base_update = Spriteset_Base.prototype.update;
+    var _Spriteset_Base_update      = Spriteset_Base.prototype.update;
     Spriteset_Base.prototype.update = function() {
         _Spriteset_Base_update.call(this);
         if ($gameScreen.needsSortPictures) {
