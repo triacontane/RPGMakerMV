@@ -90,14 +90,14 @@
  * 最小値と最大値および一回の入力で変化する値を指定します。
  *
  * 指定項目「名称:初期値:値が設定される変数:隠しフラグ:最小値:最大値:変化値:スクリプト」
- * 例：数値項目1:0:1:OFF:0:10:1:SceneManager.push(Scene_SoundTest);
+ * 例：数値項目1:0:1:OFF:0:10:1:
  *
  * ・音量項目：
  * 音量を選択する項目です。BGMボリュームなどと同じ仕様で
  * キャラクターごとのボイス音量等に使ってください。
  *
  * 指定項目「名称:初期値:値が設定される変数:隠しフラグ:スクリプト」
- * 例：音量項目1:0:2:OFF:script
+ * 例：音量項目1:0:2:OFF:SceneManager.push(Scene_SoundTest);
  *
  * ・文字項目：
  * 文字を選択する項目です。指定した文字の配列から項目を選択します。
@@ -173,6 +173,8 @@
             }
         });
     }
+
+    var localOptionWindowIndex = 0;
 
     //=============================================================================
     // Game_Interpreter
@@ -395,6 +397,8 @@
     Window_Options.prototype.initialize = function() {
         this._customParams = ConfigManager.getCustomParams();
         _Window_Options_initialize.apply(this, arguments);
+        this.select(localOptionWindowIndex);
+        localOptionWindowIndex = 0;
     };
 
     var _Window_Options_makeCommandList      = Window_Options.prototype.makeCommandList;
@@ -474,6 +478,7 @@
         var symbol = this.commandSymbol(this.index());
         var script = this._customParams[symbol].script;
         if (script) eval(script);
+        localOptionWindowIndex = this.index();
     };
 
     Window_Options.prototype._clampValue = function(value, symbol, loopFlg) {
