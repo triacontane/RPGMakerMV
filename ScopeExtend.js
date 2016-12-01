@@ -45,9 +45,10 @@
  * <SE重複除外> <SERemoveDuplication>
  * 元々の選択範囲から重複ターゲットが除外されます。
  *
- * <SEランダム> <SERandom>
- * 元々の選択範囲の中からランダムで一人だけが選択されます。
+ * <SEランダム:n> <SERandom:n>
+ * 元々の選択範囲の中からランダムでn人だけが選択されます。
  * 狙われ率の影響しない純粋なランダムです。
+ * 値を省略するとランダムで一人が選択されます。
  *
  * <SEグループ> <SEGroup>
  * 敵グループ内に、指定した敵単体と同じIDの敵キャラがいる場合、全員選択されます。
@@ -90,6 +91,12 @@
         return undefined;
     };
 
+    var getArgNumber = function(arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    };
+
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
         var windowLayer = SceneManager._scene._windowLayer;
@@ -123,18 +130,26 @@
             }.bind(this));
         }
         if (this.isScopeExtendInfo(['ランダム', 'Random'])) {
-            targets = [targets[Math.floor(Math.random() * targets.length)]];
+            var number = this.getScopeExtendInfo(['ランダム', 'Random']);
+            var targetsForRandom = [];
+            while (targetsForRandom.length < number && targets.length > targetsForRandom.length) {
+                var index = Math.floor(Math.random() * targets.length);
+                if (!targetsForRandom.contains(targets[index])) {
+                    targetsForRandom.push(targets[index]);
+                }
+            }
+            targets = targetsForRandom;
         }
         if (this.isScopeExtendInfo(['グループ', 'Group'])) {
-            var newTargets, prevTarget = targets[0];
+            var targetsForGroup, prevTarget = targets[0];
             if (prevTarget.isActor()) {
-                newTargets = prevTarget.friendsUnit().members();
+                targetsForGroup = prevTarget.friendsUnit().members();
             } else {
-                newTargets = prevTarget.friendsUnit().members().filter(function(member) {
+                targetsForGroup = prevTarget.friendsUnit().members().filter(function(member) {
                     return prevTarget.enemyId() === member.enemyId();
                 });
             }
-            targets = newTargets;
+            targets = targetsForGroup;
         }
         arguments[0] = targets;
         return _Game_Action_repeatTargets.apply(this, arguments);
@@ -180,6 +195,11 @@
 
     Game_Action.prototype.isScopeExtendInfo = function(names) {
         return !!getMetaValues(this.item(), names);
+    };
+
+    Game_Action.prototype.getScopeExtendInfo = function(names) {
+        var result = getArgNumber(getMetaValues(this.item(), names));
+        return result === true ? 1 : result;
     };
 })();
 
