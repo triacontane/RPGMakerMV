@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/12/02 各項目で決定ボタンを押したときに実行されるスクリプトを設定できる機能を追加
 // 1.1.1 2016/08/14 スイッチ項目、音量項目の初期値が無効になっていた問題を修正
 // 1.1.0 2016/04/29 項目をクリックしたときに項目値が循環するよう修正
 // 1.0.0 2016/01/17 初版
@@ -23,43 +24,43 @@
  * -------------------------------------------------------
  * @param スイッチ項目1
  * @desc 項目の情報です。以下の順で指定します。
- * 名称,初期値(ON/OFF),スイッチ番号,隠しフラグ
- * @default スイッチ項目1:OFF:0:OFF
+ * 名称:初期値:スイッチ番号:隠しフラグ:スクリプト
+ * @default スイッチ項目1:OFF:0:OFF:
  *
  * @param 数値項目1
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値(数値):変数番号:隠しフラグ:最小値:最大値:変化値
- * @default 数値項目1:0:0:OFF:0:10:1
+ * 名称:初期値:変数番号:隠しフラグ:最小値:最大値:変化値:スクリプト
+ * @default 数値項目1:0:0:OFF:0:10:1:
  *
  * @param 音量項目1
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値(数値(0...100)):変数番号:隠しフラグ
- * @default 音量項目1:0:0:OFF
+ * 名称:初期値:変数番号:隠しフラグ:スクリプト
+ * @default 音量項目1:0:0:OFF:
  *
  * @param 文字項目1
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値(Index(数値)):変数番号:隠しフラグ:文字の配列
- * @default 文字項目1:0:0:OFF:EASY, NORMAL, HARD, VERY HARD
+ * 名称:初期値:変数番号:隠しフラグ:文字配列:スクリプト
+ * @default 文字項目1:0:0:OFF:EASY, NORMAL, HARD, VERY HARD:
  *
  * @param スイッチ項目2
  * @desc 項目の情報です。以下の順で指定します。
- * 名称,初期値(ON/OFF),スイッチ番号,隠しフラグ
- * @default スイッチ項目2:OFF:0:OFF
+ * 名称,初期値:スイッチ番号:隠しフラグ:スクリプト
+ * @default スイッチ項目2:OFF:0:OFF:
  *
  * @param 数値項目2
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値(数値):変数番号:隠しフラグ:最小値:最大値:変化値
- * @default 数値項目2:0:0:OFF:0:10:1
+ * 名称:初期値:変数番号:隠しフラグ:最小値:最大値:変化値:スクリプト
+ * @default 数値項目2:0:0:OFF:0:10:1:
  *
  * @param 音量項目2
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値(数値(0...100)):変数番号:隠しフラグ
- * @default 音量項目2:0:0:OFF
+ * 名称:初期値:変数番号:隠しフラグ:スクリプト
+ * @default 音量項目2:0:0:OFF:
  *
  * @param 文字項目2
  * @desc 項目の情報です。以下の順で指定します。
- * 名称:初期値(Index(数値)):変数番号:隠しフラグ:文字の配列
- * @default 文字項目2:0:0:OFF:EASY, NORMAL, HARD, VERY HARD
+ * 名称:初期値:変数番号:隠しフラグ:文字配列:スクリプト
+ * @default 文字項目2:0:0:OFF:EASY, NORMAL, HARD, VERY HARD:
  * --------------------------------------------------------
  *
  * @help オプション画面に任意の項目を追加します。
@@ -76,31 +77,35 @@
  * 隠しフラグはプラグインコマンドから解除できます。
  * それぞれの値はコロン（:）区切りで指定してください。
  *
- * 指定項目「名称:初期値:値が設定されるスイッチ:隠しフラグ」
- * 例：スイッチ項目1:OFF:1:OFF
+ * スクリプトは上級者向け項目です。対象にカーソルを合わせて決定ボタンを
+ * 押下すると指定したJavaScriptを実行できます。
+ * 主に専用の設定画面などの遷移に使用します。
+ *
+ * 指定項目「名称:初期値:値が設定されるスイッチ:隠しフラグ:スクリプト」
+ * 例：スイッチ項目1:OFF:1:OFF:script
  *
  * ・数値項目：
  * 数値を選択する項目です。指定した番号の変数と値が同期されます。
  * スイッチ項目で指定した内容に加えて、
  * 最小値と最大値および一回の入力で変化する値を指定します。
  *
- * 指定項目「名称:初期値:値が設定される変数:隠しフラグ:最小値:最大値:変化値」
- * 例：数値項目1:0:1:OFF:0:10:1
+ * 指定項目「名称:初期値:値が設定される変数:隠しフラグ:最小値:最大値:変化値:スクリプト」
+ * 例：数値項目1:0:1:OFF:0:10:1:SceneManager.push(Scene_SoundTest);
  *
  * ・音量項目：
  * 音量を選択する項目です。BGMボリュームなどと同じ仕様で
  * キャラクターごとのボイス音量等に使ってください。
  *
- * 指定項目「名称:初期値:値が設定される変数:隠しフラグ」
- * 例：音量項目1:0:2:OFF
+ * 指定項目「名称:初期値:値が設定される変数:隠しフラグ:スクリプト」
+ * 例：音量項目1:0:2:OFF:script
  *
  * ・文字項目：
  * 文字を選択する項目です。指定した文字の配列から項目を選択します。
  * 選択した文字のインデックス(開始位置は0)が変数に設定されます。
  * 初期値に設定する値もインデックスです。
  *
- * 設定項目「名称:初期値:値が設定される変数:隠しフラグ:文字の配列」
- * 例：文字項目1:0:3:OFF:EASY, NORMAL, HARD, VERY HARD
+ * 設定項目「名称:初期値:値が設定される変数:隠しフラグ:文字の配列:スクリプト」
+ * 例：文字項目1:0:3:OFF:EASY, NORMAL, HARD, VERY HARD:script
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -117,7 +122,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(function() {
     'use strict';
     var pluginName = 'CustomizeConfigItem';
 
@@ -135,21 +140,21 @@
         return null;
     };
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
-    var getArgArrayString = function (args, upperFlg) {
+    var getArgArrayString = function(args, upperFlg) {
         var values = getArgString(args, upperFlg).split(',');
         for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
         return values;
     };
 
-    var getArgString = function (args, upperFlg) {
+    var getArgString = function(args, upperFlg) {
         return upperFlg ? args.toUpperCase() : args;
     };
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(arg, 10) || 0).clamp(min, max);
@@ -161,8 +166,8 @@
 
     if (!Object.prototype.hasOwnProperty('iterate')) {
         Object.defineProperty(Object.prototype, 'iterate', {
-            value : function (handler) {
-                Object.keys(this).forEach(function (key, index) {
+            value: function(handler) {
+                Object.keys(this).forEach(function(key, index) {
                     handler.call(this, key, this[key], index);
                 }, this);
             }
@@ -174,7 +179,7 @@
     //  プラグインコマンドを追加定義します。
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
         try {
             this.pluginCommandCustomizeConfigItem(command, args);
@@ -195,7 +200,7 @@
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandCustomizeConfigItem = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandCustomizeConfigItem = function(command, args) {
         switch (getCommandName(command)) {
             case 'CC_UNLOCK' :
             case 'オプション任意項目の隠し解除' :
@@ -209,7 +214,7 @@
     //  追加項目の設定値や初期値を管理します。
     //=============================================================================
     ConfigManager.customParams = null;
-    ConfigManager.hiddenInfo = {};
+    ConfigManager.hiddenInfo   = {};
 
     ConfigManager.getCustomParams = function() {
         if (this.customParams != null) return this.customParams;
@@ -234,12 +239,13 @@
         var param = getParamString(paramBaseName + '%1'.format(i)).split(':');
         if (param.length > 1) {
             try {
-                var data        = {};
-                data.symbol     = symbolType + '%1'.format(i);
-                data.name       = getArgString(param[0]);
-                data.initValue  = symbolType === 'Boolean' ? getArgBoolean(param[1]) : getArgNumber(param[1]);
-                data.variable   = getArgNumber(param[2]);
-                data.hidden     = getArgBoolean(param[3]);
+                var data       = {};
+                data.symbol    = symbolType + '%1'.format(i);
+                data.name      = getArgString(param[0]);
+                data.initValue = symbolType === 'Boolean' ? getArgBoolean(param[1]) : getArgNumber(param[1]);
+                data.variable  = getArgNumber(param[2]);
+                data.hidden    = getArgBoolean(param[3]);
+                data.script    = getArgString(param[param.length - 1]);
                 switch (symbolType) {
                     case 'Number':
                         data.min    = getArgNumber(param[4]);
@@ -263,18 +269,18 @@
     };
 
     var _ConfigManager_makeData = ConfigManager.makeData;
-    ConfigManager.makeData = function() {
-        var config = _ConfigManager_makeData.apply(this, arguments);
+    ConfigManager.makeData      = function() {
+        var config        = _ConfigManager_makeData.apply(this, arguments);
         config.hiddenInfo = {};
         this.getCustomParams().iterate(function(symbol) {
-            config[symbol] = this[symbol];
+            config[symbol]            = this[symbol];
             config.hiddenInfo[symbol] = this.hiddenInfo[symbol];
         }.bind(this));
         return config;
     };
 
     var _ConfigManager_applyData = ConfigManager.applyData;
-    ConfigManager.applyData = function(config) {
+    ConfigManager.applyData      = function(config) {
         _ConfigManager_applyData.apply(this, arguments);
         this.getCustomParams().iterate(function(symbol, item) {
             if (symbol.contains('Boolean')) {
@@ -349,7 +355,7 @@
     };
 
     var _ConfigManager_save = ConfigManager.save;
-    ConfigManager.save = function() {
+    ConfigManager.save      = function() {
         _ConfigManager_save.apply(this, arguments);
         this.exportCustomParams();
     };
@@ -358,7 +364,7 @@
     // Game_Map
     //  リフレッシュ時にオプション値を同期します。
     //=============================================================================
-    var _Game_Map_refresh = Game_Map.prototype.refresh;
+    var _Game_Map_refresh      = Game_Map.prototype.refresh;
     Game_Map.prototype.refresh = function() {
         _Game_Map_refresh.apply(this, arguments);
         ConfigManager.importCustomParams();
@@ -369,13 +375,13 @@
     //  セーブ時とロード時にオプション値を同期します。
     //=============================================================================
     var _DataManager_setupNewGame = DataManager.setupNewGame;
-    DataManager.setupNewGame = function() {
+    DataManager.setupNewGame      = function() {
         _DataManager_setupNewGame.apply(this, arguments);
         ConfigManager.exportCustomParams();
     };
 
     var _DataManager_loadGameWithoutRescue = DataManager.loadGameWithoutRescue;
-    DataManager.loadGameWithoutRescue = function(savefileId) {
+    DataManager.loadGameWithoutRescue      = function(savefileId) {
         var result = _DataManager_loadGameWithoutRescue.apply(this, arguments);
         ConfigManager.exportCustomParams();
         return result;
@@ -385,13 +391,13 @@
     // Window_Options
     //  追加項目を描画します。
     //=============================================================================
-    var _Window_Options_initialize = Window_Options.prototype.initialize;
+    var _Window_Options_initialize      = Window_Options.prototype.initialize;
     Window_Options.prototype.initialize = function() {
         this._customParams = ConfigManager.getCustomParams();
         _Window_Options_initialize.apply(this, arguments);
     };
 
-    var _Window_Options_makeCommandList = Window_Options.prototype.makeCommandList;
+    var _Window_Options_makeCommandList      = Window_Options.prototype.makeCommandList;
     Window_Options.prototype.makeCommandList = function() {
         _Window_Options_makeCommandList.apply(this, arguments);
         this.addCustomOptions();
@@ -403,7 +409,7 @@
         }.bind(this));
     };
 
-    var _Window_Options_statusText = Window_Options.prototype.statusText;
+    var _Window_Options_statusText      = Window_Options.prototype.statusText;
     Window_Options.prototype.statusText = function(index) {
         var result = _Window_Options_statusText.apply(this, arguments);
         var symbol = this.commandSymbol(index);
@@ -432,24 +438,25 @@
         return this._customParams[symbol].values[value];
     };
 
-    var _Window_Options_processOk = Window_Options.prototype.processOk;
+    var _Window_Options_processOk      = Window_Options.prototype.processOk;
     Window_Options.prototype.processOk = function() {
         if (!this._shiftValue(1, true)) _Window_Options_processOk.apply(this, arguments);
+        this.execScript();
     };
 
-    var _Window_Options_cursorRight = Window_Options.prototype.cursorRight;
+    var _Window_Options_cursorRight      = Window_Options.prototype.cursorRight;
     Window_Options.prototype.cursorRight = function(wrap) {
         if (!this._shiftValue(1, false)) _Window_Options_cursorRight.apply(this, arguments);
     };
 
-    var _Window_Options_cursorLeft = Window_Options.prototype.cursorLeft;
+    var _Window_Options_cursorLeft      = Window_Options.prototype.cursorLeft;
     Window_Options.prototype.cursorLeft = function(wrap) {
         if (!this._shiftValue(-1, false)) _Window_Options_cursorLeft.apply(this, arguments);
     };
 
     Window_Options.prototype._shiftValue = function(sign, loopFlg) {
         var symbol = this.commandSymbol(this.index());
-        var value = this.getConfigValue(symbol);
+        var value  = this.getConfigValue(symbol);
         if (this.isNumberSymbol(symbol)) {
             value += this.numberOffset(symbol) * sign;
             this.changeValue(symbol, this._clampValue(value, symbol, loopFlg));
@@ -461,6 +468,12 @@
             return true;
         }
         return false;
+    };
+
+    Window_Options.prototype.execScript = function() {
+        var symbol = this.commandSymbol(this.index());
+        var script = this._customParams[symbol].script;
+        if (script) eval(script);
     };
 
     Window_Options.prototype._clampValue = function(value, symbol, loopFlg) {
