@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/12/02 味方に対してN回ランダム選択できる機能を追加
+// 1.4.0 2016/12/02 ランダム設定に対象人数を設定できる機能を追加
 // 1.3.0 2016/09/15 敵N回ランダムのスキルに対して5回以上の繰り返しを指定できる機能を追加
 // 1.2.0 2016/09/06 敵グループ内で同じIDの敵キャラ全員を対象にできるスコープを追加
 // 1.1.0 2016/07/20 ターゲットの中から重複を除外できる機能を追加
@@ -59,6 +61,9 @@
  * もともとの設定上限(4回)を超えて、5回以上実行したい場合に指定します。
  * 回数の指定には制御文字\v[n]およびJavaScript計算式が利用できます。
  *
+ * さらに「味方全体」を効果範囲にしたスキルに対して設定すると
+ * 「味方N体ランダム」を効果範囲にできます。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -101,6 +106,15 @@
         if (text == null) text = '';
         var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+    };
+
+    //=============================================================================
+    // Game_Unit
+    //  味方キャラをランダム選択します。
+    //=============================================================================
+    Game_Unit.prototype.randomFriendTarget = function() {
+        var members = this.aliveMembers();
+        return members[Math.floor(Math.random() * members.length)];
     };
 
     //=============================================================================
@@ -158,8 +172,21 @@
     var _Game_Action_numTargets = Game_Action.prototype.numTargets;
     Game_Action.prototype.numTargets = function() {
         var metaValue = getMetaValues(this.item(), ['RandomNum', 'ランダム回数']);
-        return this.isForRandom() && metaValue ? getArgNumberWithEval(metaValue, 1) :
-            _Game_Action_numTargets.apply(this, arguments);
+        return metaValue ? getArgNumberWithEval(metaValue, 1) : _Game_Action_numTargets.apply(this, arguments);
+    };
+
+    var _Game_Action_targetsForFriends = Game_Action.prototype.targetsForFriends;
+    Game_Action.prototype.targetsForFriends = function() {
+        var targets = _Game_Action_targetsForFriends.apply(this, arguments);
+        var numTargets = this.numTargets();
+        if (this.isForAll() && numTargets > 0) {
+            var friendUnit = this.friendsUnit();
+            targets = [];
+            for (var i = 0; i < numTargets; i++) {
+                targets.push(friendUnit.randomFriendTarget());
+            }
+        }
+        return targets;
     };
 
     Game_Action.prototype.targetsForAll = function(targets) {
