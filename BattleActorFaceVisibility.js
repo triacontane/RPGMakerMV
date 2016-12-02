@@ -90,6 +90,11 @@
  * <face_actor_hp80:5> # HPが80%以下の場合アクターID[5]のグラフィックを適用
  * <face_actor_hp30:6> # HPが30%以下の場合アクターID[6]のグラフィックを適用
  *
+ * 特定のステートが有効になっている場合に、表示する顔グラフィックを
+ * 変化させることもできます。同じく別のアクターを作成する必要があります。
+ *
+ * <face_actor_state5:7> # ステート[5]が有効ならアクターID[7]のグラフィックを適用
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -145,6 +150,47 @@
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    };
+
+    //=============================================================================
+    // Game_Actor
+    //  顔グラフィック表示用のアクターデータを返します。
+    //=============================================================================
+    Game_Actor.prototype.getFaceActorData = function() {
+        return this.getFaceActorDataForState() || this.getFaceActorDataForHpRate() || this;
+    };
+
+    Game_Actor.prototype.getFaceActorDataForHpRate = function() {
+        var metaObject = this.actor().meta;
+        for (var i = 1; i <= 10; i++) {
+            var customActorId = metaObject['face_actor_hp' + String(i * 10)];
+            if (customActorId && this.hpRate() <= (i / 10)) {
+                return $gameActors.actor(customActorId);
+            }
+        }
+        return null;
+    };
+
+    Game_Actor.prototype.getFaceActorDataForState = function() {
+        var metaObject = this.actor().meta;
+        var stateActor = null;
+        this.getSortedStates().some(function(stateId) {
+            var customActorId = metaObject['face_actor_state' + String(stateId)];
+            if (customActorId) {
+                stateActor = $gameActors.actor(customActorId);
+                return true;
+            }
+            return false;
+        });
+        return stateActor;
+    };
+
+    Game_Actor.prototype.getSortedStates = function() {
+        return this._states.sort(this.compareOrderStateIdPriority.bind(this));
+    };
+
+    Game_Actor.prototype.compareOrderStateIdPriority = function(stateIdA, stateIdB) {
+        return $dataStates[stateIdA].priority - $dataStates[stateIdB].priority;
     };
 
     //=============================================================================
@@ -227,16 +273,7 @@
 
     Window_Face.prototype.getRealActor = function() {
         var actor = BattleManager.actor();
-        if (!actor) return null;
-        var meta = actor.actor().meta;
-        for (var i = 1; i <= 10; i++) {
-            var customActorId = meta['face_actor_hp' + (i * 10)];
-            if (customActorId && actor.hpRate() <= (i / 10)) {
-                actor = $gameActors.actor(customActorId);
-                break;
-            }
-        }
-        return actor;
+        return actor ? actor.getFaceActorData() : null;
     };
 
     Window_Face.prototype.drawActorFace = function(actor) {
