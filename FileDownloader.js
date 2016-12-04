@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2016/12/04 少しコードをリファクタリング
 // 1.0.0 2016/11/25 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -192,9 +193,9 @@
     const pluginName = 'FileDownloader';
 
     const getParamOther = function(paramNames) {
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
+        for (let name of paramNames) {
+            const paramName = PluginManager.parameters(pluginName)[name];
+            if (paramName) return paramName;
         }
         return null;
     };
@@ -236,22 +237,22 @@
     const paramAbnormalEndSwitch = getParamNumber(['AbnormalEndSwitch', '異常終了スイッチID'], 0);
     const paramResourceUrl       = addSlashOfEnd(getParamString(['ResourceUrl', '配布サイトURL']));
 
-    const pluginCommandMap = {
-        FD_FILE      : 'downloadFile',
-        FD_ファイル      : 'downloadFile',
-        FD_MY_FILE   : 'downloadMyFile',
-        FD_マイファイル    : 'downloadMyFile',
-        FD_PLUGIN    : 'downloadPlugin',
-        FD_プラグイン     : 'downloadPlugin',
-        FD_MY_PLUGIN : 'downloadMyPlugin',
-        FD_マイプラグイン   : 'downloadMyPlugin',
-        FD_PICTURE   : 'downloadPicture',
-        FD_ピクチャ      : 'downloadPicture',
-        FD_MY_PICTURE: 'downloadMyPicture',
-        FD_マイピクチャ    : 'downloadMyPicture',
-        FD_START_SITE: 'startupWebSite',
-        FD_サイト起動     : 'startupWebSite',
-    };
+    const pluginCommandMap = new Map([
+        ['FD_FILE' ,'downloadFile'],
+        ['FD_ファイル' , 'downloadFile'],
+        ['FD_MY_FILE' , 'downloadMyFile'],
+        ['FD_マイファイル' ,'downloadMyFile'],
+        ['FD_PLUGIN' , 'downloadPlugin'],
+        ['FD_プラグイン' , 'downloadPlugin'],
+        ['FD_MY_PLUGIN', 'downloadMyPlugin'],
+        ['FD_マイプラグイン', 'downloadMyPlugin'],
+        ['FD_PICTURE', 'downloadPicture'],
+        ['FD_ピクチャ', 'downloadPicture'],
+        ['FD_MY_PICTURE', 'downloadMyPicture'],
+        ['FD_マイピクチャ', 'downloadMyPicture'],
+        ['FD_START_SITE', 'startupWebSite'],
+        ['FD_サイト起動', 'startupWebSite']
+    ]);
 
     //=============================================================================
     // Game_Interpreter
@@ -270,7 +271,7 @@
     };
 
     Game_Interpreter.prototype.pluginCommandFileDownloader = function(command, args) {
-        const pluginCommand = pluginCommandMap[command.toUpperCase()];
+        const pluginCommand = pluginCommandMap.get(command.toUpperCase());
         if (pluginCommand) {
             args = convertAllArguments(args);
             this.makeDownloader(args);
@@ -351,21 +352,26 @@
             this.setResultSwitch(this._normalSwitchId, false);
             this.setResultSwitch(this._abnormalSwitchId, false);
             const childProcess = require('child_process');
-            childProcess.exec(command, this.onCompleteCommand.bind(this));
+            const promise = new Promise(function(resolve, reject) {
+                childProcess.exec(command, function(error, stdout, stderr) {
+                    if (stdout) this.outputDebugLog(stdout);
+                    if (stderr) this.outputDebugLog(stderr);
+                    return error ? reject(error) : resolve();
+                }.bind(this));
+            }.bind(this));
+            promise.then(this.onNormalEnd.bind(this), this.onAbnormalEnd.bind(this));
         }
 
-        onCompleteCommand(error, stdout, stderr) {
-            if (stdout) this.outputDebugLog(stdout);
-            if (stderr) this.outputDebugLog(stderr);
-            if (error) {
-                this.setResultSwitch(this._abnormalSwitchId, true);
-                this.outputErrorLog(error);
-                this.outputDebugLog('*** Command Abnormal End ***');
-            } else {
-                this.setResultSwitch(this._normalSwitchId, true);
-                this.outputDebugLog('*** Command Normal End ***');
-            }
+        onNormalEnd() {
+            this.setResultSwitch(this._normalSwitchId, true);
+            this.outputDebugLog('*** Command Normal End ***');
         }
+
+        onAbnormalEnd(error) {
+            this.setResultSwitch(this._abnormalSwitchId, true);
+            this.outputErrorLog(error);
+            this.outputDebugLog('*** Command Abnormal End ***');
+        };
 
         setResultSwitch(switchId, value) {
             if (switchId > 0) {
@@ -405,16 +411,20 @@
                 this.getNoNwjsInstance();
         }
 
-        static getWindowsInstance() {
+        static getDefaultInstance() {
             return new GameEmptyProcess();
+        }
+
+        static getWindowsInstance() {
+            return this.getDefaultInstance();
         }
 
         static getMacInstance() {
-            return new GameEmptyProcess();
+            return this.getDefaultInstance();
         }
 
         static getNoNwjsInstance() {
-            return new GameEmptyProcess();
+            return this.getDefaultInstance();
         }
 
         static isWindows() {
