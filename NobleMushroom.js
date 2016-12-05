@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/12/05 高速でメッセージを送った場合に顔グラフィックを表示しようとするとエラーになる場合がある不具合を修正
+//                  ノベル表示中に選択肢ウィンドウと数値入力ウィンドウの表示位置を調整できる機能を追加
 // 1.4.0 2016/11/11 オートセーブ有効時、一定の手順を踏むとセーブデータをロードできなくなる不具合を修正
 //                  選択肢表示後、直後にメッセージ表示がない場合でもウィンドウを閉じないよう修正
 // 1.3.0 2016/09/28 ウィンドウ枠を自由に調整できる機能を追加
@@ -173,14 +175,24 @@
  * NM_SETTING_FIXED    # 同上
  * NM_設定固定解除     # ウィンドウの表示設定固定を元に戻します。
  * NM_SETTING_RELEASE  # 同上
- * NM_名前入力 1       # アクターID[1]の名前を入力するポップアップを表示します。
+ * NM_名前入力 1       # アクターID[1]の名前を入力するポップアップを表示します(※)
  * NM_INPUT_NAME 1     # 同上
+ * ※このコマンドはRPGアツマールでは使用できません。
+ *
  * NM_チャプター設定 A # セーブファイルに出力するチャプタータイトルを設定します。
  * NM_SET_CHAPTER A    # 同上
  * NM_オートセーブ     # オートセーブを実行します。
  * NM_AUTO_SAVE        # 同上
+ *
+ * ・ノベルウィンドウの表示位置をX, Y, 横幅、高さを指定して調整できます。
+ * 　引数を指定しなかった場合、表示位置をデフォルトに戻します。
  * NM_ノベルウィンドウ位置設定 0 0 600 300 # ウィンドウの矩形を設定します。
  * NM_SET_RECT_NOVEL_WINDOW 0 0 600 300    # 同上
+ *
+ * ・ノベルウィンドウの選択肢の中心座標をX, Yを指定して調整できます。
+ * 　引数を指定しなかった場合、表示位置をデフォルトに戻します。
+ * NM_ノベルコマンド位置設定 0 0 # ノベルコマンドの中心座標を設定します。
+ * NM_SET_RECT_NOVEL_COMMAND 0 0 # 同上
  *
  * プラグインコマンド詳細
  *
@@ -337,7 +349,7 @@
     //  ホイール回転時に座標を記録
     //=============================================================================
     var _TouchInput__onWheel = TouchInput._onWheel;
-    TouchInput._onWheel = function(event) {
+    TouchInput._onWheel      = function(event) {
         _TouchInput__onWheel.apply(this, arguments);
         this._x = Graphics.pageToCanvasX(event.pageX);
         this._y = Graphics.pageToCanvasY(event.pageY);
@@ -407,17 +419,23 @@
                 break;
             case 'ノベルウィンドウ位置設定' :
             case 'SET_RECT_NOVEL_WINDOW' :
-                var rect;
+                var rect = [];
                 if (args.length > 0) {
-                    rect = [];
                     rect[0] = getArgNumber(args[0], 0);
                     rect[1] = getArgNumber(args[1], 0);
                     rect[2] = getArgNumber(args[2], 1);
                     rect[3] = getArgNumber(args[3], 1);
-                } else {
-                    rect = null;
                 }
                 $gameSystem.setNovelWindowRectangle.apply($gameSystem, rect);
+                break;
+            case 'ノベルコマンド位置設定':
+            case 'SET_RECT_NOVEL_COMMAND':
+                var position = [];
+                if (args.length > 0) {
+                    position[0] = getArgNumber(args[0], 0);
+                    position[1] = getArgNumber(args[1], 0);
+                }
+                $gameSystem.setNovelCommandPosition.apply($gameSystem, position);
                 break;
         }
     };
@@ -447,6 +465,7 @@
         this._messageSetting       = null;
         this._chapterTitle         = '';
         this._novelWindowRectangle = null;
+        this._novelCommandPosition = null;
     };
 
     Game_System.prototype.getNovelWindowRectangle = function() {
@@ -459,7 +478,18 @@
         } else {
             this._novelWindowRectangle = new Rectangle(x, y, width, height);
         }
+    };
 
+    Game_System.prototype.getNovelCommandPosition = function() {
+        return this._novelCommandPosition;
+    };
+
+    Game_System.prototype.setNovelCommandPosition = function(x, y) {
+        if (arguments.length === 0) {
+            this._novelCommandPosition = null;
+        } else {
+            this._novelCommandPosition = new Point(x, y);
+        }
     };
 
     Game_System.prototype.getMessageType = function() {
@@ -688,8 +718,8 @@
     var _DataManager_loadGame = DataManager.loadGame;
     DataManager.loadGame      = function(savefileId) {
         var lastAccessedId = this._lastAccessedId;
-        arguments[0] = this.convertToAutoSaveId(savefileId);
-        var result = _DataManager_loadGame.apply(this, arguments);
+        arguments[0]       = this.convertToAutoSaveId(savefileId);
+        var result         = _DataManager_loadGame.apply(this, arguments);
         if (this._lastAccessedId === this.getAutoSaveId()) {
             this._lastAccessedId = lastAccessedId;
         }
@@ -839,7 +869,7 @@
 
     //=============================================================================
     // Scene_Load
-    //  フラグによってコマンドウィンドウのクラスを変更します。
+    //  オートセーブ有効時にオートセーブ用のインデックスを有効にします。
     //=============================================================================
     Scene_Load.prototype.savefileId = function() {
         return Scene_File.prototype.savefileId.apply(this, arguments) - (paramAutoSave ? 1 : 0);
@@ -1392,7 +1422,7 @@
     };
 
     Window_NovelMessage.prototype.drawMessageFace = function() {
-        if (!this._prevTextState) {
+        if (!this._prevTextState || !this._textState) {
             _InterfaceWindow_Message.prototype.drawMessageFace.apply(this, arguments);
         } else {
             this.drawFace($gameMessage.faceName(), $gameMessage.faceIndex(), 0, this._textState.y);
@@ -1450,6 +1480,7 @@
 
     Window_NovelChoiceList.prototype.updatePlacement = function() {
         this.move(this.windowX(), this.windowY(), this.windowWidth(), this.windowHeight());
+        this.moveCustomPosition();
     };
 
     Window_NovelChoiceList.prototype.standardFontSize    = Window_NovelMessage.prototype.standardFontSize;
@@ -1462,6 +1493,14 @@
 
     Window_NovelChoiceList.prototype.windowY = function() {
         return this._messageWindow.getNovelChoiceTop();
+    };
+
+    Window_NovelChoiceList.prototype.moveCustomPosition = function() {
+        var position = $gameSystem.getNovelCommandPosition();
+        if (position) {
+            this.x = position.x - this.windowWidth() / 2;
+            this.y = position.y - this.windowHeight() / 2;
+        }
     };
 
     Window_NovelChoiceList.prototype.windowWidth = function() {
@@ -1481,7 +1520,11 @@
     };
 
     Window_NovelChoiceList.prototype.updateBackground = function() {
-        this.setBackgroundType(2);
+        this.setBackgroundType(this.getNovelBackgroundType());
+    };
+
+    Window_NovelChoiceList.prototype.getNovelBackgroundType = function() {
+        return !!$gameSystem.getNovelCommandPosition() ? 0 : 2;
     };
 
     Window_NovelChoiceList.prototype.makeCommandList = function() {
@@ -1562,20 +1605,21 @@
     Window_NovelNumberInput.prototype.standardFontSize = Window_NovelMessage.prototype.standardFontSize;
     Window_NovelNumberInput.prototype.standardFontFace = Window_NovelMessage.prototype.standardFontFace;
 
+    Window_NovelNumberInput.prototype.moveCustomPosition = Window_NovelChoiceList.prototype.moveCustomPosition;
+    Window_NovelNumberInput.prototype.updateBackground   = Window_NovelChoiceList.prototype.updateBackground;
+    Window_NovelNumberInput.prototype.updateBackground   = Window_NovelChoiceList.prototype.getNovelBackgroundType;
+
     Window_NovelNumberInput.prototype.updatePlacement = function() {
         var y = this._messageWindow.getNovelChoiceTop();
         var x = Graphics.boxWidth / 2 - this.windowWidth() / 2;
         this.move(x, y, this.windowWidth(), this.windowHeight());
+        this.moveCustomPosition();
         this.updateBackground();
     };
 
     Window_NovelNumberInput.prototype.processOk = function() {
         this._messageWindow.commitMessage();
         _InterfaceWindow_NumberInput.prototype.processOk.apply(this, arguments);
-    };
-
-    Window_NovelNumberInput.prototype.updateBackground = function() {
-        this.setBackgroundType(2);
     };
 
     //=============================================================================
