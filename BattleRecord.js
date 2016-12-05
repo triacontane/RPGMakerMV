@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2016/12/05 装備変更時に装備品の入手数がカウントアップされていた不具合を修正
 // 1.1.2 2016/09/04 1.1.1の修正に一部不足があったものを追加修正
 // 1.1.1 2016/09/02 プラグイン未適用のデータをロード後に攻撃かアイテム入手すると強制終了する問題を修正
 // 1.1.0 2016/08/27 取得可能な項目を大幅に増やしました。
@@ -324,6 +325,18 @@
     };
 
     //=============================================================================
+    // Game_Actor
+    //  装備変更時はカウンタを無効にします。
+    //=============================================================================
+    var _Game_Actor_tradeItemWithParty = Game_Actor.prototype.tradeItemWithParty;
+    Game_Actor.prototype.tradeItemWithParty = function(newItem, oldItem) {
+        $gameParty.setTradingItemWithActor(true);
+        var result = _Game_Actor_tradeItemWithParty.apply(this, arguments);
+        $gameParty.setTradingItemWithActor(false);
+        return result;
+    };
+
+    //=============================================================================
     // Game_Action
     //  戦績を記録します。
     //=============================================================================
@@ -433,6 +446,11 @@
     Game_Party.prototype.initialize = function() {
         _Game_Party_initialize.apply(this, arguments);
         this.clearRecord();
+        this._tradingItemWithActor = false;
+    };
+
+    Game_Party.prototype.setTradingItemWithActor = function(value) {
+        this._tradingItemWithActor = value;
     };
 
     Game_Party.prototype.clearRecord = function() {
@@ -494,7 +512,7 @@
     var _Game_Party_gainItem      = Game_Party.prototype.gainItem;
     Game_Party.prototype.gainItem = function(item, amount, includeEquip) {
         _Game_Party_gainItem.apply(this, arguments);
-        if (amount < 0) return;
+        if (amount < 0 || this._tradingItemWithActor) return;
         if (DataManager.isItem(item)) {
             this.recordGainItemSum(item.id, amount);
         } else if (DataManager.isWeapon(item)) {
