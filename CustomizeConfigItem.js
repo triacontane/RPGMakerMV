@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/12/08 1.2.0の機能追加以降、デフォルト項目で決定ボタンを押すとエラーになっていた現象を修正
 // 1.2.0 2016/12/02 各項目で決定ボタンを押したときに実行されるスクリプトを設定できる機能を追加
 // 1.1.1 2016/08/14 スイッチ項目、音量項目の初期値が無効になっていた問題を修正
 // 1.1.0 2016/04/29 項目をクリックしたときに項目値が循環するよう修正
@@ -434,6 +435,10 @@
         return symbol.contains('String');
     };
 
+    Window_Options.prototype.isCustomSymbol = function(symbol) {
+        return !!this._customParams[symbol];
+    };
+
     Window_Options.prototype.numberStatusText = function(value) {
         return value;
     };
@@ -476,6 +481,7 @@
 
     Window_Options.prototype.execScript = function() {
         var symbol = this.commandSymbol(this.index());
+        if (!this.isCustomSymbol(symbol)) return;
         var script = this._customParams[symbol].script;
         if (script) eval(script);
         localOptionWindowIndex = this.index();
