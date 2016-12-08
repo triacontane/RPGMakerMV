@@ -789,6 +789,13 @@
         }
     };
 
+    var _StorageManager_backup = StorageManager.backup;
+    StorageManager.backup = function(savefileId) {
+        //if (this.isAutoSave(savefileId)) return;
+        console.log('aa');
+        _StorageManager_backup.apply(this, arguments);
+    };
+
     StorageManager.isAutoSave = function(savefileId) {
         return savefileId === DataManager.getAutoSaveId();
     };
