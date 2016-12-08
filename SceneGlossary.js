@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2016/12/09 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に登録できる機能を追加
 // 1.6.0 2016/10/26 背景ピクチャを設定したときに、もともとマップ背景を透過表示できる機能を追加
 // 1.5.0 2016/08/06 まだ確認していない用語の文字色を変えられる機能を追加
 // 1.4.1 2016/07/03 戦闘画面のアイテム選択ウィンドウに用語集アイテムが表示されていた問題を修正
@@ -53,10 +54,6 @@
  * @param CommandName4
  * @desc メニュー画面に表示される4つ目のコマンド名です。空欄にすると追加されなくなります。
  * @default
- *
- * @param ItemType
- * @desc 用語扱いとするアイテムの隠しアイテムタイプ（A or B）
- * @default A
  *
  * @param AutoAddition
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
@@ -138,6 +135,10 @@
  * @desc 新着用語を明示するためのカラーです。システムカラーから選択してください。
  * @default 2
  *
+ * @param UseItemHistory
+ * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
+ * @default OFF
+ *
  * @noteParam SGピクチャ
  * @noteRequire 1
  * @noteDir img/pictures/
@@ -215,6 +216,12 @@
  * Menu X Symbol    : glossary1
  * Menu X Main Bind : this.commandGlossary.bind(this, 1)
  *
+ * ・追加機能
+ * 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に
+ * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入してください。
+ * アイテム図鑑、武器図鑑、防具図鑑も作成できます。
+ * この機能を利用する場合はパラメータ「UseItemHistory」を有効にしてください。
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
@@ -252,10 +259,6 @@
  * @param コマンド名称4
  * @desc メニュー画面に表示される4つ目のコマンド名です。空欄にすると追加されなくなります。
  * @default
- * 
- * @param アイテムタイプ
- * @desc 用語扱いとするアイテムの隠しアイテムタイプ（A or B）
- * @default A
  * 
  * @param 自動登録
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
@@ -337,6 +340,10 @@
  * @desc 新着用語を明示するためのカラーです。システムカラーから選択してください。
  * @default 2
  *
+ * @param 入手履歴を使用
+ * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
+ * @default OFF
+ *
  * @noteParam SGピクチャ
  * @noteRequire 1
  * @noteDir img/pictures/
@@ -414,10 +421,11 @@
  * Menu X Symbol    : glossary1
  * Menu X Main Bind : this.commandGlossary.bind(this, 1)
  *
- * 通常アイテムのメモ欄に以下の通り設定するとアイテム画面から
- * 辞書画面に直接遷移できます。特定のアイテムの解説等に活用できます。
- *
- * <SG用語:100> # 選択してShiftキーを押すと辞書画面に遷移します。
+ * ・追加機能
+ * 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に
+ * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入してください。
+ * アイテム図鑑、武器図鑑、防具図鑑も作成できます。
+ * この機能を利用する場合はパラメータ「UseItemHistory」を有効にしてください。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -525,7 +533,6 @@ function Scene_Glossary() {
     }
     var paramCommandNamesMax    = paramCommandNames.length;
     var paramBackPicture        = getParamString(['BackPicture', '背景ピクチャ']);
-    var paramItemType           = getParamString(['ItemType', 'アイテムタイプ']).toUpperCase();
     var paramAutoAddition       = getParamBoolean(['AutoAddition', '自動登録']);
     var paramGlossaryListWidth  = getParamNumber(['GlossaryListWidth', '用語集リスト横幅'], 1);
     var paramFontSize           = getParamNumber(['FontSize', 'フォントサイズ'], 0);
@@ -545,6 +552,7 @@ function Scene_Glossary() {
     var paramCompleteMessage    = getParamString(['CompleteMessage', '収集率メッセージ']);
     var paramNewGlossaryColor   = getParamNumber(['NewGlossaryColor', '新着用語カラー']);
     var paramThroughBackPicture = getParamBoolean(['ThroughBackPicture', '背景ピクチャ透過']);
+    var paramUseItemHistory     = getParamBoolean(['UseItemHistory', '入手履歴を使用']);
 
     //=============================================================================
     // Game_Interpreter
@@ -586,13 +594,45 @@ function Scene_Glossary() {
         }
     };
 
+    var _Game_System_onAfterLoad      = Game_System.prototype.onAfterLoad;
+    Game_System.prototype.onAfterLoad = function() {
+        _Game_System_onAfterLoad.apply(this, arguments);
+        $gameParty.initAllItemHistory();
+    };
+
     //=============================================================================
     // Game_Party
     //  用語集アイテムの管理を追加定義します。
     //=============================================================================
+    var _Game_Party_initAllItems      = Game_Party.prototype.initAllItems;
+    Game_Party.prototype.initAllItems = function() {
+        _Game_Party_initAllItems.apply(this, arguments);
+        this.initAllItemHistory();
+    };
+
+    Game_Party.prototype.initAllItemHistory = function() {
+        this._itemHistory   = this._itemHistory || {};
+        this._weaponHistory = this._weaponHistory || {};
+        this._armorHistory  = this._armorHistory || {};
+        this.getAllMaterials().forEach(function(item) {
+            this.gainItemHistory(item);
+        }, this);
+    };
+
+    Game_Party.prototype.getAllMaterials = function() {
+        return this.items().concat(this.weapons()).concat(this.armors());
+    };
+
+    Game_Party.prototype.getAllMaterialsHistories = function() {
+        return this.swapItemHash(this.getAllMaterials.bind(this));
+    };
+
     Game_Party.prototype.isGlossaryItem = function(item) {
-        var iTypeId = (paramItemType === 'B' ? 4 : 3);
-        return item.itypeId === iTypeId && getMetaValues(item, ['説明', 'Description']) !== undefined;
+        return item && getMetaValues(item, ['説明', 'Description']) !== undefined;
+    };
+
+    Game_Party.prototype.isGlossaryHiddenItem = function(item) {
+        return this.isGlossaryItem(item) && item.itypeId > 2;
     };
 
     Game_Party.prototype.isSameGlossaryType = function(item) {
@@ -607,7 +647,7 @@ function Scene_Glossary() {
 
     Game_Party.prototype.getAllGlossaryList = function() {
         return $dataItems.filter(function(item) {
-            return item && this.isGlossaryItem(item);
+            return item && this.isGlossaryHiddenItem();
         }.bind(this));
     };
 
@@ -657,6 +697,37 @@ function Scene_Glossary() {
 
     Game_Party.prototype.gainGlossary = function(item) {
         this.gainItem(item, 1, false);
+    };
+
+    var _Game_Party_gainItem      = Game_Party.prototype.gainItem;
+    Game_Party.prototype.gainItem = function(item, amount, includeEquip) {
+        _Game_Party_gainItem.apply(this, arguments);
+        if (amount > 0) this.gainItemHistory(item);
+    };
+
+    Game_Party.prototype.gainItemHistory = function(item) {
+        var container = this.itemHistoryContainer(item);
+        if (container) {
+            container[item.id] = true;
+        }
+    };
+
+    Game_Party.prototype.itemHistoryContainer = function(item) {
+        return this.swapItemHash(this.itemContainer.bind(this), [item]);
+    };
+
+    Game_Party.prototype.swapItemHash = function(caller, args) {
+        var prevItems   = this._items;
+        var prevWeapons = this._weapons;
+        var prevArmor   = this._armors;
+        this._items     = this._itemHistory;
+        this._weapons   = this._weaponHistory;
+        this._armors    = this._armorHistory;
+        var result      = caller.apply(this, args);
+        this._items     = prevItems;
+        this._weapons   = prevWeapons;
+        this._armors    = prevArmor;
+        return result;
     };
 
     Game_Party.prototype.setConfirmedGlossaryItem = function(item) {
@@ -733,7 +804,7 @@ function Scene_Glossary() {
     //=============================================================================
     var _Window_EventItem_includes      = Window_EventItem.prototype.includes;
     Window_EventItem.prototype.includes = function(item) {
-        return _Window_EventItem_includes.apply(this, arguments) && !$gameParty.isGlossaryItem(item);
+        return _Window_EventItem_includes.apply(this, arguments) && !$gameParty.isGlossaryHiddenItem(item);
     };
 
     //=============================================================================
@@ -742,7 +813,7 @@ function Scene_Glossary() {
     //=============================================================================
     var _Window_BattleItem_includes      = Window_BattleItem.prototype.includes;
     Window_BattleItem.prototype.includes = function(item) {
-        return _Window_BattleItem_includes.apply(this, arguments) && !$gameParty.isGlossaryItem(item);
+        return _Window_BattleItem_includes.apply(this, arguments) && !$gameParty.isGlossaryHiddenItem(item);
     };
 
     //=============================================================================
@@ -752,7 +823,7 @@ function Scene_Glossary() {
     var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
-        if (paramAutoAddition) $gameParty.gainGlossaryFromText(this._textState.text);
+        if (paramAutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._textState.text));
     };
 
     //=============================================================================
@@ -1035,8 +1106,7 @@ function Scene_Glossary() {
     };
 
     Window_GlossaryList.prototype.includes = function(item) {
-        return DataManager.isItem(item) && $gameParty.isGlossaryItem(item) &&
-            this.isCategoryMatch(item) && $gameParty.isSameGlossaryType(item);
+        return $gameParty.isGlossaryItem(item) && this.isCategoryMatch(item) && $gameParty.isSameGlossaryType(item);
     };
 
     Window_GlossaryList.prototype.isCategoryMatch = function(item) {
@@ -1063,6 +1133,16 @@ function Scene_Glossary() {
 
     Window_GlossaryList.prototype.getCategory = function() {
         return this._category !== 'none' ? this._category : null;
+    };
+
+    Window_GlossaryList.prototype.makeItemList = function() {
+        this._data = this.getMaterialList().filter(function(item) {
+            return this.includes(item);
+        }, this);
+    };
+
+    Window_GlossaryList.prototype.getMaterialList = function() {
+        return paramUseItemHistory ? $gameParty.getAllMaterialsHistories() : $gameParty.getAllMaterials();
     };
 
     //=============================================================================
@@ -1297,7 +1377,7 @@ function Scene_Glossary() {
         var x = this.canvasToLocalX(TouchInput.x);
         var y = this.canvasToLocalY(TouchInput.y);
         if (y >= 0 && y <= this.height) {
-            if (x >= 0 && x < this.width / 2)          this.cursorLeft(false);
+            if (x >= 0 && x < this.width / 2) this.cursorLeft(false);
             if (x >= this.width / 2 && x < this.width) this.cursorRight(false);
         }
     };
