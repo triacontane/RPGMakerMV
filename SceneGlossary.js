@@ -227,13 +227,13 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * GLOSSARY_GAIN_ALL or 用語集全取得 [種別]
+ * GLOSSARY_GAIN_ALL or 用語集全取得
  *  データベースに登録している全ての用語を取得状態にします。
- *  種別を省略すると、自動で「1」になります。
- * 例：GLOSSARY_GAIN_ALL 2
  *
- * GLOSSARY_CALL or 用語集画面の呼び出し
+ * GLOSSARY_CALL or 用語集画面の呼び出し [種別]
  *  用語集画面を呼び出します。
+ *  種別を省略すると、自動で「1」になります。
+ * 例：GLOSSARY_CALL 2
  *
  * This plugin is released under the MIT License.
  */
@@ -432,13 +432,13 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * GLOSSARY_GAIN_ALL or 用語集全取得 [種別]
+ * GLOSSARY_GAIN_ALL or 用語集全取得
  *  データベースに登録している全ての用語を取得状態にします。
- *  種別を省略すると、自動で「1」になります。
- * 例：GLOSSARY_GAIN_ALL 2
  *
- * GLOSSARY_CALL or 用語集画面の呼び出し
+ * GLOSSARY_CALL or 用語集画面の呼び出し [種別]
  *  用語集画面を呼び出します。
+ *  種別を省略すると、自動で「1」になります。
+ * 例：GLOSSARY_CALL 2
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
