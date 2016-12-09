@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2016/12/09 1.7.0で収集率が正しく表示されない問題を修正
 // 1.7.0 2016/12/09 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に登録できる機能を追加
 // 1.6.0 2016/10/26 背景ピクチャを設定したときに、もともとマップ背景を透過表示できる機能を追加
 // 1.5.0 2016/08/06 まだ確認していない用語の文字色を変えられる機能を追加
@@ -645,9 +646,23 @@ function Scene_Glossary() {
         return getMetaValues(item, ['カテゴリ', 'Category']);
     };
 
+    Game_Party.prototype.hasGlossary = function(item) {
+        return paramUseItemHistory ? this.hasItemHistory(item) : this.hasItem(item);
+    };
+
+    Game_Party.prototype.hasItemHistory = function(item) {
+        return this.swapItemHash(this.hasItem.bind(this), [item]);
+    };
+
     Game_Party.prototype.getAllGlossaryList = function() {
+        return $dataItems.concat($dataWeapons).concat($dataArmors).filter(function(item) {
+            return item && this.isGlossaryItem(item);
+        }.bind(this));
+    };
+
+    Game_Party.prototype.getAllHiddenGlossaryList = function() {
         return $dataItems.filter(function(item) {
-            return item && this.isGlossaryHiddenItem();
+            return item && this.isGlossaryHiddenItem(item);
         }.bind(this));
     };
 
@@ -655,7 +670,7 @@ function Scene_Glossary() {
         var hasCount = 0, allCount = 0;
         this.getAllGlossaryList().forEach(function(item) {
             if (this.isSameGlossaryType(item) && (!categoryName || this.getGlossaryCategory(item) === categoryName)) {
-                if (this.hasItem(item)) hasCount++;
+                if (this.hasGlossary(item)) hasCount++;
                 allCount++;
             }
         }.bind(this));
@@ -674,7 +689,7 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.gainGlossaryFromText = function(text) {
-        this.getAllGlossaryList().forEach(function(item) {
+        this.getAllHiddenGlossaryList().forEach(function(item) {
             if (!this.hasItem(item) && this.isAutoGlossaryWord(item) && text.contains(item.name)) {
                 if (paramSwitchAutoAdd > 0) $gameSwitches.setValue(paramSwitchAutoAdd, true);
                 if (paramVariableAutoAdd > 0) $gameVariables.setValue(paramVariableAutoAdd, item.id);
@@ -688,7 +703,7 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.gainGlossaryAll = function() {
-        this.getAllGlossaryList().forEach(function(item) {
+        this.getAllHiddenGlossaryList().forEach(function(item) {
             if (!this.hasItem(item)) {
                 this.gainGlossary(item);
             }
@@ -1176,8 +1191,8 @@ function Scene_Glossary() {
     };
 
     //=============================================================================
-    // Window_Glossary
-    //  用語集ウィンドウです。
+    // Window_GlossaryComplete
+    //  用語集収集率ウィンドウです。
     //=============================================================================
     function Window_GlossaryComplete() {
         this.initialize.apply(this, arguments);
