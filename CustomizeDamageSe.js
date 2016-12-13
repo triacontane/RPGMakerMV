@@ -18,11 +18,19 @@
  * @author triacontane
  *
  * @param WeaknessSe
+ * @desc この値以上なら弱点と見なします。百分率で指定します。
+ * @default 200
+ *
+ * @param WeaknessSe
  * @desc 弱点時に演奏されるSEです。
  * @default
  * @require 1
  * @dir audio/se/
  * @type file
+ *
+ * @param ResistanceLine
+ * @desc この値以下なら耐性と見なします。百分率で指定します。
+ * @default 50
  *
  * @param ResistanceSe
  * @desc 耐性時に演奏されるSEです。
@@ -44,12 +52,20 @@
  * @plugindesc ダメージSEカスタマイズプラグイン
  * @author トリアコンタン
  *
+ * @param 弱点閾値
+ * @desc この値以上なら弱点と見なします。百分率で指定します。
+ * @default 200
+ *
  * @param 弱点SE
  * @desc 弱点時に演奏されるSEです。
  * @default
  * @require 1
  * @dir audio/se/
  * @type file
+ *
+ * @param 耐性閾値
+ * @desc この値以下なら耐性と見なします。百分率で指定します。
+ * @default 50
  *
  * @param 耐性SE
  * @desc 耐性時に演奏されるSEです。
@@ -90,6 +106,13 @@
         return null;
     };
 
+    const getParamNumber = function(paramNames, min, max) {
+        const value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     const getParamString = function(paramNames) {
         const value = getParamOther(paramNames);
         return value === null ? '' : value;
@@ -98,8 +121,10 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const paramWeaknessSe   = getParamString(['WeaknessSe', '弱点SE']);
-    const paramResistanceSe = getParamString(['ResistanceSe', '耐性SE']);
+    const paramWeaknessSe     = getParamString(['WeaknessSe', '弱点SE']);
+    const paramResistanceSe   = getParamString(['ResistanceSe', '耐性SE']);
+    const paramWeaknessLine   = getParamNumber(['WeaknessLine', '弱点閾値']);
+    const paramResistanceLine = getParamNumber(['ResistanceLine', '耐性閾値']);
 
     const userSettings = new Map([
         ['weaknessSe', {name: paramWeaknessSe, volume: 90, pitch: 100, pan: 0}],
@@ -113,9 +138,9 @@
     const _Game_Action_calcElementRate    = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         const result = _Game_Action_calcElementRate.apply(this, arguments);
-        if (result > 1.0) {
+        if (result >= paramWeaknessLine / 100) {
             target.setEffectiveSe(userSettings.get('weaknessSe'));
-        } else if (result < 1.0) {
+        } else if (result <= paramResistanceLine / 100) {
             target.setEffectiveSe(userSettings.get('resistanceSe'));
         }
         return result;
