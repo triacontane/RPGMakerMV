@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/12/13 フロントビュー時にエフェクト効果のメッセージが重複して表示される問題を修正
 // 1.0.2 2016/10/10 行動パターンが何も設定されていない敵キャラが行動しようとするとエラーになる問題を修正
 // 1.0.1 2016/10/10 タイミングが「スキル使用時」「ターン開始時」以外のものについて、対象者にも効果が適用されていた問題を修正
 // 1.0.0 2016/09/25 初版
@@ -236,8 +237,7 @@
 
     DataManager.categorizeItemEffects = function(data) {
         if (!data) return;
-        var sideEffectOnEnd = [], sideEffectOnUsing = [], sideEffectOnBefore = [],
-            sideEffectOnStart = [], sideEffectOnInput = [], sideEffectOnAfter = [];
+        var sideEffectOnEnd = [], sideEffectOnUsing = [], sideEffectOnBefore = [], sideEffectOnStart = [], sideEffectOnInput = [], sideEffectOnAfter = [];
         var numbersOnInput  = this.getSideEffectNumbers(data, ['OnSkillInput', 'スキル入力時']);
         var numbersOnBefore = this.getSideEffectNumbers(data, ['OnSkillBefore', 'スキル使用前']);
         var numbersOnUsing  = this.getSideEffectNumbers(data, ['OnSkillUsing', 'スキル使用時']);
@@ -271,7 +271,7 @@
                 effects[i].sideEffect = true;
             }
         }
-        data.effects = effects.filter(function(effect) {
+        data.effects            = effects.filter(function(effect) {
             return !effect.sideEffect;
         });
         data.sideEffectOnInput  = sideEffectOnInput;
@@ -309,13 +309,13 @@
     };
 
     var _BattleManager_startAction = BattleManager.startAction;
-    BattleManager.startAction = function() {
+    BattleManager.startAction      = function() {
         _BattleManager_startAction.apply(this, arguments);
         this._action.applyItemSideEffect('sideEffectOnBefore');
     };
 
     var _BattleManager_endAction = BattleManager.endAction;
-    BattleManager.endAction = function() {
+    BattleManager.endAction      = function() {
         _BattleManager_endAction.apply(this, arguments);
         this._action.applyItemSideEffect('sideEffectOnAfter');
     };
@@ -374,7 +374,7 @@
     // Game_Enemy
     //  行動入力時に副作用を適用します。
     //=============================================================================
-    var _Game_Enemy_makeActions = Game_Enemy.prototype.makeActions;
+    var _Game_Enemy_makeActions      = Game_Enemy.prototype.makeActions;
     Game_Enemy.prototype.makeActions = function() {
         _Game_Enemy_makeActions.apply(this, arguments);
         var number = this.numActions();
@@ -402,8 +402,9 @@
     };
 
     Game_Action.prototype.applyItemSideEffect = function(property) {
-        if (!this.isValidSideEffect()) {
-            return;
+        if (!this.isValidSideEffect()) return;
+        if (this.isNeedDisplaySideEffect(property)) {
+            this.subject().result().clear();
         }
         this.item()[property].forEach(function(effect) {
             this.applyItemEffect(this.subject(), effect);
@@ -429,7 +430,11 @@
                 $gameTemp.setCommonEventSubject(this.subject());
             }
         }, this);
-        BattleManager.displaySideEffectResult(this.subject());
+        if (this.isNeedDisplaySideEffect(property)) BattleManager.displaySideEffectResult(this.subject());
+    };
+
+    Game_Action.prototype.isNeedDisplaySideEffect = function(property) {
+        return property !== 'sideEffectOnUsing';
     };
 
     //=============================================================================
@@ -489,13 +494,20 @@
     };
 
     Window_BattleLog.prototype.waitForLong = function() {
-        if (this._lines.length > 0) {
-            this.push('wait');
-            this.push('wait');
-            this.push('wait');
-            this.push('wait');
+        if (this.countTextStack() > 0) {
+            this.push('waitForSideEffectMessage');
             this.push('clear');
         }
+    };
+
+    Window_BattleLog.prototype.waitForSideEffectMessage = function() {
+        this._waitCount = 30;
+    };
+
+    Window_BattleLog.prototype.countTextStack = function() {
+        return this._methods.reduce(function(prevValue, method) {
+            return prevValue + (method.name === 'addText' ? 1 : 0)
+        }, 0);
     };
 })();
 
