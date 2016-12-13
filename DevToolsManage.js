@@ -113,8 +113,8 @@
  * @desc ゲーム開始時に同時にデベロッパツールを起動します。(ON/OFF/MINIMIZE)
  * @default ON
  *
- * @param 常に前面表示
- * @desc ゲーム画面を常に前面に表示します。(ON/OFF)
+ * @param 前面表示初期値
+ * @desc 最前面表示の初期値です(ON/OFF)
  * @default OFF
  *
  * @param デベロッパツール表示位置
@@ -131,8 +131,8 @@
  * 以前のツクールとの後方互換性を持たせるための機能です。
  * @default F12
  *
- * @param 画面の左寄せキー
- * @desc ゲーム画面の左寄せを行うキーです(F1～F12)。
+ * @param 最前面に表示キー
+ * @desc ゲーム画面を最前面に表示するキーです。(F1～F12)。
  * @default
  *
  * @param 高速化切替キー
@@ -144,11 +144,11 @@
  * @default
  *
  * @param スクリプト実行キー
- * @desc スクリプト実行用のウィンドウをポップアップするキーです。Ctrlキーと一緒に押下すると常駐実行します。(F1～F12)。
+ * @desc スクリプト常駐実行用のキーです。(F1～F12)。
  * @default
  *
  * @param フリーズキー
- * @desc 画面の更新を一時停止します。(F1～F12)。
+ * @desc 画面の更新を一時停止するキーです。(F1～F12)。
  * @default
  *
  * @param FPS表示
@@ -231,36 +231,39 @@
  */
 
 var p = null;
+var Imported = Imported || {};
 
 (function() {
     'use strict';
     var pluginName = 'DevToolsManage';
+    console.log('=========================Start Up ' + pluginName + '=========================');
+    console.log('********************************');
+    console.log('***   User Agent             ***');
+    console.log('********************************');
     console.log(navigator.userAgent);
+    console.log('********************************');
+    console.log('***   Core Version           ***');
+    console.log('********************************');
+    console.log('RPG Maker Name    : ' + Utils.RPGMAKER_NAME);
+    console.log('RPG Maker Version : ' + Utils.RPGMAKER_VERSION);
+    console.log('********************************');
+    console.log('***   Environment            ***');
+    console.log('********************************');
+    console.log('Platform : ' + (process.platform || 'Web'));
+    console.log(process.env);
+
     // テストプレー時以外は一切の機能を無効
-    if (!(Utils.isOptionValid('test') || SceneManager.isBattleTest() || SceneManager.isEventTest()) || !Utils.isNwjs()) {
+    if (!Utils.isNwjs() || !(Utils.isOptionValid('test') || SceneManager.isBattleTest() || SceneManager.isEventTest())) {
         console.log(pluginName + ' is valid only test play!');
         return;
     }
-    console.log('=========================Start Up ' + pluginName + '=========================');
-    console.log('RPG Maker Name    : ' + Utils.RPGMAKER_NAME);
-    console.log('RPG Maker Version : ' + Utils.RPGMAKER_VERSION);
-    console.log('=========================================================================');
 
     //=============================================================================
     // p
     //  ログ出力をより短い関数名で実現します。(RGSS互換)
     //=============================================================================
     p = function(value) {
-        var n = arguments.length, str = '';
-        if (n === 1) {
-            console.log(value);
-        } else {
-            for (var i = 0; i < n; i++) {
-                str += arguments[i];
-                if (i < n)  str += ':';
-            }
-            console.log(str);
-        }
+        console.log.apply(console, arguments);
         SceneManager.getNwJs().showDevTools();
     };
 
@@ -326,11 +329,6 @@ var p = null;
     var paramClickMenu        = getParamNumber(['ClickMenu', 'クリックメニュー'], -1);
 
     //=============================================================================
-    // ローカル変数
-    //=============================================================================
-    var localIsAddMenuBar = false;
-
-    //=============================================================================
     // Utils
     //  モバイルモードを偽装します。
     //=============================================================================
@@ -360,7 +358,9 @@ var p = null;
     var _Graphics__createAllElements = Graphics._createAllElements;
     Graphics._createAllElements      = function() {
         _Graphics__createAllElements.apply(this, arguments);
-        console.log('output body for check layout by ' + pluginName);
+        console.log('*********************************');
+        console.log('***   document body           ***');
+        console.log('*********************************');
         console.log(document.body);
     };
 
@@ -397,17 +397,25 @@ var p = null;
     };
 
     //=============================================================================
+    // PluginManager
+    //  状況に応じてデベロッパツールを自動制御します。
+    //=============================================================================
+    PluginManager.reload = function(plugins) {
+
+    };
+
+    //=============================================================================
     // SceneManager
     //  状況に応じてデベロッパツールを自動制御します。
     //=============================================================================
     SceneManager.devCommands       = [
-        {code: 101, name: 'DEVツール最小化', key: paramFuncKeyMinimize},
-        {code: 102, name: '画面左寄せ', key: paramFuncKeyMoveEdge},
-        {code: 103, name: 'リロード', key: paramFuncKeyReload},
-        {code: 104, name: '高速モード切替', key: paramFuncKeyRapidGame},
-        {code: 105, name: '戦闘強制勝利', key: paramFuncKeyVictory},
-        {code: 106, name: '任意スクリプト実行', key: paramFuncKeyScript},
-        {code: 107, name: '画面フリーズ', key: paramFuncKeyFreeze}
+        {code: 101, name: 'DEVツール最小化', key: paramFuncKeyMinimize, type: 'checkbox'},
+        {code: 102, name: '最前面に表示', key: paramFuncKeyMoveEdge, type: 'checkbox'},
+        {code: 103, name: 'リロード', key: paramFuncKeyReload, type: 'normal'},
+        {code: 104, name: '高速モード切替', key: paramFuncKeyRapidGame, type: 'checkbox'},
+        {code: 105, name: '戦闘強制勝利', key: paramFuncKeyVictory, type: 'normal'},
+        {code: 106, name: '常駐スクリプト実行', key: paramFuncKeyScript, type: 'normal'},
+        {code: 107, name: '画面フリーズ', key: paramFuncKeyFreeze, type: 'checkbox'}
     ];
     SceneManager.originalTitle     = null;
     SceneManager._rapidGame        = false;
@@ -551,36 +559,100 @@ var p = null;
     var _SceneManager_initNwjs = SceneManager.initNwjs;
     SceneManager.initNwjs      = function() {
         _SceneManager_initNwjs.apply(this, arguments);
-        if (paramMenuBarVisible) {
-            var gui = require('nw.gui');
-            var win = gui.Window.get();
-            if (!win.menu) {
-                localIsAddMenuBar = true;
-            }
-            win.menu = new gui.Menu({type: 'menubar'});
+        this.addMenuBar();
+    };
+
+    SceneManager.addMenuBar      = function() {
+        if (!paramMenuBarVisible) return;
+        var gui = require('nw.gui');
+        var gameWindow = gui.Window.get();
+        if (!gameWindow.menu) {
+            this._addMenuBar = true;
         }
+        gameWindow.menu = new gui.Menu({type: 'menubar'});
     };
 
     var _SceneManager_run = SceneManager.run;
     SceneManager.run      = function(sceneClass) {
         _SceneManager_run.apply(this, arguments);
-        if (paramMenuBarVisible) {
-            var gui = require('nw.gui');
-            var win = gui.Window.get();
-            if (localIsAddMenuBar) {
-                win.y -= 20;
-                win.height += 20;
+        this.setWindowSizeForMenuBar();
+    };
+
+    SceneManager.setWindowSizeForMenuBar = function() {
+        if (!paramMenuBarVisible || !this._addMenuBar) return;
+        var gui = require('nw.gui');
+        var gameWindow = gui.Window.get();
+        gameWindow.moveBy(0, -20);
+        gameWindow.resizeBy(0, 20);
+    };
+
+    var _SceneManager_updateScene = SceneManager.updateScene;
+    SceneManager.updateScene         = function() {
+        this.updateScript();
+        if (!DataManager.isBattleTest() && !DataManager.isEventTest() && DataManager.isDatabaseLoaded()) {
+            this.updateDataReload();
+        }
+        if (this._freeze || this.isReloading()) return;
+        _SceneManager_updateScene.apply(this, arguments);
+    };
+
+    SceneManager.updateScript = function() {
+        if (this._lastScriptString) {
+            this.executeScript(this._lastScriptString);
+        }
+    };
+
+    SceneManager.updateDataReload = function() {
+        if (this.isOnFocusGameWindow()) {
+            this.reloadSystemData();
+            this._dataSystemLoading = true;
+            return;
+        }
+        if (this._dataSystemLoading) {
+            this._dataSystemLoading = false;
+            if (this._preVersionId !== $dataSystem.versionId) {
+                this.reloadAllData();
+                this._dataBaseLoading = true;
+                return;
+            }
+        }
+        if (this._dataBaseLoading) {
+            this._dataBaseLoading = false;
+        }
+    };
+
+    SceneManager.isOnFocusGameWindow = function() {
+        if (this.getNwJs().isOnFocus()) {
+            this.getNwJs().setOnFocus(false);
+            return true;
+        }
+        return false;
+    };
+
+    SceneManager.reloadSystemData = function() {
+        for (var i = 0; i < DataManager._databaseFiles.length; i++) {
+            var name = DataManager._databaseFiles[i].name;
+            if (name === '$dataSystem') {
+                this._preVersionId = $dataSystem.versionId;
+                DataManager.loadDataFile(name, DataManager._databaseFiles[i].src);
+                return;
             }
         }
     };
 
-    var _SceneManager_updateScene = SceneManager.updateScene;
-    SceneManager.updateScene      = function() {
-        if (this._freeze) return;
-        if (this._lastScriptString) {
-            this.executeScript(this._lastScriptString);
+    SceneManager.reloadAllData = function() {
+        if (this._scene instanceof Scene_Map && $gamePlayer.canMove()) {
+            console.log('Map Reload');
+            $gamePlayer.reserveTransfer(
+                $gameMap.mapId(), $gamePlayer.x, $gamePlayer.y, $gamePlayer.direction(), 2);
+            $gamePlayer._needsMapReload = true;
         }
-        _SceneManager_updateScene.apply(this, arguments);
+        console.log('Data Reload');
+        DataManager.loadDatabase();
+    };
+
+    SceneManager.isReloading = function() {
+        return this._dataSystemLoading || this._dataBaseLoading;
     };
 
     //=============================================================================
@@ -718,46 +790,8 @@ var p = null;
 
     //=============================================================================
     // Scene_Map
-    //  オンフォーカス時、ゲームが再保存されていればリロードする
+    //  高速モードを実装します。
     //=============================================================================
-    var _Scene_Map_create      = Scene_Map.prototype.create;
-    Scene_Map.prototype.create = function() {
-        _Scene_Map_create.apply(this, arguments);
-        SceneManager.getNwJs().setOnFocus(false);
-    };
-
-    var _Scene_Map_update      = Scene_Map.prototype.update;
-    Scene_Map.prototype.update = function() {
-        this.updateMapReload();
-        if (this._dataSystemLoading) {
-            if (DataManager.isDatabaseLoaded()) {
-                this._dataSystemLoading = false;
-                if (this._preVersionId !== $dataSystem.versionId) {
-                    $gamePlayer.reserveTransfer(
-                        $gameMap.mapId(), $gamePlayer.x, $gamePlayer.y, $gamePlayer.direction(), 2);
-                    $gamePlayer._needsMapReload = true;
-                }
-            } else {
-                return;
-            }
-        }
-        _Scene_Map_update.apply(this, arguments);
-    };
-
-    Scene_Map.prototype.updateMapReload = function() {
-        if (SceneManager.getNwJs().isOnFocus() && $gamePlayer.canMove()) {
-            SceneManager.getNwJs().setOnFocus(false);
-            for (var i = 0; i < DataManager._databaseFiles.length; i++) {
-                var name = DataManager._databaseFiles[i].name;
-                if (name === '$dataSystem') {
-                    this._preVersionId = $dataSystem.versionId;
-                    DataManager.loadDataFile(name, DataManager._databaseFiles[i].src);
-                    this._dataSystemLoading = true;
-                }
-            }
-        }
-    };
-
     var _Scene_Map_isFastForward      = Scene_Map.prototype.isFastForward;
     Scene_Map.prototype.isFastForward = function() {
         return _Scene_Map_isFastForward.apply(this, arguments) || SceneManager.isRapid();
@@ -821,6 +855,7 @@ var p = null;
         this._onFocus         = false;
         this._menuBar         = this.getWindow().menu;
         this._menuClick       = null;
+        this.setOnFocus(false);
         this.initSetting();
     };
 
@@ -853,11 +888,15 @@ var p = null;
         var gui = this._nwGui;
         this.sortDevCommands().forEach(function(commandInfo) {
             var menuItem   = new gui.MenuItem(
-                {label: commandInfo.name + (commandInfo.key ? '(' + commandInfo.key + ')' : '')}
+                {
+                    label: commandInfo.name + (commandInfo.key ? '(' + commandInfo.key + ')' : ''),
+                    type:'checkbox',
+                }
             );
             menuItem.click = function() {
                 SceneManager.executeDevCommand(commandInfo.code);
             };
+            menuItem.checked = true;
             menu.append(menuItem);
         });
     };
