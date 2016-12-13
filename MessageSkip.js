@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/12/14 並列処理イベントが実行されている場合にスキップが聞かなくなる問題を修正
 // 1.0.1 2016/02/15 モバイル端末での動作が遅くなる不具合を修正
 // 1.0.0 2016/01/15 初版
 // ----------------------------------------------------------------------------
@@ -116,6 +117,10 @@
             autoKeyName = Input.keyMapper[autoKeyCode];
     }
 
+    //=============================================================================
+    // Game_Message
+    //  メッセージスキップ情報を保持します。
+    //=============================================================================
     var _Game_Message_initialize = Game_Message.prototype.initialize;
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.apply(this, arguments);
@@ -157,12 +162,30 @@
         if (this._autoClearSkip) this.clearSkipInfo();
     };
 
+    //=============================================================================
+    // Game_Interpreter
+    //  マップイベント終了時にメッセージスキップフラグを初期化します。
+    //=============================================================================
     var _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
-        $gameMessage.terminateEvent();
+        if ($gameMap.isMapInterpreterOf(this) && this._depth === 0) {
+            $gameMessage.terminateEvent();
+        }
     };
 
+    //=============================================================================
+    // Game_Map
+    //  指定されたインタプリタがマップイベントかどうかを返します。
+    //=============================================================================
+    Game_Map.prototype.isMapInterpreterOf = function(interpreter) {
+        return this._interpreter === interpreter;
+    };
+
+    //=============================================================================
+    // Window_Message
+    //  メッセージスキップ状態を描画します。
+    //=============================================================================
     var _Window_Message_initialize = Window_Message.prototype.initialize;
     Window_Message.prototype.initialize = function() {
         _Window_Message_initialize.apply(this, arguments);
@@ -249,6 +272,10 @@
         if (this.messageSkip()) this.startWait(2);
     };
 
+    //=============================================================================
+    // Sprite_Frame
+    //  アイコン描画用スプライトです。
+    //=============================================================================
     function Sprite_Frame() {
         this.initialize.apply(this, arguments);
     }
