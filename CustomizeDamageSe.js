@@ -17,7 +17,7 @@
  * @plugindesc CustomizeDamageSePlugin
  * @author triacontane
  *
- * @param WeaknessSe
+ * @param WeaknessLine
  * @desc この値以上なら弱点と見なします。百分率で指定します。
  * @default 200
  *
