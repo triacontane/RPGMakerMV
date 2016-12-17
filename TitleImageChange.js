@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2016/12/17 進行状況のみセーブのスクリプトを実行した場合に、グローバル情報が更新されてしまう問題を修正
 // 1.2.0 2016/08/27 進行状況に応じてタイトルBGMを変更できる機能を追加
 // 1.1.0 2016/06/05 セーブデータに歯抜けがある場合にエラーが発生する問題を修正
 //                  進行状況のみをセーブする機能を追加
@@ -150,7 +151,7 @@
     var _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
     DataManager.makeSavefileInfo = function() {
         var info = _DataManager_makeSavefileInfo.apply(this, arguments);
-        info.gradeVariable = $gameVariables.value(paramGradeVariable);
+        this.setGradeVariable(info);
         return info;
     };
 
@@ -170,8 +171,16 @@
     DataManager.saveOnlyGradeVariable = function() {
         var saveFileId = this.lastAccessedSavefileId();
         var globalInfo = this.loadGlobalInfo() || [];
-        globalInfo[saveFileId] = this.makeSavefileInfo();
+        if (globalInfo[saveFileId]) {
+            this.setGradeVariable(globalInfo[saveFileId]);
+        } else {
+            globalInfo[saveFileId] = this.makeSavefileInfo();
+        }
         this.saveGlobalInfo(globalInfo);
+    };
+
+    DataManager.setGradeVariable = function(info) {
+        info.gradeVariable = $gameVariables.value(paramGradeVariable);
     };
 
     //=============================================================================
