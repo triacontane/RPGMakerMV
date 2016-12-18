@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2016/12/18 VE_BasicModule.jsとの競合を解消
 // 1.3.0 2016/07/14 アクターと敵キャラの通常ダメージにも専用のフラッシュ色を指定できるようになりました。
 // 1.2.3 2016/07/13 1.2.2の修正が不完全だったのを対応
 // 1.2.2 2016/07/13 YEP_BattleEngineCore.jsと併用したときに、Missが重複して表示される現象を修正
@@ -487,13 +488,19 @@
                 sprite.x   = this.x + this.messageOffsetX();
                 sprite.y   = this.y + this.messageOffsetY();
                 sprite.setup(this._battler);
-                if (this.z > 0) sprite.z = this.z + 10;
-                if (this._mainSprite && this._mainSprite.z > 0) sprite.z = this._mainSprite.z + 10;
+                if (!sprite.z)  {
+                    this.setZPositionOfPopup(sprite);
+                }
                 this._damages.push(sprite);
                 this.parent.addChild(sprite);
             }
             this._battler.clearMessagePopup();
         }
+    };
+
+    Sprite_Battler.prototype.setZPositionOfPopup = function(sprite) {
+        if (this.z > 0) sprite.z = this.z + 10;
+        if (this._mainSprite && this._mainSprite.z > 0) sprite.z = this._mainSprite.z + 10;
     };
 
     Sprite_Battler.prototype.messageOffsetX = function() {
