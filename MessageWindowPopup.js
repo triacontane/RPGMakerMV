@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.4 2016/12/25 ウィンドウを閉じている最中にウィンドウ表示位置を変更するプラグインコマンドを実行すると、
+//                  一瞬だけ空ウィンドウが表示される問題を修正
 // 2.0.3 2016/10/22 デフォルト以外で制御文字と見なされる記述（\aaa[333]や\d<test>）を枠幅の計算から除外するよう修正
 // 2.0.2 2016/09/29 キャラクターの位置によってはネームポップが一部見切れてしまう現象を修正
 // 2.0.1 2016/08/25 フォントサイズを\{で変更して\}で戻さなかった場合の文字サイズがおかしくなっていた現象を修正
@@ -716,7 +718,12 @@
     var _Window_Message_update = Window_Message.prototype.update;
     Window_Message.prototype.update = function() {
         _Window_Message_update.apply(this, arguments);
+        var prevX = this.x;
+        var prevY = this.y;
         if (this.openness > 0 && this.isPopup()) this.updatePlacementPopup();
+        if ((prevX !== this.x || prevY !== this.y) && this.isClosing()) {
+            this.openness = 0;
+        }
     };
 
     var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
@@ -725,7 +732,11 @@
             this.x = 0;
         }
         _Window_Message_updatePlacement.apply(this, arguments);
-        if (this.isPopup()) this.updatePlacementPopup();
+        if (!this.isPopup()) {
+            return;
+        }
+
+        this.updatePlacementPopup();
     };
 
     Window_Message.prototype.isPopupLower = function() {

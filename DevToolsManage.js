@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2016/12/25 スローモーション機能を追加しました。一時的にゲーム速度を最低1/60倍速まで低下できます。
 // 2.0.0 2016/12/16 ES2015向けにリファクタリングしました。
 //                  JSON形式でのセーブ＆ロードに対応しました。
 //                  ゲーム画面にフォーカスを戻した際に、マップとデータベースの再読込を自動で行うようにしました。
@@ -197,8 +198,8 @@
  * @default OFF
  *
  * @param 高速スピード
- * @desc 高速化を実行した際のスピード倍率です。
- * 最大で8倍速まで指定できます。
+ * @desc 高速化を実行した際のスピード倍率です。(-60...16)
+ * 負の値を設定するとスローモーションになります。
  * @default 2
  *
  * @param モバイル偽装
@@ -234,9 +235,10 @@
  *
  * 4. タイトル画面を飛ばして最新のセーブファイルをロードできます。
  *
- * 5. マップ上でのゲームのスピードを高速化(8倍速まで)できます。
+ * 5. マップ上でのゲームのスピードを高速化(16倍速まで)できます。
  *    (マップ上で高速、フェードアウト、メッセージ表示の高速スキップ)
- *    ゲームスピードが高速の場合は、BGMのピッチが変化します。
+ *    逆に低速化(1/60倍速まで)することもできます。速度倍率に負の値を設定してください。
+ *    ゲームスピードが変化した場合は、BGMのピッチが変化します。
  *
  * 6. 強制的に敵を全滅させて勝利することができます。報酬も取得できます。
  *
@@ -349,7 +351,7 @@ var Imported = Imported || {};
     const paramShowFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
     const paramCutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
     const paramRapidStart       = getParamBoolean(['RapidStart', '高速開始']);
-    const paramRapidSpeed       = getParamNumber(['RapidSpeed', '高速スピード'], 2, 16);
+    const paramRapidSpeed       = getParamNumber(['RapidSpeed', '高速スピード'], -60, 16);
     const paramFakeMobile       = getParamBoolean(['FakeMobile', 'モバイル偽装']);
     const paramMenuBarVisible   = getParamBoolean(['MenuBarVisible', 'メニューバー表示']);
     const paramClickMenu        = getParamNumber(['ClickMenu', 'クリックメニュー'], -1);
@@ -524,7 +526,11 @@ var Imported = Imported || {};
     };
 
     SceneManager.isRapid = function() {
-        return SceneManager._rapidGame;
+        return SceneManager._rapidGame && paramRapidSpeed > 1;
+    };
+
+    SceneManager.isSlow = function() {
+        return SceneManager._rapidGame && paramRapidSpeed < -1;
     };
 
     SceneManager.toggleRapid = function() {
@@ -532,7 +538,8 @@ var Imported = Imported || {};
         if (!this.originalTitle) this.originalTitle = document.title;
         const bgm = AudioManager.saveBgm();
         AudioManager.playBgm(bgm, bgm.pos);
-        document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!] * ' + paramRapidSpeed : '');
+        document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!] * ' + paramRapidSpeed : '') +
+            (this.isSlow() ? ' [!!!Slow!!!] / ' + -paramRapidSpeed : '');
         return this.isRapid();
     };
 
@@ -602,6 +609,38 @@ var Imported = Imported || {};
         const gameWindow = gui.Window.get();
         gameWindow.moveBy(0, -20);
         gameWindow.resizeBy(0, 20);
+    };
+
+    var _SceneManager_requestUpdate = SceneManager.requestUpdate;
+    SceneManager._updateRateCount = 0;
+    SceneManager.requestUpdate = function() {
+        if (this.isSlow()) {
+            this._updateRateCount++;
+            if (this._updateRateCount >= -paramRapidSpeed) {
+                this.updateInputData();
+                _SceneManager_requestUpdate.apply(this, arguments);
+                this._updateRateCount = 0;
+            } else {
+                if (!this._stopped) {
+                    requestAnimationFrame(this.requestUpdate.bind(this));
+                }
+            }
+        } else {
+            this._updateRateCount = 0;
+            _SceneManager_requestUpdate.apply(this, arguments);
+        }
+    };
+
+    var _SceneManager_updateMain = SceneManager.updateMain;
+    SceneManager.updateMain = function() {
+        if (this.isSlow()) {
+            this.changeScene();
+            this.updateScene();
+            this.renderScene();
+            this.requestUpdate();
+        } else {
+            _SceneManager_updateMain.apply(this, arguments);
+        }
     };
 
     const _SceneManager_updateScene = SceneManager.updateScene;
@@ -698,6 +737,7 @@ var Imported = Imported || {};
     AudioManager.playBgm        = function(bgm, pos) {
         const originalPitch = bgm.pitch;
         if (SceneManager.isRapid()) arguments[0].pitch = 150;
+        if (SceneManager.isSlow()) arguments[0].pitch = 50;
         _AudioManager_playBgm.apply(this, arguments);
         this._currentBgm.pitch = originalPitch;
     };
@@ -830,7 +870,7 @@ var Imported = Imported || {};
     const _Scene_Map_updateMainMultiply    = Scene_Map.prototype.updateMainMultiply;
     Scene_Map.prototype.updateMainMultiply = function() {
         _Scene_Map_updateMainMultiply.apply(this, arguments);
-        if (this.isFastForward()) {
+        if (this.isFastForward() && SceneManager.isRapid()) {
             for (let i = 2; i <= paramRapidSpeed; i++) {
                 this.updateMain();
             }
