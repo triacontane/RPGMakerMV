@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/12/25 アイテムの売買履歴を保持して取得できる機能を追加
 // 1.1.3 2016/12/05 装備変更時に装備品の入手数がカウントアップされていた不具合を修正
 // 1.1.2 2016/09/04 1.1.1の修正に一部不足があったものを追加修正
 // 1.1.1 2016/09/02 プラグイン未適用のデータをロード後に攻撃かアイテム入手すると強制終了する問題を修正
@@ -84,6 +85,67 @@
  * $gameParty.getGainWeaponSum(1); # 武器[1]の入手合計(初期装備以外)
  * $gameParty.getGainArmorSum(1);  # 防具[1]の入手合計(初期装備以外)
  *
+ * ・売買履歴情報を取得する場合
+ * アイテムごとの売買履歴を取得できます。
+ * 開始IDと終了IDを指定することで、その範囲内の売買履歴を取得可能です。
+ * 開始IDと終了IDを指定しなかった場合、全ての売買履歴の合計を取得します。
+ *
+ * 1.購入
+ * # ID[1]からID[3]までのアイテムの累計購入金額の合計
+ * $gameParty.getItemBuyingRecord().getUseGoldSum(1, 3);
+ *
+ * # ID[2]からID[4]のアイテムの累計購入個数の合計
+ * $gameParty.getItemBuyingRecord().getAmountSum(2, 4);
+ *
+ * # アイテムの累計購入回数(まとめ買いは1回でカウント)
+ * $gameParty.getItemBuyingRecord().getTradeCount();
+ *
+ * # ID[1]のアイテムの累計購入金額
+ * $gameParty.getWeaponBuyingRecord().getUseGoldSum(1);
+ *
+ * # ID[2]のアイテムの累計購入個数
+ * $gameParty.getWeaponBuyingRecord().getAmountSum(2);
+ *
+ * # 武器の累計購入回数(まとめ買いは1回でカウント)
+ * $gameParty.getWeaponBuyingRecord().getTradeCount();
+ *
+ * # 全防具の累計購入金額の合計
+ * $gameParty.getArmorBuyingRecord().getUseGoldSum();
+ *
+ * # 全防具の累計購入個数
+ * $gameParty.getArmorBuyingRecord().getAmountSum();
+ *
+ * # 防具の累計購入回数(まとめ買いは1回でカウント)
+ * $gameParty.getArmorBuyingRecord().getTradeCount();
+ *
+ * 2.売却
+ * # ID[1]からID[3]までのアイテムの累計売却金額の合計
+ * $gameParty.getItemSellingRecord().getUseGoldSum(1, 3);
+ *
+ * # ID[2]からID[4]のアイテムの累計売却個数の合計
+ * $gameParty.getItemSellingRecord().getAmountSum(2, 4);
+ *
+ * # アイテムの累計売却回数(まとめ買いは1回でカウント)
+ * $gameParty.getItemSellingRecord().getTradeCount();
+ *
+ * # ID[1]のアイテムの累計売却金額
+ * $gameParty.getWeaponSellingRecord().getUseGoldSum(1);
+ *
+ * # ID[2]のアイテムの累計売却個数
+ * $gameParty.getWeaponSellingRecord().getAmountSum(2);
+ *
+ * # 武器の累計売却回数(まとめ買いは1回でカウント)
+ * $gameParty.getWeaponSellingRecord().getTradeCount();
+ *
+ * # 全防具の累計売却金額の合計
+ * $gameParty.getArmorSellingRecord().getUseGoldSum();
+ *
+ * # 全防具の累計売却個数
+ * $gameParty.getArmorSellingRecord().getAmountSum();
+ *
+ * # 防具の累計売却回数(まとめ買いは1回でカウント)
+ * $gameParty.getArmorSellingRecord().getTradeCount();
+ *
  * 応用的な使い方として「動的データベース構築プラグイン」と組み合わせれば
  * 戦績をデータベースの値に組み込んでより多彩な装備品やスキルを
  * 作成することができます。
@@ -161,6 +223,67 @@
  * $gameParty.getGainWeaponSum(1); # 武器[1]の入手合計(初期装備以外)
  * $gameParty.getGainArmorSum(1);  # 防具[1]の入手合計(初期装備以外)
  *
+ * ・売買履歴情報を取得する場合
+ * アイテムごとの売買履歴を取得できます。
+ * 開始IDと終了IDを指定することで、その範囲内の売買履歴を取得可能です。
+ * 開始IDと終了IDを指定しなかった場合、全ての売買履歴の合計を取得します。
+ *
+ * 1.購入
+ * # ID[1]からID[3]までのアイテムの累計購入金額の合計
+ * $gameParty.getItemBuyingRecord().getUseGoldSum(1, 3);
+ *
+ * # ID[2]からID[4]のアイテムの累計購入個数の合計
+ * $gameParty.getItemBuyingRecord().getAmountSum(2, 4);
+ *
+ * # アイテムの累計購入回数(まとめ買いは1回でカウント)
+ * $gameParty.getItemBuyingRecord().getTradeCount();
+ *
+ * # ID[1]のアイテムの累計購入金額
+ * $gameParty.getWeaponBuyingRecord().getUseGoldSum(1);
+ *
+ * # ID[2]のアイテムの累計購入個数
+ * $gameParty.getWeaponBuyingRecord().getAmountSum(2);
+ *
+ * # 武器の累計購入回数(まとめ買いは1回でカウント)
+ * $gameParty.getWeaponBuyingRecord().getTradeCount();
+ *
+ * # 全防具の累計購入金額の合計
+ * $gameParty.getArmorBuyingRecord().getUseGoldSum();
+ *
+ * # 全防具の累計購入個数
+ * $gameParty.getArmorBuyingRecord().getAmountSum();
+ *
+ * # 防具の累計購入回数(まとめ買いは1回でカウント)
+ * $gameParty.getArmorBuyingRecord().getTradeCount();
+ *
+ * 2.売却
+ * # ID[1]からID[3]までのアイテムの累計売却金額の合計
+ * $gameParty.getItemSellingRecord().getUseGoldSum(1, 3);
+ *
+ * # ID[2]からID[4]のアイテムの累計売却個数の合計
+ * $gameParty.getItemSellingRecord().getAmountSum(2, 4);
+ *
+ * # アイテムの累計売却回数(まとめ買いは1回でカウント)
+ * $gameParty.getItemSellingRecord().getTradeCount();
+ *
+ * # ID[1]のアイテムの累計売却金額
+ * $gameParty.getWeaponSellingRecord().getUseGoldSum(1);
+ *
+ * # ID[2]のアイテムの累計売却個数
+ * $gameParty.getWeaponSellingRecord().getAmountSum(2);
+ *
+ * # 武器の累計売却回数(まとめ買いは1回でカウント)
+ * $gameParty.getWeaponSellingRecord().getTradeCount();
+ *
+ * # 全防具の累計売却金額の合計
+ * $gameParty.getArmorSellingRecord().getUseGoldSum();
+ *
+ * # 全防具の累計売却個数
+ * $gameParty.getArmorSellingRecord().getAmountSum();
+ *
+ * # 防具の累計売却回数(まとめ買いは1回でカウント)
+ * $gameParty.getArmorSellingRecord().getTradeCount();
+ *
  * 応用的な使い方として「動的データベース構築プラグイン」と組み合わせれば
  * 戦績をデータベースの値に組み込んでより多彩な装備品やスキルを
  * 作成することができます。
@@ -182,6 +305,10 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+
+function Game_TradeRecord() {
+    this.initialize.apply(this, arguments);
+}
 
 (function() {
     'use strict';
@@ -254,17 +381,17 @@
     };
 
     Game_BattlerBase.prototype.recordSkillUseCounter = function(skillId) {
-        var prevCount = this.getSkillUseCounter(skillId);
+        var prevCount                  = this.getSkillUseCounter(skillId);
         this._useSkillCounter[skillId] = prevCount + 1;
     };
 
     Game_BattlerBase.prototype.recordItemUseCounter = function(itemId) {
-        var prevCount = this.getItemUseCounter(itemId);
+        var prevCount                = this.getItemUseCounter(itemId);
         this._useItemCounter[itemId] = prevCount + 1;
     };
 
     Game_BattlerBase.prototype.recordKillEnemyCounter = function(enemyId) {
-        var prevCount = this.getKillEnemyCounter(enemyId);
+        var prevCount                   = this.getKillEnemyCounter(enemyId);
         this._killEnemyCounter[enemyId] = prevCount + 1;
     };
 
@@ -328,7 +455,7 @@
     // Game_Actor
     //  装備変更時はカウンタを無効にします。
     //=============================================================================
-    var _Game_Actor_tradeItemWithParty = Game_Actor.prototype.tradeItemWithParty;
+    var _Game_Actor_tradeItemWithParty      = Game_Actor.prototype.tradeItemWithParty;
     Game_Actor.prototype.tradeItemWithParty = function(newItem, oldItem) {
         $gameParty.setTradingItemWithActor(true);
         var result = _Game_Actor_tradeItemWithParty.apply(this, arguments);
@@ -461,6 +588,27 @@
         this._gainArmorSum  = [];
     };
 
+    Game_Party.prototype.getItemTypeName = function(item) {
+        var itemTypeName;
+        if (DataManager.isItem(item)) {
+            itemTypeName = 'item';
+        } else if (DataManager.isWeapon(item)) {
+            itemTypeName = 'weapon';
+        } else if (DataManager.isArmor(item)) {
+            itemTypeName = 'armor';
+        }
+        return itemTypeName;
+    };
+
+    Game_Party.prototype.getTradeRecord = function(itemTypeName, tradeTypeName) {
+        return this.getTradeRecordInstance(itemTypeName + tradeTypeName + 'Record');
+    };
+
+    Game_Party.prototype.getTradeRecordInstance = function(fieldName) {
+        this[fieldName] = this[fieldName] || new Game_TradeRecord();
+        return this[fieldName];
+    };
+
     Game_Party.prototype.recordGainGold = function(amount) {
         this.gainGoldSum = (this.gainGoldSum || 0) + amount;
     };
@@ -470,7 +618,7 @@
     };
 
     Game_Party.prototype.recordGainItemSum = function(itemId, amount) {
-        var prevAmount = this.getGainItemSum(itemId);
+        var prevAmount            = this.getGainItemSum(itemId);
         this._gainItemSum[itemId] = prevAmount + amount;
     };
 
@@ -480,7 +628,7 @@
     };
 
     Game_Party.prototype.recordGainWeaponSum = function(weaponId, amount) {
-        var prevAmount = this.getGainWeaponSum(weaponId);
+        var prevAmount                = this.getGainWeaponSum(weaponId);
         this._gainWeaponSum[weaponId] = prevAmount + amount;
     };
 
@@ -490,7 +638,7 @@
     };
 
     Game_Party.prototype.recordGainArmorSum = function(armorId, amount) {
-        var prevAmount = this.getGainArmorSum(armorId);
+        var prevAmount              = this.getGainArmorSum(armorId);
         this._gainArmorSum[armorId] = prevAmount + amount;
     };
 
@@ -520,6 +668,94 @@
         } else if (DataManager.isArmor(item)) {
             this.recordGainArmorSum(item.id, amount);
         }
+    };
+
+    Game_Party.prototype.addTradeRecord = function(item, amount, gold, tradeType) {
+        var record = this.getTradeRecord(this.getItemTypeName(item), tradeType);
+        record.trade(item.id, amount, gold);
+    };
+
+    Game_Party.prototype.getItemBuyingRecord = function() {
+        return this.getTradeRecord('item', 'Buy');
+    };
+
+    Game_Party.prototype.getItemSellingRecord = function() {
+        return this.getTradeRecord('item', 'Sell');
+    };
+
+    Game_Party.prototype.getWeaponBuyingRecord = function() {
+        return this.getTradeRecord('weapon', 'Buy');
+    };
+
+    Game_Party.prototype.getWeaponSellingRecord = function() {
+        return this.getTradeRecord('weapon', 'Sell');
+    };
+
+    Game_Party.prototype.getArmorBuyingRecord = function() {
+        return this.getTradeRecord('armor', 'Buy');
+    };
+
+    Game_Party.prototype.getArmorSellingRecord = function() {
+        return this.getTradeRecord('armor', 'Sell');
+    };
+
+    //=============================================================================
+    // Game_TradeRecord
+    //  ショップでの売買履歴を保持するクラスです。
+    //=============================================================================
+    Game_TradeRecord.prototype.constructor = Game_TradeRecord;
+
+    Game_TradeRecord.prototype.initialize = function() {
+        this._itemUseGold = [];
+        this._itemAmount  = [];
+        this._tradeCount  = 0;
+    };
+
+    Game_TradeRecord.prototype.trade = function(itemId, amount, useGold) {
+        this._itemUseGold[itemId] = (this._itemUseGold[itemId] || 0) + useGold;
+        this._itemAmount[itemId]  = (this._itemAmount[itemId] || 0) + amount;
+        this._tradeCount++;
+    };
+
+    Game_TradeRecord.prototype.getUseGoldSum = function(startId, endId) {
+        return this.getSumRecord(this._itemUseGold, startId, endId);
+    };
+
+    Game_TradeRecord.prototype.getAmountSum = function(startId, endId) {
+        return this.getSumRecord(this._itemAmount, startId, endId);
+    };
+
+    Game_TradeRecord.prototype.getTradeCount = function() {
+        return this._tradeCount;
+    };
+
+    Game_TradeRecord.prototype.getSumRecord = function(counterArray, startIndex, endIndex) {
+        if (startIndex && !endIndex) {
+            endIndex = startIndex;
+        }
+        if (!startIndex && !endIndex) {
+            startIndex = 1;
+            endIndex = counterArray.length - 1;
+        }
+        return counterArray.slice(startIndex, endIndex + 1).reduce(function(sumValue, value) {
+            return sumValue + value;
+        }, 0);
+    };
+
+    //=============================================================================
+    // Scene_Shop
+    //  ショップでの売買履歴を保持します。
+    //=============================================================================
+    var _Scene_Shop_doBuy = Scene_Shop.prototype.doBuy;
+    Scene_Shop.prototype.doBuy = function(number) {
+        _Scene_Shop_doBuy.apply(this, arguments);
+        $gameParty.addTradeRecord(this._item, number, number * this.buyingPrice(), 'Buy');
+    };
+
+    var _Scene_Shop_doSell = Scene_Shop.prototype.doSell;
+    Scene_Shop.prototype.doSell = function(number) {
+        _Scene_Shop_doSell.apply(this, arguments);
+        $gameParty.addTradeRecord(this._item, number, number * this.sellingPrice(), 'Sell');
     };
 })();
 
