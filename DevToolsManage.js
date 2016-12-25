@@ -611,7 +611,7 @@ var Imported = Imported || {};
         gameWindow.resizeBy(0, 20);
     };
 
-    var _SceneManager_requestUpdate = SceneManager.requestUpdate;
+    const _SceneManager_requestUpdate = SceneManager.requestUpdate;
     SceneManager._updateRateCount = 0;
     SceneManager.requestUpdate = function() {
         if (this.isSlow()) {
@@ -631,7 +631,7 @@ var Imported = Imported || {};
         }
     };
 
-    var _SceneManager_updateMain = SceneManager.updateMain;
+    const _SceneManager_updateMain = SceneManager.updateMain;
     SceneManager.updateMain = function() {
         if (this.isSlow()) {
             this.changeScene();

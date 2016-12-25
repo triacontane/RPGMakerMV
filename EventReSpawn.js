@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/12/25 最後に動的生成したイベントのイベントIDを取得できるコマンドを追加
 // 1.3.1 2016/11/08 動的イベント生成中に同一マップに場所移動するとエラーが発生する現象を修正
 // 1.3.0 2016/11/03 ランダム生成機能で各種引数で文字で設定できる機能を追加＋境界値まわりのバグ修正（by くらむぼん氏）
 // 1.2.0 2016/09/06 場所移動時、生成イベントを引き継いでしまう不具合を修正
@@ -66,6 +67,12 @@
  * プレイヤー player
  * イベント event
  * 両方 both
+ *
+ * 最後に動的生成したイベントのイベントIDを取得できます。
+ * 指定した番号の変数に格納されます。
+ *
+ * ERS_最終生成イベントID取得 10  # 最後に生成したイベントIDを変数[10]に設定
+ * ERS_GET_LAST_SPAWN_EVENT_ID 10 # 同上
  *
  * イベントIDを「0」にすると実行中のイベント（このイベント）を複製します。
  *
@@ -188,6 +195,11 @@ function Game_PrefabEvent() {
             case 'MAKE_TEMPLATE_RANDOM' :
                 this.pluginCommandEventReSpawn('MAKE_RANDOM', args, true);
                 break;
+            case '最終生成イベントID取得' :
+            case 'GET_LAST_SPAWN_EVENT_ID' :
+                var eventId = $gameMap.getLastSpawnEventId();
+                $gameVariables.setValue(getArgNumber(args[0], 0), eventId);
+                break;
         }
     };
 
@@ -210,10 +222,15 @@ function Game_PrefabEvent() {
         if (this.isExistEventData(originalEventId, isTemplate) && $gameMap.isValid(x, y)) {
             var eventId = this.getEventIdSequence();
             var event   = new Game_PrefabEvent(this._mapId, eventId, originalEventId, x, y, isTemplate);
+            this._lastSpawnEventId = eventId;
             this._events.push(event);
         } else {
             throw new Error('無効なイベントIDもしくは座標のためイベントを作成できませんでした。');
         }
+    };
+
+    Game_Map.prototype.getLastSpawnEventId = function() {
+        return this._lastSpawnEventId;
     };
 
     Game_Map.prototype.isExistEventData = function(eventId, isTemplate) {
