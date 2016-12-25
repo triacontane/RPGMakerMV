@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2016/12/25 jpg保存時の拡張子を「jpeg」→「jpg」に変更
+//                  jpeg品質をパラメータから指定できる機能を追加
 // 1.5.0 2016/10/20 本体バージョン1.3.2でエラーが発生していたのを修正
 // 1.4.0 2016/10/06 パラメータに環境変数を使えるように修正
 // 1.3.0 2016/06/24 WEBP形式のショートカットキーを追加
@@ -67,7 +69,7 @@
  *
  * @param TimeStamp
  * @desc ONにすると連番の代わりにタイムスタンプを付与します。(ON/OFF)
- * @default OFF
+ * @default ON
  *
  * @param Signature
  * @desc 保存時に画像の右下に書き込まれる署名です。
@@ -95,6 +97,10 @@
  * @require 1
  * @dir audio/se/
  * @type file
+ *
+ * @param JpegQuality
+ * @desc JPEG出力したときの品質です。値を小さくすると容量も小さくなります。(1...10)
+ * @default 9
  *
  * @help プレー中のゲーム画面をキャプチャして
  * ファイルに保存したり、ピクチャとして表示したりできます。
@@ -182,7 +188,7 @@
  *
  * @param タイムスタンプ
  * @desc ONにすると連番の代わりにタイムスタンプを付与します。(ON/OFF)
- * @default OFF
+ * @default ON
  *
  * @param 署名
  * @desc 保存時に画像の右下に書き込まれる署名です。
@@ -210,6 +216,10 @@
  * @require 1
  * @dir audio/se/
  * @type file
+ *
+ * @param JPEG品質
+ * @desc JPEG出力したときの品質です。値を小さくすると容量も小さくなります。(1...10)
+ * @default 9
  *
  * @help プレー中のゲーム画面をキャプチャして
  * ファイルに保存したり、ピクチャとして表示したりできます。
@@ -270,13 +280,11 @@
     //=============================================================================
     var settings = {
         /* 署名のフォント情報です。faceはあらかじめフォントをロードしておかなければ使えません */
-        signature  : {face: 'GameFont', color: 'rgba(255,255,255,1.0)', align: 'right'},
+        signature: {face: 'GameFont', color: 'rgba(255,255,255,1.0)', align: 'right'},
         /* 効果音情報です。ファイル名はプラグイン管理画面から取得します */
-        se         : {volume: 90, pitch: 100, pan: 0},
-        /* jpeg形式で出力したときの品質です(0.1...1.0) */
-        jpegQuality: 0.9,
+        se       : {volume: 90, pitch: 100, pan: 0},
         /* テストプレー以外での動作を無効にするフラグです */
-        testOnly   : true
+        testOnly : true
     };
     //=============================================================================
     // ユーザ書き換え領域 - 終了 -
@@ -348,6 +356,7 @@
     var paramInterval           = getParamNumber(['Interval', '実行間隔']);
     var paramSeName             = getParamString(['SeName', '効果音']);
     var paramTimeStamp          = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
+    var paramJpegQuality        = getParamNumber(['JpegQuality', 'JPEG品質']);
 
     //=============================================================================
     // Game_Interpreter
@@ -463,6 +472,7 @@
     Bitmap.prototype.save = function(fileName, format, extend) {
         var data = this._canvas.toDataURL('image/' + format, extend);
         data     = data.replace(/^.*,/, '');
+        if (format === 'jpeg') format = 'jpg';
         if (data) StorageManager.saveImg(fileName, format, data);
     };
 
@@ -471,6 +481,15 @@
         this.fontSize  = fontInfo.size;
         this.textColor = fontInfo.color;
         this.drawText(text, 8, this.height - this.fontSize - 8, this.width - 8 * 2, this.fontSize, fontInfo.align);
+    };
+
+    Bitmap.prototype.signAndSave = function(signature, fileName, format, signatureImage) {
+        var fileFullPath = StorageManager.getLocalImgFileName(fileName);
+        if (signatureImage) {
+            this.signImage(signatureImage, signature);
+        }
+        this.sign(paramSignature, signature);
+        this.save(fileFullPath, format, format === 'jpeg' ? paramJpegQuality / 10 : undefined);
     };
 
     Bitmap.prototype.signImage = function(signBitmap, fontInfo) {
@@ -524,22 +543,22 @@
     };
 
     SceneManager.saveCapture = function(fileName, format) {
-        var signature = settings.signature;
-        if (this._captureBitmap) {
-            signature.size   = paramSignatureSize;
-            var fileFullName = StorageManager.getLocalImgFileName(fileName);
-            if (paramSignatureImage) {
-                var image = ImageManager.loadPicture(paramSignatureImage, 0);
-                image.addLoadListener(function() {
-                    this._captureBitmap.signImage(image, signature);
-                    this._captureBitmap.sign(paramSignature, signature);
-                    this._captureBitmap.save(fileFullName, format, settings.jpegQuality);
-                }.bind(this));
-            } else {
-                this._captureBitmap.sign(paramSignature, signature);
-                this._captureBitmap.save(fileFullName, format, settings.jpegQuality);
-            }
+        if (!this._captureBitmap) return;
+        var signature = this.getSignature();
+        if (paramSignatureImage) {
+            var image = ImageManager.loadPicture(paramSignatureImage, 0);
+            image.addLoadListener(function() {
+                this._captureBitmap.signAndSave(signature, fileName, format, image);
+            }.bind(this));
+        } else {
+            this._captureBitmap.signAndSave(signature, fileName, format, null);
         }
+    };
+
+    SceneManager.getSignature = function() {
+        var signature  = settings.signature;
+        signature.size = paramSignatureSize;
+        return signature;
     };
 
     SceneManager.takeCapture = function(format) {

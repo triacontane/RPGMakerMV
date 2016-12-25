@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/12/25 専用のスタート効果音を設定できる機能を追加
 // 1.1.0 2016/03/10 セーブが存在する場合、通常のウィンドウを開く機能を追加
 // 1.0.1 2015/11/01 既存コードの再定義方法を修正（内容に変化なし）
 // 1.0.0 2015/10/31 初版
@@ -30,6 +31,13 @@
  * @desc セーブが存在する場合、通常のウィンドウを開きます。(ON/OFF)
  * @default OFF
  *
+ * @param StartSe
+ * @desc スタートしたときの効果音のファイル名称です。指定しない場合はシステム効果音の決定が演奏されます。
+ * @default
+ * @require 1
+ * @dir audio/se/
+ * @type file
+ *
  * @help タイトル画面の選択肢をニューゲームのみにします。
  * 決定ボタンを押すか画面をクリックするとゲームが始まります。
  * 短編などセーブの概念がないゲームでの利用を想定しています。
@@ -47,7 +55,10 @@
     // ユーザ書き換え領域 - 開始 -
     //=============================================================================
     var settings = {
+        /* Start文字列のフォント情報 */
         font:{size:52, bold:false, italic:true, color:'rgba(255,255,255,1.0)'},
+        /* Start SE の情報 */
+        startSe:{name:'', volume:90, pitch:100, pan:0}
     };
     //=============================================================================
     // ユーザ書き換え領域 - 終了 -
@@ -55,13 +66,6 @@
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
         return value == null ? '' : value;
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
     var getParamBoolean = function(paramNames) {
@@ -101,11 +105,12 @@
             this._commandWindow.openness -= 64;
         }
         if (!this._seledted && this.isTriggered()) {
-            SoundManager.playOk();
+            this.playStartSe();
             if (this.isContinueEnabled()) {
                 this._commandWindow.activate();
                 this._gameStartSprite.visible = false;
                 this._commandWindowClose = false;
+                this._commandWindow.visible = true;
             } else {
                 this._gameStartSprite.opacity_shift *= 16;
                 this.commandNewGame();
@@ -114,11 +119,22 @@
         }
     };
 
+    Scene_Title.prototype.playStartSe = function() {
+        var seName = getParamString(['StartSe', 'スタート効果音']);
+        if (seName) {
+            settings.startSe.name = seName;
+            AudioManager.playSe(settings.startSe);
+        } else {
+            SoundManager.playOk();
+        }
+    };
+
     Scene_Title.prototype.onCancelCommand = function() {
         this._commandWindow.deactivate();
         this._seledted = false;
         this._gameStartSprite.visible = true;
         this._commandWindowClose = true;
+        this._commandWindow.visible = false;
     };
 
     Scene_Title.prototype.isContinueEnabled = function() {

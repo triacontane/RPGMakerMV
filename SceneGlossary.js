@@ -140,6 +140,10 @@
  * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
  * @default OFF
  *
+ * @param PageWrap
+ * @desc 複数のページが存在する場合、最後のページまで到達していたら最初のページに戻します。
+ * @default ON
+ *
  * @noteParam SGピクチャ
  * @noteRequire 1
  * @noteDir img/pictures/
@@ -344,6 +348,10 @@
  * @param 入手履歴を使用
  * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
  * @default OFF
+ *
+ * @param ページ折り返し
+ * @desc 複数のページが存在する場合、最後のページまで到達していたら最初のページに戻します。
+ * @default ON
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -554,6 +562,7 @@ function Scene_Glossary() {
     var paramNewGlossaryColor   = getParamNumber(['NewGlossaryColor', '新着用語カラー']);
     var paramThroughBackPicture = getParamBoolean(['ThroughBackPicture', '背景ピクチャ透過']);
     var paramUseItemHistory     = getParamBoolean(['UseItemHistory', '入手履歴を使用']);
+    var paramPageWrap           = getParamBoolean(['PageWrap', 'ページ折り返し']);
 
     //=============================================================================
     // Game_Interpreter
@@ -868,6 +877,11 @@ function Scene_Glossary() {
         this.createConfirmWindow();
         this.createActorWindow();
         this.setInitActivateWindow();
+    };
+
+    Scene_Glossary.prototype.createHelpWindow = function() {
+        Scene_MenuBase.prototype.createHelpWindow.apply(this, arguments);
+        this.updateHelp('');
     };
 
     Scene_Glossary.prototype.createGlossaryWindow = function() {
@@ -1261,7 +1275,7 @@ function Scene_Glossary() {
         if (this._maxPages === 1) return;
         if (this.canMoveRight()) {
             this.drawItem(this._pageIndex + 1);
-        } else if (wrap) {
+        } else if (wrap && paramPageWrap) {
             this.drawItem(0);
         }
     };
@@ -1270,7 +1284,7 @@ function Scene_Glossary() {
         if (this._maxPages === 1) return;
         if (this.canMoveLeft()) {
             this.drawItem(this._pageIndex - 1);
-        } else if (wrap) {
+        } else if (wrap && paramPageWrap) {
             this.drawItem(this._maxPages - 1);
         }
     };
@@ -1347,6 +1361,16 @@ function Scene_Glossary() {
 
     Window_Glossary.prototype.drawItemText = function(text, y) {
         this.drawTextEx(text, 0, y);
+    };
+
+    Window_Glossary.prototype.processNormalCharacter = function(textState) {
+        var c = textState.text[textState.index + 1];
+        var w = this.textWidth(c);
+        if (textState.x + w > this.contentsWidth()) {
+            this.processNewLine(textState);
+            textState.index--;
+        }
+        Window_Base.prototype.processNormalCharacter.apply(this, arguments);
     };
 
     Window_Glossary.prototype.drawPicture = function(item, bitmap, text, y) {

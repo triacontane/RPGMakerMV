@@ -85,7 +85,9 @@
     if (getParamBoolean('windowOpenRapid')) {
         var _Window_Base_updateOpen = Window_Base.prototype.updateOpen;
         Window_Base.prototype.updateOpen = function () {
-            if (this._opening) this.openness = 255;
+            if (this._opening) {
+                this.openness = 255;
+            }
             _Window_Base_updateOpen.call(this);
         };
 
