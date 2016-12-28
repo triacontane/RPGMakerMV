@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2016/12/28 YEP_SaveEventLocations.jsとの競合を解消
 // 1.4.0 2016/12/25 最後に動的生成したイベントのイベントIDを取得できるコマンドを追加
 // 1.3.1 2016/11/08 動的イベント生成中に同一マップに場所移動するとエラーが発生する現象を修正
 // 1.3.0 2016/11/03 ランダム生成機能で各種引数で文字で設定できる機能を追加＋境界値まわりのバグ修正（by くらむぼん氏）
@@ -372,7 +373,13 @@ function Game_PrefabEvent() {
         this._isTemplate      = isTemplate;
         this.linkEventData();
         Game_Event.prototype.initialize.call(this, mapId, eventId);
-        this.locate(x, y);
+        if (typeof Yanfly !== 'undefined' && Yanfly.SEL) {
+            $gameTemp._bypassLoadLocation = true;
+            this.locate(x, y);
+            $gameTemp._bypassLoadLocation = undefined;
+        } else {
+            this.locate(x, y);
+        }
         this._spritePrepared = false;
     };
 
