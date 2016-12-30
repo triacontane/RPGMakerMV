@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2016/12/29 ピクチャクリックでイベントが発生したらマップタッチを無効化するよう仕様修正
 // 1.5.1 2016/11/20 1.5.0で混入した不要なコードを削除
 // 1.5.0 2016/11/19 ピクチャクリック時にコモンイベントではなくスイッチをONにできる機能を追加
 // 1.4.0 2016/08/20 ピクチャごとに透明色を考慮するかどうかを設定できる機能を追加
@@ -466,6 +467,14 @@
 
     Scene_Map.prototype.updateTouchPictures = function() {
         this._spriteset.callTouchPictures();
+    };
+
+    const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
+    Scene_Map.prototype.processMapTouch = function() {
+        _Scene_Map_processMapTouch.apply(this, arguments);
+        if ($gameTemp.isDestinationValid() && $gameTemp.pictureCommonId()) {
+            $gameTemp.clearDestination();
+        }
     };
 
     //=============================================================================

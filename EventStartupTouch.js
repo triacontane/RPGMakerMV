@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2016/12/29 スクリプトで通常モードと調査モードを切り替えられる機能を追加
 // 1.0.0 2016/12/21 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -120,13 +121,25 @@
     // Game_Player
     //  タッチでイベントを起動する処理を追加します。
     //=============================================================================
+    Game_Player.prototype.setTouchStartupDisable = function() {
+        this._touchStartupDisable = true;
+    };
+
+    Game_Player.prototype.setTouchStartupEnable = function() {
+        this._touchStartupDisable = undefined;
+    };
+
     const _Game_Player_triggerTouchAction    = Game_Player.prototype.triggerTouchAction;
     Game_Player.prototype.triggerTouchAction = function() {
         const result = _Game_Player_triggerTouchAction.apply(this, arguments);
-        if (!result && !$gameMap.isEventRunning() && TouchInput.isTriggered()) {
+        if (!result && this.isTouchStartupValid()) {
             return this.triggerTouchActionStartupEvent();
         }
         return result;
+    };
+
+    Game_Player.prototype.isTouchStartupValid = function() {
+        return !this._touchStartupDisable && TouchInput.isTriggered() && !$gameMap.isEventRunning();
     };
 
     Game_Player.prototype.triggerTouchActionStartupEvent = function() {
@@ -196,7 +209,7 @@
     const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
     Scene_Map.prototype.processMapTouch = function() {
         _Scene_Map_processMapTouch.apply(this, arguments);
-        if ($gameTemp.isDestinationValid() && $gamePlayer.getTouchStartupEvent()) {
+        if ($gameTemp.isDestinationValid() && $gamePlayer.isTouchStartupValid() && $gamePlayer.getTouchStartupEvent()) {
             $gameTemp.clearDestination();
         }
     };
