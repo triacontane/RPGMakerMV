@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2016/12/31 ウィンドウ透過機能を追加
 // 1.3.1 2016/11/25 割合の指定に100%を指定できるよう修正
 // 1.3.0 2016/11/24 現在のHPの割合によって表示するグラフィックを変更する機能を追加
 // 1.2.0 2016/08/08 顔グラフィック以外を表示したときに縮小するかどうかを選択するパラメータを追加
@@ -43,6 +44,10 @@
  * @desc Reduction picture or enemy image(ON/OFF)
  * @default ON
  *
+ * @param ThroughWindow
+ * @desc Window through if overlap windows(ON/OFF)
+ * @default OFF
+ *
  * @help Plugin that to visualize face graphic in battle
  * This plugin is released under the MIT License.
  *
@@ -67,6 +72,11 @@
  * @param 縮小表示
  * @desc ピクチャ及び敵キャラ画像をウィンドウサイズに合わせて縮小表示します。(ON/OFF)
  * @default ON
+ *
+ * @param ウィンドウ透過
+ * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
+ * スキルウィンドウの裏側に顔グラフィックが表示されます。
+ * @default OFF
  *
  * @help 戦闘中、コマンド選択ウィンドウの上に
  * 顔グラフィックが表示されるようになります。
@@ -314,4 +324,18 @@
             this._faceSprite.setFrame(sx, sy, Window_Base._faceWidth, Window_Base._faceHeight);
         }.bind(this));
     };
+
+    //=============================================================================
+    // ウィンドウを透過して重なり合ったときの表示を自然にします。
+    //=============================================================================
+    if (getParamBoolean(['ThroughWindow', 'ウィンドウ透過']) && !WindowLayer.throughWindow) {
+        WindowLayer.throughWindow = true;
+        //=============================================================================
+        //  WindowLayer
+        //   ウィンドウのマスク処理を除去します。
+        //=============================================================================
+        WindowLayer.prototype._maskWindow = function(window) {};
+
+        WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
+    }
 })();
