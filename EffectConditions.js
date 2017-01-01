@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/01/01 YEP_BattleEngineCore.js用の対策コードを追記
 // 1.0.0 2017/01/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -132,10 +133,16 @@
 
     const _Game_Action_applyGlobal = Game_Action.prototype.applyGlobal;
     Game_Action.prototype.applyGlobal = function() {
-        const invalid = this.item().effects.some(function(effect) {
-            return effect.code === Game_Action.EFFECT_COMMON_EVENT && !this.isValidEffect(null, effect);
+        _Game_Action_applyGlobal.apply(this, arguments);
+        this.cancelEffectCommonEvent();
+    };
+
+    Game_Action.prototype.cancelEffectCommonEvent = function() {
+        this.item().effects.some(function(effect) {
+            if (effect.code === Game_Action.EFFECT_COMMON_EVENT && !this.isValidEffect(null, effect)) {
+                $gameTemp.clearCommonEvent();
+            }
         }, this);
-        if (!invalid) _Game_Action_applyGlobal.apply(this, arguments);
     };
 
     Game_Action.prototype.isValidEffect = function(target, effect) {
@@ -165,6 +172,17 @@
 
     Game_Action.prototype.getEffectIndex = function(effect) {
         return this.item().effects.indexOf(effect) + 1;
+    };
+
+    //=============================================================================
+    // BattleManager
+    //  YEP_BattleEngineCore.js用コード
+    //=============================================================================
+    const _BattleManager_actionActionCommonEvent = BattleManager.actionActionCommonEvent;
+    BattleManager.actionActionCommonEvent = function() {
+        const result = _BattleManager_actionActionCommonEvent.apply(this, arguments);
+        this._action.cancelEffectCommonEvent();
+        return result;
     };
 })();
 
