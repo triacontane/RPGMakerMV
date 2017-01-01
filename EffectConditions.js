@@ -62,8 +62,10 @@
  *
  * スクリプト中で「subject」と記述すると発動者を参照できます。
  * スクリプト中で「target」と記述すると対象者を参照できます。(※1)
+ * スクリプト中で「damage」と記述するとスキルの効果量を参照できます。(※2)
  *
  * ※1 ただし効果の種類が「コモンイベント」の場合は使えません。
+ * ※2 回復の場合は負の値になります。
  *
  * 例:<EC1条件:target.hpRate() === 1> # 相手のHPが最大の場合のみ効果あり
  *
@@ -113,6 +115,12 @@
     // Game_Action
     //  効果の条件適用を実装します。
     //=============================================================================
+    const _Game_Action_executeDamage =Game_Action.prototype.executeDamage;
+    Game_Action.prototype.executeDamage = function(target, value) {
+        this._damageValue = value;
+        _Game_Action_executeDamage.apply(this, arguments);
+    };
+
     const _Game_Action_applyItemEffect = Game_Action.prototype.applyItemEffect;
     Game_Action.prototype.applyItemEffect = function(target, effect) {
         if (this.isValidEffect(target, effect)) {
@@ -145,6 +153,7 @@
         const metaValue = getMetaValues(this.item(), [index + '条件', index + 'Cond']);
         if (!metaValue) return true;
         try {
+            const damage = this._damageValue || 0;
             const subject = this.subject();
             return eval(metaValue);
         } catch (e) {
