@@ -20,12 +20,13 @@
  * @plugindesc 特徴の条件適用プラグイン
  * @author トリアコンタン
  *
- * @help 特徴に条件を適用します。
+ * @help 特徴のひとつひとつに適用条件を設定します。
+ * 条件を満たさない特徴は無効になります。
  * 特徴を記述するデータベースのメモ欄に以下の通り入力してください。
  *
- * <TC1スイッチ:10>   // スイッチ[10]がONの場合、1番目の特徴が有効になる
- * <TC1ステート:4>    // ステート[4]が有効な場合、1番目の特徴が有効になる
- * <TC1スクリプト:式> // [式]の評価結果がtrueの場合、1番目の特徴が有効になる
+ * <TC1スイッチ:10>     // スイッチ[10]がONの場合、1番目の特徴が有効になる
+ * <TC1ステート:4>      // ステート[4]が有効な場合、1番目の特徴が有効になる
+ * <TC1スクリプト:JS式> // [式]の評価結果がtrueの場合、1番目の特徴が有効になる
  * スクリプト中で不等号を使いたい場合、以下のように記述してください。
  * < → &lt;
  * > → &gt;
@@ -50,6 +51,7 @@
 
 (function () {
     'use strict';
+    var pluginName    = 'TraitConditions';
     var metaTagPrefix = 'TC';
 
     var getArgString = function (arg, upperFlg) {
@@ -78,16 +80,9 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text === null || text === undefined) {
-            text = '';
-        }
-        var metaTagDisConvert = {
-            '&lt;': '<',
-            '&gt;': '>'
-        };
-        text = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
-            return metaTagDisConvert[value];
-        }.bind(this));
+        if (text == null) text = '';
+        text = text.replace(/&gt;?/gi, '>');
+        text = text.replace(/&lt;?/gi, '<');
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
@@ -148,13 +143,11 @@
         var metaValue = getMetaValues(obj, [id + 'スクリプト', id + 'Script']);
         if (!metaValue) return true;
         var data = this;
-        var result = false;
         try {
-            result = eval(getArgString(metaValue));
+            return eval(getArgString(metaValue));
         } catch (e) {
-            console.error(e.message);
+            throw new Error(pluginName + 'で指定したスクリプト実行中にエラーが発生しました。実行内容:' + metaValue);
         }
-        return result;
     };
 })();
 

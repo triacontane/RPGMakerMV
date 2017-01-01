@@ -118,14 +118,9 @@
     };
 
     var convertEscapeCharactersAndEval = function(text, evalFlg) {
-        if (text === null || text === undefined) text = '';
-        var metaTagDisConvert = {
-            '&lt;': '<',
-            '&gt;': '>'
-        };
-        text = text.replace(/\&gt\;|\&lt\;/gi, function(value) {
-            return metaTagDisConvert[value];
-        }.bind(this));
+        if (text == null) text = '';
+        text = text.replace(/&gt;?/gi, '>');
+        text = text.replace(/&lt;?/gi, '<');
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {

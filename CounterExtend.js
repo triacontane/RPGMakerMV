@@ -218,15 +218,8 @@ var Imported = Imported || {};
 
     const convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        const metaTagDisConvert = {
-            '&lt;': '<',
-            '&gt;': '>'
-        };
-
-        text = text.replace(/&gt;|&lt;/gi, function(value) {
-            return metaTagDisConvert[value];
-        }.bind(this));
-
+        text = text.replace(/&gt;?/gi, '>');
+        text = text.replace(/&lt;?/gi, '<');
         const windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
