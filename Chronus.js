@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.3 2016/01/02 色調変更を禁止しているときにイベントで色調変更した場合、すぐにリセットされてしまう問題を修正
 // 1.3.2 2016/07/24 1.3.1でロード時にエラーになる問題の修正
 // 1.3.1 2016/07/23 イベント処理中の時間経過有無をイベントごとに設定できるよう変更
 //                  一部コードのリファクタリング
@@ -730,6 +731,7 @@ function Game_Chronus() {
         this._demandRefresh   = false;
         this._prevHour        = -1;
         this._nowDate         = null;
+        this._clearTone       = false;
         this._timeAutoAdd     = getParamNumber('自然時間加算', 0, 99);
         this._timeTransferAdd = getParamNumber('場所移動時間加算', 0);
         this._timeBattleAdd   = getParamNumber('戦闘時間加算(固定)', 0);
@@ -774,8 +776,10 @@ function Game_Chronus() {
     Game_Chronus.prototype.refreshTint = function (swift) {
         if (this.isEnableTint()) {
             this.setTint(this.getTimeZone(), swift);
-        } else {
+            this._clearTone = false;
+        } else if (!this._clearTone) {
             $gameScreen.clearTone();
+            this._clearTone = true;
         }
     };
 
