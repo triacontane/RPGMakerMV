@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2016/01/02 メッセージウィンドウと連動して指定したピクチャの表示/非表示が自動で切り替わる機能を追加
 // 1.1.0 2016/08/25 選択肢の表示中はウィンドウを非表示にできないよう仕様変更
 // 1.0.4 2016/07/22 YEP_MessageCore.jsのネーム表示ウィンドウと連携する機能を追加
 // 1.0.3 2016/01/24 メッセージウィンドウが表示されていないときも非表示にできてしまう現象の修正
@@ -27,6 +28,10 @@
  * (light_click or shift or control)
  * @default light_click
  *
+ * @param LinkPictureNumber
+ * @desc Picture number of window show/hide
+ * @default
+ *
  * @help Erase message window (and restore) when triggered
  *
  * This plugin is released under the MIT License.
@@ -40,8 +45,16 @@
  * (右クリック or shift or control)
  * @default 右クリック
  *
+ * @param 連動ピクチャ番号
+ * @desc ウィンドウ消去時に連動して不透明度を[0]にするピクチャの番号です。
+ * @default
+ *
  * @help メッセージウィンドウを表示中に指定したボタンを押下することで
  * メッセージウィンドウを消去します。もう一度押すと戻ります。
+ *
+ * ウィンドウ消去時に連動して不透明度を[0]にするピクチャを指定することができます。
+ * 背景に特定のピクチャを使用している場合などに指定してください。
+ * 再表示すると不透明度は[255]になります。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -50,7 +63,7 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(function() {
     'use strict';
     var pluginName = 'MessageWindowHidden';
 
@@ -63,6 +76,13 @@
         return value == null ? '' : value;
     };
 
+    const getParamNumber = function(paramNames, min, max) {
+        const value = getParamString(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value) || 0).clamp(min, max);
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -73,27 +93,60 @@
     };
 
     //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    const param             = {};
+    param.triggerButton     = getParamString(['TriggerButton', 'ボタン名称']).toLowerCase();
+    param.linkPictureNumber = getParamNumber(['LinkPictureNumber', '連動ピクチャ番号']);
+
+    //=============================================================================
+    // Game_Picture
+    //  メッセージウィンドウの表示可否と連動します。
+    //=============================================================================
+    Game_Picture.prototype.linkWithMessageWindow = function(opacity) {
+        this._opacity = opacity;
+        this._targetOpacity = opacity;
+    };
+
+    //=============================================================================
     // Window_Message
     //  指定されたボタン押下時にウィンドウとサブウィンドウを非表示にします。
     //=============================================================================
-    var _Window_Message_updateWait = Window_Message.prototype.updateWait;
+    var _Window_Message_updateWait      = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
         if (!this.isClosed() && this.isTriggeredHidden() && !$gameMessage.isChoice()) {
             if (this.visible) {
-                this.hide();
-                this.subWindows().forEach(function(subWindow) {
-                    this.hideSubWindow(subWindow);
-                }.bind(this));
-                if (this.hasNameWindow()) this.hideSubWindow(this._nameWindow);
+                this.hideAllWindow();
             } else {
-                this.show();
-                this.subWindows().forEach(function(subWindow) {
-                    this.showSubWindow(subWindow);
-                }.bind(this));
-                if (this.hasNameWindow()) this.showSubWindow(this._nameWindow);
+                this.showAllWindow();
             }
         }
         return _Window_Message_updateWait.call(this);
+    };
+
+    Window_Message.prototype.hideAllWindow = function() {
+        this.hide();
+        this.subWindows().forEach(function(subWindow) {
+            this.hideSubWindow(subWindow);
+        }.bind(this));
+        if (this.hasNameWindow()) this.hideSubWindow(this._nameWindow);
+        this.linkPicture(0);
+    };
+
+    Window_Message.prototype.showAllWindow = function() {
+        this.show();
+        this.subWindows().forEach(function(subWindow) {
+            this.showSubWindow(subWindow);
+        }.bind(this));
+        if (this.hasNameWindow()) this.showSubWindow(this._nameWindow);
+        this.linkPicture(255);
+    };
+
+    Window_Message.prototype.linkPicture = function(opacity) {
+        var picture = $gameScreen.picture(param.linkPictureNumber);
+        if (picture) {
+            picture.linkWithMessageWindow(opacity);
+        }
     };
 
     Window_Message.prototype.hideSubWindow = function(subWindow) {
@@ -111,8 +164,7 @@
     };
 
     Window_Message.prototype.isTriggeredHidden = function() {
-        var buttonName = getParamString(['ボタン名称','TriggerButton']).toLowerCase();
-        switch (buttonName) {
+        switch (param.triggerButton) {
             case '':
             case '右クリック':
             case 'light_click':
@@ -120,11 +172,11 @@
             case 'ok':
                 return false;
             default:
-                return Input.isTriggered(buttonName);
+                return Input.isTriggered(param.triggerButton);
         }
     };
 
-    var _Window_Message_updateInput = Window_Message.prototype.updateInput;
+    var _Window_Message_updateInput      = Window_Message.prototype.updateInput;
     Window_Message.prototype.updateInput = function() {
         if (!this.visible) return true;
         return _Window_Message_updateInput.apply(this, arguments);
@@ -134,19 +186,19 @@
     // Window_ChoiceList、Window_NumberInput、Window_EventItem
     //  非表示の間は更新を停止します。
     //=============================================================================
-    var _Window_ChoiceList_update = Window_ChoiceList.prototype.update;
+    var _Window_ChoiceList_update      = Window_ChoiceList.prototype.update;
     Window_ChoiceList.prototype.update = function() {
         if (!this.visible) return;
         _Window_ChoiceList_update.apply(this, arguments);
     };
 
-    var _Window_NumberInput_update = Window_NumberInput.prototype.update;
+    var _Window_NumberInput_update      = Window_NumberInput.prototype.update;
     Window_NumberInput.prototype.update = function() {
         if (!this.visible) return;
         _Window_NumberInput_update.apply(this, arguments);
     };
 
-    var _Window_EventItem_update = Window_EventItem.prototype.update;
+    var _Window_EventItem_update      = Window_EventItem.prototype.update;
     Window_EventItem.prototype.update = function() {
         if (!this.visible) return;
         _Window_EventItem_update.apply(this, arguments);
