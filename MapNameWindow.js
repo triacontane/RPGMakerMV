@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/01/02 マップ名が空の時に、空白のウィンドウが出ていた問題を修正
 // 1.0.0 2017/01/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -117,6 +118,12 @@
     const _Window_MapName_windowWidth = Window_MapName.prototype.windowWidth;
     Window_MapName.prototype.windowWidth = function() {
         return param.width ? param.width : _Window_MapName_windowWidth.apply(this, arguments);
+    };
+
+    const _Window_MapName_refresh = Window_MapName.prototype.refresh;
+    Window_MapName.prototype.refresh = function() {
+        _Window_MapName_refresh.apply(this, arguments);
+        this.visible = $gameMap.displayName();
     };
 })();
 
