@@ -1,11 +1,12 @@
 //=============================================================================
 // SceneGlossary.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2017/01/03 メニュー画面の辞書コマンドに出現条件を指定できる機能を追加
 // 1.8.0 2016/12/23 説明文の自動改行機能を追加
 // 1.7.1 2016/12/09 1.7.0で収集率が正しく表示されない問題を修正
 // 1.7.0 2016/12/09 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に登録できる機能を追加
@@ -45,16 +46,32 @@
  * @desc メニュー画面に表示されるコマンド名です。空欄にすると追加されなくなります。
  * @default Glossary
  *
+ * @param CommandSwitchId
+ * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
+ * @default
+ *
  * @param CommandName2
  * @desc メニュー画面に表示される2つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
+ * @param CommandSwitchId2
+ * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
  *
  * @param CommandName3
  * @desc メニュー画面に表示される3つ目のコマンド名です。空欄にすると追加されなくなります。
  * @default
  *
+ * @param CommandSwitchId3
+ * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
+ * @default
+ *
  * @param CommandName4
  * @desc メニュー画面に表示される4つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
+ * @param CommandSwitchId4
+ * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
  *
  * @param AutoAddition
@@ -254,16 +271,32 @@
  * @desc メニュー画面に表示されるコマンド名です。空欄にすると追加されなくなります。
  * @default 用語辞典
  *
+ * @param 出現条件スイッチ
+ * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
+ * @default
+ *
  * @param コマンド名称2
  * @desc メニュー画面に表示される2つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
+ * @param 出現条件スイッチ2
+ * @desc 辞書コマンド2の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
  *
  * @param コマンド名称3
  * @desc メニュー画面に表示される3つ目のコマンド名です。空欄にすると追加されなくなります。
  * @default
  *
+ * @param 出現条件スイッチ3
+ * @desc 辞書コマンド3の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
+ * @default
+ *
  * @param コマンド名称4
  * @desc メニュー画面に表示される4つ目のコマンド名です。空欄にすると追加されなくなります。
+ * @default
+ *
+ * @param 出現条件スイッチ4
+ * @desc 辞書コマンド4の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
  * 
  * @param 自動登録
@@ -536,10 +569,12 @@ function Scene_Glossary() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramCommandNames = [];
+    var paramCommandNames     = [];
+    var paramCommandSwitchIds = [];
     for (var i = 0; i < 4; i++) {
-        var idString         = (i > 0 ? String(i + 1) : '');
-        paramCommandNames[i] = getParamString(['CommandName' + idString, 'コマンド名称' + idString]);
+        var idString             = (i > 0 ? String(i + 1) : '');
+        paramCommandNames[i]     = getParamString(['CommandName' + idString, 'コマンド名称' + idString]);
+        paramCommandSwitchIds[i] = getParamNumber(['CommandSwitchId' + idString, '出現条件スイッチ' + idString]);
     }
     var paramCommandNamesMax    = paramCommandNames.length;
     var paramBackPicture        = getParamString(['BackPicture', '背景ピクチャ']);
@@ -790,11 +825,15 @@ function Scene_Glossary() {
     // Scene_Menu
     //  用語集画面の呼び出しを追加します。
     //=============================================================================
+    Scene_Menu.isVisibleGlossaryCommand = function(index) {
+        return paramCommandNames[index] && $gameSwitches.value(paramCommandSwitchIds[index]);
+    };
+
     var _Scene_Menu_createCommandWindow      = Scene_Menu.prototype.createCommandWindow;
     Scene_Menu.prototype.createCommandWindow = function() {
         _Scene_Menu_createCommandWindow.apply(this, arguments);
         for (var i = 0; i < paramCommandNamesMax; i++) {
-            if (paramCommandNames[i]) {
+            if (Scene_Menu.isVisibleGlossaryCommand(i)) {
                 this._commandWindow.setHandler('glossary' + String(i), this.commandGlossary.bind(this, i + 1));
             }
         }
@@ -813,7 +852,7 @@ function Scene_Glossary() {
     Window_MenuCommand.prototype.addOriginalCommands = function() {
         _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
         for (var i = 0; i < paramCommandNamesMax; i++) {
-            if (paramCommandNames[i]) {
+            if (Scene_Menu.isVisibleGlossaryCommand(i)) {
                 this.addCommand(paramCommandNames[i], 'glossary' + String(i), this.isGlossaryEnabled(i));
             }
         }
