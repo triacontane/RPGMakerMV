@@ -826,7 +826,8 @@ function Scene_Glossary() {
     //  用語集画面の呼び出しを追加します。
     //=============================================================================
     Scene_Menu.isVisibleGlossaryCommand = function(index) {
-        return paramCommandNames[index] && $gameSwitches.value(paramCommandSwitchIds[index]);
+        return paramCommandNames[index] &&
+            (!paramCommandSwitchIds[index] || $gameSwitches.value(paramCommandSwitchIds[index]));
     };
 
     var _Scene_Menu_createCommandWindow      = Scene_Menu.prototype.createCommandWindow;
