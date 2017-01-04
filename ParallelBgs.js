@@ -290,9 +290,9 @@
         this.stopAllBgs();
         var prevIndex      = this._bgsLineIndex;
         this._bgsLineIndex = 1;
-        bgsArray.forEach(function(bgs) {
-            _AudioManager_playBgs.call(this, bgs, null);
-            this._bgsLineIndex++;
+        bgsArray.forEach(function(bgs, index) {
+            this._bgsLineIndex = index;
+            this.playBgs(bgs, null);
         }, this);
         this._bgsLineIndex = prevIndex;
     };
@@ -301,7 +301,7 @@
     AudioManager.saveBgs      = function() {
         var bgsArray = [];
         this.iterateAllBgs(function() {
-            bgsArray.push(_AudioManager_saveBgs.apply(this, arguments));
+            bgsArray[this._bgsLineIndex] = _AudioManager_saveBgs.apply(this, arguments);
         }.bind(this));
         return bgsArray.length > 1 ? bgsArray : bgsArray[0];
     };
