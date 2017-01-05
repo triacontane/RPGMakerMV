@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2017/01/05 アニメーションの表示位置を補正
 // 1.0.1 2016/11/17 YEP_CoreEngine.jsで画面サイズを変更すると、位置の不整合が起きる現象に対応
 // 1.0.0 2016/10/27 初版
 // ----------------------------------------------------------------------------
@@ -78,17 +79,31 @@
     // Sprite_Enemy
     //  必要に応じて敵キャラの位置を調整します。
     //=============================================================================
-    var _Sprite_Enemy_loadBitmap = Sprite_Enemy.prototype.loadBitmap;
-    Sprite_Enemy.prototype.loadBitmap = function(name, hue) {
-        _Sprite_Enemy_loadBitmap.apply(this, arguments);
-        if (this._enemy.isBigEnemy()) {
-            this.bitmap.addLoadListener(this.adjustAnchorForBigEnemy.bind(this));
+    var _Sprite_Enemy_updatePosition = Sprite_Enemy.prototype.updatePosition;
+    Sprite_Enemy.prototype.updatePosition = function() {
+        _Sprite_Enemy_updatePosition.apply(this, arguments);
+        if (this._enemy.isBigEnemy() && this.bitmap) {
+            this._originalY = this.y;
+            this.y = Graphics.boxHeight;
         }
     };
 
-    Sprite_Enemy.prototype.adjustAnchorForBigEnemy = function() {
-        if (this.bitmap.height) {
-            this.anchor.y = 1.0 - ((Graphics.boxHeight - this._homeY) / this.bitmap.height);
+    var _Sprite_Battler_setupDamagePopup = Sprite_Enemy.prototype.setupDamagePopup;
+    Sprite_Enemy.prototype.setupDamagePopup = function() {
+        var requested = this._battler.isDamagePopupRequested();
+        if (_Sprite_Battler_setupDamagePopup) {
+            _Sprite_Battler_setupDamagePopup.apply(this, arguments);
+        } else {
+            Sprite_Battler.prototype.setupDamagePopup.apply(this, arguments);
+        }
+        if (requested) this.adjustDamagePopup();
+    };
+
+    Sprite_Enemy.prototype.adjustDamagePopup = function() {
+        if (this._damages.length > 0) {
+            for (var i = 0; i < this._damages.length; i++) {
+                this._damages[i].y -= (this.y - this._originalY);
+            }
         }
     };
 })();
