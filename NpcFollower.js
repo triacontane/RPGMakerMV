@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/01/17 プラグインコマンドが小文字でも動作するよう修正（byこまちゃん先輩）
 // 1.0.1 2016/07/17 セーブデータをロードした際のエラーになる現象の修正
 // 1.0.0 2016/07/14 初版
 // ----------------------------------------------------------------------------
@@ -125,9 +126,9 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        if (!command.match(new RegExp('^' + metaTagPrefix))) return;
+        if (!command.match(new RegExp('^' + metaTagPrefix, 'i'))) return;
         try {
-            this.pluginCommandNpcFollower(command.replace(metaTagPrefix, ''), args);
+            this.pluginCommandNpcFollower(command.replace(new RegExp(metaTagPrefix, 'i'), ''), args);
         } catch (e) {
             if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
                 var window = require('nw.gui').Window.get();
