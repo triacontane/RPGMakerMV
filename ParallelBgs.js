@@ -298,6 +298,27 @@
         this._bgsLineIndex = prevIndex;
     };
 
+    var _AudioManager_replayBgs = AudioManager.replayBgs;
+    AudioManager.replayBgs      = function(bgs) {
+        if (!bgs) return;
+        if (Array.isArray(bgs)) {
+            this.replayAllBgs(bgs);
+        } else {
+            _AudioManager_replayBgs.apply(this, arguments);
+        }
+    };
+
+    AudioManager.replayAllBgs = function(bgsArray) {
+        this.stopAllBgs();
+        var prevIndex      = this._bgsLineIndex;
+        this._bgsLineIndex = 1;
+        bgsArray.forEach(function(bgs, index) {
+            this._bgsLineIndex = index;
+            this.replayBgs(bgs);
+        }, this);
+        this._bgsLineIndex = prevIndex;
+    };
+
     var _AudioManager_saveBgs = AudioManager.saveBgs;
     AudioManager.saveBgs      = function() {
         var bgsArray = [];
