@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.3.3 2016/01/02 色調変更を禁止しているときにイベントで色調変更した場合、すぐにリセットされてしまう問題を修正
+// 1.4.0 2017/01/07 ゲーム開始からの累計時間（分単位）を指定したゲーム変数に格納する機能を追加
+// 1.3.3 2017/01/02 色調変更を禁止しているときにイベントで色調変更した場合、すぐにリセットされてしまう問題を修正
 // 1.3.2 2016/07/24 1.3.1でロード時にエラーになる問題の修正
 // 1.3.1 2016/07/23 イベント処理中の時間経過有無をイベントごとに設定できるよう変更
 //                  一部コードのリファクタリング
@@ -87,6 +88,10 @@
  *
  * @param 分のゲーム変数
  * @desc 指定した番号のゲーム変数に「分」の値が自動設定されます。
+ * @default 0
+ *
+ * @param 累計時間のゲーム変数
+ * @desc 指定した番号のゲーム変数に「累計時間」（分単位）の値が自動設定されます。
  * @default 0
  *
  * @param 時間帯IDのゲーム変数
@@ -738,6 +743,7 @@ function Game_Chronus() {
         this._timeTurnAdd     = getParamNumber('戦闘時間加算(ターン)', 0);
         this._weekNames       = getParamArrayString('曜日配列');
         this._daysOfMonth     = getParamArrayNumber('月ごとの日数配列');
+        this._initDate        = Date.now();
         this.onLoad();
     };
 
@@ -1019,6 +1025,7 @@ function Game_Chronus() {
         this.setGameVariableSub('分のゲーム変数', this.getMinute());
         this.setGameVariableSub('時間帯IDのゲーム変数', this.getTimeZone());
         this.setGameVariableSub('天候IDのゲーム変数', this.getWeatherTypeId());
+        this.setGameVariableSub('累計時間のゲーム変数', this.getTotalTime());
     };
 
     Game_Chronus.prototype.setGameVariableSub = function (paramName, value) {
@@ -1145,5 +1152,9 @@ function Game_Chronus() {
 
     Game_Chronus.prototype.getRotationMinuteHand = function() {
         return this.getAnalogueMinute() * (360 / 60) * Math.PI / 180;
+    };
+
+    Game_Chronus.prototype.getTotalTime = function() {
+        return this.isRealTime() ? ((this._nowDate - this._initDate) / (1000 * 60)) : this._dayMeter * 24 * 60 + this._timeMeter;
     };
 })();
