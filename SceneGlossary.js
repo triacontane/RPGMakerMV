@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2017/01/10 辞書画面ごとに別々の背景を指定できる機能を追加
 // 1.9.0 2017/01/03 メニュー画面の辞書コマンドに出現条件を指定できる機能を追加
 // 1.8.0 2016/12/23 説明文の自動改行機能を追加
 // 1.7.1 2016/12/09 1.7.0で収集率が正しく表示されない問題を修正
@@ -50,6 +51,14 @@
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
  *
+ * @param BackPicture
+ * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
+ * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
  * @param CommandName2
  * @desc メニュー画面に表示される2つ目のコマンド名です。空欄にすると追加されなくなります。
  * @default
@@ -57,6 +66,14 @@
  * @param CommandSwitchId2
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
+ *
+ * @param BackPicture2
+ * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
+ * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param CommandName3
  * @desc メニュー画面に表示される3つ目のコマンド名です。空欄にすると追加されなくなります。
@@ -66,6 +83,14 @@
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
  *
+ * @param BackPicture3
+ * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
+ * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
  * @param CommandName4
  * @desc メニュー画面に表示される4つ目のコマンド名です。空欄にすると追加されなくなります。
  * @default
@@ -73,6 +98,14 @@
  * @param CommandSwitchId4
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
+ *
+ * @param BackPicture4
+ * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
+ * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param AutoAddition
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
@@ -109,14 +142,6 @@
  * @param PictureAlign
  * @desc 画像の揃えです。(left:左揃え center:中央揃え right:右揃え)
  * @default center
- *
- * @param BackPicture
- * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
- * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
- * @default
- * @require 1
- * @dir img/pictures/
- * @type file
  *
  * @param ThroughBackPicture
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
@@ -275,6 +300,14 @@
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
  *
+ * @param 背景ピクチャ
+ * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
+ * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
  * @param コマンド名称2
  * @desc メニュー画面に表示される2つ目のコマンド名です。空欄にすると追加されなくなります。
  * @default
@@ -282,6 +315,14 @@
  * @param 出現条件スイッチ2
  * @desc 辞書コマンド2の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
+ *
+ * @param 背景ピクチャ2
+ * @desc 2つ目のコマンド背景として表示するピクチャ（/img/pictures/）を指定できます。
+ * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param コマンド名称3
  * @desc メニュー画面に表示される3つ目のコマンド名です。空欄にすると追加されなくなります。
@@ -291,6 +332,14 @@
  * @desc 辞書コマンド3の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
  *
+ * @param 背景ピクチャ3
+ * @desc 3つ目のコマンド背景として表示するピクチャ（/img/pictures/）を指定できます。
+ * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
  * @param コマンド名称4
  * @desc メニュー画面に表示される4つ目のコマンド名です。空欄にすると追加されなくなります。
  * @default
@@ -298,6 +347,14 @@
  * @param 出現条件スイッチ4
  * @desc 辞書コマンド4の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
  * @default
+ *
+ * @param 背景ピクチャ4
+ * @desc 3つ目のコマンド背景として表示するピクチャ（/img/pictures/）を指定できます。
+ * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  * 
  * @param 自動登録
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
@@ -334,14 +391,6 @@
  * @param 画像の揃え
  * @desc 画像の揃えです。(left:左揃え center:中央揃え right:右揃え)
  * @default center
- *
- * @param 背景ピクチャ
- * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
- * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
- * @default
- * @require 1
- * @dir img/pictures/
- * @type file
  *
  * @param 背景ピクチャ透過
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
@@ -571,13 +620,14 @@ function Scene_Glossary() {
     //=============================================================================
     var paramCommandNames     = [];
     var paramCommandSwitchIds = [];
+    var paramBackPictures     = [];
     for (var i = 0; i < 4; i++) {
         var idString             = (i > 0 ? String(i + 1) : '');
         paramCommandNames[i]     = getParamString(['CommandName' + idString, 'コマンド名称' + idString]);
         paramCommandSwitchIds[i] = getParamNumber(['CommandSwitchId' + idString, '出現条件スイッチ' + idString]);
+        paramBackPictures[i]     = getParamString(['BackPicture' + idString, '背景ピクチャ' + idString]);
     }
     var paramCommandNamesMax    = paramCommandNames.length;
-    var paramBackPicture        = getParamString(['BackPicture', '背景ピクチャ']);
     var paramAutoAddition       = getParamBoolean(['AutoAddition', '自動登録']);
     var paramGlossaryListWidth  = getParamNumber(['GlossaryListWidth', '用語集リスト横幅'], 1);
     var paramFontSize           = getParamNumber(['FontSize', 'フォントサイズ'], 0);
@@ -962,12 +1012,13 @@ function Scene_Glossary() {
     };
 
     Scene_Glossary.prototype.createBackground = function() {
-        if (paramBackPicture) {
+        var pictureName = this.getBackPictureName();
+        if (pictureName) {
             if (paramThroughBackPicture) {
                 Scene_ItemBase.prototype.createBackground.apply(this, arguments);
             }
             var sprite    = new Sprite();
-            sprite.bitmap = ImageManager.loadPicture(paramBackPicture, 0);
+            sprite.bitmap = ImageManager.loadPicture(pictureName, 0);
             sprite.bitmap.addLoadListener(function() {
                 sprite.scale.x = Graphics.boxWidth / sprite.width;
                 sprite.scale.y = Graphics.boxHeight / sprite.height;
@@ -977,6 +1028,11 @@ function Scene_Glossary() {
         } else {
             Scene_ItemBase.prototype.createBackground.apply(this, arguments);
         }
+    };
+
+    Scene_Glossary.prototype.getBackPictureName = function() {
+        var type = $gameTemp.getGlossaryType();
+        return paramBackPictures[type - 1] || paramBackPictures[0];
     };
 
     Scene_Glossary.prototype.updateHelp = function(helpText) {
