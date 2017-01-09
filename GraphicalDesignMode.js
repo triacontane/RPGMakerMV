@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2017/01/09 カスタムウィンドウに表示する内容に揃えを指摘できる機能を追加しました。
 // 2.3.1 2016/11/30 RPGアツマールで画面がNowLoadingから進まなくなる場合がある問題を修正しました。
 // 2.3.0 2016/11/25 メッセージウィンドウの背景の表示可否を固定にできる機能を追加しました。
 // 2.2.1 2016/11/12 Macの場合、Ctrlキーの代わりにoptionキーを使用するようヘルプを追記
@@ -137,6 +138,14 @@
  * また、任意のピクチャやウィンドウを追加表示することができます。
  * 詳細はソースコードの「ユーザ書き換え領域」を参照してください。
  * 追加表示したものも、ドラッグ＆ドロップで位置を調整できます。
+ *
+ * ウィンドウに表示する内容は、以下の制御文字で揃えを変更することができます。
+ * \\AL[left]   # 左揃え(未記入の場合も左揃えになります)
+ * \\AL[0]      # 同上
+ * \\AL[center] # 中央揃え
+ * \\AL[1]      # 同上
+ * \\AL[right]  # 右揃え
+ * \\AL[2]      # 同上
  *
  * セーブした内容は「data/ContainerProperties.json」に保存されます。
  * JSONエディタ等で編集することも可能です。
@@ -1510,6 +1519,15 @@ var $dataContainerProperties = null;
         this.initialize.apply(this, arguments);
     }
 
+    Window_Custom._textAligns = {
+        'left':0,
+        '0':0,
+        'center':1,
+        '1':1,
+        'right':2,
+        '2':2
+    };
+
     Window_Custom.prototype             = Object.create(Window_Selectable.prototype);
     Window_Custom.prototype.constructor = Window_Custom;
 
@@ -1526,11 +1544,34 @@ var $dataContainerProperties = null;
 
     Window_Custom.prototype.drawItem = function(index) {
         var rect = this.itemRectForText(index);
+        var text = this._lines[index];
         this.resetTextColor();
-        this.drawTextEx(this._lines[index], rect.x, rect.y);
+        text = this.changeTextAlign(text);
+        if (this._textAlign > 0) {
+            rect.x = this.getTextAlignStartX(text);
+        }
+        this.drawTextEx(text, rect.x, rect.y);
+    };
+
+    Window_Custom.prototype.getTextAlignStartX = function(text) {
+        var width = this.drawTextEx(text, this.contentsWidth(), 0);
+        if (this._textAlign === 1) {
+            return this.contentsWidth() / 2 - width / 2;
+        } else {
+            return this.contentsWidth() - width;
+        }
     };
 
     Window_Custom.prototype.maxItems = function() {
         return this._lines.length;
+    };
+
+    Window_Custom.prototype.changeTextAlign = function(text) {
+        this._textAlign = 0;
+        text = text.replace(/\\al\[(.*)\]/gi, function() {
+            this._textAlign = Window_Custom._textAligns[arguments[1].toLowerCase()] || 0;
+            return '';
+        }.bind(this));
+        return text;
     };
 })();
