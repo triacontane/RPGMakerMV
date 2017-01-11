@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2017/01/12 プロジェクトを再保存してバージョンIDが変化した場合は動的生成イベントを復元しないよう修正
 // 1.4.1 2016/12/28 YEP_SaveEventLocations.jsとの競合を解消
 // 1.4.0 2016/12/25 最後に動的生成したイベントのイベントIDを取得できるコマンドを追加
 // 1.3.1 2016/11/08 動的イベント生成中に同一マップに場所移動するとエラーが発生する現象を修正
@@ -210,6 +211,14 @@ function Game_PrefabEvent() {
     };
 
     //=============================================================================
+    // Game_System
+    //  バージョンIDのチェックを追加します。
+    //=============================================================================
+    Game_System.prototype.isVersionIdChanged = function() {
+        return this.versionId() !== 0 && this.versionId() !== $dataSystem.versionId;
+    };
+
+    //=============================================================================
     // Game_Map
     //  イベントのスポーン処理を追加定義します。
     //=============================================================================
@@ -290,9 +299,15 @@ function Game_PrefabEvent() {
     };
 
     Game_Map.prototype.restoreLinkPrefabEvents = function() {
+        if (!this.isSameMapReload()) return;
         this.getPrefabEvents().forEach(function(prefabEvent) {
             prefabEvent.linkEventData();
         });
+    };
+
+    Game_Map.prototype.isSameMapReload = function() {
+        return (!$gamePlayer.isTransferring() || this.mapId() === $gamePlayer.newMapId()) &&
+            !$gameSystem.isVersionIdChanged();
     };
 
     Game_Map.prototype.getConditionalValidPosition = function(conditions) {
@@ -490,13 +505,7 @@ function Game_PrefabEvent() {
     var _DataManager_onLoad = DataManager.onLoad;
     DataManager.onLoad      = function(object) {
         _DataManager_onLoad.apply(this, arguments);
-        if (object === $dataMap && $gameMap) this.restoreLinkPrefabEvents();
-    };
-
-    DataManager.restoreLinkPrefabEvents = function() {
-        if (!$gamePlayer.isTransferring() || $gameMap.mapId() === $gamePlayer.newMapId()) {
-            $gameMap.restoreLinkPrefabEvents();
-        }
+        if (object === $dataMap && $gameMap) $gameMap.restoreLinkPrefabEvents();
     };
 })();
 
