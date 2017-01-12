@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.2.0 2016/11/27 反撃スキルIDを複数設定できる機能を追加。条件に応じたスキルで反撃します。
 // 1.1.0 2016/11/20 特定のスキルによる反撃や反撃条件を細かく指定できる機能を追加
 // 1.0.0 2016/11/15 初版
@@ -217,7 +218,7 @@ var Imported = Imported || {};
     };
 
     const convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (text == null || text === true) text = '';
         text = text.replace(/&gt;?/gi, '>');
         text = text.replace(/&lt;?/gi, '<');
         const windowLayer = SceneManager._scene._windowLayer;

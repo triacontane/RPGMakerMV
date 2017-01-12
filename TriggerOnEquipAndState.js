@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.4.0 2016/07/27 スイッチにも設定値タグを付けられるよう修正
 // 1.3.2 2016/07/14 「武器(防具)の増減」によって装備が外れた場合に対応
 // 1.3.1 2016/07/14 1.3.0で敵を倒した際にエラーになる現象の修正
@@ -118,7 +119,7 @@
     };
 
     var convertEscapeCharactersAndEval = function(text, evalFlg) {
-        if (text == null) text = '';
+        if (text == null || text === true) text = '';
         text = text.replace(/&gt;?/gi, '>');
         text = text.replace(/&lt;?/gi, '<');
         text = text.replace(/\\/g, '\x1b');

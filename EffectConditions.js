@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.0.1 2017/01/01 YEP_BattleEngineCore.js用の対策コードを追記
 // 1.0.0 2017/01/01 初版
 // ----------------------------------------------------------------------------
@@ -107,7 +108,7 @@
     };
 
     const convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (text == null || text === true) text = '';
         text = text.replace(/&gt;?/gi, '>');
         text = text.replace(/&lt;?/gi, '<');
         const windowLayer = SceneManager._scene._windowLayer;

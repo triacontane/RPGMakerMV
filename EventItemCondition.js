@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.0.0 2016/09/16 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -108,7 +109,7 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (text == null || text === true) text = '';
         text = text.replace(/&gt;?/gi, '>');
         text = text.replace(/&lt;?/gi, '<');
         var windowLayer = SceneManager._scene._windowLayer;

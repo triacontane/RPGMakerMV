@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.1.0 2016/06/15 スクリプト「data」で対象のオブジェクトを参照できる機能を追加
 //                  スクリプト評価時にエラーになった場合に異常終了しないよう修正
 // 1.0.1 2016/05/25 スクリプトに「>」「<」を使えるように修正
@@ -80,7 +81,7 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (text == null || text === true) text = '';
         text = text.replace(/&gt;?/gi, '>');
         text = text.replace(/&lt;?/gi, '<');
         text = text.replace(/\\/g, '\x1b');

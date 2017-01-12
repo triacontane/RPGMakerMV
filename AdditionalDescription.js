@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.1.3 2016/09/20 説明文の文字に「>」「<」を表示できるようエスケープ処理を追加
 // 1.1.2 2016/09/07 同じ説明文のアイテムが連続していたときに切り替えメッセージが表示されない問題を修正
 // 1.1.1 2016/09/06 親のウィンドウがアクティブなときのみ操作できるよう修正
@@ -155,7 +156,7 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (text == null || text === true) text = '';
         text = text.replace(/&gt;?/gi, '>');
         text = text.replace(/&lt;?/gi, '<');
         var windowLayer = SceneManager._scene._windowLayer;
