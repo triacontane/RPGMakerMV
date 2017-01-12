@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.3 2017/01/12 1.4.2の対策に漏れがあったため再修正
 // 1.4.2 2017/01/12 プロジェクトを再保存してバージョンIDが変化した場合は動的生成イベントを復元しないよう修正
 // 1.4.1 2016/12/28 YEP_SaveEventLocations.jsとの競合を解消
 // 1.4.0 2016/12/25 最後に動的生成したイベントのイベントIDを取得できるコマンドを追加
@@ -211,14 +212,6 @@ function Game_PrefabEvent() {
     };
 
     //=============================================================================
-    // Game_System
-    //  バージョンIDのチェックを追加します。
-    //=============================================================================
-    Game_System.prototype.isVersionIdChanged = function() {
-        return this.versionId() !== 0 && this.versionId() !== $dataSystem.versionId;
-    };
-
-    //=============================================================================
     // Game_Map
     //  イベントのスポーン処理を追加定義します。
     //=============================================================================
@@ -306,8 +299,7 @@ function Game_PrefabEvent() {
     };
 
     Game_Map.prototype.isSameMapReload = function() {
-        return (!$gamePlayer.isTransferring() || this.mapId() === $gamePlayer.newMapId()) &&
-            !$gameSystem.isVersionIdChanged();
+        return !$gamePlayer.isTransferring() || this.mapId() === $gamePlayer.newMapId();
     };
 
     Game_Map.prototype.getConditionalValidPosition = function(conditions) {
@@ -373,6 +365,19 @@ function Game_PrefabEvent() {
 
     Game_CharacterBase.prototype.isExtinct = function() {
         return this.isPrefab() && this._erased;
+    };
+
+    //=============================================================================
+    // Game_Event
+    //   イベントの参照先が失われた場合は消去します。
+    //=============================================================================
+    var _Game_Event_findProperPageIndex = Game_Event.prototype.findProperPageIndex;
+    Game_Event.prototype.findProperPageIndex = function() {
+        if (!this.event()) {
+            this.erase();
+            return - 1;
+        }
+        return _Game_Event_findProperPageIndex.apply(this, arguments);
     };
 
     //=============================================================================
