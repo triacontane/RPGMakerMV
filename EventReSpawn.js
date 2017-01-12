@@ -217,6 +217,9 @@ function Game_PrefabEvent() {
     //=============================================================================
     var _Game_Map_setupEvents      = Game_Map.prototype.setupEvents;
     Game_Map.prototype.setupEvents = function() {
+        if ($gamePlayer.isNeedMapReload()) {
+            this.unlinkPrefabEvents();
+        }
         _Game_Map_setupEvents.apply(this, arguments);
         this._eventIdSequence = this._events.length;
     };
@@ -298,6 +301,12 @@ function Game_PrefabEvent() {
         });
     };
 
+    Game_Map.prototype.unlinkPrefabEvents = function() {
+        this.getPrefabEvents().forEach(function(prefabEvent) {
+            prefabEvent.unlinkEventData();
+        });
+    };
+
     Game_Map.prototype.isSameMapReload = function() {
         return !$gamePlayer.isTransferring() || this.mapId() === $gamePlayer.newMapId();
     };
@@ -368,19 +377,6 @@ function Game_PrefabEvent() {
     };
 
     //=============================================================================
-    // Game_Event
-    //   イベントの参照先が失われた場合は消去します。
-    //=============================================================================
-    var _Game_Event_findProperPageIndex = Game_Event.prototype.findProperPageIndex;
-    Game_Event.prototype.findProperPageIndex = function() {
-        if (!this.event()) {
-            this.erase();
-            return - 1;
-        }
-        return _Game_Event_findProperPageIndex.apply(this, arguments);
-    };
-
-    //=============================================================================
     // Game_PrefabEvent
     //  動的に生成されるイベントオブジェクトです。
     //=============================================================================
@@ -408,6 +404,10 @@ function Game_PrefabEvent() {
             $dataTemplateEvents[this._originalEventId] : $dataMap.events[this._originalEventId]);
     };
 
+    Game_PrefabEvent.prototype.unlinkEventData = function() {
+        $dataMap.events[this._eventId] = null;
+    };
+
     Game_PrefabEvent.prototype.isPrefab = function() {
         return true;
     };
@@ -431,6 +431,14 @@ function Game_PrefabEvent() {
             var key = [this._mapId, this._eventId, swCode];
             $gameSelfSwitches.setValue(key, undefined);
         }.bind(this));
+    };
+
+    //=============================================================================
+    // Game_Player
+    //  プロジェクト再保存によるマップリロードかどうかの判定を取得します。
+    //=============================================================================
+    Game_Player.prototype.isNeedMapReload = function() {
+        return this._needsMapReload;
     };
 
     //=============================================================================
