@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.4 2017/01/13 動的イベントの一時消去時にバルーンやアニメーションを表示中だった場合に表示が残ってしまう問題を修正
 // 1.4.3 2017/01/12 1.4.2の対策に漏れがあったため再修正
 // 1.4.2 2017/01/12 プロジェクトを再保存してバージョンIDが変化した場合は動的生成イベントを復元しないよう修正
 // 1.4.1 2016/12/28 YEP_SaveEventLocations.jsとの競合を解消
@@ -457,6 +458,21 @@ function Game_PrefabEvent() {
         return this._character.isExtinct();
     };
 
+    Sprite_Character.prototype.endAllEffect = function() {
+        this.endBalloon();
+        this.endAnimation();
+    };
+
+    Sprite_Character.prototype.endAnimation = function() {
+        if (this._animationSprites.length > 0) {
+            var sprites = this._animationSprites.clone();
+            this._animationSprites = [];
+            sprites.forEach(function(sprite) {
+                sprite.remove();
+            });
+        }
+    };
+
     //=============================================================================
     // Spriteset_Map
     //  プレハブイベントのスプライトを管理します。
@@ -498,6 +514,7 @@ function Game_PrefabEvent() {
     Spriteset_Map.prototype.removePrefabEventSprite = function(index) {
         var sprite = this._characterSprites[index];
         this._characterSprites.splice(index, 1);
+        sprite.endAllEffect();
         this._tilemap.removeChild(sprite);
     };
 
@@ -507,8 +524,10 @@ function Game_PrefabEvent() {
     //=============================================================================
     var _Scene_Map_create      = Scene_Map.prototype.create;
     Scene_Map.prototype.create = function() {
-        $gameMap.resetSelfSwitchForPrefabEvent();
         _Scene_Map_create.apply(this, arguments);
+        if (this._transfer) {
+            $gameMap.resetSelfSwitchForPrefabEvent();
+        }
     };
 
     //=============================================================================
