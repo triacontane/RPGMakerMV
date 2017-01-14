@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/01/14 ステート自動付与の条件に計算式を適用できる機能を追加
+//                  処理の軽量化
 // 1.1.2 2016/06/03 スペルミス修正
 // 1.1.1 2016/05/23 条件式で割合を算出する際に端数を切り捨てるよう修正
 // 1.1.0 2016/05/22 複数の条件を適用できるよう修正
@@ -46,6 +48,13 @@
  *     指定した武器を装備している間、対象ステートを付与する。
  * <ASスイッチ:（スイッチID）>
  *     指定したスイッチがONになっている間、対象ステートを付与する。
+ * <AS計算式:（JS計算式）>
+ *     指定したJavaScript計算式がtrueの間、対象ステートを付与する。
+ *
+ * 計算式中で不等号を使いたい場合、以下のように記述してください。
+ * < → &lt;
+ * > → &gt;
+ * 例：<AS計算式:\v[2] &gt; 1> // 変数[2]が1より大きい場合
  *
  * 2. 自動付与ステートの対象
  * <ASアクター:（アクターID）>
@@ -73,18 +82,36 @@
 
 (function () {
     'use strict';
-    var pluginName = 'AutomaticState';
+    const metaTagPrefix = 'AS';
 
     var getArgNumber = function (arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+        return (parseInt(convertEscapeCharacters(arg)) || 0).clamp(min, max);
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var window = SceneManager._scene._windowLayer ? SceneManager._scene._windowLayer.children[0] : null;
-        return window ? window.convertEscapeCharacters(text) : text;
+        if (text == null || text === true) text = '';
+        text = text.replace(/&gt;?/gi, '>');
+        text = text.replace(/&lt;?/gi, '<');
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            const actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            const actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     if (!Object.prototype.hasOwnProperty('isEmpty')) {
@@ -120,7 +147,7 @@
     //  自動付与ステートの更新処理を定義します。
     //=============================================================================
     Game_BattlerBase.prototype.updateAutomaticState = function() {
-        $dataStates.forEach(function(state) {
+        DataManager.iterateAutomaticState(function(state) {
             if (state == null || state.meta.isEmpty()) return;
             var stateId = state.id;
             var result = this.isAutomaticValid(state);
@@ -145,7 +172,7 @@
 
     Game_BattlerBase.prototype.isAutomaticValid = function(state, result) {
         this._automaticTargetState = state;
-        var switchId = this.getStateMetaNumber('スイッチ', 1, $dataSystem.switches.length - 1);
+        var switchId = this.getStateMetaNumber(0, 1);
         if (switchId !== null) {
             if ($gameSwitches.value(switchId)) {
                 result = true;
@@ -153,7 +180,15 @@
                 return false;
             }
         }
-        var upperLimitHp = this.getStateMetaNumber('上限HP', 0, 100);
+        var formula = this.getStateMetaString(1);
+        if (formula !== null) {
+            if (eval(formula)) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
+        var upperLimitHp = this.getStateMetaNumber(2, 0, 100);
         if (upperLimitHp !== null) {
             if (Math.floor(this.hpRate() * 100) >= upperLimitHp) {
                 result = true;
@@ -161,7 +196,7 @@
                 return false;
             }
         }
-        var lowerLimitHp = this.getStateMetaNumber('下限HP', 0, 100);
+        var lowerLimitHp = this.getStateMetaNumber(3, 0, 100);
         if (lowerLimitHp !== null) {
             if (Math.floor(this.hpRate() * 100) <= lowerLimitHp) {
                 result = true;
@@ -169,7 +204,7 @@
                 return false;
             }
         }
-        var upperLimitMp = this.getStateMetaNumber('上限MP', 0, 100);
+        var upperLimitMp = this.getStateMetaNumber(4, 0, 100);
         if (upperLimitMp !== null) {
             if (Math.floor(this.mpRate() * 100) >= upperLimitMp) {
                 result = true;
@@ -177,7 +212,7 @@
                 return false;
             }
         }
-        var lowerLimitMp = this.getStateMetaNumber('下限MP', 0, 100);
+        var lowerLimitMp = this.getStateMetaNumber(5, 0, 100);
         if (lowerLimitMp !== null) {
             if (Math.floor(this.mmp > 0 && this.mpRate()) * 100 <= lowerLimitMp) {
                 result = true;
@@ -185,7 +220,7 @@
                 return false;
             }
         }
-        var upperLimitTp = this.getStateMetaNumber('上限TP', 0, 100);
+        var upperLimitTp = this.getStateMetaNumber(6, 0, 100);
         if (upperLimitTp !== null) {
             if (Math.floor(this.tpRate() * 100) >= upperLimitTp) {
                 result = true;
@@ -193,7 +228,7 @@
                 return false;
             }
         }
-        var lowerLimitTp = this.getStateMetaNumber('下限TP', 0, 100);
+        var lowerLimitTp = this.getStateMetaNumber(7, 0, 100);
         if (lowerLimitTp !== null) {
             if (Math.floor(this.tpRate() * 100) <= lowerLimitTp) {
                 result = true;
@@ -204,13 +239,18 @@
         return result;
     };
 
-    Game_BattlerBase.prototype.getStateMetaNumber = function(tagName, min, max) {
-        var value = this._automaticTargetState.meta['AS' + tagName];
+    Game_BattlerBase.prototype.getStateMetaNumber = function(tagIndex, min, max) {
+        var value = this._automaticTargetState.meta[DataManager.getAutomaticTagName(tagIndex)];
         return value != null ? getArgNumber(value, min, max) : null;
     };
 
-    Game_BattlerBase.prototype.isStateMetaInfo = function(tagName) {
-        return this._automaticTargetState.meta.hasOwnProperty('AS' + tagName);
+    Game_BattlerBase.prototype.getStateMetaString = function(tagIndex) {
+        var value = this._automaticTargetState.meta[DataManager.getAutomaticTagName(tagIndex)];
+        return value != null ? convertEscapeCharacters(value) : null;
+    };
+
+    Game_BattlerBase.prototype.isStateMetaInfo = function(tagIndex) {
+        return this._automaticTargetState.meta.hasOwnProperty(DataManager.getAutomaticTagName(tagIndex));
     };
 
     var _Game_BattlerBase_setHp = Game_BattlerBase.prototype.setHp;
@@ -238,9 +278,9 @@
     Game_Actor.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
         var result = null;
-        var actorId = this.getStateMetaNumber('アクター', 0, $dataActors.length - 1);
-        if (this.isStateMetaInfo('敵キャラ') || (actorId > 0 && actorId !== this._actorId)) return false;
-        var weaponId = this.getStateMetaNumber('武器装備', 1, $dataWeapons.length - 1);
+        var actorId = this.getStateMetaNumber(8, 0);
+        if (this.isStateMetaInfo(9) || (actorId > 0 && actorId !== this._actorId)) return false;
+        var weaponId = this.getStateMetaNumber(10, 1);
         if (weaponId !== null) {
             if (this.hasWeapon($dataWeapons[weaponId])) {
                 result = true;
@@ -248,7 +288,7 @@
                 return false;
             }
         }
-        var armorId = this.getStateMetaNumber('防具装備', 1, $dataArmors.length - 1);
+        var armorId = this.getStateMetaNumber(11, 1);
         if (armorId !== null) {
             if (this.hasArmor($dataArmors[armorId])) {
                 result = true;
@@ -271,8 +311,8 @@
     //=============================================================================
     Game_Enemy.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
-        var enemyId = this.getStateMetaNumber('敵キャラ', 0, $dataEnemies.length - 1);
-        if (this.isStateMetaInfo('アクター') || (enemyId > 0 && enemyId !== this._enemyId)) return false;
+        var enemyId = this.getStateMetaNumber(9, 0);
+        if (this.isStateMetaInfo(8) || (enemyId > 0 && enemyId !== this._enemyId)) return false;
         return Game_BattlerBase.prototype.isAutomaticValid.call(this, state, null);
     };
 
@@ -296,14 +336,10 @@
         $gameParty.updateAutomaticState();
     };
 
-    //=============================================================================
-    // Game_Interpreter
-    //  イベント終了時に自動付与ステートを更新します。
-    //=============================================================================
-    var _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
-    Game_Interpreter.prototype.terminate = function() {
-        _Game_Interpreter_terminate.apply(this, arguments);
-        if (this._depth === 0) $gameParty.updateAutomaticState();
+    var _Game_Map_refresh = Game_Map.prototype.refresh;
+    Game_Map.prototype.refresh = function() {
+        _Game_Map_refresh.apply(this, arguments);
+        $gameParty.updateAutomaticState();
     };
 
     //=============================================================================
@@ -321,5 +357,47 @@
             if (value === stateId) this.addedStates.splice(index, 1);
         }.bind(this));
     };
-})();
 
+    //=============================================================================
+    // DataManager
+    //  データベースのロード時に自動付与ステートのみを抽出します。
+    //=============================================================================
+    DataManager._automaticTagNames = [
+        'スイッチ',
+        '計算式',
+        '上限HP',
+        '下限HP',
+        '上限MP',
+        '下限MP',
+        '上限TP',
+        '下限TP',
+        'アクター',
+        '敵キャラ',
+        '武器装備',
+        '防具装備'
+    ];
+
+    var _DataManager_onLoad = DataManager.onLoad;
+    DataManager.onLoad = function(object) {
+        _DataManager_onLoad.apply(this, arguments);
+        if (object === $dataStates) {
+            this.setupAutomaticState();
+        }
+    };
+
+    DataManager.setupAutomaticState = function() {
+        this._automaticStates = $dataStates.filter(function(state) {
+            return this._automaticTagNames.some(function(tagName) {
+                return state && !!state.meta[metaTagPrefix + tagName];
+            })
+        }.bind(this));
+    };
+
+    DataManager.iterateAutomaticState = function(callBackFunc) {
+        this._automaticStates.forEach(callBackFunc);
+    };
+
+    DataManager.getAutomaticTagName = function(index) {
+        return metaTagPrefix + this._automaticTagNames[index];
+    };
+})();

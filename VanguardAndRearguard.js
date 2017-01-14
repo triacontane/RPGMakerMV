@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/01/14 敵キャラの前衛、後衛ステートアイコンを非表示にできる機能を追加
 // 1.2.2 2016/10/25 後衛の敵キャラが逃走したときに位置が元に戻ってしまう現象を修正
 // 1.2.1 2016/10/25 前衛・後衛の位置補正値に負の値を設定できるよう修正
 // 1.2.0 2016/09/15 特定のキャラクターに対するチェンジを禁止する設定を追加
@@ -26,11 +27,11 @@
  *
  * @param VanguardStateId
  * @desc State ID of vanguard.
- * @default 2
+ * @default 4
  *
  * @param RearguardStateId
  * @desc State ID of rearguard.
- * @default 3
+ * @default 5
  *
  * @param ChangeInMenu
  * @desc Changeable formation in menu screen.
@@ -55,6 +56,10 @@
  * @param ChangeSpeed
  * @desc Move speed of formation change.
  * @default 8
+ *
+ * @param HiddenIcon
+ * @desc 敵キャラの前衛、後衛のステートアイコンを非表示にします。（アクターのアイコンは表示されます）
+ * @default OFF
  *
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
@@ -108,11 +113,11 @@
  *
  * @param 前衛ステートID
  * @desc 前衛のステートIDです。
- * @default 2
+ * @default 4
  *
  * @param 後衛ステートID
  * @desc 後衛のステートIDです。
- * @default 3
+ * @default 5
  *
  * @param メニューチェンジ可能
  * @desc メニュー画面で前衛・後衛の切り替えが可能になります。
@@ -137,6 +142,10 @@
  * @param チェンジ速度
  * @desc 戦闘中にチェンジした場合のグラフィックの移動速度です。
  * @default 8
+ *
+ * @param アイコン非表示
+ * @desc 敵キャラの前衛、後衛のステートアイコンを非表示にします。（アクターのアイコンは表示されます）
+ * @default OFF
  *
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
@@ -266,6 +275,7 @@
     var paramRearguardOffsetY = getParamNumber(['RearguardOffsetY', '後衛時Y補正']);
     var paramChangeSpeed      = getParamNumber(['ChangeSpeed', 'チェンジ速度'], 1);
     var paramRearDefense      = getParamBoolean(['RearDefense', '後衛防御']);
+    var paramHiddenIcon       = getParamBoolean(['HiddenIcon', 'アイコン非表示']);
 
     //=============================================================================
     // Game_Interpreter
@@ -408,7 +418,7 @@
         }
     };
 
-    var _Game_Battler_escape = Game_Battler.prototype.escape;
+    var _Game_Battler_escape      = Game_Battler.prototype.escape;
     Game_Battler.prototype.escape = function() {
         var prevVanguard = this.isVanguard();
         _Game_Battler_escape.apply(this, arguments);
@@ -449,6 +459,25 @@
 
     Game_Enemy.prototype.getFormationOffsetX = function() {
         return Game_BattlerBase.prototype.getFormationOffsetX.call(this) * ($gameSystem.isSideView() ? -1 : 1);
+    };
+
+    Game_Enemy.prototype.stateIcons = function() {
+        var icons = Game_BattlerBase.prototype.stateIcons.apply(this, arguments);
+        return paramHiddenIcon ? this.filterFormationIcon(icons) : icons;
+    };
+
+    Game_Enemy.prototype.filterFormationIcon = function(icons) {
+        var vanguardState = $dataStates[paramVanguardStateId];
+        var rearguardState = $dataStates[paramRearguardStateId];
+        return icons.filter(function(iconIndex) {
+            if (vanguardState && vanguardState.iconIndex === iconIndex) {
+                return false;
+            }
+            if (rearguardState && rearguardState.iconIndex === iconIndex) {
+                return false;
+            }
+            return true;
+        })
     };
 
     //=============================================================================
