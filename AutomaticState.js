@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/01/17 1.2.0でスイッチの項目が正しく機能しなかった問題を修正
 // 1.2.0 2017/01/14 ステート自動付与の条件に計算式を適用できる機能を追加
 //                  処理の軽量化
 // 1.1.2 2016/06/03 スペルミス修正
@@ -241,6 +242,8 @@
 
     Game_BattlerBase.prototype.getStateMetaNumber = function(tagIndex, min, max) {
         var value = this._automaticTargetState.meta[DataManager.getAutomaticTagName(tagIndex)];
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
         return value != null ? getArgNumber(value, min, max) : null;
     };
 
