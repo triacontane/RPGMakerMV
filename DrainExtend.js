@@ -21,20 +21,24 @@
  * @desc 吸収成功時に回復効果音を演奏します。
  * @default OFF
  *
- * @help ダメージのHP吸収およびMP吸収の仕様を以下の通り拡張します。
- * 1. 吸収率を指定した与えたダメージのN%回復などが可能
- * 2. HPダメージに対してMPを回復することが可能(またはその逆)
- * 3. 通常ダメージ時のメッセージと効果音に変更可能
- * 4. ダメージ上限が相手の残HPになる吸収の仕様を撤廃可能
+ * @help ダメージタイプの「HP吸収」および「MP吸収」の仕様を拡張します。
+ * 1. 吸収率を指定して与えたダメージのN%回復をなどが可能
+ * 2. HPダメージに対してMPやTPを追加で回復することが可能
+ * 3. MPダメージに対してHPやTPを追加で回復することが可能
+ * 4. 通常ダメージ時のメッセージと効果音に変更可能
+ * 5. HP吸収の上限が相手の残HPになる吸収の仕様を撤廃可能
  *
- * スキルのメモ欄に以下の通り記述してください。
+ * スキルもしくはアイテムのダメージタイプを「HP吸収」もしくは「MP吸収」
+ * にしてからメモ欄に以下の通り記述してください。
  * <DE_HP吸収率:150>     # HPの吸収率が[150]%になります。
  * <DE_PercentageHP:150> # 同上
  * <DE_MP吸収率:50>      # MPの吸収率が[50]%になります。
  * <DE_PercentageMP:50>  # 同上
- * <DE_攻撃メッセージ>   # メッセージが攻撃メッセージになります。
+ * <DE_TP吸収率:50>      # TPの吸収率が[50]%になります。
+ * <DE_PercentageTP:50>  # 同上
+ * <DE_攻撃メッセージ>   # メッセージが攻撃時メッセージになります。
  * <DE_AttackMessage>    # 同上
- * <DE_上限突破>         # ダメージが相手の残HPを超えるようになります。
+ * <DE_上限突破>         # HP吸収が相手の残HPを超えるようになります。
  * <DE_LimitOver>        # 同上
  *
  * ※1 HP吸収に対してMPのみ回復させたい場合、HPの吸収率を0に指定してください。
@@ -51,20 +55,24 @@
  * @desc 吸収成功時に回復効果音を演奏します。
  * @default OFF
  *
- * @help ダメージのHP吸収およびMP吸収の仕様を以下の通り拡張します。
- * 1. 吸収率を指定した与えたダメージのN%回復などが可能
- * 2. HPダメージに対してMPを回復することが可能(またはその逆)
- * 3. 通常ダメージ時のメッセージと効果音に変更可能
- * 4. ダメージ上限が相手の残HPになる吸収の仕様を撤廃可能
- * 
- * スキルのメモ欄に以下の通り記述してください。
+ * @help ダメージタイプの「HP吸収」および「MP吸収」の仕様を拡張します。
+ * 1. 吸収率を指定して与えたダメージのN%回復をなどが可能
+ * 2. HPダメージに対してMPやTPを追加で回復することが可能
+ * 3. MPダメージに対してHPやTPを追加で回復することが可能
+ * 4. 通常ダメージ時のメッセージと効果音に変更可能
+ * 5. HP吸収の上限が相手の残HPになる吸収の仕様を撤廃可能
+ *
+ * スキルもしくはアイテムのダメージタイプを「HP吸収」もしくは「MP吸収」
+ * にしてからメモ欄に以下の通り記述してください。
  * <DE_HP吸収率:150>     # HPの吸収率が[150]%になります。
  * <DE_PercentageHP:150> # 同上
  * <DE_MP吸収率:50>      # MPの吸収率が[50]%になります。
  * <DE_PercentageMP:50>  # 同上
- * <DE_攻撃メッセージ>   # メッセージが攻撃メッセージになります。
+ * <DE_TP吸収率:50>      # TPの吸収率が[50]%になります。
+ * <DE_PercentageTP:50>  # 同上
+ * <DE_攻撃メッセージ>   # メッセージが攻撃時メッセージになります。
  * <DE_AttackMessage>    # 同上
- * <DE_上限突破>         # ダメージが相手の残HPを超えるようになります。
+ * <DE_上限突破>         # HP吸収が相手の残HPを超えるようになります。
  * <DE_LimitOver>        # 同上
  *
  * ※1 HP吸収に対してMPのみ回復させたい場合、HPの吸収率を0に指定してください。
@@ -150,12 +158,19 @@
         return getMetaValues(this.item(), paramNames);
     };
 
-    Game_Action.prototype.getHpDrainRate = function() {
-        return getArgNumber(this.getDrainExtendMeta(['PercentageHP', 'HP吸収率']), 0);
+    Game_Action.prototype.getHpDrainRate = function(original) {
+        var rate = getArgNumber(this.getDrainExtendMeta(['PercentageHP', 'HP吸収率']), 0);
+        return rate !== undefined ? rate / 100 : (original ? 1 : undefined);
     };
 
-    Game_Action.prototype.getMpDrainRate = function() {
-        return getArgNumber(this.getDrainExtendMeta(['PercentageMP', 'MP吸収率']), 0);
+    Game_Action.prototype.getMpDrainRate = function(original) {
+        var rate =  getArgNumber(this.getDrainExtendMeta(['PercentageMP', 'MP吸収率']), 0);
+        return rate !== undefined ? rate / 100 : (original ? 1 : undefined);
+    };
+
+    Game_Action.prototype.getTpDrainRate = function() {
+        var rate =  getArgNumber(this.getDrainExtendMeta(['PercentageTP', 'TP吸収率']), 0);
+        return rate !== undefined ? rate / 100 : undefined;
     };
 
     Game_Action.prototype.isDrainMessageAttack = function() {
@@ -178,39 +193,41 @@
         _Game_Action_executeHpDamage.apply(this, arguments);
     };
 
-    var _Game_Action_executeMpDamage = Game_Action.prototype.executeMpDamage;
-    Game_Action.prototype.executeMpDamage = function(target, value) {
-        if (this.isDrainLimitOver()) this._temporaryDisableDrain = true;
-        _Game_Action_executeMpDamage.apply(this, arguments);
-    };
-
     var _Game_Action_gainDrainedHp = Game_Action.prototype.gainDrainedHp;
     Game_Action.prototype.gainDrainedHp = function(value) {
-        var rate = this.getHpDrainRate();
-        if (rate !== undefined) {
-            arguments[0] = value * rate / 100;
-        }
-        if (arguments[0] !== 0) {
-            _Game_Action_gainDrainedHp.apply(this, arguments);
-        }
-        var mpRate = this.getMpDrainRate();
-        if (mpRate !== undefined) {
-            _Game_Action_gainDrainedMp.call(this, value * mpRate / 100);
-        }
+        this.gainDrainedParam(value, 'hp');
     };
 
     var _Game_Action_gainDrainedMp = Game_Action.prototype.gainDrainedMp;
     Game_Action.prototype.gainDrainedMp = function(value) {
-        var rate = this.getMpDrainRate();
-        if (rate !== undefined) {
-            arguments[0] = value * rate / 100;
-        }
-        if (arguments[0]) {
-            _Game_Action_gainDrainedMp.apply(this, arguments);
-        }
-        var hpRate = this.getHpDrainRate();
+        this.gainDrainedParam(value, 'mp');
+    };
+
+    Game_Action.prototype.gainDrainedParam = function(value, originalType) {
+        var hpRate = this.getHpDrainRate(originalType === 'hp');
         if (hpRate !== undefined) {
-            _Game_Action_gainDrainedHp.call(this, value * hpRate / 100);
+            var hpValue = Math.floor(value * hpRate);
+            if (hpValue !== 0) _Game_Action_gainDrainedHp.call(this, hpValue);
+        }
+        var mpRate = this.getMpDrainRate(originalType === 'mp');
+        if (mpRate !== undefined) {
+            var mpValue = Math.floor(value * mpRate);
+            if (mpValue !== 0) _Game_Action_gainDrainedMp.call(this, mpValue);
+        }
+        var tpRate = this.getTpDrainRate();
+        if (tpRate !== undefined) {
+            var tpValue = Math.floor(value * tpRate);
+            if (tpValue !== 0) this.gainDrainedTp(tpValue);
+        }
+    };
+
+    Game_Action.prototype.gainDrainedTp = function(value) {
+        if (this.isDrain()) {
+            var gainTarget = this.subject();
+            if (this._reflectionTarget !== undefined) {
+                gainTarget = this._reflectionTarget;
+            }
+            gainTarget.gainTp(value);
         }
     };
 
