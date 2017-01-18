@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/01/19 イベント生成の際にIDだけでなくイベント名の一致するイベントを動的生成できる機能を追加
 // 1.4.4 2017/01/13 動的イベントの一時消去時にバルーンやアニメーションを表示中だった場合に表示が残ってしまう問題を修正
 // 1.4.3 2017/01/12 1.4.2の対策に漏れがあったため再修正
 // 1.4.2 2017/01/12 プロジェクトを再保存してバージョンIDが変化した場合は動的生成イベントを復元しないよう修正
@@ -43,6 +44,15 @@
  * ERS_MAKE 1 5 10 # 同上
  *
  * イベントIDを「0」にすると実行中のイベント（このイベント）を複製します。
+ *
+ * ●追加機能●
+ * イベントIDに「文字列」を指定するとイベント名が一致するイベントを
+ * 複製対象にします。(対象が複数存在する場合は一番小さいIDになります)
+ *
+ * ERS_生成 aaa 5 10 # イベント名[aaa]のイベントをコピーしてX[5] Y[10]に配置
+ * ERS_MAKE aaa 5 10 # 同上
+ *
+ * 他のプラグインコマンドも同様です。
  *
  * 生成位置をランダムにすることもできます。ただのランダムではなく
  * 以下の補助条件を指定したうえでのランダムです。
@@ -146,6 +156,24 @@ function Game_PrefabEvent() {
     };
 
     //=============================================================================
+    // DataManager
+    //  データ検索用の共通処理です。
+    //=============================================================================
+    if (!DataManager.searchDataItem) {
+        DataManager.searchDataItem = function(dataArray, columnName, columnValue) {
+            var result = 0;
+            dataArray.some(function(dataItem) {
+                if (dataItem && dataItem[columnName] === columnValue) {
+                    result = dataItem;
+                    return true;
+                }
+                return false;
+            });
+            return result;
+        };
+    }
+
+    //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
@@ -179,7 +207,7 @@ function Game_PrefabEvent() {
             case 'MAKE' :
                 var x = getArgNumber(args[1]);
                 var y = getArgNumber(args[2]);
-                $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args[0]), x, y, extend);
+                $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args[0], extend), x, y, extend);
                 break;
             case 'ランダム生成' :
             case 'MAKE_RANDOM' :
@@ -189,7 +217,7 @@ function Game_PrefabEvent() {
                 conditionMap.collided   = getArgNumber(args[3], 0);
                 conditionMap.terrainTag = getArgNumber(args[4], 0);
                 conditionMap.regionId   = getArgNumber(args[5], 0);
-                $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0]), conditionMap, extend);
+                $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0], extend), conditionMap, extend);
                 break;
             case 'テンプレート生成' :
             case 'MAKE_TEMPLATE' :
@@ -207,8 +235,14 @@ function Game_PrefabEvent() {
         }
     };
 
-    Game_Interpreter.prototype.getEventIdForEventReSpawn = function(arg) {
-        var id = getArgNumber(arg, 0);
+    Game_Interpreter.prototype.getEventIdForEventReSpawn = function(arg, isTemplate) {
+        var id = 0;
+        if (!isNaN(Number(arg))) {
+            id = getArgNumber(arg, 0);
+        } else {
+            var event = DataManager.searchDataItem(isTemplate ? $dataTemplateEvents : $dataMap.events, 'name', arg);
+            id = event ? event.id : 0;
+        }
         return id > 0 ? id : this._eventId;
     };
 
