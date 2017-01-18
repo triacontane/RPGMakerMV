@@ -343,6 +343,13 @@
         }.bind(this));
     };
 
+    var _AudioManager_fadeOutBgs = AudioManager.fadeOutBgs;
+    AudioManager.fadeOutBgs      = function(time) {
+        this.iterateAllBgs(function() {
+            _AudioManager_fadeOutBgs.call(this, time);
+        }.bind(this));
+    };
+
     AudioManager.iterateAllBgs = function(callBack) {
         var prevIndex = this._bgsLineIndex;
         Object.keys(this._allBgsBuffer).forEach(function(index) {
