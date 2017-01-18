@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/01/19 設定値に入れた小数点以下の値が切り捨てられていた問題を修正
 // 1.1.0 2016/08/15 コード整形、ドロップアイテムにドロップアイテムIDの定義が抜けていたのを修正
 // 1.0.2 2016/05/16 特徴と効果にデータIDの定義を追加
 // 1.0.1 2016/01/03 iterateとisEmptyが重複定義されないよう対応
@@ -271,7 +272,7 @@ DynamicDatabaseManager._makePropertyFormula = function(parent, key, child, metaT
             try {
                 var prev   = child, 元の値 = child;
                 var result = eval(DynamicDatabaseManager._convertEscapeCharacters(this.meta[metaTag]));
-                return typeof child === 'number' ? DynamicDatabaseManager._parseIntStrict(result) : result == true;
+                return typeof child === 'number' ? result : result == true;
             } catch (e) {
                 return DynamicDatabaseManager._processEvalException(e, this.meta[metaTag]);
             }
@@ -314,12 +315,6 @@ DynamicDatabaseManager._convertEscapeCharacters = function(text) {
     });
     text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
     return text;
-};
-
-DynamicDatabaseManager._parseIntStrict = function(value, errorMessage) {
-    var result = parseInt(value, 10);
-    if (isNaN(result)) throw Error('指定した値[' + value + ']が数値ではありません。' + errorMessage);
-    return result;
 };
 
 DynamicDatabaseManager._processEvalException = function(e, formula) {
