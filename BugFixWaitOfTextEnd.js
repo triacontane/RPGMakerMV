@@ -52,11 +52,10 @@
 
     var _Window_Message_isEndOfText = Window_Message.prototype.isEndOfText;
     Window_Message.prototype.isEndOfText = function(textState) {
-        if (this.isPauseExist()) return false;
-        return _Window_Message_isEndOfText.apply(this, arguments);
+        return !this.isWaitExist() && _Window_Message_isEndOfText.apply(this, arguments);
     };
 
-    Window_Message.prototype.isPauseExist = function() {
+    Window_Message.prototype.isWaitExist = function() {
         return this.pause || this._waitCount > 0;
     }
 })();
