@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2017/01/21 ステートアイコンの並び順が逆になっていた不具合を修正
 // 1.4.0 2016/12/31 ウィンドウ透過機能を追加
 // 1.3.1 2016/11/25 割合の指定に100%を指定できるよう修正
 // 1.3.0 2016/11/24 現在のHPの割合によって表示するグラフィックを変更する機能を追加
@@ -196,11 +197,11 @@
     };
 
     Game_Actor.prototype.getSortedStates = function() {
-        return this._states.sort(this.compareOrderStateIdPriority.bind(this));
+        return this._states.clone().sort(this.compareOrderStateIdPriority.bind(this));
     };
 
     Game_Actor.prototype.compareOrderStateIdPriority = function(stateIdA, stateIdB) {
-        return $dataStates[stateIdA].priority - $dataStates[stateIdB].priority;
+        return $dataStates[stateIdB].priority - $dataStates[stateIdA].priority;
     };
 
     //=============================================================================

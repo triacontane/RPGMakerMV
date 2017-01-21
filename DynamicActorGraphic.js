@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/01/21 ステートアイコンの並び順が逆になっていた不具合を修正
 // 1.0.0 2016/12/31 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -166,11 +167,11 @@
     };
 
     Game_Actor.prototype.getSortedStates = function() {
-        return this._states.sort(this.compareOrderStateIdPriority.bind(this));
+        return this._states.clone().sort(this.compareOrderStateIdPriority.bind(this));
     };
 
     Game_Actor.prototype.compareOrderStateIdPriority = function(stateIdA, stateIdB) {
-        return $dataStates[stateIdA].priority - $dataStates[stateIdB].priority;
+        return $dataStates[stateIdB].priority - $dataStates[stateIdA].priority;
     };
 
     Game_Actor.prototype.initCustomGraphic = function() {
