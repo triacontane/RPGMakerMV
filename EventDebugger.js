@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/01/22 ステップ実行を最後まで実行するとエラーになっていた問題を修正
 // 1.0.0 2017/01/11 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -562,7 +563,6 @@ function DebugManager() {
         this._debugCount--;
         if (this._debugCount <= 0) {
             this.outputDebugDescription(this._stopDescription);
-            this._interpreter = null;
         }
         this.clearStepFlags();
     };
@@ -570,6 +570,7 @@ function DebugManager() {
     DebugManager.forceStop = function() {
         this._debugCount = 1;
         this.stop();
+        this._interpreter = null;
     };
 
     DebugManager.isValid = function() {
