@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/01/23 変数を修正しても監視ウィンドウに反映されない場合がある問題を修正
 // 1.0.1 2017/01/22 ステップ実行を最後まで実行するとエラーになっていた問題を修正
 // 1.0.0 2017/01/11 初版
 // ----------------------------------------------------------------------------
@@ -711,14 +712,7 @@ function DebugManager() {
                 this._watchList.shift();
             }
             this._watchList.push(watchTarget);
-            this._needWacterRefresh = true;
         }
-    };
-
-    DebugManager.isExistWatcherScript = function() {
-        return this._watchList.some(function(watchTarget) {
-            return this.isScriptWatcher(watchTarget);
-        }.bind(this));
     };
 
     DebugManager.isScriptWatcher = function(watchTarget) {
@@ -735,18 +729,6 @@ function DebugManager() {
 
     DebugManager.getWatcherSize = function() {
         return this._watchList.length;
-    };
-
-    DebugManager.requestWatcherRefresh = function(variableId) {
-        this._needWacterRefresh = this._needWacterRefresh || this._watchList.some(function(watchTarget) {
-                return watchTarget === variableId;
-            });
-    };
-
-    DebugManager.isNeedWatcherRefresh = function() {
-        const result            = this._needWacterRefresh || this.isExistWatcherScript();
-        this._needWacterRefresh = false;
-        return result;
     };
 
     //=============================================================================
@@ -925,16 +907,6 @@ function DebugManager() {
     //=============================================================================
     Game_Event.prototype.getPageIndex = function() {
         return this._pageIndex;
-    };
-
-    //=============================================================================
-    // Game_Variables
-    //  更新状態を監視します。
-    //=============================================================================
-    const _Game_Variables_onChange    = Game_Variables.prototype.onChange;
-    Game_Variables.prototype.onChange = function() {
-        _Game_Variables_onChange.apply(this, arguments);
-
     };
 
     //=============================================================================
@@ -1263,12 +1235,6 @@ function DebugManager() {
 
         update() {
             super.update();
-            if (DebugManager.isNeedWatcherRefresh()) {
-                this.refresh();
-            }
-        }
-
-        refresh() {
             this.makeNewCommandList();
             if (this._newList) {
                 super.refresh();
