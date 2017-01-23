@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/01/23 スリップダメージのポップアップに対応
+//                  対応するフォロワーのポップアップを表示する機能を追加
 // 1.2.0 2016/12/31 ポップアップの色調設定機能を追加
 //                  ポップアップの表示方法を詳細指定できる機能を追加
 // 1.1.1 2016/09/15 最新の修正で自動ポップアップの設定が手動に影響していた問題を修正
@@ -158,8 +160,8 @@
 
 (function() {
     'use strict';
-    const pluginName = 'CharacterPopupDamage';
-    const settings   = {
+    var pluginName = 'CharacterPopupDamage';
+    var settings   = {
         /* MPダメージ専用効果音(ファイル名はパラメータで指定) */
         mpDamageSe: {
             volume: 90,
@@ -168,51 +170,51 @@
         }
     };
 
-    const getCommandName = function(command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
-    const getParamBoolean = function(paramNames) {
-        const value = getParamOther(paramNames);
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
         return (value || '').toUpperCase() === 'ON';
     };
 
-    const getParamNumber = function(paramNames, min, max) {
-        const value = getParamOther(paramNames);
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    const getParamString = function(paramNames) {
-        const value = getParamOther(paramNames);
+    var getParamString = function(paramNames) {
+        var value = getParamOther(paramNames);
         return value === null ? '' : value;
     };
 
-    const getParamOther = function(paramNames) {
+    var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return null;
     };
 
-    const getArgNumber = function(arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
     };
 
-    const getArgBoolean = function(arg) {
+    var getArgBoolean = function(arg) {
         return (arg || '').toUpperCase() === 'ON';
     };
 
-    const convertEscapeCharactersAndEval = function(text, evalFlg) {
+    var convertEscapeCharactersAndEval = function(text, evalFlg) {
         if (text === null || text === undefined) text = '';
-        const window = SceneManager._scene._windowLayer.children[0];
+        var window = SceneManager._scene._windowLayer.children[0];
         if (window) {
-            const result = window.convertEscapeCharacters(text);
+            var result = window.convertEscapeCharacters(text);
             return evalFlg ? eval(result) : result;
         } else {
             return text;
@@ -222,36 +224,36 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const paramPlaySe          = getParamBoolean(['PlaySe', '効果音演奏']);
-    const paramOffsetX         = getParamNumber(['OffsetX', 'X座標補正']);
-    const paramOffsetY         = getParamNumber(['OffsetY', 'Y座標補正']);
-    const paramTpAutoPop       = getParamBoolean(['TPAutoPop', 'TP自動ポップアップ']);
-    const paramMpAutoPop       = getParamBoolean(['MPAutoPop', 'MP自動ポップアップ']);
-    const paramHpAutoPop       = getParamBoolean(['HPAutoPop', 'HP自動ポップアップ']);
-    const paramIncreaseAutoPop = getParamBoolean(['IncreaseAutoPop', '増加自動ポップアップ']);
-    const paramDecreaseAutoPop = getParamBoolean(['DecreaseAutoPop', '減少自動ポップアップ']);
-    const paramMpDamageSe      = getParamString(['MPDamageSe', 'MPダメージ音']);
-    const paramRotation        = getParamBoolean(['Rotation', '回転']);
-    const paramRadiusX         = getParamNumber(['RadiusX', 'X方向半径']);
-    const paramRadiusY         = getParamNumber(['RadiusY', 'Y方向半径']);
-    const paramRotateSpeed     = getParamNumber(['RotateSpeed', '回転速度']);
-    const paramScale           = getParamNumber(['Scale', '拡大率']);
-    const paramScaleDelta      = getParamNumber(['ScaleDelta', '拡大率変化値']);
+    var paramPlaySe          = getParamBoolean(['PlaySe', '効果音演奏']);
+    var paramOffsetX         = getParamNumber(['OffsetX', 'X座標補正']);
+    var paramOffsetY         = getParamNumber(['OffsetY', 'Y座標補正']);
+    var paramTpAutoPop       = getParamBoolean(['TPAutoPop', 'TP自動ポップアップ']);
+    var paramMpAutoPop       = getParamBoolean(['MPAutoPop', 'MP自動ポップアップ']);
+    var paramHpAutoPop       = getParamBoolean(['HPAutoPop', 'HP自動ポップアップ']);
+    var paramIncreaseAutoPop = getParamBoolean(['IncreaseAutoPop', '増加自動ポップアップ']);
+    var paramDecreaseAutoPop = getParamBoolean(['DecreaseAutoPop', '減少自動ポップアップ']);
+    var paramMpDamageSe      = getParamString(['MPDamageSe', 'MPダメージ音']);
+    var paramRotation        = getParamBoolean(['Rotation', '回転']);
+    var paramRadiusX         = getParamNumber(['RadiusX', 'X方向半径']);
+    var paramRadiusY         = getParamNumber(['RadiusY', 'Y方向半径']);
+    var paramRotateSpeed     = getParamNumber(['RotateSpeed', '回転速度']);
+    var paramScale           = getParamNumber(['Scale', '拡大率']);
+    var paramScaleDelta      = getParamNumber(['ScaleDelta', '拡大率変化値']);
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    const _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
+    var _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandCharacterPopupDamage(command, args);
         } catch (e) {
             if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                const window = require('nw.gui').Window.get();
+                var window = require('nw.gui').Window.get();
                 if (!window.isDevToolsOpen()) {
-                    const devTool = window.showDevTools();
+                    var devTool = window.showDevTools();
                     devTool.moveTo(0, 0);
                     devTool.resizeTo(Graphics.width, Graphics.height);
                     window.focus();
@@ -265,7 +267,7 @@
     };
 
     Game_Interpreter.prototype.pluginCommandCharacterPopupDamage = function(command, args) {
-        let popupArgs = [];
+        var popupArgs = [];
         switch (getCommandName(command)) {
             case 'CPD_DAMAGE' :
             case 'ポップアップダメージ':
@@ -311,35 +313,35 @@
         }
     };
 
-    const _Game_Interpreter_command311    = Game_Interpreter.prototype.command311;
+    var _Game_Interpreter_command311    = Game_Interpreter.prototype.command311;
     Game_Interpreter.prototype.command311 = function() {
-        const value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
-        if ($gameSystem.isNeedAutoHpPopup(value)) {
-            $gamePlayer.popupDamage(value, false);
-        }
+        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
+        this.iterateActorEx(this._params[0], this._params[1], function(actor) {
+            actor.popupDamage(value);
+        }.bind(this));
         return _Game_Interpreter_command311.apply(this, arguments);
     };
 
-    const _Game_Interpreter_command312    = Game_Interpreter.prototype.command312;
+    var _Game_Interpreter_command312    = Game_Interpreter.prototype.command312;
     Game_Interpreter.prototype.command312 = function() {
-        const value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
-        if ($gameSystem.isNeedAutoMpPopup(value)) {
-            $gamePlayer.popupMpDamage(value, false);
-        }
+        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
+        this.iterateActorEx(this._params[0], this._params[1], function(actor) {
+            actor.popupMpDamage(value);
+        }.bind(this));
         return _Game_Interpreter_command312.apply(this, arguments);
     };
 
-    const _Game_Interpreter_command326    = Game_Interpreter.prototype.command326;
+    var _Game_Interpreter_command326    = Game_Interpreter.prototype.command326;
     Game_Interpreter.prototype.command326 = function() {
-        const value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
-        if ($gameSystem.isNeedAutoTpPopup(value)) {
-            $gamePlayer.popupDamage(value, false);
-        }
+        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
+        this.iterateActorEx(this._params[0], this._params[1], function(actor) {
+            actor.popupTpDamage(value);
+        }.bind(this));
         return _Game_Interpreter_command326.apply(this, arguments);
     };
 
     Game_Interpreter.prototype.callCharacterPopup = function(args, methodName, extend) {
-        const character = this.character(getArgNumber(args[0], -1));
+        var character = this.character(getArgNumber(args[0], -1));
         if (character) character[methodName].apply(character, extend);
     };
 
@@ -347,27 +349,77 @@
     // Game_Actor
     //  ダメージ床によるポップアップを処理します。
     //=============================================================================
-    const _Game_Actor_executeFloorDamage    = Game_Actor.prototype.executeFloorDamage;
+    var _Game_Actor_executeFloorDamage    = Game_Actor.prototype.executeFloorDamage;
     Game_Actor.prototype.executeFloorDamage = function() {
-        const prevHp = this.hp;
-        const prevMp = this.mp;
-        const prevTp = this.tp;
-        _Game_Actor_executeFloorDamage.apply(this, arguments);
-        if (this === $gameParty.members()[0]) {
-            const hpDamage = prevHp - this.hp;
-            if (hpDamage !== 0 && $gameSystem.isNeedAutoHpPopup(hpDamage)) $gamePlayer.popupDamage(hpDamage, false);
-            const mpDamage = prevMp - this.mp;
-            if (mpDamage !== 0 && $gameSystem.isNeedAutoMpPopup(mpDamage)) $gamePlayer.popupMpDamage(mpDamage, false);
-            const tpDamage = prevTp - this.tp;
-            if (tpDamage !== 0 && $gameSystem.isNeedAutoTpPopup(tpDamage)) $gamePlayer.popupDamage(tpDamage, false);
+        this.popupMapDamage(_Game_Actor_executeFloorDamage);
+    };
+
+    var _Game_Actor_turnEndOnMap = Game_Actor.prototype.turnEndOnMap;
+    Game_Actor.prototype.turnEndOnMap = function() {
+        this.popupMapDamage(_Game_Actor_turnEndOnMap);
+    };
+
+    Game_Actor.prototype.popupMapDamage = function(callBackFunc) {
+        var prevHp = this.hp;
+        var prevMp = this.mp;
+        var prevTp = this.tp;
+        callBackFunc.apply(this);
+        var character = this.getCharacterObject();
+        if (!character) return;
+        var hpDamage = prevHp - this.hp;
+        if (hpDamage !== 0 && $gameSystem.isNeedAutoHpPopup(hpDamage)) character.popupDamage(hpDamage, false);
+        var mpDamage = prevMp - this.mp;
+        if (mpDamage !== 0 && $gameSystem.isNeedAutoMpPopup(mpDamage)) character.popupMpDamage(mpDamage, false);
+        var tpDamage = prevTp - this.tp;
+        if (tpDamage !== 0 && $gameSystem.isNeedAutoTpPopup(tpDamage)) character.popupDamage(tpDamage, false);
+    };
+
+    Game_Actor.prototype.popupDamage = function(value) {
+        var character = this.getCharacterObject();
+        if (!character) return;
+        if (value !== 0 && $gameSystem.isNeedAutoHpPopup(value)) {
+            character.popupDamage(value, false);
         }
+    };
+
+    Game_Actor.prototype.popupMpDamage = function(value) {
+        var character = this.getCharacterObject();
+        if (!character) return;
+        if (value !== 0 && $gameSystem.isNeedAutoMpPopup(value)) {
+            character.popupMpDamage(value, false);
+        }
+    };
+
+    Game_Actor.prototype.popupTpDamage = function(value) {
+        var character = this.getCharacterObject();
+        if (!character) return;
+        if (value !== 0 && $gameSystem.isNeedAutoTpPopup(value)) {
+            character.popupDamage(value, false);
+        }
+    };
+
+    Game_Actor.prototype.getCharacterObject = function() {
+        var index = $gameParty.battleMembers().indexOf(this);
+        var result;
+        switch(index) {
+            case -1:
+                result = null;
+                break;
+            case 0:
+                result = $gamePlayer;
+                break;
+            default:
+                var followers = $gamePlayer.followers();
+                result = followers.isVisible() ? followers.follower(index - 1) : null;
+        }
+        return result;
     };
 
     //=============================================================================
     // Game_System
     //  オートポップアップの有効フラグを追加定義します。
     //=============================================================================
-    const _Game_System_initialize    = Game_System.prototype.initialize;
+    var _Game_System_initialize    = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
         this._suppressAutoPopup = false;
@@ -436,7 +488,7 @@
     Game_CharacterBase.prototype.startDamagePopup = function(value, critical, mpFlg, mirror) {
         this._damagePopup = true;
         if (!this._damageInfo) this._damageInfo = [];
-        const damageInfo = {value: value, critical: critical, mpFlg: mpFlg, mirror: mirror};
+        var damageInfo = {value: value, critical: critical, mpFlg: mpFlg, mirror: mirror};
         if (paramPlaySe) this.playPopupSe(damageInfo);
         this._damageInfo.push(damageInfo);
     };
@@ -464,7 +516,7 @@
     // Sprite_Character
     //  ダメージをポップアップします。
     //=============================================================================
-    const _Sprite_Character_update    = Sprite_Character.prototype.update;
+    var _Sprite_Character_update    = Sprite_Character.prototype.update;
     Sprite_Character.prototype.update = function() {
         _Sprite_Character_update.apply(this, arguments);
         this.updateDamagePopup();
@@ -473,7 +525,7 @@
     Sprite_Character.prototype.updateDamagePopup = function() {
         this.setupDamagePopup();
         if (this._damages && this._damages.length > 0) {
-            for (let i = 0; i < this._damages.length; i++) {
+            for (var i = 0; i < this._damages.length; i++) {
                 this._damages[i].update();
             }
             if (!this._damages[0].isPlaying()) {
@@ -485,7 +537,7 @@
 
     Sprite_Character.prototype.setupDamagePopup = function() {
         if (this._character.isDamagePopupRequested()) {
-            const sprite = new Sprite_CharacterDamage();
+            var sprite = new Sprite_CharacterDamage();
             sprite.x     = this.x + this.damageOffsetX();
             sprite.y     = this.y + this.damageOffsetY();
             if (!sprite.z) sprite.z = 9;
@@ -514,10 +566,10 @@
     }
 
     Sprite_CharacterDamage.prototype             = Object.create(Sprite_Damage.prototype);
-    Sprite_CharacterDamage.prototype.constructor = Sprite_CharacterDamage;
+    Sprite_CharacterDamage.prototype.varructor = Sprite_CharacterDamage;
 
     Sprite_CharacterDamage.prototype.setupCharacter = function(character) {
-        const damageInfo = character.shiftDamageInfo();
+        var damageInfo = character.shiftDamageInfo();
         this._toneColor  = $gameSystem.getPopupDamageTone();
         this._mirror     = damageInfo.mirror;
         this._digit      = 0;
@@ -533,9 +585,9 @@
     };
 
     Sprite_CharacterDamage.prototype.createMissForCharacter = function() {
-        const w      = this.digitWidth();
-        const h      = this.digitHeight();
-        const sprite = this.createChildSprite();
+        var w      = this.digitWidth();
+        var h      = this.digitHeight();
+        var sprite = this.createChildSprite();
         sprite.setFrame(0, 4 * h, 4 * w, h);
         sprite.dy = 0;
         sprite.x  = w / 2;
@@ -544,7 +596,7 @@
     };
 
     Sprite_CharacterDamage.prototype.createChildSprite = function() {
-        const sprite = Sprite_Damage.prototype.createChildSprite.apply(this, arguments);
+        var sprite = Sprite_Damage.prototype.createChildSprite.apply(this, arguments);
         sprite.frame = 0;
         sprite.digit = this._digit++;
         if (this._toneColor) sprite.setColorTone(this._toneColor);
@@ -560,8 +612,8 @@
     };
 
     Sprite_CharacterDamage.prototype.updateChildRotation = function(sprite) {
-        const frame = sprite.frame++;
-        const speed = frame / 3600 * paramRotateSpeed;
+        var frame = sprite.frame++;
+        var speed = frame / 3600 * paramRotateSpeed;
         sprite.rx   = paramRadiusX * (Math.cos(speed) - 1);
         sprite.ry   = -paramRadiusY * Math.sin(speed);
         if (this._mirror) {
@@ -569,7 +621,7 @@
         }
         sprite.x       = Math.round(sprite.rx);
         sprite.y       = Math.round(sprite.ry);
-        const scale    = (paramScale + frame * paramScaleDelta / 10) / 100;
+        var scale    = (paramScale + frame * paramScaleDelta / 10) / 100;
         sprite.scale.x = scale;
         sprite.scale.y = scale;
         sprite.x += (sprite.digit - (this._digit - 1) / 2) * (this.digitWidth() * scale);
