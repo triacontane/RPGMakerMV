@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.5 2017/01/23 ウィンドウスキンを変更しているデータをロード直後にフキダシメッセージを表示すると
+//                  文字が黒くなってしまう問題を修正
 // 2.0.4 2016/12/25 ウィンドウを閉じている最中にウィンドウ表示位置を変更するプラグインコマンドを実行すると、
 //                  一瞬だけ空ウィンドウが表示される問題を修正
 // 2.0.3 2016/10/22 デフォルト以外で制御文字と見なされる記述（\aaa[333]や\d<test>）を枠幅の計算から除外するよう修正
@@ -535,6 +537,17 @@
         return this._size[1];
     };
 
+    var _Scene_Map_isReady = Scene_Map.prototype.isReady;
+    Scene_Map.prototype.isReady = function() {
+        var ready = _Scene_Map_isReady.apply(this, arguments);
+        var popSkin = $gameSystem.getPopupWindowSkin();
+        if (popSkin && ready) {
+            var bitmap = ImageManager.loadSystem(popSkin);
+            return bitmap.isReady();
+        }
+        return ready;
+    };
+
     //=============================================================================
     // Sprite_Character
     //  キャラクターの高さを逆設定します。
@@ -559,9 +572,9 @@
     //=============================================================================
     var _Window_Base_loadWindowskin = Window_Base.prototype.loadWindowskin;
     Window_Base.prototype.loadWindowskin = function() {
-        var popupSkin = $gameSystem.getPopupWindowSkin();
-        if (this.isPopup() && popupSkin) {
-            this.windowskin = ImageManager.loadSystem(popupSkin);
+        var popSkin = $gameSystem.getPopupWindowSkin();
+        if (this.isPopup() && popSkin) {
+            this.windowskin = ImageManager.loadSystem(popSkin);
         } else {
             _Window_Base_loadWindowskin.apply(this, arguments);
         }
@@ -735,7 +748,6 @@
         if (!this.isPopup()) {
             return;
         }
-
         this.updatePlacementPopup();
     };
 

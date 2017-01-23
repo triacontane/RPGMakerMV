@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/01/23 カレンダーに月名を表記する書式「MON」を追加
 // 1.4.0 2017/01/07 ゲーム開始からの累計時間（分単位）を指定したゲーム変数に格納する機能を追加
 // 1.3.3 2017/01/02 色調変更を禁止しているときにイベントで色調変更した場合、すぐにリセットされてしまう問題を修正
 // 1.3.2 2016/07/24 1.3.1でロード時にエラーになる問題の修正
@@ -40,6 +41,10 @@
  * @param 月ごとの日数配列
  * @desc 各月の日数の配列です。カンマ区切りで指定してください。個数は自由です。
  * @default 31,28,31,30,31,30,31,31,30,31,30,31
+ *
+ * @param 月名配列
+ * @desc 月の名称配列です。カンマ区切りで指定してください。個数は自由です。
+ * @default Jan.,Feb.,Mar.,Apr.,May.,Jun.,Jul.,Aug.,Sep.,Oct.,Nov.,Dec.
  *
  * @param 曜日配列
  * @desc 曜日の名称配列です。カンマ区切りで指定してください。個数は自由です。
@@ -106,12 +111,12 @@
  *
  * @param 日時フォーマット1
  * @desc マップ上の日付ウィンドウ1行目に表示される文字列です。
- * YYYY:年 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
+ * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
  * @default YYYY年 MM月 DD日 DY
  *
  * @param 日時フォーマット2
  * @desc マップ上の日付ウィンドウ2行目に表示される文字列です。
- * YYYY:年 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
+ * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
  * @default AMHH時 MI分
  *
  * @param カレンダー表示X座標
@@ -169,7 +174,8 @@
  * 現在日付はフォーマットに従って、画面左上に表示されます。
  *
  * 日付フォーマットには以下を利用できます。
- * YYYY:年 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
+ * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12)
+ * AM:午前 or 午後 MI:分 DY:曜日
  *
  * また、規格に沿った画像を用意すればアナログ時計も表示できます。
  * 表示位置は各画像の表示可否は調整できます。
@@ -742,6 +748,7 @@ function Game_Chronus() {
         this._timeBattleAdd   = getParamNumber('戦闘時間加算(固定)', 0);
         this._timeTurnAdd     = getParamNumber('戦闘時間加算(ターン)', 0);
         this._weekNames       = getParamArrayString('曜日配列');
+        this._monthNames      = getParamArrayString('月名配列');
         this._daysOfMonth     = getParamArrayNumber('月ごとの日数配列');
         this._initDate        = Date.now();
         this.onLoad();
@@ -1081,6 +1088,9 @@ function Game_Chronus() {
         var format = getParamString('日時フォーマット' + String(index));
         format = format.replace(/(YYYY)/gi, function() {
             return this.getValuePadding(this.getYear(), arguments[1].length);
+        }.bind(this));
+        format = format.replace(/MON/gi, function() {
+            return this._monthNames[this.getMonth() - 1];
         }.bind(this));
         format = format.replace(/MM/gi, function() {
             return this.getValuePadding(this.getMonth(), String(this.getMonthOfYear()).length);
