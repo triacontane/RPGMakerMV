@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2017/01/25 同一サーバで同プラグインを適用した複数のゲームを公開する際に、設定が重複するのを避けるために管理番号を追加
 // 1.2.2 2016/12/10 アナザーニューゲームをロードした際に、ロード元でイベントが実行中だった場合に続きが実行されてしまう現象を修正
 // 1.2.1 2016/11/23 遠景タイトルプラグイン（ParallaxTitle.js）と連携する設定を追加
 // 1.2.0 2016/11/22 アナザーニューゲームを選択した際に、フェードアウトしなくなる設定を追加
@@ -54,6 +55,10 @@
  * @param no_fadeout
  * @desc アナザーニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
  * @default OFF
+ *
+ * @param manage_number
+ * @desc 同一サーバ内に複数のゲームを配布する場合のみ、ゲームごとに異なる値を設定してください。
+ * @default
  *
  * @help タイトル画面のウィンドウの一番下に、もう一つのニューゲームを追加します。
  * 選択すると、ニューゲームとは別に指定したマップに遷移します。
@@ -265,7 +270,7 @@
     var _StorageManager_webStorageKey = StorageManager.webStorageKey;
     StorageManager.webStorageKey = function(savefileId) {
         if (savefileId === -1001) {
-            return 'RPG AnotherNewGame';
+            return 'RPG AnotherNewGame' + parameters['manage_number'];
         } else {
             return _StorageManager_webStorageKey.call(this, savefileId);
         }
