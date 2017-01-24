@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/01/24 副作用設定時にターン終了時にダメージのポップアップ等が出なくなる問題を修正
 // 1.1.0 2016/12/13 フロントビュー時にエフェクト効果のメッセージが重複して表示される問題を修正
 // 1.0.2 2016/10/10 行動パターンが何も設定されていない敵キャラが行動しようとするとエラーになる問題を修正
 // 1.0.1 2016/10/10 タイミングが「スキル使用時」「ターン開始時」以外のものについて、対象者にも効果が適用されていた問題を修正
@@ -271,9 +272,10 @@
                 effects[i].sideEffect = true;
             }
         }
-        data.effects            = effects.filter(function(effect) {
+        data.effects = effects.filter(function(effect) {
             return !effect.sideEffect;
         });
+
         data.sideEffectOnInput  = sideEffectOnInput;
         data.sideEffectOnBefore = sideEffectOnBefore;
         data.sideEffectOnUsing  = sideEffectOnUsing;
@@ -434,7 +436,7 @@
     };
 
     Game_Action.prototype.isNeedDisplaySideEffect = function(property) {
-        return property !== 'sideEffectOnUsing';
+        return property !== 'sideEffectOnUsing' && property !== 'sideEffectOnEnd';
     };
 
     //=============================================================================
