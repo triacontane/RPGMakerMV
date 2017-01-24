@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/01/25 同一サーバで同プラグインを適用した複数のゲームを公開する際に、設定が重複するのを避けるために管理番号を追加
+//                  RPGアツマール等CSVが使えない環境のためデータファイルとしてJSON形式をサポート
 // 1.0.3 2016/10/10 設定項目をすべて非表示にした場合、リストから選択後、ゲームが止まってしまう問題を修正
 // 1.0.2 2016/05/11 ウィンドウの位置指定方法を少し変更（見た目上はそのまま）
 // 1.0.1 2016/02/07 改行コード（CR+LF）に対応
@@ -52,6 +54,10 @@
  * @param ReadFormat
  * @desc read data format(Support CSV only)
  * @default CSV
+ *
+ * @param ManageNumber
+ * @desc 同一サーバ内に複数のゲームを配布する場合のみ、ゲームごとに異なる値を設定してください。(RPGアツマールは対象外)
+ * @default
  *
  * @help Add sound test screen.
  *
@@ -127,14 +133,19 @@
  *
  * @param 読込形式
  * @desc データファイルの読み込み形式です。
- * 現在はCSVしかサポートしていません。（この項目は無意味です）
+ * CSV形式およびJSON形式をサポートしています。
  * @default CSV
+ *
+ * @param 管理番号
+ * @desc 同一サーバ内に複数のゲームを配布する場合のみ、ゲームごとに異なる値を設定してください。(RPGアツマールは対象外)
+ * @default
  *
  * @help ゲーム中のBGMを視聴できるサウンドテストを実装します。
  * タイトル画面、メニュー画面およびプラグインコマンドから専用画面に遷移します。
  * 一度再生するとBGMを視聴できるようになります。
  *
  * 準備
+ * 1.CSV形式の場合
  * 以下の書式で「SoundTest.csv」を用意し、「/data/」以下に配置します。
  * カンマ区切りのCSV形式で、データ中にカンマは使用できません。
  * また、文字コードは「UTF-8」で保存してください。
@@ -150,6 +161,20 @@
  *
  * 「バッチ処理プラグイン」配布先
  * https://github.com/triacontane/RPGMakerMV/blob/master/ReadMe.md
+ *
+ * 2.JSON形式の場合
+ * RPGアツマール等のCSV形式が使用できない環境の場合、
+ * こちらのJSON形式を選択してください。
+ * 以下の書式で「SoundTest.json」を用意し、「/data/」以下に配置します。
+ * 文字コードは「UTF-8」で保存してください。
+ *
+ * [
+ *  {"fileName":"BGMファイル名", "displayName":"BGM表示名", "description":"説明"},
+ *  {"fileName":"BGMファイル名", "displayName":"BGM表示名", "description":"説明"}
+ * ]
+ *
+ * CSV→JSON変換ツールを使用した場合、末尾のカンマ等が正しく記述されていないと
+ * エラーが発生するので注意してください。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -196,7 +221,7 @@ function Scene_SoundTest() {
     this.initialize.apply(this, arguments);
 }
 
-(function () {
+(function() {
     'use strict';
     var pluginName = 'SceneSoundTest';
 
@@ -219,82 +244,104 @@ function Scene_SoundTest() {
         return null;
     };
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
+
+    var paramReadFormat   = getParamString(['読込形式', 'ReadFormat']).toUpperCase();
+    var paramManageNumber = getParamString(['管理番号', 'ManageNumber']);
 
     //=============================================================================
     // DataManager
     //  CSV読み込み処理を定義します。
     //=============================================================================
-    if (!DataManager.csvFiles) {
-        DataManager._dataSeparater = ',';
-        DataManager.csvFiles = [];
+    DataManager._dataSeparater = ',';
+    DataManager.soundTestFiles = [];
 
-        if (!Object.prototype.hasOwnProperty('iterate')) {
-            Object.defineProperty(Object.prototype, 'iterate', {
-                value : function (handler) {
-                    Object.keys(this).forEach(function (key, index) {
-                        handler.call(this, key, this[key], index);
-                    }, this);
-                }
-            });
-        }
-
-        DataManager.loadCsvFiles = function() {
-            this.csvFiles.forEach(function(file) {
-                this._loadCsvFile(file.name, file.src);
-            }.bind(this));
-        };
-
-        DataManager._loadCsvFile = function(name, src) {
-            var xhr = new XMLHttpRequest();
-            var url = 'data/' + src;
-            xhr.open('GET', url);
-            xhr.onload = function() {
-                if (xhr.status < 400) {
-                    window[name] = this._loadCsvData(xhr.responseText);
-                }
-            }.bind(this);
-            xhr.onerror = function() {
-                window[name] = [];
-            }.bind(this);
-            window[name] = null;
-            xhr.send();
-        };
-
-        DataManager._loadCsvData = function(responseText) {
-            var dataList = [null];
-            var dataArray = responseText.replace(/\r\n?/g, '\n').split('\n');
-            var columns = dataArray.shift().split(this._dataSeparater);
-            dataArray.forEach(function(line) {
-                if (line === '') return;
-                var dataObject = {};
-                dataObject.id = dataList.length;
-                line.split(this._dataSeparater).iterate(function(key, data) {
-                    dataObject[columns[key]] = data.replace(/^\s*\"?(.*?)\"?\s*$/, function() {
-                        return arguments[1];
-                    });
-                }.bind(this));
-                dataList[dataObject.id] = dataObject;
-            }.bind(this));
-            return dataList;
-        };
-
-        DataManager.isLoadedCsv = function() {
-            return this.csvFiles.every(function(file) {
-                return window[file.name];
-            }.bind(this));
-        };
+    if (!Object.prototype.hasOwnProperty('iterate')) {
+        Object.defineProperty(Object.prototype, 'iterate', {
+            value: function(handler) {
+                Object.keys(this).forEach(function(key, index) {
+                    handler.call(this, key, this[key], index);
+                }, this);
+            }
+        });
     }
-    DataManager.csvFiles.push({ name: '$dataSoundTest', src: 'SoundTest.csv'});
+
+    DataManager.loadCsvFiles = function() {
+        this.soundTestFiles.forEach(function(file) {
+            this._loadCsvFile(file.name, file.src);
+        }.bind(this));
+    };
+
+    DataManager._loadCsvFile = function(name, src) {
+        var xhr = new XMLHttpRequest();
+        var url = 'data/' + src;
+        xhr.open('GET', url);
+        xhr.onload   = function() {
+            if (xhr.status < 400) {
+                window[name] = this._loadSoundData(xhr.responseText);
+            } else {
+                window[name] = [];
+            }
+        }.bind(this);
+        xhr.onerror  = function() {
+            window[name] = [];
+        }.bind(this);
+        window[name] = null;
+        xhr.send();
+    };
+
+    DataManager._loadSoundData = function(responseText) {
+        switch (paramReadFormat) {
+            case 'JSON':
+                return JSON.parse(responseText);
+            default :
+                return this._loadCsvData(responseText);
+        }
+    };
+
+    DataManager._loadCsvData = function(responseText) {
+        var dataList  = [null];
+        var dataArray = responseText.replace(/\r\n?/g, '\n').split('\n');
+        var columns   = dataArray.shift().split(this._dataSeparater);
+        dataArray.forEach(function(line) {
+            if (line === '') return;
+            var dataObject = {};
+            dataObject.id  = dataList.length;
+            line.split(this._dataSeparater).iterate(function(key, data) {
+                dataObject[columns[key]] = data.replace(/^\s*\"?(.*?)\"?\s*$/, function() {
+                    return arguments[1];
+                });
+            }.bind(this));
+            dataList[dataObject.id] = dataObject;
+        }.bind(this));
+        return dataList;
+    };
+
+    DataManager.isLoadedCsv = function() {
+        return this.soundTestFiles.every(function(file) {
+            return window[file.name];
+        }.bind(this));
+    };
+
+    DataManager.getSoundTestFileName = function() {
+        switch (paramReadFormat) {
+            case 'JSON':
+                return 'SoundTest.json';
+            default :
+                return 'SoundTest.csv';
+        }
+    };
+
+    DataManager.soundTestFiles.push({name: '$dataSoundTest', src: DataManager.getSoundTestFileName()});
 
     //=============================================================================
     // StorageManager
     //  サウンドテスト設定ファイルのパス取得処理を追加定義します。
     //=============================================================================
     var _StorageManager_localFilePath = StorageManager.localFilePath;
-    StorageManager.localFilePath = function(saveFileId) {
+    StorageManager.localFilePath      = function(saveFileId) {
         if (saveFileId === SoundTestManager.saveId) {
             return this.localFileDirectoryPath() + 'SoundTest.rpgsave';
         } else {
@@ -303,9 +350,9 @@ function Scene_SoundTest() {
     };
 
     var _StorageManager_webStorageKey = StorageManager.webStorageKey;
-    StorageManager.webStorageKey = function(saveFileId) {
+    StorageManager.webStorageKey      = function(saveFileId) {
         if (saveFileId === SoundTestManager.saveId) {
-            return 'RPG SoundTest';
+            return 'RPG SoundTest' + paramManageNumber;
         } else {
             return _StorageManager_webStorageKey.apply(this, arguments);
         }
@@ -316,7 +363,7 @@ function Scene_SoundTest() {
     //  BGMの演奏時にプレイリストに追加します。
     //=============================================================================
     var _AudioManager_playBgm = AudioManager.playBgm;
-    AudioManager.playBgm = function(bgm, pos) {
+    AudioManager.playBgm      = function(bgm, pos) {
         _AudioManager_playBgm.apply(this, arguments);
         if ($gameSoundTest.addPlayList(bgm)) SoundTestManager.saveGame();
     };
@@ -326,7 +373,7 @@ function Scene_SoundTest() {
     //  プラグインコマンドを追加定義します。
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandSceneSoundTest(command, args);
@@ -347,7 +394,7 @@ function Scene_SoundTest() {
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandSceneSoundTest = function (command) {
+    Game_Interpreter.prototype.pluginCommandSceneSoundTest = function(command) {
         switch (getCommandName(command)) {
             case 'SOUND_TEST_CALL' :
             case 'サウンドテスト画面の呼び出し' :
@@ -375,7 +422,7 @@ function Scene_SoundTest() {
     // Scene_Boot
     //  サウンドテスト設定ファイルを読み込んでからゲームを開始します。
     //=============================================================================
-    var _Scene_Boot_create = Scene_Boot.prototype.create;
+    var _Scene_Boot_create      = Scene_Boot.prototype.create;
     Scene_Boot.prototype.create = function() {
         _Scene_Boot_create.apply(this, arguments);
         DataManager.loadCsvFiles();
@@ -384,12 +431,12 @@ function Scene_SoundTest() {
         }
     };
 
-    var _Scene_Boot_isReady = Scene_Boot.prototype.isReady;
+    var _Scene_Boot_isReady      = Scene_Boot.prototype.isReady;
     Scene_Boot.prototype.isReady = function() {
         return _Scene_Boot_isReady.apply(this, arguments) && DataManager.isLoadedCsv();
     };
 
-    var _Scene_Boot_start = Scene_Boot.prototype.start;
+    var _Scene_Boot_start      = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
         SoundTestManager.saveGame();
@@ -399,11 +446,11 @@ function Scene_SoundTest() {
     // Scene_Title
     //  サウンドテスト画面の呼び出しを追加します。
     //=============================================================================
-    var _Scene_Title_createCommandWindow = Scene_Title.prototype.createCommandWindow;
+    var _Scene_Title_createCommandWindow      = Scene_Title.prototype.createCommandWindow;
     Scene_Title.prototype.createCommandWindow = function() {
         _Scene_Title_createCommandWindow.apply(this, arguments);
         if ($gameSoundTest.titleCommandVisible)
-            this._commandWindow.setHandler('soundTest',  this.commandSoundTest.bind(this));
+            this._commandWindow.setHandler('soundTest', this.commandSoundTest.bind(this));
     };
 
     Scene_Title.prototype.commandSoundTest = function() {
@@ -415,7 +462,7 @@ function Scene_SoundTest() {
     // Scene_Menu
     //  サウンドテスト画面の呼び出しを追加します。
     //=============================================================================
-    var _Scene_Menu_createCommandWindow = Scene_Menu.prototype.createCommandWindow;
+    var _Scene_Menu_createCommandWindow      = Scene_Menu.prototype.createCommandWindow;
     Scene_Menu.prototype.createCommandWindow = function() {
         _Scene_Menu_createCommandWindow.apply(this, arguments);
         if ($gameSoundTest.menuCommandVisible)
@@ -430,14 +477,14 @@ function Scene_SoundTest() {
     // Window_TitleCommand
     //  サウンドテスト画面の呼び出しの選択肢を追加定義します。
     //=============================================================================
-    var _Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
+    var _Window_TitleCommand_makeCommandList      = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function() {
         _Window_TitleCommand_makeCommandList.apply(this, arguments);
         if ($gameSoundTest.titleCommandVisible)
-            this.addCommand(getParamString(['コマンド名称','CommandName']), 'soundTest');
+            this.addCommand(getParamString(['コマンド名称', 'CommandName']), 'soundTest');
     };
 
-    var _Window_TitleCommand_updatePlacement = Window_TitleCommand.prototype.updatePlacement;
+    var _Window_TitleCommand_updatePlacement      = Window_TitleCommand.prototype.updatePlacement;
     Window_TitleCommand.prototype.updatePlacement = function() {
         _Window_TitleCommand_updatePlacement.apply(this, arguments);
         if ($gameSoundTest.titleCommandVisible) this.y += this.height / 8;
@@ -447,12 +494,12 @@ function Scene_SoundTest() {
     // Window_MenuCommand
     //  サウンドテスト画面の呼び出しの選択肢を追加定義します。
     //=============================================================================
-    var _Window_MenuCommand_addOriginalCommands = Window_MenuCommand.prototype.addOriginalCommands;
+    var _Window_MenuCommand_addOriginalCommands      = Window_MenuCommand.prototype.addOriginalCommands;
     Window_MenuCommand.prototype.addOriginalCommands = function() {
         _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
         var enabled = this.isSoundTestEnabled();
         if ($gameSoundTest.menuCommandVisible)
-            this.addCommand(getParamString(['コマンド名称','CommandName']), 'soundTest', enabled);
+            this.addCommand(getParamString(['コマンド名称', 'CommandName']), 'soundTest', enabled);
     };
 
     Window_MenuCommand.prototype.isSoundTestEnabled = function() {
@@ -463,7 +510,7 @@ function Scene_SoundTest() {
     // Scene_SoundTest
     //  サウンドテスト画面を扱うクラスです。
     //=============================================================================
-    Scene_SoundTest.prototype = Object.create(Scene_MenuBase.prototype);
+    Scene_SoundTest.prototype             = Object.create(Scene_MenuBase.prototype);
     Scene_SoundTest.prototype.constructor = Scene_SoundTest;
 
     Scene_SoundTest.prototype.initialize = function() {
@@ -479,12 +526,12 @@ function Scene_SoundTest() {
         this.createBgmSettingWindow();
     };
 
-    var _Scene_SoundTest_createBackground = Scene_SoundTest.prototype.createBackground;
+    var _Scene_SoundTest_createBackground      = Scene_SoundTest.prototype.createBackground;
     Scene_SoundTest.prototype.createBackground = function() {
         var background = getParamString(['背景ピクチャ', 'BackPicture']);
         if (background) {
-            this._backgroundSprite = new Sprite();
-            this._backgroundSprite.bitmap = ImageManager.loadPicture(background ,0);
+            this._backgroundSprite        = new Sprite();
+            this._backgroundSprite.bitmap = ImageManager.loadPicture(background, 0);
             this.addChild(this._backgroundSprite);
             this._backgroundLoading = true;
         } else {
@@ -497,18 +544,18 @@ function Scene_SoundTest() {
         if (this._backgroundLoading && this._backgroundSprite.bitmap.isReady()) {
             this._backgroundSprite.scale.x = Graphics.boxWidth / this._backgroundSprite.width;
             this._backgroundSprite.scale.y = Graphics.boxHeight / this._backgroundSprite.height;
-            this._backgroundLoading = false;
+            this._backgroundLoading        = false;
         }
     };
 
     Scene_SoundTest.prototype.createBgmListWindow = function() {
-        var wy = this._helpWindow.y + this._helpWindow.height;
-        var wh = Graphics.boxHeight - wy;
+        var wy              = this._helpWindow.y + this._helpWindow.height;
+        var wh              = Graphics.boxHeight - wy;
         this._bgmListWindow = new Window_BgmList(0, wy, 320, wh);
         this._bgmListWindow.setHelpWindow(this._helpWindow);
-        this._bgmListWindow.setHandler('ok',     this.playAudio.bind(this));
+        this._bgmListWindow.setHandler('ok', this.playAudio.bind(this));
         this._bgmListWindow.setHandler('cancel', this.escapeScene.bind(this));
-        this._bgmListWindow.setHandler('shift',  this.stopAudio.bind(this));
+        this._bgmListWindow.setHandler('shift', this.stopAudio.bind(this));
         this._bgmListWindow.setHandler('touchInside', this.activateBgmList.bind(this));
         this._bgmListWindow.activate();
         this.addWindow(this._bgmListWindow);
@@ -561,7 +608,7 @@ function Scene_SoundTest() {
     // Window_Selectable
     //  サウンドテスト画面のウィンドウ共通処理です。
     //=============================================================================
-    var _Window_Selectable_processTouch = Window_Selectable.prototype.processTouch;
+    var _Window_Selectable_processTouch      = Window_Selectable.prototype.processTouch;
     Window_Selectable.prototype.processTouch = function() {
         _Window_Selectable_processTouch.apply(this, arguments);
         if (this._soundTestWindow) {
@@ -580,7 +627,7 @@ function Scene_SoundTest() {
         this.callHandler('shift');
     };
 
-    var _Window_Selectable_processHandling = Window_Selectable.prototype.processHandling;
+    var _Window_Selectable_processHandling      = Window_Selectable.prototype.processHandling;
     Window_Selectable.prototype.processHandling = function() {
         _Window_Selectable_processHandling.apply(this, arguments);
         if (!this._soundTestWindow)return;
@@ -612,7 +659,7 @@ function Scene_SoundTest() {
         this._soundTestWindow = true;
     }
 
-    Window_BgmList.prototype = Object.create(Window_Selectable.prototype);
+    Window_BgmList.prototype             = Object.create(Window_Selectable.prototype);
     Window_BgmList.prototype.constructor = Window_BgmList;
 
     Window_BgmList.prototype.initialize = function(x, y, width, height) {
@@ -692,7 +739,7 @@ function Scene_SoundTest() {
         this.initialize.apply(this, arguments);
     }
 
-    Window_BgmSetting.prototype = Object.create(Window_Command.prototype);
+    Window_BgmSetting.prototype             = Object.create(Window_Command.prototype);
     Window_BgmSetting.prototype.constructor = Window_BgmSetting;
 
     Window_BgmSetting.prototype.initialize = function(x, y) {
@@ -716,27 +763,27 @@ function Scene_SoundTest() {
     Window_BgmSetting.prototype.makeCommandList = function() {
         var volume = SoundTestManager.settingNameValues.volume;
         if (volume !== '') this.addCommand(volume, 'volume');
-        var pitch  = SoundTestManager.settingNameValues.pitch;
-        if (pitch  !== '') this.addCommand(pitch , 'pitch');
-        var pan    = SoundTestManager.settingNameValues.pan;
-        if (pan    !== '') this.addCommand(pan   , 'pan');
+        var pitch = SoundTestManager.settingNameValues.pitch;
+        if (pitch !== '') this.addCommand(pitch, 'pitch');
+        var pan = SoundTestManager.settingNameValues.pan;
+        if (pan !== '') this.addCommand(pan, 'pan');
     };
 
     Window_BgmSetting.prototype.drawItem = function(index) {
         this.resetTextColor();
-        var rect = this.itemRectForText(index);
+        var rect        = this.itemRectForText(index);
         var statusWidth = this.statusWidth();
-        var titleWidth = rect.width - statusWidth;
-        var symbol = this.commandSymbol(index);
-        var value  = this.getSettingValue(symbol);
-        var unit    = SoundTestManager.settingUnitValues[symbol];
+        var titleWidth  = rect.width - statusWidth;
+        var symbol      = this.commandSymbol(index);
+        var value       = this.getSettingValue(symbol);
+        var unit        = SoundTestManager.settingUnitValues[symbol];
         this.drawItemGauge(index);
         this.drawText(this.commandName(index), rect.x, rect.y, titleWidth, 'left');
         this.drawText(value + unit, titleWidth, rect.y, statusWidth, 'right');
     };
 
     Window_BgmSetting.prototype.drawItemGauge = function(index) {
-        var rect = this.itemRectForText(index);
+        var rect   = this.itemRectForText(index);
         var symbol = this.commandSymbol(index);
         var value  = this.getSettingValue(symbol);
         var min    = SoundTestManager.settingMinValues[symbol];
@@ -751,13 +798,13 @@ function Scene_SoundTest() {
         return 120;
     };
 
-    var _Window_BgmSetting_cursorRight = Window_BgmSetting.prototype.cursorRight;
+    var _Window_BgmSetting_cursorRight      = Window_BgmSetting.prototype.cursorRight;
     Window_BgmSetting.prototype.cursorRight = function(wrap) {
         _Window_BgmSetting_cursorRight.apply(this, arguments);
         this._shiftValue(this.valueOffset(), Input.isTriggered('right'));
     };
 
-    var _Window_BgmSetting_cursorLeft = Window_BgmSetting.prototype.cursorLeft;
+    var _Window_BgmSetting_cursorLeft      = Window_BgmSetting.prototype.cursorLeft;
     Window_BgmSetting.prototype.cursorLeft = function(wrap) {
         _Window_BgmSetting_cursorLeft.apply(this, arguments);
         this._shiftValue(-this.valueOffset(), Input.isTriggered('left'));
@@ -800,9 +847,9 @@ function Scene_SoundTest() {
         return $gameSoundTest.getBgmProperty(symbol);
     };
 
-    var paramVolume = getParamString(['音量名称','NameVolume']);
-    var paramPitch  = getParamString(['ピッチ名称','NamePitch']);
-    var paramPan    = getParamString(['位相名称','NamePan']);
+    var paramVolume = getParamString(['音量名称', 'NameVolume']);
+    var paramPitch  = getParamString(['ピッチ名称', 'NamePitch']);
+    var paramPan    = getParamString(['位相名称', 'NamePan']);
     //=============================================================================
     // SoundTestManager
     //  サウンドテスト設定ファイルのセーブとロードを定義します。
@@ -810,11 +857,12 @@ function Scene_SoundTest() {
     function SoundTestManager() {
         throw new Error('This is a static class');
     }
-    SoundTestManager.saveId  = -5684;
-    SoundTestManager.settingNameValues = {volume : paramVolume, pitch : paramPitch,  pan : paramPan};
-    SoundTestManager.settingMinValues  = {volume : 0,   pitch : 50,  pan : -100};
-    SoundTestManager.settingMaxValues  = {volume : 100, pitch : 150, pan :  100};
-    SoundTestManager.settingUnitValues = {volume : '%', pitch : '%', pan :  ''};
+
+    SoundTestManager.saveId            = -5684;
+    SoundTestManager.settingNameValues = {volume: paramVolume, pitch: paramPitch, pan: paramPan};
+    SoundTestManager.settingMinValues  = {volume: 0, pitch: 50, pan: -100};
+    SoundTestManager.settingMaxValues  = {volume: 100, pitch: 150, pan: 100};
+    SoundTestManager.settingUnitValues = {volume: '%', pitch: '%', pan: ''};
 
     SoundTestManager.makeGame = function() {
         $gameSoundTest = new Game_SoundTest();
@@ -849,23 +897,23 @@ function Scene_SoundTest() {
     //  サウンドテスト情報を保持するクラスです。
     //  $gameSoundTestとして作成され、専用のセーブファイルに保存されます。
     //=============================================================================
-    Game_SoundTest.prototype.initialize = function () {
-        this.titleCommandVisible = getParamBoolean(['タイトルに追加','AddCommandTitle']);
-        this.menuCommandVisible  = getParamBoolean(['メニューに追加','AddCommandMenu']);
-        this._playedList = {};
-        this._prevBgm = null;
-        this._prevBgs = null;
-        this._playingBgm = null;
+    Game_SoundTest.prototype.initialize = function() {
+        this.titleCommandVisible = getParamBoolean(['タイトルに追加', 'AddCommandTitle']);
+        this.menuCommandVisible  = getParamBoolean(['メニューに追加', 'AddCommandMenu']);
+        this._playedList         = {};
+        this._prevBgm            = null;
+        this._prevBgs            = null;
+        this._playingBgm         = null;
         this.resetPlayingBgm();
     };
 
-    Game_SoundTest.prototype.refresh = function () {
+    Game_SoundTest.prototype.refresh = function() {
         this.saveAudio();
         this.resetPlayingBgm();
         AudioManager.stopAll();
     };
 
-    Game_SoundTest.prototype.addPlayList = function (bgm) {
+    Game_SoundTest.prototype.addPlayList = function(bgm) {
         if (this._playedList[bgm.name] == null) {
             this._playedList[bgm.name] = bgm.pitch;
             return true;
@@ -873,13 +921,13 @@ function Scene_SoundTest() {
         return false;
     };
 
-    Game_SoundTest.prototype.addPlayListAll = function () {
+    Game_SoundTest.prototype.addPlayListAll = function() {
         $dataSoundTest.forEach(function(data) {
-            if (data) this.addPlayList({name:data.fileName, volume:90, pitch:100, pan:0});
+            if (data) this.addPlayList({name: data.fileName, volume: 90, pitch: 100, pan: 0});
         }.bind(this));
     };
 
-    Game_SoundTest.prototype.isPlayAlready = function (bgmName) {
+    Game_SoundTest.prototype.isPlayAlready = function(bgmName) {
         return !!this._playedList[bgmName];
     };
 
@@ -905,7 +953,7 @@ function Scene_SoundTest() {
     };
 
     Game_SoundTest.prototype.resetPlayingBgm = function() {
-        this._playingBgm = {name:'', pan:0, pitch:100, volume:90};
+        this._playingBgm = {name: '', pan: 0, pitch: 100, volume: 90};
     };
 
     Game_SoundTest.prototype.saveAudio = function() {
