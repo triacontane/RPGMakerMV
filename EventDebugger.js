@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/01/27 自動ブレークポイント機能を追加
 // 1.0.2 2017/01/23 変数を修正しても監視ウィンドウに反映されない場合がある問題を修正
 // 1.0.1 2017/01/22 ステップ実行を最後まで実行するとエラーになっていた問題を修正
 // 1.0.0 2017/01/11 初版
@@ -196,8 +197,10 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * BREAK_POINT \v[1] === 3 # 条件式[\v[1] === 3]を満たしたらステップ実行開始
+ * BREAK_POINT \v[1] === 3 # 条件式[\v[1] === 3]を満たしていたらステップ実行開始
  * B \v[1] === 3           # 同上
+ * AUTO_BREAK \v[1] === 3  # 条件式[\v[1] === 3]を満たした辞典でステップ実行開始
+ * AB \v[1] === 3          # 同上
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -293,6 +296,8 @@ function DebugManager() {
     const pluginCommandMap = new Map([
         ['B', 'setBreakPoint'],
         ['BREAK_POINT', 'setBreakPoint'],
+        ['AB', 'setAutoBreakPoint'],
+        ['AUTO_BREAK', 'setAutoBreakPoint'],
     ]);
 
     //=============================================================================
@@ -381,8 +386,9 @@ function DebugManager() {
     // DebugManager
     //  デバッグ実行を状態を管理します。
     //=============================================================================
-    DebugManager._debugCount       = 0;
-    DebugManager._eventNamesMap    = {
+    DebugManager._debugCount        = 0;
+    DebugManager._autoBreakFormulas = [];
+    DebugManager._eventNamesMap     = {
         101: '文章の表示',
         102: '選択肢の表示',
         103: '数値入力の処理',
@@ -498,7 +504,7 @@ function DebugManager() {
         355: 'スクリプト',
         356: 'プラグインコマンド'
     };
-    DebugManager._startDescription = [
+    DebugManager._startDescription  = [
         '-------------------ステップ実行を開始します。-------------------\n',
         'ブレークポイントを検知したため、イベントの実行を中断しました。\n',
         '☆操作方法\n',
@@ -510,7 +516,7 @@ function DebugManager() {
         ':再開(ステップ実行を終了し処理を再開する)\n',
         'F9:デバッグ画面を開く(マップ画面のみ)\n'
     ];
-    DebugManager._stopDescription  = [
+    DebugManager._stopDescription   = [
         '-------------------ステップ実行を終了します。-------------------\n',
     ];
 
@@ -731,6 +737,17 @@ function DebugManager() {
         return this._watchList.length;
     };
 
+    DebugManager.setAutoBreakPoint = function(formula) {
+        if (this._autoBreakFormulas.contains(formula)) return;
+        this._autoBreakFormulas.push(formula);
+    };
+
+    DebugManager.isAutoBreak = function() {
+        return this._autoBreakFormulas.some(function(formula) {
+            return eval(formula);
+        })
+    };
+
     //=============================================================================
     // Game_Interpreter
     //  ステップ実行の場合は、デバッガに自身を渡します。
@@ -749,6 +766,10 @@ function DebugManager() {
         if (args.length === 0 || eval(concatAllArguments(args))) {
             this.enableStepExecute();
         }
+    };
+
+    Game_Interpreter.prototype.setAutoBreakPoint = function(args) {
+        DebugManager.setAutoBreakPoint(concatAllArguments(args));
     };
 
     const _Game_Interpreter_setup    = Game_Interpreter.prototype.setup;
@@ -786,7 +807,7 @@ function DebugManager() {
 
     const _Game_Interpreter_executeCommand    = Game_Interpreter.prototype.executeCommand;
     Game_Interpreter.prototype.executeCommand = function() {
-        if (SceneManager.isStepStart() && !DebugManager.isValid()) {
+        if ((SceneManager.isStepStart() || DebugManager.isAutoBreak()) && !DebugManager.isValid()) {
             this.enableStepExecute();
         }
         if (this.isDebugging()) {
