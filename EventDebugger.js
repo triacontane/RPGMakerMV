@@ -163,7 +163,11 @@
  * 1. 指定されたキー(デフォルトF7)を押下する。(※1)
  * 2. プラグインコマンド[BREAK_POINT]を実行する。（条件が指定可能です）
  * 3. イベントテストを実行する。
+ * 4. プラグインコマンド[AUTO_BREAK]で指定した条件を満たす。(※2)
  * ※1 並列イベントが複数実行されている場合、どこで止まるかは不確定です。
+ * ※2 条件を満たした次のイベント命令からステップ実行が開始します。
+ *     1フレーム中で実行しているイベント数が多い場合、この機能はパフォーマンスを
+ *     低下させる可能性があります。
  *
  * 止めている間は以下の操作が可能です。
  *
@@ -199,7 +203,7 @@
  *
  * BREAK_POINT \v[1] === 3 # 条件式[\v[1] === 3]を満たしていたらステップ実行開始
  * B \v[1] === 3           # 同上
- * AUTO_BREAK \v[1] === 3  # 条件式[\v[1] === 3]を満たした辞典でステップ実行開始
+ * AUTO_BREAK \v[1] === 3  # 条件式[\v[1] === 3]を満たした時点でステップ実行開始
  * AB \v[1] === 3          # 同上
  *
  * 利用規約：
@@ -744,7 +748,7 @@ function DebugManager() {
 
     DebugManager.isAutoBreak = function() {
         return this._autoBreakFormulas.some(function(formula) {
-            return eval(formula);
+            return eval(convertEscapeCharacters(formula));
         })
     };
 
@@ -757,13 +761,13 @@ function DebugManager() {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         const pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
         if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertAllArguments(args));
+            this[pluginCommandMethod](args);
         }
     };
 
     Game_Interpreter.prototype.setBreakPoint = function(args) {
         if (DebugManager.isValid()) return;
-        if (args.length === 0 || eval(concatAllArguments(args))) {
+        if (args.length === 0 || eval(concatAllArguments(convertAllArguments(args)))) {
             this.enableStepExecute();
         }
     };
