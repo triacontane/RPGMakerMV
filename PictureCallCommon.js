@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/02/02 マップのズームおよびシェイク中でも正確にピクチャをクリックできるようになりました。
+//                  マウスポインタがピクチャ内にあるかどうかをスクリプトで判定できる機能を追加。
 // 1.6.0 2016/12/29 ピクチャクリックでイベントが発生したらマップタッチを無効化するよう仕様修正
 // 1.5.1 2016/11/20 1.5.0で混入した不要なコードを削除
 // 1.5.0 2016/11/19 ピクチャクリック時にコモンイベントではなくスイッチをONにできる機能を追加
@@ -142,6 +144,14 @@
  *  例：P_POINTER_REMOVE 1
  *  　：ピクチャのポインタ化解除 \v[1]
  *
+ *  ・スクリプト（上級者向け）
+ *  $gameScreen.isPointerInnerPicture([ID]);
+ *
+ *  指定した[ID]のピクチャ内にマウスポインタもしくはタッチ座標が存在する場合に
+ *  trueを返します。このスクリプトは[P_CALL_CE]を使用していなくても有効です。
+ *
+ *  例：$gameScreen.isPointerInnerPicture(5);
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -193,6 +203,13 @@
  *
  *  P_CALL_CE_REMOVE [Picture number] :
  *      break relation from picture to common event.
+ *
+ *  - Script
+ *  $gameScreen.isPointerInnerPicture([ID]);
+ *
+ *  If mouse pointer inner the picture, return true.
+ *
+ *  ex：$gameScreen.isPointerInnerPicture(5);
  *
  *  This plugin is released under the MIT License.
  */
@@ -455,6 +472,54 @@
         return this._pictureTransparentArray[this.realPictureId(pictureId)];
     };
 
+    Game_Screen.prototype.disConvertPositionX = function(x) {
+        return Math.round((x + this.zoomX() - this.shake()) / this.zoomScale());
+    };
+
+    Game_Screen.prototype.disConvertPositionY = function(y) {
+        return Math.round((y + this.zoomY()) / this.zoomScale());
+    };
+
+    Game_Screen.prototype.disConvertPositionY = function(y) {
+        return Math.round((y + this.zoomY()) / this.zoomScale());
+    };
+
+    Game_Screen.prototype.isPointerInnerPicture = function(pictureId) {
+        var picture = SceneManager.getPictureSprite(pictureId);
+        return picture ? picture.isIncludePointer() : false;
+    };
+
+    //=============================================================================
+    // SceneManager
+    //  ピクチャスプライトを取得します。
+    //=============================================================================
+    SceneManager.getPictureSprite = function(pictureId) {
+        return this._scene.getPictureSprite(pictureId);
+    };
+
+    //=============================================================================
+    // Scene_Base
+    //  ピクチャに対する繰り返し処理を追加定義します。
+    //=============================================================================
+    Scene_Base.prototype.updateTouchPictures = function() {
+        this._spriteset.iteratePictures(function(picture) {
+            if (typeof picture.callTouch === 'function') picture.callTouch();
+            return $gameTemp.pictureCommonId() === 0;
+        });
+    };
+
+    Scene_Base.prototype.getPictureSprite = function(pictureId) {
+        var result = null;
+        this._spriteset.iteratePictures(function(picture) {
+            if (picture.isIdEquals(pictureId)) {
+                result = picture;
+                return false;
+            }
+            return true;
+        });
+        return result;
+    };
+
     //=============================================================================
     // Scene_Map
     //  ピクチャのタッチ状態からのコモンイベント呼び出し予約を追加定義します。
@@ -463,10 +528,6 @@
     Scene_Map.prototype.update = function() {
         if (!$gameMap.isEventRunning()) this.updateTouchPictures();
         _Scene_Map_update.apply(this, arguments);
-    };
-
-    Scene_Map.prototype.updateTouchPictures = function() {
-        this._spriteset.callTouchPictures();
     };
 
     const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
@@ -488,33 +549,29 @@
         _Scene_Battle_update.apply(this, arguments);
     };
 
-    Scene_Battle.prototype.updateTouchPictures = function() {
-        this._spriteset.callTouchPictures();
-    };
-
     //=============================================================================
     // Spriteset_Base
-    //  ピクチャのタッチ状態からのコモンイベント呼び出し予約を追加定義します。
+    //  ピクチャに対するイテレータを追加定義します。
     //=============================================================================
-    Spriteset_Base.prototype.callTouchPictures = function() {
+    Spriteset_Base.prototype.iteratePictures = function(callBackFund) {
         var containerChildren = this._pictureContainer.children;
         if (!Array.isArray(containerChildren)) {
             this._pictureContainer.iterate(function(property) {
                 if (this._pictureContainer[property].hasOwnProperty('children')) {
                     containerChildren = this._pictureContainer[property].children;
-                    this._callTouchPicturesSub(containerChildren);
+                    this._iteratePicturesSub(containerChildren, callBackFund);
                 }
             }.bind(this));
         } else {
-            this._callTouchPicturesSub(containerChildren);
+            this._iteratePicturesSub(containerChildren, callBackFund);
         }
     };
 
-    Spriteset_Base.prototype._callTouchPicturesSub = function(containerChildren) {
+    Spriteset_Base.prototype._iteratePicturesSub = function(containerChildren, callBackFund) {
         for (var i = containerChildren.length - 1; i >= 0; i--) {
-            var picture = containerChildren[i];
-            if (typeof picture.callTouch === 'function') picture.callTouch();
-            if ($gameTemp.pictureCommonId() > 0) break;
+            if (!callBackFund(containerChildren[i])) {
+                break;
+            }
         }
     };
 
@@ -552,7 +609,7 @@
     };
 
     Sprite_Picture.prototype.updateMouseMove = function() {
-        if (this.isTouchable() && this.isTouchPosInRect() && !this.isTransparent()) {
+        if (this.isIncludePointer()) {
             if (!this._wasOnMouse) {
                 this._onMouse    = true;
                 this._wasOnMouse = true;
@@ -563,6 +620,10 @@
                 this._wasOnMouse = false;
             }
         }
+    };
+
+    Sprite_Picture.prototype.isIncludePointer = function() {
+        return this.isTouchable() && this.isTouchPosInRect() && !this.isTransparent();
     };
 
     Sprite_Picture.prototype.updateStroke = function() {
@@ -630,8 +691,8 @@
 
     Sprite_Picture.prototype.isTransparent = function() {
         if (!this.isValidTransparent()) return false;
-        var dx  = TouchInput.x - this.x;
-        var dy  = TouchInput.y - this.y;
+        var dx  = this.getTouchScreenX() - this.x;
+        var dy  = this.getTouchScreenY() - this.y;
         var sin = Math.sin(-this.rotation);
         var cos = Math.cos(-this.rotation);
         var bx  = Math.floor(dx * cos + dy * -sin) / this.scale.x + this.anchor.x * this.width;
@@ -677,8 +738,8 @@
     };
 
     Sprite_Picture.prototype.isTouchPosInRect = function() {
-        var dx  = TouchInput.x - this.x;
-        var dy  = TouchInput.y - this.y;
+        var dx  = this.getTouchScreenX() - this.x;
+        var dy  = this.getTouchScreenY() - this.y;
         var sin = Math.sin(-this.rotation);
         var cos = Math.cos(-this.rotation);
         var rx  = this.x + Math.floor(dx * cos + dy * -sin);
@@ -741,6 +802,18 @@
 
     Sprite_Picture.prototype.isTouchEvent = function(triggerFunc) {
         return this.isTouchable() && triggerFunc.call(TouchInput) && this.isTouchPosInRect();
+    };
+
+    Sprite_Picture.prototype.getTouchScreenX = function() {
+        return $gameScreen.disConvertPositionX(TouchInput.x);
+    };
+
+    Sprite_Picture.prototype.getTouchScreenY = function() {
+        return $gameScreen.disConvertPositionY(TouchInput.y);
+    };
+
+    Sprite_Picture.prototype.isIdEquals = function(pictureId) {
+        return this._pictureId === pictureId;
     };
 
     //=============================================================================
