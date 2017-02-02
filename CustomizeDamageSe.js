@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/02/02 ダメージが0だった場合に専用SEを演奏できる機能を追加
 // 1.0.0 2016/12/14 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -34,6 +35,13 @@
  *
  * @param ResistanceSe
  * @desc 耐性時に演奏されるSEです。
+ * @default
+ * @require 1
+ * @dir audio/se/
+ * @type file
+ *
+ * @param NoDamageSe
+ * @desc ダメージが0だった場合に演奏されるSEです。
  * @default
  * @require 1
  * @dir audio/se/
@@ -76,6 +84,13 @@
  * @dir audio/se/
  * @type file
  *
+ * @param 無効SE
+ * @desc ダメージが0だった場合に演奏されるSEです。
+ * @default
+ * @require 1
+ * @dir audio/se/
+ * @type file
+ *
  * @help 弱点時と耐性時と通常時（デフォルト）でダメージ効果音を分けることができます。
  * 弱点と耐性とで、それぞれダメージ倍率の閾値を指定可能です。
  *
@@ -93,59 +108,69 @@
 
 (function() {
     'use strict';
-    const pluginName = 'CustomizeDamageSe';
+    var pluginName = 'CustomizeDamageSe';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    const getParamOther = function(paramNames) {
+    var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return null;
     };
 
-    const getParamNumber = function(paramNames, min, max) {
-        const value = getParamOther(paramNames);
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    const getParamString = function(paramNames) {
-        const value = getParamOther(paramNames);
+    var getParamString = function(paramNames) {
+        var value = getParamOther(paramNames);
         return value === null ? '' : value;
     };
 
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const paramWeaknessSe     = getParamString(['WeaknessSe', '弱点SE']);
-    const paramResistanceSe   = getParamString(['ResistanceSe', '耐性SE']);
-    const paramWeaknessLine   = getParamNumber(['WeaknessLine', '弱点閾値']);
-    const paramResistanceLine = getParamNumber(['ResistanceLine', '耐性閾値']);
+    var paramWeaknessSe     = getParamString(['WeaknessSe', '弱点SE']);
+    var paramResistanceSe   = getParamString(['ResistanceSe', '耐性SE']);
+    var paramWeaknessLine   = getParamNumber(['WeaknessLine', '弱点閾値']);
+    var paramResistanceLine = getParamNumber(['ResistanceLine', '耐性閾値']);
+    var paramNoDamageSe     = getParamString(['NoDamageSe', '無効SE']);
 
-    const userSettings = new Map([
+    var userSettings = new Map([
         ['weaknessSe', {name: paramWeaknessSe, volume: 90, pitch: 100, pan: 0}],
-        ['resistanceSe', {name: paramResistanceSe, volume: 90, pitch: 100, pan: 0}]
+        ['resistanceSe', {name: paramResistanceSe, volume: 90, pitch: 100, pan: 0}],
+        ['noDamageSe', {name: paramNoDamageSe, volume: 90, pitch: 100, pan: 0}]
     ]);
 
     //=============================================================================
     // Game_Action
     //  弱点および耐性を検知します。
     //=============================================================================
-    const _Game_Action_calcElementRate    = Game_Action.prototype.calcElementRate;
+    var _Game_Action_calcElementRate    = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
-        const result = _Game_Action_calcElementRate.apply(this, arguments);
+        var result = _Game_Action_calcElementRate.apply(this, arguments);
         if (result >= paramWeaknessLine / 100) {
             target.setEffectiveSe(userSettings.get('weaknessSe'));
         } else if (result <= paramResistanceLine / 100) {
             target.setEffectiveSe(userSettings.get('resistanceSe'));
         }
         return result;
+    };
+
+    var _Game_Action_executeDamage = Game_Action.prototype.executeDamage;
+    Game_Action.prototype.executeDamage = function(target, value) {
+        if (value === 0) {
+            target.setEffectiveSe(userSettings.get('noDamageSe'));
+        }
+        _Game_Action_executeDamage.apply(this, arguments);
     };
 
     //=============================================================================
@@ -160,6 +185,10 @@
         return this._effectiveSe;
     };
 
+    Game_Battler.prototype.performNoDamage = function() {
+        SoundManager.playCustomDamage();
+    };
+
     //=============================================================================
     // SoundManager
     //  ダメージ効果音をカスタマイズ可能にします。
@@ -169,20 +198,22 @@
     };
 
     SoundManager.playCustomDamage = function() {
-        if (this._damageSe) {
+        var result = false;
+        if (this._damageSe && this._damageSe.name) {
             AudioManager.playSe(this._damageSe);
             this._damageSe = null;
-            return true;
+            result = true;
         }
-        return false;
+        this._damageSe = null;
+        return result;
     };
 
-    const _SoundManager_playActorDamage = SoundManager.playActorDamage;
+    var _SoundManager_playActorDamage = SoundManager.playActorDamage;
     SoundManager.playActorDamage        = function() {
         this.playCustomDamage() || _SoundManager_playActorDamage.apply(this, arguments);
     };
 
-    const _SoundManager_playEnemyDamage = SoundManager.playEnemyDamage;
+    var _SoundManager_playEnemyDamage = SoundManager.playEnemyDamage;
     SoundManager.playEnemyDamage        = function() {
         this.playCustomDamage() || _SoundManager_playEnemyDamage.apply(this, arguments);
     };
@@ -191,13 +222,32 @@
     // Window_BattleLog
     //  ダメージ効果音を演奏します。
     //=============================================================================
-    const _Window_BattleLog_performDamage    = Window_BattleLog.prototype.performDamage;
+    var _Window_BattleLog_performDamage    = Window_BattleLog.prototype.performDamage;
     Window_BattleLog.prototype.performDamage = function(target) {
-        const effectiveSe = target.getEffectiveSe();
+        this.setEffectiveSe(target);
+        _Window_BattleLog_performDamage.apply(this, arguments);
+    };
+
+    Window_BattleLog.prototype.performNoDamage = function(target) {
+        this.setEffectiveSe(target);
+        target.performNoDamage();
+    };
+
+    Window_BattleLog.prototype.setEffectiveSe = function(target) {
+        var effectiveSe = target.getEffectiveSe();
         if (effectiveSe) {
             SoundManager.changeDamageSe(effectiveSe);
             target.setEffectiveSe(null);
         }
-        _Window_BattleLog_performDamage.apply(this, arguments);
+    };
+
+    var _Window_BattleLog_displayHpDamage = Window_BattleLog.prototype.displayHpDamage;
+    Window_BattleLog.prototype.displayHpDamage = function(target) {
+        if (target.result().hpAffected) {
+            if (target.result().hpDamage === 0) {
+                this.push('performNoDamage', target);
+            }
+        }
+        _Window_BattleLog_displayHpDamage.apply(this, arguments);
     };
 })();
