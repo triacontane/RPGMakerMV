@@ -1,7 +1,7 @@
 //=============================================================================
 // FacePicture.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
