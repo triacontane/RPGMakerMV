@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2017/02/03 メモ欄に制御文字\v[n]を使った場合に、一度マップ移動しないと反映されない問題を修正しました。
 // 1.4.1 2016/11/27 T_dashMotion.jsとの競合を解決
 // 1.4.0 2016/11/21 複数のページに対して別々の画像を割り当てる機能を追加しました。
 // 1.3.0 2016/07/16 以下の機能を追加しました。
@@ -390,6 +391,9 @@
             var params = getArgArrayString(metaParam);
             if (this.isValidCgeParam(params)) {
                 result = params;
+                if (metaParam.match(/\\v/gi)) {
+                    this._graphicDynamic = true;
+                }
             }
             return result;
         }.bind(this));
@@ -410,6 +414,14 @@
     Game_Event.prototype.isValidCgeParam = function(params) {
         var pageIndex = getArgNumber(params[0]);
         return params.length > 1 && (pageIndex === this._pageIndex + 1 || params[0].toUpperCase() === 'A');
+    };
+
+    var _Game_Event_refresh = Game_Event.prototype.refresh;
+    Game_Event.prototype.refresh = function() {
+        if (this._graphicDynamic) {
+            this._pageIndex = -1;
+        }
+        _Game_Event_refresh.apply(this, arguments);
     };
 
     var _Game_Event_setupPageSettings      = Game_Event.prototype.setupPageSettings;
