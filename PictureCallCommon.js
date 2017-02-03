@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2017/02/03 ピクチャクリックを任意のボタンにバインドできる機能を追加
 // 1.7.0 2017/02/02 マップのズームおよびシェイク中でも正確にピクチャをクリックできるようになりました。
 //                  マウスポインタがピクチャ内にあるかどうかをスクリプトで判定できる機能を追加。
 // 1.6.0 2016/12/29 ピクチャクリックでイベントが発生したらマップタッチを無効化するよう仕様修正
@@ -103,6 +104,19 @@
  *  P_CALL_SWITCH [ピクチャ番号] [スイッチID] [トリガー] [透明色を考慮]:
  *  　　ピクチャの領域内でトリガー条件を満たした場合に、任意のスイッチをONにします。
  *  　　トリガーの設定などは、ピクチャのボタン化と同一です。
+ *
+ *  ピクチャのキーバインド or
+ *  P_CALL_KEY_BIND [ピクチャ番号] [ボタン名称] [トリガー] [透明色を考慮]:
+ *  　　ピクチャの領域内でトリガー条件を満たした場合に、任意のボタンを押したことにします。
+ *  　　ボタン名の設定は以下の通りです。(Windows基準)
+ *  ok      : Enter,Z
+ *  shift   : Shift
+ *  control : Ctrl,Alt
+ *  escape  : Esc,X
+ *  left    : ←
+ *  up      : ↑
+ *  right   : →
+ *  down    : ↓
  *
  *  ピクチャのボタン化解除 or
  *  P_CALL_CE_REMOVE [ピクチャ番号] :
@@ -284,23 +298,31 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var pictureId, commonId, trigger, variableNum, transparent, switchId;
+        var pictureId, touchParam, trigger, variableNum, transparent;
         switch (getCommandName(command)) {
             case 'P_CALL_CE' :
             case 'ピクチャのボタン化':
                 pictureId   = getArgNumber(args[0], 1, $gameScreen.maxPictures());
-                commonId    = getArgNumber(args[1], 1, $dataCommonEvents.length - 1);
+                touchParam    = getArgNumber(args[1], 1, $dataCommonEvents.length - 1);
                 trigger     = getArgNumber(args[2], 1);
                 transparent = (args.length > 3 ? getArgBoolean(args[3]) : null);
-                $gameScreen.setPictureCallCommon(pictureId, commonId, trigger, transparent);
+                $gameScreen.setPictureCallCommon(pictureId, touchParam, trigger, transparent);
                 break;
             case 'P_CALL_SWITCH' :
             case 'ピクチャのスイッチ化':
                 pictureId   = getArgNumber(args[0], 1, $gameScreen.maxPictures());
-                switchId    = getArgNumber(args[1], 1) * -1;
+                touchParam  = getArgNumber(args[1], 1);
                 trigger     = getArgNumber(args[2], 1);
                 transparent = (args.length > 3 ? getArgBoolean(args[3]) : null);
-                $gameScreen.setPictureCallCommon(pictureId, switchId, trigger, transparent);
+                $gameScreen.setPictureCallCommon(pictureId, touchParam * -1, trigger, transparent);
+                break;
+            case 'P_CALL_KEY_BIND' :
+            case 'ピクチャのキーバインド':
+                pictureId   = getArgNumber(args[0], 1, $gameScreen.maxPictures());
+                touchParam  = convertEscapeCharacters(args[1]).toLowerCase();
+                trigger     = getArgNumber(args[2], 1);
+                transparent = (args.length > 3 ? getArgBoolean(args[3]) : null);
+                $gameScreen.setPictureCallCommon(pictureId, touchParam, trigger, transparent);
                 break;
             case 'P_CALL_CE_REMOVE' :
             case 'ピクチャのボタン化解除':
@@ -356,6 +378,31 @@
 
     Game_Temp.prototype.pictureNum = function() {
         return this._pictureNum;
+    };
+
+    Game_Temp.prototype.onTouchPicture = function(param) {
+        this._touchPictureParam = param;
+        if (this.isTouchPictureSetSwitch()) {
+            $gameSwitches.setValue(param * -1, true);
+        }
+        if (this.isTouchPictureCallCommon()) {
+            this.setPictureCallInfo(param, this._pictureId);
+        }
+        if (this.isTouchPictureButtonTrigger()) {
+            Input.bindKeyState(param);
+        }
+    };
+
+    Game_Temp.prototype.isTouchPictureButtonTrigger = function() {
+        return isNaN(this._touchPictureParam);
+    };
+
+    Game_Temp.prototype.isTouchPictureSetSwitch = function() {
+        return !isNaN(this._touchPictureParam) && this._touchPictureParam < 0;
+    };
+
+    Game_Temp.prototype.isTouchPictureCallCommon = function() {
+        return !isNaN(this._touchPictureParam) && this._touchPictureParam > 0;
     };
 
     //=============================================================================
@@ -429,10 +476,10 @@
             $gameVariables._data[paramGameVariableTouchY] = TouchInput.y;
     };
 
-    Game_Screen.prototype.setPictureCallCommon = function(pictureId, commonOrSwitchId, trigger, transparent) {
+    Game_Screen.prototype.setPictureCallCommon = function(pictureId, touchParameter, trigger, transparent) {
         var realPictureId = this.realPictureId(pictureId);
         if (this._pictureCidArray[realPictureId] == null) this._pictureCidArray[realPictureId] = [];
-        this._pictureCidArray[realPictureId][trigger] = commonOrSwitchId;
+        this._pictureCidArray[realPictureId][trigger] = touchParameter;
         this._pictureTransparentArray[realPictureId]  = transparent;
     };
 
@@ -530,7 +577,7 @@
         _Scene_Map_update.apply(this, arguments);
     };
 
-    const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
+    const _Scene_Map_processMapTouch    = Scene_Map.prototype.processMapTouch;
     Scene_Map.prototype.processMapTouch = function() {
         _Scene_Map_processMapTouch.apply(this, arguments);
         if ($gameTemp.isDestinationValid() && $gameTemp.pictureCommonId()) {
@@ -661,16 +708,7 @@
         if (this.triggerIsLongPressed(i)) TouchInput._pressedTime = -60;
         if (this.triggerIsOnFocus(i)) this._onMouse = false;
         if (this.triggerIsOutFocus(i)) this._outMouse = false;
-        var commonOrSwitchId = commandIds[i];
-        if (this.isNeedSetSwitch(commonOrSwitchId)) {
-            $gameSwitches.setValue(commonOrSwitchId * -1, true);
-        } else {
-            $gameTemp.setPictureCallInfo(commonOrSwitchId, this._pictureId);
-        }
-    };
-
-    Sprite_Picture.prototype.isNeedSetSwitch = function(commandId) {
-        return commandId < 0;
+        $gameTemp.onTouchPicture(commandIds[i]);
     };
 
     Sprite_Picture.prototype.triggerIsLongPressed = function(triggerId) {
@@ -814,6 +852,34 @@
 
     Sprite_Picture.prototype.isIdEquals = function(pictureId) {
         return this._pictureId === pictureId;
+    };
+
+    //=============================================================================
+    // Input
+    //  ピクチャクリックをキー入力に紐付けます。
+    //=============================================================================
+    Input._bindKeyStateFrames = new Map();
+    Input.bindKeyState        = function(name) {
+        this._currentState[name] = true;
+        this._bindKeyStateFrames.set(name, 5);
+    };
+
+    var _Input_update = Input.update;
+    Input.update = function() {
+        _Input_update.apply(this, arguments);
+        this._updateBindKeyState();
+    };
+
+    Input._updateBindKeyState = function() {
+        this._bindKeyStateFrames.forEach(function(frame, keyName) {
+            frame--;
+            if (frame === 0 || !this._currentState[keyName]) {
+                this._currentState[keyName] = false;
+                this._bindKeyStateFrames.delete(keyName);
+            } else {
+                this._bindKeyStateFrames.set(keyName, frame);
+            }
+        }, this)
     };
 
     //=============================================================================
