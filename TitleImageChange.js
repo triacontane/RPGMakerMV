@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/02/04 どのセーブデータの進行を優先させるかを決めるための優先度変数を追加
 // 1.2.1 2016/12/17 進行状況のみセーブのスクリプトを実行した場合に、グローバル情報が更新されてしまう問題を修正
 // 1.2.0 2016/08/27 進行状況に応じてタイトルBGMを変更できる機能を追加
 // 1.1.0 2016/06/05 セーブデータに歯抜けがある場合にエラーが発生する問題を修正
@@ -24,6 +25,10 @@
  * @param 進行度変数
  * @desc ゲームの進行度に対応する変数番号(1...)
  * @default 1
+ *
+ * @param 優先度変数
+ * @desc 複数のセーブデータが存在するとき、どのセーブデータの進行度を優先するかを決める変数番号(1...)
+ * @default 0
  *
  * @param タイトル1の進行度
  * @desc 進行度変数の値がこの値以上ならタイトル1の画像が表示されます。
@@ -80,7 +85,10 @@
  * @type file
  *
  * @help ゲームの進行度に応じてタイトル画面の画像およびBGMを変更します。
- * 進行度には任意の変数が指定でき、全セーブデータの中の最大値が反映されます。
+ * 進行度には任意の変数が指定でき、通常は全セーブデータの中の最大値が反映されます。
+ *
+ * ただし、優先度変数が別途指定されている場合は、その変数が最も大きい値の
+ * 進行度をもとに画像及びBGMが決まります。
  *
  * タイトル画像は最大3つまで指定可能で、複数の条件を満たした場合は
  * 以下のような優先順位になります。
@@ -102,7 +110,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(function() {
     'use strict';
     var pluginName = 'TitleImageChange';
 
@@ -130,8 +138,9 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramGradeVariable = getParamNumber(['GradeVariable', '進行度変数'], 1, 5000);
-    var paramTitleGrades = [];
+    var paramGradeVariable    = getParamNumber(['GradeVariable', '進行度変数'], 1, 5000);
+    var paramPriorityVariable = getParamNumber(['PriorityVariable', '優先度変数'], 0, 5000);
+    var paramTitleGrades      = [];
     paramTitleGrades.push(getParamNumber(['TitleGrade3', 'タイトル3の進行度']));
     paramTitleGrades.push(getParamNumber(['TitleGrade2', 'タイトル2の進行度']));
     paramTitleGrades.push(getParamNumber(['TitleGrade1', 'タイトル1の進行度']));
@@ -149,23 +158,32 @@
     //  ゲーム進行状況を保存します。
     //=============================================================================
     var _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
-    DataManager.makeSavefileInfo = function() {
+    DataManager.makeSavefileInfo      = function() {
         var info = _DataManager_makeSavefileInfo.apply(this, arguments);
         this.setGradeVariable(info);
         return info;
     };
 
-    DataManager.getMaxGradeVariable = function() {
-        var globalInfo = this.loadGlobalInfo();
+    DataManager.getFirstPriorityGradeVariable = function() {
+        var globalInfo    = this.loadGlobalInfo();
         var gradeVariable = 0;
-        if (globalInfo) {
-            for (var i = 1; i < globalInfo.length; i++) {
-                if (globalInfo[i] && globalInfo[i].gradeVariable > gradeVariable) {
-                    gradeVariable = globalInfo[i].gradeVariable;
-                }
-            }
+        if (globalInfo && globalInfo.length > 0) {
+            var sortedGlobalInfo = globalInfo.clone().sort(this._compareOrderForGradeVariable);
+            gradeVariable = sortedGlobalInfo[0].gradeVariable;
         }
         return gradeVariable;
+    };
+
+    DataManager._compareOrderForGradeVariable = function(a, b) {
+        if (!a) {
+            return 1;
+        } else if (!b) {
+            return -1;
+        } else if (a.priorityVariable !== b.priorityVariable && paramPriorityVariable > 0) {
+            return (b.priorityVariable || 0) - (a.priorityVariable || 0);
+        } else {
+            return b.gradeVariable - a.gradeVariable;
+        }
     };
 
     DataManager.saveOnlyGradeVariable = function() {
@@ -181,13 +199,16 @@
 
     DataManager.setGradeVariable = function(info) {
         info.gradeVariable = $gameVariables.value(paramGradeVariable);
+        if (paramPriorityVariable > 0) {
+            info.priorityVariable = $gameVariables.value(paramPriorityVariable);
+        }
     };
 
     //=============================================================================
     // Scene_Title
     //  進行状況が一定以上の場合、タイトル画像を差し替えます。
     //=============================================================================
-    var _Scene_Title_initialize = Scene_Title.prototype.initialize;
+    var _Scene_Title_initialize      = Scene_Title.prototype.initialize;
     Scene_Title.prototype.initialize = function() {
         _Scene_Title_initialize.apply(this, arguments);
         this.changeTitleImage();
@@ -195,7 +216,7 @@
     };
 
     Scene_Title.prototype.changeTitleImage = function() {
-        var gradeVariable = DataManager.getMaxGradeVariable();
+        var gradeVariable = DataManager.getFirstPriorityGradeVariable();
         for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
             if (paramTitleImages[i] && gradeVariable >= paramTitleGrades[i]) {
                 $dataSystem.title1Name = paramTitleImages[i];
@@ -205,7 +226,7 @@
     };
 
     Scene_Title.prototype.changeTitleBgm = function() {
-        var gradeVariable = DataManager.getMaxGradeVariable();
+        var gradeVariable = DataManager.getFirstPriorityGradeVariable();
         for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
             if (paramTitleBgms[i] && gradeVariable >= paramTitleGrades[i]) {
                 $dataSystem.titleBgm.name = paramTitleBgms[i];
