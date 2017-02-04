@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/02/04 簡単な競合対策
 // 1.3.0 2017/02/04 どのセーブデータの進行度を優先させるかを決めるための優先度変数を追加
 // 1.2.1 2016/12/17 進行状況のみセーブのスクリプトを実行した場合に、グローバル情報が更新されてしまう問題を修正
 // 1.2.0 2016/08/27 進行状況に応じてタイトルBGMを変更できる機能を追加
@@ -165,11 +166,15 @@
     };
 
     DataManager.getFirstPriorityGradeVariable = function() {
-        var globalInfo    = this.loadGlobalInfo();
+        var globalInfo    = this.loadGlobalInfo().filter(function(data, id) {
+            return this.isThisGameFile(id);
+        }, this);
         var gradeVariable = 0;
         if (globalInfo && globalInfo.length > 0) {
             var sortedGlobalInfo = globalInfo.clone().sort(this._compareOrderForGradeVariable);
-            gradeVariable = sortedGlobalInfo[0].gradeVariable;
+            if (sortedGlobalInfo[0]) {
+                gradeVariable = sortedGlobalInfo[0].gradeVariable || 0;
+            }
         }
         return gradeVariable;
     };
@@ -182,7 +187,7 @@
         } else if (a.priorityVariable !== b.priorityVariable && paramPriorityVariable > 0) {
             return (b.priorityVariable || 0) - (a.priorityVariable || 0);
         } else {
-            return b.gradeVariable - a.gradeVariable;
+            return (b.gradeVariable || 0) - (a.gradeVariable || 0);
         }
     };
 
