@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/02/05 顔グラフィックのインデックスが4以上の場合に正しく表示されない問題を修正
 // 1.0.0 2017/02/02 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -193,11 +194,26 @@
         var sw     = Window_Base._faceWidth;
         var sh     = Window_Base._faceHeight;
         var sx     = faceInfo.faceIndex % 4 * sw;
-        var sy     = Math.floor(faceInfo.faceIndex / 4) * sh / 2;
+        var sy     = Math.floor(faceInfo.faceIndex / 4) * sh;
         var bitmap = new Bitmap(sw, sh);
+        bitmap.setForceLoading();
         face.addLoadListener(function() {
             bitmap.blt(face, sx, sy, sw, sh, 0, 0);
+            bitmap.forceOnLoad();
         });
         return bitmap;
+    };
+
+    //=============================================================================
+    // Bitmap
+    //  blt処理された場合に正しく表示できるようにします。
+    //=============================================================================
+    Bitmap.prototype.setForceLoading = function() {
+        this._isLoading = true;
+    };
+
+    Bitmap.prototype.forceOnLoad = function() {
+        this._isLoading = false;
+        this._callLoadListeners();
     };
 })();
