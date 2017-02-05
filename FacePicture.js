@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/02/05 任意のアクターの顔グラフィックをピクチャとして表示する機能を追加
 // 1.0.1 2017/02/05 顔グラフィックのインデックスが4以上の場合に正しく表示されない問題を修正
 // 1.0.0 2017/02/02 初版
 // ----------------------------------------------------------------------------
@@ -25,6 +26,11 @@
  * ピクチャのファイル名を指定する際に以下の通り指定してください。
  * $FACE[ファイル名, インデックス]
  * 例 : $FACE[Actor1, 2]
+ *
+ * また、任意のIDのアクターの顔グラフィックを表示させることもできます。
+ * ピクチャのファイル名を指定する際に以下の通り指定してください。
+ * $ACTOR_FACE[アクターID]
+ * 例 : $ACTOR_FACE[2]
  *
  * ただし、ピクチャの表示の場合は、エディタ上に存在しないファイルを
  * 選択することができないので、以下のプラグインコマンドを実行してから、
@@ -183,8 +189,15 @@
         var faceInfo = null;
         filename.replace(/\$FACE\[(.+)\s*,\s*(.+)\]/gi, function() {
             faceInfo           = {};
-            faceInfo.faceName  = getArgString(arguments[1]);
-            faceInfo.faceIndex = getArgNumber(arguments[2]);
+            faceInfo.faceName  = getArgString(arguments[1] || '');
+            faceInfo.faceIndex = getArgNumber(arguments[2] || 0);
+        }.bind(this));
+        filename.replace(/\$ACTOR_FACE\[(.+)\]/gi, function() {
+            var actor = $gameActors.actor(getArgNumber(arguments[1] || 1));
+            if (!actor) return;
+            faceInfo           = {};
+            faceInfo.faceName  = actor.faceName();
+            faceInfo.faceIndex = actor.faceIndex();
         }.bind(this));
         return faceInfo;
     };
