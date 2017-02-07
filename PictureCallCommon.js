@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2017/02/07 端末依存の記述を削除
 // 1.8.0 2017/02/03 ピクチャクリックを任意のボタンにバインドできる機能を追加
 // 1.7.0 2017/02/02 マップのズームおよびシェイク中でも正確にピクチャをクリックできるようになりました。
 //                  マウスポインタがピクチャ内にあるかどうかをスクリプトで判定できる機能を追加。
@@ -577,7 +578,7 @@
         _Scene_Map_update.apply(this, arguments);
     };
 
-    const _Scene_Map_processMapTouch    = Scene_Map.prototype.processMapTouch;
+    var _Scene_Map_processMapTouch    = Scene_Map.prototype.processMapTouch;
     Scene_Map.prototype.processMapTouch = function() {
         _Scene_Map_processMapTouch.apply(this, arguments);
         if ($gameTemp.isDestinationValid() && $gameTemp.pictureCommonId()) {
