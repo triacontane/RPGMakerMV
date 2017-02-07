@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/02/07 端末依存の記述を削除
 // 1.0.0 2017/01/17 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -94,17 +95,17 @@
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    const getParamString = function(paramNames) {
+    var getParamString = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return '';
     };
 
-    const getParamBoolean = function(paramNames) {
-        const value = getParamString(paramNames);
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
         return value.toUpperCase() === 'ON';
     };
 
@@ -122,7 +123,7 @@
 
     var getMetaValues = function(object, names) {
         if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (let i = 0, n = names.length; i < n; i++) {
+        for (var i = 0, n = names.length; i < n; i++) {
             var value = getMetaValue(object, names[i]);
             if (value !== undefined) return value;
         }
@@ -138,7 +139,7 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const param = {};
+    var param = {};
     param.recoverSe = getParamBoolean(['RecoverSe', '回復効果音']);
 
     //=============================================================================

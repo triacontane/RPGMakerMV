@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2017/02/07 端末依存の記述を削除
 // 1.0.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.0.1 2017/01/01 YEP_BattleEngineCore.js用の対策コードを追記
 // 1.0.0 2017/01/01 初版
@@ -85,33 +86,33 @@
 
 (function() {
     'use strict';
-    const pluginName    = 'EffectConditions';
-    const metaTagPrefix = 'EC';
+    var pluginName    = 'EffectConditions';
+    var metaTagPrefix = 'EC';
 
-    const getArgNumber = function(arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(arg) || 0).clamp(min, max);
     };
 
-    const getMetaValue = function(object, name) {
-        const metaTagName = metaTagPrefix + name;
+    var getMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + name;
         return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
     };
 
-    const getMetaValues = function(object, names) {
-        for (let i = 0, n = names.length; i < n; i++) {
-            const value = getMetaValue(object, names[i]);
+    var getMetaValues = function(object, names) {
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
             if (value !== undefined) return value;
         }
         return undefined;
     };
 
-    const convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function(text) {
         if (text == null || text === true) text = '';
         text = text.replace(/&gt;?/gi, '>');
         text = text.replace(/&lt;?/gi, '<');
-        const windowLayer = SceneManager._scene._windowLayer;
+        var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
@@ -119,20 +120,20 @@
     // Game_Action
     //  効果の条件適用を実装します。
     //=============================================================================
-    const _Game_Action_executeDamage =Game_Action.prototype.executeDamage;
+    var _Game_Action_executeDamage =Game_Action.prototype.executeDamage;
     Game_Action.prototype.executeDamage = function(target, value) {
         this._damageValue = value;
         _Game_Action_executeDamage.apply(this, arguments);
     };
 
-    const _Game_Action_applyItemEffect = Game_Action.prototype.applyItemEffect;
+    var _Game_Action_applyItemEffect = Game_Action.prototype.applyItemEffect;
     Game_Action.prototype.applyItemEffect = function(target, effect) {
         if (this.isValidEffect(target, effect)) {
             _Game_Action_applyItemEffect.apply(this, arguments);
         }
     };
 
-    const _Game_Action_applyGlobal = Game_Action.prototype.applyGlobal;
+    var _Game_Action_applyGlobal = Game_Action.prototype.applyGlobal;
     Game_Action.prototype.applyGlobal = function() {
         _Game_Action_applyGlobal.apply(this, arguments);
         this.cancelEffectCommonEvent();
@@ -147,24 +148,24 @@
     };
 
     Game_Action.prototype.isValidEffect = function(target, effect) {
-        const index = this.getEffectIndex(effect);
+        var index = this.getEffectIndex(effect);
         if (!this.isValidEffectSwitch(index)) return false;
         if (!this.isValidEffectScript(index, target)) return false;
         return true;
     };
 
     Game_Action.prototype.isValidEffectSwitch = function(index) {
-        const metaValue = getMetaValues(this.item(), [index + 'スイッチ', index + 'Switch']);
+        var metaValue = getMetaValues(this.item(), [index + 'スイッチ', index + 'Switch']);
         if (!metaValue) return true;
         return $gameSwitches.value(getArgNumber(metaValue, 1));
     };
 
     Game_Action.prototype.isValidEffectScript = function(index, target) {
-        const metaValue = getMetaValues(this.item(), [index + '条件', index + 'Cond']);
+        var metaValue = getMetaValues(this.item(), [index + '条件', index + 'Cond']);
         if (!metaValue) return true;
         try {
-            const damage = this._damageValue || 0;
-            const subject = this.subject();
+            var damage = this._damageValue || 0;
+            var subject = this.subject();
             return eval(metaValue);
         } catch (e) {
             throw new Error(pluginName + 'で指定したスクリプト実行中にエラーが発生しました。実行内容:' + metaValue);
@@ -179,9 +180,9 @@
     // BattleManager
     //  YEP_BattleEngineCore.js用コード
     //=============================================================================
-    const _BattleManager_actionActionCommonEvent = BattleManager.actionActionCommonEvent;
+    var _BattleManager_actionActionCommonEvent = BattleManager.actionActionCommonEvent;
     BattleManager.actionActionCommonEvent = function() {
-        const result = _BattleManager_actionActionCommonEvent.apply(this, arguments);
+        var result = _BattleManager_actionActionCommonEvent.apply(this, arguments);
         this._action.cancelEffectCommonEvent();
         return result;
     };

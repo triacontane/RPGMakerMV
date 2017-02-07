@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2017/02/07 端末依存の記述を削除
 // 1.2.1 2017/01/17 1.2.0でスイッチの項目が正しく機能しなかった問題を修正
 // 1.2.0 2017/01/14 ステート自動付与の条件に計算式を適用できる機能を追加
 //                  処理の軽量化
@@ -83,7 +84,7 @@
 
 (function () {
     'use strict';
-    const metaTagPrefix = 'AS';
+    var metaTagPrefix = 'AS';
 
     var getArgNumber = function (arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
@@ -104,11 +105,11 @@
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
         text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            const actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
             return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            const actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
             return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);

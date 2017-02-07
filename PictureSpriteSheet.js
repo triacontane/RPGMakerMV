@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2016/12/31 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -94,20 +95,20 @@
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    const getArgNumber = function(arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(arg) || 0).clamp(min, max);
     };
 
-    const convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        const windowLayer = SceneManager._scene._windowLayer;
+        var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
-    const convertAllArguments = function(args) {
-        for (let i = 0; i < args.length; i++) {
+    var convertAllArguments = function(args) {
+        for (var i = 0; i < args.length; i++) {
             args[i] = convertEscapeCharacters(args[i]);
         }
         return args;
@@ -116,7 +117,7 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const pluginCommandMap = new Map([
+    var pluginCommandMap = new Map([
         ['PSS_セルサイズ設定', 'setCellSizeForPss'],
         ['PSS_SET_CELL_SIZE', 'setCellSizeForPss'],
         ['PSS_セル指定', 'setCellForPss'],
@@ -129,10 +130,10 @@
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    const _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
+    var _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        const pluginCommand = pluginCommandMap.get(command.toUpperCase());
+        var pluginCommand = pluginCommandMap.get(command.toUpperCase());
         if (pluginCommand) {
             this[pluginCommand](convertAllArguments(args));
         }
@@ -143,14 +144,14 @@
     };
 
     Game_Interpreter.prototype.setCellForPss = function(args) {
-        const picture = $gameScreen.picture(getArgNumber(args[0], 1));
+        var picture = $gameScreen.picture(getArgNumber(args[0], 1));
         if (picture) {
             picture.setSheetCellIndex(getArgNumber(args[1], 0));
         }
     };
 
     Game_Interpreter.prototype.addCellForPss = function(args) {
-        const picture = $gameScreen.picture(getArgNumber(args[0], 1));
+        var picture = $gameScreen.picture(getArgNumber(args[0], 1));
         if (picture) {
             picture.addSheetCellIndex();
         }
@@ -165,7 +166,7 @@
     };
 
     Game_Screen.prototype.getPictureSpriteSheetSize = function() {
-        const result = this._pictureSpriteSheetSize;
+        var result = this._pictureSpriteSheetSize;
         if (result) {
             this._pictureSpriteSheetSize = undefined;
         }
@@ -176,11 +177,11 @@
     // Game_Picture
     //  セルサイズを取得して、スプライトシート化します。
     //=============================================================================
-    const _Game_Picture_show    = Game_Picture.prototype.show;
+    var _Game_Picture_show    = Game_Picture.prototype.show;
     Game_Picture.prototype.show = function(name, origin, x, y, scaleX,
                                            scaleY, opacity, blendMode) {
         _Game_Picture_show.apply(this, arguments);
-        const spriteSheetSize = $gameScreen.getPictureSpriteSheetSize();
+        var spriteSheetSize = $gameScreen.getPictureSpriteSheetSize();
         if (spriteSheetSize) {
             this._sheetCol = spriteSheetSize[0];
             this._sheetRow = spriteSheetSize[1];
@@ -219,9 +220,9 @@
     };
 
     Game_Picture.prototype.getSheetCellPosition = function() {
-        const index = this.getSheetCellIndex();
-        const colIndex = index % this._sheetCol;
-        const rowIndex = Math.floor(index / this._sheetCol);
+        var index = this.getSheetCellIndex();
+        var colIndex = index % this._sheetCol;
+        var rowIndex = Math.floor(index / this._sheetCol);
         return [colIndex, rowIndex];
     };
 
@@ -229,7 +230,7 @@
     // Sprite_Picture
     //  スプライトシート化を実装します。
     //=============================================================================
-    const _Sprite_Picture_update    = Sprite_Picture.prototype.update;
+    var _Sprite_Picture_update    = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_Picture_update.apply(this, arguments);
         if (this.visible && this.picture().isUsingSpriteSheet()) {
@@ -238,9 +239,9 @@
     };
 
     Sprite_Picture.prototype.updateFrameForPss = function() {
-        const position = this.picture().getSheetCellPosition();
-        const width    = this.getCellWidth();
-        const height   = this.getCellHeight();
+        var position = this.picture().getSheetCellPosition();
+        var width    = this.getCellWidth();
+        var height   = this.getCellHeight();
         this.setFrame(position[0] * width, position[1] * height, width, height);
     };
 

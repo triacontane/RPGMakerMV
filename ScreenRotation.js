@@ -93,57 +93,57 @@
 
 (function() {
     'use strict';
-    const pluginName    = 'ScreenRotation';
-    const metaTagPrefix = 'SR_';
+    var pluginName    = 'ScreenRotation';
+    var metaTagPrefix = 'SR_';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    const getParamString = function(paramNames) {
+    var getParamString = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return '';
     };
 
-    const getParamBoolean = function(paramNames) {
-        const value = getParamString(paramNames);
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
         return value.toUpperCase() === 'ON';
     };
 
-    const getArgNumber = function(arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(arg) || 0).clamp(min, max);
     };
 
-    const convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        const windowLayer = SceneManager._scene._windowLayer;
+        var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
-    const convertAllArguments = function(args) {
-        for (let i = 0; i < args.length; i++) {
+    var convertAllArguments = function(args) {
+        for (var i = 0; i < args.length; i++) {
             args[i] = convertEscapeCharacters(args[i]);
         }
         return args;
     };
 
-    const setPluginCommand = function(commandName, methodName) {
+    var setPluginCommand = function(commandName, methodName) {
         pluginCommandMap.set(metaTagPrefix + commandName, methodName);
     };
 
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const param     = {};
+    var param     = {};
     param.throughWindow = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
 
-    const pluginCommandMap = new Map();
+    var pluginCommandMap = new Map();
     setPluginCommand('回転開始', 'execStartRotation');
     setPluginCommand('START_ROTATION', 'execStartRotation');
     setPluginCommand('回転停止', 'execStopRotation');
@@ -157,10 +157,10 @@
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    const _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
+    var _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        const pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
+        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
         if (pluginCommandMethod) {
             this[pluginCommandMethod](convertAllArguments(args));
         }
@@ -179,10 +179,10 @@
     };
 
     Game_Interpreter.prototype.execStartZoom = function(args) {
-        const scale = getArgNumber(args[0]);
-        const duration = getArgNumber(args[1], 0);
-        const x = args.length > 2 ? getArgNumber(args[2]) : SceneManager._screenWidth / 2;
-        const y = args.length > 3 ? getArgNumber(args[3]) : SceneManager._screenHeight / 2;
+        var scale = getArgNumber(args[0]);
+        var duration = getArgNumber(args[1], 0);
+        var x = args.length > 2 ? getArgNumber(args[2]) : SceneManager._screenWidth / 2;
+        var y = args.length > 3 ? getArgNumber(args[3]) : SceneManager._screenHeight / 2;
         if (duration > 0) {
             $gameScreen.startZoom(x, y, scale / 100, duration);
         } else {
@@ -195,8 +195,8 @@
     //  指定した座標が画面内かどうかを返します。
     //=============================================================================
     Game_Map.prototype.isInnerScreenPosition = function(x, y) {
-        const ax = this.adjustX(x);
-        const ay = this.adjustY(y);
+        var ax = this.adjustX(x);
+        var ay = this.adjustY(y);
         return ax >= -1 && ay >= -1 && ax < this.screenTileX() + 1 && ay < this.screenTileY() + 1;
     };
 
@@ -212,7 +212,7 @@
         this._hiddenOuterScreen = false;
     };
 
-    const _Game_CharacterBase_isTransparent    = Game_CharacterBase.prototype.isTransparent;
+    var _Game_CharacterBase_isTransparent    = Game_CharacterBase.prototype.isTransparent;
     Game_CharacterBase.prototype.isTransparent = function() {
         return _Game_CharacterBase_isTransparent.apply(this, arguments) || this._hiddenOuterScreen;
     };
@@ -221,7 +221,7 @@
     // Game_Screen
     //  画面を回転させます。
     //=============================================================================
-    const _Game_Screen_clear    = Game_Screen.prototype.clear;
+    var _Game_Screen_clear    = Game_Screen.prototype.clear;
     Game_Screen.prototype.clear = function() {
         _Game_Screen_clear.apply(this, arguments);
         this.clearRotation();
@@ -250,13 +250,13 @@
         this._angleTarget   = angleTarget;
     };
 
-    const _Game_Screen_onBattleStart = Game_Screen.prototype.onBattleStart;
+    var _Game_Screen_onBattleStart = Game_Screen.prototype.onBattleStart;
     Game_Screen.prototype.onBattleStart = function() {
         _Game_Screen_onBattleStart.apply(this, arguments);
         this.clearRotation();
     };
 
-    const _Game_Screen_update    = Game_Screen.prototype.update;
+    var _Game_Screen_update    = Game_Screen.prototype.update;
     Game_Screen.prototype.update = function() {
         _Game_Screen_update.apply(this, arguments);
         this.updateRotation();
@@ -292,7 +292,7 @@
     };
 
     Game_Screen.prototype.iterateAllCharacters = function(callBackFund, args) {
-        const characters = $gameMap.events().concat($gamePlayer);
+        var characters = $gameMap.events().concat($gamePlayer);
         characters.forEach(function(character) {
             callBackFund.apply(character, args);
         });
@@ -311,7 +311,7 @@
     //  画面の回転処理を実装します。
     //=============================================================================
     SceneManager.rotateScene = function(angle) {
-        const radian = angle * Math.PI / 180;
+        var radian = angle * Math.PI / 180;
         this._scene.rotate(radian, this._screenWidth / 2, this._screenHeight / 2);
     };
 
@@ -321,8 +321,8 @@
     //=============================================================================
     Scene_Base.prototype.rotate = function(radian, ox, oy) {
         if (this.rotation === radian) return;
-        const sin     = Math.sin(-radian);
-        const cos     = Math.cos(-radian);
+        var sin     = Math.sin(-radian);
+        var cos     = Math.cos(-radian);
         this.rotation = radian;
         this.x        = Math.floor(ox * -cos + oy * -sin) + ox;
         this.y        = Math.floor(ox * sin + oy * -cos) + oy;

@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/02/07 端末依存の記述を削除
 // 1.1.0 2016/12/29 スクリプトで通常モードと調査モードを切り替えられる機能を追加
 // 1.0.0 2016/12/21 初版
 // ----------------------------------------------------------------------------
@@ -64,44 +65,44 @@
 
 (function() {
     'use strict';
-    const pluginName = 'EventStartupTouch';
+    var pluginName = 'EventStartupTouch';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    const getParamOther = function(paramNames) {
+    var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return null;
     };
 
-    const getParamString = function(paramNames) {
-        const value = getParamOther(paramNames);
+    var getParamString = function(paramNames) {
+        var value = getParamOther(paramNames);
         return value === null ? '' : value;
     };
 
-    const getParamNumber = function(paramNames, min, max) {
-        const value = getParamOther(paramNames);
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    const getParamArrayString = function(paramNames) {
-        const values = getParamString(paramNames).split(',');
-        for (let i = 0; i < values.length; i++) values[i] = values[i].trim();
+    var getParamArrayString = function(paramNames) {
+        var values = getParamString(paramNames).split(',');
+        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
         return values;
     };
 
-    const getParamArrayNumber = function(paramNames, min, max) {
-        const values = getParamArrayString(paramNames);
+    var getParamArrayNumber = function(paramNames, min, max) {
+        var values = getParamArrayString(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        for (let i = 0; i < values.length; i++) {
+        for (var i = 0; i < values.length; i++) {
             if (!isNaN(parseInt(values[i], 10))) {
                 values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
             } else {
@@ -114,8 +115,8 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const paramStartupSwitchId = getParamNumber(['StartupSwitchId', '起動スイッチ番号']);
-    const paramValidTriggers   = getParamArrayNumber(['ValidTriggers', '有効トリガー']);
+    var paramStartupSwitchId = getParamNumber(['StartupSwitchId', '起動スイッチ番号']);
+    var paramValidTriggers   = getParamArrayNumber(['ValidTriggers', '有効トリガー']);
 
     //=============================================================================
     // Game_Player
@@ -129,9 +130,9 @@
         this._touchStartupDisable = undefined;
     };
 
-    const _Game_Player_triggerTouchAction    = Game_Player.prototype.triggerTouchAction;
+    var _Game_Player_triggerTouchAction    = Game_Player.prototype.triggerTouchAction;
     Game_Player.prototype.triggerTouchAction = function() {
-        const result = _Game_Player_triggerTouchAction.apply(this, arguments);
+        var result = _Game_Player_triggerTouchAction.apply(this, arguments);
         if (!result && this.isTouchStartupValid()) {
             return this.triggerTouchActionStartupEvent();
         }
@@ -143,7 +144,7 @@
     };
 
     Game_Player.prototype.triggerTouchActionStartupEvent = function() {
-        const event = this.getTouchStartupEvent();
+        var event = this.getTouchStartupEvent();
         if (event) {
             $gameSwitches.setValue(paramStartupSwitchId, true);
             event.startForTouch();
@@ -152,9 +153,9 @@
     };
 
     Game_Player.prototype.getTouchStartupEvent = function() {
-        const x = $gameMap.canvasToMapX(TouchInput.x);
-        const y = $gameMap.canvasToMapY(TouchInput.y);
-        let startupEvent = null;
+        var x = $gameMap.canvasToMapX(TouchInput.x);
+        var y = $gameMap.canvasToMapY(TouchInput.y);
+        var startupEvent = null;
         $gameMap.eventsXy(x, y).some(function(event) {
             if (event.isTriggerIn(paramValidTriggers)) {
                 startupEvent = event;
@@ -174,7 +175,7 @@
         this._noLock = false;
     };
 
-    const _Game_Event_lock = Game_Event.prototype.lock;
+    var _Game_Event_lock = Game_Event.prototype.lock;
     Game_Event.prototype.lock = function() {
         _Game_Event_lock.apply(this, arguments);
         if (this._noLock) {
@@ -186,7 +187,7 @@
     // Game_Interpreter
     //  マップイベント終了時にタッチスイッチをOFFにします。
     //=============================================================================
-    const _Game_Interpreter_terminate    = Game_Interpreter.prototype.terminate;
+    var _Game_Interpreter_terminate    = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
         if ($gameMap.isMapInterpreterOf(this) && this._depth === 0) {
@@ -206,7 +207,7 @@
     // Scene_Map
     //  デフォルトのタッチ移動を無効化します。
     //=============================================================================
-    const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
+    var _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
     Scene_Map.prototype.processMapTouch = function() {
         _Scene_Map_processMapTouch.apply(this, arguments);
         if ($gameTemp.isDestinationValid() && $gamePlayer.isTouchStartupValid() && $gamePlayer.getTouchStartupEvent()) {

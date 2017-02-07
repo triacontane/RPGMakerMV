@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/02/07 端末依存の記述を削除
 // 1.2.0 2016/01/02 メッセージウィンドウと連動して指定したピクチャの表示/非表示が自動で切り替わる機能を追加
 // 1.1.0 2016/08/25 選択肢の表示中はウィンドウを非表示にできないよう仕様変更
 // 1.0.4 2016/07/22 YEP_MessageCore.jsのネーム表示ウィンドウと連携する機能を追加
@@ -76,8 +77,8 @@
         return value == null ? '' : value;
     };
 
-    const getParamNumber = function(paramNames, min, max) {
-        const value = getParamString(paramNames);
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamString(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(value) || 0).clamp(min, max);
@@ -95,7 +96,7 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const param             = {};
+    var param             = {};
     param.triggerButton     = getParamString(['TriggerButton', 'ボタン名称']).toLowerCase();
     param.linkPictureNumber = getParamNumber(['LinkPictureNumber', '連動ピクチャ番号']);
 

@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2017/01/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -49,42 +50,42 @@
 
 (function() {
     'use strict';
-    const metaTagPrefix = 'IS_';
+    var metaTagPrefix = 'IS_';
 
-    const getArgNumber = function(arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
     };
 
-    const getMetaValue = function(object, name) {
-        const metaTagName = metaTagPrefix + (name ? name : '');
+    var getMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + (name ? name : '');
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
     };
 
-    const getMetaValues = function(object, names) {
+    var getMetaValues = function(object, names) {
         if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (let i = 0, n = names.length; i < n; i++) {
-            const value = getMetaValue(object, names[i]);
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
             if (value !== undefined) return value;
         }
         return undefined;
     };
 
-    const convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        const windowLayer = SceneManager._scene._windowLayer;
+        var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
-    const _Game_Enemy_setup = Game_Enemy.prototype.setup;
+    var _Game_Enemy_setup = Game_Enemy.prototype.setup;
     Game_Enemy.prototype.setup = function(enemyId, x, y) {
         _Game_Enemy_setup.apply(this, arguments);
         this.setupInitialState();
     };
 
     Game_Enemy.prototype.setupInitialState = function() {
-        const state = getMetaValues(this.enemy(), ['State', 'ステート']);
+        var state = getMetaValues(this.enemy(), ['State', 'ステート']);
         if (state) this.addState(getArgNumber(state), 1);
     };
 })();

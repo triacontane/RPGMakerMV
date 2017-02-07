@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2016/12/08 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -49,17 +50,17 @@
 
 (function() {
     'use strict';
-    const metaTagPrefix = 'ENL';
+    var metaTagPrefix = 'ENL';
 
-    const getMetaValue = function(object, name) {
-        const metaTagName = metaTagPrefix + (name ? name : '');
+    var getMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + (name ? name : '');
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
     };
 
-    const getMetaValues = function(object, names) {
+    var getMetaValues = function(object, names) {
         if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (let i = 0, n = names.length; i < n; i++) {
-            const value = getMetaValue(object, names[i]);
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
             if (value !== undefined) return value;
         }
         return undefined;
@@ -69,10 +70,10 @@
     // Game_Event
     //  イベントロックを無効にします。
     //=============================================================================
-    const _Game_Event_lock = Game_Event.prototype.lock;
+    var _Game_Event_lock = Game_Event.prototype.lock;
     Game_Event.prototype.lock = function() {
         _Game_Event_lock.apply(this, arguments);
-        const disableLock = getMetaValues(this.event(), ['ロック無効', 'DisableLock']);
+        var disableLock = getMetaValues(this.event(), ['ロック無効', 'DisableLock']);
         if (disableLock) {
             this.setDirection(this._prelockDirection);
         }

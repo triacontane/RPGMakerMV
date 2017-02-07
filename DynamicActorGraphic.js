@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/02/07 端末依存の記述を削除
 // 1.0.1 2017/01/21 ステートアイコンの並び順が逆になっていた不具合を修正
 // 1.0.0 2016/12/31 初版
 // ----------------------------------------------------------------------------
@@ -78,32 +79,32 @@
 
 (function() {
     'use strict';
-    const metaTagPrefix = 'DAG_';
+    var metaTagPrefix = 'DAG_';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    const getArgNumber = function(arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(arg) || 0).clamp(min, max);
     };
 
-    const getArgArrayString = function(args) {
-        const values = args.split(',');
-        for (let i = 0; i < values.length; i++) {
+    var getArgArrayString = function(args) {
+        var values = args.split(',');
+        for (var i = 0; i < values.length; i++) {
             values[i] = values[i].trim();
         }
         return values;
     };
 
-    const getMetaValue = function(object, name) {
-        const metaTagName = metaTagPrefix + name;
+    var getMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + name;
         return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
     };
 
-    const convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
@@ -114,11 +115,11 @@
             return $gameVariables.value(parseInt(arguments[1], 10));
         }.bind(this));
         text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            const actor = parseInt(arguments[1], 10) >= 1 ? $gameActors.actor(parseInt(arguments[1], 10)) : null;
+            var actor = parseInt(arguments[1], 10) >= 1 ? $gameActors.actor(parseInt(arguments[1], 10)) : null;
             return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            const actor = parseInt(arguments[1], 10) >= 1 ? $gameParty.members()[parseInt(arguments[1], 10) - 1] : null;
+            var actor = parseInt(arguments[1], 10) >= 1 ? $gameParty.members()[parseInt(arguments[1], 10) - 1] : null;
             return actor ? actor.name() : '';
         }.bind(this));
         text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
@@ -129,7 +130,7 @@
     // Game_Actor
     //  リフレッシュ
     //=============================================================================
-    const _Game_Actor_refresh    = Game_Actor.prototype.refresh;
+    var _Game_Actor_refresh    = Game_Actor.prototype.refresh;
     Game_Actor.prototype.refresh = function() {
         _Game_Actor_refresh.apply(this, arguments);
         this.refreshCustomGraphic();
@@ -148,7 +149,7 @@
     };
 
     Game_Actor.prototype.refreshCustomGraphicForState = function() {
-        const actor = this.actor();
+        var actor = this.actor();
         this.getSortedStates().forEach(function(stateId) {
             this.setCharacterCustom(getMetaValue(actor, 'CHARACTER_ST' + String(stateId)));
             this.setFaceCustom(getMetaValue(actor, 'FACE_ST' + String(stateId)));
@@ -157,8 +158,8 @@
     };
 
     Game_Actor.prototype.refreshCustomGraphicForHpRate = function() {
-        const actor = this.actor();
-        for (let hpRate = 10; hpRate <= 100; hpRate += 10) {
+        var actor = this.actor();
+        for (var hpRate = 10; hpRate <= 100; hpRate += 10) {
             if (this.hpRate() > hpRate / 100) continue;
             this.setCharacterCustom(getMetaValue(actor, 'CHARACTER_HP' + String(hpRate)));
             this.setFaceCustom(getMetaValue(actor, 'FACE_HP' + String(hpRate)));
@@ -184,14 +185,14 @@
 
     Game_Actor.prototype.setCharacterCustom = function(metaValue) {
         if (!metaValue || this._characterNameCustom) return;
-        const metaValueArray       = getArgArrayString(metaValue);
+        var metaValueArray       = getArgArrayString(metaValue);
         this._characterNameCustom  = metaValueArray[0];
         this._characterIndexCustom = getArgNumber(metaValueArray[1], 0, 7);
     };
 
     Game_Actor.prototype.setFaceCustom = function(metaValue) {
         if (!metaValue || this._faceNameCustom) return;
-        const metaValueArray  = getArgArrayString(metaValue);
+        var metaValueArray  = getArgArrayString(metaValue);
         this._faceNameCustom  = metaValueArray[0];
         this._faceIndexCustom = getArgNumber(metaValueArray[1], 0, 7);
     };
@@ -201,27 +202,27 @@
         this._battlerNameCustom  = metaValue;
     };
 
-    const _Game_Actor_characterName    = Game_Actor.prototype.characterName;
+    var _Game_Actor_characterName    = Game_Actor.prototype.characterName;
     Game_Actor.prototype.characterName = function() {
         return this._characterNameCustom || _Game_Actor_characterName.apply(this, arguments);
     };
 
-    const _Game_Actor_characterIndex    = Game_Actor.prototype.characterIndex;
+    var _Game_Actor_characterIndex    = Game_Actor.prototype.characterIndex;
     Game_Actor.prototype.characterIndex = function() {
         return this._characterIndexCustom || _Game_Actor_characterIndex.apply(this, arguments);
     };
 
-    const _Game_Actor_faceName    = Game_Actor.prototype.faceName;
+    var _Game_Actor_faceName    = Game_Actor.prototype.faceName;
     Game_Actor.prototype.faceName = function() {
         return this._faceNameCustom || _Game_Actor_faceName.apply(this, arguments);
     };
 
-    const _Game_Actor_faceIndex    = Game_Actor.prototype.faceIndex;
+    var _Game_Actor_faceIndex    = Game_Actor.prototype.faceIndex;
     Game_Actor.prototype.faceIndex = function() {
         return this._faceIndexCustom || _Game_Actor_faceIndex.apply(this, arguments);
     };
 
-    const _Game_Actor_battlerName    = Game_Actor.prototype.battlerName;
+    var _Game_Actor_battlerName    = Game_Actor.prototype.battlerName;
     Game_Actor.prototype.battlerName = function() {
         return this._battlerNameCustom || _Game_Actor_battlerName.apply(this, arguments);
     };

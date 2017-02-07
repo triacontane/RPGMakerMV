@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/02/07 端末依存の記述を削除
 // 1.1.0 2017/02/05 任意のアクターの顔グラフィックをピクチャとして表示する機能を追加
 // 1.0.1 2017/02/05 顔グラフィックのインデックスが4以上の場合に正しく表示されない問題を修正
 // 1.0.0 2017/02/02 初版
@@ -130,10 +131,10 @@
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    const _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
+    var _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        const pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
+        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
         if (pluginCommandMethod) {
             this[pluginCommandMethod](args);
         }

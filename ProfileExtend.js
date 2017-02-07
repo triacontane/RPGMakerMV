@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/02/07 端末依存の記述を削除
 // 1.1.0 2017/01/13 プロフィールを途中で変更できるプラグインコマンドを追加
 // 1.0.0 2016/05/03 初版
 // ----------------------------------------------------------------------------
@@ -46,44 +47,44 @@
 
 (function () {
     'use strict';
-    const pluginName = 'ProfileExtend';
-    const metaTagPrefix = 'PE';
+    var pluginName = 'ProfileExtend';
+    var metaTagPrefix = 'PE';
 
-    const getParamNumber = function(paramNames, min, max) {
-        const value = getParamOther(paramNames);
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    const getParamOther = function(paramNames) {
+    var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return null;
     };
 
-    const getArgNumber = function(arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(arg) || 0).clamp(min, max);
     };
 
-    const getMetaValue = function(object, name) {
-        const metaTagName = metaTagPrefix + (name ? name : '');
+    var getMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + (name ? name : '');
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
     };
 
-    const convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        const windowLayer = SceneManager._scene._windowLayer;
+        var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
-    const convertAllArguments = function(args) {
-        for (let i = 0; i < args.length; i++) {
+    var convertAllArguments = function(args) {
+        for (var i = 0; i < args.length; i++) {
             args[i] = convertEscapeCharacters(args[i]);
         }
         return args;
@@ -92,13 +93,13 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const paramExtendLine = getParamNumber(['ExtendLine', '拡張行数'], 0);
+    var paramExtendLine = getParamNumber(['ExtendLine', '拡張行数'], 0);
 
-    const setPluginCommand = function(commandName, methodName) {
+    var setPluginCommand = function(commandName, methodName) {
         pluginCommandMap.set(metaTagPrefix + commandName, methodName);
     };
 
-    const pluginCommandMap = new Map();
+    var pluginCommandMap = new Map();
     setPluginCommand('_拡張プロフィール設定', 'setExtendProfile');
     setPluginCommand('_SET_EXTEND_PROFILE', 'setExtendProfile');
 
@@ -106,17 +107,17 @@
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    const _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
+    var _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        const pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
+        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
         if (pluginCommandMethod) {
             this[pluginCommandMethod](convertAllArguments(args));
         }
     };
 
     Game_Interpreter.prototype.setExtendProfile = function(args) {
-        const actor = $gameActors.actor(getArgNumber(args[0], 1));
+        var actor = $gameActors.actor(getArgNumber(args[0], 1));
         if (actor) actor.setExtendProfile(args[1]);
     };
     
@@ -124,10 +125,10 @@
     // Game_Actor
     //  プロフィールの内容を拡張します。
     //=============================================================================
-    const _Game_Actor_profile = Game_Actor.prototype.profile;
+    var _Game_Actor_profile = Game_Actor.prototype.profile;
     Game_Actor.prototype.profile = function() {
-        const profile = _Game_Actor_profile.apply(this, arguments);
-        const extend = this.getExtendProfile();
+        var profile = _Game_Actor_profile.apply(this, arguments);
+        var extend = this.getExtendProfile();
         return profile + (extend ? '\n' + extend : '');
     };
     
@@ -146,7 +147,7 @@
     // Window_Status
     //  プロフィールの入力欄を拡張します。
     //=============================================================================
-    const _Window_Status_drawHorzLine = Window_Status.prototype.drawHorzLine;
+    var _Window_Status_drawHorzLine = Window_Status.prototype.drawHorzLine;
     Window_Status.prototype.drawHorzLine = function(y) {
         if (this.lineHeight() * 13 === y) {
             arguments[0] -= this.lineHeight() * paramExtendLine;
@@ -154,7 +155,7 @@
         _Window_Status_drawHorzLine.apply(this, arguments);
     };
 
-    const _Window_Status_drawBlock4 = Window_Status.prototype.drawBlock4;
+    var _Window_Status_drawBlock4 = Window_Status.prototype.drawBlock4;
     Window_Status.prototype.drawBlock4 = function(y) {
         arguments[0] -= this.lineHeight() * paramExtendLine;
         _Window_Status_drawBlock4.apply(this, arguments);

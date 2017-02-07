@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/02/07 端末依存の記述を削除
 // 1.3.0 2016/12/09 各種パラメータを固定値で増減できる機能を追加
 // 1.2.0 2016/08/08 変換レート計算式にバトラー情報を設定できるよう修正
 // 1.1.1 2016/07/29 ヘルプと実装の記述が食い違っていたので修正
@@ -153,7 +154,7 @@
         var realParamAdd  = 0;
         var battler       = this;
         this.traitObjects().forEach(function(data) {
-            const paramIdTag = String(originalParamId);
+            var paramIdTag = String(originalParamId);
             var metaValueTransfer = getMetaValue(data, paramIdTag);
             if (metaValueTransfer) realParamId = this.executeParamFormula(metaValueTransfer).clamp(0, 7);
             var metaValueRate = getMetaValue(data, 'Rate' + paramIdTag);

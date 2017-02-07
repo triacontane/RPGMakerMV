@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/02/07 端末依存の記述を削除
 // 1.0.1 2017/01/02 マップ名が空の時に、空白のウィンドウが出ていた問題を修正
 // 1.0.0 2017/01/01 初版
 // ----------------------------------------------------------------------------
@@ -64,23 +65,23 @@
 
 (function() {
     'use strict';
-    const pluginName = 'MapNameWindow';
+    var pluginName = 'MapNameWindow';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    const getParamString = function(paramNames) {
+    var getParamString = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return '';
     };
 
-    const getParamNumber = function(paramNames, min, max) {
-        const value = getParamString(paramNames);
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamString(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseFloat(value, 10) || 0).clamp(min, max);
@@ -89,25 +90,25 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const param     = {};
+    var param     = {};
     param.positionX = getParamNumber(['PositionX', 'X座標']);
     param.positionY = getParamNumber(['PositionY', 'Y座標']);
     param.width     = getParamNumber(['Width', '横幅']);
 
-    const _Window_MapName_initialize    = Window_MapName.prototype.initialize;
+    var _Window_MapName_initialize    = Window_MapName.prototype.initialize;
     Window_MapName.prototype.initialize = function() {
         _Window_MapName_initialize.apply(this, arguments);
         if (param.positionX) this.x = param.positionX;
         if (param.positionY) this.y = param.positionY;
     };
 
-    const _Window_MapName_updateFadeIn    = Window_MapName.prototype.updateFadeIn;
+    var _Window_MapName_updateFadeIn    = Window_MapName.prototype.updateFadeIn;
     Window_MapName.prototype.updateFadeIn = function() {
         _Window_MapName_updateFadeIn.apply(this, arguments);
         this.opacity = this.contentsOpacity;
     };
 
-    const _Window_MapName_updateFadeOut    = Window_MapName.prototype.updateFadeOut;
+    var _Window_MapName_updateFadeOut    = Window_MapName.prototype.updateFadeOut;
     Window_MapName.prototype.updateFadeOut = function() {
         _Window_MapName_updateFadeOut.apply(this, arguments);
         this.opacity = this.contentsOpacity;
@@ -115,12 +116,12 @@
 
     Window_MapName.prototype.drawBackground = function(x, y, width, height) {};
 
-    const _Window_MapName_windowWidth = Window_MapName.prototype.windowWidth;
+    var _Window_MapName_windowWidth = Window_MapName.prototype.windowWidth;
     Window_MapName.prototype.windowWidth = function() {
         return param.width ? param.width : _Window_MapName_windowWidth.apply(this, arguments);
     };
 
-    const _Window_MapName_refresh = Window_MapName.prototype.refresh;
+    var _Window_MapName_refresh = Window_MapName.prototype.refresh;
     Window_MapName.prototype.refresh = function() {
         _Window_MapName_refresh.apply(this, arguments);
         this.visible = $gameMap.displayName();
