@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2017/02/09 「武器」と「防具」を専用のカテゴリで表示しようとすると表示できない問題を修正
+//                   変数などで動的に表示内容を変化させる場合に、表示内容が空の場合はページを表示しないよう修正
 // 1.10.0 2017/01/10 辞書画面ごとに別々の背景を指定できる機能を追加
 // 1.9.0 2017/01/03 メニュー画面の辞書コマンドに出現条件を指定できる機能を追加
 // 1.8.0 2016/12/23 説明文の自動改行機能を追加
@@ -774,7 +776,7 @@ function Scene_Glossary() {
 
     Game_Party.prototype.getAllGlossaryCategory = function() {
         var list = [];
-        this.items().forEach(function(item) {
+        this.getAllGlossaryList().forEach(function(item) {
             var category = this.getGlossaryCategory(item);
             if (category && this.isSameGlossaryType(item) && !list.contains(category)) {
                 list.push(category);
@@ -1355,11 +1357,18 @@ function Scene_Glossary() {
         return paramFontSize ? paramFontSize : Window_Base.prototype.standardFontFace();
     };
 
-    Window_Glossary.prototype.calcMaxPages = function(depth) {
-        if (!depth) depth = 0;
+    Window_Glossary.prototype.calcMaxPages = function(index) {
+        if (!index) index = 0;
+        var exist = this.isExistPage(['ピクチャ', 'Picture'], index) || this.isExistPage(['説明', 'Description'], index);
+        return (exist && index < 100) ? this.calcMaxPages(index + 1) : index;
+    };
+
+    Window_Glossary.prototype.isExistPage = function(names, index) {
         var item  = this._itemData;
-        var exist = !!getMetaValues(item, ['ピクチャ', 'Picture'], depth) || !!getMetaValues(item, ['説明', 'Description'], depth);
-        return (exist && depth < 100) ? this.calcMaxPages(depth + 1) : depth;
+        var value = getMetaValues(item, names, index);
+        if (!value) return false;
+        var contents = getArgString(value);
+        return contents && contents !== '0';
     };
 
     Window_Glossary.prototype.refresh = function(item) {
