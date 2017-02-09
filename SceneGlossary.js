@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.1 2017/02/09 ピクチャが空の状態でもページ表示できるよう修正
 // 1.11.0 2017/02/09 「武器」と「防具」を専用のカテゴリで表示しようとすると表示できない問題を修正
 //                   変数などで動的に表示内容を変化させる場合に、表示内容が空の場合はページを表示しないよう修正
 // 1.10.0 2017/01/10 辞書画面ごとに別々の背景を指定できる機能を追加
@@ -1359,16 +1360,24 @@ function Scene_Glossary() {
 
     Window_Glossary.prototype.calcMaxPages = function(index) {
         if (!index) index = 0;
-        var exist = this.isExistPage(['ピクチャ', 'Picture'], index) || this.isExistPage(['説明', 'Description'], index);
+        var exist = !!this.getPictureName(index) || !!this.getDescription(index);
         return (exist && index < 100) ? this.calcMaxPages(index + 1) : index;
     };
 
-    Window_Glossary.prototype.isExistPage = function(names, index) {
+    Window_Glossary.prototype.getPictureName = function(index) {
+        return this.getMetaContents(['ピクチャ', 'Picture'], index);
+    };
+
+    Window_Glossary.prototype.getDescription = function(index) {
+        return this.getMetaContents(['説明', 'Description'], index);
+    };
+
+    Window_Glossary.prototype.getMetaContents = function(names, index) {
         var item  = this._itemData;
         var value = getMetaValues(item, names, index);
-        if (!value) return false;
+        if (!value) return null;
         var contents = getArgString(value);
-        return contents && contents !== '0';
+        return contents && contents !== '0' ? contents : null;
     };
 
     Window_Glossary.prototype.refresh = function(item) {
@@ -1408,9 +1417,9 @@ function Scene_Glossary() {
         this._pageIndex = index;
         this.updateArrows();
         if (!this._itemData) return;
-        var pictureName = getMetaValues(this._itemData, ['ピクチャ', 'Picture'], index);
+        var pictureName = this.getPictureName(index);
         if (pictureName) {
-            var bitmap = ImageManager.loadPicture(getArgString(pictureName), 0);
+            var bitmap = ImageManager.loadPicture(pictureName, 0);
             bitmap.addLoadListener(this.drawItemSub.bind(this, bitmap));
         } else {
             this.drawItemSub(null);
@@ -1425,7 +1434,7 @@ function Scene_Glossary() {
 
     Window_Glossary.prototype.drawItemSub = function(bitmap) {
         var item = this._itemData;
-        var text = getMetaValues(item, ['説明', 'Description'], this._pageIndex);
+        var text = this.getDescription(this._pageIndex);
         switch (this.getPicturePosition(item)) {
             case 'under':
                 this.drawPicture(item, bitmap, text, 0);
