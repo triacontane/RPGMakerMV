@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/02/10 アクターと職業のデータベースについて「特徴」のみ動的データベースに対応
 // 1.1.1 2017/01/19 設定値に入れた小数点以下の値が切り捨てられていた問題を修正
 // 1.1.0 2016/08/15 コード整形、ドロップアイテムにドロップアイテムIDの定義が抜けていたのを修正
 // 1.0.2 2016/05/16 特徴と効果にデータIDの定義を追加
@@ -177,6 +178,8 @@ DynamicDatabaseManager._columnMapperStates = {
 };
 
 DynamicDatabaseManager._targetDynamicDatabase = {
+    $dataActors : DynamicDatabaseManager._columnMapperCoomon,
+    $dataClasses: DynamicDatabaseManager._columnMapperCoomon,
     $dataSkills : DynamicDatabaseManager._columnMapperSkills,
     $dataItems  : DynamicDatabaseManager._columnMapperItems,
     $dataWeapons: DynamicDatabaseManager._columnMapperWeapons,
