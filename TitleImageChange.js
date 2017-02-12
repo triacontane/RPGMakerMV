@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/02/12 画像やBGMを4つ以上指定できる機能を追加
 // 1.3.1 2017/02/04 簡単な競合対策
 // 1.3.0 2017/02/04 どのセーブデータの進行度を優先させるかを決めるための優先度変数を追加
 // 1.2.1 2016/12/17 進行状況のみセーブのスクリプトを実行した場合に、グローバル情報が更新されてしまう問題を修正
@@ -85,6 +86,18 @@
  * @dir audio/bgm/
  * @type file
  *
+ * @param 以降の進行度
+ * @desc タイトルを4パターン以上使いたい場合はカンマ区切りで進行度を指定します。例(4,5,6)
+ * @default
+ *
+ * @param 以降の画像
+ * @desc タイトルを4パターン以上使いたい場合はカンマ区切りで画像(img/titles1)のファイル名を指定します。例(aaa,bbb,ccc)
+ * @default
+ *
+ * @param 以降のBGM
+ * @desc タイトルを4パターン以上使いたい場合はカンマ区切りでBGM(audio/bgm)のファイル名を指定します。例(aaa,bbb,ccc)
+ * @default
+ *
  * @help ゲームの進行度に応じてタイトル画面の画像およびBGMを変更します。
  * 進行度には任意の変数が指定でき、通常は全セーブデータの中の最大値が反映されます。
  *
@@ -94,10 +107,11 @@
  * タイトル画像は最大3つまで指定可能で、複数の条件を満たした場合は
  * 以下のような優先順位になります。
  *
- * 1. タイトル3の画像およびBGM
- * 2. タイトル2の画像およびBGM
- * 3. タイトル1の画像およびBGM
- * 4. デフォルトのタイトル画像およびBGM
+ * 1. 4以降の画像及びBGM
+ * 2. タイトル3の画像およびBGM
+ * 3. タイトル2の画像およびBGM
+ * 4. タイトル1の画像およびBGM
+ * 5. デフォルトのタイトル画像およびBGM
  *
  * ゲームデータをセーブせず進行状況のみをセーブしたい場合は、
  * イベントコマンドの「スクリプト」から以下を実行してください。
@@ -136,23 +150,48 @@
         return null;
     };
 
+    var getParamArrayString = function(paramNames) {
+        var values = getParamString(paramNames).split(',');
+        for (var i = 0; i < values.length; i++) {
+            values[i] = values[i].trim();
+        }
+        return values;
+    };
+
+    var getParamArrayNumber = function(paramNames, min, max) {
+        var values = getParamArrayString(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        for (var i = 0; i < values.length; i++) {
+            if (!isNaN(parseInt(values[i], 10))) {
+                values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
+            } else {
+                values.splice(i--, 1);
+            }
+        }
+        return values;
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
     var paramGradeVariable    = getParamNumber(['GradeVariable', '進行度変数'], 1, 5000);
     var paramPriorityVariable = getParamNumber(['PriorityVariable', '優先度変数'], 0, 5000);
     var paramTitleGrades      = [];
-    paramTitleGrades.push(getParamNumber(['TitleGrade3', 'タイトル3の進行度']));
-    paramTitleGrades.push(getParamNumber(['TitleGrade2', 'タイトル2の進行度']));
     paramTitleGrades.push(getParamNumber(['TitleGrade1', 'タイトル1の進行度']));
+    paramTitleGrades.push(getParamNumber(['TitleGrade2', 'タイトル2の進行度']));
+    paramTitleGrades.push(getParamNumber(['TitleGrade3', 'タイトル3の進行度']));
     var paramTitleImages = [];
-    paramTitleImages.push(getParamString(['TitleImage3', 'タイトル3の画像']));
-    paramTitleImages.push(getParamString(['TitleImage2', 'タイトル2の画像']));
     paramTitleImages.push(getParamString(['TitleImage1', 'タイトル1の画像']));
+    paramTitleImages.push(getParamString(['TitleImage2', 'タイトル2の画像']));
+    paramTitleImages.push(getParamString(['TitleImage3', 'タイトル3の画像']));
     var paramTitleBgms = [];
-    paramTitleBgms.push(getParamString(['TitleBgm3', 'タイトル3のBGM']));
-    paramTitleBgms.push(getParamString(['TitleBgm2', 'タイトル2のBGM']));
     paramTitleBgms.push(getParamString(['TitleBgm1', 'タイトル1のBGM']));
+    paramTitleBgms.push(getParamString(['TitleBgm2', 'タイトル2のBGM']));
+    paramTitleBgms.push(getParamString(['TitleBgm3', 'タイトル3のBGM']));
+    paramTitleGrades = paramTitleGrades.concat(getParamArrayNumber(['TitleGradeAfter', '以降の進行度'])).reverse();
+    paramTitleImages = paramTitleImages.concat(getParamArrayString(['TitleImageAfter', '以降の画像'])).reverse();
+    paramTitleBgms   = paramTitleBgms.concat(getParamArrayString(['TitleBgmAfter', '以降のBGM'])).reverse();
 
     //=============================================================================
     // DataManager
