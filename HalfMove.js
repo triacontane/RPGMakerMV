@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.4 2017/02/14 下半分移動不可なタイルに対して下方向から移動できてしまっていた不具合を修正
 // 1.6.3 2016/09/21 半歩移動中、上方向にある小型船、大型船に乗船できない不具合を修正
 // 1.6.2 2016/09/03 斜め移動の移動先にイベントがある場合、縦横移動に切り替わらない問題を修正
 // 1.6.1 2016/09/01 すり抜けOFF時のイベントからの接触による起動が正しく行われるよう修正
@@ -704,6 +705,9 @@
                 } else {
                     result = $gameMap.isLowerNp(x, y);
                 }
+            } else {
+                var y3 = $gameMap.roundHalfYWithDirection(y, d);
+                result = $gameMap.isLowerNp(x, y3);
             }
         } else if (d === 4 || d === 6) {
             if (!this.isHalfPosY(x) && !this.isHalfPosX(y)) {
