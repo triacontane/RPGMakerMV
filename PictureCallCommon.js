@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.2 2017/02/14 1.8.0の修正により、ピクチャクリック時に変数に値を格納する機能が無効化されていたのを修正
 // 1.8.1 2017/02/07 端末依存の記述を削除
 // 1.8.0 2017/02/03 ピクチャクリックを任意のボタンにバインドできる機能を追加
 // 1.7.0 2017/02/02 マップのズームおよびシェイク中でも正確にピクチャをクリックできるようになりました。
@@ -48,7 +49,7 @@
  * @default ON
  *
  * @param ピクチャ番号の変数番号
- * @desc コモンイベント呼び出し時にピクチャ番号を格納するゲーム変数の番号。
+ * @desc ピクチャクリック時にピクチャ番号を格納するゲーム変数の番号。
  * @default 0
  *
  * @param ポインタX座標の変数番号
@@ -368,29 +369,27 @@
         this.setPictureCallInfo(0, 0);
     };
 
-    Game_Temp.prototype.setPictureCallInfo = function(pictureCommonId, pictureNum) {
+    Game_Temp.prototype.setPictureCallInfo = function(pictureCommonId) {
         this._pictureCommonId = pictureCommonId;
-        this._pictureNum      = pictureNum;
     };
 
     Game_Temp.prototype.pictureCommonId = function() {
         return this._pictureCommonId;
     };
 
-    Game_Temp.prototype.pictureNum = function() {
-        return this._pictureNum;
-    };
-
-    Game_Temp.prototype.onTouchPicture = function(param) {
+    Game_Temp.prototype.onTouchPicture = function(param, pictureId) {
         this._touchPictureParam = param;
         if (this.isTouchPictureSetSwitch()) {
             $gameSwitches.setValue(param * -1, true);
         }
         if (this.isTouchPictureCallCommon()) {
-            this.setPictureCallInfo(param, this._pictureId);
+            this.setPictureCallInfo(param);
         }
         if (this.isTouchPictureButtonTrigger()) {
             Input.bindKeyState(param);
+        }
+        if (paramGameVariablePictNum > 0) {
+            $gameVariables.setValue(paramGameVariablePictNum, pictureId);
         }
     };
 
@@ -431,9 +430,6 @@
         var event    = $dataCommonEvents[commonId];
         var result   = false;
         if (commonId > 0 && !this.isEventRunning() && event) {
-            if (paramGameVariablePictNum) {
-                $gameVariables._data[paramGameVariablePictNum] = $gameTemp.pictureNum();
-            }
             this._interpreter.setup(event.list);
             result = true;
         }
@@ -709,7 +705,7 @@
         if (this.triggerIsLongPressed(i)) TouchInput._pressedTime = -60;
         if (this.triggerIsOnFocus(i)) this._onMouse = false;
         if (this.triggerIsOutFocus(i)) this._outMouse = false;
-        $gameTemp.onTouchPicture(commandIds[i]);
+        $gameTemp.onTouchPicture(commandIds[i], this._pictureId);
     };
 
     Sprite_Picture.prototype.triggerIsLongPressed = function(triggerId) {
