@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2017/02/16 データベースに項目を追加するプラグインで発生する可能性のある競合対策
 // 1.2.1 2017/02/12 汎用的な競合対策
 // 1.2.0 2017/02/10 アクターと職業のデータベースについて「特徴」のみ動的データベースに対応
 // 1.1.1 2017/01/19 設定値に入れた小数点以下の値が切り捨てられていた問題を修正
@@ -246,7 +247,7 @@ DynamicDatabaseManager._makeDynamicData = function(dataArray, columnMap) {
 };
 
 DynamicDatabaseManager._makeProperty = function(parent, keyPath, key, child) {
-    if (key === 'meta') return;
+    if (!child || key === 'meta') return;
     switch (typeof child) {
         case 'string':
             if (child.match(/\\/g))
