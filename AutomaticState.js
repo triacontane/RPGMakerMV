@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2017/02/16 1.2.0以降、下限MPの設定が無効になっていた問題を修正
 // 1.2.2 2017/02/07 端末依存の記述を削除
 // 1.2.1 2017/01/17 1.2.0でスイッチの項目が正しく機能しなかった問題を修正
 // 1.2.0 2017/01/14 ステート自動付与の条件に計算式を適用できる機能を追加
@@ -216,7 +217,7 @@
         }
         var lowerLimitMp = this.getStateMetaNumber(5, 0, 100);
         if (lowerLimitMp !== null) {
-            if (Math.floor(this.mmp > 0 && this.mpRate()) * 100 <= lowerLimitMp) {
+            if (Math.floor(this.mpRate() * 100) <= lowerLimitMp) {
                 result = true;
             } else {
                 return false;
