@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2017/02/16 1.2.2で数値を0に設定すると動的設定が効かなくなる問題を修正
 // 1.2.2 2017/02/16 データベースに項目を追加するプラグインで発生する可能性のある競合対策
 // 1.2.1 2017/02/12 汎用的な競合対策
 // 1.2.0 2017/02/10 アクターと職業のデータベースについて「特徴」のみ動的データベースに対応
@@ -247,7 +248,7 @@ DynamicDatabaseManager._makeDynamicData = function(dataArray, columnMap) {
 };
 
 DynamicDatabaseManager._makeProperty = function(parent, keyPath, key, child) {
-    if (!child || key === 'meta') return;
+    if (key === 'meta') return;
     switch (typeof child) {
         case 'string':
             if (child.match(/\\/g))
@@ -263,7 +264,7 @@ DynamicDatabaseManager._makeProperty = function(parent, keyPath, key, child) {
             parent[propName] = child;
             break;
         case 'object':
-            if (parent.meta.isEmpty()) return;
+            if (!child || parent.meta.isEmpty()) return;
             child.meta = parent.meta;
             child.iterate(function(valuesKey, valuesItem) {
                 this._makeProperty(child, keyPath + '_' + valuesKey, valuesKey, valuesItem);
