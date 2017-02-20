@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2017/02/20 装備画面での「最強装備」と「全て外す」時に装備品画像が更新されなかった問題を修正
 // 1.3.1 2016/10/13 装備品の画像がトリミングの対象外になっていたのを修正
 // 1.3.0 2016/10/13 画像を指定した矩形でトリミングして表示できる機能を追加
 // 1.2.0 2016/10/08 装備品画像にZ座標を付与できるよう修正
@@ -425,6 +426,22 @@
 
     Window_SkillList.prototype.getBustPosition = function() {
         return [paramSkillBustImageX, paramSkillBustImageY];
+    };
+
+    //=============================================================================
+    // Scene_Equip
+    //  装備変更時にバストイメージを更新します。
+    //=============================================================================
+    var _Scene_Equip_commandOptimize = Scene_Equip.prototype.commandOptimize;
+    Scene_Equip.prototype.commandOptimize = function() {
+        _Scene_Equip_commandOptimize.apply(this, arguments);
+        this._itemWindow.refreshBust();
+    };
+
+    var _Scene_Equip_commandClear = Scene_Equip.prototype.commandClear;
+    Scene_Equip.prototype.commandClear = function() {
+        _Scene_Equip_commandClear.apply(this, arguments);
+        this._itemWindow.refreshBust();
     };
 
     //=============================================================================
