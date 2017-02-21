@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/02/21 グループ対象に指定したスキルが「隠れ状態」の敵にも当たってしまう問題を修正
 // 1.5.0 2016/12/02 味方に対してN回ランダム選択できる機能を追加
 // 1.4.0 2016/12/02 ランダム設定に対象人数を設定できる機能を追加
 // 1.3.0 2016/09/15 敵N回ランダムのスキルに対して5回以上の繰り返しを指定できる機能を追加
@@ -157,9 +158,9 @@
         if (this.isScopeExtendInfo(['グループ', 'Group'])) {
             var targetsForGroup, prevTarget = targets[0];
             if (prevTarget.isActor()) {
-                targetsForGroup = prevTarget.friendsUnit().members();
+                targetsForGroup = prevTarget.friendsUnit().aliveMembers();
             } else {
-                targetsForGroup = prevTarget.friendsUnit().members().filter(function(member) {
+                targetsForGroup = prevTarget.friendsUnit().aliveMembers().filter(function(member) {
                     return prevTarget.enemyId() === member.enemyId();
                 });
             }
