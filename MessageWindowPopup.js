@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2017/02/21 フキダシウィンドウ内で制御文字「\{」「\}」を指定したときの上限、下限、増減幅を設定できる機能を追加
 // 2.0.5 2017/01/23 ウィンドウスキンを変更しているデータをロード直後にフキダシメッセージを表示すると
 //                  文字が黒くなってしまう問題を修正
 // 2.0.4 2016/12/25 ウィンドウを閉じている最中にウィンドウ表示位置を変更するプラグインコマンドを実行すると、
@@ -75,6 +76,18 @@
  * @param ThroughWindow
  * @desc Window through if overlap windows(ON/OFF)
  * @default OFF
+ *
+ * @param FontSizeRange
+ * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの増減幅です。デフォルトは12です。
+ * @default 12
+ *
+ * @param FontUpperLimit
+ * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの上限値です。デフォルトは96です。
+ * @default 96
+ *
+ * @param FontLowerLimit
+ * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの下限値です。デフォルトは24です。
+ * @default 24
  *
  * @help Change the message window from fixed to popup
  *
@@ -160,6 +173,18 @@
  * 選択肢をフキダシ内に表示する場合はONにしてください。
  * @default OFF
  *
+ * @param フォントサイズ増減幅
+ * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの増減幅です。デフォルトは12です。
+ * @default 12
+ *
+ * @param フォントサイズ上限
+ * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの上限値です。デフォルトは96です。
+ * @default 96
+ *
+ * @param フォントサイズ下限
+ * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの下限値です。デフォルトは24です。
+ * @default 24
+ *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
  *
@@ -241,7 +266,7 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(function() {
     'use strict';
     var pluginName = 'MessageWindowPopup';
 
@@ -274,18 +299,18 @@
         return null;
     };
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length <= 2) min = -Infinity;
         if (arguments.length <= 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
     };
 
-    var getArgString = function (arg, upperFlg) {
+    var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
@@ -298,20 +323,23 @@
     //=============================================================================
     // パラメータのバリデーション
     //=============================================================================
-    var paramThroughWindow = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
-    var paramFaceScale     = getParamNumber(['FaceScale', 'フェイス倍率'], 1, 100);
-    var paramFontSize      = getParamNumber(['FontSize', 'フォントサイズ'], 1);
-    var paramPadding       = getParamNumber(['Padding', '余白'], 1);
-    var paramLinkage       = getParamBoolean(['WindowLinkage', 'ウィンドウ連携']);
-    var paramBetweenLines  = getParamNumber(['BetweenLines', '行間'], 0);
-    var paramAutoPopup     = getParamBoolean(['AutoPopup', '自動設定']);
+    var paramThroughWindow  = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
+    var paramFaceScale      = getParamNumber(['FaceScale', 'フェイス倍率'], 1, 100);
+    var paramFontSize       = getParamNumber(['FontSize', 'フォントサイズ'], 1);
+    var paramPadding        = getParamNumber(['Padding', '余白'], 1);
+    var paramLinkage        = getParamBoolean(['WindowLinkage', 'ウィンドウ連携']);
+    var paramBetweenLines   = getParamNumber(['BetweenLines', '行間'], 0);
+    var paramAutoPopup      = getParamBoolean(['AutoPopup', '自動設定']);
+    var paramFontSizeRange  = getParamNumber(['FontSizeRange', 'フォントサイズ増減幅'], 0);
+    var paramFontUpperLimit = getParamNumber(['FontUpperLimit', 'フォントサイズ上限'], 0);
+    var paramFontLowerLimit = getParamNumber(['FontLowerLimit', 'フォントサイズ下限'], 0);
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandMessageWindowPopup(command, args);
@@ -330,7 +358,7 @@
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandMessageWindowPopup = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandMessageWindowPopup = function(command, args) {
         switch (getCommandName(command)) {
             case 'MWP_VALID' :
             case 'フキダシウィンドウ有効化':
@@ -392,7 +420,7 @@
         }
     };
 
-    var _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
+    var _Game_Interpreter_terminate      = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
         if (this._depth === 0 && this.isGameMapInterpreter()) $gameSystem.clearMessagePopup();
@@ -410,7 +438,7 @@
     // Game_System
     //  ポップアップフラグを保持します。
     //=============================================================================
-    var _Game_System_initialize = Game_System.prototype.initialize;
+    var _Game_System_initialize      = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
         this._messagePopupCharacterId       = 0;
@@ -490,7 +518,7 @@
     // Game_Map
     //  イベント起動時に自動設定を適用します。
     //=============================================================================
-    var _Game_Map_setupStartingMapEvent = Game_Map.prototype.setupStartingMapEvent;
+    var _Game_Map_setupStartingMapEvent      = Game_Map.prototype.setupStartingMapEvent;
     Game_Map.prototype.setupStartingMapEvent = function() {
         var result = _Game_Map_setupStartingMapEvent.apply(this, arguments);
         if (result) {
@@ -503,7 +531,7 @@
         return result;
     };
 
-    var _Game_Map_setup = Game_Map.prototype.setup;
+    var _Game_Map_setup      = Game_Map.prototype.setup;
     Game_Map.prototype.setup = function(mapId) {
         _Game_Map_setup.apply(this, arguments);
         this._interpreter.setGameMapInterpreter();
@@ -513,7 +541,7 @@
     // Game_Troop
     //  戦闘開始時にポップアップフラグを解除します。
     //=============================================================================
-    var _Game_Troop_setup = Game_Troop.prototype.setup;
+    var _Game_Troop_setup      = Game_Troop.prototype.setup;
     Game_Troop.prototype.setup = function(troopId) {
         _Game_Troop_setup.apply(this, arguments);
         $gameSystem.clearMessagePopup();
@@ -523,7 +551,7 @@
     // Game_CharacterBase
     //  キャラクターの高さを設定します。
     //=============================================================================
-    var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
+    var _Game_CharacterBase_initMembers      = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
         this.setSizeForMessagePopup(0, 0);
@@ -537,9 +565,9 @@
         return this._size[1];
     };
 
-    var _Scene_Map_isReady = Scene_Map.prototype.isReady;
+    var _Scene_Map_isReady      = Scene_Map.prototype.isReady;
     Scene_Map.prototype.isReady = function() {
-        var ready = _Scene_Map_isReady.apply(this, arguments);
+        var ready   = _Scene_Map_isReady.apply(this, arguments);
         var popSkin = $gameSystem.getPopupWindowSkin();
         if (popSkin && ready) {
             var bitmap = ImageManager.loadSystem(popSkin);
@@ -552,13 +580,13 @@
     // Sprite_Character
     //  キャラクターの高さを逆設定します。
     //=============================================================================
-    var _Sprite_Character_updateBitmap = Sprite_Character.prototype.updateBitmap;
+    var _Sprite_Character_updateBitmap      = Sprite_Character.prototype.updateBitmap;
     Sprite_Character.prototype.updateBitmap = function() {
         if (this.isImageChanged()) this._imageChange = true;
         _Sprite_Character_updateBitmap.apply(this, arguments);
         if (this._imageChange) {
             this.bitmap.addLoadListener(function() {
-                var width = this.bitmap.width === 1 ? $gameMap.tileWidth() : this.patternWidth();
+                var width  = this.bitmap.width === 1 ? $gameMap.tileWidth() : this.patternWidth();
                 var height = this.bitmap.height === 1 ? $gameMap.tileHeight() : this.patternHeight();
                 this._character.setSizeForMessagePopup(width, height);
             }.bind(this));
@@ -570,7 +598,7 @@
     // Window_Base
     //  共通処理を定義します。
     //=============================================================================
-    var _Window_Base_loadWindowskin = Window_Base.prototype.loadWindowskin;
+    var _Window_Base_loadWindowskin      = Window_Base.prototype.loadWindowskin;
     Window_Base.prototype.loadWindowskin = function() {
         var popSkin = $gameSystem.getPopupWindowSkin();
         if (this.isPopup() && popSkin) {
@@ -600,7 +628,7 @@
         this._pauseSingToTail = false;
     };
 
-    var _Window_Base_updatePauseSign = Window_Base.prototype._updatePauseSign;
+    var _Window_Base_updatePauseSign       = Window_Base.prototype._updatePauseSign;
     Window_Base.prototype._updatePauseSign = function() {
         _Window_Base_updatePauseSign.apply(this, arguments);
         if (this._pauseSingToTail) this._windowPauseSignSprite.alpha = 1.0;
@@ -611,9 +639,9 @@
     };
 
     Window_Base.prototype.setPopupPosition = function(character) {
-        var pos = $gameSystem.getPopupAdjustPosition();
-        this.x = character.screenX() - this.width / 2 + (pos ? pos[0] : 0);
-        this.y = character.screenY() - this.height - (character.getHeightForPopup() + 8) + (pos ? pos[1] : 0);
+        var pos      = $gameSystem.getPopupAdjustPosition();
+        this.x       = character.screenX() - this.width / 2 + (pos ? pos[0] : 0);
+        this.y       = character.screenY() - this.height - (character.getHeightForPopup() + 8) + (pos ? pos[1] : 0);
         var lowerFlg = this.isPopupLower();
         if (lowerFlg) this.y = character.screenY() + 8;
         this.setPauseSignToTail(lowerFlg);
@@ -643,8 +671,8 @@
                     break;
                 case 2:
                     var pos = this._messageWindow.getSubWindowPosition();
-                    this.x = pos.x;
-                    this.y = pos.y;
+                    this.x  = pos.x;
+                    this.y  = pos.y;
                     this.setPauseSignToNormal();
                     this.opacity = 0;
                     break;
@@ -670,30 +698,56 @@
         this.setPauseSignToNormal();
     };
 
+    var _Window_Base_makeFontBigger = Window_Base.prototype.makeFontBigger;
+    Window_Base.prototype.makeFontBigger = function() {
+        if (this.isValidFontRangeForPopup()) {
+            if (this.contents.fontSize <= paramFontUpperLimit) {
+                this.contents.fontSize += paramFontSizeRange;
+            }
+        } else {
+            _Window_Base_makeFontBigger.apply(this, arguments);
+        }
+    };
+
+    var _Window_Base_makeFontSmaller = Window_Base.prototype.makeFontSmaller;
+    Window_Base.prototype.makeFontSmaller = function() {
+        if (this.isValidFontRangeForPopup()) {
+            if (this.contents.fontSize >= paramFontLowerLimit) {
+                this.contents.fontSize -= paramFontSizeRange;
+            }
+        } else {
+            _Window_Base_makeFontSmaller.apply(this, arguments);
+        }
+    };
+
+    Window_Base.prototype.isValidFontRangeForPopup = function() {
+        return this.isPopup() && paramFontSizeRange > 0
+    };
+
     //=============================================================================
     // Window_Message
     //  ポップアップする場合、表示内容により座標とサイズを自動設定します。
     //=============================================================================
     Window_Message._faceHeight = Math.floor(Window_Base._faceHeight * paramFaceScale / 100);
-    Window_Message._faceWidth  = Math.floor(Window_Base._faceWidth  * paramFaceScale / 100);
+    Window_Message._faceWidth  = Math.floor(Window_Base._faceWidth * paramFaceScale / 100);
 
-    var _Window_Message_standardFontSize = Window_Message.prototype.standardFontSize;
+    var _Window_Message_standardFontSize      = Window_Message.prototype.standardFontSize;
     Window_Message.prototype.standardFontSize = function() {
         return this.isPopup() ? paramFontSize : _Window_Message_standardFontSize.apply(this, arguments);
     };
 
-    var _Window_Message_standardPadding = Window_Message.prototype.standardPadding;
+    var _Window_Message_standardPadding      = Window_Message.prototype.standardPadding;
     Window_Message.prototype.standardPadding = function() {
         return this.isPopup() ? paramPadding : _Window_Message_standardPadding.apply(this, arguments);
     };
 
-    var _Window_Message_calcTextHeight = Window_Message.prototype.calcTextHeight;
+    var _Window_Message_calcTextHeight      = Window_Message.prototype.calcTextHeight;
     Window_Message.prototype.calcTextHeight = function(textState, all) {
         var height = _Window_Message_calcTextHeight.apply(this, arguments);
         return this.isPopup() ? height - 8 + paramBetweenLines : height;
     };
 
-    var _Window_Message_startMessage = Window_Message.prototype.startMessage;
+    var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         this.updateTargetCharacterId();
         _Window_Message_startMessage.apply(this, arguments);
@@ -705,7 +759,7 @@
         this._targetCharacterId = $gameSystem.getMessagePopupId();
     };
 
-    var _Window_Message_resetFontSettings = Window_Message.prototype.resetFontSettings;
+    var _Window_Message_resetFontSettings      = Window_Message.prototype.resetFontSettings;
     Window_Message.prototype.resetFontSettings = function() {
         _Window_Message_resetFontSettings.apply(this, arguments);
         if (this.isPopup()) this.contents.fontSize = paramFontSize;
@@ -725,10 +779,10 @@
     };
 
     Window_Message.prototype.isPopup = function() {
-       return !!this.getPopupTargetCharacter();
+        return !!this.getPopupTargetCharacter();
     };
 
-    var _Window_Message_update = Window_Message.prototype.update;
+    var _Window_Message_update      = Window_Message.prototype.update;
     Window_Message.prototype.update = function() {
         _Window_Message_update.apply(this, arguments);
         var prevX = this.x;
@@ -739,7 +793,7 @@
         }
     };
 
-    var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
+    var _Window_Message_updatePlacement      = Window_Message.prototype.updatePlacement;
     Window_Message.prototype.updatePlacement = function() {
         if (typeof Yanfly === 'undefined' || !Yanfly.Message) {
             this.x = 0;
@@ -775,7 +829,7 @@
         if (this.getPopupTargetCharacter()) {
             this.processVirtual();
         } else {
-            this.width = this.windowWidth();
+            this.width  = this.windowWidth();
             this.height = this.windowHeight();
             this.setPauseSignToNormal();
         }
@@ -784,9 +838,9 @@
     };
 
     Window_Message.prototype.processVirtual = function() {
-        var virtual = {};
-        virtual.index = 0;
-        virtual.text = this.convertEscapeCharacters($gameMessage.allText());
+        var virtual      = {};
+        virtual.index    = 0;
+        virtual.text     = this.convertEscapeCharacters($gameMessage.allText());
         virtual.maxWidth = 0;
         this.newPage(virtual);
         while (!this.isEndOfText(virtual)) {
@@ -794,7 +848,7 @@
         }
         virtual.y += virtual.height;
         this._subWindowY = virtual.y;
-        var choices = $gameMessage.choices();
+        var choices      = $gameMessage.choices();
         if (choices && $gameSystem.getPopupSubWindowPosition() === 2) {
             virtual.y += choices.length * this._choiceWindow.lineHeight();
             virtual.maxWidth = Math.max(virtual.maxWidth, this.newLineX() + this._choiceWindow.maxChoiceWidth());
@@ -803,7 +857,7 @@
         if (digit && $gameSystem.getPopupSubWindowPosition() === 2) {
             virtual.y += this._numberWindow.lineHeight();
         }
-        var width = virtual.maxWidth + this.padding * 2;
+        var width  = virtual.maxWidth + this.padding * 2;
         var height = Math.max(this.getFaceHeight(), virtual.y) + this.padding * 2;
         var adjust = $gameSystem.getPopupAdjustSize();
         if (adjust) {
@@ -817,8 +871,8 @@
 
     Window_Message.prototype.getSubWindowPosition = function() {
         var pos = new Point();
-        pos.x = this.x + this.newLineX();
-        pos.y = this.y + this._subWindowY;
+        pos.x   = this.x + this.newLineX();
+        pos.y   = this.y + this._subWindowY;
         return pos;
     };
 
@@ -862,7 +916,7 @@
     };
 
     Window_Message.prototype.processVirtualNormalCharacter = function(textState) {
-        var c = textState.text[textState.index++];
+        var c              = textState.text[textState.index++];
         textState.x += this.textWidth(c);
         textState.maxWidth = Math.max(textState.maxWidth, textState.x);
     };
@@ -872,7 +926,7 @@
         textState.maxWidth = Math.max(textState.maxWidth, textState.x);
     };
 
-    var _Window_Message_newLineX = Window_Message.prototype.newLineX;
+    var _Window_Message_newLineX      = Window_Message.prototype.newLineX;
     Window_Message.prototype.newLineX = function() {
         if (this.isPopup()) {
             return $gameMessage.faceName() === '' ? 0 : Window_Message._faceWidth + 8;
@@ -885,20 +939,20 @@
         return $gameMessage.faceName() === '' ? 0 : Window_Message._faceHeight;
     };
 
-    var _Window_Message_drawFace = Window_Message.prototype.drawFace;
+    var _Window_Message_drawFace      = Window_Message.prototype.drawFace;
     Window_Message.prototype.drawFace = function(faceName, faceIndex, x, y, width, height) {
         if (this.isPopup()) {
-            width = width || Window_Base._faceWidth;
-            height = height || Window_Base._faceHeight;
+            width      = width || Window_Base._faceWidth;
+            height     = height || Window_Base._faceHeight;
             var bitmap = ImageManager.loadFace(faceName);
-            var pw = Window_Base._faceWidth;
-            var ph = Window_Base._faceHeight;
-            var sw = Math.min(width, pw);
-            var sh = Math.min(height, ph);
-            var dx = Math.floor(x + Math.max(width - pw, 0) / 2);
-            var dy = Math.floor(y + Math.max(height - ph, 0) / 2);
-            var sx = faceIndex % 4 * pw + (pw - sw) / 2;
-            var sy = Math.floor(faceIndex / 4) * ph + (ph - sh) / 2;
+            var pw     = Window_Base._faceWidth;
+            var ph     = Window_Base._faceHeight;
+            var sw     = Math.min(width, pw);
+            var sh     = Math.min(height, ph);
+            var dx     = Math.floor(x + Math.max(width - pw, 0) / 2);
+            var dy     = Math.floor(y + Math.max(height - ph, 0) / 2);
+            var sx     = faceIndex % 4 * pw + (pw - sw) / 2;
+            var sy     = Math.floor(faceIndex / 4) * ph + (ph - sh) / 2;
             this.contents.blt(bitmap, sx, sy, sw, sh, dx, dy, Window_Message._faceWidth, Window_Message._faceHeight);
         } else {
             _Window_Message_drawFace.apply(this, arguments);
@@ -909,29 +963,29 @@
     // Window_ChoiceList
     //  ポップアップする場合、メッセージウィンドウに連動して表示位置と余白を調整します。
     //=============================================================================
-    var _Window_ChoiceList_standardFontSize = Window_ChoiceList.prototype.standardFontSize;
+    var _Window_ChoiceList_standardFontSize      = Window_ChoiceList.prototype.standardFontSize;
     Window_ChoiceList.prototype.standardFontSize = function() {
         return this.isPopupLinkage() ? paramFontSize : _Window_ChoiceList_standardFontSize.apply(this, arguments);
     };
 
-    var _Window_ChoiceList_standardPadding = Window_ChoiceList.prototype.standardPadding;
+    var _Window_ChoiceList_standardPadding      = Window_ChoiceList.prototype.standardPadding;
     Window_ChoiceList.prototype.standardPadding = function() {
         return this.isPopupLinkage() ? paramPadding : _Window_ChoiceList_standardPadding.apply(this, arguments);
     };
 
-    var _Window_ChoiceList_lineHeight = Window_ChoiceList.prototype.lineHeight;
+    var _Window_ChoiceList_lineHeight      = Window_ChoiceList.prototype.lineHeight;
     Window_ChoiceList.prototype.lineHeight = function() {
         return this.isPopupLinkage() ? paramFontSize + 8 : _Window_ChoiceList_lineHeight.apply(this, arguments);
     };
 
-    var _Window_ChoiceList_updatePlacement = Window_ChoiceList.prototype.updatePlacement;
+    var _Window_ChoiceList_updatePlacement      = Window_ChoiceList.prototype.updatePlacement;
     Window_ChoiceList.prototype.updatePlacement = function() {
         this.resetLayout();
         _Window_ChoiceList_updatePlacement.apply(this, arguments);
         if (this.isPopup()) this.updatePlacementPopup();
     };
 
-    var _Window_ChoiceList_refresh = Window_ChoiceList.prototype.refresh;
+    var _Window_ChoiceList_refresh      = Window_ChoiceList.prototype.refresh;
     Window_ChoiceList.prototype.refresh = function() {
         this.resetLayout();
         _Window_ChoiceList_refresh.apply(this, arguments);
@@ -941,7 +995,7 @@
         return this._messageWindow.isPopup();
     };
 
-    var _Window_ChoiceList_numVisibleRows = Window_ChoiceList.prototype.numVisibleRows;
+    var _Window_ChoiceList_numVisibleRows      = Window_ChoiceList.prototype.numVisibleRows;
     Window_ChoiceList.prototype.numVisibleRows = function() {
         var result = _Window_ChoiceList_numVisibleRows.apply(this, arguments);
         if (this.isPopupLinkage()) {
@@ -954,22 +1008,22 @@
     // Window_NumberInput
     //  ポップアップする場合、メッセージウィンドウに連動して表示位置と余白を調整します。
     //=============================================================================
-    var _Window_NumberInput_standardFontSize = Window_NumberInput.prototype.standardFontSize;
+    var _Window_NumberInput_standardFontSize      = Window_NumberInput.prototype.standardFontSize;
     Window_NumberInput.prototype.standardFontSize = function() {
         return this.isPopupLinkage() ? paramFontSize : _Window_NumberInput_standardFontSize.apply(this, arguments);
     };
 
-    var _Window_NumberInput_standardPadding = Window_NumberInput.prototype.standardPadding;
+    var _Window_NumberInput_standardPadding      = Window_NumberInput.prototype.standardPadding;
     Window_NumberInput.prototype.standardPadding = function() {
         return this.isPopupLinkage() ? paramPadding : _Window_NumberInput_standardPadding.apply(this, arguments);
     };
 
-    var _Window_NumberInput_lineHeight = Window_NumberInput.prototype.lineHeight;
+    var _Window_NumberInput_lineHeight      = Window_NumberInput.prototype.lineHeight;
     Window_NumberInput.prototype.lineHeight = function() {
         return this.isPopupLinkage() ? paramFontSize + 8 : _Window_NumberInput_lineHeight.apply(this, arguments);
     };
 
-    var _Window_NumberInput_updatePlacement = Window_NumberInput.prototype.updatePlacement;
+    var _Window_NumberInput_updatePlacement      = Window_NumberInput.prototype.updatePlacement;
     Window_NumberInput.prototype.updatePlacement = function() {
         this.resetLayout();
         this.opacity = 255;
@@ -986,29 +1040,29 @@
     //  メッセージウィンドウに連動して表示位置と余白を調整します。
     //=============================================================================
     if (typeof Window_NameBox !== 'undefined') {
-        var _Window_NameBox_standardFontSize = Window_NameBox.prototype.standardFontSize;
+        var _Window_NameBox_standardFontSize      = Window_NameBox.prototype.standardFontSize;
         Window_NameBox.prototype.standardFontSize = function() {
             return this.isPopupLinkage() ? paramFontSize : _Window_NameBox_standardFontSize.apply(this, arguments);
         };
 
-        var _Window_NameBox_standardPadding = Window_NameBox.prototype.standardPadding;
+        var _Window_NameBox_standardPadding      = Window_NameBox.prototype.standardPadding;
         Window_NameBox.prototype.standardPadding = function() {
             return this.isPopupLinkage() ? paramPadding : _Window_NameBox_standardPadding.apply(this, arguments);
         };
 
-        var _Window_NameBox_lineHeight = Window_NameBox.prototype.lineHeight;
+        var _Window_NameBox_lineHeight      = Window_NameBox.prototype.lineHeight;
         Window_NameBox.prototype.lineHeight = function() {
             return this.isPopupLinkage() ? paramFontSize + 8 : _Window_NameBox_lineHeight.apply(this, arguments);
         };
 
-        var _Window_NameBox_updatePlacement = Window_NameBox.prototype.updatePlacement;
+        var _Window_NameBox_updatePlacement      = Window_NameBox.prototype.updatePlacement;
         Window_NameBox.prototype.updatePlacement = function() {
             this.resetLayout();
             _Window_NameBox_updatePlacement.apply(this, arguments);
             if (this.isPopup()) this.updatePlacementPopup();
         };
 
-        var _Window_NameBox_refresh = Window_NameBox.prototype.refresh;
+        var _Window_NameBox_refresh      = Window_NameBox.prototype.refresh;
         Window_NameBox.prototype.refresh = function() {
             this.resetLayout();
             return _Window_NameBox_refresh.apply(this, arguments);
