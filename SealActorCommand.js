@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/02/23 封印対象にスキルを追加
 // 1.0.0 2017/02/22 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -17,25 +18,29 @@
  * @plugindesc SealActorCommandPlugin
  * @author triacontane
  *
- * @help 主要アクターコマンド「攻撃」「防御」「アイテム」を封印できます。
+ * @help アクターコマンド「攻撃」「防御」「アイテム」「スキル」を封印できます。
  * 封印されたコマンドはウィンドウから消失します。
  * 特定のコマンドが使用できないアクター、職業、装備品、ステートが作成できます。
  * さらに、スイッチやJavaScript計算式により、細かい条件が指定できます。
  *
  * 特徴を有するデータベースのメモ欄に以下の通り記入してください。
  *
- * <SAC攻撃封印スイッチ:4> # ID[4]のスイッチがONのとき攻撃を封印
- * <SACAttackSwitch:4>     # 同上
- * <SAC防御封印スイッチ:5> # ID[5]のスイッチがONのとき防御を封印
- * <SACGuardSwitch:5>      # 同上
- * <SAC道具封印スイッチ:6> # ID[6]のスイッチがONのときアイテムを封印
- * <SACItemSwitch:6>       # 同上
- * <SAC攻撃封印計算式:f>   # 計算式[f]の結果がtrueのとき攻撃を封印
- * <SACAttackFormula:f>    # 同上
- * <SAC防御封印計算式:f>   # 計算式[f]の結果がtrueのとき防御を封印
- * <SACGuardFormula:f>     # 同上
- * <SAC道具封印計算式:f>   # 計算式[f]の結果がtrueのときアイテムを封印
- * <SACItemFormula:f>      # 同上
+ * <SAC攻撃封印スイッチ:4>   # ID[4]のスイッチがONのとき攻撃を封印
+ * <SACAttackSwitch:4>       # 同上
+ * <SAC防御封印スイッチ:5>   # ID[5]のスイッチがONのとき防御を封印
+ * <SACGuardSwitch:5>        # 同上
+ * <SAC道具封印スイッチ:6>   # ID[6]のスイッチがONのときアイテムを封印
+ * <SACItemSwitch:6>         # 同上
+ * <SACスキル封印スイッチ:7> # ID[7]のスイッチがONのときスキルを封印
+ * <SACSkillSwitch:7>        # 同上
+ * <SAC攻撃封印計算式:f>     # 計算式[f]の結果がtrueのとき攻撃を封印
+ * <SACAttackFormula:f>      # 同上
+ * <SAC防御封印計算式:f>     # 計算式[f]の結果がtrueのとき防御を封印
+ * <SACGuardFormula:f>       # 同上
+ * <SAC道具封印計算式:f>     # 計算式[f]の結果がtrueのときアイテムを封印
+ * <SACItemFormula:f>        # 同上
+ * <SACスキル封印計算式:f>   # 計算式[f]の結果がtrueのときスキルを封印
+ * <SACSkillFormula:f>       # 同上
  *
  * 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
  * < → &lt;
@@ -43,6 +48,9 @@
  * 例
  * <SACAttackFormula:\v[1] &gt;= 5> # 変数[1]が5以下の場合攻撃封印
  * <SACGuardFormula:true>           # 常に防御封印
+ *
+ * 注意！
+ * 全てのコマンドを封印するとゲームが続行不可になります。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -52,25 +60,29 @@
  * @plugindesc アクターコマンド封印プラグイン
  * @author トリアコンタン
  *
- * @help 主要アクターコマンド「攻撃」「防御」「アイテム」を封印できます。
+ * @help アクターコマンド「攻撃」「防御」「アイテム」「スキル」を封印できます。
  * 封印されたコマンドはウィンドウから消失します。
  * 特定のコマンドが使用できないアクター、職業、装備品、ステートが作成できます。
  * さらに、スイッチやJavaScript計算式により、細かい条件が指定できます。
  *
  * 特徴を有するデータベースのメモ欄に以下の通り記入してください。
  *
- * <SAC攻撃封印スイッチ:4> # ID[4]のスイッチがONのとき攻撃を封印
- * <SACAttackSwitch:4>     # 同上
- * <SAC防御封印スイッチ:5> # ID[5]のスイッチがONのとき防御を封印
- * <SACGuardSwitch:5>      # 同上
- * <SAC道具封印スイッチ:6> # ID[6]のスイッチがONのときアイテムを封印
- * <SACItemSwitch:6>       # 同上
- * <SAC攻撃封印計算式:f>   # 計算式[f]の結果がtrueのとき攻撃を封印
- * <SACAttackFormula:f>    # 同上
- * <SAC防御封印計算式:f>   # 計算式[f]の結果がtrueのとき防御を封印
- * <SACGuardFormula:f>     # 同上
- * <SAC道具封印計算式:f>   # 計算式[f]の結果がtrueのときアイテムを封印
- * <SACItemFormula:f>      # 同上
+ * <SAC攻撃封印スイッチ:4>   # ID[4]のスイッチがONのとき攻撃を封印
+ * <SACAttackSwitch:4>       # 同上
+ * <SAC防御封印スイッチ:5>   # ID[5]のスイッチがONのとき防御を封印
+ * <SACGuardSwitch:5>        # 同上
+ * <SAC道具封印スイッチ:6>   # ID[6]のスイッチがONのときアイテムを封印
+ * <SACItemSwitch:6>         # 同上
+ * <SACスキル封印スイッチ:7> # ID[7]のスイッチがONのときスキルを封印
+ * <SACSkillSwitch:7>        # 同上
+ * <SAC攻撃封印計算式:f>     # 計算式[f]の結果がtrueのとき攻撃を封印
+ * <SACAttackFormula:f>      # 同上
+ * <SAC防御封印計算式:f>     # 計算式[f]の結果がtrueのとき防御を封印
+ * <SACGuardFormula:f>       # 同上
+ * <SAC道具封印計算式:f>     # 計算式[f]の結果がtrueのときアイテムを封印
+ * <SACItemFormula:f>        # 同上
+ * <SACスキル封印計算式:f>   # 計算式[f]の結果がtrueのときスキルを封印
+ * <SACSkillFormula:f>       # 同上
  *
  * 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
  * < → &lt;
@@ -78,6 +90,9 @@
  * 例
  * <SACAttackFormula:\v[1] &gt;= 5> # 変数[1]が5以下の場合攻撃封印
  * <SACGuardFormula:true>           # 常に防御封印
+ *
+ * 注意！
+ * 全てのコマンドを封印するとゲームが続行不可になります。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -131,31 +146,29 @@
         return metaValue;
     };
 
-    Game_Actor.prototype.isSealCommandAttack = function() {
-        var switchId = this.getSealMetaInfo(['AttackSwitch', '攻撃封印スイッチ']);
+    Game_Actor.prototype.isSealCommand = function(commandNames) {
+        var switchId = this.getSealMetaInfo([commandNames[0] + 'Switch', commandNames[1] + '封印スイッチ']);
         if (switchId && $gameSwitches.value(getArgNumber(switchId))) {
             return true;
         }
-        var formula = this.getSealMetaInfo(['AttackFormula', '攻撃封印計算式']);
+        var formula = this.getSealMetaInfo([commandNames[0] + 'Formula', commandNames[1] + '封印計算式']);
         return formula && eval(formula);
+    };
+
+    Game_Actor.prototype.isSealCommandAttack = function() {
+        return this.isSealCommand(['Attack', '攻撃']);
     };
 
     Game_Actor.prototype.isSealCommandGuard = function() {
-        var switchId = this.getSealMetaInfo(['GuardSwitch', '防御封印スイッチ']);
-        if (switchId && $gameSwitches.value(getArgNumber(switchId))) {
-            return true;
-        }
-        var formula = this.getSealMetaInfo(['GuardFormula', '防御封印計算式']);
-        return formula && eval(formula);
+        return this.isSealCommand(['Guard', '防御']);
     };
 
     Game_Actor.prototype.isSealCommandItem = function() {
-        var switchId = this.getSealMetaInfo(['ItemSwitch', '道具封印スイッチ']);
-        if (switchId && $gameSwitches.value(getArgNumber(switchId))) {
-            return true;
-        }
-        var formula = this.getSealMetaInfo(['ItemFormula', '道具封印計算式']);
-        return formula && eval(formula);
+        return this.isSealCommand(['Item', '道具']);
+    };
+
+    Game_Actor.prototype.isSealCommandSkill = function() {
+        return this.isSealCommand(['Skill', 'スキル']);
     };
 
     //=============================================================================
@@ -178,6 +191,12 @@
     Window_ActorCommand.prototype.addItemCommand = function() {
         if (this._actor.isSealCommandItem()) return;
         _Window_ActorCommand_addItemCommand.apply(this, arguments);
+    };
+
+    var _Window_ActorCommand_addSkillCommands = Window_ActorCommand.prototype.addSkillCommands;
+    Window_ActorCommand.prototype.addSkillCommands = function() {
+        if (this._actor.isSealCommandSkill()) return;
+        _Window_ActorCommand_addSkillCommands.apply(this, arguments);
     };
 })();
 
