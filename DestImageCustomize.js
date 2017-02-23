@@ -18,25 +18,25 @@
  * @author triacontane
  *
  * @param Opacity
- * @desc 目的地イメージの不透明度です。0にすると見えなくなります。
+ * @desc 目的地画像の不透明度です。0にすると見えなくなります。
  * @default 255
  *
  * @param BlendMode
- * @desc 目的地イメージの合成方法です。0:通常 1:加算 2:乗算 3:スクリーン
+ * @desc 目的地画像の合成方法です。0:通常 1:加算 2:乗算 3:スクリーン
  * @default 1
  *
  * @param Color
- * @desc 目的地イメージの表示色です。(通常:white)
+ * @desc 目的地画像の表示色です。(通常:white)
  * @default
  *
  * @param OriginalImage
- * @desc 目的地イメージに独自の画像を指定できます。(img/pictures)
+ * @desc 目的地画像に独自の画像を指定できます。(img/pictures)
  * @default
  * @require 1
  * @dir img/pictures/
  * @type file
  *
- * @help 目的地イメージ（マップをクリックしたときの目的地）の表示内容を
+ * @help 目的地画像（マップをクリックしたときの目的地）の表示内容を
  * カスタマイズします。色や不透明度を変更したり独自画像を設定したりできます。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -44,29 +44,29 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc 目的地イメージカスタマイズプラグイン
+ * @plugindesc 目的地画像カスタマイズプラグイン
  * @author トリアコンタン
  *
  * @param 不透明度
- * @desc 目的地イメージの不透明度です。0にすると見えなくなります。
+ * @desc 目的地画像の不透明度です。0にすると見えなくなります。
  * @default 255
  *
  * @param 合成方法
- * @desc 目的地イメージの合成方法です。0:通常 1:加算 2:乗算 3:スクリーン
+ * @desc 目的地画像の合成方法です。0:通常 1:加算 2:乗算 3:スクリーン
  * @default 1
  *
  * @param 表示色
- * @desc 目的地イメージの表示色です。(通常:white)
+ * @desc 目的地画像の表示色です。(通常:white)
  * @default
  *
  * @param 独自画像
- * @desc 目的地イメージに独自の画像を指定できます。(img/pictures)
+ * @desc 目的地画像に独自の画像を指定できます。(img/pictures)
  * @default
  * @require 1
  * @dir img/pictures/
  * @type file
  *
- * @help 目的地イメージ（マップをクリックしたときの目的地）の表示内容を
+ * @help 目的地画像（マップをクリックしたときの目的地）の表示内容を
  * カスタマイズします。色や不透明度を変更したり独自画像を設定したりできます。
  *
  * このプラグインにはプラグインコマンドはありません。
