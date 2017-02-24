@@ -71,7 +71,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc 画像ぼかし設定プラグイン
+ * @plugindesc 画像ぼかし個別設定プラグイン
  * @author トリアコンタン
  *
  * @param アニメーション
