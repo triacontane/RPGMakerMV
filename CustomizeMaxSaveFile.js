@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/02/25 セーブファイル数により大きな値を設定できるよう上限を開放
 // 1.1.0 2016/11/03 オートセーブなど最大数以上のIDに対してセーブするプラグインとの競合に対応
 // 1.0.0 2016/03/19 初版
 // ----------------------------------------------------------------------------
@@ -33,7 +34,7 @@
  * @author トリアコンタン
  *
  * @param セーブファイル数
- * @desc 最大セーブファイル数です。(1...100)
+ * @desc 最大セーブファイル数です。
  * @default 20
  *
  * @help 最大セーブファイル数をパラメータで指定した値に変更します。
@@ -65,7 +66,25 @@
         }
         return null;
     };
-    var paramSaveFileNumber = getParamNumber(['SaveFileNumber', 'セーブファイル数'], 0, 100);
+    var paramSaveFileNumber = getParamNumber(['SaveFileNumber', 'セーブファイル数'], 0);
+
+    //=============================================================================
+    // DataManager
+    //  セーブファイルの数をカスタマイズします。
+    //=============================================================================
+    var _DataManager_loadGlobalInfo = DataManager.loadGlobalInfo;
+    DataManager.loadGlobalInfo = function() {
+        if (!this._globalInfo) {
+            this._globalInfo = _DataManager_loadGlobalInfo.apply(this, arguments);
+        }
+        return this._globalInfo;
+    };
+
+    var _DataManager_saveGlobalInfo = DataManager.saveGlobalInfo;
+    DataManager.saveGlobalInfo = function(info) {
+        _DataManager_saveGlobalInfo.apply(this, arguments);
+        this._globalInfo = null;
+    };
 
     var _DataManager_maxSavefiles = DataManager.maxSavefiles;
     DataManager.maxSavefiles = function() {
