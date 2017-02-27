@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/02/27 YEP_BattleEngineCore.jsと組み合わせたときに、後衛時のノックバックが過剰になる現象を修正
 // 1.3.0 2017/01/14 敵キャラの前衛、後衛ステートアイコンを非表示にできる機能を追加
 // 1.2.2 2016/10/25 後衛の敵キャラが逃走したときに位置が元に戻ってしまう現象を修正
 // 1.2.1 2016/10/25 前衛・後衛の位置補正値に負の値を設定できるよう修正
@@ -97,6 +98,11 @@
  * 前衛後衛のチェンジを禁止して前衛か後衛で固定したい場合、
  * アクターおよび敵キャラのメモ欄に以下の通り設定してください。
  * <VARChangeDisable> # 対象バトラーに対するチェンジは禁止されます。
+ *
+ * YEP_BattleEngineCore.jsと組み合わせたときに
+ * 後衛時のノックバックが過剰になる現象を修正しています。
+ * 併用する場合は、当プラグインをYEP_BattleEngineCore.jsより下に
+ * 配置してください。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -201,6 +207,11 @@
  *
  * 敵グループ内に前衛メンバーが生存しているかどうかの判定
  * $gameTroop.aliveMembers().some(function(enemy) { return enemy.isVanguard(); });
+ *
+ * YEP_BattleEngineCore.jsと組み合わせたときに
+ * 後衛時のノックバックが過剰になる現象を修正しています。
+ * 併用する場合は、当プラグインをYEP_BattleEngineCore.jsより下に
+ * 配置してください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -683,6 +694,24 @@
         if (targetFormationY < this._formationY) {
             this._formationY = Math.max(this._formationY - paramChangeSpeed, targetFormationY);
         }
+    };
+
+    var _Sprite_Battler_stepFlinch = Sprite_Battler.prototype.stepFlinch;
+    Sprite_Battler.prototype.stepFlinch = function() {
+        this._homeX += this._formationX;
+        this._homeY += this._formationY;
+        _Sprite_Battler_stepFlinch.apply(this, arguments);
+        this._homeX -= this._formationX;
+        this._homeY -= this._formationY;
+    };
+
+    var _Sprite_Actor_stepFlinch = Sprite_Actor.prototype.stepFlinch;
+    Sprite_Actor.prototype.stepFlinch = function() {
+        this._homeX += this._formationX;
+        this._homeY += this._formationY;
+        _Sprite_Actor_stepFlinch.apply(this, arguments);
+        this._homeX -= this._formationX;
+        this._homeY -= this._formationY;
     };
 })();
 
