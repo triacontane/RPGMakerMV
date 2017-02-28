@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/02/28 ステートアイコンを横に並べる機能を追加。ステート数によって演出を分けることもできます。
 // 1.0.0 2016/08/08 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -18,16 +19,20 @@
  * @author triacontane
  *
  * @param RadiusX
- * @desc 横方向の半径の値です。(Default:64)
+ * @desc 横方向の半径の値です。
  * @default 64
  *
  * @param RadiusY
- * @desc 縦方向の半径の値です。(Default:16)
+ * @desc 縦方向の半径の値です。
  * @default 16
  *
  * @param CycleDuration
- * @desc アイコンが一周するのに掛かる時間(フレーム数)です。(Default:60)
+ * @desc アイコンが一周するのに掛かる時間(フレーム数)です。0に指定すると回転しなくなります。
  * @default 60
+ *
+ * @param LineViewLimit
+ * @desc ステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
+ * @default 1
  *
  * @param Reverse
  * @desc 回転方向が反時計回りになります。(Default:OFF)
@@ -53,8 +58,12 @@
  * @default 16
  *
  * @param 周期
- * @desc アイコンが一周するのに掛かる時間(フレーム数)です。(Default:60)
+ * @desc アイコンが一周するのに掛かる時間(フレーム数)です。0に指定すると回転しなくなります。
  * @default 60
+ *
+ * @param 一列配置上限
+ * @desc ステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
+ * @default 1
  *
  * @param 反時計回り
  * @desc 回転方向が反時計回りになります。(Default:OFF)
@@ -73,7 +82,7 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'StateRingIcon';
+    var pluginName = 'StateRingIcon';
 
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
@@ -99,10 +108,11 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramRadiusX       = getParamNumber(['RadiusX', 'X半径'], 16);
-    var paramRadiusY       = getParamNumber(['RadiusY', 'Y半径'], 16);
-    var paramCycleDuration = getParamNumber(['CycleDuration', '周期'], 60);
+    var paramRadiusX       = getParamNumber(['RadiusX', 'X半径'], 0);
+    var paramRadiusY       = getParamNumber(['RadiusY', 'Y半径'], 0);
+    var paramCycleDuration = getParamNumber(['CycleDuration', '周期'], 0);
     var paramReverse       = getParamBoolean(['Reverse', '反時計回り']);
+    var paramLineViewLimit = getParamNumber(['LineViewLimit', '一列配置上限'], 0);
 
     //=============================================================================
     // Sprite_StateIcon
@@ -133,7 +143,7 @@
             this._icons = icons;
             this.setupRingIcon();
         }
-        if (this._iconsSprites.length > 1) {
+        if (this._iconsSprites.length > paramLineViewLimit && paramLineViewLimit > 0) {
             this.updateRingPosition();
         } else {
             this.updateNormalPosition();
@@ -142,29 +152,33 @@
     };
 
     Sprite_StateIcon.prototype.updateRingPosition = function() {
-        for (var i = 0; i < this._iconsSprites.length; i++) {
-            var radian = (this._animationCount / this.getCycleDuration() + i / this._iconsSprites.length) * Math.PI * 2;
-            if (paramReverse) radian *= -1;
-            this._iconsSprites[i].setRingPosition(radian);
-        }
+        this._iconsSprites.forEach(function(sprite, index) {
+            sprite.setRingPosition(this.getIconRadian(index));
+        }, this);
     };
 
     Sprite_StateIcon.prototype.updateNormalPosition = function() {
-        for (var i = 0; i < this._iconsSprites.length; i++) {
-            this._iconsSprites[i].setNormalPosition();
-        }
+        this._iconsSprites.forEach(function(sprite, index) {
+            sprite.setNormalPosition(index, this._iconsSprites.length);
+        }, this);
+    };
+
+    Sprite_StateIcon.prototype.getIconRadian = function(index) {
+        var radian = (this._animationCount / this.getCycleDuration() + index / this._iconsSprites.length) * Math.PI * 2;
+        if (paramReverse) radian *= -1;
+        return radian;
     };
 
     Sprite_StateIcon.prototype.getCycleDuration = function() {
-        return paramCycleDuration;
+        return paramCycleDuration || Infinity;
     };
 
     Sprite_StateIcon.prototype.setupRingIcon = function() {
-        for (var i = 0; i < this._icons.length; i++) {
-            if (!this._iconsSprites[i]) this.makeNewIcon(i);
-            this._iconsSprites[i].setIconIndex(this._icons[i]);
-        }
-        for (i = this._icons.length; i < this._iconsSprites.length; i++) {
+        this._icons.forEach(function(icon, index) {
+            if (!this._iconsSprites[index]) this.makeNewIcon(index);
+            this._iconsSprites[index].setIconIndex(icon);
+        }, this);
+        for (var i = this._icons.length; i < this._iconsSprites.length; i++) {
             this.removeIcon(i);
         }
     };
@@ -223,8 +237,8 @@
         this.visible = true;
     };
 
-    Sprite_StateIconChild.prototype.setNormalPosition = function() {
-        this.x       = 0;
+    Sprite_StateIconChild.prototype.setNormalPosition = function(index, max) {
+        this.x       = ((-max + 1) / 2 + index) * Sprite_StateIcon._iconWidth;
         this.y       = 0;
         this.visible = true;
     };
