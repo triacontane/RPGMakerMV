@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/03/01 全方向移動不可な地形タグやリージョンのパラメータを追加
 // 1.6.4 2017/02/14 下半分移動不可なタイルに対して下方向から移動できてしまっていた不具合を修正
 // 1.6.3 2016/09/21 半歩移動中、上方向にある小型船、大型船に乗船できない不具合を修正
 // 1.6.2 2016/09/03 斜め移動の移動先にイベントがある場合、縦横移動に切り替わらない問題を修正
@@ -104,6 +105,14 @@
  * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
  *
+ * @param AllNpTerrainTag
+ * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param AllNpRegionId
+ * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
+ *
  * @param MultiStartDisable
  * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
  * @default OFF
@@ -192,6 +201,14 @@
  *
  * @param 左半分移動不可Region
  * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param 全方向移動不可地形
+ * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default 0
+ *
+ * @param 全方向移動不可Region
+ * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
  *
  * @param イベント複数起動防止
@@ -382,6 +399,8 @@
     var paramRightNpRegionId    = getParamNumber(['RightNpRegionId', '右半分移動不可Region'], 0);
     var paramLeftNpTerrainTag   = getParamNumber(['LeftNpTerrainTag', '左半分移動不可地形'], 0);
     var paramLeftNpRegionId     = getParamNumber(['LeftNpRegionId', '左半分移動不可Region'], 0);
+    var paramAllNpTerrainTag    = getParamNumber(['AllNpTerrainTag', '全方向移動不可地形'], 0);
+    var paramAllNpRegionId      = getParamNumber(['AllNpRegionId', '全方向移動不可Region'], 0);
     var paramMultiStartDisable  = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
     var paramEventOverlap       = getParamBoolean(['EventOverlap', 'イベント位置重複OK']);
 
@@ -539,6 +558,11 @@
             (paramLeftNpRegionId > 0 && paramLeftNpRegionId === this.regionId(x, y));
     };
 
+    Game_Map.prototype.isAllNp = function(x, y) {
+        return (paramAllNpTerrainTag > 0 && paramAllNpTerrainTag === this.terrainTag(x, y)) ||
+            (paramAllNpRegionId > 0 && paramAllNpRegionId === this.regionId(x, y));
+    };
+
     var _Game_Map_checkLayeredTilesFlags      = Game_Map.prototype.checkLayeredTilesFlags;
     Game_Map.prototype.checkLayeredTilesFlags = function(x, y, bit) {
         var result = false;
@@ -655,7 +679,7 @@
         }
         if (this.isHalfMove()) {
             result = result && !this.isUpperNoPassable(x, y, d) && !this.isLowerNoPassable(x, y, d) &&
-                    !this.isRightNoPassable(x, y, d) && !this.isLeftNoPassable(x, y, d);
+                !this.isRightNoPassable(x, y, d) && !this.isLeftNoPassable(x, y, d) && !this.isAllNoPassable(x, y, d);
         }
         localHalfPositionCount = halfPositionCount;
         return result;
@@ -742,7 +766,7 @@
         } else if ((d === 2 && !this.isHalfPosY(y) || (d === 8 && this.isHalfPosY(y)))) {
             y1 = $gameMap.roundHalfYWithDirection(y, d);
             if (this.isHalfPosX(x)) {
-                x1 = $gameMap.roundHalfXWithDirection(x, 4);
+                x1     = $gameMap.roundHalfXWithDirection(x, 4);
                 result = $gameMap.isRightNp(x1, y1);
             } else {
                 result = $gameMap.isRightNp(x, y1);
@@ -764,10 +788,34 @@
         } else if ((d === 2 && !this.isHalfPosY(y) || (d === 8 && this.isHalfPosY(y)))) {
             y1 = $gameMap.roundHalfYWithDirection(y, d);
             if (this.isHalfPosX(x)) {
-                x1 = $gameMap.roundHalfXWithDirection(x, 6);
+                x1     = $gameMap.roundHalfXWithDirection(x, 6);
                 result = $gameMap.isLeftNp(x1, y1);
             } else {
                 result = $gameMap.isLeftNp(x, y1);
+            }
+        }
+        return result;
+    };
+
+    Game_CharacterBase.prototype.isAllNoPassable = function(x, y, d) {
+        var result = false, x1, y1;
+        if (!this.isHalfPosX(x) && (d === 4 || d === 6)) {
+            x1 = $gameMap.roundXWithDirection(x, d);
+            if (this.isHalfPosY(y)) {
+                y1     = $gameMap.roundHalfYWithDirection(y, 2);
+                var y2 = $gameMap.roundHalfYWithDirection(y, 8);
+                result = $gameMap.isAllNp(x1, y1) || $gameMap.isAllNp(x1, y2);
+            } else {
+                result = $gameMap.isAllNp(x1, y);
+            }
+        } else if (!this.isHalfPosX(y) && (d === 2 || d === 8)) {
+            y1 = $gameMap.roundYWithDirection(y, d);
+            if (this.isHalfPosX(x)) {
+                x1     = $gameMap.roundHalfXWithDirection(x, 4);
+                var x2 = $gameMap.roundHalfXWithDirection(x, 6);
+                result = $gameMap.isAllNp(x1, y1) || $gameMap.isAllNp(x2, y1);
+            } else {
+                result = $gameMap.isAllNp(x, y1);
             }
         }
         return result;
@@ -1093,7 +1141,7 @@
     };
 
     Game_Player.prototype.isTestEventStart = function() {
-        return !!this._testEventStart;
+        return this._testEventStart;
     };
 
     Game_Player.prototype.executeMoveRetry = function(d) {
@@ -1148,7 +1196,7 @@
         target.setCollidedFromPlayer(true);
     };
 
-    var _Game_Player_getOnVehicle = Game_Player.prototype.getOnVehicle;
+    var _Game_Player_getOnVehicle      = Game_Player.prototype.getOnVehicle;
     Game_Player.prototype.getOnVehicle = function() {
         var result = _Game_Player_getOnVehicle.apply(this, arguments);
         if (!result && this.isHalfMove()) {
@@ -1203,7 +1251,7 @@
         return !paramEventOverlap || this.isNormalPriority();
     };
 
-    var _Game_Event_isCollidedWithPlayerCharacters = Game_Event.prototype.isCollidedWithPlayerCharacters;
+    var _Game_Event_isCollidedWithPlayerCharacters      = Game_Event.prototype.isCollidedWithPlayerCharacters;
     Game_Event.prototype.isCollidedWithPlayerCharacters = function(x, y) {
         var result = _Game_Event_isCollidedWithPlayerCharacters.apply(this, arguments);
         if (!result && !this.isHalfThrough($gamePlayer.y)) {
