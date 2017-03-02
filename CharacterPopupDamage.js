@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/03/03 ピクチャより前面にポップアップできる設定を追加
+//                  回転がない場合でも拡大率を自由に変更できるよう修正
 // 1.3.0 2017/01/23 スリップダメージのポップアップに対応
 //                  対応するフォロワーのポップアップを表示する機能を追加
 // 1.2.0 2016/12/31 ポップアップの色調設定機能を追加
@@ -64,7 +66,7 @@
  * @default
  *
  * @param 回転
- * @desc 数字の回転運動を有効にします。以後の設定はこのパラメータがONのときのみ有効です。
+ * @desc 数字の回転運動を有効にします。
  * @default ON
  *
  * @param X方向半径
@@ -86,6 +88,10 @@
  * @param 拡大率変化値
  * @desc 1フレームごとの拡大率の変化値です。
  * @default -10
+ *
+ * @param 最前面表示
+ * @desc ポップアップをピクチャより前面に表示します。
+ * @default OFF
  *
  * @help マップ画面でイベントやプレイヤーに数字をポップアップさせる機能を提供します。
  * マップ上でのダメージや回復の演出に利用できます。演出は戦闘時のものと同一です。
@@ -239,12 +245,13 @@
     var paramRotateSpeed     = getParamNumber(['RotateSpeed', '回転速度']);
     var paramScale           = getParamNumber(['Scale', '拡大率']);
     var paramScaleDelta      = getParamNumber(['ScaleDelta', '拡大率変化値']);
+    var paramOnTop           = getParamBoolean(['OnTop', '最前面表示']);
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
@@ -313,7 +320,7 @@
         }
     };
 
-    var _Game_Interpreter_command311    = Game_Interpreter.prototype.command311;
+    var _Game_Interpreter_command311      = Game_Interpreter.prototype.command311;
     Game_Interpreter.prototype.command311 = function() {
         var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
         this.iterateActorEx(this._params[0], this._params[1], function(actor) {
@@ -322,7 +329,7 @@
         return _Game_Interpreter_command311.apply(this, arguments);
     };
 
-    var _Game_Interpreter_command312    = Game_Interpreter.prototype.command312;
+    var _Game_Interpreter_command312      = Game_Interpreter.prototype.command312;
     Game_Interpreter.prototype.command312 = function() {
         var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
         this.iterateActorEx(this._params[0], this._params[1], function(actor) {
@@ -331,7 +338,7 @@
         return _Game_Interpreter_command312.apply(this, arguments);
     };
 
-    var _Game_Interpreter_command326    = Game_Interpreter.prototype.command326;
+    var _Game_Interpreter_command326      = Game_Interpreter.prototype.command326;
     Game_Interpreter.prototype.command326 = function() {
         var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
         this.iterateActorEx(this._params[0], this._params[1], function(actor) {
@@ -349,12 +356,12 @@
     // Game_Actor
     //  ダメージ床によるポップアップを処理します。
     //=============================================================================
-    var _Game_Actor_executeFloorDamage    = Game_Actor.prototype.executeFloorDamage;
+    var _Game_Actor_executeFloorDamage      = Game_Actor.prototype.executeFloorDamage;
     Game_Actor.prototype.executeFloorDamage = function() {
         this.popupMapDamage(_Game_Actor_executeFloorDamage);
     };
 
-    var _Game_Actor_turnEndOnMap = Game_Actor.prototype.turnEndOnMap;
+    var _Game_Actor_turnEndOnMap      = Game_Actor.prototype.turnEndOnMap;
     Game_Actor.prototype.turnEndOnMap = function() {
         this.popupMapDamage(_Game_Actor_turnEndOnMap);
     };
@@ -401,7 +408,7 @@
     Game_Actor.prototype.getCharacterObject = function() {
         var index = $gameParty.battleMembers().indexOf(this);
         var result;
-        switch(index) {
+        switch (index) {
             case -1:
                 result = null;
                 break;
@@ -410,7 +417,7 @@
                 break;
             default:
                 var followers = $gamePlayer.followers();
-                result = followers.isVisible() ? followers.follower(index - 1) : null;
+                result        = followers.isVisible() ? followers.follower(index - 1) : null;
         }
         return result;
     };
@@ -419,7 +426,7 @@
     // Game_System
     //  オートポップアップの有効フラグを追加定義します。
     //=============================================================================
-    var _Game_System_initialize    = Game_System.prototype.initialize;
+    var _Game_System_initialize      = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
         this._suppressAutoPopup = false;
@@ -516,7 +523,7 @@
     // Sprite_Character
     //  ダメージをポップアップします。
     //=============================================================================
-    var _Sprite_Character_update    = Sprite_Character.prototype.update;
+    var _Sprite_Character_update      = Sprite_Character.prototype.update;
     Sprite_Character.prototype.update = function() {
         _Sprite_Character_update.apply(this, arguments);
         this.updateDamagePopup();
@@ -529,7 +536,7 @@
                 this._damages[i].update();
             }
             if (!this._damages[0].isPlaying()) {
-                this.parent.removeChild(this._damages[0]);
+                this.getPopupParent().removeChild(this._damages[0]);
                 this._damages.shift();
             }
         }
@@ -538,13 +545,13 @@
     Sprite_Character.prototype.setupDamagePopup = function() {
         if (this._character.isDamagePopupRequested()) {
             var sprite = new Sprite_CharacterDamage();
-            sprite.x     = this.x + this.damageOffsetX();
-            sprite.y     = this.y + this.damageOffsetY();
+            sprite.x   = this.x + this.damageOffsetX();
+            sprite.y   = this.y + this.damageOffsetY();
             if (!sprite.z) sprite.z = 9;
             sprite.setupCharacter(this._character);
             if (!this._damages) this._damages = [];
             this._damages.push(sprite);
-            this.parent.addChild(sprite);
+            this.getPopupParent().addChild(sprite);
             this._character.clearDamagePopup();
         }
     };
@@ -557,6 +564,10 @@
         return paramOffsetY;
     };
 
+    Sprite_Character.prototype.getPopupParent = function() {
+        return paramOnTop ? this.parent.parent.parent : this.parent;
+    };
+
     //=============================================================================
     // Sprite_CharacterDamage
     //  ダメージ情報を受け取ってセットアップします。
@@ -565,14 +576,14 @@
         this.initialize.apply(this, arguments);
     }
 
-    Sprite_CharacterDamage.prototype             = Object.create(Sprite_Damage.prototype);
+    Sprite_CharacterDamage.prototype           = Object.create(Sprite_Damage.prototype);
     Sprite_CharacterDamage.prototype.varructor = Sprite_CharacterDamage;
 
     Sprite_CharacterDamage.prototype.setupCharacter = function(character) {
-        var damageInfo = character.shiftDamageInfo();
-        this._toneColor  = $gameSystem.getPopupDamageTone();
-        this._mirror     = damageInfo.mirror;
-        this._digit      = 0;
+        var damageInfo  = character.shiftDamageInfo();
+        this._toneColor = $gameSystem.getPopupDamageTone();
+        this._mirror    = damageInfo.mirror;
+        this._digit     = 0;
         if (damageInfo.value === null) {
             this.createMissForCharacter();
         } else {
@@ -596,7 +607,7 @@
     };
 
     Sprite_CharacterDamage.prototype.createChildSprite = function() {
-        var sprite = Sprite_Damage.prototype.createChildSprite.apply(this, arguments);
+        var sprite   = Sprite_Damage.prototype.createChildSprite.apply(this, arguments);
         sprite.frame = 0;
         sprite.digit = this._digit++;
         if (this._toneColor) sprite.setColorTone(this._toneColor);
@@ -606,26 +617,35 @@
     Sprite_CharacterDamage.prototype.updateChild = function(sprite) {
         if (paramRotation) {
             this.updateChildRotation(sprite);
+            sprite.setBlendColor(this._flashColor);
         } else {
             Sprite_Damage.prototype.updateChild.apply(this, arguments);
+            sprite.x = 0;
         }
+        if (paramScale) {
+            this.updateChildScale(sprite);
+        }
+        sprite.frame++;
     };
 
     Sprite_CharacterDamage.prototype.updateChildRotation = function(sprite) {
-        var frame = sprite.frame++;
+        var frame = sprite.frame;
         var speed = frame / 3600 * paramRotateSpeed;
-        sprite.rx   = paramRadiusX * (Math.cos(speed) - 1);
-        sprite.ry   = -paramRadiusY * Math.sin(speed);
+        sprite.rx = paramRadiusX * (Math.cos(speed) - 1);
+        sprite.ry = -paramRadiusY * Math.sin(speed);
         if (this._mirror) {
             sprite.rx *= -1;
         }
-        sprite.x       = Math.round(sprite.rx);
-        sprite.y       = Math.round(sprite.ry);
-        var scale    = (paramScale + frame * paramScaleDelta / 10) / 100;
+        sprite.x = Math.round(sprite.rx);
+        sprite.y = Math.round(sprite.ry);
+    };
+
+    Sprite_CharacterDamage.prototype.updateChildScale = function(sprite) {
+        var frame      = sprite.frame;
+        var scale      = (paramScale + frame * paramScaleDelta / 10) / 100;
         sprite.scale.x = scale;
         sprite.scale.y = scale;
         sprite.x += (sprite.digit - (this._digit - 1) / 2) * (this.digitWidth() * scale);
-        sprite.setBlendColor(this._flashColor);
     };
 })();
 
