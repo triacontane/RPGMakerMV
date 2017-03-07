@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/03/08 ピクチャのファイル名に制御文字を使っていた場合にリフレッシュで再表示できる機能を追加
 // 1.1.3 2017/03/03 引数に制御文字を使ってピクチャを表示してからメニューを開閉するとエラーになる不具合を修正
 // 1.1.2 2017/02/07 端末依存の記述を削除
 // 1.1.0 2017/02/05 任意のアクターの顔グラフィックをピクチャとして表示する機能を追加
@@ -51,6 +52,16 @@
  *
  * 指定例：FP_PREPARE_PICT_NAME $FACE[Actor1, 2]
  *
+ * FP_SET_PICTURE_REFRESH
+ * FP_ピクチャのリフレッシュ
+ *
+ * 表示しているピクチャをリフレッシュします。
+ * もしピクチャのファイル名に変数を使用していてピクチャ表示後に
+ * 変数が変わった場合、そのままではピクチャの表示は切り替わらないので
+ * このコマンドで切り替えてください。
+ *
+ * 指定例：FP_SET_PICTURE_REFRESH
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -86,6 +97,16 @@
  * 事前に指定したファイル名でピクチャを表示することができます。
  *
  * 指定例：FP_PREPARE_PICT_NAME $FACE[Actor1, 2]
+ *
+ * FP_SET_PICTURE_REFRESH
+ * FP_ピクチャのリフレッシュ
+ *
+ * 表示しているピクチャをリフレッシュします。
+ * もしピクチャのファイル名に変数を使用していてピクチャ表示後に
+ * 変数が変わった場合、そのままではピクチャの表示は切り替わらないので
+ * このコマンドで切り替えてください。
+ *
+ * 指定例：FP_SET_PICTURE_REFRESH
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -143,6 +164,10 @@
     var pluginCommandMap = new Map();
     setPluginCommand('ピクチャ名の事前設定', 'preparePictureName');
     setPluginCommand('PREPARE_PICT_NAME', 'preparePictureName');
+    setPluginCommand('ピクチャのリフレッシュ', 'setPictureRefresh');
+    setPluginCommand('SET_PICTURE_REFRESH', 'setPictureRefresh');
+
+    var localNeedPictureRefresh = false;
 
     //=============================================================================
     // Game_Interpreter
@@ -159,6 +184,10 @@
 
     Game_Interpreter.prototype.preparePictureName = function(args) {
         $gameScreen.setPreparePictureName(concatAllArguments(args));
+    };
+
+    Game_Interpreter.prototype.setPictureRefresh = function() {
+        localNeedPictureRefresh = true;
     };
 
     //=============================================================================
@@ -192,6 +221,27 @@
             }
         }
         _Game_Picture_show.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Spriteset_Base
+    //  ピクチャを再読み込みします。
+    //=============================================================================
+    var _Spriteset_Base_update = Spriteset_Base.prototype.update;
+    Spriteset_Base.prototype.update = function() {
+        _Spriteset_Base_update.apply(this, arguments);
+        if (localNeedPictureRefresh) {
+            this.refreshPictures();
+            localNeedPictureRefresh = false;
+        }
+    };
+
+    Spriteset_Base.prototype.refreshPictures = function() {
+        this._pictureContainer.children.forEach(function(picture) {
+            if (picture instanceof Sprite_Picture && picture.picture()) {
+                picture.loadBitmap();
+            }
+        });
     };
 
     //=============================================================================
