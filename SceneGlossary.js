@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.2 2017/03/08 カテゴリウィンドウで制御文字を使っていない場合は、ウィンドウ幅に応じて文字を縮めるように修正
 // 1.11.1 2017/02/09 ピクチャが空の状態でもページ表示できるよう修正
 // 1.11.0 2017/02/09 「武器」と「防具」を専用のカテゴリで表示しようとすると表示できない問題を修正
 //                   変数などで動的に表示内容を変化させる場合に、表示内容が空の場合はページを表示しないよう修正
@@ -1179,7 +1180,11 @@ function Scene_Glossary() {
         var text = this._data[index];
         if (text) {
             var rect = this.itemRect(index);
-            this.drawTextEx(text, rect.x + this.textPadding(), rect.y);
+            if (text.match(/\\/)) {
+                this.drawTextEx(text, rect.x + this.textPadding(), rect.y);
+            } else {
+                this.drawText(text, rect.x + this.textPadding(), rect.y, rect.width - this.textPadding());
+            }
         }
     };
 
