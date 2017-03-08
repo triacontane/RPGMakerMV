@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/03/08 アイテム使用をスキルのひとつとして作成できる機能を追加
 // 1.1.0 2017/02/23 封印対象にスキルを追加
 // 1.0.0 2017/02/22 初版
 // ----------------------------------------------------------------------------
@@ -94,6 +95,11 @@
  * 注意！
  * 全てのコマンドを封印するとゲームが続行不可になります。
  *
+ * アイテム使用をスキル化したい場合は、スキルのメモ欄に以下の通り
+ * 入力してください。対象スキルを選択後、アイテムウィンドウが開きます。
+ * <SACアイテムスキル> # アイテム使用スキル化
+ * <SACItemSkill>      # 同上
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -126,7 +132,8 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null || text === true) text = '';
+        if (text === true) return text;
+        if (text == null) text = '';
         text = text.replace(/&gt;?/gi, '>');
         text = text.replace(/&lt;?/gi, '<');
         var windowLayer = SceneManager._scene._windowLayer;
@@ -197,6 +204,65 @@
     Window_ActorCommand.prototype.addSkillCommands = function() {
         if (this._actor.isSealCommandSkill()) return;
         _Window_ActorCommand_addSkillCommands.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Scene_Battle
+    //  アイテムスキルを作成します。
+    //=============================================================================
+    var _Scene_Battle_onItemCancel = Scene_Battle.prototype.onItemCancel;
+    Scene_Battle.prototype.onItemCancel = function() {
+        if (this._selectItemSkill) {
+            this._itemWindow.hide();
+            this._skillWindow.show();
+            this._skillWindow.activate();
+            this._selectItemSkill = false;
+        } else {
+            _Scene_Battle_onItemCancel.apply(this, arguments);
+        }
+    };
+
+    var _Scene_Battle_onSkillOk =Scene_Battle.prototype.onSkillOk;
+    Scene_Battle.prototype.onSkillOk = function() {
+        var skill = this._skillWindow.item();
+        if (getMetaValues(skill, ['アイテムスキル', 'ItemSkill'])) {
+            var action = BattleManager.inputtingAction();
+            action.setSkill(skill.id);
+            BattleManager.actor().setLastBattleSkill(skill);
+            this._skillWindow.hide();
+            this.commandItem();
+            this._selectItemSkill = true;
+        } else {
+            _Scene_Battle_onSkillOk.apply(this, arguments);
+        }
+    };
+
+    var _Scene_Battle_onActorCancel = Scene_Battle.prototype.onActorCancel;
+    Scene_Battle.prototype.onActorCancel = function() {
+        if (this._selectItemSkill) {
+            this._actorWindow.hide();
+            this._itemWindow.show();
+            this._itemWindow.activate();
+        } else {
+            _Scene_Battle_onActorCancel.apply(this, arguments);
+        }
+    };
+
+    var _Scene_Battle_onEnemyCancel = Scene_Battle.prototype.onEnemyCancel;
+    Scene_Battle.prototype.onEnemyCancel = function() {
+        if (this._selectItemSkill) {
+            this._enemyWindow.hide();
+            this._itemWindow.show();
+            this._itemWindow.activate();
+        } else {
+            _Scene_Battle_onEnemyCancel.apply(this, arguments);
+        }
+    };
+
+    var _Scene_Battle_selectNextCommand = Scene_Battle.prototype.selectNextCommand;
+    Scene_Battle.prototype.selectNextCommand = function() {
+        _Scene_Battle_selectNextCommand.apply(this, arguments);
+        this._selectItemSkill = false;
     };
 })();
 
