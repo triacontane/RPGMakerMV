@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/03/11 コミュニティ版で動作しない問題を修正
 // 1.2.0 2017/01/21 1フレーム中に実行したイベントの総数をログ出力する機能を追加
 // 1.1.0 2017/01/09 ローカル環境以外でも動作するよう修正
 //                  実行中のイベントの更新時間を出力できる機能を追加
@@ -237,9 +238,9 @@
             return callBack();
         }
         const averageInfo = this._getAverageInfo(processName);
-        const beforeTime  = this._getTimeInMs();
+        const beforeTime  = performance.now();
         const result      = callBack();
-        const processTime = this._getTimeInMs() - beforeTime;
+        const processTime = performance.now() - beforeTime;
         const count       = averageInfo.count;
         averageInfo.value = (averageInfo.value * count + processTime) / (count + 1);
         averageInfo.count++;

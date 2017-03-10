@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/03/11 本体v1.3.5(コミュニティ版)で機能しなくなる問題を修正
 // 1.0.0 2016/06/02 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -132,33 +133,30 @@
     // Scene_Boot
     //  必要なフォントをロードします。
     //=============================================================================
-    var _Scene_Boot_create = Scene_Boot.prototype.create;
-    Scene_Boot.prototype.create = function() {
-        _Scene_Boot_create.apply(this, arguments);
-        paramFonts.forEach(function(fontInfo) {
-            if (fontInfo.name && fontInfo.url) {
-                Graphics.loadFont(fontInfo.name, fontInfo.url);
-            }
-        }.bind(this));
-    };
-
     var _Scene_Boot_isGameFontLoaded = Scene_Boot.prototype.isGameFontLoaded;
     Scene_Boot.prototype.isGameFontLoaded = function() {
         if (!_Scene_Boot_isGameFontLoaded.apply(this)) {
             return false;
         }
-        var result = !paramWaitLoadComplete || paramFonts.every(function(fontInfo) {
-            return Graphics.isFontLoaded(fontInfo.name) || !fontInfo.name || !fontInfo.url;
-        }.bind(this));
-        if (result) {
-            return true;
-        } else {
-            var elapsed = Date.now() - this._startDate;
-            if (elapsed >= 20000) {
-                throw new Error('Failed to load custom font');
-            }
-            return false;
+        if (!this._customFontLoading) {
+            this.loadCustomFonts();
         }
+        return this.isCustomFontLoaded();
+    };
+
+    Scene_Boot.prototype.loadCustomFonts = function() {
+        paramFonts.forEach(function(fontInfo) {
+            if (fontInfo.name && fontInfo.url) {
+                Graphics.loadFont(fontInfo.name, fontInfo.url);
+            }
+        }.bind(this));
+        this._customFontLoading = true;
+    };
+
+    Scene_Boot.prototype.isCustomFontLoaded = function() {
+        return !paramWaitLoadComplete || paramFonts.every(function(fontInfo) {
+            return !fontInfo.name || !fontInfo.url || Graphics.isFontLoaded(fontInfo.name);
+        }.bind(this));
     };
 })();
 

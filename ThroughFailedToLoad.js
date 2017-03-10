@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2017/03/11 本体v1.3.5(コミュニティ版)で機能しなくなる問題を修正
 // 2.0.0 2016/08/05 本体v1.3.0対応（1.2.0では使えなくなります）
 // 1.0.0 2016/06/25 初版
 // ----------------------------------------------------------------------------
@@ -87,22 +88,44 @@
     //  ロード失敗した画像ファイルを空の画像に差し替えます。
     //=============================================================================
     var _ImageManager_isReady = ImageManager.isReady;
-    ImageManager.isReady      = function() {
-        var result = false;
-        try {
-            result = _ImageManager_isReady.apply(this, arguments);
-        } catch (e) {
-            for (var key in this.cache._inner) {
-                if (!this.cache._inner.hasOwnProperty(key)) continue;
-                var bitmap = this.cache._inner[key].item;
-                if (bitmap.isError()) {
-                    bitmap.eraseError();
-                    this.cache.setItem(key, new Bitmap());
+    if (Utils.RPGMAKER_ENGINE) {
+        ImageManager.isReady = function() {
+            this._imageCache.eraseBitmapError();
+            return _ImageManager_isReady.apply(this, arguments);
+        };
+    } else {
+        ImageManager.isReady = function() {
+            var result = false;
+            try {
+                result = _ImageManager_isReady.apply(this, arguments);
+            } catch (e) {
+                for (var key in this.cache._inner) {
+                    if (!this.cache._inner.hasOwnProperty(key)) continue;
+                    var bitmap = this.cache._inner[key].item;
+                    if (bitmap.isError()) {
+                        bitmap.eraseError();
+                        this.cache.setItem(key, new Bitmap());
+                    }
                 }
+                result = _ImageManager_isReady.apply(this, arguments);
             }
-            result = _ImageManager_isReady.apply(this, arguments);
-        }
-        return result;
+            return result;
+        };
+    }
+
+    //=============================================================================
+    // ImageCache
+    //  ロード失敗した画像ファイルを空の画像に差し替えます。
+    //=============================================================================
+    ImageCache.prototype.eraseBitmapError = function() {
+        var items = this._items;
+        Object.keys(items).forEach(function(key) {
+            var bitmap = items[key].bitmap;
+            if (bitmap.isError()) {
+                bitmap.eraseError();
+                items[key].bitmap = new Bitmap();
+            }
+        });
     };
 
     //=============================================================================
@@ -116,8 +139,9 @@
     //  エラー発生用のフラグをキャンセルします。
     //=============================================================================
     Bitmap.prototype.eraseError = function() {
-        this._hasError  = false;
-        this._isLoading = false;
+        this._hasError     = false;
+        this._isLoading    = false;
+        this._loadingState = 'loaded';
     };
 })();
 
