@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2017/03/11 ウィンドウを非表示にできる機能を追加
 // 2.4.0 2017/01/09 カスタムウィンドウに表示する内容に揃えを指定できる機能を追加しました。
 // 2.3.1 2016/11/30 RPGアツマールで画面がNowLoadingから進まなくなる場合がある問題を修正しました。
 // 2.3.0 2016/11/25 メッセージウィンドウの背景の表示可否を固定にできる機能を追加しました。
@@ -88,6 +89,10 @@
  * @desc メッセージウィンドウ等でイベント命令ごとに指定する背景の表示設定を無視して、プラグインの設定値で固定します。
  * @default OFF
  *
+ * @param 右クリックで消去
+ * @desc デザインモードで右クリックしたときにウィンドウ全体を非表示にします。(OFFの場合は枠のみ消去)
+ * @default OFF
+ *
  * @help メニュー画面や戦闘画面など各画面のウィンドウや画像の表示位置を
  * ドラッグ＆ドロップで微調整して画面の外観をグラフィカルに設計できます。
  * 横幅、高さ、余白、背景画像なども画面上で変更できます。
@@ -110,6 +115,8 @@
  *   - Ctrl+Zで直前の変更を元に戻します。
  *   - Ctrl+Shift+Enterで現在のシーンの変更を全て初期化します。
  *   - ウィンドウ内で右クリックすると、枠の透明/不透明を切り替えます。
+ *     パラメータを変更している場合は、ウィンドウ全体の表示/非表示を切り替えます。
+ *     一度非表示にすると、画面全体をリセットしない限り再表示できません。
  *   - ウィンドウ内で数字キー(※)を押下すると、各プロパティを変更できます。
  *
  * 4. Ctrl+Sでカスタマイズした位置を保存する。
@@ -407,6 +414,7 @@ var $dataContainerProperties = null;
     var paramFakeMobile      = getParamBoolean(['FakeMobile', 'モバイル偽装']);
     var paramIconSizeScale   = getParamBoolean(['IconSizeScale', 'アイコンサイズ調整']);
     var paramBackgroundFixed = getParamBoolean(['BackgroundFixed', '背景表示可否固定']);
+    var paramRightClickHide  = getParamBoolean(['RightClickHide', '右クリックで消去']);
 
     //=============================================================================
     // Utils
@@ -496,40 +504,37 @@ var $dataContainerProperties = null;
 
         SceneManager.outputStartLog = function() {
             var logValue = [
-                '☆☆☆ようこそ、デザインモードで起動しました。☆☆☆',
-                'デザインモードでは、オブジェクトの配置やプロパティを自由に設定して実際のゲーム画面上から画面設計できます。',
-                '',
-                '--------------------操 作 方 法----------------------------------------------------------------------',
-                'ドラッグ&ドロップ ： ウィンドウや画像を掴んで好きな場所に再配置します。',
-                'Ctrl+マウス ： ウィンドウや画像がグリッドにスナップします。(Macの場合はoptionキー)',
-                'Shift+マウス ： ウィンドウや画像がオブジェクトや画面端にスナップしなくなります。',
-                'Ctrl+S ： 全ての変更を保存します。',
-                'Ctrl+C ： 直前に操作した座標をクリップボードにコピーします。',
-                'Ctrl+Z ： 直前に行った操作を元に戻します。',
-                'Ctrl+Shift+Enter ： 表示している画面の配置を全てリセットしてロードし直します。',
-                '右クリック ： ウィンドウの枠の表示/非表示を切り替えます。',
-                '数字キー ： ウィンドウの範囲内で押下すると、以下のとおり対応するプロパティを変更できます。',
-                ' 1. ウィンドウの横幅(※1)',
-                ' 2. ウィンドウの高さ(直接指定)(※1)',
-                ' 3. ウィンドウの余白(※2)',
-                ' 4. ウィンドウのフォントサイズ(※2)',
-                ' 5. ウィンドウの1行のあたりの高さ(※2)',
-                ' 6. ウィンドウの背景透明度(※2)',
-                ' 7. ウィンドウの行数(※2)',
-                ' 8. ウィンドウの背景画像ファイル名',
-                ' 9. ウィンドウのフォント名(※3)',
-                '※1 JS計算式を適用できます。計算式は入力したその場で1回だけ評価されます。',
-                '※2 JS計算式を適用できます。計算式は保存され、画面表示のたびに再評価されます。',
-                '分からない場合、今まで通り数値を設定すれば問題ありません。',
-                '※3 あらかじめフォントをロードする必要があります。「フォントロードプラグイン」をお使いください。',
-                '入手先：raw.githubusercontent.com/triacontane/RPGMakerMV/master/FontLoad.js',
-                '※4 Macの場合、Ctrlキーはoptionキーで代用してください。（commandキーでは反応しません）',
-                '-----------------------------------------------------------------------------------------------------',
-                '以下の操作ログが表示されます。'
+                '☆☆☆ようこそ、デザインモードで起動しました。☆☆☆\n',
+                'デザインモードでは、オブジェクトの配置やプロパティを自由に設定して実際のゲーム画面上から画面設計できます。\n',
+                '--------------------操 作 方 法----------------------------------------------------------------------\n',
+                'ドラッグ&ドロップ ： ウィンドウや画像を掴んで好きな場所に再配置します。\n',
+                'Ctrl+マウス ： ウィンドウや画像がグリッドにスナップします。(Macの場合はoptionキー)\n',
+                'Shift+マウス ： ウィンドウや画像がオブジェクトや画面端にスナップしなくなります。\n',
+                'Ctrl+S ： 全ての変更を保存します。\n',
+                'Ctrl+C ： 直前に操作した座標をクリップボードにコピーします。\n',
+                'Ctrl+Z ： 直前に行った操作を元に戻します。\n',
+                'Ctrl+Shift+Enter ： 表示している画面の配置を全てリセットしてロードし直します。\n',
+                '右クリック ： ウィンドウの枠（もしくはウィンドウ全体）の表示/非表示を切り替えます。\n',
+                '数字キー ： ウィンドウの範囲内で押下すると、以下のとおり対応するプロパティを変更できます。\n',
+                ' 1. ウィンドウの横幅(※1)\n',
+                ' 2. ウィンドウの高さ(直接指定)(※1)\n',
+                ' 3. ウィンドウの余白(※2)\n',
+                ' 4. ウィンドウのフォントサイズ(※2)\n',
+                ' 5. ウィンドウの1行のあたりの高さ(※2)\n',
+                ' 6. ウィンドウの背景透明度(※2)\n',
+                ' 7. ウィンドウの行数(※2)\n',
+                ' 8. ウィンドウの背景画像ファイル名\n',
+                ' 9. ウィンドウのフォント名(※3)\n',
+                '※1 JS計算式を適用できます。計算式は入力したその場で1回だけ評価されます。\n',
+                '※2 JS計算式を適用できます。計算式は保存され、画面表示のたびに再評価されます。\n',
+                '分からない場合、今まで通り数値を設定すれば問題ありません。\n',
+                '※3 あらかじめフォントをロードする必要があります。「フォントロードプラグイン」をお使いください。\n',
+                '入手先：raw.githubusercontent.com/triacontane/RPGMakerMV/master/FontLoad.js\n',
+                '※4 Macの場合、Ctrlキーはoptionキーで代用してください。（commandキーでは反応しません）\n',
+                '-----------------------------------------------------------------------------------------------------\n',
+                '以下の操作ログが表示されます。\n'
             ];
-            logValue.forEach(function(value) {
-                console.log(value);
-            });
+            console.log.apply(console, logValue);
         };
 
         var _SceneManager_onSceneCreate = SceneManager.onSceneCreate;
@@ -772,7 +777,11 @@ var $dataContainerProperties = null;
             if (this.isTouchEvent(TouchInput.isCancelled)) {
                 SoundManager.playMiss();
                 SceneManager.pushChangeStack(this);
-                this.opacity = (this.opacity === 255 ? 0 : 255);
+                if (paramRightClickHide) {
+                    this.visible = !this.visible;
+                } else {
+                    this.opacity = (this.opacity === 255 ? 0 : 255);
+                }
                 this.saveContainerInfo();
                 return true;
             }
@@ -1175,7 +1184,6 @@ var $dataContainerProperties = null;
         console.warn(errorMessage);
     };
 
-
     var _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
     DataManager.isDatabaseLoaded      = function() {
         return _DataManager_isDatabaseLoaded.apply(this, arguments) && window[this._databaseFileCp.name];
@@ -1309,6 +1317,7 @@ var $dataContainerProperties = null;
         this.width               = containerInfo.width;
         this.height              = containerInfo.height;
         this.opacity             = containerInfo.opacity;
+        this.visible             = !containerInfo.hidden;
         this._customFontSize     = containerInfo._customFontSize;
         this._customPadding      = containerInfo._customPadding;
         this._customLineHeight   = containerInfo._customLineHeight;
@@ -1355,6 +1364,7 @@ var $dataContainerProperties = null;
         containerInfo.width               = this.width;
         containerInfo.height              = this.height;
         containerInfo.opacity             = this.opacity;
+        containerInfo.hidden              = !this.visible;
         containerInfo._customFontSize     = this._customFontSize;
         containerInfo._customPadding      = this._customPadding;
         containerInfo._customLineHeight   = this._customLineHeight;
@@ -1520,12 +1530,12 @@ var $dataContainerProperties = null;
     }
 
     Window_Custom._textAligns = {
-        'left':0,
-        '0':0,
-        'center':1,
-        '1':1,
-        'right':2,
-        '2':2
+        'left'  : 0,
+        '0'     : 0,
+        'center': 1,
+        '1'     : 1,
+        'right' : 2,
+        '2'     : 2
     };
 
     Window_Custom.prototype             = Object.create(Window_Selectable.prototype);
@@ -1568,7 +1578,7 @@ var $dataContainerProperties = null;
 
     Window_Custom.prototype.changeTextAlign = function(text) {
         this._textAlign = 0;
-        text = text.replace(/\\al\[(.*)\]/gi, function() {
+        text            = text.replace(/\\al\[(.*)\]/gi, function() {
             this._textAlign = Window_Custom._textAligns[arguments[1].toLowerCase()] || 0;
             return '';
         }.bind(this));
