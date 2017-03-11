@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2017/03/11 通常版1.3.5でエラーになる問題を修正
 // 2.1.0 2017/03/11 本体v1.3.5(コミュニティ版)で機能しなくなる問題を修正
 // 2.0.0 2016/08/05 本体v1.3.0対応（1.2.0では使えなくなります）
 // 1.0.0 2016/06/25 初版
@@ -93,6 +94,21 @@
             this._imageCache.eraseBitmapError();
             return _ImageManager_isReady.apply(this, arguments);
         };
+
+        //=============================================================================
+        // ImageCache
+        //  ロード失敗した画像ファイルを空の画像に差し替えます。
+        //=============================================================================
+        ImageCache.prototype.eraseBitmapError = function() {
+            var items = this._items;
+            Object.keys(items).forEach(function(key) {
+                var bitmap = items[key].bitmap;
+                if (bitmap.isError()) {
+                    bitmap.eraseError();
+                    items[key].bitmap = new Bitmap();
+                }
+            });
+        };
     } else {
         ImageManager.isReady = function() {
             var result = false;
@@ -112,21 +128,6 @@
             return result;
         };
     }
-
-    //=============================================================================
-    // ImageCache
-    //  ロード失敗した画像ファイルを空の画像に差し替えます。
-    //=============================================================================
-    ImageCache.prototype.eraseBitmapError = function() {
-        var items = this._items;
-        Object.keys(items).forEach(function(key) {
-            var bitmap = items[key].bitmap;
-            if (bitmap.isError()) {
-                bitmap.eraseError();
-                items[key].bitmap = new Bitmap();
-            }
-        });
-    };
 
     //=============================================================================
     // AudioManager

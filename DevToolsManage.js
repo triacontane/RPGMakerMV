@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2017/03/10 コミュニティ版でロード時にエンジン名称を出力するよう修正
 // 2.1.0 2016/12/25 スローモーション機能を追加しました。一時的にゲーム速度を最低1/60倍速まで低下できます。
 // 2.0.0 2016/12/16 ES2015向けにリファクタリングしました。
 //                  JSON形式でのセーブ＆ロードに対応しました。
@@ -274,6 +275,7 @@ var Imported = Imported || {};
     console.log('********************************');
     console.log('RPG Maker Name    : ' + Utils.RPGMAKER_NAME);
     console.log('RPG Maker Version : ' + Utils.RPGMAKER_VERSION);
+    console.log('RPG Maker Engine  : ' + Utils.RPGMAKER_ENGINE);
 
     // テストプレー時以外は一切の機能を無効
     if (!Utils.isNwjs() || !Utils.isOptionValid('test')) {
@@ -387,6 +389,10 @@ var Imported = Imported || {};
     const _Graphics__createAllElements = Graphics._createAllElements;
     Graphics._createAllElements        = function() {
         _Graphics__createAllElements.apply(this, arguments);
+        console.log('*********************************');
+        console.log('***   document head           ***');
+        console.log('*********************************');
+        console.log(document.head);
         console.log('*********************************');
         console.log('***   document body           ***');
         console.log('*********************************');
