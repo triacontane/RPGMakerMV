@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/03/13 イベント「スクリプト」でエラーが起きたら、発生箇所をログ出力してステップ実行を開始する機能を追加
+//                  Ctrlキーを押している間はステップ実行を行わないようにする機能を追加
 // 1.1.0 2017/01/27 自動ブレークポイント機能を追加
 // 1.0.2 2017/01/23 変数を修正しても監視ウィンドウに反映されない場合がある問題を修正
 // 1.0.1 2017/01/22 ステップ実行を最後まで実行するとエラーになっていた問題を修正
@@ -63,6 +65,14 @@
  * @param CancelHandler
  * @desc ステップ実行時にキャンセルボタンを押した場合のファンクションキーの動作を設定します。
  * @default F6
+ *
+ * @param ScriptDebug
+ * @desc イベントコマンドの「スクリプト」でエラーが発生した際に、ゲームを中断せずその場でステップ実行を開始します。
+ * @default ON
+ *
+ * @param DisableDebugCtrlKey
+ * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
+ * @default ON
  *
  * @help 任意の箇所でイベントの実行を一時停止して、1行ずつ実行(ステップ実行)が
  * できるようになります。開始方法は以下の3通りです。
@@ -156,6 +166,14 @@
  * @param キャンセル動作
  * @desc ステップ実行時にキャンセルボタンを押した場合のファンクションキーの動作を設定します。
  * @default F6
+ *
+ * @param スクリプトデバッグ
+ * @desc イベントコマンドの「スクリプト」でエラーが発生した際に、ゲームを中断せずその場でステップ実行を開始します。
+ * @default ON
+ *
+ * @param CTRLで無効化
+ * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
+ * @default ON
  *
  * @help 任意の箇所でイベントの実行を一時停止して、1行ずつ実行(ステップ実行)が
  * できるようになります。開始方法は以下の3通りです。
@@ -283,19 +301,21 @@ function DebugManager() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const param         = {};
-    param.stepStart     = getParamString(['StepStart', 'ステップ開始']);
-    param.stepIn        = getParamString(['StepIn', 'ステップイン']);
-    param.stepOver      = getParamString(['StepOver', 'ステップオーバー']);
-    param.continue      = getParamString(['Continue', '続行']);
-    param.toggleWindow  = getParamString(['ToggleWindow', '表示切替']);
-    param.stepStart     = getParamString(['StepStart', 'ステップ開始']);
-    param.watchVariable = getParamString(['WatchVariable', '変数監視']);
-    param.maxWatchNum   = getParamNumber(['MaxWatchNum', '監視最大数'], 1);
-    param.eventTest     = getParamBoolean(['EventTest', 'イベントテスト']);
-    param.suppressFunc  = getParamBoolean(['SuppressFunc', '機能キー抑制']);
-    param.okHandler     = getParamString(['OkHandler', 'OK動作']);
-    param.cancelHandler = getParamString(['CancelHandler', 'キャンセル動作']);
+    const param               = {};
+    param.stepStart           = getParamString(['StepStart', 'ステップ開始']);
+    param.stepIn              = getParamString(['StepIn', 'ステップイン']);
+    param.stepOver            = getParamString(['StepOver', 'ステップオーバー']);
+    param.continue            = getParamString(['Continue', '続行']);
+    param.toggleWindow        = getParamString(['ToggleWindow', '表示切替']);
+    param.stepStart           = getParamString(['StepStart', 'ステップ開始']);
+    param.watchVariable       = getParamString(['WatchVariable', '変数監視']);
+    param.maxWatchNum         = getParamNumber(['MaxWatchNum', '監視最大数'], 1);
+    param.eventTest           = getParamBoolean(['EventTest', 'イベントテスト']);
+    param.suppressFunc        = getParamBoolean(['SuppressFunc', '機能キー抑制']);
+    param.okHandler           = getParamString(['OkHandler', 'OK動作']);
+    param.cancelHandler       = getParamString(['CancelHandler', 'キャンセル動作']);
+    param.scriptDebug         = getParamBoolean(['ScriptDebug', 'スクリプトデバッグ']);
+    param.disableDebugCtrlKey = getParamBoolean(['DisableDebugCtrlKey', 'CTRLで無効化']);
 
     const pluginCommandMap = new Map([
         ['B', 'setBreakPoint'],
@@ -340,7 +360,7 @@ function DebugManager() {
         switch (event.keyCode) {
             case Input.functionReverseMapper[param.stepStart]:
                 this._stepStart = true;
-                keyDownValid = true;
+                keyDownValid    = true;
                 break;
             case Input.functionReverseMapper[param.watchVariable]:
                 this.showDialogWatchVariable();
@@ -800,6 +820,7 @@ function DebugManager() {
     };
 
     Game_Interpreter.prototype.enableStepExecute = function() {
+        if (param.disableDebugCtrlKey && Input.isPressed('control')) return;
         this._debugging = true;
         DebugManager.start(this);
     };
@@ -834,7 +855,7 @@ function DebugManager() {
     };
 
     const _Game_Interpreter_command117    = Game_Interpreter.prototype.command117;
-    Game_Interpreter.prototype.command117 = function() {
+    Game_Interpreter.prototype.command117                  = function() {
         const result = _Game_Interpreter_command117.apply(this, arguments);
         if (this._childInterpreter) {
             const commonEventId = this._params[0];
@@ -844,6 +865,46 @@ function DebugManager() {
             }
         }
         return result;
+    };
+
+    const _Game_Interpreter_command122 = Game_Interpreter.prototype.command122;
+    Game_Interpreter.prototype.command122 = function() {
+        return this._params[3] === 4 ? this.execScriptCommandWithRescue(this._params[4], _Game_Interpreter_command122) :
+            _Game_Interpreter_command122.apply(this, arguments);
+    };
+
+    const _Game_Interpreter_command355    = Game_Interpreter.prototype.command355;
+    Game_Interpreter.prototype.command355 = function() {
+        return this.execScriptCommandWithRescue(this.getScriptString(), _Game_Interpreter_command355);
+    };
+
+    Game_Interpreter.prototype.execScriptCommandWithRescue = function(script, process) {
+        var result = true;
+        try {
+            result = process.apply(this, arguments);
+        } catch (e) {
+            console.log('スクリプトエラーを検知しました。');
+            console.log(`Error Script       : ${script}`);
+            console.log(`Error Process Id   : ${this.getProcessNumber()}`);
+            console.log(`Error Process Name : ${this.getProcessName()}`);
+            if (param.scriptDebug) {
+                console.error(e.stack);
+                this.enableStepExecute();
+            } else {
+                throw e;
+            }
+        }
+        return result;
+    };
+
+    Game_Interpreter.prototype.getScriptString = function() {
+        var script = this.currentCommand().parameters[0] + '\n';
+        var index  = this._index + 1;
+        while (this._list[index] && this._list[index].code === 655) {
+            script += this._list[index].parameters[0] + '\n';
+            index++;
+        }
+        return script;
     };
 
     Game_Interpreter.prototype.getProcessNumber = function() {

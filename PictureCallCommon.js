@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2017/03/13 戦闘中常にピクチャクリックイベントを実行できる機能を追加
 // 1.8.2 2017/02/14 1.8.0の修正により、ピクチャクリック時に変数に値を格納する機能が無効化されていたのを修正
 // 1.8.1 2017/02/07 端末依存の記述を削除
 // 1.8.0 2017/02/03 ピクチャクリックを任意のボタンにバインドできる機能を追加
@@ -65,10 +66,19 @@
  * 他のタッチ操作と動作が重複する場合にONにします。
  * @default OFF
  *
+ * @param 戦闘中常にコモン実行
+ * @desc 戦闘中にピクチャをクリックしたとき、常にコモンイベントを実行します。(ON/OFF)
+ * @default OFF
+ *
  * @help ピクチャをクリックすると、指定したコモンイベントが
  * 呼び出される、もしくは任意のスイッチをONにするプラグインコマンドを提供します。
  * このプラグインを利用すれば、JavaScriptの知識がなくても
  * 誰でも簡単にクリックやタッチを主体にしたゲームを作れます。
+ *
+ * 戦闘中でも実行可能ですが、ツクールMVの仕様により限られたタイミングでしか
+ * イベントは実行されません。パラメータ「戦闘中常にコモン実行」を有効にすると
+ * 常にイベントが実行されるようになりますが、
+ * 一部イベントコマンドは正しく動作しない制約があります。
  *
  * 注意！
  * 一度関連づけたピクチャとコモンイベントはピクチャを消去しても有効です。
@@ -196,6 +206,10 @@
  * @param SuppressTouch
  * @desc Suppress touch event for others(ON/OFF)
  * @default OFF
+ *
+ * @param AlwaysCommonInBattle
+ * @desc Always execute common event in battle(ON/OFF)
+ * @default OFF
  * 
  * @help When clicked picture, call common event.
  *
@@ -292,6 +306,7 @@
     var paramGameVariablePictNum      = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0);
     var paramTransparentConsideration = getParamBoolean(['TransparentConsideration', '透明色を考慮']);
     var paramSuppressTouch            = getParamBoolean(['SuppressTouch', 'タッチ操作抑制']);
+    var paramAlwaysCommonInBattle     = getParamBoolean(['AlwaysCommonInBattle', '戦闘中常にコモン実行']);
 
     //=============================================================================
     // Game_Interpreter
@@ -305,7 +320,7 @@
             case 'P_CALL_CE' :
             case 'ピクチャのボタン化':
                 pictureId   = getArgNumber(args[0], 1, $gameScreen.maxPictures());
-                touchParam    = getArgNumber(args[1], 1, $dataCommonEvents.length - 1);
+                touchParam  = getArgNumber(args[1], 1, $dataCommonEvents.length - 1);
                 trigger     = getArgNumber(args[2], 1);
                 transparent = (args.length > 3 ? getArgBoolean(args[3]) : null);
                 $gameScreen.setPictureCallCommon(pictureId, touchParam, trigger, transparent);
@@ -355,6 +370,21 @@
         }
     };
 
+    var _Game_Interpreter_clear      = Game_Interpreter.prototype.clear;
+    Game_Interpreter.prototype.clear = function() {
+        _Game_Interpreter_clear.apply(this, arguments);
+        this._setupFromPicture = false;
+    };
+
+    Game_Interpreter.prototype.setupFromPicture = function(eventList) {
+        this.setup(eventList, null);
+        this._setupFromPicture = true;
+    };
+
+    Game_Interpreter.prototype.isSetupFromPicture = function() {
+        return this._setupFromPicture;
+    };
+
     //=============================================================================
     // Game_Temp
     //  呼び出し予定のコモンイベントIDのフィールドを追加定義します。
@@ -366,7 +396,7 @@
     };
 
     Game_Temp.prototype.clearPictureCallInfo = function() {
-        this.setPictureCallInfo(0, 0);
+        this.setPictureCallInfo(0);
     };
 
     Game_Temp.prototype.setPictureCallInfo = function(pictureCommonId) {
@@ -430,7 +460,7 @@
         var event    = $dataCommonEvents[commonId];
         var result   = false;
         if (commonId > 0 && !this.isEventRunning() && event) {
-            this._interpreter.setup(event.list);
+            this._interpreter.setupFromPicture(event.list);
             result = true;
         }
         $gameTemp.clearPictureCallInfo();
@@ -442,6 +472,10 @@
     //  ピクチャがタッチされたときのコモンイベント呼び出し処理を追加定義します。
     //=============================================================================
     Game_Troop.prototype.setupPictureCommonEvent = Game_Map.prototype.setupPictureCommonEvent;
+
+    Game_Troop.prototype.isExistPictureCommon = function() {
+        return this._interpreter.isSetupFromPicture();
+    };
 
     //=============================================================================
     // Game_Screen
@@ -542,6 +576,18 @@
     };
 
     //=============================================================================
+    // BattleManager
+    //  ピクチャコモンを常に実行できるようにします。
+    //=============================================================================
+    BattleManager.updatePictureCommon = function() {
+        if ($gameTroop.isExistPictureCommon() && paramAlwaysCommonInBattle) {
+            this.updateEventMain();
+            return true;
+        }
+        return false;
+    };
+
+    //=============================================================================
     // Scene_Base
     //  ピクチャに対する繰り返し処理を追加定義します。
     //=============================================================================
@@ -570,14 +616,14 @@
     //=============================================================================
     var _Scene_Map_update      = Scene_Map.prototype.update;
     Scene_Map.prototype.update = function() {
-        if (!$gameMap.isEventRunning()) this.updateTouchPictures();
+        this.updateTouchPictures();
         _Scene_Map_update.apply(this, arguments);
     };
 
-    var _Scene_Map_processMapTouch    = Scene_Map.prototype.processMapTouch;
+    var _Scene_Map_processMapTouch      = Scene_Map.prototype.processMapTouch;
     Scene_Map.prototype.processMapTouch = function() {
         _Scene_Map_processMapTouch.apply(this, arguments);
-        if ($gameTemp.isDestinationValid() && $gameTemp.pictureCommonId()) {
+        if ($gameTemp.isDestinationValid() && $gameTemp.pictureCommonId() > 0) {
             $gameTemp.clearDestination();
         }
     };
@@ -591,6 +637,13 @@
         this.updateTouchPictures();
         $gameTroop.setupPictureCommonEvent();
         _Scene_Battle_update.apply(this, arguments);
+    };
+
+    var _Scene_Battle_updateBattleProcess      = Scene_Battle.prototype.updateBattleProcess;
+    Scene_Battle.prototype.updateBattleProcess = function() {
+        var result = BattleManager.updatePictureCommon();
+        if (result) return;
+        _Scene_Battle_updateBattleProcess.apply(this, arguments);
     };
 
     //=============================================================================
@@ -862,7 +915,7 @@
     };
 
     var _Input_update = Input.update;
-    Input.update = function() {
+    Input.update      = function() {
         _Input_update.apply(this, arguments);
         this._updateBindKeyState();
     };
