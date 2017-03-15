@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.1 2017/03/16 透明色を考慮する場合、不透明度が0のピクチャは一切反応しなくなるように仕様変更
 // 1.9.0 2017/03/13 戦闘中常にピクチャクリックイベントを実行できる機能を追加
 // 1.8.2 2017/02/14 1.8.0の修正により、ピクチャクリック時に変数に値を格納する機能が無効化されていたのを修正
 // 1.8.1 2017/02/07 端末依存の記述を削除
@@ -779,6 +780,7 @@
 
     Sprite_Picture.prototype.isTransparent = function() {
         if (!this.isValidTransparent()) return false;
+        if (this.opacity === 0) return true;
         var dx  = this.getTouchScreenX() - this.x;
         var dy  = this.getTouchScreenY() - this.y;
         var sin = Math.sin(-this.rotation);
