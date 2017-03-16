@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/03/16 連動して非表示にできるピクチャを複数指定できる機能を追加
 // 1.2.1 2017/02/07 端末依存の記述を削除
 // 1.2.0 2016/01/02 メッセージウィンドウと連動して指定したピクチャの表示/非表示が自動で切り替わる機能を追加
 // 1.1.0 2016/08/25 選択肢の表示中はウィンドウを非表示にできないよう仕様変更
@@ -47,7 +48,7 @@
  * @default 右クリック
  *
  * @param 連動ピクチャ番号
- * @desc ウィンドウ消去時に連動して不透明度を[0]にするピクチャの番号です。
+ * @desc ウィンドウ消去時に連動して不透明度を[0]にするピクチャの番号です。カンマ「,」区切りで複数指定できます。
  * @default
  *
  * @help メッセージウィンドウを表示中に指定したボタンを押下することで
@@ -77,13 +78,6 @@
         return value == null ? '' : value;
     };
 
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -93,19 +87,41 @@
         return null;
     };
 
+    var getParamArrayString = function(paramNames) {
+        var values = getParamString(paramNames).split(',');
+        for (var i = 0; i < values.length; i++) {
+            values[i] = values[i].trim();
+        }
+        return values;
+    };
+
+    var getParamArrayNumber = function(paramNames, min, max) {
+        var values = getParamArrayString(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        for (var i = 0; i < values.length; i++) {
+            if (!isNaN(parseInt(values[i], 10))) {
+                values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
+            } else {
+                values.splice(i--, 1);
+            }
+        }
+        return values;
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param             = {};
-    param.triggerButton     = getParamString(['TriggerButton', 'ボタン名称']).toLowerCase();
-    param.linkPictureNumber = getParamNumber(['LinkPictureNumber', '連動ピクチャ番号']);
+    var param                = {};
+    param.triggerButton      = getParamString(['TriggerButton', 'ボタン名称']).toLowerCase();
+    param.linkPictureNumbers = getParamArrayNumber(['LinkPictureNumber', '連動ピクチャ番号']);
 
     //=============================================================================
     // Game_Picture
     //  メッセージウィンドウの表示可否と連動します。
     //=============================================================================
     Game_Picture.prototype.linkWithMessageWindow = function(opacity) {
-        this._opacity = opacity;
+        this._opacity       = opacity;
         this._targetOpacity = opacity;
     };
 
@@ -131,7 +147,7 @@
             this.hideSubWindow(subWindow);
         }.bind(this));
         if (this.hasNameWindow()) this.hideSubWindow(this._nameWindow);
-        this.linkPicture(0);
+        this.linkPictures(0);
     };
 
     Window_Message.prototype.showAllWindow = function() {
@@ -140,11 +156,17 @@
             this.showSubWindow(subWindow);
         }.bind(this));
         if (this.hasNameWindow()) this.showSubWindow(this._nameWindow);
-        this.linkPicture(255);
+        this.linkPictures(255);
     };
 
-    Window_Message.prototype.linkPicture = function(opacity) {
-        var picture = $gameScreen.picture(param.linkPictureNumber);
+    Window_Message.prototype.linkPictures = function(opacity) {
+        param.linkPictureNumbers.forEach(function(pictureId) {
+            this.linkPicture(opacity, pictureId);
+        }, this);
+    };
+
+    Window_Message.prototype.linkPicture = function(opacity, pictureId) {
+        var picture = $gameScreen.picture(pictureId);
         if (picture) {
             picture.linkWithMessageWindow(opacity);
         }
