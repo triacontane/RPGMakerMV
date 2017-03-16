@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2017/03/16 2.0.0で巨大サイズ以外の敵に対するポップアップが表示されなくなっていた問題を修正
 // 2.0.0 2017/01/05 アニメーションの表示位置を補正
 // 1.0.1 2016/11/17 YEP_CoreEngine.jsで画面サイズを変更すると、位置の不整合が起きる現象に対応
 // 1.0.0 2016/10/27 初版
@@ -96,7 +97,7 @@
         } else {
             Sprite_Battler.prototype.setupDamagePopup.apply(this, arguments);
         }
-        if (requested) this.adjustDamagePopup();
+        if (requested && this._enemy.isBigEnemy()) this.adjustDamagePopup();
     };
 
     Sprite_Enemy.prototype.adjustDamagePopup = function() {
