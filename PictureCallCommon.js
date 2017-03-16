@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.2 2017/03/16 1.9.0で戦闘中にコモンイベント実行が正しく動作していなかった問題を修正
 // 1.9.1 2017/03/16 透明色を考慮する場合、不透明度が0のピクチャは一切反応しなくなるように仕様変更
 // 1.9.0 2017/03/13 戦闘中常にピクチャクリックイベントを実行できる機能を追加
 // 1.8.2 2017/02/14 1.8.0の修正により、ピクチャクリック時に変数に値を格納する機能が無効化されていたのを修正
@@ -371,9 +372,9 @@
         }
     };
 
-    var _Game_Interpreter_clear      = Game_Interpreter.prototype.clear;
-    Game_Interpreter.prototype.clear = function() {
-        _Game_Interpreter_clear.apply(this, arguments);
+    var _Game_Interpreter_terminate      = Game_Interpreter.prototype.terminate;
+    Game_Interpreter.prototype.terminate = function() {
+        _Game_Interpreter_terminate.apply(this, arguments);
         this._setupFromPicture = false;
     };
 
