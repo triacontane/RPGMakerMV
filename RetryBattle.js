@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/03/20 本体v1.3.4以降で、リトライ後のメニュー画面でコモンイベントアイテムが実行できていた問題を修正
 // 1.1.0 2016/07/26 リトライ後のメニュー画面でコモンイベントを実行するアイテム・スキルを実行すると正常に動作しない問題を修正
 //                  リトライ後のメニュー画面でゲーム終了を選択できないように修正
 //                  リトライ回数をカウントして、スクリプトから取得できる機能を追加
@@ -328,15 +329,30 @@
     // Game_BattlerBase
     //  リトライ時はコモンイベント使用を含むアイテムを使用禁止にします。
     //=============================================================================
-    var _Scene_ItemBase_meetsUsableItemConditions        = Game_BattlerBase.prototype.meetsUsableItemConditions;
+    var _Game_BattlerBase_meetsUsableItemConditions        = Game_BattlerBase.prototype.meetsUsableItemConditions;
     Game_BattlerBase.prototype.meetsUsableItemConditions = function(item) {
-        return _Scene_ItemBase_meetsUsableItemConditions.apply(this, arguments) && !(SceneManager.isSceneRetry() && this.isCommonEventItemOf(item));
+        return _Game_BattlerBase_meetsUsableItemConditions.apply(this, arguments) &&
+            this.meetsUsableItemConditionsForRetry(item);
+    };
+
+    Game_BattlerBase.prototype.meetsUsableItemConditionsForRetry = function(item) {
+        return !(SceneManager.isSceneRetry() && this.isCommonEventItemOf(item));
     };
 
     Game_BattlerBase.prototype.isCommonEventItemOf = function(item) {
         return item.effects.some(function(effect) {
             return effect.code === Game_Action.EFFECT_COMMON_EVENT;
         });
+    };
+
+    //=============================================================================
+    // Game_Actor
+    //  リトライ時はコモンイベント使用を含むアイテムを使用禁止にします。
+    //=============================================================================
+    var _Game_Actor_meetsUsableItemConditions = Game_Actor.prototype.meetsUsableItemConditions;
+    Game_Actor.prototype.meetsUsableItemConditions = function(item) {
+        return _Game_Actor_meetsUsableItemConditions.apply(this, arguments) &&
+            this.meetsUsableItemConditionsForRetry(item);
     };
 
     //=============================================================================
