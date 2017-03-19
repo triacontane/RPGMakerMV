@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/03/20 動的文字列を太字とイタリックにできる機能を追加
+//                  複数行表示かつ制御文字でアイコンを指定した場合に高さが余分に計算されてしまう問題の修正
 // 1.6.2 2016/12/13 動的ピクチャに対して、ピクチャの表示とピクチャの色調変更を同フレームで行うと画像が消える問題の修正
 // 1.6.1 2016/11/03 一通りの競合対策
 // 1.6.0 2016/11/03 インストールされているフォントをピクチャのフォントとして利用できる機能を追加
@@ -102,6 +104,9 @@
  * \state[n]  n 番のステート情報（アイコン＋名称）
  * \oc[c] アウトラインカラーを「c」に設定(例:\oc[red])
  * \ow[n] アウトライン幅を「n」に設定(例:\ow[5])
+ * \f[b] フォントの太字化
+ * \f[i] フォントのイタリック化
+ * \f[n] フォントの太字とイタリックを通常に戻す
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -449,13 +454,17 @@
                     this.hiddenWindow.makeFontSmaller();
                     break;
                 case 'F':
-                    switch (this.hiddenWindow.obtainEscapeParam(textState)) {
+                    switch (this.hiddenWindow.obtainEscapeParamString(textState).toUpperCase()) {
                         case 'I':
                             bitmap.fontItalic = true;
+                            break;
+                        case 'B':
+                            bitmap.fontBoldFotDtext = true;
                             break;
                         case '/':
                         case 'N':
                             bitmap.fontItalic = false;
+                            bitmap.fontBoldFotDtext = false;
                             break;
                     }
                     break;
@@ -473,7 +482,7 @@
             var w = this.hiddenWindow.textWidth(c);
 
             bitmap.fontSize = this.hiddenWindow.contents.fontSize;
-            bitmap.drawText(c, textState.x, textState.y, w * 2, textState.height, "left");
+            bitmap.drawText(c, textState.x, textState.y, w * 2, textState.height, 'left');
             textState.x += w;
         }
     };
@@ -518,7 +527,7 @@
 
     Bitmap_Virtual.prototype.blt = function(source, sx, sy, sw, sh, dx, dy, dw, dh) {
         this.width  = Math.max(dx + (dw || sw), this.width);
-        this.height = Math.max(dy + (dy || sy), this.height);
+        this.height = Math.max(dy + (dh || sh), this.height);
     };
 
     //=============================================================================
@@ -574,5 +583,14 @@
         } else {
             return '';
         }
+    };
+
+    //=============================================================================
+    // Bitmap
+    //  太字対応
+    //=============================================================================
+    var _Bitmap__makeFontNameText = Bitmap.prototype._makeFontNameText;
+    Bitmap.prototype._makeFontNameText = function() {
+        return (this.fontBoldFotDtext ? 'bold ' : '') + _Bitmap__makeFontNameText.apply(this, arguments);
     };
 })();
