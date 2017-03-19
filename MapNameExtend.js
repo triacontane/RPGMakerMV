@@ -1,5 +1,5 @@
 //=============================================================================
-// MapNameWindowExtend.js
+// MapNameExtend.js
 // ----------------------------------------------------------------------------
 // Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
