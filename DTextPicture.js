@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2017/03/20 1.7.0で末尾がイタリック体の場合に、傾き部分が見切れてしまう問題を修正
 // 1.7.0 2017/03/20 動的文字列を太字とイタリックにできる機能を追加
 //                  複数行表示かつ制御文字でアイコンを指定した場合に高さが余分に計算されてしまう問題の修正
 // 1.6.2 2016/12/13 動的ピクチャに対して、ピクチャの表示とピクチャの色調変更を同フレームで行うと画像が消える問題の修正
@@ -521,8 +522,16 @@
     };
 
     Bitmap_Virtual.prototype.drawText = function(text, x, y, maxWidth, lineHeight, align) {
-        this.width  = Math.max(x + this.window.textWidth(text), this.width);
-        this.height = Math.max(y + this.window.contents.fontSize + 8, this.height);
+        var baseWidth = this.window.textWidth(text);
+        var fontSize = this.window.contents.fontSize;
+        if (this.fontItalic) {
+            baseWidth += Math.floor(fontSize / 6);
+        }
+        if (this.fontBoldFotDtext) {
+            baseWidth += 2;
+        }
+        this.width  = Math.max(x + baseWidth, this.width);
+        this.height = Math.max(y + fontSize + 8, this.height);
     };
 
     Bitmap_Virtual.prototype.blt = function(source, sx, sy, sw, sh, dx, dy, dw, dh) {
