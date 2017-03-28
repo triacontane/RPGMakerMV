@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/03/28 既存のタイトルを非表示にする機能を追加
 // 1.1.0 2017/03/26 マップ名表示機能を追加
 // 1.0.0 2017/03/26 初版
 // ----------------------------------------------------------------------------
@@ -26,6 +27,10 @@
  * @desc ウィンドウの右上にマップ名を表示します。（プラグイン適用前のセーブデータには表示されません）
  * @default OFF
  *
+ * @param HiddenGameTitle
+ * @desc もともとゲームタイトルを表示している箇所を非表示にします。(ON/OFF)
+ * @default OFF
+ *
  * @help セーブファイルウィンドウで歩行フラフィックの代わりに
  * 顔グラフィックを表示します。
  *
@@ -42,8 +47,12 @@
  * @default 3
  *
  * @param マップ名表示
- * @desc ウィンドウの右上にマップ名を表示します。(ON/OFF)
+ * @desc ウィンドウにマップ名を表示します。(ON/OFF)
  * ただし、プラグイン適用前にセーブしたデータには表示されません
+ * @default OFF
+ *
+ * @param ゲームタイトル非表示
+ * @desc もともとゲームタイトルを表示している箇所を非表示にします。(ON/OFF)
  * @default OFF
  *
  * @help セーブファイルウィンドウで歩行フラフィックの代わりに
@@ -85,9 +94,10 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param          = {};
-    param.visibleItems = getParamNumber(['VisibleItems', '表示行数']);
-    param.showMapName  = getParamBoolean(['ShowMapName', 'マップ名表示']);
+    var param             = {};
+    param.visibleItems    = getParamNumber(['VisibleItems', '表示行数']);
+    param.showMapName     = getParamBoolean(['ShowMapName', 'マップ名表示']);
+    param.hiddenGameTitle = getParamBoolean(['HiddenGameTitle', 'ゲームタイトル非表示']);
 
     //=============================================================================
     // DataManager
@@ -108,6 +118,10 @@
     //=============================================================================
     Window_SavefileList.prototype.drawPartyCharacters = function(info, x, y) {};
 
+    if (param.hiddenGameTitle) {
+        Window_SavefileList.prototype.drawGameTitle = function(info, x, y, width) {};
+    }
+
     Window_SavefileList.prototype.drawPartyFaces = function(info, x, y) {
         if (!info.faces) return;
         info.faces.forEach(function(faceData, index) {
@@ -117,7 +131,7 @@
 
     Window_SavefileList.prototype.drawMapName = function(info, x, y, width) {
         if (!info.mapName) return;
-        this.drawText(info.mapName, x, y, width, 'right');
+        this.drawText(info.mapName, x, y, width, param.hiddenGameTitle ? 'left' : 'right');
     };
 
     var _Window_SavefileList_drawContents      = Window_SavefileList.prototype.drawContents;
@@ -125,10 +139,10 @@
         if (valid) {
             var faceY    = rect.y + this.itemHeight() / 2 - Window_Base._faceHeight / 2 + this.lineHeight() / 2;
             var faceMaxY = rect.y + rect.height - Window_Base._faceHeight;
-            if (param.showMapName) {
-                this.drawMapName(info, rect.x, rect.y, rect.width);
-            }
             this.drawPartyFaces(info, rect.x, Math.min(faceY, faceMaxY));
+            if (param.showMapName) {
+                this.drawMapName(info, rect.x + 192, rect.y, rect.width - 192);
+            }
         }
         _Window_SavefileList_drawContents.apply(this, arguments);
     };

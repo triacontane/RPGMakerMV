@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/03/28 色調変更機能を追加
 // 1.4.2 2017/02/03 メモ欄に制御文字\v[n]を使った場合に、一度マップ移動しないと反映されない問題を修正しました。
 // 1.4.1 2016/11/27 T_dashMotion.jsとの競合を解決
 // 1.4.0 2016/11/21 複数のページに対して別々の画像を割り当てる機能を追加しました。
@@ -127,7 +128,7 @@
  *
  * 例：<CG回転角:1,180> or <CGAngle:1,180>
  *
- * <CG原点:（ページ数）,（X原点）（Y原点）>
+ * <CG原点:（ページ数）,（X原点）,（Y原点）>
  * 指定したページが有効になった場合のグラフィックの原点(0...100)を設定します。
  * デフォルトではX原点が50、Y原点が100(画像の足下が原点になる)です。
  *
@@ -139,6 +140,11 @@
  * ただし、イベントそのものの位置は変わりません。
  *
  * 例：<CG絶対座標:1,16,-16> or <CGAbsolute:1,16,-16>
+ *
+ * <CG色調:（ページ数）,（R値）,（G値）（B値）>
+ * 指定したページが有効になった場合の色調(-255～255)を設定します。
+ *
+ * 例：<CG色調:1,-255,0,255> or <CGTone:1,-255,0,255>
  *
  * 〇スクリプト（高度な設定。移動ルートの指定からスクリプトで実行）
  *
@@ -153,6 +159,10 @@
  * ・ピクセル単位位置の設定
  * this.shiftPosition(（X座標）,（Y座標）);
  * 例：this.shiftPosition(24, 24);
+ *
+ * ・色調の設定
+ * this.setTone(（R値）,（G値）（B値）);
+ * 例：this.setTone(255, -255, -255);
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -327,6 +337,14 @@
         this._absoluteY = y;
     };
 
+    Game_CharacterBase.prototype.tone = function() {
+        return this._tone;
+    };
+
+    Game_CharacterBase.prototype.setTone = function(r, g, b) {
+        this._tone = [r, g, b];
+    };
+
     Game_CharacterBase.prototype.angle = function() {
         return this._angle;
     };
@@ -359,12 +377,12 @@
 
     var _Game_CharacterBase_screenX      = Game_CharacterBase.prototype.screenX;
     Game_CharacterBase.prototype.screenX = function() {
-        return this.absoluteX() != null ? this.absoluteX() : _Game_CharacterBase_screenX.apply(this, arguments) + this._additionalX;
+        return this.absoluteX() > 0 ? this.absoluteX() : _Game_CharacterBase_screenX.apply(this, arguments) + this._additionalX;
     };
 
     var _Game_CharacterBase_screenY      = Game_CharacterBase.prototype.screenY;
     Game_CharacterBase.prototype.screenY = function() {
-        return this.absoluteY() != null ? this.absoluteY() : _Game_CharacterBase_screenY.apply(this, arguments) + this._additionalY;
+        return this.absoluteY() > 0 ? this.absoluteY() : _Game_CharacterBase_screenY.apply(this, arguments) + this._additionalY;
     };
 
     var _Game_CharacterBase_screenZ      = Game_CharacterBase.prototype.screenZ;
@@ -457,6 +475,10 @@
         cgParams = this.getMetaCg(['絶対座標', 'Absolute']);
         if (cgParams) {
             this.setAbsolute(getArgNumber(cgParams[1]), getArgNumber(cgParams[2]));
+        }
+        cgParams = this.getMetaCg(['色調', 'Tone']);
+        if (cgParams) {
+            this.setTone(getArgNumber(cgParams[1]), getArgNumber(cgParams[2]), getArgNumber(cgParams[3]));
         }
     };
 
@@ -559,6 +581,8 @@
         if (originY != null) this.anchor.y = originY;
         var angle = this._character.angle() * Math.PI / 180;
         if (this.rotation !== angle) this.rotation = angle;
+        var tone = this._character.tone();
+        if (tone) this.setColorTone(tone);
     };
 
     var _Sprite_Character_setFrame      = Sprite_Character.prototype.setFrame;
