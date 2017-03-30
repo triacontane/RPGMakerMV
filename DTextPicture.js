@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2017/03/30 拡大率と原点に対応していなかった問題を修正
 // 1.8.0 2017/03/30 背景にウィンドウを表示できる機能を追加
 // 1.7.1 2017/03/20 1.7.0で末尾がイタリック体の場合に、傾き部分が見切れてしまう問題を修正
 // 1.7.0 2017/03/20 動的文字列を太字とイタリックにできる機能を追加
@@ -410,12 +411,16 @@
         return text;
     };
 
-    var _Spriteset_Base_createPictures = Spriteset_Base.prototype.createPictures;
+    //=============================================================================
+    // Spriteset_Base
+    //  ウィンドウフレーム用のコンテナを新規に作成します。
+    //=============================================================================
+    var _Spriteset_Base_createPictures      = Spriteset_Base.prototype.createPictures;
     Spriteset_Base.prototype.createPictures = function() {
-        var width = Graphics.boxWidth;
-        var height = Graphics.boxHeight;
-        var x = (Graphics.width - width) / 2;
-        var y = (Graphics.height - height) / 2;
+        var width                    = Graphics.boxWidth;
+        var height                   = Graphics.boxHeight;
+        var x                        = (Graphics.width - width) / 2;
+        var y                        = (Graphics.height - height) / 2;
         this._pictureWindowContainer = new Sprite();
         this._pictureWindowContainer.setFrame(x, y, width, height);
         this.addChild(this._pictureWindowContainer);
@@ -434,17 +439,35 @@
     // Sprite_Picture
     //  画像の動的生成を追加定義します。
     //=============================================================================
-    var _Sprite_Picture_update = Sprite_Picture.prototype.update;
+    var _Sprite_Picture_update      = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_Picture_update.apply(this, arguments);
         if (this._frameWindow) {
             this.updateFrameWindow();
-            if (!this.visible) {
-                this.removeFrameWindow();
-            }
-            if (!this._addFrameWindow) {
-                this.addFrameWindow();
-            }
+        }
+    };
+
+    Sprite_Picture.prototype.updateFrameWindow = function() {
+        var padding = this._frameWindow.standardPadding();
+        this._frameWindow.x = this.x - (this.anchor.x * this.width * this.scale.x) - padding;
+        this._frameWindow.y = this.y - (this.anchor.y * this.height * this.scale.y) - padding;
+        if (!this.visible) {
+            this.removeFrameWindow();
+        }
+        if (!this._addFrameWindow) {
+            this.addFrameWindow();
+        }
+        if (Graphics.frameCount % 2 === 0) {
+            this.adjustScaleFrameWindow();
+        }
+    };
+
+    Sprite_Picture.prototype.adjustScaleFrameWindow = function() {
+        var padding = this._frameWindow.standardPadding();
+        var newFrameWidth = Math.floor(this.width * this.scale.x + padding * 2);
+        var newFrameHeight = Math.floor(this.height * this.scale.x + padding * 2);
+        if (this._frameWindow.width !== newFrameWidth || this._frameWindow.height !== newFrameHeight) {
+            this._frameWindow.move(this._frameWindow.x, this._frameWindow.y, newFrameWidth, newFrameHeight);
         }
     };
 
@@ -457,14 +480,10 @@
 
     Sprite_Picture.prototype.removeFrameWindow = function() {
         var spriteset = SceneManager.getSpriteset();
+        if (!spriteset) return;
         spriteset.removeFrameWindow(this._frameWindow);
-        this._frameWindow = null;
+        this._frameWindow    = null;
         this._addFrameWindow = false;
-    };
-
-    Sprite_Picture.prototype.updateFrameWindow = function() {
-        this._frameWindow.x = this.x - this._frameWindow.standardPadding();
-        this._frameWindow.y = this.y - this._frameWindow.standardPadding();
     };
 
     var _Sprite_Picture_loadBitmap      = Sprite_Picture.prototype.loadBitmap;
@@ -495,14 +514,16 @@
             this.removeFrameWindow();
         }
         if (this.dTextInfo.windowFrame) {
-            this.makeFrameWindow(bitmapVirtual.width, bitmapVirtual.height);
+            var scaleX = this.picture().scaleX() / 100;
+            var scaleY = this.picture().scaleY() / 100;
+            this.makeFrameWindow(bitmapVirtual.width * scaleX, bitmapVirtual.height * scaleY);
         }
         this.hiddenWindow = null;
     };
 
     Sprite_Picture.prototype.makeFrameWindow = function(width, height) {
-        var padding = this.hiddenWindow.standardPadding();
-        this._frameWindow = new Window_Base(0, 0, width + padding * 2, height + padding * 2);
+        var padding             = this.hiddenWindow.standardPadding();
+        this._frameWindow       = new Window_Base(0, 0, width + padding * 2, height + padding * 2);
     };
 
     Sprite_Picture.prototype._processText = function(bitmap) {
@@ -541,7 +562,7 @@
                             break;
                         case '/':
                         case 'N':
-                            bitmap.fontItalic = false;
+                            bitmap.fontItalic       = false;
                             bitmap.fontBoldFotDtext = false;
                             break;
                     }
@@ -600,7 +621,7 @@
 
     Bitmap_Virtual.prototype.drawText = function(text, x, y, maxWidth, lineHeight, align) {
         var baseWidth = this.window.textWidth(text);
-        var fontSize = this.window.contents.fontSize;
+        var fontSize  = this.window.contents.fontSize;
         if (this.fontItalic) {
             baseWidth += Math.floor(fontSize / 6);
         }
@@ -675,7 +696,7 @@
     // Bitmap
     //  太字対応
     //=============================================================================
-    var _Bitmap__makeFontNameText = Bitmap.prototype._makeFontNameText;
+    var _Bitmap__makeFontNameText      = Bitmap.prototype._makeFontNameText;
     Bitmap.prototype._makeFontNameText = function() {
         return (this.fontBoldFotDtext ? 'bold ' : '') + _Bitmap__makeFontNameText.apply(this, arguments);
     };
