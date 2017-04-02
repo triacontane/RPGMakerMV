@@ -17,9 +17,13 @@
  * @plugindesc AutoRaisePlugin
  * @author triacontane
  *
- * @param AutoRaiseAnimationId
- * @desc 自働復活時に表示されるアニメーションのID
+ * @param RaiseAnimationId
+ * @desc 自働蘇生時に表示されるアニメーションのID
  * @default 49
+ *
+ * @param RaiseIconId
+ * @desc 自働蘇生が可能な場合に表示されるアイコンのID
+ * @default 72
  *
  * @help 戦闘時に、決められた回数分だけ自働蘇生できます。
  * 回数の決定は戦闘開始直後に1回だけ行われます。
