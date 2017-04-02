@@ -182,7 +182,6 @@
     };
 
     BattleManager.processAutoRaise = function(target) {
-        p(param.autoRaiseAnimationId);
         if (param.autoRaiseAnimationId > 0) {
             this._logWindow.push('showNormalAnimation', [target], param.autoRaiseAnimationId);
         }
