@@ -38,9 +38,13 @@
  * @plugindesc 自働蘇生プラグイン
  * @author トリアコンタン
  *
- * @param 自働復活アニメID
- * @desc 自働復活時に表示されるアニメーションのID
+ * @param 蘇生アニメID
+ * @desc 自働蘇生時に表示されるアニメーションのID
  * @default 49
+ *
+ * @param 蘇生アイコンID
+ * @desc 自働蘇生が可能な場合に表示されるアイコンのID
+ * @default 72
  *
  * @help 戦闘時に、決められた回数分だけ自働蘇生できます。
  * 回数の決定は戦闘開始直後に1回だけ行われます。
@@ -116,15 +120,16 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param       = {};
-    param.autoRaiseAnimationId = getParamNumber(['AutoRaiseAnimationId', '自働復活アニメID']);
+    var param              = {};
+    param.raiseAnimationId = getParamNumber(['RaiseAnimationId', '蘇生アニメID']);
+    param.raiseIconId      = getParamNumber(['RaiseIconId', '蘇生アイコンID']);
 
     //=============================================================================
     // BattleManager
     //  戦闘不能時に自働復活します。
     //=============================================================================
     var _BattleManager_setup = BattleManager.setup;
-    BattleManager.setup = function(troopId, canEscape, canLose) {
+    BattleManager.setup      = function(troopId, canEscape, canLose) {
         _BattleManager_setup.apply(this, arguments);
         this.allBattleMembers().forEach(function(member) {
             member.initAutoRaiseCount();
@@ -135,6 +140,15 @@
     // Game_BattlerBase
     //  戦闘不能時に自働復活します。
     //=============================================================================
+    var _Game_BattlerBase_allIcons      = Game_BattlerBase.prototype.allIcons;
+    Game_BattlerBase.prototype.allIcons = function() {
+        return _Game_BattlerBase_allIcons.apply(this, arguments).concat(this.getAutoRaiseIcon());
+    };
+
+    Game_BattlerBase.prototype.getAutoRaiseIcon = function() {
+        return (this.canRaise() && param.raiseIconId > 0) ? [param.raiseIconId] : [];
+    };
+
     Game_BattlerBase.prototype.initAutoRaiseCount = function() {
         this._autoRaiseCount = this.getAutoRaiseCount();
     };
@@ -156,7 +170,7 @@
             var metaValue = getMetaValues(state, ['蘇生HPレート', 'RaiseHpRate']);
             if (metaValue) {
                 var newRate = (metaValue === true ? 1 : getArgNumber(metaValue, 1, 100));
-                hpRate = Math.max(hpRate, newRate);
+                hpRate      = Math.max(hpRate, newRate);
             }
         });
         return hpRate;
@@ -173,7 +187,7 @@
         this.setHp(this.mhp * this.getRaiseHpRate() / 100);
     };
 
-    var _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
+    var _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
         _Game_BattlerBase_die.apply(this, arguments);
         if (this.canRaise()) {
@@ -182,8 +196,8 @@
     };
 
     BattleManager.processAutoRaise = function(target) {
-        if (param.autoRaiseAnimationId > 0) {
-            this._logWindow.push('showNormalAnimation', [target], param.autoRaiseAnimationId);
+        if (param.raiseAnimationId > 0) {
+            this._logWindow.push('showNormalAnimation', [target], param.raiseAnimationId);
         }
     };
 })();
