@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/04/03 オートセーブ無効時でも一部の条件でオートセーブされていた問題を修正
 // 1.5.0 2016/12/05 高速でメッセージを送った場合に顔グラフィックを表示しようとするとエラーになる場合がある不具合を修正
 //                  ノベル表示中に選択肢ウィンドウと数値入力ウィンドウの表示位置を調整できる機能を追加
 // 1.4.0 2016/11/11 オートセーブ有効時、一定の手順を踏むとセーブデータをロードできなくなる不具合を修正
@@ -528,6 +529,7 @@
     };
 
     Game_System.prototype.executeAutoSave = function() {
+        if (!paramAutoSave) return;
         this.onBeforeSave();
         DataManager.saveGameAuto();
     };
@@ -787,13 +789,6 @@
         } else {
             _StorageManager_saveToLocalFile.apply(this, arguments);
         }
-    };
-
-    var _StorageManager_backup = StorageManager.backup;
-    StorageManager.backup = function(savefileId) {
-        //if (this.isAutoSave(savefileId)) return;
-        console.log('aa');
-        _StorageManager_backup.apply(this, arguments);
     };
 
     StorageManager.isAutoSave = function(savefileId) {
