@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.2 2017/04/05 ピクチャの消去時にエラーが発生していた問題を修正
 // 1.8.1 2017/03/30 拡大率と原点に対応していなかった問題を修正
 // 1.8.0 2017/03/30 背景にウィンドウを表示できる機能を追加
 // 1.7.1 2017/03/20 1.7.0で末尾がイタリック体の場合に、傾き部分が見切れてしまう問題を修正
@@ -453,6 +454,7 @@
         this._frameWindow.y = this.y - (this.anchor.y * this.height * this.scale.y) - padding;
         if (!this.visible) {
             this.removeFrameWindow();
+            return;
         }
         if (!this._addFrameWindow) {
             this.addFrameWindow();
