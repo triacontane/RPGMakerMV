@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/04/06 イベントテストを実行すると、数秒経過後にエラーが発生する問題の修正
 // 1.0.0 2017/03/20 MapNameWindow.jsから流用作成
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -237,7 +238,7 @@
     var _Game_Map_displayName      = Game_Map.prototype.displayName;
     Game_Map.prototype.displayName = function() {
         var index = local.mapNameIndex + 1;
-        if (index > 1) {
+        if (index > 1 && $dataMap.meta) {
             return getMetaValues($dataMap, ['マップ名' + index, 'MapName' + index]);
         } else {
             return _Game_Map_displayName.apply(this, arguments) || this.getRealMapName();
