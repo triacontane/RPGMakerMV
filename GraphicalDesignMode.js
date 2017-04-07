@@ -250,10 +250,10 @@ var $dataContainerProperties = null;
         /* アイテムメニュー画面の追加情報 */
         Scene_Item    : {
             pictures: [
-                {file: '', switchId:51},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: [], switchId:52},
+                {lines: [], switchId:0},
             ],
         },
         /* スキルメニュー画面の追加情報 */
