@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2017/04/07 追加したピクチャやウィンドウについて任意のスイッチがONのときのみ表示できる機能を追加
 // 2.5.0 2017/03/11 ウィンドウを非表示にできる機能を追加
 // 2.4.0 2017/01/09 カスタムウィンドウに表示する内容に揃えを指定できる機能を追加しました。
 // 2.3.1 2016/11/30 RPGアツマールで画面がNowLoadingから進まなくなる場合がある問題を修正しました。
@@ -217,122 +218,123 @@ var $dataContainerProperties = null;
         Scene_Title   : {
             /* pictures:シーンに追加表示する画像です。無条件で表示されます。 */
             pictures: [
-                /* file:「img/pictures/」以下のファイルを拡張子なしで指定します */
-                {file: ''},
+                /* file:「img/pictures/」以下のファイルを拡張子なしで指定します  switchId: 表示条件となるスイッチIDです*/
+                {file: '', switchId:0},
             ],
             /* windows:シーンに追加表示するウィンドウです。*/
             windows : [
                 /* lines:表示内容の配列です。 制御文字が利用できます。「\\i[n]」と「\」をひとつ多く指定してください。*/
+                /* switchId:出現条件となるスイッチIDです */
                 /* 位置を調整後に新しいウィンドウを追加する場合は、必ず「配列の末尾に追加」してください */
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* メインメニュー画面の追加情報 */
         Scene_Menu    : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* 戦闘画面の追加情報 */
         Scene_Battle  : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* アイテムメニュー画面の追加情報 */
         Scene_Item    : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:51},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:52},
             ],
         },
         /* スキルメニュー画面の追加情報 */
         Scene_Skill   : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* 装備メニュー画面の追加情報 */
         Scene_Equip   : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* ステータスメニュー画面の追加情報 */
         Scene_Status  : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* オプション画面の追加情報 */
         Scene_Options : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* セーブ画面の追加情報 */
         Scene_Save    : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* ロード画面の追加情報 */
         Scene_Load    : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* ショップ画面の追加情報 */
         Scene_Shop    : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* 名前入力画面の追加情報 */
         Scene_Name    : {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
         /* ゲームオーバー画面の追加情報 */
         Scene_Gameover: {
             pictures: [
-                {file: ''},
+                {file: '', switchId:0},
             ],
             windows : [
-                {lines: []},
+                {lines: [], switchId:0},
             ],
         },
     };
@@ -1197,6 +1199,14 @@ var $dataContainerProperties = null;
         return getClassName(this._scene);
     };
 
+    var _SceneManager_updateScene = SceneManager.updateScene;
+    SceneManager.updateScene = function() {
+        _SceneManager_updateScene.apply(this, arguments);
+        if (this._scene) {
+            this._scene.updateCustomContainer();
+        }
+    };
+
     //=============================================================================
     // Scene_Base
     //  ウィンドウ追加時に位置をロードします。
@@ -1232,6 +1242,7 @@ var $dataContainerProperties = null;
                     sprite.bitmap = ImageManager.loadPicture(picture.file, 0);
                     this._customPictures.push(sprite);
                     this.addChild(sprite);
+                    sprite.switchId = picture.switchId || 0;
                 }.bind(this));
             }
         }
@@ -1248,8 +1259,44 @@ var $dataContainerProperties = null;
                     var win = new Window_Custom(windowItem.lines);
                     this._customWindows.push(win);
                     this.addWindow(win);
+                    win.switchId = windowItem.switchId || 0;
                 }.bind(this));
             }
+        }
+    };
+
+    Scene_Base.prototype.updateCustomContainer = function() {
+        if (this._customPictures) {
+            this.updateCustomPicture();
+        }
+        if (this._customWindows) {
+            this.updateCustomWindow();
+        }
+    };
+
+    Scene_Base.prototype.updateCustomPicture = function() {
+        this._customPictures.forEach(function(picture) {
+            if (picture.switchId > 0) {
+                picture.visible = $gameSwitches.value(picture.switchId);
+            }
+        });
+    };
+
+    Scene_Base.prototype.updateCustomWindow = function() {
+        this._customWindows.forEach(function(windowItem) {
+            if (windowItem.switchId > 0) {
+                if ($gameSwitches.value(windowItem.switchId)) {
+                    windowItem.show();
+                } else {
+                    windowItem.hide();
+                }
+            }
+        }, this);
+        if (!this._windowSort) {
+            this._customWindows.forEach(function(windowItem) {
+                this.addWindow(windowItem);
+            }, this);
+            this._windowSort = true;
         }
     };
 
