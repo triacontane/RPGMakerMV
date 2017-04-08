@@ -8,6 +8,7 @@
 // Version
 // 1.0.1 2017/04/08 サブコマンドマップから戻ってきたタイミングでセーブしたときにロード時の位置がサブコマンドマップに
 //                  なってしまう問題を修正
+//                  戦闘リトライプラグインと併用したときにリトライ中は、マップ移動するメニューを使用禁止に設定
 // 1.0.0 2017/04/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -728,7 +729,8 @@
         }
 
         isEnable() {
-            return !$gameSwitches.value(this.convert(this._disableSwitchId, true));
+            return !$gameSwitches.value(this.convert(this._disableSwitchId, true)) &&
+                !(SceneManager.isSceneRetry && SceneManager.isSceneRetry() && this.getMoveTargetMap() > 0);
         }
 
         isNeedSelectMember() {
