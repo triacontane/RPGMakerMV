@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/04/08 サブコマンドマップから戻ってきたタイミングでセーブしたときにロード時の位置がサブコマンドマップに
+//                  なってしまう問題を修正
 // 1.0.0 2017/04/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -355,44 +357,52 @@
     // Game_Player
     //  サブコマンドマップへ移動します。
     //=============================================================================
-    Game_Player.prototype.transferSubCommandMap = function(subCommandMapId) {
-        if (!this.isInSubCommandMap()) {
-            this._originalMapId       = $gameMap.mapId();
-            this._originalX           = this.x;
-            this._originalY           = this.y;
-            this._originalDirection   = this.direction();
-            this._originalTransparent = this._transparent;
-        }
+    Game_Player.prototype.reserveTransferToSubCommandMap = function(subCommandMapId) {
+        this.saveOriginalMap();
         this.reserveTransfer(subCommandMapId, 0, 0, 0, 2);
-        this.requestMapReload();
         if (userSetting.autoTransparent) {
             this.setTransparent(true);
         }
     };
 
-    Game_Player.prototype.returnOriginalMap = function() {
-        if (!this.isInSubCommandMap()) return;
+    Game_Player.prototype.reserveTransferToOriginalMap = function() {
+        DataManager.loadMapData(this._originalMapId);
         this.reserveTransfer(this._originalMapId, this._originalX, this._originalY, this._originalDirection, 2);
-        this.requestMapReload();
         if (userSetting.autoTransparent) {
             this.setTransparent(this._originalTransparent);
         }
+        this.clearOriginalMap();
+        this._transferringToOriginalMap = true;
     };
 
     Game_Player.prototype.isInSubCommandMap = function() {
         return this._originalMapId > 0;
     };
 
-    Game_Player.prototype.isInOriginalMap = function() {
-        return this._originalMapId === $gameMap.mapId();
+    Game_Player.prototype.isTransferringToOriginalMap = function() {
+        return this._transferringToOriginalMap;
     };
 
-    Game_Player.prototype.clearSubCommandMap = function() {
+    Game_Player.prototype.saveOriginalMap = function() {
+        this._originalMapId       = $gameMap.mapId();
+        this._originalX           = this.x;
+        this._originalY           = this.y;
+        this._originalDirection   = this.direction();
+        this._originalTransparent = this._transparent;
+    };
+
+    Game_Player.prototype.clearOriginalMap = function() {
         this._originalMapId       = 0;
         this._originalX           = 0;
         this._originalY           = 0;
         this._originalDirection   = 0;
         this._originalTransparent = false;
+    };
+
+    var _Game_Player_clearTransferInfo = Game_Player.prototype.clearTransferInfo;
+    Game_Player.prototype.clearTransferInfo = function() {
+        _Game_Player_clearTransferInfo.apply(this, arguments);
+        this._transferringToOriginalMap = false;
     };
 
     //=============================================================================
@@ -445,10 +455,6 @@
         if ($gamePlayer.isInSubCommandMap()) {
             this._transfer = false;
         }
-        if ($gamePlayer.isInOriginalMap()) {
-            this._transfer = false;
-            $gamePlayer.clearSubCommandMap();
-        }
     };
 
     //=============================================================================
@@ -458,8 +464,29 @@
     var _Scene_Menu_create = Scene_Menu.prototype.create;
     Scene_Menu.prototype.create = function() {
         _Scene_Menu_create.apply(this, arguments);
+        this.loadSubCommandWindowSkin();
+        if ($gamePlayer.isInSubCommandMap()) {
+            $gamePlayer.reserveTransferToOriginalMap();
+        }
+    };
+
+    Scene_Menu.prototype.loadSubCommandWindowSkin = function() {
         if (param.windowSkin) {
             ImageManager.loadSystem(param.windowSkin);
+        }
+    };
+
+    var _Scene_Menu_isReady = Scene_Menu.prototype.isReady;
+    Scene_Menu.prototype.isReady = function() {
+        return _Scene_Menu_isReady.apply(this, arguments) &&
+            (!$gamePlayer.isTransferringToOriginalMap() || DataManager.isMapLoaded());
+    };
+
+    var _Scene_Menu_start = Scene_Menu.prototype.start;
+    Scene_Menu.prototype.start = function() {
+        _Scene_Menu_start.apply(this, arguments);
+        if ($gamePlayer.isTransferringToOriginalMap()) {
+            $gamePlayer.performTransfer();
         }
     };
 
@@ -539,18 +566,12 @@
     Scene_Menu.prototype.moveSubCommandMap = function() {
         var mapId = this._subCommand.getMoveTargetMap();
         if (mapId <= 0) return;
-        $gamePlayer.transferSubCommandMap(mapId);
+        $gamePlayer.reserveTransferToSubCommandMap(mapId);
         if (param.selectActorIdVariable && this._subCommand.isNeedSelectMember()) {
             $gameVariables.setValue(param.selectActorIdVariable, this._statusWindow.getSelectedActorId());
         }
         SceneManager.pop();
         this._someCommandExecute = true;
-    };
-
-    var _Scene_Menu_popScene      = Scene_Menu.prototype.popScene;
-    Scene_Menu.prototype.popScene = function() {
-        $gamePlayer.returnOriginalMap();
-        _Scene_Menu_popScene.apply(this, arguments);
     };
 
     //=============================================================================
