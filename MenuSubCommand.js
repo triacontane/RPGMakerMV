@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/04/08 サブコマンドマップから戻ってきたときにフォロワー位置を復元できるよう修正
 // 1.0.1 2017/04/08 サブコマンドマップから戻ってきたタイミングでセーブしたときにロード時の位置がサブコマンドマップに
 //                  なってしまう問題を修正
 //                  戦闘リトライプラグインと併用したときにリトライ中は、マップ移動するメニューを使用禁止に設定
@@ -355,6 +356,21 @@
     };
 
     //=============================================================================
+    // Game_CharacterBase
+    //  サブコマンドマップへ移動します。
+    //=============================================================================
+    Game_CharacterBase.prototype.savePosition = function() {
+        this._originalX         = this.x;
+        this._originalY         = this.y;
+        this._originalDirection = this.direction();
+    };
+
+    Game_CharacterBase.prototype.restorePosition = function() {
+        this.locate(this._originalX, this._originalY);
+        this.setDirection(this._originalDirection)
+    };
+
+    //=============================================================================
     // Game_Player
     //  サブコマンドマップへ移動します。
     //=============================================================================
@@ -386,10 +402,11 @@
 
     Game_Player.prototype.saveOriginalMap = function() {
         this._originalMapId       = $gameMap.mapId();
-        this._originalX           = this.x;
-        this._originalY           = this.y;
-        this._originalDirection   = this.direction();
         this._originalTransparent = this._transparent;
+        this.savePosition();
+        this._followers.forEach(function(follower) {
+            follower.savePosition();
+        });
     };
 
     Game_Player.prototype.clearOriginalMap = function() {
@@ -400,9 +417,18 @@
         this._originalTransparent = false;
     };
 
-    var _Game_Player_clearTransferInfo = Game_Player.prototype.clearTransferInfo;
+    var _Game_Player_clearTransferInfo      = Game_Player.prototype.clearTransferInfo;
     Game_Player.prototype.clearTransferInfo = function() {
         _Game_Player_clearTransferInfo.apply(this, arguments);
+        if (this._transferringToOriginalMap) {
+            this.restoreOriginalMap();
+        }
+    };
+
+    Game_Player.prototype.restoreOriginalMap = function() {
+        this._followers.forEach(function(follower) {
+            follower.restorePosition();
+        });
         this._transferringToOriginalMap = false;
     };
 
@@ -410,7 +436,7 @@
     // Game_Party
     //  無効なアクター設定時のエラーを回避します。
     //=============================================================================
-    var _Game_Party_setMenuActor = Game_Party.prototype.setMenuActor;
+    var _Game_Party_setMenuActor      = Game_Party.prototype.setMenuActor;
     Game_Party.prototype.setMenuActor = function(actor) {
         if (!actor) return;
         _Game_Party_setMenuActor.apply(this, arguments);
@@ -462,7 +488,7 @@
     // Scene_Menu
     //  メインメニューにコマンドを追加します。
     //=============================================================================
-    var _Scene_Menu_create = Scene_Menu.prototype.create;
+    var _Scene_Menu_create      = Scene_Menu.prototype.create;
     Scene_Menu.prototype.create = function() {
         _Scene_Menu_create.apply(this, arguments);
         this.loadSubCommandWindowSkin();
@@ -477,13 +503,13 @@
         }
     };
 
-    var _Scene_Menu_isReady = Scene_Menu.prototype.isReady;
+    var _Scene_Menu_isReady      = Scene_Menu.prototype.isReady;
     Scene_Menu.prototype.isReady = function() {
         return _Scene_Menu_isReady.apply(this, arguments) &&
             (!$gamePlayer.isTransferringToOriginalMap() || DataManager.isMapLoaded());
     };
 
-    var _Scene_Menu_start = Scene_Menu.prototype.start;
+    var _Scene_Menu_start      = Scene_Menu.prototype.start;
     Scene_Menu.prototype.start = function() {
         _Scene_Menu_start.apply(this, arguments);
         if ($gamePlayer.isTransferringToOriginalMap()) {
@@ -510,7 +536,7 @@
     };
 
     Scene_Menu.prototype.createSubMenuCommandWindow = function(parentName) {
-        this._subMenuWindow   = new Window_MenuSubCommand(this.x, this.y, parentName);
+        this._subMenuWindow = new Window_MenuSubCommand(this.x, this.y, parentName);
         this._subMenuWindow.updatePlacement(this._commandWindow);
         this._subMenuWindow.setHandler('ok', this.onSubCommandOk.bind(this));
         this._subMenuWindow.setHandler('cancel', this.onSubCommandCancel.bind(this));
