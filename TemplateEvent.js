@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/04/09 イベント生成系のプラグインで発生する可能性のある競合を解消
 // 1.0.1 2016/06/28 固有イベントのページ数がテンプレートイベントのページ数より少ない場合に発生するエラーを修正
 // 1.0.0 2016/06/12 初版
 // ----------------------------------------------------------------------------
@@ -192,6 +193,7 @@ var $dataTemplateEvents = null;
     };
 
     var getMetaValues = function(object, names) {
+        if (!object) return undefined;
         if (!Array.isArray(names)) return getMetaValue(object, names);
         for (var i = 0, n = names.length; i < n; i++) {
             var value = getMetaValue(object, names[i]);
