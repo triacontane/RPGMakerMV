@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.0 2017/04/09 用語集リストの表示順を個別に設定する機能を追加
 // 1.11.3 2017/03/31 用語リストをスクロールしたときに確認ウィンドウの位置がおかしくなる問題を修正
 // 1.11.2 2017/03/08 カテゴリウィンドウで制御文字を使っていない場合は、ウィンドウ幅に応じて文字を縮めるように修正
 // 1.11.1 2017/02/09 ピクチャが空の状態でもページ表示できるよう修正
@@ -269,11 +270,18 @@
  * Menu X Symbol    : glossary1
  * Menu X Main Bind : this.commandGlossary.bind(this, 1)
  *
- * ・追加機能
+ * ・追加機能1
  * 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に
  * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入してください。
  * アイテム図鑑、武器図鑑、防具図鑑も作成できます。
  * この機能を利用する場合はパラメータ「UseItemHistory」を有効にしてください。
+ *
+ * ・追加機能2
+ * 用語リストはデフォルトではアイテムID順に表示されますが、
+ * 以下のタグで表示順を個別に設定することができます。
+ * 同一の表示順が重複した場合はIDの小さい方が先に表示されます。
+ * <SG表示順:5> // ID[5]と同じ並び順で表示されます。
+ * <SGOrder:5>  // 同上
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -518,11 +526,18 @@
  * Menu X Symbol    : glossary1
  * Menu X Main Bind : this.commandGlossary.bind(this, 1)
  *
- * ・追加機能
+ * ・追加機能1
  * 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に
  * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入してください。
  * アイテム図鑑、武器図鑑、防具図鑑も作成できます。
  * この機能を利用する場合はパラメータ「UseItemHistory」を有効にしてください。
+ *
+ * ・追加機能2
+ * 用語リストはデフォルトではアイテムID順に表示されますが、
+ * 以下のタグで表示順を個別に設定することができます。
+ * 同一の表示順が重複した場合はIDの小さい方が先に表示されます。
+ * <SG表示順:5> // ID[5]と同じ並び順で表示されます。
+ * <SGOrder:5>  // 同上
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -695,6 +710,26 @@ function Scene_Glossary() {
         }
     };
 
+    //=============================================================================
+    // DataManager
+    //  種別コードを返します。
+    //=============================================================================
+    DataManager.getItemTypeCode = function(item) {
+        if (this.isItem(item)) {
+            return 0;
+        } else if (this.isWeapon(item)) {
+            return 1;
+        } else if (this.isArmor(item)) {
+            return 2;
+        } else {
+            return 3;
+        }
+    };
+
+    //=============================================================================
+    // Game_System
+    //  ロード完了時に履歴情報フィールドを必要に応じて初期化します。
+    //=============================================================================
     var _Game_System_onAfterLoad      = Game_System.prototype.onAfterLoad;
     Game_System.prototype.onAfterLoad = function() {
         _Game_System_onAfterLoad.apply(this, arguments);
@@ -1272,8 +1307,17 @@ function Scene_Glossary() {
 
     Window_GlossaryList.prototype.makeItemList = function() {
         this._data = this.getMaterialList().filter(function(item) {
-            return this.includes(item);
-        }, this);
+            var isInclude = this.includes(item);
+            if (isInclude) {
+                item.sortOrder = getMetaValues(item, ['Order', '表示順']) || item.id;
+            }
+            return isInclude;
+        }, this).sort(this.compareOrder);
+    };
+
+    Window_GlossaryList.prototype.compareOrder = function(itemA, itemB) {
+        return DataManager.getItemTypeCode(itemA) - DataManager.getItemTypeCode(itemB) ||
+            itemA.sortOrder - itemB.sortOrder || itemA.id - itemB.id;
     };
 
     Window_GlossaryList.prototype.getMaterialList = function() {
