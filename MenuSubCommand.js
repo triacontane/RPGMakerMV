@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2017/04/09 サブコマンドマップから戻ってきたときにイベント位置を復元できるよう修正
 // 1.0.2 2017/04/08 サブコマンドマップから戻ってきたときにフォロワー位置を復元できるよう修正
 // 1.0.1 2017/04/08 サブコマンドマップから戻ってきたタイミングでセーブしたときにロード時の位置がサブコマンドマップに
 //                  なってしまう問題を修正
@@ -388,7 +389,7 @@
         if (userSetting.autoTransparent) {
             this.setTransparent(this._originalTransparent);
         }
-        this.clearOriginalMap();
+        this._originalMapId = 0;
         this._transferringToOriginalMap = true;
     };
 
@@ -404,32 +405,57 @@
         this._originalMapId       = $gameMap.mapId();
         this._originalTransparent = this._transparent;
         this.savePosition();
-        this._followers.forEach(function(follower) {
-            follower.savePosition();
-        });
     };
 
-    Game_Player.prototype.clearOriginalMap = function() {
-        this._originalMapId       = 0;
-        this._originalX           = 0;
-        this._originalY           = 0;
-        this._originalDirection   = 0;
-        this._originalTransparent = false;
-    };
-
-    var _Game_Player_clearTransferInfo      = Game_Player.prototype.clearTransferInfo;
-    Game_Player.prototype.clearTransferInfo = function() {
-        _Game_Player_clearTransferInfo.apply(this, arguments);
-        if (this._transferringToOriginalMap) {
-            this.restoreOriginalMap();
+    var _Game_Player_performTransfer      = Game_Player.prototype.performTransfer;
+    Game_Player.prototype.performTransfer = function() {
+        _Game_Player_performTransfer.apply(this, arguments);
+        if (this.isTransferringToOriginalMap()) {
+            this.restorePosition();
+            this._transferringToOriginalMap = false;
         }
     };
 
-    Game_Player.prototype.restoreOriginalMap = function() {
+    Game_Player.prototype.savePosition = function() {
+        Game_CharacterBase.prototype.savePosition.call(this, arguments);
+        this._followers.forEach(function(follower) {
+            follower.savePosition();
+        });
+        $gameMap.saveAllEventPosition();
+    };
+
+    Game_Player.prototype.restorePosition = function() {
+        Game_CharacterBase.prototype.restorePosition.call(this, arguments);
         this._followers.forEach(function(follower) {
             follower.restorePosition();
         });
-        this._transferringToOriginalMap = false;
+        $gameMap.restoreAllEventPosition();
+    };
+
+    //=============================================================================
+    // Game_Map
+    //  すべてのイベントの位置を保存します。
+    //=============================================================================
+    Game_Map.prototype.saveAllEventPosition = function() {
+        this._eventPositions = [];
+        this.events().forEach(function(event) {
+            var position = {};
+            position.x = event.x;
+            position.y = event.y;
+            position.direction = event.direction();
+            this._eventPositions[event.eventId()] = position;
+        }, this);
+    };
+
+    Game_Map.prototype.restoreAllEventPosition = function() {
+        this.events().forEach(function(event) {
+            var position = this._eventPositions[event.eventId()];
+            if (position) {
+                event.locate(position.x, position.y);
+                event.setDirection(position.direction);
+            }
+        }, this);
+        this._eventPositions = [];
     };
 
     //=============================================================================
