@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2017/04/11 2.6.0の修正で追加ウィンドウの位置変更が正常に動作しない問題を修正
+//                  選択肢ウィンドウについて位置変更を一時的に無効化するプラグインコマンドを追加
 // 2.6.0 2017/04/07 追加したピクチャやウィンドウについて任意のスイッチがONのときのみ表示できる機能を追加
 // 2.5.0 2017/03/11 ウィンドウを非表示にできる機能を追加
 // 2.4.0 2017/01/09 カスタムウィンドウに表示する内容に揃えを指定できる機能を追加しました。
@@ -190,11 +192,23 @@
  *  プラグインで変更した座標が無効になり
  *  イベント「メッセージ表示」で指定したウィンドウ位置が有効になります。
  *
- * GDM_LOCK_MESSAGE_WINDOW
  * GDM固定_メッセージウィンドウ
+ * GDM_LOCK_MESSAGE_WINDOW
  *  メッセージウィンドウの位置変更を再度、有効にします。
  *  プラグインで変更した座標が有効になり
  *  イベント「メッセージ表示」で指定したウィンドウ位置は無視されます。
+ *
+ * GDM解除_選択肢ウィンドウ
+ * GDM_UNLOCK_CHOICE_WINDOW
+ *  選択肢ウィンドウの位置変更を一時的に解除します。
+ *  プラグインで変更した座標が無効になり
+ *  イベント「選択肢の表示」で指定したウィンドウ位置が有効になります。
+ *
+ * GDM固定_選択肢ウィンドウ
+ * GDM_LOCK_CHOICE_WINDOW
+ *  メッセージウィンドウの位置変更を再度、有効にします。
+ *  プラグインで変更した座標が有効になり
+ *  イベント「選択肢の表示」で指定したウィンドウ位置は無視されます。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -1142,6 +1156,14 @@ var $dataContainerProperties = null;
             case '_LOCK_MESSAGE_WINDOW':
                 SceneManager._scene._messageWindow.lockPosition();
                 break;
+            case '解除_選択肢ウィンドウ' :
+            case '_UNLOCK_CHOICE_WINDOW':
+                SceneManager._scene._messageWindow._choiceWindow.unlockPosition();
+                break;
+            case '固定_選択肢ウィンドウ' :
+            case '_LOCK_CHOICE_WINDOW':
+                SceneManager._scene._messageWindow._choiceWindow.lockPosition();
+                break;
         }
     };
 
@@ -1258,10 +1280,10 @@ var $dataContainerProperties = null;
                     if (!windowItem.lines || windowItem.lines.length < 1) return;
                     var win = new Window_Custom(windowItem.lines);
                     this._customWindows.push(win);
-                    this.addWindow(win);
                     win.switchId = windowItem.switchId || 0;
                 }.bind(this));
             }
+            this.updateCustomWindowVisible();
         }
     };
 
@@ -1283,6 +1305,16 @@ var $dataContainerProperties = null;
     };
 
     Scene_Base.prototype.updateCustomWindow = function() {
+        this.updateCustomWindowVisible();
+        if (!this._windowAdd) {
+            this._customWindows.forEach(function(windowItem) {
+                this.addWindow(windowItem);
+            }, this);
+            this._windowAdd = true;
+        }
+    };
+
+    Scene_Base.prototype.updateCustomWindowVisible = function() {
         this._customWindows.forEach(function(windowItem) {
             if (windowItem.switchId > 0) {
                 if ($gameSwitches.value(windowItem.switchId)) {
@@ -1292,12 +1324,6 @@ var $dataContainerProperties = null;
                 }
             }
         }, this);
-        if (!this._windowSort) {
-            this._customWindows.forEach(function(windowItem) {
-                this.addWindow(windowItem);
-            }, this);
-            this._windowSort = true;
-        }
     };
 
     //=============================================================================
@@ -1364,7 +1390,7 @@ var $dataContainerProperties = null;
         this.width               = containerInfo.width;
         this.height              = containerInfo.height;
         this.opacity             = containerInfo.opacity;
-        this.visible             = !containerInfo.hidden;
+        this.visible             = this.visible && !containerInfo.hidden;
         this._customFontSize     = containerInfo._customFontSize;
         this._customPadding      = containerInfo._customPadding;
         this._customLineHeight   = containerInfo._customLineHeight;
