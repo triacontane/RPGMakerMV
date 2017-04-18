@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/04/19 範囲が「なし」の場合も操作できるよう修正
 // 1.1.0 2016/10/21 加算と代入を別々のメモ欄で設定できるよう変更
 // 1.0.0 2016/10/21 初版
 // ----------------------------------------------------------------------------
@@ -111,7 +112,21 @@
     var _Game_Action_applyItemUserEffect      = Game_Action.prototype.applyItemUserEffect;
     Game_Action.prototype.applyItemUserEffect = function(target) {
         _Game_Action_applyItemUserEffect.apply(this, arguments);
-        this.applyVariableControl();
+        if (!this.isForNone()) {
+            this.applyVariableControl();
+        }
+    };
+
+    var _Game_Action_applyGlobal      = Game_Action.prototype.applyGlobal;
+    Game_Action.prototype.applyGlobal = function(target) {
+        _Game_Action_applyGlobal.apply(this, arguments);
+        if (this.isForNone()) {
+            this.applyVariableControl();
+        }
+    };
+
+    Game_Action.prototype.isForNone = function(target) {
+        return this.checkItemScope([0]);
     };
 
     Game_Action.prototype.applyVariableControl = function() {
