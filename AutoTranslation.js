@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/04/19 制御文字を翻訳可能に修正、翻訳対象から除外する制御文字を追加
 // 1.0.0 2017/04/14 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -41,6 +42,10 @@
  * @desc Specifies the category of translation at run time.
  * （Normal：general, NeuralNetwork：generalnn）
  * @default general
+ *
+ * @param SubscriptionKey
+ * @desc It is the subscription key of Microsoft Azure. If unspecified, use the shared environment prepared here.
+ * @default
  *
  * @param OutLog
  * @desc Logging the request process. (ON/TEST/OFF)
@@ -132,6 +137,10 @@
  * （通常：general ニューラルネットワーク：generalnn）
  * @default general
  *
+ * @param サブスクリプションキー
+ * @desc Microsoft Azureのサブスクリプションキーです。未指定の場合、こちらで用意した共用環境を使用します。
+ * @default
+ *
  * @param ログ出力
  * @desc リクエストの経過をログ出力します。(ON/TEST/OFF)
  * TESTはテストプレー時のみ出力
@@ -170,13 +179,17 @@
  * 翻訳を適用するかどうかは任意のスイッチを指定して切り替えることができます。
  * 設定画面等で対象言語を切り替えたい場合に使用してください。
  *
+ * 翻訳して欲しくない文章がある場合、先頭に「\NT」と記述すると翻訳対象から
+ * 除外されます。
+ *
  * ・制約事項
  * 1. 「Translator Text API」の無料版は、1ヶ月に200万文字までしか翻訳できません。
  * これは当プラグインの使用者全員の合計になります。
  * （多分超えないと思うので）特に翻訳を萎縮して頂く必要はありませんが、
  * 万一超過した場合は翻訳できなくなる点は予めご了承ください。
  *
- * 2. 文章に制御文字を含む場合は、内容が失われるため翻訳をスキップします。
+ * 2. 文章に制御文字を含む場合は、内容が失われる可能性があるため
+ * 必要に応じて辞書ファイルを修正してください。
  *
  * 3. 制度に関するご要望にはお応えできません。
  *
@@ -237,6 +250,7 @@ function TranslationManager() {
     param.translateDatabase   = getParamBoolean(['TranslateDatabase', 'データベース翻訳']);
     param.translateMessage    = getParamBoolean(['TranslateMessage', 'メッセージ翻訳']);
     param.category            = getParamString(['Category', 'カテゴリ']);
+    param.subscriptionKey     = getParamString(['SubscriptionKey', 'サブスクリプションキー']);
 
     //=============================================================================
     // Game_Interpreter
@@ -262,27 +276,27 @@ function TranslationManager() {
     // Game_System
     //  翻訳先言語によって言語情報を変更します。
     //=============================================================================
-    var _Game_System_isJapanese = Game_System.prototype.isJapanese;
+    var _Game_System_isJapanese      = Game_System.prototype.isJapanese;
     Game_System.prototype.isJapanese = function() {
         return this.isTranslateLocale(_Game_System_isJapanese, /^ja/);
     };
 
-    var _Game_System_isChinese = Game_System.prototype.isChinese;
+    var _Game_System_isChinese      = Game_System.prototype.isChinese;
     Game_System.prototype.isChinese = function() {
         return this.isTranslateLocale(_Game_System_isChinese, /^zh/);
     };
 
-    var _Game_System_isKorean = Game_System.prototype.isKorean;
+    var _Game_System_isKorean      = Game_System.prototype.isKorean;
     Game_System.prototype.isKorean = function() {
         return this.isTranslateLocale(_Game_System_isKorean, /^ko/);
     };
 
-    var _Game_System_isCJK = Game_System.prototype.isCJK;
+    var _Game_System_isCJK      = Game_System.prototype.isCJK;
     Game_System.prototype.isCJK = function() {
         return this.isTranslateLocale(_Game_System_isCJK, /^(ja|zh|ko)/);
     };
 
-    var _Game_System_isRussian = Game_System.prototype.isRussian;
+    var _Game_System_isRussian      = Game_System.prototype.isRussian;
     Game_System.prototype.isRussian = function() {
         return this.isTranslateLocale(_Game_System_isRussian, /^ru/);
     };
@@ -338,22 +352,11 @@ function TranslationManager() {
     };
 
     Game_Message.prototype.getTranslateMessage = function() {
-        return this._texts.join('')
+        return this._texts.join('');
     };
 
     Game_Message.prototype.isTranslating = function() {
         return this._translateMessage || this._translateChoice;
-    };
-
-    //=============================================================================
-    // Game_Actor
-    //  言語が変わった場合にプロフィールを再設定します。
-    //=============================================================================
-    Game_Actor.prototype.reloadDatabase = function() {
-        var actor      = this.actor();
-        this._name     = actor.name;
-        this._nickname = actor.nickname;
-        this._profile  = actor.profile;
     };
 
     //=============================================================================
@@ -388,7 +391,7 @@ function TranslationManager() {
     //=============================================================================
     TranslationManager._accessTokenUrl   = 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken';
     TranslationManager._translateUrl     = 'https://api.microsofttranslator.com/V2/Http.svc/Translate';
-    TranslationManager._subscriptionKey1 = 'f78dab007fdb4ad4ad5baaaa01b74829';
+    TranslationManager._subscriptionKey1 = param.subscriptionKey || 'f78dab007fdb4ad4ad5baaaa01b74829';
 
     TranslationManager._translateProperties = {
         $dataActors : ['name', 'nickname', 'profile'],
@@ -425,28 +428,16 @@ function TranslationManager() {
         return !!this._databaseTranslator;
     };
 
-    TranslationManager.refreshData = function() {
-        if ($gameActors) {
-            $gameActors._data.forEach(function(actor) {
-                if (actor) actor.reloadDatabase();
-            })
-        }
-    };
-
     TranslationManager.update = function() {
         if (this._interval === 0 && this._databaseTranslator && !this._translateError) {
             var result = this._databaseTranslator.next();
             if (result.done) {
                 this._interval = -1;
             } else {
-                this._interval = 120;
+                this._interval = 30;
             }
         } else if (this._interval > 0) {
             this._interval--;
-        }
-        if (this.isValidTranslation() !== this._prevValidTranslation) {
-            this._prevValidTranslation = this.isValidTranslation();
-            this.refreshData();
         }
     };
 
@@ -527,8 +518,12 @@ function TranslationManager() {
             callBack(dictionaryText);
             return;
         }
-        if (this.isInvalidText(targetText) || !this.isMakingDictionary()) {
+        if (!targetText || !this.isMakingDictionary()) {
             callBack(null);
+            return;
+        }
+        if (TranslationManager.isInvalidText(targetText)) {
+            callBack(targetText.replace(/^\\NT/i, ''));
             return;
         }
         this._translating = true;
@@ -537,11 +532,16 @@ function TranslationManager() {
             this.addDictionary(targetText, translatedText);
             this._translating = false;
             callBack(translatedText);
-        }.bind(this), function() {
+        }.bind(this), function(error) {
+            console.error('Failed to Request for ' + error);
             this._translateError = true;
             callBack(null);
         }.bind(this));
         this._continue = false;
+    };
+
+    TranslationManager.isInvalidText = function(targetText) {
+        return targetText.match(/^\\NT/i)
     };
 
     TranslationManager.getTranslatePromise = function(targetText) {
@@ -550,13 +550,18 @@ function TranslationManager() {
         }.bind(this));
     };
 
-    TranslationManager.isInvalidText = function(targetText) {
-        return !targetText || this.isExistControlCharacter(targetText)
-    };
-
     TranslationManager.parseTranslatedText = function(translatedText) {
         translatedText = translatedText.replace(/%\s+(\d+)/gi, function() {
             return '%' + arguments[1] + ' ';
+        }.bind(this));
+        translatedText = translatedText.replace(/(\\\w+)\s+(\[.+?\])/gi, function() {
+            return arguments[1] + arguments[2];
+        }.bind(this));
+        translatedText = translatedText.replace(/(\\\w+)\s+(\<.+?\>)/gi, function() {
+            return arguments[1] + arguments[2];
+        }.bind(this));
+        translatedText = translatedText.replace(/(\\\w+)\s+([\{\}])/gi, function() {
+            return arguments[1] + arguments[2];
         }.bind(this));
         return translatedText;
     };
@@ -601,10 +606,6 @@ function TranslationManager() {
                 nwWin.close(true);
             }
         });
-    };
-
-    TranslationManager.isExistControlCharacter = function(targetText) {
-        return targetText.match(/\\/);
     };
 
     TranslationManager.isMakingDictionary = function() {
@@ -687,30 +688,28 @@ function TranslationManager() {
         }
     };
 
-    if (param.translateDatabase) {
-        var _DataManager_loadMapData = DataManager.loadMapData;
-        DataManager.loadMapData      = function(mapId) {
-            _DataManager_loadMapData.apply(this, arguments);
-            this._mapNameLoadingStatus = 1;
-        };
+    var _DataManager_loadMapData = DataManager.loadMapData;
+    DataManager.loadMapData      = function(mapId) {
+        _DataManager_loadMapData.apply(this, arguments);
+        this._mapNameLoadingStatus = 1;
+    };
 
-        var _DataManager_isMapLoaded = DataManager.isMapLoaded;
-        DataManager.isMapLoaded      = function() {
-            var loaded = _DataManager_isMapLoaded.apply(this, arguments);
-            if (loaded && this._mapNameLoadingStatus === 1) {
-                this._mapNameLoadingStatus = 2;
-                TranslationManager.getTranslatePromise($dataMap.displayName).then(this.onTranslateDisplayName.bind(this));
-            }
-            return loaded && this._mapNameLoadingStatus === 3;
-        };
+    var _DataManager_isMapLoaded = DataManager.isMapLoaded;
+    DataManager.isMapLoaded      = function() {
+        var loaded = _DataManager_isMapLoaded.apply(this, arguments);
+        if (loaded && this._mapNameLoadingStatus === 1) {
+            this._mapNameLoadingStatus = 2;
+            TranslationManager.getTranslatePromise($dataMap.displayName).then(this.onTranslateDisplayName.bind(this));
+        }
+        return loaded && this._mapNameLoadingStatus === 3;
+    };
 
-        DataManager.onTranslateDisplayName = function(translatedDisplayName) {
-            if (TranslationManager.isValidTranslation()) {
-                $dataMap.displayName = translatedDisplayName;
-            }
-            this._mapNameLoadingStatus = 3;
-        };
-    }
+    DataManager.onTranslateDisplayName = function(translatedDisplayName) {
+        if (TranslationManager.isValidTranslation()) {
+            $dataMap.displayName = translatedDisplayName;
+        }
+        this._mapNameLoadingStatus = 3;
+    };
 
     //=============================================================================
     // StorageManager

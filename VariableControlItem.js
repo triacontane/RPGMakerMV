@@ -125,7 +125,7 @@
         }
     };
 
-    Game_Action.prototype.isForNone = function(target) {
+    Game_Action.prototype.isForNone = function() {
         return this.checkItemScope([0]);
     };
 

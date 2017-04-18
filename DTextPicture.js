@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.3 2017/04/19 自動翻訳プラグインに一部対応
 // 1.8.2 2017/04/05 ピクチャの消去時にエラーが発生していた問題を修正
 // 1.8.1 2017/03/30 拡大率と原点に対応していなかった問題を修正
 // 1.8.0 2017/03/30 背景にウィンドウを表示できる機能を追加
@@ -164,7 +165,7 @@
 
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)\,\s*(\d+)\]/gi, function() {
             var number = parseInt(arguments[1], 10);
             usingVariables.push(number);
             return $gameVariables.value(number).padZero(arguments[2]);
@@ -289,6 +290,11 @@
     };
 
     Game_Screen.prototype.setDTextPicture = function(value, size) {
+        if (typeof TranslationManager !== 'undefined' && TranslationManager.isValidTranslation()) {
+            TranslationManager.translateIfNeed(value, function(translatedText) {
+                value = translatedText;
+            });
+        }
         this.dUsingVariables = (this.dUsingVariables || []).concat(getUsingVariables(value));
         this.dTextValue      = (this.dTextValue || '') + getArgString(value, false) + '\n';
         this.dTextOriginal   = (this.dTextOriginal || '') + value + '\n';
@@ -386,7 +392,7 @@
     var _Window_Base_convertEscapeCharacters      = Window_Base.prototype.convertEscapeCharacters;
     Window_Base.prototype.convertEscapeCharacters = function(text) {
         text = _Window_Base_convertEscapeCharacters.call(this, text);
-        text = text.replace(/\x1bV\[(\d+)\,(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)\,\s*(\d+)\]/gi, function() {
             return $gameVariables.value(parseInt(arguments[1], 10)).padZero(arguments[2]);
         }.bind(this));
         text = text.replace(/\x1bITEM\[(\d+)\]/gi, function() {

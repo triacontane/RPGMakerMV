@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.0 2017/04/19 自動翻訳プラグインに一部対応
 // 1.12.0 2017/04/09 用語集リストの表示順を個別に設定する機能を追加
 // 1.11.3 2017/03/31 用語リストをスクロールしたときに確認ウィンドウの位置がおかしくなる問題を修正
 // 1.11.2 2017/03/08 カテゴリウィンドウで制御文字を使っていない場合は、ウィンドウ幅に応じて文字を縮めるように修正
@@ -1077,7 +1078,13 @@ function Scene_Glossary() {
 
     Scene_Glossary.prototype.updateHelp = function(helpText) {
         if (paramHelpText) {
-            this._helpWindow.setText(helpText);
+            if (typeof TranslationManager !== 'undefined' && TranslationManager.isValidTranslation()) {
+                TranslationManager.getTranslatePromise(helpText).then(function(translatedText) {
+                    this._helpWindow.setText(translatedText);
+                }.bind(this));
+            } else {
+                this._helpWindow.setText(helpText);
+            }
         } else {
             this._helpWindow.visible = false;
             this._helpWindow.height  = 0;
@@ -1530,7 +1537,13 @@ function Scene_Glossary() {
     };
 
     Window_Glossary.prototype.drawItemText = function(text, y) {
-        this.drawTextEx(text, 0, y);
+        if (typeof TranslationManager !== 'undefined' && TranslationManager.isValidTranslation()) {
+            TranslationManager.getTranslatePromise(text).then(function(translatedText) {
+                this.drawTextEx(translatedText, 0, y);
+            }.bind(this));
+        } else {
+            this.drawTextEx(text, 0, y);
+        }
     };
 
     Window_Glossary.prototype.processNormalCharacter = function(textState) {
