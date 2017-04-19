@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2017/04/20 選択肢および数値ウィンドウをテール画像の右側に表示できるプラグインコマンドを追加
 // 2.1.0 2017/02/21 フキダシウィンドウ内で制御文字「\{」「\}」を指定したときの上限、下限、増減幅を設定できる機能を追加
 // 2.0.5 2017/01/23 ウィンドウスキンを変更しているデータをロード直後にフキダシメッセージを表示すると
 //                  文字が黒くなってしまう問題を修正
@@ -243,6 +244,10 @@
  *   　選択肢および数値入力のウィンドウをフキダシウィンドウの下に表示します。
  *   　特に設定を変更しない場合はこの設定になります。
  *
+ *   SUB_POS_RIGHT or サブ位置_右
+ *   　選択肢および数値入力のウィンドウをフキダシウィンドウのテール部分の
+ *   　右側に表示します。
+ *
  * 例：MWP_SETTING POS_UPPER
  * 　　フキダシウィンドウ設定 位置_自動
  * 　　MWP_SETTING SKIN window2
@@ -402,6 +407,10 @@
                     case 'サブ位置_メッセージウィンドウ内部':
                         $gameSystem.setPopupSubWindowPosition(2);
                         break;
+                    case 'SUB_POS_RIGHT' :
+                    case 'サブ位置_右':
+                        $gameSystem.setPopupSubWindowPosition(3);
+                        break;
                 }
                 break;
             case 'MWP_ADJUST':
@@ -450,7 +459,7 @@
     };
 
     Game_System.prototype.setPopupSubWindowPosition = function(position) {
-        this._messagePopupSubWindowPosition = position.clamp(0, 2);
+        this._messagePopupSubWindowPosition = position.clamp(0, 3);
     };
 
     Game_System.prototype.getPopupSubWindowPosition = function() {
@@ -618,20 +627,20 @@
             this._windowPauseSignSprite.y        = this.height + 12;
             this._windowPauseSignSprite.anchor.y = 1;
         }
-        this._pauseSingToTail = true;
+        this._pauseSignToTail = true;
     };
 
     Window_Base.prototype.setPauseSignToNormal = function() {
         this._windowPauseSignSprite.rotation = 0;
         this._windowPauseSignSprite.anchor.y = 1.0;
         this._windowPauseSignSprite.move(this._width / 2, this._height);
-        this._pauseSingToTail = false;
+        this._pauseSignToTail = false;
     };
 
     var _Window_Base_updatePauseSign       = Window_Base.prototype._updatePauseSign;
     Window_Base.prototype._updatePauseSign = function() {
         _Window_Base_updatePauseSign.apply(this, arguments);
-        if (this._pauseSingToTail) this._windowPauseSignSprite.alpha = 1.0;
+        if (this._pauseSignToTail) this._windowPauseSignSprite.alpha = 1.0;
     };
 
     Window_Base.prototype.isPopupLower = function() {
@@ -675,6 +684,11 @@
                     this.y  = pos.y;
                     this.setPauseSignToNormal();
                     this.opacity = 0;
+                    break;
+                case 3:
+                    this.x = this._messageWindow.x + this._messageWindow.width / 2 + 16;
+                    this.y = this._messageWindow.y + this._messageWindow.height;
+                    this.setPauseSignToNormal();
                     break;
             }
         } else {
