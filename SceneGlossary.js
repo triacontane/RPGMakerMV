@@ -945,6 +945,11 @@ function Scene_Glossary() {
         _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
         for (var i = 0; i < paramCommandNamesMax; i++) {
             if (Scene_Menu.isVisibleGlossaryCommand(i)) {
+                if (typeof TranslationManager !== 'undefined') {
+                    TranslationManager.translateIfNeed(paramCommandNames[i], function(translatedText) {
+                        paramCommandNames[i] = translatedText;
+                    });
+                }
                 this.addCommand(paramCommandNames[i], 'glossary' + String(i), this.isGlossaryEnabled(i));
             }
         }
@@ -1078,7 +1083,7 @@ function Scene_Glossary() {
 
     Scene_Glossary.prototype.updateHelp = function(helpText) {
         if (paramHelpText) {
-            if (typeof TranslationManager !== 'undefined' && TranslationManager.isValidTranslation()) {
+            if (typeof TranslationManager !== 'undefined') {
                 TranslationManager.getTranslatePromise(helpText).then(function(translatedText) {
                     this._helpWindow.setText(translatedText);
                 }.bind(this));
@@ -1537,7 +1542,7 @@ function Scene_Glossary() {
     };
 
     Window_Glossary.prototype.drawItemText = function(text, y) {
-        if (typeof TranslationManager !== 'undefined' && TranslationManager.isValidTranslation()) {
+        if (typeof TranslationManager !== 'undefined') {
             TranslationManager.getTranslatePromise(text).then(function(translatedText) {
                 this.drawTextEx(translatedText, 0, y);
             }.bind(this));

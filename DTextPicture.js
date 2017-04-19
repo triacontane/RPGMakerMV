@@ -290,7 +290,7 @@
     };
 
     Game_Screen.prototype.setDTextPicture = function(value, size) {
-        if (typeof TranslationManager !== 'undefined' && TranslationManager.isValidTranslation()) {
+        if (typeof TranslationManager !== 'undefined') {
             TranslationManager.translateIfNeed(value, function(translatedText) {
                 value = translatedText;
             });

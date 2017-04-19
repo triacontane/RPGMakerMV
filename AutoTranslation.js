@@ -337,9 +337,7 @@ function TranslationManager() {
         }, this);
         promise.then(function(translatedChoice) {
             translatedChoices.push(translatedChoice || originalChoice);
-            if (TranslationManager.isValidTranslation()) {
-                this._choices = translatedChoices;
-            }
+            this._choices = translatedChoices;
             this._translateChoice = false;
         }.bind(this));
     };
@@ -358,6 +356,39 @@ function TranslationManager() {
     Game_Message.prototype.isTranslating = function() {
         return this._translateMessage || this._translateChoice;
     };
+
+    //=============================================================================
+    // Game_Actor
+    //  翻訳中の待機と自動改行を実装します。
+    //=============================================================================
+    if (param.translateDatabase) {
+        var _Game_Actor_name = Game_Actor.prototype.name;
+        Game_Actor.prototype.name = function() {
+            var name = _Game_Actor_name.apply(this, arguments);
+            TranslationManager.translateIfNeed(name, function(translatedText) {
+                name = translatedText || name;
+            });
+            return name;
+        };
+
+        var _Game_Actor_nickname = Game_Actor.prototype.nickname;
+        Game_Actor.prototype.nickname = function() {
+            var nickName = _Game_Actor_nickname.apply(this, arguments);
+            TranslationManager.translateIfNeed(nickName, function(translatedText) {
+                nickName = translatedText || nickName;
+            });
+            return nickName;
+        };
+
+        var _Game_Actor_profile = Game_Actor.prototype.profile;
+        Game_Actor.prototype.profile = function() {
+            var profile = _Game_Actor_profile.apply(this, arguments);
+            TranslationManager.translateIfNeed(profile, function(translatedText) {
+                profile = translatedText || profile;
+            });
+            return profile;
+        };
+    }
 
     //=============================================================================
     // Window_Message
@@ -443,7 +474,7 @@ function TranslationManager() {
 
     // Generator Function
     TranslationManager.translateAllDatabase = function*() {
-        var i, j;
+        var i, j, k;
         this._currentData = $dataSystem;
         if (!this.translateProperty('gameTitle')) {
             yield;
@@ -475,17 +506,14 @@ function TranslationManager() {
             var databaseName = databaseNames[i];
             for (j = 1; j < window[databaseName].length; j++) {
                 this._currentData = window[databaseName][j];
-                if (!this.translateProperties(this._translateProperties[databaseName])) {
-                    yield;
+                var properties = this._translateProperties[databaseName];
+                for (k = 0; k < properties.length; k++) {
+                    if (!this.translateProperty(properties[k])) {
+                        yield;
+                    }
                 }
             }
         }
-    };
-
-    TranslationManager.translateProperties = function(properties) {
-        return properties.every(function(property) {
-            return this.translateProperty(property);
-        }, this);
     };
 
     TranslationManager.translateProperty = function(propertyName) {
@@ -515,11 +543,11 @@ function TranslationManager() {
     TranslationManager.translateIfNeed = function(targetText, callBack) {
         var dictionaryText = $dataTransDic[targetText];
         if (dictionaryText) {
-            callBack(dictionaryText);
+            callBack(this.isValidTranslation() ? dictionaryText : targetText);
             return;
         }
         if (!targetText || !this.isMakingDictionary()) {
-            callBack(null);
+            callBack(targetText || '');
             return;
         }
         if (TranslationManager.isInvalidText(targetText)) {
@@ -531,11 +559,11 @@ function TranslationManager() {
             translatedText = this.parseTranslatedText(translatedText);
             this.addDictionary(targetText, translatedText);
             this._translating = false;
-            callBack(translatedText);
+            callBack(this.isValidTranslation() ? translatedText : targetText);
         }.bind(this), function(error) {
             console.error('Failed to Request for ' + error);
             this._translateError = true;
-            callBack(null);
+            callBack(targetText);
         }.bind(this));
         this._continue = false;
     };
@@ -705,9 +733,7 @@ function TranslationManager() {
     };
 
     DataManager.onTranslateDisplayName = function(translatedDisplayName) {
-        if (TranslationManager.isValidTranslation()) {
-            $dataMap.displayName = translatedDisplayName;
-        }
+        $dataMap.displayName = translatedDisplayName;
         this._mapNameLoadingStatus = 3;
     };
 
