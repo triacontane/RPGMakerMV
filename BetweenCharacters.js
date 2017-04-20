@@ -29,7 +29,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc BetweenCharactersプラグイン
+ * @plugindesc 字間設定プラグイン
  * @author トリアコンタン
  *
  * @param 字間変数番号
