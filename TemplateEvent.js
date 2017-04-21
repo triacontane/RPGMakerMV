@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/04/22 テンプレートイベントIDに変数の値を指摘できる機能を追加
 // 1.0.2 2017/04/09 イベント生成系のプラグインで発生する可能性のある競合を解消
 // 1.0.1 2016/06/28 固有イベントのページ数がテンプレートイベントのページ数より少ない場合に発生するエラーを修正
 // 1.0.0 2016/06/12 初版
@@ -52,8 +53,9 @@
  *
  * 2.テンプレートイベントに置き換えたいイベントのメモ欄を記述します。
  *   IDとイベント名の双方が指定可能です。
- * <TE:1>   テンプレートマップのID[1]のイベントに置き換わります。
- * <TE:aaa> テンプレートマップのイベント名[aaa]のイベントに置き換わります。
+ * <TE:1>     テンプレートマップのID[1]のイベントに置き換わります。
+ * <TE:aaa>   テンプレートマップのイベント名[aaa]のイベントに置き換わります。
+ * <TE:\v[1]> テンプレートマップのID[変数[1]の値]のイベントに置き換わります。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -214,9 +216,29 @@ var $dataTemplateEvents = null;
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+        if (isNotAString(text)) text = '';
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
+    };
+
+    var isNotAString = function(args) {
+        return String(args) !== args;
     };
 
     //=============================================================================
