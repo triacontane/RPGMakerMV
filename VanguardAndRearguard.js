@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2017/04/22 全回復のイベント後、隊列ステートが解除されてしまう不具合を修正
 // 1.3.1 2017/02/27 YEP_BattleEngineCore.jsと組み合わせたときに、後衛時のノックバックが過剰になる現象を修正
 // 1.3.0 2017/01/14 敵キャラの前衛、後衛ステートアイコンを非表示にできる機能を追加
 // 1.2.2 2016/10/25 後衛の敵キャラが逃走したときに位置が元に戻ってしまう現象を修正
@@ -342,6 +343,13 @@
     Game_BattlerBase.prototype.die = function() {
         var prevVanguard = this.isVanguard();
         _Game_BattlerBase_die.apply(this, arguments);
+        this.setFormationState(prevVanguard);
+    };
+
+    var _Game_BattlerBase_recoverAll = Game_BattlerBase.prototype.recoverAll;
+    Game_BattlerBase.prototype.recoverAll = function() {
+        var prevVanguard = this.isVanguard();
+        _Game_BattlerBase_recoverAll.apply(this, arguments);
         this.setFormationState(prevVanguard);
     };
 
