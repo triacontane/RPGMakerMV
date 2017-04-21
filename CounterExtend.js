@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/04/22 1.3.0の機能がBattleEngineCoreで動作するよう修正
 // 1.3.0 2017/04/09 反撃に成功した時点で相手の行動をキャンセルできる機能を追加
 // 1.2.2 2017/02/07 端末依存の記述を削除
 // 1.2.1 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
@@ -417,6 +418,12 @@ var Imported = Imported || {};
     // BattleManager
     //  スキルによる反撃を実装します。
     //=============================================================================
+    var _BattleManager_startAction = BattleManager.startAction;
+    BattleManager.startAction = function() {
+        this._actionCancel = false;
+        _BattleManager_startAction.apply(this, arguments);
+    };
+
     var _BattleManager_invokeCounterAttack = BattleManager.invokeCounterAttack;
     BattleManager.invokeCounterAttack        = function(subject, target) {
         if (!target.isReserveCounterSkill()) {
@@ -430,8 +437,14 @@ var Imported = Imported || {};
             this._logWindow.displayActionResults(target, subject);
         }
         if (target.isCounterCancel()) {
-            this._targets = [];
+            this._actionCancel = true;
         }
+    };
+
+    var _BattleManager_invokeAction = BattleManager.invokeAction;
+    BattleManager.invokeAction = function(subject, target) {
+        if (this._actionCancel) return;
+        _BattleManager_invokeAction.apply(this, arguments);
     };
 
     //=============================================================================
