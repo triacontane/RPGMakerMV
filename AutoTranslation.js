@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/04/22 制御文字の精度をほんの少し改善
 // 1.1.0 2017/04/19 制御文字の翻訳に部分的に対応。翻訳対象から除外する制御文字を追加
 //                  サブスクリプションキーを指定できる機能を追加
 // 1.0.0 2017/04/14 初版
@@ -589,7 +590,7 @@ function TranslationManager() {
         translatedText = translatedText.replace(/(\\\w+)\s+(\<.+?\>)/gi, function() {
             return arguments[1] + arguments[2];
         }.bind(this));
-        translatedText = translatedText.replace(/(\\\w+)\s+([\{\}])/gi, function() {
+        translatedText = translatedText.replace(/(\\)\s+(\W)/gi, function() {
             return arguments[1] + arguments[2];
         }.bind(this));
         return translatedText;
