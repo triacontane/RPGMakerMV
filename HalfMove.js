@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2017/04/23 8方向移動の可否をスイッチによって切り替える機能を追加
 // 1.7.0 2017/03/01 全方向移動不可な地形タグやリージョンのパラメータを追加
 // 1.6.4 2017/02/14 下半分移動不可なタイルに対して下方向から移動できてしまっていた不具合を修正
 // 1.6.3 2016/09/21 半歩移動中、上方向にある小型船、大型船に乗船できない不具合を修正
@@ -48,6 +49,10 @@
  * @param Direction8Move
  * @desc 斜め移動を含めた8方向移動を許可します。
  * @default ON
+ *
+ * @param 8MoveSwitch
+ * @desc 指定したIDのスイッチがONのときのみ8方向移動を許可します。0の場合は常に許可します。
+ * @default 0
  *
  * @param EventThrough
  * @desc イベントに横から接触したときに半歩ぶんならすり抜けます。
@@ -146,6 +151,10 @@
  * @param 8方向移動
  * @desc 斜め移動を含めた8方向移動を許可します。
  * @default ON
+ *
+ * @param 8方向移動スイッチ
+ * @desc 指定したIDのスイッチがONのときのみ8方向移動を許可します。0の場合は常に許可します。
+ * @default 0
  *
  * @param イベントすり抜け
  * @desc イベントに横から接触したときに半歩ぶんならすり抜けます。
@@ -403,6 +412,7 @@
     var paramAllNpRegionId      = getParamNumber(['AllNpRegionId', '全方向移動不可Region'], 0);
     var paramMultiStartDisable  = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
     var paramEventOverlap       = getParamBoolean(['EventOverlap', 'イベント位置重複OK']);
+    var param8MoveSwitch        = getParamNumber(['8MoveSwitch', '8方向移動スイッチ'], 0);
 
     //=============================================================================
     // ローカル変数
@@ -1049,13 +1059,17 @@
 
     var _Game_Player_getInputDirection      = Game_Player.prototype.getInputDirection;
     Game_Player.prototype.getInputDirection = function() {
-        var result = paramDirection8Move ? Input.dir8 : _Game_Player_getInputDirection.apply(this, arguments);
+        var result = this.canDiagonalMove() ? Input.dir8 : _Game_Player_getInputDirection.apply(this, arguments);
         if (result === 0) {
             this._firstInputDir = 0;
         } else if (result % 2 === 0 && this._firstInputDir === 0) {
             this._firstInputDir = result;
         }
         return result;
+    };
+
+    Game_Player.prototype.canDiagonalMove = function() {
+        return paramDirection8Move && (param8MoveSwitch > 0 ? $gameSwitches.value(param8MoveSwitch) : true);
     };
 
     var _Game_Player_executeMove      = Game_Player.prototype.executeMove;
