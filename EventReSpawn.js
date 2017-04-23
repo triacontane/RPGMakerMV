@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/04/23 イベントを生成するプラグインコマンドで制御文字が無効になっていた問題を修正
 // 1.5.0 2017/01/19 イベント生成の際にIDだけでなくイベント名の一致するイベントを動的生成できる機能を追加
 // 1.4.4 2017/01/13 動的イベントの一時消去時にバルーンやアニメーションを表示中だった場合に表示が残ってしまう問題を修正
 // 1.4.3 2017/01/12 1.4.2の対策に漏れがあったため再修正
@@ -237,7 +238,7 @@ function Game_PrefabEvent() {
 
     Game_Interpreter.prototype.getEventIdForEventReSpawn = function(arg, isTemplate) {
         var id = 0;
-        if (!isNaN(Number(arg))) {
+        if (!isNaN(convertEscapeCharacters(arg))) {
             id = getArgNumber(arg, 0);
         } else {
             var event = DataManager.searchDataItem(isTemplate ? $dataTemplateEvents : $dataMap.events, 'name', arg);
