@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/04/23 少しだけリファクタリング
 // 1.0.0 2017/04/23 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -81,21 +82,18 @@
     };
 
     Game_BattlerBase.prototype.getPartyTotalizationStates = function() {
-        var states = [];
-        this.friendsUnit().members().forEach(function(member) {
-            states = states.concat(member.getTotalizationStates());
-        });
-        return states;
+        return this.friendsUnit().members().reduce(function(totalizationStates, member) {
+            return totalizationStates.concat(member.getTotalizationStates());
+        }, []);
     };
 
     Game_BattlerBase.prototype.getTotalizationStates = function() {
-        var states = [];
-        this.states().forEach(function(state) {
+        return this.states().reduce(function(totalizationStates, state) {
             if (isMetaValues(state, ['全体化', 'Totalization'])) {
-                states.push(state);
+                totalizationStates.push(state);
             }
-        });
-        return states;
+            return totalizationStates;
+        }, []);
     };
 
     var _Game_BattlerBase_restriction = Game_BattlerBase.prototype.restriction;
