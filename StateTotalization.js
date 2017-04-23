@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/04/02 英語ヘルプ作成
 // 1.0.1 2017/04/23 少しだけリファクタリング
 // 1.0.0 2017/04/23 初版
 // ----------------------------------------------------------------------------
@@ -18,16 +19,18 @@
  * @plugindesc StateTotalizationPlugin
  * @author triacontane
  *
- * @help 一部のステートの効果を「味方全体」にします。
- * ステートのメモ欄に以下の通り記述してください。
- * <ST_全体化>
+ * @help Change the effect of some states to "all friends".
+ * Please describe it in the memo field of the state as follows.
+ * <ST_Totalization>
  *
- * 上記メモ欄が記述されたステートの特徴および行動制約が
- * 味方全員に適用されます。
- * ただし、ステート自体が感染するわけではないので
- * アイコンやメッセージは表示されません。
+ * If the feature of the state in which the memo field is trait
+ * and the behavior restriction are
+ * It applies to all friend members.
  *
- * このプラグインにはプラグインコマンドはありません。
+ * However, since the state itself is not infected
+ * Icons and messages are not displayed.
+ *
+ * There is no plug-in command in this plug-in.
  *
  * This plugin is released under the MIT License.
  */
