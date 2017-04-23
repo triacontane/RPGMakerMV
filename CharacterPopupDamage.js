@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/04/23 ポップアップ時にキャラクターをフラッシュさせる機能を追加
 // 1.4.0 2017/03/03 ピクチャより前面にポップアップできる設定を追加
 //                  回転がない場合でも拡大率を自由に変更できるよう修正
 // 1.3.0 2017/01/23 スリップダメージのポップアップに対応
@@ -98,7 +99,7 @@
  * 指定する値をマイナスにすると回復扱いとなり色が変わります。
  * また、クリティカルにすると数字の色が一瞬、赤くなります。
  *
- * また「HPの増減」等のイベントコマンド実行時に自動で変化量をポップアップする機能や、
+ * また「HPの増減」等のイベント実行時に自動で変化量をポップアップする機能や、
  * ダメージ床を通過した際に自動でポップアップする機能も用意されています。
  * パラメータにより、HPのみや増加のみといった条件指定もできます。
  *
@@ -157,6 +158,13 @@
  *
  * CPD_SETTING_TONE 255 0 0 255
  * ポップアップ設定_色調 -255 -255 -255 0
+ *
+ * ・CPD_SETTING_FLASH or ポップアップ設定_フラッシュ [赤] [緑] [青] [強さ]
+ * ポップアップ時にキャラクターをフラッシュします。
+ * フラッシュするのはダメージを受けた場合のみです。
+ *
+ * CPD_SETTING_FLASH 255 0 0 255
+ * ポップアップ設定_フラッシュ 255 0 0 255
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -317,6 +325,14 @@
                 var gray  = getArgNumber(args[3]);
                 $gameSystem.setPopupDamageTone([red, green, blue, gray]);
                 break;
+            case 'CPD_SETTING_FLASH' :
+            case 'ポップアップ設定_フラッシュ':
+                var flashRed   = getArgNumber(args[0], 0);
+                var flashGreen = getArgNumber(args[1], 0);
+                var flashBlue  = getArgNumber(args[2], 0);
+                var alpha      = getArgNumber(args[3], 0) || 255;
+                $gameSystem.setPopupDamageFlash([flashRed, flashGreen, flashBlue, alpha]);
+                break;
         }
     };
 
@@ -431,6 +447,7 @@
         _Game_System_initialize.apply(this, arguments);
         this._suppressAutoPopup = false;
         this._popupDamageTone   = null;
+        this._popupDamageFlash  = null;
     };
 
     Game_System.prototype.setSuppressAutoPopup = function(value) {
@@ -464,6 +481,14 @@
 
     Game_System.prototype.setPopupDamageTone = function(value) {
         this._popupDamageTone = value;
+    };
+
+    Game_System.prototype.getPopupDamageFlash = function() {
+        return this._popupDamageFlash;
+    };
+
+    Game_System.prototype.setPopupDamageFlash = function(value) {
+        this._popupDamageFlash = value;
     };
 
     //=============================================================================
@@ -540,20 +565,42 @@
                 this._damages.shift();
             }
         }
+        if (this._popupFlash) {
+            this.updateDamagePopupFlash();
+        }
+    };
+
+    Sprite_Character.prototype.updateDamagePopupFlash = function() {
+        this.setBlendColor(this._popupFlash);
+        this._popupFlash[3] -= this._popupFlashSpeed;
+        if (this._popupFlash[3] <= 0) {
+            this._popupFlash      = null;
+            this._popupFlashSpeed = 0;
+        }
     };
 
     Sprite_Character.prototype.setupDamagePopup = function() {
-        if (this._character.isDamagePopupRequested()) {
-            var sprite = new Sprite_CharacterDamage();
-            sprite.x   = this.x + this.damageOffsetX();
-            sprite.y   = this.y + this.damageOffsetY();
-            if (!sprite.z) sprite.z = 9;
-            sprite.setupCharacter(this._character);
-            if (!this._damages) this._damages = [];
-            this._damages.push(sprite);
-            this.getPopupParent().addChild(sprite);
-            this._character.clearDamagePopup();
+        if (!this._character.isDamagePopupRequested()) return;
+        var sprite = new Sprite_CharacterDamage();
+        sprite.x   = this.x + this.damageOffsetX();
+        sprite.y   = this.y + this.damageOffsetY();
+        if (!sprite.z) sprite.z = 9;
+        sprite.setupCharacter(this._character);
+        if (!this._damages) this._damages = [];
+        this._damages.push(sprite);
+        this.getPopupParent().addChild(sprite);
+        this._character.clearDamagePopup();
+        if (!sprite.isMiss() && !sprite.isRecover()) {
+            this.setupDamagePopupFlash();
         }
+    };
+
+    Sprite_Character.prototype.setupDamagePopupFlash = function() {
+        var flashColor = $gameSystem.getPopupDamageFlash();
+        if (!flashColor) return;
+        this._popupFlash      = flashColor.clone();
+        this._popupFlashSpeed = Math.floor(this._popupFlash[3] / 30);
+        this.updateDamagePopupFlash();
     };
 
     Sprite_Character.prototype.damageOffsetX = function() {
@@ -583,8 +630,9 @@
         var damageInfo  = character.shiftDamageInfo();
         this._toneColor = $gameSystem.getPopupDamageTone();
         this._mirror    = damageInfo.mirror;
+        this._damageInfo = damageInfo;
         this._digit     = 0;
-        if (damageInfo.value === null) {
+        if (this.isMiss()) {
             this.createMissForCharacter();
         } else {
             this.createDigits(damageInfo.mpFlg ? 2 : 0, damageInfo.value);
@@ -592,7 +640,14 @@
         if (damageInfo.critical) {
             this.setupCriticalEffect();
         }
+    };
 
+    Sprite_CharacterDamage.prototype.isMiss = function() {
+        return this._damageInfo.value === null || this._damageInfo.value === 0;
+    };
+
+    Sprite_CharacterDamage.prototype.isRecover = function() {
+        return this._damageInfo.value < 0;
     };
 
     Sprite_CharacterDamage.prototype.createMissForCharacter = function() {
