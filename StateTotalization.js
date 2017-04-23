@@ -83,7 +83,7 @@
 
     Game_BattlerBase.prototype.getPartyTotalizationStates = function() {
         return this.friendsUnit().members().reduce(function(totalizationStates, member) {
-            return totalizationStates.concat(member.getTotalizationStates());
+            return member !== this ? totalizationStates.concat(member.getTotalizationStates()) : totalizationStates;
         }, []);
     };
 
