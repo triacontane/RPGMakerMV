@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/04/23 ポーズサインを非表示にできるスイッチを追加
 // 1.0.0 2017/01/16 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -17,19 +18,22 @@
  * @plugindesc PauseSignToTextEndPlugin
  * @author triacontane
  *
- * @help メッセージウィンドウのポーズサインが
- * テキストの末尾に表示されるようになります。
+ * @param InvisibleSwitchId
+ * @desc When the specified switch is ON, the pause sign is no longer displayed.
+ * @default 0
  *
- * ただし、フキダシウィンドウプラグインが有効になっている場合は
- * そちらを優先します。
- *
- * このプラグインにはプラグインコマンドはありません。
+ * @help Message window pause sign
+ * It will appear at the end of the text.
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc ポーズサインの末尾表示プラグイン
  * @author トリアコンタン
+ *
+ * @param 非表示スイッチ番号
+ * @desc 指定したスイッチがONのときポーズサインが表示されなくなります。
+ * @default 0
  *
  * @help メッセージウィンドウのポーズサインが
  * テキストの末尾に表示されるようになります。
@@ -47,12 +51,47 @@
 
 (function() {
     'use strict';
+    var pluginName    = 'PauseSignToTextEnd';
 
+    //=============================================================================
+    // ローカル関数
+    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
+    //=============================================================================
+    var getParamString = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return '';
+    };
+
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamString(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value) || 0).clamp(min, max);
+    };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var param = {};
+    param.invisibleSwitchId = getParamNumber(['InvisibleSwitchId', '非表示スイッチ番号']);
+
+    //=============================================================================
+    // Window_Message
+    //  ポーズサインの位置を変更します。
+    //=============================================================================
     var _Window_Message_startPause = Window_Message.prototype.startPause;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
         if (this.isPopup && this.isPopup()) return;
         this.setPauseSignToTextEnd();
+    };
+
+    Window_Message.prototype.isVisiblePauseSign = function() {
+        return !$gameSwitches.value(param.invisibleSwitchId);
     };
 
     Window_Message.prototype.setPauseSignToTextEnd = function() {
@@ -62,6 +101,12 @@
         this._windowPauseSignSprite.anchor.x = 0;
         this._windowPauseSignSprite.anchor.y = 1;
         this._windowPauseSignSprite.move(x, y);
+    };
+
+    var _Window_Message__updatePauseSign = Window_Message.prototype._updatePauseSign;
+    Window_Message.prototype._updatePauseSign = function() {
+        _Window_Message__updatePauseSign.apply(this, arguments);
+        this._windowPauseSignSprite.visible = this.isVisiblePauseSign();
     };
 })();
 
