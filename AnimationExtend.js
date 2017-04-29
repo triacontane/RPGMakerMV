@@ -14,7 +14,7 @@
 //=============================================================================
 
 /*:
- * @plugindesc AnimationRotationPlugin
+ * @plugindesc AnimationExtendPlugin
  * @author triacontane
  *
  * @param RotationVariableId
