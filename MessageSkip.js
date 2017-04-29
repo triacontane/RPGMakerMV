@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/04/29 並列実行のイベントでも通常イベントが実行中でなければスキップを解除するよう修正
+//                  キーコードの「右」と「上」が逆になっていた問題を修正
+//                  オート待機フレームを制御文字を使って動的に変更できる機能を追加
 // 1.1.0 2016/12/14 並列処理イベントが実行されている場合にスキップが効かなくなる問題を修正
 // 1.0.1 2016/02/15 モバイル端末での動作が遅くなる不具合を修正
 // 1.0.0 2016/01/15 初版
@@ -38,7 +41,7 @@
  * @default 75
  *
  * @param オート待機フレーム
- * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数
+ * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]が指定できます。
  * @default 240
  *
  * @param イベント終了で解除
@@ -46,6 +49,11 @@
  * @default ON
  *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
+ * イベントが終了すると自働でスキップやオートモードは解除されます。
+ * 並列実行イベントは、通常イベントが実行中でない場合のみ解除されます。
+ * 明示的に解除したい場合は、以下のスクリプトを実行してください。
+ *
+ * $gameMessage.clearSkipInfo();
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -72,7 +80,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() == 'ON';
+        return (value || '').toUpperCase() === 'ON';
     };
 
     var getParamOther = function (paramNames) {
@@ -82,6 +90,16 @@
             if (name) return name;
         }
         return null;
+    };
+
+    var convertEscapeCharacters = function(text) {
+        if (isNotAString(text)) text = '';
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+    };
+
+    var isNotAString = function(args) {
+        return String(args) !== args;
     };
 
     Number.prototype.times = function (handler) {
@@ -95,7 +113,7 @@
         o : 79, p : 80, q : 81, r : 82, s : 83, t : 84, u : 85,
         v : 86, w : 87, x : 88, y : 89, z : 90,
         backspace : 8, tab : 9, enter : 13, shift : 16, ctrl : 17, alt : 18, pause : 19, esc : 27, space : 32,
-        page_up : 33, page_down : 34, end : 35, home : 36, left : 37, right : 38, up : 39, down : 40, insert : 45, delete : 46
+        page_up : 33, page_down : 34, end : 35, home : 36, left : 37, right : 39, up : 38, down : 40, insert : 45, delete : 46
     };
     (9).times(function(i) {
         Input.keyCodeReverseMapper[i] = i + 48;
@@ -109,12 +127,18 @@
     var autoKeyName = getParamString('オートキー').toLowerCase();
     var autoKeyCode = Input.keyCodeReverseMapper[autoKeyName];
     if (skipKeyCode) {
-        Input.keyMapper[skipKeyCode] == null ? Input.keyMapper[skipKeyCode] = 'messageSkip' :
+        if (!Input.keyMapper[skipKeyCode]) {
+            Input.keyMapper[skipKeyCode] = 'messageSkip';
+        } else {
             skipKeyName = Input.keyMapper[skipKeyCode];
+        }
     }
     if (autoKeyCode) {
-        Input.keyMapper[autoKeyCode] == null ? Input.keyMapper[autoKeyCode] = 'messageAuto' :
+        if (!Input.keyMapper[autoKeyCode]) {
+            Input.keyMapper[autoKeyCode] = 'messageAuto';
+        } else {
             autoKeyName = Input.keyMapper[autoKeyCode];
+        }
     }
 
     //=============================================================================
@@ -169,9 +193,13 @@
     var _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
-        if ($gameMap.isMapInterpreterOf(this) && this._depth === 0) {
+        if (this.isNeedClearSkip()) {
             $gameMessage.terminateEvent();
         }
+    };
+
+    Game_Interpreter.prototype.isNeedClearSkip = function() {
+        return ($gameMap.isMapInterpreterOf(this) || !$gameMap.isEventRunning()) && this._depth === 0;
     };
 
     //=============================================================================
@@ -198,7 +226,7 @@
     var _Window_Message_startMessage = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
-        this._messageAutoCount = getParamNumber('オート待機フレーム', 1);
+        this._messageAutoCount = parseInt(convertEscapeCharacters(getParamString('オート待機フレーム', 1)));
     };
 
     var _Window_Message_update = Window_Message.prototype.update;
