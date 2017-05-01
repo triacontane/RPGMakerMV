@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/05/02 メニュー画面にも表示できる機能を追加
 // 1.0.0 2017/05/02 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -55,6 +56,10 @@
  * @param FontSize
  * @desc ウィンドウのフォントサイズです。
  * @default 22
+ *
+ * @param ShowingInMenu
+ * @desc 行動目標ウィンドウをメニュー画面にも表示します。ただし座標やサイズは自働で整形されます。
+ * @default OFF
  *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
@@ -112,6 +117,10 @@
  * @desc ウィンドウのフォントサイズです。
  * @default 22
  *
+ * @param メニュー画面に表示
+ * @desc 行動目標ウィンドウをメニュー画面にも表示します。ただし座標やサイズは自働で整形されます。
+ * @default OFF
+ *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
  * 表示する内容はプラグインコマンドで、表示可否はスイッチで制御します。
@@ -159,21 +168,10 @@
         return value.toUpperCase() === 'ON';
     };
 
-    var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var isNotAString = function(args) {
-        return String(args) !== args;
-    };
-
-    var convertAllArguments = function(args) {
-        for (var i = 0; i < args.length; i++) {
-            args[i] = convertEscapeCharacters(args[i]);
-        }
-        return args;
+    var concatAllArguments = function(args) {
+        return args.reduce(function(prevValue, arg) {
+            return prevValue + ' ' + arg;
+        }, '');
     };
 
     var setPluginCommand = function(commandName, methodName) {
@@ -193,6 +191,7 @@
     param.fadeFrame         = getParamNumber(['FadeFrame', 'フェード時間'], 1);
     param.fontSize          = getParamNumber(['FontSize', 'フォントサイズ'], 12);
     param.closeEventRunning = getParamBoolean(['CloseEventRunning', 'イベント中は閉じる']);
+    param.showingInMenu     = getParamBoolean(['ShowingInMenu', 'メニュー画面に表示']);
 
     var pluginCommandMap = new Map();
     setPluginCommand('目標設定', 'execSetDestination');
@@ -207,17 +206,17 @@
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
         if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertAllArguments(args));
+            this[pluginCommandMethod](args);
         }
     };
 
     Game_Interpreter.prototype.execSetDestination = function(args) {
-        $gameSystem.setDestination(args[0]);
+        $gameSystem.setDestination(concatAllArguments(args));
     };
 
     //=============================================================================
     // Game_System
-    //  現在値
+    //  目標テキストを追加定義します。
     //=============================================================================
     Game_System.prototype.setDestination = function(value) {
         this._destinationText = value;
@@ -229,7 +228,7 @@
 
     //=============================================================================
     // Scene_Map
-    //  プラグインコマンドを追加定義します。
+    //  行動目標ウィンドウを生成します。
     //=============================================================================
     var _Scene_Map_createMapNameWindow      = Scene_Map.prototype.createMapNameWindow;
     Scene_Map.prototype.createMapNameWindow = function() {
@@ -238,13 +237,40 @@
     };
 
     Scene_Map.prototype.createDestinationWindow = function() {
-        this._destinationWindow = new Window_Destination();
+        this._destinationWindow = new Window_Destination(param.windowX, param.windowY, param.windowWidth);
         this.addChild(this._destinationWindow);
     };
 
     //=============================================================================
+    // Scene_Menu
+    //  メニュー画面にも表示できるようにします。
+    //=============================================================================
+    var _Scene_Menu_create      = Scene_Menu.prototype.create;
+    Scene_Menu.prototype.create = function() {
+        _Scene_Menu_create.apply(this, arguments);
+        if (param.showingInMenu) {
+            this.createDestinationWindow();
+        }
+    };
+
+    Scene_Menu.prototype.createDestinationWindow = function() {
+        var y, width, height;
+        if (this._commandWindow.maxCols() === 1) {
+            y      = this._commandWindow.y + this._commandWindow.height;
+            width  = this._commandWindow.width;
+            height = null;
+        } else {
+            y      = this._goldWindow.y;
+            width  = param.windowWidth;
+            height = this._goldWindow.height;
+        }
+        this._destinationWindow = new Window_Destination(0, y, width, height);
+        this.addWindow(this._destinationWindow);
+    };
+
+    //=============================================================================
     // Window_Destination
-    //  行動目標ウィンドウ
+    //  行動目標ウィンドウです。
     //=============================================================================
     function Window_Destination() {
         this.initialize.apply(this, arguments);
@@ -253,8 +279,8 @@
     Window_Destination.prototype             = Object.create(Window_Base.prototype);
     Window_Destination.prototype.constructor = Window_Destination;
 
-    Window_Destination.prototype.initialize = function() {
-        Window_Base.prototype.initialize.call(this, param.windowX, param.windowY, param.windowWidth, this.fittingHeight(1));
+    Window_Destination.prototype.initialize = function(x, y, width, height) {
+        Window_Base.prototype.initialize.call(this, x, y, width, height || this.fittingHeight(1));
         this._text     = '';
         this._prevText = '';
         this.update();
@@ -304,11 +330,11 @@
     Window_Destination.prototype.updateText = function() {
         if (this._text === this._prevText) return;
         this._prevText = this._text;
-        this.drawTextEx(this._text, 0, 0);
+        this.drawTextEx(this._text, 0, this.contentsHeight() / 2 - this.contents.fontSize / 2 - 4);
     };
 
     Window_Destination.prototype.setOpacity = function(value) {
-        this.opacity = value;
+        this.opacity         = value;
         this.contentsOpacity = value;
     };
 
