@@ -194,6 +194,10 @@
  * プラグイン管理画面で当プラグインをYEP_MessageCore.jsより
  * 下に配置してください。
  *
+ * また、FTKR_ExMessageWindow2.jsの複数メッセージウィンドウ表示と
+ * 併せて使用する場合は、プラグイン管理画面で当プラグインを
+ * FTKR_ExMessageWindow2.jsより下に配置してください。
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
@@ -1110,7 +1114,7 @@
     //=============================================================================
     // FTKR_ExMessageWindow2.js の修正
     //=============================================================================
-    if (Imported.FTKR_EMW) {
+    if (typeof Imported !== 'undefined' && Imported.FTKR_EMW) {
 
         var _EMW_Game_System_initialize = Game_System.prototype.initialize;
         Game_System.prototype.initialize = function() {
