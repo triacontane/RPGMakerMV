@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/05/02 使用可能なスキルの中からランダムで使用する機能を追加
 // 1.1.0 2016/11/12 裏切り機能と味方対象スキルの対象を反転させる機能を追加
 // 1.0.0 2016/08/13 初版
 // ----------------------------------------------------------------------------
@@ -18,10 +19,15 @@
  * @plugindesc Confusion Extend Plugin
  * @author triacontane
  *
+ * @param TargetFriendSkill
+ * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。
+ * @default OFF
+ *
  * @help 混乱系（行動制約のプルダウンの選択値が「1」～「3」）ステートの
- * 指定内容を拡張し、通常攻撃ではなくスキル（複数指定可能）を指定したり
- * さらにそれらのスキルがすべて使用できない場合に使用する予備スキルも
- * 指定できます。
+ * 指定内容を以下の通り拡張します。
+ * ・通常攻撃ではなく指定したスキル（複数指定可能）を勝手に使用する。
+ * ・スキルが全て使用できない場合に使用する予備スキルも指定可能。
+ * ・バトラーが元々持っているスキルを勝手に使用する。
  *
  * 誰をターゲットにするかは、ステートの行動制約の種類と使用スキルの効果範囲
  * およびメモ欄で設定した値によって決まります。
@@ -45,13 +51,14 @@
  * ・味方を攻撃
  *
  * 2. ステートのメモ欄を以下の通り指定してください。
- * <CEスキル1:3>    # 通常攻撃の代わりにID[3..5]のスキルが使用されます。
- * <CEスキル2:4>    # 4番目以降も同様に指定可能です。
- * <CEスキル3:5>    #
- * <CE予備スキル:6> # 指定されたスキルがMP不足等の理由ですべて
- *                    使用できない場合、ID[6]のスキルが使用されます。
- * <CEターゲット:0> # 単体スキルの対象を[0]番目のキャラクターに指定します。
- *                    メモ欄の指定がない場合はランダムで決定されます。
+ * <CEスキル1:3>      # 通常攻撃の代わりにID[3..5]のスキルが使用されます。
+ * <CEスキル2:4>      # 4番目以降も同様に指定可能です。
+ * <CEスキル3:5>      #
+ * <CE使用可能スキル> # 使用可能なスキルが全て候補になります。
+ * <CE予備スキル:6>   # 指定されたスキルがMP不足等の理由ですべて
+ *                      使用できない場合、ID[6]のスキルが使用されます。
+ * <CEターゲット:0>   # 単体スキルの対象を[0]番目のキャラクターに指定します。
+ *                      メモ欄の指定がない場合はランダムで決定されます。
  *
  * ・追加機能
  * 裏切り機能を有効にすると対象のステートが有効になっているバトラーが
@@ -69,7 +76,7 @@
  * @author トリアコンタン
  *
  * @param 味方対象スキルの対象
- * @desc ONにすると行動制約が「味方を攻撃」の場合に味方対象のスキルを使用すると、敵を対象にします。
+ * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。
  * @default OFF
  *
  * @help 混乱系（行動制約のプルダウンの選択値が「1」～「3」）ステートの
@@ -99,13 +106,14 @@
  * ・味方を攻撃
  *
  * 2. ステートのメモ欄を以下の通り指定してください。
- * <CEスキル1:3>    # 通常攻撃の代わりにID[3..5]のスキルが使用されます。
- * <CEスキル2:4>    # 4番目以降も同様に指定可能です。
- * <CEスキル3:5>    #
- * <CE予備スキル:6> # 指定されたスキルがMP不足等の理由ですべて
- *                    使用できない場合、ID[6]のスキルが使用されます。
- * <CEターゲット:0> # 単体スキルの対象を[0]番目のキャラクターに指定します。
- *                    メモ欄の指定がない場合はランダムで決定されます。
+ * <CEスキル1:3>      # 通常攻撃の代わりにID[3..5]のスキルが使用されます。
+ * <CEスキル2:4>      # 4番目以降も同様に指定可能です。
+ * <CEスキル3:5>      #
+ * <CE使用可能スキル> # 使用可能なスキルが全て候補になります。
+ * <CE予備スキル:6>   # 指定されたスキルがMP不足等の理由ですべて
+ *                      使用できない場合、ID[6]のスキルが使用されます。
+ * <CEターゲット:0>   # 単体スキルの対象を[0]番目のキャラクターに指定します。
+ *                      メモ欄の指定がない場合はランダムで決定されます。
  *
  * ・追加機能
  * 裏切り機能を有効にすると対象のステートが有効になっているバトラーが
@@ -200,6 +208,34 @@
         });
     };
 
+    Game_BattlerBase.prototype.getUsableSkillIdList = function() {
+        return [this.attackSkillId(), this.guardSkillId()];
+    };
+
+    //=============================================================================
+    // Game_Actor
+    //  使用可能なスキル一覧を取得します。
+    //=============================================================================
+    Game_Actor.prototype.getUsableSkillIdList = function() {
+        var skillIds = this.usableSkills().map(function(skill) {
+            return skill.id;
+        });
+        return Game_BattlerBase.prototype.getUsableSkillIdList.call(this).concat(skillIds);
+    };
+
+    //=============================================================================
+    // Game_Enemy
+    //  使用可能なスキル一覧を取得します。
+    //=============================================================================
+    Game_Enemy.prototype.getUsableSkillIdList = function() {
+        var actionList = this.enemy().actions.filter(function(a) {
+            return this.isActionValid(a);
+        }, this);
+        return actionList.map(function(action) {
+            return action.skillId;
+        });
+    };
+
     //=============================================================================
     // Game_Unit
     //  裏切り機能を追加します。
@@ -236,15 +272,23 @@
         if (!state) return null;
         var skillIds = [], i = 1;
         while (i) {
-            var value = getMetaValues(state, ['スキル' + i, 'Skill' + i]);
-            if (value) {
-                skillIds.push(getArgNumber(value, 1));
+            var metaValue = getMetaValues(state, ['スキル' + i, 'Skill' + i]);
+            if (metaValue) {
+                skillIds.push(getArgNumber(metaValue, 1));
                 i++;
             } else {
                 i = (i > 10 ? null : i + 1);
             }
         }
-        return skillIds;
+        return skillIds.concat(this.getConfusionUsableSkills(state));
+    };
+
+    Game_Action.prototype.getConfusionUsableSkills = function(state) {
+        var metaValue = getMetaValues(state, ['使用可能スキル', 'UsableSkill']);
+        if (metaValue) {
+            this.subject().getUsableSkillIdList();
+        }
+        return metaValue ? this.subject().getUsableSkillIdList() : [];
     };
 
     Game_Action.prototype.getRestrictState = function() {
