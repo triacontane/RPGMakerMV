@@ -56,7 +56,7 @@
         if (!this._messageCommonEvents) {
             this._messageCommonEvents = [];
         }
-        var interpreter = new Game_Interpreter(0);
+        var interpreter = new Game_Interpreter();
         interpreter.setup($dataCommonEvents[id].list);
         this._messageCommonEvents.push(interpreter);
     };
