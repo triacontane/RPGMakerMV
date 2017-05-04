@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/05/04 1.1.0で<EICScript:s>タグが正しく機能しない場合がある問題を修正
 // 1.1.0 2017/05/04 ウィンドウを表示中にリフレッシュする機能を追加
 // 1.0.1 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.0.0 2016/09/16 初版
@@ -163,7 +164,7 @@
     };
 
     Window_EventItem.prototype.isOkEventItemScript = function(item) {
-        var metaValue = getMetaValues(item, ['スクリプト', 'RefreshSwitchId']);
+        var metaValue = getMetaValues(item, ['スクリプト', 'Script']);
         if (metaValue) {
             this._existCondition = true;
             return eval(getArgString(metaValue));
