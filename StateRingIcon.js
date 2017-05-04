@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/05/04 ステートおよびバフの残りターン数を表示する機能を追加
 // 1.1.0 2017/02/28 ステートアイコンを横に並べる機能を追加。ステート数によって演出を分けることもできます。
 // 1.0.0 2016/08/08 初版
 // ----------------------------------------------------------------------------
@@ -38,6 +39,18 @@
  * @desc 回転方向が反時計回りになります。(Default:OFF)
  * @default OFF
  *
+ * @param ShowTurnCount
+ * @desc ステートの残りターン数を表示します。
+ * @default ON
+ *
+ * @param TurnCountX
+ * @desc ターン数のX座標表示位置を調整します。デフォルトはアイコンの右下になります。
+ * @default 0
+ *
+ * @param TurnCountY
+ * @desc ターン数のY座標表示位置を調整します。デフォルトはアイコンの右下になります。
+ * @default 0
+ *
  * @help 敵キャラのステートが複数有効になった場合の
  * ステートアイコンを時計回りに回転させてリングで表現します。
  *
@@ -68,6 +81,18 @@
  * @param 反時計回り
  * @desc 回転方向が反時計回りになります。(Default:OFF)
  * @default OFF
+ *
+ * @param ターン数表示
+ * @desc ステートの残りターン数を表示します。
+ * @default ON
+ *
+ * @param ターン数X座標
+ * @desc ターン数のX座標表示位置を調整します。デフォルトはアイコンの右下になります。
+ * @default 0
+ *
+ * @param ターン数Y座標
+ * @desc ターン数のY座標表示位置を調整します。デフォルトはアイコンの右下になります。
+ * @default 0
  *
  * @help 敵キャラのステートが複数有効になった場合の
  * ステートアイコンを時計回りに回転させてリングで表現します。
@@ -113,6 +138,38 @@
     var paramCycleDuration = getParamNumber(['CycleDuration', '周期'], 0);
     var paramReverse       = getParamBoolean(['Reverse', '反時計回り']);
     var paramLineViewLimit = getParamNumber(['LineViewLimit', '一列配置上限'], 0);
+    var paramShowTurnCount = getParamBoolean(['ShowTurnCount', 'ターン数表示']);
+    var paramTurnCountX    = getParamNumber(['TurnCountX', 'ターン数X座標']);
+    var paramTurnCountY    = getParamNumber(['TurnCountY', 'ターン数Y座標']);
+
+    //=============================================================================
+    // Game_BattlerBase
+    //  ステートの残りターン数を取得します。
+    //=============================================================================
+    Game_BattlerBase.prototype.stateTurns = function() {
+        var stateTurns = this.states().map(function(state) {
+            if (state.iconIndex <= 0) {
+                return null;
+            } else if (state.autoRemovalTiming <= 0) {
+                return -1;
+            } else {
+                return this._stateTurns[state.id];
+            }
+        }, this);
+        return stateTurns.filter(function(turns) {
+            return turns !== null;
+        });
+    };
+
+    Game_BattlerBase.prototype.buffTurns = function() {
+        return this._buffTurns.filter(function(turns, index) {
+            return this._buffs[index] !== 0;
+        }, this);
+    };
+
+    Game_BattlerBase.prototype.allTurns = function() {
+        return this.stateTurns().concat(this.buffTurns());
+    };
 
     //=============================================================================
     // Sprite_StateIcon
@@ -148,6 +205,9 @@
         } else {
             this.updateNormalPosition();
         }
+        if (paramShowTurnCount) {
+            this.updateIconTurns();
+        }
         this._sortChildren();
     };
 
@@ -160,6 +220,13 @@
     Sprite_StateIcon.prototype.updateNormalPosition = function() {
         this._iconsSprites.forEach(function(sprite, index) {
             sprite.setNormalPosition(index, this._iconsSprites.length);
+        }, this);
+    };
+
+    Sprite_StateIcon.prototype.updateIconTurns = function() {
+        var turns = this._battler.allTurns();
+        this._icons.forEach(function(icon, index) {
+            this._iconsSprites[index].setIconTurn(turns[index]);
         }, this);
     };
 
@@ -221,7 +288,9 @@
 
     Sprite_StateIconChild.prototype.initialize = function() {
         Sprite_StateIcon.prototype.initialize.call(this);
-        this.visible = false;
+        this.visible     = false;
+        this._turnSprite = null;
+        this._turn       = 0;
     };
 
     Sprite_StateIconChild.prototype.update = function() {};
@@ -229,6 +298,32 @@
     Sprite_StateIconChild.prototype.setIconIndex = function(index) {
         this._iconIndex = index;
         this.updateFrame();
+    };
+
+    Sprite_StateIconChild.prototype.setIconTurn = function(turn) {
+        this.makeTurnSpriteIfNeed();
+        if (this._turn === turn) return;
+        this._turn = turn;
+        this.refreshIconTurn();
+    };
+
+    Sprite_StateIconChild.prototype.refreshIconTurn = function() {
+        var bitmap = this._turnSprite.bitmap;
+        bitmap.clear();
+        if (this._turn !== -1) {
+            bitmap.drawText(this._turn, 0, 0, bitmap.width, bitmap.height, 'center');
+        }
+    };
+
+    Sprite_StateIconChild.prototype.makeTurnSpriteIfNeed = function() {
+        if (this._turnSprite) return;
+        var sprite             = new Sprite();
+        sprite.bitmap          = new Bitmap(Sprite_StateIcon._iconWidth, Sprite_StateIcon._iconHeight);
+        sprite.bitmap.fontSize = 32;
+        sprite.x               = paramTurnCountX;
+        sprite.y               = paramTurnCountY;
+        this._turnSprite       = sprite;
+        this.addChild(this._turnSprite);
     };
 
     Sprite_StateIconChild.prototype.setRingPosition = function(radian) {
