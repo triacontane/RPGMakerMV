@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/05/05 味方の残りターン数も表示する機能を追加
 // 1.2.1 2017/05/05 1.2.0の機能でプラグイン等の機能により残りターン数が小数になった場合に切り上げする仕様を追加
 // 1.2.0 2017/05/04 ステートおよびバフの残りターン数を表示する機能を追加
 // 1.1.0 2017/02/28 ステートアイコンを横に並べる機能を追加。ステート数によって演出を分けることもできます。
@@ -52,6 +53,10 @@
  * @desc ターン数のY座標表示位置を調整します。デフォルトはアイコンの右下になります。
  * @default 0
  *
+ * @param ShowActorTurnCount
+ * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
+ * @default ON
+ *
  * @help 敵キャラのステートが複数有効になった場合の
  * ステートアイコンを時計回りに回転させてリングで表現します。
  *
@@ -95,6 +100,10 @@
  * @desc ターン数のY座標表示位置を調整します。デフォルトはアイコンの右下になります。
  * @default 0
  *
+ * @param 味方ターン数表示
+ * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
+ * @default ON
+ *
  * @help 敵キャラのステートが複数有効になった場合の
  * ステートアイコンを時計回りに回転させてリングで表現します。
  *
@@ -134,14 +143,15 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramRadiusX       = getParamNumber(['RadiusX', 'X半径'], 0);
-    var paramRadiusY       = getParamNumber(['RadiusY', 'Y半径'], 0);
-    var paramCycleDuration = getParamNumber(['CycleDuration', '周期'], 0);
-    var paramReverse       = getParamBoolean(['Reverse', '反時計回り']);
-    var paramLineViewLimit = getParamNumber(['LineViewLimit', '一列配置上限'], 0);
-    var paramShowTurnCount = getParamBoolean(['ShowTurnCount', 'ターン数表示']);
-    var paramTurnCountX    = getParamNumber(['TurnCountX', 'ターン数X座標']);
-    var paramTurnCountY    = getParamNumber(['TurnCountY', 'ターン数Y座標']);
+    var paramRadiusX            = getParamNumber(['RadiusX', 'X半径'], 0);
+    var paramRadiusY            = getParamNumber(['RadiusY', 'Y半径'], 0);
+    var paramCycleDuration      = getParamNumber(['CycleDuration', '周期'], 0);
+    var paramReverse            = getParamBoolean(['Reverse', '反時計回り']);
+    var paramLineViewLimit      = getParamNumber(['LineViewLimit', '一列配置上限'], 0);
+    var paramShowTurnCount      = getParamBoolean(['ShowTurnCount', 'ターン数表示']);
+    var paramTurnCountX         = getParamNumber(['TurnCountX', 'ターン数X座標']);
+    var paramTurnCountY         = getParamNumber(['TurnCountY', 'ターン数Y座標']);
+    var paramShowActorTurnCount = getParamBoolean(['ShowActorTurnCount', '味方ターン数表示']);
 
     //=============================================================================
     // Game_BattlerBase
@@ -152,9 +162,9 @@
             if (state.iconIndex <= 0) {
                 return null;
             } else if (state.autoRemovalTiming <= 0) {
-                return -1;
+                return '';
             } else {
-                return this._stateTurns[state.id];
+                return Math.ceil(this._stateTurns[state.id]);
             }
         }, this);
         return stateTurns.filter(function(turns) {
@@ -227,7 +237,7 @@
     Sprite_StateIcon.prototype.updateTurns = function() {
         var turns = this._battler.allTurns();
         this._icons.forEach(function(icon, index) {
-            this._iconsSprites[index].setIconTurn(Math.ceil(turns[index]));
+            this._iconsSprites[index].setIconTurn(turns[index]);
         }, this);
     };
 
@@ -311,9 +321,7 @@
     Sprite_StateIconChild.prototype.refreshIconTurn = function() {
         var bitmap = this._turnSprite.bitmap;
         bitmap.clear();
-        if (this._turn !== -1) {
-            bitmap.drawText(this._turn, 0, 0, bitmap.width, bitmap.height, 'center');
-        }
+        bitmap.drawText(this._turn, 0, 0, bitmap.width, bitmap.height, 'center');
     };
 
     Sprite_StateIconChild.prototype.makeTurnSpriteIfNeed = function() {
@@ -338,5 +346,34 @@
         this.y       = 0;
         this.visible = true;
     };
+
+    //=============================================================================
+    // Window_BattleStatus
+    //  味方の残りターン数を表示します。
+    //=============================================================================
+    if (paramShowActorTurnCount) {
+        var _Window_BattleStatus_drawActorIcons      = Window_BattleStatus.prototype.drawActorIcons;
+        Window_BattleStatus.prototype.drawActorIcons = function(actor, x, y, width) {
+            this._drawIconCount = 0;
+            _Window_BattleStatus_drawActorIcons.apply(this, arguments);
+            this.drawActorIconsTurn(actor, x, y);
+        };
+
+        Window_BattleStatus.prototype.drawActorIconsTurn = function(actor, x, y) {
+            var turns = actor.allTurns();
+            for (var i = 0; i < this._drawIconCount; i++) {
+                this.drawText(turns[i], x + Window_Base._iconWidth * i, y + 2, Window_Base._iconWidth, 'right');
+            }
+            this._drawIconCount = undefined;
+        };
+
+        var _Window_BattleStatus_drawIcon      = Window_BattleStatus.prototype.drawIcon;
+        Window_BattleStatus.prototype.drawIcon = function(iconIndex, x, y) {
+            _Window_BattleStatus_drawIcon.apply(this, arguments);
+            if (this._drawIconCount !== undefined) {
+                this._drawIconCount++;
+            }
+        };
+    }
 })();
 
