@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/05/05 スキップ中はメッセージのウェイトを無視するよう修正
 // 1.2.0 2017/04/29 並列実行のイベントでも通常イベントが実行中でなければスキップを解除するよう修正
 //                  キーコードの「右」と「上」が逆になっていた問題を修正
 //                  オート待機フレームを制御文字を使って動的に変更できる機能を追加
@@ -253,6 +254,9 @@
     var _Window_Message_updateWait = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
         this.updateSkipAuto();
+        if (this.messageSkip()) {
+            this._waitCount = 0;
+        }
         return _Window_Message_updateWait.apply(this, arguments);
     };
 
