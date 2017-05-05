@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/05/05 1.2.0の機能でプラグイン等の機能により残りターン数が小数になった場合に切り上げする仕様を追加
 // 1.2.0 2017/05/04 ステートおよびバフの残りターン数を表示する機能を追加
 // 1.1.0 2017/02/28 ステートアイコンを横に並べる機能を追加。ステート数によって演出を分けることもできます。
 // 1.0.0 2016/08/08 初版
@@ -206,7 +207,7 @@
             this.updateNormalPosition();
         }
         if (paramShowTurnCount) {
-            this.updateIconTurns();
+            this.updateTurns();
         }
         this._sortChildren();
     };
@@ -223,10 +224,10 @@
         }, this);
     };
 
-    Sprite_StateIcon.prototype.updateIconTurns = function() {
+    Sprite_StateIcon.prototype.updateTurns = function() {
         var turns = this._battler.allTurns();
         this._icons.forEach(function(icon, index) {
-            this._iconsSprites[index].setIconTurn(turns[index]);
+            this._iconsSprites[index].setIconTurn(Math.ceil(turns[index]));
         }, this);
     };
 
