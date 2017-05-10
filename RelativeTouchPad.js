@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/05/10 乗り物中にダッシュが有効になっていた現象を修正
 // 1.1.0 2017/03/01 数値入力ウィンドウのボタンを常に表示するよう変更
 //                  ダッシュ禁止の場合はダッシュできないよう変更
 // 1.0.3 2016/04/29 createUpperLayerによる競合対策
@@ -228,7 +229,7 @@ Game_Relative_Pad.distanceFar          = 144;
     var _Game_Player_updateDashing = Game_Player.prototype.updateDashing;
     Game_Player.prototype.updateDashing = function() {
         _Game_Player_updateDashing.apply(this, arguments);
-        if (this.getMovePad().isActive() && !$gameMap.isDashDisabled()) {
+        if (this.getMovePad().isActive() && !$gameMap.isDashDisabled() && !this.isInVehicle()) {
             this._dashing = this.getMovePad().isDistanceFar() || ConfigManager.alwaysDash;
         }
     };
