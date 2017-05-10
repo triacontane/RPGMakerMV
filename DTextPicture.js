@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.4 2017/05/10 プラグインを未適用のデータを読み込んだとき、最初の一回のみ動的文字列ピクチャが作成されない問題を修正
 // 1.8.3 2017/04/19 自動翻訳プラグインに一部対応
 // 1.8.2 2017/04/05 ピクチャの消去時にエラーが発生していた問題を修正
 // 1.8.1 2017/03/30 拡大率と原点に対応していなかった問題を修正
@@ -304,8 +305,8 @@
     Game_Screen.prototype.getDTextPictureInfo = function() {
         return {
             value         : this.dTextValue,
-            size          : this.dTextSize,
-            align         : this.dTextAlign,
+            size          : this.dTextSize || 0,
+            align         : this.dTextAlign || 0,
             color         : this.dTextBackColor,
             font          : this.dTextFont,
             usingVariables: this.dUsingVariables,
