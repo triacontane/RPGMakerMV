@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/05/04 イベント「スクリプト」で発生したエラーを無視できる機能を追加
 // 1.2.0 2017/03/13 イベント「スクリプト」でエラーが起きたら、発生箇所をログ出力してステップ実行を開始する機能を追加
 //                  Ctrlキーを押している間はステップ実行を行わないようにする機能を追加
 // 1.1.0 2017/01/27 自動ブレークポイント機能を追加
@@ -67,8 +68,8 @@
  * @default F6
  *
  * @param ScriptDebug
- * @desc イベントコマンドの「スクリプト」でエラーが発生した際に、ゲームを中断せずその場でステップ実行を開始します。
- * @default ON
+ * @desc イベントコマンドの「スクリプト」でエラーが発生した際の動作を設定します。0:エラー(通常通り) 1:ステップ実行 2:無視
+ * @default 1
  *
  * @param DisableDebugCtrlKey
  * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
@@ -168,8 +169,8 @@
  * @default F6
  *
  * @param スクリプトデバッグ
- * @desc イベントコマンドの「スクリプト」でエラーが発生した際に、ゲームを中断せずその場でステップ実行を開始します。
- * @default ON
+ * @desc イベントコマンドの「スクリプト」でエラーが発生した際の動作を設定します。0:エラー(通常通り) 1:ステップ実行 2:無視
+ * @default 1
  *
  * @param CTRLで無効化
  * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
@@ -314,7 +315,7 @@ function DebugManager() {
     param.suppressFunc        = getParamBoolean(['SuppressFunc', '機能キー抑制']);
     param.okHandler           = getParamString(['OkHandler', 'OK動作']);
     param.cancelHandler       = getParamString(['CancelHandler', 'キャンセル動作']);
-    param.scriptDebug         = getParamBoolean(['ScriptDebug', 'スクリプトデバッグ']);
+    param.scriptDebug         = getParamNumber(['ScriptDebug', 'スクリプトデバッグ'], 0, 2);
     param.disableDebugCtrlKey = getParamBoolean(['DisableDebugCtrlKey', 'CTRLで無効化']);
 
     const pluginCommandMap = new Map([
@@ -887,10 +888,10 @@ function DebugManager() {
             console.log(`Error Script       : ${script}`);
             console.log(`Error Process Id   : ${this.getProcessNumber()}`);
             console.log(`Error Process Name : ${this.getProcessName()}`);
-            if (param.scriptDebug) {
-                console.error(e.stack);
+            console.error(e.stack);
+            if (param.scriptDebug === 1) {
                 this.enableStepExecute();
-            } else {
+            } else if (param.scriptDebug === 0) {
                 throw e;
             }
         }
