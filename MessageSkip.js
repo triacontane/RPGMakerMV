@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/05/13 アイコンの量を増やしたときにオートとスキップのアイコンが正常に表示されない問題を修正
 // 1.3.0 2017/05/05 スキップ中はメッセージのウェイトを無視するよう修正
 // 1.2.0 2017/04/29 並列実行のイベントでも通常イベントが実行中でなければスキップを解除するよう修正
 //                  キーコードの「右」と「上」が逆になっていた問題を修正
@@ -63,11 +64,11 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(function() {
     'use strict';
     var pluginName = 'MessageSkip';
 
-    var getParamString = function (paramNames, upperFlg) {
+    var getParamString = function(paramNames, upperFlg) {
         var value = getParamOther(paramNames);
         return value == null ? '' : upperFlg ? value.toUpperCase() : value;
     };
@@ -84,7 +85,7 @@
         return (value || '').toUpperCase() === 'ON';
     };
 
-    var getParamOther = function (paramNames) {
+    var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
             var name = PluginManager.parameters(pluginName)[paramNames[i]];
@@ -103,18 +104,18 @@
         return String(args) !== args;
     };
 
-    Number.prototype.times = function (handler) {
+    Number.prototype.times = function(handler) {
         var i = 0;
         while (i < this) handler.call(this, i++);
     };
 
     Input.keyCodeReverseMapper = {
-        a : 65, b : 66, c : 67, d : 68, e : 69, f : 70, g : 71,
-        h : 72, i : 73, j : 74, k : 75, l : 76, m : 77, n : 78,
-        o : 79, p : 80, q : 81, r : 82, s : 83, t : 84, u : 85,
-        v : 86, w : 87, x : 88, y : 89, z : 90,
-        backspace : 8, tab : 9, enter : 13, shift : 16, ctrl : 17, alt : 18, pause : 19, esc : 27, space : 32,
-        page_up : 33, page_down : 34, end : 35, home : 36, left : 37, right : 39, up : 38, down : 40, insert : 45, delete : 46
+        a        : 65, b: 66, c: 67, d: 68, e: 69, f: 70, g: 71,
+        h        : 72, i: 73, j: 74, k: 75, l: 76, m: 77, n: 78,
+        o        : 79, p: 80, q: 81, r: 82, s: 83, t: 84, u: 85,
+        v        : 86, w: 87, x: 88, y: 89, z: 90,
+        backspace: 8, tab: 9, enter: 13, shift: 16, ctrl: 17, alt: 18, pause: 19, esc: 27, space: 32,
+        page_up  : 33, page_down: 34, end: 35, home: 36, left: 37, right: 39, up: 38, down: 40, insert: 45, delete: 46
     };
     (9).times(function(i) {
         Input.keyCodeReverseMapper[i] = i + 48;
@@ -146,7 +147,7 @@
     // Game_Message
     //  メッセージスキップ情報を保持します。
     //=============================================================================
-    var _Game_Message_initialize = Game_Message.prototype.initialize;
+    var _Game_Message_initialize      = Game_Message.prototype.initialize;
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.apply(this, arguments);
         this.clearSkipInfo();
@@ -191,7 +192,7 @@
     // Game_Interpreter
     //  マップイベント終了時にメッセージスキップフラグを初期化します。
     //=============================================================================
-    var _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
+    var _Game_Interpreter_terminate      = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
         if (this.isNeedClearSkip()) {
@@ -215,22 +216,22 @@
     // Window_Message
     //  メッセージスキップ状態を描画します。
     //=============================================================================
-    var _Window_Message_initialize = Window_Message.prototype.initialize;
+    var _Window_Message_initialize      = Window_Message.prototype.initialize;
     Window_Message.prototype.initialize = function() {
         _Window_Message_initialize.apply(this, arguments);
-        this._icon = new Sprite_Frame(16, 20, ImageManager.loadSystem('IconSet'), -1);
-        this._icon.x = this.width  - this._icon.width;
+        this._icon   = new Sprite_Frame(ImageManager.loadSystem('IconSet'), -1);
+        this._icon.x = this.width - this._icon.width;
         this._icon.y = this.height - this._icon.height;
         this.addChild(this._icon);
     };
 
-    var _Window_Message_startMessage = Window_Message.prototype.startMessage;
+    var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
         this._messageAutoCount = parseInt(convertEscapeCharacters(getParamString('オート待機フレーム', 1)));
     };
 
-    var _Window_Message_update = Window_Message.prototype.update;
+    var _Window_Message_update      = Window_Message.prototype.update;
     Window_Message.prototype.update = function() {
         this.updateAutoIcon();
         return _Window_Message_update.apply(this, arguments);
@@ -240,18 +241,18 @@
         if (this.messageSkip() && this.openness === 255) {
             this._icon.refresh(getParamNumber('スキップアイコン'));
             this._icon.flashSpeed = 16;
-            this._icon.flash = true;
+            this._icon.flash      = true;
         } else if (this.messageAuto() && this.openness === 255) {
             this._icon.refresh(getParamNumber('オートアイコン'));
             this._icon.flashSpeed = 2;
-            this._icon.flash = true;
+            this._icon.flash      = true;
         } else {
             this._icon.refresh(0);
             this._icon.flash = false;
         }
     };
 
-    var _Window_Message_updateWait = Window_Message.prototype.updateWait;
+    var _Window_Message_updateWait      = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
         this.updateSkipAuto();
         if (this.messageSkip()) {
@@ -278,7 +279,7 @@
         return $gameMessage.skipFlg();
     };
 
-    var _Window_Message_updateInput = Window_Message.prototype.updateInput;
+    var _Window_Message_updateInput      = Window_Message.prototype.updateInput;
     Window_Message.prototype.updateInput = function() {
         if (this.messageAuto() && this._messageAutoCount > 0 && this.visible) this._messageAutoCount--;
         return _Window_Message_updateInput.apply(this, arguments);
@@ -292,13 +293,13 @@
         return Input.isTriggered('messageAuto') || Input.isTriggered(autoKeyName);
     };
 
-    var _Window_Message_isTriggered = Window_Message.prototype.isTriggered;
+    var _Window_Message_isTriggered      = Window_Message.prototype.isTriggered;
     Window_Message.prototype.isTriggered = function() {
         return _Window_Message_isTriggered.apply(this, arguments) || this.messageSkip() ||
             (this.messageAuto() && this._messageAutoCount <= 0);
     };
 
-    var _Window_Message_startPause = Window_Message.prototype.startPause;
+    var _Window_Message_startPause      = Window_Message.prototype.startPause;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
         if (this.messageSkip()) this.startWait(2);
@@ -312,26 +313,28 @@
         this.initialize.apply(this, arguments);
     }
 
-    Sprite_Frame.prototype = Object.create(Sprite.prototype);
+    Sprite_Frame.prototype             = Object.create(Sprite.prototype);
     Sprite_Frame.prototype.constructor = Sprite_Frame;
 
-    Sprite_Frame.prototype.initialize = function(column, row, bitmap, index) {
+    Sprite_Frame.prototype.initialize = function(bitmap, index) {
         Sprite.prototype.initialize.call(this);
-        this._column = column;
-        this._row = row;
-        this.bitmap = bitmap;
-        this.anchor.x = 0.5;
-        this.anchor.y = 0.5;
-        this.flash = false;
-        this.flashSpeed = 2;
+        bitmap.addLoadListener(function() {
+            this._column = Math.floor(bitmap.width / Window_Base._iconWidth);
+            this._row    = Math.floor(bitmap.height / Window_Base._iconHeight);
+        }.bind(this));
+        this.bitmap      = bitmap;
+        this.anchor.x    = 0.5;
+        this.anchor.y    = 0.5;
+        this.flash       = false;
+        this.flashSpeed  = 2;
         this._flashAlpha = 0;
         this.refresh(index ? index : 0);
     };
 
     Sprite_Frame.prototype.refresh = function(index) {
         if (!this.bitmap.isReady()) return;
-        var w = Math.floor(this.bitmap.width / this._column);
-        var h = Math.floor(this.bitmap.height / this._row);
+        var w = Window_Base._iconWidth;
+        var h = Window_Base._iconHeight;
         this.setFrame((index % this._column) * w, Math.floor(index / this._column) * h, w, h);
     };
 
