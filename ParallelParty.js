@@ -6,9 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/05/13 パーティ間でリソースを共有する設定を追加、各パーティのマップ座標を記憶して自働で場所移動する機能を追加
 // 1.0.0 2017/05/09 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -16,6 +17,14 @@
 /*:
  * @plugindesc ParallelPartyPlugin
  * @author triacontane
+ *
+ * @param ShareResource
+ * @desc 異なるパーティでもリソース(アイテム、武器、防具、お金、歩数)を共有します。(ON/OFF)
+ * @default OFF
+ *
+ * @param SavePosition
+ * @desc パーティを切り替えたときに元の位置を保存し、元のパーティに戻したときに自働で場所移動します。
+ * @default OFF
  *
  * @help 複数のパーティを同時に管理できます。
  * 各パーティは「パーティID」で管理され、初期状態のパーティIDは「0」です。
@@ -43,6 +52,14 @@
  * @plugindesc 並列パーティプラグイン
  * @author トリアコンタン
  *
+ * @param リソース共有
+ * @desc 異なるパーティでもリソース(アイテム、武器、防具、お金、歩数)を共有します。(ON/OFF)
+ * @default OFF
+ *
+ * @param パーティ位置を保持
+ * @desc パーティを切り替えたときに元の位置を保存し、元のパーティに戻したときに自働で場所移動します。
+ * @default OFF
+ *
  * @help 複数のパーティを同時に管理できます。
  * 各パーティは「パーティID」で管理され、初期状態のパーティIDは「0」です。
  * それぞれ所持金やアイテムが別々に管理され、プラグインコマンドで
@@ -53,7 +70,7 @@
  *
  * アクターの情報は共有しているので、他のパーティに加入しているアクターを
  * 別のパーティに入れた場合、状態を引き継ぎます。
- * 
+ *
  * 戦闘中のパーティの入れ替えはできません。
  *
  * プラグインコマンド詳細
@@ -75,12 +92,27 @@ function Game_Parties() {
 
 (function() {
     'use strict';
+    var pluginName    = 'ParallelParty';
     var metaTagPrefix = 'PP_';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
+    var getParamString = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return '';
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
+        return value.toUpperCase() === 'ON';
+    };
+
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
@@ -116,6 +148,13 @@ function Game_Parties() {
     setPluginCommand('CHANGE_PARTY', 'execChangeParty');
 
     //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var param           = {};
+    param.shareResource = getParamBoolean(['ShareResource', 'リソース共有']);
+    param.savePosition  = getParamBoolean(['SavePosition', 'パーティ位置を保持']);
+
+    //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
@@ -129,10 +168,13 @@ function Game_Parties() {
     };
 
     Game_Interpreter.prototype.execChangeParty = function(args) {
-        if (!$gameParty.inBattle()) {
-            $gameSystem.changeParty(getArgNumber(args[0], 0));
+        if ($gameParty.inBattle()) return;
+        $gameSystem.changeParty(getArgNumber(args[0], 0));
+        if (!$gamePlayer.isTransferring()) {
             $gamePlayer.refresh();
             $gameMap.requestRefresh();
+        } else {
+            this.setWaitMode('transfer');
         }
     };
 
@@ -148,26 +190,81 @@ function Game_Parties() {
     };
 
     //=============================================================================
+    // Game_Party
+    //  リソースの引き継ぎと位置の保存を追加定義します。
+    //=============================================================================
+    Game_Party.prototype.getAllResources = function() {
+        return {
+            items  : this._items,
+            weapons: this._weapons,
+            armors : this._armors,
+            gold   : this._gold,
+            steps  : this._steps
+        };
+    };
+
+    Game_Party.prototype.inheritAllResources = function(prevParty) {
+        var resources = prevParty.getAllResources();
+        this._items   = resources.items;
+        this._weapons = resources.weapons;
+        this._armors  = resources.armors;
+        this._gold    = resources.gold;
+        this._steps   = resources.steps;
+    };
+
+    Game_Party.prototype.moveSavedPosition = function() {
+        if (!this._savedMapId) return;
+        $gamePlayer.reserveTransfer(this._savedMapId, this._savedX, this._savedY, this._savedDirection, 2);
+    };
+
+    Game_Party.prototype.savePosition = function() {
+        this._savedMapId     = $gameMap.mapId();
+        this._savedX         = $gamePlayer.x;
+        this._savedY         = $gamePlayer.y;
+        this._savedDirection = $gamePlayer.direction();
+    };
+
+    //=============================================================================
     // Game_Parties
     //  複数のパーティを管理します。
     //=============================================================================
     Game_Parties.prototype.initialize = function() {
         this._data    = [$gameParty];
+        this._partyId = 0;
     };
 
-    Game_Parties.prototype.createPartyIfNeed = function(partyId) {
-        if (!this.isExistParty(partyId)) {
-            this._data[partyId] = new Game_Party();
+    Game_Parties.prototype.createPartyIfNeed = function() {
+        if (!this.isExistParty()) {
+            this._data[this._partyId] = new Game_Party();
         }
     };
 
-    Game_Parties.prototype.isExistParty = function(partyId) {
-        return !!this._data[partyId];
+    Game_Parties.prototype.isExistParty = function() {
+        return !!this.getCurrentParty();
+    };
+
+    Game_Parties.prototype.getCurrentParty = function() {
+        return this._data[this._partyId];
     };
 
     Game_Parties.prototype.change = function(partyId) {
-        this.createPartyIfNeed(partyId);
-        $gameParty = this._data[partyId];
+        if (this._partyId === partyId) return;
+        this._partyId = partyId;
+        this.createPartyIfNeed();
+        var currentParty = this.getCurrentParty();
+        if (param.shareResource) {
+            currentParty.inheritAllResources($gameParty);
+        }
+        if (param.savePosition) {
+            this.moveSavedPosition();
+        }
+        $gameParty = currentParty;
+    };
+
+    Game_Parties.prototype.moveSavedPosition = function() {
+        $gameParty.savePosition();
+        var currentParty = this.getCurrentParty();
+        currentParty.moveSavedPosition();
     };
 })();
 
