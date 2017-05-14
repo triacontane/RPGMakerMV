@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/05/14 デフォルトのオプションとゲーム終了コマンドを削除できる機能を追加
+//                  カンマ(,)を含むスクリプトを正しく実行できない問題を修正
 // 1.0.3 2017/04/09 サブコマンドマップから戻ってきたときにイベント位置を復元できるよう修正
 // 1.0.2 2017/04/08 サブコマンドマップから戻ってきたときにフォロワー位置を復元できるよう修正
 // 1.0.1 2017/04/08 サブコマンドマップから戻ってきたタイミングでセーブしたときにロード時の位置がサブコマンドマップに
@@ -73,6 +75,14 @@
  * @require 1
  * @dir img/system/
  * @type file
+ *
+ * @param HideOption
+ * @desc メインメニューからオプションを消去します。
+ * @default OFF
+ *
+ * @param HideGameEnd
+ * @desc メインメニューからゲーム終了を消去します。
+ * @default OFF
  *
  * @help メインメニュー画面に任意の名前のコマンドおよび
  * ツリー表示されるサブコマンドを追加できます。
@@ -176,6 +186,14 @@
  * @dir img/system/
  * @type file
  *
+ * @param オプション消去
+ * @desc メインメニューからオプションを消去します。
+ * @default OFF
+ *
+ * @param ゲーム終了消去
+ * @desc メインメニューからゲーム終了を消去します。
+ * @default OFF
+ *
  * @help メインメニュー画面に任意の名前のコマンドおよび
  * ツリー表示されるサブコマンドを追加できます。
  * サブコマンドを実行（決定）すると、任意のスクリプトが実行されるか、
@@ -249,13 +267,17 @@
     //=============================================================================
     // ユーザ設定領域　終了
     //=============================================================================
-
     var pluginName = 'MenuSubCommand';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
+        return value.toUpperCase() === 'ON';
+    };
+
     var getParamString = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (let i = 0; i < paramNames.length; i++) {
@@ -327,6 +349,8 @@
     param.subMenuWidth          = getParamNumber(['SubMenuWidth', 'サブメニュー横幅']);
     param.selectActorIdVariable = getParamNumber(['SelectActorIdVariable', '選択アクターID変数']);
     param.windowSkin            = getParamString(['WindowSkin', 'ウィンドウスキン']);
+    param.hideOption            = getParamBoolean(['HideOption', 'オプション消去']);
+    param.hideGameEnd           = getParamBoolean(['HideGameEnd', 'ゲーム終了消去']);
 
     //=============================================================================
     // Game_Temp
@@ -335,19 +359,23 @@
     var _Game_Temp_initialize      = Game_Temp.prototype.initialize;
     Game_Temp.prototype.initialize = function() {
         _Game_Temp_initialize.apply(this, arguments);
-        this.createMenuCommand();
+        this.createMenuCommands();
     };
 
-    Game_Temp.prototype.createMenuCommand = function() {
+    Game_Temp.prototype.createMenuCommands = function() {
         this._menuParentCommands = new Map();
         param.subCommands.forEach(function(commands) {
-            var parentName = commands[1];
-            if (!this._menuParentCommands.has(parentName)) {
-                this._menuParentCommands.set(parentName, []);
-            }
-            var parent = this._menuParentCommands.get(parentName);
-            parent.push(new Game_MenuSubCommand(commands));
-        }, this)
+            this.createMenuCommand(commands);
+        }, this);
+    };
+
+    Game_Temp.prototype.createMenuCommand = function(commands) {
+        var parentName = commands[1];
+        if (!this._menuParentCommands.has(parentName)) {
+            this._menuParentCommands.set(parentName, []);
+        }
+        var parent = this._menuParentCommands.get(parentName);
+        parent.push(new Game_MenuSubCommand(commands));
     };
 
     Game_Temp.prototype.iterateMenuParents = function(callBackFunc, thisArg) {
@@ -391,7 +419,7 @@
         if (userSetting.autoTransparent) {
             this.setTransparent(this._originalTransparent);
         }
-        this._originalMapId = 0;
+        this._originalMapId             = 0;
         this._transferringToOriginalMap = true;
     };
 
@@ -441,10 +469,10 @@
     Game_Map.prototype.saveAllEventPosition = function() {
         this._eventPositions = [];
         this.events().forEach(function(event) {
-            var position = {};
-            position.x = event.x;
-            position.y = event.y;
-            position.direction = event.direction();
+            var position                          = {};
+            position.x                            = event.x;
+            position.y                            = event.y;
+            position.direction                    = event.direction();
             this._eventPositions[event.eventId()] = position;
         }, this);
     };
@@ -597,10 +625,9 @@
     };
 
     Scene_Menu.prototype.executeSubCommand = function() {
-        this._someCommandExecute = false;
         this.executeSubScript();
         this.moveSubCommandMap();
-        if (!this._someCommandExecute) {
+        if (!SceneManager.isSceneChanging()) {
             this.onSubCommandCancel();
             this._statusWindow.deselect();
         }
@@ -611,7 +638,6 @@
         if (!script) return;
         try {
             eval(script);
-            this._someCommandExecute = true;
         } catch (e) {
             SoundManager.playBuzzer();
             console.error(`実行スクリプトエラー[${script}] メッセージ[${e.message}]`);
@@ -626,7 +652,6 @@
             $gameVariables.setValue(param.selectActorIdVariable, this._statusWindow.getSelectedActorId());
         }
         SceneManager.pop();
-        this._someCommandExecute = true;
     };
 
     //=============================================================================
@@ -659,8 +684,22 @@
 
     var _Window_MenuCommand_addGameEndCommand      = Window_MenuCommand.prototype.addGameEndCommand;
     Window_MenuCommand.prototype.addGameEndCommand = function() {
-        _Window_MenuCommand_addGameEndCommand.apply(this, arguments);
+        if (this.needsCommand('gameEnd')) {
+            _Window_MenuCommand_addGameEndCommand.apply(this, arguments);
+        }
         if (param.commandPosition === 3) this.makeSubCommandList();
+    };
+
+    var _Window_MenuCommand_needsCommand = Window_MenuCommand.prototype.needsCommand;
+    Window_MenuCommand.prototype.needsCommand = function(name) {
+        var need = _Window_MenuCommand_needsCommand.apply(this, arguments);
+        if (name === 'options' && param.hideOption) {
+            return false;
+        }
+        if (name === 'gameEnd' && param.hideGameEnd) {
+            return false;
+        }
+        return need;
     };
 
     Window_MenuCommand.prototype.makeSubCommandList = function() {
@@ -766,12 +805,13 @@
     //=============================================================================
     class Game_MenuSubCommand {
         constructor(params) {
+            var length            = params.length;
             this._name            = params[0];
             this._hiddenSwitchId  = params[2];
             this._disableSwitchId = params[3];
-            this._targetScript    = params[4];
-            this._targetMapId     = params[5];
-            this._memberSelect    = getArgBoolean(params[6]);
+            this._targetScript    = params.slice(4, length - 2).join(',');
+            this._targetMapId     = params[length - 2];
+            this._memberSelect    = getArgBoolean(params[length - 1]);
         }
 
         getName() {
