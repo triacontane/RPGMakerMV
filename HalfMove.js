@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2017/05/14 プライオリティが「通常キャラと同じ」でないイベントはプレイヤーに対する衝突判定を行わないよう修正
 // 1.8.0 2017/04/23 8方向移動の可否をスイッチによって切り替える機能を追加
 // 1.7.0 2017/03/01 全方向移動不可な地形タグやリージョンのパラメータを追加
 // 1.6.4 2017/02/14 下半分移動不可なタイルに対して下方向から移動できてしまっていた不具合を修正
@@ -1268,9 +1269,9 @@
     var _Game_Event_isCollidedWithPlayerCharacters      = Game_Event.prototype.isCollidedWithPlayerCharacters;
     Game_Event.prototype.isCollidedWithPlayerCharacters = function(x, y) {
         var result = _Game_Event_isCollidedWithPlayerCharacters.apply(this, arguments);
-        if (!result && !this.isHalfThrough($gamePlayer.y)) {
-            var tu = Game_Map.tileUnit;
-            result = $gamePlayer.isCollided(x, y - tu) || $gamePlayer.isCollided(x, y + tu);
+        if (!result && !this.isHalfThrough($gamePlayer.y) && this.isNormalPriority()) {
+            var tileUnit = Game_Map.tileUnit;
+            result = $gamePlayer.isCollided(x, y - tileUnit) || $gamePlayer.isCollided(x, y + tileUnit);
         }
         this.setCollidedFromPlayer(result);
         return result;
