@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2017/05/14 「FTKR_ExMessageWindow2.js」の連携機能の修正(byフトコロ)
+//                  ポップアップの初期化および、ポップアップ無効時の文章の表示位置の不具合修正
+//                  フキダシ有効化コマンドにウィンドウIDを指定する機能追加
 // 2.3.0 2017/05/01 フトコロさんの「FTKR_ExMessageWindow2.js」と連携してフキダシを複数表示できる機能を追加（byフトコロさん）
 // 2.2.0 2017/04/20 選択肢および数値ウィンドウをテール画像の右側に表示できるプラグインコマンドを追加
 // 2.1.0 2017/02/21 フキダシウィンドウ内で制御文字「\{」「\}」を指定したときの上限、下限、増減幅を設定できる機能を追加
@@ -210,7 +213,18 @@
  *
  * 例：MWP_VALID 0
  * 　　フキダシウィンドウ有効化 3
+ * 
+ * !複数メッセージウィンドウ表示を使う場合!
+ * MWP_VALID [キャラクターID] [ウィンドウID] or
+ * フキダシウィンドウ有効化 [キャラクターID] [ウィンドウID]
+ * 　指定したメッセージウィンドウIDを指定したキャラクターIDの頭上に表示するようにします。
+ * 　プレイヤー : -1 このイベント : 0 指定したIDのイベント : 1 ～
+ *   フォロワー : -2, -3, -4
  *
+ * 例：MWP_VALID 0 1
+ * 　　フキダシウィンドウ有効化 3 2
+ *
+ * 
  * MWP_INVALID or
  * フキダシウィンドウ無効化
  * 　ウィンドウの表示方法を通常に戻します。
@@ -374,7 +388,13 @@
             case 'フキダシウィンドウ有効化':
                 var eventId = getArgNumber(args[0]);
                 if (eventId === 0) eventId = this.eventId();
-                $gameSystem.setMessagePopup(eventId);
+                var windowId = getArgNumber(args[1]);
+                if ($gameSystem.setMessagePopupEx && windowId > 0) {
+                    console.log(windowId);
+                    $gameSystem.setMessagePopupEx(windowId, eventId);
+                } else {
+                    $gameSystem.setMessagePopup(eventId);
+                }
                 break;
             case 'MWP_INVALID':
             case 'フキダシウィンドウ無効化':
@@ -1129,9 +1149,13 @@
         var _EMW_Game_System_clearMessagePopup = Game_System.prototype.clearMessagePopup;
         Game_System.prototype.clearMessagePopup = function() {
             _EMW_Game_System_clearMessagePopup.apply(this, arguments);
-            this._messagePopupCharacterIds.forEach( function(id){
-                id = 0;
-            });
+            this._messagePopupCharacterIds.forEach( function(id, i){
+                this.clearMessagePopupEx(i);
+            },this);
+        };
+
+        Game_System.prototype.clearMessagePopupEx = function(windowId) {
+            this._messagePopupCharacterIds[windowId] = 0;
         };
 
         Game_System.prototype.getMessagePopupIdEx = function(windowId) {
@@ -1166,7 +1190,7 @@
 
         Window_MessageEx.prototype.updatePlacementPopup = function() {
             this.setPopupPosition(this.getPopupTargetCharacter());
-            if (this._choiceWindow && $gameMessageEx.window(this._windowId).isChoice()) {
+            if (this._choiceWindow && this._gameMessage.isChoice()) {
                 this._choiceWindow.updatePlacementPopup();
             }
             this._numberWindow.updatePlacementPopup();
@@ -1178,7 +1202,7 @@
         Window_MessageEx.prototype.processVirtual = function() {
             var virtual      = {};
             virtual.index    = 0;
-            virtual.text     = this.convertEscapeCharacters($gameMessageEx.window(this._windowId).allText());
+            virtual.text     = this.convertEscapeCharacters(this._gameMessage.allText());
             virtual.maxWidth = 0;
             this.newPage(virtual);
             while (!this.isEndOfText(virtual)) {
@@ -1186,12 +1210,12 @@
             }
             virtual.y += virtual.height;
             this._subWindowY = virtual.y;
-            var choices      = $gameMessageEx.window(this._windowId).choices();
+            var choices      = this._gameMessage.choices();
             if (choices && $gameSystem.getPopupSubWindowPosition() === 2) {
                 virtual.y += choices.length * this._choiceWindow.lineHeight();
                 virtual.maxWidth = Math.max(virtual.maxWidth, this.newLineX() + this._choiceWindow.maxChoiceWidth());
             }
-            var digit = $gameMessageEx.window(this._windowId).numInputMaxDigits();
+            var digit = this._gameMessage.numInputMaxDigits();
             if (digit && $gameSystem.getPopupSubWindowPosition() === 2) {
                 virtual.y += this._numberWindow.lineHeight();
             }
@@ -1207,23 +1231,25 @@
             this.resetFontSettings();
         };
 
+        var _Window_MessageEx_newLineX = Window_MessageEx.prototype.newLineX;
         Window_MessageEx.prototype.newLineX = function() {
+            console.log(this.isPopup());
             if (this.isPopup()) {
-                return $gameMessageEx.window(this._windowId).faceName() === '' ? 0 : Window_Message._faceWidth + 8;
+                return this._gameMessage.faceName() === '' ? 0 : Window_Message._faceWidth + 8;
             } else {
-                return Window_Message.prototype.newLineX.apply(this, arguments);
+                return _Window_MessageEx_newLineX.apply(this, arguments);
             }
         };
 
         Window_MessageEx.prototype.getFaceHeight = function() {
-            return $gameMessageEx.window(this._windowId).faceName() === '' ? 0 : Window_Message._faceHeight;
+            return this._gameMessage.faceName() === '' ? 0 : Window_Message._faceHeight;
         };
 
         var _Window_ChoiceListEx_numVisibleRows       = Window_ChoiceListEx.prototype.numVisibleRows;
         Window_ChoiceListEx.prototype.numVisibleRows = function() {
             var result = _Window_ChoiceListEx_numVisibleRows.apply(this, arguments);
             if (this.isPopupLinkage()) {
-                result = Math.min($gameMessageEx.window(this._windowId).choices().length, 8);
+                result = Math.min(this._gameMessage.choices().length, 8);
             }
             return result;
         };
