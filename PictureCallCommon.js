@@ -290,15 +290,11 @@
         return window ? window.convertEscapeCharacters(text) : text;
     };
 
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value: function(handler) {
-                Object.keys(this).forEach(function(key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     //=============================================================================
     // パラメータの取得とバリデーション
@@ -655,7 +651,7 @@
     Spriteset_Base.prototype.iteratePictures = function(callBackFund) {
         var containerChildren = this._pictureContainer.children;
         if (!Array.isArray(containerChildren)) {
-            this._pictureContainer.iterate(function(property) {
+            iterate(this._pictureContainer, function(property) {
                 if (this._pictureContainer[property].hasOwnProperty('children')) {
                     containerChildren = this._pictureContainer[property].children;
                     this._iteratePicturesSub(containerChildren, callBackFund);
