@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/05/15 パーティを切り替えた際にリソースを統合できる機能を追加
 // 1.1.0 2017/05/13 パーティ間でリソースを共有する設定を追加、各パーティのマップ座標を記憶して自働で場所移動する機能を追加
 // 1.0.0 2017/05/09 初版
 // ----------------------------------------------------------------------------
@@ -43,8 +44,14 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * PP_パーティ変更 1 # パーティを[1]に変更します。
- * PP_CHANGE_PARTY 1 # 同上
+ * PP_パーティ変更 1 OFF # パーティを[1]に変更します。
+ * PP_CHANGE_PARTY 1 OFF # 同上
+ * PP_パーティ変更 1 ON  # パーティを[1]に変更してリソースを統合します。
+ * PP_CHANGE_PARTY 1 ON  # 同上
+ *
+ * リソース統合をONにすると、所持アイテムやお金を合流先のパーティと統合します。
+ * 別々に行動していた複数のパーティがひとつに合流する際などに使用します。
+ * リソース共有のパラメータが有効な場合、統合は行われません。
  *
  * This plugin is released under the MIT License.
  */
@@ -77,8 +84,14 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * PP_パーティ変更 1 # パーティを[1]に変更します。
- * PP_CHANGE_PARTY 1 # 同上
+ * PP_パーティ変更 1 OFF # パーティを[1]に変更します。
+ * PP_CHANGE_PARTY 1 OFF # 同上
+ * PP_パーティ変更 1 ON  # パーティを[1]に変更してリソースを統合します。
+ * PP_CHANGE_PARTY 1 ON  # 同上
+ *
+ * リソース統合をONにすると、所持アイテムやお金を合流先のパーティと統合します。
+ * 別々に行動していた複数のパーティがひとつに合流する際などに使用します。
+ * リソース共有のパラメータが有効な場合、統合は行われません。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -117,6 +130,10 @@ function Game_Parties() {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(arg) || 0).clamp(min, max);
+    };
+
+    var getArgBoolean = function(arg) {
+        return arg.toUpperCase() === 'ON';
     };
 
     var convertEscapeCharacters = function(text) {
@@ -169,7 +186,7 @@ function Game_Parties() {
 
     Game_Interpreter.prototype.execChangeParty = function(args) {
         if ($gameParty.inBattle()) return;
-        $gameSystem.changeParty(getArgNumber(args[0], 0));
+        $gameSystem.changeParty(getArgNumber(args[0], 0), getArgBoolean(args[1] || ''));
         if (!$gamePlayer.isTransferring()) {
             $gamePlayer.refresh();
             $gameMap.requestRefresh();
@@ -182,11 +199,11 @@ function Game_Parties() {
     // Game_System
     //  Game_Partiesを生成します。
     //=============================================================================
-    Game_System.prototype.changeParty = function(partyId) {
+    Game_System.prototype.changeParty = function(partyId, resourceCombine) {
         if (!this._parties) {
             this._parties = new Game_Parties();
         }
-        this._parties.change(partyId);
+        this._parties.change(partyId, resourceCombine);
     };
 
     //=============================================================================
@@ -210,6 +227,24 @@ function Game_Parties() {
         this._armors  = resources.armors;
         this._gold    = resources.gold;
         this._steps   = resources.steps;
+    };
+
+    Game_Party.prototype.combineAllResources = function(targetParty) {
+        var resources = targetParty.getAllResources();
+        Object.keys(resources.items).forEach(function(id) {
+            this.gainItem($dataItems[id], resources.items[id], false);
+        }, this);
+        Object.keys(resources.weapons).forEach(function(id) {
+            this.gainItem($dataWeapons[id], resources.weapons[id], false);
+        }, this);
+        Object.keys(resources.armors).forEach(function(id) {
+            this.gainItem($dataArmors[id], resources.armors[id], false);
+        }, this);
+        this.gainGold(resources.gold);
+        this._steps += resources.steps;
+        $gameParty.initAllItems();
+        $gameParty.loseGold($gameParty.maxGold());
+        $gameParty._steps = 0;
     };
 
     Game_Party.prototype.moveSavedPosition = function() {
@@ -247,13 +282,15 @@ function Game_Parties() {
         return this._data[this._partyId];
     };
 
-    Game_Parties.prototype.change = function(partyId) {
+    Game_Parties.prototype.change = function(partyId, resourceCombine) {
         if (this._partyId === partyId) return;
         this._partyId = partyId;
         this.createPartyIfNeed();
         var currentParty = this.getCurrentParty();
         if (param.shareResource) {
             currentParty.inheritAllResources($gameParty);
+        } else if (resourceCombine) {
+            currentParty.combineAllResources($gameParty);
         }
         if (param.savePosition) {
             this.moveSavedPosition();
