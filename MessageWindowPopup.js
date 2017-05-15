@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2017/05/16 並列実行のコモンイベントで「MWP_VALID 0」を実行したときに、実行中のマップイベントを対象とするよう修正
 // 2.3.1 2017/05/14 「FTKR_ExMessageWindow2.js」の連携機能の修正(byフトコロ)
 //                  ポップアップの初期化および、ポップアップ無効時の文章の表示位置の不具合修正
 //                  フキダシ有効化コマンドにウィンドウIDを指定する機能追加
@@ -387,10 +388,11 @@
             case 'MWP_VALID' :
             case 'フキダシウィンドウ有効化':
                 var eventId = getArgNumber(args[0]);
-                if (eventId === 0) eventId = this.eventId();
+                if (eventId === 0) {
+                    eventId = this.eventId() || ($gameMap.isEventRunning() ? $gameMap._interpreter.eventId() : 0);
+                }
                 var windowId = getArgNumber(args[1]);
                 if ($gameSystem.setMessagePopupEx && windowId > 0) {
-                    console.log(windowId);
                     $gameSystem.setMessagePopupEx(windowId, eventId);
                 } else {
                     $gameSystem.setMessagePopup(eventId);
