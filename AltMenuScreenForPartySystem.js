@@ -8,7 +8,7 @@
 // Version
 // 1.0.0 2017/05/16 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -83,6 +83,10 @@
     var _Scene_Party_create      = Scene_Party.prototype.create;
     Scene_Party.prototype.create = function() {
         _Scene_Party_create.apply(this, arguments);
+        this.setWindowBackThrough();
+    };
+
+    Scene_Party.prototype.setWindowBackThrough = function() {
         this._commandWindow.opacity = 0;
         this._partyWindow.opacity   = 0;
         this._listWindow.opacity    = 0;
@@ -97,7 +101,7 @@
             this.addChild(this._backgroundSprite);
             return;
         }
-        _Scene_Party_createBackground.call(this);
+        _Scene_Party_createBackground.apply(this, arguments);
     };
 })();
 
