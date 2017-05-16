@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/05/17 ヘルプウィンドウが抜けていたので追加
 // 1.0.0 2017/05/16 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -87,10 +88,21 @@
     };
 
     Scene_Party.prototype.setWindowBackThrough = function() {
-        this._commandWindow.opacity = 0;
-        this._partyWindow.opacity   = 0;
-        this._listWindow.opacity    = 0;
-        this._detailWindow.opacity  = 0;
+        if (this._helpWindow) {
+            this._helpWindow.opacity = 0;
+        }
+        if (this._commandWindow) {
+            this._commandWindow.opacity = 0;
+        }
+        if (this._partyWindow) {
+            this._partyWindow.opacity   = 0;
+        }
+        if (this._listWindow) {
+            this._listWindow.opacity    = 0;
+        }
+        if (this._detailWindow) {
+            this._detailWindow.opacity  = 0;
+        }
     };
 
     var _Scene_Party_createBackground      = Scene_Party.prototype.createBackground;
