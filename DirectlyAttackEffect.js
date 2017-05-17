@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/05/18 高速で戦闘を進めた場合に、たまにダメージが敵キャラの後ろに隠れてしまうことがある問題を修正
 // 1.1.1 2016/11/13 設定次第で、戦闘終了後にセーブできなくなる場合がある不具合を修正
 // 1.1.0 2016/10/05 常時残像を有効にする設定の追加
 //                  BattlerGraphicExtend.jsとの連携を強化
@@ -690,7 +691,15 @@
                 sprite.setPriorityMostFront();
             });
         }
-        this.parent.setChildIndex(this, this.parent.children.length - 1);
+        var frontIndex = this.parent.children.length - 1;
+        this.parent.children.some(function(sprite, index) {
+            if (sprite instanceof Sprite_Damage || sprite instanceof Sprite_Animation) {
+                frontIndex = index - 1;
+                return true;
+            }
+            return false;
+        });
+        this.parent.setChildIndex(this, frontIndex);
     };
 
     Sprite_Battler.prototype.updateDirectly = function() {
