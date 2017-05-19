@@ -23,7 +23,7 @@
  *
  * @param FontSize
  * @desc チェイン表示のフォントサイズです。
- * @default 36
+ * @default 48
  *
  * @param ChainX
  * @desc チェイン表示のX座標です。
@@ -85,7 +85,7 @@
  *
  * @param フォントサイズ
  * @desc チェイン表示のフォントサイズです。
- * @default 36
+ * @default 48
  *
  * @param X座標
  * @desc チェイン表示のX座標です。
