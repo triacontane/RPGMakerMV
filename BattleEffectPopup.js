@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/05/20 CounterExtend.jsとの併用でスキルによる反撃が表示されない問題を修正。
+//                  ポップアップのイタリック体および縁取り表示を行う機能を追加。
 // 1.3.1 2016/12/18 VE_BasicModule.jsとの競合を解消
 // 1.3.0 2016/07/14 アクターと敵キャラの通常ダメージにも専用のフラッシュ色を指定できるようになりました。
 // 1.2.3 2016/07/13 1.2.2の修正が不完全だったのを対応
@@ -129,6 +131,14 @@
  * @param Y座標補正
  * @desc Y座標の補正値です。
  * @default -40
+ *
+ * @param イタリック表示
+ * @desc ポップアップがイタリック体で表示されます。
+ * @default OFF
+ *
+ * @param 縁取り表示
+ * @desc ポップアップが縁取り表示されます。
+ * @default OFF
  *
  * @param 画像使用
  * @desc 各種ポップアップに任意のピクチャ(img/pictures)を使用します。メッセージの代わりにファイル名を入力してください。
@@ -309,6 +319,8 @@
     var paramOffsetX          = getParamNumber(['OffsetX', 'X座標補正']);
     var paramOffsetY          = getParamNumber(['OffsetY', 'Y座標補正']);
     var paramUsingPicture     = getParamBoolean(['UsingPicture', '画像使用']);
+    var paramUsingItalic      = getParamBoolean(['UsingItalic', 'イタリック表示']);
+    var paramUsingOutline     = getParamBoolean(['UsingOutline', '縁取り表示']);
 
     //=============================================================================
     // Game_Interpreter
@@ -433,24 +445,40 @@
     var _Window_BattleLog_displayMiss      = Window_BattleLog.prototype.displayMiss;
     Window_BattleLog.prototype.displayMiss = function(target) {
         _Window_BattleLog_displayMiss.apply(this, arguments);
-        this.pushPopupMessage(target, paramMiss, paramMissColor);
+        this.popupMiss(target);
+    };
+
+    Window_BattleLog.prototype.popupMiss = function(target) {
+        this.pushPopupMessage(target, paramAvoid, paramAvoidColor);
     };
 
     var _Window_BattleLog_displayEvasion      = Window_BattleLog.prototype.displayEvasion;
     Window_BattleLog.prototype.displayEvasion = function(target) {
         _Window_BattleLog_displayEvasion.apply(this, arguments);
+        this.popupEvasion(target);
+    };
+
+    Window_BattleLog.prototype.popupEvasion = function(target) {
         this.pushPopupMessage(target, paramAvoid, paramAvoidColor);
     };
 
     var _Window_BattleLog_displayCounter      = Window_BattleLog.prototype.displayCounter;
     Window_BattleLog.prototype.displayCounter = function(target) {
         _Window_BattleLog_displayCounter.apply(this, arguments);
+        this.popupCounter(target);
+    };
+
+    Window_BattleLog.prototype.popupCounter = function(target) {
         this.pushPopupMessage(target, paramCounter, paramCounterColor);
     };
 
     var _Window_BattleLog_displayReflection      = Window_BattleLog.prototype.displayReflection;
     Window_BattleLog.prototype.displayReflection = function(target) {
         _Window_BattleLog_displayReflection.apply(this, arguments);
+        this.popupReflection(target);
+    };
+
+    Window_BattleLog.prototype.popupReflection = function(target) {
         this.pushPopupMessage(target, paramReflection, paramReflectionColor);
     };
 
@@ -488,7 +516,7 @@
                 sprite.x   = this.x + this.messageOffsetX();
                 sprite.y   = this.y + this.messageOffsetY();
                 sprite.setup(this._battler);
-                if (!sprite.z)  {
+                if (!sprite.z) {
                     this.setZPositionOfPopup(sprite);
                 }
                 this._damages.push(sprite);
@@ -561,6 +589,13 @@
     Sprite_PopupMessage.prototype.setupDynamicText = function(text) {
         var bitmap      = new Bitmap(paramMaxWidth, paramFontSize + 8);
         bitmap.fontSize = paramFontSize;
+        if (paramUsingItalic) {
+            bitmap.fontItalic = true;
+        }
+        if (paramUsingOutline) {
+            bitmap.outlineWidth = Math.floor(bitmap.fontSize / 6);
+            bitmap.outlineColor = 'gray';
+        }
         bitmap.drawText(text, 0, 0, bitmap.width, bitmap.height, 'center');
         return bitmap;
     };
