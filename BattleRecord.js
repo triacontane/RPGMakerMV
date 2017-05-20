@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/05/20 プラグイン未適用のデータをロードしたときに一部のスクリプトが実行エラーになる問題を修正
 // 1.2.0 2016/12/25 アイテムの売買履歴を保持して取得できる機能を追加
 // 1.1.3 2016/12/05 装備変更時に装備品の入手数がカウントアップされていた不具合を修正
 // 1.1.2 2016/09/04 1.1.1の修正に一部不足があったものを追加修正
@@ -489,8 +490,18 @@ function Game_TradeRecord() {
     //=============================================================================
     Game_Actors.prototype.getSumRecord = function(propertyName, args) {
         return this._data.reduce(function(sumValue, actor) {
-            return sumValue + (args ? actor[propertyName].apply(actor, args) : actor[propertyName]);
-        }, 0);
+            return sumValue + this.getActorProperty(actor, propertyName, args);
+        }.bind(this), 0);
+    };
+
+    Game_Actors.prototype.getActorProperty = function(actor, propertyName, args) {
+        if (!actor) {
+            return 0;
+        } else if (args) {
+            return actor[propertyName].apply(actor, args);
+        } else {
+            return actor[propertyName];
+        }
     };
 
     Game_Actors.prototype.getSkillUseCounter = function(skillId) {
