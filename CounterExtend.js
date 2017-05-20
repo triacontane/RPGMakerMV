@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2017/05/20 BattleEffectPopup.jsとの併用でスキルによる反撃が表示されない問題を修正。
 // 1.3.1 2017/04/22 1.3.0の機能がBattleEngineCoreで動作するよう修正
 // 1.3.0 2017/04/09 反撃に成功した時点で相手の行動をキャンセルできる機能を追加
 // 1.2.2 2017/02/07 端末依存の記述を削除
@@ -460,6 +461,10 @@ var Imported = Imported || {};
         }
         if (!Imported.YEP_BattleEngineCore) {
             this.push('addText', TextManager.counterAttack.format(subject.name()));
+        }
+        // for BattleEffectPopup.js
+        if (this.popupCounter) {
+            this.popupCounter(subject);
         }
         this.push('performAction', subject, action);
         this.push('showAnimation', subject, targets.clone(), item.animationId);
