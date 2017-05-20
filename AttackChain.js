@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/05/20 チェイン表示の時間設定と、指定数の連携に満たさずに使用すると必ず失敗するスキルを作る機能を追加
 // 1.0.0 2017/05/20 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -32,6 +33,10 @@
  * @param ChainY
  * @desc チェイン表示のY座標です。
  * @default 80
+ *
+ * @param Duration
+ * @desc チェインが表示される時間(フレーム数)です。この値を超過するとフェードアウトします。(0の場合ずっと表示)
+ * @default 0
  *
  * @param DamageRate
  * @desc 1チェインごとに増加するダメージの増減値(%)です。
@@ -62,10 +67,13 @@
  * さらにパラメータで追加の解除条件を指定できます。
  *
  * スキルのメモ欄で以下の機能を追加できます。
+ * 数値には制御文字\v[n]が使用できます。
  * <AC_倍率:200> # チェインダメージ倍率をさらに200%にします。
  * <AC_Rate:200> # 同上
  * <AC_終了>     # そのスキルで連携を強制終了します。
  * <AC_End>      # 同上
+ * <AC_条件:5>   # 5連携に満たない状態で使用すると必ず失敗します。
+ * <AC_Cond:5>   # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -94,6 +102,10 @@
  * @param Y座標
  * @desc チェイン表示のY座標です。
  * @default 80
+ *
+ * @param 表示時間
+ * @desc チェインが表示される時間(フレーム数)です。この値を超過するとフェードアウトします。(0の場合ずっと表示)
+ * @default 0
  *
  * @param ダメージ倍率
  * @desc 1チェインごとに増加するダメージの増減値(%)です。
@@ -124,10 +136,13 @@
  * さらにパラメータで追加の解除条件を指定できます。
  *
  * スキルのメモ欄で以下の機能を追加できます。
+ * 数値には制御文字\v[n]が使用できます。
  * <AC_倍率:200> # チェインダメージ倍率をさらに200%にします。
  * <AC_Rate:200> # 同上
  * <AC_終了>     # そのスキルで連携を強制終了します。
  * <AC_End>      # 同上
+ * <AC_条件:5>   # 5連携に満たない状態で使用すると必ず失敗します。
+ * <AC_Cond:5>   # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -145,6 +160,17 @@
     'use strict';
     var pluginName    = 'AttackChain';
     var metaTagPrefix = 'AC_';
+
+    //=============================================================================
+    // ユーザ設定領域
+    //=============================================================================
+    var userSettings = {
+        /* チェイン画像の色設定 */
+        chainColor: {
+            party: 'rgba(0, 128, 255, 1.0)',
+            troop: 'red'
+        }
+    };
 
     //=============================================================================
     // ローカル関数
@@ -169,6 +195,12 @@
     var getParamBoolean = function(paramNames) {
         var value = getParamString(paramNames);
         return value.toUpperCase() === 'ON';
+    };
+
+    var getArgNumber = function(arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(arg) || 0).clamp(min, max);
     };
 
     var getMetaValue = function(object, name) {
@@ -204,6 +236,7 @@
     param.damageRate         = getParamNumber(['DamageRate', 'ダメージ倍率']);
     param.chainX             = getParamNumber(['ChainX', 'X座標']) || 0;
     param.chainY             = getParamNumber(['ChainY', 'Y座標']) || 0;
+    param.duration           = getParamNumber(['Duration', '表示時間']) || 0;
     param.cancelChangeTarget = getParamBoolean(['CancelChangeTarget', 'ターゲット変更で解除']);
     param.cancelMiss         = getParamBoolean(['CancelMiss', 'ミスで解除']);
     param.cancelNoAttack     = getParamBoolean(['CancelNoAttack', '攻撃以外で解除']);
@@ -211,7 +244,7 @@
 
     //=============================================================================
     // Game_Unit
-    //  チェイン状態を設定します。
+    //  チェイン回数を保持します。
     //=============================================================================
     Game_Unit.prototype.getChainCount = function() {
         return this._chainCount || 0;
@@ -234,7 +267,7 @@
     };
 
     Game_Unit.prototype.getChainRate = function(addRate) {
-        return (100 + this.getChainCount() * param.damageRate * (addRate || 1.0)).clamp(0, param.maxRate) / 100;
+        return (100 + this.getChainCount() * param.damageRate * addRate).clamp(0, param.maxRate) / 100;
     };
 
     //=============================================================================
@@ -275,12 +308,24 @@
         return Math.floor(damageValue);
     };
 
+    Game_Action.prototype.getMetaTextForAttackChain = function(names) {
+        return getMetaValues(this.item(), names);
+    };
+
+    Game_Action.prototype.getMetaNumberForAttackChain = function(names) {
+        return getArgNumber(this.getMetaTextForAttackChain(names));
+    };
+
     Game_Action.prototype.getAdditionalChainRate = function() {
-        return (parseInt(getMetaValues(this.item(), ['倍率', 'Rate'])) || 100) / 100;
+        return (this.getMetaNumberForAttackChain(['倍率', 'Rate']) || 100) / 100;
     };
 
     Game_Action.prototype.isForceEndChain = function() {
-        return getMetaValues(this.item(), ['終了', 'End']) !== undefined;
+        return this.getMetaTextForAttackChain(['終了', 'End']) !== undefined;
+    };
+
+    Game_Action.prototype.isChainConditionOk = function() {
+        return this.getMetaNumberForAttackChain(['条件', 'Cond']) <= this.friendsUnit().getChainCount();
     };
 
     Game_Action.prototype.updateChain = function(target) {
@@ -305,6 +350,11 @@
             return true;
         }
         return false;
+    };
+
+    var _Game_Action_itemHit      = Game_Action.prototype.itemHit;
+    Game_Action.prototype.itemHit = function(target) {
+        return this.isChainConditionOk() ? _Game_Action_itemHit.apply(this, arguments) : 0.0;
     };
 
     //=============================================================================
@@ -363,6 +413,7 @@
     Sprite_ChainCount.prototype.initialize = function() {
         Sprite.prototype.initialize.call(this);
         this._chainCount = 0;
+        this._duration = 0;
         this.createBitmap();
         this.update();
         this.initPosition();
@@ -389,7 +440,12 @@
             this._chainCount = chainCount;
             this.refresh();
         }
-        this.updateScale();
+        if (this._duration > 0) {
+            this._duration--;
+            this.updateScale();
+        } else {
+            this.updateFade();
+        }
     };
 
     Sprite_ChainCount.prototype.updateScale = function() {
@@ -406,14 +462,25 @@
         }
     };
 
+    Sprite_ChainCount.prototype.updateFade = function() {
+        if (this.opacity > 0) {
+            this.opacity -= 8;
+        }
+    };
+
     Sprite_ChainCount.prototype.refresh = function() {
         this.bitmap.clear();
         var chainValue = Math.abs(this._chainCount);
         if (chainValue > 1) {
-            this.bitmap.textColor = (this.isPartyChain() ? 'rgba(0, 128, 255, 1.0)' : 'red');
-            this.bitmap.drawText(`${chainValue} ${param.unit}`, 0, 0, this.bitmap.width, this.bitmap.height, 'left');
+            this.refreshText(`${chainValue} ${param.unit}`);
             this.refreshScale();
+            this._duration = param.duration || Infinity;
         }
+    };
+
+    Sprite_ChainCount.prototype.refreshText = function(text) {
+        this.bitmap.textColor = userSettings.chainColor[(this.isPartyChain() ? 'party' : 'troop')];
+        this.bitmap.drawText(text, 0, 0, this.bitmap.width, this.bitmap.height, 'left');
     };
 
     Sprite_ChainCount.prototype.refreshScale = function() {
