@@ -29,7 +29,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc 並び順による狙われ率調整プラグイン
+ * @plugindesc 並び順による狙われ率変動プラグイン
  * @author トリアコンタン
  *
  * @param 変動倍率
