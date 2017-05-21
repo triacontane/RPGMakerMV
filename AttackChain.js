@@ -267,7 +267,7 @@
     };
 
     Game_Unit.prototype.getChainRate = function(addRate) {
-        return (100 + this.getChainCount() * param.damageRate * addRate).clamp(0, param.maxRate) / 100;
+        return (100 + this.getChainCount() * param.damageRate * addRate).clamp(0, param.maxRate || Infinity) / 100;
     };
 
     //=============================================================================
