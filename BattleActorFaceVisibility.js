@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/05/21 敵キャラ選択中にウィンドウを非表示にする機能と、味方選択中に表示対象を選択中のアクターに変更する機能を追加
 // 1.4.1 2017/01/21 ステートアイコンの並び順が逆になっていた不具合を修正
 // 1.4.0 2016/12/31 ウィンドウ透過機能を追加
 // 1.3.1 2016/11/25 割合の指定に100%を指定できるよう修正
@@ -20,7 +21,7 @@
 // 1.0.1 2015/11/19 サイドビューでも表示されるように仕様変更
 // 1.0.0 2015/11/13 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -49,6 +50,14 @@
  * @desc Window through if overlap windows(ON/OFF)
  * @default OFF
  *
+ * @param HideWhenSelectEnemy
+ * @desc 敵キャラを選択中はグラフィックを非表示にします。
+ * @default OFF
+ *
+ * @param ShowWhenSelectActor
+ * @desc 味方キャラを選択中は（行動入力中の対象ではなく）選択している対象を表示します。
+ * @default ON
+ *
  * @help Plugin that to visualize face graphic in battle
  * This plugin is released under the MIT License.
  *
@@ -72,6 +81,14 @@
  *
  * @param 縮小表示
  * @desc ピクチャ及び敵キャラ画像をウィンドウサイズに合わせて縮小表示します。(ON/OFF)
+ * @default ON
+ *
+ * @param 敵選択中は非表示
+ * @desc 敵キャラを選択中はグラフィックを非表示にします。
+ * @default OFF
+ *
+ * @param 味方選択中は対象表示
+ * @desc 味方キャラを選択中は（行動入力中の対象ではなく）選択している対象を表示します。
  * @default ON
  *
  * @param ウィンドウ透過
@@ -113,7 +130,7 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(function() {
     'use strict';
     var pluginName = 'BattleActorFaceVisibility';
 
@@ -122,7 +139,7 @@
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (text === null || text === undefined) text = '';
         var window = SceneManager._scene._windowLayer.children[0];
         return window ? window.convertEscapeCharacters(text) : text;
     };
@@ -140,7 +157,7 @@
     };
 
     var isParamExist = function(paramNames) {
-        return getParamOther(paramNames) != null;
+        return getParamOther(paramNames) !== null;
     };
 
     var getParamOther = function(paramNames) {
@@ -152,16 +169,23 @@
         return null;
     };
 
-    var getArgString = function (arg, upperFlg) {
+    var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
     };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var param = {};
+    param.hideWhenSelectEnemy = getParamBoolean(['HideWhenSelectEnemy', '敵選択中は非表示']);
+    param.showWhenSelectActor = getParamBoolean(['ShowWhenSelectActor', '味方選択中は対象表示']);
 
     //=============================================================================
     // Game_Actor
@@ -208,14 +232,14 @@
     // Scene_Battle
     //  顔グラフィックを表示するウィンドウを追加します。
     //=============================================================================
-    var _Scene_Battle_createAllWindows = Scene_Battle.prototype.createAllWindows;
+    var _Scene_Battle_createAllWindows      = Scene_Battle.prototype.createAllWindows;
     Scene_Battle.prototype.createAllWindows = function() {
         _Scene_Battle_createAllWindows.call(this);
         this.createFaceWindow();
     };
 
     Scene_Battle.prototype.createFaceWindow = function() {
-        var length = this._windowLayer.children.length, windowIndex = 0;
+        var length       = this._windowLayer.children.length, windowIndex = 0;
         this._faceWindow = new Window_Face();
         for (var i = 0; i < length; i++) {
             if (this._windowLayer.children[i] === this._helpWindow) {
@@ -223,6 +247,8 @@
                 break;
             }
         }
+        this._faceWindow.setEnemyWindow(this._enemyWindow);
+        this._faceWindow.setActorWindow(this._actorWindow);
         this._windowLayer.addChildAt(this._faceWindow, windowIndex);
     };
 
@@ -234,16 +260,16 @@
         this.initialize.apply(this, arguments);
     }
 
-    Window_Face.prototype = Object.create(Window_Base.prototype);
+    Window_Face.prototype             = Object.create(Window_Base.prototype);
     Window_Face.prototype.constructor = Window_Face;
 
     Window_Face.prototype.initialize = function() {
-        var width  = 192;
-        var height = Window_Base._faceHeight + this.standardPadding() * 2;
-        var paramsX = ['ウィンドウX座標','WindowXCustom'];
-        var x = isParamExist(paramsX) ? getParamNumber(paramsX) : 0;
-        var paramsY = ['ウィンドウY座標','WindowYCustom'];
-        var y = isParamExist(paramsY) ? getParamNumber(paramsY) : Graphics.boxHeight - this.fittingHeight(4) - height;
+        var width   = 192;
+        var height  = Window_Base._faceHeight + this.standardPadding() * 2;
+        var paramsX = ['ウィンドウX座標', 'WindowXCustom'];
+        var x       = isParamExist(paramsX) ? getParamNumber(paramsX) : 0;
+        var paramsY = ['ウィンドウY座標', 'WindowYCustom'];
+        var y       = isParamExist(paramsY) ? getParamNumber(paramsY) : Graphics.boxHeight - this.fittingHeight(4) - height;
         Window_Base.prototype.initialize.call(this, x, y, width, height);
         this.hide();
         this.createFaceSprite();
@@ -252,17 +278,25 @@
     };
 
     Window_Face.prototype.createFaceSprite = function() {
-        var sprite = new Sprite();
-        sprite.x        = this.width / 2;
-        sprite.y        = this.height / 2;
-        sprite.anchor.x = 0.5;
-        sprite.anchor.y = 0.5;
+        var sprite       = new Sprite();
+        sprite.x         = this.width / 2;
+        sprite.y         = this.height / 2;
+        sprite.anchor.x  = 0.5;
+        sprite.anchor.y  = 0.5;
         this._faceSprite = sprite;
         this.addChild(this._faceSprite);
     };
 
+    Window_Face.prototype.setEnemyWindow = function(enemyWindow) {
+        this._enemyWindow = enemyWindow;
+    };
+
+    Window_Face.prototype.setActorWindow = function(actorWindow) {
+        this._actorWindow = actorWindow;
+    };
+
     Window_Face.prototype.setWindowVisible = function() {
-        if (!getParamBoolean(['WindowVisible','ウィンドウ表示'])) {
+        if (!getParamBoolean(['WindowVisible', 'ウィンドウ表示'])) {
             this.opacity = 0;
             this._faceSprite.y += this.padding;
         }
@@ -270,20 +304,36 @@
 
     Window_Face.prototype.update = function() {
         Window_Base.prototype.update.call(this);
+        this.updateImage();
+        this.updateVisibility();
+    };
+
+    Window_Face.prototype.updateImage = function() {
         var actor = this.getRealActor();
         if (actor && this._actorId !== actor.actorId()) {
             this.drawActorFace(actor);
-            this._actorId = actor.actorId();
-            this.show();
         }
-        if (actor == null && this._actorId !== 0) {
-            this._actorId = 0;
-            this.hide();
+        this._actorId = actor ? actor.actorId() : 0;
+    };
+
+    Window_Face.prototype.updateVisibility = function() {
+        var visibility = this.isVisible();
+        if (visibility !== this.visible) {
+            if (visibility) {
+                this.show();
+            } else {
+                this.hide();
+            }
         }
     };
 
+    Window_Face.prototype.isVisible = function() {
+        return this._actorId !== 0 && !(param.hideWhenSelectEnemy && this._enemyWindow.visible);
+    };
+
     Window_Face.prototype.getRealActor = function() {
-        var actor = BattleManager.actor();
+        var useActorWindow = this._actorWindow.visible && param.showWhenSelectActor;
+        var actor = useActorWindow ? this._actorWindow.actor() : BattleManager.actor();
         return actor ? actor.getFaceActorData() : null;
     };
 
@@ -320,8 +370,8 @@
             this._faceSprite.scale.x = 1.0;
             this._faceSprite.scale.y = 1.0;
             this._faceSprite.bitmap  = bitmap;
-            var sx = actor.faceIndex() % 4 * Window_Base._faceWidth;
-            var sy = Math.floor(actor.faceIndex() / 4) * Window_Base._faceHeight;
+            var sx                   = actor.faceIndex() % 4 * Window_Base._faceWidth;
+            var sy                   = Math.floor(actor.faceIndex() / 4) * Window_Base._faceHeight;
             this._faceSprite.setFrame(sx, sy, Window_Base._faceWidth, Window_Base._faceHeight);
         }.bind(this));
     };
