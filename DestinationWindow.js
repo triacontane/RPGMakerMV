@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/05/22 専用ウィンドウスキンを指定した状態でセーブ＆ロードした際にテキスト色が黒くなる問題を修正
 // 1.2.0 2017/05/03 アイコン表示機能、横幅自動調整機能を追加、別の目標を指定したときに重なって表示される問題を修正
 // 1.1.0 2017/05/02 メニュー画面にも表示できる機能を追加
 // 1.0.0 2017/05/02 初版
@@ -326,8 +327,8 @@
 
     Window_Destination.prototype.initialize = function(x, y, width, height) {
         Window_Base.prototype.initialize.call(this, x, y, width, height || this.fittingHeight(1));
-        this._text          = '';
-        this._iconIndex     = 0;
+        this._text      = '';
+        this._iconIndex = 0;
         this.update();
         this.opacity = this.isVisible() ? 255 : 0;
     };
@@ -358,6 +359,7 @@
 
     Window_Destination.prototype.update = function() {
         Window_Base.prototype.update.call(this);
+        if (!this.windowskin.isReady()) return;
         this.updateText();
         this.updateOpacity();
     };
