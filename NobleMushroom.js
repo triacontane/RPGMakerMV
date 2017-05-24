@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2017/05/25 1.5.1で オートセーブ無効時にイベントメニューからセーブすると空でセーブされてしまう問題を修正
 // 1.5.1 2017/04/03 オートセーブ無効時でも一部の条件でオートセーブされていた問題を修正
 // 1.5.0 2016/12/05 高速でメッセージを送った場合に顔グラフィックを表示しようとするとエラーになる場合がある不具合を修正
 //                  ノベル表示中に選択肢ウィンドウと数値入力ウィンドウの表示位置を調整できる機能を追加
@@ -529,7 +530,6 @@
     };
 
     Game_System.prototype.executeAutoSave = function() {
-        if (!paramAutoSave) return;
         this.onBeforeSave();
         DataManager.saveGameAuto();
     };
@@ -677,6 +677,18 @@
     // DataManager
     //  オートセーブを追加定義します。
     //=============================================================================
+    Object.defineProperty(DataManager, '_lastAccessedId', {
+        get         : function() {
+            return this.__lastAccessedId;
+        },
+        set         : function(value) {
+            if (value !== this.getAutoSaveId()) {
+                this.__lastAccessedId = value;
+            }
+        },
+        configurable: true
+    });
+
     DataManager._isShiftAutoSave = false;
 
     var _DataManager_createGameObjects = DataManager.createGameObjects;
@@ -704,11 +716,17 @@
     };
 
     DataManager.saveGameAuto = function() {
-        var lastAccessedId    = this._lastAccessedId;
         this._processAutoSave = true;
-        this.saveGameWithoutRescue(this.getAutoSaveId());
+        if (paramAutoSave) {
+            this.saveGameWithoutRescue(this.getAutoSaveId());
+        } else {
+            var json = JsonEx.stringify(this.makeSaveContents());
+            if (json.length >= 200000) {
+                console.warn('Save data too big!');
+            }
+            StorageManager.save(this.getAutoSaveId(), json);
+        }
         this._processAutoSave = false;
-        this._lastAccessedId  = lastAccessedId;
     };
 
     var _DataManager_latestSavefileId = DataManager.latestSavefileId;
@@ -719,13 +737,8 @@
 
     var _DataManager_loadGame = DataManager.loadGame;
     DataManager.loadGame      = function(savefileId) {
-        var lastAccessedId = this._lastAccessedId;
-        arguments[0]       = this.convertToAutoSaveId(savefileId);
-        var result         = _DataManager_loadGame.apply(this, arguments);
-        if (this._lastAccessedId === this.getAutoSaveId()) {
-            this._lastAccessedId = lastAccessedId;
-        }
-        return result;
+        arguments[0] = this.convertToAutoSaveId(savefileId);
+        return _DataManager_loadGame.apply(this, arguments);
     };
 
     DataManager.loadGameReserve = function() {

@@ -1,6 +1,5 @@
 //=============================================================================
 // AltMenuScreen.js
-// 1.0.1 2016/07/22 スクロール可能であることを示す矢印スプライトの向きがおかしい問題の修正
 //=============================================================================
 
 /*:
@@ -66,19 +65,6 @@
         this.changePaintOpacity(actor.isBattleMember());
         this.drawActorFace(actor, rect.x, rect.y + lineHeight * 2.5, w, h);
         this.changePaintOpacity(true);
-    };
-
-    Window_MenuStatus.prototype._refreshArrows = function() {
-        Window.prototype._refreshArrows.call(this);
-        var w = this._width;
-        var h = this._height;
-        var p = 24;
-        var q = p / 2;
-
-        this._downArrowSprite.rotation = 270 * Math.PI / 180;
-        this._downArrowSprite.move(w - q, h / 2);
-        this._upArrowSprite.rotation = 270 * Math.PI / 180;
-        this._upArrowSprite.move(q, h / 2);
     };
 
     Window_MenuStatus.prototype.drawItemStatus = function(index) {
