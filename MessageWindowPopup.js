@@ -7,6 +7,11 @@
 // ----------------------------------------------------------------------------
 // Version
 // 2.4.0 2017/05/16 並列実行のコモンイベントで「MWP_VALID 0」を実行したときに、実行中のマップイベントを対象とするよう修正
+// 2.3.2 2017/05/25 「FTKR_ExMessageWindow2.js」の連携機能の修正(byフトコロ)
+//                  ウィンドウを閉じた時にフキダシ無効化をする対象を、指定していたウィンドウIDのみに変更
+//                  フキダシ無効化コマンドにウィンドウIDを指定する機能追加
+//                  場所移動時にすべてのウィンドウIDのフキダシ無効化処理を追加
+//                  プラグインパラメータ[自動設定]をOFFに設定した場合、イベント起動時にフキダシ無効化する対象をウィンドウID0だけに変更
 // 2.3.1 2017/05/14 「FTKR_ExMessageWindow2.js」の連携機能の修正(byフトコロ)
 //                  ポップアップの初期化および、ポップアップ無効時の文章の表示位置の不具合修正
 //                  フキダシ有効化コマンドにウィンドウIDを指定する機能追加
@@ -201,6 +206,13 @@
  * また、FTKR_ExMessageWindow2.jsの複数メッセージウィンドウ表示と
  * 併せて使用する場合は、プラグイン管理画面で当プラグインを
  * FTKR_ExMessageWindow2.jsより下に配置してください。
+ * 
+ * 
+ * プラグインパラメータ[自動設定]詳細
+ * FTKR_ExMessageWindow2.jsと併用する場合、
+ * 自動設定で使用するメッセージウィンドウは、ウィンドウID0 です。
+ * OFFの場合、ウィンドウID0 を通常の表示方法に戻します。
+ * 
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -210,7 +222,7 @@
  * フキダシウィンドウ有効化 [キャラクターID]
  * 　メッセージウィンドウを指定したキャラクターIDの頭上に表示するようにします。
  * 　プレイヤー : -1 このイベント : 0 指定したIDのイベント : 1 ～
- *   フォロワー : -2, -3, -4
+ * 　フォロワー : -2, -3, -4
  *
  * 例：MWP_VALID 0
  * 　　フキダシウィンドウ有効化 3
@@ -220,7 +232,8 @@
  * フキダシウィンドウ有効化 [キャラクターID] [ウィンドウID]
  * 　指定したメッセージウィンドウIDを指定したキャラクターIDの頭上に表示するようにします。
  * 　プレイヤー : -1 このイベント : 0 指定したIDのイベント : 1 ～
- *   フォロワー : -2, -3, -4
+ * 　フォロワー : -2, -3, -4
+ * 　ウィンドウIDを指定しない(入力なし)場合は、ウィンドウID0を使用します。
  *
  * 例：MWP_VALID 0 1
  * 　　フキダシウィンドウ有効化 3 2
@@ -233,6 +246,17 @@
  * 例：MWP_INVALID
  * 　　フキダシウィンドウ無効化
  *
+ * !複数メッセージウィンドウ表示を使う場合!
+ * MWP_INVALID [ウィンドウID]
+ * フキダシウィンドウ無効化 [ウィンドウID]
+ * 　指定したメッセージウィンドウIDの表示方法を通常に戻します。
+ * 　入力無しはすべてのウィンドウIDの表示方法を通常に戻します。
+ *
+ * 例：MWP_INVALID 1
+ * 　　フキダシウィンドウ無効化 2
+ * 　　フキダシウィンドウ無効化
+ * 
+ * 
  * MWP_SETTING [設定内容] or
  * フキダシウィンドウ設定 [設定内容]
  * 　フキダシウィンドウの設定を行います。設定内容に以下を入力。
@@ -286,6 +310,11 @@
  * 例：MWP_ADJUST POS 5 -3
  * 　　フキダシウィンドウ調整 サイズ 20 -40
  *
+ * !複数メッセージウィンドウ表示を使う場合!
+ * フキダシウィンドウの設定や表示位置、サイズの調整結果は
+ * すべてのウィンドウIDで共通です。
+ * 
+ * 
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -345,6 +374,11 @@
         return window ? window.convertEscapeCharacters(text) : text;
     };
 
+    //FTKR_ExMessageWindow2.jsを使用しているか
+    var imported_FTKR_EMW = function() {
+        return typeof Imported !== 'undefined' && Imported.FTKR_EMW;
+    };
+
     //=============================================================================
     // パラメータのバリデーション
     //=============================================================================
@@ -391,16 +425,21 @@
                 if (eventId === 0) {
                     eventId = this.eventId() || ($gameMap.isEventRunning() ? $gameMap._interpreter.eventId() : 0);
                 }
-                var windowId = getArgNumber(args[1]);
-                if ($gameSystem.setMessagePopupEx && windowId > 0) {
-                    $gameSystem.setMessagePopupEx(windowId, eventId);
+                if (imported_FTKR_EMW() && args[1]) {
+                    var windowId = getArgNumber(args[1]);
+                    if (windowId >= 0) $gameSystem.setMessagePopupEx(windowId, eventId);
                 } else {
                     $gameSystem.setMessagePopup(eventId);
                 }
                 break;
             case 'MWP_INVALID':
             case 'フキダシウィンドウ無効化':
-                $gameSystem.clearMessagePopup();
+                if (imported_FTKR_EMW() && args[0]) {
+                    var windowId = getArgNumber(args[0]);
+                    if (windowId >= 0) $gameSystem.clearMessagePopupEx(windowId);
+                } else {
+                    $gameSystem.clearMessagePopup();
+                }
                 break;
             case 'MWP_SETTING' :
             case 'フキダシウィンドウ設定':
@@ -459,7 +498,13 @@
     var _Game_Interpreter_terminate      = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
-        if (this._depth === 0 && this.isGameMapInterpreter()) $gameSystem.clearMessagePopup();
+        if (this._depth === 0 && this.isGameMapInterpreter()) {
+            if (imported_FTKR_EMW()) {
+                $gameSystem.clearMessagePopupEx(this.windowId());
+            } else {
+                $gameSystem.clearMessagePopup();
+            }
+        }
     };
 
     Game_Interpreter.prototype.setGameMapInterpreter = function() {
@@ -561,7 +606,11 @@
             if (paramAutoPopup) {
                 $gameSystem.setMessagePopup(this._interpreter.eventId());
             } else {
-                $gameSystem.clearMessagePopup();
+                if (imported_FTKR_EMW()) {
+                    $gameSystem.clearMessagePopupEx(0);
+                } else {
+                    $gameSystem.clearMessagePopup();
+                }
             }
         }
         return result;
@@ -1136,8 +1185,12 @@
     //=============================================================================
     // FTKR_ExMessageWindow2.js の修正
     //=============================================================================
-    if (typeof Imported !== 'undefined' && Imported.FTKR_EMW) {
+    if (imported_FTKR_EMW()) {
 
+        //------------------------------------------------------------------------
+        //Game_System
+        //フキダシウィンドウの有効無効フラグをウィンドウID毎に保持
+        //------------------------------------------------------------------------
         var _EMW_Game_System_initialize = Game_System.prototype.initialize;
         Game_System.prototype.initialize = function() {
             _EMW_Game_System_initialize.apply(this, arguments);
@@ -1165,6 +1218,21 @@
             return this._messagePopupCharacterIds[windowId] !== 0 ? this._messagePopupCharacterIds[windowId] : null;
         };
 
+        //------------------------------------------------------------------------
+        //Scene_Map
+        //場所移動時にすべてのウィンドウIDのフキダシ無効化
+        //------------------------------------------------------------------------
+        var _EMW_Scene_Map_terminate = Scene_Map.prototype.terminate;
+        Scene_Map.prototype.terminate = function() {
+            _EMW_Scene_Map_terminate.call(this);
+            if (SceneManager.isNextScene(Scene_Map)) {
+                $gameSystem.clearMessagePopup();
+            }
+        };
+
+        //------------------------------------------------------------------------
+        //Window_MessageEx
+        //------------------------------------------------------------------------
         var _Window_MessageEx_startMessage      = Window_MessageEx.prototype.startMessage;
         Window_MessageEx.prototype.startMessage = function() {
             this.updateTargetCharacterId();
@@ -1235,7 +1303,6 @@
 
         var _Window_MessageEx_newLineX = Window_MessageEx.prototype.newLineX;
         Window_MessageEx.prototype.newLineX = function() {
-            console.log(this.isPopup());
             if (this.isPopup()) {
                 return this._gameMessage.faceName() === '' ? 0 : Window_Message._faceWidth + 8;
             } else {
@@ -1247,6 +1314,9 @@
             return this._gameMessage.faceName() === '' ? 0 : Window_Message._faceHeight;
         };
 
+        //------------------------------------------------------------------------
+        //Window_ChoiceListEx
+        //------------------------------------------------------------------------
         var _Window_ChoiceListEx_numVisibleRows       = Window_ChoiceListEx.prototype.numVisibleRows;
         Window_ChoiceListEx.prototype.numVisibleRows = function() {
             var result = _Window_ChoiceListEx_numVisibleRows.apply(this, arguments);
@@ -1263,6 +1333,9 @@
             if (this.isPopup()) this.updatePlacementPopup();
         };
 
+        //------------------------------------------------------------------------
+        //Window_NumberInputEx
+        //------------------------------------------------------------------------
         var _Window_NumberInputEx_updatePlacement      = Window_NumberInputEx.prototype.updatePlacement;
         Window_NumberInputEx.prototype.updatePlacement = function() {
             this.resetLayout();
