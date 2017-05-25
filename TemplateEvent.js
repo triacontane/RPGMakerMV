@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/05/25 場所移動直後にアニメパターンが一瞬だけ初期化されてしまう問題を修正
 // 1.1.0 2017/04/22 テンプレートイベントIDに変数の値を指摘できる機能を追加
 // 1.0.2 2017/04/09 イベント生成系のプラグインで発生する可能性のある競合を解消
 // 1.0.1 2016/06/28 固有イベントのページ数がテンプレートイベントのページ数より少ない場合に発生するエラーを修正
@@ -335,7 +336,10 @@ var $dataTemplateEvents = null;
         var event = $dataMap.events[eventId];
         this.setTemplate(event);
         _Game_Event_initialize.apply(this, arguments);
-        this.locate(event.x, event.y);
+        if (this.hasTemplate()) {
+            this.setPosition(event.x, event.y);
+            this.refreshBushDepth();
+        }
     };
 
     var _Game_Event_setupPageSettings      = Game_Event.prototype.setupPageSettings;
