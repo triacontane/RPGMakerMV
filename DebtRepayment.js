@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/05/25 一定金額までは借金してお店で商品を購入できる機能を追加
 // 1.0.0 2016/06/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -16,6 +17,10 @@
 /*:
  * @plugindesc 所持金マイナスプラグイン
  * @author トリアコンタン
+ *
+ * @param 購入可能下限金額
+ * @desc お店で購入可能な下限の金額です。指定する場合はマイナス値を指定してください。制御文字\v[n]が指定可能です。
+ * @default 0
  *
  * @help 所持金をマイナスにすることができます。
  *
@@ -46,9 +51,44 @@
     var pluginName    = 'DebtRepayment';
     var metaTagPrefix = 'DR';
 
+    //=============================================================================
+    // ローカル関数
+    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
+    //=============================================================================
+    var getParamString = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return '';
+    };
+
+    var getArgNumber = function(arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(convertEscapeCharacters(arg)) || 0).clamp(min, max);
+    };
+
     var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
+
+    var convertEscapeCharacters = function(text) {
+        if (isNotAString(text)) text = '';
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+    };
+
+    var isNotAString = function(args) {
+        return String(args) !== args;
+    };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var param = {};
+    param.underLimitCanBuying = getParamString(['UnderLimitCanBuying', '購入可能下限金額']);
 
     //=============================================================================
     // Game_Interpreter
@@ -122,6 +162,19 @@
 
     Game_Party.prototype.setDebtDisable = function(value) {
         this._debtDisable = !!value;
+    };
+
+    Game_Party.prototype.getCanBuyingUnderLimit = function() {
+        return this.isDebtEnable() ? Math.min(getArgNumber(param.underLimitCanBuying), this.maxGold()) : 0;
+    };
+
+    //=============================================================================
+    // Scene_Shop
+    //  購入可能下限金額を調整します。
+    //=============================================================================
+    var _Scene_Shop_money = Scene_Shop.prototype.money;
+    Scene_Shop.prototype.money = function() {
+        return _Scene_Shop_money.apply(this, arguments) - $gameParty.getCanBuyingUnderLimit();
     };
 })();
 
