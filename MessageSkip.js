@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/05/26 クリックでオートおよびスキップを切り替えるボタンを追加
 // 1.3.1 2017/05/13 アイコンの量を増やしたときにオートとスキップのアイコンが正常に表示されない問題を修正
 // 1.3.0 2017/05/05 スキップ中はメッセージのウェイトを無視するよう修正
 // 1.2.0 2017/04/29 並列実行のイベントでも通常イベントが実行中でなければスキップを解除するよう修正
@@ -49,6 +50,36 @@
  * @param イベント終了で解除
  * @desc イベント終了と共にスキップ、オート状態を解除します。(ON/OFF)
  * @default ON
+ *
+ * @param スキップピクチャ
+ * @desc ウィンドウ内に表示するスキップピクチャのファイル名です。クリックするとスキップモードになります。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param スキップピクチャX
+ * @desc ウィンドウ内に表示するスキップピクチャのX座標です。
+ * @default 500
+ *
+ * @param スキップピクチャY
+ * @desc ウィンドウ内に表示するスキップピクチャのY座標です。
+ * @default 0
+ *
+ * @param オートピクチャ
+ * @desc ウィンドウ内に表示するオートピクチャのファイル名です。クリックするとオートモードになります。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param オートピクチャX
+ * @desc ウィンドウ内に表示するオートピクチャのX座標です。
+ * @default 750
+ *
+ * @param オートピクチャY
+ * @desc ウィンドウ内に表示するオートピクチャのY座標です。
+ * @default 0
  *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
  * イベントが終了すると自働でスキップやオートモードは解除されます。
@@ -124,6 +155,9 @@
         Input.keyCodeReverseMapper['f' + (i + 1)] = i + 112;
     });
 
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
     var skipKeyName = getParamString('スキップキー').toLowerCase();
     var skipKeyCode = Input.keyCodeReverseMapper[skipKeyName];
     var autoKeyName = getParamString('オートキー').toLowerCase();
@@ -142,6 +176,12 @@
             autoKeyName = Input.keyMapper[autoKeyCode];
         }
     }
+    var paramSkipPicture = getParamString(['SkipPicture', 'スキップピクチャ']);
+    var paramSkipPictureX = getParamNumber(['SkipPictureX', 'スキップピクチャX']);
+    var paramSkipPictureY = getParamNumber(['SkipPictureY', 'スキップピクチャY']);
+    var paramAutoPicture = getParamString(['AutoPicture', 'オートピクチャ']);
+    var paramAutoPictureX = getParamNumber(['AutoPictureX', 'オートピクチャX']);
+    var paramAutoPictureY = getParamNumber(['AutoPictureY', 'オートピクチャY']);
 
     //=============================================================================
     // Game_Message
@@ -219,10 +259,28 @@
     var _Window_Message_initialize      = Window_Message.prototype.initialize;
     Window_Message.prototype.initialize = function() {
         _Window_Message_initialize.apply(this, arguments);
+        this.createSpriteFrame();
+        this.createSpriteSkipButton();
+        this.createSpriteAutoButton();
+    };
+
+    Window_Message.prototype.createSpriteFrame = function() {
         this._icon   = new Sprite_Frame(ImageManager.loadSystem('IconSet'), -1);
         this._icon.x = this.width - this._icon.width;
         this._icon.y = this.height - this._icon.height;
         this.addChild(this._icon);
+    };
+
+    Window_Message.prototype.createSpriteSkipButton = function() {
+        if (!paramSkipPicture) return;
+        this._skipButton = new Sprite_MessageButton(paramSkipPicture, paramSkipPictureX, paramSkipPictureY);
+        this.addChild(this._skipButton);
+    };
+
+    Window_Message.prototype.createSpriteAutoButton = function() {
+        if (!paramAutoPicture) return;
+        this._autoButton = new Sprite_MessageButton(paramAutoPicture, paramAutoPictureX, paramAutoPictureY);
+        this.addChild(this._autoButton);
     };
 
     var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
@@ -286,23 +344,75 @@
     };
 
     Window_Message.prototype.isTriggeredMessageSkip = function() {
-        return Input.isTriggered('messageSkip') || Input.isTriggered(skipKeyName);
+        return Input.isTriggered('messageSkip') || Input.isTriggered(skipKeyName) || this.isTriggeredMessageSkipButton();
+    };
+
+    Window_Message.prototype.isTriggeredMessageSkipButton = function() {
+        return this._skipButton &&
+            this._skipButton.isTriggered(this.canvasToLocalX(TouchInput.x), this.canvasToLocalY(TouchInput.y));
     };
 
     Window_Message.prototype.isTriggeredMessageAuto = function() {
-        return Input.isTriggered('messageAuto') || Input.isTriggered(autoKeyName);
+        return Input.isTriggered('messageAuto') || Input.isTriggered(autoKeyName) || this.isTriggeredMessageAutoButton();
+    };
+
+    Window_Message.prototype.isTriggeredMessageAutoButton = function() {
+        return this._autoButton &&
+            this._autoButton.isTriggered(this.canvasToLocalX(TouchInput.x), this.canvasToLocalY(TouchInput.y));
     };
 
     var _Window_Message_isTriggered      = Window_Message.prototype.isTriggered;
     Window_Message.prototype.isTriggered = function() {
-        return _Window_Message_isTriggered.apply(this, arguments) || this.messageSkip() ||
-            (this.messageAuto() && this._messageAutoCount <= 0);
+        if (this.isTriggeredMessageSkipButton() || this.isTriggeredMessageAutoButton()) {
+            return false;
+        }
+        return _Window_Message_isTriggered.apply(this, arguments) ||
+            this.messageSkip() || (this.messageAuto() && this._messageAutoCount <= 0);
     };
 
     var _Window_Message_startPause      = Window_Message.prototype.startPause;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
         if (this.messageSkip()) this.startWait(2);
+    };
+
+    //=============================================================================
+    // Sprite_MessageButton
+    //  メッセージボタン描画用スプライトです。
+    //=============================================================================
+    function Sprite_MessageButton() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Sprite_MessageButton.prototype             = Object.create(Sprite.prototype);
+    Sprite_MessageButton.prototype.constructor = Sprite_MessageButton;
+
+    Sprite_MessageButton.prototype.initialize = function(fileName, x, y) {
+        Sprite.prototype.initialize.call(this);
+        this.bitmap = ImageManager.loadPicture(fileName);
+        this.x = x;
+        this.y = y;
+        this.anchor.x = 0.5;
+        this.anchor.y = 0.5;
+    };
+
+    Sprite_MessageButton.prototype.update = function() {
+        Sprite.prototype.update.call(this);
+        this.opacity = this.parent.openness;
+    };
+
+    Sprite_MessageButton.prototype.isTriggered = function(targetX, targetY) {
+        var realX = targetX + this._frame.width * this.anchor.x;
+        var realY = targetY + this._frame.height * this.anchor.y;
+        if (TouchInput.isTriggered() && this.isInSprite(realX, realY)) {
+            return true;
+        }
+        return false;
+    };
+
+    Sprite_MessageButton.prototype.isInSprite = function(targetX, targetY) {
+        return this.x <= targetX && this.x + this._frame.width >= targetX &&
+            this.y <= targetY && this.y + this._frame.height >= targetY;
     };
 
     //=============================================================================
