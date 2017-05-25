@@ -101,7 +101,7 @@
 
     var getParamString = function(paramNames, upperFlg) {
         var value = getParamOther(paramNames);
-        return value == null ? '' : upperFlg ? value.toUpperCase() : value;
+        return value === null ? '' : upperFlg ? value.toUpperCase() : value;
     };
 
     var getParamNumber = function(paramNames, min, max) {
