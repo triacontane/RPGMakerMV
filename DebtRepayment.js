@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/05/25 借金時のウィンドウ文字色を変更できる機能を追加
 // 1.1.0 2017/05/25 一定金額までは借金してお店で商品を購入できる機能を追加
 // 1.0.0 2016/06/01 初版
 // ----------------------------------------------------------------------------
@@ -15,11 +16,50 @@
 //=============================================================================
 
 /*:
+ * @plugindesc DebtRepaymentPlugin
+ * @author triacontane
+ *
+ * @param UnderLimitCanBuying
+ * @desc お店で購入可能な下限の金額です。指定する場合はマイナス値を指定してください。制御文字\v[n]が指定可能です。
+ * @default 0
+ *
+ * @param DebtTextColor
+ * @desc 所持金ウィンドウで借金時の文字色を変更します。システムカラー番号（\c[n]）で指定します。
+ * @default 0
+ *
+ * @help 所持金をマイナスにすることができます。
+ *
+ * プラグインコマンド詳細
+ *  イベントコマンド「プラグインコマンド」から実行。
+ *  （パラメータの間は半角スペースで区切る）
+ *
+ * 所持金をマイナスに設定することを一時的に禁止します。
+ *  DR借金禁止
+ *  DR_DEBT_DISABLE
+ *
+ * 所持金をマイナスに設定することを再度許可します。
+ *  DR借金許可
+ *  DR_DEBT_ENABLE
+ *
+ * 所持金がマイナスの場合、ゼロに戻します。
+ *  DR借金返済
+ *  DR_REPAY_GOLD
+ *
+ * 利用規約：
+ *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
+ *  についても制限はありません。
+ *  このプラグインはもうあなたのものです。
+ */
+/*:ja
  * @plugindesc 所持金マイナスプラグイン
  * @author トリアコンタン
  *
  * @param 購入可能下限金額
  * @desc お店で購入可能な下限の金額です。指定する場合はマイナス値を指定してください。制御文字\v[n]が指定可能です。
+ * @default 0
+ *
+ * @param 借金文字色
+ * @desc 所持金ウィンドウで借金時の文字色を変更します。システムカラー番号（\c[n]）で指定します。
  * @default 0
  *
  * @help 所持金をマイナスにすることができます。
@@ -64,6 +104,13 @@
         return '';
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamString(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value) || 0).clamp(min, max);
+    };
+
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
@@ -89,6 +136,7 @@
     //=============================================================================
     var param = {};
     param.underLimitCanBuying = getParamString(['UnderLimitCanBuying', '購入可能下限金額']);
+    param.debtTextColor       = getParamNumber(['DebtTextColor', '借金文字色'], 0);
 
     //=============================================================================
     // Game_Interpreter
@@ -175,6 +223,19 @@
     var _Scene_Shop_money = Scene_Shop.prototype.money;
     Scene_Shop.prototype.money = function() {
         return _Scene_Shop_money.apply(this, arguments) - $gameParty.getCanBuyingUnderLimit();
+    };
+
+    //=============================================================================
+    // Window_Gold
+    //  借金時の文字色を変更します。
+    //=============================================================================
+    var _Window_Gold_resetTextColor = Window_Gold.prototype.resetTextColor;
+    Window_Gold.prototype.resetTextColor = function() {
+        if (param.debtTextColor > 0 && $gameParty.gold() < 0) {
+            this.changeTextColor(this.textColor(param.debtTextColor));
+        } else {
+            _Window_Gold_resetTextColor.apply(this, arguments);
+        }
     };
 })();
 
