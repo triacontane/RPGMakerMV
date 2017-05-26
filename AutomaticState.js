@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.5 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.2.4 2017/05/27 全回復の直後に自動ステートが解除されてしまう問題を修正
 // 1.2.3 2017/02/16 1.2.0以降、下限MPの設定が無効になっていた問題を修正
 // 1.2.2 2017/02/07 端末依存の記述を削除
@@ -118,23 +119,15 @@
         return text;
     };
 
-    if (!Object.prototype.hasOwnProperty('isEmpty')) {
-        Object.defineProperty(Object.prototype, 'isEmpty', {
-            value : function () {
-                return Object.keys(this).length <= 0;
-            }
-        });
-    }
+    var isEmpty = function(that) {
+        return Object.keys(that).length <= 0;
+    };
 
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value : function (handler) {
-                Object.keys(this).forEach(function (key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     //=============================================================================
     // Game_System
@@ -152,7 +145,7 @@
     //=============================================================================
     Game_BattlerBase.prototype.updateAutomaticState = function() {
         DataManager.iterateAutomaticState(function(state) {
-            if (state == null || state.meta.isEmpty()) return;
+            if (state == null || isEmpty(state.meta)) return;
             var stateId = state.id;
             var result = this.isAutomaticValid(state);
             if (result === null) return;
@@ -359,13 +352,13 @@
     //  ステート付与、解除時のメッセージを抑制します。
     //=============================================================================
     Game_ActionResult.prototype.deleteRemovedStates = function(stateId) {
-        this.removedStates.iterate(function(key, value, index) {
+        iterate(this.removedStates, function(key, value, index) {
             if (value === stateId) this.removedStates.splice(index, 1);
         }.bind(this));
     };
 
     Game_ActionResult.prototype.deleteAddedStates = function(stateId) {
-        this.addedStates.iterate(function(key, value, index) {
+        iterate(this.addedStates, function(key, value, index) {
             if (value === stateId) this.addedStates.splice(index, 1);
         }.bind(this));
     };
