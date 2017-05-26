@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.1 2017/05/27 動的文字列ピクチャプラグインのウィンドウフレームクリックをピクチャクリックに対応
 // 1.9.3 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング（by liplyさん）
 // 1.9.2 2017/03/16 1.9.0で戦闘中にコモンイベント実行が正しく動作していなかった問題を修正
 // 1.9.1 2017/03/16 透明色を考慮する場合、不透明度が0のピクチャは一切反応しなくなるように仕様変更
@@ -777,6 +778,7 @@
     };
 
     Sprite_Picture.prototype.isTransparent = function() {
+        if (this.isTouchPosInFrameWindow()) return false;
         if (!this.isValidTransparent()) return false;
         if (this.opacity === 0) return true;
         var dx  = this.getTouchScreenX() - this.x;
@@ -826,14 +828,22 @@
     };
 
     Sprite_Picture.prototype.isTouchPosInRect = function() {
+        if (this.isTouchPosInFrameWindow()) return true;
         var dx  = this.getTouchScreenX() - this.x;
         var dy  = this.getTouchScreenY() - this.y;
         var sin = Math.sin(-this.rotation);
         var cos = Math.cos(-this.rotation);
         var rx  = this.x + Math.floor(dx * cos + dy * -sin);
         var ry  = this.y + Math.floor(dx * sin + dy * cos);
-        return (rx >= this.minX() && rx <= this.maxX() &&
-        ry >= this.minY() && ry <= this.maxY());
+        return (rx >= this.minX() && rx <= this.maxX() && ry >= this.minY() && ry <= this.maxY());
+    };
+
+    Sprite_Picture.prototype.isTouchPosInFrameWindow = function() {
+        if (!this._frameWindow) return false;
+        var frame = this._frameWindow;
+        var x  = this.getTouchScreenX();
+        var y  = this.getTouchScreenY();
+        return frame.x <= x && frame.x + frame.width >= x && frame.y <= y && frame.y + frame.height >= y;
     };
 
     Sprite_Picture.prototype.isTouchable = function() {
