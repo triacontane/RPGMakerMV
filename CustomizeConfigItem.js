@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.2.1 2016/12/08 1.2.0の機能追加以降、デフォルト項目で決定ボタンを押すとエラーになっていた現象を修正
 // 1.2.0 2016/12/02 各項目で決定ボタンを押したときに実行されるスクリプトを設定できる機能を追加
 // 1.1.1 2016/08/14 スイッチ項目、音量項目の初期値が無効になっていた問題を修正
@@ -165,15 +166,11 @@
         return (arg || '').toUpperCase() == 'ON';
     };
 
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value: function(handler) {
-                Object.keys(this).forEach(function(key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     var localOptionWindowIndex = 0;
 
@@ -275,7 +272,7 @@
     ConfigManager.makeData      = function() {
         var config        = _ConfigManager_makeData.apply(this, arguments);
         config.hiddenInfo = {};
-        this.getCustomParams().iterate(function(symbol) {
+        iterate(this.getCustomParams(), function(symbol) {
             config[symbol]            = this[symbol];
             config.hiddenInfo[symbol] = this.hiddenInfo[symbol];
         }.bind(this));
@@ -285,7 +282,7 @@
     var _ConfigManager_applyData = ConfigManager.applyData;
     ConfigManager.applyData      = function(config) {
         _ConfigManager_applyData.apply(this, arguments);
-        this.getCustomParams().iterate(function(symbol, item) {
+        iterate(this.getCustomParams(), function(symbol, item) {
             if (symbol.contains('Boolean')) {
                 this[symbol] = this.readFlagCustom(config, symbol, item);
             } else if (symbol.contains('Volume')) {
@@ -298,7 +295,7 @@
     };
 
     ConfigManager.customParamUnlock = function(name) {
-        this.getCustomParams().iterate(function(symbol, item) {
+        iterate(this.getCustomParams(), function(symbol, item) {
             if (item.name === name) this.hiddenInfo[symbol] = false;
         }.bind(this));
         this.save();
@@ -344,7 +341,7 @@
 
     ConfigManager.importCustomParams = function() {
         if (!$gameVariables || !$gameSwitches) return;
-        this.getCustomParams().iterate(function(symbol, item) {
+        iterate(this.getCustomParams(), function(symbol, item) {
             if (item.variable > 0) {
                 if (symbol.contains('Boolean')) {
                     this[symbol] = $gameSwitches.value(item.variable);
@@ -409,7 +406,7 @@
     };
 
     Window_Options.prototype.addCustomOptions = function() {
-        this._customParams.iterate(function(key, item) {
+        iterate(this._customParams, function(key, item) {
             if (!ConfigManager.hiddenInfo[key]) this.addCommand(item.name, key);
         }.bind(this));
     };
