@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.0 2016/02/07 解除条件によって様々なステートIDを付与できる機能を追加
 // 1.0.0 2016/02/04 初版
 // ----------------------------------------------------------------------------
@@ -45,7 +46,6 @@
  */
 (function () {
     'use strict';
-    var pluginName = 'StateChangeIfRemove';
 
     var getArgNumber = function (arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
@@ -59,15 +59,11 @@
         return window ? window.convertEscapeCharacters(text) : text;
     };
 
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value : function (handler) {
-                Object.keys(this).forEach(function (key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     //=============================================================================
     //  Game_Actor
@@ -143,13 +139,13 @@
     //  ステート付与、解除時のメッセージを抑制します。
     //=============================================================================
     Game_ActionResult.prototype.deleteRemovedStates = function(stateId) {
-        this.removedStates.iterate(function(key, value, index) {
+        iterate(this.removedStates, function(key, value, index) {
             if (value === stateId) this.removedStates.splice(index, 1);
         }.bind(this));
     };
 
     Game_ActionResult.prototype.deleteAddedStates = function(stateId) {
-        this.addedStates.iterate(function(key, value, index) {
+        iterate(this.addedStates, function(key, value, index) {
             if (value === stateId) this.addedStates.splice(index, 1);
         }.bind(this));
     };
