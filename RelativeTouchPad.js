@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.1 2017/05/10 乗り物中にダッシュが有効になっていた現象を修正
 // 1.1.0 2017/03/01 数値入力ウィンドウのボタンを常に表示するよう変更
 //                  ダッシュ禁止の場合はダッシュできないよう変更
@@ -124,15 +125,11 @@ Game_Relative_Pad.distanceFar          = 144;
         return Math.floor(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
     };
 
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value : function (handler) {
-                Object.keys(this).forEach(function (key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     //=============================================================================
     // Input
@@ -157,7 +154,7 @@ Game_Relative_Pad.distanceFar          = 144;
     };
 
     Input._suppressSubmit = function() {
-        this._submitState.iterate(function (keyName, frameCount) {
+        iterate(this._submitState, function (keyName, frameCount) {
             if (frameCount + 1 < Graphics.frameCount) {
                 this._currentState[keyName] = false;
                 delete this._submitState[keyName];
