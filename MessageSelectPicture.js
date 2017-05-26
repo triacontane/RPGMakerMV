@@ -6,9 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.0 2016/02/20 選択肢拡張プラグイン（MPP_ChoiceEX.js）に対応
 // 1.0.2 2016/01/24 マウス操作でピクチャが更新されない問題を修正
-// 1.0.1 2016/01/24 起動しないバグ修正
+// 1.0.1 2016/01/24 起動しないバグ修正(笑)
 // 1.0.0 2016/01/23 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -65,15 +66,11 @@
         return (command || '').toUpperCase();
     };
 
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value : function (handler) {
-                Object.keys(this).forEach(function (key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     //=============================================================================
     // Game_Interpreter
@@ -147,7 +144,7 @@
 
     Window_ChoiceList.prototype.updateSelectPicture = function() {
         var visiblyId = -1;
-        $gameMessage.getSelectPictures().iterate(function(key, id, index) {
+        iterate($gameMessage.getSelectPictures(), function(key, id, index) {
             var picture = $gameScreen.picture(id);
             if (!picture) return;
             var compareResult = (index === this.index() || visiblyId === id);
