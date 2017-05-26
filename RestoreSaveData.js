@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.0.0 2016/01/24 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -35,15 +36,11 @@
 (function () {
     'use strict';
 
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value : function (handler) {
-                Object.keys(this).forEach(function (key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     var _DataManager_loadGameWithoutRescue = DataManager.loadGameWithoutRescue;
     DataManager.loadGameWithoutRescue = function(saveFileId) {
@@ -64,7 +61,7 @@
     };
 
     DataManager.makePropertyForLoadData = function(newData, loadData) {
-        newData.iterate(function(key, value) {
+        iterate(newData, function(key, value) {
             if (!loadData.hasOwnProperty(key) && newData.hasOwnProperty(key)) {
                 loadData[key] = value;
             }
