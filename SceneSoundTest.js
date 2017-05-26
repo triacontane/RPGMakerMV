@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.0 2017/01/25 同一サーバで同プラグインを適用した複数のゲームを公開する際に、設定が重複するのを避けるために管理番号を追加
 //                  RPGアツマール等CSVが使えない環境のためデータファイルとしてJSON形式をサポート
 // 1.0.3 2016/10/10 設定項目をすべて非表示にした場合、リストから選択後、ゲームが止まってしまう問題を修正
@@ -248,6 +249,12 @@ function Scene_SoundTest() {
         return (command || '').toUpperCase();
     };
 
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
+        });
+    };
+
     var paramReadFormat   = getParamString(['読込形式', 'ReadFormat']).toUpperCase();
     var paramManageNumber = getParamString(['管理番号', 'ManageNumber']);
 
@@ -257,16 +264,6 @@ function Scene_SoundTest() {
     //=============================================================================
     DataManager._dataSeparater = ',';
     DataManager.soundTestFiles = [];
-
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value: function(handler) {
-                Object.keys(this).forEach(function(key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
-        });
-    }
 
     DataManager.loadCsvFiles = function() {
         this.soundTestFiles.forEach(function(file) {
@@ -309,7 +306,7 @@ function Scene_SoundTest() {
             if (line === '') return;
             var dataObject = {};
             dataObject.id  = dataList.length;
-            line.split(this._dataSeparater).iterate(function(key, data) {
+            iterate(line.split(this._dataSeparater), function(key, data) {
                 dataObject[columns[key]] = data.replace(/^\s*\"?(.*?)\"?\s*$/, function() {
                     return arguments[1];
                 });
