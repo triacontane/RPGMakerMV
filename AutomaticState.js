@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.4 2017/05/27 全回復の直後に自動ステートが解除されてしまう問題を修正
 // 1.2.3 2017/02/16 1.2.0以降、下限MPの設定が無効になっていた問題を修正
 // 1.2.2 2017/02/07 端末依存の記述を削除
 // 1.2.1 2017/01/17 1.2.0でスイッチの項目が正しく機能しなかった問題を修正
@@ -273,6 +274,12 @@
     var _Game_BattlerBase_setTp = Game_BattlerBase.prototype.setTp;
     Game_BattlerBase.prototype.setTp = function(tp) {
         _Game_BattlerBase_setTp.apply(this, arguments);
+        this.updateAutomaticState();
+    };
+
+    var _Game_BattlerBase_recoverAll = Game_BattlerBase.prototype.recoverAll;
+    Game_BattlerBase.prototype.recoverAll = function() {
+        _Game_BattlerBase_recoverAll.apply(this, arguments);
         this.updateAutomaticState();
     };
 
