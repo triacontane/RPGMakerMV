@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 2.0.0 2016/08/05 本体v1.3.0対応（1.2.0では使えなくなります）
 //                  素材のプリロード時に発生するエラー(対象が存在しない等)を抑制するよう仕様変更
 // 1.1.2 2016/07/23 コードのリファクタリングとヘルプの修正
@@ -113,15 +114,11 @@ var $dataMaterials = null;
         return null;
     };
 
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value : function (handler) {
-                Object.keys(this).forEach(function (key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     //=============================================================================
     // パラメータの取得と整形
@@ -160,7 +157,7 @@ var $dataMaterials = null;
 
     DataManager.initParallelPreload = function() {
         this.materialFilePaths = [];
-        $dataMaterials.iterate(function (key, value) {
+        iterate($dataMaterials, function (key, value) {
             for (var i = 0, n = value.length; i < n; i++) {
                 this.materialFilePaths.push([key, value[i]]);
             }
