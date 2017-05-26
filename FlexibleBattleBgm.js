@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.0.0 2016/01/07 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -96,15 +97,11 @@
     // Object
     //  プロパティの定義
     //=============================================================================
-    if (!Object.prototype.hasOwnProperty('iterate')) {
-        Object.defineProperty(Object.prototype, 'iterate', {
-            value : function (handler) {
-                Object.keys(this).forEach(function (key, index) {
-                    handler.call(this, key, this[key], index);
-                }, this);
-            }
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     //=============================================================================
     // Game_Interpreter
@@ -139,9 +136,9 @@
                 var start  = getArgNumber(args[0], 1, 5000);
                 var end    = getArgNumber(args[1], 1, 5000);
                 var name   = getArgString(args[2]);
-                var volume = args[3] != null ? getArgNumber(args[3]) : null;
-                var pitch  = args[4] != null ? getArgNumber(args[4]) : null;
-                var pan    = args[5] != null ? getArgNumber(args[5]) : null;
+                var volume = args[3] !== undefined ? getArgNumber(args[3]) : null;
+                var pitch  = args[4] !== undefined ? getArgNumber(args[4]) : null;
+                var pan    = args[5] !== undefined ? getArgNumber(args[5]) : null;
                 $gameSystem.addTroopBattleBgm(start, end, name, volume, pitch, pan);
                 break;
         }
@@ -154,9 +151,9 @@
     var _Game_System_battleBgm = Game_System.prototype.battleBgm;
     Game_System.prototype.battleBgm = function() {
         var id = $gameTroop._troopId;
-        if (this._troopsBattleBgm != null && id !== 0) {
+        if (this._troopsBattleBgm && id !== 0) {
             var bgm = null;
-            this._troopsBattleBgm.iterate(function(key, value) {
+            iterate(this._troopsBattleBgm, function(key, value) {
                 if (id >= parseInt(key.split(':')[0], 10) && id <= parseInt(key.split(':')[1], 10)) bgm = value;
             });
             if (bgm) return bgm;
@@ -165,10 +162,10 @@
     };
 
     Game_System.prototype.addTroopBattleBgm = function(start, end, name, volume, pitch, pan) {
-        if (volume == null) volume = 90;
-        if (pitch == null) pitch = 100;
-        if (pan == null) pan = 0;
-        if (this._troopsBattleBgm == null) this._troopsBattleBgm = {};
+        if (volume === null) volume = 90;
+        if (pitch === null) pitch = 100;
+        if (pan === null) pan = 0;
+        if (!this._troopsBattleBgm) this._troopsBattleBgm = {};
         this._troopsBattleBgm[start + ':' + end] = {name:name, pan:pan.clamp(-100, 100),
             volume:volume.clamp(0, 100), pitch:pitch.clamp(50, 150)};
     };
