@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/05/28 耐性計算式を除算と減算の二つを用意しました。
 // 1.0.1 2016/05/31 戦闘テスト以外で戦闘に入るとエラーになる場合がある問題を修正
 // 1.0.0 2016/05/28 初版
 // ----------------------------------------------------------------------------
@@ -25,15 +26,27 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param 有効度で減算
+ * @desc ONにした場合、対象のステート有効度の値で蓄積値が減算されます。詳細はヘルプをご確認ください。
+ * @default ON
+ *
  * @help 特定のステートを蓄積型に変更します。
- * 使用効果「ステート付加」によって値が蓄積していき、
- * 100%を超えると対象のステートが有効になります。
- *
- * 蓄積量は対象の「ステート有効度」によって変動します。
- * また、「ステート解除」によって蓄積量がリセットされます。
- *
- * ステートのメモ欄に以下の通り設定してください。
+ * 蓄積型のステートにしたい場合、メモ欄に以下の通り設定してください。
  * <AS蓄積型>
+ *
+ * 蓄積型ステートは使用効果「ステート付加」によって値が蓄積していき、
+ * 蓄積率が100%を超えると対象のステートが有効になります。
+ * 実際の蓄積率は対象の「ステート有効度」によって変動します。
+ *
+ * ・「有効度で減算」がONの場合
+ * 効果「ステート付加」の設定値 - (100 - 対象の「ステートの有効度」) = 蓄積率
+ *
+ * ・「有効度で減算」がOFFの場合
+ * 効果「ステート付加」の設定値 / 対象の「ステートの有効度」 = 蓄積率
+ *
+ * ※実際にはデフォルトの仕様に合わせて若干の幸運補正が付加されます。
+ *
+ * また、「ステート解除」によって蓄積量がリセットされます。
  *
  * ステートをひとつだけ指定して戦闘画面にゲージとして表示することができます。
  * この機能を使う場合は、アクターのメモ欄に以下の通り設定してください。
@@ -74,6 +87,11 @@
             if (name) return name;
         }
         return null;
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return value.toUpperCase() === 'ON';
     };
 
     var getParamString = function(paramNames) {
@@ -128,7 +146,8 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramGaugeImage = getParamString(['GaugeImage', 'ゲージ画像ファイル']);
+    var paramGaugeImage  = getParamString(['GaugeImage', 'ゲージ画像ファイル']);
+    var paramSubtraction = getParamBoolean(['Subtraction', '有効度で減算']);
 
     //=============================================================================
     // Game_Interpreter
@@ -243,6 +262,14 @@
         return getArgNumber(getMetaValues(this.getData(), names)) || 0;
     };
 
+    Game_Actor.prototype.getData = function() {
+        return this.actor();
+    };
+
+    Game_Enemy.prototype.getData = function() {
+        return this.enemy();
+    };
+
     //=============================================================================
     // Game_Action
     //  行動によってステート蓄積量を増やします。
@@ -252,7 +279,11 @@
         _Game_Action_itemEffectAddAttackState.apply(this, arguments);
         this.subject().attackStates(true).forEach(function(stateId) {
             var accumulation = effect.value1;
-            accumulation *= target.stateRate(stateId);
+            if (paramSubtraction) {
+                accumulation -= (1.0 - target.stateRate(stateId));
+            } else {
+                accumulation *= target.stateRate(stateId);
+            }
             accumulation *= this.subject().attackStatesRate(stateId);
             accumulation *= this.lukEffectRate(target);
             var result       = target.accumulateState(stateId, accumulation);
@@ -265,7 +296,11 @@
         if (BattleManager.isStateAccumulate(effect.dataId)) {
             var accumulation = effect.value1;
             if (!this.isCertainHit()) {
-                accumulation *= target.stateRate(effect.dataId);
+                if (paramSubtraction) {
+                    accumulation -= (1.0 - target.stateRate(effect.dataId));
+                } else {
+                    accumulation *= target.stateRate(effect.dataId);
+                }
                 accumulation *= this.lukEffectRate(target);
             }
             var result = target.accumulateState(effect.dataId, accumulation);

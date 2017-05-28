@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2017/05/28 イベントを配置したときアニメパターンが一瞬だけ初期化されてしまう問題を修正
 // 1.5.1 2017/04/23 イベントを生成するプラグインコマンドで制御文字が無効になっていた問題を修正
 // 1.5.0 2017/01/19 イベント生成の際にIDだけでなくイベント名の一致するイベントを動的生成できる機能を追加
 // 1.4.4 2017/01/13 動的イベントの一時消去時にバルーンやアニメーションを表示中だった場合に表示が残ってしまう問題を修正
@@ -427,12 +428,17 @@ function Game_PrefabEvent() {
         Game_Event.prototype.initialize.call(this, mapId, eventId);
         if (typeof Yanfly !== 'undefined' && Yanfly.SEL) {
             $gameTemp._bypassLoadLocation = true;
-            this.locate(x, y);
+            this.locateWithoutStraighten(x, y);
             $gameTemp._bypassLoadLocation = undefined;
         } else {
-            this.locate(x, y);
+            this.locateWithoutStraighten(x, y);
         }
         this._spritePrepared = false;
+    };
+
+    Game_PrefabEvent.prototype.locateWithoutStraighten = function(x, y) {
+        this.setPosition(x, y);
+        this.refreshBushDepth();
     };
 
     Game_PrefabEvent.prototype.linkEventData = function() {
