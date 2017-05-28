@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/05/28 減算の結果が負の値になったときに蓄積率が減算されていた問題を修正
 // 1.1.0 2017/05/28 耐性計算式を除算と減算の二つを用意しました。
 // 1.0.1 2016/05/31 戦闘テスト以外で戦闘に入るとエラーになる場合がある問題を修正
 // 1.0.0 2016/05/28 初版
@@ -39,10 +40,14 @@
  * 実際の蓄積率は対象の「ステート有効度」によって変動します。
  *
  * ・「有効度で減算」がONの場合
- * 効果「ステート付加」の設定値 - (100 - 対象の「ステートの有効度」) = 蓄積率
+ * 効果「ステート付加」の設定値 - (1.0 - 対象の「ステートの有効度」) = 蓄積率
+ * 例：効果の「ステート付加」が80%(0.8)で、対象のステート有効度が50%(0,5)の場合
+ * 0.8 - (1.0 - 0.5) = 0.3 # 蓄積率は30%(0.3)
  *
  * ・「有効度で減算」がOFFの場合
- * 効果「ステート付加」の設定値 / 対象の「ステートの有効度」 = 蓄積率
+ * 効果「ステート付加」の設定値 * 対象の「ステートの有効度」 = 蓄積率
+ * 例：効果の「ステート付加」が80%(0.8)で、対象のステート有効度が50%(0,5)の場合
+ * 0.8 * 0.5 = 0.4         # 蓄積率は40%(0.4)
  *
  * ※実際にはデフォルトの仕様に合わせて若干の幸運補正が付加されます。
  *
@@ -279,14 +284,10 @@
         _Game_Action_itemEffectAddAttackState.apply(this, arguments);
         this.subject().attackStates(true).forEach(function(stateId) {
             var accumulation = effect.value1;
-            if (paramSubtraction) {
-                accumulation -= (1.0 - target.stateRate(stateId));
-            } else {
-                accumulation *= target.stateRate(stateId);
-            }
+            accumulation = this.applyResistanceForAccumulateState(accumulation, target, stateId);
             accumulation *= this.subject().attackStatesRate(stateId);
             accumulation *= this.lukEffectRate(target);
-            var result       = target.accumulateState(stateId, accumulation);
+            var result = target.accumulateState(stateId, accumulation);
             if (result) this.makeSuccess(target);
         }.bind(this), target);
     };
@@ -296,11 +297,7 @@
         if (BattleManager.isStateAccumulate(effect.dataId)) {
             var accumulation = effect.value1;
             if (!this.isCertainHit()) {
-                if (paramSubtraction) {
-                    accumulation -= (1.0 - target.stateRate(effect.dataId));
-                } else {
-                    accumulation *= target.stateRate(effect.dataId);
-                }
+                accumulation = this.applyResistanceForAccumulateState(accumulation, target, effect.dataId);
                 accumulation *= this.lukEffectRate(target);
             }
             var result = target.accumulateState(effect.dataId, accumulation);
@@ -308,6 +305,15 @@
         } else {
             _Game_Action_itemEffectAddNormalState.apply(this, arguments);
         }
+    };
+
+    Game_Action.prototype.applyResistanceForAccumulateState = function(accumulation, target, stateId) {
+        if (paramSubtraction) {
+            accumulation -= (1.0 - target.stateRate(stateId));
+        } else {
+            accumulation *= target.stateRate(stateId);
+        }
+        return Math.max(accumulation, 0);
     };
 
     //=============================================================================
