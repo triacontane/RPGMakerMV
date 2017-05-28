@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.2 2017/05/28 進入不可タイルに存在するイベントに対する半歩用衝突判定が行われない現象を修正
 // 1.8.1 2017/05/14 プライオリティが「通常キャラと同じ」でないイベントはプレイヤーに対する衝突判定を行わないよう修正
 // 1.8.0 2017/04/23 8方向移動の可否をスイッチによって切り替える機能を追加
 // 1.7.0 2017/03/01 全方向移動不可な地形タグやリージョンのパラメータを追加
@@ -893,6 +894,14 @@
         }
     };
 
+    var _Game_CharacterBase_canPass2 = Game_CharacterBase.prototype.canPass;
+    Game_CharacterBase.prototype.canPass = function(x, y, d) {
+        var x2 = $gameMap.roundXWithDirection(x, d);
+        var y2 = $gameMap.roundYWithDirection(y, d);
+        this.isCollidedWithCharacters(x2, y2);
+        return _Game_CharacterBase_canPass2.apply(this, arguments);
+    };
+
     var _Game_CharacterBase_canPass      = Game_CharacterBase.prototype.canPass;
     Game_CharacterBase.prototype.canPass = function(x, y, d) {
         if (this.isHalfMove()) {
@@ -968,7 +977,7 @@
     };
 
     Game_CharacterBase.prototype.isThroughEnable = function() {
-        return (this._throughDisable != null ? !this._throughDisable : paramEventThrough);
+        return (this._throughDisable !== undefined ? !this._throughDisable : paramEventThrough);
     };
 
     var _Game_CharacterBase_checkEventTriggerTouchFront      = Game_CharacterBase.prototype.checkEventTriggerTouchFront;
