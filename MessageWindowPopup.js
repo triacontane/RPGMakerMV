@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2017/05/28 ウィンドウスキンを変更した直後の文字色のみ変更前の文字色になってしまう問題を修正
+//                  2行目以降の文字サイズを変更したときにウィンドウの高さが正しく計算されない問題を修正
 // 2.4.0 2017/05/16 並列実行のコモンイベントで「MWP_VALID 0」を実行したときに、実行中のマップイベントを対象とするよう修正
 // 2.3.2 2017/05/25 「FTKR_ExMessageWindow2.js」の連携機能の修正(byフトコロ)
 //                  ウィンドウを閉じた時にフキダシ無効化をする対象を、指定していたウィンドウIDのみに変更
@@ -840,8 +842,8 @@
     var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         this.updateTargetCharacterId();
-        _Window_Message_startMessage.apply(this, arguments);
         this.loadWindowskin();
+        _Window_Message_startMessage.apply(this, arguments);
         this.resetLayout();
     };
 
@@ -980,6 +982,17 @@
             default:
                 this.processVirtualNormalCharacter(textState);
                 break;
+        }
+    };
+
+    var _Window_Message_processNewLine = Window_Message.prototype.processNewLine;
+    Window_Message.prototype.processNewLine = function(textState) {
+        if (this.isPopup()) {
+            textState.index++;
+            _Window_Message_processNewLine.apply(this, arguments);
+            textState.index--;
+        } else {
+            _Window_Message_processNewLine.apply(this, arguments);
         }
     };
 
@@ -1236,8 +1249,8 @@
         var _Window_MessageEx_startMessage      = Window_MessageEx.prototype.startMessage;
         Window_MessageEx.prototype.startMessage = function() {
             this.updateTargetCharacterId();
-            _Window_MessageEx_startMessage.apply(this, arguments);
             this.loadWindowskin();
+            _Window_MessageEx_startMessage.apply(this, arguments);
             this.resetLayout();
         };
 
