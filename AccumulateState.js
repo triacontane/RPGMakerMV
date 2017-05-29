@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2017/05/29 蓄積率計算式を独自に指定できるよう仕様変更。運補正と必中補正の有無を設定できる機能を追加
 // 1.1.1 2017/05/28 減算の結果が負の値になったときに蓄積率が減算されていた問題を修正
 // 1.1.0 2017/05/28 耐性計算式を除算と減算の二つを用意しました。
 // 1.0.1 2016/05/31 戦闘テスト以外で戦闘に入るとエラーになる場合がある問題を修正
@@ -27,8 +28,16 @@
  * @dir img/pictures/
  * @type file
  *
- * @param 有効度で減算
- * @desc ONにした場合、対象のステート有効度の値で蓄積値が減算されます。詳細はヘルプをご確認ください。
+ * @param 蓄積率計算式
+ * @desc 蓄積率を算出する計算式を効果の「ステート付加」および対象の「ステート有効度」から独自作成します。
+ * @default
+ *
+ * @param 運補正
+ * @desc ONにすると蓄積率に対して運による補正を掛けます。（デフォルト仕様準拠）
+ * @default ON
+ *
+ * @param 必中時有効度無視
+ * @desc ONにすると必中スキルに関しては「ステート付加」の値がそのまま蓄積率に反映されます。
  * @default ON
  *
  * @help 特定のステートを蓄積型に変更します。
@@ -36,22 +45,30 @@
  * <AS蓄積型>
  *
  * 蓄積型ステートは使用効果「ステート付加」によって値が蓄積していき、
- * 蓄積率が100%を超えると対象のステートが有効になります。
- * 実際の蓄積率は対象の「ステート有効度」によって変動します。
+ * 蓄積率が100%(=1.0)を超えると対象のステートが有効になります。
+ * 計算式は以下の通りです。
  *
- * ・「有効度で減算」がONの場合
- * 効果「ステート付加」の設定値 - (1.0 - 対象の「ステートの有効度」) = 蓄積率
- * 例：効果の「ステート付加」が80%(0.8)で、対象のステート有効度が50%(0.5)の場合
- * 0.8 - (1.0 - 0.5) = 0.3 # 蓄積率は30%(0.3)
- *
- * ・「有効度で減算」がOFFの場合
  * 効果「ステート付加」の設定値 * 対象の「ステートの有効度」 = 蓄積率
  * 例：効果の「ステート付加」が80%(0.8)で、対象のステート有効度が50%(0.5)の場合
  * 0.8 * 0.5 = 0.4         # 蓄積率は40%(0.4)
  *
- * ※実際にはデフォルトの仕様に合わせて若干の幸運補正が付加されます。
+ * 上級者向け機能として蓄積率計算式を別途指定できます。
+ * 計算式では以下の変数が使用できます。
  *
- * また、「ステート解除」によって蓄積量がリセットされます。
+ * a : 効果の「ステート付加」の設定値
+ * b : 対象の「ステート有効度」の設定値
+ *
+ * 蓄積率計算式の指定例
+ * a - (1.0 - b)
+ *
+ * 例：効果の「ステート付加」が80%(0.8)で、対象のステート有効度が50%(0.5)の場合
+ * 0.8 - (1.0 - 0.5) = 0.3  # 蓄積率は30%(0.3)
+ *
+ * 蓄積率が負の値になった場合は「0」として計算されます。
+ * 実行時のブザーが鳴る場合、スクリプトの記述に問題があります。
+ * F8を押下してデベロッパツールを開き、内容を確認してください。
+ *
+ * また、「ステート解除」によって蓄積率がリセットされます。
  *
  * ステートをひとつだけ指定して戦闘画面にゲージとして表示することができます。
  * この機能を使う場合は、アクターのメモ欄に以下の通り設定してください。
@@ -151,8 +168,10 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramGaugeImage  = getParamString(['GaugeImage', 'ゲージ画像ファイル']);
-    var paramSubtraction = getParamBoolean(['Subtraction', '有効度で減算']);
+    var paramGaugeImage        = getParamString(['GaugeImage', 'ゲージ画像ファイル']);
+    var paramAccumulateFormula = getParamString(['AccumulateFormula', '蓄積率計算式']);
+    var paramLuckAdjust        = getParamBoolean(['LuckAdjust', '運補正']);
+    var paramCertainHit        = getParamBoolean(['CertainHit', '必中時有効度無視']);
 
     //=============================================================================
     // Game_Interpreter
@@ -283,11 +302,9 @@
     Game_Action.prototype.itemEffectAddAttackState = function(target, effect) {
         _Game_Action_itemEffectAddAttackState.apply(this, arguments);
         this.subject().attackStates(true).forEach(function(stateId) {
-            var accumulation = effect.value1;
-            accumulation = this.applyResistanceForAccumulateState(accumulation, target, stateId);
-            accumulation *= this.subject().attackStatesRate(stateId);
-            accumulation *= this.lukEffectRate(target);
-            var result = target.accumulateState(stateId, accumulation);
+            var accumulation = effect.value1 * this.subject().attackStatesRate(stateId);
+            accumulation     = this.applyResistanceForAccumulateState(accumulation, target, stateId);
+            var result       = target.accumulateState(stateId, accumulation);
             if (result) this.makeSuccess(target);
         }.bind(this), target);
     };
@@ -296,9 +313,8 @@
     Game_Action.prototype.itemEffectAddNormalState = function(target, effect) {
         if (BattleManager.isStateAccumulate(effect.dataId)) {
             var accumulation = effect.value1;
-            if (!this.isCertainHit()) {
+            if (!this.isCertainHit() || !paramCertainHit) {
                 accumulation = this.applyResistanceForAccumulateState(accumulation, target, effect.dataId);
-                accumulation *= this.lukEffectRate(target);
             }
             var result = target.accumulateState(effect.dataId, accumulation);
             if (result) this.makeSuccess(target);
@@ -307,13 +323,24 @@
         }
     };
 
-    Game_Action.prototype.applyResistanceForAccumulateState = function(accumulation, target, stateId) {
-        if (paramSubtraction) {
-            accumulation -= (1.0 - target.stateRate(stateId));
+    Game_Action.prototype.applyResistanceForAccumulateState = function(effectValue, target, stateId) {
+        if (paramAccumulateFormula) {
+            var a = effectValue;
+            var b = target.stateRate(stateId);
+            try {
+                effectValue = eval(paramAccumulateFormula);
+            } catch (e) {
+                SoundManager.playBuzzer();
+                console.warn('Script Error : ' + paramAccumulateFormula);
+                console.warn(e.stack);
+            }
         } else {
-            accumulation *= target.stateRate(stateId);
+            effectValue *= target.stateRate(stateId);
         }
-        return Math.max(accumulation, 0);
+        if (paramLuckAdjust) {
+            effectValue *= this.lukEffectRate(target);
+        }
+        return effectValue.clamp(0.0, 1.0);
     };
 
     //=============================================================================
