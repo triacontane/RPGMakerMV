@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/05/30 弱点と耐性のポップアップで弱点や耐性と見なすための閾値を設定できる機能を追加
 // 1.4.0 2017/05/20 CounterExtend.jsとの併用でスキルによる反撃が表示されない問題を修正。
 //                  ポップアップのイタリック体および縁取り表示を行う機能を追加。
 // 1.3.1 2016/12/18 VE_BasicModule.jsとの競合を解消
@@ -92,6 +93,10 @@
  * @param 弱点カラー
  * @desc 弱点発生時の文字のフラッシュ色です。
  * @default 0,255,128,255
+ *
+ * @param 弱点閾値
+ * @desc この値以上なら弱点と見なします。百分率で指定します。
+ * @default 200
  * 
  * @param 耐性
  * @desc 弱点時のポップアップメッセージまたはファイル名です。
@@ -103,6 +108,10 @@
  * @param 耐性カラー
  * @desc 耐性発生時の文字のフラッシュ色です。
  * @default 0,0,128,255
+ *
+ * @param 耐性閾値
+ * @desc この値以下なら耐性と見なします。百分率で指定します。
+ * @default 50
  *
  * @param 味方ダメージカラー
  * @desc アクターダメージのフラッシュ色です。
@@ -309,7 +318,9 @@
     var paramCounterColor     = getParamArrayNumber(['CounterColor', '反撃カラー'], 0, 256);
     var paramWeakness         = getParamString(['Weakness', '弱点']);
     var paramWeaknessColor    = getParamArrayNumber(['WeaknessColor', '弱点カラー'], 0, 256);
+    var paramWeaknessLine     = getParamNumber(['WeaknessLine', '弱点閾値']);
     var paramResistance       = getParamString(['Resistance', '耐性']);
+    var paramResistanceLine   = getParamNumber(['ResistanceLine', '耐性閾値']);
     var paramResistanceColor  = getParamArrayNumber(['ResistanceColor', '耐性カラー'], 0, 256);
     var paramActorDamageColor = getParamArrayNumber(['ActorDamageColor', '味方ダメージカラー'], 0, 256);
     var paramEnemyDamageColor = getParamArrayNumber(['EnemyDamageColor', '敵ダメージカラー'], 0, 256);
@@ -373,9 +384,9 @@
     var _Game_Action_calcElementRate      = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         var result = _Game_Action_calcElementRate.apply(this, arguments);
-        if (result > 1.0) {
+        if (result >= paramWeaknessLine / 100) {
             target.appointMessagePopup(paramWeakness, paramWeaknessColor);
-        } else if (result < 1.0) {
+        } else if (result <= paramResistanceLine / 100) {
             target.appointMessagePopup(paramResistance, paramResistanceColor);
         }
         return result;
@@ -449,7 +460,7 @@
     };
 
     Window_BattleLog.prototype.popupMiss = function(target) {
-        this.pushPopupMessage(target, paramAvoid, paramAvoidColor);
+        this.pushPopupMessage(target, paramMiss, paramMissColor);
     };
 
     var _Window_BattleLog_displayEvasion      = Window_BattleLog.prototype.displayEvasion;
