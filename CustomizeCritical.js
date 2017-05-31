@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/05/31 1.1.0の修正でメニュー画面でスキルを使用するとエラーになる不具合を修正
 // 1.1.0 2017/05/27 連続ヒットする攻撃の2ヒット目以降のダメージが正常に表示されない問題を修正。YEP_BattleEngineCore.jsとの競合を解消
 // 1.0.0 2016/05/05 初版
 // ----------------------------------------------------------------------------
@@ -140,6 +141,9 @@
     };
 
     Game_Action.prototype.itemCri = function(target) {
+        if (!this._criticalMap) {
+            this.judgeCritical(target);
+        }
         return this._criticalMap.get(target) ? 1.0 : 0.0;
     };
 
