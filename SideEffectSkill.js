@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/06/01 弱点時のみ副作用が適用できる機能を追加
 // 1.1.1 2017/01/24 副作用設定時にターン終了時にダメージのポップアップ等が出なくなる問題を修正
 // 1.1.0 2016/12/13 フロントビュー時にエフェクト効果のメッセージが重複して表示される問題を修正
 // 1.0.2 2016/10/10 行動パターンが何も設定されていない敵キャラが行動しようとするとエラーになる問題を修正
@@ -47,7 +48,7 @@
  * 全員の行動が完了してターンが終了した瞬間に
  * 副作用が適用されます。
  *
- * さらにスキルが「成功時のみ」「失敗時のみ」の場合だけ
+ * さらにスキルが「成功時のみ」「失敗時のみ」「弱点時のみ」の場合だけ
  * 副作用を適用することもできます。
  *
  * スキルのメモ欄に以下の通り指定してください。
@@ -70,6 +71,8 @@
  * <SES_HitOnly>           # 同上
  * <SES_失敗時のみ>        # 行動が失敗した場合のみ副作用を適用
  * <SES_MissOnly>          # 同上
+ * <SES_弱点時のみ>        # 行動が弱点を突いた場合のみ副作用を適用
+ * <SES_EffectiveOnly>     # 同上
  *
  * 複数指定する場合、[,]で区切ってください。効果の番号が[1]が先頭です。
  * また入力時副作用は敵キャラ専用です。
@@ -117,7 +120,7 @@
  * 全員の行動が完了してターンが終了した瞬間に
  * 副作用が適用されます。
  *
- * さらにスキルが「成功時のみ」「失敗時のみ」の場合だけ
+ * さらにスキルが「成功時のみ」「失敗時のみ」「弱点時のみ」の場合だけ
  * 副作用を適用することもできます。
  *
  * スキルのメモ欄に以下の通り指定してください。
@@ -140,6 +143,8 @@
  * <SES_HitOnly>           # 同上
  * <SES_失敗時のみ>        # 行動が失敗した場合のみ副作用を適用
  * <SES_MissOnly>          # 同上
+ * <SES_弱点時のみ>        # 行動が弱点を突いた場合のみ副作用を適用
+ * <SES_EffectiveOnly>     # 同上
  *
  * 複数指定する場合、[,]で区切ってください。効果の番号が[1]が先頭です。
  * また入力時副作用は敵キャラ専用です。
@@ -403,6 +408,15 @@
         this._successForSideEffect = true;
     };
 
+    var _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
+    Game_Action.prototype.calcElementRate = function(target) {
+        var rate = _Game_Action_calcElementRate.apply(this, arguments);
+        if (rate >= 1.1) {
+            this._effectiveForSideEffect = true;
+        }
+        return rate;
+    };
+
     Game_Action.prototype.applyItemSideEffect = function(property) {
         if (!this.isValidSideEffect()) return;
         if (this.isNeedDisplaySideEffect(property)) {
@@ -420,9 +434,22 @@
         } else if (!this._applyForSideEffect) {
             return true;
         } else {
-            return (this._successForSideEffect || !getMetaValues(this.item(), ['HitOnly', '成功時のみ'])) &&
-                (!this._successForSideEffect || !getMetaValues(this.item(), ['MissOnly', '失敗時のみ']));
+            return this.isValidSideEffectForSuccess() &&
+                this.isValidSideEffectForFailure() &&
+                this.isValidSideEffectForEffective();
         }
+    };
+
+    Game_Action.prototype.isValidSideEffectForSuccess = function() {
+        return this._successForSideEffect || !getMetaValues(this.item(), ['HitOnly', '成功時のみ']);
+    };
+
+    Game_Action.prototype.isValidSideEffectForFailure = function() {
+        return !this._successForSideEffect || !getMetaValues(this.item(), ['MissOnly', '失敗時のみ']);
+    };
+
+    Game_Action.prototype.isValidSideEffectForEffective = function() {
+        return this._effectiveForSideEffect || !getMetaValues(this.item(), ['EffectiveOnly', '弱点時のみ']);
     };
 
     Game_Action.prototype.applyItemSideEffectGlobal = function(property) {
