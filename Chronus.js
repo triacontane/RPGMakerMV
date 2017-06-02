@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/06/01 実時間およびゲーム内時間と連動するタイマー機能を追加
+//                  時間が変動する間隔を自由に指定できる機能を追加
 // 1.6.0 2017/04/23 降雪マップをマップ単位でタイルセット単位で設定する機能を追加、降水確率を調整できる機能を追加
 // 1.5.0 2017/01/23 カレンダーに月名を表記する書式「MON」を追加
 // 1.4.0 2017/01/07 ゲーム開始からの累計時間（分単位）を指定したゲーム変数に格納する機能を追加
@@ -52,8 +54,12 @@
  * @default (日),(月),(火),(水),(木),(金),(土)
  *
  * @param 自然時間加算
- * @desc 1秒ごとに加算されるゲーム時間（分単位）の値です。イベント処理中は無効です。
+ * @desc 1秒（自然時間加算間隔で指定した間隔）ごとに加算されるゲーム時間（分単位）の値です。イベント処理中は無効です。
  * @default 5
+ *
+ * @param 自然時間加算間隔
+ * @desc ゲーム時間の自然加算が行われる間隔(フレーム数)です。1F=1/60秒
+ * @default 60
  *
  * @param 場所移動時間加算
  * @desc 1回の場所移動で加算されるゲーム時間（分単位）の値です。
@@ -216,6 +222,38 @@
  * C_SET_TIME_VIRTUAL : 時間の取得方法をゲーム内時間に変更します。
  * C_SET_RAINY_PERCENT [確率] : 降水確率(0-100)を設定します。
  *
+ * ・タイマー操作系コマンド
+ * コマンド実行から指定した時間[分]が経過後にスイッチやセルフスイッチを
+ * ONにできるコマンドです。
+ * 実時間連動機能と併せて使用することもできます。
+ * スイッチの場合はIDを、セルフスイッチの場合は種類(A,B,C,D)を指定します。
+ *
+ * C_SET_SWITCH_TIMER [スイッチID] [分] [ループ]
+ * 指定例（ゲーム内時間で30分経過後する度にスイッチ[10]をONにする）
+ * C_SET_SWITCH_TIMER 10 30 ON
+ *
+ * C_SET_SELF_SWITCH_TIMER [セルフスイッチ種類] [分] [ループ]
+ * 指定例（ゲーム内時間で3時間過後にセルフスイッチ[B](※)をONにする）
+ * C_SET_SELF_SWITCH_TIMER B 180 OFF
+ * ※対象イベントはプラグインコマンドを実行したイベントです。
+ *
+ * 途中で解除や一時停止する可能性がある場合は[タイマー名]を指定するコマンドを
+ * 実行してください。解除などの際にタイマー名を指定する必要があるためです。
+ *
+ * C_SET_SWITCH_NAMED_TIMER [タイマー名] [スイッチID] [分] [ループ]
+ * 指定例（ゲーム内時間で30分経過後する度にスイッチ[10]をONにする）
+ * C_SET_SWITCH_NAMED_TIMER timer 10 30 ON
+ *
+ * C_SET_SELF_SWITCH_NAMED_TIMER [セルフスイッチ種類] [分] [ループ]
+ * 指定例（ゲーム内時間で3時間過後にセルフスイッチ[B](※)をONにする）
+ * C_SET_SELF_SWITCH_NAMED_TIMER timer B 180 OFF
+ * ※対象イベントはプラグインコマンドを実行したイベントです。
+ *
+ * 解除、停止、再開のコマンドは以下の通りです。
+ * C_CLEAR_TIMER timer # タイマー名「timer」を解除します。
+ * C_STOP_TIMER timer  # タイマー名「timer」を一時停止します。
+ * C_START_TIMER timer # タイマー名「timer」を再開します。
+ *
  * メモ欄詳細
  *  タイトルセットおよびマップのメモ欄に以下を入力すると、
  *  一時的に天候と色調変化を自動で無効化できます。
@@ -245,6 +283,10 @@
  */
 
 function Game_Chronus() {
+    this.initialize.apply(this, arguments);
+}
+
+function Game_ChronusTimer() {
     this.initialize.apply(this, arguments);
 }
 
@@ -284,7 +326,7 @@ function Game_Chronus() {
 
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
-        return value == null ? '' : value;
+        return value === null ? '' : value;
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -309,7 +351,7 @@ function Game_Chronus() {
     };
 
     var isParamExist = function(paramNames) {
-        return getParamOther(paramNames) != null;
+        return getParamOther(paramNames) !== null;
     };
 
     var getParamArrayString = function(paramNames) {
@@ -371,6 +413,11 @@ function Game_Chronus() {
         _DataManager_extractSaveContents.apply(this, arguments);
         $gameSystem.onLoad();
     };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var paramAutoAddInterval = getParamNumber('自然時間加算間隔', 1) || 60;
 
     //=============================================================================
     // Game_Interpreter
@@ -464,7 +511,41 @@ function Game_Chronus() {
                 break;
             case 'SET_RAINY_PERCENT':
                 $gameSystem.chronus().setRainyPercent(getArgNumber(args[0], 0, 100));
+                break;
+            case 'SET_SWITCH_TIMER':
+                this.setSwitchTimer(args, false);
+                break;
+            case 'SET_SWITCH_NAMED_TIMER':
+                this.setSwitchTimer(args, true);
+                break;
+            case 'SET_SELF_SWITCH_TIMER':
+                this.setSwitchTimer(args, false, true);
+                break;
+            case 'SET_SELF_SWITCH_NAMED_TIMER':
+                this.setSwitchTimer(args, true, true);
+                break;
+            case 'STOP_TIMER':
+                $gameSystem.chronus().stopTimer(convertEscapeCharacters(args[0]));
+                break;
+            case 'START_TIMER':
+                $gameSystem.chronus().startTimer(convertEscapeCharacters(args[0]));
+                break;
+            case 'CLEAR_TIMER':
+                $gameSystem.chronus().clearTimer(convertEscapeCharacters(args[0]));
+                break;
         }
+    };
+
+    Game_Interpreter.prototype.setSwitchTimer = function(args, named, selfSwitch) {
+        var timerName = named ? convertEscapeCharacters(args.shift()) : null;
+        var timeout   = getArgNumber(args.shift(), 0);
+        var switchKey  = this.getSwitchKey(args.shift(), selfSwitch);
+        var loop      = getArgBoolean(args.shift());
+        $gameSystem.chronus().makeTimer(timerName, timeout, switchKey, loop);
+    };
+
+    Game_Interpreter.prototype.getSwitchKey = function(arg, selfSwitch) {
+        return selfSwitch ? [$gameMap.mapId(), this.eventId(), convertEscapeCharacters(arg).toUpperCase()] : getArgNumber(arg);
     };
 
     var _Game_Interpreter_command236      = Game_Interpreter.prototype.command236;
@@ -772,16 +853,31 @@ function Game_Chronus() {
     Game_Chronus.prototype.onLoad = function() {
         this._nowDate = new Date();
         if (!this._frameCount) this._frameCount = 0;
+        if (!this._timers) this._timers = [];
+        if (!this._namedTimers) this._namedTimers = {};
     };
 
     Game_Chronus.prototype.update = function() {
+        this.updateTimer();
         this.updateEffect();
         if (this.isTimeStop()) return;
         this._frameCount++;
-        if (this._frameCount >= 60) {
+        if (this._frameCount >= paramAutoAddInterval) {
             if (this.isRealTime()) this._nowDate.setTime(Date.now());
             this.addTime();
         }
+    };
+
+    Game_Chronus.prototype.updateTimer = function() {
+        for (var timerName in this._namedTimers) {
+            if (this._namedTimers.hasOwnProperty(timerName)) {
+                var valid = this._namedTimers[timerName].update();
+                if (!valid) this.clearTimer(timerName);
+            }
+        }
+        this._timers = this._timers.filter(function(timer) {
+            return timer.update();
+        })
     };
 
     Game_Chronus.prototype.isRealTime = function() {
@@ -846,9 +942,9 @@ function Game_Chronus() {
     };
 
     Game_Chronus.prototype.updateBatWeatherLevel = function() {
-        var frequency        = this.getChangeWeatherFrequency();
-        var max              = this.getBadWeatherLevelMax();
-        var newLevel         = (this._badWeaterLevel || 0).clamp(frequency, max - frequency);
+        var frequency = this.getChangeWeatherFrequency();
+        var max       = this.getBadWeatherLevelMax();
+        var newLevel  = (this._badWeaterLevel || 0).clamp(frequency, max - frequency);
         if (Math.randomInt(10) <= 1) frequency *= 5;
         this._badWeaterLevel = (newLevel + (Math.randomInt(frequency * 2) - frequency)).clamp(0, max);
         this.updateWeatherType();
@@ -919,7 +1015,14 @@ function Game_Chronus() {
     };
 
     Game_Chronus.prototype.getEffectDuration = function() {
-        return this.isRealTime() ? 600 : this._timeAutoAdd === 0 ? 1 : Math.floor(60 * 5 / (this._timeAutoAdd / 10));
+        if (this.isRealTime()) {
+            return 600;
+        }
+        return this._timeAutoAdd === 0 ? 1 : Math.floor(60 * 5 / (this.getRealAddSpeed() / 10));
+    };
+
+    Game_Chronus.prototype.getRealAddSpeed = function() {
+        return this._timeAutoAdd * 60 / paramAutoAddInterval;
     };
 
     Game_Chronus.prototype.disableTint = function() {
@@ -1234,5 +1337,100 @@ function Game_Chronus() {
 
     Game_Chronus.prototype.getTotalTime = function() {
         return this.isRealTime() ? ((this._nowDate - this._initDate) / (1000 * 60)) : this._dayMeter * 24 * 60 + this._timeMeter;
+    };
+
+    Game_Chronus.prototype.makeTimer = function(timerName, timeout, switchKey, loop) {
+        var timer = new Game_ChronusTimer(timeout, switchKey, loop);
+        if (timerName) {
+            this._namedTimers[timerName] = timer;
+        } else {
+            this._timers.push(timer);
+        }
+    };
+
+    Game_Chronus.prototype.clearTimer = function(timerName) {
+        delete this._namedTimers[timerName];
+    };
+
+    Game_Chronus.prototype.stopTimer = function(timerName) {
+        var timer = this._namedTimers[timerName];
+        if (timer) {
+            timer.stop();
+        }
+    };
+
+    Game_Chronus.prototype.startTimer = function(timerName) {
+        var timer = this._namedTimers[timerName];
+        if (timer) {
+            timer.start();
+        }
+    };
+
+    //=============================================================================
+    // Game_ChronusTimer
+    //  ゲーム内時間のタイマーを扱うクラスです。このクラスはGame_Chronusクラスで生成されます。
+    //  セーブデータの保存対象のためグローバル領域に定義します。
+    //=============================================================================
+    Game_ChronusTimer.prototype             = Object.create(Game_ChronusTimer.prototype);
+    Game_ChronusTimer.prototype.constructor = Game_ChronusTimer;
+
+    Game_ChronusTimer.prototype.initialize = function(timeout, switchKey, loop) {
+        this._timeout = timeout;
+        this._loop    = loop || false;
+        this.setBaseTime();
+        if (Array.isArray(switchKey)) {
+            this.setCallBackSelfSwitch(switchKey);
+        } else {
+            this.setCallBackSwitch(switchKey);
+        }
+        this.start();
+    };
+
+    Game_ChronusTimer.prototype.start = function() {
+        this._start = true;
+    };
+
+    Game_ChronusTimer.prototype.stop = function() {
+        this._start = false;
+    };
+
+    Game_ChronusTimer.prototype.getTotalTime = function() {
+        return $gameSystem.chronus().getTotalTime();
+    };
+
+    Game_ChronusTimer.prototype.setBaseTime = function() {
+        this._baseTime = this.getTotalTime();
+    };
+
+    Game_ChronusTimer.prototype.setCallBackSwitch = function(switchId) {
+        this._callBackSwitchId = switchId;
+    };
+
+    Game_ChronusTimer.prototype.setCallBackSelfSwitch = function(selfSwitchKey) {
+        this._callBackSelfSwitchKey = selfSwitchKey;
+    };
+
+    Game_ChronusTimer.prototype.update = function() {
+        if (!this._start || !this.isTimeout()) return true;
+        this.onTimeout();
+        if (this._loop) {
+            this.setBaseTime();
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    Game_ChronusTimer.prototype.isTimeout = function() {
+        return this._baseTime + this._timeout <= this.getTotalTime();
+    };
+
+    Game_ChronusTimer.prototype.onTimeout = function() {
+        if (this._callBackSwitchId) {
+            $gameSwitches.setValue(this._callBackSwitchId, true);
+        }
+        if (this._callBackSelfSwitchKey) {
+            $gameSelfSwitches.setValue(this._callBackSelfSwitchKey, true);
+        }
     };
 })();
