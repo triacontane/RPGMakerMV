@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/06/03 固有イベントのグラフィックで上書きした場合は、オプションと向き、パターンも固有イベントで上書きするよう変更
 // 1.1.1 2017/05/25 場所移動直後にアニメパターンが一瞬だけ初期化されてしまう問題を修正
 // 1.1.0 2017/04/22 テンプレートイベントIDに変数の値を指摘できる機能を追加
 // 1.0.2 2017/04/09 イベント生成系のプラグインで発生する可能性のある競合を解消
@@ -345,15 +346,40 @@ var $dataTemplateEvents = null;
     var _Game_Event_setupPageSettings      = Game_Event.prototype.setupPageSettings;
     Game_Event.prototype.setupPageSettings = function() {
         _Game_Event_setupPageSettings.apply(this, arguments);
+        if (this.hasTemplate()) {
+            this.setupPageSettingsForTemplate();
+        }
+    };
+
+    Game_Event.prototype.setupPageSettingsForTemplate = function() {
         var page  = this.getOriginalPages()[this._pageIndex];
-        if (!paramReplaceGraphic && page) {
+        if (!page) return;
+        if (this.isOverrideGraphic()) {
             var image = page.image;
             if (image.tileId > 0) {
                 this.setTileImage(image.tileId);
             } else if (image.characterName) {
-                this.setImage(image.characterName, image.characterIndex);
+                this.setupPageOptions(page);
+                this.setupPageImage(image);
             }
         }
+    };
+
+    Game_Event.prototype.isOverrideGraphic = function() {
+        return !paramReplaceGraphic;
+    };
+
+    Game_Event.prototype.setupPageOptions = function(page) {
+        this.setWalkAnime(page.walkAnime);
+        this.setStepAnime(page.stepAnime);
+        this.setDirectionFix(page.directionFix);
+        this.setThrough(page.through);
+    };
+
+    Game_Event.prototype.setupPageImage = function(image) {
+        this.setImage(image.characterName, image.characterIndex);
+        this.setDirection(image.direction);
+        this.setPattern(image.pattern);
     };
 
     Game_Event.prototype.setTemplate = function(event) {
