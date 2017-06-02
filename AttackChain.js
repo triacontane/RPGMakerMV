@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/06/02 最大連携数が正しくカウントできていなかった問題を修正
 // 1.1.0 2017/05/20 チェイン表示の時間設定と、指定数の連携に満たさずに使用すると必ず失敗するスキルを作る機能を追加
 // 1.0.0 2017/05/20 初版
 // ----------------------------------------------------------------------------
@@ -257,7 +258,7 @@
     Game_Unit.prototype.addChainCount = function() {
         this._chainCount = this.getChainCount() + 1;
         this.members()[0].opponentsUnit().resetChainCount();
-        if (this._chainCount > this._maxChain) {
+        if (this._chainCount > this._maxChain || !this._maxChain) {
             this._maxChain = this._chainCount;
         }
     };
