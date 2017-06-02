@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.5 2017/06/02 1.2.4の修正により動作しなくなっていた問題を修正
 // 1.2.4 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.2.3 2017/02/16 1.2.2で数値を0に設定すると動的設定が効かなくなる問題を修正
 // 1.2.2 2017/02/16 データベースに項目を追加するプラグインで発生する可能性のある競合対策
@@ -65,16 +66,6 @@
 
 (function() {
     'use strict';
-
-    var isEmpty = function(that) {
-        return Object.keys(that).length <= 0;
-    };
-
-    var iterate = function(that, handler) {
-        Object.keys(that).forEach(function(key, index) {
-            handler.call(that, key, that[key], index);
-        });
-    };
 
     Number.prototype.times = function(handler) {
         var i = 0;
@@ -182,9 +173,19 @@ DynamicDatabaseManager._targetDynamicDatabase = {
     $dataStates : DynamicDatabaseManager._columnMapperStates
 };
 
+DynamicDatabaseManager._isEmpty = function(that) {
+    return Object.keys(that).length <= 0;
+};
+
+DynamicDatabaseManager._iterate = function(that, handler) {
+    Object.keys(that).forEach(function(key, index) {
+        handler.call(that, key, that[key], index);
+    });
+};
+
 DynamicDatabaseManager.makeDynamicDatabase = function() {
     this._setColumnMapperDynamic();
-    iterate(this._targetDynamicDatabase, function(dataKey, columnMap) {
+    this._iterate(this._targetDynamicDatabase, function(dataKey, columnMap) {
         this._makeDynamicData(window[dataKey], columnMap);
     }.bind(this));
 };
@@ -217,7 +218,7 @@ DynamicDatabaseManager._setColumnMapperDynamic = function() {
 
 DynamicDatabaseManager._getMaxLength = function(keyName) {
     var length = 0;
-    iterate(this._targetDynamicDatabase, function(dataKey) {
+    this._iterate(this._targetDynamicDatabase, function(dataKey) {
         var dataArray = window[dataKey];
         dataArray.forEach(function(data) {
             if (data != null && data.hasOwnProperty(keyName)) length = Math.max(data[keyName].length, length);
@@ -231,7 +232,7 @@ DynamicDatabaseManager._makeDynamicData = function(dataArray, columnMap) {
     dataArray.forEach(function(data) {
         if (data != null) {
             this._targetData = data;
-            iterate(data, function(key, value) {
+            this._iterate(data, function(key, value) {
                 this._makeProperty(data, key, key, value);
             }.bind(this));
         }
@@ -247,7 +248,7 @@ DynamicDatabaseManager._makeProperty = function(parent, keyPath, key, child) {
             break;
         case 'boolean':
         case 'number':
-            if (isEmpty(parent.meta)) return;
+            if (this._isEmpty(parent.meta)) return;
             var propName = this._columnMapper[keyPath] || this._columnMapperCoomon[keyPath];
             var metaTag  = 'DD' + propName;
             if (propName != null && parent.meta[metaTag] != null)
@@ -255,9 +256,9 @@ DynamicDatabaseManager._makeProperty = function(parent, keyPath, key, child) {
             parent[propName] = child;
             break;
         case 'object':
-            if (!child || isEmpty(parent.meta)) return;
+            if (!child || this._isEmpty(parent.meta)) return;
             child.meta = parent.meta;
-            iterate(child, function(valuesKey, valuesItem) {
+            this._iterate(child, function(valuesKey, valuesItem) {
                 this._makeProperty(child, keyPath + '_' + valuesKey, valuesKey, valuesItem);
             }.bind(this));
             break;
