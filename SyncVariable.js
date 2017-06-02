@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2017/06/02 ゲームデータ作成前にデータ受信した際にエラーになる問題を修正
 // 1.1.3 2016/06/29 追加でネットワークエラー対応
 // 1.1.2 2016/06/28 ゲーム中にネットワークが切断された場合にエラーになる現象を修正
 // 1.1.1 2016/06/02 認証ファイルの形式をJSONでも作成できるよう修正
@@ -317,7 +318,7 @@ function SyncManager() {
     };
 
     SyncManager.canUse = function() {
-        return this._online && this._authority;
+        return this._online && this._authority && $gameSwitches && $gameVariables
     };
 
     SyncManager.setNeedUpload = function() {
@@ -364,7 +365,10 @@ function SyncManager() {
     };
 
     SyncManager.downloadVariables = function() {
-        if (!this.canUse()) return;
+        if (!this.canUse()) {
+            this.needDownload = true;
+            return;
+        }
         this._mainData.get(paramUserId, function(err, datum) {
             if (!err) {
                 this.outLog('変数情報を受信しました。');
