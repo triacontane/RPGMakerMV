@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2017/06/04 StateRolling.jsとの競合を解消
 // 1.1.2 2017/05/18 高速で戦闘を進めた場合に、たまにダメージが敵キャラの後ろに隠れてしまうことがある問題を修正
 // 1.1.1 2016/11/13 設定次第で、戦闘終了後にセーブできなくなる場合がある不具合を修正
 // 1.1.0 2016/10/05 常時残像を有効にする設定の追加
@@ -553,7 +554,7 @@
     //  戦闘終了後に直接攻撃用の参照を破棄します。
     //=============================================================================
     var _BattleManager_endAction = BattleManager.endBattle;
-    BattleManager.endBattle = function(result) {
+    BattleManager.endBattle      = function(result) {
         _BattleManager_endAction.apply(this, arguments);
         $gameParty.battleMembers().forEach(function(member) {
             member.initDirectlyAttack();
@@ -949,7 +950,7 @@
     // Sprite_Actor
     //  ターゲットへの直接攻撃演出を追加定義します。
     //=============================================================================
-    var _Sprite_Actor_updatePosition = Sprite_Actor.prototype.hasOwnProperty('updatePosition') ?
+    var _Sprite_Actor_updatePosition      = Sprite_Actor.prototype.hasOwnProperty('updatePosition') ?
         Sprite_Actor.prototype.updatePosition : null;
     Sprite_Actor.prototype.updatePosition = function() {
         if (_Sprite_Actor_updatePosition) {
@@ -1033,7 +1034,8 @@
     };
 
     Sprite_AfterimageActor.prototype.createStateSprite = function() {
-        this._stateSprite = new Sprite_Dummy();
+        this._stateSprite     = new Sprite_Dummy();
+        this._stateIconSprite = new Sprite_Dummy();
     };
 
     Sprite_AfterimageActor.prototype.createWeaponSprite = function() {
@@ -1072,7 +1074,7 @@
     };
 
     Sprite_AfterimageActor.prototype.setOriginalSprite = function(originalSprite) {
-        this._originalSprite = originalSprite;
+        this._originalSprite     = originalSprite;
         this._originalMainSprite = originalSprite.getMainSprite();
     };
 
