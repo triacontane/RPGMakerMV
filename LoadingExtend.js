@@ -67,7 +67,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc LoadingExtendプラグイン
+ * @plugindesc ロード中画像拡張プラグイン
  * @author トリアコンタン
  *
  * @param イメージ列数
