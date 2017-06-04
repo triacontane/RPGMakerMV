@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2017/06/04 1.1.3で戦闘行動のキャラクターに対するスキルが実行できなくなっていた問題を修正
 // 1.1.3 2017/06/04 単体を対象にした制限スキルを実行したときに、選択した対象と実行対象がズレてしまう場合がある問題を修正
 // 1.1.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.1.1 2016/11/13 戦闘中に強制終了する場合がある不具合を修正
@@ -236,7 +237,7 @@
     var _Game_Unit_smoothDeadTarget = Game_Unit.prototype.smoothDeadTarget;
     Game_Unit.prototype.smoothDeadTarget = function(index) {
         arguments[0] = this.shiftIndexForRestrictionTarget(index);
-        _Game_Unit_smoothDeadTarget.apply(this, arguments);
+        return _Game_Unit_smoothDeadTarget.apply(this, arguments);
     };
 
     Game_Unit.prototype.filterSelectableMembers = function(members) {
