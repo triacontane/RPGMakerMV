@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2017/06/04 単体を対象にした制限スキルを実行したときに、選択した対象と実行対象がズレてしまう場合がある問題を修正
 // 1.1.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.1.1 2016/11/13 戦闘中に強制終了する場合がある不具合を修正
 // 1.1.0 2016/09/29 使用者に対して無効なスキルを設定できる機能を追加
@@ -223,13 +224,22 @@
     };
 
     //=============================================================================
-    // Game_Party
+    // Game_Unit
     //  スキルやアイテムの対象として選択不可能な対象に選択しないようにします。
     //=============================================================================
-    var _Game_Party_members      = Game_Party.prototype.members;
-    Game_Party.prototype.members = function() {
-        var members = _Game_Party_members.apply(this, arguments);
-        if (this._needOriginalMember) return members;
+    var _Game_Unit_smoothTarget = Game_Unit.prototype.smoothTarget;
+    Game_Unit.prototype.smoothTarget = function(index) {
+        arguments[0] = this.shiftIndexForRestrictionTarget(index);
+        return _Game_Unit_smoothTarget.apply(this, arguments);
+    };
+
+    var _Game_Unit_smoothDeadTarget = Game_Unit.prototype.smoothDeadTarget;
+    Game_Unit.prototype.smoothDeadTarget = function(index) {
+        arguments[0] = this.shiftIndexForRestrictionTarget(index);
+        _Game_Unit_smoothDeadTarget.apply(this, arguments);
+    };
+
+    Game_Unit.prototype.filterSelectableMembers = function(members) {
         var action  = BattleManager.getTargetAction();
         if (action) {
             this._needOriginalMember = true;
@@ -239,6 +249,23 @@
             this._needOriginalMember = false;
         }
         return members;
+    };
+
+    Game_Unit.prototype.shiftIndexForRestrictionTarget = function(index) {
+        this._needOriginalMember = true;
+        var allMember = this.members();
+        this._needOriginalMember = false;
+        return this.members().indexOf(allMember[index]);
+    };
+
+    //=============================================================================
+    // Game_Party
+    //  スキルやアイテムの対象として選択不可能な対象に選択しないようにします。
+    //=============================================================================
+    var _Game_Party_members      = Game_Party.prototype.members;
+    Game_Party.prototype.members = function() {
+        var members = _Game_Party_members.apply(this, arguments);
+        return this._needOriginalMember ? members : this.filterSelectableMembers(members);
     };
 
     Game_Party.prototype.getSkillUser = function() {
@@ -252,16 +279,7 @@
     var _Game_Troop_members      = Game_Troop.prototype.members;
     Game_Troop.prototype.members = function() {
         var members = _Game_Troop_members.apply(this, arguments);
-        if (this._needOriginalMember) return members;
-        var action  = BattleManager.getTargetAction();
-        if (action) {
-            this._needOriginalMember = true;
-            members = members.filter(function(member) {
-                return member.canSelectTarget(action.item(), action.subject());
-            });
-            this._needOriginalMember = false;
-        }
-        return members;
+        return this._needOriginalMember ? members : this.filterSelectableMembers(members);
     };
 
     //=============================================================================
