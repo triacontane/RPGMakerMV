@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2017/06/04 残像を使用する設定で複数のキャラクターに対して連続でアニメーションを再生すると処理落ちする問題を修正
 // 1.1.3 2017/06/04 StateRolling.jsとの競合を解消
 // 1.1.2 2017/05/18 高速で戦闘を進めた場合に、たまにダメージが敵キャラの後ろに隠れてしまうことがある問題を修正
 // 1.1.1 2016/11/13 設定次第で、戦闘終了後にセーブできなくなる場合がある不具合を修正
@@ -894,7 +895,8 @@
     };
 
     Sprite_Battler.prototype.isVisibleAfterimage = function() {
-        return !this.isAfterImage() && (this._visibleAfterimage || this._afterimageViaibleCounter > 0);
+        return !this.isAfterImage() && (this._visibleAfterimage || this._afterimageViaibleCounter > 0) &&
+            this._afterimageSprites.length > 0;
     };
 
     Sprite_Battler.prototype.getAttackAltitude = function() {
@@ -1062,15 +1064,16 @@
     };
 
     Sprite_AfterimageActor.prototype.updateProperty = function() {
+        if (paramAlwaysAfterimage) {
+            this.visible = (this.x !== this._originalSprite.getRealX() || this.y !== this._originalSprite.getRealY());
+        }
+        if (!this.visible) return;
         this.scale.x   = this._originalSprite.scale.x;
         this.scale.y   = this._originalSprite.scale.y;
         this.opacity   = this._originalMainSprite.opacity * this._opacityRate;
         this.blendMode = this._originalMainSprite.blendMode;
         this.setColorTone(this._originalMainSprite.getColorTone());
         this.setBlendColor(this._originalMainSprite.getBlendColor());
-        if (paramAlwaysAfterimage) {
-            this.visible = (this.x !== this._originalSprite.getRealX() || this.y !== this._originalSprite.getRealY());
-        }
     };
 
     Sprite_AfterimageActor.prototype.setOriginalSprite = function(originalSprite) {
