@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2017/06/05 マップズームに対してフキダシ位置が正しく表示されるよう対応
+//                  フキダシの位置固定をイベントごとに設定できる機能を追加
 // 2.4.1 2017/05/28 ウィンドウスキンを変更した直後の文字色のみ変更前の文字色になってしまう問題を修正（by 奏ねこまさん）
 //                  2行目以降の文字サイズを変更したときにウィンドウの高さが正しく計算されない問題を修正
 // 2.4.0 2017/05/16 並列実行のコモンイベントで「MWP_VALID 0」を実行したときに、実行中のマップイベントを対象とするよう修正
@@ -263,13 +265,19 @@
  * フキダシウィンドウ設定 [設定内容]
  * 　フキダシウィンドウの設定を行います。設定内容に以下を入力。
  *
- * 　POS_UPPER or 位置_上固定
+ *   POS_UPPER or 位置_上固定
  * 　　ウィンドウの位置をキャラクターの上で固定します。
  *
- * 　POS_LOWER or 位置_下固定
+ *   POS_UPPER 1 or 位置_上固定 1
+ * 　　イベントID[1]のみウィンドウの位置をキャラクターの上で固定します。
+ *
+ *   POS_LOWER or 位置_下固定
  * 　　ウィンドウの位置をキャラクターの下で固定します。
  *
- * 　POS_AUTO or 位置_自動
+ *   POS_LOWER -1 or 位置_下固定 -1
+ * 　　プレイヤーのみウィンドウの位置をキャラクターの下で固定します。
+ *
+ *   POS_AUTO or 位置_自動
  * 　　通常はキャラクターの上に表示し、ウィンドウが上に見切れる場合のみ
  * 　　下に表示します。
  *
@@ -423,10 +431,7 @@
         switch (getCommandName(command)) {
             case 'MWP_VALID' :
             case 'フキダシウィンドウ有効化':
-                var eventId = getArgNumber(args[0]);
-                if (eventId === 0) {
-                    eventId = this.eventId() || ($gameMap.isEventRunning() ? $gameMap._interpreter.eventId() : 0);
-                }
+                var eventId = this.getEventIdForMessagePopup(args[0]);
                 if (imported_FTKR_EMW() && args[1]) {
                     var windowId = getArgNumber(args[1]);
                     if (windowId >= 0) $gameSystem.setMessagePopupEx(windowId, eventId);
@@ -448,15 +453,15 @@
                 switch (getCommandName(args[0])) {
                     case 'POS_UPPER' :
                     case '位置_上固定':
-                        $gameSystem.setPopupFixUpper();
+                        $gameSystem.setPopupFixUpper(args[1] ? this.getEventIdForMessagePopup(args[1]) : null);
                         break;
                     case 'POS_LOWER' :
                     case '位置_下固定':
-                        $gameSystem.setPopupFixLower();
+                        $gameSystem.setPopupFixLower(args[1] ? this.getEventIdForMessagePopup(args[1]) : null);
                         break;
                     case 'POS_AUTO' :
                     case '位置_自動':
-                        $gameSystem.setPopupAuto();
+                        $gameSystem.setPopupAuto(args[1] ? this.getEventIdForMessagePopup(args[1]) : null);
                         break;
                     case 'SKIN' :
                     case 'スキン' :
@@ -497,6 +502,14 @@
         }
     };
 
+    Game_Interpreter.prototype.getEventIdForMessagePopup = function(arg) {
+        var eventId = getArgNumber(arg);
+        if (eventId === 0) {
+            eventId = this.eventId() || ($gameMap.isEventRunning() ? $gameMap._interpreter.eventId() : 0);
+        }
+        return eventId;
+    };
+
     var _Game_Interpreter_terminate      = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
@@ -532,6 +545,12 @@
         this._messagePopupSubWindowPosition = 0;
     };
 
+    Game_System.prototype.initMessagePositionEvents = function() {
+        if (!this._messagePopupPositionEvents) {
+            this._messagePopupPositionEvents = [];
+        }
+    };
+
     Game_System.prototype.setPopupSubWindowPosition = function(position) {
         this._messagePopupSubWindowPosition = position.clamp(0, 3);
     };
@@ -555,22 +574,32 @@
 
     Game_System.prototype.clearMessagePopup = function() {
         this._messagePopupCharacterId = 0;
+        this._messagePopupPositionEvents = [];
     };
 
     Game_System.prototype.getMessagePopupId = function() {
         return this._messagePopupCharacterId !== 0 ? this._messagePopupCharacterId : null;
     };
 
-    Game_System.prototype.setPopupFixUpper = function() {
-        this._messagePopupPosition = 1;
+    Game_System.prototype.setPopupFixUpper = function(characterId) {
+        this.setPopupFixPosition(characterId, 1);
     };
 
-    Game_System.prototype.setPopupFixLower = function() {
-        this._messagePopupPosition = 2;
+    Game_System.prototype.setPopupFixLower = function(characterId) {
+        this.setPopupFixPosition(characterId, 2);
     };
 
-    Game_System.prototype.setPopupAuto = function() {
-        this._messagePopupPosition = 0;
+    Game_System.prototype.setPopupAuto = function(characterId) {
+        this.setPopupFixPosition(characterId, 0);
+    };
+
+    Game_System.prototype.setPopupFixPosition = function(characterId, position) {
+        if (characterId !== null) {
+            this.initMessagePositionEvents();
+            this._messagePopupPositionEvents[characterId] = position;
+        } else {
+            this._messagePopupPosition = position;
+        }
     };
 
     Game_System.prototype.setPopupAdjustSize = function(w, h) {
@@ -590,11 +619,20 @@
     };
 
     Game_System.prototype.isPopupFixUpper = function() {
-        return this._messagePopupPosition === 1;
+        return this.isPopupFixPosition(1);
     };
 
     Game_System.prototype.isPopupFixLower = function() {
-        return this._messagePopupPosition === 2;
+        return this.isPopupFixPosition(2);
+    };
+
+    Game_System.prototype.isPopupFixPosition = function(position) {
+        this.initMessagePositionEvents();
+        if (this._messagePopupPositionEvents && !!this._messagePopupPositionEvents[this._messagePopupCharacterId]) {
+            return this._messagePopupPositionEvents[this._messagePopupCharacterId] === position;
+        } else {
+            return this._messagePopupPosition === position;
+        }
     };
 
     //=============================================================================
@@ -649,7 +687,15 @@
     };
 
     Game_CharacterBase.prototype.getHeightForPopup = function() {
-        return this._size[1];
+        return $gameScreen.zoomScale() * this._size[1];
+    };
+
+    Game_CharacterBase.prototype.getRealScreenX = function() {
+        return $gameScreen.zoomScale() * this.screenX();
+    };
+
+    Game_CharacterBase.prototype.getRealScreenY = function() {
+        return $gameScreen.zoomScale() * this.screenY();
     };
 
     var _Scene_Map_isReady      = Scene_Map.prototype.isReady;
@@ -727,10 +773,10 @@
 
     Window_Base.prototype.setPopupPosition = function(character) {
         var pos      = $gameSystem.getPopupAdjustPosition();
-        this.x       = character.screenX() - this.width / 2 + (pos ? pos[0] : 0);
-        this.y       = character.screenY() - this.height - (character.getHeightForPopup() + 8) + (pos ? pos[1] : 0);
+        this.x       = character.getRealScreenX() - this.width / 2 + (pos ? pos[0] : 0);
+        this.y       = character.getRealScreenY() - this.height - (character.getHeightForPopup() + 8) + (pos ? pos[1] : 0);
         var lowerFlg = this.isPopupLower();
-        if (lowerFlg) this.y = character.screenY() + 8;
+        if (lowerFlg) this.y = character.getRealScreenY() + 8;
         this.setPauseSignToTail(lowerFlg);
         var deltaX = 0;
         if (this.x < 0) {
