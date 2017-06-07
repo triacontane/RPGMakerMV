@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.0 2017/06/08 所持数表示機能を追加
 // 1.13.0 2017/04/19 自動翻訳プラグインに一部対応
 // 1.12.0 2017/04/09 用語集リストの表示順を個別に設定する機能を追加
 // 1.11.3 2017/03/31 用語リストをスクロールしたときに確認ウィンドウの位置がおかしくなる問題を修正
@@ -193,6 +194,10 @@
  * @param PageWrap
  * @desc 複数のページが存在する場合、最後のページまで到達していたら最初のページに戻します。
  * @default ON
+ *
+ * @param ShowingItemNumber
+ * @desc 用語集アイテムの所持数を表示します。
+ * @default OFF
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -450,6 +455,10 @@
  * @desc 複数のページが存在する場合、最後のページまで到達していたら最初のページに戻します。
  * @default ON
  *
+ * @param 所持数表示
+ * @desc 用語集アイテムの所持数を表示します。
+ * @default OFF
+ *
  * @noteParam SGピクチャ
  * @noteRequire 1
  * @noteDir img/pictures/
@@ -670,6 +679,7 @@ function Scene_Glossary() {
     var paramThroughBackPicture = getParamBoolean(['ThroughBackPicture', '背景ピクチャ透過']);
     var paramUseItemHistory     = getParamBoolean(['UseItemHistory', '入手履歴を使用']);
     var paramPageWrap           = getParamBoolean(['PageWrap', 'ページ折り返し']);
+    var paramShowingItemNumber  = getParamBoolean(['ShowingItemNumber', '所持数表示']);
 
     //=============================================================================
     // Game_Interpreter
@@ -1258,12 +1268,12 @@ function Scene_Glossary() {
         return 1;
     };
 
-    Window_GlossaryList.prototype.needsNumber = function() {
-        return false;
+    Window_GlossaryList.prototype.numberWidth = function() {
+        return this.needsNumber() ? Window_ItemList.prototype.numberWidth.call(this, arguments) : 0;
     };
 
-    Window_GlossaryList.prototype.numberWidth = function() {
-        return 0;
+    Window_GlossaryList.prototype.needsNumber = function() {
+        return paramShowingItemNumber;
     };
 
     Window_GlossaryList.prototype.drawItemName = function(item, x, y, width) {
@@ -1357,7 +1367,7 @@ function Scene_Glossary() {
     };
 
     Window_GlossaryConfirm.prototype.updatePlacement = function() {
-        this.x = this._listWindow.x + 64;
+        this.x   = this._listWindow.x + 64;
         var line = this._listWindow.index() - this._listWindow.topRow();
         if (line >= this._listWindow.maxPageRows() - 2) {
             line -= 3;
