@@ -5,6 +5,9 @@
  *
  *  modification by triacontane
  *  original : https://forums.rpgmakerweb.com/index.php?threads/mbs-fple-mv.57363/
+ *
+ * Version
+ * 1.3.1 2017/06/07 T_MiniMap.jsとの競合を解消
  */
 /*:
  *  @plugindesc This plugin makes your game a first person labyrinth explorer.
@@ -1021,6 +1024,10 @@ var $babylon, $fple;
             this._spriteset = new Spriteset_Base();
             this._spriteset._blackScreen.opacity = 0;
             this.addChild(this._spriteset);
+            if (this.createMiniMap) {
+                this.createMiniMap();
+                this.updateMiniMap();
+            }
         } else {
             aliasCreateSpriteset.apply(this, arguments);
         }
@@ -1051,6 +1058,9 @@ var $babylon, $fple;
         aliasUpdateMain.apply(this, arguments);
         if (this.useFPLE())
             this._updateFPLE();
+        if (this.updateMiniMap) {
+            this.updateMiniMap();
+        }
     };
     //-----------------------------------------------------------------------
     // Updates the FPLE Scene
@@ -1085,6 +1095,16 @@ var $babylon, $fple;
     Scene_Map.prototype.useFPLE = function() {
         return !!$dataMap.meta.fple;
     };
+
+    if (Object.keys(PluginManager.parameters('T_MiniMap')).length > 0) {
+        Scene_Map.prototype.createMiniMap = function() {
+            Spriteset_Map.prototype.createMiniMap.call(this._spriteset);
+        };
+
+        Scene_Map.prototype.updateMiniMap = function() {
+            Spriteset_Map.prototype.updateMiniMap.call(this._spriteset);
+        };
+    }
 })();
 //=============================================================================
 // Graphics
