@@ -249,7 +249,7 @@
                 this.push('performNoDamage', target);
             }
         }
-        if (PluginManager.parameters('CustumCriticalSoundVer5') && target.result().hpDamage > 0) {
+        if (Object.keys(PluginManager.parameters('CustumCriticalSoundVer5')).length > 0 && target.result().hpDamage > 0) {
             this.setEffectiveSe(target);
         }
         _Window_BattleLog_displayHpDamage.apply(this, arguments);
