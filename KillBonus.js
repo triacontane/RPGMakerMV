@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/06/08 ボーナス取得条件としてノーダメージ、ノーデス、ノースキルおよびスイッチを追加
 // 1.0.0 2016/08/07 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -36,6 +37,16 @@
  * <KB_StateEnemy:5>   # 敵全体にステートID[5]を付与します。
  * <KB_ステート敵:5>   # 同上
  * <KB_Script:script>  # 任意のJavaScriptを実行します。
+ *
+ * 撃破ボーナス条件をひとつだけ付けることができます。
+ * <KB_条件:ノーダメージ> # ダメージを受けずに撃破で報酬
+ * <KB_Cond:NoDamage>     # 同上
+ * <KB_条件:ノースキル>   # スキルを使わずに撃破で報酬
+ * <KB_Cond:NoSkill>      # 同上
+ * <KB_条件:ノーデス>     # 戦闘不能者を出さずに撃破で報酬
+ * <KB_Cond:NoDeath>      # 同上
+ * <KB_条件:1>            # スイッチ[1]がONのときに撃破で報酬
+ * <KB_Cond:1>            # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -80,7 +91,99 @@
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
-    var _Game_Action_executeHpDamage = Game_Action.prototype.executeHpDamage;
+    //=============================================================================
+    // BattleManager
+    //  スキルやダメージの状況を保持します。
+    //=============================================================================
+    var _BattleManager_setup = BattleManager.setup;
+    BattleManager.setup = function(troopId, canEscape, canLose) {
+        _BattleManager_setup.apply(this, arguments);
+        $gameParty.members().forEach(function(member) {
+            member.initKillBonusCondition();
+        })
+    };
+
+    //=============================================================================
+    // Game_BattlerBase
+    //  スキルやダメージの状況を保持します。
+    //=============================================================================
+    Game_BattlerBase._condNoDamages = ['NoDamage', 'ノーダメージ'];
+    Game_BattlerBase._condNoSkill   = ['NoSkill', 'ノースキル'];
+    Game_BattlerBase._condNoDeath   = ['NoDeath', 'ノーデス'];
+
+    Game_BattlerBase.prototype.initKillBonusCondition = function() {
+        this._noSkill  = true;
+        this._noDamage = true;
+        this._noDeath  = true;
+    };
+
+    Game_BattlerBase.prototype.breakNoSkill = function() {
+        this._noSkill  = false;
+    };
+
+    Game_BattlerBase.prototype.breakNoDamage = function() {
+        this._noDamage  = false;
+    };
+
+    Game_BattlerBase.prototype.breakNoDeath = function() {
+        this._noDeath  = false;
+    };
+
+    Game_BattlerBase.prototype.canAcceptKillBonus = function() {
+        return this.traitObjects().every(function(data) {
+            return this.checkDataForKillBonus(data);
+        }.bind(this));
+    };
+
+    Game_BattlerBase.prototype.checkDataForKillBonus = function(data) {
+        var condition = getMetaValues(data, ['Cond', '条件']);
+        if (!condition) return true;
+        if (Game_BattlerBase._condNoDamages.contains(condition) && !this._noDamage) {
+            return false;
+        }
+        if (Game_BattlerBase._condNoSkill.contains(condition) && !this._noSkill) {
+            return false;
+        }
+        if (Game_BattlerBase._condNoDeath.contains(condition) && !this._noDeath) {
+            return false;
+        }
+        var switchId = parseInt(convertEscapeCharacters(condition));
+        if (switchId > 0 && !$gameSwitches.value(switchId)) {
+            return false;
+        }
+        return true;
+    };
+
+    var _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
+    Game_BattlerBase.prototype.die = function() {
+        _Game_BattlerBase_die.apply(this, arguments);
+        this.breakNoDeath();
+    };
+
+    //=============================================================================
+    // Game_Battler
+    //  ダメージ時にノーダメージフラグを解除します。
+    //=============================================================================
+    var _Game_Battler_performDamage = Game_Battler.prototype.performDamage;
+    Game_Battler.prototype.performDamage = function() {
+        _Game_Battler_performDamage.apply(this, arguments);
+        this.breakNoDamage();
+    };
+
+    //=============================================================================
+    // Game_Action
+    //  撃破ボーナスを適用します。
+    //=============================================================================
+    var _Game_Action_testApply = Game_Action.prototype.testApply;
+    Game_Action.prototype.testApply = function(target) {
+        var result = _Game_Action_testApply.apply(this, arguments);
+        if (result && !this.isAttack() && !this.isGuard()) {
+            this.subject().breakNoSkill();
+        }
+        return result;
+    };
+
+    var _Game_Action_executeHpDamage      = Game_Action.prototype.executeHpDamage;
     Game_Action.prototype.executeHpDamage = function(target, value) {
         _Game_Action_executeHpDamage.apply(this, arguments);
         if (target.hp === 0) this.executeKillBonus();
@@ -88,7 +191,7 @@
 
     Game_Action.prototype.executeKillBonus = function() {
         var subject = this.subject();
-        if (!subject) return;
+        if (!subject || !subject.canAcceptKillBonus()) return;
         this._gainHp = 0;
         this._gainMp = 0;
         this._gainTp = 0;
