@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2017/06/08 1.2.2の修正により起動できなくなっていた問題を修正
 // 1.2.2 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.2.1 2016/12/08 1.2.0の機能追加以降、デフォルト項目で決定ボタンを押すとエラーになっていた現象を修正
 // 1.2.0 2016/12/02 各項目で決定ボタンを押したときに実行されるスクリプトを設定できる機能を追加
@@ -163,7 +164,7 @@
     };
 
     var getArgBoolean = function(arg) {
-        return (arg || '').toUpperCase() == 'ON';
+        return (arg || '').toUpperCase() === 'ON';
     };
 
     var iterate = function(that, handler) {
@@ -328,7 +329,7 @@
 
     ConfigManager.exportCustomParams = function() {
         if (!$gameVariables || !$gameSwitches) return;
-        this.getCustomParams().iterate(function(symbol, item) {
+        iterate(this.getCustomParams(), function(symbol, item) {
             if (item.variable > 0) {
                 if (symbol.contains('Boolean')) {
                     $gameSwitches.setValue(item.variable, !!this[symbol]);
