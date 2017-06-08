@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/06/09 設定を固有イベントで上書きする機能を追加。それに伴い既存のパラメータ名称を一部変更
 // 1.1.2 2017/06/03 固有イベントのグラフィックで上書きした場合は、オプションと向き、パターンも固有イベントで上書きするよう変更
 // 1.1.1 2017/05/25 場所移動直後にアニメパターンが一瞬だけ初期化されてしまう問題を修正
 // 1.1.0 2017/04/22 テンプレートイベントIDに変数の値を指摘できる機能を追加
@@ -30,8 +31,8 @@
  * @desc マップイベントを呼び出す際に、呼び出し元のイベントIDを維持します。対象を「このイベント」にした際の挙動が変わります。
  * @default OFF
  *
- * @param ReplaceGraphic
- * @desc 固有イベントにグラフィックが指定されていた場合でも、無視してテンプレートイベントのグラフィフィックに置換します。
+ * @param NoOverride
+ * @desc 固有イベントにグラフィックが指定されていた場合でも、設定の上書きを行いません。
  * @default OFF
  *
  * @help 汎用的に使用するイベントをテンプレート化できます。
@@ -39,25 +40,35 @@
  * 実際のイベントのメモ欄に所定の記述をするだけで、テンプレートイベントと
  * 動的に置き換えることができます。
  *
- * イベント初期配置以外の全項目はテンプレートイベントの設定に置き換わりますが
- * グラフィックを指定していた場合、置き換え元のグラフィックを維持します。
- *
- * また、テンプレートイベントから置き換え元のイベントを呼び出すことができます。
+ * またテンプレートイベントから置き換え元のイベントを呼び出すことができます。
  * 宝箱や場所移動イベント等、一部だけ固有の処理をしたい場合に有効です。
  * 外観や共通部分のイベント処理をテンプレートイベントに記述し、
  * アイテム入手や場所移動先指定など固有部分だけを元のイベントに記述します。
  *
- * さらに、任意のマップイベントをコモンイベントのように呼び出す機能も
- * 提供します。IDおよびイベント名で呼び出すイベントを指定可能です。
+ * 任意のマップイベントをコモンイベントのように呼び出す機能も提供します。
+ * IDおよびイベント名で呼び出すイベントを指定可能です。
  *
  * 利用手順
  * 1.テンプレートマップを作成して、テンプレートイベントを配置します。
  *
  * 2.テンプレートイベントに置き換えたいイベントのメモ欄を記述します。
  *   IDとイベント名の双方が指定可能です。
- * <TE:1>     テンプレートマップのID[1]のイベントに置き換わります。
- * <TE:aaa>   テンプレートマップのイベント名[aaa]のイベントに置き換わります。
+ * <TE:1>   テンプレートマップのID[1]のイベントに置き換わります。
+ * <TE:aaa> テンプレートマップのイベント名[aaa]のイベントに置き換わります。
  * <TE:\v[1]> テンプレートマップのID[変数[1]の値]のイベントに置き換わります。
+ *
+ * 原則、初期配置以外の全設定はテンプレートイベントの設定に置き換わりますが
+ * 例外としてグラフィックを指定していた場合とメモ欄(※1)を記述した場合は
+ * 以下の設定について固有イベントの設定を優先します。
+ * ・画像
+ * ・自律移動
+ * ・オプション
+ * ・プライオリティ
+ * ・トリガー
+ *
+ * ※1 固有イベントのメモ欄に以下の通り記述します。
+ * <TE上書き>
+ * <TEOverRide>
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -74,7 +85,7 @@
  *
  * TEマップイベント呼び出し [イベントID] [ページ番号]
  * TE_CALL_MAP_EVENT [イベントID] [ページ番号]
- *  同一マップ内の別のイベント処理を呼び出します。処理完了後、元の処理に戻ります。
+ *  同一マップ内の別イベント処理を呼び出します。処理完了後、元の処理に戻ります。
  *  イベントIDに数値以外を指定すると、イベント名として扱われ
  *  イベント名が一致するイベントの処理を呼び出します。
  *  テンプレートイベントに記述した場合以外でも有効です。
@@ -99,8 +110,8 @@
  * @desc マップイベントを呼び出す際に、呼び出し元のイベントIDを維持します。対象を「このイベント」にした際の挙動が変わります。
  * @default OFF
  *
- * @param グラフィック置換
- * @desc 固有イベントにグラフィックが指定されていた場合でも、無視してテンプレートイベントのグラフィフィックに置換します。
+ * @param 上書き禁止
+ * @desc 固有イベントにグラフィックが指定されていた場合でも、設定の上書きを行いません。
  * @default OFF
  *
  * @help 汎用的に使用するイベントをテンプレート化できます。
@@ -108,16 +119,13 @@
  * 実際のイベントのメモ欄に所定の記述をするだけで、テンプレートイベントと
  * 動的に置き換えることができます。
  *
- * イベント初期配置以外の全項目はテンプレートイベントの設定に置き換わりますが
- * グラフィックを指定していた場合、置き換え元のグラフィックを維持します。
- *
- * また、テンプレートイベントから置き換え元のイベントを呼び出すことができます。
+ * またテンプレートイベントから置き換え元のイベントを呼び出すことができます。
  * 宝箱や場所移動イベント等、一部だけ固有の処理をしたい場合に有効です。
  * 外観や共通部分のイベント処理をテンプレートイベントに記述し、
  * アイテム入手や場所移動先指定など固有部分だけを元のイベントに記述します。
  *
- * さらに、任意のマップイベントをコモンイベントのように呼び出す機能も
- * 提供します。IDおよびイベント名で呼び出すイベントを指定可能です。
+ * 任意のマップイベントをコモンイベントのように呼び出す機能も提供します。
+ * IDおよびイベント名で呼び出すイベントを指定可能です。
  *
  * 利用手順
  * 1.テンプレートマップを作成して、テンプレートイベントを配置します。
@@ -126,6 +134,20 @@
  *   IDとイベント名の双方が指定可能です。
  * <TE:1>   テンプレートマップのID[1]のイベントに置き換わります。
  * <TE:aaa> テンプレートマップのイベント名[aaa]のイベントに置き換わります。
+ * <TE:\v[1]> テンプレートマップのID[変数[1]の値]のイベントに置き換わります。
+ *
+ * 原則、初期配置以外の全設定はテンプレートイベントの設定に置き換わりますが
+ * 例外としてグラフィックを指定していた場合とメモ欄(※1)を記述した場合は
+ * 以下の設定について固有イベントの設定を優先します。
+ * ・画像
+ * ・自律移動
+ * ・オプション
+ * ・プライオリティ
+ * ・トリガー
+ *
+ * ※1 固有イベントのメモ欄に以下の通り記述します。
+ * <TE上書き>
+ * <TEOverRide>
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -142,7 +164,7 @@
  *
  * TEマップイベント呼び出し [イベントID] [ページ番号]
  * TE_CALL_MAP_EVENT [イベントID] [ページ番号]
- *  同一マップ内の別のイベント処理を呼び出します。処理完了後、元の処理に戻ります。
+ *  同一マップ内の別イベント処理を呼び出します。処理完了後、元の処理に戻ります。
  *  イベントIDに数値以外を指定すると、イベント名として扱われ
  *  イベント名が一致するイベントの処理を呼び出します。
  *  テンプレートイベントに記述した場合以外でも有効です。
@@ -246,9 +268,9 @@ var $dataTemplateEvents = null;
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramTemplateMapId  = getParamNumber(['TemplateMapId', 'テンプレートマップID']);
-    var paramKeepEventId    = getParamBoolean(['KeepEventId', 'イベントIDを維持']);
-    var paramReplaceGraphic = getParamBoolean(['ReplaceGraphic', 'グラフィック置換']);
+    var paramTemplateMapId = getParamNumber(['TemplateMapId', 'テンプレートマップID']);
+    var paramKeepEventId   = getParamBoolean(['KeepEventId', 'イベントIDを維持']);
+    var paramNoOverride    = getParamBoolean(['NoOverride', '上書き禁止']);
 
     //=============================================================================
     // Game_Interpreter
@@ -345,41 +367,22 @@ var $dataTemplateEvents = null;
 
     var _Game_Event_setupPageSettings      = Game_Event.prototype.setupPageSettings;
     Game_Event.prototype.setupPageSettings = function() {
+        if (this.hasTemplate() && this.isOverrideProperty()) {
+            this._needOriginalPage = true;
+        }
         _Game_Event_setupPageSettings.apply(this, arguments);
-        if (this.hasTemplate()) {
-            this.setupPageSettingsForTemplate();
-        }
+        this._needOriginalPage = false;
     };
 
-    Game_Event.prototype.setupPageSettingsForTemplate = function() {
-        var page  = this.getOriginalPages()[this._pageIndex];
-        if (!page) return;
-        if (this.isOverrideGraphic()) {
-            var image = page.image;
-            if (image.tileId > 0) {
-                this.setTileImage(image.tileId);
-            } else if (image.characterName) {
-                this.setupPageOptions(page);
-                this.setupPageImage(image);
-            }
-        }
+    var _Game_Event_page      = Game_Event.prototype.page;
+    Game_Event.prototype.page = function() {
+        return this._needOriginalPage ? this.getOriginalPage() : _Game_Event_page.apply(this, arguments);
     };
 
-    Game_Event.prototype.isOverrideGraphic = function() {
-        return !paramReplaceGraphic;
-    };
-
-    Game_Event.prototype.setupPageOptions = function(page) {
-        this.setWalkAnime(page.walkAnime);
-        this.setStepAnime(page.stepAnime);
-        this.setDirectionFix(page.directionFix);
-        this.setThrough(page.through);
-    };
-
-    Game_Event.prototype.setupPageImage = function(image) {
-        this.setImage(image.characterName, image.characterIndex);
-        this.setDirection(image.direction);
-        this.setPattern(image.pattern);
+    Game_Event.prototype.isOverrideProperty = function() {
+        var page = this.getOriginalPage();
+        if (!page) return false;
+        return (!paramNoOverride && (page.image.tileId > 0 || page.image.characterName)) || this._override;
     };
 
     Game_Event.prototype.setTemplate = function(event) {
@@ -391,8 +394,10 @@ var $dataTemplateEvents = null;
                 if (template) templateId = template.id;
             }
             this._templateId = templateId;
+            this._override   = !!getMetaValues(event, ['OverRide', '上書き']);
         } else {
             this._templateId = 0;
+            this._override   = false;
         }
     };
 
@@ -407,6 +412,10 @@ var $dataTemplateEvents = null;
 
     Game_Event.prototype.getOriginalPages = function() {
         return $dataMap.events[this._eventId].pages;
+    };
+
+    Game_Event.prototype.getOriginalPage = function() {
+        return this.getOriginalPages()[this._pageIndex];
     };
 
     Game_Event.prototype.getPages = function() {
