@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/06/10 リファクタリング
 // 1.1.1 2017/06/07 CustumCriticalSoundVer5.jsとの競合を解消
 // 1.1.0 2017/02/02 ダメージが0だった場合に専用SEを演奏できる機能を追加
 // 1.0.0 2016/12/14 初版
@@ -136,6 +137,10 @@
         return value === null ? '' : value;
     };
 
+    var isExistPlugin = function(pluginName) {
+        return Object.keys(PluginManager.parameters(pluginName)).length > 0
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
@@ -249,7 +254,7 @@
                 this.push('performNoDamage', target);
             }
         }
-        if (Object.keys(PluginManager.parameters('CustumCriticalSoundVer5')).length > 0 && target.result().hpDamage > 0) {
+        if (isExistPlugin('CustumCriticalSoundVer5') && target.result().hpDamage > 0) {
             this.setEffectiveSe(target);
         }
         _Window_BattleLog_displayHpDamage.apply(this, arguments);
