@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/06/10 同期をマップ画面でのみ行うよう修正。ロードおよびニューゲーム時に確実に受信するよう修正
 // 1.1.4 2017/06/02 ゲームデータ作成前にデータ受信した際にエラーになる問題を修正
 // 1.1.3 2016/06/29 追加でネットワークエラー対応
 // 1.1.2 2016/06/28 ゲーム中にネットワークが切断された場合にエラーになる現象を修正
@@ -302,6 +303,11 @@ function SyncManager() {
         this._callLoadListeners();
     };
 
+    SyncManager.start = function() {
+        this.needDownload = true;
+        this.isDownloaded = false;
+    };
+
     SyncManager.addLoadListener = function(listener) {
         if (!this._online) {
             this._loadListeners.push(listener);
@@ -323,10 +329,6 @@ function SyncManager() {
 
     SyncManager.setNeedUpload = function() {
         if (!this.isExecute) this.needUpload = true;
-    };
-
-    SyncManager.setNeedDownload = function() {
-        if (!this.isExecute) this.needDownload = true;
     };
 
     SyncManager.update = function() {
@@ -500,14 +502,14 @@ function SyncManager() {
     var DataManager_loadGameWithoutRescue = DataManager.loadGameWithoutRescue;
     DataManager.loadGameWithoutRescue     = function(savefileId) {
         var result = DataManager_loadGameWithoutRescue.apply(this, arguments);
-        if (result) SyncManager.setNeedDownload();
+        if (result) SyncManager.start();
         return result;
     };
 
     var _DataManager_setupNewGame = DataManager.setupNewGame;
     DataManager.setupNewGame      = function() {
         _DataManager_setupNewGame.apply(this, arguments);
-        SyncManager.setNeedDownload();
+        SyncManager.start();
     };
 
     //=============================================================================
@@ -570,7 +572,9 @@ function SyncManager() {
     var _SceneManager_updateMain = SceneManager.updateMain;
     SceneManager.updateMain      = function() {
         _SceneManager_updateMain.apply(this, arguments);
-        SyncManager.update();
+        if (this._scene instanceof Scene_Map) {
+            SyncManager.update();
+        }
     };
 
     var _SceneManager_onError = SceneManager.onError;
