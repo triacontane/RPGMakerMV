@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.3 2017/06/10 CustumCriticalSoundVer5.jsとの競合を解消
 // 1.3.2 2017/05/20 BattleEffectPopup.jsとの併用でスキルによる反撃が表示されない問題を修正。
 // 1.3.1 2017/04/22 1.3.0の機能がBattleEngineCoreで動作するよう修正
 // 1.3.0 2017/04/09 反撃に成功した時点で相手の行動をキャンセルできる機能を追加
@@ -260,6 +261,10 @@ var Imported = Imported || {};
         return String(args) !== args;
     };
 
+    var isExistPlugin = function(pluginName) {
+        return Object.keys(PluginManager.parameters(pluginName)).length > 0
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
@@ -434,8 +439,7 @@ var Imported = Imported || {};
             action.setCounterSkill();
             if (paramPayCounterCost) target.useItem(action.item());
             action.apply(subject);
-            this._logWindow.displaySkillCounter(target, action, [subject]);
-            this._logWindow.displayActionResults(target, subject);
+            this._logWindow.displayCounterExtend(subject, action, target);
         }
         if (target.isCounterCancel()) {
             this._actionCancel = true;
@@ -470,6 +474,15 @@ var Imported = Imported || {};
         this.push('showAnimation', subject, targets.clone(), item.animationId);
         this.push('waitForAnimation');
         this.displayAction(subject, item);
+    };
+
+    Window_BattleLog.prototype.displayCounterExtend = function(subject, action, target) {
+        this.displaySkillCounter(target, action, [subject]);
+        if (isExistPlugin('CustumCriticalSoundVer5')) {
+            this.push('displayActionResults', target, subject);
+        } else {
+            this.displayActionResults(target, subject);
+        }
     };
 
     var _Window_BattleLog_updateWaitMode    = Window_BattleLog.prototype.updateWaitMode;
