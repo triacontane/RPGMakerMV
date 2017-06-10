@@ -1,16 +1,18 @@
 //=============================================================================
 // ConfusionExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/06/10 制約「敵を攻撃」の場合に味方対象スキルを実行した場合、対象を味方にするよう修正
+//                  使用可能スキルに除外設定を追加
 // 1.2.0 2017/05/02 使用可能なスキルの中からランダムで使用する機能を追加
 // 1.1.0 2016/11/12 裏切り機能と味方対象スキルの対象を反転させる機能を追加
 // 1.0.0 2016/08/13 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -59,6 +61,9 @@
  *                      使用できない場合、ID[6]のスキルが使用されます。
  * <CEターゲット:0>   # 単体スキルの対象を[0]番目のキャラクターに指定します。
  *                      メモ欄の指定がない場合はランダムで決定されます。
+ *
+ * 使用可能スキルを指定する際、使わせたくないスキルを別途指定できます。
+ * <CE使用可能スキル:1,2,3> # 使用可能スキルのうち[1][2][3]を候補から外します。
  *
  * ・追加機能
  * 裏切り機能を有効にすると対象のステートが有効になっているバトラーが
@@ -115,6 +120,9 @@
  * <CEターゲット:0>   # 単体スキルの対象を[0]番目のキャラクターに指定します。
  *                      メモ欄の指定がない場合はランダムで決定されます。
  *
+ * 使用可能スキルを指定する際、使わせたくないスキルを別途指定できます。
+ * <CE使用可能スキル:1,2,3> # 使用可能スキルのうち[1][2][3]を候補から外します。
+ *
  * ・追加機能
  * 裏切り機能を有効にすると対象のステートが有効になっているバトラーが
  * 敵や混乱スキルの攻撃対象から外れ、さらにそのバトラー以外が戦闘不能になると
@@ -155,6 +163,24 @@
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    };
+
+    var getArgArrayNumber = function(args, min, max) {
+        var values = getArgArrayString(args, false);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        for (var i = 0; i < values.length; i++) {
+            values[i] = (parseFloat(values[i], 10) || 0).clamp(min, max);
+        }
+        return values;
+    };
+
+    var getArgArrayString = function(args) {
+        var values = args.split(',');
+        for (var i = 0; i < values.length; i++) {
+            values[i] = values[i].trim();
+        }
+        return values;
     };
 
     var getMetaValue = function(object, name) {
@@ -284,11 +310,23 @@
     };
 
     Game_Action.prototype.getConfusionUsableSkills = function(state) {
-        var metaValue = getMetaValues(state, ['使用可能スキル', 'UsableSkill']);
-        if (metaValue) {
-            this.subject().getUsableSkillIdList();
+        var usableSkillInclude = getMetaValues(state, ['使用可能スキル', 'UsableSkill']);
+        var skillList = [];
+        if (usableSkillInclude) {
+            skillList = this.subject().getUsableSkillIdList();
+            if (usableSkillInclude !== true) {
+                skillList = this.filterConfusionUsableSkills(skillList, usableSkillInclude);
+            }
         }
-        return metaValue ? this.subject().getUsableSkillIdList() : [];
+        return skillList;
+    };
+
+    Game_Action.prototype.filterConfusionUsableSkills = function(skillList, usableSkillInclude) {
+        var filterList = getArgArrayNumber(usableSkillInclude);
+        skillList = skillList.filter(function(skillId) {
+            return !filterList.contains(skillId);
+        });
+        return skillList;
     };
 
     Game_Action.prototype.getRestrictState = function() {
@@ -346,7 +384,7 @@
     Game_Action.prototype.isConfusionSkillTargetForFriend = function() {
         switch (this.subject().confusionLevel()) {
             case 1:
-                return this.isConfusionSkillTargetReverse();
+                return this.isForFriend();
             case 2:
                 return Math.randomInt(2) === 0;
             case 3:
