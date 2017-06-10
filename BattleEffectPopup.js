@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
 // 1.5.0 2017/05/30 弱点と耐性のポップアップで弱点や耐性と見なすための閾値を設定できる機能を追加
 // 1.4.0 2017/05/20 CounterExtend.jsとの併用でスキルによる反撃が表示されない問題を修正。
 //                  ポップアップのイタリック体および縁取り表示を行う機能を追加。
@@ -384,6 +385,7 @@
     var _Game_Action_calcElementRate      = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         var result = _Game_Action_calcElementRate.apply(this, arguments);
+        if (BattleManager.isInputting()) return result;
         if (result >= paramWeaknessLine / 100) {
             target.appointMessagePopup(paramWeakness, paramWeaknessColor);
         } else if (result <= paramResistanceLine / 100) {
