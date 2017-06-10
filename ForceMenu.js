@@ -33,6 +33,7 @@
  */
 (function () {
     'use strict';
+    var i = 0;
 
     Scene_Map.prototype.isMenuCalled = function() {
         document.title = 'メニュー表示:' + i++ + '回目';
