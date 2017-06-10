@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
 // 1.2.0 2017/06/01 弱点時のみ副作用が適用できる機能を追加
 // 1.1.1 2017/01/24 副作用設定時にターン終了時にダメージのポップアップ等が出なくなる問題を修正
 // 1.1.0 2016/12/13 フロントビュー時にエフェクト効果のメッセージが重複して表示される問題を修正
@@ -411,7 +412,7 @@
     var _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         var rate = _Game_Action_calcElementRate.apply(this, arguments);
-        if (rate >= 1.1) {
+        if (!BattleManager.isInputting() && rate >= 1.1) {
             this._effectiveForSideEffect = true;
         }
         return rate;
