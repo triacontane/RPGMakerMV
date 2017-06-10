@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
 // 1.1.2 2017/06/10 リファクタリング
 // 1.1.1 2017/06/07 CustumCriticalSoundVer5.jsとの競合を解消
 // 1.1.0 2017/02/02 ダメージが0だった場合に専用SEを演奏できる機能を追加
@@ -163,6 +164,7 @@
     var _Game_Action_calcElementRate    = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         var result = _Game_Action_calcElementRate.apply(this, arguments);
+        if (BattleManager.isInputting()) return result;
         if (result >= paramWeaknessLine / 100) {
             target.setEffectiveSe(userSettings.get('weaknessSe'));
         } else if (result <= paramResistanceLine / 100) {
