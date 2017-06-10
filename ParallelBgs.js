@@ -241,6 +241,21 @@
     AudioManager._bgsFading       = false;
     AudioManager._bgsFadeCounter  = 0;
 
+    var _AudioManager_bgsVolume = Object.getOwnPropertyDescriptor(AudioManager, 'bgsVolume');
+    Object.defineProperty(AudioManager, 'bgsVolume', {
+        get: function() {
+            return _AudioManager_bgsVolume.get.call(this);
+        },
+        set: function(value) {
+            _AudioManager_bgsVolume.set.call(this, value);
+            var nowBgs = this._currentBgs;
+            this.iterateAllBgs(function() {
+                if (nowBgs !== this._currentBgs) this.updateBgsParameters(this._currentBgs);
+            }.bind(this));
+        },
+        configurable: true
+    });
+
     Object.defineProperty(AudioManager, '_bgsBuffer', {
         get: function() {
             return this._allBgsBuffer[this.getBgsLineIndex()];
