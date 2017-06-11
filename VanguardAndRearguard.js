@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/06/11 メニュー画面でフェイスを右にずらす機能を有効にするかどうかのパラメータを追加
 // 1.3.2 2017/04/22 全回復のイベント後、隊列ステートが解除されてしまう不具合を修正
 // 1.3.1 2017/02/27 YEP_BattleEngineCore.jsと組み合わせたときに、後衛時のノックバックが過剰になる現象を修正
 // 1.3.0 2017/01/14 敵キャラの前衛、後衛ステートアイコンを非表示にできる機能を追加
@@ -62,6 +63,10 @@
  * @param HiddenIcon
  * @desc 敵キャラの前衛、後衛のステートアイコンを非表示にします。（アクターのアイコンは表示されます）
  * @default OFF
+ *
+ * @param FaceShift
+ * @desc メニュー画面で、後衛の顔グラフィックを右に少しずらして表示します。
+ * @default ON
  *
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
@@ -153,6 +158,10 @@
  * @param アイコン非表示
  * @desc 敵キャラの前衛、後衛のステートアイコンを非表示にします。（アクターのアイコンは表示されます）
  * @default OFF
+ *
+ * @param フェイスシフト
+ * @desc メニュー画面で、後衛の顔グラフィックを右に少しずらして表示します。
+ * @default ON
  *
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
@@ -288,6 +297,7 @@
     var paramChangeSpeed      = getParamNumber(['ChangeSpeed', 'チェンジ速度'], 1);
     var paramRearDefense      = getParamBoolean(['RearDefense', '後衛防御']);
     var paramHiddenIcon       = getParamBoolean(['HiddenIcon', 'アイコン非表示']);
+    var paramFaceShift        = getParamBoolean(['FaceShift', 'フェイスシフト']);
 
     //=============================================================================
     // Game_Interpreter
@@ -346,7 +356,7 @@
         this.setFormationState(prevVanguard);
     };
 
-    var _Game_BattlerBase_recoverAll = Game_BattlerBase.prototype.recoverAll;
+    var _Game_BattlerBase_recoverAll      = Game_BattlerBase.prototype.recoverAll;
     Game_BattlerBase.prototype.recoverAll = function() {
         var prevVanguard = this.isVanguard();
         _Game_BattlerBase_recoverAll.apply(this, arguments);
@@ -486,7 +496,7 @@
     };
 
     Game_Enemy.prototype.filterFormationIcon = function(icons) {
-        var vanguardState = $dataStates[paramVanguardStateId];
+        var vanguardState  = $dataStates[paramVanguardStateId];
         var rearguardState = $dataStates[paramRearguardStateId];
         return icons.filter(function(iconIndex) {
             if (vanguardState && vanguardState.iconIndex === iconIndex) {
@@ -624,7 +634,7 @@
     // Window_MenuStatus
     //  前衛・後衛で描画位置を変更します。
     //=============================================================================
-    Window_MenuStatus.shiftWidth              = 24;
+    Window_MenuStatus.shiftWidth              = paramFaceShift ? 24 : 0;
     Window_MenuStatus.prototype.drawActorFace = function(actor, x, y, width, height) {
         if (actor.isRearguard()) {
             arguments[1] += Window_MenuStatus.shiftWidth;
@@ -704,7 +714,7 @@
         }
     };
 
-    var _Sprite_Battler_stepFlinch = Sprite_Battler.prototype.stepFlinch;
+    var _Sprite_Battler_stepFlinch      = Sprite_Battler.prototype.stepFlinch;
     Sprite_Battler.prototype.stepFlinch = function() {
         this._homeX += this._formationX;
         this._homeY += this._formationY;
@@ -713,7 +723,7 @@
         this._homeY -= this._formationY;
     };
 
-    var _Sprite_Actor_stepFlinch = Sprite_Actor.prototype.stepFlinch;
+    var _Sprite_Actor_stepFlinch      = Sprite_Actor.prototype.stepFlinch;
     Sprite_Actor.prototype.stepFlinch = function() {
         this._homeX += this._formationX;
         this._homeY += this._formationY;
