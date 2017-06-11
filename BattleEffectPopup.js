@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2017/06/10 行動が無効だった場合のポップアップを追加
 // 1.5.1 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
 // 1.5.0 2017/05/30 弱点と耐性のポップアップで弱点や耐性と見なすための閾値を設定できる機能を追加
 // 1.4.0 2017/05/20 CounterExtend.jsとの併用でスキルによる反撃が表示されない問題を修正。
@@ -60,6 +61,17 @@
  *
  * @param ミスカラー
  * @desc ミス発生時の文字のフラッシュ色です。
+ * @default 0,0,0,0
+ *
+ * @param 無効
+ * @desc 行動が無効（行動は成功したが有効な効果がなかった）だった時のポップアップメッセージまたはファイル名です。
+ * @default Invalid!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param 無効カラー
+ * @desc 無効発生時の文字のフラッシュ色です。
  * @default 0,0,0,0
  *
  * @param 魔法反射
@@ -313,6 +325,8 @@
     var paramAvoidColor       = getParamArrayNumber(['AvoidColor', '回避カラー'], 0, 256);
     var paramMiss             = getParamString(['Miss', 'ミス']);
     var paramMissColor        = getParamArrayNumber(['MissColor', 'ミスカラー'], 0, 256);
+    var paramInvalid          = getParamString(['Invalid', '無効']);
+    var paramInvalidColor     = getParamArrayNumber(['InvalidColor', '無効カラー'], 0, 256);
     var paramReflection       = getParamString(['Reflection', '魔法反射']);
     var paramReflectionColor  = getParamArrayNumber(['ReflectionColor', '魔法反射カラー'], 0, 256);
     var paramCounter          = getParamString(['Counter', '反撃']);
@@ -434,6 +448,14 @@
     };
 
     //=============================================================================
+    // Game_ActionResult
+    //  行動が無効だったかどうかを返します。
+    //=============================================================================
+    Game_ActionResult.prototype.isInvalid = function() {
+        return !this.success && !this.missed && !this.evaded;
+    };
+
+    //=============================================================================
     // Window_BattleLog
     //  ポップアップメッセージをリクエストします。
     //=============================================================================
@@ -444,6 +466,9 @@
     var _Window_BattleLog_displayDamage      = Window_BattleLog.prototype.displayDamage;
     Window_BattleLog.prototype.displayDamage = function(target) {
         _Window_BattleLog_displayDamage.apply(this, arguments);
+        if (target.result().isInvalid()) {
+            this.pushPopupMessage(target, paramInvalid, paramInvalidColor);
+        }
         target.startAppointMessagePopup();
     };
 
@@ -558,6 +583,7 @@
     //=============================================================================
     var _Sprite_Damage_setup      = Sprite_Damage.prototype.setup;
     Sprite_Damage.prototype.setup = function(target) {
+        // for YEP_BattleEngineCore.js
         var result = target.shiftDamagePopup ? target.shiftDamagePopup() : target.result();
         if ((!result.evaded || !paramAvoid) && (!result.missed || !paramMiss)) {
             if (target.shiftDamagePopup) {
@@ -565,6 +591,10 @@
             }
             _Sprite_Damage_setup.apply(this, arguments);
         }
+        this.setupFlash(result, target);
+    };
+
+    Sprite_Damage.prototype.setupFlash = function(result, target) {
         if (!result.missed && !result.evaded && result.hpAffected) {
             var color = target instanceof Game_Actor ? paramActorDamageColor : paramEnemyDamageColor;
             if (color && color.length > 0) this.setupFlashEffect(color);
