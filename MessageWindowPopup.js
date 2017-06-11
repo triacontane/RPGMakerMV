@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.1 2017/06/11 DP_MapZoom.js以外のマップズーム機能に対してフキダシ位置が正しく表示されていなかった問題を修正
 // 2.5.0 2017/06/05 マップズームに対してフキダシ位置が正しく表示されるよう対応
 //                  フキダシの位置固定をイベントごとに設定できる機能を追加
 // 2.4.1 2017/05/28 ウィンドウスキンを変更した直後の文字色のみ変更前の文字色になってしまう問題を修正（by 奏ねこまさん）
@@ -691,13 +692,31 @@
     };
 
     Game_CharacterBase.prototype.getRealScreenX = function() {
-        return $gameScreen.zoomScale() * this.screenX();
+        return $gameScreen.convertRealX(this.screenX());
     };
 
     Game_CharacterBase.prototype.getRealScreenY = function() {
-        return $gameScreen.zoomScale() * this.screenY();
+        return $gameScreen.convertRealY(this.screenY());
     };
 
+    //=============================================================================
+    // Game_Screen
+    //  画面座標をズームを考慮した座標に変換します。
+    //=============================================================================
+    Game_Screen.prototype.convertRealX = function(x) {
+        var scale = this.zoomScale();
+        return scale * x - (scale - 1.0) * this.zoomX();
+    };
+
+    Game_Screen.prototype.convertRealY = function(y) {
+        var scale = this.zoomScale();
+        return scale * y - (scale - 1.0) * this.zoomY();
+    };
+
+    //=============================================================================
+    // Scene_Map
+    //  ポップアップ用のウィンドウスキンをロードします。
+    //=============================================================================
     var _Scene_Map_isReady      = Scene_Map.prototype.isReady;
     Scene_Map.prototype.isReady = function() {
         var ready   = _Scene_Map_isReady.apply(this, arguments);
