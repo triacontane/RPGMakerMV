@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2017/06/11 プライオリティの設定を0にすると設定が有効にならない問題を修正
 // 1.5.1 2017/06/11 GALV_CamControl.jsとの競合を解消
 // 1.5.0 2017/03/28 色調変更機能を追加
 // 1.4.2 2017/02/03 メモ欄に制御文字\v[n]を使った場合に、一度マップ移動しないと反映されない問題を修正しました。
@@ -388,7 +389,7 @@
 
     var _Game_CharacterBase_screenZ      = Game_CharacterBase.prototype.screenZ;
     Game_CharacterBase.prototype.screenZ  = function() {
-        return this._customPriority > 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
+        return this._customPriority >= 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
     };
 
     //=============================================================================
