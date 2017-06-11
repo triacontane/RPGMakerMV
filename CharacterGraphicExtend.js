@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/06/11 GALV_CamControl.jsとの競合を解消
 // 1.5.0 2017/03/28 色調変更機能を追加
 // 1.4.2 2017/02/03 メモ欄に制御文字\v[n]を使った場合に、一度マップ移動しないと反映されない問題を修正しました。
 // 1.4.1 2016/11/27 T_dashMotion.jsとの競合を解決
@@ -377,12 +378,12 @@
 
     var _Game_CharacterBase_screenX      = Game_CharacterBase.prototype.screenX;
     Game_CharacterBase.prototype.screenX = function() {
-        return this.absoluteX() > 0 ? this.absoluteX() : _Game_CharacterBase_screenX.apply(this, arguments) + this._additionalX;
+        return this._absoluteX > 0 ? this.absoluteX() : _Game_CharacterBase_screenX.apply(this, arguments) + this._additionalX;
     };
 
     var _Game_CharacterBase_screenY      = Game_CharacterBase.prototype.screenY;
     Game_CharacterBase.prototype.screenY = function() {
-        return this.absoluteY() > 0 ? this.absoluteY() : _Game_CharacterBase_screenY.apply(this, arguments) + this._additionalY;
+        return this._absoluteY > 0 ? this.absoluteY() : _Game_CharacterBase_screenY.apply(this, arguments) + this._additionalY;
     };
 
     var _Game_CharacterBase_screenZ      = Game_CharacterBase.prototype.screenZ;
@@ -557,6 +558,7 @@
     var _Sprite_Character_update = Sprite_Character.prototype.update;
     Sprite_Character.prototype.update = function() {
         _Sprite_Character_update.apply(this, arguments);
+        // for T_dashMotion.js
         if (this.updateDashMotion) {
             this.resolveConflictForDashMotion();
         }
