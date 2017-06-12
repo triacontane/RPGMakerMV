@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.5 2017/06/12 変数がマイナス値のときのゼロ埋め表示が正しく表示されない問題を修正
 // 1.8.4 2017/05/10 プラグインを未適用のデータを読み込んだとき、最初の一回のみ動的文字列ピクチャが作成されない問題を修正
 // 1.8.3 2017/04/19 自動翻訳プラグインに一部対応
 // 1.8.2 2017/04/05 ピクチャの消去時にエラーが発生していた問題を修正
@@ -394,7 +395,7 @@
     Window_Base.prototype.convertEscapeCharacters = function(text) {
         text = _Window_Base_convertEscapeCharacters.call(this, text);
         text = text.replace(/\x1bV\[(\d+)\,\s*(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1], 10)).padZero(arguments[2]);
+            return this.getVariablePadZero($gameVariables.value(parseInt(arguments[1], 10)), arguments[2]);
         }.bind(this));
         text = text.replace(/\x1bITEM\[(\d+)\]/gi, function() {
             var item = $dataItems[getArgNumber(arguments[1], 1, $dataItems.length)];
@@ -417,6 +418,10 @@
             return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
         }.bind(this));
         return text;
+    };
+
+    Window_Base.prototype.getVariablePadZero = function(value, digit) {
+        return (value < 0 ? '-' : '') + Math.abs(value).padZero(digit);
     };
 
     //=============================================================================
