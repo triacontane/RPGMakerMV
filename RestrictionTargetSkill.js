@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.5 2017/06/12 敵が制約付きスキルを使用した際にエラーが発生する場合がある問題を修正
 // 1.1.4 2017/06/04 1.1.3で戦闘行動のキャラクターに対するスキルが実行できなくなっていた問題を修正
 // 1.1.3 2017/06/04 単体を対象にした制限スキルを実行したときに、選択した対象と実行対象がズレてしまう場合がある問題を修正
 // 1.1.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
@@ -160,6 +161,12 @@
     // Game_BattlerBase
     //  スキルやアイテムの対象として選択可能かどうかを返します。
     //=============================================================================
+    Game_Battler.prototype.isExistValidTarget = function(item) {
+        var trialAction = new Game_Action(this, false);
+        trialAction.setItemObject(item);
+        return trialAction.makeTargets().length > 0;
+    };
+
     Game_BattlerBase.prototype.canSelectTarget = function(item, user) {
         if (getMetaValues(item, ['使用者無効', 'UserInvalid']) && user === this) {
             return false;
@@ -205,10 +212,23 @@
         return result;
     };
 
+    var _Game_Enemy_isActionValid = Game_Enemy.prototype.isActionValid;
+    Game_Enemy.prototype.isActionValid = function(action) {
+        return _Game_Enemy_isActionValid.apply(this, arguments) && this.isExistValidTarget($dataSkills[action.skillId]);
+    };
+
     //=============================================================================
     // Game_Action
     //  スキルやアイテムの対象として選択不可能な対象に選択しないようにします。
     //=============================================================================
+    var _Game_Action_subject = Game_Action.prototype.subject;
+    Game_Action.prototype.subject = function() {
+        $gameTroop.setNeedOriginalMember(true);
+        var subject = _Game_Action_subject.apply(this, arguments);
+        $gameTroop.setNeedOriginalMember(false);
+        return subject;
+    };
+
     var _Game_Action_makeTargets      = Game_Action.prototype.makeTargets;
     Game_Action.prototype.makeTargets = function() {
         BattleManager.setTargetAction(this);
@@ -257,6 +277,10 @@
         var allMember = this.members();
         this._needOriginalMember = false;
         return this.members().indexOf(allMember[index]);
+    };
+
+    Game_Unit.prototype.setNeedOriginalMember = function(value) {
+        this._needOriginalMember = value;
     };
 
     //=============================================================================
