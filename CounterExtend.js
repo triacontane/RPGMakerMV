@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/06/13 反撃スキルに指定した効果範囲と連続回数が適用されるようになりました。
+//                  攻撃を受けてから反撃するクロスカウンター機能を追加
 // 1.3.3 2017/06/10 CustumCriticalSoundVer5.jsとの競合を解消
 // 1.3.2 2017/05/20 BattleEffectPopup.jsとの併用でスキルによる反撃が表示されない問題を修正。
 // 1.3.1 2017/04/22 1.3.0の機能がBattleEngineCoreで動作するよう修正
@@ -62,6 +64,9 @@
  * <CE_魔法反撃スキルID:3>    # 魔法反撃時にID[3]のスキルを使用します。
  * <CE_MagicCounterSkillId:3> # 同上
  *
+ * 反撃スキルは、通常は攻撃してきた相手をターゲットとしますが
+ * 味方対象のスキルなどは自分や味方に対して使用します。
+ *
  * 3. 反撃条件をJavaScript計算式の評価結果を利用できます。
  * 反撃条件を満たさない場合は反撃は実行されません。
  * 特定のスキルに対してのみ反撃したり、特定の条件下でのみ反撃したりできます。
@@ -105,6 +110,11 @@
  * 当たらなくなります。特徴を有するメモ欄に以下の通り入力してください。
  * <CE_キャンセル> # 反撃成功時に相手の行動をキャンセル
  * <CE_Cancel>     # 同上
+ *
+ * 7. デフォルトの反撃とは異なり、攻撃を受けてから反撃させることができます。
+ * 特徴を有するメモ欄に以下の通り入力してください。
+ * <CE_クロスカウンター> # 相手の攻撃を受けてから反撃します。
+ * <CE_CrossCounter>     # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -151,6 +161,9 @@
  * <CE_魔法反撃スキルID:3>    # 魔法反撃時にID[3]のスキルを使用します。
  * <CE_MagicCounterSkillId:3> # 同上
  *
+ * 反撃スキルは、通常は攻撃してきた相手をターゲットとしますが
+ * 味方対象のスキルなどは自分や味方に対して使用します。
+ *
  * 3. 反撃条件をJavaScript計算式の評価結果を利用できます。
  * 反撃条件を満たさない場合は反撃は実行されません。
  * 特定のスキルに対してのみ反撃したり、特定の条件下でのみ反撃したりできます。
@@ -194,6 +207,11 @@
  * 当たらなくなります。特徴を有するメモ欄に以下の通り入力してください。
  * <CE_キャンセル> # 反撃成功時に相手の行動をキャンセル
  * <CE_Cancel>     # 同上
+ *
+ * 7. デフォルトの反撃とは異なり、攻撃を受けてから反撃させることができます。
+ * 特徴を有するメモ欄に以下の通り入力してください。
+ * <CE_クロスカウンター> # 相手の攻撃を受けてから反撃します。
+ * <CE_CrossCounter>     # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -287,6 +305,12 @@ var Imported = Imported || {};
         });
     };
 
+    Game_BattlerBase.prototype.isCrossCounter = function() {
+        return this.traitObjects().some(function(traitObject) {
+            return getMetaValues(traitObject, ['クロスカウンター', 'CrossCounter']);
+        });
+    };
+
     Game_BattlerBase.prototype.getMagicCounterRate = function() {
         return this.traitObjects().reduce(function(prevValue, traitObject) {
             var metaValue = getMetaValues(traitObject, ['魔法反撃', 'MagicCounter']);
@@ -365,12 +389,34 @@ var Imported = Imported || {};
             this.canPaySkillCost($dataSkills[this._reserveCounterSkillId]);
     };
 
+    Game_BattlerBase.prototype.isCounterSubject = function() {
+        return this._counterSubject;
+    };
+
+    Game_BattlerBase.prototype.setCounterSubject = function(value) {
+        this._counterSubject = value;
+    };
+
+    //=============================================================================
+    // Game_Battler
+    //  カウンター時のスキルコスト消費処理を別途定義します。
+    //=============================================================================
+    var _Game_Battler_useItem = Game_Battler.prototype.useItem;
+    Game_Battler.prototype.useItem = function(item) {
+        if (this.isCounterSubject() && !paramPayCounterCost) return;
+        _Game_Battler_useItem.apply(this, arguments);
+        this.refresh();
+    };
+
     //=============================================================================
     // Game_Action
     //  魔法反撃を可能にします。
     //=============================================================================
     var _Game_Action_itemCnt    = Game_Action.prototype.itemCnt;
     Game_Action.prototype.itemCnt = function(target) {
+        if (this.subject().isCounterSubject()) {
+            return 0;
+        }
         var cnt = _Game_Action_itemCnt.apply(this, arguments);
         if (this.isMagical()) {
             return this.itemMagicCnt(target);
@@ -416,10 +462,6 @@ var Imported = Imported || {};
         return names;
     };
 
-    Game_Action.prototype.setCounterSkill = function() {
-        this.setSkill(this.subject().getCounterSkillId());
-    };
-
     //=============================================================================
     // BattleManager
     //  スキルによる反撃を実装します。
@@ -427,6 +469,9 @@ var Imported = Imported || {};
     var _BattleManager_startAction = BattleManager.startAction;
     BattleManager.startAction = function() {
         this._actionCancel = false;
+        if (this._subject.isCounterSubject()) {
+            this._logWindow.displaySkillCounter(this._subject);
+        }
         _BattleManager_startAction.apply(this, arguments);
     };
 
@@ -435,15 +480,29 @@ var Imported = Imported || {};
         if (!target.isReserveCounterSkill()) {
             _BattleManager_invokeCounterAttack.apply(this, arguments);
         } else {
-            var action = new Game_Action(target);
-            action.setCounterSkill();
-            if (paramPayCounterCost) target.useItem(action.item());
-            action.apply(subject);
-            this._logWindow.displayCounterExtend(subject, action, target);
+            if (target.isCrossCounter()) {
+                this.invokeNormalAction(subject, target);
+            }
+            this.invokeCounterSkill(subject, target);
         }
         if (target.isCounterCancel()) {
             this._actionCancel = true;
         }
+    };
+
+    BattleManager.invokeCounterSkill = function(subject, target) {
+        var counterSkillId = target.getCounterSkillId();
+        var action = new Game_Action(target);
+        action.setSkill(counterSkillId);
+        var counterTargetIndex;
+        if (action.isForFriend()) {
+            counterTargetIndex = target.friendsUnit().members().indexOf(target);
+        } else {
+            counterTargetIndex = subject.friendsUnit().members().indexOf(subject);
+        }
+        target.setCounterSubject(true);
+        target.forceAction(counterSkillId, counterTargetIndex);
+        this.forceAction(target);
     };
 
     var _BattleManager_invokeAction = BattleManager.invokeAction;
@@ -452,12 +511,17 @@ var Imported = Imported || {};
         _BattleManager_invokeAction.apply(this, arguments);
     };
 
+    var _BattleManager_endAction = BattleManager.endAction;
+    BattleManager.endAction = function() {
+        this._subject.setCounterSubject(false);
+        _BattleManager_endAction.apply(this, arguments);
+    };
+
     //=============================================================================
     // Window_BattleLog
     //  スキルによる反撃を演出します。
     //=============================================================================
-    Window_BattleLog.prototype.displaySkillCounter = function(subject, action, targets) {
-        var item             = action.item();
+    Window_BattleLog.prototype.displaySkillCounter = function(subject) {
         var counterAnimation = subject.getCounterAnimationId();
         if (counterAnimation) {
             this.push('showAnimation', subject, [subject], counterAnimation);
@@ -469,19 +533,6 @@ var Imported = Imported || {};
         // for BattleEffectPopup.js
         if (this.popupCounter) {
             this.popupCounter(subject);
-        }
-        this.push('performAction', subject, action);
-        this.push('showAnimation', subject, targets.clone(), item.animationId);
-        this.push('waitForAnimation');
-        this.displayAction(subject, item);
-    };
-
-    Window_BattleLog.prototype.displayCounterExtend = function(subject, action, target) {
-        this.displaySkillCounter(target, action, [subject]);
-        if (isExistPlugin('CustumCriticalSoundVer5')) {
-            this.push('displayActionResults', target, subject);
-        } else {
-            this.displayActionResults(target, subject);
         }
     };
 
