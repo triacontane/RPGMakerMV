@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/06/13 行動がガード（耐性によって完全に防がれた）された場合のポップアップを追加
 // 1.6.0 2017/06/10 行動が無効だった場合のポップアップを追加
 // 1.5.1 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
 // 1.5.0 2017/05/30 弱点と耐性のポップアップで弱点や耐性と見なすための閾値を設定できる機能を追加
@@ -73,6 +74,17 @@
  * @param 無効カラー
  * @desc 無効発生時の文字のフラッシュ色です。
  * @default 0,0,0,0
+ *
+ * @param ガード
+ * @desc 行動がガード（行動は成功したが相手の耐性によって完全に防がれた）された時のポップアップメッセージまたはファイル名です。
+ * @default Guard!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param ガードカラー
+ * @desc ガード発生時の文字のフラッシュ色です。
+ * @default 0,128,255,255
  *
  * @param 魔法反射
  * @desc 魔法反射時のポップアップメッセージまたはファイル名です。
@@ -178,6 +190,8 @@
  *
  * ・失敗（通常のMissは表示されなくなります）
  * ・回避（通常のMissは表示されなくなります）
+ * ・無効（行動は成功したが有効な効果がなかった）
+ * ・ガード（行動は成功したが相手の耐性によって完全に防がれた）
  * ・クリティカル
  * ・反撃
  * ・魔法反射
@@ -185,6 +199,10 @@
  * ・耐性（ダメージ倍率が1.0を下回った場合）
  * ・ステート付与（ステートごとに設定できます）
  * ・コモンイベント（プラグインコマンドから実行します）
+ *
+ * ※ガードが表示されるのは、ステート有効度もしくは属性有効度が0%の効果が
+ * 存在し、かつ他に有効な効果がない場合です。
+ * なお、「ステート無効化」で防がれた場合は表示されません。
  *
  * また、ポップアップ時にフラッシュカラーを指定することができます。
  * フラッシュカラーの指定は「赤」「緑」「青」「強さ」の順番で
@@ -327,6 +345,8 @@
     var paramMissColor        = getParamArrayNumber(['MissColor', 'ミスカラー'], 0, 256);
     var paramInvalid          = getParamString(['Invalid', '無効']);
     var paramInvalidColor     = getParamArrayNumber(['InvalidColor', '無効カラー'], 0, 256);
+    var paramGuard            = getParamString(['Guard', 'ガード']);
+    var paramGuardColor       = getParamArrayNumber(['GuardColor', 'ガードカラー'], 0, 256);
     var paramReflection       = getParamString(['Reflection', '魔法反射']);
     var paramReflectionColor  = getParamArrayNumber(['ReflectionColor', '魔法反射カラー'], 0, 256);
     var paramCounter          = getParamString(['Counter', '反撃']);
@@ -400,7 +420,9 @@
     Game_Action.prototype.calcElementRate = function(target) {
         var result = _Game_Action_calcElementRate.apply(this, arguments);
         if (BattleManager.isInputting()) return result;
-        if (result >= paramWeaknessLine / 100) {
+        if (result === 0) {
+            target.appointMessagePopup(paramGuard, paramGuardColor);
+        } else if (result >= paramWeaknessLine / 100) {
             target.appointMessagePopup(paramWeakness, paramWeaknessColor);
         } else if (result <= paramResistanceLine / 100) {
             target.appointMessagePopup(paramResistance, paramResistanceColor);
@@ -447,12 +469,31 @@
         return this._flashColor;
     };
 
+    var _Game_Battler_stateRate = Game_Battler.prototype.stateRate;
+    Game_Battler.prototype.stateRate = function(stateId) {
+        var rate = _Game_Battler_stateRate.apply(this, arguments);
+        if (rate === 0) {
+            this.result().guarded = true;
+        }
+        return rate;
+    };
+
     //=============================================================================
     // Game_ActionResult
     //  行動が無効だったかどうかを返します。
     //=============================================================================
+    var _Game_ActionResult_clear = Game_ActionResult.prototype.clear;
+    Game_ActionResult.prototype.clear = function() {
+        _Game_ActionResult_clear.apply(this, arguments);
+        this.guarded = false;
+    };
+
     Game_ActionResult.prototype.isInvalid = function() {
         return !this.success && !this.missed && !this.evaded;
+    };
+
+    Game_ActionResult.prototype.isGuarded = function() {
+        return this.guarded && this.isInvalid();
     };
 
     //=============================================================================
@@ -466,7 +507,9 @@
     var _Window_BattleLog_displayDamage      = Window_BattleLog.prototype.displayDamage;
     Window_BattleLog.prototype.displayDamage = function(target) {
         _Window_BattleLog_displayDamage.apply(this, arguments);
-        if (target.result().isInvalid()) {
+        if (target.result().isGuarded()) {
+            this.pushPopupMessage(target, paramGuard, paramGuardColor);
+        } else if (target.result().isInvalid()) {
             this.pushPopupMessage(target, paramInvalid, paramInvalidColor);
         }
         target.startAppointMessagePopup();
