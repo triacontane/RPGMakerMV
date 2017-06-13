@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/06/14 連携ダメージ数を表示する機能と最大連携ダメージを取得できる機能を追加
+//                  機械翻訳による英語化対応
 // 1.1.1 2017/06/02 最大連携数が正しくカウントできていなかった問題を修正
 // 1.1.0 2017/05/20 チェイン表示の時間設定と、指定数の連携に満たさずに使用すると必ず失敗するスキルを作る機能を追加
 // 1.0.0 2017/05/20 初版
@@ -20,67 +22,71 @@
  * @author triacontane
  *
  * @param Unit
- * @desc チェイン数の単位です。
+ * @desc It is a unit of chain number.
  * @default Chain!!
  *
+ * @param DamageUnit
+ * @desc It is a unit of chain damage.
+ * @default Damage!!
+ *
  * @param FontSize
- * @desc チェイン表示のフォントサイズです。
+ * @desc It is the font size of chain display.
  * @default 48
  *
  * @param ChainX
- * @desc チェイン表示のX座標です。
+ * @desc The X coordinate of the chain display.
  * @default 8
  *
  * @param ChainY
- * @desc チェイン表示のY座標です。
+ * @desc The Y coordinate of the chain display.
  * @default 80
  *
  * @param Duration
- * @desc チェインが表示される時間(フレーム数)です。この値を超過するとフェードアウトします。(0の場合ずっと表示)
+ * @desc The time in which the chain is displayed. If this value is exceeded, it fades out.
  * @default 0
  *
  * @param DamageRate
- * @desc 1チェインごとに増加するダメージの増減値(%)です。
+ * @desc Increase / decrease value of damage increased by 1 chain (%).
  * @default 10
  *
  * @param MaxRate
- * @desc チェインによって増加するダメージの最大倍率です。
+ * @desc This is the maximum magnification of damage increased by the chain.
  * @default 500
  *
  * @param CancelChangeTarget
- * @desc チェイン継続中のターゲット以外に攻撃すると解除されます。
+ * @desc It will be canceled if attacking a target other than the chain continuing chain.
  * @default ON
  *
  * @param CancelMiss
- * @desc 攻撃をミスすると解除されます。
+ * @desc It will be canceled if Missed attacks.
  * @default ON
  *
  * @param CancelNoAttack
- * @desc ダメージを与える攻撃以外を行うと解除されます。
+ * @desc It will be canceled if doing other than damaging attacks.
  * @default ON
  *
  * @param CancelOpposite
- * @desc 敵方が行動すると解除されます。
+ * @desc It will be canceled if the enemy acts.
  * @default ON
  *
- * @help 戦闘中、味方の攻撃が連続したときにダメージ倍率が上昇します。
- * チェインの継続中に相手側のチェインがスタートしたら解除されます。
- * さらにパラメータで追加の解除条件を指定できます。
+ * @help During battle, damage magnification will rise when friendly attacks are continuous.
+ * Maximum collaboration damage is displayed simultaneously with the number of chains.
+ * It will be canceled when chain of opponent starts during chain continuation.
+ * You can also specify additional cancellation conditions with parameters.
  *
- * スキルのメモ欄で以下の機能を追加できます。
- * 数値には制御文字\v[n]が使用できます。
- * <AC_倍率:200> # チェインダメージ倍率をさらに200%にします。
- * <AC_Rate:200> # 同上
- * <AC_終了>     # そのスキルで連携を強制終了します。
- * <AC_End>      # 同上
- * <AC_条件:5>   # 5連携に満たない状態で使用すると必ず失敗します。
- * <AC_Cond:5>   # 同上
+ * The following functions can be added in the note of the skill.
+ * Can use \v[n]
+ * <AC_Rate:200> # Set the chain damage magnification to 200% further.
+ * <AC_End>      # I will forcibly terminate cooperation with that skill.
+ * <AC_Cond:5>   # 5 Failure to use with less than cooperation always fails.
  *
- * このプラグインにはプラグインコマンドはありません。
+ * There is no plugin command in this plugin.
  *
- * イベントコマンド「スクリプト」から以下が実行可能です。
- * $gameParty.getChainCount();    # 現在のパーティ連携数取得
- * $gameParty.getMaxChainCount(); # パーティの最大連携数を取得
+ * The following can be executed from the event command "script".
+ * $gameParty.getChainCount();     # Acquisition of number of current parties
+ * $gameParty.getMaxChainCount();  # Get maximum number of parties
+ * $gameParty.getChainDamage();    # Current Party collaboration Damage Acquisition
+ * $gameParty.getMaxChainDamage(); # Get party's maximum collaboration damage
  *
  * This plugin is released under the MIT License.
  */
@@ -91,6 +97,10 @@
  * @param 単位
  * @desc チェイン数の単位です。
  * @default Chain!!
+ *
+ * @param ダメージ単位
+ * @desc チェインダメージの単位です。
+ * @default Damage!!
  *
  * @param フォントサイズ
  * @desc チェイン表示のフォントサイズです。
@@ -133,6 +143,7 @@
  * @default ON
  *
  * @help 戦闘中、味方の攻撃が連続したときにダメージ倍率が上昇します。
+ * チェイン数と同時に最大連携ダメージも表示されます。
  * チェインの継続中に相手側のチェインがスタートしたら解除されます。
  * さらにパラメータで追加の解除条件を指定できます。
  *
@@ -148,8 +159,10 @@
  * このプラグインにはプラグインコマンドはありません。
  *
  * イベントコマンド「スクリプト」から以下が実行可能です。
- * $gameParty.getChainCount();    # 現在のパーティ連携数取得
- * $gameParty.getMaxChainCount(); # パーティの最大連携数を取得
+ * $gameParty.getChainCount();     # 現在のパーティ連携数取得
+ * $gameParty.getMaxChainCount();  # パーティの最大連携数を取得
+ * $gameParty.getChainDamage();    # 現在のパーティ連携ダメージ取得
+ * $gameParty.getMaxChainDamage(); # パーティの最大連携ダメージを取得
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -232,6 +245,7 @@
     //=============================================================================
     var param                = {};
     param.unit               = getParamString(['Unit', '単位']);
+    param.damageUnit         = getParamString(['DamageUnit', 'ダメージ単位']);
     param.fontSize           = getParamNumber(['FontSize', 'フォントサイズ']) || 48;
     param.maxRate            = getParamNumber(['MaxRate', '最大倍率']) || 100;
     param.damageRate         = getParamNumber(['DamageRate', 'ダメージ倍率']);
@@ -251,20 +265,41 @@
         return this._chainCount || 0;
     };
 
+    Game_Unit.prototype.getChainDamage = function() {
+        return this._chainDamage || 0;
+    };
+
     Game_Unit.prototype.getMaxChainCount = function() {
         return this._maxChain || 0;
     };
 
-    Game_Unit.prototype.addChainCount = function() {
+    Game_Unit.prototype.getMaxChainDamage = function() {
+        return this._maxChainDamage || 0;
+    };
+
+    Game_Unit.prototype.addChainDamage = function(damageValue) {
+        this._chainDamage = this.getChainDamage() + damageValue;
+        if (this._chainDamage > this._maxChainDamage || !this._maxChainDamage) {
+            this._maxChainDamage = this._chainDamage;
+        }
+    };
+
+    Game_Unit.prototype.addChainCount = function(damage) {
         this._chainCount = this.getChainCount() + 1;
         this.members()[0].opponentsUnit().resetChainCount();
         if (this._chainCount > this._maxChain || !this._maxChain) {
             this._maxChain = this._chainCount;
         }
+        this.addChainDamage(damage);
     };
 
     Game_Unit.prototype.resetChainCount = function() {
         this._chainCount = 0;
+        this.resetChainDamage();
+    };
+
+    Game_Unit.prototype.resetChainDamage = function() {
+        this._chainDamage = 0;
     };
 
     Game_Unit.prototype.getChainRate = function(addRate) {
@@ -334,7 +369,7 @@
             this.friendsUnit().resetChainCount();
         }
         if (this._damageForChain) {
-            this.friendsUnit().addChainCount();
+            this.friendsUnit().addChainCount(target.result().hpDamage);
             BattleManager.setChainTarget(target);
         }
         if (param.cancelOpposite) {
@@ -369,11 +404,11 @@
         $gameTroop.resetChainCount();
     };
 
-    BattleManager.getChainCount = function() {
+    BattleManager.getChainParty = function() {
         if (this.isPartyChain()) {
-            return $gameParty.getChainCount();
+            return $gameParty;
         } else {
-            return -$gameTroop.getChainCount();
+            return $gameTroop;
         }
     };
 
@@ -396,13 +431,25 @@
     var _Scene_Battle_createSpriteset      = Scene_Battle.prototype.createSpriteset;
     Scene_Battle.prototype.createSpriteset = function() {
         _Scene_Battle_createSpriteset.apply(this, arguments);
+        this.createChainCountSprite();
+        if (param.damageUnit) {
+            this.createChainDamageSprite();
+        }
+    };
+
+    Scene_Battle.prototype.createChainCountSprite = function() {
         this._chainCountSprite = new Sprite_ChainCount();
         this.addChild(this._chainCountSprite);
     };
 
+    Scene_Battle.prototype.createChainDamageSprite = function() {
+        this._chainDamageSprite = new Sprite_ChainDamage();
+        this.addChild(this._chainDamageSprite);
+    };
+
     //=============================================================================
     // Sprite_ChainCount
-    //  ヒット数を表示します。
+    //  連携数を表示します。
     //=============================================================================
     function Sprite_ChainCount() {
         this.initialize.apply(this, arguments);
@@ -413,8 +460,8 @@
 
     Sprite_ChainCount.prototype.initialize = function() {
         Sprite.prototype.initialize.call(this);
-        this._chainCount = 0;
-        this._duration = 0;
+        this._chainValue = 0;
+        this._duration   = 0;
         this.createBitmap();
         this.update();
         this.initPosition();
@@ -423,29 +470,37 @@
     Sprite_ChainCount.prototype.initPosition = function() {
         this.anchor.x = 0.5;
         this.anchor.y = 0.5;
-        this.x        = param.chainX + this.width / 2;
-        this.y        = param.chainY + this.height / 2;
+        this.x        = this.getInitX() + this.width / 2;
+        this.y        = this.getInitY() + this.height / 2;
     };
 
     Sprite_ChainCount.prototype.createBitmap = function() {
-        this.bitmap              = new Bitmap((param.fontSize / 2) * 12, param.fontSize + 8);
-        this.bitmap.fontSize     = param.fontSize;
+        var fontSize             = this.getFontSize();
+        var width                = (fontSize / 2) * this.getCharNumber() + this.getItalicWidth();
+        var height               = fontSize + 12;
+        this.bitmap              = new Bitmap(width, height);
+        this.bitmap.fontSize     = fontSize;
         this.bitmap.fontItalic   = true;
-        this.bitmap.outlineWidth = 8;
+        this.bitmap.outlineWidth = this.getOutlineWidth();
         this.bitmap.outlineColor = 'white';
     };
 
     Sprite_ChainCount.prototype.update = function() {
-        var chainCount = BattleManager.getChainCount();
-        if (chainCount !== this._chainCount) {
-            this._chainCount = chainCount;
-            this.refresh();
-        }
+        this.updateChainValue();
         if (this._duration > 0) {
             this._duration--;
             this.updateScale();
         } else {
             this.updateFade();
+        }
+        this.updateVisibly();
+    };
+
+    Sprite_ChainCount.prototype.updateChainValue = function() {
+        var chainValue = this.getChainValue();
+        if (chainValue !== this._chainValue) {
+            this._chainValue = chainValue;
+            this.refresh();
         }
     };
 
@@ -469,19 +524,64 @@
         }
     };
 
+    Sprite_ChainCount.prototype.updateVisibly = function() {
+        this.visible = this.getChainParty().getChainCount() > 1;
+    };
+
+    Sprite_ChainCount.prototype.getChainParty = function() {
+        return BattleManager.getChainParty();
+    };
+
+    Sprite_ChainCount.prototype.getItalicWidth = function() {
+        return 4;
+    };
+
+    Sprite_ChainCount.prototype.getValueLength = function() {
+        return 4;
+    };
+
+    Sprite_ChainCount.prototype.getCharNumber = function() {
+        return this.getValueLength() + this.getChainUnit().length;
+    };
+
+    Sprite_ChainCount.prototype.getInitX = function() {
+        return param.chainX;
+    };
+
+    Sprite_ChainCount.prototype.getInitY = function() {
+        return param.chainY;
+    };
+
+    Sprite_ChainCount.prototype.getChainValue = function() {
+        return this.getChainParty().getChainCount();
+    };
+
+    Sprite_ChainCount.prototype.getFontSize = function() {
+        return param.fontSize
+    };
+
+    Sprite_ChainCount.prototype.getChainUnit = function() {
+        return param.unit;
+    };
+
+    Sprite_ChainCount.prototype.getOutlineWidth = function() {
+        return Math.floor(this.getFontSize() / 6);
+    };
+
+    Sprite_ChainCount.prototype.getTextColor = function() {
+        return userSettings.chainColor[(this.isPartyChain() ? 'party' : 'troop')];
+    };
+
     Sprite_ChainCount.prototype.refresh = function() {
         this.bitmap.clear();
-        var chainValue = Math.abs(this._chainCount);
-        if (chainValue > 1) {
-            this.refreshText(`${chainValue} ${param.unit}`);
-            this.refreshScale();
-            this._duration = param.duration || Infinity;
-        }
+        this.refreshText(`${this._chainValue} ${this.getChainUnit()}`);
+        this.refreshScale();
+        this._duration = param.duration || Infinity;
     };
 
     Sprite_ChainCount.prototype.refreshText = function(text) {
-        this.bitmap.textColor = userSettings.chainColor[(this.isPartyChain() ? 'party' : 'troop')];
-        this.bitmap.drawText(text, 0, 0, this.bitmap.width, this.bitmap.height, 'left');
+        this.bitmap.textColor = this.getTextColor();
+        this.bitmap.drawText(text, 0, 0, this.bitmap.width - this.getItalicWidth(), this.bitmap.height, 'left');
     };
 
     Sprite_ChainCount.prototype.refreshScale = function() {
@@ -491,6 +591,41 @@
     };
 
     Sprite_ChainCount.prototype.isPartyChain = function() {
-        return this._chainCount > 0;
+        return BattleManager.isPartyChain();
+    };
+
+    //=============================================================================
+    // Sprite_ChainDamage
+    //  連携ダメージを表示します。
+    //=============================================================================
+    function Sprite_ChainDamage() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Sprite_ChainDamage.prototype             = Object.create(Sprite_ChainCount.prototype);
+    Sprite_ChainDamage.prototype.constructor = Sprite_ChainDamage;
+
+    Sprite_ChainDamage.prototype.getValueLength = function() {
+        return 6;
+    };
+
+    Sprite_ChainDamage.prototype.getChainValue = function() {
+        return this.getChainParty().getChainDamage();
+    };
+
+    Sprite_ChainDamage.prototype.getFontSize = function() {
+        return Math.max(Sprite_ChainCount.prototype.getFontSize.call(this) - 12, 12);
+    };
+
+    Sprite_ChainDamage.prototype.getChainUnit = function() {
+        return param.damageUnit;
+    };
+
+    Sprite_ChainDamage.prototype.getTextColor = function() {
+        return 'black';
+    };
+
+    Sprite_ChainDamage.prototype.getInitY = function() {
+        return param.chainY + param.fontSize;
     };
 })();
