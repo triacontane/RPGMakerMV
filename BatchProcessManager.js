@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/06/14 サウンドテストプラグインと組み合わせて使わないとエラーになる問題を修正
 // 1.0.0 2016/02/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -53,13 +54,15 @@
         return (command || '').toUpperCase();
     };
 
-    if (!Object.prototype.hasOwnProperty('isEmpty')) {
-        Object.defineProperty(Object.prototype, 'isEmpty', {
-            value: function() {
-                return Object.keys(this).length <= 0;
-            }
+    var isEmpty = function(that) {
+        return Object.keys(that).length <= 0;
+    };
+
+    var iterate = function(that, handler) {
+        Object.keys(that).forEach(function(key, index) {
+            handler.call(that, key, that[key], index);
         });
-    }
+    };
 
     function BatchProcessManager() {
         throw new Error('This is a static class');
@@ -122,7 +125,7 @@
             if (!data)return;
             if (columns == null) {
                 columns = [];
-                data.iterate(function(key) {
+                iterate(data, function(key) {
                     if (data.hasOwnProperty(key)) {
                         columns.push(key);
                         outText += key + ',';
@@ -167,7 +170,7 @@
     };
 
     Input.isPressedAny = function() {
-        return !this._currentState.isEmpty();
+        return !isEmpty(this._currentState);
     };
 
     BatchProcessManager.outputSoundTestCsv = function() {
