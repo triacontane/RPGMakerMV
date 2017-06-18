@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2017/06/18 BGS、ME、SEの演奏機能を追加
 // 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.0 2017/01/25 同一サーバで同プラグインを適用した複数のゲームを公開する際に、設定が重複するのを避けるために管理番号を追加
 //                  RPGアツマール等CSVが使えない環境のためデータファイルとしてJSON形式をサポート
@@ -66,13 +67,14 @@
  * Make [/data/SoundTest.csv] UFT-8
  *
  * COLUMN      : DESCRIPTION
- * fileName    : BGM File name
- * displayName : BGM Display name
- * description : BGM Description
+ * fileName    : Audio File name
+ * displayName : Audio Display name
+ * description : Audio Description
+ * type        : Audio Type(bgm or bgs or me or se)
  *
  * ex :
- * fileName,displayName,description
- * aaa,bbb,ccc
+ * fileName,displayName,description,type
+ * aaa,bbb,ccc,bgm
  *
  * Plugin Command
  *
@@ -141,9 +143,9 @@
  * @desc 同一サーバ内に複数のゲームを配布する場合のみ、ゲームごとに異なる値を設定してください。(RPGアツマールは対象外)
  * @default
  *
- * @help ゲーム中のBGMを視聴できるサウンドテストを実装します。
+ * @help ゲーム中のオーディオを視聴できるサウンドテスト画面を実装します。
  * タイトル画面、メニュー画面およびプラグインコマンドから専用画面に遷移します。
- * 一度再生するとBGMを視聴できるようになります。
+ * ゲーム中に一度でも再生したことのあるオーディオを視聴できるようになります。
  *
  * 準備
  * 1.CSV形式の場合
@@ -156,6 +158,7 @@
  * fileName    : BGMのファイル名です。拡張子不要。
  * displayName : BGMリストに表示される曲名です。
  * description : ヘルプウィンドウに表示される説明です。
+ * type        : オーディオ種別(bgm or bgs or me or se)
  *
  * なお、別プラグイン「バッチ処理プラグイン」(BatchProcessManager.js)
  * を使えば現在のBGMフォルダを解析して上記書式のひな形CSVを自動生成できます。
@@ -170,8 +173,8 @@
  * 文字コードは「UTF-8」で保存してください。
  *
  * [
- *  {"fileName":"BGMファイル名", "displayName":"BGM表示名", "description":"説明"},
- *  {"fileName":"BGMファイル名", "displayName":"BGM表示名", "description":"説明"}
+ *  {"fileName":"BGMファイル名", "displayName":"BGM表示名", "description":"説明", "type":"BGM"},
+ *  {"fileName":"BGMファイル名", "displayName":"BGM表示名", "description":"説明", "type":"BGS""}
  * ]
  *
  * CSV→JSON変換ツールを使用した場合、末尾のカンマ等が正しく記述されていないと
@@ -218,6 +221,10 @@ function Game_SoundTest() {
     this.initialize.apply(this, arguments);
 }
 
+function Game_AudioSelector() {
+    this.initialize.apply(this, arguments);
+}
+
 function Scene_SoundTest() {
     this.initialize.apply(this, arguments);
 }
@@ -228,7 +235,7 @@ function Scene_SoundTest() {
 
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
-        return value == null ? '' : value;
+        return value === null ? '' : value;
     };
 
     var getParamBoolean = function(paramNames) {
@@ -357,12 +364,36 @@ function Scene_SoundTest() {
 
     //=============================================================================
     // AudioManager
-    //  BGMの演奏時にプレイリストに追加します。
+    //  演奏時にプレイリストに追加します。
     //=============================================================================
     var _AudioManager_playBgm = AudioManager.playBgm;
     AudioManager.playBgm      = function(bgm, pos) {
         _AudioManager_playBgm.apply(this, arguments);
-        if ($gameSoundTest.addPlayList(bgm)) SoundTestManager.saveGame();
+        SoundTestManager.addPlayListIfNeed(bgm, 0);
+    };
+
+    var _AudioManager_playBgs = AudioManager.playBgs;
+    AudioManager.playBgs      = function(bgs, pos) {
+        _AudioManager_playBgs.apply(this, arguments);
+        SoundTestManager.addPlayListIfNeed(bgs, 1);
+    };
+
+    var _AudioManager_playMe = AudioManager.playMe;
+    AudioManager.playMe      = function(me) {
+        _AudioManager_playMe.apply(this, arguments);
+        SoundTestManager.addPlayListIfNeed(me, 2);
+    };
+
+    var _AudioManager_playSe = AudioManager.playSe;
+    AudioManager.playSe      = function(se) {
+        _AudioManager_playSe.apply(this, arguments);
+        SoundTestManager.addPlayListIfNeed(se, 3);
+    };
+
+    var _AudioManager_playStaticSe = AudioManager.playStaticSe;
+    AudioManager.playStaticSe      = function(se) {
+        _AudioManager_playStaticSe.apply(this, arguments);
+        SoundTestManager.addPlayListIfNeed(se, 3);
     };
 
     //=============================================================================
@@ -519,8 +550,10 @@ function Scene_SoundTest() {
     Scene_SoundTest.prototype.create = function() {
         Scene_MenuBase.prototype.create.call(this);
         this.createHelpWindow();
-        this.createBgmListWindow();
-        this.createBgmSettingWindow();
+        this.createAudioCategoryWindow();
+        this.createAudioListWindow();
+        this.createAudioSettingWindow();
+        this.activateAudioList();
     };
 
     var _Scene_SoundTest_createBackground      = Scene_SoundTest.prototype.createBackground;
@@ -545,38 +578,46 @@ function Scene_SoundTest() {
         }
     };
 
-    Scene_SoundTest.prototype.createBgmListWindow = function() {
-        var wy              = this._helpWindow.y + this._helpWindow.height;
-        var wh              = Graphics.boxHeight - wy;
-        this._bgmListWindow = new Window_BgmList(0, wy, 320, wh);
-        this._bgmListWindow.setHelpWindow(this._helpWindow);
-        this._bgmListWindow.setHandler('ok', this.playAudio.bind(this));
-        this._bgmListWindow.setHandler('cancel', this.escapeScene.bind(this));
-        this._bgmListWindow.setHandler('shift', this.stopAudio.bind(this));
-        this._bgmListWindow.setHandler('touchInside', this.activateBgmList.bind(this));
-        this._bgmListWindow.activate();
-        this.addWindow(this._bgmListWindow);
+    Scene_SoundTest.prototype.createAudioCategoryWindow = function() {
+        var y                     = this._helpWindow.y + this._helpWindow.height;
+        this._audioCategoryWindow = new Window_AudioCategory(0, y);
+        this._audioCategoryWindow.setHandler('touchInside', this.onTouchCategory.bind(this));
+        this.addWindow(this._audioCategoryWindow);
     };
 
-    Scene_SoundTest.prototype.createBgmSettingWindow = function() {
-        this._bgmSettingWindow = new Window_BgmSetting(this._bgmListWindow.width, this._bgmListWindow.y);
-        this._bgmSettingWindow.setHandler('cancel', this.activateBgmList.bind(this));
-        this._bgmSettingWindow.setHandler('touchInside', this.activateBgmSetting.bind(this));
-        this._bgmSettingWindow.deactivate();
-        this.addWindow(this._bgmSettingWindow);
-        if (SoundTestManager.isSettingEmpty()) this._bgmSettingWindow.hide();
+    Scene_SoundTest.prototype.createAudioListWindow = function() {
+        var upperWindow       = this._audioCategoryWindow.isCommandExist() ? this._audioCategoryWindow : this._helpWindow;
+        var y                 = upperWindow.y + upperWindow.height;
+        var height            = Graphics.boxHeight - y;
+        this._audioListWindow = new Window_AudioList(0, y, 320, height, this._audioCategoryWindow);
+        this._audioListWindow.setHelpWindow(this._helpWindow);
+        this._audioListWindow.setHandler('ok', this.playAudio.bind(this));
+        this._audioListWindow.setHandler('cancel', this.escapeScene.bind(this));
+        this._audioListWindow.setHandler('change', this.changeAudioCategory.bind(this));
+        this._audioListWindow.setHandler('shift', this.stopAudio.bind(this));
+        this._audioListWindow.setHandler('touchInside', this.activateAudioList.bind(this));
+        this.addWindow(this._audioListWindow);
+    };
+
+    Scene_SoundTest.prototype.createAudioSettingWindow = function() {
+        this._audioSettingWindow = new Window_AudioSetting(this._audioCategoryWindow.width, this._audioCategoryWindow.y);
+        this._audioSettingWindow.setHandler('cancel', this.activateAudioList.bind(this));
+        this._audioSettingWindow.setHandler('touchInside', this.activateAudioSetting.bind(this));
+        this.addWindow(this._audioSettingWindow);
+        if (SoundTestManager.isSettingEmpty()) this._audioSettingWindow.hide();
     };
 
     Scene_SoundTest.prototype.playAudio = function() {
-        if (this._bgmListWindow.isCurrentItemEnabled()) {
-            $gameSoundTest.setNameAndPlay(this._bgmListWindow.item().fileName);
-            this.activateBgmSetting();
+        if (this._audioListWindow.isCurrentItemEnabled()) {
+            $gameSoundTest.setNameAndPlay(this._audioListWindow.item().fileName);
+            this.activateAudioSetting();
         }
     };
 
     Scene_SoundTest.prototype.stopAudio = function() {
-        if (this._bgmListWindow.isCurrentItemEnabled()) {
+        if (this._audioListWindow.isCurrentItemEnabled()) {
             $gameSoundTest.setNameAndPlay('');
+            AudioManager.stopAll();
         }
     };
 
@@ -585,20 +626,39 @@ function Scene_SoundTest() {
         this.popScene();
     };
 
-    Scene_SoundTest.prototype.activateBgmSetting = function() {
+    Scene_SoundTest.prototype.activateAudioSetting = function() {
         if (!SoundTestManager.isSettingEmpty()) {
-            this._bgmListWindow.deactivate();
-            this._bgmSettingWindow.activate();
-            this._bgmSettingWindow.select(0);
+            this._audioListWindow.deactivate();
+            this._audioSettingWindow.activate();
+            this._audioSettingWindow.select(0);
+            this._audioCategoryWindow.deactivate();
+            this.changeAudioName();
         } else {
-            this.activateBgmList();
+            this.activateAudioList();
         }
     };
 
-    Scene_SoundTest.prototype.activateBgmList = function() {
-        this._bgmSettingWindow.deselect();
-        this._bgmSettingWindow.deactivate();
-        this._bgmListWindow.activate();
+    Scene_SoundTest.prototype.onTouchCategory = function() {
+        this._audioCategoryWindow.selectForTouch();
+        this.changeAudioCategory();
+        this.activateAudioList();
+    };
+
+    Scene_SoundTest.prototype.activateAudioList = function() {
+        this._audioSettingWindow.deselect();
+        this._audioSettingWindow.deactivate();
+        this._audioListWindow.activate();
+    };
+
+    Scene_SoundTest.prototype.changeAudioCategory = function() {
+        var type = this._audioCategoryWindow.getAudioType();
+        this._audioListWindow.setup(type);
+        $gameSoundTest.setAudioType(type);
+        this.changeAudioName();
+    };
+
+    Scene_SoundTest.prototype.changeAudioName = function() {
+        $gameSoundTest.setName(this._audioListWindow.item().fileName);
     };
 
     //=============================================================================
@@ -620,14 +680,10 @@ function Scene_SoundTest() {
         }
     };
 
-    Window_Selectable.prototype.processShift = function() {
-        this.callHandler('shift');
-    };
-
     var _Window_Selectable_processHandling      = Window_Selectable.prototype.processHandling;
     Window_Selectable.prototype.processHandling = function() {
         _Window_Selectable_processHandling.apply(this, arguments);
-        if (!this._soundTestWindow)return;
+        if (!this._soundTestWindow) return;
         if (this.isOpenAndActive()) {
             if (this.isShiftEnabled() && this.isShiftTriggered()) {
                 this.processShift();
@@ -648,56 +704,124 @@ function Scene_SoundTest() {
     };
 
     //=============================================================================
-    // Window_BgmList
-    //  BGMリストウィンドウです。
+    // Window_AudioSetting
+    //  オーディオカテゴリウィンドウです。
     //=============================================================================
-    function Window_BgmList() {
+    function Window_AudioCategory() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_AudioCategory._audioTypeNames = {
+        bgm: 'BGM',
+        bgs: 'BGS',
+        me : 'ME',
+        se : 'SE'
+    };
+
+    Window_AudioCategory.prototype             = Object.create(Window_HorzCommand.prototype);
+    Window_AudioCategory.prototype.constructor = Window_AudioCategory;
+
+    Window_AudioCategory.prototype.initialize = function(x, y) {
+        Window_Command.prototype.initialize.call(this, x, y);
+        this._soundTestWindow = true;
+        this.select(0);
+        this.deactivate();
+    };
+
+    Window_AudioCategory.prototype.getAudioType = function() {
+        return this.commandSymbol(this.index());
+    };
+
+    Window_AudioCategory.prototype.makeCommandList = function() {
+        SoundTestManager.types.forEach(function(type) {
+            if ($gameSoundTest.isExistAudio(type)) {
+                this.addCommand(Window_AudioCategory._audioTypeNames[type], type);
+            }
+        }, this);
+        this.updateVisibility();
+    };
+
+    Window_AudioCategory.prototype.maxCols = function() {
+        return 4;
+    };
+
+    Window_AudioCategory.prototype.windowWidth = function() {
+        return 320;
+    };
+
+    Window_AudioCategory.prototype.updateVisibility = function() {
+        if (!this.isCommandExist()) {
+            this.visible = false;
+        }
+    };
+
+    Window_AudioCategory.prototype.isCommandExist = function() {
+        return this._list.length > 1;
+    };
+
+    Window_AudioCategory.prototype.selectForTouch = function() {
+        var lastIndex = this.index();
+        var x         = this.canvasToLocalX(TouchInput.x);
+        var y         = this.canvasToLocalY(TouchInput.y);
+        var hitIndex  = this.hitTest(x, y);
+        if (hitIndex >= 0) {
+            this.select(hitIndex);
+        }
+        if (this.index() !== lastIndex) {
+            SoundManager.playCursor();
+        }
+    };
+
+    //=============================================================================
+    // Window_AudioList
+    //  オーディオリストウィンドウです。
+    //=============================================================================
+    function Window_AudioList() {
         this.initialize.apply(this, arguments);
         this._soundTestWindow = true;
     }
 
-    Window_BgmList.prototype             = Object.create(Window_Selectable.prototype);
-    Window_BgmList.prototype.constructor = Window_BgmList;
+    Window_AudioList.prototype             = Object.create(Window_Selectable.prototype);
+    Window_AudioList.prototype.constructor = Window_AudioList;
 
-    Window_BgmList.prototype.initialize = function(x, y, width, height) {
+    Window_AudioList.prototype.initialize = function(x, y, width, height, categoryWindow) {
         Window_Selectable.prototype.initialize.call(this, x, y, width, height);
-        this._data = [];
-        this.refresh();
+        this._data           = [];
+        this._categoryWindow = categoryWindow;
+        this.setup(categoryWindow.getAudioType());
         this.select(0);
     };
 
-    Window_BgmList.prototype.maxCols = function() {
+    Window_AudioList.prototype.maxCols = function() {
         return 1;
     };
 
-    Window_BgmList.prototype.spacing = function() {
+    Window_AudioList.prototype.spacing = function() {
         return 0;
     };
 
-    Window_BgmList.prototype.maxItems = function() {
+    Window_AudioList.prototype.maxItems = function() {
         return this._data ? this._data.length : 1;
     };
 
-    Window_BgmList.prototype.item = function() {
+    Window_AudioList.prototype.item = function() {
         var index = this.index();
         return this._data && index >= 0 ? this._data[index] : null;
     };
 
-    Window_BgmList.prototype.isEnabled = function(item) {
-        return item ? $gameSoundTest.isPlayAlready(item.fileName) : false;
+    Window_AudioList.prototype.isEnabled = function(item) {
+        return item ? $gameSoundTest.isPlayAlready(item.fileName, this._audioType) : false;
     };
 
-    Window_BgmList.prototype.isCurrentItemEnabled = function() {
+    Window_AudioList.prototype.isCurrentItemEnabled = function() {
         return this.isEnabled(this._data[this.index()]);
     };
 
-    Window_BgmList.prototype.makeItemList = function() {
-        this._data = $dataSoundTest.filter(function(item) {
-            return item != null;
-        }, this);
+    Window_AudioList.prototype.makeItemList = function() {
+        this._data = $gameSoundTest.getAudioDataList(this._audioType);
     };
 
-    Window_BgmList.prototype.drawItem = function(index) {
+    Window_AudioList.prototype.drawItem = function(index) {
         var item = this._data[index];
         if (item) {
             var rect = this.itemRect(index);
@@ -708,56 +832,92 @@ function Scene_SoundTest() {
         }
     };
 
-    Window_BgmList.prototype.drawItemName = function(item, x, y, width) {
+    Window_AudioList.prototype.drawItemName = function(item, x, y, width) {
         this.resetTextColor();
         this.drawText(this.isEnabled(item) ? item.displayName : '？？？', x, y, width);
     };
 
-    Window_BgmList.prototype.updateHelp = function() {
+    Window_AudioList.prototype.updateHelp = function() {
         var item = this.item();
         this._helpWindow.setText(item ? this.getDescription(item) : '');
     };
 
-    Window_BgmList.prototype.getDescription = function(item) {
+    Window_AudioList.prototype.getDescription = function(item) {
         return this.isEnabled(item) ? '【' + item.displayName + '】\n' + item.description : '？？？';
     };
 
-    Window_BgmList.prototype.refresh = function() {
+    Window_AudioList.prototype.setup = function(audioType) {
+        if (this._audioType === audioType) return;
+        this._audioType = audioType;
+        this.refresh();
+        this.select(0);
+    };
+
+    Window_AudioList.prototype.refresh = function() {
         this.makeItemList();
         this.createContents();
         this.drawAllItems();
     };
 
+    var _Window_AudioList_cursorRight      = Window_AudioList.prototype.cursorRight;
+    Window_AudioList.prototype.cursorRight = function(wrap) {
+        var prevIndex = this._categoryWindow.index();
+        _Window_AudioList_cursorRight.apply(this, arguments);
+        this._categoryWindow.cursorRight(wrap);
+        this.callHandler('change');
+        if (prevIndex !== this._categoryWindow.index()) {
+            SoundManager.playCursor();
+        }
+    };
+
+    var _Window_AudioList_cursorLeft      = Window_AudioList.prototype.cursorLeft;
+    Window_AudioList.prototype.cursorLeft = function(wrap) {
+        var prevIndex = this._categoryWindow.index();
+        _Window_AudioList_cursorLeft.apply(this, arguments);
+        this._categoryWindow.cursorLeft(wrap);
+        this.callHandler('change');
+        if (prevIndex !== this._categoryWindow.index()) {
+            SoundManager.playCursor();
+        }
+    };
+
+    var _Window_AudioList_playOkSound = Window_AudioList.prototype.playOkSound;
+    Window_AudioList.prototype.playOkSound = function() {
+        if (!$gameSoundTest.isSelectSe()) {
+            _Window_AudioList_playOkSound.apply(this, arguments);
+        }
+    };
+
     //=============================================================================
-    // Window_BgmSetting
+    // Window_AudioSetting
     //  BGM設定ウィンドウです。
     //=============================================================================
-    function Window_BgmSetting() {
+    function Window_AudioSetting() {
         this.initialize.apply(this, arguments);
     }
 
-    Window_BgmSetting.prototype             = Object.create(Window_Command.prototype);
-    Window_BgmSetting.prototype.constructor = Window_BgmSetting;
+    Window_AudioSetting.prototype             = Object.create(Window_Command.prototype);
+    Window_AudioSetting.prototype.constructor = Window_AudioSetting;
 
-    Window_BgmSetting.prototype.initialize = function(x, y) {
+    Window_AudioSetting.prototype.initialize = function(x, y) {
         Window_Command.prototype.initialize.call(this, x, y);
         this._soundTestWindow = true;
         this.deselect();
     };
 
-    Window_BgmSetting.prototype.windowWidth = function() {
+    Window_AudioSetting.prototype.windowWidth = function() {
         return 360;
     };
 
-    Window_BgmSetting.prototype.windowHeight = function() {
+    Window_AudioSetting.prototype.windowHeight = function() {
         return this.fittingHeight(this.maxRows());
     };
 
-    Window_BgmSetting.prototype.lineHeight = function() {
+    Window_AudioSetting.prototype.lineHeight = function() {
         return 42;
     };
 
-    Window_BgmSetting.prototype.makeCommandList = function() {
+    Window_AudioSetting.prototype.makeCommandList = function() {
         var volume = SoundTestManager.settingNameValues.volume;
         if (volume !== '') this.addCommand(volume, 'volume');
         var pitch = SoundTestManager.settingNameValues.pitch;
@@ -766,7 +926,7 @@ function Scene_SoundTest() {
         if (pan !== '') this.addCommand(pan, 'pan');
     };
 
-    Window_BgmSetting.prototype.drawItem = function(index) {
+    Window_AudioSetting.prototype.drawItem = function(index) {
         this.resetTextColor();
         var rect        = this.itemRectForText(index);
         var statusWidth = this.statusWidth();
@@ -779,7 +939,7 @@ function Scene_SoundTest() {
         this.drawText(value + unit, titleWidth, rect.y, statusWidth, 'right');
     };
 
-    Window_BgmSetting.prototype.drawItemGauge = function(index) {
+    Window_AudioSetting.prototype.drawItemGauge = function(index) {
         var rect   = this.itemRectForText(index);
         var symbol = this.commandSymbol(index);
         var value  = this.getSettingValue(symbol);
@@ -791,27 +951,27 @@ function Scene_SoundTest() {
         this.drawGauge(rect.x, rect.y, rect.width, rate, color1, color2);
     };
 
-    Window_BgmSetting.prototype.statusWidth = function() {
+    Window_AudioSetting.prototype.statusWidth = function() {
         return 120;
     };
 
-    var _Window_BgmSetting_cursorRight      = Window_BgmSetting.prototype.cursorRight;
-    Window_BgmSetting.prototype.cursorRight = function(wrap) {
+    var _Window_BgmSetting_cursorRight        = Window_AudioSetting.prototype.cursorRight;
+    Window_AudioSetting.prototype.cursorRight = function(wrap) {
         _Window_BgmSetting_cursorRight.apply(this, arguments);
         this._shiftValue(this.valueOffset(), Input.isTriggered('right'));
     };
 
-    var _Window_BgmSetting_cursorLeft      = Window_BgmSetting.prototype.cursorLeft;
-    Window_BgmSetting.prototype.cursorLeft = function(wrap) {
+    var _Window_BgmSetting_cursorLeft        = Window_AudioSetting.prototype.cursorLeft;
+    Window_AudioSetting.prototype.cursorLeft = function(wrap) {
         _Window_BgmSetting_cursorLeft.apply(this, arguments);
         this._shiftValue(-this.valueOffset(), Input.isTriggered('left'));
     };
 
-    Window_BgmSetting.prototype.processOk = function() {
+    Window_AudioSetting.prototype.processOk = function() {
         this._shiftValue(this.valueOffset(), Input.isTriggered('ok') || TouchInput.isTriggered('ok'));
     };
 
-    Window_BgmSetting.prototype._shiftValue = function(offset, loopFlg) {
+    Window_AudioSetting.prototype._shiftValue = function(offset, loopFlg) {
         var index  = this.index();
         var symbol = this.commandSymbol(index);
         var value  = this.getSettingValue(symbol);
@@ -827,20 +987,22 @@ function Scene_SoundTest() {
         this.changeValue(symbol, value);
     };
 
-    Window_BgmSetting.prototype.valueOffset = function() {
+    Window_AudioSetting.prototype.valueOffset = function() {
         return 10;
     };
 
-    Window_BgmSetting.prototype.changeValue = function(symbol, value) {
+    Window_AudioSetting.prototype.changeValue = function(symbol, value) {
         var lastValue = this.getSettingValue(symbol);
         if (lastValue !== value) {
             $gameSoundTest.setBgmPropertyAndPlay(symbol, value);
             this.redrawItem(this.findSymbol(symbol));
-            SoundManager.playCursor();
+            if (!$gameSoundTest.isSelectSe()) {
+                SoundManager.playCursor();
+            }
         }
     };
 
-    Window_BgmSetting.prototype.getSettingValue = function(symbol) {
+    Window_AudioSetting.prototype.getSettingValue = function(symbol) {
         return $gameSoundTest.getBgmProperty(symbol);
     };
 
@@ -860,6 +1022,7 @@ function Scene_SoundTest() {
     SoundTestManager.settingMinValues  = {volume: 0, pitch: 50, pan: -100};
     SoundTestManager.settingMaxValues  = {volume: 100, pitch: 150, pan: 100};
     SoundTestManager.settingUnitValues = {volume: '%', pitch: '%', pan: ''};
+    SoundTestManager.types             = ['bgm', 'bgs', 'me', 'se'];
 
     SoundTestManager.makeGame = function() {
         $gameSoundTest = new Game_SoundTest();
@@ -875,6 +1038,7 @@ function Scene_SoundTest() {
         }
         if (json) {
             $gameSoundTest = JsonEx.parse(json);
+            $gameSoundTest.onLoad();
         } else {
             return false;
         }
@@ -889,6 +1053,39 @@ function Scene_SoundTest() {
         return this.settingNameValues.volume + this.settingNameValues.pitch + this.settingNameValues.pan === '';
     };
 
+    SoundTestManager.addPlayListIfNeed = function(audio, typeIndex) {
+        var added = $gameSoundTest.addPlayList(audio, this.types[typeIndex]);
+        if (added) this.saveGame();
+    };
+
+    //=============================================================================
+    // Game_AudioSelector
+    //  選択中のサウンド情報を保持するクラスです。
+    //=============================================================================
+    Game_AudioSelector.prototype.initialize = function() {
+        this._type         = '';
+        this._container    = null;
+        this._player       = null;
+    };
+
+    Game_AudioSelector.prototype.setData = function(type, container, playingAudio, player) {
+        this._type         = type;
+        this._container    = container;
+        this._player       = player;
+    };
+
+    Game_AudioSelector.prototype.play = function(audio) {
+        this._player(audio);
+    };
+
+    Game_AudioSelector.prototype.getAudioType = function() {
+        return this._type;
+    };
+
+    Game_AudioSelector.prototype.getContainer = function() {
+        return this._container;
+    };
+
     //=============================================================================
     // Game_SoundTest
     //  サウンドテスト情報を保持するクラスです。
@@ -898,21 +1095,78 @@ function Scene_SoundTest() {
         this.titleCommandVisible = getParamBoolean(['タイトルに追加', 'AddCommandTitle']);
         this.menuCommandVisible  = getParamBoolean(['メニューに追加', 'AddCommandMenu']);
         this._playedList         = {};
-        this._prevBgm            = null;
-        this._prevBgs            = null;
-        this._playingBgm         = null;
-        this.resetPlayingBgm();
+        this._playedBgsList      = {};
+        this._playedMeList       = {};
+        this._playedSeList       = {};
+        this._originalBgm        = null;
+        this._originalBgs        = null;
+        this._playingAudio       = null;
+        this._audioSelector      = null;
+        this.onLoad();
+    };
+
+    Game_SoundTest.prototype.onLoad = function() {
+        this._audioSelector = null;
+        this.setAudioType();
+    };
+
+    Game_SoundTest.prototype.setAudioType = function(type) {
+        if (!type) type = SoundTestManager.types[0];
+        if (!this._audioSelector) {
+            this._audioSelector = new Game_AudioSelector();
+        }
+        if (type === this._audioSelector.getAudioType()) return;
+        var audioData = this.getAudioData(type);
+        this._audioSelector.setData(type, audioData.container, audioData.playingAudio, audioData.player);
+    };
+
+    Game_SoundTest.prototype.getAudioData = function(type) {
+        var container, player;
+        switch (type.toLowerCase()) {
+            case SoundTestManager.types[0]:
+                container    = this._playedList;
+                player       = AudioManager.playBgm.bind(AudioManager);
+                break;
+            case SoundTestManager.types[1]:
+                if (!this._playedBgsList) this._playedBgsList = {};
+                container    = this._playedBgsList;
+                player       = AudioManager.playBgs.bind(AudioManager);
+                break;
+            case SoundTestManager.types[2]:
+                if (!this._playedMeList) this._playedMeList = {};
+                container    = this._playedMeList;
+                player       = AudioManager.playMe.bind(AudioManager);
+                break;
+            case SoundTestManager.types[3]:
+                if (!this._playedSeList) this._playedSeList = {};
+                container    = this._playedSeList;
+                player       = AudioManager.playSe.bind(AudioManager);
+                break;
+        }
+        return {
+            container   : container,
+            player      : player
+        }
     };
 
     Game_SoundTest.prototype.refresh = function() {
         this.saveAudio();
-        this.resetPlayingBgm();
+        this.initAudio();
         AudioManager.stopAll();
     };
 
-    Game_SoundTest.prototype.addPlayList = function(bgm) {
-        if (this._playedList[bgm.name] == null) {
-            this._playedList[bgm.name] = bgm.pitch;
+    Game_SoundTest.prototype.initAudio = function() {
+        this._playingAudio = {name:'', volume:90, pitch:100, pan:0};
+    };
+
+    Game_SoundTest.prototype.getAudioContainer = function(type) {
+        return type ? this.getAudioData(type).container : this._audioSelector.getContainer()
+    };
+
+    Game_SoundTest.prototype.addPlayList = function(audio, type) {
+        var container = this.getAudioContainer(type);
+        if (!container.hasOwnProperty(audio.name)) {
+            container[audio.name] = audio.pitch;
             return true;
         }
         return false;
@@ -920,49 +1174,81 @@ function Scene_SoundTest() {
 
     Game_SoundTest.prototype.addPlayListAll = function() {
         $dataSoundTest.forEach(function(data) {
-            if (data) this.addPlayList({name: data.fileName, volume: 90, pitch: 100, pan: 0});
+            if (data) this.addPlayList({name: data.fileName, volume: 90, pitch: 100, pan: 0}, data.type);
         }.bind(this));
     };
 
-    Game_SoundTest.prototype.isPlayAlready = function(bgmName) {
-        return !!this._playedList[bgmName];
+    Game_SoundTest.prototype.getAudioDataList = function(type) {
+        return $dataSoundTest.filter(function(data) {
+            return data && ((data.type || SoundTestManager.types[0]) === type);
+        });
     };
 
-    Game_SoundTest.prototype.setNameAndPlay = function(bgmName) {
-        this._playingBgm.name = bgmName;
+    Game_SoundTest.prototype.isExistAudio = function(type) {
+        return this.getAudioDataList(type).length > 0;
+    };
+
+    Game_SoundTest.prototype.isPlayAlready = function(audioName, type) {
+        var container = this.getAudioContainer(type);
+        return !!container[audioName];
+    };
+
+    Game_SoundTest.prototype.setName = function(audioName) {
+        var audio  = this._playingAudio;
+        audio.name = audioName;
         if (SoundTestManager.settingNameValues.pitch === '') {
-            this._playingBgm.pitch = this._playedList[bgmName];
+            audio.pitch = this.getAudioContainer()[audioName];
         }
+    };
+
+    Game_SoundTest.prototype.setNameAndPlay = function(audioName) {
+        this.setName(audioName);
         this.play();
     };
 
     Game_SoundTest.prototype.setBgmPropertyAndPlay = function(symbol, value) {
-        this._playingBgm[symbol] = value;
+        this._playingAudio[symbol] = value;
         this.play();
     };
 
     Game_SoundTest.prototype.getBgmProperty = function(symbol) {
-        return this._playingBgm[symbol];
+        return this._playingAudio[symbol];
     };
 
     Game_SoundTest.prototype.play = function() {
-        AudioManager.playBgm(this._playingBgm);
-    };
-
-    Game_SoundTest.prototype.resetPlayingBgm = function() {
-        this._playingBgm = {name: '', pan: 0, pitch: 100, volume: 90};
+        if (this.isSelectBgs()) {
+            AudioManager.stopBgm();
+        }
+        if (this.isSelectBgm()) {
+            AudioManager.stopBgs();
+            AudioManager.stopMe();
+        }
+        this._audioSelector.play(this._playingAudio);
     };
 
     Game_SoundTest.prototype.saveAudio = function() {
-        this._prevBgm = AudioManager.saveBgm();
-        this._prevBgs = AudioManager.saveBgs();
+        this._originalBgm = AudioManager.saveBgm();
+        this._originalBgs = AudioManager.saveBgs();
     };
 
     Game_SoundTest.prototype.restoreAudio = function() {
-        AudioManager.replayBgm(this._prevBgm);
-        AudioManager.replayBgs(this._prevBgs);
+        AudioManager.replayBgm(this._originalBgm);
+        AudioManager.replayBgs(this._originalBgs);
+    };
+
+    Game_SoundTest.prototype.isSelectType = function(type) {
+        return this._audioSelector.getAudioType() === SoundTestManager.types[type];
+    };
+
+    Game_SoundTest.prototype.isSelectBgm = function() {
+        return this.isSelectType(0);
+    };
+
+    Game_SoundTest.prototype.isSelectBgs = function() {
+        return this.isSelectType(1);
+    };
+
+    Game_SoundTest.prototype.isSelectSe = function() {
+        return this.isSelectType(3);
     };
 })();
-
-
-
