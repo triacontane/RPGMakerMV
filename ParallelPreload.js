@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2017/06/18 本体v1.5.0で機能しなくなる問題に対応（by 奏ねこま様）
 // 2.0.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 2.0.0 2016/08/05 本体v1.3.0対応（1.2.0では使えなくなります）
 //                  素材のプリロード時に発生するエラー(対象が存在しない等)を抑制するよう仕様変更
@@ -308,6 +309,7 @@ var $dataMaterials = null;
             _Bitmap__onLoad.apply(this, arguments);
         } else {
             this._isLoading = false;
+            this._loadingState = 'loaded';  // added by nekoma.
             this.resize(this._image.width, this._image.height);
             this._callLoadListeners();
         }
@@ -347,6 +349,7 @@ var $dataMaterials = null;
     Bitmap.prototype.eraseError = function() {
         this._hasError  = false;
         this._isLoading = false;
+        this._loadingState = 'none';    // added by nekoma.
     };
 
     //=============================================================================
