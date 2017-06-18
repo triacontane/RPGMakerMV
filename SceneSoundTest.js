@@ -54,7 +54,7 @@
  * @default
  *
  * @param ReadFormat
- * @desc read data format(Support CSV only)
+ * @desc read data format(CSV or JSON)
  * @default CSV
  *
  * @param ManageNumber
@@ -75,6 +75,9 @@
  * ex :
  * fileName,displayName,description,type
  * aaa,bbb,ccc,bgm
+ *
+ * CSV Sample
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SoundTest.csv
  *
  * Plugin Command
  *
@@ -164,7 +167,10 @@
  * を使えば現在のBGMフォルダを解析して上記書式のひな形CSVを自動生成できます。
  *
  * 「バッチ処理プラグイン」配布先
- * https://github.com/triacontane/RPGMakerMV/blob/master/ReadMe.md
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BatchProcessManager.js
+ *
+ * こちらにCSVのサンプルをあげています。
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/SoundTest.csv
  *
  * 2.JSON形式の場合
  * RPGアツマール等のCSV形式が使用できない環境の場合、
