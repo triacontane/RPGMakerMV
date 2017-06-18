@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2017/06/18 本体v1.5.0で機能しなくなる問題を修正
 // 2.1.1 2017/03/11 通常版1.3.5でエラーになる問題を修正
 // 2.1.0 2017/03/11 本体v1.3.5(コミュニティ版)で機能しなくなる問題を修正
 // 2.0.0 2016/08/05 本体v1.3.0対応（1.2.0では使えなくなります）
@@ -21,8 +22,12 @@
  * @author triacontane
  *
  * @param InvalidIfTest
- * @desc Not through if test play
+ * @desc Not through if test play.
  * @default ON
+ *
+ * @param InvalidIfWeb
+ * @desc Not through if Web mode.
+ * @default OFF
  *
  * @help Through error of Failed to load.
  * Image not found, Audio not found.
@@ -34,16 +39,20 @@
  * @author トリアコンタン
  *
  * @param テストプレー時無効
- * @desc テストプレーの際は通常通りエラーを発生させます。
+ * @desc テストプレー時は本プラグインの機能が無効になります。
  * @default ON
+ *
+ * @param Web版で無効
+ * @desc Web版実行時は本プラグインの機能が無効になります。
+ * @default OFF
  *
  * @help 存在しない画像、音声素材が指定された場合に発生するエラーを無視します。
  * 音声の場合は何も再生されず、画像の場合は空の透明画像がセットされます。
  *
  * エラーログは通常通り出力されます。
  *
- * 動画ファイルについてはもともとエラーを発生させていないので
- * 何もしません。
+ * 本体v1.5.0より正式に実装されたロード失敗時に3回までリロードする機能については
+ * 当プラグインの機能と競合するため、無効化されます。
  *
  * フォント、データベースまたはプラグインで追加されたファイルの読み込みに
  * 失敗した場合は、通常通りエラーが発生します。
@@ -78,18 +87,20 @@
     // パラメータの取得と整形
     //=============================================================================
     var paramInvalidIfTest = getParamBoolean(['InvalidIfTest', 'テストプレー時無効']);
+    var paramInvalidIfWeb  = getParamBoolean(['InvalidIfWeb', 'Web版で無効']);
 
     //=============================================================================
     // テストプレー時は無効
     //=============================================================================
     if (paramInvalidIfTest && Utils.isOptionValid('test')) return;
+    if (paramInvalidIfWeb && !Utils.isNwjs()) return;
 
-    //=============================================================================
-    // ImageManager
-    //  ロード失敗した画像ファイルを空の画像に差し替えます。
-    //=============================================================================
     var _ImageManager_isReady = ImageManager.isReady;
-    if (Utils.RPGMAKER_ENGINE) {
+    if (typeof ResourceHandler !== 'undefined') {
+        //=============================================================================
+        // ImageManager
+        //  ロード失敗した画像ファイルを空の画像に差し替えます。
+        //=============================================================================
         ImageManager.isReady = function() {
             this._imageCache.eraseBitmapError();
             return _ImageManager_isReady.apply(this, arguments);
@@ -109,7 +120,25 @@
                 }
             });
         };
+
+        //=============================================================================
+        // ResourceHandler
+        //  リトライ機能の仕様を変更します。
+        //=============================================================================
+        ResourceHandler.createLoader      = function(url, retryMethod, resignMethod, retryInterval) {
+            return null;
+        };
+
+        var _Graphics__playVideo = Graphics._playVideo;
+        Graphics._playVideo      = function(src) {
+            _Graphics__playVideo.apply(this, arguments);
+            this._video.onerror = this._videoLoader || this._onVideoError.bind(this);
+        };
     } else {
+        //=============================================================================
+        // ImageManager
+        //  ロード失敗した画像ファイルを空の画像に差し替えます。
+        //=============================================================================
         ImageManager.isReady = function() {
             var result = false;
             try {
