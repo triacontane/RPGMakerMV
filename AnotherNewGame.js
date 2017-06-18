@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/06/18 アナザーニューゲームの追加位置を指定できる機能を追加
 // 1.3.0 2017/05/27 ニューゲームを非表示にできる機能を追加
 // 1.2.4 2017/05/23 プラグインコマンドのヘルプを修正
 // 1.2.3 2017/01/25 同一サーバで同プラグインを適用した複数のゲームを公開する際に、設定が重複するのを避けるために管理番号を追加
@@ -61,6 +62,10 @@
  * @param manage_number
  * @desc 同一サーバ内に複数のゲームを配布する場合のみ、ゲームごとに異なる値を設定してください。(RPGアツマールは対象外)
  * @default
+ *
+ * @param add_position
+ * @desc アナザーニューゲームのコマンド追加位置です。(1:ニューゲームの上、2:コンティニューの上、3:オプションの上)
+ * @default 0
  *
  * @help タイトル画面のウィンドウの一番下に、もう一つのニューゲームを追加します。
  * 選択すると、ニューゲームとは別に指定したマップに遷移します。
@@ -225,7 +230,14 @@
     var _Window_TitleCommand_makeCommandList      = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function() {
         _Window_TitleCommand_makeCommandList.call(this);
-        if (ANGSettingManager.visible) this.addCommand(parameters['name'], 'nameGame2', ANGSettingManager.enable);
+        if (ANGSettingManager.visible) {
+            this.addCommand(parameters['name'], 'nameGame2', ANGSettingManager.enable);
+            var addPosition = parseInt(parameters['add_position'], 10);
+            if (addPosition > 0) {
+                var anotherCommand = this._list.pop();
+                this._list.splice(addPosition - 1, 0, anotherCommand);
+            }
+        }
         if (ANGSettingManager.newGameHidden) {
             this.eraseCommandNewGame();
         }
