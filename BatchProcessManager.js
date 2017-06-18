@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/06/18 サウンドテストプラグインの修正に合わせてBGS,ME,SEの情報も出力する機能を追加
 // 1.0.1 2017/06/14 サウンドテストプラグインと組み合わせて使わないとエラーになる問題を修正
 // 1.0.0 2016/02/01 初版
 // ----------------------------------------------------------------------------
@@ -32,8 +33,10 @@
  * BPM_サウンドテストCSV作成
  * 　サウンドテストプラグイン(SceneSoundTest.js)で使用する
  *   CSVファイルのひな形を出力します。
- * 　必要な列とBGMごとの行が出力され、あとは説明と表示名を入力するだけです。
- * 　例：BPM_SOUND_TEST_MAKE_CSV
+ * 　必要な列とオーディオごとの行が出力され、あとは説明と表示名を入力するだけです。
+ * 　引数にコードを指定すればBGM以外も出力できます。
+ * 　例1：BPM_SOUND_TEST_MAKE_CSV se            # SEのみ出力
+ * 　例2：BPM_SOUND_TEST_MAKE_CSV bgm bgs me se # 全オーディオを出力
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -68,11 +71,11 @@
         throw new Error('This is a static class');
     }
 
-    BatchProcessManager.batchStart = function(handlerString) {
+    BatchProcessManager.batchStart = function(handlerString, args) {
         this.devToolOpen();
         console.log('処理を開始します。');
         try {
-            this[handlerString]();
+            this[handlerString](args);
             console.log('処理が正常に終了しました。');
         } catch (e) {
             console.error('処理で例外が発生しました。:' + e.toString());
@@ -123,7 +126,7 @@
         var columns = null, outText = '';
         objects.forEach(function(data) {
             if (!data)return;
-            if (columns == null) {
+            if (!columns) {
                 columns = [];
                 iterate(data, function(key) {
                     if (data.hasOwnProperty(key)) {
@@ -145,8 +148,8 @@
         return (text[text.length - 1] === ',' ? text.substr(0, text.length - 1) : text) + '\n';
     };
 
-    BatchProcessManager.getFileNameListAudioBgm = function() {
-        return this.getFileNameList('/audio/bgm/');
+    BatchProcessManager.getFileNameListAudio = function(type) {
+        return this.getFileNameList(`/audio/${type}/`);
     };
 
     StorageManager.saveToLocalTextFile = function(fileName, text) {
@@ -173,29 +176,37 @@
         return !isEmpty(this._currentState);
     };
 
-    BatchProcessManager.outputSoundTestCsv = function() {
-        var fileList = this.getFileNameListAudioBgm();
+    BatchProcessManager.outputSoundTestCsv = function(types) {
+        var objects = [];
+        types.forEach(function(type) {
+            objects = objects.concat(this.makeSoundTestCsv(type.toLowerCase()))
+        }, this);
+        this.saveCsvData('SoundTest.csv', objects);
+    };
+
+    BatchProcessManager.makeSoundTestCsv = function(type) {
+        var fileList = this.getFileNameListAudio(type);
         var objects  = [];
         fileList.forEach(function(fileName) {
             var data         = {};
             data.fileName    = fileName;
             data.displayName = fileName;
             data.description = '　';
+            data.type        = type;
             objects.push(data);
         });
-        this.saveCsvData('SoundTest.csv', objects);
+        return objects;
     };
 
     BatchProcessManager.deleteAllSaveFile = function() {
-
-        alert(this.getFileNameList('/save/'));
+        alert('作成中です');
     };
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         var commandPrefix = new RegExp('^' + metaTagPrefix);
@@ -223,7 +234,8 @@
         switch (getCommandName(command)) {
             case 'SOUND_TEST_MAKE_CSV' :
             case 'サウンドテストCSV作成':
-                BatchProcessManager.batchStart('outputSoundTestCsv');
+                if (args.length === 0) args[0] = 'bgm';
+                BatchProcessManager.batchStart('outputSoundTestCsv', args);
                 break;
             case 'DELETE_SAVE_DATA' :
             case 'セーブファイル全削除':
