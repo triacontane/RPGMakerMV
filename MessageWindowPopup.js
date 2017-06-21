@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2017/06/21 ウィンドウが画面外に出ないように調整するパラメータを追加
 // 2.5.1 2017/06/11 DP_MapZoom.js以外のマップズーム機能に対してフキダシ位置が正しく表示されていなかった問題を修正
 // 2.5.0 2017/06/05 マップズームに対してフキダシ位置が正しく表示されるよう対応
 //                  フキダシの位置固定をイベントごとに設定できる機能を追加
@@ -105,6 +106,10 @@
  * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの下限値です。デフォルトは24です。
  * @default 24
  *
+ * @param InnerScreen
+ * @desc 横方向だけでなく縦方向についても画面内にフキダシウィンドウが収まるように位置を調整します。
+ * @default OFF
+ *
  * @help Change the message window from fixed to popup
  *
  * Plugin Command
@@ -200,6 +205,10 @@
  * @param フォントサイズ下限
  * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの下限値です。デフォルトは24です。
  * @default 24
+ *
+ * @param 画面内に収める
+ * @desc 横方向だけでなく縦方向についても画面内にフキダシウィンドウが収まるように位置を調整します。
+ * @default OFF
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
@@ -403,6 +412,7 @@
     var paramFontSizeRange  = getParamNumber(['FontSizeRange', 'フォントサイズ増減幅'], 0);
     var paramFontUpperLimit = getParamNumber(['FontUpperLimit', 'フォントサイズ上限'], 0);
     var paramFontLowerLimit = getParamNumber(['FontLowerLimit', 'フォントサイズ下限'], 0);
+    var paramInnerScreen    = getParamBoolean(['InnerScreen', '画面内に収める']);
 
     //=============================================================================
     // Game_Interpreter
@@ -574,7 +584,7 @@
     };
 
     Game_System.prototype.clearMessagePopup = function() {
-        this._messagePopupCharacterId = 0;
+        this._messagePopupCharacterId    = 0;
         this._messagePopupPositionEvents = [];
     };
 
@@ -797,6 +807,14 @@
         var lowerFlg = this.isPopupLower();
         if (lowerFlg) this.y = character.getRealScreenY() + 8;
         this.setPauseSignToTail(lowerFlg);
+        var deltaX = this.adjustPopupPositionX();
+        if (paramInnerScreen) {
+            this.adjustPopupPositionY();
+        }
+        this._windowPauseSignSprite.x = this._width / 2 + deltaX;
+    };
+
+    Window_Base.prototype.adjustPopupPositionX = function() {
         var deltaX = 0;
         if (this.x < 0) {
             deltaX = this.x;
@@ -806,7 +824,20 @@
             deltaX = this.x + this.width - Graphics.boxWidth;
             this.x = Graphics.boxWidth - this.width;
         }
-        this._windowPauseSignSprite.x = this._width / 2 + deltaX;
+        return deltaX;
+    };
+
+    Window_Base.prototype.adjustPopupPositionY = function() {
+        var deltaY = 0;
+        if (this.y < 0) {
+            deltaY = this.y;
+            this.y = 0;
+        }
+        if (this.y + this.height > Graphics.boxHeight) {
+            deltaY = this.y + this.height - Graphics.boxHeight;
+            this.y = Graphics.boxHeight - this.height;
+        }
+        return deltaY;
     };
 
     Window_Base.prototype.updatePlacementPopup = function() {
@@ -855,7 +886,7 @@
         this.setPauseSignToNormal();
     };
 
-    var _Window_Base_makeFontBigger = Window_Base.prototype.makeFontBigger;
+    var _Window_Base_makeFontBigger      = Window_Base.prototype.makeFontBigger;
     Window_Base.prototype.makeFontBigger = function() {
         if (this.isValidFontRangeForPopup()) {
             if (this.contents.fontSize <= paramFontUpperLimit) {
@@ -866,7 +897,7 @@
         }
     };
 
-    var _Window_Base_makeFontSmaller = Window_Base.prototype.makeFontSmaller;
+    var _Window_Base_makeFontSmaller      = Window_Base.prototype.makeFontSmaller;
     Window_Base.prototype.makeFontSmaller = function() {
         if (this.isValidFontRangeForPopup()) {
             if (this.contents.fontSize >= paramFontLowerLimit) {
@@ -1050,7 +1081,7 @@
         }
     };
 
-    var _Window_Message_processNewLine = Window_Message.prototype.processNewLine;
+    var _Window_Message_processNewLine      = Window_Message.prototype.processNewLine;
     Window_Message.prototype.processNewLine = function(textState) {
         if (this.isPopup()) {
             textState.index++;
@@ -1269,7 +1300,7 @@
         //Game_System
         //フキダシウィンドウの有効無効フラグをウィンドウID毎に保持
         //------------------------------------------------------------------------
-        var _EMW_Game_System_initialize = Game_System.prototype.initialize;
+        var _EMW_Game_System_initialize  = Game_System.prototype.initialize;
         Game_System.prototype.initialize = function() {
             _EMW_Game_System_initialize.apply(this, arguments);
             this._messagePopupCharacterIds = [];
@@ -1279,12 +1310,12 @@
             this._messagePopupCharacterIds[windowId] = eventId;
         };
 
-        var _EMW_Game_System_clearMessagePopup = Game_System.prototype.clearMessagePopup;
+        var _EMW_Game_System_clearMessagePopup  = Game_System.prototype.clearMessagePopup;
         Game_System.prototype.clearMessagePopup = function() {
             _EMW_Game_System_clearMessagePopup.apply(this, arguments);
-            this._messagePopupCharacterIds.forEach( function(id, i){
+            this._messagePopupCharacterIds.forEach(function(id, i) {
                 this.clearMessagePopupEx(i);
-            },this);
+            }, this);
         };
 
         Game_System.prototype.clearMessagePopupEx = function(windowId) {
@@ -1300,7 +1331,7 @@
         //Scene_Map
         //場所移動時にすべてのウィンドウIDのフキダシ無効化
         //------------------------------------------------------------------------
-        var _EMW_Scene_Map_terminate = Scene_Map.prototype.terminate;
+        var _EMW_Scene_Map_terminate  = Scene_Map.prototype.terminate;
         Scene_Map.prototype.terminate = function() {
             _EMW_Scene_Map_terminate.call(this);
             if (SceneManager.isNextScene(Scene_Map)) {
@@ -1332,7 +1363,7 @@
         };
 
         Window_MessageEx.prototype.updateTargetCharacterId = function() {
-            var id = $gameSystem.getMessagePopupIdEx(this._windowId);
+            var id                  = $gameSystem.getMessagePopupIdEx(this._windowId);
             this._targetCharacterId = $gameSystem.getMessagePopupIdEx(this._windowId);
         };
 
@@ -1379,7 +1410,7 @@
             this.resetFontSettings();
         };
 
-        var _Window_MessageEx_newLineX = Window_MessageEx.prototype.newLineX;
+        var _Window_MessageEx_newLineX      = Window_MessageEx.prototype.newLineX;
         Window_MessageEx.prototype.newLineX = function() {
             if (this.isPopup()) {
                 return this._gameMessage.faceName() === '' ? 0 : Window_Message._faceWidth + 8;
@@ -1395,7 +1426,7 @@
         //------------------------------------------------------------------------
         //Window_ChoiceListEx
         //------------------------------------------------------------------------
-        var _Window_ChoiceListEx_numVisibleRows       = Window_ChoiceListEx.prototype.numVisibleRows;
+        var _Window_ChoiceListEx_numVisibleRows      = Window_ChoiceListEx.prototype.numVisibleRows;
         Window_ChoiceListEx.prototype.numVisibleRows = function() {
             var result = _Window_ChoiceListEx_numVisibleRows.apply(this, arguments);
             if (this.isPopupLinkage()) {
