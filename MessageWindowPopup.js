@@ -7,6 +7,7 @@
 // ----------------------------------------------------------------------------
 // Version
 // 2.6.0 2017/06/21 ウィンドウが画面外に出ないように調整するパラメータを追加
+//                  フキダシの位置固定をイベントごとに設定できる機能で、イベント名で指定できる機能を追加
 // 2.5.1 2017/06/11 DP_MapZoom.js以外のマップズーム機能に対してフキダシ位置が正しく表示されていなかった問題を修正
 // 2.5.0 2017/06/05 マップズームに対してフキダシ位置が正しく表示されるよう対応
 //                  フキダシの位置固定をイベントごとに設定できる機能を追加
@@ -281,11 +282,17 @@
  *   POS_UPPER 1 or 位置_上固定 1
  * 　　イベントID[1]のみウィンドウの位置をキャラクターの上で固定します。
  *
+ *   POS_UPPER aaa or 位置_上固定 aaa
+ * 　　イベント名[aaa]のみウィンドウの位置をキャラクターの上で固定します。
+ *
  *   POS_LOWER or 位置_下固定
  * 　　ウィンドウの位置をキャラクターの下で固定します。
  *
  *   POS_LOWER -1 or 位置_下固定 -1
  * 　　プレイヤーのみウィンドウの位置をキャラクターの下で固定します。
+ *
+ *   POS_LOWER aaa or 位置_下固定 aaa
+ * 　　イベント名[aaa]のみウィンドウの位置をキャラクターの下で固定します。
  *
  *   POS_AUTO or 位置_自動
  * 　　通常はキャラクターの上に表示し、ウィンドウが上に見切れる場合のみ
@@ -514,7 +521,11 @@
     };
 
     Game_Interpreter.prototype.getEventIdForMessagePopup = function(arg) {
-        var eventId = getArgNumber(arg);
+        var convertedArg = convertEscapeCharacters(arg);
+        var eventId = parseInt(convertedArg);
+        if (isNaN(eventId)) {
+            return convertedArg;
+        }
         if (eventId === 0) {
             eventId = this.eventId() || ($gameMap.isEventRunning() ? $gameMap._interpreter.eventId() : 0);
         }
@@ -639,8 +650,13 @@
 
     Game_System.prototype.isPopupFixPosition = function(position) {
         this.initMessagePositionEvents();
-        if (this._messagePopupPositionEvents && !!this._messagePopupPositionEvents[this._messagePopupCharacterId]) {
-            return this._messagePopupPositionEvents[this._messagePopupCharacterId] === position;
+        var positionFixForId = this._messagePopupPositionEvents[this._messagePopupCharacterId];
+        var event = $gameMap.event(this._messagePopupCharacterId);
+        var positionFixForName = event ? this._messagePopupPositionEvents[event.event().name] : 0;
+        if (positionFixForId > 0) {
+            return positionFixForId === position;
+        } else if (positionFixForName > 0) {
+            return positionFixForName === position;
         } else {
             return this._messagePopupPosition === position;
         }
