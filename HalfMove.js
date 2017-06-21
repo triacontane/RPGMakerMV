@@ -285,10 +285,11 @@
  * <HMHeight:3>
  *
  * ・イベントの8方向自律移動
- * プレイヤーが8方向移動可能な状態のときにイベントに以下のタグが付いていると
- * ランダム移動やプレイヤーに近づく移動で8方向移動を使うようになります。
- * <HM8Move>
- * <HM8方向移動>
+ * プレイヤーが8方向移動可能な状態のときは、イベントもランダム移動や
+ * プレイヤー接近移動で8方向移動を使うようになります。
+ * 以下のタグを指定するとことでイベントの8方向移動を禁止できます。
+ * <HM8MoveDisable>
+ * <HM8方向移動禁止>
  *
  * ・他プラグインとの連携に関して
  *
@@ -1313,7 +1314,7 @@
         this._throughDisable   = getMetaValues(this.event(), ['ThroughDisable', 'すり抜け禁止']);
         this._eventWidth       = getArgNumber(getMetaValues(this.event(), ['Width', '横幅']), 0);
         this._eventHeight      = getArgNumber(getMetaValues(this.event(), ['Height', '高さ']), 0);
-        this._can8move         = getMetaValues(this.event(), ['8方向移動', '8Move']);
+        this._can8moveDisable  = getMetaValues(this.event(), ['8MoveDisable', '8方向移動禁止']);
         var metaValue          = getMetaValues(this.event(), ['TriggerExpansion', 'トリガー拡大']);
         this._triggerExpansion = metaValue ? getArgBoolean(metaValue) : paramTriggerExpansion;
     };
@@ -1424,7 +1425,7 @@
     };
 
     Game_Event.prototype.canDiagonalMove = function() {
-        return this._can8move && Game_Character.prototype.canDiagonalMove.call(this);
+        return !this._can8moveDisable && Game_Character.prototype.canDiagonalMove.call(this);
     };
 
     //=============================================================================
