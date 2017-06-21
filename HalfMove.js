@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2017/06/21 イベントの自律移動で8方向移動を使用できる機能を追加
 // 1.8.2 2017/05/28 進入不可タイルに存在するイベントに対する半歩用衝突判定が行われない現象を修正
 // 1.8.1 2017/05/14 プライオリティが「通常キャラと同じ」でないイベントはプレイヤーに対する衝突判定を行わないよう修正
 // 1.8.0 2017/04/23 8方向移動の可否をスイッチによって切り替える機能を追加
@@ -282,6 +283,12 @@
  * <HMWidth:2>
  * <HM高さ:3>
  * <HMHeight:3>
+ *
+ * ・イベントの8方向自律移動
+ * プレイヤーが8方向移動可能な状態のときにイベントに以下のタグが付いていると
+ * ランダム移動やプレイヤーに近づく移動で8方向移動を使うようになります。
+ * <HM8Move>
+ * <HM8方向移動>
  *
  * ・他プラグインとの連携に関して
  *
@@ -1013,6 +1020,93 @@
         return result;
     };
 
+    Game_Character.prototype.canDiagonalMove = function() {
+        return paramDirection8Move && (param8MoveSwitch > 0 ? $gameSwitches.value(param8MoveSwitch) : true);
+    };
+
+    Game_Character.prototype.getDiagonalRandomDirection = function() {
+        var direction;
+        do {
+            direction = 1 + Math.randomInt(9);
+        } while (!this.isDiagonalDirection(direction));
+        return direction;
+    };
+
+    Game_Character.prototype.getDiagonalTowardDirection = function(x, y) {
+        var sx = this.deltaXFrom(x);
+        var sy = this.deltaYFrom(y);
+        var direction = 5;
+        if (sx !== 0) {
+            direction += (sx < 0 ? 1 : -1);
+        }
+        if (sy !== 0) {
+            direction += (sy < 0 ? -3 : 3);
+        }
+        return direction;
+    };
+
+    Game_Character.prototype.isDiagonalDirection = function(direction) {
+        return direction !== 5 && direction % 2 === 1
+    };
+
+    var _Game_Character_moveRandom = Game_Character.prototype.moveRandom;
+    Game_Character.prototype.moveRandom = function() {
+        if (!this.canDiagonalMove() || Math.randomInt(2) === 0) {
+            _Game_Character_moveRandom.apply(this, arguments);
+        } else {
+            this.executeDiagonalMove(this.getDiagonalRandomDirection());
+        }
+    };
+
+    var _Game_Character_moveTowardCharacter = Game_Character.prototype.moveTowardCharacter;
+    Game_Character.prototype.moveTowardCharacter = function(character) {
+        if (!this.canDiagonalMove() || Math.randomInt(4) === 0) {
+            _Game_Character_moveTowardCharacter.apply(this, arguments);
+            return;
+        }
+        var direction = this.getDiagonalTowardDirection(character.x, character.y);
+        if (this.isDiagonalDirection(direction)) {
+            this.executeDiagonalMove(direction);
+        }
+        if (!this.isMovementSucceeded()) {
+            _Game_Character_moveTowardCharacter.apply(this, arguments);
+        }
+    };
+
+    var _Game_Character_moveAwayFromCharacter = Game_Character.prototype.moveAwayFromCharacter;
+    Game_Character.prototype.moveAwayFromCharacter = function(character) {
+        if (!this.canDiagonalMove() || Math.randomInt(4) === 0) {
+            _Game_Character_moveAwayFromCharacter.apply(this, arguments);
+            return;
+        }
+        var direction = 10 - this.getDiagonalTowardDirection(character.x, character.y);
+        if (this.isDiagonalDirection(direction)) {
+            this.executeDiagonalMove(direction);
+        }
+        if (!this.isMovementSucceeded()) {
+            _Game_Character_moveAwayFromCharacter.apply(this, arguments);
+        }
+    };
+
+    Game_Character.prototype.executeDiagonalMove = function(d) {
+        var horizon  = d / 3 <= 1 ? d + 3 : d - 3;
+        var vertical = d % 3 === 0 ? d - 1 : d + 1;
+        this.moveDiagonally(horizon, vertical);
+        if (this._firstInputDir === horizon) {
+            this.moveStraightForRetry(vertical);
+            this.moveStraightForRetry(horizon);
+        } else {
+            this.moveStraightForRetry(horizon);
+            this.moveStraightForRetry(vertical);
+        }
+    };
+
+    Game_Character.prototype.moveStraightForRetry = function(d) {
+        if (!this.isMovementSucceeded()) {
+            this.moveStraight(d);
+        }
+    };
+
     //=============================================================================
     // Game_Player
     //  8方向移動に対応させます。
@@ -1076,10 +1170,6 @@
             this._firstInputDir = result;
         }
         return result;
-    };
-
-    Game_Player.prototype.canDiagonalMove = function() {
-        return paramDirection8Move && (param8MoveSwitch > 0 ? $gameSwitches.value(param8MoveSwitch) : true);
     };
 
     var _Game_Player_executeMove      = Game_Player.prototype.executeMove;
@@ -1183,25 +1273,6 @@
         }
     };
 
-    Game_Player.prototype.executeDiagonalMove = function(d) {
-        var horizon  = d / 3 <= 1 ? d + 3 : d - 3;
-        var vertical = d % 3 === 0 ? d - 1 : d + 1;
-        this.moveDiagonally(horizon, vertical);
-        if (this._firstInputDir === horizon) {
-            this.moveStraightForRetry(vertical);
-            this.moveStraightForRetry(horizon);
-        } else {
-            this.moveStraightForRetry(horizon);
-            this.moveStraightForRetry(vertical);
-        }
-    };
-
-    Game_Player.prototype.moveStraightForRetry = function(d) {
-        if (!this.isMovementSucceeded()) {
-            this.moveStraight(d);
-        }
-    };
-
     Game_Player.prototype.resetPrevPos = function() {
         Game_CharacterBase.prototype.resetPrevPos.call(this);
         this.followers().forEach(function(follower) {
@@ -1242,6 +1313,7 @@
         this._throughDisable   = getMetaValues(this.event(), ['ThroughDisable', 'すり抜け禁止']);
         this._eventWidth       = getArgNumber(getMetaValues(this.event(), ['Width', '横幅']), 0);
         this._eventHeight      = getArgNumber(getMetaValues(this.event(), ['Height', '高さ']), 0);
+        this._can8move         = getMetaValues(this.event(), ['8方向移動', '8Move']);
         var metaValue          = getMetaValues(this.event(), ['TriggerExpansion', 'トリガー拡大']);
         this._triggerExpansion = metaValue ? getArgBoolean(metaValue) : paramTriggerExpansion;
     };
@@ -1349,6 +1421,10 @@
 
     Game_Event.prototype.setCollidedFromPlayer = function(value) {
         this._collidedFromPlayer = value;
+    };
+
+    Game_Event.prototype.canDiagonalMove = function() {
+        return this._can8move && Game_Character.prototype.canDiagonalMove.call(this);
     };
 
     //=============================================================================
