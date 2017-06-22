@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.3 2017/06/22 プラグインを適用していないデータをロードしたときにプレイヤーが表示されない問題を修正
 // 1.5.2 2017/06/11 プライオリティの設定を0にすると設定が有効にならない問題を修正
 // 1.5.1 2017/06/11 GALV_CamControl.jsとの競合を解消
 // 1.5.0 2017/03/28 色調変更機能を追加
@@ -256,6 +257,18 @@
                 data.metaArray[metaName] = data.metaArray[metaName] || [];
                 data.metaArray[metaName].push(match[2] === ':' ? match[3] : true);
             }
+        }
+    };
+
+    //=============================================================================
+    // Game_System
+    //  ロード時にプレイヤーの初期化が必要な場合は初期化します。
+    //=============================================================================
+    var _Game_System_onAfterLoad = Game_System.prototype.onAfterLoad;
+    Game_System.prototype.onAfterLoad = function() {
+        _Game_System_onAfterLoad.apply(this, arguments);
+        if (!$gamePlayer.hasOwnProperty('_customResource')) {
+            $gamePlayer.clearCgInfo();
         }
     };
 
