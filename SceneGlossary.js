@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.1 2017/06/22 カテゴリ表示が有効な場合に、対象用語を一つも所持していない場合はカテゴリリストに表示しないよう修正
 // 1.14.0 2017/06/08 所持数表示機能を追加
 // 1.13.0 2017/04/19 自動翻訳プラグインに一部対応
 // 1.12.0 2017/04/09 用語集リストの表示順を個別に設定する機能を追加
@@ -827,7 +828,7 @@ function Scene_Glossary() {
         var list = [];
         this.getAllGlossaryList().forEach(function(item) {
             var category = this.getGlossaryCategory(item);
-            if (category && this.isSameGlossaryType(item) && !list.contains(category)) {
+            if (category && this.isSameGlossaryType(item) && !list.contains(category) && this.hasGlossary(item)) {
                 list.push(category);
             }
         }.bind(this));
