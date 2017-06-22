@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/06/23 立ち止まったときに足音演奏間隔をリセットする機能を追加
 // 1.0.0 2016/02/18 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -19,6 +20,10 @@
  *
  * @param イベント実行中無効
  * @desc イベント実行中は足音を無効にする。（ON/OFF）
+ * @default OFF
+ *
+ * @param 立ち止まるとリセット
+ * @desc 演奏間隔が設定されている場合、立ち止まることでリセットされます。（ON/OFF）
  * @default OFF
  *
  * @help 以下の状況下で指定した足音効果音を演奏します。
@@ -67,7 +72,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(function() {
     //=============================================================================
     // ユーザ書き換え領域 - 開始 -
     //  name   : 効果音名称(拡張子不要)
@@ -84,80 +89,80 @@
         // interval:効果音を演奏する間隔（1の場合は1歩ごと）
 
         // 常に演奏される足音
-        always: {
-            interval:1,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
-            dash1:{name:'', volume:90, pitch:100, pan:0},
-            dash2:{name:'', volume:90, pitch:100, pan:0},
+        always     : {
+            interval: 1,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // 梯子属性通過時の足音
-        ladder: {
-            interval:1,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
-            dash1:{name:'', volume:90, pitch:100, pan:0},
-            dash2:{name:'', volume:90, pitch:100, pan:0},
+        ladder     : {
+            interval: 1,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // カウンター属性通過時の足音
-        counter: {
-            interval:1,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
-            dash1:{name:'', volume:90, pitch:100, pan:0},
-            dash2:{name:'', volume:90, pitch:100, pan:0},
+        counter    : {
+            interval: 1,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // 茂み属性通過時の足音
-        bush: {
-            interval:1,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
-            dash1:{name:'', volume:90, pitch:100, pan:0},
-            dash2:{name:'', volume:90, pitch:100, pan:0},
+        bush       : {
+            interval: 1,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // ダメージ床属性通過時の足音
         damageFloor: {
-            interval:1,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
-            dash1:{name:'', volume:90, pitch:100, pan:0},
-            dash2:{name:'', volume:90, pitch:100, pan:0},
+            interval: 1,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // 小型船乗船時の足音
-        boat: {
-            interval:4,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
+        boat       : {
+            interval: 4,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // 大型船乗船時の足音
-        ship: {
-            interval:4,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
+        ship       : {
+            interval: 4,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // 飛行船船乗船時の足音
-        airship: {
-            interval:4,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
+        airship    : {
+            interval: 4,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // 地形タグ 1 通過時の足音（2以降はコピーするか以下の通り値を変更してください）
         // terrainTag1 → terrainTag2
         terrainTag1: {
-            interval:1,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
-            dash1:{name:'', volume:90, pitch:100, pan:0},
-            dash2:{name:'', volume:90, pitch:100, pan:0},
+            interval: 1,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
         // リージョン 1 通過時の足音（2以降はコピーするか以下の通り値を変更してください）
         // region1 → region2
-        region1: {
-            interval:1,
-            walk1:{name:'', volume:90, pitch:100, pan:0},
-            walk2:{name:'', volume:90, pitch:100, pan:0},
-            dash1:{name:'', volume:90, pitch:100, pan:0},
-            dash2:{name:'', volume:90, pitch:100, pan:0},
+        region1    : {
+            interval: 1,
+            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
+            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
         },
     };
     //=============================================================================
@@ -167,10 +172,10 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() == 'ON';
+        return (value || '').toUpperCase() === 'ON';
     };
 
-    var getParamOther = function(paramNames) {
+    var getParamOther            = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
             var name = PluginManager.parameters(pluginName)[paramNames[i]];
@@ -179,8 +184,9 @@
         return null;
     };
     var paramEventRunningInvalid = getParamBoolean(['イベント実行中無効', 'EventRunningInvalid']);
+    var paramResetIfStop         = getParamBoolean(['立ち止まるとリセット', 'ResetIfStop']);
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
@@ -189,7 +195,7 @@
     //  プラグインコマンドを追加定義します。
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandFootstep(command, args);
@@ -210,7 +216,7 @@
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandFootstep = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandFootstep = function(command, args) {
         switch (getCommandName(command)) {
             case 'FS_INVALID_SOUND' :
             case '足音無効化':
@@ -227,32 +233,36 @@
     // Game_CharacterBase
     //  足音効果音の演奏処理を追加します。
     //=============================================================================
-    var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
+    var _Game_CharacterBase_initMembers      = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
         this.setStepSoundFlg(false);
         this._stepToggle = null;
+        this.resetStepCountForSound();
+    };
+
+    Game_CharacterBase.prototype.resetStepCountForSound = function() {
         this._stepCountForSound = null;
     };
 
-    var _Game_CharacterBase_increaseSteps = Game_CharacterBase.prototype.increaseSteps;
+    var _Game_CharacterBase_increaseSteps      = Game_CharacterBase.prototype.increaseSteps;
     Game_CharacterBase.prototype.increaseSteps = function() {
         _Game_CharacterBase_increaseSteps.apply(this, arguments);
         if (!this.isPlayStepSound() || $gameSystem.footstepDisable ||
             ($gameMap.isEventRunning() && paramEventRunningInvalid)) return;
         var soundsHash = [
-            {key:'airship'                       , condition:this.isInAirship.bind(this)},
-            {key:'ship'                          , condition:this.isInShip.bind(this)},
-            {key:'boat'                          , condition:this.isInBoat.bind(this)},
-            {key:'region' + this.regionId()      , condition:function(){return true;}},
-            {key:'damageFloor'                   , condition:this.isOnDamageFloor.bind(this)},
-            {key:'bush'                          , condition:this.isOnBush.bind(this)},
-            {key:'counter'                       , condition:this.isOnCounter.bind(this)},
-            {key:'ladder'                        , condition:this.isOnLadder.bind(this)},
-            {key:'terrainTag' + this.terrainTag(), condition:function(){return true;}},
-            {key:'always'                        , condition:function(){return true;}}
+            {key: 'airship', condition: this.isInAirship.bind(this)},
+            {key: 'ship', condition: this.isInShip.bind(this)},
+            {key: 'boat', condition: this.isInBoat.bind(this)},
+            {key: 'region' + this.regionId(), condition: this.noCondition.bind(this)},
+            {key: 'damageFloor', condition: this.isOnDamageFloor.bind(this)},
+            {key: 'bush', condition: this.isOnBush.bind(this)},
+            {key: 'counter', condition: this.isOnCounter.bind(this)},
+            {key: 'ladder', condition: this.isOnLadder.bind(this)},
+            {key: 'terrainTag' + this.terrainTag(), condition: this.noCondition.bind(this)},
+            {key: 'always', condition: this.noCondition.bind(this)}
         ];
-        soundsHash.some(function(data){
+        soundsHash.some(function(data) {
             return this.playStepSound(data.key, data.condition);
         }.bind(this));
     };
@@ -269,6 +279,10 @@
             return true;
         }
         return false;
+    };
+
+    Game_CharacterBase.prototype.noCondition = function() {
+        return true
     };
 
     Game_CharacterBase.prototype.isOnDamageFloor = function() {
@@ -307,11 +321,19 @@
         return true;
     };
 
+    var _Game_Player_updateNonmoving      = Game_Player.prototype.updateNonmoving;
+    Game_Player.prototype.updateNonmoving = function(wasMoving) {
+        _Game_Player_updateNonmoving.apply(this, arguments);
+        if (!wasMoving && paramResetIfStop) {
+            this.resetStepCountForSound();
+        }
+    };
+
     //=============================================================================
     // Game_System
     //  足音効果音の有効無効設定を追加定義します。
     //=============================================================================
-    var _Game_System_initialize = Game_System.prototype.initialize;
+    var _Game_System_initialize      = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
         this.footstepDisable = null;
