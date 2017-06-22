@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2017/06/22 一度に複数のステートが解除された場合に一部アイコンが正しく消去されない問題を修正
 // 1.3.1 2017/05/05 残りターン数のフォントサイズ指定機能を追加
 // 1.3.0 2017/05/05 味方の残りターン数も表示する機能を追加
 // 1.2.1 2017/05/05 1.2.0の機能でプラグイン等の機能により残りターン数が小数になった場合に切り上げする仕様を追加
@@ -113,8 +114,12 @@
  * @desc 残りターン数表示のフォントサイズです。
  * @default 32
  *
- * @help 敵キャラのステートが複数有効になった場合の
- * ステートアイコンを時計回りに回転させてリングで表現します。
+ * @help 敵キャラのステートが複数有効になった場合のステートアイコンを時計回りに
+ * 回転させてリング表示したり一列に並べて表示したりできます。
+ *
+ * また、各ステートの残りターンを表示することもできます。
+ *
+ * 追加機能として、味方のステートの残りターンを表示することもできます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -266,8 +271,9 @@
             if (!this._iconsSprites[index]) this.makeNewIcon(index);
             this._iconsSprites[index].setIconIndex(icon);
         }, this);
-        for (var i = this._icons.length; i < this._iconsSprites.length; i++) {
-            this.removeIcon(i);
+        var spriteLength = this._iconsSprites.length;
+        for (var i = this._icons.length; i < spriteLength; i++) {
+            this.popIcon();
         }
     };
 
@@ -277,9 +283,9 @@
         this.addChild(iconSprite);
     };
 
-    Sprite_StateIcon.prototype.removeIcon = function(index) {
-        this.removeChild(this._iconsSprites[index]);
-        this._iconsSprites.splice(index, 1);
+    Sprite_StateIcon.prototype.popIcon = function() {
+        var removedSprite = this._iconsSprites.pop();
+        this.removeChild(removedSprite);
     };
 
     Sprite_StateIcon.prototype._sortChildren = function() {
