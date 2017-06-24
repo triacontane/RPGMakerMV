@@ -7,6 +7,7 @@
 // ----------------------------------------------------------------------------
 // Version
 // 2.7.0 2017/06/24 フキダシ位置を設定する機能で、イベント名で指定できる機能を追加
+//                  フキダシ有効化時にウィンドウ位置を設定できる機能を追加
 // 2.6.0 2017/06/21 ウィンドウが画面外に出ないように調整するパラメータを追加
 //                  フキダシの位置固定をイベントごとに設定できる機能で、イベント名で指定できる機能を追加
 // 2.5.1 2017/06/11 DP_MapZoom.js以外のマップズーム機能に対してフキダシ位置が正しく表示されていなかった問題を修正
@@ -234,25 +235,30 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * MWP_VALID [キャラクターID] or
- * フキダシウィンドウ有効化 [キャラクターID]
+ * MWP_VALID [キャラクターID] [ウィンドウ位置] or
+ * フキダシウィンドウ有効化 [キャラクターID] [ウィンドウ位置]
  * 　メッセージウィンドウを指定したキャラクターIDの頭上に表示します。
  * 　プレイヤー : -1 このイベント : 0 指定したIDのイベント : 1 ～
  * 　フォロワー : -2, -3, -4
  *
- * 例：MWP_VALID 0
- * 　　フキダシウィンドウ有効化 3
+ * 　ウィンドウ位置
+ *   0 : 自動（指定しなかった場合も含む）
+ *   1 : キャラクターの上に表示
+ *   2 : キャラクターの下に表示
  *
- * MWP_VALID [イベント名] or
- * フキダシウィンドウ有効化 [イベント名]
+ * 例：MWP_VALID 0 1
+ * 　　フキダシウィンドウ有効化 3 1
+ *
+ * MWP_VALID [イベント名] [ウィンドウ位置] or
+ * フキダシウィンドウ有効化 [イベント名] [ウィンドウ位置]
  * 　メッセージウィンドウを指定した名称と一致するイベントの頭上に表示します。
  *
- * 例：MWP_VALID test_event
- * 　　フキダシウィンドウ有効化 テストイベント
+ * 例：MWP_VALID test_event 1
+ * 　　フキダシウィンドウ有効化 テストイベント 2
  * 
  * !複数メッセージウィンドウ表示を使う場合!
- * MWP_VALID [キャラクターID] [ウィンドウID] or
- * フキダシウィンドウ有効化 [キャラクターID] [ウィンドウID]
+ * MWP_VALID [キャラクターID] [ウィンドウID] [ウィンドウ位置] or
+ * フキダシウィンドウ有効化 [キャラクターID] [ウィンドウID] [ウィンドウ位置]
  * 　指定したメッセージウィンドウIDを指定したキャラクターIDの頭上に表示するようにします。
  * 　プレイヤー : -1 このイベント : 0 指定したIDのイベント : 1 ～
  * 　フォロワー : -2, -3, -4
@@ -446,11 +452,19 @@
                 if (isNaN(eventId)) {
                     eventId = this.getEventIdFromEventName(eventId);
                 }
+                var windowPosition;
                 if (imported_FTKR_EMW() && args[1]) {
                     var windowId = getArgNumber(args[1]);
                     if (windowId >= 0) $gameSystem.setMessagePopupEx(windowId, eventId);
+                    windowPosition = getArgNumber(args[2]);
                 } else {
                     $gameSystem.setMessagePopup(eventId);
+                    windowPosition = getArgNumber(args[1]);
+                }
+                if (windowPosition === 1) {
+                    $gameSystem.setPopupFixUpper(eventId);
+                } else if (windowPosition === 2) {
+                    $gameSystem.setPopupFixLower(eventId);
                 }
                 break;
             case 'MWP_INVALID':
