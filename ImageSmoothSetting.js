@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/06/24 テキストなど動的画像のぼかし設定を追加
 // 1.0.0 2017/02/24 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -55,6 +56,10 @@
  *
  * @param Tileset
  * @desc タイルセット画像にぼかしをかけます。
+ * @default OFF
+ *
+ * @param DynamicImage
+ * @desc ウィンドウの文字など動的に作成した画像にぼかしをかけます。
  * @default OFF
  *
  * @help 画像を拡大したときに「ぼかし」処理を行うかどうかを
@@ -114,6 +119,10 @@
  * @desc タイルセット画像にぼかしをかけます。
  * @default OFF
  *
+ * @param 動的画像
+ * @desc ウィンドウの文字など動的に作成した画像にぼかしをかけます。
+ * @default OFF
+ *
  * @help 画像を拡大したときに「ぼかし」処理を行うかどうかを
  * 画像種別ごとに設定できます。
  * 「ぼかし」処理を行わないとくっきり映りますが、ドットが見えます。
@@ -156,17 +165,18 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param        = {};
-    param.tileset    = getParamBoolean(['Tileset', 'タイルセット']);
-    param.system     = getParamBoolean(['System', 'システム']);
-    param.character  = getParamBoolean(['Character', 'キャラクター']);
-    param.title      = getParamBoolean(['Title', 'タイトル']);
-    param.picture    = getParamBoolean(['Picture', 'ピクチャ']);
-    param.parallax   = getParamBoolean(['Parallax', '遠景']);
-    param.face       = getParamBoolean(['Face', 'フェイス']);
-    param.battler    = getParamBoolean(['Battler', 'バトラー']);
-    param.battleBack = getParamBoolean(['BattleBack', '戦闘背景']);
-    param.animation  = getParamBoolean(['Animation', 'アニメーション']);
+    var param          = {};
+    param.tileset      = getParamBoolean(['Tileset', 'タイルセット']);
+    param.system       = getParamBoolean(['System', 'システム']);
+    param.character    = getParamBoolean(['Character', 'キャラクター']);
+    param.title        = getParamBoolean(['Title', 'タイトル']);
+    param.picture      = getParamBoolean(['Picture', 'ピクチャ']);
+    param.parallax     = getParamBoolean(['Parallax', '遠景']);
+    param.face         = getParamBoolean(['Face', 'フェイス']);
+    param.battler      = getParamBoolean(['Battler', 'バトラー']);
+    param.battleBack   = getParamBoolean(['BattleBack', '戦闘背景']);
+    param.animation    = getParamBoolean(['Animation', 'アニメーション']);
+    param.dynamicImage = getParamBoolean(['DynamicImage', '動的画像']);
 
     //=============================================================================
     // ImageManager
@@ -195,6 +205,18 @@
             arguments[3] = this._smoothMap[folder];
         }
         return _ImageManager_loadBitmap.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Bitmap
+    //  動的作成画像にぼかしを設定可能にします。
+    //=============================================================================
+    var _Bitmap_initialize      = Bitmap.prototype.initialize;
+    Bitmap.prototype.initialize = function(width, height) {
+        _Bitmap_initialize.apply(this, arguments);
+        if (param.dynamicImage) {
+            this.smooth = true;
+        }
     };
 })();
 
