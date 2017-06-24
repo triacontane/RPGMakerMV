@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/06/24 有効、無効を切り替えるスイッチを追加
 // 1.1.0 2017/04/23 ポーズサインを非表示にできるスイッチを追加
 // 1.0.0 2017/01/16 初版
 // ----------------------------------------------------------------------------
@@ -18,7 +19,13 @@
  * @plugindesc PauseSignToTextEndPlugin
  * @author triacontane
  *
+ * @param ValidateSwitchId
+ * @type number
+ * @desc When the specified switch is ON, the pause sign is displayed at the end. When it is 0, it is always displayed at the end.
+ * @default 0
+ *
  * @param InvisibleSwitchId
+ * @type number
  * @desc When the specified switch is ON, the pause sign is no longer displayed.
  * @default 0
  *
@@ -31,7 +38,13 @@
  * @plugindesc ポーズサインの末尾表示プラグイン
  * @author トリアコンタン
  *
+ * @param 有効スイッチ番号
+ * @type number
+ * @desc 指定したスイッチがONのときポーズサインが末尾に表示されます。0の場合は常に末尾に表示されます。
+ * @default 0
+ *
  * @param 非表示スイッチ番号
+ * @type number
  * @desc 指定したスイッチがONのときポーズサインが表示されなくなります。
  * @default 0
  *
@@ -77,7 +90,8 @@
     // パラメータの取得と整形
     //=============================================================================
     var param = {};
-    param.invisibleSwitchId = getParamNumber(['InvisibleSwitchId', '非表示スイッチ番号']);
+    param.invisibleSwitchId = getParamNumber(['InvisibleSwitchId', '非表示スイッチ番号'], 0);
+    param.validateSwitchId  = getParamNumber(['ValidateSwitchId', '有効スイッチ番号'], 0);
 
     //=============================================================================
     // Window_Message
@@ -86,8 +100,15 @@
     var _Window_Message_startPause = Window_Message.prototype.startPause;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
-        if (this.isPopup && this.isPopup()) return;
-        this.setPauseSignToTextEnd();
+        if ((!this.isPopup || !this.isPopup()) && this.isValidPauseSignTextEnd()) {
+            this.setPauseSignToTextEnd();
+        } else {
+            this._refreshPauseSign();
+        }
+    };
+
+    Window_Message.prototype.isValidPauseSignTextEnd = function() {
+        return !param.validateSwitchId || $gameSwitches.value(param.validateSwitchId);
     };
 
     Window_Message.prototype.isVisiblePauseSign = function() {
@@ -109,6 +130,3 @@
         this._windowPauseSignSprite.visible = this.isVisiblePauseSign();
     };
 })();
-
-
-
