@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageWindowPopup.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2017/06/24 フキダシ位置を設定する機能で、イベント名で指定できる機能を追加
 // 2.6.0 2017/06/21 ウィンドウが画面外に出ないように調整するパラメータを追加
 //                  フキダシの位置固定をイベントごとに設定できる機能で、イベント名で指定できる機能を追加
 // 2.5.1 2017/06/11 DP_MapZoom.js以外のマップズーム機能に対してフキダシ位置が正しく表示されていなかった問題を修正
@@ -58,7 +59,7 @@
 //                  英語対応
 // 1.0.0 2016/01/28 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -235,12 +236,19 @@
  *
  * MWP_VALID [キャラクターID] or
  * フキダシウィンドウ有効化 [キャラクターID]
- * 　メッセージウィンドウを指定したキャラクターIDの頭上に表示するようにします。
+ * 　メッセージウィンドウを指定したキャラクターIDの頭上に表示します。
  * 　プレイヤー : -1 このイベント : 0 指定したIDのイベント : 1 ～
  * 　フォロワー : -2, -3, -4
  *
  * 例：MWP_VALID 0
  * 　　フキダシウィンドウ有効化 3
+ *
+ * MWP_VALID [イベント名] or
+ * フキダシウィンドウ有効化 [イベント名]
+ * 　メッセージウィンドウを指定した名称と一致するイベントの頭上に表示します。
+ *
+ * 例：MWP_VALID test_event
+ * 　　フキダシウィンドウ有効化 テストイベント
  * 
  * !複数メッセージウィンドウ表示を使う場合!
  * MWP_VALID [キャラクターID] [ウィンドウID] or
@@ -252,7 +260,6 @@
  *
  * 例：MWP_VALID 0 1
  * 　　フキダシウィンドウ有効化 3 2
- *
  * 
  * MWP_INVALID or
  * フキダシウィンドウ無効化
@@ -428,21 +435,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandMessageWindowPopup(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window  = require('nw.gui').Window.get();
-                var devTool = window.showDevTools();
-                devTool.moveTo(0, 0);
-                devTool.resizeTo(Graphics.width, Graphics.height);
-                window.focus();
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandMessageWindowPopup(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandMessageWindowPopup = function(command, args) {
@@ -450,6 +443,9 @@
             case 'MWP_VALID' :
             case 'フキダシウィンドウ有効化':
                 var eventId = this.getEventIdForMessagePopup(args[0]);
+                if (isNaN(eventId)) {
+                    eventId = this.getEventIdFromEventName(eventId);
+                }
                 if (imported_FTKR_EMW() && args[1]) {
                     var windowId = getArgNumber(args[1]);
                     if (windowId >= 0) $gameSystem.setMessagePopupEx(windowId, eventId);
@@ -460,8 +456,8 @@
             case 'MWP_INVALID':
             case 'フキダシウィンドウ無効化':
                 if (imported_FTKR_EMW() && args[0]) {
-                    var windowId = getArgNumber(args[0]);
-                    if (windowId >= 0) $gameSystem.clearMessagePopupEx(windowId);
+                    var windowId2 = getArgNumber(args[0]);
+                    if (windowId2 >= 0) $gameSystem.clearMessagePopupEx(windowId2);
                 } else {
                     $gameSystem.clearMessagePopup();
                 }
@@ -529,6 +525,18 @@
         if (eventId === 0) {
             eventId = this.eventId() || ($gameMap.isEventRunning() ? $gameMap._interpreter.eventId() : 0);
         }
+        return eventId;
+    };
+
+    Game_Interpreter.prototype.getEventIdFromEventName = function(eventName) {
+        var eventId = 0;
+        $gameMap.events().some(function(event) {
+            if (event.event().name === eventName) {
+                eventId = event.eventId();
+                return true;
+            }
+            return false;
+        });
         return eventId;
     };
 
