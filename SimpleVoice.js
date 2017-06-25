@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/06/26 英語表記のプラグインコマンドの指定方法を変更
 // 1.0.0 2017/06/25 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -89,7 +90,7 @@
  *  （パラメータの間は半角スペースで区切る）
  *
  * SV_ボイスの演奏 aaa 90 100 0 # 指定したボイスを演奏します。
- * SV_PlayVoice aaa 90 100 0    # 同上
+ * SV_PLAY_VOICE aaa 90 100 0   # 同上
  * ※具体的な引数は以下の通りです。
  * 0 : ファイル名(拡張子不要)
  * 1 : 音量(省略した場合は90)
@@ -97,10 +98,10 @@
  * 3 : 位相(省略した場合は0)
  *
  * SV_ボイスのループ演奏 aaa 90 100 0 # 指定したボイスをループ演奏します。
- * SV_PlayLoopVoice aaa 90 100 0      # 同上
+ * SV_PLAY_LOOP_VOICE aaa 90 100 0    # 同上
  *
  * SV_ボイスの停止 aaa # ボイスaaaの演奏を停止します。
- * SV_StopVoice aaa    # 同上
+ * SV_STOP_VOICE aaa   # 同上
  * ※引数を省略した場合は全てのボイスを停止します。
  *
  * 利用規約：
@@ -171,11 +172,11 @@
 
     var pluginCommandMap = new Map();
     setPluginCommand('ボイスの演奏', 'execPlayVoice');
-    setPluginCommand('PlayVoice', 'execPlayVoice');
+    setPluginCommand('PLAY_VOICE', 'execPlayVoice');
     setPluginCommand('ボイスのループ演奏', 'execPlayLoopVoice');
-    setPluginCommand('PlayLoopVoice', 'execPlayLoopVoice');
+    setPluginCommand('PLAY_LOOP_VOICE', 'execPlayLoopVoice');
     setPluginCommand('ボイスの停止', 'execStopVoice');
-    setPluginCommand('StopVoice', 'execStopVoice');
+    setPluginCommand('STOP_VOICE', 'execStopVoice');
 
     //=============================================================================
     // Game_Interpreter
