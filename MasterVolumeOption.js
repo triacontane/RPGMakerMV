@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/06/26 ボリュームの変化量を変更できる機能を追加（byツミオさん）
 // 1.0.0 2017/06/24 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -15,7 +16,7 @@
 
 /*:
  * @plugindesc MasterVolumePlugin
- * @author triacontane
+ * @author triacontane      (Tsumio altered a portion.)
  *
  * @param ItemName
  * @type string
@@ -26,6 +27,11 @@
  * @type number
  * @desc Default value of the master volume.
  * @default 100
+ * 
+ * @param OffsetValue
+ * @type number
+ * @desc Offset value of the all volume(including other volume).
+ * @default 20
  *
  * @help Add the master volume to the option screen using the master volume API
  * added in RPG Maker version 1.5.0.
@@ -37,7 +43,7 @@
  */
 /*:ja
  * @plugindesc マスターボリューム設定プラグイン
- * @author トリアコンタン
+ * @author トリアコンタン     （ツミオが一部改変）
  *
  * @param 項目名称
  * @type string
@@ -48,6 +54,11 @@
  * @type number
  * @desc マスターボリュームの初期値です。
  * @default 100
+ * 
+ * @param 音量の増減量
+ * @type number
+ * @desc マスターボリュームと、その他全ての音量値を含めた音量の増減量です。
+ * @default 20
  *
  * @help 本体バージョン1.5.0で追加されたマスターボリュームAPIを利用して
  * オプション画面にマスターボリュームを追加します。
@@ -93,6 +104,7 @@
     var param          = {};
     param.itemName     = getParamString(['ItemName', '項目名称']);
     param.defaultValue = getParamNumber(['DefaultValue', '初期値']);
+    param.offsetValue  = getParamNumber(['OffsetValue', '音量の増減量']);//ツミオ加筆
 
     //=============================================================================
     // ConfigManager
@@ -129,6 +141,17 @@
     Window_Options.prototype.addVolumeOptions = function() {
         this.addCommand(param.itemName, 'masterVolume');
         _Window_Options_addVolumeOptions.apply(this, arguments);
-    }
+    };
+
+    //=============================================================================
+    // Window_Options
+    //  バーの移動量の設定を付け加えます（ツミオ加筆）
+    //=============================================================================
+    var _Window_Options_volumeOffset      = Window_Options.prototype.volumeOffset;
+    Window_Options.prototype.volumeOffset = function() {
+        _Window_Options_volumeOffset.call(this);
+        return param.offsetValue;
+    };
+
 })();
 
