@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.6 2017/06/28 混乱ステート拡張プラグイン（ConfusionExtend.js）との競合を解消
 // 1.1.5 2017/06/12 敵が制約付きスキルを使用した際にエラーが発生する場合がある問題を修正
 // 1.1.4 2017/06/04 1.1.3で戦闘行動のキャラクターに対するスキルが実行できなくなっていた問題を修正
 // 1.1.3 2017/06/04 単体を対象にした制限スキルを実行したときに、選択した対象と実行対象がズレてしまう場合がある問題を修正
@@ -164,7 +165,7 @@
     Game_Battler.prototype.isExistValidTarget = function(item) {
         var trialAction = new Game_Action(this, false);
         trialAction.setItemObject(item);
-        return trialAction.makeTargets().length > 0;
+        return trialAction.isExistTarget();
     };
 
     Game_BattlerBase.prototype.canSelectTarget = function(item, user) {
@@ -221,6 +222,18 @@
     // Game_Action
     //  スキルやアイテムの対象として選択不可能な対象に選択しないようにします。
     //=============================================================================
+    Game_Action.prototype.isExistTarget = function() {
+        BattleManager.setTargetAction(this);
+        var targets = [];
+        if (this.isForOpponent()) {
+            targets = this.targetsForOpponents();
+        } else if (this.isForFriend()) {
+            targets = this.targetsForFriends();
+        }
+        BattleManager.setTargetAction(null);
+        return targets.length > 0;
+    };
+
     var _Game_Action_subject = Game_Action.prototype.subject;
     Game_Action.prototype.subject = function() {
         $gameTroop.setNeedOriginalMember(true);
