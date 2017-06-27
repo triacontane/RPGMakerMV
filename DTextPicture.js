@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.6 2017/06/28 フォント変更機能のヘルプが抜けていたので追加
 // 1.8.5 2017/06/12 変数がマイナス値のときのゼロ埋め表示が正しく表示されない問題を修正
 // 1.8.4 2017/05/10 プラグインを未適用のデータを読み込んだとき、最初の一回のみ動的文字列ピクチャが作成されない問題を修正
 // 1.8.3 2017/04/19 自動翻訳プラグインに一部対応
@@ -93,6 +94,9 @@
  *  D_TEXT_SETTING WINDOW ON : 背景にウィンドウを表示する
  *  例：D_TEXT_SETTING WINDOW ON
  *
+ *  D_TEXT_SETTING FONT [フォント名] : 描画で使用するフォントを指定した名称に変更
+ *  例：D_TEXT_SETTING FONT ＭＳ Ｐ明朝
+ *
  * これらの設定はD_TEXTと同様、ピクチャを表示する前に行ってください。
  *
  * 対応制御文字一覧（イベントコマンド「文章の表示」と同一です）
@@ -170,7 +174,7 @@
         text = text.replace(/\x1bV\[(\d+)\,\s*(\d+)\]/gi, function() {
             var number = parseInt(arguments[1], 10);
             usingVariables.push(number);
-            return $gameVariables.value(number).padZero(arguments[2]);
+            return $gameVariables.value(number);
         }.bind(this));
         text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
             var number = parseInt(arguments[1], 10);
