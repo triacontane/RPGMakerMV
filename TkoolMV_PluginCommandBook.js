@@ -1713,9 +1713,15 @@
         }
     };
 
-    var _Spriteset_Base_createUpperLayer      = Spriteset_Base.prototype.createUpperLayer;
-    Spriteset_Base.prototype.createUpperLayer = function() {
-        _Spriteset_Base_createUpperLayer.apply(this, arguments);
+    var _Spriteset_Map_createUpperLayer      = Spriteset_Map.prototype.createUpperLayer;
+    Spriteset_Map.prototype.createUpperLayer = function() {
+        _Spriteset_Map_createUpperLayer.apply(this, arguments);
+        this.createAnimationContainer();
+    };
+
+    var _Spriteset_Battle_createUpperLayer      = Spriteset_Battle.prototype.createUpperLayer;
+    Spriteset_Battle.prototype.createUpperLayer = function() {
+        _Spriteset_Battle_createUpperLayer.apply(this, arguments);
         this.createAnimationContainer();
     };
 
