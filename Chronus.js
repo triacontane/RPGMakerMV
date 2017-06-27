@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2017/06/28 累計経過日数を格納するパラメータと、累計時間および日数を初期化できるプラグインコマンドを追加
+//                  パラメータの型指定に対応
 // 1.7.0 2017/06/01 実時間およびゲーム内時間と連動するタイマー機能を追加
 //                  時間が変動する間隔を自由に指定できる機能を追加
 // 1.6.0 2017/04/23 降雪マップをマップ単位でタイルセット単位で設定する機能を追加、降水確率を調整できる機能を追加
@@ -54,64 +56,84 @@
  * @default (日),(月),(火),(水),(木),(金),(土)
  *
  * @param 自然時間加算
+ * @type number
  * @desc 1秒（自然時間加算間隔で指定した間隔）ごとに加算されるゲーム時間（分単位）の値です。イベント処理中は無効です。
  * @default 5
  *
  * @param 自然時間加算間隔
+ * @type number
  * @desc ゲーム時間の自然加算が行われる間隔(フレーム数)です。1F=1/60秒
  * @default 60
  *
  * @param 場所移動時間加算
+ * @type number
  * @desc 1回の場所移動で加算されるゲーム時間（分単位）の値です。
  * @default 30
  *
  * @param 戦闘時間加算(固定)
+ * @type number
  * @desc 1回の戦闘で加算されるゲーム時間（分単位）の値です。
  * @default 30
  *
  * @param 戦闘時間加算(ターン)
+ * @type number
  * @desc 1回の戦闘で消費したターン数ごとに加算されるゲーム時間（分単位）の値です。
  * @default 5
  *
  * @param 年のゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「年」の値が自動設定されます。
  * @default 0
  *
  * @param 月のゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「月」の値が自動設定されます。
  * @default 0
  *
  * @param 日のゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「日」の値が自動設定されます。
  * @default 0
  *
  * @param 曜日IDのゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「曜日」のIDが自動設定されます。
  * @default 0
  *
  * @param 曜日名のゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「曜日」の名称が自動設定されます。
  * ゲーム変数に文字列が入るので注意してください。
  * @default 0
  *
  * @param 時のゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「時」の値が自動設定されます。
  * @default 0
  *
  * @param 分のゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「分」の値が自動設定されます。
  * @default 0
  *
  * @param 累計時間のゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「累計時間」（分単位）の値が自動設定されます。
  * @default 0
  *
+ * @param 累計日数のゲーム変数
+ * @type number
+ * @desc 指定した番号のゲーム変数に「累計日数」の値が自動設定されます。
+ * @default 0
+ *
  * @param 時間帯IDのゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「時間帯」のIDが自動設定されます。
  * 0:深夜 1:早朝 2:朝 3:昼 4:夕方 5:夜
  * @default 0
  *
  * @param 天候IDのゲーム変数
+ * @type number
  * @desc 指定した番号のゲーム変数に「天候」のIDが自動設定されます。
  * 0:なし 1:雨 2:嵐 3:雪
  * @default 0
@@ -127,14 +149,17 @@
  * @default AMHH時 MI分
  *
  * @param カレンダー表示X座標
+ * @type number
  * @desc カレンダーの表示 X 座標です。
  * @default 0
  *
  * @param カレンダー表示Y座標
+ * @type number
  * @desc カレンダーの表示 Y 座標です。
  * @default 0
  *
  * @param 文字盤画像ファイル
+ * @type database
  * @desc アナログ時計を表示する場合の文字盤画像ファイル名（拡張子は不要）です。
  * 画像は「img/pictures/」以下に保存してください。
  * @default
@@ -143,6 +168,7 @@
  * @type file
  *
  * @param 長針画像ファイル
+ * @type database
  * @desc アナログ時計を表示する場合の長針画像ファイル名（拡張子は不要）です。
  * 画像は「img/pictures/」以下に保存してください。
  * @default
@@ -151,6 +177,7 @@
  * @type file
  *
  * @param 短針画像ファイル
+ * @type database
  * @desc アナログ時計を表示する場合の長針画像ファイル名（拡張子は不要）です。
  * 画像は「img/pictures/」以下に保存してください。
  * @default
@@ -159,10 +186,12 @@
  * @type file
  *
  * @param 時計X座標
+ * @type number
  * @desc アナログ時計の表示X座標です。画像の中心座標を指定してください。
  * @default 84
  *
  * @param 時計Y座標
+ * @type number
  * @desc アナログ時計の表示Y座標です。画像の中心座標を指定してください。
  * @default 156
  *
@@ -221,6 +250,7 @@
  * C_SET_TIME_REAL : 時間の取得方法を実時間に変更します。
  * C_SET_TIME_VIRTUAL : 時間の取得方法をゲーム内時間に変更します。
  * C_SET_RAINY_PERCENT [確率] : 降水確率(0-100)を設定します。
+ * C_INIT_TOTAL_TIME : 累計時間、累計日数を初期化します。
  *
  * ・タイマー操作系コマンド
  * コマンド実行から指定した時間[分]が経過後にスイッチやセルフスイッチを
@@ -533,13 +563,16 @@ function Game_ChronusTimer() {
             case 'CLEAR_TIMER':
                 $gameSystem.chronus().clearTimer(convertEscapeCharacters(args[0]));
                 break;
+            case 'INIT_TOTAL_TIME':
+                $gameSystem.chronus().initTotalTime();
+                break;
         }
     };
 
     Game_Interpreter.prototype.setSwitchTimer = function(args, named, selfSwitch) {
         var timerName = named ? convertEscapeCharacters(args.shift()) : null;
         var timeout   = getArgNumber(args.shift(), 0);
-        var switchKey  = this.getSwitchKey(args.shift(), selfSwitch);
+        var switchKey = this.getSwitchKey(args.shift(), selfSwitch);
         var loop      = getArgBoolean(args.shift());
         $gameSystem.chronus().makeTimer(timerName, timeout, switchKey, loop);
     };
@@ -820,8 +853,6 @@ function Game_ChronusTimer() {
     Game_Chronus.weatherTypes          = ['none', 'rain', 'storm', 'snow'];
 
     Game_Chronus.prototype.initialize = function() {
-        this._timeMeter       = 0;            // 一日の中での時間経過（分単位）60 * 24
-        this._dayMeter        = 0;            // ゲーム開始からの累計日数
         this._stop            = true;         // 停止フラグ（全ての加算に対して有効。ただし手動による加算は例外）
         this._disableTint     = false;        // 色調変更禁止フラグ
         this._calendarVisible = false;        // カレンダー表示フラグ
@@ -846,8 +877,14 @@ function Game_ChronusTimer() {
         this._weekNames       = getParamArrayString('曜日配列');
         this._monthNames      = getParamArrayString('月名配列');
         this._daysOfMonth     = getParamArrayNumber('月ごとの日数配列');
-        this._initDate        = Date.now();
+        this.initTotalTime();
         this.onLoad();
+    };
+
+    Game_Chronus.prototype.initTotalTime = function() {
+        this._timeMeter = 0;
+        this._dayMeter  = 0;
+        this._initDate  = Date.now();
     };
 
     Game_Chronus.prototype.onLoad = function() {
@@ -1194,21 +1231,24 @@ function Game_ChronusTimer() {
     };
 
     Game_Chronus.prototype.setGameVariable = function() {
-        this.setGameVariableSub('年のゲーム変数', this.getYear());
-        this.setGameVariableSub('月のゲーム変数', this.getMonth());
-        this.setGameVariableSub('日のゲーム変数', this.getDay());
-        this.setGameVariableSub('曜日IDのゲーム変数', this.getWeekIndex());
-        this.setGameVariableSub('曜日名のゲーム変数', this.getWeekName());
-        this.setGameVariableSub('時のゲーム変数', this.getHour());
-        this.setGameVariableSub('分のゲーム変数', this.getMinute());
-        this.setGameVariableSub('時間帯IDのゲーム変数', this.getTimeZone());
-        this.setGameVariableSub('天候IDのゲーム変数', this.getWeatherTypeId());
-        this.setGameVariableSub('累計時間のゲーム変数', this.getTotalTime());
+        this.setGameVariableSub('年のゲーム変数', this.getYear.bind(this));
+        this.setGameVariableSub('月のゲーム変数', this.getMonth.bind(this));
+        this.setGameVariableSub('日のゲーム変数', this.getDay.bind(this));
+        this.setGameVariableSub('曜日IDのゲーム変数', this.getWeekIndex.bind(this));
+        this.setGameVariableSub('曜日名のゲーム変数', this.getWeekName.bind(this));
+        this.setGameVariableSub('時のゲーム変数', this.getHour.bind(this));
+        this.setGameVariableSub('分のゲーム変数', this.getMinute.bind(this));
+        this.setGameVariableSub('時間帯IDのゲーム変数', this.getTimeZone.bind(this));
+        this.setGameVariableSub('天候IDのゲーム変数', this.getWeatherTypeId.bind(this));
+        this.setGameVariableSub('累計時間のゲーム変数', this.getTotalTime.bind(this));
+        this.setGameVariableSub('累計日数のゲーム変数', this.getTotalDay.bind(this));
     };
 
-    Game_Chronus.prototype.setGameVariableSub = function(paramName, value) {
-        var index = getParamNumber(paramName, 0, 5000);
-        if (index !== 0) $gameVariables.setValue(index, value);
+    Game_Chronus.prototype.setGameVariableSub = function(paramName, callBack) {
+        var index = getParamNumber(paramName, 0);
+        if (index !== 0) {
+            $gameVariables.setValue(index, callBack());
+        }
     };
 
     Game_Chronus.prototype.getMonthOfYear = function() {
@@ -1337,6 +1377,10 @@ function Game_ChronusTimer() {
 
     Game_Chronus.prototype.getTotalTime = function() {
         return this.isRealTime() ? ((this._nowDate - this._initDate) / (1000 * 60)) : this._dayMeter * 24 * 60 + this._timeMeter;
+    };
+
+    Game_Chronus.prototype.getTotalDay = function() {
+        return this.getTotalTime() / (24 * 60);
     };
 
     Game_Chronus.prototype.makeTimer = function(timerName, timeout, switchKey, loop) {
