@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2017/06/29 1.8.0で追加した累計時間の初期化機能で、現在時間まで初期化されてしまう問題を修正
 // 1.8.0 2017/06/28 累計経過日数を格納するパラメータと、累計時間および日数を初期化できるプラグインコマンドを追加
 //                  パラメータの型指定に対応
 // 1.7.0 2017/06/01 実時間およびゲーム内時間と連動するタイマー機能を追加
@@ -877,13 +878,16 @@ function Game_ChronusTimer() {
         this._weekNames       = getParamArrayString('曜日配列');
         this._monthNames      = getParamArrayString('月名配列');
         this._daysOfMonth     = getParamArrayNumber('月ごとの日数配列');
+        this._timeMeter       = 0;
+        this._dayMeter        = 0;
+        this._initDate        = Date.now();
         this.initTotalTime();
         this.onLoad();
     };
 
     Game_Chronus.prototype.initTotalTime = function() {
-        this._timeMeter = 0;
-        this._dayMeter  = 0;
+        this._criterionTime = this._timeMeter;
+        this._criterionDay  = this._dayMeter;
         this._initDate  = Date.now();
     };
 
@@ -1376,7 +1380,13 @@ function Game_ChronusTimer() {
     };
 
     Game_Chronus.prototype.getTotalTime = function() {
-        return this.isRealTime() ? ((this._nowDate - this._initDate) / (1000 * 60)) : this._dayMeter * 24 * 60 + this._timeMeter;
+        if (this.isRealTime()) {
+            return (this._nowDate - this._initDate) / (1000 * 60);
+        } else {
+            var dayMeter = this._dayMeter - (this._criterionDay || 0);
+            var timeMeter = this._timeMeter - (this._criterionTime || 0);
+            return dayMeter * 24 * 60 + timeMeter;
+        }
     };
 
     Game_Chronus.prototype.getTotalDay = function() {
