@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/06/29 マスターボリュームの増減値を変更したときに計算誤差が表示される場合がある問題を修正
 // 1.1.0 2017/06/26 ボリュームの変化量を変更できる機能を追加（byツミオさん）
 // 1.0.0 2017/06/24 初版
 // ----------------------------------------------------------------------------
@@ -112,7 +113,7 @@
     //=============================================================================
     Object.defineProperty(ConfigManager, 'masterVolume', {
         get: function() {
-            return AudioManager._masterVolume * 100;
+            return Math.floor(AudioManager._masterVolume * 100);
         },
         set: function(value) {
             AudioManager.masterVolume = value.clamp(0, 100) / 100;
