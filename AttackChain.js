@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/07/03 プラグインパラメータの型指定を追加
 // 1.3.0 2017/07/03 最大連携数およびダメージのカウントを無効にするスイッチおよび初期化するスクリプトを追加
 // 1.2.0 2017/06/14 連携ダメージ数を表示する機能と最大連携ダメージを取得できる機能を追加
 //                  機械翻訳による英語化対応
@@ -13,7 +14,7 @@
 // 1.1.0 2017/05/20 チェイン表示の時間設定と、指定数の連携に満たさずに使用すると必ず失敗するスキルを作る機能を追加
 // 1.0.0 2017/05/20 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -25,10 +26,12 @@
  * @param Unit
  * @desc It is a unit of chain number.
  * @default Chain!!
+ * @type string
  *
  * @param DamageUnit
  * @desc It is a unit of chain damage.
  * @default Damage!!
+ * @type string
  *
  * @param FontSize
  * @desc It is the font size of chain display.
@@ -62,19 +65,23 @@
  *
  * @param CancelChangeTarget
  * @desc It will be canceled if attacking a target other than the chain continuing chain.
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param CancelMiss
  * @desc It will be canceled if Missed attacks.
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param CancelNoAttack
  * @desc It will be canceled if doing other than damaging attacks.
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param CancelOpposite
  * @desc It will be canceled if the enemy acts.
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param InvalidSwitchId
  * @desc When the specified switch is ON, the maximum number of cooperation and the maximum damage count are invalid.
@@ -110,10 +117,12 @@
  * @param 単位
  * @desc チェイン数の単位です。
  * @default Chain!!
+ * @type string
  *
  * @param ダメージ単位
  * @desc チェインダメージの単位です。
  * @default Damage!!
+ * @type string
  *
  * @param フォントサイズ
  * @desc チェイン表示のフォントサイズです。
@@ -146,20 +155,24 @@
  * @type number
  *
  * @param ターゲット変更で解除
- * @desc チェイン継続中のターゲット以外に攻撃すると解除されます。(ON/OFF)
- * @default ON
+ * @desc チェイン継続中のターゲット以外に攻撃すると解除されます。
+ * @default true
+ * @type boolean
  *
  * @param ミスで解除
- * @desc 攻撃をミスすると解除されます。(ON/OFF)
- * @default ON
+ * @desc 攻撃をミスすると解除されます。
+ * @default true
+ * @type boolean
  *
  * @param 攻撃以外で解除
- * @desc ダメージを与える攻撃以外を行うと解除されます。(ON/OFF)
- * @default ON
+ * @desc ダメージを与える攻撃以外を行うと解除されます。
+ * @default true
+ * @type boolean
  *
  * @param 相手行動で解除
- * @desc 敵方が行動すると解除されます。(ON/OFF)
- * @default ON
+ * @desc 敵方が行動すると解除されます。
+ * @default true
+ * @type boolean
  *
  * @param 無効スイッチ番号
  * @desc 指定したスイッチがONのとき最大連携数および最大ダメージのカウントが無効になります。
@@ -233,7 +246,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     var getArgNumber = function(arg, min, max) {
