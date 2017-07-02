@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/07/03 最大連携数およびダメージのカウントを無効にするスイッチおよび初期化するスクリプトを追加
 // 1.2.0 2017/06/14 連携ダメージ数を表示する機能と最大連携ダメージを取得できる機能を追加
 //                  機械翻訳による英語化対応
 // 1.1.1 2017/06/02 最大連携数が正しくカウントできていなかった問題を修正
@@ -32,26 +33,32 @@
  * @param FontSize
  * @desc It is the font size of chain display.
  * @default 48
+ * @type number
  *
  * @param ChainX
  * @desc The X coordinate of the chain display.
  * @default 8
+ * @type number
  *
  * @param ChainY
  * @desc The Y coordinate of the chain display.
  * @default 80
+ * @type number
  *
  * @param Duration
  * @desc The time in which the chain is displayed. If this value is exceeded, it fades out.
  * @default 0
+ * @type number
  *
  * @param DamageRate
  * @desc Increase / decrease value of damage increased by 1 chain (%).
  * @default 10
+ * @type number
  *
  * @param MaxRate
  * @desc This is the maximum magnification of damage increased by the chain.
  * @default 500
+ * @type number
  *
  * @param CancelChangeTarget
  * @desc It will be canceled if attacking a target other than the chain continuing chain.
@@ -68,6 +75,11 @@
  * @param CancelOpposite
  * @desc It will be canceled if the enemy acts.
  * @default ON
+ *
+ * @param InvalidSwitchId
+ * @desc When the specified switch is ON, the maximum number of cooperation and the maximum damage count are invalid.
+ * @default 0
+ * @type switch
  *
  * @help During battle, damage magnification will rise when friendly attacks are continuous.
  * Maximum collaboration damage is displayed simultaneously with the number of chains.
@@ -87,6 +99,7 @@
  * $gameParty.getMaxChainCount();  # Get maximum number of parties
  * $gameParty.getChainDamage();    # Current Party collaboration Damage Acquisition
  * $gameParty.getMaxChainDamage(); # Get party's maximum collaboration damage
+ * $gameParty.resetMaxChain();     # Reset maximum cooperation number and damage
  *
  * This plugin is released under the MIT License.
  */
@@ -105,42 +118,53 @@
  * @param フォントサイズ
  * @desc チェイン表示のフォントサイズです。
  * @default 48
+ * @type number
  *
  * @param X座標
  * @desc チェイン表示のX座標です。
  * @default 8
+ * @type number
  *
  * @param Y座標
  * @desc チェイン表示のY座標です。
  * @default 80
+ * @type number
  *
  * @param 表示時間
  * @desc チェインが表示される時間(フレーム数)です。この値を超過するとフェードアウトします。(0の場合ずっと表示)
  * @default 0
+ * @type number
  *
  * @param ダメージ倍率
  * @desc 1チェインごとに増加するダメージの増減値(%)です。
  * @default 10
+ * @type number
  *
  * @param 最大倍率
  * @desc チェインによって増加するダメージの最大倍率です。
  * @default 500
+ * @type number
  *
  * @param ターゲット変更で解除
- * @desc チェイン継続中のターゲット以外に攻撃すると解除されます。
+ * @desc チェイン継続中のターゲット以外に攻撃すると解除されます。(ON/OFF)
  * @default ON
  *
  * @param ミスで解除
- * @desc 攻撃をミスすると解除されます。
+ * @desc 攻撃をミスすると解除されます。(ON/OFF)
  * @default ON
  *
  * @param 攻撃以外で解除
- * @desc ダメージを与える攻撃以外を行うと解除されます。
+ * @desc ダメージを与える攻撃以外を行うと解除されます。(ON/OFF)
  * @default ON
  *
  * @param 相手行動で解除
- * @desc 敵方が行動すると解除されます。
+ * @desc 敵方が行動すると解除されます。(ON/OFF)
  * @default ON
+ *
+ * @param 無効スイッチ番号
+ * @desc 指定したスイッチがONのとき最大連携数および最大ダメージのカウントが無効になります。
+ * @default 0
+ * @type switch
  *
  * @help 戦闘中、味方の攻撃が連続したときにダメージ倍率が上昇します。
  * チェイン数と同時に最大連携ダメージも表示されます。
@@ -163,6 +187,7 @@
  * $gameParty.getMaxChainCount();  # パーティの最大連携数を取得
  * $gameParty.getChainDamage();    # 現在のパーティ連携ダメージ取得
  * $gameParty.getMaxChainDamage(); # パーティの最大連携ダメージを取得
+ * $gameParty.resetMaxChain();     # 最大連携数およびダメージをリセット
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -256,11 +281,18 @@
     param.cancelMiss         = getParamBoolean(['CancelMiss', 'ミスで解除']);
     param.cancelNoAttack     = getParamBoolean(['CancelNoAttack', '攻撃以外で解除']);
     param.cancelOpposite     = getParamBoolean(['CancelOpposite', '相手行動で解除']);
+    param.invalidSwitchId    = getParamNumber(['InvalidSwitchId', '無効スイッチ番号'], 0);
 
     //=============================================================================
     // Game_Unit
     //  チェイン回数を保持します。
     //=============================================================================
+    var _Game_Unit_initialize      = Game_Unit.prototype.initialize;
+    Game_Unit.prototype.initialize = function() {
+        _Game_Unit_initialize.apply(this, arguments);
+        this.resetMaxChain();
+    };
+
     Game_Unit.prototype.getChainCount = function() {
         return this._chainCount || 0;
     };
@@ -279,7 +311,7 @@
 
     Game_Unit.prototype.addChainDamage = function(damageValue) {
         this._chainDamage = this.getChainDamage() + damageValue;
-        if (this._chainDamage > this._maxChainDamage || !this._maxChainDamage) {
+        if (this.isCountMaxChain() && (this._chainDamage > this._maxChainDamage || !this._maxChainDamage)) {
             this._maxChainDamage = this._chainDamage;
         }
     };
@@ -287,7 +319,7 @@
     Game_Unit.prototype.addChainCount = function(damage) {
         this._chainCount = this.getChainCount() + 1;
         this.members()[0].opponentsUnit().resetChainCount();
-        if (this._chainCount > this._maxChain || !this._maxChain) {
+        if (this.isCountMaxChain() && (this._chainCount > this._maxChain || !this._maxChain)) {
             this._maxChain = this._chainCount;
         }
         this.addChainDamage(damage);
@@ -304,6 +336,15 @@
 
     Game_Unit.prototype.getChainRate = function(addRate) {
         return (100 + this.getChainCount() * param.damageRate * addRate).clamp(0, param.maxRate || Infinity) / 100;
+    };
+
+    Game_Unit.prototype.resetMaxChain = function() {
+        this._maxChain        = 0;
+        this._maxChainDamage  = 0;
+    };
+
+    Game_Unit.prototype.isCountMaxChain = function() {
+        return !$gameSwitches.value(param.invalidSwitchId);
     };
 
     //=============================================================================
