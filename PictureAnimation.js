@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/07/03 ループしないアニメーションの終了後に最初のセルに戻るかどうかを選択できる機能を追加
 // 1.4.0 2016/09/03 アニメーションに合わせて指定したSEを演奏する機能を追加
 // 1.3.2 2016/05/11 クロスフェードを指定していた場合に2回目のアニメ表示でエラーになる場合がある問題を修正
 // 1.3.1 2016/03/15 ピクチャ上に戦闘アニメを表示するプラグイン「PictureOnAnimation」との競合を解消
@@ -31,6 +32,11 @@
 /*:
  * @plugindesc ピクチャのアニメーションプラグイン
  * @author トリアコンタン
+ *
+ * @param 最初のセルに戻る
+ * @desc ループしないアニメーションの終了後、最初のセルに戻ります。無効にすると最後のセルで止まります。
+ * @default true
+ * @type boolean
  * 
  * @help 指定したフレーム間隔でピクチャをアニメーションします。
  * アニメーションしたいセル画像（※）を用意の上
@@ -139,9 +145,25 @@
  */
 (function() {
     'use strict';
+    var pluginName = 'PictureAnimation';
+
     var settings = {
         /* maxCellAnimation:セル数の最大値 */
         maxCellAnimation: 200
+    };
+
+    var getParamString = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return '';
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     //=============================================================================
@@ -181,6 +203,12 @@
         var window = SceneManager._scene._windowLayer.children[0];
         return window ? window.convertEscapeCharacters(text) : text;
     };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var param = {};
+    param.returnToFirstCell = getParamBoolean(['ReturnToFirstCell', '最初のセルに戻る']);
 
     //=============================================================================
     // Game_Interpreter
@@ -385,7 +413,7 @@
      * @type Number
      */
     Object.defineProperty(Game_Picture.prototype, 'cell', {
-        get         : function() {
+        get: function() {
             if (this._linkedVariable > 0) {
                 return $gameVariables.value(this._linkedVariable) % this._cellNumber;
             }
@@ -400,15 +428,14 @@
                     return this._cellCount;
             }
         },
-        set         : function(value) {
+        set: function(value) {
             var newCellCount = value % this.getCellNumber();
             if (this._cellCount !== newCellCount) {
                 this._prevCellCount     = this.cell;
                 this._fadeDurationCount = this._fadeDuration;
             }
             this._cellCount = newCellCount;
-        },
-        configurable: true
+        }
     });
 
     Game_Picture.prototype.getCellNumber = function() {
@@ -443,10 +470,14 @@
         if (this._frameCount === 0) {
             this.addCellCount();
             this.playCellSe();
-            if (this._cellCount === 0 && !this._loopFlg) {
+            if (this.isEndFirstLoop() && !this._loopFlg) {
                 this._animationFlg = false;
             }
         }
+    };
+
+    Game_Picture.prototype.isEndFirstLoop = function() {
+        return this._cellCount === (param.returnToFirstCell ? 0 : this._cellNumber - 1);
     };
 
     Game_Picture.prototype.updateFading = function() {
@@ -464,7 +495,7 @@
 
     Game_Picture.prototype.playCellSe = function() {
         var se = this._cellSes[this.cell + 1];
-        if (se)  {
+        if (se) {
             AudioManager.playSe(se);
         }
     };
