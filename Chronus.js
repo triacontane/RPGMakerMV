@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.2 2017/07/05 時間変動間隔を変更したときにアナログ時計が正しく表示されない問題を修正
 // 1.8.1 2017/06/29 1.8.0で追加した累計時間の初期化機能で、現在時間まで初期化されてしまう問題を修正
 // 1.8.0 2017/06/28 累計経過日数を格納するパラメータと、累計時間および日数を初期化できるプラグインコマンドを追加
 //                  パラメータの型指定に対応
@@ -160,7 +161,6 @@
  * @default 0
  *
  * @param 文字盤画像ファイル
- * @type database
  * @desc アナログ時計を表示する場合の文字盤画像ファイル名（拡張子は不要）です。
  * 画像は「img/pictures/」以下に保存してください。
  * @default
@@ -169,7 +169,6 @@
  * @type file
  *
  * @param 長針画像ファイル
- * @type database
  * @desc アナログ時計を表示する場合の長針画像ファイル名（拡張子は不要）です。
  * 画像は「img/pictures/」以下に保存してください。
  * @default
@@ -178,7 +177,6 @@
  * @type file
  *
  * @param 短針画像ファイル
- * @type database
  * @desc アナログ時計を表示する場合の長針画像ファイル名（拡張子は不要）です。
  * 画像は「img/pictures/」以下に保存してください。
  * @default
@@ -1368,7 +1366,7 @@ function Game_ChronusTimer() {
     };
 
     Game_Chronus.prototype.getAnalogueMinute = function() {
-        return this.getMinute() + (this.isRealTime() ? 0 : this._frameCount / 60 * this._timeAutoAdd);
+        return this.getMinute() + (this.isRealTime() ? 0 : this._frameCount / paramAutoAddInterval * this._timeAutoAdd);
     };
 
     Game_Chronus.prototype.getRotationHourHand = function() {
