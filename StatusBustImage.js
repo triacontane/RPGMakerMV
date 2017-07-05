@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/07/05 メインメニュー画面でも先頭アクターの画像を表示できる機能を追加
 // 1.3.2 2017/02/20 装備画面での「最強装備」と「全て外す」時に装備品画像が更新されなかった問題を修正
 // 1.3.1 2016/10/13 装備品の画像がトリミングの対象外になっていたのを修正
 // 1.3.0 2016/10/13 画像を指定した矩形でトリミングして表示できる機能を追加
@@ -47,9 +48,18 @@
  * @desc スキル画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
  * @default
  *
+ * @param MainBustImageX
+ * @desc メインメニュー画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
+ * @param MainBustImageY
+ * @desc メインメニュー画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
  * @param UnderContents
- * @desc ONにするとステータス等の下に画像が表示されます。(ON/OFF)
- * @default ON
+ * @desc 有効にするとステータス等の下に画像が表示されます。
+ * @default true
+ * @type boolean
  *
  * @help ステータス画面にアクターごとのバストアップ画像を表示します。
  * 足下を原点として表示位置を自由に調整できます。
@@ -122,9 +132,18 @@
  * @desc スキル画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
  * @default
  *
+ * @param メイン_画像X座標
+ * @desc メインメニュー画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
+ * @param メイン_画像Y座標
+ * @desc メインメニュー画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
+ * @default
+ *
  * @param コンテンツの下に表示
- * @desc ONにするとステータス等の下に画像が表示されます。(ON/OFF)
- * @default ON
+ * @desc 有効にするとステータス等の下に画像が表示されます。
+ * @default true
+ * @type boolean
  *
  * @help ステータス画面にアクターごとのバストアップ画像を表示します。
  * 足下を原点として表示位置を自由に調整できます。
@@ -132,6 +151,10 @@
  * 装備画面とスキル画面にも同一のバストアップ画像を表示できますが
  * デフォルト画面サイズではスペースがないので、使用する場合は必要に応じて
  * 画面サイズを変更してください。
+ *
+ * また、メインメニュー画面にも同一のバストアップ画像を表示できますが
+ * 表示されるのは「先頭のアクター」のみです。
+ * 主にアクターが一人の場合に使用します。
  *
  * アクターのメモ欄に以下の通り指定してください。
  *
@@ -209,7 +232,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getMetaValue = function(object, name) {
@@ -266,6 +289,8 @@
     var paramEquipBustImageY = getParamNumber(['EquipBustImageY', '装備_画像Y座標']);
     var paramSkillBustImageX = getParamNumber(['SkillBustImageX', 'スキル_画像X座標']);
     var paramSkillBustImageY = getParamNumber(['SkillBustImageY', 'スキル_画像Y座標']);
+    var paramMainBustImageX  = getParamNumber(['MainBustImageX', 'メイン_画像X座標']);
+    var paramMainBustImageY  = getParamNumber(['MainBustImageY', 'メイン_画像Y座標']);
     var paramUnderContents   = getParamBoolean(['UnderContents', 'コンテンツの下に表示']);
 
     //=============================================================================
@@ -276,23 +301,7 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandBustStatus(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandBustStatus(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandBustStatus = function(command, args) {
@@ -388,6 +397,30 @@
     };
 
     //=============================================================================
+    // Window_MenuStatus
+    //  バスト画像表示用スプライトを追加定義します。
+    //=============================================================================
+    var _Window_MenuStatus_refresh = Window_MenuStatus.prototype.refresh;
+    Window_MenuStatus.prototype.refresh = function() {
+        _Window_MenuStatus_refresh.apply(this, arguments);
+        this._actor = $gameParty.members()[0];
+        this.refreshBust();
+    };
+
+    var _Window_MenuStatus_setPendingIndex = Window_MenuStatus.prototype.setPendingIndex;
+    Window_MenuStatus.prototype.setPendingIndex = function(index) {
+        _Window_MenuStatus_setPendingIndex.apply(this, arguments);
+        var actor = $gameParty.members()[0];
+        if (actor === this._actor) return;
+        this._actor = actor;
+        this.refreshBust();
+    };
+
+    Window_MenuStatus.prototype.getBustPosition = function() {
+        return [paramMainBustImageX, paramMainBustImageY];
+    };
+
+    //=============================================================================
     // Window_Status
     //  バスト画像表示用スプライトを追加定義します。
     //=============================================================================
@@ -432,13 +465,13 @@
     // Scene_Equip
     //  装備変更時にバストイメージを更新します。
     //=============================================================================
-    var _Scene_Equip_commandOptimize = Scene_Equip.prototype.commandOptimize;
+    var _Scene_Equip_commandOptimize      = Scene_Equip.prototype.commandOptimize;
     Scene_Equip.prototype.commandOptimize = function() {
         _Scene_Equip_commandOptimize.apply(this, arguments);
         this._itemWindow.refreshBust();
     };
 
-    var _Scene_Equip_commandClear = Scene_Equip.prototype.commandClear;
+    var _Scene_Equip_commandClear      = Scene_Equip.prototype.commandClear;
     Scene_Equip.prototype.commandClear = function() {
         _Scene_Equip_commandClear.apply(this, arguments);
         this._itemWindow.refreshBust();
@@ -534,7 +567,7 @@
             sprite.y        = this.y + (yStr ? getArgNumber(yStr) : 0);
             var zStr        = getMetaValues(equip, ['PosZ', '座標Z']);
             sprite.z        = zStr !== undefined ? getArgNumber(zStr) : 1;
-            var rectString = getMetaValues(equip, ['矩形', 'Rect']);
+            var rectString  = getMetaValues(equip, ['矩形', 'Rect']);
             if (rectString) {
                 var rect = getArgArrayEval(rectString, 0);
                 sprite.setFrame(rect[0], rect[1], rect[2], rect[3]);
