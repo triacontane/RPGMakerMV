@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/07/07 固有処理呼び出し中にテンプレートイベントのIDと名称を取得できるスクリプトを追加
 // 1.2.0 2017/06/09 設定を固有イベントで上書きする機能を追加。それに伴い既存のパラメータ名称を一部変更
 // 1.1.2 2017/06/03 固有イベントのグラフィックで上書きした場合は、オプションと向き、パターンも固有イベントで上書きするよう変更
 // 1.1.1 2017/05/25 場所移動直後にアニメパターンが一瞬だけ初期化されてしまう問題を修正
@@ -26,14 +27,17 @@
  * @param TemplateMapId
  * @desc テンプレートイベントが存在するマップIDです。
  * @default 1
+ * @type number
  *
  * @param KeepEventId
  * @desc マップイベントを呼び出す際に、呼び出し元のイベントIDを維持します。対象を「このイベント」にした際の挙動が変わります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param NoOverride
  * @desc 固有イベントにグラフィックが指定されていた場合でも、設定の上書きを行いません。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 汎用的に使用するイベントをテンプレート化できます。
  * テンプレートイベントは、専用に用意したマップに定義してください。
@@ -96,6 +100,11 @@
  *  例2:[aaa]という名前のイベントの1ページ目を呼び出します。
  *  TEマップイベント呼び出し aaa 1
  *
+ * ・スクリプト
+ * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
+ * this.character(0).getTemplateId();
+ * this.character(0).getTemplateName();
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -105,14 +114,17 @@
  * @param テンプレートマップID
  * @desc テンプレートイベントが存在するマップIDです。
  * @default 1
+ * @type number
  *
  * @param イベントIDを維持
  * @desc マップイベントを呼び出す際に、呼び出し元のイベントIDを維持します。対象を「このイベント」にした際の挙動が変わります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 上書き禁止
  * @desc 固有イベントにグラフィックが指定されていた場合でも、設定の上書きを行いません。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 汎用的に使用するイベントをテンプレート化できます。
  * テンプレートイベントは、専用に用意したマップに定義してください。
@@ -175,6 +187,11 @@
  *  例2:[aaa]という名前のイベントの1ページ目を呼び出します。
  *  TEマップイベント呼び出し aaa 1
  *
+ * ・スクリプト
+ * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
+ * this.character(0).getTemplateId();
+ * this.character(0).getTemplateName();
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -201,7 +218,7 @@ var $dataTemplateEvents = null;
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
@@ -280,23 +297,7 @@ var $dataTemplateEvents = null;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandTemplateEvent(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandTemplateEvent(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandTemplateEvent = function(command, args) {
@@ -399,6 +400,14 @@ var $dataTemplateEvents = null;
             this._templateId = 0;
             this._override   = false;
         }
+    };
+
+    Game_Event.prototype.getTemplateId = function() {
+        return this._templateId;
+    };
+
+    Game_Event.prototype.getTemplateName = function() {
+        return this.hasTemplate() ? $dataTemplateEvents[this._templateId].name : '';
     };
 
     Game_Event.prototype.hasTemplate = function() {
