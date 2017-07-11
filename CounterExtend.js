@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2017/07/11 1.4.0の機能追加以降、スキル反撃を行うとアクター本来の行動がキャンセルされる場合がある問題を修正
 // 1.4.0 2017/06/13 反撃スキルに指定した効果範囲と連続回数が適用されるようになりました。
 //                  攻撃を受けてから反撃するクロスカウンター機能を追加
 // 1.3.3 2017/06/10 CustumCriticalSoundVer5.jsとの競合を解消
@@ -410,6 +411,36 @@ var Imported = Imported || {};
         this.refresh();
     };
 
+    Game_Battler.prototype.setCounterAction = function(target) {
+        var counterSkillId = this.getCounterSkillId();
+        var action = new Game_Action(this);
+        action.setSkill(counterSkillId);
+        var counterTargetIndex;
+        if (action.isForFriend()) {
+            counterTargetIndex = this.friendsUnit().members().indexOf(this);
+        } else {
+            counterTargetIndex = target.friendsUnit().members().indexOf(target);
+        }
+        this.setCounterSubject(true);
+        this._nativeActions = this._actions;
+        this.forceAction(counterSkillId, counterTargetIndex);
+    };
+
+    var _Game_Battler_onAllActionsEnd = Game_Battler.prototype.onAllActionsEnd;
+    Game_Battler.prototype.onAllActionsEnd = function() {
+        _Game_Battler_onAllActionsEnd.apply(this, arguments);
+        this.restoreNativeActionsIfNeed();
+    };
+
+    Game_Battler.prototype.restoreNativeActionsIfNeed = function() {
+        // for YEP_BattleEngineCore.js
+        if (Imported.YEP_BattleEngineCore && !BattleManager._processTurn) return;
+        if (this._nativeActions && this._nativeActions.length > 0) {
+            this._actions = this._nativeActions;
+        }
+        this._nativeActions = null;
+    };
+
     //=============================================================================
     // Game_Action
     //  魔法反撃を可能にします。
@@ -485,7 +516,9 @@ var Imported = Imported || {};
             if (target.isCrossCounter()) {
                 this.invokeNormalAction(subject, target);
             }
-            this.invokeCounterSkill(subject, target);
+            if (!target.isCounterSubject()) {
+                this.invokeCounterSkill(subject, target);
+            }
         }
         if (target.isCounterCancel()) {
             this._actionCancel = true;
@@ -493,18 +526,8 @@ var Imported = Imported || {};
     };
 
     BattleManager.invokeCounterSkill = function(subject, target) {
-        var counterSkillId = target.getCounterSkillId();
-        var action = new Game_Action(target);
-        action.setSkill(counterSkillId);
-        var counterTargetIndex;
-        if (action.isForFriend()) {
-            counterTargetIndex = target.friendsUnit().members().indexOf(target);
-        } else {
-            counterTargetIndex = subject.friendsUnit().members().indexOf(subject);
-        }
-        target.setCounterSubject(true);
-        target.forceAction(counterSkillId, counterTargetIndex);
-        this.forceAction(target);
+        target.setCounterAction(subject);
+        this._actionForcedBattler = target;
     };
 
     var _BattleManager_invokeAction = BattleManager.invokeAction;
@@ -515,7 +538,9 @@ var Imported = Imported || {};
 
     var _BattleManager_endAction = BattleManager.endAction;
     BattleManager.endAction = function() {
-        this._subject.setCounterSubject(false);
+        if (this._subject.isCounterSubject()) {
+            this._subject.setCounterSubject(false);
+        }
         _BattleManager_endAction.apply(this, arguments);
     };
 
