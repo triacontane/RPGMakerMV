@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2017/07/11 YEP_BattleEngineCore.jsとの競合を解消
 // 1.1.3 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
 // 1.1.2 2017/06/10 リファクタリング
 // 1.1.1 2017/06/07 CustumCriticalSoundVer5.jsとの競合を解消
@@ -195,6 +196,16 @@
 
     Game_Battler.prototype.performNoDamage = function() {
         SoundManager.playCustomDamage();
+    };
+
+    var _Game_Battler_performResultEffects = Game_Battler.prototype.performResultEffects;
+    Game_Battler.prototype.performResultEffects = function() {
+        var effectiveSe = this.getEffectiveSe();
+        if (effectiveSe) {
+            SoundManager.changeDamageSe(effectiveSe);
+            this.setEffectiveSe(null);
+        }
+        _Game_Battler_performResultEffects.apply(this, arguments);
     };
 
     //=============================================================================
