@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/07/12 YEP_BattleEngineCore.jsと組み合わせたときに戦闘不能へのステート変化ができない競合を解消
 // 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.0 2016/02/07 解除条件によって様々なステートIDを付与できる機能を追加
 // 1.0.0 2016/02/04 初版
@@ -123,10 +124,14 @@
 
     Game_Battler.prototype.changeState = function(stateId, tagName) {
         if (this.hasState(stateId)) return;
-        var newStateId = $dataStates[stateId].meta['SC' + tagName];
-        if (newStateId != null) {
+        var newStateIdText = $dataStates[stateId].meta['SC' + tagName];
+        if (newStateIdText) {
             this._result.deleteRemovedStates(stateId);
-            this.addState(getArgNumber(newStateId, 1));
+            var newStateId = getArgNumber(newStateIdText, 1);
+            if (newStateId === this.deathStateId() && this.removeImmortal) {
+                this.removeImmortal();
+            }
+            this.addState(newStateId);
         }
     };
 
