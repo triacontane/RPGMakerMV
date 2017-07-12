@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.0 2017/07/13 最後に選択していた項目を記憶した状態で辞書画面に戻る機能を追加
+//                   パラメータの型指定機能に対応
 // 1.14.1 2017/06/22 カテゴリ表示が有効な場合に、対象用語を一つも所持していない場合はカテゴリリストに表示しないよう修正
 // 1.14.0 2017/06/08 所持数表示機能を追加
 // 1.13.0 2017/04/19 自動翻訳プラグインに一部対応
@@ -50,7 +52,8 @@
  *
  * @param UseCategory
  * @desc 用語をカテゴリごとに分けて表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param CommandName
  * @desc メニュー画面に表示されるコマンド名です。空欄にすると追加されなくなります。
@@ -58,7 +61,8 @@
  *
  * @param CommandSwitchId
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
- * @default
+ * @default 0
+ * @type switch
  *
  * @param BackPicture
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -74,7 +78,8 @@
  *
  * @param CommandSwitchId2
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
- * @default
+ * @default 0
+ * @type switch
  *
  * @param BackPicture2
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -90,7 +95,8 @@
  *
  * @param CommandSwitchId3
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
- * @default
+ * @default 0
+ * @type switch
  *
  * @param BackPicture3
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -106,7 +112,8 @@
  *
  * @param CommandSwitchId4
  * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
- * @default
+ * @default 0
+ * @type switch
  *
  * @param BackPicture4
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -118,7 +125,8 @@
  *
  * @param AutoAddition
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param FontSize
  * @desc 用語集のフォントサイズです。
@@ -138,11 +146,13 @@
  *
  * @param UsableItem
  * @desc 用語選択中に対象の用語を「アイテム」として使用できるようになります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param AutoResizePicture
  * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param PicturePosition
  * @desc 画像の表示位置です。(top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾)
@@ -154,19 +164,23 @@
  *
  * @param ThroughBackPicture
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param ConfirmMessage
  * @desc 用語アイテムを使用する際に確認メッセージが表示されるようになります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param SwitchAutoAdd
  * @desc 用語アイテムの自動登録が行われた際に指定した番号のスイッチがONになります。何らかの通知を行いたい場合に指定します。
  * @default 0
+ * @type switch
  *
  * @param VariableAutoAdd
  * @desc 用語アイテムの自動登録が行われた際に指定した番号の変数にアイテムIDが設定されます。
  * @default 0
+ * @type variable
  *
  * @param ConfirmUse
  * @desc 確認メッセージで使う場合のメッセージです。
@@ -178,7 +192,8 @@
  *
  * @param CompleteView
  * @desc カテゴリごとの収集率を表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param CompleteMessage
  * @desc 収集率を表示する文言です。「%1」が収集率に変換されます。
@@ -187,18 +202,22 @@
  * @param NewGlossaryColor
  * @desc 新着用語を明示するためのカラーです。システムカラーから選択してください。
  * @default 2
+ * @type number
  *
  * @param UseItemHistory
  * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param PageWrap
  * @desc 複数のページが存在する場合、最後のページまで到達していたら最初のページに戻します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ShowingItemNumber
  * @desc 用語集アイテムの所持数を表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -302,6 +321,10 @@
  *  種別を省略すると、自動で「1」になります。
  * 例：GLOSSARY_CALL 2
  *
+ * GLOSSARY_BACK or 用語集画面に戻る
+ *  最後に選択していた項目を再選択した状態で用語集画面を呼び出します。
+ * 例：GLOSSARY_BACK
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -310,15 +333,17 @@
  *
  * @param カテゴリ分類
  * @desc 用語をカテゴリごとに分けて表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  * 
  * @param コマンド名称
  * @desc メニュー画面に表示されるコマンド名です。空欄にすると追加されなくなります。
  * @default 用語辞典
  *
  * @param 出現条件スイッチ
- * @desc 辞書コマンドの出現条件スイッチ番号です。空欄にすると無条件で表示されます。
- * @default
+ * @desc 辞書コマンドの出現条件スイッチ番号です。0にすると無条件で表示されます。
+ * @default 0
+ * @type switch
  *
  * @param 背景ピクチャ
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -333,8 +358,9 @@
  * @default
  *
  * @param 出現条件スイッチ2
- * @desc 辞書コマンド2の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
- * @default
+ * @desc 辞書コマンド2の出現条件スイッチ番号です。0にすると無条件で表示されます。
+ * @default 0
+ * @type switch
  *
  * @param 背景ピクチャ2
  * @desc 2つ目のコマンド背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -349,8 +375,9 @@
  * @default
  *
  * @param 出現条件スイッチ3
- * @desc 辞書コマンド3の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
- * @default
+ * @desc 辞書コマンド3の出現条件スイッチ番号です。0にすると無条件で表示されます。
+ * @default 0
+ * @type switch
  *
  * @param 背景ピクチャ3
  * @desc 3つ目のコマンド背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -365,8 +392,9 @@
  * @default
  *
  * @param 出現条件スイッチ4
- * @desc 辞書コマンド4の出現条件スイッチ番号です。空欄にすると無条件で表示されます。
- * @default
+ * @desc 辞書コマンド4の出現条件スイッチ番号です。0にすると無条件で表示されます。
+ * @default 0
+ * @type switch
  *
  * @param 背景ピクチャ4
  * @desc 3つ目のコマンド背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -378,15 +406,18 @@
  * 
  * @param 自動登録
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param フォントサイズ
  * @desc 用語集のフォントサイズです。
  * @default 22
+ * @type number
  *
  * @param 用語集リスト横幅
  * @desc 用語集リストのウィンドウ横幅です。
  * @default 240
+ * @type number
  *
  * @param ヘルプテキスト
  * @desc 用語リスト選択時のヘルプ画面に表示するテキストです。未指定の場合、ヘルプウィンドウは非表示になります。
@@ -398,11 +429,13 @@
  *
  * @param アイテム使用
  * @desc 用語選択中に対象の用語を「アイテム」として使用できるようになります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 画像の自動縮小
  * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 画像の表示位置
  * @desc 画像の表示位置です。(top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾)
@@ -414,19 +447,23 @@
  *
  * @param 背景ピクチャ透過
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 確認メッセージ
  * @desc 用語アイテムを使用する際に確認メッセージが表示されるようになります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 自動登録IDスイッチ
  * @desc 用語アイテムの自動登録が行われた際に指定した番号のスイッチがONになります。何らかの通知を行いたい場合に指定します。
  * @default 0
+ * @type switch
  *
  * @param 自動登録ID変数
  * @desc 用語アイテムの自動登録が行われた際に指定した番号の変数にアイテムIDが設定されます。
  * @default 0
+ * @type variable
  *
  * @param 確認_使う
  * @desc 確認メッセージで使う場合のメッセージです。
@@ -438,7 +475,8 @@
  * 
  * @param 収集率表示
  * @desc カテゴリごとの収集率を表示します。コンプリートの目安です。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 収集率メッセージ
  * @desc 収集率を表示する文言です。「%1」が収集率に変換されます。
@@ -447,18 +485,22 @@
  * @param 新着用語カラー
  * @desc 新着用語を明示するためのカラーです。システムカラーから選択してください。
  * @default 2
+ * @type number
  *
  * @param 入手履歴を使用
  * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param ページ折り返し
  * @desc 複数のページが存在する場合、最後のページまで到達していたら最初のページに戻します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 所持数表示
  * @desc 用語集アイテムの所持数を表示します。
- * @default OFF
+ * @default true
+ * @type boolean
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -562,6 +604,10 @@
  *  種別を省略すると、自動で「1」になります。
  * 例：GLOSSARY_CALL 2
  *
+ * GLOSSARY_BACK or 用語集画面に戻る
+ *  最後に選択していた項目を再選択した状態で用語集画面を呼び出します。
+ * 例：GLOSSARY_BACK
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -583,7 +629,7 @@ function Scene_Glossary() {
 
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
-        return value == null ? '' : value;
+        return value === null ? '' : value;
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -689,35 +735,27 @@ function Scene_Glossary() {
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandSceneGlossary(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandSceneGlossary(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandSceneGlossary = function(command, args) {
         switch (getCommandName(command)) {
             case 'GLOSSARY_CALL' :
             case '用語集画面の呼び出し' :
+                $gameParty.clearGlossaryIndex();
                 $gameTemp.setGlossaryType(getArgNumber(args[0], 1));
                 SceneManager.push(Scene_Glossary);
                 break;
             case 'GLOSSARY_GAIN_ALL' :
             case '用語集全取得' :
                 $gameParty.gainGlossaryAll();
+                break;
+            case 'GLOSSARY_BACK' :
+            case '用語集画面に戻る' :
+                if (args[0]) {
+                    $gameTemp.setGlossaryType(getArgNumber(args[0], 1));
+                }
+                SceneManager.push(Scene_Glossary);
                 break;
         }
     };
@@ -905,6 +943,42 @@ function Scene_Glossary() {
         return this._confirmedGlossaryItems ? this._confirmedGlossaryItems.contains(item.id) : false;
     };
 
+    Game_Party.prototype.setGlossaryCategoryIndex = function(index) {
+        this.initGlossaryIndex();
+        this._glossaryCategoryIndex[$gameTemp.getGlossaryType()] = index;
+    };
+
+    Game_Party.prototype.getGlossaryCategoryIndex = function() {
+        this.initGlossaryIndex();
+        return this._glossaryCategoryIndex[$gameTemp.getGlossaryType()];
+    };
+
+    Game_Party.prototype.setGlossaryListIndex = function(index) {
+        this.initGlossaryIndex();
+        this._glossaryListIndex[$gameTemp.getGlossaryType()] = index;
+    };
+
+    Game_Party.prototype.getGlossaryListIndex = function() {
+        this.initGlossaryIndex();
+        return this._glossaryListIndex[$gameTemp.getGlossaryType()];
+    };
+
+    Game_Party.prototype.clearGlossaryIndex = function() {
+        var type = $gameTemp.getGlossaryType();
+        this.initGlossaryIndex();
+        this._glossaryListIndex[type]     = -1;
+        this._glossaryCategoryIndex[type] = -1;
+    };
+
+    Game_Party.prototype.initGlossaryIndex = function() {
+        if (!this._glossaryCategoryIndex) {
+            this._glossaryCategoryIndex = {};
+        }
+        if (!this._glossaryListIndex) {
+            this._glossaryListIndex = {};
+        }
+    };
+
     //=============================================================================
     // Game_Temp
     //  用語集画面の種別を追加定義します。
@@ -943,6 +1017,7 @@ function Scene_Glossary() {
     };
 
     Scene_Menu.prototype.commandGlossary = function(type) {
+        $gameParty.clearGlossaryIndex();
         $gameTemp.setGlossaryType(type);
         SceneManager.push(Scene_Glossary);
     };
@@ -1108,10 +1183,12 @@ function Scene_Glossary() {
     };
 
     Scene_Glossary.prototype.setInitActivateWindow = function() {
-        if (paramUseCategory) {
-            this.activateCategoryWindow(true);
+        var clearIndex = !($gameParty.getGlossaryListIndex() >= 0);
+        if (paramUseCategory && clearIndex) {
+            this.activateCategoryWindow(clearIndex);
         } else {
-            this.activateListWindow(true);
+            this.activateListWindow(clearIndex);
+            this._glossaryListWindow.selectLastIndex();
         }
     };
 
@@ -1146,7 +1223,7 @@ function Scene_Glossary() {
 
     Scene_Glossary.prototype.onCancelGlossaryList = function() {
         if (paramUseCategory) {
-            this.activateCategoryWindow();
+            this.activateCategoryWindow(false);
         } else {
             this.escapeScene();
         }
@@ -1205,6 +1282,14 @@ function Scene_Glossary() {
         Window_Selectable.prototype.initialize.call(this, glWindow.x, glWindow.y, glWindow.width, glWindow.height);
         this._data = null;
         this.refresh();
+        this.selectLastIndex();
+    };
+
+    Window_GlossaryCategory.prototype.selectLastIndex = function() {
+        var lastIndex = $gameParty.getGlossaryCategoryIndex();
+        if (lastIndex >= 0) {
+            this.select(Math.min(lastIndex, this.maxItems() - 1));
+        }
     };
 
     Window_GlossaryCategory.prototype.maxItems = function() {
@@ -1227,6 +1312,9 @@ function Scene_Glossary() {
     Window_GlossaryCategory.prototype.select = function(index) {
         Window_Selectable.prototype.select.apply(this, arguments);
         this._glossaryListWindow.setCategory(this.item());
+        if (index >= 0) {
+            $gameParty.setGlossaryCategoryIndex(index);
+        }
     };
 
     Window_GlossaryCategory.prototype.refresh = function() {
@@ -1263,6 +1351,14 @@ function Scene_Glossary() {
         var height           = gWindow.height - (paramCompleteView ? this.lineHeight() + this.standardPadding() * 2 : 0);
         Window_ItemList.prototype.initialize.call(this, 0, gWindow.y, paramGlossaryListWidth, height);
         this.refresh();
+        this.selectLastIndex();
+    };
+
+    Window_GlossaryList.prototype.selectLastIndex = function() {
+        var lastIndex = $gameParty.getGlossaryListIndex();
+        if (lastIndex >= 0) {
+            this.select(Math.min(lastIndex, this.maxItems() - 1));
+        }
     };
 
     Window_GlossaryList.prototype.maxCols = function() {
@@ -1314,6 +1410,9 @@ function Scene_Glossary() {
         }
         Window_ItemList.prototype.select.apply(this, arguments);
         this._glossaryWindow.refresh(this.item());
+        if (index >= 0) {
+            $gameParty.setGlossaryListIndex(index);
+        }
     };
 
     Window_GlossaryList.prototype.cursorRight = function(wrap) {
