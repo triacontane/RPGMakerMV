@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2017/07/12 複数のバトラーが同時に反撃を行った場合に全員分の反撃が正常に行われない問題を修正
 // 1.4.1 2017/07/11 1.4.0の機能追加以降、スキル反撃を行うとアクター本来の行動がキャンセルされる場合がある問題を修正
 // 1.4.0 2017/06/13 反撃スキルに指定した効果範囲と連続回数が適用されるようになりました。
 //                  攻撃を受けてから反撃するクロスカウンター機能を追加
@@ -392,14 +393,6 @@ var Imported = Imported || {};
             this.canPaySkillCost($dataSkills[this._reserveCounterSkillId]);
     };
 
-    Game_BattlerBase.prototype.isCounterSubject = function() {
-        return this._counterSubject;
-    };
-
-    Game_BattlerBase.prototype.setCounterSubject = function(value) {
-        this._counterSubject = value;
-    };
-
     //=============================================================================
     // Game_Battler
     //  カウンター時のスキルコスト消費処理を別途定義します。
@@ -421,24 +414,30 @@ var Imported = Imported || {};
         } else {
             counterTargetIndex = target.friendsUnit().members().indexOf(target);
         }
-        this.setCounterSubject(true);
         this._nativeActions = this._actions;
+        this._counterSubject = true;
         this.forceAction(counterSkillId, counterTargetIndex);
     };
 
-    var _Game_Battler_onAllActionsEnd = Game_Battler.prototype.onAllActionsEnd;
-    Game_Battler.prototype.onAllActionsEnd = function() {
-        _Game_Battler_onAllActionsEnd.apply(this, arguments);
-        this.restoreNativeActionsIfNeed();
-    };
-
-    Game_Battler.prototype.restoreNativeActionsIfNeed = function() {
-        // for YEP_BattleEngineCore.js
-        if (Imported.YEP_BattleEngineCore && !BattleManager._processTurn) return;
+    Game_Battler.prototype.clearCounterAction = function() {
         if (this._nativeActions && this._nativeActions.length > 0) {
             this._actions = this._nativeActions;
         }
         this._nativeActions = null;
+        this._counterSubject = false;
+    };
+
+    Game_Battler.prototype.isCounterSubject = function() {
+        return this._counterSubject;
+    };
+
+    var _Game_Battler_onAllActionsEnd = Game_Battler.prototype.onAllActionsEnd;
+    Game_Battler.prototype.onAllActionsEnd = function() {
+        if (this.isCounterSubject()) {
+            this.clearResult();
+        } else {
+            _Game_Battler_onAllActionsEnd.apply(this, arguments);
+        }
     };
 
     //=============================================================================
@@ -499,6 +498,12 @@ var Imported = Imported || {};
     // BattleManager
     //  スキルによる反撃を実装します。
     //=============================================================================
+    var _BattleManager_initMembers = BattleManager.initMembers;
+    BattleManager.initMembers = function() {
+        _BattleManager_initMembers.apply(this, arguments);
+        this._counterBattlers = [];
+    };
+
     var _BattleManager_startAction = BattleManager.startAction;
     BattleManager.startAction = function() {
         this._actionCancel = false;
@@ -517,7 +522,7 @@ var Imported = Imported || {};
                 this.invokeNormalAction(subject, target);
             }
             if (!target.isCounterSubject()) {
-                this.invokeCounterSkill(subject, target);
+                this.prepareCounterSkill(subject, target);
             }
         }
         if (target.isCounterCancel()) {
@@ -525,9 +530,9 @@ var Imported = Imported || {};
         }
     };
 
-    BattleManager.invokeCounterSkill = function(subject, target) {
+    BattleManager.prepareCounterSkill = function(subject, target) {
         target.setCounterAction(subject);
-        this._actionForcedBattler = target;
+        this._counterBattlers.push(target);
     };
 
     var _BattleManager_invokeAction = BattleManager.invokeAction;
@@ -536,12 +541,15 @@ var Imported = Imported || {};
         _BattleManager_invokeAction.apply(this, arguments);
     };
 
-    var _BattleManager_endAction = BattleManager.endAction;
-    BattleManager.endAction = function() {
-        if (this._subject.isCounterSubject()) {
-            this._subject.setCounterSubject(false);
+    var _BattleManager_getNextSubject = BattleManager.getNextSubject;
+    BattleManager.getNextSubject = function() {
+        if (this._subject && this._subject.isCounterSubject()) {
+            this._subject.clearCounterAction();
         }
-        _BattleManager_endAction.apply(this, arguments);
+        if (this._counterBattlers.length > 0) {
+            return this._counterBattlers.shift();
+        }
+        return _BattleManager_getNextSubject.apply(this, arguments);
     };
 
     //=============================================================================
