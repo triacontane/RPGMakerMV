@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2017/07/16 EST_BATTLE_ROYALE_EVO.jsとの競合を解消
 // 1.3.1 2017/07/03 プラグインパラメータの型指定を追加
 // 1.3.0 2017/07/03 最大連携数およびダメージのカウントを無効にするスイッチおよび初期化するスクリプトを追加
 // 1.2.0 2017/06/14 連携ダメージ数を表示する機能と最大連携ダメージを取得できる機能を追加
@@ -331,7 +332,7 @@
 
     Game_Unit.prototype.addChainCount = function(damage) {
         this._chainCount = this.getChainCount() + 1;
-        this.members()[0].opponentsUnit().resetChainCount();
+        this.opponentsUnit().resetChainCount();
         if (this.isCountMaxChain() && (this._chainCount > this._maxChain || !this._maxChain)) {
             this._maxChain = this._chainCount;
         }
@@ -358,6 +359,18 @@
 
     Game_Unit.prototype.isCountMaxChain = function() {
         return !$gameSwitches.value(param.invalidSwitchId);
+    };
+
+    Game_Unit.prototype.opponentsUnit = function() {
+        return null;
+    };
+
+    Game_Party.prototype.opponentsUnit = function() {
+        return $gameTroop;
+    };
+
+    Game_Troop.prototype.opponentsUnit = function() {
+        return $gameParty;
     };
 
     //=============================================================================
