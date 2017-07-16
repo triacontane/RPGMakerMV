@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/07/16 セルフ変数機能を追加
 // 1.3.0 2017/07/07 固有処理呼び出し中にテンプレートイベントのIDと名称を取得できるスクリプトを追加
 // 1.2.0 2017/06/09 設定を固有イベントで上書きする機能を追加。それに伴い既存のパラメータ名称を一部変更
 // 1.1.2 2017/06/03 固有イベントのグラフィックで上書きした場合は、オプションと向き、パターンも固有イベントで上書きするよう変更
@@ -74,6 +75,30 @@
  * <TE上書き>
  * <TEOverRide>
  *
+ * ・セルフ変数機能
+ * イベントに対してセルフ変数（そのイベント専用の変数）を定義できます。
+ * プラグインコマンドから操作し、文章の表示やイベント出現条件として使用可能です。
+ *
+ * 「文章の表示」で使用する場合
+ * 制御文字「\sv[n](n:インデックス)」で表示できます。
+ *
+ * 「イベント出現条件」で使用する場合
+ * 対象ページのイベントコマンドの先頭を「注釈」にして
+ * 以下の書式で条件を指定してください。複数指定も可能です。
+ *
+ * \TE{条件}
+ *
+ * 条件はJavaScriptとしてで記述し、制御文字が使用可能です。
+ * 指定例：
+ * \TE{\sv[1] >= 3}      # セルフ変数[1]が3以上の場合
+ * \TE{\sv[2] === \v[1]} # セルフ変数[2]が変数[1]と等しい場合
+ *
+ * 「条件分岐」などのスクリプトで使用する場合
+ * 以下のスクリプトで指定したインデックスのセルフ変数が取得できます。
+ * this.getSelfVariable(n)
+ * 指定例：
+ * this.getSelfVariable(1) !== 0 # セルフ変数[1]が3以上の場合
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
@@ -100,10 +125,36 @@
  *  例2:[aaa]という名前のイベントの1ページ目を呼び出します。
  *  TEマップイベント呼び出し aaa 1
  *
+ * TEセルフ変数の操作 [インデックス] [操作種別] [オペランド]
+ * TE_SET_SELF_VARIABLE [インデックス] [操作種別] [オペランド]
+ *  セルフ変数を操作します。
+ *  インデックス : 操作対象のセルフ変数のインデックスです。1以上の数値を指定
+ *  操作種別     : 操作種別です。以下の通り指定してください。
+ *   0 : 代入
+ *   1 : 加算
+ *   2 : 減算
+ *   3 : 乗算
+ *   4 : 除算
+ *   5 : 剰余
+ *  オペランド   : 設定値です。数値を指定してください。
+ * ※セルフ変数に数値以外を設定したい場合は、スクリプトで指定してください。
+ *
+ *  例1:インデックス[1]のセルフ変数に値[100]を代入します。
+ *  TE_SET_SELF_VARIABLE 1 0 100
+ *
+ *  例2:インデックス[3]のセルフ変数から値[2]を減算します。
+ *  TE_SET_SELF_VARIABLE 3 50 2
+ *
  * ・スクリプト
  * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
  * this.character(0).getTemplateId();
  * this.character(0).getTemplateName();
+ *
+ * ・指定したインデックスのセルフ変数を取得します。
+ * this.getSelfVariable(index);
+ *
+ * ・セルフ変数に値を設定します。
+ * this.controlSelfVariable(index, type, operand);
  *
  * This plugin is released under the MIT License.
  */
@@ -161,6 +212,30 @@
  * <TE上書き>
  * <TEOverRide>
  *
+ * ・セルフ変数機能
+ * イベントに対してセルフ変数（そのイベント専用の変数）を定義できます。
+ * プラグインコマンドから操作し、文章の表示やイベント出現条件として使用可能です。
+ *
+ * 「文章の表示」で使用する場合
+ * 制御文字「\sv[n](n:インデックス)」で表示できます。
+ *
+ * 「イベント出現条件」で使用する場合
+ * 対象ページのイベントコマンドの先頭を「注釈」にして
+ * 以下の書式で条件を指定してください。複数指定も可能です。
+ *
+ * \TE{条件}
+ *
+ * 条件はJavaScriptとしてで記述し、制御文字が使用可能です。
+ * 指定例：
+ * \TE{\sv[1] >= 3}      # セルフ変数[1]が3以上の場合
+ * \TE{\sv[2] === \v[1]} # セルフ変数[2]が変数[1]と等しい場合
+ *
+ * 「条件分岐」などのスクリプトで使用する場合
+ * 以下のスクリプトで指定したインデックスのセルフ変数が取得できます。
+ * this.getSelfVariable(n)
+ * 指定例：
+ * this.getSelfVariable(1) !== 0 # セルフ変数[1]が3以上の場合
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
@@ -187,10 +262,36 @@
  *  例2:[aaa]という名前のイベントの1ページ目を呼び出します。
  *  TEマップイベント呼び出し aaa 1
  *
+ * TEセルフ変数の操作 [インデックス] [操作種別] [オペランド]
+ * TE_SET_SELF_VARIABLE [インデックス] [操作種別] [オペランド]
+ *  セルフ変数を操作します。
+ *  インデックス : 操作対象のセルフ変数のインデックスです。1以上の数値を指定
+ *  操作種別     : 操作種別です。以下の通り指定してください。
+ *   0 : 代入
+ *   1 : 加算
+ *   2 : 減算
+ *   3 : 乗算
+ *   4 : 除算
+ *   5 : 剰余
+ *  オペランド   : 設定値です。数値を指定してください。
+ * ※セルフ変数に数値以外を設定したい場合は、スクリプトで指定してください。
+ *
+ *  例1:インデックス[1]のセルフ変数に値[100]を代入します。
+ *  TE_SET_SELF_VARIABLE 1 0 100
+ *
+ *  例2:インデックス[3]のセルフ変数から値[2]を減算します。
+ *  TE_SET_SELF_VARIABLE 3 50 2
+ *
  * ・スクリプト
  * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
  * this.character(0).getTemplateId();
  * this.character(0).getTemplateName();
+ *
+ * ・指定したインデックスのセルフ変数を取得します。
+ * this.getSelfVariable(index);
+ *
+ * ・セルフ変数に値を設定します。
+ * this.controlSelfVariable(index, type, operand);
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -293,6 +394,14 @@ var $dataTemplateEvents = null;
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
+    var _Game_Interpreter_command101      = Game_Interpreter.prototype.command101;
+    Game_Interpreter.prototype.command101 = function() {
+        if (!$gameMessage.isBusy()) {
+            $gameMessage.setEventId(this._eventId);
+        }
+        return _Game_Interpreter_command101.apply(this, arguments);
+    };
+
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
@@ -320,6 +429,13 @@ var $dataTemplateEvents = null;
                         this.callMapEventById(pageIndex, this._eventId);
                     }
                 }
+                break;
+            case 'セルフ変数の操作' :
+            case '_SET_SELF_VARIABLE' :
+                var selfIndex   = getArgNumber(args[0], 0);
+                var controlType = getArgNumber(args[1], 0);
+                var operand     = getArgNumber(args[2]);
+                this.controlSelfVariable(selfIndex, controlType, operand);
                 break;
         }
     };
@@ -349,6 +465,122 @@ var $dataTemplateEvents = null;
         var page = pages[pageIndex - 1 || this._pageIndex] || pages[0];
         if (!eventId) eventId = this.isOnCurrentMap() ? this._eventId : 0;
         this.setupChild(page.list, eventId);
+    };
+
+    Game_Interpreter.prototype.controlSelfVariable = function(index, type, operand) {
+        var key = this.getSelfVariableKey(index);
+        if (key) {
+            this.operateSelfVariable(key, type, operand);
+        }
+    };
+
+    Game_Interpreter.prototype.getSelfVariable = function(selfVariableIndex) {
+        var key = this.getSelfVariableKey(selfVariableIndex);
+        return $gameSelfSwitches.getVariableValue(key);
+    };
+
+    Game_Interpreter.prototype.operateSelfVariable = function(key, operationType, value) {
+        var oldValue = $gameSelfSwitches.getVariableValue(key);
+        switch (operationType) {
+            case 0:  // Set
+                $gameSelfSwitches.setVariableValue(key, oldValue = value);
+                break;
+            case 1:  // Add
+                $gameSelfSwitches.setVariableValue(key, oldValue + value);
+                break;
+            case 2:  // Sub
+                $gameSelfSwitches.setVariableValue(key, oldValue - value);
+                break;
+            case 3:  // Mul
+                $gameSelfSwitches.setVariableValue(key, oldValue * value);
+                break;
+            case 4:  // Div
+                $gameSelfSwitches.setVariableValue(key, oldValue / value);
+                break;
+            case 5:  // Mod
+                $gameSelfSwitches.setVariableValue(key, oldValue % value);
+                break;
+        }
+    };
+
+    Game_Interpreter.prototype.getSelfVariableKey = function(index) {
+        return $gameSelfSwitches.makeSelfVariableKey(this._eventId, index);
+    };
+
+    //=============================================================================
+    // Game_Message
+    //  メッセージ表示中のイベントIDを保持します。
+    //=============================================================================
+    var _Game_Message_clear      = Game_Message.prototype.clear;
+    Game_Message.prototype.clear = function() {
+        _Game_Message_clear.apply(this, arguments);
+        this._eventId = 0;
+    };
+
+    Game_Message.prototype.setEventId = function(id) {
+        this._eventId = id;
+    };
+
+    Game_Message.prototype.getEventId = function() {
+        return this._eventId;
+    };
+
+    //=============================================================================
+    // Game_System
+    //  ロード完了時に必要ならセルフ変数を初期化します。
+    //=============================================================================
+    var _Game_System_onAfterLoad      = Game_System.prototype.onAfterLoad;
+    Game_System.prototype.onAfterLoad = function() {
+        _Game_System_onAfterLoad.apply(this, arguments);
+        $gameSelfSwitches.clearVariableIfNeed();
+    };
+
+    //=============================================================================
+    // Game_SelfSwitches
+    //  セルフ変数を追加します。
+    //=============================================================================
+    var _Game_SelfSwitches_initialize      = Game_SelfSwitches.prototype.initialize;
+    Game_SelfSwitches.prototype.initialize = function() {
+        _Game_SelfSwitches_initialize.apply(this, arguments);
+        this.clearVariable();
+    };
+
+    Game_SelfSwitches.prototype.clearVariable = function() {
+        this._variableData = {};
+    };
+
+    Game_SelfSwitches.prototype.clearVariableIfNeed = function() {
+        if (!this._variableData) {
+            this.clearVariable();
+        }
+    };
+
+    Game_SelfSwitches.prototype.getVariableValue = function(key) {
+        return this._variableData.hasOwnProperty(key) ? this._variableData[key] : 0;
+    };
+
+    Game_SelfSwitches.prototype.setVariableValue = function(key, value) {
+        if (this._variableData[key] === value) {
+            return;
+        }
+        if (value !== undefined) {
+            this._variableData[key] = value;
+        } else {
+            delete this._variableData[key];
+        }
+        this.onChange();
+    };
+
+    Game_SelfSwitches.prototype.makeSelfVariableKey = function(eventId, index) {
+        return eventId > 0 ? [$gameMap.mapId(), eventId, index] : null;
+    };
+
+    Game_SelfSwitches.prototype.convertSelfVariableCharacter = function(eventId, text) {
+        text = text.replace(/\x1bSV\[(\d+)\]/gi, function() {
+            var key = this.makeSelfVariableKey(eventId, parseInt(arguments[1]));
+            return this.getVariableValue(key);
+        }.bind(this));
+        return text;
     };
 
     //=============================================================================
@@ -431,6 +663,53 @@ var $dataTemplateEvents = null;
         return this.event().pages;
     };
 
+    var _Game_Event_meetsConditions      = Game_Event.prototype.meetsConditions;
+    Game_Event.prototype.meetsConditions = function(page) {
+        return _Game_Event_meetsConditions.apply(this, arguments) && this.meetsConditionsForSelfVariable(page);
+    };
+
+    Game_Event.prototype.meetsConditionsForSelfVariable = function(page) {
+        var comment = this.getStartComment(page);
+        return !(comment && this.execConditionScriptForSelfVariable(comment) === false);
+    };
+
+    Game_Event.prototype.getStartComment = function(page) {
+        var index   = 0;
+        var comment = '';
+        while (true) {
+            var currentComment = this.getCurrentComment(page, index);
+            if (currentComment) {
+                comment += currentComment;
+                index++;
+            } else {
+                break;
+            }
+        }
+        return comment
+    };
+
+    Game_Event.prototype.getCurrentComment = function(page, index) {
+        var command = page.list[index];
+        return command && (command.code === 108 || command.code === 408) ? command.parameters[0] : '';
+    };
+
+    Game_Event.prototype.execConditionScriptForSelfVariable = function(note) {
+        var scripts = [];
+        note.replace(/\\TE\{(.+?)\}/gi, function() {
+            scripts.push(arguments[1]);
+        }.bind(this));
+        return scripts.every(function(script) {
+            script = getArgString(script);
+            script = $gameSelfSwitches.convertSelfVariableCharacter(this._eventId, script);
+            return eval(script);
+        }, this);
+    };
+
+    Game_Event.prototype.getSelfVariable = function(selfVariableIndex) {
+        var key = $gameSelfSwitches.makeSelfVariableKey(this._eventId, selfVariableIndex);
+        return $gameSelfSwitches.getVariableValue(key);
+    };
+
     //=============================================================================
     // DataManager
     //  データ検索用の共通処理です。
@@ -448,6 +727,12 @@ var $dataTemplateEvents = null;
             return result;
         };
     }
+
+    var _Window_Base_convertEscapeCharacters      = Window_Base.prototype.convertEscapeCharacters;
+    Window_Base.prototype.convertEscapeCharacters = function(text) {
+        text = _Window_Base_convertEscapeCharacters.apply(this, arguments);
+        return $gameSelfSwitches.convertSelfVariableCharacter($gameMessage.getEventId(), text);
+    };
 
     //=============================================================================
     // Scene_Boot
