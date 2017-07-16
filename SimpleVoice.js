@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/07/16 ボイスのチャンネル指定機能を追加。同一チャンネルのボイスが同時再生されないようになります。
 // 1.0.1 2017/06/26 英語表記のプラグインコマンドの指定方法を変更
 // 1.0.0 2017/06/25 初版
 // ----------------------------------------------------------------------------
@@ -43,19 +44,26 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * SV_ボイスの演奏 aaa 90 100 0 # 指定したボイスを演奏します。
- * SV_PlayVoice aaa 90 100 0    # 同上
+ * SV_ボイスの演奏 aaa 90 100 0 2 # 指定したボイスを演奏します。
+ * SV_PLAY_VOICE aaa 90 100 0 2   # 同上
  * ※具体的な引数は以下の通りです。
  * 0 : ファイル名(拡張子不要)
  * 1 : 音量(省略した場合は90)
  * 2 : ピッチ(省略した場合は100)
  * 3 : 位相(省略した場合は0)
+ * 4 : チャンネル番号
+ *
+ * チャンネル番号(数値)を指定すると、停止するときに指定したチャンネルと一致する
+ * すべてのボイスを一度に停止することができます。
+ * これにより同一のチャンネルのボイスが重なって演奏されないようになります。
  *
  * SV_ボイスのループ演奏 aaa 90 100 0 # 指定したボイスをループ演奏します。
- * SV_PlayLoopVoice aaa 90 100 0      # 同上
+ * SV_PLAY_LOOP_VOICE aaa 90 100 0    # 同上
  *
  * SV_ボイスの停止 aaa # ボイスaaaの演奏を停止します。
- * SV_StopVoice aaa    # 同上
+ * SV_STOP_VOICE aaa   # 同上
+ * SV_ボイスの停止 1   # チャンネル[1]で再生した全てのボイスの演奏を停止します。
+ * SV_STOP_VOICE 1     # 同上
  * ※引数を省略した場合は全てのボイスを停止します。
  *
  * This plugin is released under the MIT License.
@@ -89,19 +97,26 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * SV_ボイスの演奏 aaa 90 100 0 # 指定したボイスを演奏します。
- * SV_PLAY_VOICE aaa 90 100 0   # 同上
+ * SV_ボイスの演奏 aaa 90 100 0 2 # 指定したボイスを演奏します。
+ * SV_PLAY_VOICE aaa 90 100 0 2   # 同上
  * ※具体的な引数は以下の通りです。
  * 0 : ファイル名(拡張子不要)
  * 1 : 音量(省略した場合は90)
  * 2 : ピッチ(省略した場合は100)
  * 3 : 位相(省略した場合は0)
+ * 4 : チャンネル番号
+ *
+ * チャンネル番号(数値)を指定すると、停止するときに指定したチャンネルと一致する
+ * すべてのボイスを一度に停止することができます。
+ * これにより同一のチャンネルのボイスが重なって演奏されないようになります。
  *
  * SV_ボイスのループ演奏 aaa 90 100 0 # 指定したボイスをループ演奏します。
  * SV_PLAY_LOOP_VOICE aaa 90 100 0    # 同上
  *
  * SV_ボイスの停止 aaa # ボイスaaaの演奏を停止します。
  * SV_STOP_VOICE aaa   # 同上
+ * SV_ボイスの停止 1   # チャンネル[1]で再生した全てのボイスの演奏を停止します。
+ * SV_STOP_VOICE 1     # 同上
  * ※引数を省略した場合は全てのボイスを停止します。
  *
  * 利用規約：
@@ -197,7 +212,8 @@
         voice.volume = args.length >= 2 ? getArgNumber(args[1], 0, 100) : 90;
         voice.pitch  = args.length >= 3 ? getArgNumber(args[2], 50, 150) : 100;
         voice.pan    = args.length >= 4 ? getArgNumber(args[3], -100, 100) : 0;
-        AudioManager.playVoice(voice, loop || false);
+        var channel  = args.length >= 5 ? getArgNumber(args[4], 1) : undefined;
+        AudioManager.playVoice(voice, loop || false, channel);
     };
 
     Game_Interpreter.prototype.execPlayLoopVoice = function(args) {
@@ -205,7 +221,12 @@
     };
 
     Game_Interpreter.prototype.execStopVoice = function(args) {
-        AudioManager.stopVoice(args[0]);
+        var channel = Number(args[0]);
+        if (isNaN(channel)) {
+            AudioManager.stopVoice(args[0], null);
+        } else {
+            AudioManager.stopVoice(null, channel);
+        }
     };
 
     //=============================================================================
@@ -264,20 +285,21 @@
 
     AudioManager._voiceBuffers = [];
     AudioManager._voiceVolume  = 100;
-    AudioManager.playVoice     = function(voice, loop) {
+    AudioManager.playVoice     = function(voice, loop, channel) {
         if (voice.name) {
-            this.stopVoice(voice.name);
+            this.stopVoice(voice.name, channel);
             var buffer = this.createBuffer(param.folderName, voice.name);
             this.updateVoiceParameters(buffer, voice);
             buffer.play(loop);
             buffer.name = voice.name;
+            buffer.channel = channel;
             this._voiceBuffers.push(buffer);
         }
     };
 
-    AudioManager.stopVoice = function(name) {
+    AudioManager.stopVoice = function(name, channel) {
         this._voiceBuffers.forEach(function(buffer) {
-            if (!name || buffer.name === name) {
+            if (!name && !channel || buffer.name === name || buffer.channel === channel) {
                 buffer.stop();
             }
         });
@@ -296,6 +318,10 @@
         this.stopVoice();
     };
 
+    //=============================================================================
+    // Scene_Base
+    //  フェードアウト時にSEの演奏も停止します。
+    //=============================================================================
     var _Scene_Base_fadeOutAll = Scene_Base.prototype.fadeOutAll;
     Scene_Base.prototype.fadeOutAll = function() {
         _Scene_Base_fadeOutAll.apply(this, arguments);
