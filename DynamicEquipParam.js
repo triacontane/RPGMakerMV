@@ -52,6 +52,9 @@
  * ※特徴を有するメモ欄から指定した内容に対応する数値を取得
  * <aaa:100> # a.special('aaa')で[100]を返す。
  *
+ * 特定のキャラクターが装備すると強化されたり
+ * 組み合わせによる強化やステートによる強化が可能になります。
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -92,6 +95,9 @@
  *
  * ※特徴を有するメモ欄から指定した内容に対応する数値を取得
  * <aaa:100> # a.special('aaa')で[100]を返す。
+ *
+ * 特定のキャラクターが装備すると強化されたり
+ * 組み合わせによる強化やステートによる強化が可能になります。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -171,7 +177,7 @@
         if (paramFormula) {
             var param = item.params[paramId];
             var a = this;
-            value = eval(paramFormula) - param;
+            value = Math.round(eval(paramFormula)) - param;
         }
         return value;
     };
@@ -181,7 +187,7 @@
         this.traitObjects().forEach(function(traitObject) {
             value += getArgNumber(convertEscapeCharacters(traitObject.meta[tagName]));
         });
-        return value;
+        return Math.round(value);
     };
 })();
 
