@@ -144,6 +144,10 @@
         return String(args) !== args;
     };
 
+    //=============================================================================
+    // Game_Actor
+    //  装備品パラメータの動的設定を追加します。
+    //=============================================================================
     Game_Actor._paramNames = [
         ['最大HP', 'Mhp'],
         ['最大MP', 'Mmp'],
@@ -160,13 +164,9 @@
         var value = _Game_Actor_paramPlus.apply(this, arguments);
         if (this._calcParam) return value;
         this._calcParam = true;
-        var equips = this.equips();
-        for (var i = 0; i < equips.length; i++) {
-            var item = equips[i];
-            if (item) {
-                value += this.paramPlusDynamic(paramId, item);
-            }
-        }
+        this.equips().forEach(function(item) {
+            if (item) value += this.paramPlusDynamic(paramId, item);
+        }, this);
         this._calcParam = false;
         return value;
     };
