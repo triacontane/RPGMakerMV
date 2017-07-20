@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/07/20 一部プラグインとの競合対策
 // 1.3.0 2017/05/04 イベント「スクリプト」で発生したエラーを無視できる機能を追加
 // 1.2.0 2017/03/13 イベント「スクリプト」でエラーが起きたら、発生箇所をログ出力してステップ実行を開始する機能を追加
 //                  Ctrlキーを押している間はステップ実行を行わないようにする機能を追加
@@ -807,11 +808,13 @@ function DebugManager() {
     };
 
     Game_Interpreter.prototype.setPageIndex = function() {
-        this._pageIndex = 0;
-        this._eventName = '';
-        if (this._eventId > 0) {
-            this._pageIndex = $gameMap.event(this._eventId).getPageIndex() + 1;
-            this._eventName = $gameMap.event(this._eventId).event().name;
+        var event = $gameMap.event(this._eventId);
+        if (event) {
+            this._pageIndex = event.getPageIndex() + 1;
+            this._eventName = event.event().name;
+        } else {
+            this._pageIndex = 0;
+            this._eventName = '';
         }
     };
 
