@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2017/07/21 SAN_MapGenerator.jsとの競合を解消
 // 1.4.0 2017/07/16 セルフ変数機能を追加
 // 1.3.0 2017/07/07 固有処理呼び出し中にテンプレートイベントのIDと名称を取得できるスクリプトを追加
 // 1.2.0 2017/06/09 設定を固有イベントで上書きする機能を追加。それに伴い既存のパラメータ名称を一部変更
@@ -40,7 +41,9 @@
  * @default false
  * @type boolean
  *
- * @help 汎用的に使用するイベントをテンプレート化できます。
+ * @help TemplateEvent.js[Template Event Plugin]
+ *
+ * 汎用的に使用するイベントをテンプレート化できます。
  * テンプレートイベントは、専用に用意したマップに定義してください。
  * 実際のイベントのメモ欄に所定の記述をするだけで、テンプレートイベントと
  * 動的に置き換えることができます。
@@ -177,7 +180,9 @@
  * @default false
  * @type boolean
  *
- * @help 汎用的に使用するイベントをテンプレート化できます。
+ * @help TemplateEvent.js[テンプレートイベントプラグイン]
+ *
+ * 汎用的に使用するイベントをテンプレート化できます。
  * テンプレートイベントは、専用に用意したマップに定義してください。
  * 実際のイベントのメモ欄に所定の記述をするだけで、テンプレートイベントと
  * 動的に置き換えることができます。
@@ -381,6 +386,10 @@ var $dataTemplateEvents = null;
 
     var isNotAString = function(args) {
         return String(args) !== args;
+    };
+
+    var isExistPlugin = function(pluginName) {
+        return Object.keys(PluginManager.parameters(pluginName)).length > 0
     };
 
     //=============================================================================
@@ -652,7 +661,8 @@ var $dataTemplateEvents = null;
     };
 
     Game_Event.prototype.getOriginalPages = function() {
-        return $dataMap.events[this._eventId].pages;
+        var eventId = isExistPlugin('SAN_MapGenerator') ? this._dataEventId : this._eventId;
+        return $dataMap.events[eventId].pages;
     };
 
     Game_Event.prototype.getOriginalPage = function() {
