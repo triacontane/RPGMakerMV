@@ -159,6 +159,9 @@
  * ・セルフ変数に値を設定します。
  * this.controlSelfVariable(index, type, operand);
  *
+ * SAN_MapGenerator.jsと組み合わせる場合
+ * このプラグインをSAN_MapGenerator.jsより下に定義してください。
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -297,6 +300,9 @@
  *
  * ・セルフ変数に値を設定します。
  * this.controlSelfVariable(index, type, operand);
+ *
+ * SAN_MapGenerator.jsと組み合わせる場合
+ * このプラグインをSAN_MapGenerator.jsより下に定義してください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
