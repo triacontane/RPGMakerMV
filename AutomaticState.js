@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/07/21 パーティの並び順で自動ステートを付与する機能を追加
 // 1.2.5 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.2.4 2017/05/27 全回復の直後に自動ステートが解除されてしまう問題を修正
 // 1.2.3 2017/02/16 1.2.0以降、下限MPの設定が無効になっていた問題を修正
@@ -55,6 +56,8 @@
  *     指定したスイッチがONになっている間、対象ステートを付与する。
  * <AS計算式:（JS計算式）>
  *     指定したJavaScript計算式がtrueの間、対象ステートを付与する。
+ * <AS並び順:（インデックス）>
+ *     並び順(1～)が指定した値と一致する間、対象ステートを付与する。
  *
  * 計算式中で不等号を使いたい場合、以下のように記述してください。
  * < → &lt;
@@ -145,7 +148,7 @@
     //=============================================================================
     Game_BattlerBase.prototype.updateAutomaticState = function() {
         DataManager.iterateAutomaticState(function(state) {
-            if (state == null || isEmpty(state.meta)) return;
+            if (!state || isEmpty(state.meta)) return;
             var stateId = state.id;
             var result = this.isAutomaticValid(state);
             if (result === null) return;
@@ -233,19 +236,31 @@
                 return false;
             }
         }
+        var unitIndex = this.getStateMetaNumber(12, 0);
+        if (unitIndex !== null) {
+            if (this.index() === unitIndex - 1) {
+                result = true;
+            } else {
+                return false;
+            }
+        }
         return result;
+    };
+
+    Game_BattlerBase.prototype.index = function() {
+        return 0;
     };
 
     Game_BattlerBase.prototype.getStateMetaNumber = function(tagIndex, min, max) {
         var value = this._automaticTargetState.meta[DataManager.getAutomaticTagName(tagIndex)];
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return value != null ? getArgNumber(value, min, max) : null;
+        return value !== undefined ? getArgNumber(value, min, max) : null;
     };
 
     Game_BattlerBase.prototype.getStateMetaString = function(tagIndex) {
         var value = this._automaticTargetState.meta[DataManager.getAutomaticTagName(tagIndex)];
-        return value != null ? convertEscapeCharacters(value) : null;
+        return value !== undefined ? convertEscapeCharacters(value) : null;
     };
 
     Game_BattlerBase.prototype.isStateMetaInfo = function(tagIndex) {
@@ -331,6 +346,12 @@
         });
     };
 
+    var _Game_Party_swapOrder = Game_Party.prototype.swapOrder;
+    Game_Party.prototype.swapOrder = function(index1, index2) {
+        _Game_Party_swapOrder.apply(this, arguments);
+        this.updateAutomaticState();
+    };
+
     //=============================================================================
     // Game_Map
     //  場所移動時に自動付与ステートを更新します。
@@ -379,7 +400,8 @@
         'アクター',
         '敵キャラ',
         '武器装備',
-        '防具装備'
+        '防具装備',
+        '並び順'
     ];
 
     var _DataManager_onLoad = DataManager.onLoad;
