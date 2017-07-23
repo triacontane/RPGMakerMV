@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/07/23 ヘルプにアクターのレベルやIDを参照する計算式を追記
 // 1.0.0 2017/07/18 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -48,6 +49,10 @@
  * a.mpRate() # MPレート(0.0 - 1.0)
  * a.tpRate() # TPレート(0.0 - 1.0)
  * a.special('aaa') # メモ欄の[aaa]の値(※)
+ * a.level        # レベル
+ * a.actorId()    # アクターID
+ * a._classId     # 職業ID
+ * a.currentExp() # 経験値
  *
  * ※特徴を有するメモ欄から指定した内容に対応する数値を取得
  * <aaa:100> # a.special('aaa')で[100]を返す。
@@ -92,6 +97,10 @@
  * a.mpRate() # MPレート(0.0 - 1.0)
  * a.tpRate() # TPレート(0.0 - 1.0)
  * a.special('aaa') # メモ欄の[aaa]の値(※)
+ * a.level        # レベル
+ * a.actorId()    # アクターID
+ * a._classId     # 職業ID
+ * a.currentExp() # 経験値
  *
  * ※特徴を有するメモ欄から指定した内容に対応する数値を取得
  * <aaa:100> # a.special('aaa')で[100]を返す。
