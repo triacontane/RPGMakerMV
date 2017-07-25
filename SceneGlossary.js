@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.1 2017/07/22 1.15.0でパラメータのブール変数項目が全て効かなくなっていた問題を修正
 // 1.15.0 2017/07/13 最後に選択していた項目を記憶した状態で辞書画面に戻る機能を追加
 //                   パラメータの型指定機能に対応
 // 1.14.1 2017/06/22 カテゴリ表示が有効な場合に、対象用語を一つも所持していない場合はカテゴリリストに表示しないよう修正
@@ -125,7 +126,7 @@
  *
  * @param AutoAddition
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
- * @default true
+ * @default false
  * @type boolean
  *
  * @param FontSize
@@ -406,7 +407,7 @@
  * 
  * @param 自動登録
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
- * @default true
+ * @default false
  * @type boolean
  *
  * @param フォントサイズ
@@ -499,7 +500,7 @@
  *
  * @param 所持数表示
  * @desc 用語集アイテムの所持数を表示します。
- * @default true
+ * @default false
  * @type boolean
  *
  * @noteParam SGピクチャ
@@ -641,7 +642,7 @@ function Scene_Glossary() {
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
