@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2017/07/26 コンソールからの関数実行で直前に編集したウィンドウの位置を変更できる機能を追加
 // 2.7.0 2017/04/11 2.6.0の修正で追加ウィンドウの位置変更が正常に動作しない問題を修正
 //                  選択肢ウィンドウについて位置変更を一時的に無効化するプラグインコマンドを追加
 // 2.6.0 2017/04/07 追加したピクチャやウィンドウについて任意のスイッチがONのときのみ表示できる機能を追加
@@ -41,60 +42,73 @@
  * @param デザインモード
  * @desc デザインモードでゲームを起動します。(ON/OFF)
  * モード中はドラッグ＆ドロップで位置を調整できます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 自動保存
  * @desc 位置を変更したときに自動で変更を保存します。(ON/OFF)
  * 通常は、Ctrl+Sで保存します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param モバイル版作成
  * @desc モバイル版のウィンドウ配置を別に作成します。(ON/OFF)
  * モバイル版とPC版とでウィンドウ配置を変えたい場合のみONにしてください。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param モバイル偽装
  * @desc モバイル実行を偽装します。(ON/OFF)
  * モバイル版のウィンドウ作成やテスト時にONにしてください。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param ウィンドウ透過
  * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
  * 他のプラグインで同様機能を実現している場合はOFF。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param グリッドサイズ
  * @desc ウィンドウ調整中に指定サイズでグリッドを表示します。
  * 0を指定すると非表示になります。
  * @default 48
+ * @type number
  *
  * @param パディング
  * @desc ウィンドウ余白のデフォルト値です。入力した場合、適用されます。デフォルト：18
- * @default
+ * @default 0
+ * @type number
  *
  * @param フォントサイズ
  * @desc ウィンドウフォントサイズのデフォルト値です。入力した場合、適用されます。デフォルト：28
- * @default
+ * @default 0
+ * @type number
  *
  * @param 行の高さ
  * @desc ウィンドウの行高のデフォルト値です。入力した場合、適用されます。デフォルト：36
- * @default
+ * @default 0
+ * @type number
  *
  * @param 背景透明度
  * @desc ウィンドウの背景透明度デフォルト値です。入力した場合、適用されます。デフォルト：192
- * @default
+ * @default 0
+ * @type number
  *
  * @param アイコンサイズ調整
  * @desc フォントサイズが変更された場合にアイコンのサイズを自動で調整します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 背景表示可否固定
  * @desc メッセージウィンドウ等でイベント命令ごとに指定する背景の表示設定を無視して、プラグインの設定値で固定します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 右クリックで消去
  * @desc デザインモードで右クリックしたときにウィンドウ全体を非表示にします。(OFFの場合は枠のみ消去)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help メニュー画面や戦闘画面など各画面のウィンドウや画像の表示位置を
  * ドラッグ＆ドロップで微調整して画面の外観をグラフィカルに設計できます。
@@ -121,6 +135,8 @@
  *     パラメータを変更している場合は、ウィンドウ全体の表示/非表示を切り替えます。
  *     一度非表示にすると、画面全体をリセットしない限り再表示できません。
  *   - ウィンドウ内で数字キー(※)を押下すると、各プロパティを変更できます。
+ *   - コンソールに「changePos(x, y);」(x:X座標、y:Y座標)と打ち込むと
+ *     直前に編集したウィンドウ位置を変更できます。
  *
  * 4. Ctrl+Sでカスタマイズした位置を保存する。
  *
@@ -233,122 +249,122 @@ var $dataContainerProperties = null;
             /* pictures:シーンに追加表示する画像です。無条件で表示されます。 */
             pictures: [
                 /* file:「img/pictures/」以下のファイルを拡張子なしで指定します  switchId: 表示条件となるスイッチIDです*/
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             /* windows:シーンに追加表示するウィンドウです。*/
             windows : [
                 /* lines:表示内容の配列です。 制御文字が利用できます。「\\i[n]」と「\」をひとつ多く指定してください。*/
                 /* switchId:出現条件となるスイッチIDです */
                 /* 位置を調整後に新しいウィンドウを追加する場合は、必ず「配列の末尾に追加」してください */
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* メインメニュー画面の追加情報 */
         Scene_Menu    : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* 戦闘画面の追加情報 */
         Scene_Battle  : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* アイテムメニュー画面の追加情報 */
         Scene_Item    : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* スキルメニュー画面の追加情報 */
         Scene_Skill   : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* 装備メニュー画面の追加情報 */
         Scene_Equip   : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* ステータスメニュー画面の追加情報 */
         Scene_Status  : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* オプション画面の追加情報 */
         Scene_Options : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* セーブ画面の追加情報 */
         Scene_Save    : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* ロード画面の追加情報 */
         Scene_Load    : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* ショップ画面の追加情報 */
         Scene_Shop    : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* 名前入力画面の追加情報 */
         Scene_Name    : {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
         /* ゲームオーバー画面の追加情報 */
         Scene_Gameover: {
             pictures: [
-                {file: '', switchId:0},
+                {file: '', switchId: 0},
             ],
             windows : [
-                {lines: [], switchId:0},
+                {lines: [], switchId: 0},
             ],
         },
     };
@@ -373,7 +389,7 @@ var $dataContainerProperties = null;
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
@@ -445,6 +461,14 @@ var $dataContainerProperties = null;
     // デザインモードの場合のみ実装する
     //=============================================================================
     if (Utils.isDesignMode()) {
+
+        //=============================================================================
+        // グローバル関数
+        //=============================================================================
+        window.changePos = function(x, y) {
+            SceneManager.setLastWindowPosition(x, y);
+        };
+
         //=============================================================================
         // Input
         //  コピーと上書き保存用のボタンを追加定義します。
@@ -496,15 +520,39 @@ var $dataContainerProperties = null;
         var _SceneManager_initialize = SceneManager.initialize;
         SceneManager.initialize      = function() {
             _SceneManager_initialize.call(this);
-            this.lastWindowX    = null;
-            this.lastWindowY    = null;
-            this.infoWindow     = '';
-            this.infoExtend     = '';
-            this._copyCount     = 0;
-            this._infoHelp      = 'デザインモードで起動しています。 ';
-            this._documentTitle = '';
-            this._changeStack   = [];
+            this.lastWindowX            = null;
+            this.lastWindowY            = null;
+            this._lastWindow            = null;
+            this._windowPositionChanged = false;
+            this.infoWindow             = '';
+            this.infoExtend             = '';
+            this._copyCount             = 0;
+            this._infoHelp              = 'デザインモードで起動しています。 ';
+            this._documentTitle         = '';
+            this._changeStack           = [];
             this.showDevToolsForGdm();
+        };
+
+        SceneManager.setLastWindow = function(windowObject) {
+            this._lastWindow = windowObject;
+        };
+
+        SceneManager.setLastWindowPosition = function(x, y) {
+            if (!this._lastWindow) {
+                this.setInfoExtend('直前に触れたオブジェクトが存在しないため、この操作は無効です。', 0);
+                return;
+            }
+            this._lastWindow.position.x = x;
+            this._lastWindow.position.y = y;
+            this._windowPositionChanged = true;
+        };
+
+        SceneManager.isWindowPositionChanged = function(windowObject) {
+            if (this._windowPositionChanged && windowObject === this._lastWindow) {
+                this._windowPositionChanged = false;
+                return true;
+            }
+            return false;
         };
 
         SceneManager.showDevToolsForGdm = function() {
@@ -526,6 +574,7 @@ var $dataContainerProperties = null;
                 'ドラッグ&ドロップ ： ウィンドウや画像を掴んで好きな場所に再配置します。\n',
                 'Ctrl+マウス ： ウィンドウや画像がグリッドにスナップします。(Macの場合はoptionキー)\n',
                 'Shift+マウス ： ウィンドウや画像がオブジェクトや画面端にスナップしなくなります。\n',
+                'コンソールに「changePos(x, y);」(x:X座標、y:Y座標)と打ち込むと直前に編集したウィンドウ位置を変更できます。\n',
                 'Ctrl+S ： 全ての変更を保存します。\n',
                 'Ctrl+C ： 直前に操作した座標をクリップボードにコピーします。\n',
                 'Ctrl+Z ： 直前に行った操作を元に戻します。\n',
@@ -750,6 +799,9 @@ var $dataContainerProperties = null;
         };
 
         PIXI.Container.prototype.processPosition = function() {
+            if (SceneManager.isWindowPositionChanged(this)) {
+                return true;
+            }
             if (this.isTouchEvent(TouchInput.isTriggered) || (this._holding && TouchInput.isPressed())) {
                 if (!this._holding) this.hold();
                 var x = TouchInput.x - this._dx;
@@ -782,6 +834,7 @@ var $dataContainerProperties = null;
             if (this.isPreparedEvent() && !this.parent.isFrameChanged) {
                 this._windowFrameSprite.setBlendColor([255, 128, 0, 192]);
                 this.parent.isFrameChanged = true;
+                SceneManager.setLastWindow(this);
             } else {
                 this._windowFrameSprite.setBlendColor([0, 0, 0, 0]);
             }
@@ -1222,7 +1275,7 @@ var $dataContainerProperties = null;
     };
 
     var _SceneManager_updateScene = SceneManager.updateScene;
-    SceneManager.updateScene = function() {
+    SceneManager.updateScene      = function() {
         _SceneManager_updateScene.apply(this, arguments);
         if (this._scene) {
             this._scene.updateCustomContainer();
