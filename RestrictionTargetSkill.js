@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.7 2017/07/26 ステート全体化プラグイン（StateTotalization.js）との競合を解消
 // 1.1.6 2017/06/28 混乱ステート拡張プラグイン（ConfusionExtend.js）との競合を解消
 // 1.1.5 2017/06/12 敵が制約付きスキルを使用した際にエラーが発生する場合がある問題を修正
 // 1.1.4 2017/06/04 1.1.3で戦闘行動のキャラクターに対するスキルが実行できなくなっていた問題を修正
@@ -25,7 +26,9 @@
  * @plugindesc RestrictionTargetSkillPlugin
  * @author triacontane
  *
- * @help 特定のバトラー（敵および味方）に対して使用できない、もしくは
+ * @help RestrictionTargetSkill.js
+ *
+ * 特定のバトラー（敵および味方）に対して使用できない、もしくは
  * 特定のバトラーに対してのみ使用できるスキルを作成できます。
  * 敵がスキルを使う場合や、自動戦闘、混乱、複数対象の場合なども含めて
  * 常に対象スキルのターゲットから外れます。
@@ -69,7 +72,9 @@
  * @plugindesc 対象限定スキルプラグイン
  * @author トリアコンタン
  *
- * @help 特定のバトラー（敵および味方）に対して使用できない、もしくは
+ * @help RestrictionTargetSkill.js
+ *
+ * 特定のバトラー（敵および味方）に対して使用できない、もしくは
  * 特定のバトラーに対してのみ使用できるスキルを作成できます。
  * 敵がスキルを使う場合や、自動戦闘、混乱、複数対象の場合なども含めて
  * 常に対象スキルのターゲットから外れます。
@@ -176,9 +181,12 @@
         if (scriptValue && eval(getArgString(scriptValue))) {
             return false;
         }
-        return !this.traitObjects().some(function(data) {
+        this.friendsUnit().setNeedOriginalMember(true);
+        var result = !this.traitObjects().some(function(data) {
             return !!getMetaValues(data, ['無敵', 'Invincible']);
         });
+        this.friendsUnit().setNeedOriginalMember(false);
+        return result;
     };
 
     Game_Actor.prototype.canSelectTarget = function(item, user) {
