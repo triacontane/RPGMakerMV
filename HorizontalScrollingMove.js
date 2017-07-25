@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/07/25 上向きを許容するパラメータを追加
 // 1.0.0 2017/03/29 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -18,8 +19,19 @@
  * @author triacontane
  *
  * @param ValidSwitchId
- * @desc 横スクロール移動が有効になるスイッチ番号です。
- * @default 1
+ * @desc 横スクロール移動が有効になるスイッチ番号です。0を指定すると常に有効になります。
+ * @default 0
+ * @type switch
+ *
+ * @param ValidUpPlayer
+ * @desc プレイヤーが上下に移動するときは上向きを許容します。
+ * @default false
+ * @type boolean
+ *
+ * @param ValidUpEvent
+ * @desc イベントが上下に移動するときは上向きを許容します。
+ * @default false
+ * @type boolean
  *
  * @help キャラクターが移動する際の向きを左右に限定します。
  * 主に横スクロールのゲームにおけるキャラ移動を想定しています。
@@ -34,8 +46,19 @@
  * @author トリアコンタン
  *
  * @param 有効スイッチ番号
- * @desc 横スクロール移動が有効になるスイッチ番号です。
- * @default 1
+ * @desc 横スクロール移動が有効になるスイッチ番号です。0を指定すると常に有効になります。
+ * @default 0
+ * @type switch
+ *
+ * @param プレイヤー上向き許容
+ * @desc プレイヤーが上下に移動するときは上向きを許容します。
+ * @default false
+ * @type boolean
+ *
+ * @param イベント上向き許容
+ * @desc イベントが上下に移動するときは上向きを許容します。
+ * @default false
+ * @type boolean
  *
  * @help キャラクターが移動する際の向きを左右に限定します。
  * 主に横スクロールのゲームにおけるキャラ移動を想定しています。
@@ -53,7 +76,7 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'HorizontalScrollingMove';
+    var pluginName = 'HorizontalScrollingMove';
 
     //=============================================================================
     // ローカル関数
@@ -75,25 +98,60 @@
         return (parseInt(value) || 0).clamp(min, max);
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
+        return value.toUpperCase() === 'TRUE';
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param       = {};
+    var param           = {};
     param.validSwitchId = getParamNumber(['ValidSwitchId', '有効スイッチ番号']);
+    param.validUpPlayer = getParamBoolean(['ValidUpPlayer', 'プレイヤー上向き許容']);
+    param.validUpEvent  = getParamBoolean(['ValidUpEvent', 'イベント上向き許容']);
 
-    var _Game_CharacterBase_setDirection = Game_CharacterBase.prototype.setDirection;
+    //=============================================================================
+    // Game_CharacterBase
+    //  横移動時に別の方向を向こうとした場合、矯正します。
+    //=============================================================================
+    var _Game_CharacterBase_setDirection      = Game_CharacterBase.prototype.setDirection;
     Game_CharacterBase.prototype.setDirection = function(d) {
         var prevDirection = this.direction();
         _Game_CharacterBase_setDirection.apply(this, arguments);
-        if ($gameSwitches.value(param.validSwitchId)) {
+        if (this.isHorizontalMove()) {
             this.modifyDirectionForHorizontalMove(prevDirection);
         }
     };
 
+    Game_CharacterBase.prototype.isHorizontalMove = function() {
+        return !param.validSwitchId || $gameSwitches.value(param.validSwitchId);
+    };
+
     Game_CharacterBase.prototype.modifyDirectionForHorizontalMove = function(prevDirection) {
-        if (!this.isOnLadder() && (this.direction() === 2 || this.direction() === 8) && !this.isDirectionFixed()) {
+        if (this.isNeedModifyDirection() && !this.isOnLadder() && !this.isDirectionFixed()) {
             this._direction = prevDirection;
         }
+    };
+
+    Game_CharacterBase.prototype.isNeedModifyDirection = function() {
+        return this.direction() === 2 || (this.isNeedModifyUpper() && this.direction() === 8);
+    };
+
+    Game_CharacterBase.prototype.isNeedModifyUpper = function() {
+        return false;
+    };
+
+    Game_Player.prototype.isNeedModifyUpper= function() {
+        return !param.validUpPlayer;
+    };
+
+    Game_Follower.prototype.isNeedModifyUpper= function() {
+        return !param.validUpPlayer;
+    };
+
+    Game_Event.prototype.isNeedModifyUpper = function() {
+        return !param.validUpEvent;
     };
 })();
 
