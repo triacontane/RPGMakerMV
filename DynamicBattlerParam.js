@@ -33,7 +33,7 @@
  * @desc 防御力を決定する計算式です。メモ欄に指定があればそちらを優先します。
  * @default
  *
- * @param FormulaMag
+ * @param FormulaMat
  * @desc 魔法力を決定する計算式です。メモ欄に指定があればそちらを優先します。
  * @default
  *
@@ -58,7 +58,7 @@
  *
  * <DBP_Atk:[計算式]> # 攻撃力に計算式を適用
  * <DBP_Def:[計算式]> # 防御力に計算式を適用
- * <DBP_Mag:[計算式]> # 魔法力に計算式を適用
+ * <DBP_Mat:[計算式]> # 魔法力に計算式を適用
  * <DBP_Mdf:[計算式]> # 魔法防御に計算式を適用
  * <DBP_Agi:[計算式]> # 敏捷性に計算式を適用
  * <DBP_Luk:[計算式]> # 運に計算式を適用
@@ -236,7 +236,7 @@
     param.formula[index++] = getParamString(['FormulaMmp', '最大MP計算式']);
     param.formula[index++] = getParamString(['FormulaAtk', '攻撃力計算式']);
     param.formula[index++] = getParamString(['FormulaDef', '防御力計算式']);
-    param.formula[index++] = getParamString(['FormulaMag', '魔法力計算式']);
+    param.formula[index++] = getParamString(['FormulaMat', '魔法力計算式']);
     param.formula[index++] = getParamString(['FormulaMdf', '魔法防御計算式']);
     param.formula[index++] = getParamString(['FormulaAgi', '敏捷性計算式']);
     param.formula[index++] = getParamString(['FormulaLuk', '運計算式']);
