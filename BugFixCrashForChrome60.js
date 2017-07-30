@@ -52,7 +52,7 @@
     'use strict';
     var pluginName = 'BugFixCrashForChrome60';
 
-    if (!navigator.userAgent.match(/Chrome\/60/)) {
+    if (!navigator.userAgent.match(/Chrome\/60/) && !Utils.isOptionValid('test')) {
         console.log('**********\n' + pluginName + ' is unnecessary in the current execution environment.\n**********\n');
         return;
     }
