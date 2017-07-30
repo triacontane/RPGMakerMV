@@ -26,6 +26,9 @@
  * Since it is unknown why values outside the range are passed,
  * this is an interim measure.
  *
+ * Version
+ * Google Chrome 60.0.3112.78
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -39,6 +42,9 @@
  * 根本原因は、forEachの繰り返し途中で、対象配列の要素が削除された場合に、
  * 配列の範囲外(長さを上回るindex)の値（undefined）が渡されることがあるためです。
  * なぜ範囲外の値が渡されるのかは不明なので、こちらは暫定対策となります。
+ *
+ * 発生を確認したバージョン
+ * Google Chrome 60.0.3112.78
  *
  * このプラグインにはプラグインコマンドはありません。
  *
