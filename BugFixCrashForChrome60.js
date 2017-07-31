@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/07/31 適用バージョンが60固定になっていたので6Xに変更
 // 1.0.0 2017/07/31 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -58,7 +59,7 @@
     'use strict';
     var pluginName = 'BugFixCrashForChrome60';
 
-    if (!navigator.userAgent.match(/Chrome\/60/) && !Utils.isOptionValid('test')) {
+    if (!navigator.userAgent.match(/Chrome\/6/) && !Utils.isOptionValid('test')) {
         console.log('**********\n' + pluginName + ' is unnecessary in the current execution environment.\n**********\n');
         return;
     }
