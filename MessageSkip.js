@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2017/08/03 キーを押している間だけスキップが有効にできる機能を追加
 // 1.5.0 2017/05/27 オートおよびスキップボタンの原点指定と表示可否を変更できるスイッチの機能を追加
 // 1.4.0 2017/05/26 クリックでオートおよびスキップを切り替えるボタンを追加
 // 1.3.1 2017/05/13 アイコンの量を増やしたときにオートとスキップのアイコンが正常に表示されない問題を修正
@@ -30,35 +31,46 @@
  * @desc メッセージスキップに該当するキー
  * (キーのアルファベット/shift/control/tab)
  * @default S
+ * @type select
+ * @option shift
+ * @option control
+ * @option tab
+ * @option S
  *
  * @param AutoKey
  * @desc メッセージオートに該当するキー
  * (キーのアルファベット/shift/control/tab)
  * @default A
+ * @type select
+ * @option shift
+ * @option control
+ * @option tab
+ * @option A
  *
  * @param SkipIcon
  * @desc メッセージスキップ中にウィンドウ右下に表示されるアイコン
  * @default 140
+ * @type number
  *
  * @param AutoIcon
  * @desc メッセージオート中にウィンドウ右下に表示されるアイコン
  * @default 75
+ * @type number
+ *
+ * @param PressingSkip
+ * @desc スキップの判定が指定のキーを押している間のみになります。
+ * @default false
+ * @type boolean
  *
  * @param AutoWaitFrame
  * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]が指定できます。
  * @default 240
+ * @type number
  *
  * @param ResetOnEventEnd
  * @desc イベント終了と共にスキップ、オート状態を解除します。(ON/OFF)
- * @default ON
- *
- * @param PictureAnchor
- * @desc スキップ、オートの各ピクチャボタン座標の原点です。（0:左上、1:右上、2:左下、3:右下）
- * @default 0
- *
- * @param PictureSwitchId
- * @desc 指定した番号のスイッチがONのときのみスキップ、オートの各ピクチャボタンを表示します。0の場合は無条件で表示します。
- * @default 0
+ * @default true
+ * @type boolean
  *
  * @param SkipPicture
  * @desc ウィンドウ内に表示するスキップピクチャのファイル名です。クリックするとスキップモードになります。
@@ -67,13 +79,29 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param PictureAnchor
+ * @desc スキップ、オートの各ピクチャボタン座標の原点です。（0:左上、1:右上、2:左下、3:右下）
+ * @default 0
+ * @type select
+ * @option 0
+ * @option 1
+ * @option 2
+ * @option 3
+ *
+ * @param PictureSwitchId
+ * @desc 指定した番号のスイッチがONのときのみスキップ、オートの各ピクチャボタンを表示します。0の場合は無条件で表示します。
+ * @default 0
+ * @type switch
+ *
  * @param SkipPictureX
  * @desc ウィンドウ内に表示するスキップピクチャのX座標です。
  * @default 500
+ * @type number
  *
  * @param SkipPictureY
  * @desc ウィンドウ内に表示するスキップピクチャのY座標です。
  * @default 0
+ * @type number
  *
  * @param AutoPicture
  * @desc ウィンドウ内に表示するオートピクチャのファイル名です。クリックするとオートモードになります。
@@ -85,10 +113,12 @@
  * @param AutoPictureX
  * @desc ウィンドウ内に表示するオートピクチャのX座標です。
  * @default 750
+ * @type number
  *
  * @param AutoPictureY
  * @desc ウィンドウ内に表示するオートピクチャのY座標です。
  * @default 0
+ * @type number
  *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
  * イベントが終了すると自働でスキップやオートモードは解除されます。
@@ -109,27 +139,46 @@
  * @desc メッセージスキップに該当するキー
  * (キーのアルファベット/shift/control/tab)
  * @default S
+ * @type select
+ * @option shift
+ * @option control
+ * @option tab
+ * @option S
  *
  * @param オートキー
  * @desc メッセージオートに該当するキー
  * (キーのアルファベット/shift/control/tab)
  * @default A
+ * @type select
+ * @option shift
+ * @option control
+ * @option tab
+ * @option A
  *
  * @param スキップアイコン
  * @desc メッセージスキップ中にウィンドウ右下に表示されるアイコン
  * @default 140
+ * @type number
  *
  * @param オートアイコン
  * @desc メッセージオート中にウィンドウ右下に表示されるアイコン
  * @default 75
+ * @type number
+ *
+ * @param 押し続けスキップ
+ * @desc スキップの判定が指定のキーを押している間のみになります。
+ * @default false
+ * @type boolean
  *
  * @param オート待機フレーム
  * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]が指定できます。
  * @default 240
+ * @type number
  *
  * @param イベント終了で解除
  * @desc イベント終了と共にスキップ、オート状態を解除します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param スキップピクチャ
  * @desc ウィンドウ内に表示するスキップピクチャのファイル名です。クリックするとスキップモードになります。
@@ -141,18 +190,26 @@
  * @param ボタン原点
  * @desc スキップ、オートの各ピクチャボタン座標の原点です。（0:左上、1:右上、2:左下、3:右下）
  * @default 0
+ * @type select
+ * @option 0
+ * @option 1
+ * @option 2
+ * @option 3
  *
  * @param ボタン表示スイッチID
  * @desc 指定した番号のスイッチがONのときのみスキップ、オートの各ピクチャボタンを表示します。0の場合は無条件で表示します。
  * @default 0
+ * @type switch
  *
  * @param スキップピクチャX
  * @desc ウィンドウ内に表示するスキップピクチャのX座標です。
  * @default 500
+ * @type number
  *
  * @param スキップピクチャY
  * @desc ウィンドウ内に表示するスキップピクチャのY座標です。
  * @default 0
+ * @type number
  *
  * @param オートピクチャ
  * @desc ウィンドウ内に表示するオートピクチャのファイル名です。クリックするとオートモードになります。
@@ -164,10 +221,12 @@
  * @param オートピクチャX
  * @desc ウィンドウ内に表示するオートピクチャのX座標です。
  * @default 750
+ * @type number
  *
  * @param オートピクチャY
  * @desc ウィンドウ内に表示するオートピクチャのY座標です。
  * @default 0
+ * @type number
  *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
  * イベントが終了すると自働でスキップやオートモードは解除されます。
@@ -196,12 +255,12 @@
         var value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
+        return (parseInt(value) || 0).clamp(min, max);
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        var value = getParamString(paramNames);
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
@@ -272,6 +331,7 @@
     var paramAutoPictureY    = getParamNumber(['AutoPictureY', 'オートピクチャY']);
     var paramPictureAnchor   = getParamNumber(['PictureAnchor', 'ボタン原点']);
     var paramPictureSwitchId = getParamNumber(['PictureSwitchId', 'ボタン表示スイッチID'], 0);
+    var paramPressingSkip    = getParamBoolean(['PressingSkip', '押し続けスキップ']);
 
     //=============================================================================
     // Game_Message
@@ -286,11 +346,10 @@
 
     Game_Message.prototype.toggleSkip = function() {
         this.setSkipFlg(!this._skipFlg);
-        if (this._skipFlg) this._autoFlg = false;
     };
 
     Game_Message.prototype.toggleAuto = function() {
-        if (!this._skipFlg) this.setAutoFlg(!this._autoFlg);
+        this.setAutoFlg(!this._autoFlg);
     };
 
     Game_Message.prototype.skipFlg = function() {
@@ -303,10 +362,13 @@
 
     Game_Message.prototype.setSkipFlg = function(value) {
         this._skipFlg = value;
+        if (this._skipFlg) this._autoFlg = false;
     };
 
     Game_Message.prototype.setAutoFlg = function(value) {
-        this._autoFlg = value;
+        if (!this._skipFlg) {
+            this._autoFlg = value;
+        }
     };
 
     Game_Message.prototype.clearSkipInfo = function() {
@@ -399,7 +461,7 @@
         return _Window_Message_update.apply(this, arguments);
     };
 
-    var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
+    var _Window_Message_updatePlacement      = Window_Message.prototype.updatePlacement;
     Window_Message.prototype.updatePlacement = function() {
         _Window_Message_updatePlacement.apply(this, arguments);
         if (this._skipButton) {
@@ -447,12 +509,15 @@
     };
 
     Window_Message.prototype.updateSkipAuto = function() {
+        if (this.isClosed()) return;
         if (this.isAnySubWindowActive()) {
             $gameMessage.clearSkipInfo();
-        } else if (this.isTriggeredMessageSkip()) {
+        } else if (!paramPressingSkip && this.isTriggeredMessageSkip()) {
             $gameMessage.toggleSkip();
         } else if (this.isTriggeredMessageAuto()) {
             $gameMessage.toggleAuto();
+        } else if (paramPressingSkip) {
+            $gameMessage.setSkipFlg(this.isPressedMessageSkip());
         }
     };
 
@@ -471,12 +536,16 @@
     };
 
     Window_Message.prototype.isTriggeredMessageSkip = function() {
-        return Input.isTriggered('messageSkip') || Input.isTriggered(skipKeyName) || this.isTriggeredMessageSkipButton();
+        return Input.isTriggered('messageSkip') || Input.isTriggered(skipKeyName) || this.isTriggeredMessageSkipButton(false);
     };
 
-    Window_Message.prototype.isTriggeredMessageSkipButton = function() {
+    Window_Message.prototype.isPressedMessageSkip = function() {
+        return Input.isPressed('messageSkip') || Input.isPressed(skipKeyName) || this.isTriggeredMessageSkipButton(true);
+    };
+
+    Window_Message.prototype.isTriggeredMessageSkipButton = function(pressed) {
         return this._skipButton &&
-            this._skipButton.isTriggered(this.canvasToLocalX(TouchInput.x), this.canvasToLocalY(TouchInput.y));
+            this._skipButton.isTriggered(this.canvasToLocalX(TouchInput.x), this.canvasToLocalY(TouchInput.y), pressed);
     };
 
     Window_Message.prototype.isTriggeredMessageAuto = function() {
@@ -519,7 +588,7 @@
         this.bitmap   = ImageManager.loadPicture(fileName);
         this.anchor.x = 0.5;
         this.anchor.y = 0.5;
-        this.visible = false;
+        this.visible  = false;
     };
 
     Sprite_MessageButton.prototype.update = function() {
@@ -537,13 +606,11 @@
         this.visible = $gameSwitches.value(paramPictureSwitchId);
     };
 
-    Sprite_MessageButton.prototype.isTriggered = function(targetX, targetY) {
+    Sprite_MessageButton.prototype.isTriggered = function(targetX, targetY, pressed) {
         var realX = targetX + this._frame.width * this.anchor.x;
         var realY = targetY + this._frame.height * this.anchor.y;
-        if (TouchInput.isTriggered() && this.isInSprite(realX, realY)) {
-            return true;
-        }
-        return false;
+        var triggeredOk = (pressed ? TouchInput.isPressed() : TouchInput.isTriggered());
+        return triggeredOk && this.isInSprite(realX, realY)
     };
 
     Sprite_MessageButton.prototype.isInSprite = function(targetX, targetY) {
