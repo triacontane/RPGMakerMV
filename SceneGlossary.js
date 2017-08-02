@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.0 2017/08/03 カテゴリの並び順を自由に指定できる機能を追加
 // 1.15.1 2017/07/22 1.15.0でパラメータのブール変数項目が全て効かなくなっていた問題を修正
 // 1.15.0 2017/07/13 最後に選択していた項目を記憶した状態で辞書画面に戻る機能を追加
 //                   パラメータの型指定機能に対応
@@ -158,10 +159,18 @@
  * @param PicturePosition
  * @desc 画像の表示位置です。(top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾)
  * @default top
+ * @type select
+ * @option top
+ * @option bottom
+ * @option text
  *
  * @param PictureAlign
  * @desc 画像の揃えです。(left:左揃え center:中央揃え right:右揃え)
  * @default center
+ * @type select
+ * @option left
+ * @option center
+ * @option right
  *
  * @param ThroughBackPicture
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
@@ -219,6 +228,11 @@
  * @desc 用語集アイテムの所持数を表示します。
  * @default false
  * @type boolean
+ *
+ * @param CategoryOrder
+ * @desc カテゴリ並び順を任意に変更したい場合はカテゴリ名を指定してください。
+ * @default
+ * @type string[]
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -441,10 +455,18 @@
  * @param 画像の表示位置
  * @desc 画像の表示位置です。(top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾)
  * @default top
+ * @type select
+ * @option top
+ * @option bottom
+ * @option text
  *
  * @param 画像の揃え
  * @desc 画像の揃えです。(left:左揃え center:中央揃え right:右揃え)
  * @default center
+ * @type select
+ * @option left
+ * @option center
+ * @option right
  *
  * @param 背景ピクチャ透過
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
@@ -502,6 +524,11 @@
  * @desc 用語集アイテムの所持数を表示します。
  * @default false
  * @type boolean
+ *
+ * @param カテゴリ並び順
+ * @desc カテゴリ並び順を任意に変更したい場合はカテゴリ名を指定してください。
+ * @default
+ * @type string[]
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -654,6 +681,19 @@ function Scene_Glossary() {
         return null;
     };
 
+    var getParamJson = function(paramNames, defaultValue) {
+        var value = getParamOther(paramNames);
+        try {
+            value = JSON.parse(value);
+            if (value === null) {
+                value = defaultValue;
+            }
+        } catch (e) {
+            alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nName:[${paramNames}]\nValue:${value}`);
+        }
+        return value;
+    };
+
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
@@ -728,6 +768,7 @@ function Scene_Glossary() {
     var paramUseItemHistory     = getParamBoolean(['UseItemHistory', '入手履歴を使用']);
     var paramPageWrap           = getParamBoolean(['PageWrap', 'ページ折り返し']);
     var paramShowingItemNumber  = getParamBoolean(['ShowingItemNumber', '所持数表示']);
+    var paramCategoryOrder      = getParamJson(['CategoryOrder', 'カテゴリ並び順'], []);
 
     //=============================================================================
     // Game_Interpreter
@@ -871,7 +912,17 @@ function Scene_Glossary() {
                 list.push(category);
             }
         }.bind(this));
-        return list;
+        return list.sort(this._compareOrderGlossaryCategory.bind(this));
+    };
+
+    /**
+     * @private
+     */
+    Game_Party.prototype._compareOrderGlossaryCategory = function(a, b) {
+        var orderLength = paramCategoryOrder.length + 1;
+        var orderA = paramCategoryOrder.indexOf(a) + 1 || orderLength;
+        var orderB = paramCategoryOrder.indexOf(b) + 1 || orderLength;
+        return orderA - orderB;
     };
 
     Game_Party.prototype.gainGlossaryFromText = function(text) {
