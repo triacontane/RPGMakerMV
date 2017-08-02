@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2017/08/03 YEP_BattleEngineCore.jsと併用したときに、メッセージの種類によってポップアップ位置が変化する問題を修正
 // 1.7.0 2017/06/13 行動がガード（耐性によって完全に防がれた）された場合のポップアップを追加
 // 1.6.0 2017/06/10 行動が無効だった場合のポップアップを追加
 // 1.5.1 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
@@ -376,23 +377,7 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandBattleEffectPopup(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandBattleEffectPopup(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandBattleEffectPopup = function(command, args) {
@@ -590,6 +575,17 @@
         _Sprite_Battler_updateDamagePopup.apply(this, arguments);
     };
 
+    var _Sprite_Battler_pushDamageSprite = Sprite_Battler.prototype.pushDamageSprite;
+    Sprite_Battler.prototype.pushDamageSprite = function(sprite) {
+        var damage = this._damages;
+        this._damages = this._damages.filter(function(sprite) {
+            return !sprite.isMessage();
+        });
+        _Sprite_Battler_pushDamageSprite.apply(this, arguments);
+        damage.push(sprite);
+        this._damages = damage;
+    };
+
     Sprite_Battler.prototype.setupMessagePopup = function() {
         if (this._battler.isMessagePopupRequested()) {
             if (this._battler.isSpriteVisible()) {
@@ -649,6 +645,10 @@
         this._flashDuration = duration || paramFlashDuration;
     };
 
+    Sprite_Damage.prototype.isMessage = function() {
+        return false;
+    };
+
     //=============================================================================
     // Sprite_PopupMessage
     //  ポップアップメッセージを表示するスプライトです。
@@ -688,6 +688,10 @@
 
     Sprite_PopupMessage.prototype.setupStaticText = function(textPicture) {
         return ImageManager.loadPicture(textPicture, 0);
+    };
+
+    Sprite_PopupMessage.prototype.isMessage = function() {
+        return true;
     };
 })();
 
