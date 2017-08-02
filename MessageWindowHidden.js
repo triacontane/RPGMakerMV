@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.3.1-SNAPSHOT 2017/07/03 古いYEP_MessageCore.jsのネーム表示ウィンドウが再表示できない不具合の修正
+// 1.3.2 2017/08/02 ponidog_BackLog_utf8.jsとの競合を解消
+// 1.3.1 2017/07/03 古いYEP_MessageCore.jsのネーム表示ウィンドウが再表示できない不具合の修正(by DarkPlasmaさま)
 // 1.3.0 2017/03/16 連動して非表示にできるピクチャを複数指定できる機能を追加
 // 1.2.1 2017/02/07 端末依存の記述を削除
 // 1.2.0 2016/01/02 メッセージウィンドウと連動して指定したピクチャの表示/非表示が自動で切り替わる機能を追加
@@ -133,13 +134,17 @@
     var _Window_Message_updateWait      = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
         if (!this.isClosed() && this.isTriggeredHidden() && !$gameMessage.isChoice()) {
-            if (this.visible) {
+            if (!this.isHidden()) {
                 this.hideAllWindow();
             } else {
                 this.showAllWindow();
             }
         }
-        return _Window_Message_updateWait.call(this);
+        var wait = _Window_Message_updateWait.apply(this, arguments);
+        if (this.isHidden() && this.visible) {
+            this.hideAllWindow();
+        }
+        return wait;
     };
 
     Window_Message.prototype.hideAllWindow = function() {
@@ -149,6 +154,7 @@
         }.bind(this));
         if (this.hasNameWindow() && !this.nameWindowIsSubWindow()) this.hideSubWindow(this._nameWindow);
         this.linkPictures(0);
+        this._hideByMessageWindowHidden = true;
     };
 
     Window_Message.prototype.showAllWindow = function() {
@@ -158,6 +164,11 @@
         }.bind(this));
         if (this.hasNameWindow() && !this.nameWindowIsSubWindow()) this.showSubWindow(this._nameWindow);
         this.linkPictures(255);
+        this._hideByMessageWindowHidden = false;
+    };
+
+    Window_Message.prototype.isHidden = function() {
+        return this._hideByMessageWindowHidden;
     };
 
     Window_Message.prototype.linkPictures = function(opacity) {
@@ -194,7 +205,7 @@
         return this.subWindows().filter(function(subWindow) {
             return subWindow === this._nameWindow;
         }, this).length > 0;
-    }
+    };
 
     Window_Message.prototype.isTriggeredHidden = function() {
         switch (param.triggerButton) {
@@ -211,7 +222,7 @@
 
     var _Window_Message_updateInput      = Window_Message.prototype.updateInput;
     Window_Message.prototype.updateInput = function() {
-        if (!this.visible) return true;
+        if (this.isHidden()) return true;
         return _Window_Message_updateInput.apply(this, arguments);
     };
 
