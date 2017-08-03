@@ -1047,6 +1047,7 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.getSelectedGlossaryType = function() {
+        return this._selectedGlossaryType || 0;
     };
 
     //=============================================================================
