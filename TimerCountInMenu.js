@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/08/04 画面キャプチャにタイマー画像が含まれないよう修正
 // 1.0.0 2017/08/03 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -138,18 +139,13 @@
 
     //=============================================================================
     // Scene_Map
-    //  メインメニュー呼び出し中フラグを設定します。
+    //  キャプチャ作成時にタイマーを描画対象から外します。
     //=============================================================================
-    var _Scene_Map_callMenu = Scene_Map.prototype.callMenu;
-    Scene_Map.prototype.callMenu = function() {
-        _Scene_Map_callMenu.apply(this, arguments);
-
-    };
-
-    var _Scene_Map_start = Scene_Map.prototype.start;
-    Scene_Map.prototype.start = function() {
-        _Scene_Map_start.apply(this, arguments);
-
+    var _Scene_Map_terminate = Scene_Map.prototype.terminate;
+    Scene_Map.prototype.terminate = function() {
+        this._spriteset.setTimerOpacity(0);
+        _Scene_Map_terminate.apply(this, arguments);
+        this._spriteset.setTimerOpacity(255);
     };
 
     //=============================================================================
@@ -191,6 +187,14 @@
         if ($gameTimer) {
             $gameTimer.initialize();
         }
+    };
+
+    //=============================================================================
+    // Spriteset_Base
+    //  タイマースプライトの可視状態を設定します。
+    //=============================================================================
+    Spriteset_Base.prototype.setTimerOpacity = function(opacity) {
+        this._timerSprite.opacity = opacity;
     };
 
     //=============================================================================
