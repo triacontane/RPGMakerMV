@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.1 2017/08/04 セーブとロードを繰り返しすと用語辞典の初期位置が最後に選択していたものになってしまう問題を修正
+//                   コマンド「GLOSSARY_GAIN_ALL」で隠しアイテム以外も辞書に追加されるよう仕様変更
 // 1.16.0 2017/08/03 カテゴリの並び順を自由に指定できる機能を追加
 // 1.15.1 2017/07/22 1.15.0でパラメータのブール変数項目が全て効かなくなっていた問題を修正
 // 1.15.0 2017/07/13 最後に選択していた項目を記憶した状態で辞書画面に戻る機能を追加
@@ -330,6 +332,8 @@
  *
  * GLOSSARY_GAIN_ALL or 用語集全取得
  *  データベースに登録している全ての用語を取得状態にします。
+ *  対象は「隠しアイテム」扱いの用語のみですが、パラメータ「入手履歴を使用」が
+ *  有効な場合は全てのアイテムを解禁します。（アイテム自体は取得しません）
  *
  * GLOSSARY_CALL or 用語集画面の呼び出し [種別]
  *  用語集画面を呼び出します。
@@ -611,7 +615,7 @@
  * 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に
  * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入してください。
  * アイテム図鑑、武器図鑑、防具図鑑も作成できます。
- * この機能を利用する場合はパラメータ「UseItemHistory」を有効にしてください。
+ * この機能を利用する場合はパラメータ「入手履歴を使用」を有効にしてください。
  *
  * ・追加機能2
  * 用語リストはデフォルトではアイテムID順に表示されますが、
@@ -626,6 +630,8 @@
  *
  * GLOSSARY_GAIN_ALL or 用語集全取得
  *  データベースに登録している全ての用語を取得状態にします。
+ *  対象は「隠しアイテム」扱いの用語のみですが、パラメータ「入手履歴を使用」が
+ *  有効な場合は全てのアイテムを解禁します。（アイテム自体は取得しません）
  *
  * GLOSSARY_CALL or 用語集画面の呼び出し [種別]
  *  用語集画面を呼び出します。
@@ -785,7 +791,7 @@ function Scene_Glossary() {
             case 'GLOSSARY_CALL' :
             case '用語集画面の呼び出し' :
                 $gameParty.clearGlossaryIndex();
-                $gameTemp.setGlossaryType(getArgNumber(args[0], 1));
+                $gameParty.setSelectedGlossaryType(getArgNumber(args[0], 1));
                 SceneManager.push(Scene_Glossary);
                 break;
             case 'GLOSSARY_GAIN_ALL' :
@@ -795,7 +801,7 @@ function Scene_Glossary() {
             case 'GLOSSARY_BACK' :
             case '用語集画面に戻る' :
                 if (args[0]) {
-                    $gameTemp.setGlossaryType(getArgNumber(args[0], 1));
+                    $gameParty.setSelectedGlossaryType(getArgNumber(args[0], 1));
                 }
                 SceneManager.push(Scene_Glossary);
                 break;
@@ -864,7 +870,7 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.isSameGlossaryType = function(item) {
-        var type     = $gameTemp.getGlossaryType();
+        var type     = this.getSelectedGlossaryType();
         var itemType = getArgNumber(getMetaValues(item, ['種別', 'Type']));
         return type > 1 ? itemType === type : !itemType || itemType === type;
     };
@@ -940,9 +946,14 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.gainGlossaryAll = function() {
-        this.getAllHiddenGlossaryList().forEach(function(item) {
-            if (!this.hasItem(item)) {
+        this.getAllGlossaryList().forEach(function(item) {
+            if (this.hasItem(item)) {
+                return;
+            }
+            if (this.isGlossaryHiddenItem(item)) {
                 this.gainGlossary(item);
+            } else {
+                this.gainItemHistory(item);
             }
         }.bind(this));
     };
@@ -997,26 +1008,26 @@ function Scene_Glossary() {
 
     Game_Party.prototype.setGlossaryCategoryIndex = function(index) {
         this.initGlossaryIndex();
-        this._glossaryCategoryIndex[$gameTemp.getGlossaryType()] = index;
+        this._glossaryCategoryIndex[this.getSelectedGlossaryType()] = index;
     };
 
     Game_Party.prototype.getGlossaryCategoryIndex = function() {
         this.initGlossaryIndex();
-        return this._glossaryCategoryIndex[$gameTemp.getGlossaryType()];
+        return this._glossaryCategoryIndex[this.getSelectedGlossaryType()];
     };
 
     Game_Party.prototype.setGlossaryListIndex = function(index) {
         this.initGlossaryIndex();
-        this._glossaryListIndex[$gameTemp.getGlossaryType()] = index;
+        this._glossaryListIndex[this.getSelectedGlossaryType()] = index;
     };
 
     Game_Party.prototype.getGlossaryListIndex = function() {
         this.initGlossaryIndex();
-        return this._glossaryListIndex[$gameTemp.getGlossaryType()];
+        return this._glossaryListIndex[this.getSelectedGlossaryType()];
     };
 
     Game_Party.prototype.clearGlossaryIndex = function() {
-        var type = $gameTemp.getGlossaryType();
+        var type = this.getSelectedGlossaryType();
         this.initGlossaryIndex();
         this._glossaryListIndex[type]     = -1;
         this._glossaryCategoryIndex[type] = -1;
@@ -1031,22 +1042,11 @@ function Scene_Glossary() {
         }
     };
 
-    //=============================================================================
-    // Game_Temp
-    //  用語集画面の種別を追加定義します。
-    //=============================================================================
-    var _Game_Temp_initialize      = Game_Temp.prototype.initialize;
-    Game_Temp.prototype.initialize = function() {
-        _Game_Temp_initialize.apply(this, arguments);
-        this._glossaryType = 0;
+    Game_Party.prototype.setSelectedGlossaryType = function(type) {
+        this._selectedGlossaryType = type;
     };
 
-    Game_Temp.prototype.setGlossaryType = function(type) {
-        this._glossaryType = type;
-    };
-
-    Game_Temp.prototype.getGlossaryType = function() {
-        return this._glossaryType;
+    Game_Party.prototype.getSelectedGlossaryType = function() {
     };
 
     //=============================================================================
@@ -1070,7 +1070,7 @@ function Scene_Glossary() {
 
     Scene_Menu.prototype.commandGlossary = function(type) {
         $gameParty.clearGlossaryIndex();
-        $gameTemp.setGlossaryType(type);
+        $gameParty.setSelectedGlossaryType(type);
         SceneManager.push(Scene_Glossary);
     };
 
@@ -1215,7 +1215,7 @@ function Scene_Glossary() {
     };
 
     Scene_Glossary.prototype.getBackPictureName = function() {
-        var type = $gameTemp.getGlossaryType();
+        var type = $gameParty.getSelectedGlossaryType();
         return paramBackPictures[type - 1] || paramBackPictures[0];
     };
 
