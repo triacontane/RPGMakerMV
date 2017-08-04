@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2017/08/05 アクターのバトラー画像をマップ上に表示する機能を追加
 // 1.5.3 2017/06/22 プラグインを適用していないデータをロードしたときにプレイヤーが表示されない問題を修正
 // 1.5.2 2017/06/11 プライオリティの設定を0にすると設定が有効にならない問題を修正
 // 1.5.1 2017/06/11 GALV_CamControl.jsとの競合を解消
@@ -35,7 +36,8 @@
  *
  * @param イベント消去無効
  * @desc エンカウント発生時にイベントを一瞬消去するエフェクトを無効にします。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help イベントのグラフィック表示方法を拡張して多彩な表現を可能にします。
  * イベントのメモ欄に所定の書式で記入してください。
@@ -69,6 +71,12 @@
  *
  * <CGフェイス:（ページ数）,（ファイル名）（インデックス）>
  * 指定したページが有効になった場合のグラフィックをフェイス画像から取得します。
+ * 拡張子は不要です。歩行アニメ待機アニメは無効化されます。
+ *
+ * 例：<CGフェイス:1,Actor1,4> or <CGFace:1,Actor1,4>
+ *
+ * <CGアクター:（ページ数）,（ファイル名）（インデックス）>
+ * 指定したページが有効になった場合のグラフィックをバトラー画像から取得します。
  * 拡張子は不要です。歩行アニメ待機アニメは無効化されます。
  *
  * 例：<CGフェイス:1,Actor1,4> or <CGFace:1,Actor1,4>
@@ -180,7 +188,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
@@ -518,7 +526,7 @@
         }
         cgParams = this.getMetaCg(['敵キャラ', 'Enemy']);
         if (cgParams) {
-            this._customResource = 'Enemy';
+            this._customResource = $gameSystem.isSideView() ? 'SvEnemy' : 'Enemy';
             this._graphicColumns = 1;
             this._graphicRows    = 1;
             arguments[0]         = cgParams[1];
@@ -529,7 +537,7 @@
             this._graphicColumns = 16;
             this._graphicRows    = 20;
             arguments[0]         = 'IconSet';
-            arguments[1]         = getArgNumber(cgParams[1], 0, 16 * 20 - 1);
+            arguments[1]         = getArgNumber(cgParams[1], 0, this._graphicColumns * this._graphicRows - 1);
         }
         cgParams = this.getMetaCg(['フェイス', 'Face']);
         if (cgParams) {
@@ -537,7 +545,7 @@
             this._graphicColumns = 4;
             this._graphicRows    = 2;
             arguments[0]         = cgParams[1];
-            arguments[1]         = getArgNumber(cgParams[2], 0, 4 * 2 - 1);
+            arguments[1]         = getArgNumber(cgParams[2], 0, this._graphicColumns * this._graphicRows - 1);
         }
         cgParams = this.getMetaCg(['遠景', 'Parallax']);
         if (cgParams) {
@@ -545,6 +553,14 @@
             this._graphicColumns = 1;
             this._graphicRows    = 1;
             arguments[0]         = cgParams[1];
+        }
+        cgParams = this.getMetaCg(['アクター', 'Actor']);
+        if (cgParams) {
+            this._customResource = 'SvActor';
+            this._graphicColumns = 9;
+            this._graphicRows    = 6;
+            arguments[0]         = cgParams[1];
+            arguments[1]         = getArgNumber(cgParams[2], 0, this._graphicColumns * this._graphicRows - 1);
         }
         _Game_Event_setImage.apply(this, arguments);
     };
