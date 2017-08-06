@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/08/06 メモリ上にロードされていないアクターの自動ステートチェックが実行されるとエラーになる現象を修正
+//                  処理の軽量化
 // 1.3.0 2017/07/21 パーティの並び順で自動ステートを付与する機能を追加
 // 1.2.5 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.2.4 2017/05/27 全回復の直後に自動ステートが解除されてしまう問題を修正
@@ -292,9 +294,22 @@
     };
 
     //=============================================================================
+    // Game_Actors
+    //  データが存在するかどうかを返します。
+    //=============================================================================
+    Game_Actors.prototype.isExistData = function(actorId) {
+        return !!this._data[actorId];
+    };
+
+    //=============================================================================
     // Game_Actor
     //  自動付与ステートの更新処理を定義します。
     //=============================================================================
+    Game_Actor.prototype.updateAutomaticState = function() {
+        if (!$gameActors.isExistData(this._actorId)) return;
+        Game_BattlerBase.prototype.updateAutomaticState.call(this);
+    };
+
     Game_Actor.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
         var result = null;
@@ -340,10 +355,23 @@
     // Game_Party
     //  全てのアクターの自動付与ステートを更新します。
     //=============================================================================
+    Game_Party.prototype.requestUpdateAutomaticState = function() {
+        this._requestUpdateAutomaticState = true;
+    };
+
     Game_Party.prototype.updateAutomaticState = function() {
         this.members().forEach(function(actor) {
             actor.updateAutomaticState();
         });
+        this._lastUpdateFrameAutomaticState = Graphics.frameCount;
+    };
+
+    Game_Party.prototype.updateAutomaticStateIfRequested = function() {
+        var coolTime = (this._lastUpdateFrameAutomaticState + 10 > Graphics.frameCount);
+        if (this._requestUpdateAutomaticState && !coolTime) {
+            this.updateAutomaticState();
+            this._requestUpdateAutomaticState = false;
+        }
     };
 
     var _Game_Party_swapOrder = Game_Party.prototype.swapOrder;
@@ -356,6 +384,12 @@
     // Game_Map
     //  場所移動時に自動付与ステートを更新します。
     //=============================================================================
+    var _Game_Map_refreshIfNeeded = Game_Map.prototype.refreshIfNeeded;
+    Game_Map.prototype.refreshIfNeeded = function() {
+        _Game_Map_refreshIfNeeded.apply(this, arguments);
+        $gameParty.updateAutomaticStateIfRequested();
+    };
+
     var _Game_Map_setup = Game_Map.prototype.setup;
     Game_Map.prototype.setup = function(mapId) {
         _Game_Map_setup.apply(this, arguments);
@@ -365,7 +399,7 @@
     var _Game_Map_refresh = Game_Map.prototype.refresh;
     Game_Map.prototype.refresh = function() {
         _Game_Map_refresh.apply(this, arguments);
-        $gameParty.updateAutomaticState();
+        $gameParty.requestUpdateAutomaticState();
     };
 
     //=============================================================================
