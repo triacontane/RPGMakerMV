@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/08/07 環境に関する制約を追加
 // 1.0.1 2017/08/07 リファクタリング（仕様の変更はなし）
 // 1.0.0 2017/08/06 初版
 // ----------------------------------------------------------------------------
@@ -23,6 +24,9 @@
  * parallel playback of multiple videos
  * It will be possible. Also, the movie will be displayed at the bottom of
  * the window. However, it does not correspond to "color tone change of picture".
+ *
+ * Currently there is a problem that the video may not be played properly
+ * with PC Firefox. For the time being we will only support local execution.
  *
  * After preparing movie files with plug-in command "MP_SET_MOVIE"
  * Please execute the event designation "Show Picture"
@@ -54,6 +58,9 @@
  * ピクチャの移動や回転による処理の対象になるほか、複数の動画の並行再生が
  * 可能になります。また、動画がウィンドウの下に表示されるようになります。
  * ただし「ピクチャの色調変更」には対応していません。
+ *
+ * 現在、PC版Firefoxで動画が正常に再生されない場合がある問題があり
+ * 当面の間はローカル実行のみをサポート対象とします。
  *
  * プラグインコマンド「MP_SET_MOVIE」で動画ファイルを準備してから
  * イベントコマンド「ピクチャの表示」をファイル指定を空で実行してください。
@@ -193,6 +200,15 @@
         } else {
             return _Game_Interpreter_updateWaitMode.apply(this, arguments);
         }
+    };
+
+    //=============================================================================
+    // Utils
+    //  動作環境を判定します。
+    //=============================================================================
+    Utils.isPcChrome = function() {
+        var agent = navigator.userAgent;
+        return !!(!agent.match(/Android/) && agent.match(/Chrome/)) && !this.isNwjs();
     };
 
     //=============================================================================
@@ -430,7 +446,7 @@
     ImageManager.loadVideo = function(filename) {
         if (filename) {
             var path = 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
-            return Bitmap_Video.load(path, true);
+            return Bitmap_Video.load(path, false);
         } else {
             return this.loadEmptyBitmap();
         }
@@ -485,7 +501,9 @@
     };
 
     Bitmap_Video.prototype.update = function() {
-        this._baseTexture.update();
+        if (!Utils.isPcChrome()) {
+            this._baseTexture.update();
+        }
     };
 
     Bitmap_Video.prototype.setVolume = function(volume) {
