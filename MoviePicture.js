@@ -200,15 +200,15 @@
     //  動画ピクチャを準備します。
     //=============================================================================
     Game_Screen.prototype.setVideoPictureName = function(movieName) {
-        this._moviePictureName = movieName;
+        this._videoPictureName = movieName;
     };
 
     Game_Screen.prototype.getVideoPictureName = function() {
-        return this._moviePictureName;
+        return this._videoPictureName;
     };
 
     Game_Screen.prototype.clearVideoPictureName = function() {
-        this._moviePictureName = null;
+        this._videoPictureName = null;
     };
 
     Game_Screen.prototype.isVideoWaiting = function() {
@@ -297,9 +297,8 @@
         if (SceneManager.isBattleStartUnexpectedLoad()) {
             return;
         }
-        var bitmap  = ImageManager.loadVideo(this._pictureName);
-        this.bitmap = bitmap;
-        bitmap.addLoadListener(function() {
+        this.bitmap = ImageManager.loadVideo(this._pictureName);
+        this.bitmap.addLoadListener(function() {
             this.startVideo();
         }.bind(this));
     };
@@ -310,6 +309,7 @@
         var picture     = this.picture();
         if (picture) {
             this.bitmap.setCurrentTime(picture.getVideoPosition());
+            this.bitmap.play();
         }
     };
 
@@ -406,6 +406,7 @@
         this._pictureContainer.children.forEach(function(picture) {
             if (picture.clearVideo) {
                 picture.clearVideo();
+                picture.bitmap = null;
             }
         });
     };
@@ -426,12 +427,10 @@
     // ImageManager
     //  動画の読み込みを追加定義します。
     //=============================================================================
-    ImageManager.loadVideo = function(filename, smooth) {
+    ImageManager.loadVideo = function(filename) {
         if (filename) {
-            var path      = 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
-            var bitmap    = Bitmap_Video.load(path);
-            bitmap.smooth = smooth;
-            return bitmap;
+            var path = 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
+            return Bitmap_Video.load(path, true);
         } else {
             return this.loadEmptyBitmap();
         }
@@ -476,9 +475,10 @@
         return !!this._video;
     };
 
-    Bitmap_Video.load = function(url) {
+    Bitmap_Video.load = function(url, smooth) {
         var bitmap    = Object.create(Bitmap_Video.prototype);
         bitmap._defer = true;
+        bitmap.smooth = smooth;
         bitmap.initialize();
         bitmap._requestVideo(url);
         return bitmap;
@@ -503,7 +503,8 @@
     Bitmap_Video.prototype.destroy = function() {
         if (this.isReady()) {
             this.pause();
-            this._video        = null;
+            this._video = null;
+            this.__baseTexture.destroy();
             this.__baseTexture = null;
         } else {
             this._loadingDestory = true;
@@ -511,8 +512,10 @@
     };
 
     Bitmap_Video.prototype._requestVideo = function(url) {
-        this.__baseTexture = PIXI.VideoBaseTexture.fromUrl(url);
-        this._video        = this.__baseTexture.source;
+        var scaleMode               = this.smooth ? PIXI.SCALE_MODES.LINEAR : PIXI.SCALE_MODES.NEAREST;
+        this.__baseTexture          = PIXI.VideoBaseTexture.fromUrl(url, scaleMode);
+        this.__baseTexture.autoPlay = false;
+        this._video                 = this.__baseTexture.source;
         this._video.addEventListener('canplaythrough', this._onLoad.bind(this));
         this._video.addEventListener('ended', this._onEnded.bind(this));
         this._loadingState = 'requesting';
