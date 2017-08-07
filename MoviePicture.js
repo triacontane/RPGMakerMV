@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/08/07 リファクタリング（仕様の変更はなし）
 // 1.0.0 2017/08/06 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -124,16 +125,16 @@
     // パラメータの取得と整形
     //=============================================================================
     var pluginCommandMap = new Map();
-    setPluginCommand('SET_MOVIE', 'execSetMoviePicture');
-    setPluginCommand('動画設定', 'execSetMoviePicture');
-    setPluginCommand('SET_LOOP', 'execSetMovieLoop');
-    setPluginCommand('ループ設定', 'execSetMovieLoop');
-    setPluginCommand('SET_PAUSE', 'execSetMoviePause');
-    setPluginCommand('ポーズ設定', 'execSetMoviePause');
-    setPluginCommand('SET_WAIT', 'execSetMovieWait');
-    setPluginCommand('ウェイト設定', 'execSetMovieWait');
-    setPluginCommand('SET_VOLUME', 'execSetMovieVolume');
-    setPluginCommand('音量設定', 'execSetMovieVolume');
+    setPluginCommand('SET_MOVIE', 'execSetVideoPicture');
+    setPluginCommand('動画設定', 'execSetVideoPicture');
+    setPluginCommand('SET_LOOP', 'execSetVideoLoop');
+    setPluginCommand('ループ設定', 'execSetVideoLoop');
+    setPluginCommand('SET_PAUSE', 'execSetVideoPause');
+    setPluginCommand('ポーズ設定', 'execSetVideoPause');
+    setPluginCommand('SET_WAIT', 'execSetVideoWait');
+    setPluginCommand('ウェイト設定', 'execSetVideoWait');
+    setPluginCommand('SET_VOLUME', 'execSetVideoVolume');
+    setPluginCommand('音量設定', 'execSetVideoVolume');
 
     //=============================================================================
     // Game_Interpreter
@@ -148,32 +149,32 @@
         }
     };
 
-    Game_Interpreter.prototype.execSetMoviePicture = function(args) {
-        $gameScreen.setMoviePicture(args[0]);
+    Game_Interpreter.prototype.execSetVideoPicture = function(args) {
+        $gameScreen.setVideoPictureName(args[0]);
     };
 
-    Game_Interpreter.prototype.execSetMovieLoop = function(args) {
+    Game_Interpreter.prototype.execSetVideoLoop = function(args) {
         var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
         if (picture) {
             picture.setVideoLoop(getArgBoolean(args[1]));
         }
     };
 
-    Game_Interpreter.prototype.execSetMoviePause = function(args) {
+    Game_Interpreter.prototype.execSetVideoPause = function(args) {
         var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
         if (picture) {
             picture.setVideoPause(getArgBoolean(args[1]));
         }
     };
 
-    Game_Interpreter.prototype.execSetMovieVolume = function(args) {
+    Game_Interpreter.prototype.execSetVideoVolume = function(args) {
         var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
         if (picture) {
             picture.setVideoVolume(getArgNumber(args[1], 0, 100));
         }
     };
 
-    Game_Interpreter.prototype.execSetMovieWait = function(args) {
+    Game_Interpreter.prototype.execSetVideoWait = function(args) {
         var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
         if (picture) {
             picture.setVideoWait(true);
@@ -181,7 +182,7 @@
         }
     };
 
-    var _Game_Interpreter_updateWaitMode = Game_Interpreter.prototype.updateWaitMode;
+    var _Game_Interpreter_updateWaitMode      = Game_Interpreter.prototype.updateWaitMode;
     Game_Interpreter.prototype.updateWaitMode = function() {
         if (this._waitMode === 'videoPicture') {
             var waiting = $gameScreen.isVideoWaiting();
@@ -198,15 +199,15 @@
     // Game_Screen
     //  動画ピクチャを準備します。
     //=============================================================================
-    Game_Screen.prototype.setMoviePicture = function(movieName) {
+    Game_Screen.prototype.setVideoPictureName = function(movieName) {
         this._moviePictureName = movieName;
     };
 
-    Game_Screen.prototype.getMoviePicture = function() {
+    Game_Screen.prototype.getVideoPictureName = function() {
         return this._moviePictureName;
     };
 
-    Game_Screen.prototype.clearMoviePicture = function() {
+    Game_Screen.prototype.clearVideoPictureName = function() {
         this._moviePictureName = null;
     };
 
@@ -224,9 +225,9 @@
     Game_Picture.prototype.show = function(name, origin, x, y, scaleX,
                                            scaleY, opacity, blendMode) {
         _Game_Picture_show.apply(this, arguments);
-        var videoName = $gameScreen.getMoviePicture();
+        var videoName = $gameScreen.getVideoPictureName();
         if (videoName && !name) {
-            $gameScreen.clearMoviePicture();
+            $gameScreen.clearVideoPictureName();
             this._name  = videoName;
             this._video = true;
             this.setVideoVolume(100);
@@ -293,24 +294,20 @@
     };
 
     Sprite_Picture.prototype.loadVideo = function() {
-        if (this.isBattleStartUnexpectedLoad()) {
+        if (SceneManager.isBattleStartUnexpectedLoad()) {
             return;
         }
-        var bitmap = ImageManager.loadVideo(this._pictureName);
+        var bitmap  = ImageManager.loadVideo(this._pictureName);
         this.bitmap = bitmap;
         bitmap.addLoadListener(function() {
             this.startVideo();
         }.bind(this));
     };
 
-    Sprite_Picture.prototype.isBattleStartUnexpectedLoad = function() {
-        return SceneManager._scene instanceof Scene_Battle && !$gameParty.inBattle()
-    };
-
     Sprite_Picture.prototype.startVideo = function() {
         this.refreshForVideo();
         this._playStart = true;
-        var picture = this.picture();
+        var picture     = this.picture();
         if (picture) {
             this.bitmap.setCurrentTime(picture.getVideoPosition());
         }
@@ -329,7 +326,7 @@
         this.updateVideo();
     };
 
-    var _Sprite_Picture_setBlendColor = Sprite_Picture.prototype.setBlendColor;
+    var _Sprite_Picture_setBlendColor      = Sprite_Picture.prototype.setBlendColor;
     Sprite_Picture.prototype.setBlendColor = function(color) {
         if (this.isVideoPicture()) return;
         _Sprite_Picture_setBlendColor.apply(this, arguments);
@@ -417,7 +414,7 @@
     // Scene_Base
     //  シーン遷移時に再生中の動画をすべて破棄します。
     //=============================================================================
-    var _Scene_Base_terminate = Scene_Base.prototype.terminate;
+    var _Scene_Base_terminate      = Scene_Base.prototype.terminate;
     Scene_Base.prototype.terminate = function() {
         if (this._spriteset && this._spriteset instanceof Spriteset_Base) {
             this._spriteset.clearAllVideo();
@@ -446,6 +443,10 @@
         } else {
             return '.mp4';
         }
+    };
+
+    SceneManager.isBattleStartUnexpectedLoad = function() {
+        return this._scene instanceof Scene_Battle && !$gameParty.inBattle()
     };
 
     //=============================================================================
@@ -510,11 +511,11 @@
     };
 
     Bitmap_Video.prototype._requestVideo = function(url) {
-        this.__baseTexture           = PIXI.VideoBaseTexture.fromUrl(url);
-        this._video                  = this.__baseTexture.source;
-        this._video.oncanplaythrough = this._onLoad.bind(this);
-        this._video.onended          = this._onEnded.bind(this);
-        this._loadingState           = 'requesting';
+        this.__baseTexture = PIXI.VideoBaseTexture.fromUrl(url);
+        this._video        = this.__baseTexture.source;
+        this._video.addEventListener('canplaythrough', this._onLoad.bind(this));
+        this._video.addEventListener('ended', this._onEnded.bind(this));
+        this._loadingState = 'requesting';
     };
 
     Bitmap_Video.prototype._onLoad = function() {
