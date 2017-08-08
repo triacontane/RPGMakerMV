@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2017/08/08 エラー処理を追加
 // 1.0.2 2017/08/07 環境に関する制約を追加
 // 1.0.1 2017/08/07 リファクタリング（仕様の変更はなし）
 // 1.0.0 2017/08/06 初版
@@ -24,6 +25,8 @@
  * parallel playback of multiple videos
  * It will be possible. Also, the movie will be displayed at the bottom of
  * the window. However, it does not correspond to "color tone change of picture".
+ *
+ * This plugin can only be used with core script ver1.5.0 or later.
  *
  * Currently there is a problem that the video may not be played properly
  * with PC Firefox. For the time being we will only support local execution.
@@ -59,8 +62,14 @@
  * 可能になります。また、動画がウィンドウの下に表示されるようになります。
  * ただし「ピクチャの色調変更」には対応していません。
  *
- * 現在、PC版Firefoxで動画が正常に再生されない場合がある問題があり
- * 当面の間はローカル実行のみをサポート対象とします。
+ * このプラグインはコアスクリプトver1.5.0以降でのみ使用できます。
+ *
+ * 現在、スマートデバイスで実行したときに動画が最初のフレームで停止する
+ * 現象を確認しています。
+ * よって当面の間はローカル実行(Game.exe)のみをサポート対象とします。
+ *
+ * また、アルファチャンネル付き動画についてはローカル実行(Game.exe)で
+ * 正常に再生できない現象を確認しています。
  *
  * プラグインコマンド「MP_SET_MOVIE」で動画ファイルを準備してから
  * イベントコマンド「ピクチャの表示」をファイル指定を空で実行してください。
@@ -69,7 +78,7 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * MP_SET_MOVIE file  # 動画ファイル[file]を準備します。
+ * MP_SET_MOVIE file  # 動画ファイル[file]を準備します。拡張子不要。
  * MP_動画設定 file   # 同上
  * MP_SET_LOOP 1 on   # ピクチャ番号[1]の動画がループ再生されます。
  * MP_ループ設定 1 on # 同上(offでループ再生を解除します)
@@ -446,9 +455,17 @@
     ImageManager.loadVideo = function(filename) {
         if (filename) {
             var path = 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
-            return Bitmap_Video.load(path, false);
+            return Bitmap_Video.load(path, false, this.getVideoClass());
         } else {
             return this.loadEmptyBitmap();
+        }
+    };
+
+    ImageManager.getVideoClass = function() {
+        if (Utils.isNwjs() || Utils.isPcChrome()) {
+            return Bitmap_Video;
+        } else {
+            return Bitmap_DrawVideo;
         }
     };
 
@@ -491,11 +508,11 @@
         return !!this._video;
     };
 
-    Bitmap_Video.load = function(url, smooth) {
-        var bitmap    = Object.create(Bitmap_Video.prototype);
+    Bitmap_Video.load = function(url, smooth, loadClass) {
+        var bitmap    = Object.create(loadClass.prototype);
         bitmap._defer = true;
-        bitmap.smooth = smooth;
         bitmap.initialize();
+        bitmap.smooth = smooth;
         bitmap._requestVideo(url);
         return bitmap;
     };
@@ -507,7 +524,8 @@
     };
 
     Bitmap_Video.prototype.setVolume = function(volume) {
-        this._video.volume = volume * Graphics.getVideoVolume();
+        var videoVolume    = volume * Graphics.getVideoVolume();
+        this._video.volume = (videoVolume !== undefined ? videoVolume : volume);
     };
 
     Bitmap_Video.prototype.pause = function() {
@@ -522,7 +540,7 @@
         if (this.isReady()) {
             this.pause();
             this._video = null;
-            this.__baseTexture.destroy();
+            this._baseTexture.destroy();
             this.__baseTexture = null;
         } else {
             this._loadingDestory = true;
@@ -530,13 +548,29 @@
     };
 
     Bitmap_Video.prototype._requestVideo = function(url) {
-        var scaleMode               = this.smooth ? PIXI.SCALE_MODES.LINEAR : PIXI.SCALE_MODES.NEAREST;
-        this.__baseTexture          = PIXI.VideoBaseTexture.fromUrl(url, scaleMode);
-        this.__baseTexture.autoPlay = false;
-        this._video                 = this.__baseTexture.source;
-        this._video.addEventListener('canplaythrough', this._onLoad.bind(this));
-        this._video.addEventListener('ended', this._onEnded.bind(this));
+        if (!this._loader) {
+            this._loader = ResourceHandler.createLoader(url, this._requestVideo.bind(this, url), this._onError.bind(this));
+        }
+        this._createVideo(url);
+        this._createVideoBaseTexture();
         this._loadingState = 'requesting';
+    };
+
+    Bitmap_Video.prototype._createVideo = function(url) {
+        this._video     = document.createElement('video');
+        this._video.src = url;
+        this._video.addEventListener('canplaythrough', this._loadListener = this._onLoad.bind(this));
+        this._video.addEventListener('ended', this._endedListener = this._onEnded.bind(this));
+        this._video.addEventListener('error', this._errorListener = this._loader || this._onError.bind(this));
+        this._video.load();
+        this._video.autoplay = false;
+        this._loadingState = 'requesting';
+    };
+
+    Bitmap_Video.prototype._createVideoBaseTexture = function() {
+        var scaleMode      = this.smooth ? PIXI.SCALE_MODES.LINEAR : PIXI.SCALE_MODES.NEAREST;
+        this.__baseTexture = PIXI.VideoBaseTexture.fromVideo(this._video, scaleMode);
+        this._baseTexture.autoPlay = false;
     };
 
     Bitmap_Video.prototype._onLoad = function() {
@@ -556,12 +590,16 @@
 
     Bitmap_Video.prototype._onEnded = function() {
         this._firstLapEnded = true;
-        if (this._loop) {
-            this.setCurrentTime(0);
-            this.play();
-        } else {
+        if (!this._video.loop) {
             this._ended = true;
         }
+    };
+
+    Bitmap_Video.prototype._onError = function() {
+        this._video.removeEventListener('load', this._loadListener);
+        this._video.removeEventListener('ended', this._endedListener);
+        this._video.removeEventListener('error', this._errorListener);
+        this._loadingState = 'error';
     };
 
     Bitmap_Video.prototype.isFirstLap = function() {
@@ -573,7 +611,7 @@
     };
 
     Bitmap_Video.prototype.setVideoLoop = function(loop) {
-        this._loop = loop;
+        this._video.loop = loop;
     };
 
     Bitmap_Video.prototype.setCurrentTime = function(value) {
@@ -582,6 +620,32 @@
 
     Bitmap_Video.prototype.getCurrentTime = function() {
         return this._video.currentTime;
+    };
+
+    //=============================================================================
+    // Bitmap_DrawVideo
+    //  drawImageで実装する動画ビットマップクラスです。
+    //=============================================================================
+    function Bitmap_DrawVideo() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Bitmap_DrawVideo.prototype             = Object.create(Bitmap_Video.prototype);
+    Bitmap_DrawVideo.prototype.constructor = Bitmap_DrawVideo;
+
+    Bitmap_DrawVideo.prototype._createVideoBaseTexture = function() {
+        // do nothing
+    };
+
+    Bitmap_DrawVideo.prototype.update = function() {
+        if (this.width + this.height > 1000 && Graphics.frameCount % 2 !== 0) {
+            return;
+        }
+        if (this.getCurrentTime() > 0) {
+            this.clear();
+        }
+        this._context.drawImage(this._video, 0, 0, this.width, this.height);
+        this._baseTexture.update();
     };
 
     //=============================================================================
