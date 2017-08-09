@@ -6,7 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 2.1.1 2017/03/10 コミュニティ版でロード時にエンジン名称を出力するよう修正
+// 2.2.0 2017/08/09 パラメータ型指定機能に対応。一部パラメータは再設定が必要です。
+//                  起動時に自動で最前面に表示するパラメータを追加。
+//                  NW.jsを最新化したときに発生するエラーに対処（ただし一部機能は使用できません）
+// 2.1.1 2017/03/10 コミュニティ版でロード時にエンジン名称を出力するよう修正。
 // 2.1.0 2016/12/25 スローモーション機能を追加しました。一時的にゲーム速度を最低1/60倍速まで低下できます。
 // 2.0.0 2016/12/16 ES2015向けにリファクタリングしました。
 //                  JSON形式でのセーブ＆ロードに対応しました。
@@ -34,7 +37,7 @@
 // 1.0.1 2015/12/19 F12キーでリセットする機能を追加（F5と同様の動作）
 // 1.0.0 2015/12/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -44,71 +47,182 @@
  * @author triacontane
  *
  * @param StartupDevTool
- * @desc It will start the developer tools at the start of the game.(ON/OFF/MINIMIZE)
- * @default ON
+ * @desc It will start the developer tools at the start of the game.
+ * @default true
+ * @type select
+ * @option ON
+ * @option OFF
+ * @option MINIMIZE
  *
  * @param DevToolsPosition
  * @desc Developer tool's position(X, Y, Width, Height) Separated comma(ex:0,0,800,600)
+ * @default
+ * @type struct<devPosition>
  * @default
  *
  * @param FuncKeyMinimize
  * @desc デベロッパツールの最小化/復帰の切り替えを行うキーです(F1～F12)。
  * このキーをCtrlと一緒に押すとデベロッパツールとゲーム画面を閉じます。
  * @default F8
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FuncKeyReload
  * @desc 画面のリロードを行うキーです(F1～F12)。デフォルトF5キーと同様の役割を持ちます。
  * @default F12
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FuncKeyOnTop
  * @desc ゲーム画面を最前面に表示するキーです。(F1～F12)。
  * @default
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FuncKeyRapidGame
  * @desc ゲームを高速化するキーです。(F1～F12)。
  * @default F10
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FuncKeyScript
  * @desc スクリプト実行用のウィンドウをポップアップするキーです。(F1～F12)。
  * @default F6
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FuncKeyFreeze
  * @desc 画面の更新を一時停止するキーです。(F1～F12)。
  * @default
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param ShowFPS
- * @desc 初期状態で画面左上にFPSを表示します（FPS/MS/OFF）。
+ * @desc 初期状態で画面左上にFPSもしくはMSを表示します（FPS/MS/OFF）。
  * @default OFF
+ * @type select
+ * @option FPS
+ * @option MS
+ * @option OFF
  *
  * @param CutTitle
  * @desc タイトル画面をとばして最新のセーブファイルをロードします。
  * セーブファイルがなければニューゲームになります。（ON/OFF）
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param RapidStart
  * @desc 高速化された状態でゲームを開始します。（ON/OFF）
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param RapidSpeed
  * @desc 高速化を実行した際のスピード倍率です。
  * @default 2
+ * @type number
+ * @min -60
+ * @max 16
  *
  * @param FakeMobile
  * @desc モバイル実行を偽装します。(ON/OFF)
  * モバイル版で異なるUIを使用する場合の表示確認ができます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param MenuBarVisible
  * @desc メニューバーを表示し各種デバッグコマンドを実行できます。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ClickMenu
  * @desc クリックメニューから各種デバッグコマンドを実行できます。(-1;無効 0:左 1:ホイール 2:右)
- * @default 2
+ * @default 1
+ * @type select
+ * @option -1
+ * @option 0
+ * @option 1
+ * @option 2
  *
  * @param JsonSave
  * @desc JSON形式でセーブ＆ロードできます。テキストエディタ等でセーブファイルを自由に編集できるようになります。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param OutputStartupInfo
+ * @desc 起動時に様々な情報をログ出力します。
+ * @default true
+ * @type boolean
+ *
+ * @param StartupOnTop
+ * @desc 起動時にゲーム画面が最前面に固定されます。
+ * @default false
+ * @type boolean
  *
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
@@ -148,77 +262,208 @@
  * @author トリアコンタン
  *
  * @param 開始時に起動
- * @desc ゲーム開始時に同時にデベロッパツールを起動します。(ON/OFF/MINIMIZE)
+ * @desc ゲーム開始時に同時にデベロッパツールを起動します。(MINIMIZE:最小化で起動)
  * @default ON
+ * @type select
+ * @option ON
+ * @option OFF
+ * @option MINIMIZE
  *
  * @param デベロッパツール表示位置
- * @desc デベロッパツールの表示座標です。X、Y、横幅、高さをカンマ区切りで指定します。指定しない場合自動調整されます。
+ * @desc デベロッパツールの表示座標です。X、Y、横幅、高さを指定します。指定しない場合自動調整されます。
+ * @default
+ * @type struct<devPosition>
  * @default
  *
  * @param 最小化切替キー
  * @desc デベロッパツールの最小化/復帰の切り替えを行うキーです(F1～F12)。
  * このキーをCtrlと一緒に押すとデベロッパツールとゲーム画面を閉じます。
  * @default F8
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param リロードキー
  * @desc 画面のリロードを行うキーです(F1～F12)。デフォルトF5キーと同様の役割を持ちます。
  * 以前のツクールとの後方互換性を持たせるための機能です。
  * @default F12
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param 最前面に表示キー
  * @desc ゲーム画面を最前面表示を切り替えるキーです。(F1～F12)。
- * @default
+ * @default F11
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param 高速化切替キー
  * @desc ゲームの高速化を切り替えるキーです。(F1～F12)。
  * @default
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param 強制戦闘勝利キー
  * @desc 戦闘を勝利扱いで強制終了するキーです。(F1～F12)。
  * @default
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param スクリプト実行キー
  * @desc スクリプト常駐実行用のキーです。(F1～F12)。
  * @default
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param フリーズキー
  * @desc 画面の更新を一時停止するキーです。(F1～F12)。
- * @default
+ * @default F10
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FPS表示
  * @desc 初期状態で画面左上にFPSを表示します。（FPS/MS/OFF）
  * @default OFF
+ * @type select
+ * @option FPS
+ * @option MS
+ * @option OFF
  *
  * @param タイトルカット
  * @desc タイトル画面をとばして最新のセーブファイルをロードします。
  * セーブファイルがなければニューゲームになります。（ON/OFF）
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 高速開始
  * @desc 高速化された状態でゲームを開始します。（ON/OFF）
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 高速スピード
  * @desc 高速化を実行した際のスピード倍率です。(-60...16)
  * 負の値を設定するとスローモーションになります。
  * @default 2
+ * @type number
+ * @min -60
+ * @max 16
  *
  * @param モバイル偽装
  * @desc モバイル実行を偽装します。(ON/OFF)
  * モバイル版で異なるUIを使用する場合の表示確認ができます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param メニューバー表示
  * @desc メニューバーを表示し各種デバッグコマンドを実行できます。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param クリックメニュー
  * @desc クリックメニューから各種デバッグコマンドを実行できます。(-1;無効 0:左 1:ホイール 2:右)
- * @default 2
+ * @default 1
+ * @type select
+ * @option -1
+ * @option 0
+ * @option 1
+ * @option 2
  *
  * @param JSON形式セーブ
  * @desc JSON形式でセーブ＆ロードできます。テキストエディタ等でセーブファイルを自由に編集できるようになります。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param 起動時情報出力
+ * @desc 起動時に様々な情報をログ出力します。
+ * @default true
+ * @type boolean
+ *
+ * @param 最前面で起動
+ * @desc 起動時にゲーム画面が最前面に固定されます。
+ * @default false
+ * @type boolean
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
@@ -257,37 +502,40 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+/*~struct~devPosition:
+ * @param x
+ * @desc デベロッパツールのX座標です。
+ * @type number
+ * @param y
+ * @desc デベロッパツールのY座標です。
+ * @type number
+ * @param width
+ * @desc デベロッパツールの横幅です。
+ * @type number
+ * @param height
+ * @desc デベロッパツールの高さです。
+ * @type number
+ */
+/*~struct~devPosition:ja
+ * @param x
+ * @desc デベロッパツールのX座標です。
+ * @type number
+ * @param y
+ * @desc デベロッパツールのY座標です。
+ * @type number
+ * @param width
+ * @desc デベロッパツールの横幅です。
+ * @type number
+ * @param height
+ * @desc デベロッパツールの高さです。
+ * @type number
+ */
 
-var p        = null;
-var Imported = Imported || {};
+var p = null;
 
 (function() {
     'use strict';
     const pluginName = 'DevToolsManage';
-
-    console.log('=========================Start Up ' + pluginName + '=========================');
-    console.log('********************************');
-    console.log('***   User Agent             ***');
-    console.log('********************************');
-    console.log(navigator.userAgent);
-    console.log('********************************');
-    console.log('***   Core Version           ***');
-    console.log('********************************');
-    console.log('RPG Maker Name    : ' + Utils.RPGMAKER_NAME);
-    console.log('RPG Maker Version : ' + Utils.RPGMAKER_VERSION);
-    console.log('RPG Maker Engine  : ' + Utils.RPGMAKER_ENGINE);
-
-    // テストプレー時以外は一切の機能を無効
-    if (!Utils.isNwjs() || !Utils.isOptionValid('test')) {
-        console.log(pluginName + ' is valid only test play!');
-        return;
-    }
-
-    console.log('********************************');
-    console.log('***   Environment            ***');
-    console.log('********************************');
-    console.log('Platform : ' + process.platform);
-    console.log(process.env);
 
     //=============================================================================
     // p
@@ -316,7 +564,7 @@ var Imported = Imported || {};
 
     const getParamBoolean = function(paramNames) {
         const value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     const getParamOther = function(paramNames) {
@@ -328,45 +576,38 @@ var Imported = Imported || {};
         return null;
     };
 
-    const getParamArrayString = function(paramNames) {
-        const values = getParamString(paramNames);
-        return (values || '').split(',');
+    const getParamJson = function(paramNames, defaultValue) {
+        var value = getParamOther(paramNames);
+        try {
+            value = JSON.parse(value);
+            if (value === null) {
+                value = defaultValue;
+            }
+        } catch (e) {
+            alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nName:[${paramNames}]\nValue:${value}`);
+        }
+        return value;
     };
 
-    const getParamArrayNumber = function(paramNames, min, max) {
-        const values = getParamArrayString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        for (let i = 0; i < values.length; i++) values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
-        return values;
-    };
-
-    const paramStartupDevTool   = getParamString(['StartupDevTool', '開始時に起動'], true);
-    const paramDevToolsPosition = getParamArrayNumber(['DevToolsPosition', 'デベロッパツール表示位置'], 0, 9999);
-    const paramFuncKeyMinimize  = getParamString(['FuncKeyMinimize', '最小化切替キー']);
-    const paramFuncKeyReload    = getParamString(['FuncKeyReload', 'リロードキー']);
-    const paramFuncKeyOnTop     = getParamString(['FuncKeyOnTop', '最前面に表示キー']);
-    const paramFuncKeyRapidGame = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
-    const paramFuncKeyVictory   = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
-    const paramFuncKeyScript    = getParamString(['FuncKeyScript', 'スクリプト実行キー']);
-    const paramFuncKeyFreeze    = getParamString(['FuncKeyFreeze', 'フリーズキー']);
-    const paramShowFPS          = getParamString(['ShowFPS', 'FPS表示'], true);
-    const paramCutTitle         = getParamBoolean(['CutTitle', 'タイトルカット']);
-    const paramRapidStart       = getParamBoolean(['RapidStart', '高速開始']);
-    const paramRapidSpeed       = getParamNumber(['RapidSpeed', '高速スピード'], -60, 16);
-    const paramFakeMobile       = getParamBoolean(['FakeMobile', 'モバイル偽装']);
-    const paramMenuBarVisible   = getParamBoolean(['MenuBarVisible', 'メニューバー表示']);
-    const paramClickMenu        = getParamNumber(['ClickMenu', 'クリックメニュー'], -1);
-    const paramJsonSave         = getParamBoolean(['JsonSave', 'JSON形式セーブ']);
-
-    //=============================================================================
-    // Utils
-    //  モバイルモードを偽装します。
-    //=============================================================================
-    const _Utils_isMobileDevice = Utils.isMobileDevice;
-    Utils.isMobileDevice        = function() {
-        return _Utils_isMobileDevice.apply(this, arguments) || paramFakeMobile;
-    };
+    const paramStartupDevTool    = getParamString(['StartupDevTool', '開始時に起動'], true);
+    const paramDevToolsPosition  = getParamJson(['DevToolsPosition', 'デベロッパツール表示位置']);
+    const paramFuncKeyMinimize   = getParamString(['FuncKeyMinimize', '最小化切替キー']);
+    const paramFuncKeyReload     = getParamString(['FuncKeyReload', 'リロードキー']);
+    const paramFuncKeyOnTop      = getParamString(['FuncKeyOnTop', '最前面に表示キー']);
+    const paramFuncKeyRapidGame  = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
+    const paramFuncKeyVictory    = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
+    const paramFuncKeyScript     = getParamString(['FuncKeyScript', 'スクリプト実行キー']);
+    const paramFuncKeyFreeze     = getParamString(['FuncKeyFreeze', 'フリーズキー']);
+    const paramShowFPS           = getParamString(['ShowFPS', 'FPS表示'], true);
+    const paramCutTitle          = getParamBoolean(['CutTitle', 'タイトルカット']);
+    const paramRapidStart        = getParamBoolean(['RapidStart', '高速開始']);
+    const paramRapidSpeed        = getParamNumber(['RapidSpeed', '高速スピード'], -60, 16);
+    const paramFakeMobile        = getParamBoolean(['FakeMobile', 'モバイル偽装']);
+    const paramMenuBarVisible    = getParamBoolean(['MenuBarVisible', 'メニューバー表示']);
+    const paramClickMenu         = getParamNumber(['ClickMenu', 'クリックメニュー'], -1);
+    const paramJsonSave          = getParamBoolean(['JsonSave', 'JSON形式セーブ']);
+    const paramOutputStartupInfo = getParamBoolean(['OutputStartupInfo', '起動時情報出力']);
+    const paramStartupOnTop      = getParamBoolean(['StartupOnTop', '最前面で起動']);
 
     //=============================================================================
     // Graphics
@@ -389,14 +630,57 @@ var Imported = Imported || {};
     const _Graphics__createAllElements = Graphics._createAllElements;
     Graphics._createAllElements        = function() {
         _Graphics__createAllElements.apply(this, arguments);
-        console.log('*********************************');
-        console.log('***   document head           ***');
-        console.log('*********************************');
-        console.log(document.head);
-        console.log('*********************************');
-        console.log('***   document body           ***');
-        console.log('*********************************');
-        console.log(document.body);
+        if (paramOutputStartupInfo) {
+            this.outputStartUpLog();
+        }
+    };
+
+    Graphics.outputStartUpLog = function() {
+        console.log('********************************');
+        console.log('***   User Agent             ***');
+        console.log('********************************');
+        console.log(navigator.userAgent);
+        console.log('********************************');
+        console.log('***   Core Version           ***');
+        console.log('********************************');
+        console.log('RPG Maker Name    : ' + Utils.RPGMAKER_NAME);
+        console.log('RPG Maker Version : ' + Utils.RPGMAKER_VERSION);
+        console.log('RPG Maker Engine  : ' + (Utils.RPGMAKER_ENGINE || 'Official Version'));
+
+        if (Utils.isNwjs()) {
+            console.log('********************************');
+            console.log('***   Environment            ***');
+            console.log('********************************');
+            console.log('Platform : ' + process.platform);
+            console.log(process.env);
+            console.log('*********************************');
+            console.log('***   document head           ***');
+            console.log('*********************************');
+            console.log(document.head);
+            console.log('*********************************');
+            console.log('***   document body           ***');
+            console.log('*********************************');
+            console.log(document.body);
+        }
+    };
+
+    // テストプレー時以外は以降の機能を無効
+    if (!Utils.isNwjs() || !Utils.isOptionValid('test')) {
+        console.log(pluginName + ' is valid only test play!');
+        return;
+    }
+
+    //=============================================================================
+    // Utils
+    //  モバイルモードを偽装します。
+    //=============================================================================
+    const _Utils_isMobileDevice = Utils.isMobileDevice;
+    Utils.isMobileDevice        = function() {
+        return _Utils_isMobileDevice.apply(this, arguments) || paramFakeMobile;
+    };
+
+    Utils.isNwjsNormal = function() {
+        return this.isNwjs() && navigator.userAgent.match(/Chrome\/4/);
     };
 
     //=============================================================================
@@ -449,7 +733,10 @@ var Imported = Imported || {};
     SceneManager.initialize        = function() {
         _SceneManager_initialize.apply(this, arguments);
         this._nwJsGui = new Controller_NwJs();
-        this._freeze  = false;
+        if (paramStartupOnTop) {
+            this._nwJsGui.toggleAlwaysOnTop();
+        }
+        this._freeze = false;
         Graphics.setFPSMeter(paramShowFPS);
     };
 
@@ -541,12 +828,19 @@ var Imported = Imported || {};
 
     SceneManager.toggleRapid = function() {
         this._rapidGame = !this._rapidGame;
-        if (!this.originalTitle) this.originalTitle = document.title;
-        const bgm = AudioManager.saveBgm();
+        const bgm       = AudioManager.saveBgm();
         AudioManager.playBgm(bgm, bgm.pos);
-        document.title = this.originalTitle + (this.isRapid() ? ' [!!!Rapid!!!] * ' + paramRapidSpeed : '') +
-            (this.isSlow() ? ' [!!!Slow!!!] / ' + -paramRapidSpeed : '');
+        AudioManager._bgmBuffer.play(true, bgm.pos);
+        this.updateDocumentTitle();
         return this.isRapid();
+    };
+
+    SceneManager.updateDocumentTitle = function() {
+        if (!this.originalTitle) this.originalTitle = document.title;
+        document.title = this.originalTitle +
+            (this.isRapid() ? ' [!!!Rapid!!!] * ' + paramRapidSpeed : '') +
+            (this.isSlow() ? ' [!!!Slow!!!] / ' + -paramRapidSpeed : '') +
+            (this._nwJsGui.isOnTop() ? '[!!!Always On Top!!!]' : '');
     };
 
     SceneManager.isCurrentScene = function(sceneClass) {
@@ -594,11 +888,14 @@ var Imported = Imported || {};
     };
 
     SceneManager.addMenuBar = function() {
-        if (!paramMenuBarVisible) return;
+        if (!paramMenuBarVisible) {
+            this._needAdjustScreen = false;
+            return;
+        }
         const gui        = require('nw.gui');
         const gameWindow = gui.Window.get();
-        if (!gameWindow.menu) {
-            this._addMenuBar = true;
+        if (!gameWindow.menu || gameWindow.menu.type !== 'menubar') {
+            this._needAdjustScreen = true;
         }
         gameWindow.menu = new gui.Menu({type: 'menubar'});
     };
@@ -610,16 +907,23 @@ var Imported = Imported || {};
     };
 
     SceneManager.setWindowSizeForMenuBar = function() {
-        if (!paramMenuBarVisible || !this._addMenuBar) return;
+        if (!this._needAdjustScreen) {
+            return;
+        }
         const gui        = require('nw.gui');
         const gameWindow = gui.Window.get();
-        gameWindow.moveBy(0, -20);
-        gameWindow.resizeBy(0, 20);
+        var height = this.getMenuBarHeight();
+        gameWindow.moveBy(0, -height);
+        gameWindow.resizeBy(0, height);
+    };
+
+    SceneManager.getMenuBarHeight = function() {
+        return Utils.isNwjsNormal() ? 20 : 25;
     };
 
     const _SceneManager_requestUpdate = SceneManager.requestUpdate;
-    SceneManager._updateRateCount = 0;
-    SceneManager.requestUpdate = function() {
+    SceneManager._updateRateCount     = 0;
+    SceneManager.requestUpdate        = function() {
         if (this.isSlow()) {
             this._updateRateCount++;
             if (this._updateRateCount >= -paramRapidSpeed) {
@@ -638,7 +942,7 @@ var Imported = Imported || {};
     };
 
     const _SceneManager_updateMain = SceneManager.updateMain;
-    SceneManager.updateMain = function() {
+    SceneManager.updateMain        = function() {
         if (this.isSlow()) {
             this.changeScene();
             this.updateScene();
@@ -1024,6 +1328,11 @@ var Imported = Imported || {};
     Controller_NwJs.prototype.toggleAlwaysOnTop = function() {
         this._onTop = !this._onTop;
         this.getWindow().setAlwaysOnTop(this._onTop);
+        SceneManager.updateDocumentTitle();
+        return this._onTop;
+    };
+
+    Controller_NwJs.prototype.isOnTop = function() {
         return this._onTop;
     };
 
@@ -1036,11 +1345,17 @@ var Imported = Imported || {};
     };
 
     Controller_NwJs.prototype.showDevTools = function() {
-        if (!this.getWindow().isDevToolsOpen() || !this._devTool) {
+        if (!(this.getWindow().isDevToolsOpen && this.getWindow().isDevToolsOpen()) || !this._devTool) {
             const devTool = this.getWindow().showDevTools();
-            if (paramDevToolsPosition && paramDevToolsPosition.length >= 4) {
-                devTool.moveTo(paramDevToolsPosition[0], paramDevToolsPosition[1]);
-                devTool.resizeTo(paramDevToolsPosition[2], paramDevToolsPosition[3]);
+            if (!devTool) {
+                setTimeout(function() {
+                    this.getWindow().focus();
+                }.bind(this), 500);
+                return;
+            }
+            if (paramDevToolsPosition && paramDevToolsPosition.width > 0 && paramDevToolsPosition.height > 0) {
+                devTool.moveTo(paramDevToolsPosition.x, paramDevToolsPosition.y);
+                devTool.resizeTo(paramDevToolsPosition.width, paramDevToolsPosition.height);
             } else {
                 devTool.moveTo(0, 0);
                 devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
@@ -1066,7 +1381,10 @@ var Imported = Imported || {};
             this.focus();
         }.bind(this));
         devTool.on('loaded', function() {
-            if (paramStartupDevTool === 'MINIMIZE') this._devTool.minimize();
+            if (paramStartupDevTool === 'MINIMIZE') {
+                this._devTool.minimize();
+            }
+            SceneManager.updateDocumentTitle();
         }.bind(this));
         devTool.on('closed', function() {
             this.getWindow().close();
