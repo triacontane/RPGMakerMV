@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.3 2017/08/09 反撃条件に属性を指定する際に「通常攻撃」を指定した場合も考慮する関数を追加
 // 1.4.2 2017/07/12 複数のバトラーが同時に反撃を行った場合に全員分の反撃が正常に行われない問題を修正
 // 1.4.1 2017/07/11 1.4.0の機能追加以降、スキル反撃を行うとアクター本来の行動がキャンセルされる場合がある問題を修正
 // 1.4.0 2017/06/13 反撃スキルに指定した効果範囲と連続回数が適用されるようになりました。
@@ -31,11 +32,13 @@
  *
  * @param PayCounterCost
  * @desc 固有スキルによる反撃がコスト消費するかどうかを設定します。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param FailureCostShortage
  * @desc 固有スキルによる反撃がコスト不足の場合、反撃は行いません。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 反撃の仕様を拡張します。
  * 魔法に対する反撃や、特定のスキルを使った反撃、
@@ -80,8 +83,9 @@
  * <CE_MagicCounterCond:s(1)>     # 同上
  *
  * 実行したスキルの情報はローカル変数「skill」で参照できます。
- * <CE_反撃条件:skill.id === 10> # スキルIDが[10]なら反撃します。
- * <CE_反撃条件:elementId === 3> # スキル属性IDが[3]なら反撃します。
+ * また、アクションオブジェクトはローカル変数「action」で参照できます。
+ * <CE_反撃条件:skill.id === 10>      # スキルIDが[10]なら反撃します。
+ * <CE_反撃条件:action.hasElement(3)> # スキル属性IDが[3]なら反撃します。
  *
  * 対象のバトラー情報は「this」で、相手のバトラー情報は「target」で参照できます。
  * <CE_反撃条件:this.hpRate() &lt; 0.5> # 自分のHPが50%を下回ると反撃します。
@@ -91,7 +95,7 @@
  * > → &gt;
  *
  * 4. 複数の反撃スキルおよび反撃条件を設定できます。
- * 複数定義する場合は、末尾に「_1」を付与してください。
+ * 複数定義する場合は、末尾に「_n」を付与してください。
  * <CE_反撃スキルID:4>   # スイッチ[1]がONならスキルID[4]で反撃
  * <CE_反撃条件:s(1)>    #
  * <CE_反撃スキルID_1:5> # スイッチ[2]がONならスキルID[5]で反撃
@@ -129,11 +133,13 @@
  *
  * @param 反撃コスト消費
  * @desc 固有スキルによる反撃がコスト消費するかどうかを設定します。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param コスト不足で失敗
  * @desc 固有スキルによる反撃がコスト不足の場合、反撃は行いません。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 反撃の仕様を拡張します。
  * 魔法に対する反撃や、特定のスキルを使った反撃、
@@ -178,8 +184,9 @@
  * <CE_MagicCounterCond:s(1)>     # 同上
  *
  * 実行したスキルの情報はローカル変数「skill」で参照できます。
- * <CE_反撃条件:skill.id === 10> # スキルIDが[10]なら反撃します。
- * <CE_反撃条件:elementId === 3> # スキル属性IDが[3]なら反撃します。
+ * また、アクションオブジェクトはローカル変数「action」で参照できます。
+ * <CE_反撃条件:skill.id === 10>      # スキルIDが[10]なら反撃します。
+ * <CE_反撃条件:action.hasElement(3)> # スキル属性IDが[3]なら反撃します。
  *
  * 対象のバトラー情報は「this」で、相手のバトラー情報は「target」で参照できます。
  * <CE_反撃条件:this.hpRate() &lt; 0.5> # 自分のHPが50%を下回ると反撃します。
@@ -189,7 +196,7 @@
  * > → &gt;
  *
  * 4. 複数の反撃スキルおよび反撃条件を設定できます。
- * 複数定義する場合は、末尾に「_1」を付与してください。
+ * 複数定義する場合は、末尾に「_n」を付与してください。
  * <CE_反撃スキルID:4>   # スイッチ[1]がONならスキルID[4]で反撃
  * <CE_反撃条件:s(1)>    #
  * <CE_反撃スキルID_1:5> # スイッチ[2]がONならスキルID[5]で反撃
@@ -243,7 +250,7 @@ var Imported = Imported || {};
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getArgEval = function(arg, min, max) {
@@ -273,18 +280,14 @@ var Imported = Imported || {};
 
     var convertEscapeCharacters = function(text) {
         if (isNotAString(text)) text = '';
-        text = text.replace(/&gt;?/gi, '>');
-        text = text.replace(/&lt;?/gi, '<');
+        text            = text.replace(/&gt;?/gi, '>');
+        text            = text.replace(/&lt;?/gi, '<');
         var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
     var isNotAString = function(args) {
         return String(args) !== args;
-    };
-
-    var isExistPlugin = function(pluginName) {
-        return Object.keys(PluginManager.parameters(pluginName)).length > 0
     };
 
     //=============================================================================
@@ -363,10 +366,11 @@ var Imported = Imported || {};
     };
 
     Game_BattlerBase.prototype.executeCounterScript = function(counterCondition, action, target) {
-        var skill     = action.item();
-        var v         = $gameVariables.value.bind($gameVariables);
-        var s         = $gameSwitches.value.bind($gameSwitches);
-        var elementId = skill.damage.elementId;
+        var skill      = action.item();
+        // use in eval
+        var v          = $gameVariables.value.bind($gameVariables);
+        var s          = $gameSwitches.value.bind($gameSwitches);
+        var elementId  = skill.damage.elementId;
         var result;
         try {
             result = !!eval(counterCondition);
@@ -375,7 +379,7 @@ var Imported = Imported || {};
             }
         } catch (e) {
             console.error(e.toString());
-            throw new Error('反撃条件計算式の評価に失敗しました。式:' + counterCondition);
+            throw new Error('Failed To Execute Counter Condition Script :' + counterCondition);
         }
         return result ? 1 : 0;
     };
@@ -397,7 +401,7 @@ var Imported = Imported || {};
     // Game_Battler
     //  カウンター時のスキルコスト消費処理を別途定義します。
     //=============================================================================
-    var _Game_Battler_useItem = Game_Battler.prototype.useItem;
+    var _Game_Battler_useItem      = Game_Battler.prototype.useItem;
     Game_Battler.prototype.useItem = function(item) {
         if (this.isCounterSubject() && !paramPayCounterCost) return;
         _Game_Battler_useItem.apply(this, arguments);
@@ -406,7 +410,7 @@ var Imported = Imported || {};
 
     Game_Battler.prototype.setCounterAction = function(target) {
         var counterSkillId = this.getCounterSkillId();
-        var action = new Game_Action(this);
+        var action         = new Game_Action(this);
         action.setSkill(counterSkillId);
         var counterTargetIndex;
         if (action.isForFriend()) {
@@ -414,7 +418,7 @@ var Imported = Imported || {};
         } else {
             counterTargetIndex = target.friendsUnit().members().indexOf(target);
         }
-        this._nativeActions = this._actions;
+        this._nativeActions  = this._actions;
         this._counterSubject = true;
         this.forceAction(counterSkillId, counterTargetIndex);
     };
@@ -423,7 +427,7 @@ var Imported = Imported || {};
         if (this._nativeActions && this._nativeActions.length > 0) {
             this._actions = this._nativeActions;
         }
-        this._nativeActions = null;
+        this._nativeActions  = null;
         this._counterSubject = false;
     };
 
@@ -431,7 +435,7 @@ var Imported = Imported || {};
         return this._counterSubject;
     };
 
-    var _Game_Battler_onAllActionsEnd = Game_Battler.prototype.onAllActionsEnd;
+    var _Game_Battler_onAllActionsEnd      = Game_Battler.prototype.onAllActionsEnd;
     Game_Battler.prototype.onAllActionsEnd = function() {
         if (this.isCounterSubject()) {
             this.clearResult();
@@ -444,7 +448,7 @@ var Imported = Imported || {};
     // Game_Action
     //  魔法反撃を可能にします。
     //=============================================================================
-    var _Game_Action_itemCnt    = Game_Action.prototype.itemCnt;
+    var _Game_Action_itemCnt      = Game_Action.prototype.itemCnt;
     Game_Action.prototype.itemCnt = function(target) {
         if (this.subject().isCounterSubject()) {
             return 0;
@@ -494,18 +498,27 @@ var Imported = Imported || {};
         return names;
     };
 
+    Game_Action.prototype.hasElement = function(elementId) {
+        var skillElementId = this.item().damage.elementId;
+        if (skillElementId < 0) {
+            return this.subject().attackElements().contains(elementId);
+        } else {
+            return elementId === skillElementId;
+        }
+    };
+
     //=============================================================================
     // BattleManager
     //  スキルによる反撃を実装します。
     //=============================================================================
     var _BattleManager_initMembers = BattleManager.initMembers;
-    BattleManager.initMembers = function() {
+    BattleManager.initMembers      = function() {
         _BattleManager_initMembers.apply(this, arguments);
         this._counterBattlers = [];
     };
 
     var _BattleManager_startAction = BattleManager.startAction;
-    BattleManager.startAction = function() {
+    BattleManager.startAction      = function() {
         this._actionCancel = false;
         if (this._subject.isCounterSubject()) {
             this._logWindow.displaySkillCounter(this._subject);
@@ -514,7 +527,7 @@ var Imported = Imported || {};
     };
 
     var _BattleManager_invokeCounterAttack = BattleManager.invokeCounterAttack;
-    BattleManager.invokeCounterAttack        = function(subject, target) {
+    BattleManager.invokeCounterAttack      = function(subject, target) {
         if (!target.isReserveCounterSkill()) {
             _BattleManager_invokeCounterAttack.apply(this, arguments);
         } else {
@@ -536,13 +549,13 @@ var Imported = Imported || {};
     };
 
     var _BattleManager_invokeAction = BattleManager.invokeAction;
-    BattleManager.invokeAction = function(subject, target) {
+    BattleManager.invokeAction      = function(subject, target) {
         if (this._actionCancel) return;
         _BattleManager_invokeAction.apply(this, arguments);
     };
 
     var _BattleManager_getNextSubject = BattleManager.getNextSubject;
-    BattleManager.getNextSubject = function() {
+    BattleManager.getNextSubject      = function() {
         if (this._subject && this._subject.isCounterSubject()) {
             this._subject.clearCounterAction();
         }
@@ -571,7 +584,7 @@ var Imported = Imported || {};
         }
     };
 
-    var _Window_BattleLog_updateWaitMode    = Window_BattleLog.prototype.updateWaitMode;
+    var _Window_BattleLog_updateWaitMode      = Window_BattleLog.prototype.updateWaitMode;
     Window_BattleLog.prototype.updateWaitMode = function() {
         var waiting = false;
         switch (this._waitMode) {
