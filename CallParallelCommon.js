@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/08/09 コモンイベントを呼び出さないアイテムを使用するとエラーが発生する問題を修正
 // 1.0.0 2017/07/22 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -74,7 +75,7 @@
     Scene_ItemBase.prototype.checkCommonEvent = function() {
         var checkResult = _Scene_ItemBase_checkCommonEvent.apply(this, arguments);
         var event = $gameTemp.reservedCommonEvent();
-        if (event.trigger === 2) {
+        if (event && event.trigger === 2) {
             $gameTemp.clearCommonEvent();
         }
         return checkResult;
