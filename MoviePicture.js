@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/08/09 アルファチャンネル付き動画の再生に対応（ただし特定の手順を踏む必要あり）
 // 1.0.3 2017/08/08 エラー処理を追加
 // 1.0.2 2017/08/07 環境に関する制約を追加
 // 1.0.1 2017/08/07 リファクタリング（仕様の変更はなし）
@@ -68,9 +69,6 @@
  * 現象を確認しています。
  * よって当面の間はローカル実行(Game.exe)のみをサポート対象とします。
  *
- * また、アルファチャンネル付き動画についてはローカル実行(Game.exe)で
- * 正常に再生できない現象を確認しています。
- *
  * プラグインコマンド「MP_SET_MOVIE」で動画ファイルを準備してから
  * イベントコマンド「ピクチャの表示」をファイル指定を空で実行してください。
  *
@@ -88,6 +86,14 @@
  * MP_ウェイト設定 1  # 同上
  * MP_SET_VOLUME 1 50 # ピクチャ番号[1]の動画の音量を50%に設定します。
  * MP_音量設定 1 50   # 同上
+ *
+ * アルファチャンネル付き動画を使用する場合は、以下に注意してください。
+ * 1. 通常のGame.exeでは動作しません。NW.jsを最新化してください。
+ *
+ * 2. プラグインコマンド「MP_SET_MOVIE」実行時に二つめの引数をonにしてください。
+ * MP_SET_MOVIE file on
+ *
+ * 3. スマートデバイス環境(.mp4を使用)では透過が有効になりません。(2017/08/09時点)
  *
  * 注意：
  * サイズの大きな動画を複数再生すると、パフォーマンスが低下する可能性があります。
@@ -130,7 +136,7 @@
     };
 
     var getArgBoolean = function(arg) {
-        return arg.toUpperCase() === 'ON' || arg.toUpperCase() === 'TRUE'
+        return arg && (arg.toUpperCase() === 'ON' || arg.toUpperCase() === 'TRUE');
     };
 
     var setPluginCommand = function(commandName, methodName) {
@@ -166,7 +172,7 @@
     };
 
     Game_Interpreter.prototype.execSetVideoPicture = function(args) {
-        $gameScreen.setVideoPictureName(args[0]);
+        $gameScreen.setVideoPictureName(args[0], getArgBoolean(args[1]));
     };
 
     Game_Interpreter.prototype.execSetVideoLoop = function(args) {
@@ -224,16 +230,22 @@
     // Game_Screen
     //  動画ピクチャを準備します。
     //=============================================================================
-    Game_Screen.prototype.setVideoPictureName = function(movieName) {
+    Game_Screen.prototype.setVideoPictureName = function(movieName, useAlpha) {
         this._videoPictureName = movieName;
+        this._videoUseAlpha    = useAlpha;
     };
 
     Game_Screen.prototype.getVideoPictureName = function() {
         return this._videoPictureName;
     };
 
+    Game_Screen.prototype.isVideoUseAlpha = function() {
+        return this._videoUseAlpha;
+    };
+
     Game_Screen.prototype.clearVideoPictureName = function() {
         this._videoPictureName = null;
+        this._videoUseAlpha    = null;
     };
 
     Game_Screen.prototype.isVideoWaiting = function() {
@@ -252,10 +264,11 @@
         _Game_Picture_show.apply(this, arguments);
         var videoName = $gameScreen.getVideoPictureName();
         if (videoName && !name) {
-            $gameScreen.clearVideoPictureName();
-            this._name  = videoName;
-            this._video = true;
+            this._name          = videoName;
+            this._video         = true;
+            this._videoUseAlpha = $gameScreen.isVideoUseAlpha();
             this.setVideoVolume(100);
+            $gameScreen.clearVideoPictureName();
         } else {
             this._video = false;
         }
@@ -263,6 +276,10 @@
 
     Game_Picture.prototype.isVideo = function() {
         return this._video;
+    };
+
+    Game_Picture.prototype.isVideoUseAlpha = function() {
+        return this._videoUseAlpha;
     };
 
     Game_Picture.prototype.setVideoLoop = function(value) {
@@ -322,7 +339,10 @@
         if (SceneManager.isBattleStartUnexpectedLoad()) {
             return;
         }
-        this.bitmap = ImageManager.loadVideo(this._pictureName);
+        if (this.isVideoPicture()) {
+            this.bitmap.destroy();
+        }
+        this.bitmap = ImageManager.loadVideo(this._pictureName, this.picture().isVideoUseAlpha());
         this.bitmap.addLoadListener(function() {
             this.startVideo();
         }.bind(this));
@@ -452,17 +472,17 @@
     // ImageManager
     //  動画の読み込みを追加定義します。
     //=============================================================================
-    ImageManager.loadVideo = function(filename) {
+    ImageManager.loadVideo = function(filename, alpha) {
         if (filename) {
             var path = 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
-            return Bitmap_Video.load(path, false, this.getVideoClass());
+            return Bitmap_Video.load(path, false, this.getVideoClass(alpha));
         } else {
             return this.loadEmptyBitmap();
         }
     };
 
-    ImageManager.getVideoClass = function() {
-        if (Utils.isNwjs() || Utils.isPcChrome()) {
+    ImageManager.getVideoClass = function(alpha) {
+        if ((Utils.isNwjs() || Utils.isPcChrome()) && !alpha) {
             return Bitmap_Video;
         } else {
             return Bitmap_DrawVideo;
@@ -564,12 +584,12 @@
         this._video.addEventListener('error', this._errorListener = this._loader || this._onError.bind(this));
         this._video.load();
         this._video.autoplay = false;
-        this._loadingState = 'requesting';
+        this._loadingState   = 'requesting';
     };
 
     Bitmap_Video.prototype._createVideoBaseTexture = function() {
-        var scaleMode      = this.smooth ? PIXI.SCALE_MODES.LINEAR : PIXI.SCALE_MODES.NEAREST;
-        this.__baseTexture = PIXI.VideoBaseTexture.fromVideo(this._video, scaleMode);
+        var scaleMode              = this.smooth ? PIXI.SCALE_MODES.LINEAR : PIXI.SCALE_MODES.NEAREST;
+        this.__baseTexture         = PIXI.VideoBaseTexture.fromVideo(this._video, scaleMode);
         this._baseTexture.autoPlay = false;
     };
 
@@ -638,7 +658,7 @@
     };
 
     Bitmap_DrawVideo.prototype.update = function() {
-        if (this.width + this.height > 1000 && Graphics.frameCount % 2 !== 0) {
+        if (this.isHalfRefreshRateSize() && Graphics.frameCount % 2 !== 0) {
             return;
         }
         if (this.getCurrentTime() > 0) {
@@ -646,6 +666,10 @@
         }
         this._context.drawImage(this._video, 0, 0, this.width, this.height);
         this._baseTexture.update();
+    };
+
+    Bitmap_DrawVideo.prototype.isHalfRefreshRateSize = function() {
+        return this.width * this.height > 1000000;
     };
 
     //=============================================================================
