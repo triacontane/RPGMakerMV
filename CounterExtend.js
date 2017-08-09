@@ -376,6 +376,7 @@ var Imported = Imported || {};
             result = !!eval(counterCondition);
             if ($gameTemp.isPlaytest()) {
                 console.log('Execute Script:' + counterCondition);
+                console.log('Execute Result:' + result);
             }
         } catch (e) {
             console.error(e.toString());
@@ -500,7 +501,8 @@ var Imported = Imported || {};
 
     Game_Action.prototype.hasElement = function(elementId) {
         var skillElementId = this.item().damage.elementId;
-        if (skillElementId < 0) {
+        // Normal attack elementID[-1]
+        if (skillElementId === -1) {
             return this.subject().attackElements().contains(elementId);
         } else {
             return elementId === skillElementId;
