@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/08/13 パラメータの型指定機能に対応
 // 1.1.1 2016/01/24 ピクチャが回転しているときも位置を把握できるよう修正
 // 1.1.0 2015/12/26 グリッドの表示機能とグリッドにスナップ機能を追加
 //                  Ctrl+Cで座標をコピーできる機能を追加
@@ -28,10 +29,13 @@
  * @param GridSize
  * @desc View grid line
  * @default 48
+ * @type number
  *
  * @param TestMapId
  * @desc Event test map id
  * @default -1
+ * @type number
+ * @min -1
  *
  * @help Plugin that adjust picture to graphical.
  * Drag and drop on test screen.
@@ -52,10 +56,13 @@
  * @param グリッドサイズ
  * @desc ピクチャ調整中に指定サイズでグリッドを表示します。0を指定すると非表示になります。
  * @default 48
+ * @type number
  *
  * @param テストマップID
  * @desc 任意のマップをイベントテストの舞台に設定できます。
  * @default -1
+ * @type number
+ * @min -1
  * 
  * @help イベントコマンドのテスト時に、ピクチャの表示位置を
  * ドラッグ＆ドロップで微調整できます。
