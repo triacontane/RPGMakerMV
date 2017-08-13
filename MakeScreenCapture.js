@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/08/13 パラメータの型指定機能に対応
 // 1.6.0 2016/12/25 jpg保存時の拡張子を「jpeg」→「jpg」に変更
 //                  jpeg品質をパラメータから指定できる機能を追加
 // 1.5.0 2016/10/20 本体バージョン1.3.2でエラーが発生していたのを修正
@@ -38,16 +39,58 @@
  * @desc キャプチャとファイル保存を行うファンクションキーです。
  * 保存形式の設定にかかわらずpng形式で出力します。
  * @default F6
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FuncKeyJpegCapture
  * @desc キャプチャとファイル保存を行うファンクションキーです。
  * 保存形式の設定にかかわらずjpeg形式で出力します。
  * @default F7
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FuncKeyWebpCapture
  * @desc キャプチャとファイル保存を行うファンクションキーです。
  * 保存形式の設定にかかわらずwebp形式で出力します。
  * @default
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param FileName
  * @desc 画像のファイル名です。
@@ -62,14 +105,20 @@
  * @param FileFormat
  * @desc 画像のデフォルト保存形式です。(png/jpeg/webp)
  * @default png
+ * @type select
+ * @option png
+ * @option jpeg
+ * @option webp
  *
  * @param NumberDigit
  * @desc キャプチャファイルの連番桁数です。
  * @default 2
+ * @type number
  *
  * @param TimeStamp
  * @desc ONにすると連番の代わりにタイムスタンプを付与します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param Signature
  * @desc 保存時に画像の右下に書き込まれる署名です。
@@ -78,6 +127,7 @@
  * @param SignatureSize
  * @desc 署名のフォントサイズです。
  * @default 22
+ * @type number
  *
  * @param SignatureImage
  * @desc 保存時に画像の右下に書き込まれる著名画像ファイル名です。「img/pictures」に配置。拡張子不要。
@@ -90,6 +140,7 @@
  * @desc キャプチャを定期実行する間隔（秒単位）です。
  * 0にすると、定期キャプチャを行いません。
  * @default 0
+ * @type number
  *
  * @param SeName
  * @desc キャプチャ実行時に演奏する効果音のファイル名です。
@@ -101,6 +152,9 @@
  * @param JpegQuality
  * @desc JPEG出力したときの品質です。値を小さくすると容量も小さくなります。(1...10)
  * @default 9
+ * @type number
+ * @min 1
+ * @max 10
  *
  * @help プレー中のゲーム画面をキャプチャして
  * ファイルに保存したり、ピクチャとして表示したりできます。
@@ -157,16 +211,58 @@
  * @desc キャプチャとファイル保存を行うファンクションキーです。
  * 保存形式の設定にかかわらずpng形式で出力します。
  * @default F6
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param JPEGキャプチャキー
  * @desc キャプチャとファイル保存を行うファンクションキーです。
  * 保存形式の設定にかかわらずjpeg形式で出力します。
  * @default F7
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param WEBPキャプチャキー
  * @desc キャプチャとファイル保存を行うファンクションキーです。
  * 保存形式の設定にかかわらずwebp形式で出力します。
  * @default F9
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param ファイル名
  * @desc 画像のファイル名です。
@@ -181,14 +277,20 @@
  * @param 保存形式
  * @desc 画像のデフォルト保存形式です。(png/jpeg/webp)
  * @default png
+ * @type select
+ * @option png
+ * @option jpeg
+ * @option webp
  *
  * @param 連番桁数
  * @desc キャプチャファイルの連番桁数です。
  * @default 2
+ * @type number
  *
  * @param タイムスタンプ
  * @desc ONにすると連番の代わりにタイムスタンプを付与します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 署名
  * @desc 保存時に画像の右下に書き込まれる署名です。
@@ -197,6 +299,7 @@
  * @param 署名サイズ
  * @desc 署名のフォントサイズです。
  * @default 22
+ * @type number
  *
  * @param 署名画像
  * @desc 保存時に画像の右下に書き込まれる著名画像ファイル名です。「img/pictures」に配置。拡張子不要。
@@ -209,6 +312,7 @@
  * @desc キャプチャを定期実行する間隔（秒単位）です。
  * 0にすると、定期キャプチャを行いません。
  * @default 0
+ * @type number
  *
  * @param 効果音
  * @desc キャプチャ実行時に演奏する効果音のファイル名です。
@@ -220,6 +324,9 @@
  * @param JPEG品質
  * @desc JPEG出力したときの品質です。値を小さくすると容量も小さくなります。(1...10)
  * @default 9
+ * @type number
+ * @min 1
+ * @max 10
  *
  * @help プレー中のゲーム画面をキャプチャして
  * ファイルに保存したり、ピクチャとして表示したりできます。
@@ -305,7 +412,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
