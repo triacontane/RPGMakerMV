@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2017/08/14 ウィンドウを振動させる機能を追加
+//                  パラメータの型指定機能に対応
 // 2.7.0 2017/06/24 フキダシ位置を設定する機能で、イベント名で指定できる機能を追加
 //                  フキダシ有効化時にウィンドウ位置を設定できる機能を追加
 // 2.6.0 2017/06/21 ウィンドウが画面外に出ないように調整するパラメータを追加
@@ -72,46 +74,62 @@
  * @param FontSize
  * @desc Font size of popup window
  * @default 22
+ * @type number
  *
  * @param Padding
  * @desc Padding of popup window
  * @default 10
+ * @type number
  *
  * @param AutoPopup
  * @desc Popup set when event starting（ON/OFF）
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param FaceScale
  * @desc Scale of face graphic of popup window(1-100%)
  * @default 75
+ * @type number
  *
  * @param WindowLinkage
  * @desc Select window and Number input window is linkage with popup window(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param BetweenLines
  * @desc Between the Lines
  * @default 4
+ * @type number
  *
  * @param ThroughWindow
  * @desc Window through if overlap windows(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param FontSizeRange
  * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの増減幅です。デフォルトは12です。
  * @default 12
+ * @type number
  *
  * @param FontUpperLimit
  * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの上限値です。デフォルトは96です。
  * @default 96
+ * @type number
  *
  * @param FontLowerLimit
  * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの下限値です。デフォルトは24です。
  * @default 24
+ * @type number
  *
  * @param InnerScreen
  * @desc 横方向だけでなく縦方向についても画面内にフキダシウィンドウが収まるように位置を調整します。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param ShakeSpeed
+ * @desc ウィンドウを振動させる際の速さです。
+ * @default 5
+ * @type number
  *
  * @help Change the message window from fixed to popup
  *
@@ -158,6 +176,9 @@
  * 　SIZE [Width] [Height]
  * 　　Popup window adjust relative size.
  *
+ * ・使用可能な制御文字
+ * \sh[5] # 強さ[5]でウィンドウを振動させます。
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -168,50 +189,66 @@
  * @desc フキダシウィンドウのデフォルトフォントサイズ
  * 通常ウィンドウのフォントサイズ：28
  * @default 22
+ * @type number
  *
  * @param 余白
  * @desc フキダシウィンドウの余白サイズ
  * 通常ウィンドウの余白：18
  * @default 10
+ * @type number
  *
  * @param 自動設定
  * @desc イベント起動時にフキダシの対象が、起動したイベントに自動設定されます。（ON/OFF）
  * OFFの場合は通常のメッセージウィンドウに設定されます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param フェイス倍率
  * @desc フキダシウィンドウの顔グラフィック表示倍率(1-100%)
  * @default 75
+ * @type number
  *
  * @param ウィンドウ連携
  * @desc 選択肢ウィンドウと数値入力ウィンドウを
  * ポップアップウィンドウに連動させます。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 行間
  * @desc 行と行の間のスペースをピクセル単位で設定します。
  * @default 4
+ * @type boolean
  *
  * @param ウィンドウ透過
  * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
  * 選択肢をフキダシ内に表示する場合はONにしてください。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param フォントサイズ増減幅
  * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの増減幅です。デフォルトは12です。
  * @default 12
+ * @type number
  *
  * @param フォントサイズ上限
  * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの上限値です。デフォルトは96です。
  * @default 96
+ * @type number
  *
  * @param フォントサイズ下限
  * @desc フキダシウィンドウで制御文字「\{」「\}」を使用した場合のフォントサイズの下限値です。デフォルトは24です。
  * @default 24
+ * @type number
  *
  * @param 画面内に収める
  * @desc 横方向だけでなく縦方向についても画面内にフキダシウィンドウが収まるように位置を調整します。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param 振動の速さ
+ * @desc ウィンドウを振動させる際の速さです。
+ * @default 5
+ * @type number
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
@@ -353,7 +390,9 @@
  * !複数メッセージウィンドウ表示を使う場合!
  * フキダシウィンドウの設定や表示位置、サイズの調整結果は
  * すべてのウィンドウIDで共通です。
- * 
+ *
+ * ・使用可能な制御文字
+ * \sh[5] # 強さ[5]でウィンドウを振動させます。
  * 
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -381,7 +420,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
@@ -433,6 +472,7 @@
     var paramFontUpperLimit = getParamNumber(['FontUpperLimit', 'フォントサイズ上限'], 0);
     var paramFontLowerLimit = getParamNumber(['FontLowerLimit', 'フォントサイズ下限'], 0);
     var paramInnerScreen    = getParamBoolean(['InnerScreen', '画面内に収める']);
+    var paramShakeSpeed     = getParamNumber(['ShakeSpeed', '振動の速さ'], 1);
 
     //=============================================================================
     // Game_Interpreter
@@ -532,7 +572,7 @@
 
     Game_Interpreter.prototype.getEventIdForMessagePopup = function(arg) {
         var convertedArg = convertEscapeCharacters(arg);
-        var eventId = parseInt(convertedArg);
+        var eventId      = parseInt(convertedArg);
         if (isNaN(eventId)) {
             return convertedArg;
         }
@@ -672,8 +712,8 @@
 
     Game_System.prototype.isPopupFixPosition = function(position) {
         this.initMessagePositionEvents();
-        var positionFixForId = this._messagePopupPositionEvents[this._messagePopupCharacterId];
-        var event = $gameMap.event(this._messagePopupCharacterId);
+        var positionFixForId   = this._messagePopupPositionEvents[this._messagePopupCharacterId];
+        var event              = $gameMap.event(this._messagePopupCharacterId);
         var positionFixForName = event ? this._messagePopupPositionEvents[event.event().name] : 0;
         if (positionFixForId > 0) {
             return positionFixForId === position;
@@ -839,17 +879,47 @@
     };
 
     Window_Base.prototype.setPopupPosition = function(character) {
-        var pos      = $gameSystem.getPopupAdjustPosition();
-        this.x       = character.getRealScreenX() - this.width / 2 + (pos ? pos[0] : 0);
-        this.y       = character.getRealScreenY() - this.height - (character.getHeightForPopup() + 8) + (pos ? pos[1] : 0);
+        this.setPopupBasePosition(character);
+        this.setPopupLowerPosition(character);
+        this.setPopupAdjustInnerScreen();
+        if (this._shakePower > 0) {
+            this.setPopupShakePosition();
+        }
+    };
+
+    Window_Base.prototype.setPopupBasePosition = function(character) {
+        var pos = $gameSystem.getPopupAdjustPosition();
+        this.x  = character.getRealScreenX() - this.width / 2 + (pos ? pos[0] : 0);
+        this.y  = character.getRealScreenY() - this.height - (character.getHeightForPopup() + 8) + (pos ? pos[1] : 0);
+    };
+
+    Window_Base.prototype.setPopupShakePosition = function() {
+        var position = Math.sin(this._shakeCount / 10 * paramShakeSpeed) * this._shakePower;
+        this.x += position;
+        this._windowPauseSignSprite.x -= position;
+        this._shakeCount++;
+    };
+
+    Window_Base.prototype.setPopupLowerPosition = function(character) {
         var lowerFlg = this.isPopupLower();
-        if (lowerFlg) this.y = character.getRealScreenY() + 8;
+        if (lowerFlg) {
+            this.y = character.getRealScreenY() + 8;
+        }
         this.setPauseSignToTail(lowerFlg);
-        var deltaX = this.adjustPopupPositionX();
+    };
+
+    Window_Base.prototype.setPopupAdjustInnerScreen = function() {
         if (paramInnerScreen) {
             this.adjustPopupPositionY();
         }
-        this._windowPauseSignSprite.x = this._width / 2 + deltaX;
+        var adjustResultX = this.adjustPopupPositionX();
+        this._windowPauseSignSprite.x = this._width / 2 + adjustResultX;
+    };
+
+
+    Window_Base.prototype.setWindowShake = function(power) {
+        this._shakePower = power;
+        this._shakeCount = 0;
     };
 
     Window_Base.prototype.adjustPopupPositionX = function() {
@@ -1194,6 +1264,21 @@
         } else {
             _Window_Message_drawFace.apply(this, arguments);
         }
+    };
+
+    var _Window_Message_processEscapeCharacter      = Window_Message.prototype.processEscapeCharacter;
+    Window_Message.prototype.processEscapeCharacter = function(code, textState) {
+        if (code === 'SH') {
+            this.setWindowShake(this.obtainEscapeParam(textState));
+        } else {
+            _Window_Message_processEscapeCharacter.apply(this, arguments);
+        }
+    };
+
+    var _Window_Message_terminateMessage = Window_Message.prototype.terminateMessage;
+    Window_Message.prototype.terminateMessage = function() {
+        this.setWindowShake(0);
+        _Window_Message_terminateMessage.apply(this, arguments);
     };
 
     //=============================================================================
