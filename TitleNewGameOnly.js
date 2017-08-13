@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/06/12 型指定機能に対応
 // 1.2.0 2016/12/25 専用のスタート効果音を設定できる機能を追加
 // 1.1.0 2016/03/10 セーブが存在する場合、通常のウィンドウを開く機能を追加
 // 1.0.1 2015/11/01 既存コードの再定義方法を修正（内容に変化なし）
@@ -26,10 +27,12 @@
  *
  * @param FontFace
  * @desc スタート文字列のフォント名です。(指定する場合のみ)
+ * @default
  *
  * @param ContinueEnable
  * @desc セーブが存在する場合、通常のウィンドウを開きます。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param StartSe
  * @desc スタートしたときの効果音のファイル名称です。指定しない場合はシステム効果音の決定が演奏されます。
@@ -70,7 +73,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() == 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
