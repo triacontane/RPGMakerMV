@@ -1,16 +1,17 @@
 //=============================================================================
 // MapRapid.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/08/12 型指定機能に対応
 // 1.1.0 2016/01/11 テストプレー時のみ有効にできる設定を追加
 //                  すべてのフェードアウト・フェードインを一瞬で行う機能を追加
 // 1.0.0 2015/11/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -21,19 +22,23 @@
  *
  * @param testPlayOnly
  * @desc テストプレー時のみ本プラグインを適用します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param showMessageRapid
  * @desc 制御文字にかかわらずメッセージを一瞬で表示する。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param windowOpenRapid
  * @desc ウィンドウの開閉を一瞬で行います。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param fadeRapid
  * @desc フェードイン・フェードアウトを一瞬で行います。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @help マップ上の様々なウェイトを排除してゲームを高速化します。
  * 項目ごとに設定をON/OFFできます。
@@ -50,7 +55,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
