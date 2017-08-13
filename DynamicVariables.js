@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2017/08/12 パラメータの型指定機能に対応
 // 1.0.2 2016/11/04 指定範囲外のスイッチの値を正しく返していなかった問題を修正
 // 1.0.1 2016/11/01 結果が空文字の場合に0が設定されないよう修正
 // 1.0.0 2016/10/27 初版
@@ -22,22 +23,27 @@
  * @param DynamicSwitchStart
  * @desc 動的スイッチの開始位置番号です。
  * @default 0
+ * @type switch
  *
  * @param DynamicSwitchEnd
  * @desc 動的スイッチの終了位置番号です。
  * @default 0
+ * @type switch
  *
  * @param DynamicVariableStart
  * @desc 動的変数の開始位置番号です。
  * @default 0
+ * @type variable
  *
  * @param DynamicVariableEnd
  * @desc 動的変数の終了位置番号です。
  * @default 0
+ * @type variable
  *
  * @param ValidException
  * @desc スクリプト実行時に例外処理を行います。不正なスクリプトで強制終了しなくなる代わりに実行速度が僅かに低下します。
- * @default ON
+ * @default false
+ * @type boolean
  *
  * @help 指定範囲内の変数、スイッチを参照しようとした際に、
  * 「変数名称」及び「スイッチ名称」をJavaScriptとして評価した結果を返すようにします。
@@ -110,22 +116,27 @@
  * @param 動的スイッチ開始位置
  * @desc 動的スイッチの開始位置番号です。
  * @default 0
+ * @type switch
  *
  * @param 動的スイッチ終了位置
  * @desc 動的スイッチの終了位置番号です。
  * @default 0
+ * @type switch
  *
  * @param 動的変数開始位置
  * @desc 動的変数の開始位置番号です。
  * @default 0
+ * @type variable
  *
  * @param 動的変数終了位置
  * @desc 動的変数の終了位置番号です。
  * @default 0
+ * @type variable
  *
  * @param 例外処理
  * @desc スクリプト実行時に例外処理を行います。不正なスクリプトで強制終了しなくなる代わりに実行速度が僅かに低下します。
- * @default ON
+ * @default false
+ * @type boolean
  *
  * @help 指定範囲内の変数、スイッチを参照しようとした際に、
  * 「変数名称」及び「スイッチ名称」をJavaScriptとして実行した結果を返すよう
@@ -209,7 +220,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
