@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.1 2017/08/14 ウィンドウの振動時間を設定できる機能を追加
 // 2.8.0 2017/08/14 ウィンドウを振動させる機能を追加
 //                  パラメータの型指定機能に対応
 // 2.7.0 2017/06/24 フキダシ位置を設定する機能で、イベント名で指定できる機能を追加
@@ -127,8 +128,13 @@
  * @type boolean
  *
  * @param ShakeSpeed
- * @desc ウィンドウを振動させる際の速さです。
+ * @desc ウィンドウを振動させる際の速さです。制御文字\v[n]が利用できます。
  * @default 5
+ * @type number
+ *
+ * @param ShakeDuration
+ * @desc ウィンドウを振動させる時間(フレーム)です。制御文字\v[n]が利用できます。0を指定するとずっと振動し続けます。
+ * @default 60
  * @type number
  *
  * @help Change the message window from fixed to popup
@@ -246,8 +252,13 @@
  * @type boolean
  *
  * @param 振動の速さ
- * @desc ウィンドウを振動させる際の速さです。
+ * @desc ウィンドウを振動させる際の速さです。制御文字\v[n]が利用できます。
  * @default 5
+ * @type number
+ *
+ * @param 振動時間
+ * @desc ウィンドウを振動させる時間(フレーム)です。制御文字\v[n]が利用できます。0を指定するとずっと振動し続けます。
+ * @default 60
  * @type number
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
@@ -412,18 +423,18 @@
     };
 
     var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
+        var value = getParamString(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
+        return (parseInt(value) || 0).clamp(min, max);
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
+        var value = getParamString(paramNames);
         return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
-    var getParamOther = function(paramNames) {
+    var getParamString = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
             var name = PluginManager.parameters(pluginName)[paramNames[i]];
@@ -435,7 +446,7 @@
     var getArgNumber = function(arg, min, max) {
         if (arguments.length <= 2) min = -Infinity;
         if (arguments.length <= 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+        return (parseInt(convertEscapeCharacters(arg)) || 0).clamp(min, max);
     };
 
     var getArgString = function(arg, upperFlg) {
@@ -472,7 +483,8 @@
     var paramFontUpperLimit = getParamNumber(['FontUpperLimit', 'フォントサイズ上限'], 0);
     var paramFontLowerLimit = getParamNumber(['FontLowerLimit', 'フォントサイズ下限'], 0);
     var paramInnerScreen    = getParamBoolean(['InnerScreen', '画面内に収める']);
-    var paramShakeSpeed     = getParamNumber(['ShakeSpeed', '振動の速さ'], 1);
+    var paramShakeSpeed     = getParamString(['ShakeSpeed', '振動の速さ']);
+    var paramShakeDuration  = getParamString(['ShakeDuration', '振動時間']);
 
     //=============================================================================
     // Game_Interpreter
@@ -894,7 +906,12 @@
     };
 
     Window_Base.prototype.setPopupShakePosition = function() {
-        var position = Math.sin(this._shakeCount / 10 * paramShakeSpeed) * this._shakePower;
+        var duration = getArgNumber(paramShakeDuration);
+        if (duration && this._shakeCount > duration) {
+            this.setWindowShake(0);
+        }
+        var speed = getArgNumber(paramShakeSpeed, 1);
+        var position = Math.sin(this._shakeCount / 10 * speed) * this._shakePower;
         this.x += position;
         this._windowPauseSignSprite.x -= position;
         this._shakeCount++;
@@ -912,14 +929,13 @@
         if (paramInnerScreen) {
             this.adjustPopupPositionY();
         }
-        var adjustResultX = this.adjustPopupPositionX();
+        var adjustResultX             = this.adjustPopupPositionX();
         this._windowPauseSignSprite.x = this._width / 2 + adjustResultX;
     };
 
-
     Window_Base.prototype.setWindowShake = function(power) {
-        this._shakePower = power;
-        this._shakeCount = 0;
+        this._shakePower    = power;
+        this._shakeCount    = 0;
     };
 
     Window_Base.prototype.adjustPopupPositionX = function() {
@@ -1275,7 +1291,7 @@
         }
     };
 
-    var _Window_Message_terminateMessage = Window_Message.prototype.terminateMessage;
+    var _Window_Message_terminateMessage      = Window_Message.prototype.terminateMessage;
     Window_Message.prototype.terminateMessage = function() {
         this.setWindowShake(0);
         _Window_Message_terminateMessage.apply(this, arguments);
