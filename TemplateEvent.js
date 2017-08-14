@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/08/15 文章のスクロール表示でセルフ変数が正しく表示できていなかった問題を修正
 // 1.5.0 2017/08/14 セルフ変数の操作を「移動ルートの設定」からも行えるよう修正
 // 1.4.1 2017/07/21 SAN_MapGenerator.jsとの競合を解消
 // 1.4.0 2017/07/16 セルフ変数機能を追加
@@ -415,6 +416,14 @@ var $dataTemplateEvents = null;
             $gameMessage.setEventId(this._eventId);
         }
         return _Game_Interpreter_command101.apply(this, arguments);
+    };
+
+    var _Game_Interpreter_command105 = Game_Interpreter.prototype.command105;
+    Game_Interpreter.prototype.command105 = function() {
+        if (!$gameMessage.isBusy()) {
+            $gameMessage.setEventId(this._eventId);
+        }
+        return _Game_Interpreter_command105.apply(this, arguments);
     };
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
