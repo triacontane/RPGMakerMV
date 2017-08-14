@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/08/14 セルフ変数の操作を「移動ルートの設定」からも行えるよう修正
 // 1.4.1 2017/07/21 SAN_MapGenerator.jsとの競合を解消
 // 1.4.0 2017/07/16 セルフ変数機能を追加
 // 1.3.0 2017/07/07 固有処理呼び出し中にテンプレートイベントのIDと名称を取得できるスクリプトを追加
@@ -148,19 +149,17 @@
  *  例2:インデックス[3]のセルフ変数から値[2]を減算します。
  *  TE_SET_SELF_VARIABLE 3 50 2
  *
- * ・スクリプト
+ * ・スクリプト（イベントコマンドのスクリプト、変数の操作から実行）
  * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
- * this.character(0).getTemplateId();
- * this.character(0).getTemplateName();
+ *  this.character(0).getTemplateId();
+ *  this.character(0).getTemplateName();
  *
- * ・指定したインデックスのセルフ変数を取得します。
- * this.getSelfVariable(index);
+ * 指定したインデックスのセルフ変数を取得します。
+ *  this.getSelfVariable(index);
  *
- * ・セルフ変数に値を設定します。
- * this.controlSelfVariable(index, type, operand);
- *
- * SAN_MapGenerator.jsと組み合わせる場合
- * このプラグインをSAN_MapGenerator.jsより下に定義してください。
+ * セルフ変数に値を設定します。
+ * このスクリプトは「移動ルートの設定」でも実行できます。
+ *  this.controlSelfVariable(index, type, operand);
  *
  * This plugin is released under the MIT License.
  */
@@ -290,16 +289,17 @@
  *  例2:インデックス[3]のセルフ変数から値[2]を減算します。
  *  TE_SET_SELF_VARIABLE 3 50 2
  *
- * ・スクリプト
+ * ・スクリプト（イベントコマンドのスクリプト、変数の操作から実行）
  * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
- * this.character(0).getTemplateId();
- * this.character(0).getTemplateName();
+ *  this.character(0).getTemplateId();
+ *  this.character(0).getTemplateName();
  *
- * ・指定したインデックスのセルフ変数を取得します。
- * this.getSelfVariable(index);
+ * 指定したインデックスのセルフ変数を取得します。
+ *  this.getSelfVariable(index);
  *
- * ・セルフ変数に値を設定します。
- * this.controlSelfVariable(index, type, operand);
+ * セルフ変数に値を設定します。
+ * このスクリプトは「移動ルートの設定」でも実行できます。
+ *  this.controlSelfVariable(index, type, operand);
  *
  * SAN_MapGenerator.jsと組み合わせる場合
  * このプラグインをSAN_MapGenerator.jsより下に定義してください。
@@ -483,43 +483,15 @@ var $dataTemplateEvents = null;
     };
 
     Game_Interpreter.prototype.controlSelfVariable = function(index, type, operand) {
-        var key = this.getSelfVariableKey(index);
-        if (key) {
-            this.operateSelfVariable(key, type, operand);
+        var character = this.character(0);
+        if (character) {
+            character.controlSelfVariable(index, type, operand);
         }
     };
 
     Game_Interpreter.prototype.getSelfVariable = function(selfVariableIndex) {
-        var key = this.getSelfVariableKey(selfVariableIndex);
-        return $gameSelfSwitches.getVariableValue(key);
-    };
-
-    Game_Interpreter.prototype.operateSelfVariable = function(key, operationType, value) {
-        var oldValue = $gameSelfSwitches.getVariableValue(key);
-        switch (operationType) {
-            case 0:  // Set
-                $gameSelfSwitches.setVariableValue(key, oldValue = value);
-                break;
-            case 1:  // Add
-                $gameSelfSwitches.setVariableValue(key, oldValue + value);
-                break;
-            case 2:  // Sub
-                $gameSelfSwitches.setVariableValue(key, oldValue - value);
-                break;
-            case 3:  // Mul
-                $gameSelfSwitches.setVariableValue(key, oldValue * value);
-                break;
-            case 4:  // Div
-                $gameSelfSwitches.setVariableValue(key, oldValue / value);
-                break;
-            case 5:  // Mod
-                $gameSelfSwitches.setVariableValue(key, oldValue % value);
-                break;
-        }
-    };
-
-    Game_Interpreter.prototype.getSelfVariableKey = function(index) {
-        return $gameSelfSwitches.makeSelfVariableKey(this._eventId, index);
+        var character = this.character(0);
+        return character ? character.getSelfVariable(selfVariableIndex) : 0;
     };
 
     //=============================================================================
@@ -721,9 +693,44 @@ var $dataTemplateEvents = null;
         }, this);
     };
 
+    Game_Event.prototype.getSelfVariableKey = function(index) {
+        return $gameSelfSwitches.makeSelfVariableKey(this._eventId, index);
+    };
+
+    Game_Event.prototype.controlSelfVariable = function(index, type, operand) {
+        var key = this.getSelfVariableKey(index);
+        if (key) {
+            this.operateSelfVariable(key, type, operand);
+        }
+    };
+
     Game_Event.prototype.getSelfVariable = function(selfVariableIndex) {
-        var key = $gameSelfSwitches.makeSelfVariableKey(this._eventId, selfVariableIndex);
+        var key = this.getSelfVariableKey(selfVariableIndex);
         return $gameSelfSwitches.getVariableValue(key);
+    };
+
+    Game_Event.prototype.operateSelfVariable = function(key, operationType, value) {
+        var oldValue = $gameSelfSwitches.getVariableValue(key);
+        switch (operationType) {
+            case 0:  // Set
+                $gameSelfSwitches.setVariableValue(key, oldValue = value);
+                break;
+            case 1:  // Add
+                $gameSelfSwitches.setVariableValue(key, oldValue + value);
+                break;
+            case 2:  // Sub
+                $gameSelfSwitches.setVariableValue(key, oldValue - value);
+                break;
+            case 3:  // Mul
+                $gameSelfSwitches.setVariableValue(key, oldValue * value);
+                break;
+            case 4:  // Div
+                $gameSelfSwitches.setVariableValue(key, oldValue / value);
+                break;
+            case 5:  // Mod
+                $gameSelfSwitches.setVariableValue(key, oldValue % value);
+                break;
+        }
     };
 
     //=============================================================================
