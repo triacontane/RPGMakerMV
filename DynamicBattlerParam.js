@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/08/14 計算式でパラメータを取得する際に装備品による変動分を含まないよう修正
 // 1.0.0 2017/07/27 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -66,7 +67,9 @@
  * <DBP_Mmp:[計算式]> # 最大MPに計算式を適用
  *
  * 計算式に使用できる要素は以下の通りです。
- * 各パラメータの値は本プラグインによる変動分は含みません。
+ * 各パラメータの値は本プラグインや装備品による変動を
+ * 含まないバトラー本来のパラメータとなります。
+ *
  * param # データベースで指定した元々の値
  * a.hp  # HP
  * a.mp  # MP
@@ -146,7 +149,9 @@
  * <DBP_最大MP:[計算式]>   # 最大MPに計算式を適用
  *
  * 計算式に使用できる要素は以下の通りです。
- * 各パラメータの値は本プラグインによる変動分は含みません。
+ * 各パラメータの値は本プラグインや装備品による変動を
+ * 含まないバトラー本来のパラメータとなります。
+ *
  * param # データベースで指定した元々の値
  * a.hp  # HP
  * a.mp  # MP
@@ -286,6 +291,15 @@
             value += getArgNumber(convertEscapeCharacters(traitObject.meta[tagName]));
         });
         return Math.round(value);
+    };
+
+    var _Game_BattlerBase_param = Game_BattlerBase.prototype.param;
+    Game_BattlerBase.prototype.param = function(paramId) {
+        if (this._calcParameter) {
+            return this.paramBase(paramId);
+        } else {
+            return _Game_BattlerBase_param.apply(this, arguments);
+        }
     };
 
     var _Game_Actor_paramBase = Game_Actor.prototype.paramBase;
