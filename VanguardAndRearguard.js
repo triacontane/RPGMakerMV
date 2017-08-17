@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/08/18 前衛が全滅したときに後衛が前衛に詰められる設定を追加
 // 1.4.0 2017/06/11 メニュー画面でフェイスを右にずらす機能を有効にするかどうかのパラメータを追加
 // 1.3.2 2017/04/22 全回復のイベント後、隊列ステートが解除されてしまう不具合を修正
 // 1.3.1 2017/02/27 YEP_BattleEngineCore.jsと組み合わせたときに、後衛時のノックバックが過剰になる現象を修正
@@ -31,42 +32,57 @@
  * @param VanguardStateId
  * @desc State ID of vanguard.
  * @default 4
+ * @type state
  *
  * @param RearguardStateId
  * @desc State ID of rearguard.
  * @default 5
+ * @type state
  *
  * @param ChangeInMenu
  * @desc Changeable formation in menu screen.
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param RearDefense
  * @desc Rearguard member never targeting, if vanguard member alive.
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param SkillIdChange
  * @desc Skill ID of formation change.
  * @default 0
+ * @type skill
  *
  * @param RearguardOffsetX
  * @desc Offset X Position of rearguard.
  * @default 48
+ * @type number
  *
  * @param RearguardOffsetY
  * @desc Offset Y Position of rearguard.
  * @default 0
+ * @type number
  *
  * @param ChangeSpeed
  * @desc Move speed of formation change.
  * @default 8
+ * @type number
  *
  * @param HiddenIcon
  * @desc 敵キャラの前衛、後衛のステートアイコンを非表示にします。（アクターのアイコンは表示されます）
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param FaceShift
  * @desc メニュー画面で、後衛の顔グラフィックを右に少しずらして表示します。
- * @default ON
+ * @default true
+ * @type boolean
+ *
+ * @param ShiftVanguard
+ * @desc 前衛が全滅した時点で後衛が強制的に前衛に移動します。また、前衛がいない状態では後衛に移動できなくなります。
+ * @default false
+ * @type boolean
  *
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
@@ -126,42 +142,57 @@
  * @param 前衛ステートID
  * @desc 前衛のステートIDです。
  * @default 4
+ * @type state
  *
  * @param 後衛ステートID
  * @desc 後衛のステートIDです。
  * @default 5
+ * @type state
  *
  * @param メニューチェンジ可能
  * @desc メニュー画面で前衛・後衛の切り替えが可能になります。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 後衛防御
  * @desc 前衛メンバーが生存している限り、後衛メンバーが狙われなくなります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param チェンジスキルID
  * @desc 戦闘中の前衛・後衛切り替えコマンドで実行されるスキルIDです。0を指定すると戦闘中はチェンジ不可となります。
  * @default 0
+ * @type skill
  *
  * @param 後衛時X補正
  * @desc 後衛時のX座標を前衛時に対する相対値で指定します。サイドビューかつ敵キャラの場合は反転します。
  * @default 48
+ * @type number
  *
  * @param 後衛時Y補正
  * @desc 後衛時のX座標を前衛時に対する相対値で指定します。
  * @default 0
+ * @type number
  *
  * @param チェンジ速度
  * @desc 戦闘中にチェンジした場合のグラフィックの移動速度です。
  * @default 8
+ * @type number
  *
  * @param アイコン非表示
  * @desc 敵キャラの前衛、後衛のステートアイコンを非表示にします。（アクターのアイコンは表示されます）
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param フェイスシフト
  * @desc メニュー画面で、後衛の顔グラフィックを右に少しずらして表示します。
- * @default ON
+ * @default true
+ * @type boolean
+ *
+ * @param 前衛に詰める
+ * @desc 前衛が全滅した時点で後衛が強制的に前衛に移動します。また、前衛がいない状態では後衛に移動できなくなります。
+ * @default false
+ * @type boolean
  *
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
@@ -249,7 +280,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -298,6 +329,7 @@
     var paramRearDefense      = getParamBoolean(['RearDefense', '後衛防御']);
     var paramHiddenIcon       = getParamBoolean(['HiddenIcon', 'アイコン非表示']);
     var paramFaceShift        = getParamBoolean(['FaceShift', 'フェイスシフト']);
+    var paramShiftVanguard    = getParamBoolean(['ShiftVanguard', '前衛に詰める']);
 
     //=============================================================================
     // Game_Interpreter
@@ -307,23 +339,7 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandVanguardAndRearguard(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandVanguardAndRearguard(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandVanguardAndRearguard = function(command, args) {
@@ -341,29 +357,38 @@
     // Game_BattlerBase
     //  前衛・後衛の概念を追加定義します。
     //=============================================================================
-    var _Game_BattlerBase_refresh      = Game_BattlerBase.prototype.refresh;
-    Game_BattlerBase.prototype.refresh = function() {
-        _Game_BattlerBase_refresh.apply(this, arguments);
-        if (!this.isVanguard() && !this.isRearguard()) {
-            this.setFormationState(true);
-        }
-    };
-
-    var _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
-    Game_BattlerBase.prototype.die = function() {
-        var prevVanguard = this.isVanguard();
-        _Game_BattlerBase_die.apply(this, arguments);
-        this.setFormationState(prevVanguard);
-    };
-
     var _Game_BattlerBase_recoverAll      = Game_BattlerBase.prototype.recoverAll;
     Game_BattlerBase.prototype.recoverAll = function() {
-        var prevVanguard = this.isVanguard();
+        var prevVanguard = !this.isRearguard();
         _Game_BattlerBase_recoverAll.apply(this, arguments);
         this.setFormationState(prevVanguard);
     };
 
+    var _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
+    Game_BattlerBase.prototype.die = function() {
+        var prevVanguard = !this.isRearguard();
+        _Game_BattlerBase_die.apply(this, arguments);
+        this.setFormationState(prevVanguard);
+    };
+
+    var _Game_BattlerBase_addNewState = Game_BattlerBase.prototype.addNewState;
+    Game_BattlerBase.prototype.addNewState = function(stateId) {
+        _Game_BattlerBase_addNewState.apply(this, arguments);
+        if (stateId === this.deathStateId()) {
+            this.friendsUnit().shiftVanguard();
+        }
+    };
+
+    var _Game_BattlerBase_hide = Game_BattlerBase.prototype.hide;
+    Game_BattlerBase.prototype.hide = function() {
+        _Game_BattlerBase_hide.apply(this, arguments);
+        this.friendsUnit().shiftVanguard();
+    };
+
     Game_BattlerBase.prototype.setFormationState = function(vanguardFlg) {
+        if (this.friendsUnit().isNeedShiftVanguard(this)) {
+            vanguardFlg = true;
+        }
         var additionalStateId = (vanguardFlg ? paramVanguardStateId : paramRearguardStateId);
         var removeStateId     = (vanguardFlg ? paramRearguardStateId : paramVanguardStateId);
         if (!this.isStateAffected(additionalStateId)) {
@@ -478,12 +503,9 @@
     // Game_Enemy
     //  前衛・後衛ステートの初期値を設定します。
     //=============================================================================
-    var _Game_Enemy_setup      = Game_Enemy.prototype.setup;
-    Game_Enemy.prototype.setup = function(enemyId, x, y) {
-        _Game_Enemy_setup.apply(this, arguments);
-        if (getMetaValues(this.enemy(), ['Rearguard', '後衛'])) {
-            this.setFormationState(false);
-        }
+    Game_Enemy.prototype.initFormationState = function() {
+        var formationState = !getMetaValues(this.enemy(), ['Rearguard', '後衛']);
+        this.setFormationState(formationState);
     };
 
     Game_Enemy.prototype.getFormationOffsetX = function() {
@@ -511,7 +533,7 @@
 
     //=============================================================================
     // Game_Unit
-    //  前衛メンバーのみを生存メンバーとして扱う仕様に変更します。
+    //  メンバー全体の前衛・後衛状態を管理します。
     //=============================================================================
     var _Game_Unit_aliveMembers = Game_Unit.prototype.aliveMembers;
     if (paramRearDefense) {
@@ -552,6 +574,36 @@
             default :
                 return _Game_Unit_isAllDead.apply(this, arguments);
         }
+    };
+
+    Game_Unit.prototype.isNeedShiftVanguard = function(exceptionBattler) {
+        return paramShiftVanguard && !this.isAliveVanguardMember(exceptionBattler);
+    };
+
+    Game_Unit.prototype.isAliveVanguardMember = function(exceptionBattler) {
+        var vanguardMember = this.vanguardMembers();
+        return vanguardMember.length > 0 && (vanguardMember.length > 1 || vanguardMember[0] !== exceptionBattler);
+    };
+
+    Game_Unit.prototype.shiftVanguard = function() {
+        if (!this.isNeedShiftVanguard(null)) {
+            return;
+        }
+        this.aliveMembers().forEach(function(member) {
+            member.setFormationState(true);
+        });
+    };
+
+    //=============================================================================
+    // Game_Troop
+    //  敵キャラの前衛・後衛状態を初期設定します。
+    //=============================================================================
+    var _Game_Troop_setup = Game_Troop.prototype.setup;
+    Game_Troop.prototype.setup = function(troopId) {
+        _Game_Troop_setup.apply(this, arguments);
+        this.members().forEach(function(enemy) {
+            enemy.initFormationState();
+        });
     };
 
     //=============================================================================
