@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/08/18 動画の再生速度(倍率)を変更できるプラグインコマンドを追加
 // 1.1.0 2017/08/09 アルファチャンネル付き動画の再生に対応（ただし特定の手順を踏む必要あり）
 // 1.0.3 2017/08/08 エラー処理を追加
 // 1.0.2 2017/08/07 環境に関する制約を追加
@@ -48,6 +49,8 @@
  * MP_ウェイト設定 1  # 同上
  * MP_SET_VOLUME 1 50 # ピクチャ番号[1]の動画の音量を50%に設定します。
  * MP_音量設定 1 50   # 同上
+ * MP_SET_SPEED 1 150 # ピクチャ番号[1]の動画の再生速度を150%に設定します。
+ * MP_速度設定 1 150  # 同上
  *
  * 注意：
  * サイズの大きな動画を複数再生すると、パフォーマンスが低下する可能性があります。
@@ -86,6 +89,8 @@
  * MP_ウェイト設定 1  # 同上
  * MP_SET_VOLUME 1 50 # ピクチャ番号[1]の動画の音量を50%に設定します。
  * MP_音量設定 1 50   # 同上
+ * MP_SET_SPEED 1 150 # ピクチャ番号[1]の動画の再生速度を150%に設定します。
+ * MP_速度設定 1 150  # 同上
  *
  * アルファチャンネル付き動画を使用する場合は、以下に注意してください。
  * 1. 通常のGame.exeでは動作しません。NW.jsを最新化してください。
@@ -93,7 +98,8 @@
  * 2. プラグインコマンド「MP_SET_MOVIE」実行時に二つめの引数をonにしてください。
  * MP_SET_MOVIE file on
  *
- * 3. スマートデバイス環境(.mp4を使用)では透過が有効になりません。(2017/08/09時点)
+ * 3. スマートデバイス環境(.mp4を使用)では透過を使用できません。
+ *    こちらはコーデック(H.264)の仕様なのでプラグイン側では対応できません。
  *
  * 注意：
  * サイズの大きな動画を複数再生すると、パフォーマンスが低下する可能性があります。
@@ -151,6 +157,8 @@
     setPluginCommand('動画設定', 'execSetVideoPicture');
     setPluginCommand('SET_LOOP', 'execSetVideoLoop');
     setPluginCommand('ループ設定', 'execSetVideoLoop');
+    setPluginCommand('SET_SPEED', 'execSetVideoSpeed');
+    setPluginCommand('速度設定', 'execSetVideoSpeed');
     setPluginCommand('SET_PAUSE', 'execSetVideoPause');
     setPluginCommand('ポーズ設定', 'execSetVideoPause');
     setPluginCommand('SET_WAIT', 'execSetVideoWait');
@@ -201,6 +209,13 @@
         if (picture) {
             picture.setVideoWait(true);
             this._waitMode = 'videoPicture';
+        }
+    };
+
+    Game_Interpreter.prototype.execSetVideoSpeed = function(args) {
+        var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
+        if (picture) {
+            picture.setVideoSpeed(getArgNumber(args[1], 10, 500));
         }
     };
 
@@ -314,6 +329,14 @@
         return this._volumeVideo;
     };
 
+    Game_Picture.prototype.setVideoSpeed = function(value) {
+        this._speedVideo = value;
+    };
+
+    Game_Picture.prototype.getVideoSpeed = function() {
+        return this._speedVideo || 100;
+    };
+
     Game_Picture.prototype.setVideoPosition = function(value) {
         this._positionVideo = value;
     };
@@ -385,10 +408,19 @@
             return;
         }
         if (this.picture() && this._playStart) {
+            this.updateVideoSpeed();
             this.updateVideoPause();
             this.updateVideoVolume();
             this.updateVideoLoop();
             this.updateVideoWaiting();
+        }
+    };
+
+    Sprite_Picture.prototype.updateVideoSpeed = function() {
+        var speed = this.picture().getVideoSpeed() / 100;
+        if (speed !== this._speed) {
+            this._speed = speed;
+            this.bitmap.setVideoSpeed(speed);
         }
     };
 
@@ -428,6 +460,8 @@
             $gameScreen.erasePicture(this._pictureId);
             this.visible = false;
         }
+        this._volume = null;
+        this._speed  = null;
     };
 
     Sprite_Picture.prototype.clearVideo = function() {
@@ -640,6 +674,10 @@
 
     Bitmap_Video.prototype.getCurrentTime = function() {
         return this._video.currentTime;
+    };
+
+    Bitmap_Video.prototype.setVideoSpeed = function(value) {
+        this._video.playbackRate = value;
     };
 
     //=============================================================================
