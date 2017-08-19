@@ -1,7 +1,7 @@
 //=============================================================================
 // DTextPicture.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
@@ -39,7 +39,7 @@
 // 1.0.1 2015/11/07 RPGツクールMV（日本語版）に合わせてコメントの表記を変更
 // 1.0.0 2015/11/06 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -138,7 +138,7 @@
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg.toString()), 10) || 0).clamp(min, max);
+        return (parseInt(convertEscapeCharacters(arg.toString())) || 0).clamp(min, max);
     };
 
     var getArgString = function(arg, upperFlg) {
@@ -162,7 +162,7 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (text === undefined || text === null) text = '';
         var window = SceneManager.getHiddenWindow();
         return window ? window.convertEscapeCharacters(text) : text;
     };
