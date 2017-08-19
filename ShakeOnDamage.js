@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/08/19 パラメータに計算式を使用できる機能を追加
 // 1.0.0 2017/08/13 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -48,6 +49,11 @@
  * 戦闘でアクターがダメージを受けたときに画面を振動させます。
  * クリティカル時と通常時とで強さを変えることができます。
  *
+ * 各パラメータには計算式を適用できます。さらにローカル変数として
+ * 以下が使用可能です。
+ * a : ダメージを受けた対象のアクターです。
+ * r : ダメージを受けた対象のアクターの残りHP率(0-100)です。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -87,6 +93,11 @@
  * 戦闘でアクターがダメージを受けたときに画面を振動させます。
  * クリティカル時と通常時とで強さを変えることができます。
  *
+ * 各パラメータには計算式を適用できます。さらにローカル変数として
+ * 以下が使用可能です。
+ * a : ダメージを受けた対象のアクターです。
+ * r : ダメージを受けた対象のアクターの残りHP率(0-100)です。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -97,7 +108,7 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'ShakeOnDamage';
+    var pluginName = 'ShakeOnDamage';
 
     //=============================================================================
     // ローカル関数
@@ -119,14 +130,24 @@
         return (parseInt(value) || 0).clamp(min, max);
     };
 
+    var convertEscapeCharacters = function(text) {
+        if (isNotAString(text)) text = '';
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+    };
+
+    var isNotAString = function(args) {
+        return String(args) !== args;
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
     var param                = {};
-    param.shakePower         = getParamNumber(['ShakePower', 'シェイク強さ']);
-    param.criticalShakePower = getParamNumber(['CriticalShakePower', 'クリティカルシェイク強さ']);
-    param.shakeSpeed         = getParamNumber(['ShakeSpeed', 'シェイク速さ']);
-    param.shakeDuration      = getParamNumber(['ShakeDuration', 'シェイク時間']);
+    param.shakePower         = getParamString(['ShakePower', 'シェイク強さ']);
+    param.criticalShakePower = getParamString(['CriticalShakePower', 'クリティカルシェイク強さ']);
+    param.shakeSpeed         = getParamString(['ShakeSpeed', 'シェイク速さ']);
+    param.shakeDuration      = getParamString(['ShakeDuration', 'シェイク時間']);
 
     //=============================================================================
     // Game_Battler
@@ -144,7 +165,7 @@
     // Game_Action
     //  クリティカル判定を記憶します。
     //=============================================================================
-    var _Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
+    var _Game_Action_makeDamageValue      = Game_Action.prototype.makeDamageValue;
     Game_Action.prototype.makeDamageValue = function(target, critical) {
         target.setCriticalForShake(critical);
         return _Game_Action_makeDamageValue.apply(this, arguments);
@@ -163,9 +184,30 @@
     };
 
     Window_BattleLog.prototype.shakeOnDamage = function(target) {
-        var power = target.isCriticalForShake() ? param.criticalShakePower : param.shakePower;
-        $gameScreen.startShake(power, param.shakeSpeed, param.shakeDuration);
+        this._targetOnDamage = target;
+        var power    = target.isCriticalForShake() ? this.getCriticalDamageShakePower() : this.getDamageShakePower();
+        var speed    = this.convertShakeParameter(param.shakeSpeed);
+        var duration = this.convertShakeParameter(param.shakeDuration);
+        $gameScreen.startShake(power, speed, duration);
         target.setCriticalForShake(false);
+        this._targetOnDamage = null;
+    };
+
+    Window_BattleLog.prototype.getDamageShakePower = function() {
+        return this.convertShakeParameter(param.shakePower);
+    };
+
+    Window_BattleLog.prototype.getCriticalDamageShakePower = function() {
+        var power = param.criticalShakePower !== '' ? param.criticalShakePower : param.shakePower;
+        return this.convertShakeParameter(power);
+    };
+
+    Window_BattleLog.prototype.convertShakeParameter = function(param) {
+        var convertParam = convertEscapeCharacters(param);
+        // use in eval
+        var a = this._targetOnDamage;
+        var r = a.hpRate() * 100;
+        return isNaN(Number(convertParam)) ? eval(convertParam) : parseInt(convertParam);
     };
 })();
 
