@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2017/08/20 ウィンドウつきピクチャが重なったときにウィンドウがピクチャの下に表示される問題を修正
 // 1.8.6 2017/06/28 フォント変更機能のヘルプが抜けていたので追加
 // 1.8.5 2017/06/12 変数がマイナス値のときのゼロ埋め表示が正しく表示されない問題を修正
 // 1.8.4 2017/05/10 プラグインを未適用のデータを読み込んだとき、最初の一回のみ動的文字列ピクチャが作成されない問題を修正
@@ -59,8 +60,8 @@
  * ※ ピクチャ表示前にD_TEXTを複数回実行すると、複数行表示できます。
  *
  * ※ ver1.4.0より、[D_TEXT]実行後に「ピクチャの表示」で「画像」を指定した場合は
- *    動的文字列ピクチャ生成を保留として通常通り「画像」ピクチャが表示されるように
- *    挙動が変更になりました。
+ *    動的文字列ピクチャ生成を保留として通常通り「画像」ピクチャが表示される
+ *    ように挙動が変更になりました。
  *
  * プラグインコマンド詳細
  *   イベントコマンド「プラグインコマンド」から実行。
@@ -84,7 +85,7 @@
  *      D_TEXT_SETTING BG_COLOR #336699
  *      D_TEXT_SETTING BG_COLOR rgba(255,255,255,0.5)
  *
- *  D_TEXT_SETTING REAL_TIME ON : 制御文字で表示した変数のリアルタイム表示を可能にする
+ *  D_TEXT_SETTING REAL_TIME ON : 制御文字で表示した変数のリアルタイム表示
  *
  *  例：D_TEXT_SETTING REAL_TIME ON
  *
@@ -196,23 +197,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandDTextPicture(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandDTextPicture(command, args);
     };
 
     Game_Interpreter.textAlignMapper = {
@@ -429,30 +414,6 @@
     };
 
     //=============================================================================
-    // Spriteset_Base
-    //  ウィンドウフレーム用のコンテナを新規に作成します。
-    //=============================================================================
-    var _Spriteset_Base_createPictures      = Spriteset_Base.prototype.createPictures;
-    Spriteset_Base.prototype.createPictures = function() {
-        var width                    = Graphics.boxWidth;
-        var height                   = Graphics.boxHeight;
-        var x                        = (Graphics.width - width) / 2;
-        var y                        = (Graphics.height - height) / 2;
-        this._pictureWindowContainer = new Sprite();
-        this._pictureWindowContainer.setFrame(x, y, width, height);
-        this.addChild(this._pictureWindowContainer);
-        _Spriteset_Base_createPictures.apply(this, arguments);
-    };
-
-    Spriteset_Base.prototype.addFrameWindow = function(frameWindow) {
-        this._pictureWindowContainer.addChild(frameWindow);
-    };
-
-    Spriteset_Base.prototype.removeFrameWindow = function(frameWindow) {
-        this._pictureWindowContainer.removeChild(frameWindow);
-    };
-
-    //=============================================================================
     // Sprite_Picture
     //  画像の動的生成を追加定義します。
     //=============================================================================
@@ -490,18 +451,21 @@
     };
 
     Sprite_Picture.prototype.addFrameWindow = function() {
-        var spriteset = SceneManager.getSpriteset();
-        if (!spriteset) return;
-        spriteset.addFrameWindow(this._frameWindow);
-        this._addFrameWindow = true;
+        var parent = this.parent;
+        if (parent) {
+            var index = parent.getChildIndex(this);
+            parent.addChildAt(this._frameWindow, index);
+            this._addFrameWindow = true;
+        }
     };
 
     Sprite_Picture.prototype.removeFrameWindow = function() {
-        var spriteset = SceneManager.getSpriteset();
-        if (!spriteset) return;
-        spriteset.removeFrameWindow(this._frameWindow);
-        this._frameWindow    = null;
-        this._addFrameWindow = false;
+        var parent = this.parent;
+        if (parent) {
+            parent.removeChild(this._frameWindow);
+            this._frameWindow    = null;
+            this._addFrameWindow = false;
+        }
     };
 
     var _Sprite_Picture_loadBitmap      = Sprite_Picture.prototype.loadBitmap;
