@@ -1,7 +1,7 @@
 //=============================================================================
 // TemplateEvent.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
@@ -20,7 +20,7 @@
 // 1.0.1 2016/06/28 固有イベントのページ数がテンプレートイベントのページ数より少ない場合に発生するエラーを修正
 // 1.0.0 2016/06/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
