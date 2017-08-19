@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2017/08/19 セルフ変数の一括操作のコマンドおよびセルフ変数を外部から操作するスクリプトを追加
 // 1.5.1 2017/08/15 文章のスクロール表示でセルフ変数が正しく表示できていなかった問題を修正
 // 1.5.0 2017/08/14 セルフ変数の操作を「移動ルートの設定」からも行えるよう修正
 // 1.4.1 2017/07/21 SAN_MapGenerator.jsとの競合を解消
@@ -29,138 +30,81 @@
  * @author triacontane
  *
  * @param TemplateMapId
- * @desc テンプレートイベントが存在するマップIDです。
+ * @desc The map ID where the template event resides.
  * @default 1
  * @type number
  *
  * @param KeepEventId
- * @desc マップイベントを呼び出す際に、呼び出し元のイベントIDを維持します。対象を「このイベント」にした際の挙動が変わります。
+ * @desc Maintain the event ID of the caller when invoking the map event.
  * @default false
  * @type boolean
  *
  * @param NoOverride
- * @desc 固有イベントにグラフィックが指定されていた場合でも、設定の上書きを行いません。
+ * @desc Even if a graphic is specified for a specific event, it will not overwrite the setting.
  * @default false
  * @type boolean
  *
  * @help TemplateEvent.js[Template Event Plugin]
  *
- * 汎用的に使用するイベントをテンプレート化できます。
- * テンプレートイベントは、専用に用意したマップに定義してください。
- * 実際のイベントのメモ欄に所定の記述をするだけで、テンプレートイベントと
- * 動的に置き換えることができます。
+ * You can template commonly used events.
+ * Please define the template event in the map prepared exclusively.
+ * Just by writing a predetermined description in the note of the actual event,
+ * It can be replaced dynamically.
  *
- * またテンプレートイベントから置き換え元のイベントを呼び出すことができます。
- * 宝箱や場所移動イベント等、一部だけ固有の処理をしたい場合に有効です。
- * 外観や共通部分のイベント処理をテンプレートイベントに記述し、
- * アイテム入手や場所移動先指定など固有部分だけを元のイベントに記述します。
+ * You can also call up the source event from the template event.
+ * It is effective when you want to do some unique processing,
+ * such as treasure boxes and place movement events.
+ * Describe the appearance and event processing of the common part
+ * in the template event,
+ * We describe only the unique part such as item acquisition and
+ * location destination designation in the original event.
  *
- * 任意のマップイベントをコモンイベントのように呼び出す機能も提供します。
- * IDおよびイベント名で呼び出すイベントを指定可能です。
+ * It also provides a function to call an arbitrary map event like a common event.
+ * Events to be called can be specified by ID and event name.
  *
- * 利用手順
- * 1.テンプレートマップを作成して、テンプレートイベントを配置します。
+ * Procedure
+ * 1.Create a template map and place a template event.
  *
- * 2.テンプレートイベントに置き換えたいイベントのメモ欄を記述します。
- *   IDとイベント名の双方が指定可能です。
- * <TE:1>   テンプレートマップのID[1]のイベントに置き換わります。
- * <TE:aaa> テンプレートマップのイベント名[aaa]のイベントに置き換わります。
- * <TE:\v[1]> テンプレートマップのID[変数[1]の値]のイベントに置き換わります。
+ * 2.Write a memo field of the event you want to replace
+ * with the template event. Both ID and event name can be specified.
+ * <TE:1>   It is replaced with the event of ID [1] of the template map.
+ * <TE:aaa> It is replaced with the event of event name [aaa] of the template map.
+ * <TE:\v[1]> It is replaced with the event of ID of template map [value of variable [1]].
  *
- * 原則、初期配置以外の全設定はテンプレートイベントの設定に置き換わりますが
- * 例外としてグラフィックを指定していた場合とメモ欄(※1)を記述した場合は
- * 以下の設定について固有イベントの設定を優先します。
- * ・画像
- * ・自律移動
- * ・オプション
- * ・プライオリティ
- * ・トリガー
+ * In principle, all settings except initial placement will be replaced with
+ * template event settings If you specify graphics as an exception and when you
+ * write a memo field (* 1)
+ * Priority is given to the settings of unique events for the following settings.
+ * Image
+ * Autonomous Movement
+ * Options
+ * Priority
+ * Trigger
  *
- * ※1 固有イベントのメモ欄に以下の通り記述します。
- * <TE上書き>
+ * *1 Write it in the memo field of the unique event as follows.
  * <TEOverRide>
  *
- * ・セルフ変数機能
- * イベントに対してセルフ変数（そのイベント専用の変数）を定義できます。
- * プラグインコマンドから操作し、文章の表示やイベント出現条件として使用可能です。
+ * Plugin Command
  *
- * 「文章の表示」で使用する場合
- * 制御文字「\sv[n](n:インデックス)」で表示できます。
+ * TE_CALL_ORIGIN_EVENT [PageIndex]
+ *  Call up the event processing of the replacement source. After processing is completed,
+ *  it returns to the original processing. If you omit the page number, the running page
+ *  number is applied as it is. It is effective only when described in the template event.
  *
- * 「イベント出現条件」で使用する場合
- * 対象ページのイベントコマンドの先頭を「注釈」にして
- * 以下の書式で条件を指定してください。複数指定も可能です。
+ *  ex
+ *  TE_CALL_ORIGIN_EVENT 1
  *
- * \TE{条件}
+ * TE_CALL_MAP_EVENT [EventId] [PageIndex]
+ *  Call up another event processing in the same map. After processing is completed,
+ *  it returns to the original processing. If you specify an event ID other than a numeric value,
+ *  it calls processing of an event that is treated as an event name and whose event name matches.
+ *  It is valid even if it is described in the template event.
  *
- * 条件はJavaScriptとしてで記述し、制御文字が使用可能です。
- * 指定例：
- * \TE{\sv[1] >= 3}      # セルフ変数[1]が3以上の場合
- * \TE{\sv[2] === \v[1]} # セルフ変数[2]が変数[1]と等しい場合
+ *  ex1
+ *  TE_CALL_MAP_EVENT 5 1
  *
- * 「条件分岐」などのスクリプトで使用する場合
- * 以下のスクリプトで指定したインデックスのセルフ変数が取得できます。
- * this.getSelfVariable(n)
- * 指定例：
- * this.getSelfVariable(1) !== 0 # セルフ変数[1]が3以上の場合
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * TE固有イベント呼び出し [ページ番号]
- * TE_CALL_ORIGIN_EVENT [ページ番号]
- *  置き換え元のイベント処理を呼び出します。処理完了後、元の処理に戻ります。
- *  ページ番号を省略すると、実行中のページ番号がそのまま適用されます。
- *  テンプレートイベントに記述した場合のみ有効です。
- *
- *  例1:置き換え元イベントの1ページ目を呼び出します。
- *  TE固有イベント呼び出し 1
- *
- * TEマップイベント呼び出し [イベントID] [ページ番号]
- * TE_CALL_MAP_EVENT [イベントID] [ページ番号]
- *  同一マップ内の別イベント処理を呼び出します。処理完了後、元の処理に戻ります。
- *  イベントIDに数値以外を指定すると、イベント名として扱われ
- *  イベント名が一致するイベントの処理を呼び出します。
- *  テンプレートイベントに記述した場合以外でも有効です。
- *
- *  例1:ID[5]のイベントの1ページ目を呼び出します。
- *  TEマップイベント呼び出し 5 1
- *
- *  例2:[aaa]という名前のイベントの1ページ目を呼び出します。
- *  TEマップイベント呼び出し aaa 1
- *
- * TEセルフ変数の操作 [インデックス] [操作種別] [オペランド]
- * TE_SET_SELF_VARIABLE [インデックス] [操作種別] [オペランド]
- *  セルフ変数を操作します。
- *  インデックス : 操作対象のセルフ変数のインデックスです。1以上の数値を指定
- *  操作種別     : 操作種別です。以下の通り指定してください。
- *   0 : 代入
- *   1 : 加算
- *   2 : 減算
- *   3 : 乗算
- *   4 : 除算
- *   5 : 剰余
- *  オペランド   : 設定値です。数値を指定してください。
- * ※セルフ変数に数値以外を設定したい場合は、スクリプトで指定してください。
- *
- *  例1:インデックス[1]のセルフ変数に値[100]を代入します。
- *  TE_SET_SELF_VARIABLE 1 0 100
- *
- *  例2:インデックス[3]のセルフ変数から値[2]を減算します。
- *  TE_SET_SELF_VARIABLE 3 50 2
- *
- * ・スクリプト（イベントコマンドのスクリプト、変数の操作から実行）
- * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
- *  this.character(0).getTemplateId();
- *  this.character(0).getTemplateName();
- *
- * 指定したインデックスのセルフ変数を取得します。
- *  this.getSelfVariable(index);
- *
- * セルフ変数に値を設定します。
- * このスクリプトは「移動ルートの設定」でも実行できます。
- *  this.controlSelfVariable(index, type, operand);
+ *  ex2
+ *  TE_CALL_MAP_EVENT aaa 1
  *
  * This plugin is released under the MIT License.
  */
@@ -290,6 +234,10 @@
  *  例2:インデックス[3]のセルフ変数から値[2]を減算します。
  *  TE_SET_SELF_VARIABLE 3 50 2
  *
+ * TEセルフ変数の一括操作 [開始INDEX] [終了INDEX] [操作種別] [オペランド]
+ * TE_SET_RANGE_SELF_VARIABLE [開始INDEX] [終了INDEX] [操作種別] [オペランド]
+ *  セルフ変数を一括操作します。
+ *
  * ・スクリプト（イベントコマンドのスクリプト、変数の操作から実行）
  * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
  *  this.character(0).getTemplateId();
@@ -300,7 +248,18 @@
  *
  * セルフ変数に値を設定します。
  * このスクリプトは「移動ルートの設定」でも実行できます。
- *  this.controlSelfVariable(index, type, operand);
+ * formulaFlgをtrueに設定すると、operandを計算式として評価します。
+ *  this.controlSelfVariable(index, type, operand, formulaFlg);
+ *
+ * セルフ変数に値を一括設定します。
+ * このスクリプトは「移動ルートの設定」でも実行できます。
+ *  this.controlSelfVariableRange(index, type, operand, formulaFlg);
+ *
+ * 外部のイベントのセルフ変数を操作します。
+ *  $gameSelfSwitches.setVariableValue([マップID, イベントID, INDEX], 設定値);
+ *
+ * 外部のイベントのセルフ変数を取得します。
+ *  $gameSelfSwitches.getVariableValue([マップID, イベントID, INDEX]);
  *
  * SAN_MapGenerator.jsと組み合わせる場合
  * このプラグインをSAN_MapGenerator.jsより下に定義してください。
@@ -459,7 +418,15 @@ var $dataTemplateEvents = null;
                 var selfIndex   = getArgNumber(args[0], 0);
                 var controlType = getArgNumber(args[1], 0);
                 var operand     = getArgNumber(args[2]);
-                this.controlSelfVariable(selfIndex, controlType, operand);
+                this.controlSelfVariable(selfIndex, controlType, operand, false);
+                break;
+            case 'セルフ変数の一括操作' :
+            case '_SET_RANGE_SELF_VARIABLE' :
+                var selfStartIndex   = getArgNumber(args[0], 0);
+                var selfEndIndex     = getArgNumber(args[1], 0);
+                var controlTypeRange = getArgNumber(args[2], 0);
+                var operandRange     = getArgNumber(args[3]);
+                this.controlSelfVariableRange(selfStartIndex, selfEndIndex, controlTypeRange, operandRange, false);
                 break;
         }
     };
@@ -491,10 +458,17 @@ var $dataTemplateEvents = null;
         this.setupChild(page.list, eventId);
     };
 
-    Game_Interpreter.prototype.controlSelfVariable = function(index, type, operand) {
+    Game_Interpreter.prototype.controlSelfVariable = function(index, type, operand, formulaFlg) {
         var character = this.character(0);
         if (character) {
-            character.controlSelfVariable(index, type, operand);
+            character.controlSelfVariable(index, type, operand, formulaFlg);
+        }
+    };
+
+    Game_Interpreter.prototype.controlSelfVariableRange = function(startIndex, endIndex, type, operand, formulaFlg) {
+        var character = this.character(0);
+        if (character) {
+            character.controlSelfVariableRange(startIndex, endIndex, type, operand, formulaFlg);
         }
     };
 
@@ -559,7 +533,7 @@ var $dataTemplateEvents = null;
         if (this._variableData[key] === value) {
             return;
         }
-        if (value !== undefined) {
+        if (value !== undefined && value !== 0) {
             this._variableData[key] = value;
         } else {
             delete this._variableData[key];
@@ -706,10 +680,16 @@ var $dataTemplateEvents = null;
         return $gameSelfSwitches.makeSelfVariableKey(this._eventId, index);
     };
 
-    Game_Event.prototype.controlSelfVariable = function(index, type, operand) {
+    Game_Event.prototype.controlSelfVariable = function(index, type, operand, formulaFlg) {
         var key = this.getSelfVariableKey(index);
         if (key) {
-            this.operateSelfVariable(key, type, operand);
+            this.operateSelfVariable(key, type, formulaFlg ? eval(operand) : operand);
+        }
+    };
+
+    Game_Event.prototype.controlSelfVariableRange = function(startIndex, endIndex, type, operand, formulaFlg) {
+        for (var index = startIndex; index <= endIndex; index++) {
+            this.controlSelfVariable(index, type, operand, formulaFlg);
         }
     };
 
