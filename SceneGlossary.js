@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.17.0 2017/08/21 用語に制御文字が使われた場合は自動変換する機能を追加
 // 1.16.1 2017/08/04 セーブとロードを繰り返しすと用語辞典の初期位置が最後に選択していたものになってしまう問題を修正
 //                   コマンド「GLOSSARY_GAIN_ALL」で隠しアイテム以外も辞書に追加されるよう仕様変更
 // 1.16.0 2017/08/03 カテゴリの並び順を自由に指定できる機能を追加
@@ -1320,6 +1321,18 @@ function Scene_Glossary() {
     };
 
     //=============================================================================
+    // Window_Base
+    //  必要なら制御文字変換を行ってテキストを表示します。
+    //=============================================================================
+    Window_Base.prototype.drawTextExIfNeed = function(text, x, y, maxWidth) {
+        if (text.match(/\\/)) {
+            this.drawTextEx(text, x, y);
+        } else {
+            this.drawText(text, x, y, maxWidth);
+        }
+    };
+
+    //=============================================================================
     // Window_GlossaryCategory
     //  用語集カテゴリウィンドウです。
     //=============================================================================
@@ -1380,11 +1393,7 @@ function Scene_Glossary() {
         var text = this._data[index];
         if (text) {
             var rect = this.itemRect(index);
-            if (text.match(/\\/)) {
-                this.drawTextEx(text, rect.x + this.textPadding(), rect.y);
-            } else {
-                this.drawText(text, rect.x + this.textPadding(), rect.y, rect.width - this.textPadding());
-            }
+            this.drawTextExIfNeed(text, rect.x + this.textPadding(), rect.y, rect.width - this.textPadding());
         }
     };
 
@@ -1431,7 +1440,7 @@ function Scene_Glossary() {
             var iconBoxWidth = item.iconIndex > 0 ? Window_Base._iconWidth + 4 : 0;
             this.drawIcon(item.iconIndex, x + 2, y + 2);
             this.setGlossaryColor(item);
-            this.drawText(item.name, x + iconBoxWidth, y, width - iconBoxWidth);
+            this.drawTextExIfNeed(item.name, x + iconBoxWidth, y, width - iconBoxWidth);
             this.changePaintOpacity(1);
             this.resetTextColor();
         }
