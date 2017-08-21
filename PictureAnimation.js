@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/08/22 アニメーション再生中に、セル数が少ない別のアニメーションに切り替えたときにエラーが発生する場合がある現象を修正
 // 1.5.0 2017/07/03 ループしないアニメーションの終了後に最初のセルに戻るかどうかを選択できる機能を追加
 // 1.4.0 2016/09/03 アニメーションに合わせて指定したSEを演奏する機能を追加
 // 1.3.2 2016/05/11 クロスフェードを指定していた場合に2回目のアニメ表示でエラーになる場合がある問題を修正
@@ -515,6 +516,9 @@
         this._customArray   = customArray;
         this._animationFlg  = true;
         this._loopFlg       = loopFlg;
+        if (this._cellNumber <= this._cellCount) {
+            this._cellCount = this._cellNumber - 1;
+        }
     };
 
     Game_Picture.prototype.stopAnimationFrame = function(forceFlg) {
