@@ -6,9 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/08/23 アニメーションの拡大率を動的に設定できる機能を追加
 // 1.0.0 2017/04/28 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -20,12 +21,21 @@
  * @param RotationVariableId
  * @desc 回転角(0-360)を取得するための変数番号
  * @default 0
+ * @type variable
  *
  * @param FrameVariableId
  * @desc アニメーションのフレーム数(1-)を取得するための変数番号
  * @default 0
+ * @type variable
  *
- * @help アニメーションを表示する際の角度やフレーム数を動的に変更できます。
+ * @param ScaleVariableId
+ * @desc 拡大率(100%)を取得するための変数番号
+ * @default 0
+ * @type variable
+ *
+ * @help AnimationExtend.js
+ *
+ * アニメーションを表示する際の角度やフレーム数を動的に変更できます。
  * パラメータで指定した番号の変数の値がそれぞれ適用されます。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -39,13 +49,22 @@
  * @param 回転角変数番号
  * @desc 回転角(0-360)を取得するための変数番号
  * @default 0
+ * @type variable
  *
  * @param フレーム数変数番号
  * @desc アニメーションのフレーム数(1-)を取得するための変数番号。
  * デフォルトのフレーム数は「4」です。1フレーム=1/60秒
  * @default 0
+ * @type variable
  *
- * @help アニメーションを表示する際の角度やフレーム数を動的に変更できます。
+ * @param 拡大率変数番号
+ * @desc 拡大率(100%)を取得するための変数番号
+ * @default 0
+ * @type variable
+ *
+ * @help AnimationExtend.js
+ *
+ * アニメーションを表示する際の角度やフレーム数を動的に変更できます。
  * パラメータで指定した番号の変数の値がそれぞれ適用されます。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -86,6 +105,7 @@
     var param                = {};
     param.rotationVariableId = getParamNumber(['RotationVariableId', '回転角変数番号']);
     param.frameVariableId    = getParamNumber(['FrameVariableId', 'フレーム数変数番号']);
+    param.scaleVariableId    = getParamNumber(['ScaleVariableId', '拡大率変数番号']);
 
     //=============================================================================
     // Sprite_Animation
@@ -97,6 +117,11 @@
         var customRotation = $gameVariables.value(param.rotationVariableId);
         if (customRotation > 0) {
             this.rotation = customRotation / (180 / Math.PI);
+        }
+        var customScale = $gameVariables.value(param.scaleVariableId);
+        if (customScale !== 0) {
+            this.scale.x = customScale / 100;
+            this.scale.y = customScale / 100;
         }
     };
 
