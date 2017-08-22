@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/08/22 身代わり条件「必中以外」を無効にした場合でも必中攻撃に対する身代わりが発動しない場合がある問題を修正
 // 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2017/02/05 初版
 // ----------------------------------------------------------------------------
@@ -20,11 +21,13 @@
  *
  * @param CondDying
  * @desc デフォルトの身代わり条件である「瀕死」を有効にします。OFFにすると無効になります。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param CondNonCertainHit
  * @desc デフォルトの身代わり条件である「必中以外」を有効にします。OFFにすると無効になります。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @help 以下の内容に沿って身代わりの仕様を拡張します。
  *
@@ -106,11 +109,13 @@
  *
  * @param 身代わり条件_瀕死
  * @desc デフォルトの身代わり条件である「瀕死」を有効にします。OFFにすると無効になります。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 身代わり条件_必中以外
  * @desc デフォルトの身代わり条件である「必中以外」を有効にします。OFFにすると無効になります。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @help 以下の内容に沿って身代わりの仕様を拡張します。
  *
@@ -205,7 +210,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     var getMetaValue = function(object, name) {
@@ -362,12 +367,15 @@
     };
 
     BattleManager.checkSubstituteDefault = function(target) {
-        if (!param.condDying && !this._action.isCertainHit()) {
-            return true;
-        } else if (!param.condNonCertainHit && target.isDying()) {
-            return true;
-        }
-        return false;
-    }
+        return this.isValidSubstituteDying(target) && this.isValidSubstituteCertainHit();
+    };
+
+    BattleManager.isValidSubstituteDying = function(target) {
+        return !param.condDying || target.isDying();
+    };
+
+    BattleManager.isValidSubstituteCertainHit = function() {
+        return !param.condNonCertainHit || !this._action.isCertainHit();
+    };
 })();
 
