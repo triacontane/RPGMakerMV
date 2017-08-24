@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/08/24 ヘルプの誤字を修正＋型指定機能に対応
 // 1.1.1 2017/04/22 制御文字の精度をほんの少し改善
 // 1.1.0 2017/04/19 制御文字の翻訳に部分的に対応。翻訳対象から除外する制御文字を追加
 //                  サブスクリプションキーを指定できる機能を追加
@@ -30,20 +31,26 @@
  *
  * @param TranslateDatabase
  * @desc Translate each element of the database. Translation process involves little by little in the background.
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param TranslateMessage
  * @desc Translate the contents of the message and choose display.
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param TranslationSwitchId
  * @desc Is the switch ID translation is enabled. Specify 0 to unconditionally valid in translation.
  * @default 0
+ * @type switch
  *
  * @param Category
  * @desc Specifies the category of translation at run time.
  * （Normal：general, NeuralNetwork：generalnn）
  * @default general
+ * @type select
+ * @option general
+ * @option generalnn
  *
  * @param SubscriptionKey
  * @desc It is the subscription key of Microsoft Azure. If unspecified, use the shared environment prepared here.
@@ -52,6 +59,10 @@
  * @param OutLog
  * @desc Logging the request process. (ON/TEST/OFF)
  * @default TEST
+ * @type select
+ * @option ON
+ * @option TEST
+ * @option OFF
  *
  * Automatically translate messages and data during game.
  * Although there is a limit to the precision because of machine translation,
@@ -124,20 +135,26 @@
  *
  * @param データベース翻訳
  * @desc データベースの各要素を翻訳します。翻訳処理はバックグラウンドで少しずつ行われます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param メッセージ翻訳
  * @desc メッセージ表示と選択肢表示の内容を翻訳します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 翻訳スイッチID
  * @desc 翻訳が有効になるスイッチIDです。0を指定すると無条件で翻訳が有効になります。
  * @default 0
+ * @type switch
  *
  * @param カテゴリ
  * @desc 翻訳実行時のカテゴリを指定します。
  * （通常：general ニューラルネットワーク：generalnn）
  * @default general
+ * @type select
+ * @option general
+ * @option generalnn
  *
  * @param サブスクリプションキー
  * @desc Microsoft Azureのサブスクリプションキーです。未指定の場合、こちらで用意した共用環境を使用します。
@@ -147,6 +164,10 @@
  * @desc リクエストの経過をログ出力します。(ON/TEST/OFF)
  * TESTはテストプレー時のみ出力
  * @default TEST
+ * @type select
+ * @option ON
+ * @option TEST
+ * @option OFF
  *
  * @help ゲーム中のメッセージおよびデータを自働で翻訳します。
  * 機械翻訳のため精度には限界はありますが、手軽に多言語対応できます。
@@ -171,7 +192,7 @@
  * 2. 制御文字を含む文章の翻訳は不完全です。結果がおかしくなる場合
  * 必要に応じて辞書ファイルを修正してください。
  *
- * 3. 制度に関するご要望にはお応えできません。
+ * 3. 翻訳精度に関するご要望にはお応えできません。
  *
  * 4. 「Translator Text API」がサービスを終了した場合、当然このプラグインは
  * 使用できなくなります。（代替案は検討します）
@@ -238,7 +259,7 @@ function TranslationManager() {
 
     var getParamBoolean = function(paramNames) {
         var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     //=============================================================================
