@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/08/24 画像を別のものに変更するスクリプトを追加
 // 1.6.1 2017/08/06 ヘルプを修正
 // 1.6.0 2017/08/05 アクターのバトラー画像をマップ上に表示する機能を追加
 // 1.5.3 2017/06/22 プラグインを適用していないデータをロードしたときにプレイヤーが表示されない問題を修正
@@ -175,6 +176,13 @@
  * ・色調の設定
  * this.setTone(（R値）,（G値）（B値）);
  * 例：this.setTone(255, -255, -255);
+ *
+ * ・画像の変更
+ * this.changeImage(（新しいファイル名）, （インデックス）);
+ * 例：this.changeImage('Package1', 3);
+ *
+ * ※1 画像種別(ピクチャ⇒遠景など)を変更することはできません。
+ * ※2 インデックスの指定を省略した場合、変更前の値が維持されます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -412,6 +420,13 @@
     var _Game_CharacterBase_screenZ      = Game_CharacterBase.prototype.screenZ;
     Game_CharacterBase.prototype.screenZ  = function() {
         return this._customPriority >= 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
+    };
+
+    Game_CharacterBase.prototype.changeImage = function(fileName, fileIndex) {
+        if (arguments.length < 2) {
+            fileIndex = this._characterIndex;
+        }
+        Game_CharacterBase.prototype.setImage.call(this, fileName, fileIndex);
     };
 
     //=============================================================================
