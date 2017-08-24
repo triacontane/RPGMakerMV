@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/08/20 最新のMW.jsで動作するよう修正
 // 1.2.1 2017/03/11 コミュニティ版で動作しない問題を修正
 // 1.2.0 2017/01/21 1フレーム中に実行したイベントの総数をログ出力する機能を追加
 // 1.1.0 2017/01/09 ローカル環境以外でも動作するよう修正
@@ -417,11 +418,13 @@
     SceneManager.showDevTools = function() {
         if (!Utils.isNwjs()) return;
         const nwWin = require('nw.gui').Window.get();
-        if (!nwWin.isDevToolsOpen()) {
+        if (!nwWin.isDevToolsOpen || !nwWin.isDevToolsOpen()) {
             const devTool = nwWin.showDevTools();
-            devTool.moveTo(0, 0);
-            devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-            nwWin.focus();
+            if (devTool) {
+                devTool.moveTo(0, 0);
+                devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+                nwWin.focus();
+            }
         }
     };
 
