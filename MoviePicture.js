@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2017/08/27 二連続で再生したときに動画の音量同期機能が正常に動作しない問題を修正
 // 1.3.0 2017/08/26 動画の音量をいずれかのオーディオ音量と同期させる機能を追加
 // 1.2.0 2017/08/18 動画の再生速度(倍率)を変更できるプラグインコマンドを追加
 // 1.1.0 2017/08/09 アルファチャンネル付き動画の再生に対応（ただし特定の手順を踏む必要あり）
@@ -63,6 +64,11 @@
  * MP_SET_SPEED 1 150 # ピクチャ番号[1]の動画の再生速度を150%に設定します。
  * MP_速度設定 1 150  # 同上
  *
+ * 動画音量種別を設定します。設定する内容はプラグインパラメータ「動画音量種別」と
+ * 同じです。プラグインパラメータの設定より優先されます。
+ * MP_音量種別設定 BGM
+ * MP_SET_VOLUME_TYPE BGM
+ *
  * 注意：
  * サイズの大きな動画を複数再生すると、パフォーマンスが低下する可能性があります。
  *
@@ -112,6 +118,11 @@
  * MP_音量設定 1 50   # 同上
  * MP_SET_SPEED 1 150 # ピクチャ番号[1]の動画の再生速度を150%に設定します。
  * MP_速度設定 1 150  # 同上
+ *
+ * 動画音量種別を設定します。設定する内容はプラグインパラメータ「動画音量種別」と
+ * 同じです。プラグインパラメータの設定より優先されます。
+ * MP_音量種別設定 BGM
+ * MP_SET_VOLUME_TYPE BGM
  *
  * アルファチャンネル付き動画を使用する場合は、以下に注意してください。
  * 1. 通常のGame.exeでは動作しません。NW.jsを最新化してください。
@@ -199,6 +210,8 @@
     setPluginCommand('ウェイト設定', 'execSetVideoWait');
     setPluginCommand('SET_VOLUME', 'execSetVideoVolume');
     setPluginCommand('音量設定', 'execSetVideoVolume');
+    setPluginCommand('SET_VOLUME_TYPE', 'execSetVideoVolumeType');
+    setPluginCommand('音量種別設定', 'execSetVideoVolumeType');
 
     //=============================================================================
     // Game_Interpreter
@@ -235,6 +248,13 @@
         var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
         if (picture) {
             picture.setVideoVolume(getArgNumber(args[1], 0, 100));
+        }
+    };
+
+    Game_Interpreter.prototype.execSetVideoVolumeType = function(args) {
+        var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
+        if (picture) {
+            picture.setVideoVolumeType(args[1]);
         }
     };
 
@@ -317,6 +337,7 @@
             this._video         = true;
             this._videoUseAlpha = $gameScreen.isVideoUseAlpha();
             this.setVideoVolume(100);
+            this.setVideoVolumeType(param.movieVolumeType);
             $gameScreen.clearVideoPictureName();
         } else {
             this._video = false;
@@ -359,8 +380,12 @@
         this._volumeVideo = value;
     };
 
-    Game_Picture.prototype.getVideoVolume = function() {
-        return this._volumeVideo;
+    Game_Picture.prototype.getVideoRealVolume = function() {
+        return this._volumeVideo * AudioManager.getVideoPictureVolume(this._volumeVideoType);
+    };
+
+    Game_Picture.prototype.setVideoVolumeType = function(value) {
+        this._volumeVideoType = value;
     };
 
     Game_Picture.prototype.setVideoSpeed = function(value) {
@@ -411,6 +436,7 @@
         var picture     = this.picture();
         if (picture) {
             this.bitmap.setCurrentTime(picture.getVideoPosition());
+            this._volume = null;
             this.updateVideoVolume();
             this.bitmap.play();
         }
@@ -475,10 +501,10 @@
     };
 
     Sprite_Picture.prototype.updateVideoVolume = function() {
-        var volume = this.picture().getVideoVolume() / 100;
+        var volume = this.picture().getVideoRealVolume();
         if (volume !== this._volume) {
             this._volume = volume;
-            this.bitmap.setVolume(volume);
+            this.bitmap.setVolume(volume / 100);
         }
     };
 
@@ -579,15 +605,16 @@
     //  動画ピクチャの音量を取得します。
     //=============================================================================
     AudioManager._movieVolumePropertyMap = {
-        BGM: 'bgmVolume',
-        BGS: 'bgsVolume',
-        ME : 'meVolume',
-        SE : 'seVolume'
+        BGM  : 'bgmVolume',
+        BGS  : 'bgsVolume',
+        ME   : 'meVolume',
+        SE   : 'seVolume',
+        VOICE: 'voiceVolume'
     };
 
-    AudioManager.getVideoPictureVolume = function() {
-        var property = this._movieVolumePropertyMap[param.movieVolumeType];
-        return Graphics.getVideoVolume() * (property ? this[property] : 100);
+    AudioManager.getVideoPictureVolume = function(volumeType) {
+        var property = this._movieVolumePropertyMap[volumeType];
+        return Graphics.getVideoVolume() * (property ? this[property] : 100) / 100;
     };
 
     //=============================================================================
@@ -633,8 +660,7 @@
     };
 
     Bitmap_Video.prototype.setVolume = function(volume) {
-        var videoVolume    = volume * AudioManager.getVideoPictureVolume() / 100;
-        this._video.volume = (videoVolume !== undefined ? videoVolume : volume);
+        this._video.volume = volume;
     };
 
     Bitmap_Video.prototype.pause = function() {
