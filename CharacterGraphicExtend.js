@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2017/08/27 マップで使用しているタイルセット以外のタイルセットを使ったイベントを作成できる機能を追加
 // 1.7.0 2017/08/24 画像を別のものに変更するスクリプトを追加
 // 1.6.1 2017/08/06 ヘルプを修正
 // 1.6.0 2017/08/05 アクターのバトラー画像をマップ上に表示する機能を追加
@@ -99,6 +100,12 @@
  * イベントの画像選択から一番左上のタイルを選択してください。
  *
  * 例：<CGタイル:1,2,2> or <CGTile:1,2,2>
+ *
+ * <CGタイルセット:（ページ数）,（タイルセットID）>
+ * 指定したページが有効になった場合のタイルセットを指定します。
+ * マップで使用しているタイルセット以外のタイルセット画像が使えます。
+ *
+ * 例：<CGタイルセット:1,2> or <CGTileset:1,2>
  *
  * <CGシフト:（ページ数）,（X座標）,（Y座標）>
  * 指定したページが有効になった場合のグラフィック表示位置を
@@ -315,11 +322,16 @@
         this._originY         = null;
         this._absoluteX       = null;
         this._absoluteY       = null;
+        this._customTilesetId = 0;
         this.setBlendMode(0);
     };
 
     Game_CharacterBase.prototype.customResource = function() {
         return this._customResource;
+    };
+
+    Game_CharacterBase.prototype.customTilesetId = function() {
+        return this._customTilesetId;
     };
 
     Game_CharacterBase.prototype.graphicColumns = function() {
@@ -529,6 +541,10 @@
             this._tileBlockWidth  = getArgNumber(cgParams[1]);
             this._tileBlockHeight = getArgNumber(cgParams[2]);
         }
+        cgParams = this.getMetaCg(['タイルセット', 'Tileset']);
+        if (cgParams) {
+            this._customTilesetId = getArgNumber(cgParams[1]);
+        }
     };
 
     var _Game_Event_setImage      = Game_Event.prototype.setImage;
@@ -594,6 +610,19 @@
     // Sprite_Character
     //  拡張したプロパティに基づいてエフェクトを反映させます。
     //=============================================================================
+    var _Sprite_Character_tilesetBitmap = Sprite_Character.prototype.tilesetBitmap;
+    Sprite_Character.prototype.tilesetBitmap = function(tileId) {
+        var customTilesetId = this._character.customTilesetId();
+        this._customTilesetId = customTilesetId;
+        if (customTilesetId) {
+            var tileset = $dataTilesets[customTilesetId];
+            var setNumber = 5 + Math.floor(tileId / 256);
+            return ImageManager.loadTileset(tileset.tilesetNames[setNumber]);
+        } else {
+            return _Sprite_Character_tilesetBitmap.apply(this, arguments);
+        }
+    };
+
     var _Sprite_Character_updateBitmap      = Sprite_Character.prototype.updateBitmap;
     Sprite_Character.prototype.updateBitmap = function() {
         if (this.isImageChanged()) this._customResource = this._character.customResource();
@@ -641,8 +670,12 @@
 
     var _Sprite_Character_isImageChanged      = Sprite_Character.prototype.isImageChanged;
     Sprite_Character.prototype.isImageChanged = function() {
-        return _Sprite_Character_isImageChanged.apply(this, arguments) ||
-            this._customResource !== this._character.customResource();
+        return _Sprite_Character_isImageChanged.apply(this, arguments) || this.isCustomImageChanged();
+    };
+
+    Sprite_Character.prototype.isCustomImageChanged = function() {
+        return this._customResource !== this._character.customResource() ||
+            this._customTilesetId !== this._character.customTilesetId();
     };
 
     var _Sprite_Character_setCharacterBitmap      = Sprite_Character.prototype.setCharacterBitmap;
