@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/08/26 動画の音量をいずれかのオーディオ音量と同期させる機能を追加
 // 1.2.0 2017/08/18 動画の再生速度(倍率)を変更できるプラグインコマンドを追加
 // 1.1.0 2017/08/09 アルファチャンネル付き動画の再生に対応（ただし特定の手順を踏む必要あり）
 // 1.0.3 2017/08/08 エラー処理を追加
@@ -21,6 +22,16 @@
 /*:
  * @plugindesc MovieInScreenPlugin
  * @author triacontane
+ *
+ * @param MovieVolumeType
+ * @desc 動画再生時に音声が含まれる場合、その音量を参照するオーディオ種別です。指定しない場合、常に100%で再生されます。
+ * @default none
+ * @type select
+ * @option none
+ * @option BGM
+ * @option BGS
+ * @option ME
+ * @option SE
  *
  * @help Play movies using the picture display frame.
  * In addition to being subject to processing by moving and rotating pictures,
@@ -60,6 +71,16 @@
 /*:ja
  * @plugindesc 動画のピクチャ表示プラグイン
  * @author トリアコンタン
+ *
+ * @param 動画音量種別
+ * @desc 動画再生時に音声が含まれる場合、その音量を参照するオーディオ種別です。指定しない場合、常に100%で再生されます。
+ * @default none
+ * @type select
+ * @option none
+ * @option BGM
+ * @option BGS
+ * @option ME
+ * @option SE
  *
  * @help ピクチャの表示枠を使って動画を再生します。
  * ピクチャの移動や回転による処理の対象になるほか、複数の動画の並行再生が
@@ -112,12 +133,22 @@
 
 (function() {
     'use strict';
+    var pluginName    = 'MoviePicture';
     var metaTagPrefix = 'MP_';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
+    var getParamString = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name) return name;
+        }
+        return '';
+    };
+
     var convertEscapeCharacters = function(text) {
         if (isNotAString(text)) text = '';
         var windowLayer = SceneManager._scene._windowLayer;
@@ -152,6 +183,9 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
+    var param             = {};
+    param.movieVolumeType = getParamString(['MovieVolumeType', '動画音量種別']).toUpperCase();
+
     var pluginCommandMap = new Map();
     setPluginCommand('SET_MOVIE', 'execSetVideoPicture');
     setPluginCommand('動画設定', 'execSetVideoPicture');
@@ -377,6 +411,7 @@
         var picture     = this.picture();
         if (picture) {
             this.bitmap.setCurrentTime(picture.getVideoPosition());
+            this.updateVideoVolume();
             this.bitmap.play();
         }
     };
@@ -524,15 +559,35 @@
     };
 
     ImageManager.getVideoFileExt = function() {
-        if (Graphics.canPlayVideoType('video/webm') && !Utils.isMobileDevice()) {
+        if (Graphics.canPlayVideoType('video/webm')) {
             return '.webm';
         } else {
             return '.mp4';
         }
     };
 
+    //=============================================================================
+    // SceneManager
+    //  戦闘開始時にマップピクチャが一瞬読み込まれてしまう現象を回避します
+    //=============================================================================
     SceneManager.isBattleStartUnexpectedLoad = function() {
         return this._scene instanceof Scene_Battle && !$gameParty.inBattle()
+    };
+
+    //=============================================================================
+    // AudioManager
+    //  動画ピクチャの音量を取得します。
+    //=============================================================================
+    AudioManager._movieVolumePropertyMap = {
+        BGM: 'bgmVolume',
+        BGS: 'bgsVolume',
+        ME : 'meVolume',
+        SE : 'seVolume'
+    };
+
+    AudioManager.getVideoPictureVolume = function() {
+        var property = this._movieVolumePropertyMap[param.movieVolumeType];
+        return Graphics.getVideoVolume() * (property ? this[property] : 100);
     };
 
     //=============================================================================
@@ -578,7 +633,7 @@
     };
 
     Bitmap_Video.prototype.setVolume = function(volume) {
-        var videoVolume    = volume * Graphics.getVideoVolume();
+        var videoVolume    = volume * AudioManager.getVideoPictureVolume() / 100;
         this._video.volume = (videoVolume !== undefined ? videoVolume : volume);
     };
 
