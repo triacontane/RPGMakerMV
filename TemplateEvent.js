@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2017/08/26 セルフ変数に文字列が入っている場合でも出現条件の注釈が正しく動作するよう修正
 // 1.6.0 2017/08/19 セルフ変数の一括操作のコマンドおよびセルフ変数を外部から操作するスクリプトを追加
 // 1.5.1 2017/08/15 文章のスクロール表示でセルフ変数が正しく表示できていなかった問題を修正
 // 1.5.0 2017/08/14 セルフ変数の操作を「移動ルートの設定」からも行えるよう修正
@@ -181,6 +182,7 @@
  * 指定例：
  * \TE{\sv[1] >= 3}      # セルフ変数[1]が3以上の場合
  * \TE{\sv[2] === \v[1]} # セルフ変数[2]が変数[1]と等しい場合
+ * \TE{\sv[3] === 'AAA'} # セルフ変数[3]が'AAA'と等しい場合
  *
  * 「条件分岐」などのスクリプトで使用する場合
  * 以下のスクリプトで指定したインデックスのセルフ変数が取得できます。
@@ -545,10 +547,11 @@ var $dataTemplateEvents = null;
         return eventId > 0 ? [$gameMap.mapId(), eventId, index] : null;
     };
 
-    Game_SelfSwitches.prototype.convertSelfVariableCharacter = function(eventId, text) {
+    Game_SelfSwitches.prototype.convertSelfVariableCharacter = function(eventId, text, scriptFlag) {
         text = text.replace(/\x1bSV\[(\d+)\]/gi, function() {
             var key = this.makeSelfVariableKey(eventId, parseInt(arguments[1]));
-            return this.getVariableValue(key);
+            var value = this.getVariableValue(key);
+            return isNotAString(value) || !scriptFlag ? value : '\'' + value + '\'';
         }.bind(this));
         return text;
     };
@@ -671,7 +674,7 @@ var $dataTemplateEvents = null;
         }.bind(this));
         return scripts.every(function(script) {
             script = getArgString(script);
-            script = $gameSelfSwitches.convertSelfVariableCharacter(this._eventId, script);
+            script = $gameSelfSwitches.convertSelfVariableCharacter(this._eventId, script, true);
             return eval(script);
         }, this);
     };
@@ -743,7 +746,7 @@ var $dataTemplateEvents = null;
     var _Window_Base_convertEscapeCharacters      = Window_Base.prototype.convertEscapeCharacters;
     Window_Base.prototype.convertEscapeCharacters = function(text) {
         text = _Window_Base_convertEscapeCharacters.apply(this, arguments);
-        return $gameSelfSwitches.convertSelfVariableCharacter($gameMessage.getEventId(), text);
+        return $gameSelfSwitches.convertSelfVariableCharacter($gameMessage.getEventId(), text, false);
     };
 
     //=============================================================================
