@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/08/27 指定する桁数が少ないと数値入力画面が正しく表示されない問題を修正
 // 1.0.0 2017/04/05 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -291,6 +292,7 @@
         Window_NameInput.prototype.initialize.call(this, editWindow);
         this.width = this.windowWidth();
         this.x = SceneManager._boxWidth / 2 - this.width / 2;
+        this.createContents();
         this.refresh();
     };
 
