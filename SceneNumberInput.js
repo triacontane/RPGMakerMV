@@ -21,6 +21,7 @@
  * @param DefaultDigit
  * @desc 入力する数値のデフォルト桁数です。
  * @default 4
+ * @type number
  *
  * @param BackPicture
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -33,6 +34,7 @@
  * @param FontSize
  * @desc 数値入力ウィンドウのフォントサイズです。
  * @default 48
+ * @type number
  *
  * @param HelpMessage
  * @desc デフォルトのヘルプ説明メッセージです。プラグインコマンドで指定した場合はそちらが優先されます。
@@ -60,6 +62,7 @@
  * @param デフォルト桁数
  * @desc 入力する数値のデフォルト桁数です。
  * @default 4
+ * @type number
  *
  * @param 背景ピクチャ
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -72,6 +75,7 @@
  * @param フォントサイズ
  * @desc 数値入力ウィンドウのフォントサイズです。
  * @default 48
+ * @type number
  *
  * @param ヘルプメッセージ
  * @desc デフォルトのヘルプ説明メッセージです。プラグインコマンドで指定した場合はそちらが優先されます。
