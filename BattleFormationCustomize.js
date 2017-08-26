@@ -22,10 +22,10 @@
  * 戦闘における隊列の位置を調整します。
  * 特徴を有するメモ欄に以下の通り指定してください。
  *
- * <BFC_X:100>  # 隊列のX座標を[100]に設定します。
- * <BFC_Y:100>  # 隊列のY座標を[100]に設定します。
- * <BFC_DX:100> # 隊列のX座標を元位置から[100]ずらします。
- * <BFC_DY:100> # 隊列のY座標を元位置から[100]ずらします。
+ * <BFC_座標:10,20>   # 隊列の座標をX座標を[10]に、Y座標を[20]に設定します。
+ * <BFC_Pos:10,20>    # 同上
+ * <BFC_相対座標:100> # 隊列の座標を元位置からX方向に[10]、Y方向に[20]ずらします。
+ * <BFC_DeltaPos:100> # 同上
  *
  * X座標とY座標は両方指定してください。
  *
@@ -40,10 +40,10 @@
  * 戦闘における隊列の位置を調整します。
  * 特徴を有するメモ欄に以下の通り指定してください。
  *
- * <BFC_X:100>  # 隊列のX座標を[100]に設定します。
- * <BFC_Y:100>  # 隊列のY座標を[100]に設定します。
- * <BFC_DX:100> # 隊列のX座標を元位置から[100]ずらします。
- * <BFC_DY:100> # 隊列のY座標を元位置から[100]ずらします。
+ * <BFC_座標:10,20>   # 隊列の座標をX座標を[10]に、Y座標を[20]に設定します。
+ * <BFC_Pos:10,20>    # 同上
+ * <BFC_相対座標:100> # 隊列の座標を元位置からX方向に[10]、Y方向に[20]ずらします。
+ * <BFC_DeltaPos:100> # 同上
  *
  * X座標とY座標は両方指定してください。
  *
@@ -63,15 +63,26 @@
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    var getArgNumber = function(arg, min, max) {
+    var getArgArrayNumber = function(args, min, max) {
+        var values = args.split(',');
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
+        return values.map(function(value) {
+            return parseInt(value).clamp(min, max);
+        });
     };
 
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + name;
         return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
+    };
+
+    var getMetaValues = function(object, names) {
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
+            if (value !== undefined) return value;
+        }
+        return undefined;
     };
 
     var convertEscapeCharacters = function(text) {
@@ -105,30 +116,27 @@
     };
 
     Sprite_Battler.prototype.setCustomHome = function() {
-        var x = this.getCustomHomePosition('X');
-        var y = this.getCustomHomePosition('Y');
-        if (x !== null && y !== null) {
-            this.setHome(x, y);
+        var customPosition = this.getCustomHomePosition(['座標', 'Pos']);
+        if (customPosition) {
+            this.setHome(customPosition[0], customPosition[1]);
         }
     };
 
     Sprite_Battler.prototype.setCustomDeltaHome = function() {
-        var dx = this.getCustomHomePosition('DX');
-        var dy = this.getCustomHomePosition('DY');
-        if (dx !== null && dy !== null) {
-            this.setHome(this._homeX + dx - this._homeDx, this._homeY + dy - this._homeDy);
-            this._homeDx = dx;
-            this._homeDy = dy;
+        var customPosition = this.getCustomHomePosition(['相対座標', 'DeltaPos']);
+        if (customPosition) {
+            this.setHome(this._homeX + customPosition[0] - this._homeDx, this._homeY + customPosition[1] - this._homeDy);
+            this._homeDx = customPosition[0];
+            this._homeDy = customPosition[1];
         }
     };
 
-    Sprite_Battler.prototype.getCustomHomePosition = function(type) {
-        var battler = this._battler;
+    Sprite_Battler.prototype.getCustomHomePosition = function(types) {
         var position = null;
-        battler.traitObjects().some(function(traitObject) {
-            var metaValue = getMetaValue(traitObject, type);
+        this._battler.traitObjects().some(function(traitObject) {
+            var metaValue = getMetaValues(traitObject, types);
             if (metaValue !== undefined) {
-                position = getArgNumber(metaValue);
+                position = getArgArrayNumber(metaValue);
                 return true;
             }
             return false;
