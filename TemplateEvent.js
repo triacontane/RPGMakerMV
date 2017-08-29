@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/08/29 プラグインコマンドで制御文字\sv[n]が利用できる機能を追加
 // 1.6.1 2017/08/26 セルフ変数に文字列が入っている場合でも出現条件の注釈が正しく動作するよう修正
 // 1.6.0 2017/08/19 セルフ変数の一括操作のコマンドおよびセルフ変数を外部から操作するスクリプトを追加
 // 1.5.1 2017/08/15 文章のスクロール表示でセルフ変数が正しく表示できていなかった問題を修正
@@ -16,7 +17,7 @@
 // 1.2.0 2017/06/09 設定を固有イベントで上書きする機能を追加。それに伴い既存のパラメータ名称を一部変更
 // 1.1.2 2017/06/03 固有イベントのグラフィックで上書きした場合は、オプションと向き、パターンも固有イベントで上書きするよう変更
 // 1.1.1 2017/05/25 場所移動直後にアニメパターンが一瞬だけ初期化されてしまう問題を修正
-// 1.1.0 2017/04/22 テンプレートイベントIDに変数の値を指摘できる機能を追加
+// 1.1.0 2017/04/22 テンプレートイベントIDに変数の値を指定できる機能を追加
 // 1.0.2 2017/04/09 イベント生成系のプラグインで発生する可能性のある競合を解消
 // 1.0.1 2016/06/28 固有イベントのページ数がテンプレートイベントのページ数より少ない場合に発生するエラーを修正
 // 1.0.0 2016/06/12 初版
@@ -233,12 +234,17 @@
  *  例1:インデックス[1]のセルフ変数に値[100]を代入します。
  *  TE_SET_SELF_VARIABLE 1 0 100
  *
- *  例2:インデックス[3]のセルフ変数から値[2]を減算します。
- *  TE_SET_SELF_VARIABLE 3 50 2
+ *  例2:インデックス[3]のセルフ変数から値[50]を減算します。
+ *  TE_SET_SELF_VARIABLE 3 2 50
+ *
+ *  例2:インデックス[5]のセルフ変数に値[セルフ変数[1]の値]を加算します。
+ *  TE_SET_SELF_VARIABLE 5 1 \sv[1]
  *
  * TEセルフ変数の一括操作 [開始INDEX] [終了INDEX] [操作種別] [オペランド]
  * TE_SET_RANGE_SELF_VARIABLE [開始INDEX] [終了INDEX] [操作種別] [オペランド]
  *  セルフ変数を一括操作します。
+ *
+ * 本プラグインのすべてのプラグインコマンドで制御文字\sv[n]を使用できます。
  *
  * ・スクリプト（イベントコマンドのスクリプト、変数の操作から実行）
  * 固有処理呼び出し中にテンプレートイベントのIDと名称を取得します。
@@ -279,15 +285,11 @@ var $dataTemplateEvents = null;
     var pluginName    = 'TemplateEvent';
     var metaTagPrefix = 'TE';
 
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
-
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
+        return (parseInt(value) || 0).clamp(min, max);
     };
 
     var getParamBoolean = function(paramNames) {
@@ -319,15 +321,10 @@ var $dataTemplateEvents = null;
         return undefined;
     };
 
-    var getArgString = function(arg, upperFlg) {
-        arg = convertEscapeCharacters(arg);
-        return upperFlg ? arg.toUpperCase() : arg;
-    };
-
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+        return (parseInt(arg) || 0).clamp(min, max);
     };
 
     var convertEscapeCharacters = function(text) {
@@ -360,10 +357,30 @@ var $dataTemplateEvents = null;
         return Object.keys(PluginManager.parameters(pluginName)).length > 0
     };
 
+    var convertAllArguments = function(args) {
+        return args.map(function(arg) {
+            return convertEscapeCharacters(arg);
+        })
+    };
+
+    var setPluginCommand = function(commandName, methodName) {
+        pluginCommandMap.set(metaTagPrefix + commandName, methodName);
+    };
+
+    var pluginCommandMap = new Map();
+    setPluginCommand('固有イベント呼び出し', 'execCallOriginEvent');
+    setPluginCommand('_CALL_ORIGIN_EVENT', 'execCallOriginEvent');
+    setPluginCommand('マップイベント呼び出し', 'execCallMapEvent');
+    setPluginCommand('_CALL_MAP_EVENT', 'execCallMapEvent');
+    setPluginCommand('セルフ変数の操作', 'execControlSelfVariable');
+    setPluginCommand('_SET_SELF_VARIABLE', 'execControlSelfVariable');
+    setPluginCommand('セルフ変数の一括操作', 'execControlSelfVariableRange');
+    setPluginCommand('_SET_RANGE_SELF_VARIABLE', 'execControlSelfVariableRange');
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramTemplateMapId = getParamNumber(['TemplateMapId', 'テンプレートマップID']);
+    var paramTemplateMapId = getParamNumber(['TemplateMapId', 'テンプレートマップID'], 1);
     var paramKeepEventId   = getParamBoolean(['KeepEventId', 'イベントIDを維持']);
     var paramNoOverride    = getParamBoolean(['NoOverride', '上書き禁止']);
 
@@ -379,7 +396,7 @@ var $dataTemplateEvents = null;
         return _Game_Interpreter_command101.apply(this, arguments);
     };
 
-    var _Game_Interpreter_command105 = Game_Interpreter.prototype.command105;
+    var _Game_Interpreter_command105      = Game_Interpreter.prototype.command105;
     Game_Interpreter.prototype.command105 = function() {
         if (!$gameMessage.isBusy()) {
             $gameMessage.setEventId(this._eventId);
@@ -390,47 +407,41 @@ var $dataTemplateEvents = null;
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        this.pluginCommandTemplateEvent(command.replace(metaTagPrefix, ''), args);
+        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
+        if (pluginCommandMethod) {
+            this[pluginCommandMethod](this.convertAllSelfVariables(convertAllArguments(args)));
+        }
     };
 
-    Game_Interpreter.prototype.pluginCommandTemplateEvent = function(command, args) {
-        switch (getCommandName(command)) {
-            case '固有イベント呼び出し' :
-            case '_CALL_ORIGIN_EVENT' :
-                this.callOriginEvent(getArgNumber(args[0]));
-                break;
-            case 'マップイベント呼び出し' :
-            case '_CALL_MAP_EVENT' :
-                var pageIndex = getArgNumber(args[1], 1);
-                var eventId   = getArgNumber(args[0]);
-                if ($gameMap.event(eventId)) {
-                    this.callMapEventById(pageIndex, eventId);
-                } else {
-                    var eventName = getArgString(args[0]);
-                    if (eventName) {
-                        this.callMapEventByName(pageIndex, eventName);
-                    } else {
-                        this.callMapEventById(pageIndex, this._eventId);
-                    }
-                }
-                break;
-            case 'セルフ変数の操作' :
-            case '_SET_SELF_VARIABLE' :
-                var selfIndex   = getArgNumber(args[0], 0);
-                var controlType = getArgNumber(args[1], 0);
-                var operand     = getArgNumber(args[2]);
-                this.controlSelfVariable(selfIndex, controlType, operand, false);
-                break;
-            case 'セルフ変数の一括操作' :
-            case '_SET_RANGE_SELF_VARIABLE' :
-                var selfStartIndex   = getArgNumber(args[0], 0);
-                var selfEndIndex     = getArgNumber(args[1], 0);
-                var controlTypeRange = getArgNumber(args[2], 0);
-                var operandRange     = getArgNumber(args[3]);
-                this.controlSelfVariableRange(selfStartIndex, selfEndIndex, controlTypeRange, operandRange, false);
-                break;
+    Game_Interpreter.prototype.execCallOriginEvent = function(args) {
+        this.callOriginEvent(getArgNumber(args[0]));
+    };
+
+    Game_Interpreter.prototype.execCallMapEvent = function(args) {
+        var pageIndex = getArgNumber(args[1], 1);
+        var eventId   = getArgNumber(args[0]);
+        if ($gameMap.event(eventId)) {
+            this.callMapEventById(pageIndex, eventId);
+        } else if (args[0] !== '') {
+            this.callMapEventByName(pageIndex, args[0]);
+        } else {
+            this.callMapEventById(pageIndex, this._eventId);
         }
+    };
+
+    Game_Interpreter.prototype.execControlSelfVariable = function(args) {
+        var selfIndex   = getArgNumber(args[0], 0);
+        var controlType = getArgNumber(args[1], 0, 5);
+        var operand     = isNaN(Number(args[2])) ? args[2] : getArgNumber(args[2]);
+        this.controlSelfVariable(selfIndex, controlType, operand, false);
+    };
+
+    Game_Interpreter.prototype.execControlSelfVariableRange = function(args) {
+        var selfStartIndex = getArgNumber(args[0], 0);
+        var selfEndIndex   = getArgNumber(args[1], 0);
+        var controlType    = getArgNumber(args[2], 0, 5);
+        var operand        = isNaN(Number(args[3])) ? args[3] : getArgNumber(args[3]);
+        this.controlSelfVariableRange(selfStartIndex, selfEndIndex, controlType, operand, false);
     };
 
     Game_Interpreter.prototype.callOriginEvent = function(pageIndex) {
@@ -477,6 +488,12 @@ var $dataTemplateEvents = null;
     Game_Interpreter.prototype.getSelfVariable = function(selfVariableIndex) {
         var character = this.character(0);
         return character ? character.getSelfVariable(selfVariableIndex) : 0;
+    };
+
+    Game_Interpreter.prototype.convertAllSelfVariables = function(args) {
+        return args.map(function(arg) {
+            return $gameSelfSwitches.convertSelfVariableCharacter(this._eventId, arg, false);
+        }, this);
     };
 
     //=============================================================================
@@ -549,7 +566,7 @@ var $dataTemplateEvents = null;
 
     Game_SelfSwitches.prototype.convertSelfVariableCharacter = function(eventId, text, scriptFlag) {
         text = text.replace(/\x1bSV\[(\d+)\]/gi, function() {
-            var key = this.makeSelfVariableKey(eventId, parseInt(arguments[1]));
+            var key   = this.makeSelfVariableKey(eventId, parseInt(arguments[1]));
             var value = this.getVariableValue(key);
             return isNotAString(value) || !scriptFlag ? value : '\'' + value + '\'';
         }.bind(this));
@@ -673,7 +690,7 @@ var $dataTemplateEvents = null;
             scripts.push(arguments[1]);
         }.bind(this));
         return scripts.every(function(script) {
-            script = getArgString(script);
+            script = convertEscapeCharacters(script);
             script = $gameSelfSwitches.convertSelfVariableCharacter(this._eventId, script, true);
             return eval(script);
         }, this);
