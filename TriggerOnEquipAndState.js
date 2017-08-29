@@ -1,11 +1,12 @@
 //=============================================================================
 // TriggerOnEquipAndState.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2017/08/29 HIME_EquipSlotsCore.jsとの競合を解消
 // 1.4.1 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.4.0 2016/07/27 スイッチにも設定値タグを付けられるよう修正
 // 1.3.2 2016/07/14 「武器(防具)の増減」によって装備が外れた場合に対応
@@ -17,7 +18,7 @@
 // 1.0.1 2016/06/03 スクリプトに「>」「<」を使えるように修正
 // 1.0.0 2016/04/03 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -28,7 +29,8 @@
  *
  * @param 戦闘メンバーのみ
  * @desc 変数やスイッチが変動する対象となるアクターが戦闘メンバーに限定されます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 装備またはステートの着脱時に、変数およびスイッチを操作できるようになります。
  * 着脱時に、スイッチの場合はON/OFFが切り替わり、変数の場合は値が増減します。
@@ -86,7 +88,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getMetaValue = function(object, name) {
@@ -256,10 +258,10 @@
         var prevItem = new Game_Item(this._equips[slotId].object());
         _Game_Actor_changeEquip.apply(this, arguments);
         var newItem = this._equips[slotId];
-        if (prevItem._itemId !== 0 && prevItem._itemId !== newItem._itemId) {
+        if (prevItem.itemId() !== 0 && prevItem.itemId() !== newItem.itemId()) {
             this.onChangeEquipAndState(prevItem.object(), false);
         }
-        if (newItem._itemId !== 0 && newItem._itemId !== prevItem._itemId) {
+        if (newItem.itemId() !== 0 && newItem.itemId() !== prevItem.itemId()) {
             this.onChangeEquipAndState(newItem.object(), true);
         }
     };
@@ -326,6 +328,14 @@
             console.log(e.stack);
         }
         return result;
+    };
+
+    //=============================================================================
+    // Game_EquipSlot
+    //  for HIME_EquipSlotsCore.js
+    //=============================================================================
+    Game_EquipSlot.prototype.itemId = function() {
+        return this._item.itemId();
     };
 })();
 
