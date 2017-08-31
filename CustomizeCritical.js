@@ -1,17 +1,18 @@
 //=============================================================================
 // CustomizeCritical.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2017/09/01 様子を見る等の一部の行動を敵キャラが実行するとエラーになる問題を修正（byツミオさま）
 // 1.1.2 2017/07/09 ヘルプのメモ欄「<CC計算式:JavaScript計算式>」の記述例が誤っていたので修正
 // 1.1.1 2017/05/31 1.1.0の修正でメニュー画面でスキルを使用するとエラーになる不具合を修正
 // 1.1.0 2017/05/27 連続ヒットする攻撃の2ヒット目以降のダメージが正常に表示されない問題を修正。YEP_BattleEngineCore.jsとの競合を解消
 // 1.0.0 2016/05/05 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -149,6 +150,9 @@
     };
 
     Game_Action.prototype.isCritical = function() {
+        if (!this._criticalMap) {
+            return false;
+        }
         for (var criticalData of this._criticalMap) {
             if (criticalData[1]) return true;
         }
