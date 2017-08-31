@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.18.0 2017/09/01 カテゴリごとにアイテム使用可否を設定できる機能を追加
 // 1.17.0 2017/08/21 用語に制御文字が使われた場合は自動変換する機能を追加
 // 1.16.1 2017/08/04 セーブとロードを繰り返しすと用語辞典の初期位置が最後に選択していたものになってしまう問題を修正
 //                   コマンド「GLOSSARY_GAIN_ALL」で隠しアイテム以外も辞書に追加されるよう仕様変更
@@ -237,6 +238,11 @@
  * @default
  * @type string[]
  *
+ * @param CategoryUnusable
+ * @desc ここで指定したカテゴリは「アイテム使用」が有効でも使用できなくなります。
+ * @default
+ * @type string[]
+ *
  * @noteParam SGピクチャ
  * @noteRequire 1
  * @noteDir img/pictures/
@@ -347,6 +353,7 @@
  *
  * This plugin is released under the MIT License.
  */
+
 /*:ja
  * @plugindesc ゲーム内用語辞典プラグイン
  * @author トリアコンタン
@@ -532,6 +539,11 @@
  *
  * @param カテゴリ並び順
  * @desc カテゴリ並び順を任意に変更したい場合はカテゴリ名を指定してください。
+ * @default
+ * @type string[]
+ *
+ * @param 使用禁止カテゴリ
+ * @desc ここで指定したカテゴリは「アイテム使用」が有効でも使用できなくなります。
  * @default
  * @type string[]
  *
@@ -776,6 +788,7 @@ function Scene_Glossary() {
     var paramPageWrap           = getParamBoolean(['PageWrap', 'ページ折り返し']);
     var paramShowingItemNumber  = getParamBoolean(['ShowingItemNumber', '所持数表示']);
     var paramCategoryOrder      = getParamJson(['CategoryOrder', 'カテゴリ並び順'], []);
+    var paramCategoryUnusable   = getParamJson(['CategoryUnusable', '使用禁止カテゴリ'], []);
 
     //=============================================================================
     // Game_Interpreter
@@ -927,8 +940,8 @@ function Scene_Glossary() {
      */
     Game_Party.prototype._compareOrderGlossaryCategory = function(a, b) {
         var orderLength = paramCategoryOrder.length + 1;
-        var orderA = paramCategoryOrder.indexOf(a) + 1 || orderLength;
-        var orderB = paramCategoryOrder.indexOf(b) + 1 || orderLength;
+        var orderA      = paramCategoryOrder.indexOf(a) + 1 || orderLength;
+        var orderB      = paramCategoryOrder.indexOf(b) + 1 || orderLength;
         return orderA - orderB;
     };
 
@@ -1169,9 +1182,6 @@ function Scene_Glossary() {
     Scene_Glossary.prototype.createGlossaryListWindow = function() {
         this._glossaryListWindow = new Window_GlossaryList(this._glossaryWindow);
         this._glossaryListWindow.setHandler('cancel', this.onCancelGlossaryList.bind(this));
-        if (paramUsableItem) {
-            this._glossaryListWindow.setHandler('ok', this.onOkGlossaryList.bind(this));
-        }
         this._itemWindow = this._glossaryListWindow;
         this.addWindow(this._glossaryListWindow);
     };
@@ -1284,27 +1294,26 @@ function Scene_Glossary() {
     };
 
     Scene_Glossary.prototype.activateCategoryWindow = function(indexInit) {
-        this._glossaryCategoryWindow.activate();
-        this._glossaryCategoryWindow.show();
-        if (indexInit) this._glossaryCategoryWindow.select(0);
-        this._glossaryListWindow.deactivate();
-        this._glossaryListWindow.hide();
+        this._glossaryCategoryWindow.activateAndShow();
+        if (indexInit) {
+            this._glossaryCategoryWindow.select(0);
+        }
+        this._glossaryListWindow.deactivateAndHide();
         this._glossaryListWindow.deselect();
         this._glossaryCompleteWindow.clear();
-        this._confirmWindow.hide();
-        this._confirmWindow.deactivate();
+        this._confirmWindow.deactivateAndHide();
         this.updateHelp(paramHelpTextCategory);
     };
 
     Scene_Glossary.prototype.activateListWindow = function(indexInit) {
-        this._glossaryListWindow.activate();
-        this._glossaryListWindow.show();
-        if (indexInit) this._glossaryListWindow.select(0);
-        this._glossaryCategoryWindow.deactivate();
-        this._glossaryCategoryWindow.hide();
+        this._glossaryListWindow.setItemHandler(this.onOkGlossaryList.bind(this));
+        this._glossaryListWindow.activateAndShow();
+        if (indexInit) {
+            this._glossaryListWindow.select(0);
+        }
+        this._glossaryCategoryWindow.deactivateAndHide();
         this._glossaryCompleteWindow.refresh();
-        this._confirmWindow.hide();
-        this._confirmWindow.deactivate();
+        this._confirmWindow.deactivateAndHide();
         this.updateHelp(paramHelpText);
     };
 
@@ -1312,8 +1321,7 @@ function Scene_Glossary() {
         this._glossaryListWindow.deactivate();
         this._confirmWindow.updatePlacement();
         this._confirmWindow.select(0);
-        this._confirmWindow.show();
-        this._confirmWindow.activate();
+        this._confirmWindow.activateAndShow();
     };
 
     Scene_Glossary.prototype.escapeScene = function() {
@@ -1330,6 +1338,20 @@ function Scene_Glossary() {
         } else {
             this.drawText(text, x, y, maxWidth);
         }
+    };
+
+    //=============================================================================
+    // Window_Selectable
+    //  アクティブウィンドウを切り替えます。
+    //=============================================================================
+    Window_Selectable.prototype.activateAndShow = function() {
+        this.activate();
+        this.show();
+    };
+
+    Window_Selectable.prototype.deactivateAndHide = function() {
+        this.deactivate();
+        this.hide();
     };
 
     //=============================================================================
@@ -1453,7 +1475,7 @@ function Scene_Glossary() {
     };
 
     Window_GlossaryList.prototype.isEnabled = function(item) {
-        return paramUsableItem ? Window_ItemList.prototype.isEnabled.call(this, item) : true;
+        return this.isUsableItem() ? Window_ItemList.prototype.isEnabled.call(this, item) : true;
     };
 
     Window_GlossaryList.prototype.includes = function(item) {
@@ -1506,6 +1528,22 @@ function Scene_Glossary() {
 
     Window_GlossaryList.prototype.getMaterialList = function() {
         return paramUseItemHistory ? $gameParty.getAllMaterialsHistories() : $gameParty.getAllMaterials();
+    };
+
+    Window_GlossaryList.prototype.isUsableItem = function() {
+        return paramUsableItem && !paramCategoryUnusable.contains(this._category);
+    };
+
+    Window_GlossaryList.prototype.removeHandler = function(symbol) {
+        delete this._handlers[symbol];
+    };
+
+    Window_GlossaryList.prototype.setItemHandler = function(handler) {
+        if (this.isUsableItem()) {
+            this.setHandler('ok', handler);
+        } else {
+            this.removeHandler('ok');
+        }
     };
 
     //=============================================================================
