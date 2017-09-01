@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2017/09/01 スクリプトエラー発生時に警告を出力する機能を追加
 // 2.2.0 2017/08/09 パラメータ型指定機能に対応。一部パラメータは再設定が必要です。
 //                  起動時に自動で最前面に表示するパラメータを追加。
 //                  NW.jsを最新化したときに発生するエラーに対処（ただし一部機能は使用できません）
@@ -646,6 +647,11 @@ var p = null;
         console.log('RPG Maker Name    : ' + Utils.RPGMAKER_NAME);
         console.log('RPG Maker Version : ' + Utils.RPGMAKER_VERSION);
         console.log('RPG Maker Engine  : ' + (Utils.RPGMAKER_ENGINE || 'Official Version'));
+        console.log('********************************');
+        console.log('***   Audio                  ***');
+        console.log('********************************');
+        console.log('Can Play OGG : ' + WebAudio.canPlayOgg());
+        console.log('Can Play M4A : ' + WebAudio.canPlayM4a());
 
         if (Utils.isNwjs()) {
             console.log('********************************');
@@ -1216,6 +1222,56 @@ var p = null;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
         if (SceneManager.isRapid()) this.startWait(1);
+    };
+
+    var _Game_Interpreter_command355 = Game_Interpreter.prototype.command355;
+    Game_Interpreter.prototype.command355 = function() {
+        try {
+            return _Game_Interpreter_command355.apply(this, arguments);
+        } catch (e) {
+            console.warn(`Script Error!! Event ID:${this._eventId}`);
+            throw e;
+        }
+    };
+
+    var _Game_Interpreter_command111 = Game_Interpreter.prototype.command111;
+    Game_Interpreter.prototype.command111 = function() {
+        if (this._params[0] === 12) {
+            try {
+                return _Game_Interpreter_command111.apply(this, arguments);
+            } catch (e) {
+                if (this._params[0] === 12) {
+                    console.warn(`Script Error!! Event ID:${this._eventId}`);
+                }
+                throw e;
+            }
+        } else {
+            return _Game_Interpreter_command111.apply(this, arguments);
+        }
+    };
+
+    var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
+    Game_Character.prototype.processMoveCommand = function(command) {
+        try {
+            _Game_Character_processMoveCommand.apply(this, arguments);
+        } catch (e) {
+            if (command.code === Game_Character.ROUTE_SCRIPT) {
+                console.warn(`Script Error!! ${this.getInformation()}`);
+            }
+            throw e;
+        }
+    };
+
+    Game_Character.prototype.getInformation = function() {
+        return `X:${this._x} Y:${this._y}`;
+    };
+
+    Game_Event.prototype.getInformation = function() {
+        return `ID:${this._eventId} Name:${this.event().name}` + Game_Character.prototype.getInformation.call(this);
+    };
+
+    Game_Player.prototype.getInformation = function() {
+        return `Player` + Game_Character.prototype.getInformation.call(this);
     };
 
     //=============================================================================
