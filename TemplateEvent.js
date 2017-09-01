@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2017/09/01 スクリプトヘルプの誤記を修正
 // 1.7.0 2017/08/29 プラグインコマンドで制御文字\sv[n]が利用できる機能を追加
 // 1.6.1 2017/08/26 セルフ変数に文字列が入っている場合でも出現条件の注釈が正しく動作するよう修正
 // 1.6.0 2017/08/19 セルフ変数の一括操作のコマンドおよびセルフ変数を外部から操作するスクリプトを追加
@@ -261,7 +262,7 @@
  *
  * セルフ変数に値を一括設定します。
  * このスクリプトは「移動ルートの設定」でも実行できます。
- *  this.controlSelfVariableRange(index, type, operand, formulaFlg);
+ *  this.controlSelfVariableRange(start, end, type, operand, formulaFlg);
  *
  * 外部のイベントのセルフ変数を操作します。
  *  $gameSelfSwitches.setVariableValue([マップID, イベントID, INDEX], 設定値);
