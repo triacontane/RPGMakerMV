@@ -1,11 +1,12 @@
 //=============================================================================
 // StatusBustImage.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2017/09/04 バストアップ画像をウィンドウの下に表示できる機能を追加
 // 1.4.0 2017/07/05 メインメニュー画面でも先頭アクターの画像を表示できる機能を追加
 // 1.3.2 2017/02/20 装備画面での「最強装備」と「全て外す」時に装備品画像が更新されなかった問題を修正
 // 1.3.1 2016/10/13 装備品の画像がトリミングの対象外になっていたのを修正
@@ -15,7 +16,7 @@
 // 1.0.1 2016/08/12 キャラクターを切り替えたときにグラフィックが切り替わらない問題を修正
 // 1.0.0 2016/07/19 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -56,10 +57,16 @@
  * @desc メインメニュー画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
  * @default
  *
- * @param UnderContents
- * @desc 有効にするとステータス等の下に画像が表示されます。
- * @default true
- * @type boolean
+ * @param BustPriority
+ * @desc バストアップ画像の表示優先度（プライオリティ）です。
+ * @default 0
+ * @type select
+ * @option ウィンドウの下
+ * @value 0
+ * @option ウィンドウの内容の下
+ * @value 1
+ * @option ウィンドウの上
+ * @value 2
  *
  * @help ステータス画面にアクターごとのバストアップ画像を表示します。
  * 足下を原点として表示位置を自由に調整できます。
@@ -140,10 +147,16 @@
  * @desc メインメニュー画面でバストアップ画像を表示するY座標(足下原点)です。指定しない場合、表示されなくなります。
  * @default
  *
- * @param コンテンツの下に表示
- * @desc 有効にするとステータス等の下に画像が表示されます。
- * @default true
- * @type boolean
+ * @param 表示優先度
+ * @desc バストアップ画像の表示優先度（プライオリティ）です。
+ * @default 0
+ * @type select
+ * @option ウィンドウの下
+ * @value 0
+ * @option ウィンドウの内容の下
+ * @value 1
+ * @option ウィンドウの上
+ * @value 2
  *
  * @help ステータス画面にアクターごとのバストアップ画像を表示します。
  * 足下を原点として表示位置を自由に調整できます。
@@ -291,7 +304,7 @@
     var paramSkillBustImageY = getParamNumber(['SkillBustImageY', 'スキル_画像Y座標']);
     var paramMainBustImageX  = getParamNumber(['MainBustImageX', 'メイン_画像X座標']);
     var paramMainBustImageY  = getParamNumber(['MainBustImageY', 'メイン_画像Y座標']);
-    var paramUnderContents   = getParamBoolean(['UnderContents', 'コンテンツの下に表示']);
+    var paramBustPriority    = getParamNumber(['BustPriority', '表示優先度'], 0);
 
     //=============================================================================
     // Game_Interpreter
@@ -378,11 +391,15 @@
         this._bustContainer = new Sprite();
         this._bustSprite    = new Sprite_Bust();
         this._bustContainer.addChild(this._bustSprite);
-        this.addChildAt(this._bustContainer, paramUnderContents ? 2 : 3);
+        this._bustAddContainer = false;
     };
 
     Window_Base.prototype.setBustPosition = function(x, y) {
-        this._bustSprite.move(x - this.x, y - this.y);
+        if (paramBustPriority === 0) {
+            this._bustSprite.move(x, y);
+        } else {
+            this._bustSprite.move(x - this.x, y - this.y);
+        }
     };
 
     Window_Base.prototype.getBustPosition = function() {
@@ -393,21 +410,33 @@
         if (this._actor && this.isNeedBust()) {
             this.setBustPosition.apply(this, this.getBustPosition());
             this._bustSprite.refresh(this._actor);
+            if (!this._bustAddContainer) {
+                this.addBustContainer();
+            }
         }
+    };
+
+    Window_Base.prototype.addBustContainer = function() {
+        if (paramBustPriority === 0) {
+            this.parent.parent.addChildAt(this._bustContainer, 1);
+        } else {
+            this.addChildAt(this._bustContainer, paramBustPriority === 1 ? 2 : 3);
+        }
+        this._bustAddContainer = true;
     };
 
     //=============================================================================
     // Window_MenuStatus
     //  バスト画像表示用スプライトを追加定義します。
     //=============================================================================
-    var _Window_MenuStatus_refresh = Window_MenuStatus.prototype.refresh;
+    var _Window_MenuStatus_refresh      = Window_MenuStatus.prototype.refresh;
     Window_MenuStatus.prototype.refresh = function() {
         _Window_MenuStatus_refresh.apply(this, arguments);
         this._actor = $gameParty.members()[0];
         this.refreshBust();
     };
 
-    var _Window_MenuStatus_setPendingIndex = Window_MenuStatus.prototype.setPendingIndex;
+    var _Window_MenuStatus_setPendingIndex      = Window_MenuStatus.prototype.setPendingIndex;
     Window_MenuStatus.prototype.setPendingIndex = function(index) {
         _Window_MenuStatus_setPendingIndex.apply(this, arguments);
         var actor = $gameParty.members()[0];
