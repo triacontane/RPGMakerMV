@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2017/09/04 メニューコマンドやサブコマンドを好きなだけ追加できるようパラメータの仕様を変更
 // 1.1.0 2017/05/14 デフォルトのオプションとゲーム終了コマンドを削除できる機能を追加
 //                  カンマ(,)を含むスクリプトを正しく実行できない問題を修正
 // 1.0.3 2017/04/09 サブコマンドマップから戻ってきたときにイベント位置を復元できるよう修正
@@ -15,7 +16,7 @@
 //                  戦闘リトライプラグインと併用したときにリトライ中は、マップ移動するメニューを使用禁止に設定
 // 1.0.0 2017/04/01 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -24,37 +25,10 @@
  * @plugindesc MenuSubCommandPlugin
  * @author triacontane
  *
- * @param SubCommand1
- * @desc Name,ParentName,HiddenSwitchID,DisableSwitchID,SubCommandScript,TargetMapId,MemberSelect
- * @default Item,Parent1,100,200,this.commandItem(),0,OFF
- *
- * @param SubCommand2
- * @desc Name,ParentName,HiddenSwitchID,DisableSwitchID,SubCommandScript,TargetMapId,MemberSelect
- * @default Skill,Parent1,100,200,SceneManager.push(Scene_Skill),0,ON
- *
- * @param SubCommand3
- * @desc Name,ParentName,HiddenSwitchID,DisableSwitchID,SubCommandScript,TargetMapId,MemberSelect
- * @default Option,Parent2,100,200,SceneManager.push(Scene_Options),0,OFF
- *
- * @param SubCommand4
- * @desc Name,ParentName,HiddenSwitchID,DisableSwitchID,SubCommandScript,TargetMapId,MemberSelect
- * @default Status,Parent2,100,200,SceneManager.push(Scene_Status),0,ON
- *
- * @param SubCommand5
- * @desc Name,ParentName,HiddenSwitchID,DisableSwitchID,SubCommandScript,TargetMapId,MemberSelect
- * @default SubCommand5,Parent3,100,200,,0,OFF
- *
- * @param SubCommand6
- * @desc Name,ParentName,HiddenSwitchID,DisableSwitchID,SubCommandScript,TargetMapId,MemberSelect
- * @default SubCommand6,Parent3,100,200,,0,ON
- *
- * @param SubCommand7
- * @desc Name,ParentName,HiddenSwitchID,DisableSwitchID,SubCommandScript,TargetMapId,MemberSelect
- * @default SubCommand7,Parent3,100,200,,0,OFF
- *
- * @param SubCommand8
- * @desc Name,ParentName,HiddenSwitchID,DisableSwitchID,SubCommandScript,TargetMapId,MemberSelect
- * @default SubCommand8,Parent3,100,200,,0,ON
+ * @param SubCommand
+ * @desc サブコマンド情報です。
+ * @default
+ * @type struct<SubCommand>[]
  *
  * @param CommandPosition
  * @desc サブコマンド群を追加する位置です。
@@ -84,36 +58,21 @@
  * @desc メインメニューからゲーム終了を消去します。
  * @default OFF
  *
- * @help メインメニュー画面に任意の名前のコマンドおよび
- * ツリー表示されるサブコマンドを追加できます。
+ * @help MenuSubCommand.js
+ *
+ * メインメニュー画面に任意の名前のコマンドおよび
+ * ツリー表示されるサブコマンドを好きなだけ追加できます。
  * サブコマンドを実行（決定）すると、任意のスクリプトが実行されるか、
  * もしくは指定したマップに移動します。（両方も可能）
  *
- * 指定したマップへの移動は主にイベントによる自作メニューを
- * 組み込むために使用します。
+ * スクリプトは、主にスクリプトで組まれた別画面に遷移する場合に使用します。
+ * もちろん他のプラグインで追加された画面にも遷移可能です。
+ * マップ移動は主にイベントによる自作メニュー画面に遷移する場合に使用します。
+ * 自作メニュー画面から戻る際は、再度メニューを開いてください。
+ * 元々メニューを開いていた場所は、別途保存しているので意識する必要はありません。
+ *
  * また、通常の縦レイアウトとメニュー画面はもちろん、
  * プラグインによる横レイアウトのメニュー画面にも対応しています。
- *
- * プラグインパラメータを以下の通りカンマ区切りで指定してください。
- *
- * ・指定例
- * アイテム,親コマンド1,100,200,this.commandItem(),0,OFF
- *
- * ◆項目名◆　　　　◆説明◆
- * 名称　　　　　　：サブコマンドに表示される任意のコマンド名称
- * 親名称　　　　　：メインコマンドに表示される親となる任意のコマンド名称
- * 非表示スイッチID：ONのときコマンドが非表示になるスイッチID
- * 禁止スイッチID　：ONのときコマンドが使用禁止になるスイッチID
- * 実行スクリプト　：コマンドを決定したときに実行されるスクリプト
- * 移動先マップID　：コマンドを決定したときに移動するマップID
- * メンバー選択有無：コマンド実行前に対象メンバーを選択します(ON/OFF)
- *
- * 実行スクリプトは、主にスクリプトで組まれた別画面に遷移する場合に
- * 使用します。もちろん他のプラグインで追加された画面にも遷移可能です。
- *
- * マップ移動機能は、主に移動先のマップでイベントによる自作メニューや
- * 自作システムの実行を想定しています。戻る際は再度メニューを開いてください。
- * 元々メニューを開いていた場所は、別途保存しているので意識する必要はありません。
  *
  * メンバー選択してマップ移動する際に選択したアクターIDを変数に保存できます。
  *
@@ -134,50 +93,33 @@
  * @plugindesc メニュー画面のサブコマンドプラグイン
  * @author トリアコンタン
  *
- * @param サブコマンド1
- * @desc 名称,親名称,非表示スイッチID,使用禁止スイッチID,実行スクリプト,移動先マップID,メンバー選択有無
- * @default アイテム,親コマンド1,100,200,this.commandItem(),0,OFF
- *
- * @param サブコマンド2
- * @desc 名称,親名称,非表示スイッチID,使用禁止スイッチID,実行スクリプト,移動先マップID,メンバー選択有無
- * @default スキル,親コマンド1,100,200,SceneManager.push(Scene_Skill),0,ON
- *
- * @param サブコマンド3
- * @desc 名称,親名称,非表示スイッチID,使用禁止スイッチID,実行スクリプト,移動先マップID,メンバー選択有無
- * @default オプション,親コマンド2,100,200,SceneManager.push(Scene_Options),0,OFF
- *
- * @param サブコマンド4
- * @desc 名称,親名称,非表示スイッチID,使用禁止スイッチID,実行スクリプト,移動先マップID,メンバー選択有無
- * @default ステータス,親コマンド2,100,200,SceneManager.push(Scene_Status),0,ON
- *
- * @param サブコマンド5
- * @desc 名称,親名称,非表示スイッチID,使用禁止スイッチID,実行スクリプト,移動先マップID,メンバー選択有無
- * @default サブコマンド5,親コマンド3,100,200,,0,OFF
- *
- * @param サブコマンド6
- * @desc 名称,親名称,非表示スイッチID,使用禁止スイッチID,実行スクリプト,移動先マップID,メンバー選択有無
- * @default サブコマンド6,親コマンド3,100,200,,0,ON
- *
- * @param サブコマンド7
- * @desc 名称,親名称,非表示スイッチID,使用禁止スイッチID,実行スクリプト,移動先マップID,メンバー選択有無
- * @default サブコマンド7,親コマンド3,100,200,,0,OFF
- *
- * @param サブコマンド8
- * @desc 名称,親名称,非表示スイッチID,使用禁止スイッチID,実行スクリプト,移動先マップID,メンバー選択有無
- * @default サブコマンド8,親コマンド3,100,200,,0,ON
+ * @param サブコマンド
+ * @desc サブコマンド情報です。
+ * @default
+ * @type struct<SubCommand>[]
  *
  * @param コマンド追加位置
- * @desc サブコマンド群を追加する位置です。
- * 0:並び替えの下 1:オプションの下 2:セーブの下 3:ゲーム終了の下
+ * @desc サブコマンド群を追加する位置です。0:並び替えの下 1:オプションの下 2:セーブの下 3:ゲーム終了の下
  * @default 0
+ * @type select
+ * @option 並び替えの下
+ * @value 0
+ * @option オプションの下
+ * @value 1
+ * @option セーブの下
+ * @value 2
+ * @option ゲーム終了の下
+ * @value 3
  *
  * @param サブメニュー横幅
  * @desc サブメニューを表示するウィンドウの横幅です。指定しない場合デフォルト値「240」が適用されます。
  * @default 0
+ * @type number
  *
  * @param 選択アクターID変数
  * @desc サブメニュー用マップに移動する際に選択していたアクターのIDを格納する変数番号です。
  * @default 0
+ * @type variable
  *
  * @param ウィンドウスキン
  * @desc サブコマンド用のウィンドウに専用のスキンを設定します。
@@ -188,42 +130,29 @@
  *
  * @param オプション消去
  * @desc メインメニューからオプションを消去します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param ゲーム終了消去
  * @desc メインメニューからゲーム終了を消去します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @help メインメニュー画面に任意の名前のコマンドおよび
- * ツリー表示されるサブコマンドを追加できます。
+ * @help MenuSubCommand.js
+ *
+ * メインメニュー画面に任意の名前のコマンドおよび
+ * ツリー表示されるサブコマンドを好きなだけ追加できます。
  * サブコマンドを実行（決定）すると、任意のスクリプトが実行されるか、
  * もしくは指定したマップに移動します。（両方も可能）
  *
- * 指定したマップへの移動は主にイベントによる自作メニューを
- * 組み込むために使用します。
+ * スクリプトは、主にスクリプトで組まれた別画面に遷移する場合に使用します。
+ * もちろん他のプラグインで追加された画面にも遷移可能です。
+ * マップ移動は主にイベントによる自作メニュー画面に遷移する場合に使用します。
+ * 自作メニュー画面から戻る際は、再度メニューを開いてください。
+ * 元々メニューを開いていた場所は、別途保存しているので意識する必要はありません。
+ *
  * また、通常の縦レイアウトとメニュー画面はもちろん、
  * プラグインによる横レイアウトのメニュー画面にも対応しています。
- *
- * プラグインパラメータを以下の通りカンマ区切りで指定してください。
- *
- * ・指定例
- * アイテム,親コマンド1,100,200,this.commandItem(),0,OFF
- *
- * ◆項目名◆　　　　◆説明◆
- * 名称　　　　　　：サブコマンドに表示される任意のコマンド名称
- * 親名称　　　　　：メインコマンドに表示される親となる任意のコマンド名称
- * 非表示スイッチID：ONのときコマンドが非表示になるスイッチID
- * 禁止スイッチID　：ONのときコマンドが使用禁止になるスイッチID
- * 実行スクリプト　：コマンドを決定したときに実行されるスクリプト
- * 移動先マップID　：コマンドを決定したときに移動するマップID
- * メンバー選択有無：コマンド実行前に対象メンバーを選択します(ON/OFF)
- *
- * 実行スクリプトは、主にスクリプトで組まれた別画面に遷移する場合に
- * 使用します。もちろん他のプラグインで追加された画面にも遷移可能です。
- *
- * マップ移動機能は、主に移動先のマップでイベントによる自作メニューや
- * 自作システムの実行を想定しています。戻る際は再度メニューを開いてください。
- * 元々メニューを開いていた場所は、別途保存しているので意識する必要はありません。
  *
  * メンバー選択してマップ移動する際に選択したアクターIDを変数に保存できます。
  *
@@ -242,6 +171,74 @@
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
+ */
+
+/*~struct~SubCommand:ja
+ * @param Name
+ * @desc サブコマンドに表示される任意のコマンド名称
+ * @default アイテム
+ *
+ * @param ParentName
+ * @desc サブコマンドに表示される任意のコマンド名称
+ * @default 親コマンド1
+ *
+ * @param HiddenSwitchId
+ * @desc ONのときコマンドが非表示になるスイッチID
+ * @default 0
+ * @type switch
+ *
+ * @param DisableSwitchId
+ * @desc ONのときコマンドが使用禁止になるスイッチID
+ * @default 0
+ * @type switch
+ *
+ * @param Script
+ * @desc コマンドを決定したときに実行されるスクリプト
+ * @default this.commandItem();
+ *
+ * @param MapId
+ * @desc コマンドを決定したときに移動するマップID
+ * @default 0
+ * @type map_id
+ *
+ * @param SelectMember
+ * @desc コマンド実行前に対象メンバーを選択するかどうか
+ * @default false
+ * @type boolean
+ */
+
+/*~struct~SubCommand:
+ * @param Name
+ * @desc サブコマンドに表示される任意のコマンド名称
+ * @default アイテム
+ *
+ * @param ParentName
+ * @desc サブコマンドに表示される任意のコマンド名称
+ * @default 親コマンド1
+ *
+ * @param HiddenSwitchId
+ * @desc ONのときコマンドが非表示になるスイッチID
+ * @default 0
+ * @type switch
+ *
+ * @param DisableSwitchId
+ * @desc ONのときコマンドが使用禁止になるスイッチID
+ * @default 0
+ * @type switch
+ *
+ * @param Script
+ * @desc コマンドを決定したときに実行されるスクリプト
+ * @default this.commandItem();
+ *
+ * @param MapId
+ * @desc コマンドを決定したときに移動するマップID
+ * @default 0
+ * @type map_id
+ *
+ * @param SelectMember
+ * @desc コマンド実行前に対象メンバーを選択するかどうか
+ * @default false
+ * @type boolean
  */
 
 (function() {
@@ -275,7 +272,7 @@
     //=============================================================================
     var getParamBoolean = function(paramNames) {
         var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     var getParamString = function(paramNames) {
@@ -285,14 +282,6 @@
             if (name) return name;
         }
         return '';
-    };
-
-    var getParamArrayString = function(paramNames) {
-        var values = getParamString(paramNames).split(',');
-        for (var i = 0; i < values.length; i++) {
-            values[i] = values[i].trim();
-        }
-        return values;
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -329,22 +318,32 @@
     };
 
     var getArgBoolean = function(arg) {
-        return arg.toUpperCase() === 'ON';
+        return arg.toUpperCase() === 'ON' || arg.toUpperCase() === 'TRUE';
+    };
+
+    var getParamArrayJson = function(paramNames, defaultValue) {
+        var value = getParamString(paramNames) || null;
+        try {
+            value = JSON.parse(value);
+            if (value === null) {
+                value = defaultValue;
+            } else {
+                value = value.map(function(valueData) {
+                    return JSON.parse(valueData);
+                });
+            }
+        } catch (e) {
+            alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nName:[${paramNames}]\nValue:${value}`);
+            value = defaultValue;
+        }
+        return value;
     };
 
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const param       = {};
-    param.subCommands = [];
-    for (var i = 1; i < Infinity; i++) {
-        var commandParams = getParamArrayString(['SubCommand' + i, 'サブコマンド' + i]);
-        if (commandParams.length > 1) {
-            param.subCommands.push(commandParams);
-        } else {
-            break;
-        }
-    }
+    const param                 = {};
+    param.subCommands           = getParamArrayJson(['サブコマンド', 'SubCommand'], []);
     param.commandPosition       = getParamNumber(['CommandPosition', 'コマンド追加位置']);
     param.subMenuWidth          = getParamNumber(['SubMenuWidth', 'サブメニュー横幅']);
     param.selectActorIdVariable = getParamNumber(['SelectActorIdVariable', '選択アクターID変数']);
@@ -370,7 +369,7 @@
     };
 
     Game_Temp.prototype.createMenuCommand = function(commands) {
-        var parentName = commands[1];
+        var parentName = commands.ParentName;
         if (!this._menuParentCommands.has(parentName)) {
             this._menuParentCommands.set(parentName, []);
         }
@@ -690,7 +689,7 @@
         if (param.commandPosition === 3) this.makeSubCommandList();
     };
 
-    var _Window_MenuCommand_needsCommand = Window_MenuCommand.prototype.needsCommand;
+    var _Window_MenuCommand_needsCommand      = Window_MenuCommand.prototype.needsCommand;
     Window_MenuCommand.prototype.needsCommand = function(name) {
         var need = _Window_MenuCommand_needsCommand.apply(this, arguments);
         if (name === 'options' && param.hideOption) {
@@ -804,14 +803,13 @@
     //  サブコマンドを扱うクラスです。
     //=============================================================================
     class Game_MenuSubCommand {
-        constructor(params) {
-            var length            = params.length;
-            this._name            = params[0];
-            this._hiddenSwitchId  = params[2];
-            this._disableSwitchId = params[3];
-            this._targetScript    = params.slice(4, length - 2).join(',');
-            this._targetMapId     = params[length - 2];
-            this._memberSelect    = getArgBoolean(params[length - 1]);
+        constructor(subCommandData) {
+            this._name            = subCommandData.Name;
+            this._hiddenSwitchId  = subCommandData.HiddenSwitchId;
+            this._disableSwitchId = subCommandData.DisableSwitchId;
+            this._targetScript    = subCommandData.Script;
+            this._targetMapId     = subCommandData.MapId;
+            this._memberSelect    = getArgBoolean(subCommandData.SelectMember);
         }
 
         getName() {
