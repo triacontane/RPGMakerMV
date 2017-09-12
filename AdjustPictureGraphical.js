@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/09/13 DWindow.jsなどピクチャコンテナにピクチャ以外を入れる一部のプラグインとの競合を解消
 // 1.2.0 2017/08/13 パラメータの型指定機能に対応
 // 1.1.1 2016/01/24 ピクチャが回転しているときも位置を把握できるよう修正
 // 1.1.0 2015/12/26 グリッドの表示機能とグリッドにスナップ機能を追加
@@ -208,7 +209,7 @@
     //=============================================================================
     Spriteset_Base.prototype.checkDragPictures = function() {
         this._pictureContainer.children.reverse().some(function(picture) {
-            return picture.checkDrag();
+            return picture.checkDrag && picture.checkDrag();
         }, this);
         this._pictureContainer.children.reverse();
     };
