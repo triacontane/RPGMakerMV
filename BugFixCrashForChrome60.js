@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/09/31 Chromeバージョンが61以降なら本プラグインを適用しないよう変更
 // 1.1.0 2017/08/05 対応範囲の拡大
 // 1.0.1 2017/07/31 適用バージョンが60固定になっていたので6Xに変更
 // 1.0.0 2017/07/31 初版
@@ -39,7 +40,7 @@
  *
  * @help  BugFixChromeForEach.js
  *
- * Chromeのバージョン60以降で、戦闘が強制終了する場合がある問題に暫定対処します。
+ * Chromeのバージョン60で、戦闘が強制終了する場合がある問題に暫定対処します。
  *
  * 根本原因は、forEachの繰り返し途中で、対象配列の要素が削除された場合に、
  * 配列の範囲外(長さを上回るindex)の値（undefined）が渡されることがあるためです。
@@ -51,6 +52,13 @@
  * 発生を確認したバージョン
  * Google Chrome 60.0.3112.78
  * Google Chrome 60.0.3112.90
+ *
+ * 本現象はChrome61で修正が確認されました。
+ * よって動作環境のChromeバージョンを確認して60の場合のみ
+ * 本プラグインの修正を適用するように変更しました。
+ *
+ * 修正を確認したバージョン
+ * Google Chrome 61.0.3163.79
  *
  * このプラグインはコアスクリプトを上書きしている箇所が多いので
  * プラグイン管理画面で極力、上の方に配置してください。
@@ -67,7 +75,7 @@
     'use strict';
     var pluginName = 'BugFixCrashForChrome60';
 
-    if (!navigator.userAgent.match(/Chrome\/6/) && !Utils.isOptionValid('test')) {
+    if (!navigator.userAgent.match(/Chrome\/60/) && !Utils.isOptionValid('test')) {
         console.log('**********\n' + pluginName + ' is unnecessary in the current execution environment.\n**********\n');
         return;
     }
