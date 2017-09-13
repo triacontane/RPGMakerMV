@@ -1,11 +1,12 @@
 //=============================================================================
 // AutomaticState.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/09/13 自動ステート対象をアクター、敵キャラIDで限定するときに複数指定できる機能を追加
 // 1.3.1 2017/08/06 メモリ上にロードされていないアクターの自動ステートチェックが実行されるとエラーになる現象を修正
 //                  処理の軽量化
 // 1.3.0 2017/07/21 パーティの並び順で自動ステートを付与する機能を追加
@@ -23,7 +24,7 @@
 // 1.0.1 2016/02/14 オートステートの追加時にメッセージを表示する仕様を追加
 // 1.0.0 2016/02/08 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -32,7 +33,9 @@
  * @plugindesc ステート自動付与プラグイン
  * @author トリアコンタン
  *
- * @help 条件を満たしている間、指定したステートを付与します。
+ * @help AutomaticState.js
+ *
+ * 条件を満たしている間、指定したステートを付与します。
  * ステートのメモ欄に以下の書式で条件を入力してください。
  *
  * メモ欄書式（ステートIDには制御文字を利用できます）
@@ -70,9 +73,14 @@
  * <ASアクター:（アクターID）>
  *     ステート自動付与の対象を指定したアクターのみに設定する。
  *     IDの指定がない場合、全てのアクターに有効になる。
+ *     複数のアクターを指定したい場合、数値をカンマで区切る。
+ * 例：<ASアクター:1,2,3>
+ *
  * <AS敵キャラ:（敵キャラID）>
  *     ステート自動付与の対象を指定した敵キャラのみに設定する。
  *     IDの指定がない場合、全ての敵キャラに有効になる。
+ *     複数の敵キャラを指定したい場合、数値をカンマで区切る。
+ * 例：<AS敵キャラ:1,2,3>
  *
  * 複数の条件が指定された場合は、全ての条件を満たした場合のみ
  * ステートが付与されます。
@@ -174,6 +182,11 @@
 
     Game_BattlerBase.prototype.isAutomaticValid = function(state, result) {
         this._automaticTargetState = state;
+        if (this.isAutoStateBattler()) {
+            result = true;
+        } else {
+            return false;
+        }
         var switchId = this.getStateMetaNumber(0, 1);
         if (switchId !== null) {
             if ($gameSwitches.value(switchId)) {
@@ -265,6 +278,20 @@
         return value !== undefined ? convertEscapeCharacters(value) : null;
     };
 
+    Game_BattlerBase.prototype.isAutoStateBattler = function() {
+        if (this.isStateMetaInfo(this.getOppositeBattlerCheckTagIndex())) {
+            return false;
+        }
+        var battlerIdValue = this.getStateMetaString(this.getBattlerCheckTagIndex());
+        if (!battlerIdValue) {
+            return true;
+        }
+        var batterId = this.getBattlerId();
+        return battlerIdValue.split(',').some(function(stateTargetIdText) {
+            return batterId === parseInt(stateTargetIdText);
+        });
+    };
+
     Game_BattlerBase.prototype.isStateMetaInfo = function(tagIndex) {
         return this._automaticTargetState.meta.hasOwnProperty(DataManager.getAutomaticTagName(tagIndex));
     };
@@ -293,6 +320,18 @@
         this.updateAutomaticState();
     };
 
+    Game_BattlerBase.prototype.getBattlerId = function() {
+        return 0;
+    };
+
+    Game_BattlerBase.prototype.getBattlerCheckTagIndex = function() {
+        return 0;
+    };
+
+    Game_BattlerBase.prototype.getOppositeBattlerCheckTagIndex = function() {
+        return 0;
+    };
+
     //=============================================================================
     // Game_Actors
     //  データが存在するかどうかを返します。
@@ -313,8 +352,6 @@
     Game_Actor.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
         var result = null;
-        var actorId = this.getStateMetaNumber(8, 0);
-        if (this.isStateMetaInfo(9) || (actorId > 0 && actorId !== this._actorId)) return false;
         var weaponId = this.getStateMetaNumber(10, 1);
         if (weaponId !== null) {
             if (this.hasWeapon($dataWeapons[weaponId])) {
@@ -340,15 +377,32 @@
         this.updateAutomaticState();
     };
 
+    Game_Actor.prototype.getBattlerId = function() {
+        return this._actorId;
+    };
+
+    Game_Actor.prototype.getBattlerCheckTagIndex = function() {
+        return 8;
+    };
+
+    Game_Actor.prototype.getOppositeBattlerCheckTagIndex = function() {
+        return Game_Enemy.prototype.getBattlerCheckTagIndex.call(this);
+    };
+
     //=============================================================================
     // Game_Enemy
     //  自動付与ステートの更新処理を定義します。
     //=============================================================================
-    Game_Enemy.prototype.isAutomaticValid = function(state) {
-        this._automaticTargetState = state;
-        var enemyId = this.getStateMetaNumber(9, 0);
-        if (this.isStateMetaInfo(8) || (enemyId > 0 && enemyId !== this._enemyId)) return false;
-        return Game_BattlerBase.prototype.isAutomaticValid.call(this, state, null);
+    Game_Enemy.prototype.getBattlerId = function() {
+        return this._enemyId;
+    };
+
+    Game_Enemy.prototype.getBattlerCheckTagIndex = function() {
+        return 9;
+    };
+
+    Game_Enemy.prototype.getOppositeBattlerCheckTagIndex = function() {
+        return Game_Actor.prototype.getBattlerCheckTagIndex.call(this);
     };
 
     //=============================================================================
