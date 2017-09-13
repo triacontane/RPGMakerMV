@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/09/14 合成方法や不透明度の初期値を設定できるメモ欄を追加
 // 1.0.0 2017/08/20 初版
 // 0.9.0 2017/08/19 プロトタイプ版
 // ----------------------------------------------------------------------------
@@ -26,12 +27,16 @@
  * イベントを作成してメモ欄を以下の通り記述すると、指定した画像がマップに表示され、
  * かつイベント位置とは無関係に画像の左上がマップの左上に合わせられます。
  *
- * <PLM:file> # 「img/parallaxes/file」を一枚絵として表示します。
+ * <PLM:file>        # 「img/parallaxes/file」を一枚絵として表示します。
+ * <PLM_Blend:1>     # 合成方法の初期値を「加算」にします。
+ * <PLM合成:1>       # 同上
+ * <PLM_Opacity:128> # 不透明度の初期値を「128」にします。
+ * <PLM不透明度:128> # 同上
  *
  * イベント内の「画像」「オプション」項目は無視されますが、その他の項目は
  * 通常のイベントと同じように機能します。
  *
- * 合成方法や不透明度などを変更したい場合は、自律移動で指定するか
+ * 合成方法や不透明度などを後から変更したい場合は、自律移動で指定するか
  * 以下の「キャラクターグラフィック表示拡張プラグイン」と併用してください。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CharacterGraphicExtend.js
  *
@@ -63,12 +68,16 @@
  * イベントを作成してメモ欄を以下の通り記述すると、指定した画像がマップに表示され、
  * かつイベント位置とは無関係に画像の左上がマップの左上に合わせられます。
  *
- * <PLM:file> # 「img/parallaxes/file」を一枚絵として表示します。
+ * <PLM:file>        # 「img/parallaxes/file」を一枚絵として表示します。
+ * <PLM_Blend:1>     # 合成方法の初期値を「加算」にします。
+ * <PLM合成:1>       # 同上
+ * <PLM_Opacity:128> # 不透明度の初期値を「128」にします。
+ * <PLM不透明度:128> # 同上
  *
  * イベント内の「画像」「オプション」項目は無視されますが、その他の項目は
  * 通常のイベントと同じように機能します。
  *
- * 合成方法や不透明度などを変更したい場合は、自律移動で指定するか
+ * 合成方法や不透明度などを後から変更したい場合は、自律移動で指定するか
  * 以下の「キャラクターグラフィック表示拡張プラグイン」と併用してください。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CharacterGraphicExtend.js
  *
@@ -103,6 +112,14 @@
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + name;
         return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
+    };
+
+    var getMetaValues = function(object, names) {
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
+            if (value !== undefined) return value;
+        }
+        return undefined;
     };
 
     var convertEscapeCharacters = function(text) {
@@ -161,7 +178,26 @@
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         this._mapLayerName = getMetaValue($dataMap.events[eventId], '') || null;
+        if (this._mapLayerName) {
+            this.initBlendMode();
+            this.initOpacity();
+        }
     };
+
+    Game_Event.prototype.initBlendMode = function() {
+        var blendMode = getMetaValues($dataMap.events[this._eventId], ['_Blend', '合成']);
+        if (blendMode) {
+            this._blendMode = parseInt(blendMode);
+        }
+    };
+
+    Game_Event.prototype.initOpacity = function() {
+        var blendMode = getMetaValues($dataMap.events[this._eventId], ['_Opacity', '不透明度']);
+        if (blendMode) {
+            this._opacity = parseInt(blendMode);
+        }
+    };
+
 
     Game_Event.prototype.existPage = function() {
         return this._pageIndex >= 0;
