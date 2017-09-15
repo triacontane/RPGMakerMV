@@ -1,11 +1,12 @@
 //=============================================================================
 // EventReSpawn.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2017/09/15 座標を指定する際、小数を指定できるよう修正（半歩移動プラグイン等との組み合わせを想定）
 // 1.5.3 2017/06/18 コピー対象のイベントを変数から指定する際、変数に文字列が入っていると正しく取得できない問題を修正（by 奏ねこま氏）
 // 1.5.2 2017/05/28 イベントを配置したときアニメパターンが一瞬だけ初期化されてしまう問題を修正
 // 1.5.1 2017/04/23 イベントを生成するプラグインコマンドで制御文字が無効になっていた問題を修正
@@ -25,7 +26,7 @@
 // 1.0.1 2016/08/09 イベント生成後にメニューを開いて戻ってくるとエラーが発生する現象の修正
 // 1.0.0 2016/08/08 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -129,7 +130,13 @@ function Game_PrefabEvent() {
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || makeRandomCompatible[arg] || 0).clamp(min, max);
+        return (parseInt(convertEscapeCharacters(arg)) || makeRandomCompatible[arg] || 0).clamp(min, max);
+    };
+
+    var getArgFloat = function(arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseFloat(convertEscapeCharacters(arg)) || 0).clamp(min, max);
     };
 
     var convertEscapeCharacters = function(text) {
@@ -185,31 +192,15 @@ function Game_PrefabEvent() {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         var commandPrefix = new RegExp('^' + metaTagPrefix);
         if (!command.match(commandPrefix)) return;
-        try {
-            this.pluginCommandEventReSpawn(command.replace(commandPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandEventReSpawn(command.replace(commandPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandEventReSpawn = function(command, args, extend) {
         switch (getCommandName(command)) {
             case '生成' :
             case 'MAKE' :
-                var x = getArgNumber(args[1]);
-                var y = getArgNumber(args[2]);
+                var x = getArgFloat(args[1]);
+                var y = getArgFloat(args[2]);
                 $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args[0], extend), x, y, extend);
                 break;
             case 'ランダム生成' :
