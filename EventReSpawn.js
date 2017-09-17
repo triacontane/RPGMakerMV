@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/09/17 プラグインコマンドにテンプレートイベントのセルフ変数「\sv[n]」が利用できる機能を追加
 // 1.6.0 2017/09/15 座標を指定する際、小数を指定できるよう修正（半歩移動プラグイン等との組み合わせを想定）
 // 1.5.3 2017/06/18 コピー対象のイベントを変数から指定する際、変数に文字列が入っていると正しく取得できない問題を修正（by 奏ねこま氏）
 // 1.5.2 2017/05/28 イベントを配置したときアニメパターンが一瞬だけ初期化されてしまう問題を修正
@@ -123,26 +124,16 @@ function Game_PrefabEvent() {
     'use strict';
     var metaTagPrefix = 'ERS_';
 
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
-
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg)) || makeRandomCompatible[arg] || 0).clamp(min, max);
+        return (parseInt(arg) || makeRandomCompatible[arg] || 0).clamp(min, max);
     };
 
     var getArgFloat = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseFloat(convertEscapeCharacters(arg)) || 0).clamp(min, max);
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+        return (parseFloat(arg) || 0).clamp(min, max);
     };
 
     var makeRandomCompatible = {
@@ -164,6 +155,57 @@ function Game_PrefabEvent() {
         both: 3,
         両方: 3,
     };
+
+    var convertEscapeCharacters = function(text) {
+        if (isNotAString(text)) text = '';
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
+    };
+
+    var isNotAString = function(args) {
+        return String(args) !== args;
+    };
+
+    var convertAllArguments = function(args) {
+        return args.map(function(arg) {
+            return convertEscapeCharacters(arg);
+        });
+    };
+
+    var setPluginCommand = function(commandName, methodName) {
+        pluginCommandMap.set(metaTagPrefix + commandName, methodName);
+    };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var pluginCommandMap = new Map();
+    setPluginCommand('MAKE', 'execMakeEvent');
+    setPluginCommand('生成', 'execMakeEvent');
+    setPluginCommand('MAKE_RANDOM', 'execMakeEventRandom');
+    setPluginCommand('ランダム生成', 'execMakeEventRandom');
+    setPluginCommand('テンプレート生成', 'execMakeTemplateEvent');
+    setPluginCommand('MAKE_TEMPLATE', 'execMakeTemplateEvent');
+    setPluginCommand('テンプレートランダム生成', 'execMakeTemplateEventRandom');
+    setPluginCommand('MAKE_TEMPLATE_RANDOM', 'execMakeTemplateEventRandom');
+    setPluginCommand('最終生成イベントID取得', 'execGetLastSpawnEventId');
+    setPluginCommand('GET_LAST_SPAWN_EVENT_ID', 'execGetLastSpawnEventId');
 
     //=============================================================================
     // DataManager
@@ -190,43 +232,43 @@ function Game_PrefabEvent() {
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var commandPrefix = new RegExp('^' + metaTagPrefix);
-        if (!command.match(commandPrefix)) return;
-        this.pluginCommandEventReSpawn(command.replace(commandPrefix, ''), args);
+        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
+        if (pluginCommandMethod) {
+            args = convertAllArguments(args);
+            if (this.convertAllSelfVariables) {
+                args = this.convertAllSelfVariables(args);
+            }
+            this[pluginCommandMethod](args);
+        }
     };
 
-    Game_Interpreter.prototype.pluginCommandEventReSpawn = function(command, args, extend) {
-        switch (getCommandName(command)) {
-            case '生成' :
-            case 'MAKE' :
-                var x = getArgFloat(args[1]);
-                var y = getArgFloat(args[2]);
-                $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args[0], extend), x, y, extend);
-                break;
-            case 'ランダム生成' :
-            case 'MAKE_RANDOM' :
-                var conditionMap        = {};
-                conditionMap.passable   = getArgNumber(args[1], 0);
-                conditionMap.screen     = getArgNumber(args[2], 0);
-                conditionMap.collided   = getArgNumber(args[3], 0);
-                conditionMap.terrainTag = getArgNumber(args[4], 0);
-                conditionMap.regionId   = getArgNumber(args[5], 0);
-                $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0], extend), conditionMap, extend);
-                break;
-            case 'テンプレート生成' :
-            case 'MAKE_TEMPLATE' :
-                this.pluginCommandEventReSpawn('MAKE', args, true);
-                break;
-            case 'テンプレートランダム生成' :
-            case 'MAKE_TEMPLATE_RANDOM' :
-                this.pluginCommandEventReSpawn('MAKE_RANDOM', args, true);
-                break;
-            case '最終生成イベントID取得' :
-            case 'GET_LAST_SPAWN_EVENT_ID' :
-                var eventId = $gameMap.getLastSpawnEventId();
-                $gameVariables.setValue(getArgNumber(args[0], 0), eventId);
-                break;
-        }
+    Game_Interpreter.prototype.execMakeEvent = function(args, extend) {
+        var x = getArgFloat(args[1]);
+        var y = getArgFloat(args[2]);
+        $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args[0], extend), x, y, extend);
+    };
+
+    Game_Interpreter.prototype.execMakeEventRandom = function(args, extend) {
+        var conditionMap        = {};
+        conditionMap.passable   = getArgNumber(args[1], 0);
+        conditionMap.screen     = getArgNumber(args[2], 0);
+        conditionMap.collided   = getArgNumber(args[3], 0);
+        conditionMap.terrainTag = getArgNumber(args[4], 0);
+        conditionMap.regionId   = getArgNumber(args[5], 0);
+        $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0], extend), conditionMap, extend);
+    };
+
+    Game_Interpreter.prototype.execMakeTemplateEvent = function(args) {
+        this.execMakeEvent(args, true);
+    };
+
+    Game_Interpreter.prototype.execMakeTemplateEventRandom = function(args) {
+        this.execMakeEventRandom(args, true);
+    };
+
+    Game_Interpreter.prototype.execGetLastSpawnEventId = function(args) {
+        var eventId = $gameMap.getLastSpawnEventId();
+        $gameVariables.setValue(getArgNumber(args[0], 0), eventId);
     };
 
     Game_Interpreter.prototype.getEventIdForEventReSpawn = function(arg, isTemplate) {
