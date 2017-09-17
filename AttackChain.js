@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/09/18 一定連携以上でスキルが別のスキルに変化する機能を追加
 // 1.3.2 2017/07/16 EST_BATTLE_ROYALE_EVO.jsとの競合を解消
 // 1.3.1 2017/07/03 プラグインパラメータの型指定を追加
 // 1.3.0 2017/07/03 最大連携数およびダメージのカウントを無効にするスイッチおよび初期化するスクリプトを追加
@@ -37,6 +38,11 @@
  * @param FontSize
  * @desc It is the font size of chain display.
  * @default 48
+ * @type number
+ *
+ * @param DamageFontSize
+ * @desc It is the font size of damage display.
+ * @default 36
  * @type number
  *
  * @param ChainX
@@ -89,6 +95,10 @@
  * @default 0
  * @type switch
  *
+ * @param SkillChangeMessage
+ * @desc A message when a skill change has occurred through cooperation. %1:before skill %2:after skill
+ * @default %1 changed to %2!
+ *
  * @help During battle, damage magnification will rise when friendly attacks are continuous.
  * Maximum collaboration damage is displayed simultaneously with the number of chains.
  * It will be canceled when chain of opponent starts during chain continuation.
@@ -99,6 +109,15 @@
  * <AC_Rate:200> # Set the chain damage magnification to 200% further.
  * <AC_End>      # I will forcibly terminate cooperation with that skill.
  * <AC_Cond:5>   # 5 Failure to use with less than cooperation always fails.
+ *
+ * You can set skill change when the number of cooperation becomes constant.
+ * <AC_SkillChangeChain:2>       # Skill changes over 2 collaboration.
+ * <AC_SkillChangeId:10>         # Set skill ID after skill change to [10].
+ * <AC_SkillChangeMessage:aaa>   # Message [aaa] is displayed when the skill changes.
+ *
+ * In the skill change message, the following values are converted.
+ * %1 : before skill name
+ * %2 : after skill name
  *
  * There is no plugin command in this plugin.
  *
@@ -128,6 +147,11 @@
  * @param フォントサイズ
  * @desc チェイン表示のフォントサイズです。
  * @default 48
+ * @type number
+ *
+ * @param ダメージフォントサイズ
+ * @desc ダメージ表示のフォントサイズです。
+ * @default 36
  * @type number
  *
  * @param X座標
@@ -180,6 +204,10 @@
  * @default 0
  * @type switch
  *
+ * @param スキル変化メッセージ
+ * @desc 連携によってスキル変化が起こった場合のメッセージです。%1:変化前スキル名 %2:変化後スキル名
+ * @default %1が%2に変化した！
+ *
  * @help 戦闘中、味方の攻撃が連続したときにダメージ倍率が上昇します。
  * チェイン数と同時に最大連携ダメージも表示されます。
  * チェインの継続中に相手側のチェインがスタートしたら解除されます。
@@ -193,6 +221,18 @@
  * <AC_End>      # 同上
  * <AC_条件:5>   # 5連携に満たない状態で使用すると必ず失敗します。
  * <AC_Cond:5>   # 同上
+ *
+ * 連携数が一定上になった場合のスキル変化を設定できます。
+ * <AC_スキル変化連携数:2>       # 2連携以上でスキル変化します。
+ * <AC_SkillChangeChain:2>       # 同上
+ * <AC_スキル変化ID:10>          # スキル変化後のスキルIDを[10]に設定します。
+ * <AC_SkillChangeId:10>         # 同上
+ * <AC_スキル変化メッセージ:aaa> # スキル変化時にメッセージ[aaa]を表示します。
+ * <AC_SkillChangeMessage:aaa>   # 同上
+ *
+ * スキル変化メッセージでは以下の値が変換されます。
+ * %1 : 変化前スキル名
+ * %2 : 変化後スキル名
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -286,6 +326,7 @@
     param.unit               = getParamString(['Unit', '単位']);
     param.damageUnit         = getParamString(['DamageUnit', 'ダメージ単位']);
     param.fontSize           = getParamNumber(['FontSize', 'フォントサイズ']) || 48;
+    param.damageFontSize     = getParamNumber(['DamageFontSize', 'ダメージフォントサイズ']) || 48;
     param.maxRate            = getParamNumber(['MaxRate', '最大倍率']) || 100;
     param.damageRate         = getParamNumber(['DamageRate', 'ダメージ倍率']);
     param.chainX             = getParamNumber(['ChainX', 'X座標']) || 0;
@@ -296,6 +337,7 @@
     param.cancelNoAttack     = getParamBoolean(['CancelNoAttack', '攻撃以外で解除']);
     param.cancelOpposite     = getParamBoolean(['CancelOpposite', '相手行動で解除']);
     param.invalidSwitchId    = getParamNumber(['InvalidSwitchId', '無効スイッチ番号'], 0);
+    param.skillChangeMessage = getParamString(['SkillChangeMessage', 'スキル変化メッセージ']);
 
     //=============================================================================
     // Game_Unit
@@ -353,8 +395,8 @@
     };
 
     Game_Unit.prototype.resetMaxChain = function() {
-        this._maxChain        = 0;
-        this._maxChainDamage  = 0;
+        this._maxChain       = 0;
+        this._maxChainDamage = 0;
     };
 
     Game_Unit.prototype.isCountMaxChain = function() {
@@ -431,6 +473,14 @@
         return this.getMetaNumberForAttackChain(['条件', 'Cond']) <= this.friendsUnit().getChainCount();
     };
 
+    Game_Action.prototype.isChangeSkillDueToChain = function() {
+        return this.getMetaNumberForAttackChain(['スキル変化連携数', 'SkillChangeChain']) <= this.friendsUnit().getChainCount();
+    };
+
+    Game_Action.prototype.getChangeSkillIdDueToChain = function() {
+        return this.getMetaNumberForAttackChain(['スキル変化ID', 'SkillChangeId']);
+    };
+
     Game_Action.prototype.updateChain = function(target) {
         if (this.isChainCancel()) {
             this.friendsUnit().resetChainCount();
@@ -460,6 +510,55 @@
         return this.isChainConditionOk() ? _Game_Action_itemHit.apply(this, arguments) : 0.0;
     };
 
+    Game_Action.prototype.changeSkillDueToChain = function() {
+        if (!this.isChangeSkillDueToChain()) {
+            return;
+        }
+        var itemId = this.getChangeSkillIdDueToChain();
+        if (itemId > 0) {
+            this._item.changeItem(itemId);
+        }
+    };
+
+    Game_Action.prototype.getSkillChangeMessage = function() {
+        return this._item.getChangeMessage();
+    };
+
+    //=============================================================================
+    // Game_Item
+    //  スキルを別のものに変化させます。
+    //=============================================================================
+    Game_Item.prototype.changeItem = function(newItemId) {
+        this._originalItemId = this._itemId;
+        this.setObject(this.getObjectFromId(newItemId));
+    };
+
+    Game_Item.prototype.getChangeMessage = function() {
+        if (!this._originalItemId) {
+            return null;
+        }
+        var originalItem  = this.getObjectFromId(this._originalItemId);
+        var changeMessage = getMetaValues(originalItem, ['スキル変化メッセージ', 'SkillChangeMessage']) || param.skillChangeMessage;
+        if (changeMessage) {
+            changeMessage = changeMessage.format(originalItem.name, this.object().name);
+        }
+        this._originalItemId = null;
+        return changeMessage;
+    };
+
+    Game_Item.prototype.getObjectFromId = function(id) {
+        if (this.isSkill()) {
+            return $dataSkills[id];
+        } else if (this.isItem()) {
+            return $dataItems[id];
+        } else if (this.isWeapon()) {
+            return $dataWeapons[id];
+        } else if (this.isArmor()) {
+            return $dataArmors[id];
+        }
+        return null;
+    };
+
     //=============================================================================
     // BattleManager
     //  チェイン状態を画面表示するために取得します。
@@ -469,6 +568,12 @@
         _BattleManager_setup.apply(this, arguments);
         $gameParty.resetChainCount();
         $gameTroop.resetChainCount();
+    };
+
+    var _BattleManager_startAction = BattleManager.startAction;
+    BattleManager.startAction      = function() {
+        this._subject.currentAction().changeSkillDueToChain();
+        _BattleManager_startAction.apply(this, arguments);
     };
 
     BattleManager.getChainParty = function() {
@@ -489,6 +594,29 @@
 
     BattleManager.isChangeTarget = function(target) {
         return this._chainTarget !== target;
+    };
+
+    //=============================================================================
+    // Window_BattleLog
+    //  連携によるスキル変化メッセージを表示します。
+    //=============================================================================
+    var _Window_BattleLog_startAction      = Window_BattleLog.prototype.startAction;
+    Window_BattleLog.prototype.startAction = function(subject, action, targets) {
+        this._actionForChainAttack = action;
+        _Window_BattleLog_startAction.apply(this, arguments);
+    };
+
+    var _Window_BattleLog_displayAction      = Window_BattleLog.prototype.displayAction;
+    Window_BattleLog.prototype.displayAction = function(subject, item) {
+        this.displayChangeAction();
+        _Window_BattleLog_displayAction.apply(this, arguments);
+    };
+
+    Window_BattleLog.prototype.displayChangeAction = function() {
+        var message = this._actionForChainAttack.getSkillChangeMessage();
+        if (message) {
+            this.push('addText', message);
+        }
     };
 
     //=============================================================================
@@ -681,7 +809,7 @@
     };
 
     Sprite_ChainDamage.prototype.getFontSize = function() {
-        return Math.max(Sprite_ChainCount.prototype.getFontSize.call(this) - 12, 12);
+        return param.damageFontSize || Math.floor(Sprite_ChainCount.prototype.getFontSize.call(this) * 0.75);
     };
 
     Sprite_ChainDamage.prototype.getChainUnit = function() {
