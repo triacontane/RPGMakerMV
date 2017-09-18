@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2017/09/19 連携表示の単位の表示倍率を調整できる機能を追加
 // 1.4.0 2017/09/18 一定連携以上でスキルが別のスキルに変化する機能を追加
 // 1.3.2 2017/07/16 EST_BATTLE_ROYALE_EVO.jsとの競合を解消
 // 1.3.1 2017/07/03 プラグインパラメータの型指定を追加
@@ -259,10 +260,12 @@
     //=============================================================================
     var userSettings = {
         /* チェイン画像の色設定 */
-        chainColor: {
+        chainColor    : {
             party: 'rgba(0, 128, 255, 1.0)',
             troop: 'red'
-        }
+        },
+        /* 連携表示の単位の表示倍率 */
+        chainUnitScale: 0.75
     };
 
     //=============================================================================
@@ -769,14 +772,21 @@
 
     Sprite_ChainCount.prototype.refresh = function() {
         this.bitmap.clear();
-        this.refreshText(`${this._chainValue} ${this.getChainUnit()}`);
+        this.refreshText(this._chainValue, this.getChainUnit());
         this.refreshScale();
         this._duration = param.duration || Infinity;
     };
 
-    Sprite_ChainCount.prototype.refreshText = function(text) {
+    Sprite_ChainCount.prototype.refreshText = function(number, unit) {
         this.bitmap.textColor = this.getTextColor();
-        this.bitmap.drawText(text, 0, 0, this.bitmap.width - this.getItalicWidth(), this.bitmap.height, 'left');
+        var numberFont        = this.getFontSize();
+        this.bitmap.fontSize  = numberFont;
+        var maxWidth          = this.bitmap.width - this.getItalicWidth();
+        this.bitmap.drawText(number, 0, 0, maxWidth, this.bitmap.height, 'left');
+        this.bitmap.fontSize *= userSettings.chainUnitScale;
+        var x = number.toString().length * this.getFontSize() / 2 + 4;
+        var y = (numberFont - this.bitmap.fontSize) / 2;
+        this.bitmap.drawText(unit, x, y, maxWidth, this.bitmap.height, 'left');
     };
 
     Sprite_ChainCount.prototype.refreshScale = function() {
