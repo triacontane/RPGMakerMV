@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/09/20 ヘルプにサンプルマップの旨を記載
 // 1.1.0 2017/09/14 合成方法や不透明度の初期値を設定できるメモ欄を追加
 // 1.0.0 2017/08/20 初版
 // 0.9.0 2017/08/19 プロトタイプ版
@@ -48,6 +49,16 @@
  *
  * このプラグインにはプラグインコマンドはありません。
  *
+ * 当プラグインで使用できるサンプルマップをどらぴか様よりご提供いただきました。
+ * この場を借りて御礼申し上げます。
+ *
+ * 以下のURLから「Download」ボタンでダウンロードできます。
+ * クレジット表記なしでご自由にお使い頂けるご許可を頂いています。
+ * https://github.com/triacontane/RPGMakerMV/blob/master/Sample/sample_parallax.zip
+ *
+ * PIKA's GAME GALLERY
+ * https://mashimarohb252d6.wixsite.com/pikasgame
+ *
  * @noteParam PLM
  * @noteRequire 1
  * @noteDir img/parallaxes
@@ -88,6 +99,16 @@
  * 当プラグインはマップのループには対応していません。
  *
  * このプラグインにはプラグインコマンドはありません。
+ *
+ * 当プラグインで使用できるサンプルマップをどらぴか様よりご提供いただきました。
+ * この場を借りて御礼申し上げます。
+ *
+ * 以下のURLから「Download」ボタンでダウンロードできます。
+ * クレジット表記なしでご自由にお使い頂けるご許可を頂いています。
+ * https://github.com/triacontane/RPGMakerMV/blob/master/Sample/sample_parallax.zip
+ *
+ * PIKA's GAME GALLERY
+ * https://mashimarohb252d6.wixsite.com/pikasgame
  *
  * @noteParam PLM
  * @noteRequire 1
