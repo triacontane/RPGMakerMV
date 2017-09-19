@@ -47,7 +47,7 @@ this.shiftPosition(10, 20); # 表示位置をX[10] Y[20]ずらします。
 ![使い方2](https://4.bp.blogspot.com/-FxAdskzexuw/WcE7G0mQvfI/AAAAAAAAcP0/mu05f6c800kLut_NBO3WoFDiPLwJVND5QCLcBGAs/s1600/howToUse2.jpg)
 
 # ダウンロード
-プラグインファイルはGithubで公開しています。  
+以下のURLからダウンロードできます。
 <https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/ParallaxLayerMap.js>  
 
 ダウンロード方法(Windowsの場合)  
@@ -57,5 +57,6 @@ this.shiftPosition(10, 20); # 表示位置をX[10] Y[20]ずらします。
 1. ファイル名を変えずに、プロジェクトの「js/plugins」配下に配置
 
 # 利用規約
-当プラグインはMITライセンスのもとで公開されています。作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）についても制限はありません。このプラグインはもうあなたのものです。  
-<http://opensource.org/licenses/mit-license.php>
+当プラグインはMITライセンスのもとで公開されています。作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）についても制限はありません。このプラグインはもうあなたのものです。
+- <http://opensource.org/licenses/mit-license.php>
+- <https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/LICENSE.txt>
