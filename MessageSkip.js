@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1-SNAPSHOT 2017/09/21 オートモード時 改ページを伴わない入力待ちの後のメッセージを一瞬でスキップする問題を修正
 // 1.6.0 2017/08/03 キーを押している間だけスキップが有効にできる機能を追加
 // 1.5.0 2017/05/27 オートおよびスキップボタンの原点指定と表示可否を変更できるスイッチの機能を追加
 // 1.4.0 2017/05/26 クリックでオートおよびスキップを切り替えるボタンを追加
@@ -452,6 +453,10 @@
     var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
+        this.initializeMessageAutoCount();
+    };
+
+    Window_Message.prototype.initializeMessageAutoCount = function() {
         this._messageAutoCount = parseInt(convertEscapeCharacters(getParamString(['AutoWaitFrame', 'オート待機フレーム'], 1)));
     };
 
@@ -562,8 +567,12 @@
         if (this.isTriggeredMessageSkipButton() || this.isTriggeredMessageAutoButton()) {
             return false;
         }
+        if (this.messageAuto() && this._messageAutoCount <= 0) {
+            this.initializeMessageAutoCount();
+            return true;
+        }
         return _Window_Message_isTriggered.apply(this, arguments) ||
-            this.messageSkip() || (this.messageAuto() && this._messageAutoCount <= 0);
+            this.messageSkip();
     };
 
     var _Window_Message_startPause      = Window_Message.prototype.startPause;
