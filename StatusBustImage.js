@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2917/09/25 バストアップ画像に表情差分用の追加グラフィックを重ねて表示できる機能を追加
 // 1.5.0 2017/09/04 バストアップ画像をウィンドウの下に表示できる機能を追加
 // 1.4.0 2017/07/05 メインメニュー画面でも先頭アクターの画像を表示できる機能を追加
 // 1.3.2 2017/02/20 装備画面での「最強装備」と「全て外す」時に装備品画像が更新されなかった問題を修正
@@ -75,25 +76,55 @@
  * デフォルト画面サイズではスペースがないので、使用する場合は必要に応じて
  * 画面サイズを変更してください。
  *
+ * また、メインメニュー画面にも同一のバストアップ画像を表示できますが
+ * 表示されるのは「先頭のアクター」のみです。
+ * 主にアクターが一人の場合に使用します。
+ *
  * アクターのメモ欄に以下の通り指定してください。
  *
+ * <SBI画像:file>   # /img/pictures/file.pngが表示されます。
  * <SBIImage:file>  # /img/pictures/file.pngが表示されます。
- * <SBIRect:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
- *                       # 切り出して（トリミング）表示します。(カンマ区切り)
+ * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
+ * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
+ *
+ * さらに以下のメモ欄で追加差分を複数表示することが可能です。
+ * <SBI追加画像1:file2>       # /img/pictures/file2.pngが表示されます。
+ * <SBIAddImage1:file2>       # 同上
+ * <SBI追加条件1:\v[1] === 3> # 変数[1]が[3]と等しい時のみ追加画像が表示されます。
+ * <SBIAddCond1:\v[1] === 3>  # 同上
+ * <SBI追加座標X1:30>         # 追加画像のX座標を[30]に設定します。
+ * <SBIAddPosX1:30>           # 同上
+ * <SBI追加座標Y1:30>         # 追加画像のY座標を[30]に設定します。
+ * <SBIAddPosY1:30>           # 同上
+ * 複数の追加画像を表示したい場合は最後の数字を[2]以降に変更してください。
+ *
+ * 指定する座標はベース画像の足下からの相対座標です。
+ *
+ * 計算式中で不等号を使いたい場合、以下のように記述してください。
+ * < → &lt;
+ * > → &gt;
+ * 例：<SBIAddCond1:\v[2] &gt; 1> // 変数[2]が1より大きい場合
  *
  * さらに動画(データベースのアニメーション)を再生することもできます。
  * 画像の上に重ねてまばたき等を表現するのに使用します。
  *
+ * <SBI動画:1>      # ID[1]のアニメーションがループ再生されます。
  * <SBIAnimation:1> # ID[1]のアニメーションがループ再生されます。
  *
  * 装備品ごとに画像を上乗せできます。
  * アイテムのメモ欄に以下の通り指定してください。
+ * <SBI画像:item>   # /img/pictures/item.pngが表示されます。
  * <SBIImage:item>  # /img/pictures/item.pngが表示されます。
  * <SBIPosX:30>     # 装備品画像のX座標を[30]に設定します。
+ * <SBI座標X:30>    # 装備品画像のX座標を[30]に設定します。
  * <SBIPosY:30>     # 装備品画像のY座標を[30]に設定します。
+ * <SBI座標Y:30>    # 装備品画像のY座標を[30]に設定します。
  * <SBIPosZ:3>      # 装備品画像のZ座標を[3]に設定します。
- * <SBIRect:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
- *                       # 切り出して（トリミング）表示します。(カンマ区切り)
+ * <SBI座標Z:3>     # 装備品画像のZ座標を[3]に設定します。
+ * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
+ * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
+ *
+ * 指定する座標はベース画像の足下からの相対座標です。
  *
  * Z座標が大きい値ほど手前に表示されます。指定しない場合は[1]になります。
  * アクター画像のZ座標は[0]で固定です。
@@ -105,9 +136,17 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
+ * SBI画像差し替え 1 file2  # ID[1]のアクターの画像を
+ *                          「file2.png」に差し替えます。
  * SBI_IMAGE_CHANGE 1 file2 # ID[1]のアクターの画像を
  *                          「file2.png」に差し替えます。
+ * SBI動画差し替え 1 3  # ID[1]のアクターの動画を「3」に差し替えます。
  * SBI_ANIME_CHANGE 1 3 # ID[1]のアクターの動画を「3」に差し替えます。
+ *
+ * 利用規約：
+ *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
+ *  についても制限はありません。
+ *  このプラグインはもうあなたのものです。
  *
  * This plugin is released under the MIT License.
  */
@@ -176,6 +215,24 @@
  * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
  * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
  *
+ * さらに以下のメモ欄で追加差分を複数表示することが可能です。
+ * <SBI追加画像1:file2>       # /img/pictures/file2.pngが表示されます。
+ * <SBIAddImage1:file2>       # 同上
+ * <SBI追加条件1:\v[1] === 3> # 変数[1]が[3]と等しい時のみ追加画像が表示されます。
+ * <SBIAddCond1:\v[1] === 3>  # 同上
+ * <SBI追加座標X1:30>         # 追加画像のX座標を[30]に設定します。
+ * <SBIAddPosX1:30>           # 同上
+ * <SBI追加座標Y1:30>         # 追加画像のY座標を[30]に設定します。
+ * <SBIAddPosY1:30>           # 同上
+ * 複数の追加画像を表示したい場合は最後の数字を[2]以降に変更してください。
+ *
+ * 指定する座標はベース画像の足下からの相対座標です。
+ *
+ * 計算式中で不等号を使いたい場合、以下のように記述してください。
+ * < → &lt;
+ * > → &gt;
+ * 例：<SBIAddCond1:\v[2] &gt; 1> // 変数[2]が1より大きい場合
+ *
  * さらに動画(データベースのアニメーション)を再生することもできます。
  * 画像の上に重ねてまばたき等を表現するのに使用します。
  *
@@ -194,6 +251,8 @@
  * <SBI座標Z:3>     # 装備品画像のZ座標を[3]に設定します。
  * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
  * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
+ *
+ * 指定する座標はベース画像の足下からの相対座標です。
  *
  * Z座標が大きい値ほど手前に表示されます。指定しない場合は[1]になります。
  * アクター画像のZ座標は[0]で固定です。
@@ -243,11 +302,6 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
-    };
-
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
@@ -288,9 +342,20 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (isNotAString(text)) text = '';
         var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+        return windowLayer ? convertEscapeTags(windowLayer.children[0].convertEscapeCharacters(text)) : text;
+    };
+
+    var convertEscapeTags = function(text) {
+        if (isNotAString(text)) text = '';
+        text = text.replace(/&gt;?/gi, '>');
+        text = text.replace(/&lt;?/gi, '<');
+        return text;
+    };
+
+    var isNotAString = function(args) {
+        return String(args) !== args;
     };
 
     //=============================================================================
@@ -343,16 +408,20 @@
         this._bustAnimationId = null;
     };
 
+    Game_Actor.prototype.getMetaInfoForBustImage = function(names) {
+        return getMetaValues(this.actor(), names);
+    };
+
     Game_Actor.prototype.setBustImageName = function(value) {
         this._bustImageName = value;
     };
 
     Game_Actor.prototype.getBustImageName = function() {
-        return this._bustImageName || getMetaValues(this.actor(), ['画像', 'Image']);
+        return this._bustImageName || this.getMetaInfoForBustImage(['画像', 'Image']);
     };
 
     Game_Actor.prototype.getBustImageRect = function() {
-        var rectString = getMetaValues(this.actor(), ['矩形', 'Rect']);
+        var rectString = this.getMetaInfoForBustImage(['矩形', 'Rect']);
         var rect       = rectString ? getArgArrayEval(rectString, 0) : null;
         return rect ? new Rectangle(rect[0], rect[1], rect[2], rect[3]) : null;
     };
@@ -363,8 +432,35 @@
 
     Game_Actor.prototype.getBustAnimationId = function() {
         if (this._bustAnimationId) return this._bustAnimationId;
-        var value = getMetaValues(this.actor(), ['動画', 'Animation']);
+        var value = this.getMetaInfoForBustImage(['動画', 'Animation']);
         return value ? getArgNumber(value, 1) : 0;
+    };
+
+    Game_Actor.prototype.getAdditionalBustImage = function(index) {
+        var fileName = this.getMetaInfoForBustImage(['追加画像' + index, 'AddImage' + index]);
+        if (!fileName) {
+            return null;
+        }
+        var additionalImage      = {};
+        additionalImage.fileName = getArgString(fileName);
+        additionalImage.cond     = getArgString(this.getMetaInfoForBustImage(['追加条件' + index, 'AddCond' + index]));
+        additionalImage.x        = getArgNumber(this.getMetaInfoForBustImage(['追加座標X' + index, 'AddPosX' + index]));
+        additionalImage.y        = getArgNumber(this.getMetaInfoForBustImage(['追加座標Y' + index, 'AddPosY' + index]));
+        return additionalImage;
+    };
+
+    Game_Actor.prototype.getAdditionalBustImageList = function() {
+        var bustList = [];
+        var index    = 1;
+        var image    = null;
+        do {
+            image = this.getAdditionalBustImage(index);
+            if (image) {
+                bustList.push(image);
+            }
+            index++;
+        } while (image);
+        return bustList;
     };
 
     //=============================================================================
@@ -395,7 +491,7 @@
     };
 
     Window_Base.prototype.setBustPosition = function(x, y) {
-        if (paramBustPriority === 0) {
+        if (this.isUnderWindow()) {
             this._bustSprite.move(x, y);
         } else {
             this._bustSprite.move(x - this.x, y - this.y);
@@ -411,18 +507,25 @@
             this.setBustPosition.apply(this, this.getBustPosition());
             this._bustSprite.refresh(this._actor);
             if (!this._bustAddContainer) {
-                this.addBustContainer();
+                this.tryAddBustContainer();
             }
         }
     };
 
-    Window_Base.prototype.addBustContainer = function() {
-        if (paramBustPriority === 0) {
+    Window_Base.prototype.tryAddBustContainer = function() {
+        if (this.isUnderWindow()) {
+            if (!this.parent) {
+                return;
+            }
             this.parent.parent.addChildAt(this._bustContainer, 1);
         } else {
             this.addChildAt(this._bustContainer, paramBustPriority === 1 ? 2 : 3);
         }
         this._bustAddContainer = true;
+    };
+
+    Window_Base.prototype.isUnderWindow = function() {
+        return paramBustPriority === 0;
     };
 
     //=============================================================================
@@ -519,16 +622,18 @@
 
     Sprite_Bust.prototype.initialize = function() {
         Sprite_Base.prototype.initialize.call(this);
-        this.anchor.x      = 0.5;
-        this.anchor.y      = 1.0;
-        this._actor        = null;
-        this._equipSprites = [];
-        this.z             = 0;
+        this.anchor.x         = 0.5;
+        this.anchor.y         = 1.0;
+        this._actor           = null;
+        this._equipSprites    = [];
+        this._additonalSprite = [];
+        this.z                = 0;
     };
 
     Sprite_Bust.prototype.refresh = function(actor) {
         this._actor = actor;
         this.drawMain();
+        this.drawAdditions();
         this.drawEquips();
         this.drawAnimation();
     };
@@ -540,6 +645,21 @@
         if (rect) {
             this.setFrame(rect.x, rect.y, rect.width, rect.height);
         }
+    };
+
+    Sprite_Bust.prototype.drawAdditions = function() {
+        this.clearAdditions();
+        var additionalList = this._actor.getAdditionalBustImageList();
+        additionalList.forEach(function(additionalImage) {
+            this.makeAdditionSprite(additionalImage);
+        }, this);
+    };
+
+    Sprite_Bust.prototype.clearAdditions = function() {
+        this._additonalSprite.forEach(function(sprite) {
+            this.parent.removeChild(sprite);
+        }.bind(this));
+        this._additonalSprite = [];
     };
 
     Sprite_Bust.prototype.drawAnimation = function() {
@@ -604,6 +724,20 @@
             this.parent.addChild(sprite);
             this._equipSprites.push(sprite);
         }
+    };
+
+    Sprite_Bust.prototype.makeAdditionSprite = function(image) {
+        if (image.cond && !eval(image.cond)) {
+            return;
+        }
+        var sprite      = new Sprite();
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        sprite.bitmap   = ImageManager.loadPicture(image.fileName);
+        sprite.x        = this.x + image.x;
+        sprite.y        = this.y + image.y;
+        this.parent.addChild(sprite);
+        this._additonalSprite.push(sprite);
     };
 
     Sprite_Bust.prototype.startAnimation = function() {
