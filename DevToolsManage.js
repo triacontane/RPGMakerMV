@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2017/09/25 競合対策でマップとデータのリロード機能を無効にする設定を追加
+//                  最新のNW.jsかつメニューバーを表示しない場合にエラーになる問題を修正
 // 2.2.2 2017/09/25 ヘルプに注意事項を追記
 // 2.2.1 2017/09/01 スクリプトエラー発生時に警告を出力する機能を追加
 // 2.2.0 2017/08/09 パラメータ型指定機能に対応。一部パラメータは再設定が必要です。
@@ -203,13 +205,17 @@
  * @type boolean
  *
  * @param ClickMenu
- * @desc クリックメニューから各種デバッグコマンドを実行できます。(-1;無効 0:左 1:ホイール 2:右)
+ * @desc クリックメニューから各種デバッグコマンドを実行できます。(-1:無効 0:左 1:ホイール 2:右)
  * @default 1
  * @type select
- * @option -1
- * @option 0
- * @option 1
- * @option 2
+ * @option 無効
+ * @value -1
+ * @option 左
+ * @value 0
+ * @option ホイール
+ * @value 1
+ * @option 右
+ * @value 2
  *
  * @param JsonSave
  * @desc JSON形式でセーブ＆ロードできます。テキストエディタ等でセーブファイルを自由に編集できるようになります。
@@ -224,6 +230,11 @@
  * @param StartupOnTop
  * @desc 起動時にゲーム画面が最前面に固定されます。
  * @default false
+ * @type boolean
+ *
+ * @param UseReloadData
+ * @desc オンフォーカスでマップとデータを再読込します。競合等で動作に問題がある場合は無効にしてください。
+ * @default true
  * @type boolean
  *
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
@@ -447,13 +458,17 @@
  * @type boolean
  *
  * @param クリックメニュー
- * @desc クリックメニューから各種デバッグコマンドを実行できます。(-1;無効 0:左 1:ホイール 2:右)
+ * @desc クリックメニューから各種デバッグコマンドを実行できます。(-1:無効 0:左 1:ホイール 2:右)
  * @default 1
  * @type select
- * @option -1
- * @option 0
- * @option 1
- * @option 2
+ * @option 無効
+ * @value -1
+ * @option 左
+ * @value 0
+ * @option ホイール
+ * @value 1
+ * @option 右
+ * @value 2
  *
  * @param JSON形式セーブ
  * @desc JSON形式でセーブ＆ロードできます。テキストエディタ等でセーブファイルを自由に編集できるようになります。
@@ -468,6 +483,11 @@
  * @param 最前面で起動
  * @desc 起動時にゲーム画面が最前面に固定されます。
  * @default false
+ * @type boolean
+ *
+ * @param リロード機能を使う
+ * @desc オンフォーカスでマップとデータを再読込します。競合等で動作に問題がある場合は無効にしてください。
+ * @default true
  * @type boolean
  * 
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
@@ -616,6 +636,7 @@ var p = null;
     const paramJsonSave          = getParamBoolean(['JsonSave', 'JSON形式セーブ']);
     const paramOutputStartupInfo = getParamBoolean(['OutputStartupInfo', '起動時情報出力']);
     const paramStartupOnTop      = getParamBoolean(['StartupOnTop', '最前面で起動']);
+    const paramUseReloadData     = getParamBoolean(['UseReloadData', 'リロード機能を使う']);
 
     //=============================================================================
     // Graphics
@@ -925,7 +946,7 @@ var p = null;
         }
         const gui        = require('nw.gui');
         const gameWindow = gui.Window.get();
-        var height = this.getMenuBarHeight();
+        var height       = this.getMenuBarHeight();
         gameWindow.moveBy(0, -height);
         gameWindow.resizeBy(0, height);
     };
@@ -969,11 +990,15 @@ var p = null;
     const _SceneManager_updateScene = SceneManager.updateScene;
     SceneManager.updateScene        = function() {
         this.updateScript();
-        if (!DataManager.isBattleTest() && !DataManager.isEventTest() && DataManager.isDatabaseLoaded()) {
+        if (this.isUsingReload() && DataManager.isDatabaseLoaded()) {
             this.updateDataReload();
         }
         if (this._freeze || this.isReloading()) return;
         _SceneManager_updateScene.apply(this, arguments);
+    };
+
+    SceneManager.isUsingReload = function() {
+        return paramUseReloadData && !DataManager.isBattleTest() && !DataManager.isEventTest();
     };
 
     SceneManager.updateScript = function() {
@@ -1231,7 +1256,7 @@ var p = null;
         if (SceneManager.isRapid()) this.startWait(1);
     };
 
-    var _Game_Interpreter_command355 = Game_Interpreter.prototype.command355;
+    var _Game_Interpreter_command355      = Game_Interpreter.prototype.command355;
     Game_Interpreter.prototype.command355 = function() {
         try {
             return _Game_Interpreter_command355.apply(this, arguments);
@@ -1241,7 +1266,7 @@ var p = null;
         }
     };
 
-    var _Game_Interpreter_command111 = Game_Interpreter.prototype.command111;
+    var _Game_Interpreter_command111      = Game_Interpreter.prototype.command111;
     Game_Interpreter.prototype.command111 = function() {
         if (this._params[0] === 12) {
             try {
@@ -1257,7 +1282,7 @@ var p = null;
         }
     };
 
-    var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
+    var _Game_Character_processMoveCommand      = Game_Character.prototype.processMoveCommand;
     Game_Character.prototype.processMoveCommand = function(command) {
         try {
             _Game_Character_processMoveCommand.apply(this, arguments);
@@ -1304,7 +1329,10 @@ var p = null;
     };
 
     Controller_NwJs.prototype.initSetting = function() {
-        if (paramMenuBarVisible) this.makeMenu(this._menuBar);
+        if (paramMenuBarVisible) {
+            this.makeMenu(this._menuBar);
+            this.setMenuBar(this._menuBar);
+        }
         this.initClickMenu();
         this.addEventListener();
         switch (paramStartupDevTool) {
@@ -1313,7 +1341,6 @@ var p = null;
                 this.showDevTools();
                 break;
         }
-        this.setMenuBar(this._menuBar);
     };
 
     Controller_NwJs.prototype.initClickMenu = function() {
