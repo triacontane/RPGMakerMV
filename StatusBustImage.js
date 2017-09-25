@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.6.0 2917/09/25 バストアップ画像に表情差分用の追加グラフィックを重ねて表示できる機能を追加
+// 1.7.0 2017/09/25 ベース画像と追加画像に原点を変更できる機能を追加
+// 1.6.0 2017/09/25 バストアップ画像に表情差分用の追加グラフィックを重ねて表示できる機能を追加
 // 1.5.0 2017/09/04 バストアップ画像をウィンドウの下に表示できる機能を追加
 // 1.4.0 2017/07/05 メインメニュー画面でも先頭アクターの画像を表示できる機能を追加
 // 1.3.2 2017/02/20 装備画面での「最強装備」と「全て外す」時に装備品画像が更新されなかった問題を修正
@@ -67,6 +68,28 @@
  * @option ウィンドウの内容の下
  * @value 1
  * @option ウィンドウの上
+ * @value 2
+ *
+ * @param BaseImageOrigin
+ * @desc ベース画像の原点です。
+ * @default 2
+ * @type select
+ * @option 左上
+ * @value 0
+ * @option 中央
+ * @value 1
+ * @option 足下
+ * @value 2
+ *
+ * @param AddImageOrigin
+ * @desc 追懐画像および装備品画像の原点です。
+ * @default 2
+ * @type select
+ * @option 左上
+ * @value 0
+ * @option 中央
+ * @value 1
+ * @option 足下
  * @value 2
  *
  * @help ステータス画面にアクターごとのバストアップ画像を表示します。
@@ -195,6 +218,28 @@
  * @option ウィンドウの内容の下
  * @value 1
  * @option ウィンドウの上
+ * @value 2
+ *
+ * @param ベース画像原点
+ * @desc ベース画像の原点です。
+ * @default 2
+ * @type select
+ * @option 左上
+ * @value 0
+ * @option 中央
+ * @value 1
+ * @option 足下
+ * @value 2
+ *
+ * @param 追加画像原点
+ * @desc 追懐画像および装備品画像の原点です。
+ * @default 2
+ * @type select
+ * @option 左上
+ * @value 0
+ * @option 中央
+ * @value 1
+ * @option 足下
  * @value 2
  *
  * @help ステータス画面にアクターごとのバストアップ画像を表示します。
@@ -370,6 +415,8 @@
     var paramMainBustImageX  = getParamNumber(['MainBustImageX', 'メイン_画像X座標']);
     var paramMainBustImageY  = getParamNumber(['MainBustImageY', 'メイン_画像Y座標']);
     var paramBustPriority    = getParamNumber(['BustPriority', '表示優先度'], 0);
+    var paramBaseImageOrigin = getParamNumber(['BaseImageOrigin', 'ベース画像原点'], 0);
+    var paramAddImageOrigin  = getParamNumber(['AddImageOrigin', '追加画像原点'], 0);
 
     //=============================================================================
     // Game_Interpreter
@@ -616,14 +663,16 @@
     function Sprite_Bust() {
         this.initialize.apply(this, arguments);
     }
+    Sprite_Bust._anchorListX = [0.0, 0.5, 0.5];
+    Sprite_Bust._anchorListY = [0.0, 0.5, 1.0];
 
     Sprite_Bust.prototype             = Object.create(Sprite_Base.prototype);
     Sprite_Bust.prototype.constructor = Sprite_Bust;
 
     Sprite_Bust.prototype.initialize = function() {
         Sprite_Base.prototype.initialize.call(this);
-        this.anchor.x         = 0.5;
-        this.anchor.y         = 1.0;
+        this.anchor.x         = Sprite_Bust._anchorListX[paramBaseImageOrigin];
+        this.anchor.y         = Sprite_Bust._anchorListY[paramBaseImageOrigin];
         this._actor           = null;
         this._equipSprites    = [];
         this._additonalSprite = [];
@@ -707,8 +756,8 @@
         var itemFileName = getMetaValues(equip, ['画像', 'Image']);
         if (itemFileName) {
             var sprite      = new Sprite();
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
+            sprite.anchor.x = Sprite_Bust._anchorListX[paramAddImageOrigin];
+            sprite.anchor.y = Sprite_Bust._anchorListY[paramAddImageOrigin];
             sprite.bitmap   = ImageManager.loadPicture(getArgString(itemFileName), 0);
             var xStr        = getMetaValues(equip, ['PosX', '座標X']);
             sprite.x        = this.x + (xStr ? getArgNumber(xStr) : 0);
@@ -731,8 +780,8 @@
             return;
         }
         var sprite      = new Sprite();
-        sprite.anchor.x = 0.5;
-        sprite.anchor.y = 0.5;
+        sprite.anchor.x = Sprite_Bust._anchorListX[paramAddImageOrigin];
+        sprite.anchor.y = Sprite_Bust._anchorListY[paramAddImageOrigin];
         sprite.bitmap   = ImageManager.loadPicture(image.fileName);
         sprite.x        = this.x + image.x;
         sprite.y        = this.y + image.y;
