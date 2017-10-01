@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/10/01 パラメータの型指定機能に対応
 // 1.0.0 2017/03/20 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -20,14 +21,33 @@
  * @param UpperPictureId
  * @desc 指定した番号以上のピクチャはウィンドウより上に表示されるようになります。
  * @default 101
+ * @type number
  *
  * @param LowerPictureId
  * @desc 指定した番号以下のピクチャはキャラクター、バトラーより下に表示されるようになります。
  * @default 0
+ * @type number
  *
  * @param LowerPictureZ
  * @desc 下層ピクチャのZ座標です。変更することでより細かい表示優先度の調整ができます。
  * @default 2
+ * @type select
+ * @option 下層タイル
+ * @value 0
+ * @option 通常キャラの下
+ * @value 1
+ * @option 通常キャラと同じ
+ * @value 3
+ * @option 上層タイル
+ * @value 4
+ * @option 通常キャラの上
+ * @value 5
+ * @option 飛行船の影
+ * @value 6
+ * @option フキダシ
+ * @value 7
+ * @option マップタッチの行き先
+ * @value 9
  *
  * @help ピクチャを上層、中層、下層に分けて表示できます。
  * 上層：ウィンドウより上
@@ -59,14 +79,33 @@
  * @param 上層ピクチャ番号
  * @desc 指定した番号以上のピクチャはウィンドウより上に表示されるようになります。
  * @default 101
+ * @type number
  *
  * @param 下層ピクチャ番号
  * @desc 指定した番号以下のピクチャはキャラクター、バトラーより下に表示されるようになります。
  * @default 0
+ * @type number
  *
  * @param 下層ピクチャZ座標
  * @desc 下層ピクチャのZ座標です。変更することでより細かい表示優先度の調整ができます。
  * @default 2
+ * @type select
+ * @option 下層タイル
+ * @value 0
+ * @option 通常キャラの下
+ * @value 1
+ * @option 通常キャラと同じ
+ * @value 3
+ * @option 上層タイル
+ * @value 4
+ * @option 通常キャラの上
+ * @value 5
+ * @option 飛行船の影
+ * @value 6
+ * @option フキダシ
+ * @value 7
+ * @option マップタッチの行き先
+ * @value 9
  *
  * @help ピクチャを上層、中層、下層に分けて表示できます。
  * 上層：ウィンドウより上
