@@ -32,6 +32,11 @@
  *
  * お気に入り設定数に制限はありません。1以上の値を指定してください。
  *
+ * スクリプト詳細
+ * $gameActors.actor(id).getFavouriteEquipName(index, slotId);
+ *
+ * [id]で指定したアクターのお気に入り[index]の[slotId]の装備品名を取得します。
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -56,8 +61,7 @@
  * スクリプト詳細
  * $gameActors.actor(id).getFavouriteEquipName(index, slotId);
  *
- * idで指定したアクターのお気に入り[index]の[slotId]の装備品名を取得します。
- *
+ * [id]で指定したアクターのお気に入り[index]の[slotId]の装備品名を取得します。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
