@@ -1,11 +1,13 @@
 //=============================================================================
 // HalfMove.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2017/10/02 パラメータの型指定機能に対応
+//                   斜め移動をしながらイベントを起動すると起動地点から余分に移動する場合がある不具合を修正
 // 1.9.0 2017/06/21 イベントの自律移動で8方向移動を使用できる機能を追加
 // 1.8.2 2017/05/28 進入不可タイルに存在するイベントに対する半歩用衝突判定が行われない現象を修正
 // 1.8.1 2017/05/14 プライオリティが「通常キャラと同じ」でないイベントはプレイヤーに対する衝突判定を行わないよう修正
@@ -40,7 +42,7 @@
 //                  メモ欄にてイベントごとに半歩移動の可否を設定できる機能を追加
 // 1.0.0 2016/05/06 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -51,35 +53,43 @@
  *
  * @param Direction8Move
  * @desc 斜め移動を含めた8方向移動を許可します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 8MoveSwitch
  * @desc 指定したIDのスイッチがONのときのみ8方向移動を許可します。0の場合は常に許可します。
  * @default 0
+ * @type switch
  *
  * @param EventThrough
  * @desc イベントに横から接触したときに半歩ぶんならすり抜けます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param DisableForcing
  * @desc 移動ルートの強制中は半歩移動を無効にします。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param AvoidCorner
  * @desc 直進中にマップの角に引っ掛かった場合、斜め移動に切り替えて再試行します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param DiagonalSlow
  * @desc 斜め移動中の歩行速度が0.8倍になります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param TriggerExpansion
  * @desc プライオリティが「通常キャラと同じ」イベントの起動領域を左右に半マス分だけ拡張します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param AdjustmentRealStep
  * @desc 歩数が増加するタイミングが2歩につき1歩分となります。エンカウント歩数とダメージ床のタイミングも調整されます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param UpperNpTerrainTag
  * @desc 上半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
@@ -123,11 +133,13 @@
  *
  * @param MultiStartDisable
  * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param EventOverlap
  * @desc プライオリティが「通常キャラと同じ」以外のイベント同士であれば位置の重複を許可します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help Moving distance in half.
  *
@@ -153,83 +165,103 @@
  *
  * @param 8方向移動
  * @desc 斜め移動を含めた8方向移動を許可します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 8方向移動スイッチ
  * @desc 指定したIDのスイッチがONのときのみ8方向移動を許可します。0の場合は常に許可します。
  * @default 0
+ * @type switch
  *
  * @param イベントすり抜け
  * @desc イベントに横から接触したときに半歩ぶんならすり抜けます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 強制中無効
  * @desc 移動ルートの強制中は半歩移動を無効にします。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 角回避
  * @desc 直進中にマップの角に引っ掛かった場合、斜め移動に切り替えて再試行します。進行方向に起動可能なイベントがある場合は無効。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 斜め移動中減速
  * @desc 斜め移動中の歩行速度が0.8倍になります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param トリガー拡大
  * @desc イベントの起動領域を拡張します。プライオリティによって拡張領域が異なります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 実歩数調整
  * @desc 歩数が増加するタイミングが2歩につき1歩分となります。エンカウント歩数とダメージ床のタイミングも調整されます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 上半分移動不可地形
  * @desc 上半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 上半分移動不可Region
  * @desc 上半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 下半分移動不可地形
  * @desc 下半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 下半分移動不可Region
  * @desc 下半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 右半分移動不可地形
  * @desc 右半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 右半分移動不可Region
  * @desc 右半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 左半分移動不可地形
  * @desc 左半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 左半分移動不可Region
  * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 全方向移動不可地形
  * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param 全方向移動不可Region
  * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default 0
+ * @type number
  *
  * @param イベント複数起動防止
  * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param イベント位置重複OK
  * @desc プライオリティが「通常キャラと同じ」以外のイベント同士であれば位置の重複を許可します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help キャラクターの移動単位が1タイルの半分になります。
  * 半歩移動が有効なら、乗り物以外は全て半歩移動になります。
@@ -330,7 +362,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -1301,6 +1333,13 @@
             localHalfPositionCount--;
         }
         return result;
+    };
+
+    var _Game_Player_moveStraightForRetry = Game_Player.prototype.moveStraightForRetry;
+    Game_Player.prototype.moveStraightForRetry = function(d) {
+        if (this.canMove()) {
+            _Game_Player_moveStraightForRetry.apply(this, arguments);
+        }
     };
 
     //=============================================================================
