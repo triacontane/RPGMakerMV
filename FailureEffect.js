@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/10/04 ダメージが整数にならない場合がある不具合を修正
+//                  失敗時にメッセージを出力する機能を追加
 // 1.0.0 2017/10/02 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -21,6 +23,11 @@
  * @desc 失敗時のダメージ倍率(%)です。各スキルのメモ欄に個別の設定があればそちらが優先されます。
  * @default 30
  * @type number
+ *
+ * @param FailureMessageOutput
+ * @desc 失敗時にメッセージを出力するかどうかです。
+ * @default false
+ * @type boolean
  *
  * @help FailureEffect.js
  *
@@ -44,6 +51,11 @@
  * @desc 失敗時のダメージ倍率(%)です。各スキルのメモ欄に個別の設定があればそちらが優先されます。
  * @default 30
  * @type number
+ *
+ * @param 失敗時メッセージ出力
+ * @desc 失敗時にメッセージを出力するかどうかです。
+ * @default false
+ * @type boolean
  *
  * @help FailureEffect.js
  *
@@ -96,6 +108,11 @@
         return (parseInt(value) || 0).clamp(min, max);
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
+        return value.toUpperCase() === 'TRUE';
+    };
+
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
@@ -134,32 +151,33 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param       = {};
-    param.failureDamageRate = getParamNumber(['FailureDamageRate', '失敗時のダメージ倍率'], 0);
+    var param                  = {};
+    param.failureDamageRate    = getParamNumber(['FailureDamageRate', '失敗時のダメージ倍率'], 0);
+    param.failureMessageOutput = getParamBoolean(['FailureMessageOutput', '失敗時メッセージ出力']);
 
-    var local = {};
+    var local         = {};
     local.originalHit = true;
 
     //=============================================================================
     // Game_ActionResult
     //  必ずヒット扱いに変更します。
     //=============================================================================
-    var _Game_ActionResult_isHit = Game_ActionResult.prototype.isHit;
+    var _Game_ActionResult_isHit      = Game_ActionResult.prototype.isHit;
     Game_ActionResult.prototype.isHit = function() {
         local.originalHit = _Game_ActionResult_isHit.apply(this, arguments);
-        this.missed = false;
-        this.evaded = false;
+        this.missed       = false;
+        this.evaded       = false;
         return this.used;
     };
 
     //=============================================================================
-    // Game_ActionResult
+    // Game_Action
     //  失敗時のダメージ倍率と適用効果を変更します。
     //=============================================================================
-    var _Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
+    var _Game_Action_makeDamageValue      = Game_Action.prototype.makeDamageValue;
     Game_Action.prototype.makeDamageValue = function(target, critical) {
         var damage = _Game_Action_makeDamageValue.apply(this, arguments);
-        return local.originalHit ? damage : damage * this.getFailureRate() / 100;
+        return local.originalHit ? damage : Math.floor(damage * this.getFailureRate() / 100);
     };
 
     Game_Action.prototype.getFailureRate = function() {
@@ -167,7 +185,7 @@
         return metaValue ? getArgNumber(metaValue, 0) : param.failureDamageRate;
     };
 
-    var _Game_Action_applyItemEffect = Game_Action.prototype.applyItemEffect;
+    var _Game_Action_applyItemEffect      = Game_Action.prototype.applyItemEffect;
     Game_Action.prototype.applyItemEffect = function(target, effect) {
         if (!local.originalHit && !this.isValidEffectWhenFailure(effect)) {
             return;
@@ -175,6 +193,11 @@
         _Game_Action_applyItemEffect.apply(this, arguments);
     };
 
+    /**
+     * 失敗時にも適用する効果かどうかの判断。
+     * @param {Object} effect
+     * @returns {Boolean} result
+     */
     Game_Action.prototype.isValidEffectWhenFailure = function(effect) {
         var metaValue = getMetaValues(this.item(), ['失敗効果', 'FailureEffect']);
         if (!metaValue) {
@@ -184,8 +207,33 @@
         return getArgArrayString(metaValue).contains(String(effectIndex));
     };
 
+    /**
+     * 効果のインデックスを返す。
+     * @param {Object} effect
+     * @returns {Number} インデックス
+     */
     Game_Action.prototype.getEffectIndex = function(effect) {
         return this.item().effects.indexOf(effect) + 1;
+    };
+
+    //=============================================================================
+    // Window_BattleLog
+    //  失敗時のメッセージを出力します。
+    //=============================================================================
+    var _Window_BattleLog_displayActionResults      = Window_BattleLog.prototype.displayActionResults;
+    Window_BattleLog.prototype.displayActionResults = function(subject, target) {
+        this.displayFailureEffect(target);
+        _Window_BattleLog_displayActionResults.apply(this, arguments);
+    };
+
+    /**
+     * 失敗メッセージの出力。
+     * @param {Game_Battler} target
+     */
+    Window_BattleLog.prototype.displayFailureEffect = function(target) {
+        if (!local.originalHit && param.failureMessageOutput) {
+            this.displayMiss(target);
+        }
     };
 })();
 
