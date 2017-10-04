@@ -1,11 +1,12 @@
 //=============================================================================
 // CrossSave.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.7 2017/10/04 ネットワークセーブの限界容量を再度緩和
 // 1.0.6 2016/07/12 ネットワークセーブの限界容量を緩和
 // 1.0.5 2016/07/02 「ファイルに追加」が無効な場合にセーブ画面でのカーソル初期位置がひとつずれる問題の修正
 // 1.0.4 2016/06/29 追加でネットワークエラー対応
@@ -845,7 +846,7 @@ function CrossSaveManager() {
     CrossSaveManager._loadListeners  = [];
     CrossSaveManager._authFile       = null;
     CrossSaveManager._fragmentLength = 4000;
-    CrossSaveManager._limitFragment  = 20;
+    CrossSaveManager._limitFragment  = 40;
 
     CrossSaveManager.initialize = function() {
         this._milkCocoa     = new MilkCocoa(this._milkCocoaApiId);
