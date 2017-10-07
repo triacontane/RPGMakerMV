@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/10/07 混乱スキルのターゲット選択方法にラストターゲット(直前に選択した対象)を追加しました。
 // 1.3.0 2017/06/10 制約「敵を攻撃」の場合に味方対象スキルを実行した場合、対象を味方にするよう修正
 //                  使用可能スキルに除外設定を追加
 // 1.2.0 2017/05/02 使用可能なスキルの中からランダムで使用する機能を追加
@@ -61,6 +62,7 @@
  *                      使用できない場合、ID[6]のスキルが使用されます。
  * <CEターゲット:0>   # 単体スキルの対象を[0]番目のキャラクターに指定します。
  *                      メモ欄の指定がない場合はランダムで決定されます。
+ *                      -1を指定するとラストターゲットになります。
  *
  * 使用可能スキルを指定する際、使わせたくないスキルを別途指定できます。
  * <CE使用可能スキル:1,2,3> # 使用可能スキルのうち[1][2][3]を候補から外します。
@@ -119,6 +121,7 @@
  *                      使用できない場合、ID[6]のスキルが使用されます。
  * <CEターゲット:0>   # 単体スキルの対象を[0]番目のキャラクターに指定します。
  *                      メモ欄の指定がない場合はランダムで決定されます。
+ *                      -1を指定するとラストターゲットになります。
  *
  * 使用可能スキルを指定する際、使わせたくないスキルを別途指定できます。
  * <CE使用可能スキル:1,2,3> # 使用可能スキルのうち[1][2][3]を候補から外します。
@@ -239,6 +242,18 @@
     };
 
     //=============================================================================
+    // Game_Battler
+    //  ラストターゲットを取得します。
+    //=============================================================================
+    /**
+     * ラストターゲットを取得します。
+     * @returns {number} ラストターゲット
+     */
+    Game_Battler.prototype.getLastTargetIndex = function() {
+        return this._lastTargetIndex;
+    };
+
+    //=============================================================================
     // Game_Actor
     //  使用可能なスキル一覧を取得します。
     //=============================================================================
@@ -266,7 +281,7 @@
     // Game_Unit
     //  裏切り機能を追加します。
     //=============================================================================
-    var _Game_Unit_aliveMembers = Game_Unit.prototype.aliveMembers;
+    var _Game_Unit_aliveMembers      = Game_Unit.prototype.aliveMembers;
     Game_Unit.prototype.aliveMembers = function() {
         var members = _Game_Unit_aliveMembers.apply(this, arguments);
         return members.filter(function(member) {
@@ -311,7 +326,7 @@
 
     Game_Action.prototype.getConfusionUsableSkills = function(state) {
         var usableSkillInclude = getMetaValues(state, ['使用可能スキル', 'UsableSkill']);
-        var skillList = [];
+        var skillList          = [];
         if (usableSkillInclude) {
             skillList = this.subject().getUsableSkillIdList();
             if (usableSkillInclude !== true) {
@@ -323,7 +338,7 @@
 
     Game_Action.prototype.filterConfusionUsableSkills = function(skillList, usableSkillInclude) {
         var filterList = getArgArrayNumber(usableSkillInclude);
-        skillList = skillList.filter(function(skillId) {
+        skillList      = skillList.filter(function(skillId) {
             return !filterList.contains(skillId);
         });
         return skillList;
@@ -354,13 +369,13 @@
         }
     };
 
-    var _Game_Action_repeatTargets = Game_Action.prototype.repeatTargets;
+    var _Game_Action_repeatTargets      = Game_Action.prototype.repeatTargets;
     Game_Action.prototype.repeatTargets = function(targets) {
         if (Array.isArray(targets[0])) arguments[0] = targets[0];
         return _Game_Action_repeatTargets.apply(this, arguments);
     };
 
-    var _Game_Action_confusionTarget = Game_Action.prototype.confusionTarget;
+    var _Game_Action_confusionTarget      = Game_Action.prototype.confusionTarget;
     Game_Action.prototype.confusionTarget = function() {
         var target = _Game_Action_confusionTarget.apply(this, arguments);
         if (this.isExistConfusionSkill()) {
@@ -373,7 +388,8 @@
         var state = this.getRestrictState();
         var value = getMetaValues(state, ['ターゲット', 'Target']);
         if (value) {
-            this._targetIndex = getArgNumber(value, 0);
+            var index         = getArgNumber(value, -1);
+            this._targetIndex = (index === -1 ? this.subject().getLastTargetIndex() : index);
         }
         if (this.isForUser()) {
             return this.subject();
