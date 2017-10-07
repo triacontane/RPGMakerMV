@@ -273,7 +273,13 @@
             if (this._stepCountForSound++ % soundHash.interval === 0) {
                 var soundKey = this.isDashing() ? 'dash' : 'walk';
                 soundKey += this._stepToggle ? '2' : '1';
-                if (soundHash.hasOwnProperty(soundKey)) AudioManager.playSe(soundHash[soundKey]);
+                if (soundHash.hasOwnProperty(soundKey)) {
+                    if (AudioManager.playAdjustSe) {
+                        AudioManager.playAdjustSe(soundHash[soundKey], this);
+                    } else {
+                        AudioManager.playSe(soundHash[soundKey]);
+                    }
+                }
                 this._stepToggle = !this._stepToggle;
             }
             return true;
