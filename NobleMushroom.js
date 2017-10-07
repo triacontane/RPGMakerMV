@@ -1,11 +1,13 @@
 //=============================================================================
 // NobleMushroom.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 DOWANGO Co., Ltd
+// Copyright (c) 2016-2017 DOWANGO Co., Ltd
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2017/10/07 自動改行が有効な場合、自動改行位置と入力した改行が重なったときに2回改行されてしまう問題を修正
+//                  パラメータの型指定機能に対応
 // 1.5.2 2017/05/25 1.5.1で オートセーブ無効時にイベントメニューからセーブすると空でセーブされてしまう問題を修正
 // 1.5.1 2017/04/03 オートセーブ無効時でも一部の条件でオートセーブされていた問題を修正
 // 1.5.0 2016/12/05 高速でメッセージを送った場合に顔グラフィックを表示しようとするとエラーになる場合がある不具合を修正
@@ -25,7 +27,7 @@
 // 1.1.0 2016/09/20 画面サイズ変更およびモバイル用の画面サイズ設定を追加
 // 1.0.0 2016/08/16 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -34,49 +36,293 @@
  * @plugindesc ノベルゲーム総合プラグイン
  * @author トリアコンタン
  *
+ * @param InitialViewType
+ * @desc メッセージ表示タイプの初期値です。(0:通常 1:ノベル)
+ * @default 1
+ * @type select
+ * @option Normal
+ * @value 0
+ * @option Novel
+ * @value 1
+ *
+ * @param TitleViewType
+ * @desc タイトル画面のコマンドウィンドウの表示方法です。(0:通常 1:ノベル)
+ * @default 1
+ * @type select
+ * @option Normal
+ * @value 0
+ * @option Novel
+ * @value 1
+ *
+ * @param WaitByCommand
+ * @desc イベントコマンド「文章の表示」ひとつごとに続く文章の表示を待機します。(ON/OFF)
+ * @default true
+ * @type boolean
+ *
+ * @param VariableSpeed
+ * @desc メッセージ表示速度を格納する変数の番号です。変数の値が1文字描画ごとに待機するフレーム数です。
+ * @default 1
+ * @type variable
+ *
+ * @param InitialSpeed
+ * @desc 表示速度変数に格納されるメッセージ表示速度の初期値です。
+ * @default 1
+ * @type number
+ *
+ * @param RapidShowClick
+ * @desc 文章の表示中に決定ボタンや左クリックで文章を瞬間表示します。(ON/OFF)
+ * @default true
+ * @type boolean
+ *
+ * @param ClickInFrame
+ * @desc マウス関連の操作がメッセージウィンドウの枠内の場合でのみ有効になります。(ON/OFF)
+ * @default false
+ * @type boolean
+ *
+ * @param AutoWordWrap
+ * @desc 文章がウィンドウ枠に収まらない場合に自動で改行します。(ON/OFF)
+ * @default true
+ * @type boolean
+ *
+ * @param RelativeFontSize
+ * @desc ノベルウィンドウのフォントサイズです。デフォルトフォントサイズからの相対値で指定します。
+ * @default 6
+ * @type number
+ * @min -32
+ * @max 32
+ *
+ * @param ViewMincho
+ * @desc 明朝体系フォントがデバイスにインストールされていれば優先的に使用します。(ON/OFF)
+ * @default true
+ * @type boolean
+ *
+ * @param ViewGothic
+ * @desc ゴシック体系フォントがデバイスにインストールされていれば優先的に使用します。(ON/OFF)
+ * @default false
+ * @type boolean
+ *
+ * @param ViewCustomFont
+ * @desc 指定されたフォントがデバイスにインストールされていれば優先的に使用します。(複数指定する場合はカンマ区切り)
+ * @default
+ *
+ * @param SelectionPrefix
+ * @desc 選択肢の接頭辞です。(0:使用しない 1:アルファベット 2:数字)
+ * @default 0
+ * @type select
+ * @option No Use
+ * @value 0
+ * @option Alphabet
+ * @value 1
+ * @option Number
+ * @value 2
+ *
+ * @param ScreenWidth
+ * @desc 横方向の画面サイズです。0を指定すると変更しません。
+ * @default 0
+ * @type number
+ *
+ * @param ScreenHeight
+ * @desc 縦方向の画面サイズです。0を指定すると変更しません。
+ * @default 0
+ * @type number
+ *
+ * @param ScreenWidthMobile
+ * @desc スマホ等を使用した場合の横方向の画面サイズです。0を指定すると変更しません。
+ * @default 0
+ * @type number
+ *
+ * @param ScreenHeightMobile
+ * @desc スマホ等を使用した場合の縦方向の画面サイズです。0を指定すると変更しません。
+ * @default 0
+ * @type number
+ *
+ * @param MobileMode
+ * @desc PC上でもモバイルモードで実行します。主にテスト用に使用するオプションですが音が鳴らない制約があります。
+ * @default false
+ * @type boolean
+ *
+ * @param AutoSave
+ * @desc 進行状況が自動でセーブされるようになります。ミニゲームとしてサウンドノベルを利用する場合などはOFFを推奨します。
+ * @default true
+ * @type boolean
+ *
+ * @param CanPause
+ * @desc 表示タイプがノベルならイベント実行中にキャンセルボタンでポーズメニューが表示され、セーブやロードができます。
+ * @default true
+ * @type boolean
+ *
+ * @param NameAutoSave
+ * @desc セーブ画面に表示されるオートセーブ名称です。
+ * @default オートセーブ
+ *
+ * @param CommandLoad
+ * @desc ポーズメニューの「ロード」のコマンド名称です。
+ * @default ロード
+ *
+ * @param CommandQuickSave
+ * @desc ポーズメニューの「クイックセーブ」のコマンド名称です。
+ * @default クイックセーブ
+ *
+ * @param CommandQuickLoad
+ * @desc ポーズメニューの「クイックロード」のコマンド名称です。
+ * @default クイックロード
+ *
+ * @help It is a base plug-in for creating sound novel easily with RPG Maker MV
+ * When applied, the display of the message window becomes the entire screen,
+ * and the displayed message is not erased and accumulated on the screen.
+ *
+ * Cancel button or right click (multi-touch) while displaying the Novel window
+ * The progress of the event stops and the pause menu is displayed.
+ * From the pause menu you can.
+ *
+ * Save
+ * Load
+ * Quick Save
+ * Quick Load
+ * To Title
+ * Cancel
+ *
+ * Control Character
+ * \UL    # Wait for entering sentences Immediately cancel the wait and advance the event command.
+ * \WC    # Close the window. It will be auto saved at this stage.
+ * \MS[n] # Temporarily change the character display speed to "n" frame.
+ *
+ * Plugin Command
+ *
+ * NM_タイプ変更 1     # メッセージの表示タイプを変更します。
+ *                       設定は場所移動後に反映されます。
+ * NM_CHANGE_TYPE 1    # 同上
+ * NM_再ウェイト       # 制御文字[\UL]で解除した入力待ちを再度有効にします。
+ * NM_RE_WAIT          # 同上
+ * NM_閉じる           # ウィンドウを明示的に閉じます。
+ * NM_CLOSE            # 同上
+ * NM_設定固定         # ウィンドウの表示設定を現在の設定で固定します。
+ *                       固定された状態では以後の文章の表示での設定は無視されます。
+ * NM_SETTING_FIXED    # 同上
+ * NM_設定固定解除     # ウィンドウの表示設定固定を元に戻します。
+ * NM_SETTING_RELEASE  # 同上
+ * NM_名前入力 1       # アクターID[1]の名前を入力するポップアップを表示します(※)
+ * NM_INPUT_NAME 1     # 同上
+ * ※このコマンドはRPGアツマールでは使用できません。
+ *
+ * NM_チャプター設定 A # セーブファイルに出力するチャプタータイトルを設定します。
+ * NM_SET_CHAPTER A    # 同上
+ * NM_オートセーブ     # オートセーブを実行します。
+ * NM_AUTO_SAVE        # 同上
+ *
+ * ・ノベルウィンドウの表示位置をX, Y, 横幅、高さを指定して調整できます。
+ * 　引数を指定しなかった場合、表示位置をデフォルトに戻します。
+ * NM_ノベルウィンドウ位置設定 0 0 600 300 # ウィンドウの矩形を設定します。
+ * NM_SET_RECT_NOVEL_WINDOW 0 0 600 300    # 同上
+ *
+ * ・ノベルウィンドウの選択肢の中心座標をX, Yを指定して調整できます。
+ * 　引数を指定しなかった場合、表示位置をデフォルトに戻します。
+ * NM_ノベルコマンド位置設定 0 0 # ノベルコマンドの中心座標を設定します。
+ * NM_SET_RECT_NOVEL_COMMAND 0 0 # 同上
+ *
+ * ・NM_タイプ変更 or NM_CHANGE_TYPE
+ * メッセージを表示タイプを変更します。タイプには以下が存在します。
+ *
+ * 0:通常のメッセージ表示です。
+ * 1:ノベルメッセージ表示です。メッセージが画面全体に表示され、蓄積されます。
+ *   選択肢や数値入力なども合わせて表示方法が自動調整されます。
+ *
+ * 設定変更は場所移動するまで反映されないので注意してください。
+ *
+ * ・NM_設定固定 or NM_SETTING_FIXED
+ * ウィンドウの設定を現在のもので固定します。対象は以下の通りです。
+ *
+ * 1. 顔グラフィックの設定
+ * 2. タイプ(ウィンドウ、暗くする、透明)
+ * 3. 位置(上　中　下)
+ *
+ * 固定している限り、文章の表示での設定は無視されます。
+ * 再度有効にする場合は、NM_設定固定解除を実行してください。
+ *
+ * ・NM_名前入力 or NM_INPUT_NAME
+ * 専用の画面を使わない簡易版の名前入力の処理です。
+ * 第二引数に文字列を指定すると、ダイアログに指定した説明が表示されます。
+ * 入力値を空欄にする、もしくはキャンセルした場合、名前は変更されません。
+ * (例)
+ * NM_名前入力 1 名前を入力してください。
+ *
+ * ・NM_ノベルウィンドウ位置設定 or NM_SET_RECT_NOVEL_WINDOW
+ * 通常は画面全体に表示されるノベルウィンドウの表示位置(X, Y, 横幅, 高さ)を
+ * 指定できます。引数を指定しないと、デフォルトサイズに戻ります。
+ *
+ * 利用規約：
+ *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
+ *  についても制限はありません。
+ *  このプラグインはもうあなたのものです。
+ */
+/*:ja
+ * @plugindesc ノベルゲーム総合プラグイン
+ * @author トリアコンタン
+ *
  * @param 表示タイプ初期値
  * @desc メッセージ表示タイプの初期値です。(0:通常 1:ノベル)
  * @default 1
+ * @type select
+ * @option 通常
+ * @value 0
+ * @option ノベル
+ * @value 1
  *
  * @param タイトル表示タイプ
  * @desc タイトル画面のコマンドウィンドウの表示方法です。(0:通常 1:ノベル)
  * @default 1
+ * @type select
+ * @option 通常
+ * @value 0
+ * @option ノベル
+ * @value 1
  *
  * @param コマンド単位ウェイト
  * @desc イベントコマンド「文章の表示」ひとつごとに続く文章の表示を待機します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 表示速度変数
  * @desc メッセージ表示速度を格納する変数の番号です。変数の値が1文字描画ごとに待機するフレーム数です。
  * @default 1
+ * @type variable
  *
  * @param 表示速度初期値
  * @desc 表示速度変数に格納されるメッセージ表示速度の初期値です。
  * @default 1
+ * @type number
  *
  * @param クリック瞬間表示
  * @desc 文章の表示中に決定ボタンや左クリックで文章を瞬間表示します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param クリック範囲限定
  * @desc マウス関連の操作がメッセージウィンドウの枠内の場合でのみ有効になります。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 自動改行
  * @desc 文章がウィンドウ枠に収まらない場合に自動で改行します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 相対フォントサイズ
  * @desc ノベルウィンドウのフォントサイズです。デフォルトフォントサイズからの相対値で指定します。
  * @default 6
+ * @type number
+ * @min -32
+ * @max 32
  *
  * @param 明朝体表示
  * @desc 明朝体系フォントがデバイスにインストールされていれば優先的に使用します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ゴシック体表示
  * @desc ゴシック体系フォントがデバイスにインストールされていれば優先的に使用します。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 固有フォント表示
  * @desc 指定されたフォントがデバイスにインストールされていれば優先的に使用します。(複数指定する場合はカンマ区切り)
@@ -85,34 +331,48 @@
  * @param 選択肢接頭辞
  * @desc 選択肢の接頭辞です。(0:使用しない 1:アルファベット 2:数字)
  * @default 0
+ * @type select
+ * @option 使用しない
+ * @value 0
+ * @option アルファベット
+ * @value 1
+ * @option 数字
+ * @value 2
  *
  * @param 画面横サイズ
  * @desc 横方向の画面サイズです。0を指定すると変更しません。
  * @default 0
+ * @type number
  *
  * @param 画面縦サイズ
  * @desc 縦方向の画面サイズです。0を指定すると変更しません。
  * @default 0
+ * @type number
  *
  * @param モバイル画面横サイズ
  * @desc スマホ等を使用した場合の横方向の画面サイズです。0を指定すると変更しません。
  * @default 0
+ * @type number
  *
  * @param モバイル画面縦サイズ
  * @desc スマホ等を使用した場合の縦方向の画面サイズです。0を指定すると変更しません。
  * @default 0
+ * @type number
  *
  * @param モバイルモード
  * @desc PC上でもモバイルモードで実行します。主にテスト用に使用するオプションですが音が鳴らない制約があります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param オートセーブ
  * @desc 進行状況が自動でセーブされるようになります。ミニゲームとしてサウンドノベルを利用する場合などはOFFを推奨します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ポーズ可能
  * @desc 表示タイプがノベルならイベント実行中にキャンセルボタンでポーズメニューが表示され、セーブやロードができます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param オートセーブ名称
  * @desc セーブ画面に表示されるオートセーブ名称です。
@@ -196,8 +456,6 @@
  * NM_ノベルコマンド位置設定 0 0 # ノベルコマンドの中心座標を設定します。
  * NM_SET_RECT_NOVEL_COMMAND 0 0 # 同上
  *
- * プラグインコマンド詳細
- *
  * ・NM_タイプ変更 or NM_CHANGE_TYPE
  * メッセージを表示タイプを変更します。タイプには以下が存在します。
  *
@@ -270,8 +528,8 @@
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     var getArgString = function(arg, upperFlg) {
@@ -365,23 +623,7 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandBlueMushroom(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandBlueMushroom(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandBlueMushroom = function(command, args) {
@@ -1430,7 +1672,7 @@
     Window_NovelMessage.prototype.processAutoWordWrap = function(textState) {
         var c         = textState.text[textState.index];
         var textNextX = textState.x + (c ? this.textWidth(c) : 0);
-        if (textNextX > this.contents.width) {
+        if (textNextX > this.contents.width && c !== '\n') {
             textState.index--;
             this.processNewLine(textState);
         }
