@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2017/10/07 探索系プラグインとの併用時の負荷対策に、イベントによる探索深度を変更できる機能を追加
+//                   YEP_MoveRouteCore.jsとの競合を解消
 // 1.10.0 2017/10/02 パラメータの型指定機能に対応
 //                   斜め移動をしながらイベントを起動すると起動地点から余分に移動する場合がある不具合を修正
 // 1.9.0 2017/06/21 イベントの自律移動で8方向移動を使用できる機能を追加
@@ -141,6 +143,11 @@
  * @default false
  * @type boolean
  *
+ * @param EventSearchLimit
+ * @desc 探索系のプラグインと併用で重くなった場合に調節してください。（探索精度は下がります）デフォルト:12
+ * @default 12
+ * @type number
+ *
  * @help Moving distance in half.
  *
  * Plugin command
@@ -263,6 +270,11 @@
  * @default false
  * @type boolean
  *
+ * @param イベント探索深度
+ * @desc 探索系のプラグインと併用で重くなった場合に調節してください。（探索精度は下がります）デフォルト:12
+ * @default 12
+ * @type number
+ *
  * @help キャラクターの移動単位が1タイルの半分になります。
  * 半歩移動が有効なら、乗り物以外は全て半歩移動になります。
  *
@@ -341,6 +353,9 @@
  * イベント位置を設定したりできます。
  *
  * 配布元：半歩移動プラグインと同じ配布元です。
+ *
+ * 4. YEP_MoveRouteCore.jsとの組み合わせる場合、
+ * このプラグインを下に配置してください。
  *
  * 他のプラグインと併用する場合は、それぞれの配布元の規約や注意事項を
  * あらかじめご確認ください。
@@ -455,6 +470,7 @@
     var paramMultiStartDisable  = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
     var paramEventOverlap       = getParamBoolean(['EventOverlap', 'イベント位置重複OK']);
     var param8MoveSwitch        = getParamNumber(['8MoveSwitch', '8方向移動スイッチ'], 0);
+    var paramEventSearchLimit   = getParamNumber(['EventSearchLimit', 'イベント探索深度'], 0);
 
     //=============================================================================
     // ローカル変数
@@ -934,7 +950,7 @@
         }
     };
 
-    var _Game_CharacterBase_canPass2 = Game_CharacterBase.prototype.canPass;
+    var _Game_CharacterBase_canPass2     = Game_CharacterBase.prototype.canPass;
     Game_CharacterBase.prototype.canPass = function(x, y, d) {
         var x2 = $gameMap.roundXWithDirection(x, d);
         var y2 = $gameMap.roundYWithDirection(y, d);
@@ -1041,6 +1057,22 @@
         }
     };
 
+    /**
+     * for YEP_MoveRouteCore.js
+     * @param x
+     * @param y
+     * @param collision
+     */
+    Game_CharacterBase.prototype.moveToPoint = function(x, y, collision) {
+        collision = collision || false;
+        if (collision) $gameTemp._moveAllowPlayerCollision = true;
+        var direction = this.findDirectionTo(x, y);
+        if (collision) $gameTemp._moveAllowPlayerCollision = false;
+        if (direction > 0) this.moveStraight(direction);
+        if (this.x !== x || this.y !== y) this._moveRouteIndex -= 1;
+        this.setMovementSuccess(true);
+    };
+
     //=============================================================================
     // Game_Character
     //  タッチ移動の動作を調整します。
@@ -1066,8 +1098,8 @@
     };
 
     Game_Character.prototype.getDiagonalTowardDirection = function(x, y) {
-        var sx = this.deltaXFrom(x);
-        var sy = this.deltaYFrom(y);
+        var sx        = this.deltaXFrom(x);
+        var sy        = this.deltaYFrom(y);
         var direction = 5;
         if (sx !== 0) {
             direction += (sx < 0 ? 1 : -1);
@@ -1082,7 +1114,7 @@
         return direction !== 5 && direction % 2 === 1
     };
 
-    var _Game_Character_moveRandom = Game_Character.prototype.moveRandom;
+    var _Game_Character_moveRandom      = Game_Character.prototype.moveRandom;
     Game_Character.prototype.moveRandom = function() {
         if (!this.canDiagonalMove() || Math.randomInt(2) === 0) {
             _Game_Character_moveRandom.apply(this, arguments);
@@ -1091,7 +1123,7 @@
         }
     };
 
-    var _Game_Character_moveTowardCharacter = Game_Character.prototype.moveTowardCharacter;
+    var _Game_Character_moveTowardCharacter      = Game_Character.prototype.moveTowardCharacter;
     Game_Character.prototype.moveTowardCharacter = function(character) {
         if (!this.canDiagonalMove() || Math.randomInt(4) === 0) {
             _Game_Character_moveTowardCharacter.apply(this, arguments);
@@ -1106,7 +1138,7 @@
         }
     };
 
-    var _Game_Character_moveAwayFromCharacter = Game_Character.prototype.moveAwayFromCharacter;
+    var _Game_Character_moveAwayFromCharacter      = Game_Character.prototype.moveAwayFromCharacter;
     Game_Character.prototype.moveAwayFromCharacter = function(character) {
         if (!this.canDiagonalMove() || Math.randomInt(4) === 0) {
             _Game_Character_moveAwayFromCharacter.apply(this, arguments);
@@ -1335,7 +1367,7 @@
         return result;
     };
 
-    var _Game_Player_moveStraightForRetry = Game_Player.prototype.moveStraightForRetry;
+    var _Game_Player_moveStraightForRetry      = Game_Player.prototype.moveStraightForRetry;
     Game_Player.prototype.moveStraightForRetry = function(d) {
         if (this.canMove()) {
             _Game_Player_moveStraightForRetry.apply(this, arguments);
@@ -1392,7 +1424,7 @@
         var result = _Game_Event_isCollidedWithPlayerCharacters.apply(this, arguments);
         if (!result && !this.isHalfThrough($gamePlayer.y) && this.isNormalPriority()) {
             var tileUnit = Game_Map.tileUnit;
-            result = $gamePlayer.isCollided(x, y - tileUnit) || $gamePlayer.isCollided(x, y + tileUnit);
+            result       = $gamePlayer.isCollided(x, y - tileUnit) || $gamePlayer.isCollided(x, y + tileUnit);
         }
         this.setCollidedFromPlayer(result);
         return result;
@@ -1465,6 +1497,11 @@
 
     Game_Event.prototype.canDiagonalMove = function() {
         return !this._can8moveDisable && Game_Character.prototype.canDiagonalMove.call(this);
+    };
+
+    var _Game_Event_searchLimit = Game_Event.prototype.searchLimit;
+    Game_Event.prototype.searchLimit = function() {
+        return paramEventSearchLimit > 0 ? paramEventSearchLimit : _Game_Event_searchLimit.apply(this, arguments);
     };
 
     //=============================================================================
