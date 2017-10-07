@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2017/10/07 ターン終了時の副作用を持つスキルでトドメをさした場合、次の戦闘のターン終了時に副作用が発生する問題を修正
 // 1.2.1 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
 // 1.2.0 2017/06/01 弱点時のみ副作用が適用できる機能を追加
 // 1.1.1 2017/01/24 副作用設定時にターン終了時にダメージのポップアップ等が出なくなる問題を修正
@@ -376,6 +377,12 @@
 
     Game_Battler.prototype.resetEndActions = function() {
         this._endActions = null;
+    };
+
+    var _Game_Battler_onBattleEnd = Game_Battler.prototype.onBattleEnd;
+    Game_Battler.prototype.onBattleEnd = function() {
+        _Game_Battler_onBattleEnd.apply(this, arguments);
+        this.resetEndActions();
     };
 
     //=============================================================================
