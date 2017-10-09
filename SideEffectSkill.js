@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2017/10/10 0ターン目に戦闘行動の強制を実行するとエラーになる問題の修正
 // 1.2.2 2017/10/07 ターン終了時の副作用を持つスキルでトドメをさした場合、次の戦闘のターン終了時に副作用が発生する問題を修正
 // 1.2.1 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
 // 1.2.0 2017/06/01 弱点時のみ副作用が適用できる機能を追加
@@ -314,7 +315,9 @@
     var _BattleManager_endTurn = BattleManager.endTurn;
     BattleManager.endTurn      = function() {
         _BattleManager_endTurn.apply(this, arguments);
-        this.applyItemSideEffectEnd();
+        if (this._sideEffectBattlers) {
+            this.applyItemSideEffectEnd();
+        }
     };
 
     var _BattleManager_startAction = BattleManager.startAction;
@@ -326,7 +329,9 @@
     var _BattleManager_endAction = BattleManager.endAction;
     BattleManager.endAction      = function() {
         _BattleManager_endAction.apply(this, arguments);
-        this._action.applyItemSideEffect('sideEffectOnAfter');
+        if (this._action) {
+            this._action.applyItemSideEffect('sideEffectOnAfter');
+        }
     };
 
     BattleManager.applyItemSideEffectStart = function() {
