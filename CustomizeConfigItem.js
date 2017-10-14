@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2017/10/15 2.0.0の修正によりスイッチ項目を有効にしたときにゲーム開始するとエラーになる問題を修正
 // 2.0.0 2017/09/10 ツクールの型指定機能に対応し、各オプション項目を任意の数だけ追加できる機能を追加
 // 1.2.3 2017/06/08 1.2.2の修正により起動できなくなっていた問題を修正
 // 1.2.2 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
@@ -247,16 +248,6 @@
         return (command || '').toUpperCase();
     };
 
-    var getArgArrayString = function(args, upperFlg) {
-        var values = getArgString(args, upperFlg).split(',');
-        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
-        return values;
-    };
-
-    var getArgString = function(args, upperFlg) {
-        return upperFlg ? args.toUpperCase() : args;
-    };
-
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
@@ -320,8 +311,12 @@
     // ConfigManager
     //  追加項目の設定値や初期値を管理します。
     //=============================================================================
-    ConfigManager.customParams = null;
-    ConfigManager.hiddenInfo   = {};
+    ConfigManager.customParams   = null;
+    ConfigManager.hiddenInfo     = {};
+    ConfigManager._symbolNumber  = 'Number';
+    ConfigManager._symbolBoolean = 'Boolean';
+    ConfigManager._symbolString  = 'String';
+    ConfigManager._symbolVolume  = 'Volume';
 
     ConfigManager.getCustomParams = function() {
         if (this.customParams) {
@@ -344,7 +339,7 @@
     };
 
     ConfigManager.makeNumberOption = function(optionItem, index) {
-        var data    = this.makeCommonOption(optionItem, index, 'Number');
+        var data    = this.makeCommonOption(optionItem, index, this._symbolNumber);
         data.min    = getArgNumber(optionItem.NumberMin);
         data.max    = getArgNumber(optionItem.NumberMax);
         data.offset = getArgNumber(optionItem.NumberStep);
@@ -352,7 +347,7 @@
     };
 
     ConfigManager.makeStringOption = function(optionItem, index) {
-        var data    = this.makeCommonOption(optionItem, index, 'String');
+        var data    = this.makeCommonOption(optionItem, index, this._symbolString);
         data.values = getArgJson(optionItem.StringItems);
         data.min    = 0;
         data.max    = data.values.length - 1;
@@ -360,14 +355,14 @@
     };
 
     ConfigManager.makeSwitchOption = function(optionItem, index) {
-        var data       = this.makeCommonOption(optionItem, index, 'Switch');
+        var data       = this.makeCommonOption(optionItem, index, this._symbolBoolean);
         data.initValue = getArgBoolean(optionItem.DefaultValue);
         data.variable  = getArgNumber(optionItem.SwitchID);
         this.pushOptionData(data);
     };
 
     ConfigManager.makeVolumeOption = function(optionItem, index) {
-        var data = this.makeCommonOption(optionItem, index, 'Volume');
+        var data = this.makeCommonOption(optionItem, index, this._symbolVolume);
         this.pushOptionData(data);
     };
 
@@ -401,9 +396,9 @@
     ConfigManager.applyData      = function(config) {
         _ConfigManager_applyData.apply(this, arguments);
         iterate(this.getCustomParams(), function(symbol, item) {
-            if (symbol.contains('Boolean')) {
+            if (symbol.contains(this._symbolBoolean)) {
                 this[symbol] = this.readFlagCustom(config, symbol, item);
-            } else if (symbol.contains('Volume')) {
+            } else if (symbol.contains(this._symbolVolume)) {
                 this[symbol] = this.readVolumeCustom(config, symbol, item);
             } else {
                 this[symbol] = this.readOther(config, symbol, item);
@@ -448,7 +443,7 @@
         if (!$gameVariables || !$gameSwitches) return;
         iterate(this.getCustomParams(), function(symbol, item) {
             if (item.variable > 0) {
-                if (symbol.contains('Boolean')) {
+                if (symbol.contains(this._symbolBoolean)) {
                     $gameSwitches.setValue(item.variable, !!this[symbol]);
                 } else {
                     $gameVariables.setValue(item.variable, this[symbol]);
@@ -461,9 +456,9 @@
         if (!$gameVariables || !$gameSwitches) return;
         iterate(this.getCustomParams(), function(symbol, item) {
             if (item.variable > 0) {
-                if (symbol.contains('Boolean')) {
+                if (symbol.contains(this._symbolBoolean)) {
                     this[symbol] = $gameSwitches.value(item.variable);
-                } else if (symbol.contains('Volume')) {
+                } else if (symbol.contains(this._symbolVolume)) {
                     this[symbol] = $gameVariables.value(item.variable).clamp(0, 100);
                 } else {
                     this[symbol] = $gameVariables.value(item.variable).clamp(item.min, item.max);
@@ -543,11 +538,11 @@
     };
 
     Window_Options.prototype.isNumberSymbol = function(symbol) {
-        return symbol.contains('Number');
+        return symbol.contains(ConfigManager._symbolNumber);
     };
 
     Window_Options.prototype.isStringSymbol = function(symbol) {
-        return symbol.contains('String');
+        return symbol.contains(ConfigManager._symbolString);
     };
 
     Window_Options.prototype.isCustomSymbol = function(symbol) {
