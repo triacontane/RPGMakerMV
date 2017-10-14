@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.18/1 2017/10/15 1.16.0の機能追加により、カテゴリ数が10以上かつ並び順を指定しない場合の並び順がおかしくなる問題を修正
 // 1.18.0 2017/09/01 カテゴリごとにアイテム使用可否を設定できる機能を追加
 // 1.17.0 2017/08/21 用語に制御文字が使われた場合は自動変換する機能を追加
 // 1.16.1 2017/08/04 セーブとロードを繰り返しすと用語辞典の初期位置が最後に選択していたものになってしまう問題を修正
@@ -932,7 +933,7 @@ function Scene_Glossary() {
                 list.push(category);
             }
         }.bind(this));
-        return list.sort(this._compareOrderGlossaryCategory.bind(this));
+        return paramCategoryOrder.length > 0 ? list.sort(this._compareOrderGlossaryCategory.bind(this)) : list;
     };
 
     /**
