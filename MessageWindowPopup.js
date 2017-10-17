@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2017/10/18 AltWindowFrame.jsとの競合を解消してMADOと連携できるようになりました。
 // 2.8.1 2017/08/14 ウィンドウの振動時間を設定できる機能を追加
 // 2.8.0 2017/08/14 ウィンドウを振動させる機能を追加
 //                  パラメータの型指定機能に対応
@@ -1065,6 +1066,15 @@
         this.loadWindowskin();
         _Window_Message_startMessage.apply(this, arguments);
         this.resetLayout();
+    };
+
+    var _Window_Message_loadWindowskin = Window_Message.prototype.loadWindowskin;
+    Window_Message.prototype.loadWindowskin = function() {
+        var popupWindowSkin = $gameSystem.getPopupWindowSkin();
+        if (this._windowSkinName !== popupWindowSkin) {
+            this._windowSkinName = popupWindowSkin;
+            _Window_Message_loadWindowskin.apply(this, arguments);
+        }
     };
 
     Window_Message.prototype.updateTargetCharacterId = function() {
