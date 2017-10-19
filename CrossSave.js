@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/10/19 サーバ種別を指定できる機能を追加
+//                  型指定機能に対応
 // 1.0.7 2017/10/04 ネットワークセーブの限界容量を再度緩和
 // 1.0.6 2016/07/12 ネットワークセーブの限界容量を緩和
 // 1.0.5 2016/07/02 「ファイルに追加」が無効な場合にセーブ画面でのカーソル初期位置がひとつずれる問題の修正
@@ -39,6 +41,9 @@
  * @param パスワード桁数
  * @desc 入力するパスワードの桁数です。プレイヤー数が多く見込まれる場合は桁数を増やしてください。(4-6)
  * @default 4
+ * @type number
+ * @min 4
+ * @max 6
  *
  * @param 説明文
  * @desc ヘルプウィンドウに表示される文章です。
@@ -46,11 +51,13 @@
  *
  * @param タイトルに追加
  * @desc タイトル画面にネットワークロードのコマンドを追加します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ファイルに追加
  * @desc セーブ画面、ロード画面の先頭行にネットワークセーブ、ロードのコマンドを追加します。
- * @default ON
+ * @default true
+ * @type boolean
  * 
  * @param 背景ピクチャ
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
@@ -61,8 +68,16 @@
  * @type file
  *
  * @param 認証ファイル形式
- * @desc 認証ファイルの形式をJSON形式で作成します。ブラウザ実行時にファイルをうまく読み込めない場合、ONにしてください。
- * @default OFF
+ * @desc 認証ファイルをBase64エンコーディングして保存します。認証が成功しない場合はOFFにしてみてください。
+ * @default true
+ * @type boolean
+ *
+ * @param サーバ種別
+ * @desc データが保存されるサーバのグループです。通常は[1]のままでOKです。
+ * @default 1
+ * @type select
+ * @option 1
+ * @option 2
  *
  * @help セーブデータをサーバ上にアップロード/ダウンロードして
  * 異なるプラットフォーム間で共有します。
@@ -112,6 +127,20 @@
  * ネットワークセーブ画面は以下の方法で遷移できます。
  * ・セーブ画面の一番上の選択肢
  * ・プラグインコマンド実行時
+ *
+ * ・サーバ種別について
+ * パラメータのサーバ種別は通常は[1]のままでOKですが、
+ * 利用者さまの増加に伴い、接続数上限超過で接続できない事例が発生しています。
+ * 「時間内に処理が処理が完了しませんでした」
+ * というエラーが頻発する場合は[2]に切り替えてください。
+ * ただし、以下に注意してください。
+ *
+ * 1. [1]でネットワークセーブしたデータを引き継ぐことはできません。
+ * 2. 再度認証のプラグインコマンドを実行する必要があります。
+ *
+ * なお、パラメータのサーバ種別にMilkcocoaのAPP_IDを入力すると
+ * ご自身のMilkcocoaアカウントに追加したアプリケーションに
+ * データを保存できます。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -193,8 +222,8 @@ function CrossSaveManager() {
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     var getParamString = function(paramNames) {
@@ -239,6 +268,7 @@ function CrossSaveManager() {
     var paramAddCommandFile  = getParamBoolean(['AddCommandFile', 'ファイルに追加']);
     var paramBackPicture     = getParamString(['BackPicture', '背景ピクチャ']);
     var paramAuthFileFormat  = getParamBoolean(['AuthFileFormat', '認証ファイル形式']);
+    var paramServerType      = getParamString(['ServerType', 'サーバ種別']);
 
     //=============================================================================
     // Game_Interpreter
@@ -247,23 +277,7 @@ function CrossSaveManager() {
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandCrossSave(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandCrossSave(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandCrossSave = function(command, args) {
@@ -344,7 +358,7 @@ function CrossSaveManager() {
         Scene_File.prototype.isCrossSave = function() {
             return this._listWindow.index() === 0;
         };
-        
+
         //=============================================================================
         // Scene_Save
         //  ネットワークセーブ画面の呼び出しを追加します。
@@ -597,7 +611,7 @@ function CrossSaveManager() {
     Window_PasswordInput.prototype.processJump = function(silentFlg) {
         if (this._index !== this.getLastIndex()) {
             this._index = this.getLastIndex();
-            if (!silentFlg)SoundManager.playCursor();
+            if (!silentFlg) SoundManager.playCursor();
         }
     };
 
@@ -842,14 +856,14 @@ function CrossSaveManager() {
     CrossSaveManager.timeOutSecond   = 10;
     CrossSaveManager.suppressOnError = false;
     CrossSaveManager._milkCocoaUrl   = 'https://cdn.rawgit.com/triacontane/RPGMakerMV/master/milkcocoa.js';
-    CrossSaveManager._milkCocoaApiId = 'leadiomt9dk1.mlkcca.com';
+    CrossSaveManager._milkCocoaApiId = ['leadiomt9dk1', 'onj8yj9vwk'];
     CrossSaveManager._loadListeners  = [];
     CrossSaveManager._authFile       = null;
     CrossSaveManager._fragmentLength = 4000;
     CrossSaveManager._limitFragment  = 40;
 
     CrossSaveManager.initialize = function() {
-        this._milkCocoa     = new MilkCocoa(this._milkCocoaApiId);
+        this._milkCocoa     = new MilkCocoa(this.getAppId() + '.mlkcca.com');
         this._authData      = this._milkCocoa.dataStore('auth');
         this._mainData      = this._milkCocoa.dataStore('main');
         this._online        = true;
@@ -860,6 +874,19 @@ function CrossSaveManager() {
         this._restoredData  = null;
         if (!DataManager.isEventTest()) this.loadAuthData();
         this._callLoadListeners();
+    };
+
+    CrossSaveManager.getAppId = function() {
+        switch (paramServerType) {
+            case '':
+            case '1':
+                return this._milkCocoaApiId[0];
+            case '2':
+                return this._milkCocoaApiId[1];
+            default:
+                return paramServerType;
+
+        }
     };
 
     CrossSaveManager.getRestoredData = function() {
@@ -1052,6 +1079,7 @@ function CrossSaveManager() {
         this.resetResultMessage();
         this.getMainData('Length', this.loadDataContents.bind(this), localMessage.NO_DATA);
         this.setSuppressOnError();
+        return true;
     };
 
     CrossSaveManager.loadDataContents = function(datum) {
