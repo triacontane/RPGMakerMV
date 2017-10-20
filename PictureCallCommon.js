@@ -1,11 +1,12 @@
 //=============================================================================
 // PictureCallCommon.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.2 2017/10/21 戦闘画面に突入する際のエフェクトで、マウスオーバーイベントが予期せず発生する場合がある問題を修正
 // 1.10.1 2017/05/27 動的文字列ピクチャプラグインのウィンドウフレームクリックをピクチャクリックに対応
 // 1.9.3 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング（by liplyさん）
 // 1.9.2 2017/03/16 1.9.0で戦闘中にコモンイベント実行が正しく動作していなかった問題を修正
@@ -40,7 +41,7 @@
 //                  トリガーとして「右クリック」や「長押し」を追加
 // 1.0.0 2015/11/14 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -700,6 +701,10 @@
     var _Sprite_update              = Sprite_Picture.prototype.update;
     Sprite_Picture.prototype.update = function() {
         _Sprite_update.apply(this, arguments);
+        this.updateTouch();
+    };
+
+    Sprite_Picture.prototype.updateTouch = function() {
         this.updateMouseMove();
         this.updateStroke();
         this.updatePointer();
@@ -744,7 +749,9 @@
 
     Sprite_Picture.prototype.callTouch = function() {
         var commandIds = $gameScreen.getPictureCid(this._pictureId);
-        if (!commandIds) return;
+        if (!commandIds || SceneManager.isNextScene(Scene_Battle)) {
+            return;
+        }
         for (var i = 0, n = this._triggerHandler.length; i < n; i++) {
             var handler = this._triggerHandler[i];
             if (handler && commandIds[i] && handler.call(this) && (this.triggerIsFocus(i) || !this.isTransparent())) {
