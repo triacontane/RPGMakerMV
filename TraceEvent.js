@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/10/22 イベントの検索範囲と範囲外だった場合の動作を指定できる機能を追加
 // 1.0.0 2017/10/14 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -25,6 +26,21 @@
  * @value 0
  * @option 自身の現在値から最も近いイベント
  * @value 1
+ *
+ * @param TraceRange
+ * @desc イベントを探索する際の探索有効範囲です。制御文字\v[n]を使うと変数値を取得します。
+ * @default 0
+ *
+ * @param OutOfRangeAction
+ * @desc イベントが範囲外だった場合の動作です。
+ * @default 0
+ * @type select
+ * @option No Move
+ * @value 0
+ * @option Random
+ * @value 1
+ * @option Toward Player
+ * @value 2
  *
  * @help TraceEvent.js
  *
@@ -66,6 +82,21 @@
  * @value 0
  * @option 自身の現在値から最も近いイベント
  * @value 1
+ *
+ * @param 追跡範囲
+ * @desc イベントを探索する際の探索有効範囲です。制御文字\v[n]を使うと変数値を取得します。
+ * @default 0
+ *
+ * @param 範囲外動作
+ * @desc イベントが範囲外だった場合の動作です。
+ * @default 0
+ * @type select
+ * @option 動かない
+ * @value 0
+ * @option ランダム移動
+ * @value 1
+ * @option プレイヤーに近づく
+ * @value 2
  *
  * @help TraceEvent.js
  *
@@ -124,6 +155,12 @@
         return (parseInt(value) || 0).clamp(min, max);
     };
 
+    var getArgNumber = function(arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(arg) || 0).clamp(min, max);
+    };
+
     var convertEscapeCharacters = function(text) {
         if (isNotAString(text)) text = '';
         var windowLayer = SceneManager._scene._windowLayer;
@@ -139,6 +176,8 @@
     //=============================================================================
     var param               = {};
     param.eventPriorityType = getParamNumber(['EventPriorityType', 'イベント優先基準'], 0);
+    param.traceRange        = getParamString(['TraceRange', '追跡範囲'], 0);
+    param.outOfRangeAction  = getParamNumber(['OutOfRangeAction', '範囲外動作'], 0);
 
     //=============================================================================
     // Game_Character
@@ -172,14 +211,13 @@
     };
 
     Game_Character.prototype.traceEvent = function(character, awayFlg) {
-        if (!character) {
-            return;
-        }
-        if (!awayFlg) {
-            this.moveTowardCharacter(character);
-        } else {
-            this.moveAwayFromCharacter(character);
-        }
+        this.tryTraceAction(character, function() {
+            if (!awayFlg) {
+                this.moveTowardCharacter(character);
+            } else {
+                this.moveAwayFromCharacter(character);
+            }
+        });
     };
 
     Game_Character.prototype.findEventById = function(id) {
@@ -198,13 +236,45 @@
     };
 
     Game_Character.prototype.findEvent = function(character) {
-        if (!character) {
+        this.tryTraceAction(character, function() {
+            var direction = this.findDirectionTo(character.x, character.y);
+            if (direction > 0) {
+                this.moveStraight(direction);
+            }
+        });
+    };
+
+    Game_Character.prototype.tryTraceAction = function(character, actionCallBack) {
+        if (!this.canTraceCharacter(character)) {
+            this.actionWhenOutOfRange();
             return;
         }
-        var direction = this.findDirectionTo(character.x, character.y);
-        if (direction > 0) {
-            this.moveStraight(direction);
+        actionCallBack.call(this);
+    };
+
+    Game_Character.prototype.canTraceCharacter = function(character) {
+        if (!character) {
+            return false;
         }
+        var range = this.getTraceRange();
+        return range <= 0 || this.getDistance(character) <= range;
+    };
+
+    Game_Character.prototype.actionWhenOutOfRange = function() {
+        switch (param.outOfRangeAction) {
+            case 1:
+                this.moveRandom();
+                break;
+            case 2:
+                this.moveTowardPlayer();
+                break;
+            default:
+            // do nothing
+        }
+    };
+
+    Game_Character.prototype.getTraceRange = function() {
+        return getArgNumber(convertEscapeCharacters(param.traceRange), 0);
     };
 
     Game_Character.prototype.findHighestPriorityEvent = function(events) {
