@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2017/10/23 特定のスイッチもしくはセルフスイッチが有効なときのみ感知エフェクトを出す機能を追加
+//                  パラメータの型指定機能に対応
 // 2.0.0 2016/08/27 フラッシュの代わりにフキダシアイコンを利用できる機能を追加
 //                  パラメータ名等に一部破壊的な変更が加わっています。
 // 1.1.0 2016/07/14 各種パラメータとメモ欄で感知可否の設定を追加
@@ -23,36 +25,76 @@
  *
  * @param デフォルトフラッシュ
  * @desc 感知時にイベントを指定色でフラッシュさせます。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param デフォルトフキダシ
  * @desc 感知時にイベントに自動でフキダシアイコンを出します。
  * (1:びっくり 2:はてな 3:音符 4:ハート 5:怒り....)
  * @default 0
+ * @type select
+ * @option なし
+ * @value 0
+ * @option びっくり
+ * @value 1
+ * @option はてな
+ * @value 2
+ * @option 音符
+ * @value 3
+ * @option ハート
+ * @value 4
+ * @option 怒り
+ * @value 5
+ * @option 汗
+ * @value 6
+ * @option くしゃくしゃ
+ * @value 7
+ * @option 沈黙
+ * @value 8
+ * @option 電球
+ * @value 9
+ * @option Zzz
+ * @value 10
+ * @option ユーザ定義1
+ * @value 11
+ * @option ユーザ定義2
+ * @value 12
+ * @option ユーザ定義3
+ * @value 13
+ * @option ユーザ定義4
+ * @value 14
+ * @option ユーザ定義5
+ * @value 15
  *
  * @param 空イベントは無効
  * @desc イベント内容が空の場合、感知しなくなります。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 感知距離
  * @desc イベントを関知する距離です。
  * @default 2
+ * @type number
  *
  * @param フラッシュカラー
- * @desc 感知時のフラッシュ色です。R(赤),G(緑),B(青),A(強さ)の順番でカンマ(,)区切りで指定。
- * @default 255,255,255,128
+ * @desc 感知時のフラッシュ色です。R(赤),G(緑),B(青),A(強さ)の順番で指定してください。
+ * @default
+ * @type struct<Color>
  *
  * @param フラッシュ時間
  * @desc フラッシュさせるフレーム数です。
  * @default 60
+ * @type number
  *
  * @param フキダシ間隔
  * @desc フキダシを表示する間隔のフレーム数です。
  * @default 15
+ * @type number
  *
  * @param 向きを考慮
  * @desc プレイヤーがイベントの方を向いている場合のみエフェクトを有効にします。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 周囲に存在するイベントを感知してイベントにエフェクトを発生させます。
  * 実行可能なイベントをプレイヤーに伝えてユーザビリティを向上させます。
@@ -71,6 +113,13 @@
  * <NESフキダシ対象:1> # 対象イベントのフキダシを(1:びっくり)にします。
  * <NESフキダシ対象:0> # 対象イベントのフキダシを無効にします。
  *
+ * 特定のスイッチもしくはセルフスイッチがONのときのみ感知エフェクトを
+ * 表示したい場合は、メモ欄を以下の通り指定してください。
+ * <NESスイッチ:1>       # スイッチ[1]がONのときのみエフェクトを出します。
+ * <NESSwitch:1>         # 同上
+ * <NESセルフスイッチ:A> # セルフスイッチ[A]がONのときのみエフェクトを出します。
+ * <NESSelfSwitch:1>     # 同上
+ *
  * 注意！
  * モバイル端末では、フラッシュを使用すると動作が
  * 少し重くなるようです。ご利用の際はご注意ください。
@@ -82,6 +131,37 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+
+/*~struct~Color:
+ * @param Red
+ * @desc 赤色の情報です。(0-255)
+ * @type number
+ * @min 0
+ * @max 255
+ * @default 0
+ *
+ * @param Green
+ * @desc 緑色の情報です。(0-255)
+ * @type number
+ * @min 0
+ * @max 255
+ * @default 0
+ *
+ * @param Blue
+ * @desc 青色の情報です。(0-255)
+ * @type number
+ * @min 0
+ * @max 255
+ * @default 0
+ *
+ * @param Alpha
+ * @desc 強さの情報です。(0-255)
+ * @type number
+ * @min 0
+ * @max 255
+ * @default 0
+ */
+
 (function() {
     'use strict';
     var pluginName    = 'NearEventSensor';
@@ -96,11 +176,6 @@
         return null;
     };
 
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value === null ? '' : value;
-    };
-
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
@@ -109,28 +184,22 @@
     };
 
     var getParamBoolean = function(paramNames) {
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
+    };
+
+    var getParamJson = function(paramNames, defaultValue) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
-    };
-
-    var getParamArrayString = function(paramNames) {
-        var values = getParamString(paramNames).split(',');
-        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
-        return values;
-    };
-
-    var getParamArrayNumber = function(paramNames, min, max) {
-        var values = getParamArrayString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        for (var i = 0; i < values.length; i++) {
-            if (!isNaN(parseInt(values[i], 10))) {
-                values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
-            } else {
-                values.splice(i--, 1);
+        try {
+            value = JSON.parse(value);
+            if (value === null) {
+                value = defaultValue;
             }
+        } catch (e) {
+            alert(`!!!Plugin param is wrong.!!!\nPlugin:.js\nName:[]\nValue:`);
+            value = defaultValue;
         }
-        return values;
+        return value;
     };
 
     var getArgNumber = function(arg, min, max) {
@@ -140,7 +209,7 @@
     };
 
     var getArgBoolean = function(arg) {
-        return arg === true ? true : (arg || '').toUpperCase() === 'ON';
+        return arg === true ? true : (arg || '').toUpperCase() === 'ON' || (arg || '').toUpperCase() === 'TRUE';
     };
 
     var getMetaValue = function(object, name) {
@@ -170,10 +239,13 @@
     var paramDefaultBalloon   = getParamNumber(['DefaultBalloon', 'デフォルトフキダシ'], 0);
     var paramDisableEmpty     = getParamBoolean(['DisableEmpty', '空イベントは無効']);
     var paramSensorDistance   = getParamNumber(['SensorDistance', '感知距離'], 1);
-    var paramFlashColor       = getParamArrayNumber(['FlashColor', 'フラッシュカラー'], 0, 256);
+    var paramFlashColor       = getParamJson(['FlashColor', 'フラッシュカラー'], null);
     var paramFlashDuration    = getParamNumber(['FlashDuration', 'フラッシュ時間'], 1);
     var paramBalloonInterval  = getParamNumber(['BalloonInterval', 'フキダシ間隔'], 0);
     var paramConsiderationDir = getParamBoolean(['ConsiderationDir', '向きを考慮']);
+    if (paramFlashColor) {
+        paramFlashColor = [paramFlashColor.Red, paramFlashColor.Green, paramFlashColor.Blue, paramFlashColor.Alpha];
+    }
 
     //=============================================================================
     // Sprite_Character
@@ -237,8 +309,8 @@
     };
 
     Game_Event.prototype.updateSensorEffect = function() {
-        if (this.isEmptyValidate() && this.isVeryNearThePlayer() && !$gameMap.isEventRunning()) {
-            if (!this.isFlash() && this.isFlashEvent()) {
+        if (this.isEmptyValidate() && this.isVeryNearThePlayer() && !$gameMap.isEventRunning() && this.isValidSensor()) {
+            if (!this.isFlash() && this.isFlashEvent() && paramFlashColor) {
                 this.startFlash(paramFlashColor.clone(), paramFlashDuration);
             }
             var balloonId = this.getSensorBalloonId();
@@ -263,6 +335,20 @@
     Game_Event.prototype.isFlashEvent = function() {
         var useFlash = getMetaValues(this.event(), ['フラッシュ対象', 'FlashEvent']);
         return useFlash ? getArgBoolean(useFlash) : paramDefaultFlash;
+    };
+
+    Game_Event.prototype.isValidSensor = function() {
+        return this.isValidSensorSwitch() && this.isValidSensorSelfSwitch();
+    };
+
+    Game_Event.prototype.isValidSensorSwitch = function() {
+        var switchId = getMetaValues(this.event(), ['スイッチ', 'Switch']);
+        return switchId ? $gameSwitches.value(getArgNumber(switchId, 1)) : true;
+    };
+
+    Game_Event.prototype.isValidSensorSelfSwitch = function() {
+        var selfSwitchType = getMetaValues(this.event(), ['セルフスイッチ', 'SelfSwitch']);
+        return selfSwitchType ? $gameSelfSwitches.value([this._mapId, this._eventId, selfSwitchType.toUpperCase()]) : true;
     };
 
     Game_Event.prototype.getSensorBalloonId = function() {
