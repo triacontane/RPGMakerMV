@@ -1,11 +1,12 @@
 //=============================================================================
 // VanguardAndRearguard.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/10/25 ヘルプの英語化対応
 // 1.5.0 2017/08/18 前衛が全滅したときに後衛が前衛に詰められる設定を追加
 // 1.4.0 2017/06/11 メニュー画面でフェイスを右にずらす機能を有効にするかどうかのパラメータを追加
 // 1.3.2 2017/04/22 全回復のイベント後、隊列ステートが解除されてしまう不具合を修正
@@ -20,7 +21,7 @@
 //                  前衛メンバーが生存している限り、後衛メンバーが狙われなくなる機能を追加
 // 1.0.0 2016/06/05 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -70,68 +71,70 @@
  * @type number
  *
  * @param HiddenIcon
- * @desc 敵キャラの前衛、後衛のステートアイコンを非表示にします。（アクターのアイコンは表示されます）
+ * @desc Hide the enemy character's vanguard, state game icon of the rear guard. (Actor icon is displayed)
  * @default false
  * @type boolean
  *
  * @param FaceShift
- * @desc メニュー画面で、後衛の顔グラフィックを右に少しずらして表示します。
+ * @desc On the menu screen, display the rearguard face graphics slightly shifted to the right.
  * @default true
  * @type boolean
  *
  * @param ShiftVanguard
- * @desc 前衛が全滅した時点で後衛が強制的に前衛に移動します。また、前衛がいない状態では後衛に移動できなくなります。
+ * @desc At the time the wiped out, the guards will be forcibly moved to vanguard.
  * @default false
  * @type boolean
  *
- * @help 戦闘に「前衛」「後衛」の概念を追加します。
- * 「前衛」時のステートと「後衛」時のステートを指定したうえで
- * 「特徴」欄などを使って「前衛」と「後衛」それぞれの特殊効果を設定してください。
- * 優先度は「0」に設定することを推奨します。
- * [SV]モーションおよび[SV]重ね合わせが優先度のもっとも高いステートのものが
- * 優先されるというMVの仕様のためです。
+ * @help We add the concept of "vanguard" "rearguard" to battle.
+ * After designating the state at "vanguard" and the state at "guard"
+ * Please set special effects of "vanguard" and "rearguard"
+ * by using "Trait" column and so on.
  *
- * 「前衛」「後衛」に指定されたステートは、解除条件を満たしても解除されません。
- * 変更するには以下のいずれかの方法を選択します。
+ * It is recommended to set the priority to "0".
+ * [SV] Motion and [SV] Superimposition is the state with the highest priority
+ * It is due to the MV's specification that it will be given priority.
  *
- * ・メニュー画面の「並び替え」で同じキャラクターを選択する。
- * ・戦闘画面で「チェンジ」コマンドを実行する。
- * ・イベントから対象ステートを付与する。
+ * The state specified as "vanguard" "rearguard" will not be canceled
+ * even if it satisfies the cancellation condition.
+ * To change it, choose one of the following methods.
  *
- * 戦闘中のチェンジを有効した場合、チェンジ用スキルの対象を「使用者」にして
- * さらにメモ欄に以下の通り設定してください。
- * (既存スキル「防御」をコピーすることをオススメします)
+ * - Select the same character by "Sort" on the menu screen.
+ * - Execute the "change" command on the battle screen.
+ * - Grant the target state from the event.
+ *
+ * When changing during battle is effective, change the
+ * target of the change skill to "user"
+ * Further please set in the memo field as follows.
+ * (We recommend copying existing skill "defense")
  * <VARChange>
  *
- * 上記メモ欄はチェンジ以外のスキルでも有効です。
- * スキル使用者をチェンジ対象にしたい場合はメモ欄に以下の通り設定してください。
+ * The memo field above is also valid for skills other than change.
+ * If you want to change the skill user, please set the following
+ * in the memo field.
  * <VARUserChange>
  *
- * 前衛のみ、後衛のみを対象にしたスキルを作成したい場合、
- * スキルのメモ欄に以下の通り設定してください。
- * <VAROnlyVanguard>  # 前衛のみ対象スキル
- * <VAROnlyRearguard> # 後衛のみ対象スキル
+ * If you want to create a skill that targets only vanguard,
+ * Please set as follows in the memo field of skill.
+ * <VAROnlyVanguard>  # target only vanguard
+ * <VAROnlyRearguard> # target only rearguard
  *
- * ただし、メニュー画面から使用する場合は無効です。
+ * However, it is invalid when using from the menu screen.
  *
- * 敵キャラの初期配置を後衛にしたい場合、メモ欄に以下の通り設定してください。
+ * If you want to rearrange the initial placement of enemy characters,
+ * please set as follows in the memo field.
  * <VARRearguard>
  *
- * 前衛後衛のチェンジを禁止して前衛か後衛で固定したい場合、
- * アクターおよび敵キャラのメモ欄に以下の通り設定してください。
- * <VARChangeDisable> # 対象バトラーに対するチェンジは禁止されます。
+ * If you want to ban the vanguard of vanguard and fix it
+ * with vanguard or rearguard,
+ * Please set as follows in the memo field of actor and enemy character.
+ * <VARChangeDisable> # Changes to the target butler are prohibited.
  *
- * YEP_BattleEngineCore.jsと組み合わせたときに
- * 後衛時のノックバックが過剰になる現象を修正しています。
- * 併用する場合は、当プラグインをYEP_BattleEngineCore.jsより下に
- * 配置してください。
+ * - Plugin Command
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * VAR_SET_DEFEAT_CONDITION 1 # 敵味方の敗北条件を変更します。
- *  0:通常 1:前衛が全員戦闘不能で敗北 2:後衛が全員戦闘不能で敗北
+ * VAR_SET_DEFEAT_CONDITION 1 # We will change the defeat conditions of our enemy ally.
+ *  0: Normal
+ *  1: All vanguards are unable to fight and defeat
+ *  2: All rearguards are unable to fight and defeat
  *
  * This plugin is released under the MIT License.
  */
