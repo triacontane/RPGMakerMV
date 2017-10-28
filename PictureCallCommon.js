@@ -1,4 +1,4 @@
-//=============================================================================
+﻿//=============================================================================
 // PictureCallCommon.js
 // ----------------------------------------------------------------------------
 // Copyright (c) 2015-2017 Triacontane
@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.3 2017/10/28 ピクチャタッチイベントの呼び出し待機中に戦闘に突入すると、戦闘画面表示後に実行されてしまう問題を修正
 // 1.10.2 2017/10/21 戦闘画面に突入する際のエフェクトで、マウスオーバーイベントが予期せず発生する場合がある問題を修正
 // 1.10.1 2017/05/27 動的文字列ピクチャプラグインのウィンドウフレームクリックをピクチャクリックに対応
 // 1.9.3 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング（by liplyさん）
@@ -629,6 +630,12 @@
         }
     };
 
+    var _Scene_Map_terminate = Scene_Map.prototype.terminate;
+    Scene_Map.prototype.terminate = function() {
+        _Scene_Map_terminate.apply(this, arguments);
+        $gameTemp.clearPictureCallInfo();
+    };
+
     //=============================================================================
     // Scene_Battle
     //  ピクチャのタッチ状態からのコモンイベント呼び出し予約を追加定義します。
@@ -645,6 +652,12 @@
         var result = BattleManager.updatePictureCommon();
         if (result) return;
         _Scene_Battle_updateBattleProcess.apply(this, arguments);
+    };
+
+    var _Scene_Battle_terminate = Scene_Battle.prototype.terminate;
+    Scene_Battle.prototype.terminate = function() {
+        _Scene_Battle_terminate.apply(this, arguments);
+        $gameTemp.clearPictureCallInfo();
     };
 
     //=============================================================================
