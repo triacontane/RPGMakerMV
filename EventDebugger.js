@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/10/28 スクリプトエラーが発生したときの行番号を出力する機能を追加
+//                  型指定機能に対応
 // 1.3.1 2017/07/20 一部プラグインとの競合対策
 // 1.3.0 2017/05/04 イベント「スクリプト」で発生したエラーを無視できる機能を追加
 // 1.2.0 2017/03/13 イベント「スクリプト」でエラーが起きたら、発生箇所をログ出力してステップ実行を開始する機能を追加
@@ -27,54 +29,177 @@
  * @param StepStart
  * @desc 次に実行されたイベントコマンドからステップ実行を開始するためのファンクションキーです。
  * @default F7
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param StepIn
  * @desc ステップ実行時にステップイン(1コマンド実行)するためのファンクションキーです。
  * @default F11
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param StepOver
  * @desc ステップ実行時にステップオーバー(1コマンド実行)するためのファンクションキーです。コモンイベントを飛ばします。
  * @default F10
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param Continue
  * @desc ステップ実行を中断して続行するためのファンクションキーです。
  * @default F6
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param ToggleWindow
  * @desc デバッグ用ウィンドウの表示状態を切り替えます。Shiftキーでも切り替えることができます。
  * @default F12
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param WatchVariable
  * @desc 常駐して監視するゲーム変数もしくはスクリプトを入力するダイアログが表示されます。
  * @default F1
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param MaxWatchNum
  * @desc 監視する変数の最大数です。あまりに大きな値を指定するとパフォーマンスが低下する可能性があります。
  * @default 3
+ * @type number
  *
  * @param EventTest
  * @desc イベントテストを行うと自動でステップ実行になります。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param SuppressFunc
  * @desc ファンクションキー押下時、デフォルトや他のプラグインの動作を抑制します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param OkHandler
  * @desc ステップ実行時に決定ボタンを押した場合のファンクションキーの動作を設定します。
  * @default F11
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param CancelHandler
  * @desc ステップ実行時にキャンセルボタンを押した場合のファンクションキーの動作を設定します。
  * @default F6
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param ScriptDebug
  * @desc イベントコマンドの「スクリプト」でエラーが発生した際の動作を設定します。0:エラー(通常通り) 1:ステップ実行 2:無視
  * @default 1
+ * @type select
+ * @option エラー（通常通り）
+ * @value 0
+ * @option ステップ実行
+ * @value 1
+ * @option 無視
+ * @value 2
  *
  * @param DisableDebugCtrlKey
  * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @help 任意の箇所でイベントの実行を一時停止して、1行ずつ実行(ステップ実行)が
  * できるようになります。開始方法は以下の3通りです。
@@ -128,54 +253,177 @@
  * @param ステップ開始
  * @desc 次に実行されたイベントコマンドからステップ実行を開始するためのファンクションキーです。
  * @default F7
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param ステップイン
  * @desc ステップ実行時にステップイン(1コマンド実行)するためのファンクションキーです。
  * @default F11
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param ステップオーバー
  * @desc ステップ実行時にステップオーバー(1コマンド実行)するためのファンクションキーです。コモンイベントを飛ばします。
  * @default F10
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param 続行
  * @desc ステップ実行を中断して続行するためのファンクションキーです。
  * @default F6
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param 表示切替
  * @desc デバッグ用ウィンドウの表示状態を切り替えます。Shiftキーでも切り替えることができます。
  * @default F12
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param 変数監視
  * @desc 常駐して監視するゲーム変数もしくはスクリプトを入力するダイアログが表示されます。
  * @default F1
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param 監視最大数
  * @desc 監視する変数の最大数です。あまりに大きな値を指定するとパフォーマンスが低下する可能性があります。
  * @default 3
+ * @type number
  *
  * @param イベントテスト
  * @desc イベントテストを行うと自動でステップ実行になります。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 機能キー抑制
  * @desc ファンクションキー押下時、デフォルトや他のプラグインの動作を抑制します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param OK動作
  * @desc ステップ実行時に決定ボタンを押した場合のファンクションキーの動作を設定します。
  * @default F11
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param キャンセル動作
  * @desc ステップ実行時にキャンセルボタンを押した場合のファンクションキーの動作を設定します。
  * @default F6
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
  *
  * @param スクリプトデバッグ
  * @desc イベントコマンドの「スクリプト」でエラーが発生した際の動作を設定します。0:エラー(通常通り) 1:ステップ実行 2:無視
  * @default 1
+ * @type select
+ * @option エラー（通常通り）
+ * @value 0
+ * @option ステップ実行
+ * @value 1
+ * @option 無視
+ * @value 2
  *
  * @param CTRLで無効化
  * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @help 任意の箇所でイベントの実行を一時停止して、1行ずつ実行(ステップ実行)が
  * できるようになります。開始方法は以下の3通りです。
@@ -890,6 +1138,7 @@ function DebugManager() {
             console.log('スクリプトエラーを検知しました。');
             console.log(`Error Script       : ${script}`);
             console.log(`Error Process Id   : ${this.getProcessNumber()}`);
+            console.log(`Error Process Line : ${this.getProcessLine()}`);
             console.log(`Error Process Name : ${this.getProcessName()}`);
             console.error(e.stack);
             if (param.scriptDebug === 1) {
@@ -921,6 +1170,17 @@ function DebugManager() {
         } else {
             return `Map ID:${this._mapId} Event ID:${this._eventId} Page:${this._pageIndex}`;
         }
+    };
+
+    Game_Interpreter.prototype.getProcessLine = function() {
+        var line = 0;
+        this._list.some(function(command, index) {
+            if (command.code < 400 && command.code > 0) {
+                line++;
+            }
+            return this._index <= index;
+        }, this);
+        return line;
     };
 
     Game_Interpreter.prototype.getProcessName = function() {
