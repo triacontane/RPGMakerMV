@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2017/10/29 場所移動のフェードアウト中にポーズメニューを押下すると、移動後にイベントが進まなくなる不具合を修正
 // 1.6.0 2017/10/07 自動改行が有効な場合、自動改行位置と入力した改行が重なったときに2回改行されてしまう問題を修正
 //                  パラメータの型指定機能に対応
 // 1.5.2 2017/05/25 1.5.1で オートセーブ無効時にイベントメニューからセーブすると空でセーブされてしまう問題を修正
@@ -920,15 +921,14 @@
     //  オートセーブを追加定義します。
     //=============================================================================
     Object.defineProperty(DataManager, '_lastAccessedId', {
-        get         : function() {
+        get: function() {
             return this.__lastAccessedId;
         },
-        set         : function(value) {
+        set: function(value) {
             if (value !== this.getAutoSaveId()) {
                 this.__lastAccessedId = value;
             }
-        },
-        configurable: true
+        }
     });
 
     DataManager._isShiftAutoSave = false;
@@ -1473,11 +1473,18 @@
     };
 
     Window_Message.prototype.checkInputPause = function() {
-        if ($gameMap.isEventRunning() && Input.isTriggered('escape') || (TouchInput.isCancelled() &&
-            this.isTouchedInsideFrame())) {
+        if (this.isTriggeredPause() && this.canCallPause()) {
             SoundManager.playOk();
             this.callPauseHandler();
         }
+    };
+
+    Window_Message.prototype.isTriggeredPause = function() {
+        return Input.isTriggered('escape') || (TouchInput.isCancelled() && this.isTouchedInsideFrame());
+    };
+
+    Window_Message.prototype.canCallPause = function() {
+        return $gameMap.isEventRunning() && !$gamePlayer.isTransferring();
     };
 
     Window_Message.prototype.keepActivationSubWindow = function() {
