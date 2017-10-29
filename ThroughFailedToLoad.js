@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2017/10/30 アニメーション画像に対するエラーが無視が無効になっていた問題を修正
 // 2.3.0 2017/10/29 音声ファイルと画像ファイルのいずれかのみ無視する機能を追加
 // 2.2.0 2017/06/18 本体v1.5.0で機能しなくなる問題を修正
 // 2.1.1 2017/03/11 通常版1.3.5でエラーになる問題を修正
@@ -134,69 +135,40 @@
     }
 
     if (paramThroughType !== 1) {
-        var _ImageManager_isReady = ImageManager.isReady;
-        if (typeof ResourceHandler !== 'undefined') {
-            //=============================================================================
-            // ImageManager
-            //  ロード失敗した画像ファイルを空の画像に差し替えます。
-            //=============================================================================
-            ImageManager.isReady = function() {
-                this._imageCache.eraseBitmapError();
-                return _ImageManager_isReady.apply(this, arguments);
-            };
-
-            //=============================================================================
-            // ImageCache
-            //  ロード失敗した画像ファイルを空の画像に差し替えます。
-            //=============================================================================
-            ImageCache.prototype.eraseBitmapError = function() {
-                var items = this._items;
-                Object.keys(items).forEach(function(key) {
-                    var bitmap = items[key].bitmap;
-                    if (bitmap.isError()) {
-                        bitmap.eraseError();
-                        items[key].bitmap = new Bitmap();
-                    }
-                });
-            };
-
-            var _Graphics__playVideo = Graphics._playVideo;
-            Graphics._playVideo      = function(src) {
-                _Graphics__playVideo.apply(this, arguments);
-                this._video.onerror = this._videoLoader || this._onVideoError.bind(this);
-            };
-        } else {
-            //=============================================================================
-            // ImageManager
-            //  ロード失敗した画像ファイルを空の画像に差し替えます。
-            //=============================================================================
-            ImageManager.isReady = function() {
-                var result = false;
-                try {
-                    result = _ImageManager_isReady.apply(this, arguments);
-                } catch (e) {
-                    for (var key in this.cache._inner) {
-                        if (!this.cache._inner.hasOwnProperty(key)) continue;
-                        var bitmap = this.cache._inner[key].item;
-                        if (bitmap.isError()) {
-                            bitmap.eraseError();
-                            this.cache.setItem(key, new Bitmap());
-                        }
-                    }
-                    result = _ImageManager_isReady.apply(this, arguments);
-                }
-                return result;
-            };
-        }
-
         //=============================================================================
         // Bitmap
         //  エラー発生用のフラグをキャンセルします。
         //=============================================================================
+        var _Bitmap_isReady = Bitmap.prototype.isReady;
+        Bitmap.prototype.isReady = function() {
+            if (this.isError()) {
+                this.eraseError();
+            }
+            return _Bitmap_isReady.apply(this, arguments);
+        };
+
+        var _Bitmap_decode = Bitmap.prototype.decode;
+        Bitmap.prototype.decode = function(){
+            _Bitmap_decode.apply(this, arguments);
+            if (this._loadingState === 'requesting') {
+                this._image.addEventListener('error', this._onError.bind(this));
+            }
+        };
+
         Bitmap.prototype.eraseError = function() {
             this._hasError     = false;
             this._isLoading    = false;
             this._loadingState = 'loaded';
+        };
+
+        //=============================================================================
+        // Graphics
+        //  エラーイベントを登録します。
+        //=============================================================================
+        var _Graphics__playVideo = Graphics._playVideo;
+        Graphics._playVideo      = function(src) {
+            _Graphics__playVideo.apply(this, arguments);
+            this._video.onerror = this._videoLoader || this._onVideoError.bind(this);
         };
     }
 
