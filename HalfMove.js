@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.1 2017/10/29 MPP_MiniMap_OP1.jsとの競合を解消
 // 1.11.0 2017/10/07 探索系プラグインとの併用時の負荷対策に、イベントによる探索深度を変更できる機能を追加
 //                   YEP_MoveRouteCore.jsとの競合を解消
 // 1.10.0 2017/10/02 パラメータの型指定機能に対応
@@ -354,7 +355,10 @@
  *
  * 配布元：半歩移動プラグインと同じ配布元です。
  *
- * 4. YEP_MoveRouteCore.jsとの組み合わせる場合、
+ * 4. YEP_MoveRouteCore.jsと組み合わせる場合、
+ * このプラグインを下に配置してください。
+ *
+ * 5. MPP_MiniMap_OP1.jsと組み合わせる場合、
  * このプラグインを下に配置してください。
  *
  * 他のプラグインと併用する場合は、それぞれの配布元の規約や注意事項を
@@ -1577,5 +1581,19 @@
     Game_Follower.prototype.isHalfMove = function() {
         return $gamePlayer.isHalfMove() || this.isHalfPosX() || this.isHalfPosY();
     };
+
+    // Resolve conflict for MPP_MiniMap_OP1.js
+    //=============================================================================
+    // Game_MiniMap
+    //  描画判定において半歩座標を考慮します。
+    //=============================================================================
+    if (typeof Game_MiniMap === 'function') {
+        var _Game_MiniMap_isFilled = Game_MiniMap.prototype.isFilled;
+        Game_MiniMap.prototype.isFilled = function(x, y) {
+            arguments[0] = Math.floor(arguments[0]);
+            arguments[1] = Math.floor(arguments[1]);
+            return _Game_MiniMap_isFilled.apply(this, arguments);
+        };
+    }
 })();
 
