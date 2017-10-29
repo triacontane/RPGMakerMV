@@ -1,18 +1,19 @@
 //=============================================================================
 // ThroughFailedToLoad.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2017/10/29 音声ファイルと画像ファイルのいずれかのみ無視する機能を追加
 // 2.2.0 2017/06/18 本体v1.5.0で機能しなくなる問題を修正
 // 2.1.1 2017/03/11 通常版1.3.5でエラーになる問題を修正
 // 2.1.0 2017/03/11 本体v1.3.5(コミュニティ版)で機能しなくなる問題を修正
 // 2.0.0 2016/08/05 本体v1.3.0対応（1.2.0では使えなくなります）
 // 1.0.0 2016/06/25 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -23,11 +24,24 @@
  *
  * @param InvalidIfTest
  * @desc Not through if test play.
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param InvalidIfWeb
  * @desc Not through if Web mode.
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param ThroughType
+ * @desc 無視する素材の種別です。
+ * @default 3
+ * @type select
+ * @option Audio Only
+ * @value 1
+ * @option Image Only
+ * @value 2
+ * @option All
+ * @value 3
  *
  * @help Through error of Failed to load.
  * Image not found, Audio not found.
@@ -40,11 +54,24 @@
  *
  * @param テストプレー時無効
  * @desc テストプレー時は本プラグインの機能が無効になります。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param Web版で無効
  * @desc Web版実行時は本プラグインの機能が無効になります。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param 無視種別
+ * @desc 無視する素材の種別です。
+ * @default 3
+ * @type select
+ * @option 音声のみ
+ * @value 1
+ * @option 画像のみ
+ * @value 2
+ * @option 全て
+ * @value 3
  *
  * @help 存在しない画像、音声素材が指定された場合に発生するエラーを無視します。
  * 音声の場合は何も再生されず、画像の場合は空の透明画像がセットされます。
@@ -79,8 +106,15 @@
     };
 
     var getParamBoolean = function(paramNames) {
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
+    };
+
+    var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value) || 0).clamp(min, max);
     };
 
     //=============================================================================
@@ -88,90 +122,111 @@
     //=============================================================================
     var paramInvalidIfTest = getParamBoolean(['InvalidIfTest', 'テストプレー時無効']);
     var paramInvalidIfWeb  = getParamBoolean(['InvalidIfWeb', 'Web版で無効']);
+    var paramThroughType   = getParamNumber(['ThroughType', '無視種別'], 1, 3);
 
     //=============================================================================
-    // テストプレー時は無効
+    // プラグイン無効条件の判定
     //=============================================================================
-    if (paramInvalidIfTest && Utils.isOptionValid('test')) return;
-    if (paramInvalidIfWeb && !Utils.isNwjs()) return;
+    if (paramInvalidIfTest && Utils.isOptionValid('test')) {
+        return;
+    } else if (paramInvalidIfWeb && !Utils.isNwjs()) {
+        return;
+    }
 
-    var _ImageManager_isReady = ImageManager.isReady;
-    if (typeof ResourceHandler !== 'undefined') {
-        //=============================================================================
-        // ImageManager
-        //  ロード失敗した画像ファイルを空の画像に差し替えます。
-        //=============================================================================
-        ImageManager.isReady = function() {
-            this._imageCache.eraseBitmapError();
-            return _ImageManager_isReady.apply(this, arguments);
-        };
+    if (paramThroughType !== 1) {
+        var _ImageManager_isReady = ImageManager.isReady;
+        if (typeof ResourceHandler !== 'undefined') {
+            //=============================================================================
+            // ImageManager
+            //  ロード失敗した画像ファイルを空の画像に差し替えます。
+            //=============================================================================
+            ImageManager.isReady = function() {
+                this._imageCache.eraseBitmapError();
+                return _ImageManager_isReady.apply(this, arguments);
+            };
 
-        //=============================================================================
-        // ImageCache
-        //  ロード失敗した画像ファイルを空の画像に差し替えます。
-        //=============================================================================
-        ImageCache.prototype.eraseBitmapError = function() {
-            var items = this._items;
-            Object.keys(items).forEach(function(key) {
-                var bitmap = items[key].bitmap;
-                if (bitmap.isError()) {
-                    bitmap.eraseError();
-                    items[key].bitmap = new Bitmap();
+            //=============================================================================
+            // ImageCache
+            //  ロード失敗した画像ファイルを空の画像に差し替えます。
+            //=============================================================================
+            ImageCache.prototype.eraseBitmapError = function() {
+                var items = this._items;
+                Object.keys(items).forEach(function(key) {
+                    var bitmap = items[key].bitmap;
+                    if (bitmap.isError()) {
+                        bitmap.eraseError();
+                        items[key].bitmap = new Bitmap();
+                    }
+                });
+            };
+
+            var _Graphics__playVideo = Graphics._playVideo;
+            Graphics._playVideo      = function(src) {
+                _Graphics__playVideo.apply(this, arguments);
+                this._video.onerror = this._videoLoader || this._onVideoError.bind(this);
+            };
+        } else {
+            //=============================================================================
+            // ImageManager
+            //  ロード失敗した画像ファイルを空の画像に差し替えます。
+            //=============================================================================
+            ImageManager.isReady = function() {
+                var result = false;
+                try {
+                    result = _ImageManager_isReady.apply(this, arguments);
+                } catch (e) {
+                    for (var key in this.cache._inner) {
+                        if (!this.cache._inner.hasOwnProperty(key)) continue;
+                        var bitmap = this.cache._inner[key].item;
+                        if (bitmap.isError()) {
+                            bitmap.eraseError();
+                            this.cache.setItem(key, new Bitmap());
+                        }
+                    }
+                    result = _ImageManager_isReady.apply(this, arguments);
                 }
-            });
-        };
+                return result;
+            };
+        }
 
+        //=============================================================================
+        // Bitmap
+        //  エラー発生用のフラグをキャンセルします。
+        //=============================================================================
+        Bitmap.prototype.eraseError = function() {
+            this._hasError     = false;
+            this._isLoading    = false;
+            this._loadingState = 'loaded';
+        };
+    }
+
+    if (paramThroughType !== 2) {
+        //=============================================================================
+        // AudioManager
+        //  エラーチェック処理を無視します。
+        //=============================================================================
+        AudioManager.checkErrors = function() {};
+    }
+
+    if (typeof ResourceHandler !== 'undefined') {
         //=============================================================================
         // ResourceHandler
         //  リトライ機能の仕様を変更します。
         //=============================================================================
-        ResourceHandler.createLoader      = function(url, retryMethod, resignMethod, retryInterval) {
-            return null;
+        var _ResourceHandler_createLoader = ResourceHandler.createLoader;
+        ResourceHandler.createLoader = function(url, retryMethod, resignMethod, retryInterval) {
+            return this.isNeedLoader(url) ? _ResourceHandler_createLoader.apply(this, arguments) : null;
         };
 
-        var _Graphics__playVideo = Graphics._playVideo;
-        Graphics._playVideo      = function(src) {
-            _Graphics__playVideo.apply(this, arguments);
-            this._video.onerror = this._videoLoader || this._onVideoError.bind(this);
-        };
-    } else {
-        //=============================================================================
-        // ImageManager
-        //  ロード失敗した画像ファイルを空の画像に差し替えます。
-        //=============================================================================
-        ImageManager.isReady = function() {
-            var result = false;
-            try {
-                result = _ImageManager_isReady.apply(this, arguments);
-            } catch (e) {
-                for (var key in this.cache._inner) {
-                    if (!this.cache._inner.hasOwnProperty(key)) continue;
-                    var bitmap = this.cache._inner[key].item;
-                    if (bitmap.isError()) {
-                        bitmap.eraseError();
-                        this.cache.setItem(key, new Bitmap());
-                    }
-                }
-                result = _ImageManager_isReady.apply(this, arguments);
+        ResourceHandler.isNeedLoader = function(url) {
+            if (paramThroughType === 1 && !url.match(/^audio\//)) {
+                return true;
+            } else if (paramThroughType === 2 && (!url.match(/^img\//) && !url.match(/^movie\//))) {
+                return true;
+            } else {
+                return false;
             }
-            return result;
         };
     }
-
-    //=============================================================================
-    // AudioManager
-    //  エラーチェック処理を無視します。
-    //=============================================================================
-    AudioManager.checkErrors = function() {};
-
-    //=============================================================================
-    // Bitmap
-    //  エラー発生用のフラグをキャンセルします。
-    //=============================================================================
-    Bitmap.prototype.eraseError = function() {
-        this._hasError     = false;
-        this._isLoading    = false;
-        this._loadingState = 'loaded';
-    };
 })();
 
