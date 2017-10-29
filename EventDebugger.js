@@ -1,11 +1,12 @@
 //=============================================================================
 // EventDebugger.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// Copyright (c) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2017/10/29 アイテムからコモンイベントを実行した後にマップイベントを実行したときのスクリプトエラー情報が間違っていた問題を修正
 // 1.4.0 2017/10/28 スクリプトエラーが発生したときの行番号を出力する機能を追加
 //                  型指定機能に対応
 // 1.3.1 2017/07/20 一部プラグインとの競合対策
@@ -17,7 +18,7 @@
 // 1.0.1 2017/01/22 ステップ実行を最後まで実行するとエラーになっていた問題を修正
 // 1.0.0 2017/01/11 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -246,6 +247,7 @@
  *
  * This plugin is released under the MIT License.
  */
+
 /*:ja
  * @plugindesc イベントデバッグプラグイン
  * @author トリアコンタン
@@ -1055,6 +1057,12 @@ function DebugManager() {
         this.setPageIndex();
     };
 
+    const _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
+    Game_Interpreter.prototype.terminate = function() {
+        _Game_Interpreter_terminate.apply(this, arguments);
+        this._commonEventId = 0;
+    };
+
     Game_Interpreter.prototype.setPageIndex = function() {
         var event = $gameMap.event(this._eventId);
         if (event) {
@@ -1107,7 +1115,7 @@ function DebugManager() {
     };
 
     const _Game_Interpreter_command117    = Game_Interpreter.prototype.command117;
-    Game_Interpreter.prototype.command117                  = function() {
+    Game_Interpreter.prototype.command117 = function() {
         const result = _Game_Interpreter_command117.apply(this, arguments);
         if (this._childInterpreter) {
             const commonEventId = this._params[0];
@@ -1119,7 +1127,7 @@ function DebugManager() {
         return result;
     };
 
-    const _Game_Interpreter_command122 = Game_Interpreter.prototype.command122;
+    const _Game_Interpreter_command122    = Game_Interpreter.prototype.command122;
     Game_Interpreter.prototype.command122 = function() {
         return this._params[3] === 4 ? this.execScriptCommandWithRescue(this._params[4], _Game_Interpreter_command122) :
             _Game_Interpreter_command122.apply(this, arguments);
@@ -1135,11 +1143,15 @@ function DebugManager() {
         try {
             result = process.apply(this, arguments);
         } catch (e) {
-            console.log('スクリプトエラーを検知しました。');
-            console.log(`Error Script       : ${script}`);
-            console.log(`Error Process Id   : ${this.getProcessNumber()}`);
-            console.log(`Error Process Line : ${this.getProcessLine()}`);
-            console.log(`Error Process Name : ${this.getProcessName()}`);
+            var logValue = [
+                '----- スクリプトエラーを検知しました。----- \n',
+                `- Error Process Id   : ${this.getProcessNumber()}\n`,
+                `- Error Process Line : ${this.getProcessLine()}\n`,
+                `- Error Process Name : ${this.getProcessName()}\n`,
+                `- Error Script Text\n${script}`,
+                `- Error Detail`
+            ];
+            console.log.apply(console, logValue);
             console.error(e.stack);
             if (param.scriptDebug === 1) {
                 this.enableStepExecute();
