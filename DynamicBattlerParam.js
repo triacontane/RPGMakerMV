@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/10/31 1.2.0でデバッグ用のコードが混入していたので修正
 // 1.2.0 2017/10/28 追加能力値および特殊能力値についても計算式を適用できる機能を追加
 // 1.1.0 2017/08/14 計算式でパラメータを取得する際に装備品による変動分を含まないよう修正
 // 1.0.0 2017/07/27 初版
@@ -537,7 +538,6 @@
         }
         this._calcParameter = true;
         var formula = this.getParamFormula(paramId);
-        if (formula) p (formula);
         var a = this;
         var dynamicParam = formula ? this.roundParamIfNeed(paramId, eval(formula)) : param;
         this._calcParameter = false;
