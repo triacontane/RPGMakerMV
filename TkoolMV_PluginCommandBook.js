@@ -6,6 +6,11 @@
 // Copyright (c) 2015 Alec
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
+// ----------------------------------------------------------------------------
+// Version
+// 1.1.0 2017/10/31 ピクチャ関連の命令を戦闘中に使用すると失敗する問題を修正
+// 1.0.0 2015/12/31 初版
+// ----------------------------------------------------------------------------
 //
 //=============================================================================
 /*:
@@ -422,7 +427,7 @@
  *
  *  使用例
  *  ピクチャの回転角設定 1 90
- *  Trimming_Picture \v[1] \v[2]
+ *  Angle_Picture \v[1] \v[2]
  * * ===========================================================================
  * 文字の連結(English：ConcatenStrings)
  * 文字を連結し、指定の変数に代入します。
@@ -1121,7 +1126,7 @@
     };
 
     Game_Interpreter.prototype.pluginCommandBook_ピクチャの有効判定         = function(args) {
-        var picture = $gameScreen.picture($gameScreen.realPictureId(parseIntStrict(args[1])));
+        var picture = $gameScreen.picture(parseIntStrict(args[1]));
         $gameSwitches.setValue(parseIntStrict(args[0]), picture != null);
     };
     Game_Interpreter.prototype.pluginCommandBook_Get_Picture_Valid = function(args) {
@@ -1129,7 +1134,7 @@
     };
 
     Game_Interpreter.prototype.pluginCommandBook_ピクチャの表示優先度設定         = function(args) {
-        var picture = $gameScreen.picture($gameScreen.realPictureId(parseIntStrict(args[0])));
+        var picture = $gameScreen.picture(parseIntStrict(args[0]));
         if (picture) {
             picture.setZ(parseIntStrict(args[1]));
         } else {
@@ -1141,7 +1146,7 @@
     };
 
     Game_Interpreter.prototype.pluginCommandBook_ピクチャのトリミング       = function(args) {
-        var picture = $gameScreen.picture($gameScreen.realPictureId(parseIntStrict(args[0])));
+        var picture = $gameScreen.picture(parseIntStrict(args[0]));
         if (picture) {
             picture.setFrameDirect(parseIntStrict(args[1]), parseIntStrict(args[2]),
                 parseIntStrict(args[3]), parseIntStrict(args[4]));
@@ -1154,7 +1159,7 @@
     };
 
     Game_Interpreter.prototype.pluginCommandBook_ピクチャの回転角設定    = function(args) {
-        var picture = $gameScreen.picture($gameScreen.realPictureId(parseIntStrict(args[0])));
+        var picture = $gameScreen.picture(parseIntStrict(args[0]));
         if (picture) {
             picture.setAngleDirect(parseIntStrict(args[1]));
         } else {
@@ -1228,7 +1233,7 @@
         var VarId1 = parseIntStrict(args[0]);
         var Str    = String(args[1]);
         var Nm1    = parseIntStrict(args[2]);
-        var Nm2    = args[3]
+        var Nm2    = args[3];
         if (Nm2.toLowerCase() == 'end' || Nm2 == '最後') Nm2 = Str.length;
         var Nm2 = parseIntStrict(Nm2);
         if (args[4] == null) args[4] = '前方';
@@ -1256,14 +1261,14 @@
         var VarId1 = parseIntStrict(args[0]);
         var Str    = String(args[1]);
         var Str2   = String(args[2]);
-        var StrCnt = 0
-        var StrLen
+        var StrCnt = 0;
+        var StrLen;
         if (args[3] == '1') {
             StrCnt = (Str.match(new RegExp(Str2, "g")) || []).length;
         } else {
             while (Str.indexOf(Str2, 0) != -1) {
-                StrCnt++
-                StrLen = Str.indexOf(Str2, 0) + 1
+                StrCnt++;
+                StrLen = Str.indexOf(Str2, 0) + 1;
                 Str    = Str.substring(StrLen, Str.length);
             }
         }
@@ -1281,17 +1286,17 @@
         var VarId1 = parseIntStrict(args[0]);
         var Str    = String(args[1]);
         var Str2   = String(args[2]);
-        var StrLen
+        var StrLen;
         if (args[3] == null) args[4] = '前方';
         args[3] = args[3].replace(/front/i, '前方');
         args[3] = args[3].replace(/back/i, '後方');
         switch (args[3]) {
             case '前方':
             default:
-                StrLen = Str.indexOf(Str2) + 1
+                StrLen = Str.indexOf(Str2) + 1;
                 break;
             case '後方':
-                StrLen = Str.lastIndexOf(Str2) + 1
+                StrLen = Str.lastIndexOf(Str2) + 1;
                 break;
         }
         $gameVariables.setValue(VarId1, StrLen);
