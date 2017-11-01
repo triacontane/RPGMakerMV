@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.2 2017/11/02 イベント実行中に時間を変更した場合にアナログ時計の表示が変更されない問題を修正
 // 1.9.1 2017/11/02 時間経過の初期状態を「停止」から「開始」に変更
 // 1.9.0 2017/10/05 アナログ時計の画像を変更できる機能を追加
 //                  カレンダーウィンドウのフォントサイズと不透明度を変更できる機能を追加
@@ -402,8 +403,8 @@ function Game_ChronusTimer() {
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     var isParamExist = function(paramNames) {
@@ -863,7 +864,7 @@ function Game_ChronusTimer() {
 
     Sprite_Chronicle_Clock.prototype.update = function() {
         this.visible = this.chronus().isShowingClock();
-        if (this.visible && !this.chronus().isTimeStop()) {
+        if (this.visible) {
             this.updateHourHand();
             this.updateMinuteHand();
         }
