@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.4 2017/11/01 ピクチャコモンが呼ばれる瞬間に対象ピクチャが表示されていない場合はイベントを呼ばない仕様に変更
 // 1.10.3 2017/10/28 ピクチャタッチイベントの呼び出し待機中に戦闘に突入すると、戦闘画面表示後に実行されてしまう問題を修正
 // 1.10.2 2017/10/21 戦闘画面に突入する際のエフェクトで、マウスオーバーイベントが予期せず発生する場合がある問題を修正
 // 1.10.1 2017/05/27 動的文字列ピクチャプラグインのウィンドウフレームクリックをピクチャクリックに対応
@@ -398,7 +399,8 @@
     };
 
     Game_Temp.prototype.clearPictureCallInfo = function() {
-        this.setPictureCallInfo(0);
+        this._pictureCommonId = 0;
+        this._touchPictureId  = 0;
     };
 
     Game_Temp.prototype.setPictureCallInfo = function(pictureCommonId) {
@@ -406,6 +408,9 @@
     };
 
     Game_Temp.prototype.pictureCommonId = function() {
+        if (!$gameScreen.picture(this._touchPictureId)) {
+            this.clearPictureCallInfo();
+        }
         return this._pictureCommonId;
     };
 
@@ -423,6 +428,7 @@
         if (paramGameVariablePictNum > 0) {
             $gameVariables.setValue(paramGameVariablePictNum, pictureId);
         }
+        this._touchPictureId = pictureId;
     };
 
     Game_Temp.prototype.isTouchPictureButtonTrigger = function() {
@@ -630,7 +636,7 @@
         }
     };
 
-    var _Scene_Map_terminate = Scene_Map.prototype.terminate;
+    var _Scene_Map_terminate      = Scene_Map.prototype.terminate;
     Scene_Map.prototype.terminate = function() {
         _Scene_Map_terminate.apply(this, arguments);
         $gameTemp.clearPictureCallInfo();
@@ -654,7 +660,7 @@
         _Scene_Battle_updateBattleProcess.apply(this, arguments);
     };
 
-    var _Scene_Battle_terminate = Scene_Battle.prototype.terminate;
+    var _Scene_Battle_terminate      = Scene_Battle.prototype.terminate;
     Scene_Battle.prototype.terminate = function() {
         _Scene_Battle_terminate.apply(this, arguments);
         $gameTemp.clearPictureCallInfo();
@@ -861,8 +867,8 @@
     Sprite_Picture.prototype.isTouchPosInFrameWindow = function() {
         if (!this._frameWindow) return false;
         var frame = this._frameWindow;
-        var x  = this.getTouchScreenX();
-        var y  = this.getTouchScreenY();
+        var x     = this.getTouchScreenX();
+        var y     = this.getTouchScreenY();
         return frame.x <= x && frame.x + frame.width >= x && frame.y <= y && frame.y + frame.height >= y;
     };
 
