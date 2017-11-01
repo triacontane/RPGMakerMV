@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.1 2017/11/02 時間経過の初期状態を「停止」から「開始」に変更
 // 1.9.0 2017/10/05 アナログ時計の画像を変更できる機能を追加
 //                  カレンダーウィンドウのフォントサイズと不透明度を変更できる機能を追加
 // 1.8.3 2017/07/18 タイマーの機能のプラグインコマンドに関する説明が一部間違っていた問題を修正
@@ -909,7 +910,7 @@ function Game_ChronusTimer() {
     Game_Chronus.weatherTypes          = ['none', 'rain', 'storm', 'snow'];
 
     Game_Chronus.prototype.initialize = function() {
-        this._stop            = true;         // 停止フラグ（全ての加算に対して有効。ただし手動による加算は例外）
+        this._stop            = false;        // 停止フラグ（全ての加算に対して有効。ただし手動による加算は例外）
         this._disableTint     = false;        // 色調変更禁止フラグ
         this._calendarVisible = false;        // カレンダー表示フラグ
         this._disableWeather  = false;        // 天候制御禁止フラグ
