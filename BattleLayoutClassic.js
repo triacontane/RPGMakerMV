@@ -6,9 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/11/03 戦闘中常にパーティコマンドウィンドウを表示する機能を追加
 // 1.0.0 2017/05/18 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -19,7 +20,13 @@
  *
  * @param HideGauge
  * @desc 全てのゲージを非表示にします。
- * @default ON
+ * @default true
+ * @type boolean
+ *
+ * @param ShowCommandAlways
+ * @desc 戦闘中常にパーティコマンドウィンドウを表示します。ステータスウィンドウは常に左端に固定されます。
+ * @default false
+ * @type boolean
  *
  * @help 戦闘のレイアウトをRPGツクール2003に近づけます。
  *
@@ -33,7 +40,13 @@
  *
  * @param ゲージ非表示
  * @desc 全てのゲージを非表示にします。
- * @default ON
+ * @default true
+ * @type boolean
+ *
+ * @param コマンド常時表示
+ * @desc 戦闘中常にパーティコマンドウィンドウを表示します。ステータスウィンドウは常に左端に固定されます。
+ * @default false
+ * @type boolean
  *
  * @help 戦闘のレイアウトをRPGツクール2003に近づけます。
  *
@@ -63,15 +76,16 @@
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        var value = getParamString(paramNames).toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param       = {};
-    param.hideGauge = getParamBoolean(['HideGauge', 'ゲージ非表示']);
+    var param               = {};
+    param.hideGauge         = getParamBoolean(['HideGauge', 'ゲージ非表示']);
+    param.showCommandAlways = getParamBoolean(['ShowCommandAlways', 'コマンド常時表示']);
 
     //=============================================================================
     // Window_Base
@@ -102,6 +116,10 @@
         if (!BattleManager.isInputting()) {
             statusX = this._partyCommandWindow.width / 2;
         }
+        if (param.showCommandAlways) {
+            this._statusWindow.x = 0;
+            return;
+        }
         if (this._statusWindow.x < statusX) {
             this._statusWindow.x += 16;
             if (this._statusWindow.x > statusX) {
@@ -113,6 +131,14 @@
             if (this._statusWindow.x < statusX) {
                 this._statusWindow.x = statusX;
             }
+        }
+    };
+
+    var _Scene_Battle_endCommandSelection      = Scene_Battle.prototype.endCommandSelection;
+    Scene_Battle.prototype.endCommandSelection = function() {
+        _Scene_Battle_endCommandSelection.apply(this, arguments);
+        if (param.showCommandAlways) {
+            this._partyCommandWindow.open();
         }
     };
 })();
