@@ -11,6 +11,7 @@ RPGツクールMVで使用可能な自作プラグイン「メニュー内コモ
 ![スクリーンショット](https://3.bp.blogspot.com/-9hrJUZNrfPM/Wf4lI86hBjI/AAAAAAAAcQ0/BkoHaSJE3PMY0XGPXDqUx9Npzl7F4dGUgCLcBGAs/s1600/image_20171105_052936.jpg)
 
 # 詳しい使い方
+　通常のイベントコマンドはもちろん、スクリプトによってウィンドウオブジェクトを取得すれば、様々な高度な処理がイベントで実現できます。
 
 ## プラグインコマンド
 ```$xslt
@@ -23,7 +24,6 @@ ENABLE_WINDOW_CONTROL   # 同上
 ```$xslt
 // ウィンドウオブジェクトを取得
 this.getSceneWindow(windowName);
-
 指定した名前のウィンドウオブジェクトを返します。
 プロパティの取得や設定が可能です。上級者向け機能です。
 
