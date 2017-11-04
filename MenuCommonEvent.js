@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/11/05 ヘルプとダウンロード先を追記
 // 1.1.0 2017/11/05 タイマー有効化機能などいくつかの機能を追加
 // 1.0.0 2017/11/04 初版
 // ----------------------------------------------------------------------------
@@ -15,7 +16,7 @@
 //=============================================================================
 
 /*:
- * @plugindesc MenuCommonEventPlugin
+ * @plugindesc MenuCommonEventPlugin(ver1.1.1)
  * @author triacontane
  *
  * @param CommonEventInfo
@@ -133,6 +134,12 @@
  * ピクチャのボタン化プラグイン（PictureCallCommon.js）と併用する場合
  * コマンドは「P_CALL_CE」ではなく「P_CALL_SWITCH」を使ってください。
  *
+ * プラグインURL
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MenuCommonEvent.js
+ *
+ * ヘルプURL
+ * https://github.com/triacontane/RPGMakerMV/blob/master/ReadMe/MenuCommonEvent.md
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -181,7 +188,7 @@
  *
  */
 /*:ja
- * @plugindesc メニュー内コモンイベントプラグイン
+ * @plugindesc メニュー内コモンイベントプラグイン(ver1.1.1)
  * @author トリアコンタン
  *
  * @param コモンイベント情報
@@ -298,6 +305,12 @@
  * 〇他のプラグインとの連携
  * ピクチャのボタン化プラグイン（PictureCallCommon.js）と併用する場合
  * コマンドは「P_CALL_CE」ではなく「P_CALL_SWITCH」を使ってください。
+ *
+ * プラグインURL
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MenuCommonEvent.js
+ *
+ * ヘルプURL
+ * https://github.com/triacontane/RPGMakerMV/blob/master/ReadMe/MenuCommonEvent.md
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
