@@ -5,7 +5,7 @@ RPGツクールMVで使用可能な自作プラグイン「メニュー内コモ
 
 1. メニュー系の画面であれば利用できます。サウンドテストプラグインや用語辞典プラグインとの連携は確認済みです。
 1. 移動ルートの設定などキャラクターを対象にする一部コマンドは動作しません。また、プラグインによって追加されたスクリプトやコマンドは正しく動作しない可能性があります。
- 
+
 # スクリーンショット
 - イベントで指定したメッセージやピクチャが表示できます。
 ![スクリーンショット](https://3.bp.blogspot.com/-9hrJUZNrfPM/Wf4lI86hBjI/AAAAAAAAcQ0/BkoHaSJE3PMY0XGPXDqUx9Npzl7F4dGUgCLcBGAs/s1600/image_20171105_052936.jpg)
@@ -81,7 +81,7 @@ itemWindow      装備品ウィンドウ
 - ピクチャのボタン化プラグイン（PictureCallCommon.js）と併用する場合コマンドは「P_CALL_CE」ではなく「P_CALL_SWITCH」を使ってください。
 
 # ダウンロード
-以下のURLからダウンロードできます。
+以下のURLからダウンロードできます。  
 <https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MenuCommonEvent.js>  
 
 ダウンロード方法(Windowsの場合)  
