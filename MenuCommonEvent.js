@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/11/05 タイマー有効化機能などいくつかの機能を追加
 // 1.0.0 2017/11/04 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -14,6 +15,172 @@
 //=============================================================================
 
 /*:
+ * @plugindesc MenuCommonEventPlugin
+ * @author triacontane
+ *
+ * @param CommonEventInfo
+ * @desc 各画面で実行するコモンイベントの情報です。
+ * @default
+ * @type struct<CommonEventInfo>[]
+ *
+ * @param MaxMenuPicture
+ * @desc メニュー画面で表示するピクチャの最大数です。
+ * @default 10
+ * @type number
+ * @min 1
+ * @max 100
+ *
+ * @param SaveInterpreterIndex
+ * @desc イベントの実行位置を記憶して別画面から戻ってきたときに記憶した位置から再開します。
+ * @default false
+ * @type boolean
+ *
+ * @param ActivateTimer
+ * @desc メニュー画面中でもタイマーを表示し、かつタイマーを進めます。
+ * @default false
+ * @type boolean
+ *
+ * @param CommandPrefix
+ * @desc プラグインコマンドおよびメモ欄の接頭辞です。コマンドやメモ欄が他プラグインと被る場合に指定してください。
+ * @default
+ *
+ * @help MenuCommonEvent.js
+ *
+ * メニュー画面やプラグインで追加した画面(※1)でコモンイベントを並列実行できます。
+ * メッセージやピクチャ、変数の操作などが各イベントコマンド(※2)が実行可能です。
+ * コモンイベントは各画面につきひとつ実行できます。
+ *
+ * ※1 メニュー系の画面であれば利用できます。
+ * サウンドテストプラグインや用語辞典プラグインとの連携は確認済みです。
+ *
+ * ※2 移動ルートの設定などキャラクターを対象にする一部コマンドは動作しません。
+ * また、プラグインによって追加されたスクリプトやコマンドは正しく動作しない
+ * 可能性があります。
+ *
+ * プラグインコマンド詳細
+ *  イベントコマンド「プラグインコマンド」から実行。
+ *  （パラメータの間は半角スペースで区切る）
+ *
+ * ウィンドウ操作禁止      # メニュー画面のウィンドウ操作を禁止します。
+ * DISABLE_WINDOW_CONTROL  # 同上
+ * ウィンドウ操作許可      # 禁止したメニュー画面のウィンドウ操作を許可します。
+ * ENABLE_WINDOW_CONTROL   # 同上
+ *
+ * プラグインコメント名が他のプラグインと被っている場合はパラメータの
+ * 「コマンド接頭辞」に値を設定してください。
+ *
+ * スクリプト詳細
+ *  イベントコマンド「スクリプト」「変数の操作」から実行。
+ *
+ * // ウィンドウオブジェクトを取得
+ * this.getSceneWindow(windowName);
+ * 指定した名前のウィンドウオブジェクトを返します。
+ * プロパティの取得や設定が可能です。上級者向け機能です。
+ * 主要画面のウィンドウ名は以下の通りです。
+ *
+ * ・メインメニュー
+ * commandWindow   コマンドウィンドウ
+ * statusWindow    ステータスウィンドウ
+ * goldWindow      お金ウィンドウ
+ *
+ * ・アイテム画面
+ * categoryWindow  アイテムカテゴリウィンドウ
+ * itemWindow      アイテムウィンドウ
+ * actorWindow     アクター選択ウィンドウ
+ *
+ * ・スキル画面
+ * skillTypeWindow スキルタイプウィンドウ
+ * statusWindow    ステータスウィンドウ
+ * itemWindow      スキルウィンドウ
+ * actorWindow     アクター選択ウィンドウ
+ *
+ * ・装備画面
+ * helpWindow      ヘルプウィンドウ
+ * commandWindow   コマンドウィンドウ
+ * slotWindow      スロットウィンドウ
+ * statusWindow    ステータスウィンドウ
+ * itemWindow      装備品ウィンドウ
+ *
+ * ・ステータス画面
+ * statusWindow    ステータスウィンドウ
+ *
+ * // ウィンドウアクティブ判定
+ * this.isWindowActive(windowName);
+ * 指定した名前のウィンドウがアクティブなときにtrueを返します。
+ * ウィンドウの指定例は上と同じです。
+ *
+ * // ウィンドウインデックス取得
+ * this.getSceneWindowIndex();
+ * 現在アクティブなウィンドウのインデックスを取得します。先頭は0です。
+ *
+ * // 選択中のアクターオブジェクト取得
+ * $gameParty.menuActor();
+ * 装備画面やステータス画面で選択中のアクターの情報を取得します。
+ * 上級者向けスクリプトです。(※1)
+ *
+ * // 選択中のアクターID取得
+ * $gameParty.menuActor().actorId();
+ * 装備画面やステータス画面で選択中のアクターIDを取得します。
+ *
+ * ※1 既存のコアスクリプトですが、有用に使えるため記載しています。
+ *
+ * // 用語辞典の表示内容更新
+ * this.refreshGlossary();
+ * 用語辞典プラグインにおいて用語の表示内容を最新にします。
+ * 同プラグインと連携した場合に使用します。
+ *
+ * 〇他のプラグインとの連携
+ * ピクチャのボタン化プラグイン（PictureCallCommon.js）と併用する場合
+ * コマンドは「P_CALL_CE」ではなく「P_CALL_SWITCH」を使ってください。
+ *
+ * 利用規約：
+ *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
+ *  についても制限はありません。
+ *  このプラグインはもうあなたのものです。
+ */
+
+/*~struct~CommonEventInfo:
+ *
+ * @param SceneName
+ * @desc コモンイベント実行対象の画面です。独自に追加した画面を対象にする場合はクラス名を直接入力してください。
+ * @type select
+ * @default
+ * @option メインメニュー
+ * @value Scene_Menu
+ * @option アイテム
+ * @value Scene_Item
+ * @option スキル
+ * @value Scene_Skill
+ * @option 装備
+ * @value Scene_Equip
+ * @option ステータス
+ * @value Scene_Status
+ * @option オプション
+ * @value Scene_Options
+ * @option セーブ
+ * @value Scene_Save
+ * @option ロード
+ * @value Scene_Load
+ * @option ゲーム終了
+ * @value Scene_End
+ * @option ショップ
+ * @value Scene_Shop
+ * @option 名前入力
+ * @value Scene_Name
+ * @option デバッグ
+ * @value Scene_Debug
+ * @option サウンドテスト
+ * @value Scene_SoundTest
+ * @option 用語辞典
+ * @value Scene_Glossary
+ *
+ * @param CommonEventId
+ * @desc 画面で並列実行するコモンイベントのIDです。トリガーを並列実行にする必要はなく、スイッチも参照されません。
+ * @default 1
+ * @type common_event
+ *
+ */
+/*:ja
  * @plugindesc メニュー内コモンイベントプラグイン
  * @author トリアコンタン
  *
@@ -31,6 +198,11 @@
  *
  * @param 実行位置を記憶
  * @desc イベントの実行位置を記憶して別画面から戻ってきたときに記憶した位置から再開します。
+ * @default false
+ * @type boolean
+ *
+ * @param タイマー有効化
+ * @desc メニュー画面中でもタイマーを表示し、かつタイマーを進めます。
  * @default false
  * @type boolean
  *
@@ -103,6 +275,10 @@
  * 指定した名前のウィンドウがアクティブなときにtrueを返します。
  * ウィンドウの指定例は上と同じです。
  *
+ * // ウィンドウインデックス取得
+ * this.getSceneWindowIndex();
+ * 現在アクティブなウィンドウのインデックスを取得します。先頭は0です。
+ *
  * // 選択中のアクターオブジェクト取得
  * $gameParty.menuActor();
  * 装備画面やステータス画面で選択中のアクターの情報を取得します。
@@ -129,7 +305,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-/*~struct~CommonEventInfo:
+/*~struct~CommonEventInfo:ja
  *
  * @param SceneName
  * @desc コモンイベント実行対象の画面です。独自に追加した画面を対象にする場合はクラス名を直接入力してください。
@@ -250,6 +426,7 @@
     param.commandPrefix        = getParamString(['CommandPrefix', 'コマンド接頭辞']);
     param.maxMenuPicture       = getParamNumber(['MaxMenuPicture', 'ピクチャ表示最大数'], 1);
     param.saveInterpreterIndex = getParamBoolean(['SaveInterpreterIndex', '実行位置を記憶']);
+    param.activateTimer        = getParamBoolean(['ActivateTimer', 'タイマー有効化']);
 
     var pluginCommandMap = new Map();
     setPluginCommand('ウィンドウ操作禁止', 'execDisableWindowControl');
@@ -285,6 +462,19 @@
 
     Game_Interpreter.prototype.getSceneWindow = function(windowName) {
         return SceneManager.getSceneWindow('_' + windowName);
+    };
+
+    Game_Interpreter.prototype.getSceneWindowIndex = function() {
+        var index = -1;
+        SceneManager.getSceneWindowList().some(function(sceneWindow) {
+            if (sceneWindow instanceof Window_Selectable && sceneWindow.active) {
+                index = sceneWindow.index();
+                return true;
+            } else {
+                return false;
+            }
+        });
+        return index;
     };
 
     Game_Interpreter.prototype.refreshGlossary = function() {
@@ -474,6 +664,10 @@
         }
         this._commonEvent.update();
         $gameScreen.update();
+        if (param.activateTimer) {
+            $gameTimer.update(true);
+        }
+        this.checkGameover();
         this.updateTouchPicturesIfNeed();
     };
 
@@ -493,8 +687,8 @@
     //=============================================================================
     var _Scene_Base_update      = Scene_Base.prototype.update;
     Scene_Base.prototype.update = function() {
-        _Scene_Base_update.apply(this, arguments);
         this.updateCommonEvent();
+        _Scene_Base_update.apply(this, arguments);
     };
 
     Scene_Base.prototype.updateCommonEvent = function() {
@@ -526,12 +720,29 @@
         this._blackScreen.opacity = 0;
     };
 
+    var _Spriteset_Menu_createTimer = Spriteset_Menu.prototype.createTimer;
+    Spriteset_Menu.prototype.createTimer = function() {
+        if (param.activateTimer) {
+            _Spriteset_Menu_createTimer.apply(this, arguments);
+        }
+    };
+
     //=============================================================================
     // SceneManager
     //  ウィンドウオブジェクトを取得します。
     //=============================================================================
     SceneManager.getSceneWindow = function(windowName) {
         var sceneWindow = this._scene[windowName];
-        return sceneWindow instanceof Window_Base ? sceneWindow : null;
+        return sceneWindow instanceof Window ? sceneWindow : null;
+    };
+
+    SceneManager.getSceneWindowList = function() {
+        var windowList = [];
+        for (var sceneWindow in this._scene) {
+            if (this._scene.hasOwnProperty(sceneWindow) && this._scene[sceneWindow] instanceof Window) {
+                windowList.push(this._scene[sceneWindow]);
+            }
+        }
+        return windowList;
     };
 })();
