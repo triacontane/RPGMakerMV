@@ -21,6 +21,11 @@
  * @desc The button text for gacha commands.
  * @default ガチャを引く
  *
+ * @param Button Text 10 Time
+ * @desc 10連ガチャボタンに表示するテキストです。
+ * 機能を使わない場合は空にしてください。
+ * @default 10連ガチャを引く
+ *
  * @param Button Text All
  * @desc 全額ガチャボタンに表示するテキストです。
  * 機能を使わない場合は空にしてください。
