@@ -3,6 +3,11 @@
 //
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
+// Version(modify triacontane)
+// 1.2.0 2017/11/05 10連ガチャの機能を追加
+// 1.1.0 2016/03/11 変数でガチャを引ける機能を追加。可能な限りガチャを引き続ける機能を追加
+// 1.0.0 2016/01/01 初版
+// ----------------------------------------------------------------------------
 
 /*:
  * @plugindesc Get the item at random
@@ -120,6 +125,11 @@
  * @desc ガチャボタンに表示するテキストです。
  * @default ガチャを引く
  *
+ * @param Button Text 10 Time
+ * @desc 10連ガチャボタンに表示するテキストです。
+ * 機能を使わない場合は空にしてください。
+ * @default 10連ガチャを引く
+ *
  * @param Button Text All
  * @desc 全額ガチャボタンに表示するテキストです。
  * 機能を使わない場合は空にしてください。
@@ -212,31 +222,31 @@
  *   <gachaRank:5>             # ガチャアイテムのランクを1から5の間で指定します。
  */
 
-(function () {
+(function() {
 
-    var parameters = PluginManager.parameters('Gacha');
-    var message = String(parameters['Help Message Text'] || '1回Required Amount\\Gでガチャを引きます');
-    var buttonText = String(parameters['Button Text'] || 'ガチャを引く');
-    var buttonTextAll = String(parameters['Button Text All'] || '');
-    var getText = String(parameters['Get Message Text'] || 'GET Item Name');
+    var parameters     = PluginManager.parameters('Gacha');
+    var message        = String(parameters['Help Message Text'] || '1回Required Amount\\Gでガチャを引きます');
+    var buttonText     = String(parameters['Button Text'] || 'ガチャを引く');
+    var buttonText10   = String(parameters['Button Text 10 Time'] || '');
+    var buttonTextAll  = String(parameters['Button Text All'] || '');
+    var getText        = String(parameters['Get Message Text'] || 'GET Item Name');
     var itemDescEnable = !!Number(parameters['Show Item Description'] || 0);
-    var effect = Number(parameters['Effect'] || '119');
-    var rankEffect = [];
+    var effect         = Number(parameters['Effect'] || '119');
+    var rankEffect     = [];
     rankEffect.push(Number(parameters['Rank1 Effect'] || '-1'));
     rankEffect.push(Number(parameters['Rank2 Effect'] || '-1'));
     rankEffect.push(Number(parameters['Rank3 Effect'] || '-1'));
     rankEffect.push(Number(parameters['Rank4 Effect'] || '-1'));
     rankEffect.push(Number(parameters['Rank5 Effect'] || '-1'));
-    var me = String(parameters['ME'] || 'Organ');
-    var amount = Number(parameters['Required Amount'] || '100');
+    var me       = String(parameters['ME'] || 'Organ');
+    var amount   = Number(parameters['Required Amount'] || '100');
     var variable = Number(parameters['Required Variable'] || '0');
     var costUnit = String(parameters['Cost Unit'] || '回');
-    var reg = /Required Amount/gi;
-    message = message.replace(reg, String(amount));
+    var reg      = /Required Amount/gi;
+    message      = message.replace(reg, String(amount));
 
-
-    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
         if (command === "Gacha") {
             switch (args[0]) {
@@ -258,7 +268,6 @@
             }
         }
     };
-
 
     Game_System.prototype.addToGacha = function(type, dataId) {
         if (!this._GachaFlags) {
@@ -316,27 +325,26 @@
         }
     };
 
-
     function Scene_Gacha() {
         this.initialize.apply(this, arguments);
     }
 
-    Scene_Gacha.prototype = Object.create(Scene_MenuBase.prototype);
+    Scene_Gacha.prototype             = Object.create(Scene_MenuBase.prototype);
     Scene_Gacha.prototype.constructor = Scene_Gacha;
 
-    Scene_Gacha.prototype.initialize = function () {
+    Scene_Gacha.prototype.initialize = function() {
         Scene_MenuBase.prototype.initialize.call(this);
-        this._item = null;
-        this._effectPlaying = false;
-        this._resultShowing = false;
-        this._wait = 0;
-        this._effectSprite = null;
-        this._windowFadeSprite = null;
+        this._item                  = null;
+        this._effectPlaying         = false;
+        this._resultShowing         = false;
+        this._wait                  = 0;
+        this._effectSprite          = null;
+        this._windowFadeSprite      = null;
         this._screenFadeOutDuration = 0;
-        this._screenFadeInDuration = 0;
+        this._screenFadeInDuration  = 0;
 
-        this._lot = [];
-        this._itemList = {};
+        this._lot       = [];
+        this._itemList  = {};
         this._execCount = 0;
 
         var numLot;
@@ -370,7 +378,7 @@
         }
     };
 
-    Scene_Gacha.prototype.create = function () {
+    Scene_Gacha.prototype.create = function() {
         Scene_MenuBase.prototype.create.call(this);
 
         this.createHelpWindow();
@@ -391,7 +399,7 @@
         this._windowFadeSprite.visible = false;
         this.addChild(this._windowFadeSprite);
 
-        this._effectSprite = new Sprite_GachaEffect();
+        this._effectSprite   = new Sprite_GachaEffect();
         this._effectSprite.x = Graphics.boxWidth / 2;
         this._effectSprite.y = Graphics.boxHeight / 2;
         this.addChild(this._effectSprite);
@@ -399,18 +407,19 @@
         this._helpWindow.setText(message);
     };
 
-    Scene_Gacha.prototype.createGoldWindow = function () {
-        var y = this._helpWindow.height;
-        this._goldWindow = this.isCostTypeVariable() ? new Window_Cost(0, y) : new Window_Gold(0, y);
+    Scene_Gacha.prototype.createGoldWindow = function() {
+        var y              = this._helpWindow.height;
+        this._goldWindow   = this.isCostTypeVariable() ? new Window_Cost(0, y) : new Window_Gold(0, y);
         this._goldWindow.x = Graphics.boxWidth - this._goldWindow.width;
         this.addWindow(this._goldWindow);
     };
 
-    Scene_Gacha.prototype.createCommandWindow = function () {
-        this._commandWindow = new Window_GachaCommand(this._goldWindow.x, this._purchaseOnly);
+    Scene_Gacha.prototype.createCommandWindow = function() {
+        this._commandWindow   = new Window_GachaCommand(this._goldWindow.x, this._purchaseOnly);
         this._commandWindow.y = this._helpWindow.height;
-        this._commandWindow.setHandler('gachaAll', this.commandGachaAll.bind(this));
-        this._commandWindow.setHandler('gacha', this.commandGacha.bind(this));
+        this._commandWindow.setHandler('gachaAll', this.commandGacha.bind(this, Infinity));
+        this._commandWindow.setHandler('gacha10', this.commandGacha.bind(this, 10));
+        this._commandWindow.setHandler('gacha', this.commandGacha.bind(this, 1));
         this._commandWindow.setHandler('cancel', this.popScene.bind(this));
         this._commandWindow.lotIsValid(this._lot.length > 0);
         this._commandWindow.clearCommandList();
@@ -419,15 +428,15 @@
         this.addWindow(this._commandWindow);
     };
 
-    Scene_Gacha.prototype.createDummyWindow = function () {
-        var wy = this._commandWindow.y + this._commandWindow.height;
-        var wh = Graphics.boxHeight - wy;
+    Scene_Gacha.prototype.createDummyWindow = function() {
+        var wy            = this._commandWindow.y + this._commandWindow.height;
+        var wh            = Graphics.boxHeight - wy;
         this._dummyWindow = new Window_Base(0, wy, Graphics.boxWidth, wh);
         this.addWindow(this._dummyWindow);
     };
 
-    Scene_Gacha.prototype.createGetCommandWindow = function () {
-        this._getCommandWindow = new Window_GachaGetCommand(Graphics.boxWidth, false);
+    Scene_Gacha.prototype.createGetCommandWindow = function() {
+        this._getCommandWindow   = new Window_GachaGetCommand(Graphics.boxWidth, false);
         this._getCommandWindow.y = Graphics.boxHeight - this._getCommandWindow.height;
         this._getCommandWindow.setHandler('ok', this.commandOk.bind(this));
         this._getCommandWindow.setHandler('cancel', this.commandCancel.bind(this));
@@ -435,9 +444,9 @@
         this.addWindow(this._getCommandWindow);
     };
 
-    Scene_Gacha.prototype.createGetWindow = function () {
-        var wy = this._helpWindow.height;
-        var wh = Graphics.boxHeight - wy - this._getCommandWindow.height;
+    Scene_Gacha.prototype.createGetWindow = function() {
+        var wy          = this._helpWindow.height;
+        var wh          = Graphics.boxHeight - wy - this._getCommandWindow.height;
         this._getWindow = new Window_GachaGet(0, wy, Graphics.boxWidth, wh);
         this._getWindow.itemDescEnable(itemDescEnable);
         this._getWindow.hide();
@@ -452,12 +461,12 @@
         }, this);
     };
 
-    Scene_Gacha.prototype.isCostTypeVariable = function () {
+    Scene_Gacha.prototype.isCostTypeVariable = function() {
         return variable > 0;
     };
 
-    Scene_Gacha.prototype.commandGacha = function (allBet) {
-        this._allBet = !!allBet;
+    Scene_Gacha.prototype.commandGacha = function(count) {
+        this._count = count;
         // Draw lots
         if (this._lot.length <= 0) {
             this._item = null;
@@ -466,7 +475,6 @@
             this._item = this._lot[(Math.random() * this._lot.length) >> 0];
             this.consumeCost();
             this.getGacha();
-
 
             this._goldWindow.refresh();
 
@@ -480,7 +488,7 @@
 
             this._screenFadeOut();
             this._effectPlaying = true;
-            this._wait = 0;
+            this._wait          = 0;
 
             var animation = $dataAnimations[effect];
             this._effectSprite.startAnimation(animation, false, 0);
@@ -493,11 +501,7 @@
 
     };
 
-    Scene_Gacha.prototype.commandGachaAll = function () {
-        this.commandGacha(true);
-    };
-
-    Scene_Gacha.prototype.consumeCost = function () {
+    Scene_Gacha.prototype.consumeCost = function() {
         if (this.isCostTypeVariable()) {
             var value = $gameVariables.value(variable);
             $gameVariables.setValue(variable, value - amount);
@@ -506,7 +510,7 @@
         }
     };
 
-    Scene_Gacha.prototype.getGacha = function () {
+    Scene_Gacha.prototype.getGacha = function() {
         $gameParty.gainItem(this._item, 1);
         var name = this._item.name;
         if (!this._itemList[name]) this._itemList[name] = 0;
@@ -514,12 +518,12 @@
         this._execCount++;
     };
 
-    Scene_Gacha.prototype.commandOk = function () {
+    Scene_Gacha.prototype.commandOk = function() {
         this._effectSprite.allRemove();
         this._rankSprite.allRemove();
-        if (this._allBet && this._commandWindow.canGacha()) {
+        if (this._count > 1 && this._commandWindow.canGacha()) {
             this._getWindow.hide();
-            this.commandGacha(true);
+            this.commandGacha(this._count - 1);
             return;
         } else {
             if (this._execCount >= 2) {
@@ -534,8 +538,8 @@
         this.backToCommand();
     };
 
-    Scene_Gacha.prototype.backToCommand = function () {
-        this._itemList = {};
+    Scene_Gacha.prototype.backToCommand = function() {
+        this._itemList  = {};
         this._execCount = 0;
         this._goldWindow.show();
         this._commandWindow.show();
@@ -551,12 +555,12 @@
         this._commandWindow.refresh();
     };
 
-    Scene_Gacha.prototype.commandCancel = function () {
+    Scene_Gacha.prototype.commandCancel = function() {
         this._allBet = false;
         this.commandOk();
     };
 
-    Scene_Gacha.prototype.update = function () {
+    Scene_Gacha.prototype.update = function() {
         Scene_Menu.prototype.update.call(this);
         this._updateScreenFlashSprite();
 
@@ -574,7 +578,7 @@
                         var rank = Number(this._item.meta.gachaRank || '-1');
                         if (rank > 0 && rank < 6) {
                             if (rankEffect[rank - 1] > 0) {
-                                var animation = $dataAnimations[rankEffect[rank - 1]];
+                                var animation      = $dataAnimations[rankEffect[rank - 1]];
                                 this._rankSprite.x = this._getWindow.width / 2 + this._getWindow.x - 20;
                                 this._rankSprite.y = this._getWindow.contentsHeight() + this._getWindow.y;
                                 if (itemDescEnable) {
@@ -592,10 +596,10 @@
                     this._getCommandWindow.show();
                     this._getWindow.show();
                     var message = getText;
-                    var reg = /Item Name/gi;
-                    message = message.replace(reg, String(this._item.name));
+                    var reg     = /Item Name/gi;
+                    message     = message.replace(reg, String(this._item.name));
                     this._helpWindow.setText(message);
-                    this._wait = 0;
+                    this._wait          = 0;
                     this._resultShowing = true;
                 }
                 else {
@@ -611,14 +615,14 @@
         }
     };
 
-    Scene_Gacha.prototype._updateScreenFlashSprite = function () {
+    Scene_Gacha.prototype._updateScreenFlashSprite = function() {
         var d;
         if (this._screenFadeOutDuration > 0) {
             d = this._screenFadeOutDuration--;
             this._windowFadeSprite.opacity += 255 * (1 - (d - 1) / d);
         }
         if (this._screenFadeInDuration > 0) {
-            d = this._screenFadeInDuration--;
+            d                              = this._screenFadeInDuration--;
             this._windowFadeSprite.opacity *= (d - 1) / d;
             this._windowFadeSprite.visible = (this._screenFadeInDuration > 0);
         }
@@ -626,118 +630,120 @@
 
     Scene_Gacha.prototype._screenFadeOut = function() {
         this._windowFadeSprite.visible = true;
-        this._screenFadeOutDuration = 15;
-        this._screenFadeInDuration = 0;
+        this._screenFadeOutDuration    = 15;
+        this._screenFadeInDuration     = 0;
     };
 
     Scene_Gacha.prototype._screenFadeIn = function() {
         this._windowFadeSprite.visible = true;
-        this._screenFadeOutDuration = 0;
-        this._screenFadeInDuration = 15;
+        this._screenFadeOutDuration    = 0;
+        this._screenFadeInDuration     = 15;
     };
-
 
     function Window_Gacha() {
         this.initialize.apply(this, arguments);
     }
 
-    Window_Gacha.prototype = Object.create(Window_Selectable.prototype);
+    Window_Gacha.prototype             = Object.create(Window_Selectable.prototype);
     Window_Gacha.prototype.constructor = Window_Gacha;
 
-    Window_Gacha.prototype.initialize = function (x, y) {
-        var width = Graphics.boxWidth;
+    Window_Gacha.prototype.initialize = function(x, y) {
+        var width  = Graphics.boxWidth;
         var height = this.fittingHeight(6);
         Window_Selectable.prototype.initialize.call(this, x, y, width, height);
         this.refresh();
         this.activate();
     };
 
-
     function Window_GachaCommand() {
         this.initialize.apply(this, arguments);
     }
 
-    Window_GachaCommand.prototype = Object.create(Window_HorzCommand.prototype);
+    Window_GachaCommand.prototype             = Object.create(Window_HorzCommand.prototype);
     Window_GachaCommand.prototype.constructor = Window_GachaCommand;
 
-    Window_GachaCommand.prototype.initialize = function (width, purchaseOnly) {
-        this._windowWidth = width;
+    Window_GachaCommand.prototype.initialize = function(width, purchaseOnly) {
+        this._windowWidth  = width;
         this._purchaseOnly = purchaseOnly;
         Window_HorzCommand.prototype.initialize.call(this, 0, 0);
     };
 
-    Window_GachaCommand.prototype.windowWidth = function () {
+    Window_GachaCommand.prototype.windowWidth = function() {
         return this._windowWidth;
     };
 
-    Window_GachaCommand.prototype.maxCols = function () {
-        return buttonTextAll ? 3 : 2;
+    Window_GachaCommand.prototype.maxCols = function() {
+        return 2 + (buttonText10 ? 1 : 0) + (buttonTextAll ? 1 : 0);
     };
 
-    Window_GachaCommand.prototype.makeCommandList = function () {
+    Window_GachaCommand.prototype.makeCommandList = function() {
         this.addCommand(buttonText, 'gacha', this.canGacha());
+        if (buttonText10) {
+            this.addCommand(buttonText10, 'gacha10', this.canGacha(10));
+        }
         if (buttonTextAll) {
             this.addCommand(buttonTextAll, 'gachaAll', this.canGacha());
         }
         this.addCommand(TextManager.cancel, 'cancel');
     };
 
-    Window_GachaCommand.prototype.isCostTypeVariable = function () {
+    Window_GachaCommand.prototype.isCostTypeVariable = function() {
         return variable > 0;
     };
 
-    Window_GachaCommand.prototype.canGacha = function () {
-        return (this.isCostTypeVariable() ? $gameVariables.value(variable) : $gameParty.gold()) >= amount &&
-            !!this._lotIsValid;
+    Window_GachaCommand.prototype.canGacha = function(count) {
+        return this.getGachaResource() >= amount * (count || 1) && !!this._lotIsValid;
+    };
+
+    Window_GachaCommand.prototype.getGachaResource = function() {
+        return this.isCostTypeVariable() ? $gameVariables.value(variable) : $gameParty.gold();
     };
 
     Window_GachaCommand.prototype.lotIsValid = function(value) {
         this._lotIsValid = value;
     };
 
-
     function Window_GachaGetCommand() {
         this.initialize.apply(this, arguments);
     }
 
-    Window_GachaGetCommand.prototype = Object.create(Window_HorzCommand.prototype);
+    Window_GachaGetCommand.prototype             = Object.create(Window_HorzCommand.prototype);
     Window_GachaGetCommand.prototype.constructor = Window_GachaGetCommand;
 
-    Window_GachaGetCommand.prototype.initialize = function (width, purchaseOnly) {
-        this._windowWidth = width;
+    Window_GachaGetCommand.prototype.initialize = function(width, purchaseOnly) {
+        this._windowWidth  = width;
         this._purchaseOnly = purchaseOnly;
         Window_HorzCommand.prototype.initialize.call(this, 0, 0);
     };
 
-    Window_GachaGetCommand.prototype.windowWidth = function () {
+    Window_GachaGetCommand.prototype.windowWidth = function() {
         return this._windowWidth;
     };
 
-    Window_GachaGetCommand.prototype.maxCols = function () {
+    Window_GachaGetCommand.prototype.maxCols = function() {
         return 1;
     };
 
-    Window_GachaGetCommand.prototype.makeCommandList = function () {
+    Window_GachaGetCommand.prototype.makeCommandList = function() {
         this.addCommand('OK', 'ok');
     };
-
 
     function Window_GachaGet() {
         this.initialize.apply(this, arguments);
     }
 
-    Window_GachaGet.prototype = Object.create(Window_Base.prototype);
+    Window_GachaGet.prototype             = Object.create(Window_Base.prototype);
     Window_GachaGet.prototype.constructor = Window_GachaGet;
 
     Window_GachaGet.prototype.initialize = function(x, y, width, height) {
         Window_Base.prototype.initialize.call(this, x, y, width, height);
-        this._item = null;
-        this._itemDescEnable = true;
-        this._gachaSprite = new Sprite();
+        this._item                 = null;
+        this._itemDescEnable       = true;
+        this._gachaSprite          = new Sprite();
         this._gachaSprite.anchor.x = 0.5;
         this._gachaSprite.anchor.y = 0;
-        this._gachaSprite.x = width / 2 - 20;
-        this._gachaSprite.y = this.padding;
+        this._gachaSprite.x        = width / 2 - 20;
+        this._gachaSprite.y        = this.padding;
         this.addChildToBack(this._gachaSprite);
         this.refresh();
     };
@@ -759,7 +765,7 @@
     Window_GachaGet.prototype.update = function() {
         Window_Base.prototype.update.call(this);
         if (this._gachaSprite.bitmap) {
-            var bitmapHeight = this._gachaSprite.bitmap.height;
+            var bitmapHeight   = this._gachaSprite.bitmap.height;
             var contentsHeight = this.contents.height;
             if (this._itemDescEnable) {
                 contentsHeight -= this.lineHeight() * 3
@@ -785,13 +791,13 @@
 
         if (!item || !item.meta.gachaImage) {
             this._gachaSprite.bitmap = null;
-            return;
+
         }
         else {
             var bitmap;
-            bitmap = ImageManager.loadBitmap("img/gacha/", this._item.meta.gachaImage);
+            bitmap                   = ImageManager.loadBitmap("img/gacha/", this._item.meta.gachaImage);
             this._gachaSprite.bitmap = bitmap;
-            bitmap.smooth = true;
+            bitmap.smooth            = true;
         }
     };
 
@@ -800,7 +806,7 @@
     };
 
     Window_GachaGet.prototype.drawHorzLine = function(y) {
-        var lineY = y + this.lineHeight() / 2 - 1;
+        var lineY                  = y + this.lineHeight() / 2 - 1;
         this.contents.paintOpacity = 48;
         this.contents.fillRect(0, lineY, this.contentsWidth(), 2, this.lineColor());
         this.contents.paintOpacity = 255;
@@ -814,16 +820,16 @@
         this.initialize.apply(this, arguments);
     }
 
-    Sprite_GachaEffect.prototype = Object.create(Sprite.prototype);
+    Sprite_GachaEffect.prototype             = Object.create(Sprite.prototype);
     Sprite_GachaEffect.prototype.constructor = Sprite_GachaEffect;
 
     Sprite_GachaEffect.prototype.initialize = function() {
         Sprite.prototype.initialize.call(this);
         this._animationSprites = [];
-        this._endSprites = [];
-        this._effectTarget = this;
-        this._hiding = false;
-        this._keepDisplay = false;
+        this._endSprites       = [];
+        this._effectTarget     = this;
+        this._hiding           = false;
+        this._keepDisplay      = false;
     };
 
     Sprite_GachaEffect.prototype.keepDisplay = function(value) {
@@ -852,7 +858,7 @@
 
     Sprite_GachaEffect.prototype.updateAnimationSprites = function() {
         if (this._animationSprites.length > 0) {
-            var sprites = this._animationSprites.clone();
+            var sprites            = this._animationSprites.clone();
             this._animationSprites = [];
             for (var i = 0; i < sprites.length; i++) {
                 var sprite = sprites[i];
@@ -884,7 +890,7 @@
     Sprite_GachaEffect.prototype.allRemove = function() {
         var sprites, sprite, i;
         if (this._animationSprites.length > 0) {
-            sprites = this._animationSprites.clone();
+            sprites                = this._animationSprites.clone();
             this._animationSprites = [];
             for (i = 0; i < sprites.length; i++) {
                 sprite = sprites[i];
@@ -892,7 +898,7 @@
             }
         }
         if (this._endSprites.length > 0) {
-            sprites = this._endSprites.clone();
+            sprites          = this._endSprites.clone();
             this._endSprites = [];
             for (i = 0; i < sprites.length; i++) {
                 sprite = sprites[i];
@@ -908,7 +914,7 @@
         this.initialize.apply(this, arguments);
     }
 
-    Window_Cost.prototype = Object.create(Window_Gold.prototype);
+    Window_Cost.prototype             = Object.create(Window_Gold.prototype);
     Window_Cost.prototype.constructor = Window_Cost;
 
     Window_Cost.prototype.value = function() {
