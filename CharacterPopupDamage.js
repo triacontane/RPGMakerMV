@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2017/11/10 コピペミスによる誤記を修正
 // 1.5.0 2017/04/23 ポップアップ時にキャラクターをフラッシュさせる機能を追加
 // 1.4.0 2017/03/03 ピクチャより前面にポップアップできる設定を追加
 //                  回転がない場合でも拡大率を自由に変更できるよう修正
@@ -262,23 +263,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandCharacterPopupDamage(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandCharacterPopupDamage(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandCharacterPopupDamage = function(command, args) {
@@ -623,15 +608,15 @@
         this.initialize.apply(this, arguments);
     }
 
-    Sprite_CharacterDamage.prototype           = Object.create(Sprite_Damage.prototype);
-    Sprite_CharacterDamage.prototype.varructor = Sprite_CharacterDamage;
+    Sprite_CharacterDamage.prototype             = Object.create(Sprite_Damage.prototype);
+    Sprite_CharacterDamage.prototype.constructor = Sprite_CharacterDamage;
 
     Sprite_CharacterDamage.prototype.setupCharacter = function(character) {
-        var damageInfo  = character.shiftDamageInfo();
-        this._toneColor = $gameSystem.getPopupDamageTone();
-        this._mirror    = damageInfo.mirror;
+        var damageInfo   = character.shiftDamageInfo();
+        this._toneColor  = $gameSystem.getPopupDamageTone();
+        this._mirror     = damageInfo.mirror;
         this._damageInfo = damageInfo;
-        this._digit     = 0;
+        this._digit      = 0;
         if (this.isMiss()) {
             this.createMissForCharacter();
         } else {
