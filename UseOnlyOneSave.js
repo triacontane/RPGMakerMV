@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2017/11/11 ロード成功時にBGMが再生されないことがある問題を修正
 // 1.0.0 2017/11/10 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -64,6 +65,25 @@
     //=============================================================================
     Scene_File.prototype.savefileId = function() {
         return 1;
+    };
+
+    //=============================================================================
+    // Scene_Title
+    //  ロード成功時にBGMを再生します。
+    //=============================================================================
+    var _Scene_Title_commandContinue = Scene_Title.prototype.commandContinue;
+    Scene_Title.prototype.commandContinue = function() {
+        this.fadeOutAll();
+        _Scene_Title_commandContinue.apply(this, arguments);
+        this._loadSuccess = true;
+    };
+
+    var _Scene_Title_terminate = Scene_Title.prototype.terminate;
+    Scene_Title.prototype.terminate = function() {
+        _Scene_Title_terminate.apply(this, arguments);
+        if (this._loadSuccess) {
+            $gameSystem.onAfterLoad();
+        }
     };
 })();
 
