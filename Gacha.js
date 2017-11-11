@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.3.0 2017/11/11 新規アイテム入手時に通知する機能を追加
 // 1.2.0 2017/11/05 10連ガチャの機能を追加
 // 1.1.0 2016/03/11 変数でガチャを引ける機能を追加。可能な限りガチャを引き続ける機能を追加
 // 1.0.0 2016/01/01 初版
@@ -22,8 +23,7 @@
  * @default ガチャを引く
  *
  * @param Button Text 10 Time
- * @desc 10連ガチャボタンに表示するテキストです。
- * 機能を使わない場合は空にしてください。
+ * @desc The button text for 10 times gacha commands.
  * @default 10連ガチャを引く
  *
  * @param Button Text All
@@ -38,6 +38,15 @@
  * @param Show Item Description
  * @desc The switch of item description display
  * @default 0
+ * @type select
+ * @option Hidden
+ * @value 0
+ * @option Show
+ * @value 1
+ *
+ * @param New Item Notice
+ * @desc 新規アイテム入手時の通知です。指定しない場合は表示されません。
+ * @default \C[2]New!!\C[0]
  *
  * @param Effect
  * @desc The animation number for get effect.
@@ -147,6 +156,15 @@
  * @param Show Item Description
  * @desc 1でアイテム取得時に説明を表示します。[0: 説明非表示 1: 説明表示]
  * @default 0
+ * @type select
+ * @option 説明非表示
+ * @value 0
+ * @option 説明表示
+ * @value 1
+ *
+ * @param New Item Notice
+ * @desc 新規アイテム入手時の通知です。指定しない場合は表示されません。
+ * @default \C[2]New!!\C[0]
  *
  * @param Effect
  * @desc アイテム取得時のアニメーションIDを指定します。
@@ -236,6 +254,7 @@
     var buttonTextAll  = String(parameters['Button Text All'] || '');
     var getText        = String(parameters['Get Message Text'] || 'GET Item Name');
     var itemDescEnable = !!Number(parameters['Show Item Description'] || 0);
+    var newItemNotice  = String(parameters['New Item Notice'] || 'New!!');
     var effect         = Number(parameters['Effect'] || '119');
     var rankEffect     = [];
     rankEffect.push(Number(parameters['Rank1 Effect'] || '-1'));
@@ -348,9 +367,8 @@
         this._screenFadeOutDuration = 0;
         this._screenFadeInDuration  = 0;
 
-        this._lot       = [];
-        this._itemList  = {};
-        this._execCount = 0;
+        this._lot      = [];
+        this._itemList = {};
 
         var numLot;
         var item, i, j;
@@ -470,13 +488,14 @@
         return variable > 0;
     };
 
-    Scene_Gacha.prototype.commandGacha = function(count) {
-        this._count = count;
+    Scene_Gacha.prototype.commandGacha = function(remainCount) {
+        if (remainCount) {
+            this._remainCount = remainCount;
+        }
         // Draw lots
         if (this._lot.length <= 0) {
             this._item = null;
-        }
-        else {
+        } else {
             this._item = this._lot[(Math.random() * this._lot.length) >> 0];
             this.consumeCost();
             this.getGacha();
@@ -516,36 +535,42 @@
     };
 
     Scene_Gacha.prototype.getGacha = function() {
+        this._newItem = !$gameParty.hasItem(this._item, true);
         $gameParty.gainItem(this._item, 1);
         var name = this._item.name;
-        if (!this._itemList[name]) this._itemList[name] = 0;
+        if (!this._itemList[name]) {
+            this._itemList[name] = 0;
+        }
         this._itemList[name]++;
-        this._execCount++;
+    };
+
+    Scene_Gacha.prototype.getNewItemText = function() {
+        return this._newItem ? (newItemNotice) : '';
     };
 
     Scene_Gacha.prototype.commandOk = function() {
         this._effectSprite.allRemove();
         this._rankSprite.allRemove();
-        if (this._count > 1 && this._commandWindow.canGacha()) {
+        if (this._remainCount > 1 && this._commandWindow.canGacha()) {
             this._getWindow.hide();
-            this.commandGacha(this._count - 1);
-            return;
+            this._remainCount--;
+            this.commandGacha(null);
         } else {
-            if (this._execCount >= 2) {
-                Object.keys(this._itemList).forEach(function(key) {
+            var itemListKeys = Object.keys(this._itemList);
+            if (itemListKeys.length >= 2) {
+                itemListKeys.forEach(function(key) {
                     $gameMessage.add(key + ' × ' + this._itemList[key]);
                 }.bind(this));
                 $gameMessage.add('を手に入れた！');
                 this._textShowing = true;
-                return;
+            } else {
+                this.backToCommand();
             }
         }
-        this.backToCommand();
     };
 
     Scene_Gacha.prototype.backToCommand = function() {
-        this._itemList  = {};
-        this._execCount = 0;
+        this._itemList = {};
         this._goldWindow.show();
         this._commandWindow.show();
         this._commandWindow.activate();
@@ -561,7 +586,9 @@
     };
 
     Scene_Gacha.prototype.commandCancel = function() {
-        this._allBet = false;
+        if (this._remainCount === Infinity) {
+            this._remainCount = 0;
+        }
         this.commandOk();
     };
 
@@ -600,24 +627,26 @@
                     this._dummyWindow.hide();
                     this._getCommandWindow.show();
                     this._getWindow.show();
-                    var message = getText;
+                    var message = this.getNewItemText() + getText;
                     var reg     = /Item Name/gi;
                     message     = message.replace(reg, String(this._item.name));
                     this._helpWindow.setText(message);
                     this._wait          = 0;
                     this._resultShowing = true;
-                }
-                else {
-                    if (TouchInput.isTriggered() || Input.isTriggered("ok")) {
+                } else {
+                    if (this.isTriggeredEffectCancel()) {
                         this._effectSprite.allRemove();
                     }
                 }
-            }
-            else if (this._resultShowing) {
+            } else if (this._resultShowing) {
                 this._resultShowing = false;
                 this._getCommandWindow.activate();
             }
         }
+    };
+
+    Scene_Gacha.prototype.isTriggeredEffectCancel = function() {
+        return TouchInput.isTriggered() || Input.isTriggered('ok') || Input.isTriggered('cancel');
     };
 
     Scene_Gacha.prototype._updateScreenFlashSprite = function() {
