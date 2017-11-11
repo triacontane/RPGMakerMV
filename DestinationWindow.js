@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2017/11/11 マップ画面のウィンドウを一定時間で消去できる機能を追加
 // 1.2.1 2017/05/22 専用ウィンドウスキンを指定した状態でセーブ＆ロードした際にテキスト色が黒くなる問題を修正
 // 1.2.0 2017/05/03 アイコン表示機能、横幅自動調整機能を追加、別の目標を指定したときに重なって表示される問題を修正
 // 1.1.0 2017/05/02 メニュー画面にも表示できる機能を追加
@@ -23,26 +24,32 @@
  * @param ShowingSwitchId
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。
  * @default 1
+ * @type switch
  *
  * @param CloseEventRunning
  * @desc イベントが実行されている間はウィンドウを閉じます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param WindowX
  * @desc ウィンドウのX横幅です。
  * @default 24
+ * @type number
  *
  * @param WindowY
  * @desc ウィンドウのY横幅です。
  * @default 24
+ * @type number
  *
  * @param WindowWidth
  * @desc ウィンドウの横幅です。
  * @default 320
+ * @type number
  *
  * @param WindowOpacity
  * @desc ウィンドウの不透明度です。
  * @default 255
+ * @type number
  *
  * @param WindowSkin
  * @desc ウィンドウスキンのファイル名(img/system)です。拡張子不要。
@@ -54,18 +61,27 @@
  * @param FadeFrame
  * @desc ウィンドウのフェードイン、フェードアウト時間(フレーム数)です。
  * @default 8
+ * @type number
  *
  * @param FontSize
  * @desc ウィンドウのフォントサイズです。
  * @default 22
+ * @type number
  *
  * @param ShowingInMenu
  * @desc 行動目標ウィンドウをメニュー画面にも表示します。ただし座標やサイズは自働で整形されます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param AutoAdjust
  * @desc 指定した文字列がウィンドウに収まらない場合に自働で調整します。ただし一部の制御文字が使用不可となります。
- * @default ON
+ * @default true
+ * @type boolean
+ *
+ * @param ShowingFrames
+ * @desc 行動目標ウィンドウの表示フレーム数です。0を指定すると常時表示されます。
+ * @default 0
+ * @type number
  *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
@@ -93,26 +109,32 @@
  * @param 表示スイッチID
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。
  * @default 1
+ * @type switch
  *
  * @param イベント中は閉じる
  * @desc イベントが実行されている間はウィンドウを閉じます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ウィンドウX座標
  * @desc ウィンドウのX横幅です。
  * @default 24
+ * @type number
  *
  * @param ウィンドウY座標
  * @desc ウィンドウのY横幅です。
  * @default 24
+ * @type number
  *
  * @param ウィンドウ横幅
  * @desc ウィンドウの横幅です。
  * @default 320
+ * @type number
  *
  * @param ウィンドウ不透明度
  * @desc ウィンドウの不透明度です。
  * @default 255
+ * @type number
  *
  * @param ウィンドウスキン名
  * @desc ウィンドウスキンのファイル名(img/system)です。拡張子不要。
@@ -124,18 +146,27 @@
  * @param フェード時間
  * @desc ウィンドウのフェードイン、フェードアウト時間(フレーム数)です。
  * @default 8
+ * @type number
  *
  * @param フォントサイズ
  * @desc ウィンドウのフォントサイズです。
  * @default 22
+ * @type number
  *
  * @param メニュー画面に表示
  * @desc 行動目標ウィンドウをメニュー画面にも表示します。ただし座標やサイズは自働で整形されます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 自働調整
  * @desc 指定した文字列がウィンドウに収まらない場合に自働で調整します。ただし一部の制御文字が使用不可となります。
- * @default ON
+ * @default true
+ * @type boolean
+ *
+ * @param 表示フレーム数
+ * @desc 行動目標ウィンドウの表示フレーム数です。0を指定すると常時表示されます。
+ * @default 0
+ * @type number
  *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
@@ -187,7 +218,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     var getArgNumber = function(arg, min, max) {
@@ -221,6 +252,7 @@
     param.closeEventRunning = getParamBoolean(['CloseEventRunning', 'イベント中は閉じる']);
     param.showingInMenu     = getParamBoolean(['ShowingInMenu', 'メニュー画面に表示']);
     param.autoAdjust        = getParamBoolean(['AutoAdjust', '自働調整']);
+    param.showingFrames     = getParamNumber(['ShowingFrames', '表示フレーム数'], 0);
 
     var pluginCommandMap = new Map();
     setPluginCommand('目標設定', 'execSetDestination');
@@ -258,6 +290,7 @@
     //=============================================================================
     Game_System.prototype.setDestination = function(value) {
         this._destinationText = value;
+        this.resetDestinationFrame();
     };
 
     Game_System.prototype.getDestination = function() {
@@ -270,6 +303,15 @@
 
     Game_System.prototype.getDestinationIcon = function() {
         return this._destinationIconIndex || '';
+    };
+
+    Game_System.prototype.resetDestinationFrame = function() {
+        this._destinationFrame = 0;
+    };
+
+    Game_System.prototype.isOverDestinationFrame = function() {
+        this._destinationFrame++;
+        return param.showingFrames > 0 ? param.showingFrames <= this._destinationFrame : false;
     };
 
     //=============================================================================
@@ -310,7 +352,7 @@
             width  = param.windowWidth;
             height = this._goldWindow.height;
         }
-        this._destinationWindow = new Window_Destination(0, y, width, height);
+        this._destinationWindow = new Window_DestinationMenu(0, y, width, height);
         this.addWindow(this._destinationWindow);
     };
 
@@ -408,11 +450,34 @@
     };
 
     Window_Destination.prototype.isVisible = function() {
-        return $gameSwitches.value(param.showingSwitchId) && !this.isEventRunning() && (!!this._text || !!this._iconIndex);
+        return $gameSwitches.value(param.showingSwitchId) && !this.isEventRunning() && this.isExistText() && !this.isOverFrame();
+    };
+
+    Window_Destination.prototype.isOverFrame = function() {
+        return $gameSystem.isOverDestinationFrame();
+    };
+
+    Window_Destination.prototype.isExistText = function() {
+        return !!this._text || !!this._iconIndex;
     };
 
     Window_Destination.prototype.isEventRunning = function() {
         return $gameMap.isEventRunning() && param.closeEventRunning;
+    };
+
+    //=============================================================================
+    // Window_DestinationMenu
+    //  メニュー画面の行動目標ウィンドウです。
+    //=============================================================================
+    function Window_DestinationMenu() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_DestinationMenu.prototype             = Object.create(Window_Destination.prototype);
+    Window_DestinationMenu.prototype.constructor = Window_DestinationMenu;
+
+    Window_DestinationMenu.prototype.isOverFrame = function() {
+        return false;
     };
 })();
 
