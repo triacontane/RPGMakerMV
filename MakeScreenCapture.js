@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2017/11/11 総合開発支援プラグインとの連携による修正
 // 1.7.0 2017/08/13 パラメータの型指定機能に対応
 // 1.6.0 2016/12/25 jpg保存時の拡張子を「jpeg」→「jpg」に変更
 //                  jpeg品質をパラメータから指定できる機能を追加
@@ -547,8 +548,9 @@
     Scene_Base.prototype.update = function() {
         _Scene_Base_update.apply(this, arguments);
         var count = Graphics.frameCount;
-        if (paramInterval !== 0 && Utils.isTestCapture() &&
-            (count + 1) % (paramInterval * 60) === 0) SceneManager.takeCapture(paramFileFormat);
+        if (paramInterval !== 0 && Utils.isTestCapture() && (count + 1) % (paramInterval * 60) === 0) {
+            SceneManager.takeCapture();
+        }
     };
 
     //=============================================================================
@@ -669,6 +671,9 @@
     };
 
     SceneManager.takeCapture = function(format) {
+        if (!format) {
+            format = paramFileFormat;
+        }
         this.makeCapture();
         this.saveCapture(paramFileName, format);
     };
@@ -705,7 +710,7 @@
 
     SceneManager.onKeyUpForCapture = function(event) {
         // PrintScreen
-        if (event.keyCode === 44) SceneManager.takeCapture(paramFileFormat);
+        if (event.keyCode === 44) SceneManager.takeCapture();
     };
 
     //=============================================================================
