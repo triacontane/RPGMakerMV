@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/11/12 オンラインストレージ使用時にセーブするとたまにエラーになる現象を修正
 // 1.0.1 2017/11/11 ロード成功時にBGMが再生されないことがある問題を修正
 // 1.0.0 2017/11/10 初版
 // ----------------------------------------------------------------------------
@@ -57,6 +58,23 @@
             return;
         }
         _SceneManager_goto.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // StorageManager
+    //  バックアップの削除失敗のエラーを無視します。(オンラインストレージ対策)
+    //=============================================================================
+    var _StorageManager_cleanBackup = StorageManager.cleanBackup;
+    StorageManager.cleanBackup = function(savefileId) {
+        try {
+            _StorageManager_cleanBackup.apply(this, arguments);
+        } catch (e) {
+            if (e.code === 'EBUSY') {
+                console.error(e);
+            } else {
+                throw e;
+            }
+        }
     };
 
     //=============================================================================
