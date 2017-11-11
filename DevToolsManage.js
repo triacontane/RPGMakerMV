@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2017/11/11 画面キャプチャ管理プラグインとの連携による修正
 // 2.3.0 2017/09/25 競合対策でマップとデータのリロード機能を無効にする設定を追加
 //                  最新のNW.jsかつメニューバーを表示しない場合にエラーになる問題を修正
 // 2.2.2 2017/09/25 ヘルプに注意事項を追記
@@ -271,6 +272,9 @@
  * ver2.2.0にて型指定機能に対応したことで一部パラメータの再設定が必要になりました。
  * それ以前からアップデートした場合プラグイン管理画面から一度、削除して再設定してください。
  *
+ * 画面キャプチャ管理プラグインと連携すると画面キャプチャ用のメニューバーが表示されます。
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -281,9 +285,12 @@
  * @desc ゲーム開始時に同時にデベロッパツールを起動します。(MINIMIZE:最小化で起動)
  * @default ON
  * @type select
- * @option ON
- * @option OFF
- * @option MINIMIZE
+ * @option 起動する
+ * @value ON
+ * @option 起動しない
+ * @value OFF
+ * @option 最小化で起動
+ * @value MINIMIZE
  *
  * @param デベロッパツール表示位置
  * @desc デベロッパツールの表示座標です。X、Y、横幅、高さを指定します。指定しない場合自動調整されます。
@@ -525,6 +532,9 @@
  * ver2.2.0にて型指定機能に対応したことで一部パラメータの再設定が必要になりました。
  * それ以前からアップデートした場合プラグイン管理画面から一度、削除して再設定してください。
  *
+ * 画面キャプチャ管理プラグインと連携すると画面キャプチャ用のメニューバーが表示されます。
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -749,15 +759,6 @@ var p = null;
     // SceneManager
     //  状況に応じてデベロッパツールを自動制御します。
     //=============================================================================
-    SceneManager.devCommands       = [
-        {code: 101, use: true, name: 'DEVツール最小化', key: paramFuncKeyMinimize, type: 'checkbox'},
-        {code: 102, use: true, name: '最前面に表示', key: paramFuncKeyOnTop, type: 'checkbox'},
-        {code: 103, use: true, name: 'リロード', key: paramFuncKeyReload, type: 'normal'},
-        {code: 104, use: true, name: '高速モード切替', key: paramFuncKeyRapidGame, type: 'checkbox'},
-        {code: 105, use: true, name: '戦闘強制勝利', key: paramFuncKeyVictory, type: 'normal'},
-        {code: 106, use: true, name: '常駐スクリプト実行', key: paramFuncKeyScript, type: 'normal'},
-        {code: 107, use: true, name: '画面フリーズ', key: paramFuncKeyFreeze, type: 'checkbox'}
-    ];
     SceneManager.originalTitle     = null;
     SceneManager._rapidGame        = false;
     SceneManager._lastScriptString = null;
@@ -765,6 +766,7 @@ var p = null;
 
     const _SceneManager_initialize = SceneManager.initialize;
     SceneManager.initialize        = function() {
+        this.initDevCommand();
         _SceneManager_initialize.apply(this, arguments);
         this._nwJsGui = new Controller_NwJs();
         if (paramStartupOnTop) {
@@ -772,6 +774,19 @@ var p = null;
         }
         this._freeze = false;
         Graphics.setFPSMeter(paramShowFPS);
+    };
+
+    SceneManager.initDevCommand = function() {
+        this.devCommands = [
+            {code: 101, use: true, name: 'DEVツール最小化', key: paramFuncKeyMinimize, type: 'checkbox'},
+            {code: 102, use: true, name: '最前面に表示', key: paramFuncKeyOnTop, type: 'checkbox'},
+            {code: 103, use: true, name: 'リロード', key: paramFuncKeyReload, type: 'normal'},
+            {code: 104, use: true, name: '高速モード切替', key: paramFuncKeyRapidGame, type: 'checkbox'},
+            {code: 105, use: true, name: '戦闘強制勝利', key: paramFuncKeyVictory, type: 'normal'},
+            {code: 106, use: true, name: '常駐スクリプト実行', key: paramFuncKeyScript, type: 'normal'},
+            {code: 107, use: true, name: '画面フリーズ', key: paramFuncKeyFreeze, type: 'checkbox'},
+            {code: 108, use: !!SceneManager.takeCapture, name: '画面キャプチャ', key: null, type: 'normal'}
+        ];
     };
 
     SceneManager.getNwJs = function() {
@@ -850,6 +865,10 @@ var p = null;
 
     SceneManager.executeDevCommand107 = function() {
         return this.toggleFreeze();
+    };
+
+    SceneManager.executeDevCommand108 = function() {
+        return this.takeCapture();
     };
 
     SceneManager.isRapid = function() {
