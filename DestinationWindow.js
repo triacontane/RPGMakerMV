@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2017/11/15 行動目標ウィンドウの文字列揃えを中央揃え、右揃えにできる機能を追加
 // 1.3.0 2017/11/11 マップ画面のウィンドウを一定時間で消去できる機能を追加
 // 1.2.1 2017/05/22 専用ウィンドウスキンを指定した状態でセーブ＆ロードした際にテキスト色が黒くなる問題を修正
 // 1.2.0 2017/05/03 アイコン表示機能、横幅自動調整機能を追加、別の目標を指定したときに重なって表示される問題を修正
@@ -82,6 +83,17 @@
  * @desc 行動目標ウィンドウの表示フレーム数です。0を指定すると常時表示されます。
  * @default 0
  * @type number
+ *
+ * @param TextAlign
+ * @desc 文字列の揃えです。
+ * @default 0
+ * @type select
+ * @option Left
+ * @value 0
+ * @option Center
+ * @value 1
+ * @option Right
+ * @value 2
  *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
@@ -168,6 +180,17 @@
  * @default 0
  * @type number
  *
+ * @param 文字列揃え
+ * @desc 文字列の揃えです。
+ * @default 0
+ * @type select
+ * @option 左揃え
+ * @value 0
+ * @option 中央揃え
+ * @value 1
+ * @option 右揃え
+ * @value 2
+ *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
  * 表示する内容はプラグインコマンドで、表示可否はスイッチで制御します。
@@ -253,6 +276,7 @@
     param.showingInMenu     = getParamBoolean(['ShowingInMenu', 'メニュー画面に表示']);
     param.autoAdjust        = getParamBoolean(['AutoAdjust', '自働調整']);
     param.showingFrames     = getParamNumber(['ShowingFrames', '表示フレーム数'], 0);
+    param.textAlign         = getParamNumber(['TextAlign', '文字列揃え'], 0);
 
     var pluginCommandMap = new Map();
     setPluginCommand('目標設定', 'execSetDestination');
@@ -426,7 +450,7 @@
 
     Window_Destination.prototype.drawDestination = function() {
         this.contents.clear();
-        var x = 0;
+        var x = this.getContentsX();
         var y = this.contentsHeight() / 2 - this.contents.fontSize / 2 - 4;
         if (this._iconIndex > 0) {
             this.drawIcon(this._iconIndex, x, y);
@@ -438,6 +462,18 @@
         } else {
             this.drawTextEx(this._text, x, y);
         }
+    };
+
+    Window_Destination.prototype.getContentsX = function() {
+        if (param.textAlign === 0) {
+            return 0;
+        }
+        var width = param.autoAdjust ? this.textWidth(this._text) : this.drawTextEx(this._text, 0, -this.lineHeight());
+        if (this._iconIndex > 0) {
+            width += Window_Base._iconWidth;
+        }
+        var division = (param.textAlign === 1 ? 2 : 1);
+        return this.contentsWidth() / division - width / division;
     };
 
     Window_Destination.prototype.setOpacity = function(value) {
