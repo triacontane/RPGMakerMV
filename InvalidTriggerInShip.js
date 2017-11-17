@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/11/18 トリガーごとに起動の有効/無効を設定できる機能を追加
 // 1.0.0 2017/11/15 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -22,13 +23,27 @@
  * @default 0
  * @type switch
  *
+ * @param InvalidActionButton
+ * @desc 乗船時、決定ボタンによるイベント実行を無効化します。
+ * @default true
+ * @type boolean
+ *
+ * @param InvalidPlayerTouch
+ * @desc 乗船時、プレイヤーからの接触によるイベント実行を無効化します。
+ * @default true
+ * @type boolean
+ *
+ * @param InvalidEventTouch
+ * @desc 乗船時、イベントからの接触によるイベント実行を無効化します。
+ * @default true
+ * @type boolean
+ *
  * @help InvalidTriggerInShip.js
  *
- * 小型船および大型船に乗っているときに、プレイヤーからの
- * トリガーによるイベント起動を無効化します。
+ * 小型船および大型船に乗っているとき、トリガーによるイベント起動を無効化します。
+ * トリガーの種類ごとに有効/無効を設定できます。
  *
- * イベントからの接触、自動実行および並列処理は実行されます。
- * 飛行船に乗っているときと同じ仕様になります。
+ * 自動実行および並列処理は実行されます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -43,13 +58,27 @@
  * @default 0
  * @type switch
  *
+ * @param 決定ボタントリガー無効
+ * @desc 乗船時、決定ボタンによるイベント実行を無効化します。
+ * @default true
+ * @type boolean
+ *
+ * @param プレイヤー接触トリガー無効
+ * @desc 乗船時、プレイヤーからの接触によるイベント実行を無効化します。
+ * @default true
+ * @type boolean
+ *
+ * @param イベント接触トリガー無効
+ * @desc 乗船時、イベントからの接触によるイベント実行を無効化します。
+ * @default true
+ * @type boolean
+ *
  * @help InvalidTriggerInShip.js
  *
- * 小型船および大型船に乗っているときに、プレイヤーからの
- * トリガーによるイベント起動を無効化します。
+ * 小型船および大型船に乗っているとき、トリガーによるイベント起動を無効化します。
+ * トリガーの種類ごとに有効/無効を設定できます。
  *
- * イベントからの接触、自動実行および並列処理は実行されます。
- * 飛行船に乗っているときと同じ仕様になります。
+ * 自動実行および並列処理は実行されます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -61,7 +90,7 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'InvalidTriggerInShip';
+    var pluginName = 'InvalidTriggerInShip';
 
     //=============================================================================
     // ローカル関数
@@ -71,9 +100,9 @@
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
             var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
+            if (name !== undefined) return name;
         }
-        alert('Fail to load plugin parameter of ' + pluginName);
+        alert('Fail to load plugin parameter of ' + pluginName + ':' + paramNames);
         return null;
     };
 
@@ -84,27 +113,53 @@
         return (parseInt(value) || 0).clamp(min, max);
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
+        return value.toUpperCase() === 'TRUE';
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
     var param              = {};
     param.activateSwitchId = getParamNumber(['ActivateSwitchId', '有効スイッチ番号'], 0);
+    param.invalicTriggers  = [];
+    if (getParamBoolean(['InvalidActionButton', '決定ボタントリガー無効'], 0)) {
+        param.invalicTriggers.push(0);
+    }
+    if (getParamBoolean(['InvalidPlayerTouch', 'プレイヤー接触トリガー無効'], 0)) {
+        param.invalicTriggers.push(1);
+    }
+    if (getParamBoolean(['InvalidEventTouch', 'イベント接触トリガー無効'], 0)) {
+        param.invalicTriggers.push(2);
+    }
 
     //=============================================================================
     // Game_Player
-    //  船に乗っている間はイベントを無効にします。
+    //  船に乗っているのトリガー無効判定を実装します。
     //=============================================================================
-    var _Game_Player_canStartLocalEvents = Game_Player.prototype.canStartLocalEvents;
-    Game_Player.prototype.canStartLocalEvents = function() {
-        return !this.isInvalidTriggerInShip() && _Game_Player_canStartLocalEvents.apply(this, arguments);
+    Game_Player.prototype.isInvalidTriggerInShip = function() {
+        return this.isInShipOrBoat() && this.isInvalidTriggerSwitch();
     };
 
-    Game_Player.prototype.isInvalidTriggerInShip = function() {
-        return this.isInShipOrBoat() && (param.activateSwitchId > 0 ? $gameSwitches.value(param.activateSwitchId) : true);
+    Game_Player.prototype.isInvalidTriggerSwitch = function() {
+        return param.activateSwitchId > 0 ? $gameSwitches.value(param.activateSwitchId) : true;
     };
 
     Game_Player.prototype.isInShipOrBoat = function() {
         return this.isInShip() || this.isInBoat();
+    };
+
+    //=============================================================================
+    // Game_Event
+    //  船に乗っている間はイベントを無効にします。
+    //=============================================================================
+    var _Game_Event_start = Game_Event.prototype.start;
+    Game_Event.prototype.start = function() {
+        if ($gamePlayer.isInvalidTriggerInShip() && this.isTriggerIn(param.invalicTriggers)) {
+            return;
+        }
+        _Game_Event_start.apply(this, arguments);
     };
 })();
 
