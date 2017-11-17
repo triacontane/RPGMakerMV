@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/11/18 コモンイベントを一切指定しない状態でメニューを開くとエラーになる現象を修正
 // 1.1.1 2017/11/05 ヘルプとダウンロード先を追記
 // 1.1.0 2017/11/05 タイマー有効化機能などいくつかの機能を追加
 // 1.0.0 2017/11/04 初版
@@ -435,7 +436,7 @@
     // パラメータの取得と整形
     //=============================================================================
     var param                  = {};
-    param.commonEventInfo      = getParamArrayJson(['CommonEventInfo', 'コモンイベント情報']);
+    param.commonEventInfo      = getParamArrayJson(['CommonEventInfo', 'コモンイベント情報'], []);
     param.commandPrefix        = getParamString(['CommandPrefix', 'コマンド接頭辞']);
     param.maxMenuPicture       = getParamNumber(['MaxMenuPicture', 'ピクチャ表示最大数'], 1);
     param.saveInterpreterIndex = getParamBoolean(['SaveInterpreterIndex', '実行位置を記憶']);
