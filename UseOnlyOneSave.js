@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/11/18 メニュー画面でセーブしたときに通知する機能を追加
 // 1.0.2 2017/11/12 オンラインストレージ使用時にセーブするとたまにエラーになる現象を修正
 // 1.0.1 2017/11/11 ロード成功時にBGMが再生されないことがある問題を修正
 // 1.0.0 2017/11/10 初版
@@ -19,6 +20,10 @@
  * @plugindesc UseOnlyOneSavePlugin
  * @author triacontane
  *
+ * @param SaveMessage
+ * @desc メニュー画面でのセーブ実行時に表示するメッセージです。指定しない場合は表示されません。
+ * @default プレイデータをセーブしました。
+ *
  * @help UseOnlyOneSave.js
  *
  * ロードもしくはセーブ時に各画面を経由せず、ファイル1のみを
@@ -29,6 +34,10 @@
 /*:ja
  * @plugindesc 単一セーブデータプラグイン
  * @author トリアコンタン
+ *
+ * @param セーブメッセージ
+ * @desc メニュー画面でのセーブ実行時に表示するメッセージです。指定しない場合は表示されません。
+ * @default プレイデータをセーブしました。
  *
  * @help UseOnlyOneSave.js
  *
@@ -45,6 +54,23 @@
 
 (function() {
     'use strict';
+    var pluginName    = 'UseOnlyOneSave';
+
+    var getParamString = function(paramNames) {
+        if (!Array.isArray(paramNames)) paramNames = [paramNames];
+        for (var i = 0; i < paramNames.length; i++) {
+            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+            if (name !== undefined) return name;
+        }
+        alert('Fail to load plugin parameter of ' + pluginName);
+        return null;
+    };
+
+    //=============================================================================
+    // パラメータの取得と整形
+    //=============================================================================
+    var param       = {};
+    param.saveMessage = getParamString(['SaveMessage', 'セーブメッセージ']);
 
     //=============================================================================
     // SceneManager
@@ -52,12 +78,27 @@
     //=============================================================================
     var _SceneManager_goto = SceneManager.goto;
     SceneManager.goto = function(sceneClass) {
+        var result = this.cutSaveScene(sceneClass);
+        if (!result) {
+            _SceneManager_goto.apply(this, arguments);
+        }
+    };
+
+    var _SceneManager_push = SceneManager.push;
+    SceneManager.push = function(sceneClass) {
+        var result = this.cutSaveScene(sceneClass);
+        if (!result) {
+            _SceneManager_push.apply(this, arguments);
+        }
+    };
+
+    SceneManager.cutSaveScene = function(sceneClass) {
         if (sceneClass === Scene_Save || sceneClass === Scene_Load) {
             var sceneFile = new sceneClass();
             sceneFile.onSavefileOk();
-            return;
+            return true;
         }
-        _SceneManager_goto.apply(this, arguments);
+        return false;
     };
 
     //=============================================================================
@@ -78,11 +119,67 @@
     };
 
     //=============================================================================
+    // Scene_Menu
+    //  セーブ通知を実装します。
+    //=============================================================================
+    Scene_Menu.prototype.isExistHelpNotice = function() {
+        return !!param.saveMessage;
+    };
+
+    var _Scene_Menu_create = Scene_Menu.prototype.create;
+    Scene_Menu.prototype.create = function() {
+        _Scene_Menu_create.apply(this, arguments);
+        if (this.isExistHelpNotice()) {
+            this.createSaveNoticeWindow();
+        }
+    };
+
+    Scene_Menu.prototype.createSaveNoticeWindow = function() {
+        this.createHelpWindow();
+        this._helpWindow.y = SceneManager._boxHeight - this._helpWindow.height;
+        this._helpWindow.openness = 0;
+        this._helpWindow.setText(param.saveMessage);
+    };
+
+    var _Scene_Menu_commandSave = Scene_Menu.prototype.commandSave;
+    Scene_Menu.prototype.commandSave = function() {
+        _Scene_Menu_commandSave.apply(this, arguments);
+        if (this.isExistHelpNotice()) {
+            this.setupHelpNotice();
+        }
+        this._commandWindow.activate();
+    };
+
+    Scene_Menu.prototype.setupHelpNotice = function() {
+        this._savePopDuration = 120;
+        this._helpWindow.open();
+    };
+
+    var _Scene_Menu_update = Scene_Menu.prototype.update;
+    Scene_Menu.prototype.update = function() {
+        _Scene_Menu_update.apply(this, arguments);
+        if (this._savePopDuration > 0) {
+            this.updateHelpNotice();
+        }
+    };
+
+    Scene_Menu.prototype.updateHelpNotice = function() {
+        this._savePopDuration--;
+        if (this._savePopDuration === 0) {
+            this._helpWindow.close();
+        }
+    };
+
+    //=============================================================================
     // Scene_File
     //  セーブファイルIDを1に限定します。
     //=============================================================================
     Scene_File.prototype.savefileId = function() {
         return 1;
+    };
+
+    Scene_File.prototype.popScene = function() {
+        // do nothing
     };
 
     //=============================================================================
