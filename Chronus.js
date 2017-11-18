@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.3 2017/11/18 場所移動時の時間経過が30分以内の場合、色調を時間に合わせて瞬間変更しないように仕様変更
 // 1.9.2 2017/11/02 イベント実行中に時間を変更した場合にアナログ時計の表示が変更されない問題を修正
 // 1.9.1 2017/11/02 時間経過の初期状態を「停止」から「開始」に変更
 // 1.9.0 2017/10/05 アナログ時計の画像を変更できる機能を追加
@@ -708,11 +709,7 @@ function Game_ChronusTimer() {
     //=============================================================================
     var _Scene_Map_onMapLoaded      = Scene_Map.prototype.onMapLoaded;
     Scene_Map.prototype.onMapLoaded = function() {
-        var chronus = $gameSystem.chronus();
-        chronus.updateWeatherType();
-        chronus.updateWeatherPower();
-        chronus.refreshTint(true);
-        chronus.refreshWeather(true);
+        $gameSystem.chronus().onMapLoaded();
         _Scene_Map_onMapLoaded.apply(this, arguments);
     };
 
@@ -956,6 +953,15 @@ function Game_ChronusTimer() {
         if (!this._frameCount) this._frameCount = 0;
         if (!this._timers) this._timers = [];
         if (!this._namedTimers) this._namedTimers = {};
+    };
+
+    Game_Chronus.prototype.onMapLoaded = function() {
+        this.updateWeatherType();
+        this.updateWeatherPower();
+        if (this._timeTransferAdd > 30) {
+            this.refreshTint(true);
+        }
+        this.refreshWeather(true);
     };
 
     Game_Chronus.prototype.update = function() {
