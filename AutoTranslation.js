@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/11/19 RTK1_Option_EnJa.jsと連携できるように仕様を微調整
 // 1.1.2 2017/08/24 ヘルプの誤字を修正＋型指定機能に対応
 // 1.1.1 2017/04/22 制御文字の精度をほんの少し改善
 // 1.1.0 2017/04/19 制御文字の翻訳に部分的に対応。翻訳対象から除外する制御文字を追加
@@ -43,6 +44,11 @@
  * @desc Is the switch ID translation is enabled. Specify 0 to unconditionally valid in translation.
  * @default 0
  * @type switch
+ *
+ * @param InvertTranslationSwitch
+ * @desc The effect of translation switch ID is inverted, translation is enabled when OFF, and disabled when ON.
+ * @default false
+ * @type boolean
  *
  * @param Category
  * @desc Specifies the category of translation at run time.
@@ -148,6 +154,11 @@
  * @default 0
  * @type switch
  *
+ * @param 翻訳スイッチ反転
+ * @desc 翻訳スイッチIDの効果を反転させ、OFFのときに翻訳が有効、ONのときに無効になります。
+ * @default false
+ * @type boolean
+ *
  * @param カテゴリ
  * @desc 翻訳実行時のカテゴリを指定します。
  * （通常：general ニューラルネットワーク：generalnn）
@@ -219,6 +230,16 @@
  * 翻訳して欲しくない文章がある場合、先頭に「\NT」と記述すると翻訳対象から
  * 除外されます。
  *
+ * ・RTK1_Option_EnJaとの連携
+ * RTK1_Option_EnJaが有効になっている場合、用語の自動翻訳は行いません。
+ * 同プラグインのswitchと自動翻訳プラグインの翻訳スイッチIDを同一にした上で
+ * 翻訳スイッチ反転を有効にすることで自然な動作になります。
+ *
+ * 注意！
+ * 総合開発支援プラグインを使用中で、データベース翻訳機能を使う場合は
+ * 同プラグインのリロード機能を無効にしてください。
+ * 翻訳したデータベースが翻訳前のデータで上書きされてしまいます。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -262,18 +283,23 @@ function TranslationManager() {
         return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
+    var isExistPlugin = function(pluginName) {
+        return Object.keys(PluginManager.parameters(pluginName)).length > 0
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param                 = {};
-    param.toLanguage          = getParamString(['ToLanguage', '翻訳先言語']);
-    param.fromLanguage        = getParamString(['FromLanguage', '翻訳元言語']);
-    param.outLog              = getParamString(['OutLog', 'ログ出力']).toUpperCase();
-    param.translationSwitchId = getParamNumber(['TranslationSwitchId', '翻訳スイッチID'], 0);
-    param.translateDatabase   = getParamBoolean(['TranslateDatabase', 'データベース翻訳']);
-    param.translateMessage    = getParamBoolean(['TranslateMessage', 'メッセージ翻訳']);
-    param.category            = getParamString(['Category', 'カテゴリ']);
-    param.subscriptionKey     = getParamString(['SubscriptionKey', 'サブスクリプションキー']);
+    var param                     = {};
+    param.toLanguage              = getParamString(['ToLanguage', '翻訳先言語']);
+    param.fromLanguage            = getParamString(['FromLanguage', '翻訳元言語']);
+    param.outLog                  = getParamString(['OutLog', 'ログ出力']).toUpperCase();
+    param.translationSwitchId     = getParamNumber(['TranslationSwitchId', '翻訳スイッチID'], 0);
+    param.translateDatabase       = getParamBoolean(['TranslateDatabase', 'データベース翻訳']);
+    param.translateMessage        = getParamBoolean(['TranslateMessage', 'メッセージ翻訳']);
+    param.category                = getParamString(['Category', 'カテゴリ']);
+    param.subscriptionKey         = getParamString(['SubscriptionKey', 'サブスクリプションキー']);
+    param.invertTranslationSwitch = getParamBoolean(['InvertTranslationSwitch', '翻訳スイッチ反転']);
 
     //=============================================================================
     // Game_Interpreter
@@ -360,7 +386,7 @@ function TranslationManager() {
         }, this);
         promise.then(function(translatedChoice) {
             translatedChoices.push(translatedChoice || originalChoice);
-            this._choices = translatedChoices;
+            this._choices         = translatedChoices;
             this._translateChoice = false;
         }.bind(this));
     };
@@ -385,7 +411,7 @@ function TranslationManager() {
     //  翻訳中の待機と自動改行を実装します。
     //=============================================================================
     if (param.translateDatabase) {
-        var _Game_Actor_name = Game_Actor.prototype.name;
+        var _Game_Actor_name      = Game_Actor.prototype.name;
         Game_Actor.prototype.name = function() {
             var name = _Game_Actor_name.apply(this, arguments);
             TranslationManager.translateIfNeed(name, function(translatedText) {
@@ -394,7 +420,7 @@ function TranslationManager() {
             return name;
         };
 
-        var _Game_Actor_nickname = Game_Actor.prototype.nickname;
+        var _Game_Actor_nickname      = Game_Actor.prototype.nickname;
         Game_Actor.prototype.nickname = function() {
             var nickName = _Game_Actor_nickname.apply(this, arguments);
             TranslationManager.translateIfNeed(nickName, function(translatedText) {
@@ -403,7 +429,7 @@ function TranslationManager() {
             return nickName;
         };
 
-        var _Game_Actor_profile = Game_Actor.prototype.profile;
+        var _Game_Actor_profile      = Game_Actor.prototype.profile;
         Game_Actor.prototype.profile = function() {
             var profile = _Game_Actor_profile.apply(this, arguments);
             TranslationManager.translateIfNeed(profile, function(translatedText) {
@@ -448,7 +474,6 @@ function TranslationManager() {
     TranslationManager._subscriptionKey1 = param.subscriptionKey || 'f78dab007fdb4ad4ad5baaaa01b74829';
 
     TranslationManager._translateProperties = {
-        $dataActors : ['name', 'nickname', 'profile'],
         $dataClasses: ['name'],
         $dataSkills : ['name', 'description', 'message1', 'message2'],
         $dataItems  : ['name', 'description', 'message1', 'message2'],
@@ -496,7 +521,7 @@ function TranslationManager() {
     };
 
     // Generator Function
-    TranslationManager.translateAllDatabase = function*() {
+    TranslationManager.translateAllDatabase = function* () {
         var i, j, k;
         this._currentData = $dataSystem;
         if (!this.translateProperty('gameTitle')) {
@@ -512,14 +537,16 @@ function TranslationManager() {
             }
         }
 
-        var termNames = Object.keys($dataSystem.terms);
-        for (i = 0; i < termNames.length; i++) {
-            this._currentData = $dataSystem.terms[termNames[i]];
-            var isArray       = Array.isArray(this._currentData);
-            var keyArray      = (isArray ? this._currentData : Object.keys(this._currentData));
-            for (j = 0; j < keyArray.length; j++) {
-                if (!this.translateProperty(isArray ? j : keyArray[j])) {
-                    yield;
+        if (!isExistPlugin('RTK1_Option_EnJa')) {
+            var termNames = Object.keys($dataSystem.terms);
+            for (i = 0; i < termNames.length; i++) {
+                this._currentData = $dataSystem.terms[termNames[i]];
+                var isArray       = Array.isArray(this._currentData);
+                var keyArray      = (isArray ? this._currentData : Object.keys(this._currentData));
+                for (j = 0; j < keyArray.length; j++) {
+                    if (!this.translateProperty(isArray ? j : keyArray[j])) {
+                        yield;
+                    }
                 }
             }
         }
@@ -529,7 +556,7 @@ function TranslationManager() {
             var databaseName = databaseNames[i];
             for (j = 1; j < window[databaseName].length; j++) {
                 this._currentData = window[databaseName][j];
-                var properties = this._translateProperties[databaseName];
+                var properties    = this._translateProperties[databaseName];
                 for (k = 0; k < properties.length; k++) {
                     if (!this.translateProperty(properties[k])) {
                         yield;
@@ -664,7 +691,11 @@ function TranslationManager() {
     };
 
     TranslationManager.isValidTranslation = function() {
-        return param.translationSwitchId && $gameSwitches ? $gameSwitches.value(param.translationSwitchId) : true;
+        if (!param.translationSwitchId || !$gameSwitches) {
+            return true;
+        }
+        var result = ($gameSwitches ? $gameSwitches.value(param.translationSwitchId) : true);
+        return param.invertTranslationSwitch ? !result : result;
     };
 
     //=============================================================================
@@ -756,7 +787,7 @@ function TranslationManager() {
     };
 
     DataManager.onTranslateDisplayName = function(translatedDisplayName) {
-        $dataMap.displayName = translatedDisplayName;
+        $dataMap.displayName       = translatedDisplayName;
         this._mapNameLoadingStatus = 3;
     };
 
