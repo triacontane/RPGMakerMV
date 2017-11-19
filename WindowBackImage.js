@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/11/19 拡大率を設定できる機能を追加
 // 1.0.0 2017/11/18 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -201,6 +202,20 @@
  * @type number
  * @min -2000
  * @max 2000
+ *
+ * @param ScaleX
+ * @desc X方向の拡大率(%指定)です。
+ * @default 100
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @param ScaleY
+ * @desc Y方向の拡大率(%指定)です。
+ * @default 100
+ * @type number
+ * @min -2000
+ * @max 2000
  */
 
 (function() {
@@ -258,10 +273,16 @@
         _Window__createAllParts.apply(this, arguments);
         var backImageData = this.getBackImageData();
         if (backImageData) {
-            this._backImageDx = parseInt(backImageData['OffsetX']) || 0;
-            this._backImageDy = parseInt(backImageData['OffsetY']) || 0;
             this._createBackImage(backImageData['ImageFile']);
+            this._setBackImageProperty(backImageData);
         }
+    };
+
+    Window.prototype._setBackImageProperty = function(backImageData) {
+        this._backImageDx = parseInt(backImageData['OffsetX']) || 0;
+        this._backImageDy = parseInt(backImageData['OffsetY']) || 0;
+        this._windowBackImageSprite.scale.x = (parseInt(backImageData['ScaleX']) || 100) / 100;
+        this._windowBackImageSprite.scale.y = (parseInt(backImageData['ScaleY']) || 100) / 100;
     };
 
     /**
