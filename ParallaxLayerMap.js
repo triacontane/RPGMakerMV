@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/11/19 MOG_ChronoEngine.js等との競合を解消
 // 1.1.0 2017/09/20 ヘルプにサンプルマップの旨を記載
 // 1.1.0 2017/09/14 合成方法や不透明度の初期値を設定できるメモ欄を追加
 // 1.0.0 2017/08/20 初版
@@ -132,6 +133,9 @@
     //=============================================================================
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + name;
+        if (!object || !object.meta) {
+            return undefined;
+        }
         return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
     };
 
@@ -198,7 +202,7 @@
     var _Game_Event_initialize      = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
-        this._mapLayerName = getMetaValue($dataMap.events[eventId], '') || null;
+        this._mapLayerName = getMetaValue(this.getOriginalEvent(), '') || null;
         if (this._mapLayerName) {
             this.initBlendMode();
             this.initOpacity();
@@ -206,19 +210,23 @@
     };
 
     Game_Event.prototype.initBlendMode = function() {
-        var blendMode = getMetaValues($dataMap.events[this._eventId], ['_Blend', '合成']);
+        var blendMode = getMetaValues(this.getOriginalEvent(), ['_Blend', '合成']);
         if (blendMode) {
             this._blendMode = parseInt(blendMode);
         }
     };
 
     Game_Event.prototype.initOpacity = function() {
-        var blendMode = getMetaValues($dataMap.events[this._eventId], ['_Opacity', '不透明度']);
+        var blendMode = getMetaValues(this.getOriginalEvent(), ['_Opacity', '不透明度']);
         if (blendMode) {
             this._opacity = parseInt(blendMode);
         }
     };
 
+    // Resolve conflict for TemplateEvent
+    Game_Event.prototype.getOriginalEvent = function() {
+        return $dataMap.events[this._eventId];
+    };
 
     Game_Event.prototype.existPage = function() {
         return this._pageIndex >= 0;
