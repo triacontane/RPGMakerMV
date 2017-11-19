@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/11/19 イベントからセーブした場合、ロード直後に再セーブされてしまう問題を修正
 // 1.1.0 2017/11/18 メニュー画面でセーブしたときに通知する機能を追加
 // 1.0.2 2017/11/12 オンラインストレージ使用時にセーブするとたまにエラーになる現象を修正
 // 1.0.1 2017/11/11 ロード成功時にBGMが再生されないことがある問題を修正
@@ -199,6 +200,19 @@
         if (this._loadSuccess) {
             $gameSystem.onAfterLoad();
         }
+    };
+
+    //=============================================================================
+    // Game_Interpreter
+    //  イベントからセーブ時にインデックスを進めます。
+    //=============================================================================
+    var _Game_Interpreter_command352 = Game_Interpreter.prototype.command352;
+    Game_Interpreter.prototype.command352 = function() {
+        // Resolves of being saved again when loading.
+        if (!$gameParty.inBattle()) {
+            this._index++;
+        }
+        _Game_Interpreter_command352.apply(this, arguments);
     };
 })();
 
