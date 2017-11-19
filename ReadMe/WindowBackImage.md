@@ -7,6 +7,8 @@ RPGツクールMVで使用可能な自作プラグイン「ウィンドウ背景
 - ウィンドウごとに別々の画像を指定できます。
 ![スクリーンショット](https://1.bp.blogspot.com/-dsDsij8DeAs/WhEh0Zk8iMI/AAAAAAAAcd8/mNmAJcvZ5hEpN3R7mYEntRQgHPiwLZ56wCLcBGAs/s1600/image_20171119_150002.jpg)
 
+- 素材提供元:<http://frames-design.com/>
+
 # 詳しい使い方
 　背景画像はウィンドウのサイズにかかわらず、中央を原点に表示されます。倍率と座標を補正することは可能ですが、サイズが可変、不定のウィンドウに対して背景画像を指定することは推奨しません。  
 
