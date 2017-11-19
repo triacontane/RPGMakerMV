@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2017/11/19 MOG_MenuCursor.jsとの併用時、カーソルがサブコマンドの下に隠れてしまう競合の解消
 // 2.0.0 2017/09/04 メニューコマンドやサブコマンドを好きなだけ追加できるようパラメータの仕様を変更
 // 1.1.0 2017/05/14 デフォルトのオプションとゲーム終了コマンドを削除できる機能を追加
 //                  カンマ(,)を含むスクリプトを正しく実行できない問題を修正
@@ -179,7 +180,7 @@
  * @default アイテム
  *
  * @param ParentName
- * @desc サブコマンドに表示される任意のコマンド名称
+ * @desc メインコマンドに表示されるサブコマンドの親名称。同一の名称の親を持つサブコマンドは一つに纏められます。
  * @default 親コマンド1
  *
  * @param HiddenSwitchId
@@ -213,7 +214,7 @@
  * @default アイテム
  *
  * @param ParentName
- * @desc サブコマンドに表示される任意のコマンド名称
+ * @desc メインコマンドに表示されるサブコマンドの親名称。同一の名称の親を持つサブコマンドは一つに纏められます。
  * @default 親コマンド1
  *
  * @param HiddenSwitchId
@@ -595,7 +596,8 @@
         this._subMenuWindow.updatePlacement(this._commandWindow);
         this._subMenuWindow.setHandler('ok', this.onSubCommandOk.bind(this));
         this._subMenuWindow.setHandler('cancel', this.onSubCommandCancel.bind(this));
-        this.addChild(this._subMenuWindow);
+        var index = this.getChildIndex(this._windowLayer) + 1;
+        this.addChildAt(this._subMenuWindow, index);
     };
 
     Scene_Menu.prototype.removeSubMenuCommandWindow = function() {
