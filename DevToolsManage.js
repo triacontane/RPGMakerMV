@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// ---   2017/11/23 Fix missing menu bar height at SceneManager.setWindowSizeForMenuBar
 // 2.3.1 2017/11/11 画面キャプチャ管理プラグインとの連携による修正
 // 2.3.0 2017/09/25 競合対策でマップとデータのリロード機能を無効にする設定を追加
 //                  最新のNW.jsかつメニューバーを表示しない場合にエラーになる問題を修正
@@ -968,6 +969,18 @@ var p = null;
         var height       = this.getMenuBarHeight();
         gameWindow.moveBy(0, -height);
         gameWindow.resizeBy(0, height);
+
+        // v 2017-11-23 add start
+        setTimeout(function() { // Fix missing menu bar height
+            var style_height = parseInt(Graphics._canvas.style.height, 10);
+            var height_diff = SceneManager._screenHeight - style_height;
+            console.log('style.height = ' + style_height + ', diff = ' + height_diff);
+            if (height_diff != 0) {
+                gameWindow.moveBy(0, -height_diff);
+                gameWindow.resizeBy(0, height_diff);
+            }
+        }, 400); // 300+
+        // ^ 2017-11-23 add end
     };
 
     SceneManager.getMenuBarHeight = function() {
