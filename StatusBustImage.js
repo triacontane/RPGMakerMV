@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2017/02/02 特定条件下で戦闘画面にもバストアップが表示されていた問題を修正
 // 1.7.0 2017/09/25 ベース画像と追加画像に原点を変更できる機能を追加
 // 1.6.0 2017/09/25 バストアップ画像に表情差分用の追加グラフィックを重ねて表示できる機能を追加
 // 1.5.0 2017/09/04 バストアップ画像をウィンドウの下に表示できる機能を追加
@@ -526,6 +527,9 @@
     };
 
     Window_Base.prototype.isNeedBust = function() {
+        if ($gameParty.inBattle()) {
+            return false;
+        }
         var pos = this.getBustPosition();
         return pos !== null && (pos[0] !== 0 || pos[1] !== 0);
     };
