@@ -8,6 +8,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/12/03 コマンド「Load_Picture」で実行するとエラーになる問題を修正
 // 1.1.0 2017/10/31 ピクチャ関連の命令を戦闘中に使用すると失敗する問題を修正
 // 1.0.0 2015/12/31 初版
 // ----------------------------------------------------------------------------
@@ -714,23 +715,7 @@
             for (var i = 0; i < args.length; i++) {
                 args[i] = Game_Interpreter.prototype.pluginCommandBook_unescape(args[i]);
             }
-            try {
-                this[methodName](args);
-            } catch (e) {
-                if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                    var window = require('nw.gui').Window.get();
-                    if (!window.isDevToolsOpen()) {
-                        var devTool = window.showDevTools();
-                        devTool.moveTo(0, 0);
-                        devTool.resizeTo(Graphics.width, Graphics.height);
-                        window.focus();
-                    }
-                }
-                console.log('プラグインコマンドの実行中にエラーが発生しました。');
-                console.log('- コマンド名 　: ' + command);
-                console.log('- コマンド引数 : ' + args);
-                console.log('- エラー原因   : ' + e.toString());
-            }
+            this[methodName](args);
         }
     };
 
@@ -905,7 +890,7 @@
         ImageManager.loadPicture(args[0], 0);
     };
     Game_Interpreter.prototype.pluginCommandBook_Load_Picture = function(args) {
-        this.pluginCommandBook_ピクチャの読み込み();
+        this.pluginCommandBook_ピクチャの読み込み(args);
     };
 
     Game_Interpreter.prototype.pluginCommandBook_戦闘アニメの読み込み     = function(args) {
