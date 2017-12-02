@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// ---   2017/11/23 Fix missing menu bar height at SceneManager.setWindowSizeForMenuBar
+// 2.3.4 2017/12/02 リファクタリング
+// 2.3.2 2017/11/23 Fix missing menu bar height at SceneManager.setWindowSizeForMenuBar
 // 2.3.1 2017/11/11 画面キャプチャ管理プラグインとの連携による修正
 // 2.3.0 2017/09/25 競合対策でマップとデータのリロード機能を無効にする設定を追加
 //                  最新のNW.jsかつメニューバーを表示しない場合にエラーになる問題を修正
@@ -890,11 +891,24 @@ var p = null;
     };
 
     SceneManager.updateDocumentTitle = function() {
-        if (!this.originalTitle) this.originalTitle = document.title;
-        document.title = this.originalTitle +
-            (this.isRapid() ? ' [!!!Rapid!!!] * ' + paramRapidSpeed : '') +
-            (this.isSlow() ? ' [!!!Slow!!!] / ' + -paramRapidSpeed : '') +
-            (this._nwJsGui.isOnTop() ? '[!!!Always On Top!!!]' : '');
+        if (!this.originalTitle) {
+            this.originalTitle = document.title;
+        }
+        document.title = this.originalTitle + this.addDocumentTitleRapidOrSlow() + this.addDocumentTitleAlwaysOnTop();
+    };
+
+    SceneManager.addDocumentTitleRapidOrSlow = function() {
+        if (this.isRapid()) {
+            return ' [!!!Rapid!!!] * ' + paramRapidSpeed;
+        } else if (this.isSlow()) {
+            return ' [!!!Slow!!!] / ' + -paramRapidSpeed;
+        } else {
+            return '';
+        }
+    };
+
+    SceneManager.addDocumentTitleAlwaysOnTop = function() {
+        return this._nwJsGui.isOnTop() ? ' [!!!Always On Top!!!]' : '';
     };
 
     SceneManager.isCurrentScene = function(sceneClass) {
@@ -970,17 +984,15 @@ var p = null;
         gameWindow.moveBy(0, -height);
         gameWindow.resizeBy(0, height);
 
-        // v 2017-11-23 add start
         setTimeout(function() { // Fix missing menu bar height
             var style_height = parseInt(Graphics._canvas.style.height, 10);
             var height_diff = SceneManager._screenHeight - style_height;
-            console.log('style.height = ' + style_height + ', diff = ' + height_diff);
-            if (height_diff != 0) {
+            if (height_diff !== 0) {
+                console.log('style.height = ' + style_height + ', diff = ' + height_diff);
                 gameWindow.moveBy(0, -height_diff);
                 gameWindow.resizeBy(0, height_diff);
             }
         }, 400); // 300+
-        // ^ 2017-11-23 add end
     };
 
     SceneManager.getMenuBarHeight = function() {
@@ -1116,8 +1128,12 @@ var p = null;
     const _AudioManager_playBgm = AudioManager.playBgm;
     AudioManager.playBgm        = function(bgm, pos) {
         const originalPitch = bgm.pitch;
-        if (SceneManager.isRapid()) arguments[0].pitch = 150;
-        if (SceneManager.isSlow()) arguments[0].pitch = 50;
+        if (SceneManager.isRapid()) {
+            arguments[0].pitch = 150;
+        }
+        if (SceneManager.isSlow()) {
+            arguments[0].pitch = 50;
+        }
         _AudioManager_playBgm.apply(this, arguments);
         this._currentBgm.pitch = originalPitch;
     };
@@ -1467,29 +1483,38 @@ var p = null;
     };
 
     Controller_NwJs.prototype.showDevTools = function() {
-        if (!(this.getWindow().isDevToolsOpen && this.getWindow().isDevToolsOpen()) || !this._devTool) {
+        if (!this.isDevToolsOpen() || !this._devTool) {
             const devTool = this.getWindow().showDevTools();
-            if (!devTool) {
+            if (devTool) {
+                this.setDevToolPosition(devTool);
+            } else {
                 setTimeout(function() {
                     this.getWindow().focus();
-                }.bind(this), 500);
-                return;
-            }
-            if (paramDevToolsPosition && paramDevToolsPosition.width > 0 && paramDevToolsPosition.height > 0) {
-                devTool.moveTo(paramDevToolsPosition.x, paramDevToolsPosition.y);
-                devTool.resizeTo(paramDevToolsPosition.width, paramDevToolsPosition.height);
-            } else {
-                devTool.moveTo(0, 0);
-                devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-            }
-            if (!this._devTool) {
-                this.addEventListenerDevTools(devTool);
-                this._devTool = devTool;
+                }.bind(this), 1000);
             }
         } else {
             this._devTool.restore();
         }
         this.focus();
+    };
+
+    Controller_NwJs.prototype.isDevToolsOpen = function() {
+        var gameWindow = this.getWindow();
+        return gameWindow.isDevToolsOpen && gameWindow.isDevToolsOpen();
+    };
+
+    Controller_NwJs.prototype.setDevToolPosition = function(devTool) {
+        if (paramDevToolsPosition && paramDevToolsPosition.width > 0 && paramDevToolsPosition.height > 0) {
+            devTool.moveTo(paramDevToolsPosition.x, paramDevToolsPosition.y);
+            devTool.resizeTo(paramDevToolsPosition.width, paramDevToolsPosition.height);
+        } else {
+            devTool.moveTo(0, 0);
+            devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+        }
+        if (!this._devTool) {
+            this.addEventListenerDevTools(devTool);
+            this._devTool = devTool;
+        }
     };
 
     Controller_NwJs.prototype.addEventListenerDevTools = function(devTool) {
