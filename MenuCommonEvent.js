@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2017/12/02 NobleMushroom.jsとの競合を解消
 // 1.1.2 2017/11/18 コモンイベントを一切指定しない状態でメニューを開くとエラーになる現象を修正
 // 1.1.1 2017/11/05 ヘルプとダウンロード先を追記
 // 1.1.0 2017/11/05 タイマー有効化機能などいくつかの機能を追加
@@ -636,6 +637,12 @@
         this.addChild(this._messageWindow);
     };
 
+    // Resolve conflict for NobleMushroom.js
+    Scene_MenuBase.prototype.changeImplementationWindowMessage  = Scene_Map.prototype.changeImplementationWindowMessage;
+    Scene_MenuBase.prototype.restoreImplementationWindowMessage = Scene_Map.prototype.restoreImplementationWindowMessage;
+    Scene_MenuBase.prototype.onPause                            = Scene_Map.prototype.onPause;
+    Scene_MenuBase.prototype.offPause                           = Scene_Map.prototype.offPause;
+
     Scene_MenuBase.prototype.createSpriteset = function() {
         this._spriteset = new Spriteset_Menu();
         this.addChild(this._spriteset);
@@ -734,7 +741,7 @@
         this._blackScreen.opacity = 0;
     };
 
-    var _Spriteset_Menu_createTimer = Spriteset_Menu.prototype.createTimer;
+    var _Spriteset_Menu_createTimer      = Spriteset_Menu.prototype.createTimer;
     Spriteset_Menu.prototype.createTimer = function() {
         if (param.activateTimer) {
             _Spriteset_Menu_createTimer.apply(this, arguments);
