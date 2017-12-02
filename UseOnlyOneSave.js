@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2017/12/02 MenuCommonEvent.jsとの競合を解消
 // 1.1.1 2017/11/19 イベントからセーブした場合、ロード直後に再セーブされてしまう問題を修正
 // 1.1.0 2017/11/18 メニュー画面でセーブしたときに通知する機能を追加
 // 1.0.2 2017/11/12 オンラインストレージ使用時にセーブするとたまにエラーになる現象を修正
@@ -156,9 +157,14 @@
         this._helpWindow.open();
     };
 
-    var _Scene_Menu_update = Scene_Menu.prototype.update;
+    // Resolve conflict for plugin to override Scene_MenuBase or Scene_Base
+    var _Scene_Menu_update = Scene_Menu.prototype.hasOwnProperty('update') ? Scene_Menu.prototype.update : null;
     Scene_Menu.prototype.update = function() {
-        _Scene_Menu_update.apply(this, arguments);
+        if (_Scene_Menu_update) {
+            _Scene_Menu_update.apply(this, arguments);
+        } else {
+            Scene_MenuBase.prototype.update.apply(this, arguments);
+        }
         if (this._savePopDuration > 0) {
             this.updateHelpNotice();
         }
