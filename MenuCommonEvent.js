@@ -18,7 +18,7 @@
 //=============================================================================
 
 /*:
- * @plugindesc MenuCommonEventPlugin(ver1.1.1)
+ * @plugindesc MenuCommonEventPlugin
  * @author triacontane
  *
  * @param CommonEventInfo
@@ -190,7 +190,7 @@
  *
  */
 /*:ja
- * @plugindesc メニュー内コモンイベントプラグイン(ver1.1.1)
+ * @plugindesc メニュー内コモンイベントプラグイン
  * @author トリアコンタン
  *
  * @param コモンイベント情報
