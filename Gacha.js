@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.4.0 2017/12/05 ガチャの演出を省略できるスイッチを追加。アイテム入手時に効果音を演奏する機能を追加。
 // 1.3.0 2017/11/11 新規アイテム入手時に通知する機能を追加
 // 1.2.0 2017/11/05 10連ガチャの機能を追加
 // 1.1.0 2016/03/11 変数でガチャを引ける機能を追加。可能な限りガチャを引き続ける機能を追加
@@ -103,6 +104,18 @@
  * @desc ガチャのコストを指定された変数に変更します。
  * 1回ごとに「Required Amount」の値だけ変数が減ります。
  * @default 0
+ *
+ * @param Effect Stop Switch
+ * @desc 対象スイッチがONになっているとき、ガチャの演出を省略します。
+ * @default 0
+ * @type switch
+ *
+ * @param SE
+ * @desc ガチャ終了時に演奏される効果音です。演出省略時も演奏されます。
+ * @default Item3
+ * @require 1
+ * @dir audio/se/
+ * @type file
  *
  * @noteParam gachaImage
  * @noteRequire 1
@@ -209,18 +222,30 @@
  * @dir audio/me/
  * @type file
  *
- * @param  Required Amount
+ * @param Required Amount
  * @desc ガチャを引くのに必要なGです。
  * @default 100
  *
- * @param  Required Variable
+ * @param Required Variable
  * @desc ガチャのコストを指定された変数に変更します。
  * 1回ごとに「Required Amount」の値だけ変数が減ります。
  * @default 0
  *
- * @param  Cost Unit
+ * @param Cost Unit
  * @desc ガチャのコストに使う変数の単位です。
  * @default 回
+ *
+ * @param Effect Stop Switch
+ * @desc 対象スイッチがONになっているとき、ガチャの演出を省略します。
+ * @default 0
+ * @type switch
+ *
+ * @param SE
+ * @desc ガチャ終了時に演奏される効果音です。演出省略時も演奏されます。
+ * @default Item3
+ * @require 1
+ * @dir audio/se/
+ * @type file
  *
  * @noteParam gachaImage
  * @noteRequire 1
@@ -262,12 +287,15 @@
     rankEffect.push(Number(parameters['Rank3 Effect'] || '-1'));
     rankEffect.push(Number(parameters['Rank4 Effect'] || '-1'));
     rankEffect.push(Number(parameters['Rank5 Effect'] || '-1'));
-    var me       = String(parameters['ME'] || 'Organ');
-    var amount   = Number(parameters['Required Amount'] || '100');
-    var variable = Number(parameters['Required Variable'] || '0');
-    var costUnit = String(parameters['Cost Unit'] || '回');
-    var reg      = /Required Amount/gi;
-    message      = message.replace(reg, String(amount));
+    var me                 = String(parameters['ME'] || 'Organ');
+    var amount             = Number(parameters['Required Amount'] || '100');
+    var variable           = Number(parameters['Required Variable'] || '0');
+    var costUnit           = String(parameters['Cost Unit'] || '回');
+    var effectStopSwitchId = Number(parameters['Effect Stop Switch'] || 0);
+    var se                 = String(parameters['SE'] || '');
+
+    var reg = /Required Amount/gi;
+    message = message.replace(reg, String(amount));
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
@@ -507,7 +535,9 @@
         this._commandWindow.deactivate();
         this._getCommandWindow.deactivate();
 
-        if (this._item) {
+        if (this.isEffectStop()) {
+            this.commandOk();
+        } else if (this._item) {
             this._getWindow.setItem(this._item);
 
             this._screenFadeOut();
@@ -523,6 +553,10 @@
             this._commandWindow.activate();
         }
 
+    };
+
+    Scene_Gacha.prototype.isEffectStop = function() {
+        return effectStopSwitchId > 0 && $gameSwitches.value(effectStopSwitchId);
     };
 
     Scene_Gacha.prototype.consumeCost = function() {
@@ -557,7 +591,10 @@
             this.commandGacha(null);
         } else {
             var itemListKeys = Object.keys(this._itemList);
-            if (itemListKeys.length >= 2) {
+            if (this.isEffectStop() || itemListKeys.length >= 2) {
+                if (se) {
+                    AudioManager.playSe({name:se, volume:90, pitch:100, pan:0});
+                }
                 itemListKeys.forEach(function(key) {
                     $gameMessage.add(key + ' × ' + this._itemList[key]);
                 }.bind(this));
@@ -825,9 +862,7 @@
 
         if (!item || !item.meta.gachaImage) {
             this._gachaSprite.bitmap = null;
-
-        }
-        else {
+        } else {
             var bitmap;
             bitmap                   = ImageManager.loadBitmap("img/gacha/", this._item.meta.gachaImage);
             this._gachaSprite.bitmap = bitmap;
@@ -836,7 +871,9 @@
     };
 
     Window_GachaGet.prototype.drawDescription = function(x, y) {
-        if (this._item) this.drawTextEx(this._item.description, x, y);
+        if (this._item) {
+            this.drawTextEx(this._item.description, x, y);
+        }
     };
 
     Window_GachaGet.prototype.drawHorzLine = function(y) {
