@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.1 2017/12/07 MPP_ChoiceEX.jsとの競合を解消（by 奏ねこまさん）
 // 2.9.0 2017/10/18 AltWindowFrame.jsとの競合を解消してMADOと連携できるようになりました。
 // 2.8.1 2017/08/14 ウィンドウの振動時間を設定できる機能を追加
 // 2.8.0 2017/08/14 ウィンドウを振動させる機能を追加
@@ -1324,6 +1325,15 @@
     var _Window_ChoiceList_lineHeight      = Window_ChoiceList.prototype.lineHeight;
     Window_ChoiceList.prototype.lineHeight = function() {
         return this.isPopupLinkage() ? paramFontSize + 8 : _Window_ChoiceList_lineHeight.apply(this, arguments);
+    };
+
+    var _Window_ChoiceList_start      = Window_ChoiceList.prototype.start;
+    Window_ChoiceList.prototype.start = function() {
+        if (!this.isPopup()) {
+            this._messageWindow.updateTargetCharacterId();
+            this._messageWindow.resetLayout();
+        }
+        return _Window_ChoiceList_start.apply(this, arguments);
     };
 
     var _Window_ChoiceList_updatePlacement      = Window_ChoiceList.prototype.updatePlacement;
