@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2017/12/06 効果音の音量、ピッチ、左右バランスを後から変更できる機能を追加
 // 1.0.0 2017/12/05 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -33,8 +34,14 @@
  * 「\!」による待機や「\^」によるスキップ時も演奏されます。
  *
  * ・スクリプト詳細
- * // ページ送り効果音を「Book2」に変更します。
- * $gameSystem.setMessageTriggerSe('Book2');
+ * ページ送り効果音を以下の通りに変更します。
+ * 指定しなかった項目は変更されません。
+ *  名称         : Book2
+ *  音量         : 90
+ *  ピッチ       : 100
+ *  左右バランス : 0
+ *
+ * $gameSystem.setMessageTriggerSe('Book2', 90, 100, 0);
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -143,9 +150,20 @@
         return this._messageTriggerSe;
     };
 
-    Game_System.prototype.setMessageTriggerSe = function(seName) {
+    Game_System.prototype.setMessageTriggerSe = function(name, volume, pitch, pan) {
         this.initMessageTriggerSeIfNeed();
-        this._messageTriggerSe.name = seName;
+        if (name || name === '') {
+            this._messageTriggerSe.name = name;
+        }
+        if (volume || volume === 0) {
+            this._messageTriggerSe.volume = volume;
+        }
+        if (pitch || pitch === 0) {
+            this._messageTriggerSe.pitch = pitch;
+        }
+        if (pan || pan === 0) {
+            this._messageTriggerSe.pan = pan;
+        }
     };
 
     //=============================================================================
