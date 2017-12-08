@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/12/08 SceneGlossary.jsとの間で発生する可能性のある競合を解消
 // 1.2.0 2017/05/15 パーティを切り替えた際にリソースを統合できる機能を追加
 // 1.1.0 2017/05/13 パーティ間でリソースを共有する設定を追加、各パーティのマップ座標を記憶して自働で場所移動する機能を追加
 // 1.0.0 2017/05/09 初版
@@ -55,6 +56,7 @@
  *
  * This plugin is released under the MIT License.
  */
+
 /*:ja
  * @plugindesc 並列パーティプラグイン
  * @author トリアコンタン
@@ -212,21 +214,28 @@ function Game_Parties() {
     //=============================================================================
     Game_Party.prototype.getAllResources = function() {
         return {
-            items  : this._items,
-            weapons: this._weapons,
-            armors : this._armors,
-            gold   : this._gold,
-            steps  : this._steps
+            items        : this._items,
+            weapons      : this._weapons,
+            armors       : this._armors,
+            gold         : this._gold,
+            steps        : this._steps,
+            itemHistory  : this._itemHistory,
+            weaponHistory: this._weaponHistory,
+            armorHistory : this._armorHistory
         };
     };
 
     Game_Party.prototype.inheritAllResources = function(prevParty) {
-        var resources = prevParty.getAllResources();
-        this._items   = resources.items;
-        this._weapons = resources.weapons;
-        this._armors  = resources.armors;
-        this._gold    = resources.gold;
-        this._steps   = resources.steps;
+        var resources       = prevParty.getAllResources();
+        this._items         = resources.items;
+        this._weapons       = resources.weapons;
+        this._armors        = resources.armors;
+        this._gold          = resources.gold;
+        this._steps         = resources.steps;
+        // for SceneGlossary.js
+        this._itemHistory   = resources.itemHistory;
+        this._weaponHistory = resources.weaponHistory;
+        this._armorHistory  = resources.armorHistory;
     };
 
     Game_Party.prototype.combineAllResources = function(targetParty) {
