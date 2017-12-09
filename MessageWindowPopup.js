@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.2 2017/12/10 フキダシ位置のY座標を調整する際にテール画像が表示されるように微調整
 // 2.9.1 2017/12/07 フキダシ表示を無効化後、メッセージの表示をする前に選択肢を表示すると位置がおかしくなる問題を修正（by 奏ねこまさん）
 // 2.9.0 2017/10/18 AltWindowFrame.jsとの競合を解消してMADOと連携できるようになりました。
 // 2.8.1 2017/08/14 ウィンドウの振動時間を設定できる機能を追加
@@ -959,9 +960,10 @@
             deltaY = this.y;
             this.y = 0;
         }
-        if (this.y + this.height > Graphics.boxHeight) {
-            deltaY = this.y + this.height - Graphics.boxHeight;
-            this.y = Graphics.boxHeight - this.height;
+        var maxY = Graphics.boxHeight - this._windowPauseSignSprite.height / 2;
+        if (this.y + this.height > maxY) {
+            deltaY = this.y + this.height - maxY;
+            this.y = maxY - this.height;
         }
         return deltaY;
     };
