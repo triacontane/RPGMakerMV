@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2017/12/10 2.0.0においてYEP_MainMenuManager.jsとの連携時、ヘルプに示している登録内容で実行するとエラーになったいた問題を修正
 // 2.0.0 2017/12/09 用語辞典を好きなだけ追加し、各辞典ごとに仕様や表示内容をカスタマイズできる機能を追加
 //                  用語カテゴリを変更できるコマンドを追加、アイテムごとに使用可否を設定できる機能を追加
 //                  アイテム使用時に使用したアイテムIDを変数に格納する機能と、任意のスイッチを変更できる機能を追加
@@ -986,7 +987,7 @@ function Scene_Glossary() {
      * @private
      */
     Game_Party.prototype._compareOrderGlossaryCategory = function(a, b) {
-        var order = param.CategoryOrder;
+        var order       = param.CategoryOrder;
         var orderLength = order.length + 1;
         var orderA      = order.indexOf(a) + 1 || orderLength;
         var orderB      = order.indexOf(b) + 1 || orderLength;
@@ -1104,20 +1105,20 @@ function Scene_Glossary() {
         }
     };
 
-    Game_Party.prototype.setSelectedGlossaryTypeIndex = function(index) {
-        this.setSelectedGlossaryType(null, index);
-    };
-
     Game_Party.prototype.setSelectedGlossaryType = function(type, index) {
         this._selectedGlossaryType = this.setupGlossary(type, index);
     };
 
     Game_Party.prototype.setupGlossary = function(type, index) {
-        this._glossarySetting = param.GlossaryInfo.filter(function(glossaryItem) {
+        var glossary = param.GlossaryInfo;
+        if (glossary.length === 0) {
+            throw new Error('Glossary Info is empty. Please set plugin parameter.');
+        }
+        this._glossarySetting = glossary.filter(function(glossaryItem) {
             return glossaryItem.GlossaryType === type;
         })[0];
         if (!this._glossarySetting) {
-            this._glossarySetting = param.GlossaryInfo[index || 0];
+            this._glossarySetting = glossary[index] || glossary[0];
         }
         return this._glossarySetting.GlossaryType;
     };
@@ -1207,14 +1208,14 @@ function Scene_Glossary() {
         _Scene_Menu_createCommandWindow.apply(this, arguments);
         for (var i = 0; i < param.GlossaryInfo.length; i++) {
             if (Scene_Menu.isVisibleGlossaryCommand(i)) {
-                this._commandWindow.setHandler('glossary' + String(i), this.commandGlossary.bind(this, i));
+                this._commandWindow.setHandler('glossary' + String(i + 1), this.commandGlossary.bind(this, null, i));
             }
         }
     };
 
-    Scene_Menu.prototype.commandGlossary = function(typeIndex) {
+    Scene_Menu.prototype.commandGlossary = function(type, typeIndex) {
         $gameParty.clearGlossaryIndex();
-        $gameParty.setSelectedGlossaryTypeIndex(typeIndex);
+        $gameParty.setSelectedGlossaryType(type, typeIndex);
         SceneManager.push(Scene_Glossary);
     };
 
@@ -1233,7 +1234,7 @@ function Scene_Glossary() {
                         glossaryName = translatedText;
                     });
                 }
-                this.addCommand(glossaryName, 'glossary' + String(i), this.isGlossaryEnabled(i));
+                this.addCommand(glossaryName, 'glossary' + String(i + 1), this.isGlossaryEnabled(i));
             }
         }
     };
