@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2017/12/12 入手履歴使用有無と用語リストウィンドウの横幅を、辞書ごとに別々に設定できるようになりました。
 // 2.0.1 2017/12/10 2.0.0においてYEP_MainMenuManager.jsとの連携時、ヘルプに示している登録内容で実行するとエラーになったいた問題を修正
 // 2.0.0 2017/12/09 用語辞典を好きなだけ追加し、各辞典ごとに仕様や表示内容をカスタマイズできる機能を追加
 //                  用語カテゴリを変更できるコマンドを追加、アイテムごとに使用可否を設定できる機能を追加
@@ -74,12 +75,6 @@
  * @type number
  * @parent Layout
  *
- * @param GlossaryListWidth
- * @desc 用語集リストのウィンドウ横幅です。
- * @default 240
- * @type number
- * @parent Layout
- *
  * @param AutoResizePicture
  * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
  * @default true
@@ -139,11 +134,6 @@
  * @default 0
  * @type variable
  * @parent AutoAddition
- *
- * @param UseItemHistory
- * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
- * @default false
- * @type boolean
  *
  * @param CategoryOrder
  * @desc カテゴリ並び順を任意に変更したい場合はカテゴリ名を指定してください。
@@ -384,6 +374,16 @@
  * @default true
  * @type boolean
  *
+ * @param UseItemHistory
+ * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
+ * @default false
+ * @type boolean
+ *
+ * @param GlossaryListWidth
+ * @desc 用語集リストのウィンドウ横幅です。
+ * @default 240
+ * @type number
+ * @parent Layout
  */
 
 /*:ja
@@ -403,13 +403,6 @@
  * @text フォントサイズ
  * @desc 用語集のフォントサイズです。
  * @default 22
- * @type number
- * @parent Layout
- *
- * @param GlossaryListWidth
- * @text 用語集リスト横幅
- * @desc 用語集リストのウィンドウ横幅です。
- * @default 240
  * @type number
  * @parent Layout
  *
@@ -480,12 +473,6 @@
  * @default 0
  * @type variable
  * @parent AutoAddition
- *
- * @param UseItemHistory
- * @text 入手履歴を使用
- * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
- * @default false
- * @type boolean
  *
  * @param CategoryOrder
  * @text カテゴリ並び順
@@ -747,6 +734,17 @@
  * @default true
  * @type boolean
  *
+ * @param UseItemHistory
+ * @text 入手履歴を使用
+ * @desc ONにすると一度入手した用語アイテムを失っても辞書には表示されたままになります。
+ * @default false
+ * @type boolean
+ *
+ * @param GlossaryListWidth
+ * @text 用語集リスト横幅
+ * @desc 用語集リストのウィンドウ横幅です。
+ * @default 240
+ * @type number
  */
 
 function Scene_Glossary() {
@@ -922,6 +920,10 @@ function Scene_Glossary() {
         return this.swapItemHash(this.getAllMaterials.bind(this));
     };
 
+    Game_Party.prototype.getMaterialList = function() {
+        return this._glossarySetting.UseItemHistory ? this.getAllMaterialsHistories() : this.getAllMaterials();
+    };
+
     Game_Party.prototype.isGlossaryItem = function(item) {
         return item && getMetaValues(item, ['説明', 'Description']) !== undefined;
     };
@@ -942,7 +944,7 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.hasGlossary = function(item) {
-        return param.UseItemHistory ? this.hasItemHistory(item) : this.hasItem(item);
+        return this._glossarySetting.UseItemHistory ? this.hasItemHistory(item) : this.hasItem(item);
     };
 
     Game_Party.prototype.hasItemHistory = function(item) {
@@ -1191,6 +1193,10 @@ function Scene_Glossary() {
         return usable !== undefined ? usable : this._glossarySetting.UsableDefault;
     };
 
+    Game_Party.prototype.getGlossaryListWidth = function() {
+        return this._glossarySetting.GlossaryListWidth || 160;
+    };
+
     //=============================================================================
     // Scene_Menu
     //  用語集画面の呼び出しを追加します。
@@ -1307,7 +1313,7 @@ function Scene_Glossary() {
     };
 
     Scene_Glossary.prototype.createGlossaryWindow = function() {
-        this._glossaryWindow = new Window_Glossary(param.GlossaryListWidth, this._helpWindow.height);
+        this._glossaryWindow = new Window_Glossary($gameParty.getGlossaryListWidth(), this._helpWindow.height);
         this.addWindow(this._glossaryWindow);
     };
 
@@ -1587,7 +1593,8 @@ function Scene_Glossary() {
         if ($gameParty.isUseGlossaryComplete()) {
             height -= this.lineHeight() + this.standardPadding() * 2;
         }
-        Window_ItemList.prototype.initialize.call(this, 0, gWindow.y, param.GlossaryListWidth, height);
+        var width = $gameParty.getGlossaryListWidth();
+        Window_ItemList.prototype.initialize.call(this, 0, gWindow.y, width, height);
         this.refresh();
         this.selectLastIndex();
     };
@@ -1688,7 +1695,7 @@ function Scene_Glossary() {
     };
 
     Window_GlossaryList.prototype.getMaterialList = function() {
-        return param.UseItemHistory ? $gameParty.getAllMaterialsHistories() : $gameParty.getAllMaterials();
+        return $gameParty.getMaterialList();
     };
 
     Window_GlossaryList.prototype.canItemUse = function() {
