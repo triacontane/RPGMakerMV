@@ -6,7 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.6.1-SNAPSHOT 2017/09/21 オートモード時 改ページを伴わない入力待ちの後のメッセージを一瞬でスキップする問題を修正
+// 1.7.0 2017/12/12 SkipAlreadyReadMessage.jsとの連携したときに当プラグインのスキップ機能が既読スキップになるよう修正
+//                  スキップピクチャの条件スイッチが0(指定なし)のときに同ピクチャが表示されない問題を修正
+// 1.6.1 2017/09/21 オートモード時 改ページを伴わない入力待ちの後のメッセージを一瞬でスキップする問題を修正(by DarkPlasmaさん)
 // 1.6.0 2017/08/03 キーを押している間だけスキップが有効にできる機能を追加
 // 1.5.0 2017/05/27 オートおよびスキップボタンの原点指定と表示可否を変更できるスイッチの機能を追加
 // 1.4.0 2017/05/26 クリックでオートおよびスキップを切り替えるボタンを追加
@@ -19,7 +21,7 @@
 // 1.0.1 2016/02/15 モバイル端末での動作が遅くなる不具合を修正
 // 1.0.0 2016/01/15 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -128,6 +130,11 @@
  *
  * $gameMessage.clearSkipInfo();
  *
+ * ・SkipAlreadyReadMessage.jsとの連携
+ * SkipAlreadyReadMessage.js（奏ねこま様作）と併用したときに
+ * 当プラグインのスキップ機能は「既読スキップ」機能になります。
+ * http://makonet.sakura.ne.jp/rpg_tkool/
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -235,6 +242,11 @@
  * 明示的に解除したい場合は、以下のスクリプトを実行してください。
  *
  * $gameMessage.clearSkipInfo();
+ *
+ * ・SkipAlreadyReadMessage.jsとの連携
+ * SkipAlreadyReadMessage.js（奏ねこま様作）と併用したときに
+ * 当プラグインのスキップ機能は「既読スキップ」機能になります。
+ * http://makonet.sakura.ne.jp/rpg_tkool/
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -524,6 +536,15 @@
         } else if (paramPressingSkip) {
             $gameMessage.setSkipFlg(this.isPressedMessageSkip());
         }
+        this.updateSkipForSkipAlreadyReadMessage();
+    };
+
+    // for SkipAlreadyReadMessage.js
+    Window_Message.prototype.updateSkipForSkipAlreadyReadMessage = function() {
+        var pluginName = 'SkipAlreadyReadMessage';
+        if ($gameMessage[pluginName] && !$gameMessage[pluginName].already_read) {
+            $gameMessage.setSkipFlg(false);
+        }
     };
 
     Window_Message.prototype.messageAuto = function() {
@@ -571,8 +592,7 @@
             this.initializeMessageAutoCount();
             return true;
         }
-        return _Window_Message_isTriggered.apply(this, arguments) ||
-            this.messageSkip();
+        return _Window_Message_isTriggered.apply(this, arguments) || this.messageSkip();
     };
 
     var _Window_Message_startPause      = Window_Message.prototype.startPause;
@@ -611,8 +631,7 @@
     };
 
     Sprite_MessageButton.prototype.updateVisibility = function() {
-        if (!paramPictureSwitchId) return;
-        this.visible = $gameSwitches.value(paramPictureSwitchId);
+        this.visible = (!paramPictureSwitchId || $gameSwitches.value(paramPictureSwitchId));
     };
 
     Sprite_MessageButton.prototype.isTriggered = function(targetX, targetY, pressed) {
