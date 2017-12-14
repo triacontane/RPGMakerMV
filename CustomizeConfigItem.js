@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2017/12/15 追加項目のデフォルト項目を含めた並び順を自由に設定できる機能を追加
 // 2.0.1 2017/10/15 2.0.0の修正によりスイッチ項目を有効にしたときにゲーム開始するとエラーになる問題を修正
 // 2.0.0 2017/09/10 ツクールの型指定機能に対応し、各オプション項目を任意の数だけ追加できる機能を追加
 // 1.2.3 2017/06/08 1.2.2の修正により起動できなくなっていた問題を修正
@@ -129,6 +130,26 @@
  * @desc 項目を操作したときの数値の変化量です。
  * @default 20
  * @type number
+ *
+ * @param AddPosition
+ * @text 追加位置
+ * @desc 項目を追加する位置です。指定した項目の上に追加されます。
+ * @default
+ * @type select
+ * @option 末尾に追加
+ * @value
+ * @option 常時ダッシュ
+ * @value alwaysDash
+ * @option コマンド記憶
+ * @value commandRemember
+ * @option BGM 音量
+ * @value bgmVolume
+ * @option BGS 音量
+ * @value bgsVolume
+ * @option ME 音量
+ * @value meVolume
+ * @option SE 音量
+ * @value seVolume
  */
 /*~struct~BooleanData:
  * @param Name
@@ -153,6 +174,26 @@
  * @param Script
  * @desc 項目を決定したときに実行されるスクリプトです。
  * @default
+ *
+ * @param AddPosition
+ * @text 追加位置
+ * @desc 項目を追加する位置です。指定した項目の上に追加されます。
+ * @default
+ * @type select
+ * @option 末尾に追加
+ * @value
+ * @option 常時ダッシュ
+ * @value alwaysDash
+ * @option コマンド記憶
+ * @value commandRemember
+ * @option BGM 音量
+ * @value bgmVolume
+ * @option BGS 音量
+ * @value bgsVolume
+ * @option ME 音量
+ * @value meVolume
+ * @option SE 音量
+ * @value seVolume
  */
 /*~struct~StringData:
  * @param Name
@@ -182,6 +223,26 @@
  * @desc 項目の設定内容の配列です。
  * @default
  * @type string[]
+ *
+ * @param AddPosition
+ * @text 追加位置
+ * @desc 項目を追加する位置です。指定した項目の上に追加されます。
+ * @default
+ * @type select
+ * @option 末尾に追加
+ * @value
+ * @option 常時ダッシュ
+ * @value alwaysDash
+ * @option コマンド記憶
+ * @value commandRemember
+ * @option BGM 音量
+ * @value bgmVolume
+ * @option BGS 音量
+ * @value bgsVolume
+ * @option ME 音量
+ * @value meVolume
+ * @option SE 音量
+ * @value seVolume
  */
 /*~struct~VolumeData:
  * @param Name
@@ -206,6 +267,26 @@
  * @param Script
  * @desc 項目を決定したときに実行されるスクリプトです。
  * @default
+ *
+ * @param AddPosition
+ * @text 追加位置
+ * @desc 項目を追加する位置です。指定した項目の上に追加されます。
+ * @default
+ * @type select
+ * @option 末尾に追加
+ * @value
+ * @option 常時ダッシュ
+ * @value alwaysDash
+ * @option コマンド記憶
+ * @value commandRemember
+ * @option BGM 音量
+ * @value bgmVolume
+ * @option BGS 音量
+ * @value bgsVolume
+ * @option ME 音量
+ * @value meVolume
+ * @option SE 音量
+ * @value seVolume
  */
 
 (function() {
@@ -260,7 +341,7 @@
 
     var getArgJson = function(arg, defaultValue) {
         try {
-            arg = JSON.parse(arg);
+            arg = JSON.parse(arg || null);
             if (arg === null) {
                 arg = defaultValue;
             }
@@ -348,7 +429,7 @@
 
     ConfigManager.makeStringOption = function(optionItem, index) {
         var data    = this.makeCommonOption(optionItem, index, this._symbolString);
-        data.values = getArgJson(optionItem.StringItems);
+        data.values = getArgJson(optionItem.StringItems, ['no item']);
         data.min    = 0;
         data.max    = data.values.length - 1;
         this.pushOptionData(data);
@@ -374,6 +455,7 @@
         data.script    = optionItem.Script;
         data.initValue = getArgNumber(optionItem.DefaultValue);
         data.variable  = getArgNumber(optionItem.VariableID, 0);
+        data.addPotion = optionItem.AddPosition;
         return data;
     };
 
@@ -520,8 +602,25 @@
 
     Window_Options.prototype.addCustomOptions = function() {
         iterate(this._customParams, function(key, item) {
-            if (!ConfigManager.hiddenInfo[key]) this.addCommand(item.name, key);
+            if (!ConfigManager.hiddenInfo[key]) {
+                this.addCommand(item.name, key);
+                if (item.addPotion) {
+                    this.shiftCustomOptions(item.addPotion);
+                }
+            }
         }.bind(this));
+    };
+
+    Window_Options.prototype.shiftCustomOptions = function(addPotion) {
+        var targetCommand = this._list.filter(function(command) {
+            return command.symbol === addPotion;
+        })[0];
+        if (!targetCommand) {
+            return;
+        }
+        var targetIndex = this._list.indexOf(targetCommand);
+        var newCommand = this._list.pop();
+        this._list.splice(targetIndex, 0, newCommand);
     };
 
     var _Window_Options_statusText      = Window_Options.prototype.statusText;
