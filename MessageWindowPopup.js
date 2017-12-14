@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.3 2017/12/14 2.9.2の修正で上方向に対する調整が抜けていたのを修正
 // 2.9.2 2017/12/10 フキダシ位置のY座標を調整する際にテール画像が表示されるように微調整
 // 2.9.1 2017/12/07 フキダシ表示を無効化後、メッセージの表示をする前に選択肢を表示すると位置がおかしくなる問題を修正（by 奏ねこまさん）
 // 2.9.0 2017/10/18 AltWindowFrame.jsとの競合を解消してMADOと連携できるようになりました。
@@ -873,6 +874,7 @@
             this._windowPauseSignSprite.y        = this.height + 12;
             this._windowPauseSignSprite.anchor.y = 1;
         }
+        this._pauseSignLower = lowerFlg;
         this._pauseSignToTail = true;
     };
 
@@ -955,17 +957,14 @@
     };
 
     Window_Base.prototype.adjustPopupPositionY = function() {
-        var deltaY = 0;
-        if (this.y < 0) {
-            deltaY = this.y;
-            this.y = 0;
+        var minY = (this._pauseSignLower ? this._windowPauseSignSprite.height / 2 : 0);
+        if (this.y < minY) {
+            this.y = minY;
         }
         var maxY = Graphics.boxHeight - this._windowPauseSignSprite.height / 2;
         if (this.y + this.height > maxY) {
-            deltaY = this.y + this.height - maxY;
             this.y = maxY - this.height;
         }
-        return deltaY;
     };
 
     Window_Base.prototype.updatePlacementPopup = function() {
