@@ -7,6 +7,7 @@
 // ----------------------------------------------------------------------------
 // Version
 // 2.1.0 2017/12/15 追加項目のデフォルト項目を含めた並び順を自由に設定できる機能を追加
+//                  項目名称を日本語化
 // 2.0.1 2017/10/15 2.0.0の修正によりスイッチ項目を有効にしたときにゲーム開始するとエラーになる問題を修正
 // 2.0.0 2017/09/10 ツクールの型指定機能に対応し、各オプション項目を任意の数だけ追加できる機能を追加
 // 1.2.3 2017/06/08 1.2.2の修正により起動できなくなっていた問題を修正
@@ -94,39 +95,47 @@
 
 /*~struct~NumberData:
  * @param Name
+ * @text 項目名称
  * @desc 項目の名称です。
  * @default 数値項目1
  *
  * @param DefaultValue
+ * @text 初期値
  * @desc 項目の初期値です。
  * @default 0
  * @type number
  *
  * @param VariableID
+ * @text 変数番号
  * @desc 項目の設定内容が格納される変数番号です。
  * @default 0
  * @type variable
  *
  * @param HiddenFlag
+ * @text 隠しフラグ
  * @desc 項目がデフォルトで隠されるようになります。プラグインコマンドの実行で表示されます。
  * @default false
  * @type boolean
  *
  * @param Script
+ * @text スクリプト
  * @desc 項目を決定したときに実行されるスクリプトです。
  * @default
  *
  * @param NumberMin
+ * @text 最小値
  * @desc 項目の最小値です。
  * @default 0
  * @type number
  *
  * @param NumberMax
+ * @text 最大値
  * @desc 項目の最大値です。
  * @default 100
  * @type number
  *
  * @param NumberStep
+ * @text 変化値
  * @desc 項目を操作したときの数値の変化量です。
  * @default 20
  * @type number
@@ -153,25 +162,30 @@
  */
 /*~struct~BooleanData:
  * @param Name
+ * @text 項目名称
  * @desc 項目の名称です。
  * @default スイッチ項目1
  *
  * @param DefaultValue
+ * @text 初期値
  * @desc 項目の初期値です。
  * @default false
  * @type boolean
  *
  * @param SwitchID
+ * @text スイッチ番号
  * @desc 項目の設定内容が格納されるスイッチ番号です。
  * @default 0
  * @type switch
  *
  * @param HiddenFlag
+ * @text 隠しフラグ
  * @desc 項目がデフォルトで隠されるようになります。プラグインコマンドの実行で表示されます。
  * @default false
  * @type boolean
  *
  * @param Script
+ * @text スクリプト
  * @desc 項目を決定したときに実行されるスクリプトです。
  * @default
  *
@@ -197,29 +211,35 @@
  */
 /*~struct~StringData:
  * @param Name
+ * @text 項目名称
  * @desc 項目の名称です。
  * @default 文字列項目1
  *
  * @param DefaultValue
+ * @text 初期値
  * @desc 項目の初期値です。インデックスの数値を指定します。
  * @default 0
  * @type number
  *
  * @param VariableID
+ * @text 変数番号
  * @desc 項目の設定内容が格納される変数番号です。
  * @default 0
  * @type variable
  *
  * @param HiddenFlag
+ * @text 隠しフラグ
  * @desc 項目がデフォルトで隠されるようになります。プラグインコマンドの実行で表示されます。
  * @default false
  * @type boolean
  *
  * @param Script
+ * @text スクリプト
  * @desc 項目を決定したときに実行されるスクリプトです。
  * @default
  *
  * @param StringItems
+ * @text 内容の配列
  * @desc 項目の設定内容の配列です。
  * @default
  * @type string[]
@@ -246,25 +266,30 @@
  */
 /*~struct~VolumeData:
  * @param Name
+ * @text 項目名称
  * @desc 項目の名称です。
  * @default 音量項目1
  *
  * @param DefaultValue
+ * @text 初期値
  * @desc 項目の初期値です。
  * @default 0
  * @type number
  *
  * @param VariableID
+ * @text 変数番号
  * @desc 項目の設定内容が格納される変数番号です。
  * @default 0
  * @type variable
  *
  * @param HiddenFlag
+ * @text 隠しフラグ
  * @desc 項目がデフォルトで隠されるようになります。プラグインコマンドの実行で表示されます。
  * @default false
  * @type boolean
  *
  * @param Script
+ * @text スクリプト
  * @desc 項目を決定したときに実行されるスクリプトです。
  * @default
  *
