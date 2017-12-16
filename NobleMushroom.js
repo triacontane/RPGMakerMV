@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2017/12/17 ノベルメッセージの縦書きの対応
 // 1.6.1 2017/10/29 場所移動のフェードアウト中にポーズメニューを押下すると、移動後にイベントが進まなくなる不具合を修正
 // 1.6.0 2017/10/07 自動改行が有効な場合、自動改行位置と入力した改行が重なったときに2回改行されてしまう問題を修正
 //                  パラメータの型指定機能に対応
@@ -167,6 +168,11 @@
  * @param CommandQuickLoad
  * @desc ポーズメニューの「クイックロード」のコマンド名称です。
  * @default クイックロード
+ *
+ * @param VerticalWriting
+ * @desc ノベル文章表示を縦書きにします。(ON/OFF)
+ * @default false
+ * @type boolean
  *
  * @help It is a base plug-in for creating sound novel easily with RPG Maker MV
  * When applied, the display of the message window becomes the entire screen,
@@ -391,6 +397,11 @@
  * @desc ポーズメニューの「クイックロード」のコマンド名称です。
  * @default クイックロード
  *
+ * @param 縦書き
+ * @desc ノベル文章表示を縦書きにします。(ON/OFF)
+ * @default false
+ * @type boolean
+ *
  * @help RPGツクールMVでサウンドノベルを手軽に作成するためのベースプラグインです。
  * 適用すると、メッセージウィンドウの表示が画面全体になり
  * 表示したメッセージが消去されず画面に蓄積されるようになります。
@@ -577,6 +588,7 @@
     var paramCommandLoad        = getParamString(['CommandLoad', 'ロードコマンド']);
     var paramCommandQuickLoad   = getParamString(['CommandQuickSave', 'Qロードコマンド']);
     var paramCommandQuickSave   = getParamString(['CommandQuickLoad', 'Qセーブコマンド']);
+    var paramVerticalWriting    = getParamBoolean(['VerticalWriting', '縦書き']);
 
     //=============================================================================
     // インタフェースの定義
@@ -1645,8 +1657,14 @@
 
     Window_NovelMessage.prototype.getPauseSignSpritePosition = function() {
         var signSprite = this._windowPauseSignSprite;
-        var x          = this._textState.x + this.padding + (signSprite.width * signSprite.anchor.x);
-        var y          = this._textState.y + this._textState.height + this.padding;
+        var x = 0, y = 0;
+        if (paramVerticalWriting) {
+            x = this.contents.width - this._textState.y - this.padding + (this.contents.fontSize / 2);
+            y = this._textState.x + this.padding + signSprite.height;
+        } else {
+            x = this._textState.x + this.padding + (signSprite.width * signSprite.anchor.x);
+            y = this._textState.y + this._textState.height + this.padding;
+        }
         return {x: x, y: y};
     };
 
@@ -1660,8 +1678,19 @@
     };
 
     Window_NovelMessage.prototype.processNormalCharacter = function(textState) {
-        _InterfaceWindow_Message.prototype.processNormalCharacter.apply(this, arguments);
-        if (paramAutoWordWrap) this.processAutoWordWrap(textState);
+        if (paramVerticalWriting) {
+            var c = textState.text[textState.index++];
+            var w = this.textWidth(c);
+            var x = this.contents.width - textState.y - (textState.height / 2 + w / 2);
+            var y = textState.x;
+            this.contents.drawText(c, x, y, w * 2, textState.height, 'left');
+            textState.x += this.contents.fontSize;
+        } else {
+            _InterfaceWindow_Message.prototype.processNormalCharacter.apply(this, arguments);
+        }
+        if (paramAutoWordWrap) {
+            this.processAutoWordWrap(textState);
+        }
     };
 
     Window_NovelMessage.prototype.processNewLine = function(textState) {
@@ -1679,7 +1708,8 @@
     Window_NovelMessage.prototype.processAutoWordWrap = function(textState) {
         var c         = textState.text[textState.index];
         var textNextX = textState.x + (c ? this.textWidth(c) : 0);
-        if (textNextX > this.contents.width && c !== '\n') {
+        var maxWidth  = (paramVerticalWriting ? this.contents.height : this.contents.width);
+        if (textNextX > maxWidth && c !== '\n') {
             textState.index--;
             this.processNewLine(textState);
         }
@@ -1726,6 +1756,14 @@
 
     Window_NovelMessage.prototype.doesContinue = function() {
         return Window_Message.prototype.doesContinue.apply(this, arguments) || !this._windowClosing;
+    };
+
+    Window_NovelMessage.prototype.needsNewPage = function(textState) {
+        if (paramVerticalWriting) {
+            return (!this.isEndOfText(textState) && textState.y + textState.height > this.contents.width);
+        } else {
+            return Window_Message.prototype.needsNewPage.apply(this, arguments);
+        }
     };
 
     //=============================================================================
