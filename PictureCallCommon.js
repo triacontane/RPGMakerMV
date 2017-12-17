@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.5 2017/12/17 コモンイベントを実行するタイプのボタンは、イベント実行中に無効になるよう仕様変更
 // 1.10.4 2017/11/01 ピクチャコモンが呼ばれる瞬間に対象ピクチャが表示されていない場合はイベントを呼ばない仕様に変更
 // 1.10.3 2017/10/28 ピクチャタッチイベントの呼び出し待機中に戦闘に突入すると、戦闘画面表示後に実行されてしまう問題を修正
 // 1.10.2 2017/10/21 戦闘画面に突入する際のエフェクトで、マウスオーバーイベントが予期せず発生する場合がある問題を修正
@@ -420,6 +421,10 @@
             $gameSwitches.setValue(param * -1, true);
         }
         if (this.isTouchPictureCallCommon()) {
+            if ($gameMap.isEventRunning()) {
+                this._touchPictureParam = null;
+                return;
+            }
             this.setPictureCallInfo(param);
         }
         if (this.isTouchPictureButtonTrigger()) {
