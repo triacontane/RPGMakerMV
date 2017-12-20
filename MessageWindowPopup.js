@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.4 2017/12/21 FTKR_ExMessageWindow2.jsとの連携で、上下にフキダシウィンドウを同時表示できるよう修正
 // 2.9.3 2017/12/14 2.9.2の修正で上方向に対する調整が抜けていたのを修正
 // 2.9.2 2017/12/10 フキダシ位置のY座標を調整する際にテール画像が表示されるように微調整
 // 2.9.1 2017/12/07 フキダシ表示を無効化後、メッセージの表示をする前に選択肢を表示すると位置がおかしくなる問題を修正（by 奏ねこまさん）
@@ -508,13 +509,13 @@
                 if (isNaN(eventId)) {
                     eventId = this.getEventIdFromEventName(eventId);
                 }
+                $gameSystem.setMessagePopup(eventId);
                 var windowPosition;
                 if (imported_FTKR_EMW() && args[1]) {
                     var windowId = getArgNumber(args[1]);
                     if (windowId >= 0) $gameSystem.setMessagePopupEx(windowId, eventId);
                     windowPosition = getArgNumber(args[2]);
                 } else {
-                    $gameSystem.setMessagePopup(eventId);
                     windowPosition = getArgNumber(args[1]);
                 }
                 if (windowPosition === 1) {
@@ -718,18 +719,19 @@
         return this._messagePopupAdjustPosition;
     };
 
-    Game_System.prototype.isPopupFixUpper = function() {
-        return this.isPopupFixPosition(1);
+    Game_System.prototype.isPopupFixUpper = function(eventId) {
+        return this.isPopupFixPosition(1, eventId);
     };
 
-    Game_System.prototype.isPopupFixLower = function() {
-        return this.isPopupFixPosition(2);
+    Game_System.prototype.isPopupFixLower = function(eventId) {
+        return this.isPopupFixPosition(2, eventId);
     };
 
-    Game_System.prototype.isPopupFixPosition = function(position) {
+    Game_System.prototype.isPopupFixPosition = function(position, eventId) {
+        var id = eventId || this._messagePopupCharacterId;
         this.initMessagePositionEvents();
-        var positionFixForId   = this._messagePopupPositionEvents[this._messagePopupCharacterId];
-        var event              = $gameMap.event(this._messagePopupCharacterId);
+        var positionFixForId   = this._messagePopupPositionEvents[id];
+        var event              = $gameMap.event(id);
         var positionFixForName = event ? this._messagePopupPositionEvents[event.event().name] : 0;
         if (positionFixForId > 0) {
             return positionFixForId === position;
@@ -1130,7 +1132,8 @@
     };
 
     Window_Message.prototype.isPopupLower = function() {
-        return $gameSystem.isPopupFixLower() || (!$gameSystem.isPopupFixUpper() && this.getWindowTopY() < 0);
+        var id = this._targetCharacterId;
+        return $gameSystem.isPopupFixLower(id) || (!$gameSystem.isPopupFixUpper(id) && this.getWindowTopY() < 0);
     };
 
     Window_Message.prototype.getWindowTopY = function() {
