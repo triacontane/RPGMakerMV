@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.2 2017/12/23 半歩移動有効時にタッチ移動時の探索深度が本来の半分になっていた問題を修正
 // 1.11.1 2017/10/29 MPP_MiniMap_OP1.jsとの競合を解消
 // 1.11.0 2017/10/07 探索系プラグインとの併用時の負荷対策に、イベントによる探索深度を変更できる機能を追加
 //                   YEP_MoveRouteCore.jsとの競合を解消
@@ -145,8 +146,8 @@
  * @type boolean
  *
  * @param EventSearchLimit
- * @desc 探索系のプラグインと併用で重くなった場合に調節してください。（探索精度は下がります）デフォルト:12
- * @default 12
+ * @desc 探索系のプラグインと併用で重くなった場合に調節してください。（探索精度は下がります）デフォルト:24
+ * @default 24
  * @type number
  *
  * @help Moving distance in half.
@@ -272,8 +273,8 @@
  * @type boolean
  *
  * @param イベント探索深度
- * @desc 探索系のプラグインと併用で重くなった場合に調節してください。（探索精度は下がります）デフォルト:12
- * @default 12
+ * @desc 探索系のプラグインと併用で重くなった場合に調節してください。（探索精度は下がります）デフォルト:24
+ * @default 24
  * @type number
  *
  * @help キャラクターの移動単位が1タイルの半分になります。
@@ -488,23 +489,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandHalfMove(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandHalfMove(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandHalfMove = function(command, args) {
@@ -1174,6 +1159,11 @@
         if (!this.isMovementSucceeded()) {
             this.moveStraight(d);
         }
+    };
+
+    var _Game_Character_searchLimit = Game_Character.prototype.searchLimit;
+    Game_Character.prototype.searchLimit = function() {
+        return _Game_Character_searchLimit.apply(this, arguments) * (this.isHalfMove() ? 2 : 1)
     };
 
     //=============================================================================
