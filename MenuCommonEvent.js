@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2017/12/24 公式ガチャプラグインと連携できるよう修正
 // 1.1.3 2017/12/02 NobleMushroom.jsとの競合を解消
 // 1.1.2 2017/11/18 コモンイベントを一切指定しない状態でメニューを開くとエラーになる現象を修正
 // 1.1.1 2017/11/05 ヘルプとダウンロード先を追記
@@ -354,6 +355,8 @@
  * @value Scene_SoundTest
  * @option 用語辞典
  * @value Scene_Glossary
+ * @option 公式ガチャ
+ * @value Scene_Gacha
  *
  * @param CommonEventId
  * @desc 画面で並列実行するコモンイベントのIDです。トリガーを並列実行にする必要はなく、スイッチも参照されません。
@@ -624,7 +627,10 @@
             return;
         }
         this.createSpriteset();
-        this.createMessageWindow();
+        if (!this._messageWindow) {
+            this.createMessageWindow();
+        }
+        this.changeParentMessageWindow();
     };
 
     Scene_MenuBase.prototype.hasCommonEvent = function() {
@@ -633,6 +639,9 @@
 
     Scene_MenuBase.prototype.createMessageWindow = function() {
         Scene_Map.prototype.createMessageWindow.call(this);
+    };
+
+    Scene_MenuBase.prototype.changeParentMessageWindow = function() {
         this._windowLayer.removeChild(this._messageWindow);
         this.addChild(this._messageWindow);
     };
