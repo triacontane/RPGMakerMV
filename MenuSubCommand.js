@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2017/12/24-SNAPSHOT 対象メンバーを選択するサブコマンド選択時にメニューコマンドをその名前に置き換える処理を追加
+//                           メニューへ戻った際に対象メンバー選択やサブコマンド選択に戻るように変更
 // 2.0.1 2017/11/19 MOG_MenuCursor.jsとの併用時、カーソルがサブコマンドの下に隠れてしまう競合の解消
 // 2.0.0 2017/09/04 メニューコマンドやサブコマンドを好きなだけ追加できるようパラメータの仕様を変更
 // 1.1.0 2017/05/14 デフォルトのオプションとゲーム終了コマンドを削除できる機能を追加
@@ -367,6 +369,11 @@
         param.subCommands.forEach(function(commands) {
             this.createMenuCommand(commands);
         }, this);
+        /* 最後に選択したサブコマンド */
+        this._lastSubCommand = {
+            parent: null,
+            index: 0
+        };
     };
 
     Game_Temp.prototype.createMenuCommand = function(commands) {
@@ -384,6 +391,31 @@
 
     Game_Temp.prototype.getSubMenuCommands = function(parentName) {
         return this._menuParentCommands.get(parentName);
+    };
+
+    /**
+     * 最後に選択したサブコマンドを取得する
+     */
+    Game_Temp.prototype.getLastSubCommand = function () {
+        return this._lastSubCommand;
+    };
+
+    Game_Temp.prototype.setLastSubCommandParent = function (parentName) {
+        this._lastSubCommand.parent = parentName;
+    }
+
+    Game_Temp.prototype.setLastSubCommandIndex = function (index) {
+        this._lastSubCommand.index = index;
+    };
+
+    /**
+     * 最後に選択したサブコマンドをリセットする
+     */
+    Game_Temp.prototype.resetLastSubCommand = function () {
+        this._lastSubCommand = {
+            parent: null,
+            index: 0
+        };
     };
 
     //=============================================================================
@@ -551,6 +583,9 @@
         if ($gamePlayer.isInSubCommandMap()) {
             $gamePlayer.reserveTransferToOriginalMap();
         }
+        if (this._isSubCommandOkAfterCreate) {
+            this.onSubCommandOk();
+        }
     };
 
     Scene_Menu.prototype.loadSubCommandWindowSkin = function() {
@@ -579,11 +614,15 @@
         $gameTemp.iterateMenuParents(function(subCommands, parentName) {
             this._commandWindow.setHandler('parent' + parentName, this.commandParent.bind(this));
         }, this);
+
+        /* 最後に選択していたメニューにカーソルを合わせる */
+        this.selectLastCommand();
     };
 
     Scene_Menu.prototype.commandParent = function() {
         var parentName  = this._commandWindow.currentExt();
         var subCommands = $gameTemp.getSubMenuCommands(parentName);
+        $gameTemp.setLastSubCommandParent(parentName);
         if (subCommands.length === 1) {
             this.onSubCommandOk(subCommands[0]);
         } else {
@@ -609,7 +648,11 @@
 
     Scene_Menu.prototype.onSubCommandOk = function(subCommand) {
         this._subCommand = (this._subMenuWindow ? this._subMenuWindow.currentExt() : subCommand);
+        $gameTemp.setLastSubCommandIndex(this._subMenuWindow ? this._subMenuWindow.index() : 0);
         if (this._subCommand.isNeedSelectMember()) {
+            if (this._subMenuWindow) {
+                this._commandWindow.maskCommand(this._subCommand.getName());
+            }
             this._statusWindow.selectLast();
             this._statusWindow.activate();
             this._statusWindow.setHandler('ok', this.executeSubCommand.bind(this));
@@ -625,12 +668,43 @@
         this._commandWindow.activate();
     };
 
+    var _Scene_Menu_onPersonalCancel = Scene_Menu.prototype.onPersonalCancel;
+    Scene_Menu.prototype.onPersonalCancel = function () {
+        _Scene_Menu_onPersonalCancel.apply(this);
+        this._commandWindow.maskOff();
+        /* 最後に選択していたメニューにカーソルを合わせる */
+        this.selectLastCommand();
+    };
+
+
+    /**
+     * 最後に選択していたメニューにカーソルを合わせる
+     */
+    Scene_Menu.prototype.selectLastCommand = function () {
+        var lastSubCommand = $gameTemp.getLastSubCommand();
+        if (lastSubCommand.parent) {
+            this._commandWindow.selectSymbol('parent' + lastSubCommand.parent);
+            var subCommands = $gameTemp.getSubMenuCommands(lastSubCommand.parent);
+            if (subCommands.length !== 1) {
+                this.commandParent();
+                this._commandWindow.deactivate();
+                this._subMenuWindow.select(lastSubCommand.index);
+                /* 別シーンからキャラ選択に戻った時 */
+                var subCommand = subCommands[lastSubCommand.index];
+                if (subCommand.isNeedSelectMember()) {
+                    this._isSubCommandOkAfterCreate = true;
+                }
+            }
+        }
+    };
+
     Scene_Menu.prototype.executeSubCommand = function() {
         this.executeSubScript();
         this.moveSubCommandMap();
         if (!SceneManager.isSceneChanging()) {
             this.onSubCommandCancel();
             this._statusWindow.deselect();
+            this._commandWindow.maskOff();
         }
     };
 
@@ -655,10 +729,23 @@
         SceneManager.pop();
     };
 
+    /**
+     * メニューから抜ける際に最後に選択したサブコマンドをリセットする
+     */
+    Scene_Menu.prototype.popScene = function () {
+        $gameTemp.resetLastSubCommand();
+        Scene_Base.prototype.popScene.call(this);
+    };
+
     //=============================================================================
     // Window_MenuCommand
     //  サブコマンドを追加します。
     //=============================================================================
+    var _Window_MenuCommand_initialize = Window_MenuCommand.prototype.initialize;
+    Window_MenuCommand.prototype.initialize = function () {
+        this._maskedName = {};
+        _Window_MenuCommand_initialize.apply(this);
+    };
     var _Window_MenuCommand_initCommandPosition = Window_MenuCommand.initCommandPosition;
     Window_MenuCommand.initCommandPosition      = function() {
         if ($gamePlayer.isInSubCommandMap()) return;
@@ -707,7 +794,7 @@
         $gameTemp.iterateMenuParents(function(subCommands, parentName) {
             this._subCommands = subCommands;
             if (this.checkSubCommands('isVisible')) {
-                this.addCommand(parentName, 'parent' + parentName, this.checkSubCommands('isEnable'), parentName);
+                this.addCommand(this._maskedName[parentName] ? this._maskedName[parentName] : parentName, 'parent' + parentName, this.checkSubCommands('isEnable'), parentName);
             }
         }, this);
     };
@@ -732,6 +819,17 @@
 
     Window_MenuCommand.prototype.isHorizontalMenu = function() {
         return this.maxCols() >= this.maxPageRows();
+    };
+
+    Window_MenuCommand.prototype.maskCommand = function (maskName) {
+        this._maskedName = {};
+        this._maskedName[this.commandName(this.index())] = maskName;
+        this.refresh();
+    };
+
+    Window_MenuCommand.prototype.maskOff = function () {
+        this._maskedName = {};
+        this.refresh();
     };
 
     //=============================================================================
