@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2017/12/24 GALV_LayerGraphics.jsと併用したときに画像がちらつく競合を解消
 // 1.1.0 2017/10/01 パラメータの型指定機能に対応
 // 1.0.0 2017/03/20 初版
 // ----------------------------------------------------------------------------
@@ -30,7 +31,7 @@
  *
  * @param LowerPictureZ
  * @desc 下層ピクチャのZ座標です。変更することでより細かい表示優先度の調整ができます。
- * @default 2
+ * @default 1
  * @type select
  * @option 下層タイル
  * @value 0
@@ -88,7 +89,7 @@
  *
  * @param 下層ピクチャZ座標
  * @desc 下層ピクチャのZ座標です。変更することでより細かい表示優先度の調整ができます。
- * @default 2
+ * @default 1
  * @type select
  * @option 下層タイル
  * @value 0
@@ -240,6 +241,8 @@
     Spriteset_Battle.prototype.setLowerPictureContainer = function() {
         var index = this._battleField.getChildIndex(this._back2Sprite);
         this._battleField.addChildAt(this._pictureContainerLower, index + 1);
+        // resolve conflict for GALV_LayerGraphics.js
+        this._pictureContainerLower.z = 2;
     };
 
     //=============================================================================
