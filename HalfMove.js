@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.3 2017/12/30 半歩移動無効時のタッチ移動の挙動が一部おかしくなっていた問題を修正
+//                   タッチ移動を少し軽量化
 // 1.11.2 2017/12/23 半歩移動有効時にタッチ移動時の探索深度が本来の半分になっていた問題を修正
 // 1.11.1 2017/10/29 MPP_MiniMap_OP1.jsとの競合を解消
 // 1.11.0 2017/10/07 探索系プラグインとの併用時の負荷対策に、イベントによる探索深度を変更できる機能を追加
@@ -145,11 +147,6 @@
  * @default false
  * @type boolean
  *
- * @param EventSearchLimit
- * @desc 探索系のプラグインと併用で重くなった場合に調節してください。（探索精度は下がります）デフォルト:24
- * @default 24
- * @type number
- *
  * @help Moving distance in half.
  *
  * Plugin command
@@ -271,11 +268,6 @@
  * @desc プライオリティが「通常キャラと同じ」以外のイベント同士であれば位置の重複を許可します。
  * @default false
  * @type boolean
- *
- * @param イベント探索深度
- * @desc 探索系のプラグインと併用で重くなった場合に調節してください。（探索精度は下がります）デフォルト:24
- * @default 24
- * @type number
  *
  * @help キャラクターの移動単位が1タイルの半分になります。
  * 半歩移動が有効なら、乗り物以外は全て半歩移動になります。
@@ -475,7 +467,6 @@
     var paramMultiStartDisable  = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
     var paramEventOverlap       = getParamBoolean(['EventOverlap', 'イベント位置重複OK']);
     var param8MoveSwitch        = getParamNumber(['8MoveSwitch', '8方向移動スイッチ'], 0);
-    var paramEventSearchLimit   = getParamNumber(['EventSearchLimit', 'イベント探索深度'], 0);
 
     //=============================================================================
     // ローカル変数
@@ -1068,10 +1059,28 @@
     //=============================================================================
     var _Game_Character_findDirectionTo      = Game_Character.prototype.findDirectionTo;
     Game_Character.prototype.findDirectionTo = function(goalX, goalY) {
-        localHalfPositionCount++;
-        var result = _Game_Character_findDirectionTo.apply(this, arguments);
-        localHalfPositionCount--;
+        var result;
+        if (this.isHalfMove()) {
+            localHalfPositionCount++;
+            result = _Game_Character_findDirectionTo.apply(this, arguments);
+            localHalfPositionCount--;
+        } else {
+            result = _Game_Character_findDirectionTo.apply(this, arguments);
+        }
+        if (!this._searchHighPrecision && !this.canPass(this.x, this.y, result)) {
+            this._searchHighPrecision = true;
+            result                    = this.findDirectionTo(goalX, goalY);
+        }
         return result;
+    };
+
+    var _Game_Character_searchLimit      = Game_Character.prototype.searchLimit;
+    Game_Character.prototype.searchLimit = function() {
+        return _Game_Character_searchLimit.apply(this, arguments) * (this.isSearchHighPrecision() ? 2 : 1)
+    };
+
+    Game_Character.prototype.isSearchHighPrecision = function() {
+        return this._searchHighPrecision;
     };
 
     Game_Character.prototype.canDiagonalMove = function() {
@@ -1159,11 +1168,6 @@
         if (!this.isMovementSucceeded()) {
             this.moveStraight(d);
         }
-    };
-
-    var _Game_Character_searchLimit = Game_Character.prototype.searchLimit;
-    Game_Character.prototype.searchLimit = function() {
-        return _Game_Character_searchLimit.apply(this, arguments) * (this.isHalfMove() ? 2 : 1)
     };
 
     //=============================================================================
@@ -1368,6 +1372,14 @@
         }
     };
 
+    var _Game_Player_updateNonmoving = Game_Player.prototype.updateNonmoving;
+    Game_Player.prototype.updateNonmoving = function(wasMoving) {
+        _Game_Player_updateNonmoving.apply(this, arguments);
+        if (!wasMoving) {
+            this._searchHighPrecision = false;
+        }
+    };
+
     //=============================================================================
     // Game_Event
     //  半歩移動用の接触処理を定義します。
@@ -1491,11 +1503,6 @@
 
     Game_Event.prototype.canDiagonalMove = function() {
         return !this._can8moveDisable && Game_Character.prototype.canDiagonalMove.call(this);
-    };
-
-    var _Game_Event_searchLimit = Game_Event.prototype.searchLimit;
-    Game_Event.prototype.searchLimit = function() {
-        return paramEventSearchLimit > 0 ? paramEventSearchLimit : _Game_Event_searchLimit.apply(this, arguments);
     };
 
     //=============================================================================
