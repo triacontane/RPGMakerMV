@@ -8,6 +8,7 @@
 // Version
 // 1.11.3 2017/12/30 半歩移動無効時のタッチ移動の挙動が一部おかしくなっていた問題を修正
 //                   タッチ移動を少し軽量化
+//                   タッチ移動でイベントの一歩前に停止したときにイベントが起動する場合がある問題を修正
 // 1.11.2 2017/12/23 半歩移動有効時にタッチ移動時の探索深度が本来の半分になっていた問題を修正
 // 1.11.1 2017/10/29 MPP_MiniMap_OP1.jsとの競合を解消
 // 1.11.0 2017/10/07 探索系プラグインとの併用時の負荷対策に、イベントによる探索深度を変更できる機能を追加
@@ -1291,6 +1292,9 @@
             var destinationX = $gameTemp.destinationX();
             var destinationY = $gameTemp.destinationY();
             var tu           = Game_Map.tileUnit;
+            if (x1 === destinationX && y1 === destinationY) {
+                return false;
+            }
             if (Math.abs(destinationX - x2) <= tu && Math.abs(destinationY - y2) <= tu) {
                 return this.triggerTouchActionD2(x2, y2);
             } else if (Math.abs(destinationX - x3) <= tu && Math.abs(destinationY - y3) <= tu) {
