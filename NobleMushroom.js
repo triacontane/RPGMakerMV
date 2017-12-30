@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2017/12/30 相対フォントサイズにマイナス値を設定しても反映されなかった問題を修正
 // 1.7.0 2017/12/17 ノベルメッセージの縦書きの対応
 // 1.6.1 2017/10/29 場所移動のフェードアウト中にポーズメニューを押下すると、移動後にイベントが進まなくなる不具合を修正
 // 1.6.0 2017/10/07 自動改行が有効な場合、自動改行位置と入力した改行が重なったときに2回改行されてしまう問題を修正
@@ -572,7 +573,7 @@
     var paramInitialSpeed       = getParamNumber(['InitialSpeed', '表示速度初期値'], 0);
     var paramWaitByCommand      = getParamBoolean(['WaitByCommand', 'コマンド単位ウェイト']);
     var paramAutoWordWrap       = getParamBoolean(['AutoWordWrap', '自動改行']);
-    var paramRelativeFontSize   = getParamNumber(['RelativeFontSize', '相対フォントサイズ'], 1, 5000);
+    var paramRelativeFontSize   = getParamNumber(['RelativeFontSize', '相対フォントサイズ'], -32, 32);
     var paramViewMincho         = getParamBoolean(['ViewMincho', '明朝体表示']);
     var paramViewGothic         = getParamBoolean(['ViewGothic', 'ゴシック体表示']);
     var paramViewCustomFont     = getParamString(['ViewCustomFont', '固有フォント表示']);
