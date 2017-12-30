@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2017/12/30 パラメータの型指定機能に対応し、ヘルプの記述を修正
 // 1.2.0 2016/11/05 ノベルゲーム総合プラグインから、メッセージ表示速度を調整する制御文字を流用
 // 1.1.2 2016/07/24 複数行「\>」が指定されている場合もデフォルトと同じ動作をするよう修正
 // 1.1.1 2016/07/23 制御文字「\>\<」が指定されている場合、そちらを優先するよう修正
@@ -24,10 +25,12 @@
  * @param VariableSpeed
  * @desc Variable number of Message speed
  * @default 1
+ * @type variable
  *
  * @param RapidShow
  * @desc Rapid show if triggered(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help Customize for message speed
  * 0    : Rapid
@@ -43,20 +46,24 @@
  * @param 表示速度変数
  * @desc メッセージ表示速度を格納する変数の番号
  * @default 1
+ * @type variable
  *
  * @param 瞬間表示
  * @desc 文章の表示中に決定ボタンや左クリックで文章を瞬間表示します。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help メッセージ表示速度を調整します。
  * パラメータで指定した番号の変数に対して以下の値を代入してください。
  * 0     : 瞬間表示
  * 1     : 通常と同様の表示速度
  * 2以上 : 指定したフレーム間隔で一文字を表示します。
- * 
- * ※大きければ大きいほどゆっくりと表示されます。
  *
- * ※公開中の「オプション任意項目作成プラグイン」と組み合わせれば
+ * ※ パラメータで指定するのは表示速度自体ではなく
+ * 表示速度を取得する変数の値です。
+ * 変数値が大きければ大きいほどゆっくりと表示されます。
+ *
+ * ※ 公開中の「オプション任意項目作成プラグイン」と組み合わせれば
  * 対象の変数をオプション画面から操作できます。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CustomizeConfigItem.js
  *
@@ -85,7 +92,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
