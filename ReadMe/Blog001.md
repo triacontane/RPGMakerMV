@@ -103,11 +103,12 @@ array.forEach(function(item) {
 
 　従来のツクールMVでスクリプト実行時などに表示されていたエラーメッセージは正直とても分かりにくいものでした。以下のメッセージは存在しない関数を呼び出したときのメッセージです。「値 is not a function」の形式で表示されますが、リリース後にプレイヤーからこのエラー報告を頂いても直接の原因がサッパリ分かりません。
 
-- 従来のエラー発生時の表示内容  
+### 従来のエラー発生時の表示内容
 ![old_error](https://2.bp.blogspot.com/-6zu9stwxRug/WknNIsDl9xI/AAAAAAAAcgA/IwxXwokLyMUSRAXMLeAW4_7q17I_Ge9TQCLcBGAs/s1600/old_error.png)
 
 　NW.jsを最新化することで同日の状況に置けるエラーメッセージは以下のように変化します。「変数名 is not a function」の形式になるのでどこに問題があるのかが、ある程度予測できるようになります。
-- 最新のエラー表示内容  
+
+### 最新のエラー表示内容
 ![new_error](https://3.bp.blogspot.com/-5KzgAsQDLqY/WknNKcgeREI/AAAAAAAAcgE/Ew6YKGiSjhU9oseir2yB_bmId1_uwOf8wCLcBGAs/s1600/new_error.png)
 
 # NW.jsを最新化するリスク
@@ -120,14 +121,13 @@ array.forEach(function(item) {
 
 　動かなくなるデバッグ用の関数詳細については以下の通りです。（難し方は読み飛ばしてしまってOKです）
 
-- メソッド「require('nw.gui').Window.get().isDevToolsOpen();」が消えている
-デベロッパツールが開いているかどうかを返す関数「isDevToolsOpen」がなくなっているので、当該関数を呼ぼうとするとエラーになります。リファレンスには確かに記述があるのですが、実際には定義されていないようです。
 
+### メソッド「require('nw.gui').Window.get().isDevToolsOpen();」が消えている
+デベロッパツールが開いているかどうかを返す関数「isDevToolsOpen」がなくなっているので、当該関数を呼ぼうとするとエラーになります。リファレンスには確かに記述があるのですが、実際には定義されていないようです。
 <http://docs.nwjs.io/en/latest/References/Window/#winisdevtoolsopen>
 
-- require('nw.gui').Window.get().showDevTools();がデベロッパツールオブジェクトを返却しなくなっている。 
+### require('nw.gui').Window.get().showDevTools();がデベロッパツールオブジェクトを返却しなくなっている。
 アップデート前は「showDevTools()」を呼ぶとデベロッパツールオブジェクトを返却していましたが、現在はundefinedが返却されます。NW.jsのリファレンスによると第二引数にコールバック関数を指定することでデベロッパツールオブジェクトが渡される、となっていますが関数は呼ばれるものの、デベロッパツールオブジェクトが引数として渡されません。
-
 <http://docs.nwjs.io/en/latest/References/Window/#winshowdevtoolsiframe-callback>
 
 ## フォントサイズが一定以下の場合に表示が崩れる
@@ -137,10 +137,10 @@ array.forEach(function(item) {
 
 　報告元ではChromeでとなっていますが、NW.jsを現時点（2018/01/01）で最新化した場合も同様の問題が発生しています。
 
-- NW.jsを最新化した場合の表示  
+### NW.jsを最新化した場合の表示  
 ![image3](https://1.bp.blogspot.com/-iFYC3DHKiEI/WkUnRp5aJ2I/AAAAAAAAcfg/AzLfw89OIRIL-HfTSIETT30iX23bFfFlwCLcBGAs/s1600/ng.png)
 
-- もともとのツクールMVの表示  
+### もともとのツクールMVの表示  
 ![image2](https://1.bp.blogspot.com/-tSmGiZq0HUU/WkUnQpQ6HVI/AAAAAAAAcfc/ZNvxXZybAL0K795XhFWDEg5i5o3JPfGnwCLcBGAs/s1600/ok.png)
 
 　フォントサイズを21以上にすれば解決しますが、ルビなど大きくしづらい場合もあるので厄介な問題です。
