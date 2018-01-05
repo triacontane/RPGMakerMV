@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2018/01/06 1.1.3の修正でセーブ画面に遷移するとゲームが停止する不具合を修正
 // 1.1.3 2018/01/05 マップ画面からスクリプトでロード実行されたときに、エラーが発生する場合がある問題を修正
 // 1.1.2 2017/12/02 MenuCommonEvent.jsとの競合を解消
 // 1.1.1 2017/11/19 イベントからセーブした場合、ロード直後に再セーブされてしまう問題を修正
@@ -99,8 +100,9 @@
         if (sceneClass === Scene_Save || sceneClass === Scene_Load) {
             var sceneFile = new sceneClass();
             sceneFile.onSavefileOk();
-            if (this._scene instanceof Scene_Map) {
+            if (sceneClass === Scene_Load && this._scene instanceof Scene_Map) {
                 $dataMap.loadFromMap = true;
+                $gameSystem.onAfterLoad();
             }
             return true;
         }
