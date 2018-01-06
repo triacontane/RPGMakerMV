@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2018/01/07 FTKR_CSS_MenuStatus.jsとの競合を解消
 // 1.5.1 2017/10/25 ヘルプの英語化対応
 // 1.5.0 2017/08/18 前衛が全滅したときに後衛が前衛に詰められる設定を追加
 // 1.4.0 2017/06/11 メニュー画面でフェイスを右にずらす機能を有効にするかどうかのパラメータを追加
@@ -703,6 +704,25 @@
             arguments[3] -= Window_MenuStatus.shiftWidth;
         }
         Window_Base.prototype.drawActorSimpleStatus.apply(this, arguments);
+    };
+
+    var _Window_MenuStatus_drawCssActorStatus = Window_MenuStatus.prototype.drawCssActorStatus;
+    Window_MenuStatus.prototype.drawCssActorStatus = function(index, actor, x, y, width, height, lss) {
+        var spaceArray = FTKR.CSS.MS.simpleStatus.space.split(',').num();
+        if (!this._shiftWidth) {
+            this._defaultSpace = spaceArray[1];
+            this._shiftWidth = Math.min(this._defaultSpace, Window_MenuStatus.shiftWidth);
+        }
+        if (actor.isRearguard()) {
+            arguments[2] += this._shiftWidth;
+            arguments[4] -= this._shiftWidth;
+            spaceArray[1] = this._defaultSpace - this._shiftWidth;
+        } else {
+            spaceArray[1] = this._defaultSpace;
+
+        }
+        FTKR.CSS.MS.simpleStatus.space = spaceArray.toString();
+        _Window_MenuStatus_drawCssActorStatus.apply(this, arguments);
     };
 
     //=============================================================================
