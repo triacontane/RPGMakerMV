@@ -707,23 +707,24 @@
     };
 
     var _Window_MenuStatus_drawCssActorStatus = Window_MenuStatus.prototype.drawCssActorStatus;
-    Window_MenuStatus.prototype.drawCssActorStatus = function(index, actor, x, y, width, height, lss) {
-        var spaceArray = FTKR.CSS.MS.simpleStatus.space.split(',').num();
-        if (!this._shiftWidth) {
-            this._defaultSpace = spaceArray[1];
-            this._shiftWidth = Math.min(this._defaultSpace, Window_MenuStatus.shiftWidth);
-        }
-        if (actor.isRearguard()) {
-            arguments[2] += this._shiftWidth;
-            arguments[4] -= this._shiftWidth;
-            spaceArray[1] = this._defaultSpace - this._shiftWidth;
-        } else {
-            spaceArray[1] = this._defaultSpace;
-
-        }
-        FTKR.CSS.MS.simpleStatus.space = spaceArray.toString();
-        _Window_MenuStatus_drawCssActorStatus.apply(this, arguments);
-    };
+    if (_Window_MenuStatus_drawCssActorStatus) {
+        Window_MenuStatus.prototype.drawCssActorStatus = function(index, actor, x, y, width, height, lss) {
+            var spaceArray = FTKR.CSS.MS.simpleStatus.space.split(',').num();
+            if (!this._shiftWidth) {
+                this._defaultSpace = spaceArray[1];
+                this._shiftWidth = Math.min(this._defaultSpace, Window_MenuStatus.shiftWidth);
+            }
+            if (actor.isRearguard()) {
+                arguments[2] += this._shiftWidth;
+                arguments[4] -= this._shiftWidth;
+                spaceArray[1] = this._defaultSpace - this._shiftWidth;
+            } else {
+                spaceArray[1] = this._defaultSpace;
+            }
+            FTKR.CSS.MS.simpleStatus.space = spaceArray.toString();
+            _Window_MenuStatus_drawCssActorStatus.apply(this, arguments);
+        };
+    }
 
     //=============================================================================
     // Window_ActorCommand
