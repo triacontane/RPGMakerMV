@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/01/07 プレイヤーの浮遊とフォロワーと連動させるかどうかを選択できる機能を追加
 // 1.1.2 2016/07/31 パラメータ名の変換ミス修正(敷居値→閾値)
 //                  隊列歩行時のフォロワーの高度がデフォルト値で固定になっていた問題の修正
 // 1.1.1 2016/04/06 本プラグインを適用していないセーブデータをロードしたときも、正しく動作するよう修正
@@ -47,6 +48,11 @@
  * @param HighestThreshold
  * @desc 一定高度以上の条件となる敷居値です。
  * @default 48
+ *
+ * @param FloatFollower
+ * @desc 浮遊時に自動的にフォロワーも浮遊します。
+ * @default true
+ * @type boolean
  *
  * @help キャラクターを浮遊させます。
  * 浮遊中は以下の効果があります。
@@ -116,6 +122,12 @@
  * @param 高度閾値
  * @desc 一定高度以上の条件となる閾値です。
  * @default 48
+ * @type number
+ *
+ * @param フォロワー連動
+ * @desc 浮遊時に自動的にフォロワーも浮遊します。
+ * @default true
+ * @type boolean
  *
  * @help キャラクターを浮遊させます。
  * 浮遊中は以下の効果があります。
@@ -178,6 +190,11 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -215,6 +232,7 @@
     var paramHighestTerrainTags  = getParamArrayNumber(['高度通行地形タグ', 'HighestTerrainTags']);
     var paramHighestRegionId     = getParamArrayNumber(['高度通行リージョン', 'HighestRegionId']);
     var paramHighestThreshold    = getParamNumber(['高度閾値', 'HighestThreshold']);
+    var paramFloatFollower       = getParamBoolean(['フォロワー連動', 'FloatFollower']);
 
     //=============================================================================
     // Game_Interpreter
@@ -331,6 +349,9 @@
 
     Game_Player.prototype.float = function(waitFlg, max) {
         Game_CharacterBase.prototype.float.apply(this, arguments);
+        if (!paramFloatFollower) {
+            return;
+        }
         this.followers().forEach(function(follower) {
             follower.float(waitFlg, max);
             follower._altitude = -follower._memberIndex * 4;
@@ -348,6 +369,9 @@
 
     Game_Player.prototype.landing = function() {
         Game_CharacterBase.prototype.landing.apply(this, arguments);
+        if (!paramFloatFollower) {
+            return;
+        }
         this.followers().forEach(function(follower) {
             follower.landing();
         }.bind(this));
