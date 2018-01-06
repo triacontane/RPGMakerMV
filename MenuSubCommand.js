@@ -6,8 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 2.1.0 2017/12/24-SNAPSHOT 対象メンバーを選択するサブコマンド選択時にメニューコマンドをその名前に置き換える処理を追加
-//                           メニューへ戻った際に対象メンバー選択やサブコマンド選択に戻るように変更
+// 2.2.0 2018/01/07 同名の親コマンドを指定できる機能を追加
+// 2.1.0 2017/12/24 対象メンバーを選択するサブコマンド選択時にメニューコマンドをその名前に置き換える処理を追加
+//                  メニューへ戻った際に対象メンバー選択やサブコマンド選択に戻るように変更
 // 2.0.1 2017/11/19 MOG_MenuCursor.jsとの併用時、カーソルがサブコマンドの下に隠れてしまう競合の解消
 // 2.0.0 2017/09/04 メニューコマンドやサブコマンドを好きなだけ追加できるようパラメータの仕様を変更
 // 1.1.0 2017/05/14 デフォルトのオプションとゲーム終了コマンドを削除できる機能を追加
@@ -177,6 +178,11 @@
  */
 
 /*~struct~SubCommand:ja
+ *
+ * @param CommandId
+ * @desc サブコマンドの識別番号。この番号と名称とでコマンドがまとめられます。通常は全て0で問題ありません。
+ * @default 0
+ *
  * @param Name
  * @desc サブコマンドに表示される任意のコマンド名称
  * @default アイテム
@@ -211,6 +217,11 @@
  */
 
 /*~struct~SubCommand:
+ *
+ * @param CommandId
+ * @desc サブコマンドの識別番号。この番号と名称とでコマンドがまとめられます。通常は全て0で問題ありません。
+ * @default 0
+ *
  * @param Name
  * @desc サブコマンドに表示される任意のコマンド名称
  * @default アイテム
@@ -247,7 +258,7 @@
 (function() {
     'use strict';
     //=============================================================================
-    // ユーザ設定領域　開始
+    // ユーザ設定領域 開始
     //=============================================================================
     var userSetting = {
         /**
@@ -265,7 +276,7 @@
         autoTransparent : true
     };
     //=============================================================================
-    // ユーザ設定領域　終了
+    // ユーザ設定領域 終了
     //=============================================================================
     var pluginName = 'MenuSubCommand';
 
@@ -345,7 +356,7 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const param                 = {};
+    var param                   = {};
     param.subCommands           = getParamArrayJson(['サブコマンド', 'SubCommand'], []);
     param.commandPosition       = getParamNumber(['CommandPosition', 'コマンド追加位置']);
     param.subMenuWidth          = getParamNumber(['SubMenuWidth', 'サブメニュー横幅']);
@@ -377,7 +388,7 @@
     };
 
     Game_Temp.prototype.createMenuCommand = function(commands) {
-        var parentName = commands.ParentName;
+        var parentName = commands.ParentName + commands.CommandId;
         if (!this._menuParentCommands.has(parentName)) {
             this._menuParentCommands.set(parentName, []);
         }
@@ -402,7 +413,7 @@
 
     Game_Temp.prototype.setLastSubCommandParent = function (parentName) {
         this._lastSubCommand.parent = parentName;
-    }
+    };
 
     Game_Temp.prototype.setLastSubCommandIndex = function (index) {
         this._lastSubCommand.index = index;
@@ -794,7 +805,8 @@
         $gameTemp.iterateMenuParents(function(subCommands, parentName) {
             this._subCommands = subCommands;
             if (this.checkSubCommands('isVisible')) {
-                this.addCommand(this._maskedName[parentName] ? this._maskedName[parentName] : parentName, 'parent' + parentName, this.checkSubCommands('isEnable'), parentName);
+                var commandName = this._maskedName[parentName] ? this._maskedName[parentName] : subCommands[0].getParentName();
+                this.addCommand(commandName, 'parent' + parentName, this.checkSubCommands('isEnable'), parentName);
             }
         }, this);
     };
@@ -904,6 +916,7 @@
     //=============================================================================
     class Game_MenuSubCommand {
         constructor(subCommandData) {
+            this._parentName      = subCommandData.ParentName;
             this._name            = subCommandData.Name;
             this._hiddenSwitchId  = subCommandData.HiddenSwitchId;
             this._disableSwitchId = subCommandData.DisableSwitchId;
@@ -914,6 +927,10 @@
 
         getName() {
             return this._name;
+        }
+
+        getParentName() {
+            return this._parentName;
         }
 
         isVisible() {
