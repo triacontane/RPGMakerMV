@@ -6,13 +6,14 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2018/01/10 マップ画面を使った独自のタイトルでセーブ時のピクチャが表示されていた問題を修正
 // 1.2.1 2016/09/18 YEP_EquipCore.jsとの競合を解消
 // 1.2.0 2016/09/17 マップ画面を使った独自のタイトル画面が作成できる機能を追加
 // 1.1.1 2016/09/16 完全スキップがONかつセーブデータが存在しない場合にゲームを開始できない問題を修正
 // 1.1.0 2016/09/16 ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップできる機能を追加
 // 1.0.0 2016/05/22 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -61,8 +62,8 @@
  * AL_AUTO_SAVE            # 同上
  * AL_最終セーブ地点へ移動 # 最後にセーブした場所へ移動します。
  * AL_MOVE_LAST_SAVEPOINT  # 同上
- * AL_ニューゲーム         # データベース上のパーティの初期位置へ移動します。
- * AL_NEW_GAME             # 同上
+ * AL_初期位置へ移動       # データベース上のパーティの初期位置へ移動します。
+ * AL_MOVE_INITIAL_POINT   # 同上
  *
  * This plugin is released under the MIT License.
  */
@@ -165,23 +166,7 @@
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         var commandPrefix = new RegExp('^' + metaTagPrefix);
         if (!command.match(commandPrefix)) return;
-        try {
-            this.pluginCommandAutoLoad(command.replace(commandPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandAutoLoad(command.replace(commandPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandAutoLoad = function(command) {
@@ -237,7 +222,17 @@
         if (this.isExistLastSavePoint()) {
             this.setTransparent(this._lastSaveTransparent);
             this.reserveTransfer(this._lastSaveMapId, this._lastSaveX, this._lastSaveY, this.direction(), 0);
+            this._requestLoad = true;
+        }
+    };
+
+    var _Game_Player_clearTransferInfo = Game_Player.prototype.clearTransferInfo;
+    Game_Player.prototype.clearTransferInfo = function() {
+        _Game_Player_clearTransferInfo.apply(this, arguments);
+        if (this._requestLoad) {
             $gameSystem.onAfterLoad();
+            $gameScreen.restorePictures();
+            this._requestLoad = false;
         }
     };
 
@@ -296,7 +291,11 @@
         if (result) {
             Scene_Load.prototype.reloadMapIfUpdated.call(this);
             SceneManager.goto(Scene_Map);
-            if (!paramTitleMapId) $gameSystem.onAfterLoad();
+            if (!paramTitleMapId) {
+                $gameSystem.onAfterLoad();
+            } else{
+                $gameScreen.savePictures();
+            }
         } else if (paramCompletelySkip || paramTitleMapId > 0) {
             this.goToNewGame();
         }
@@ -318,5 +317,18 @@
     if (paramCompletelySkip || paramTitleMapId > 0) {
         Scene_Title = Scene_Boot;
     }
+
+    //=============================================================================
+    // Game_Screen
+    //  マップを使った
+    //=============================================================================
+    Game_Screen.prototype.savePictures = function() {
+        this._savedPictures = this._pictures;
+        this.clearPictures();
+    };
+
+    Game_Screen.prototype.restorePictures = function() {
+        this._pictures = this._savedPictures;
+    };
 })();
 
