@@ -157,6 +157,8 @@
     var paramCompletelySkip = getParamBoolean(['CompletelySkip', '完全スキップ']);
     var paramTitleMapId     = getParamNumber(['TitleMapID', 'タイトルマップID'], 0);
 
+    var $gameScreenBack = null;
+
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
@@ -175,6 +177,7 @@
             case '_AUTO_SAVE' :
                 this._index++;
                 $gameSystem.autoSave();
+                this._index--;
                 break;
             case '_初期位置へ移動' :
             case '_MOVE_INITIAL_POINT' :
@@ -231,7 +234,8 @@
         _Game_Player_clearTransferInfo.apply(this, arguments);
         if (this._requestLoad) {
             $gameSystem.onAfterLoad();
-            $gameScreen.restorePictures();
+            $gameScreen = $gameScreenBack;
+            $gameScreen.startFadeIn(1);
             this._requestLoad = false;
         }
     };
@@ -294,7 +298,8 @@
             if (!paramTitleMapId) {
                 $gameSystem.onAfterLoad();
             } else{
-                $gameScreen.savePictures();
+                $gameScreenBack = $gameScreen;
+                $gameScreen = new Game_Screen();
             }
         } else if (paramCompletelySkip || paramTitleMapId > 0) {
             this.goToNewGame();
@@ -317,18 +322,5 @@
     if (paramCompletelySkip || paramTitleMapId > 0) {
         Scene_Title = Scene_Boot;
     }
-
-    //=============================================================================
-    // Game_Screen
-    //  マップを使った
-    //=============================================================================
-    Game_Screen.prototype.savePictures = function() {
-        this._savedPictures = this._pictures;
-        this.clearPictures();
-    };
-
-    Game_Screen.prototype.restorePictures = function() {
-        this._pictures = this._savedPictures;
-    };
 })();
 
