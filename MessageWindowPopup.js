@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.5 2018/01/12 KMS_DebugUtil.jsとの競合を解消
 // 2.9.4 2017/12/21 FTKR_ExMessageWindow2.jsとの連携で、上下にフキダシウィンドウを同時表示できるよう修正
 // 2.9.3 2017/12/14 2.9.2の修正で上方向に対する調整が抜けていたのを修正
 // 2.9.2 2017/12/10 フキダシ位置のY座標を調整する際にテール画像が表示されるように微調整
@@ -474,6 +475,10 @@
         return typeof Imported !== 'undefined' && Imported.FTKR_EMW;
     };
 
+    var isExistPlugin = function(pluginName) {
+        return Object.keys(PluginManager.parameters(pluginName)).length > 0;
+    };
+
     //=============================================================================
     // パラメータのバリデーション
     //=============================================================================
@@ -752,12 +757,10 @@
         if (result) {
             if (paramAutoPopup) {
                 $gameSystem.setMessagePopup(this._interpreter.eventId());
+            } else if (imported_FTKR_EMW()) {
+                $gameSystem.clearMessagePopupEx(0);
             } else {
-                if (imported_FTKR_EMW()) {
-                    $gameSystem.clearMessagePopupEx(0);
-                } else {
-                    $gameSystem.clearMessagePopup();
-                }
+                $gameSystem.clearMessagePopup();
             }
         }
         return result;
@@ -1038,7 +1041,7 @@
     };
 
     Window_Base.prototype.isValidFontRangeForPopup = function() {
-        return this.isPopup() && paramFontSizeRange > 0
+        return this.isPopup() && paramFontSizeRange > 0;
     };
 
     //=============================================================================
@@ -1396,6 +1399,13 @@
     Window_NumberInput.prototype.isPopup = function() {
         return this._messageWindow.isPopup();
     };
+
+    // Resolve conflict for KMS_DebugUtil.js
+    if (isExistPlugin('KMS_DebugUtil')) {
+        Window_NumberInput.prototype.isPopup = function() {
+            return this._messageWindow && this._messageWindow.isPopup();
+        };
+    }
 
     //=============================================================================
     // Window_NameBox
