@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2018/01/14 複数のカテゴリに属する用語を作成できる機能を追加
 // 2.1.0 2017/12/12 入手履歴使用有無と用語リストウィンドウの横幅を、辞書ごとに別々に設定できるようになりました。
 // 2.0.1 2017/12/10 2.0.0においてYEP_MainMenuManager.jsとの連携時、ヘルプに示している登録内容で実行するとエラーになったいた問題を修正
 // 2.0.0 2017/12/09 用語辞典を好きなだけ追加し、各辞典ごとに仕様や表示内容をカスタマイズできる機能を追加
@@ -172,6 +173,9 @@
  * カテゴリごとに分類して表示する方式が選択できます。
  * パラメータから表示方法を選択してください。
  * カテゴリごとに表示する場合はメモ欄に「<SGカテゴリ:XXX>」を指定してください。
+ * カテゴリをカンマ区切りで指定すると、複数のカテゴリに所属できます。
+ *
+ * 例：<SGカテゴリ:XXX,YYY>
  *
  * メニュー画面およびプラグインコマンドから用語集画面に遷移できます。
  *
@@ -513,6 +517,9 @@
  * カテゴリごとに分類して表示する方式が選択できます。
  * パラメータから表示方法を選択してください。
  * カテゴリごとに表示する場合はメモ欄に「<SGカテゴリ:XXX>」を指定してください。
+ * カテゴリをカンマ区切りで指定すると、複数のカテゴリに所属できます。
+ *
+ * 例：<SGカテゴリ:XXX,YYY>
  *
  * メニュー画面およびプラグインコマンドから用語集画面に遷移できます。
  *
@@ -521,7 +528,7 @@
  * 「アイテムタイプ」を「隠しアイテムA」もしくは「隠しアイテムB」に設定
  *
  * 2.「名前」に用語の名称を設定
- * 
+ *
  * 3.「メモ欄」に以下の通り記述(不要な項目は省略可能)
  * <SG説明:説明文>           // 用語の説明文
  * <SGカテゴリ:カテゴリ名>   // 用語の属するカテゴリの名称
@@ -801,28 +808,27 @@ function Scene_Glossary() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var createParameter = function(pluginName) {
-        var parameter = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager._parameters[pluginName.toLowerCase()] = parameter;
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                value = JSON.parse(value);
+            } catch (e) {
+                console.log(e);
+            }
+            return value;
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
         return parameter;
     };
 
-    var paramReplacer = function(key, value) {
-        if (value === 'null') {
-            return value;
-        }
-        if (value[0] === '"' && value[value.length - 1] === '"') {
-            return value;
-        }
-        try {
-            value = JSON.parse(value);
-        } catch (e) {
-            // do nothing
-        }
-        return value;
-    };
-
-    var param = createParameter('SceneGlossary');
+    var param = createPluginParameter('SceneGlossary');
     if (!param.GlossaryInfo) {
         param.GlossaryInfo = [];
     }
@@ -940,7 +946,11 @@ function Scene_Glossary() {
 
     Game_Party.prototype.getGlossaryCategory = function(item) {
         var customCategory = this._customGlossaryCategoryList ? this._customGlossaryCategoryList[item.id] : undefined;
-        return customCategory ? customCategory : getMetaValues(item, ['カテゴリ', 'Category']);
+        return customCategory ? customCategory : getMetaValues(item, ['カテゴリ', 'Category']) || '';
+    };
+
+    Game_Party.prototype.getGlossaryCategoryList = function(item) {
+        return this.getGlossaryCategory(item).split(',');
     };
 
     Game_Party.prototype.hasGlossary = function(item) {
@@ -951,9 +961,12 @@ function Scene_Glossary() {
         return this.swapItemHash(this.hasItem.bind(this), [item]);
     };
 
-    Game_Party.prototype.getAllGlossaryList = function() {
+    Game_Party.prototype.getAllGlossaryList = function(needTypeCheck, needHavingCheck, categoryName) {
         return $dataItems.concat($dataWeapons).concat($dataArmors).filter(function(item) {
-            return item && this.isGlossaryItem(item);
+            return item && this.isGlossaryItem(item) &&
+                (!needTypeCheck || this.isSameGlossaryType(item)) &&
+                (!needHavingCheck || this.hasGlossary(item)) &&
+                (!categoryName || this.hasGlossaryCategory(item, categoryName));
         }.bind(this));
     };
 
@@ -965,23 +978,28 @@ function Scene_Glossary() {
 
     Game_Party.prototype.getHasGlossaryPercent = function(categoryName) {
         var hasCount = 0, allCount = 0;
-        this.getAllGlossaryList().forEach(function(item) {
-            if (this.isSameGlossaryType(item) && (!categoryName || this.getGlossaryCategory(item) === categoryName)) {
-                if (this.hasGlossary(item)) hasCount++;
-                allCount++;
+        this.getAllGlossaryList(true, false, categoryName).forEach(function(item) {
+            if (this.hasGlossary(item)) {
+                hasCount++;
             }
+            allCount++;
         }.bind(this));
         return Math.floor(hasCount / allCount * 100);
     };
 
+    Game_Party.prototype.hasGlossaryCategory = function(item, categoryName) {
+        return this.getGlossaryCategoryList(item).contains(categoryName);
+    };
+
     Game_Party.prototype.getAllGlossaryCategory = function() {
         var list = [];
-        this.getAllGlossaryList().forEach(function(item) {
-            var category = this.getGlossaryCategory(item);
-            if (category && this.isSameGlossaryType(item) && !list.contains(category) && this.hasGlossary(item)) {
-                list.push(category);
-            }
-        }.bind(this));
+        this.getAllGlossaryList(true, true, '').forEach(function(item) {
+            this.getGlossaryCategoryList(item).forEach(function(category) {
+                if (category && !list.contains(category)) {
+                    list.push(category);
+                }
+            }, this);
+        }, this);
         return param.CategoryOrder.length > 0 ? list.sort(this._compareOrderGlossaryCategory.bind(this)) : list;
     };
 
@@ -1011,7 +1029,7 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.gainGlossaryAll = function() {
-        this.getAllGlossaryList().forEach(function(item) {
+        this.getAllGlossaryList(false, false, '').forEach(function(item) {
             if (this.hasItem(item)) {
                 return;
             }
@@ -1154,7 +1172,7 @@ function Scene_Glossary() {
     };
 
     Game_Party.prototype.getGlossaryConfirmMessages = function() {
-        return [this._glossarySetting.ConfirmUse, this._glossarySetting.ConfirmNoUse]
+        return [this._glossarySetting.ConfirmUse, this._glossarySetting.ConfirmNoUse];
     };
 
     Game_Party.prototype.getGlossaryHelpMessages = function() {
@@ -1651,7 +1669,7 @@ function Scene_Glossary() {
     };
 
     Window_GlossaryList.prototype.isCategoryMatch = function(item) {
-        return !$gameParty.isUseGlossaryCategory() || this._category === $gameParty.getGlossaryCategory(item);
+        return !$gameParty.isUseGlossaryCategory() || $gameParty.hasGlossaryCategory(item, this._category);
     };
 
     Window_GlossaryList.prototype.select = function(index) {
