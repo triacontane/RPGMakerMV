@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.5.0 2018/01/14 新規アイテム入手時にアニメーションを設定できる機能を追加
 // 1.4.0 2017/12/05 ガチャの演出を省略できるスイッチを追加。アイテム入手時に効果音を演奏する機能を追加。
 // 1.3.0 2017/11/11 新規アイテム入手時に通知する機能を追加
 // 1.2.0 2017/11/05 10連ガチャの機能を追加
@@ -81,6 +82,12 @@
  *
  * @param Rank5 Effect
  * @desc The animation number for rank 5 effect. If you specify -1, does not display the animation.
+ * @default -1
+ * @require 1
+ * @type animation
+ *
+ * @param New Effect
+ * @desc The animation number for new item effect. If you specify -1, does not display the animation.
  * @default -1
  * @require 1
  * @type animation
@@ -215,6 +222,12 @@
  * @require 1
  * @type animation
  *
+ * @param New Effect
+ * @desc 新規アイテム入手時のアニメーションIDを指定します。-1を指定するとアニメーションを表示しません。
+ * @default -1
+ * @require 1
+ * @type animation
+ *
  * @param ME
  * @desc アイテム取得時のMEを指定します。
  * @default Organ
@@ -253,9 +266,14 @@
  * @noteType file
  * @noteData items
  *
- * @help 変数でガチャを引けるように修正
- * 可能な限りガチャを引き続ける機能を追加
- * by トリアコンタン
+ * @help
+ * もともとの公式ガチャプラグインに対して以下の機能追加を行いました。
+ * ・変数でガチャを引けるように修正
+ * ・可能な限りガチャを引き続ける機能を追加
+ * ・10連ガチャの機能を追加
+ * ・新規アイテム入手時の通知とエフェクトを追加（新規アイテムのエフェクトは最後のコマで停止します）
+ * ・ガチャの演出をカットするスイッチを追加
+ *
  *
  * Plugin Command:
  *   Gacha open                 # ガチャ画面を開きます。
@@ -287,6 +305,7 @@
     rankEffect.push(Number(parameters['Rank3 Effect'] || '-1'));
     rankEffect.push(Number(parameters['Rank4 Effect'] || '-1'));
     rankEffect.push(Number(parameters['Rank5 Effect'] || '-1'));
+    var newEffect          = Number(parameters['New Effect'] || '-1');
     var me                 = String(parameters['ME'] || 'Organ');
     var amount             = Number(parameters['Required Amount'] || '100');
     var variable           = Number(parameters['Required Variable'] || '0');
@@ -300,9 +319,9 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
-        if (command === "Gacha") {
+        if (command === 'Gacha') {
             switch (args[0]) {
-                case "open":
+                case 'open':
                     SceneManager.push(Scene_Gacha);
                     break;
 
@@ -388,7 +407,7 @@
         Scene_MenuBase.prototype.initialize.call(this);
         this._item                  = null;
         this._effectPlaying         = false;
-        this._resultShowing         = false;
+        this._rankEffectPlaying     = false;
         this._wait                  = 0;
         this._effectSprite          = null;
         this._windowFadeSprite      = null;
@@ -529,7 +548,6 @@
             this.getGacha();
 
             this._goldWindow.refresh();
-
         }
 
         this._commandWindow.deactivate();
@@ -547,12 +565,10 @@
             var animation = $dataAnimations[effect];
             this._effectSprite.startAnimation(animation, false, 0);
 
-            AudioManager.playMe({"name": me, "volume": 90, "pitch": 100, "pan": 0});
-        }
-        else {
+            AudioManager.playMe({'name': me, 'volume': 90, 'pitch': 100, 'pan': 0});
+        } else {
             this._commandWindow.activate();
         }
-
     };
 
     Scene_Gacha.prototype.isEffectStop = function() {
@@ -592,12 +608,12 @@
         } else {
             var itemListKeys = Object.keys(this._itemList);
             if (this.isEffectStop() || itemListKeys.length >= 2) {
-                if (se) {
-                    AudioManager.playSe({name:se, volume:90, pitch:100, pan:0});
-                }
                 itemListKeys.forEach(function(key) {
                     $gameMessage.add(key + ' × ' + this._itemList[key]);
                 }.bind(this));
+                if (se) {
+                    AudioManager.playSe({name: se, volume: 90, pitch: 100, pan: 0});
+                }
                 $gameMessage.add('を手に入れた！');
                 this._textShowing = true;
             } else {
@@ -637,49 +653,71 @@
             this._textShowing = false;
             this.backToCommand();
         }
-
         this._wait++;
-        if (this._wait > 12) {
-            if (this._effectPlaying) {
-                if (!this._effectSprite.isAnimationPlaying()) {
-                    this._screenFadeIn();
-                    if (!!this._item.meta.gachaImage) {
-                        var rank = Number(this._item.meta.gachaRank || '-1');
-                        if (rank > 0 && rank < 6) {
-                            if (rankEffect[rank - 1] > 0) {
-                                var animation      = $dataAnimations[rankEffect[rank - 1]];
-                                this._rankSprite.x = this._getWindow.width / 2 + this._getWindow.x - 20;
-                                this._rankSprite.y = this._getWindow.contentsHeight() + this._getWindow.y;
-                                if (itemDescEnable) {
-                                    this._rankSprite.y -= this._getWindow.lineHeight() * 3;
-                                }
-                                this._rankSprite.startAnimation(animation, false, 0);
-                            }
-                        }
-                    }
+        if (this._wait <= 12) {
+            return;
+        }
+        if (this._effectPlaying) {
+            this.updateResultEffect();
+        } else if (this._rankEffectPlaying) {
+            this.updateRankEffectPlaying();
+        }
+    };
 
-                    this._effectPlaying = false;
-                    this._goldWindow.hide();
-                    this._commandWindow.hide();
-                    this._dummyWindow.hide();
-                    this._getCommandWindow.show();
-                    this._getWindow.show();
-                    var message = this.getNewItemText() + getText;
-                    var reg     = /Item Name/gi;
-                    message     = message.replace(reg, String(this._item.name));
-                    this._helpWindow.setText(message);
-                    this._wait          = 0;
-                    this._resultShowing = true;
-                } else {
-                    if (this.isTriggeredEffectCancel()) {
-                        this._effectSprite.allRemove();
-                    }
+    Scene_Gacha.prototype.updateResultEffect = function() {
+        if (!this._effectSprite.isAnimationPlaying() || this.isTriggeredEffectCancel()) {
+            this._effectSprite.allRemove();
+            this._screenFadeIn();
+            if (this._item.meta.gachaImage) {
+                this.setupRankAnimation();
+            }
+            this.showResult();
+            this._effectPlaying = false;
+        }
+    };
+
+    Scene_Gacha.prototype.showResult = function() {
+        this._goldWindow.hide();
+        this._commandWindow.hide();
+        this._dummyWindow.hide();
+        this._getCommandWindow.show();
+        this._getWindow.show();
+        var message = this.getNewItemText() + getText;
+        var reg     = /Item Name/gi;
+        message     = message.replace(reg, String(this._item.name));
+        this._helpWindow.setText(message);
+        this._wait = 0;
+        this._getCommandWindow.activate();
+    };
+
+    Scene_Gacha.prototype.updateRankEffectPlaying = function() {
+        if (!this._rankSprite.isAnimationPlaying()) {
+            if (this._newItem) {
+                this.setupNewAnimation();
+            }
+            this._rankEffectPlaying = false;
+        }
+    };
+
+    Scene_Gacha.prototype.setupRankAnimation = function() {
+        var rank = Number(this._item.meta.gachaRank || '-1');
+        if (rank > 0 && rank < 6) {
+            if (rankEffect[rank - 1] > 0) {
+                var animation      = $dataAnimations[rankEffect[rank - 1]];
+                this._rankSprite.x = this._getWindow.width / 2 + this._getWindow.x - 20;
+                this._rankSprite.y = this._getWindow.contentsHeight() + this._getWindow.y;
+                if (itemDescEnable) {
+                    this._rankSprite.y -= this._getWindow.lineHeight() * 3;
                 }
-            } else if (this._resultShowing) {
-                this._resultShowing = false;
-                this._getCommandWindow.activate();
+                this._rankSprite.startAnimation(animation, false, 0);
+                this._rankEffectPlaying = true;
             }
         }
+    };
+
+    Scene_Gacha.prototype.setupNewAnimation = function() {
+        var animation = $dataAnimations[newEffect];
+        this._rankSprite.startAnimation(animation, false, 0);
     };
 
     Scene_Gacha.prototype.isTriggeredEffectCancel = function() {
@@ -839,7 +877,7 @@
             var bitmapHeight   = this._gachaSprite.bitmap.height;
             var contentsHeight = this.contents.height;
             if (this._itemDescEnable) {
-                contentsHeight -= this.lineHeight() * 3
+                contentsHeight -= this.lineHeight() * 3;
             }
             var scale = 1;
             if (bitmapHeight > contentsHeight) {
@@ -863,17 +901,13 @@
         if (!item || !item.meta.gachaImage) {
             this._gachaSprite.bitmap = null;
         } else {
-            var bitmap;
-            bitmap                   = ImageManager.loadBitmap("img/gacha/", this._item.meta.gachaImage);
-            this._gachaSprite.bitmap = bitmap;
-            bitmap.smooth            = true;
+            this._gachaSprite.bitmap = ImageManager.loadBitmap('img/gacha/', this._item.meta.gachaImage);
+            this._gachaSprite.smooth = true;
         }
     };
 
     Window_GachaGet.prototype.drawDescription = function(x, y) {
-        if (this._item) {
-            this.drawTextEx(this._item.description, x, y);
-        }
+        if (this._item) this.drawTextEx(this._item.description, x, y);
     };
 
     Window_GachaGet.prototype.drawHorzLine = function(y) {
@@ -935,13 +969,10 @@
                 var sprite = sprites[i];
                 if (sprite.isPlaying()) {
                     this._animationSprites.push(sprite);
+                } else if (!this._keepDisplay) {
+                    sprite.remove();
                 } else {
-                    if (!this._keepDisplay) {
-                        sprite.remove();
-                    }
-                    else {
-                        this._endSprites.push(sprite);
-                    }
+                    this._endSprites.push(sprite);
                 }
             }
         }
