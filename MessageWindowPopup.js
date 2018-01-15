@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.6 2018/01/15 MPP_MessageEX.jsとの競合を解消、パラメータの型指定誤りを修正、2.9.1の修正の取り込みが一部間違っていた問題を修正
 // 2.9.5 2018/01/12 KMS_DebugUtil.jsとの競合を解消
 // 2.9.4 2017/12/21 FTKR_ExMessageWindow2.jsとの連携で、上下にフキダシウィンドウを同時表示できるよう修正
 // 2.9.3 2017/12/14 2.9.2の修正で上方向に対する調整が抜けていたのを修正
@@ -229,7 +230,7 @@
  * @param 行間
  * @desc 行と行の間のスペースをピクセル単位で設定します。
  * @default 4
- * @type boolean
+ * @type number
  *
  * @param ウィンドウ透過
  * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
@@ -277,13 +278,13 @@
  * また、FTKR_ExMessageWindow2.jsの複数メッセージウィンドウ表示と
  * 併せて使用する場合は、プラグイン管理画面で当プラグインを
  * FTKR_ExMessageWindow2.jsより下に配置してください。
- * 
- * 
+ *
+ *
  * プラグインパラメータ[自動設定]詳細
  * FTKR_ExMessageWindow2.jsと併用する場合、
  * 自動設定で使用するメッセージウィンドウは、ウィンドウID0 です。
  * OFFの場合、ウィンドウID0 を通常の表示方法に戻します。
- * 
+ *
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -309,7 +310,7 @@
  *
  * 例：MWP_VALID test_event 1
  * 　　フキダシウィンドウ有効化 テストイベント 2
- * 
+ *
  * !複数メッセージウィンドウ表示を使う場合!
  * MWP_VALID [キャラクターID] [ウィンドウID] [ウィンドウ位置] or
  * フキダシウィンドウ有効化 [キャラクターID] [ウィンドウID] [ウィンドウ位置]
@@ -320,7 +321,7 @@
  *
  * 例：MWP_VALID 0 1
  * 　　フキダシウィンドウ有効化 3 2
- * 
+ *
  * MWP_INVALID or
  * フキダシウィンドウ無効化
  * 　ウィンドウの表示方法を通常に戻します。
@@ -337,8 +338,8 @@
  * 例：MWP_INVALID 1
  * 　　フキダシウィンドウ無効化 2
  * 　　フキダシウィンドウ無効化
- * 
- * 
+ *
+ *
  * MWP_SETTING [設定内容] or
  * フキダシウィンドウ設定 [設定内容]
  * 　フキダシウィンドウの設定を行います。設定内容に以下を入力。
@@ -410,7 +411,7 @@
  *
  * ・使用可能な制御文字
  * \sh[5] # 強さ[5]でウィンドウを振動させます。
- * 
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -879,7 +880,7 @@
             this._windowPauseSignSprite.y        = this.height + 12;
             this._windowPauseSignSprite.anchor.y = 1;
         }
-        this._pauseSignLower = lowerFlg;
+        this._pauseSignLower  = lowerFlg;
         this._pauseSignToTail = true;
     };
 
@@ -920,7 +921,7 @@
         if (duration && this._shakeCount > duration) {
             this.setWindowShake(0);
         }
-        var speed = getArgNumber(paramShakeSpeed, 1);
+        var speed    = getArgNumber(paramShakeSpeed, 1);
         var position = Math.sin(this._shakeCount / 10 * speed) * this._shakePower;
         this.x += position;
         this._windowPauseSignSprite.x -= position;
@@ -944,8 +945,8 @@
     };
 
     Window_Base.prototype.setWindowShake = function(power) {
-        this._shakePower    = power;
-        this._shakeCount    = 0;
+        this._shakePower = power;
+        this._shakeCount = 0;
     };
 
     Window_Base.prototype.adjustPopupPositionX = function() {
@@ -1071,11 +1072,15 @@
     Window_Message.prototype.startMessage = function() {
         this.updateTargetCharacterId();
         this.loadWindowskin();
+        // Resolve conflict for MPP_MessageEX
+        if (isExistPlugin('MPP_MessageEX')) {
+            this.width = this.windowWidth();
+        }
         _Window_Message_startMessage.apply(this, arguments);
         this.resetLayout();
     };
 
-    var _Window_Message_loadWindowskin = Window_Message.prototype.loadWindowskin;
+    var _Window_Message_loadWindowskin      = Window_Message.prototype.loadWindowskin;
     Window_Message.prototype.loadWindowskin = function() {
         var popupWindowSkin = $gameSystem.getPopupWindowSkin();
         if (this._windowSkinName !== popupWindowSkin) {
@@ -1336,8 +1341,8 @@
 
     var _Window_ChoiceList_start      = Window_ChoiceList.prototype.start;
     Window_ChoiceList.prototype.start = function() {
+        this._messageWindow.updateTargetCharacterId();
         if (!this.isPopup()) {
-            this._messageWindow.updateTargetCharacterId();
             this._messageWindow.resetLayout();
         }
         return _Window_ChoiceList_start.apply(this, arguments);
