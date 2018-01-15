@@ -6,12 +6,13 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.4 2018/01/15 実行時に対象スイッチIDおよび代入されているもとの値を参照できる機能を追加
 // 1.0.3 2017/08/12 パラメータの型指定機能に対応
 // 1.0.2 2016/11/04 指定範囲外のスイッチの値を正しく返していなかった問題を修正
 // 1.0.1 2016/11/01 結果が空文字の場合に0が設定されないよう修正
 // 1.0.0 2016/10/27 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -49,6 +50,7 @@
  * 「変数名称」及び「スイッチ名称」をJavaScriptとして評価した結果を返すようにします。
  * JavaScript中では式の簡略化のために以下のローカル変数が利用できます。
  *
+ * id        # 処理対象のスイッチ、変数ID
  * v(n)      # [n]番の変数の値
  * s(n)      # [n]番のスイッチの値
  * max       # Math.maxに変換されます。(例 : max(1, 2) -> 2)
@@ -58,6 +60,9 @@
  * ※ Math.max以外にも一般的なMathモジュールのメソッドが使用可能です。
  *    また、他のゲームオブジェクト、データオブジェクトも同じ記法で参照できます。
  *    いずれも利用には、多少のJavaScriptの知識が必要になります。
+ *
+ * また、以下のスクリプトでスイッチや変数にもともと入っている値を参照できます。
+ * this._data[id]
  *
  * 動的変数は、指定範囲内の変数およびスイッチを参照するすべての箇所(※)で有効です。
  * また、範囲内の変数及びスイッチに対する値の設定は無視されます。
@@ -142,6 +147,7 @@
  * 「変数名称」及び「スイッチ名称」をJavaScriptとして実行した結果を返すよう
  * 変更します。JavaScript中では式の簡略化のために以下のローカル変数が利用できます。
  *
+ * id        # 処理対象のスイッチ、変数ID
  * v(n)      # [n]番の変数の値
  * s(n)      # [n]番のスイッチの値
  * max       # Math.maxに変換されます。(例 : max(1, 2) -> 2)
@@ -151,6 +157,9 @@
  * ※ Math.max以外にも一般的なMathモジュールのメソッドが使用可能です。
  *    また、他のゲームオブジェクト、データオブジェクトも同じ記法で参照できます。
  *    いずれも利用には、多少のJavaScriptの知識が必要になります。
+ *
+ * また、以下のスクリプトでスイッチや変数にもともと入っている値を参照できます。
+ * this._data[id]
  *
  * 動的変数は、指定範囲内の変数およびスイッチを参照するすべての箇所(※)で有効です。
  * また、範囲内の変数及びスイッチに対する値の設定は無視されます。
@@ -262,13 +271,13 @@
     var _Game_Variables_value      = Game_Variables.prototype.value;
     Game_Variables.prototype.value = function(variableId) {
         if (variableId >= paramDynamicVariableStart && variableId <= paramDynamicVariableEnd) {
-            return this.getDynamicValue($dataSystem.variables[variableId]);
+            return this.getDynamicValue($dataSystem.variables[variableId], variableId);
         } else {
             return _Game_Variables_value.apply(this, arguments);
         }
     };
 
-    Game_Variables.prototype.getDynamicValue = function(dynamicScript) {
+    Game_Variables.prototype.getDynamicValue = function(dynamicScript, id) {
         var v   = $gameVariables.value.bind($gameVariables), s = $gameSwitches.value.bind($gameSwitches);
         var max = Math.max, min = Math.min, abs = Math.abs, floor = Math.floor, pow = Math.pow, random = Math.random;
 
@@ -317,7 +326,7 @@
     var _Game_Switches_value      = Game_Switches.prototype.value;
     Game_Switches.prototype.value = function(switchId) {
         if (switchId >= paramDynamicSwitchStart && switchId <= paramDynamicSwitchEnd) {
-            return !!this.getDynamicValue($dataSystem.switches[switchId]);
+            return !!this.getDynamicValue($dataSystem.switches[switchId], switchId);
         } else {
             return _Game_Switches_value.apply(this, arguments);
         }
