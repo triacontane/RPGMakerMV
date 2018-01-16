@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/01/16 スキル実行時の移動中にSVモーションを適用できる機能を追加
 // 1.1.4 2017/06/04 残像を使用する設定で複数のキャラクターに対して連続でアニメーションを再生すると処理落ちする問題を修正
 // 1.1.3 2017/06/04 StateRolling.jsとの競合を解消
 // 1.1.2 2017/05/18 高速で戦闘を進めた場合に、たまにダメージが敵キャラの後ろに隠れてしまうことがある問題を修正
@@ -14,7 +15,7 @@
 //                  BattlerGraphicExtend.jsとの連携を強化
 // 1.0.0 2016/09/01 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -33,19 +34,23 @@
  *
  * @param ValidActor
  * @desc 直接攻撃演出をアクターに適用します。OFFにすると適用されません。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ValidEnemy
  * @desc 直接攻撃演出を敵キャラに適用します。OFFにすると適用されません。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param NoAfterimage
  * @desc ONにすると残像表示が無効になります。競合やパフォーマンス対策になります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param AlwaysAfterimage
  * @desc ONにすると戦闘中は常に残像が表示されます。他のプラグインとの連携がしやすくなります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help スキル実行時にターゲットまで近寄ってから実行します。
  * 追加で以下の機能を実装します。
@@ -88,6 +93,12 @@
  * <DAEWeapon:1>            # 同上
  * <DAEモーション:dead>     # 攻撃時のモーションが「戦闘不能」になります。
  * <DAEMotion:dead>         # 同上
+ * <DAE開始モーション:dead> # 攻撃開始時のモーションが「戦闘不能」になります。
+ * <DAEStartMotion:dead>    # 同上
+ * <DAE終了モーション:dead> # 攻撃終了時のモーションが「戦闘不能」になります。
+ * <DAEEndMotion:dead>      # 同上
+ *
+ * ※モーションの種類については後述
  *
  * メモ欄詳細
  * <DAE攻撃:[フレーム数],[高度],[Z座標],[中心移動]>
@@ -149,6 +160,12 @@
  * abnormal 状態異常
  * sleep    睡眠
  * dead     戦闘不能
+ *
+ * <DAE開始モーション:[モーション名称]>
+ * スキル開始の移動中のモーションを指定したものに変更します。
+ *
+ * <DAE終了モーション:[モーション名称]>
+ * スキル終了の移動中のモーションを指定したものに変更します。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -168,19 +185,23 @@
  *
  * @param アクターに適用
  * @desc 直接攻撃演出をアクターに適用します。OFFにすると適用されません。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 敵キャラに適用
  * @desc 直接攻撃演出を敵キャラに適用します。OFFにすると適用されません。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 残像不使用
  * @desc ONにすると残像表示が無効になります。競合やパフォーマンス対策になります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 常時残像使用
  * @desc ONにすると戦闘中は常に残像が表示されます。他のプラグインとの連携がしやすくなります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help スキル実行時にターゲットまで近寄ってから実行します。
  * 追加で以下の機能を実装します。
@@ -223,6 +244,12 @@
  * <DAEWeapon:1>            # 同上
  * <DAEモーション:dead>     # 攻撃時のモーションが「戦闘不能」になります。
  * <DAEMotion:dead>         # 同上
+ * <DAE開始モーション:dead> # 攻撃開始時のモーションが「戦闘不能」になります。
+ * <DAEStartMotion:dead>    # 同上
+ * <DAE終了モーション:dead> # 攻撃終了時のモーションが「戦闘不能」になります。
+ * <DAEEndMotion:dead>      # 同上
+ *
+ * ※モーションの種類については後述
  *
  * メモ欄詳細
  * <DAE攻撃:[フレーム数],[高度],[Z座標],[中心移動]>
@@ -284,6 +311,12 @@
  * abnormal 状態異常
  * sleep    睡眠
  * dead     戦闘不能
+ *
+ * <DAE開始モーション:[モーション名称]>
+ * スキル開始の移動中のモーションを指定したものに変更します。
+ *
+ * <DAE終了モーション:[モーション名称]>
+ * スキル終了の移動中のモーションを指定したものに変更します。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -315,8 +348,8 @@
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     var getArgNumber = function(arg, min, max) {
@@ -504,6 +537,20 @@
     // Game_Actor
     //  攻撃モーションをスキルごとに設定します。
     //=============================================================================
+    var _Game_Actor_performActionStart      = Game_Actor.prototype.performActionStart;
+    Game_Actor.prototype.performActionStart = function(action) {
+        _Game_Actor_performActionStart.apply(this, arguments);
+        this._actionForMotion = action;
+        this.requestCustomMotion(['開始モーション', 'StartMotion']);
+    };
+
+    var _Game_Actor_performActionEnd      = Game_Actor.prototype.performActionEnd;
+    Game_Actor.prototype.performActionEnd = function() {
+        _Game_Actor_performActionEnd.apply(this, arguments);
+        this.requestCustomMotion(['終了モーション', 'EndMotion']);
+        this._actionForMotion = null;
+    };
+
     Game_Actor.prototype.hasDirectoryAttack = function() {
         var info = this._directlyAdditionalInfo;
         return Game_Battler.prototype.hasDirectoryAttack.apply(this, arguments) &&
@@ -513,9 +560,7 @@
     var _Game_Actor_performAction      = Game_Actor.prototype.performAction;
     Game_Actor.prototype.performAction = function(action) {
         if (paramValidActor) {
-            var customMotion = getMetaValues(action.item(), ['モーション', 'Motion']);
-            if (customMotion) {
-                this.requestMotion(getArgString(customMotion).toLowerCase());
+            if (this.requestCustomMotion(['モーション', 'Motion'])) {
                 return;
             }
             var attackMotion = getMetaValues(action.item(), ['武器', 'Weapon']);
@@ -538,6 +583,14 @@
         } else {
             return _Game_Actor_weapons.apply(this, arguments);
         }
+    };
+
+    Game_Actor.prototype.requestCustomMotion = function(tagNames) {
+        var customMotion = getMetaValues(this._actionForMotion.item(), tagNames);
+        if (customMotion) {
+            this.requestMotion(getArgString(customMotion).toLowerCase());
+        }
+        return !!customMotion;
     };
 
     //=============================================================================
@@ -993,6 +1046,10 @@
         return this._mainSprite;
     };
 
+    Sprite_Actor.prototype.getMotionInfo = function() {
+        return {motion: this._motion, pattern: this._pattern};
+    };
+
     //=============================================================================
     // Sprite_Enemy
     //  ターゲットへの直接攻撃演出を追加定義します。
@@ -1024,7 +1081,6 @@
     Sprite_AfterimageActor.prototype             = Object.create(Sprite_Actor.prototype);
     Sprite_AfterimageActor.prototype.constructor = Sprite_AfterimageActor;
 
-    Sprite_AfterimageActor.prototype.updateMotion   = function() {};
     Sprite_AfterimageActor.prototype.updatePosition = function() {};
 
     Sprite_AfterimageActor.prototype.setBattler = function(battler) {
@@ -1058,9 +1114,16 @@
         if (this._battler) {
             this.updateMain();
             this.updateProperty();
+            this.updateMotion();
         } else {
             this.bitmap = null;
         }
+    };
+
+    Sprite_AfterimageActor.prototype.updateMotion = function() {
+        var motionInfo = this._originalSprite.getMotionInfo();
+        this._motion   = motionInfo.motion;
+        this._pattern  = motionInfo.pattern;
     };
 
     Sprite_AfterimageActor.prototype.updateProperty = function() {
@@ -1111,6 +1174,7 @@
     Sprite_AfterimageEnemy.prototype.setOriginalSprite  = Sprite_AfterimageActor.prototype.setOriginalSprite;
     Sprite_AfterimageEnemy.prototype.setAfterimageIndex = Sprite_AfterimageActor.prototype.setAfterimageIndex;
     Sprite_AfterimageEnemy.prototype.getAfterimageIndex = Sprite_AfterimageActor.prototype.getAfterimageIndex;
+    Sprite_AfterimageEnemy.prototype.updateMotion       = function() {};
 
     //=============================================================================
     // Sprite_Dummy
