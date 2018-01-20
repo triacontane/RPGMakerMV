@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2018/01/20 setMaxItem.jsとの競合を解消。他のプラグインから用語辞典ウィンドウを改変できるように定義をグローバル領域に移動
 // 2.2.0 2018/01/14 複数のカテゴリに属する用語を作成できる機能を追加
 // 2.1.0 2017/12/12 入手履歴使用有無と用語リストウィンドウの横幅を、辞書ごとに別々に設定できるようになりました。
 // 2.0.1 2017/12/10 2.0.0においてYEP_MainMenuManager.jsとの連携時、ヘルプに示している登録内容で実行するとエラーになったいた問題を修正
@@ -754,7 +755,51 @@
  * @type number
  */
 
+/**
+ * 用語集画面です。
+ * @constructor
+ */
 function Scene_Glossary() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * 用語集カテゴリウィンドウです。
+ * @constructor
+ */
+function Window_GlossaryCategory() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * 用語集リストウィンドウです。
+ * @constructor
+ */
+function Window_GlossaryList() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * 用語集確認ウィンドウです。
+ * @constructor
+ */
+function Window_GlossaryConfirm() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * 用語集ウィンドウです。
+ * @constructor
+ */
+function Window_Glossary() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * 用語集収集率ウィンドウです。
+ * @constructor
+ */
+function Window_GlossaryComplete() {
     this.initialize.apply(this, arguments);
 }
 
@@ -817,11 +862,10 @@ function Scene_Glossary() {
                 return value;
             }
             try {
-                value = JSON.parse(value);
+                return JSON.parse(value);
             } catch (e) {
-                console.log(e);
+                return value;
             }
-            return value;
         };
         var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
         PluginManager.setParameters(pluginName, parameter);
@@ -1533,10 +1577,6 @@ function Scene_Glossary() {
     // Window_GlossaryCategory
     //  用語集カテゴリウィンドウです。
     //=============================================================================
-    function Window_GlossaryCategory() {
-        this.initialize.apply(this, arguments);
-    }
-
     Window_GlossaryCategory.prototype             = Object.create(Window_Selectable.prototype);
     Window_GlossaryCategory.prototype.constructor = Window_GlossaryCategory;
 
@@ -1598,10 +1638,6 @@ function Scene_Glossary() {
     // Window_GlossaryList
     //  用語集リストウィンドウです。
     //=============================================================================
-    function Window_GlossaryList() {
-        this.initialize.apply(this, arguments);
-    }
-
     Window_GlossaryList.prototype             = Object.create(Window_ItemList.prototype);
     Window_GlossaryList.prototype.constructor = Window_GlossaryList;
 
@@ -1629,7 +1665,7 @@ function Scene_Glossary() {
     };
 
     Window_GlossaryList.prototype.numberWidth = function() {
-        return this.needsNumber() ? Window_ItemList.prototype.numberWidth.call(this, arguments) : 0;
+        return this.needsNumber() ? Window_ItemList.prototype.numberWidth.apply(this, arguments) : 0;
     };
 
     Window_GlossaryList.prototype.needsNumber = function() {
@@ -1737,10 +1773,6 @@ function Scene_Glossary() {
     // Window_GlossaryConfirm
     //  用語集確認ウィンドウです。
     //=============================================================================
-    function Window_GlossaryConfirm() {
-        this.initialize.apply(this, arguments);
-    }
-
     Window_GlossaryConfirm.prototype             = Object.create(Window_Command.prototype);
     Window_GlossaryConfirm.prototype.constructor = Window_GlossaryConfirm;
 
@@ -1772,10 +1804,6 @@ function Scene_Glossary() {
     // Window_GlossaryComplete
     //  用語集収集率ウィンドウです。
     //=============================================================================
-    function Window_GlossaryComplete() {
-        this.initialize.apply(this, arguments);
-    }
-
     Window_GlossaryComplete.prototype             = Object.create(Window_Base.prototype);
     Window_GlossaryComplete.prototype.constructor = Window_GlossaryComplete;
 
@@ -1802,10 +1830,6 @@ function Scene_Glossary() {
     // Window_Glossary
     //  用語集ウィンドウです。
     //=============================================================================
-    function Window_Glossary() {
-        this.initialize.apply(this, arguments);
-    }
-
     Window_Glossary.prototype             = Object.create(Window_Base.prototype);
     Window_Glossary.prototype.constructor = Window_Glossary;
 
