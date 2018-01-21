@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/01/21 項目の揃えを設定できる機能を追加
 // 1.0.0 2018/01/20 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -26,6 +27,14 @@
  * @desc カテゴリウィンドウの縦方向の項目数です。
  * @default 2
  * @type number
+ *
+ * @param categoryAlign
+ * @desc カテゴリウィンドウの項目の揃えです。
+ * @default left
+ * @type select
+ * @option left
+ * @option center
+ * @option right
  *
  * @help AltGlossary.js
  *
@@ -54,6 +63,15 @@
  * @desc カテゴリウィンドウの縦方向の項目数です。
  * @default 2
  * @type number
+ *
+ * @param categoryAlign
+ * @text カテゴリ項目揃え
+ * @desc カテゴリウィンドウの項目の揃えです。
+ * @default left
+ * @type select
+ * @option left
+ * @option center
+ * @option right
  *
  * @help AltGlossary.js
  *
@@ -130,6 +148,19 @@
     Window_GlossaryCategory.prototype.hide = function() {
         if (!$gameParty.isUseGlossaryCategory()) {
             _Window_GlossaryCategory_hide.apply(this, arguments);
+        }
+    };
+
+    Window_GlossaryCategory.prototype.drawTextExIfNeed = function(text, x, y, maxWidth) {
+        var align = param.categoryAlign.toLowerCase();
+        if (text.match(/\\/)) {
+            if (align && align !== 'left') {
+                var width = this.drawTextEx(text, x, -this.lineHeight());
+                x += (maxWidth - width - this.textPadding()) / (align === 'center' ? 2 : 1);
+            }
+            this.drawTextEx(text, x, y);
+        } else {
+            this.drawText(text, x, y, maxWidth - this.textPadding(), align);
         }
     };
 
