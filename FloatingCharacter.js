@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2018/01/24 イベントを初期状態で浮遊させる機能を追加
 // 1.2.0 2018/01/07 プレイヤーの浮遊とフォロワーと連動させるかどうかを選択できる機能を追加
 // 1.1.2 2016/07/31 パラメータ名の変換ミス修正(敷居値→閾値)
 //                  隊列歩行時のフォロワーの高度がデフォルト値で固定になっていた問題の修正
@@ -93,6 +94,10 @@
  *
  * このプラグインにはプラグインコマンドはありません。
  *
+ * イベントのメモ欄に以下の通り記述すると、イベントが初期状態で浮遊します。
+ * <FCAltitude:24> # 高さ[24]で浮遊します。
+ * <FC高度:24>     # 同上
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -168,6 +173,10 @@
  *
  * このプラグインにはプラグインコマンドはありません。
  *
+ * イベントのメモ欄に以下の通り記述すると、イベントが初期状態で浮遊します。
+ * <FCAltitude:24> # 高さ[24]で浮遊します。
+ * <FC高度:24>     # 同上
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -177,6 +186,7 @@
 (function () {
     'use strict';
     var pluginName = 'FloatingCharacter';
+    var metaTagPrefix = 'FC';
 
     var getParamString = function(paramNames) {
         var value = getParamOther(paramNames);
@@ -222,6 +232,41 @@
             }
         }
         return values;
+    };
+
+    var getMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + name;
+        return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
+    };
+
+    var getMetaValues = function(object, names) {
+        for (var i = 0, n = names.length; i < n; i++) {
+            var value = getMetaValue(object, names[i]);
+            if (value !== undefined) return value;
+        }
+        return undefined;
+    };
+
+    var convertEscapeCharacters = function(text) {
+        if (String(text) !== text) text = '';
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     //=============================================================================
@@ -316,11 +361,6 @@
         return this.isFloating() ? false : _Game_CharacterBase_isOnBush.apply(this, arguments);
     };
 
-    var _Game_Player_isOnDamageFloor = Game_Player.prototype.isOnDamageFloor;
-    Game_Player.prototype.isOnDamageFloor = function() {
-        return this.isFloating() ? false : _Game_Player_isOnDamageFloor.apply(this, arguments);
-    };
-
     Game_CharacterBase.prototype.maxAltitude = function() {
         return this._maxAltitude;
     };
@@ -347,17 +387,6 @@
         if (waitFlg) this._waitCount = Math.max(this.maxAltitude() - this._altitude, 0);
     };
 
-    Game_Player.prototype.float = function(waitFlg, max) {
-        Game_CharacterBase.prototype.float.apply(this, arguments);
-        if (!paramFloatFollower) {
-            return;
-        }
-        this.followers().forEach(function(follower) {
-            follower.float(waitFlg, max);
-            follower._altitude = -follower._memberIndex * 4;
-        }.bind(this));
-    };
-
     Game_CharacterBase.prototype.landing = function(waitFlg) {
         this._needFloat = false;
         if (waitFlg) this._waitCount = this.maxAltitude();
@@ -365,16 +394,6 @@
 
     Game_CharacterBase.prototype.landingIfOk = function(waitFlg) {
         if ($gameMap.isAirshipLandOk(this.x, this.y)) this.landing(waitFlg);
-    };
-
-    Game_Player.prototype.landing = function() {
-        Game_CharacterBase.prototype.landing.apply(this, arguments);
-        if (!paramFloatFollower) {
-            return;
-        }
-        this.followers().forEach(function(follower) {
-            follower.landing();
-        }.bind(this));
     };
 
     var _Game_CharacterBase_update = Game_CharacterBase.prototype.update;
@@ -401,13 +420,54 @@
         }
     };
 
+    Game_Player.prototype.float = function(waitFlg, max) {
+        Game_CharacterBase.prototype.float.apply(this, arguments);
+        if (!paramFloatFollower) {
+            return;
+        }
+        this.followers().forEach(function(follower) {
+            follower.float(waitFlg, max);
+            follower._altitude = -follower._memberIndex * 4;
+        }.bind(this));
+    };
+
+    var _Game_Player_isOnDamageFloor = Game_Player.prototype.isOnDamageFloor;
+    Game_Player.prototype.isOnDamageFloor = function() {
+        return this.isFloating() ? false : _Game_Player_isOnDamageFloor.apply(this, arguments);
+    };
+
+    Game_Player.prototype.landing = function() {
+        Game_CharacterBase.prototype.landing.apply(this, arguments);
+        if (!paramFloatFollower) {
+            return;
+        }
+        this.followers().forEach(function(follower) {
+            follower.landing();
+        }.bind(this));
+    };
+
     Game_Vehicle.prototype.updateFloating = function() {};
     Game_Vehicle.prototype.isFloating = function() {
         return false;
     };
 
+    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    Game_Event.prototype.initialize = function(mapId, eventId) {
+        _Game_Event_initialize.apply(this, arguments);
+        var altitude = getMetaValues(this.event(), ['高度', 'Altitude']);
+        if (altitude !== undefined) {
+            this.setInitAltitude(parseInt(altitude || 24));
+        }
+    };
+
+    Game_Event.prototype.setInitAltitude = function(altitude) {
+        this.float(false, altitude);
+        this._altitude = this._maxAltitude;
+        this.refreshBushDepth();
+    };
+
     //=============================================================================
-    // Game_CharacterBase
+    // Sprite_Character
     //  キャラクターの浮遊関連情報を追加定義します。
     //=============================================================================
     var _Sprite_Character_initMembers = Sprite_Character.prototype.initMembers;
@@ -427,8 +487,8 @@
             if (!this._shadowSprite) this.createShadow();
             this._shadowSprite.y = this._character.screenShadowY();
             this._shadowSprite.opacity = this._character.shadowOpacity();
-        } else {
-            if (this._shadowSprite) this.disposeShadow();
+        } else if (this._shadowSprite) {
+            this.disposeShadow();
         }
     };
 
