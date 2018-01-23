@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.5 2018/01/24 KhasAdvancedLightingとの競合を解消
+// 1.11.4 2017/12/31 PD_8DirDash.jsとの併用時、タッチ移動で斜め移動できるよう修正
 // 1.11.3 2017/12/30 半歩移動無効時のタッチ移動の挙動が一部おかしくなっていた問題を修正
 //                   タッチ移動を少し軽量化
 //                   タッチ移動でイベントの一歩前に停止したときにイベントが起動する場合がある問題を修正
@@ -292,7 +294,7 @@
  * 対象イベントが半歩移動しなくなります。
  * <HM半歩禁止>
  * <HMHalfDisable>
- *     
+ *
  * 対象イベントがすり抜けしなくなります。
  * <HMすり抜け禁止>
  * <HMThroughDisable>
@@ -561,12 +563,13 @@
         }
     };
 
+    // for PD_8DirDash.js
     Game_Map.prototype.roundHalfXWithDirection = function(x, d) {
-        return this.roundX(x + (d === 6 ? Game_Map.tileUnit : d === 4 ? -Game_Map.tileUnit : 0));
+        return this.roundX(x + ((d % 3) === 0 ? Game_Map.tileUnit : (d % 3) === 1 ? -Game_Map.tileUnit : 0));
     };
 
     Game_Map.prototype.roundHalfYWithDirection = function(y, d) {
-        return this.roundY(y + (d === 2 ? Game_Map.tileUnit : d === 8 ? -Game_Map.tileUnit : 0));
+        return this.roundY(y + (d <= 3 ? Game_Map.tileUnit : d >= 7 ? -Game_Map.tileUnit : 0));
     };
 
     Game_Map.prototype.roundNoHalfXWithDirection = function(x, d) {
@@ -931,12 +934,22 @@
         }
     };
 
+    Game_CharacterBase.prototype.divideDirection = function(d) {
+        var horizon  = d / 3 <= 1 ? d + 3 : d - 3;
+        var vertical = d % 3 === 0 ? d - 1 : d + 1;
+        return {horizon:horizon, vertical:vertical};
+    };
+
     var _Game_CharacterBase_canPass2     = Game_CharacterBase.prototype.canPass;
     Game_CharacterBase.prototype.canPass = function(x, y, d) {
+        if (d % 2 !== 0) {
+            var divide = this.divideDirection(d);
+            return this.canPassDiagonally(x, y, divide.horizon, divide.vertical);
+        }
         var x2 = $gameMap.roundXWithDirection(x, d);
         var y2 = $gameMap.roundYWithDirection(y, d);
         this.isCollidedWithCharacters(x2, y2);
-        return _Game_CharacterBase_canPass2.apply(this, arguments);
+        return _Game_CharacterBase_canPass2.call(this, x, y, d);
     };
 
     var _Game_CharacterBase_canPass      = Game_CharacterBase.prototype.canPass;
@@ -1077,7 +1090,7 @@
 
     var _Game_Character_searchLimit      = Game_Character.prototype.searchLimit;
     Game_Character.prototype.searchLimit = function() {
-        return _Game_Character_searchLimit.apply(this, arguments) * (this.isSearchHighPrecision() ? 2 : 1)
+        return _Game_Character_searchLimit.apply(this, arguments) * (this.isSearchHighPrecision() ? 2 : 1);
     };
 
     Game_Character.prototype.isSearchHighPrecision = function() {
@@ -1110,7 +1123,7 @@
     };
 
     Game_Character.prototype.isDiagonalDirection = function(direction) {
-        return direction !== 5 && direction % 2 === 1
+        return direction !== 5 && direction % 2 === 1;
     };
 
     var _Game_Character_moveRandom      = Game_Character.prototype.moveRandom;
@@ -1153,8 +1166,9 @@
     };
 
     Game_Character.prototype.executeDiagonalMove = function(d) {
-        var horizon  = d / 3 <= 1 ? d + 3 : d - 3;
-        var vertical = d % 3 === 0 ? d - 1 : d + 1;
+        var divide = this.divideDirection(d);
+        var horizon  = divide.horizon;
+        var vertical = divide.vertical;
         this.moveDiagonally(horizon, vertical);
         if (this._firstInputDir === horizon) {
             this.moveStraightForRetry(vertical);
@@ -1596,5 +1610,17 @@
             return _Game_MiniMap_isFilled.apply(this, arguments);
         };
     }
+
+    // Resolve conflict for KhasAdvancedLighting
+    var _Game_Map_getHeight = Game_Map.prototype.getHeight;
+    Game_Map.prototype.getHeight = function(x, y) {
+        if (this.isHalfPos(x)) {
+            x -= Game_Map.tileUnit;
+        }
+        if (this.isHalfPos(y)) {
+            y -= Game_Map.tileUnit;
+        }
+        _Game_Map_getHeight.call(this, x, y);
+    };
 })();
 
