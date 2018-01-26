@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.3 2018/01/27 DynamicVariables.jsとの連携機能を追加
 // 1.4.2 2017/08/29 HIME_EquipSlotsCore.jsとの競合を解消
 // 1.4.1 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.4.0 2016/07/27 スイッチにも設定値タグを付けられるよう修正
@@ -311,8 +312,9 @@
         if (variableTarget) {
             var variableId    = this.getVariableIdForToes(variableTarget, $dataSystem.variables.length - 1);
             var variableValue = getMetaValues(item, ['変数設定値' + indexString, 'VariableValue' + indexString]);
+            var originalValue = $gameVariables.getOriginalValue ? $gameVariables.getOriginalValue(variableId) : $gameVariables.value(variableId);
             var resultValue   = (variableValue ? getArgNumber(variableValue) : 1) * (addedSign ? 1 : -1);
-            $gameVariables.setValue(variableId, $gameVariables.value(variableId) + resultValue);
+            $gameVariables.setValue(variableId, originalValue + resultValue);
             result = true;
         }
         return result;
@@ -334,8 +336,10 @@
     // Game_EquipSlot
     //  for HIME_EquipSlotsCore.js
     //=============================================================================
-    Game_EquipSlot.prototype.itemId = function() {
-        return this._item.itemId();
-    };
+    if (typeof Game_EquipSlot !== 'undefined') {
+        Game_EquipSlot.prototype.itemId = function() {
+            return this._item.itemId();
+        };
+    }
 })();
 
