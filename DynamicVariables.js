@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.5 2018/01/27 1.0.4の更新でもともと入っていた値の取得方法をvalueに変更
 // 1.0.4 2018/01/15 実行時に対象スイッチIDおよび代入されているもとの値を参照できる機能を追加
 // 1.0.3 2017/08/12 パラメータの型指定機能に対応
 // 1.0.2 2016/11/04 指定範囲外のスイッチの値を正しく返していなかった問題を修正
@@ -51,6 +52,7 @@
  * JavaScript中では式の簡略化のために以下のローカル変数が利用できます。
  *
  * id        # 処理対象のスイッチ、変数ID
+ * value     # 処理対象のスイッチ、変数IDにもともと入っていた値
  * v(n)      # [n]番の変数の値
  * s(n)      # [n]番のスイッチの値
  * max       # Math.maxに変換されます。(例 : max(1, 2) -> 2)
@@ -60,9 +62,6 @@
  * ※ Math.max以外にも一般的なMathモジュールのメソッドが使用可能です。
  *    また、他のゲームオブジェクト、データオブジェクトも同じ記法で参照できます。
  *    いずれも利用には、多少のJavaScriptの知識が必要になります。
- *
- * また、以下のスクリプトでスイッチや変数にもともと入っている値を参照できます。
- * this._data[id]
  *
  * 動的変数は、指定範囲内の変数およびスイッチを参照するすべての箇所(※)で有効です。
  * また、範囲内の変数及びスイッチに対する値の設定は無視されます。
@@ -148,6 +147,7 @@
  * 変更します。JavaScript中では式の簡略化のために以下のローカル変数が利用できます。
  *
  * id        # 処理対象のスイッチ、変数ID
+ * value     # 処理対象のスイッチ、変数IDにもともと入っていた値
  * v(n)      # [n]番の変数の値
  * s(n)      # [n]番のスイッチの値
  * max       # Math.maxに変換されます。(例 : max(1, 2) -> 2)
@@ -217,7 +217,7 @@
 
 (function() {
     'use strict';
-    var pluginName = 'DynamicVariables';
+    var pluginName    = 'DynamicVariables';
     var metaTagPrefix = 'DV';
 
     var getParamNumber = function(paramNames, min, max) {
@@ -270,14 +270,22 @@
     //=============================================================================
     var _Game_Variables_value      = Game_Variables.prototype.value;
     Game_Variables.prototype.value = function(variableId) {
+        var value = _Game_Variables_value.apply(this, arguments);
         if (variableId >= paramDynamicVariableStart && variableId <= paramDynamicVariableEnd) {
-            return this.getDynamicValue($dataSystem.variables[variableId], variableId);
+            return this.getDynamicValue($dataSystem.variables[variableId], variableId, value);
         } else {
-            return _Game_Variables_value.apply(this, arguments);
+            return value;
         }
     };
 
-    Game_Variables.prototype.getDynamicValue = function(dynamicScript, id) {
+    Game_Variables.prototype.getOriginalValue = function(variableId) {
+        return _Game_Variables_value.apply(this, arguments);
+    };
+
+    Game_Variables.prototype.getDynamicValue = function(dynamicScript, id, value) {
+        if (!dynamicScript) {
+            return value;
+        }
         var v   = $gameVariables.value.bind($gameVariables), s = $gameSwitches.value.bind($gameSwitches);
         var max = Math.max, min = Math.min, abs = Math.abs, floor = Math.floor, pow = Math.pow, random = Math.random;
 
@@ -325,20 +333,25 @@
     //=============================================================================
     var _Game_Switches_value      = Game_Switches.prototype.value;
     Game_Switches.prototype.value = function(switchId) {
+        var value = _Game_Switches_value.apply(this, arguments);
         if (switchId >= paramDynamicSwitchStart && switchId <= paramDynamicSwitchEnd) {
-            return !!this.getDynamicValue($dataSystem.switches[switchId], switchId);
+            return !!this.getDynamicValue($dataSystem.switches[switchId], switchId, value);
         } else {
-            return _Game_Switches_value.apply(this, arguments);
+            return value;
         }
     };
 
-    Game_Switches.prototype.getDynamicValue = Game_Variables.prototype.getDynamicValue;
+    Game_Switches.prototype.getOriginalValue = function(switchId) {
+        return _Game_Switches_value.apply(this, arguments);
+    };
+
+    Game_Switches.prototype.getDynamicValue  = Game_Variables.prototype.getDynamicValue;
 
     //=============================================================================
     // Game_Event
     //  必要な場合、イベントページを毎フレームリフレッシュします。
     //=============================================================================
-    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    var _Game_Event_initialize      = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         this._needsAlwaysRefresh = this.isNeedAlwaysRefresh();
@@ -348,7 +361,7 @@
         return getMetaValues(this.event(), ['AlwaysRefresh', '常時リフレッシュ']);
     };
 
-    var _Game_Event_update = Game_Event.prototype.update;
+    var _Game_Event_update      = Game_Event.prototype.update;
     Game_Event.prototype.update = function() {
         if (this._needsAlwaysRefresh) {
             this.refresh();
