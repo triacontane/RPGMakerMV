@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2018/01/28 サブコマンドを選択後メニューに戻って通常コマンドを選択し、さらにメニューに戻ったときに最初のサブコマンドが展開される問題を修正
 // 2.2.0 2018/01/07 同名の親コマンドを指定できる機能を追加
 // 2.1.0 2017/12/24 対象メンバーを選択するサブコマンド選択時にメニューコマンドをその名前に置き換える処理を追加
 //                  メニューへ戻った際に対象メンバー選択やサブコマンド選択に戻るように変更
@@ -441,7 +442,7 @@
 
     Game_CharacterBase.prototype.restorePosition = function() {
         this.locate(this._originalX, this._originalY);
-        this.setDirection(this._originalDirection)
+        this.setDirection(this._originalDirection);
     };
 
     //=============================================================================
@@ -716,6 +717,8 @@
             this.onSubCommandCancel();
             this._statusWindow.deselect();
             this._commandWindow.maskOff();
+        } else {
+            this._subCommandSelected = true;
         }
     };
 
@@ -743,9 +746,12 @@
     /**
      * メニューから抜ける際に最後に選択したサブコマンドをリセットする
      */
-    Scene_Menu.prototype.popScene = function () {
-        $gameTemp.resetLastSubCommand();
-        Scene_Base.prototype.popScene.call(this);
+    var _Scene_Menu_terminate = Scene_Menu.prototype.terminate;
+    Scene_Menu.prototype.terminate = function() {
+        _Scene_Menu_terminate.apply(this, arguments);
+        if (!this._subCommandSelected) {
+            $gameTemp.resetLastSubCommand();
+        }
     };
 
     //=============================================================================
