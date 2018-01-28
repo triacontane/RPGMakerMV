@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.6 2018/01/28 プライオリティが通常キャラと同じイベントに対して拡張トリガーが適用されない問題を修正
 // 1.11.5 2018/01/24 KhasAdvancedLightingとの競合を解消
 // 1.11.4 2017/12/31 PD_8DirDash.jsとの併用時、タッチ移動で斜め移動できるよう修正
 // 1.11.3 2017/12/30 半歩移動無効時のタッチ移動の挙動が一部おかしくなっていた問題を修正
@@ -586,7 +587,7 @@
 
     Game_Map.prototype.eventsXyUnitNt = function(x, y) {
         return this.events().filter(function(event) {
-            return event.posUnitNt(x, y);
+            return event.posExpansionNt(x, y);
         });
     };
 
@@ -991,8 +992,8 @@
 
     var _Game_CharacterBase_isCollidedWithEvents      = Game_CharacterBase.prototype.isCollidedWithEvents;
     Game_CharacterBase.prototype.isCollidedWithEvents = function(x, y) {
-        var result = _Game_CharacterBase_isCollidedWithEvents.apply(this, arguments);
-        return result ? true : this.isCollidedWithEventsForHalfMove(x, y);
+        return _Game_CharacterBase_isCollidedWithEvents.apply(this, arguments) ||
+            this.isCollidedWithEventsForHalfMove(x, y);
     };
 
     Game_CharacterBase.prototype.isCollidedWithEventsForHalfMove = function(x, y) {
@@ -1521,6 +1522,14 @@
 
     Game_Event.prototype.canDiagonalMove = function() {
         return !this._can8moveDisable && Game_Character.prototype.canDiagonalMove.call(this);
+    };
+
+    Game_Event.prototype.posExpansionNt = function(x, y) {
+        if (this._triggerExpansion) {
+            return this.isTriggerExpansion(x, y) && !this.isThrough();
+        } else {
+            return this.posUnitNt(x, y);
+        }
     };
 
     //=============================================================================
