@@ -306,18 +306,17 @@
  * <HMトリガー拡大:OFF>
  *
  * ・トリガー拡大をONにした場合の仕様
- * プライオリティが「通常キャラと同じ」かつイベントすり抜けが有効な場合
- * 　左右に半マスずつ起動可能領域が拡張されます。
- *
- * 上記以外の場合、個別にトリガー領域を設定することができます。
- * 以下のとおり記述してください。
+ * イベントのメモ欄の記述により個別にトリガー領域を設定することができます。
  * // 下、左、右、上方向にそれぞれ1マス、2マス、3マス、4マス拡大したい場合
  * <HM拡大領域:1,2,3,4>
  *
  * // 下、左、右、上方向にそれぞれ0.5マス、1マス、1マス、0.5マス拡大したい場合
  * <HM拡大領域:0.5,1,1,0.5>
  *
- * 何も記述しないと、上下左右に半マスずつトリガー領域が拡張されます。
+ * プライオリティが「通常キャラと同じ」かつイベントすり抜けが無効な場合
+ * 　左右に半マスずつ起動可能領域が拡張されます。
+ *
+ * それ以外は上下左右に半マスずつトリガー領域が拡張されます。
  *
  * 注意！
  * 対象イベントの領域が拡大する以下のタグは廃止になりました。
@@ -673,10 +672,11 @@
     var _Game_CharacterBase_initMembers      = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
-        this._halfDisable    = false;
-        this._throughDisable = false;
-        this._eventWidth     = null;
-        this._eventHeight    = null;
+        this._halfDisable     = false;
+        this._throughDisable  = false;
+        this._eventWidth      = null;
+        this._eventHeight     = null;
+        this._customExpansion = false;
     };
 
     var _Game_CharacterBase_pos      = Game_CharacterBase.prototype.pos;
@@ -938,7 +938,7 @@
     Game_CharacterBase.prototype.divideDirection = function(d) {
         var horizon  = d / 3 <= 1 ? d + 3 : d - 3;
         var vertical = d % 3 === 0 ? d - 1 : d + 1;
-        return {horizon:horizon, vertical:vertical};
+        return {horizon: horizon, vertical: vertical};
     };
 
     var _Game_CharacterBase_canPass2     = Game_CharacterBase.prototype.canPass;
@@ -1024,7 +1024,7 @@
     };
 
     Game_CharacterBase.prototype.isHalfThrough = function(y) {
-        return this.isThroughEnable() && this.y !== y;
+        return !this._customExpansion && this.isThroughEnable() && this.y !== y;
     };
 
     Game_CharacterBase.prototype.isThroughEnable = function() {
@@ -1167,7 +1167,7 @@
     };
 
     Game_Character.prototype.executeDiagonalMove = function(d) {
-        var divide = this.divideDirection(d);
+        var divide   = this.divideDirection(d);
         var horizon  = divide.horizon;
         var vertical = divide.vertical;
         this.moveDiagonally(horizon, vertical);
@@ -1391,7 +1391,7 @@
         }
     };
 
-    var _Game_Player_updateNonmoving = Game_Player.prototype.updateNonmoving;
+    var _Game_Player_updateNonmoving      = Game_Player.prototype.updateNonmoving;
     Game_Player.prototype.updateNonmoving = function(wasMoving) {
         _Game_Player_updateNonmoving.apply(this, arguments);
         if (!wasMoving) {
@@ -1423,10 +1423,11 @@
 
     Game_Event.prototype.getExpansionArea = function() {
         var metaValue = getMetaValues(this.event(), ['ExpansionArea', '拡大領域']);
-        if (this.isNormalPriority() && !this.isThroughEnable()) {
-            return [0, 0.5, 0.5, 0];
-        } else if (metaValue) {
+        if (metaValue) {
+            this._customExpansion = true;
             return getArgArrayFloat(metaValue, 0);
+        } else if (this.isNormalPriority() && !this.isThroughEnable()) {
+            return [0, 0.5, 0.5, 0];
         } else {
             return [0.5, 0.5, 0.5, 0.5];
         }
@@ -1612,7 +1613,7 @@
     //  描画判定において半歩座標を考慮します。
     //=============================================================================
     if (typeof Game_MiniMap === 'function') {
-        var _Game_MiniMap_isFilled = Game_MiniMap.prototype.isFilled;
+        var _Game_MiniMap_isFilled      = Game_MiniMap.prototype.isFilled;
         Game_MiniMap.prototype.isFilled = function(x, y) {
             arguments[0] = Math.floor(arguments[0]);
             arguments[1] = Math.floor(arguments[1]);
@@ -1621,7 +1622,7 @@
     }
 
     // Resolve conflict for KhasAdvancedLighting
-    var _Game_Map_getHeight = Game_Map.prototype.getHeight;
+    var _Game_Map_getHeight      = Game_Map.prototype.getHeight;
     Game_Map.prototype.getHeight = function(x, y) {
         if (this.isHalfPos(x)) {
             x -= Game_Map.tileUnit;
