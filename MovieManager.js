@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2018/01/30 ヘルプの記述を修正
 // 1.0.1 2016/06/24 メニューを開いたときに最後に表示していたムービーが写り込む不具合を修正
 // 1.0.0 2016/06/09 初版
 // ----------------------------------------------------------------------------
@@ -22,6 +23,8 @@
  * コントロールできるようになります。
  * 座標や拡大率はもちろん、ループ可否や再生速度を自由に調整可能です。
  * イベントコマンド「ムービーの再生」後に以下のプラグインコマンドを実行します。
+ * （大抵のコマンドは「ムービーの再生」前でも機能しますが「MM_ウェイト」のみ
+ * 　「ムービーの再生」前では機能しません）
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -82,6 +85,7 @@
  * MM_ウェイト
  *  ムービーの再生が終了するまでイベント実行を待機します。
  *  ループ再生している場合はゲームの進行が停止するので注意してください。
+ *  このコマンドはイベント「ムービーの再生」の直後に実行してください。
  *  ex:MM_ウェイト
  *
  * スクリプトコマンド詳細
@@ -96,6 +100,11 @@
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
+ */
+
+/**
+ * 動画管理モジュールです。
+ * @constructor
  */
 function MovieManager() {
     throw new Error('This is a static class');
@@ -261,23 +270,7 @@ function MovieManager() {
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandMovieManager(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandMovieManager(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandMovieManager = function(command, args) {
@@ -477,7 +470,7 @@ function MovieManager() {
     MovieManager.setOpacity = function(opacity) {
         var realOpacity = opacity / 256;
         if (realOpacity !== this.getOpacity()) {
-            this.getVideo().style.opacity = realOpacity;
+            this.getVideo().style.opacity = String(realOpacity);
         }
     };
 
