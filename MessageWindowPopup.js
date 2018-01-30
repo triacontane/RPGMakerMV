@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.7 2018/01/30 BetweenCharacters.jsとの競合を解消
 // 2.9.6 2018/01/15 MPP_MessageEX.jsとの競合を解消、パラメータの型指定誤りを修正、2.9.1の修正の取り込みが一部間違っていた問題を修正
 // 2.9.5 2018/01/12 KMS_DebugUtil.jsとの競合を解消
 // 2.9.4 2017/12/21 FTKR_ExMessageWindow2.jsとの連携で、上下にフキダシウィンドウを同時表示できるよう修正
@@ -1264,6 +1265,10 @@
     Window_Message.prototype.processVirtualNormalCharacter = function(textState) {
         var c              = textState.text[textState.index++];
         textState.x += this.textWidth(c);
+        // Resolve conflict for BetweenCharacters.js
+        if (this.getBetweenCharacters) {
+            textState.x += this.getBetweenCharacters();
+        }
         textState.maxWidth = Math.max(textState.maxWidth, textState.x);
     };
 
