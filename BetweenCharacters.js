@@ -6,9 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/01/30 パラメータの型指定機能に対応。MessageWindowPopup.jsとの競合を解消
 // 1.0.0 2017/04/20 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -20,9 +21,12 @@
  * @param BetweenVariableId
  * @desc 字間を値(ピクセル単位)を取得する変数番号です。
  * @default 0
+ * @type variable
  *
  * @help 文章に字間を設定できます。
  * 指定した変数の値がそのまま字間（ピクセル数）になります。
+ *
+ * メッセージを表示する前に指定した変数に値を入れてください。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -35,6 +39,9 @@
  * @param 字間変数番号
  * @desc 字間を値(ピクセル単位)を取得する変数番号です。
  * @default 0
+ * @type variable
+ *
+ * メッセージを表示する前に指定した変数に値を入れてください。
  *
  * @help 文章に字間を設定できます。
  * 指定した変数の値がそのまま字間（ピクセル数）になります。
@@ -80,7 +87,11 @@
     var _Window_Base_processNormalCharacter = Window_Base.prototype.processNormalCharacter;
     Window_Base.prototype.processNormalCharacter = function(textState) {
         _Window_Base_processNormalCharacter.apply(this, arguments);
-        textState.x += ($gameVariables.value(param.betweenVariableId) || 0);
-    }
+        textState.x += this.getBetweenCharacters();
+    };
+
+    Window_Base.prototype.getBetweenCharacters = function() {
+        return $gameVariables.value(param.betweenVariableId) || 0;
+    };
 })();
 
