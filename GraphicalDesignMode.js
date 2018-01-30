@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.1 2018/01/30 最新のNW.jsで動作するよう修正
 // 2.8.0 2017/07/26 コンソールからの関数実行で直前に編集したウィンドウの位置を変更できる機能を追加
 // 2.7.0 2017/04/11 2.6.0の修正で追加ウィンドウの位置変更が正常に動作しない問題を修正
 //                  選択肢ウィンドウについて位置変更を一時的に無効化するプラグインコマンドを追加
@@ -375,7 +376,7 @@ var $dataContainerProperties = null;
     var metaTagPrefix = 'GDM';
 
     if (!Utils.RPGMAKER_VERSION || Utils.RPGMAKER_VERSION.match(/^1\.2./)) {
-        console.error('!!!このプラグインは本体バージョン1.3系以降でないと使用できません。!!!');
+        alert('!!!このプラグインは本体バージョン1.3系以降でないと使用できません。!!!');
         return;
     }
 
@@ -557,11 +558,15 @@ var $dataContainerProperties = null;
 
         SceneManager.showDevToolsForGdm = function() {
             var nwWin = require('nw.gui').Window.get();
-            if (!nwWin.isDevToolsOpen()) {
-                var devTool = nwWin.showDevTools();
-                devTool.moveTo(0, 0);
-                devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                nwWin.focus();
+            if (nwWin.isDevToolsOpen) {
+                if (!nwWin.isDevToolsOpen()) {
+                    var devTool = nwWin.showDevTools();
+                    devTool.moveTo(0, 0);
+                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
+                    nwWin.focus();
+                }
+            } else {
+                nwWin.showDevTools();
             }
             this.outputStartLog();
         };
@@ -705,11 +710,9 @@ var $dataContainerProperties = null;
         };
 
         StorageManager.localDataFileDirectoryPath = function() {
-            var path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, '/data/');
-            if (path.match(/^\/([A-Z]\:)/)) {
-                path = path.slice(1);
-            }
-            return decodeURIComponent(path);
+            var path = require('path');
+            var base = path.dirname(process.mainModule.filename);
+            return path.join(base, 'data/');
         };
 
         //=============================================================================
@@ -1180,23 +1183,7 @@ var $dataContainerProperties = null;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandGraphicalDesignMode(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandGraphicalDesignMode(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandGraphicalDesignMode = function(command) {
