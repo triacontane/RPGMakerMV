@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.7 2016/02/01 プラグインが未適用の状態でセーブされたデータをロードした際、一部の処理に差異が出る問題を修正
 // 1.11.6 2018/01/28 プライオリティが通常キャラと同じイベントに対して拡張トリガーが適用されない問題を修正
 // 1.11.5 2018/01/24 KhasAdvancedLightingとの競合を解消
 // 1.11.4 2017/12/31 PD_8DirDash.jsとの併用時、タッチ移動で斜め移動できるよう修正
@@ -521,6 +522,12 @@
         }.bind(this));
     };
 
+    var _Game_System_onAfterLoad = Game_System.prototype.onAfterLoad;
+    Game_System.prototype.onAfterLoad = function() {
+        _Game_System_onAfterLoad.apply(this, arguments);
+        $gamePlayer.initMembersForHalfMoveIfNeed();
+    };
+
     //=============================================================================
     // Game_Map
     //  座標計算を半分にします。
@@ -672,11 +679,21 @@
     var _Game_CharacterBase_initMembers      = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
+        this.initMembersForHalfMove();
+    };
+
+    Game_CharacterBase.prototype.initMembersForHalfMove = function() {
         this._halfDisable     = false;
         this._throughDisable  = false;
         this._eventWidth      = null;
         this._eventHeight     = null;
         this._customExpansion = false;
+    };
+
+    Game_Player.prototype.initMembersForHalfMoveIfNeed = function() {
+        if (!this.hasOwnProperty('_halfDisable')) {
+            this.initMembersForHalfMove();
+        }
     };
 
     var _Game_CharacterBase_pos      = Game_CharacterBase.prototype.pos;
