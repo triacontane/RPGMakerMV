@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2018/02/07 場所移動時にセルフスイッチがクリアされなくなる機能を追加
 // 1.7.0 2017/09/17 プラグインコマンドにテンプレートイベントのセルフ変数「\sv[n]」が利用できる機能を追加
 // 1.6.0 2017/09/15 座標を指定する際、小数を指定できるよう修正（半歩移動プラグイン等との組み合わせを想定）
 // 1.5.3 2017/06/18 コピー対象のイベントを変数から指定する際、変数に文字列が入っていると正しく取得できない問題を修正（by 奏ねこま氏）
@@ -35,6 +36,12 @@
 /*:
  * @plugindesc イベント動的生成プラグイン
  * @author トリアコンタン
+ *
+ * @param keepSelfSwitch
+ * @text セルフスイッチ維持
+ * @desc 有効にすると場所移動時にセルフスイッチをクリアしなくなります。イベントの消去を実行した場合はクリアされます。
+ * @default false
+ * @type boolean
  *
  * @help イベントをコピーして動的に生成します。
  * コピーした一時イベントは、イベントコマンド「イベントの一時消去」によって
@@ -123,6 +130,32 @@ function Game_PrefabEvent() {
 (function() {
     'use strict';
     var metaTagPrefix = 'ERS_';
+
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(AltGlossary)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+
+    var param = createPluginParameter('EventReSpawn');
 
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
@@ -600,7 +633,7 @@ function Game_PrefabEvent() {
     var _Scene_Map_create      = Scene_Map.prototype.create;
     Scene_Map.prototype.create = function() {
         _Scene_Map_create.apply(this, arguments);
-        if (this._transfer) {
+        if (this._transfer && !param.keepSelfSwitch) {
             $gameMap.resetSelfSwitchForPrefabEvent();
         }
     };
