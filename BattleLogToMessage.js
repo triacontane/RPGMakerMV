@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2018/02/10 メッセージウィンドウを画面上部に固定できる機能を追加
 // 1.3.0 2016/10/25 バトルイベント実行中などでログウィンドウを閉じることのできる機能を追加
 // 1.2.0 2016/10/18 メッセージスピードの調整機能と、行動終了後に追加ウェイトする機能を追加
 // 1.1.0 2016/10/14 ダメージのポップアップを抑制する機能を追加
@@ -22,19 +23,28 @@
  *
  * @param StatusPosUpper
  * @desc コマンドやステータスのウィンドウを画面上部に配置して、メッセージによって隠れないようにします。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param SuppressPopup
  * @desc ダメージのポップアップを非表示にします。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param MessagePosUpper
+ * @desc メッセージウィンドウ全体を上部に表示します。その場合、ステータス上部配置は無効にしてください。
+ * @default false
+ * @type boolean
  *
  * @param MessageSpeed
  * @desc メッセージスピードを指定した番号の変数から取得するよう変更します。変数値(0:ウェイトなし 1:通常 2以上:遅くなる)
  * @default 0
+ * @type number
  *
  * @param WaitForEndAction
  * @desc 行動終了後、メッセージをクリアする前に指定したフレーム数だけウェイトを掛けます。
  * @default 0
+ * @type number
  *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
@@ -48,19 +58,28 @@
  *
  * @param ステータス上部配置
  * @desc コマンドやステータスのウィンドウを画面上部に配置して、メッセージによって隠れないようにします。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ポップアップ抑制
  * @desc ダメージのポップアップを非表示にします。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param メッセージ上部配置
+ * @desc メッセージウィンドウ全体を上部に表示します。その場合、ステータス上部配置は無効にしてください。
+ * @default false
+ * @type boolean
  *
  * @param メッセージ速度変数
  * @desc メッセージスピードを指定した番号の変数から取得するよう変更します。変数の値がフレーム値になります。
  * @default 0
+ * @type number
  *
  * @param 行動終了後ウェイト
  * @desc 行動終了後、メッセージをクリアする前に指定したフレーム数だけウェイトを掛けます。
  * @default 0
+ * @type number
  *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
@@ -86,7 +105,7 @@
 
 (function() {
     'use strict';
-    var pluginName = 'BattleLogToMessage';
+    var pluginName    = 'BattleLogToMessage';
     var metaTagPrefix = 'BLM';
 
     var getCommandName = function(command) {
@@ -111,7 +130,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     //=============================================================================
@@ -119,6 +138,7 @@
     //=============================================================================
     var paramStatusPosUpper   = getParamBoolean(['StatusPosUpper', 'ステータス上部配置']);
     var paramSuppressPopup    = getParamBoolean(['SuppressPopup', 'ポップアップ抑制']);
+    var paramMessagePosUpper  = getParamBoolean(['MessagePosUpper', 'メッセージ上部配置']);
     var paramMessageSpeed     = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
     var paramWaitForEndAction = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
 
@@ -127,23 +147,7 @@
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         var commandPrefix = new RegExp('^' + metaTagPrefix);
         if (!command.match(commandPrefix)) return;
-        try {
-            this.pluginCommandBattleLogToMessage(command.replace(commandPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandBattleLogToMessage(command.replace(commandPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandBattleLogToMessage = function(command) {
@@ -164,7 +168,7 @@
     //  ウィンドウの開閉状態を管理します。
     //=============================================================================
     var _BattleManager_initMembers = BattleManager.initMembers;
-    BattleManager.initMembers = function() {
+    BattleManager.initMembers      = function() {
         _BattleManager_initMembers.apply(this, arguments);
         this._battleLogClose = false;
     };
@@ -189,6 +193,9 @@
         if (paramStatusPosUpper) {
             this.adjustWindowPositions();
         }
+        if (paramMessagePosUpper) {
+            this.adjustWindowMessagePositions();
+        }
     };
 
     Scene_Battle.prototype.adjustWindowPositions = function() {
@@ -200,6 +207,11 @@
         this._enemyWindow.y        = 0;
         this._skillWindow.y        = this._helpWindow.y + this._helpWindow.height;
         this._itemWindow.y         = this._skillWindow.y;
+    };
+
+    Scene_Battle.prototype.adjustWindowMessagePositions = function() {
+        this._messageWindow.y = 0;
+        this._logWindow.y = 0;
     };
 
     var _Scene_Battle_updateWindowPositions      = Scene_Battle.prototype.updateWindowPositions;
@@ -234,7 +246,7 @@
         _Window_BattleLog_update.apply(this, arguments);
     };
 
-    var _Window_BattleLog_messageSpeed = Window_BattleLog.prototype.messageSpeed;
+    var _Window_BattleLog_messageSpeed      = Window_BattleLog.prototype.messageSpeed;
     Window_BattleLog.prototype.messageSpeed = function() {
         return (paramMessageSpeed ? $gameVariables.value(paramMessageSpeed) :
             _Window_BattleLog_messageSpeed.apply(this, arguments));
@@ -253,6 +265,18 @@
     };
 
     Window_BattleLog.prototype.drawBackground = function() {};
+
+    //=============================================================================
+    // Window_Message
+    //  戦闘中はメッセージウィンドウを上部に固定します。
+    //=============================================================================
+    var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
+    Window_Message.prototype.updatePlacement = function() {
+        _Window_Message_updatePlacement.apply(this, arguments);
+        if ($gameParty.inBattle() && paramMessagePosUpper) {
+            this.y = 0;
+        }
+    };
 
     //=============================================================================
     // Game_Battler
