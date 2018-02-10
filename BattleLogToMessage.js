@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2018/02/10 戦闘終了のメッセージ表示後にログウィンドウが一瞬だけ残ってしまう現象を修正
 // 1.4.0 2018/02/10 メッセージウィンドウを画面上部に固定できる機能を追加
 // 1.3.0 2016/10/25 バトルイベント実行中などでログウィンドウを閉じることのできる機能を追加
 // 1.2.0 2016/10/18 メッセージスピードの調整機能と、行動終了後に追加ウェイトする機能を追加
@@ -179,6 +180,12 @@
 
     BattleManager.isBattleLogClose = function() {
         return this._battleLogClose;
+    };
+
+    var _BattleManager_displayRewards = BattleManager.displayRewards;
+    BattleManager.displayRewards = function() {
+        this._logWindow.hide();
+        _BattleManager_displayRewards.apply(this, arguments);
     };
 
     //=============================================================================
