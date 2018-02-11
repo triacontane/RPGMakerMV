@@ -1,14 +1,15 @@
 //=============================================================================
 // CustomizeFailureMessage.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (c) 2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2018/02/11 失敗メッセージ表示後に別のスキルで失敗した場合、もとの失敗メッセージが表示される不具合を修正
 // 1.0.0 2016/07/31 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -69,7 +70,9 @@
     Game_Action.prototype.apply = function(target) {
         _Game_Action_apply.apply(this, arguments);
         var message = getMetaValue(this.item(), '');
-        if (message) target.setFailureMessage(message);
+        if (message) {
+            target.setFailureMessage(message);
+        }
     };
 
     //=============================================================================
@@ -87,6 +90,7 @@
                 }
             }
             this.push('addText', fmt.format(target.name()));
+            target.setFailureMessage('');
         }
     };
 })();
