@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2017/02/12 アウトラインカラーをウィンドウカラー番号から指定できる機能を追加
 // 1.9.0 2017/08/20 ウィンドウつきピクチャが重なったときにウィンドウがピクチャの下に表示される問題を修正
 // 1.8.6 2017/06/28 フォント変更機能のヘルプが抜けていたので追加
 // 1.8.5 2017/06/12 変数がマイナス値のときのゼロ埋め表示が正しく表示されない問題を修正
@@ -47,7 +48,7 @@
 /*:
  * @plugindesc 動的文字列ピクチャ生成プラグイン
  * @author トリアコンタン
- * 
+ *
  * @help 指定した文字列でピクチャを動的に生成するコマンドを提供します。
  * 文字列には各種制御文字（\v[n]等）も使用可能で、制御文字で表示した変数の値が
  * 変更されたときにリアルタイムでピクチャの内容を更新できます。
@@ -117,11 +118,16 @@
  * \armor[n]  n 番の防具情報（アイコン＋名称）
  * \skill[n]  n 番のスキル情報（アイコン＋名称）
  * \state[n]  n 番のステート情報（アイコン＋名称）
- * \oc[c] アウトラインカラーを「c」に設定(例:\oc[red])
+ * \oc[c] アウトラインカラーを「c」に設定(※1)
  * \ow[n] アウトライン幅を「n」に設定(例:\ow[5])
  * \f[b] フォントの太字化
  * \f[i] フォントのイタリック化
  * \f[n] フォントの太字とイタリックを通常に戻す
+ *
+ * ※1 アウトラインカラーの指定方法
+ * \oc[red]  色名で指定
+ * \oc[rgb(0,255,0)] カラーコードで指定
+ * \oc[2] 文字色番号\c[n]と同様のもので指定
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -550,7 +556,13 @@
                     }
                     break;
                 case 'OC':
-                    bitmap.outlineColor = this.hiddenWindow.obtainEscapeParamString(textState);
+                    var colorCode = this.hiddenWindow.obtainEscapeParamString(textState);
+                    var colorIndex = Number(colorCode);
+                    if (!isNaN(colorIndex) && colorIndex > 0) {
+                        bitmap.outlineColor = this.hiddenWindow.textColor(colorIndex);
+                    } else {
+                        bitmap.outlineColor = this.hiddenWindow.obtainEscapeParamString(textState);
+                    }
                     break;
                 case 'OW':
                     bitmap.outlineWidth = this.hiddenWindow.obtainEscapeParam(textState);
