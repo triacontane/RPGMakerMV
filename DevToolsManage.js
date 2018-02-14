@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2018/02/15 ブラウザ起動時もテストプレーと判断した場合は一部の機能が使えるようにしました。
 // 2.3.4 2017/12/02 リファクタリング
 // 2.3.2 2017/11/23 Fix missing menu bar height at SceneManager.setWindowSizeForMenuBar
 // 2.3.1 2017/11/11 画面キャプチャ管理プラグインとの連携による修正
@@ -279,6 +280,7 @@
  *
  * This plugin is released under the MIT License.
  */
+
 /*:ja
  * @plugindesc 総合開発支援プラグイン
  * @author トリアコンタン
@@ -498,7 +500,7 @@
  * @desc オンフォーカスでマップとデータを再読込します。競合等で動作に問題がある場合は無効にしてください。
  * @default true
  * @type boolean
- * 
+ *
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
  * また、UserAgentやコアスクリプトのバージョン等役立つ情報をログに出力します。
@@ -581,7 +583,7 @@ var p = null;
     // p
     //  ログ出力をより短い関数名で実現します。(RGSS互換)
     //=============================================================================
-    p = function(value) {
+    p = function() {
         console.log.apply(console, arguments);
         SceneManager.getNwJs().showDevTools();
     };
@@ -617,7 +619,7 @@ var p = null;
     };
 
     const getParamJson = function(paramNames, defaultValue) {
-        var value = getParamOther(paramNames);
+        let value = getParamOther(paramNames);
         try {
             value = JSON.parse(value);
             if (value === null) {
@@ -711,7 +713,7 @@ var p = null;
     };
 
     // テストプレー時以外は以降の機能を無効
-    if (!Utils.isNwjs() || !Utils.isOptionValid('test')) {
+    if (!Utils.isOptionValid('test')) {
         console.log(pluginName + ' is valid only test play!');
         return;
     }
@@ -768,14 +770,17 @@ var p = null;
 
     const _SceneManager_initialize = SceneManager.initialize;
     SceneManager.initialize        = function() {
-        this.initDevCommand();
         _SceneManager_initialize.apply(this, arguments);
+        this.initDevCommand();
+        Graphics.setFPSMeter(paramShowFPS);
+        if (!Utils.isNwjs()) {
+            return;
+        }
+        this._freeze = false;
         this._nwJsGui = new Controller_NwJs();
         if (paramStartupOnTop) {
             this._nwJsGui.toggleAlwaysOnTop();
         }
-        this._freeze = false;
-        Graphics.setFPSMeter(paramShowFPS);
     };
 
     SceneManager.initDevCommand = function() {
@@ -952,7 +957,9 @@ var p = null;
     const _SceneManager_initNwjs = SceneManager.initNwjs;
     SceneManager.initNwjs        = function() {
         _SceneManager_initNwjs.apply(this, arguments);
-        this.addMenuBar();
+        if (Utils.isNwjs()) {
+            this.addMenuBar();
+        }
     };
 
     SceneManager.addMenuBar = function() {
@@ -992,7 +999,7 @@ var p = null;
                 gameWindow.moveBy(0, -height_diff);
                 gameWindow.resizeBy(0, height_diff);
             }
-        }, 400); // 300+
+        }, 500);
     };
 
     SceneManager.getMenuBarHeight = function() {
@@ -1008,11 +1015,9 @@ var p = null;
                 this.updateInputData();
                 _SceneManager_requestUpdate.apply(this, arguments);
                 this._updateRateCount = 0;
-            } else {
-                if (!this._stopped) {
+            } else if (!this._stopped) {
                     requestAnimationFrame(this.requestUpdate.bind(this));
                 }
-            }
         } else {
             this._updateRateCount = 0;
             _SceneManager_requestUpdate.apply(this, arguments);
@@ -1042,7 +1047,7 @@ var p = null;
     };
 
     SceneManager.isUsingReload = function() {
-        return paramUseReloadData && !DataManager.isBattleTest() && !DataManager.isEventTest();
+        return paramUseReloadData && !DataManager.isBattleTest() && !DataManager.isEventTest() && Utils.isNwjs();
     };
 
     SceneManager.updateScript = function() {
@@ -1351,7 +1356,7 @@ var p = null;
     };
 
     Game_Player.prototype.getInformation = function() {
-        return `Player` + Game_Character.prototype.getInformation.call(this);
+        return 'Player' + Game_Character.prototype.getInformation.call(this);
     };
 
     //=============================================================================
