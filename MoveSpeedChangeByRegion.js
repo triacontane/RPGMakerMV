@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2018/02/15 フォロワーを連れているときにフォロワーの移動速度がおかしくなる問題を修正
 // 1.0.0 2018/02/12 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -139,6 +140,10 @@
         param.fasterRegions = [];
     }
 
+    //=============================================================================
+    // Game_CharacterBase
+    //  地形による速度変化を設定
+    //=============================================================================
     var _Game_CharacterBase_realMoveSpeed      = Game_CharacterBase.prototype.realMoveSpeed;
     Game_CharacterBase.prototype.realMoveSpeed = function() {
         return _Game_CharacterBase_realMoveSpeed.apply(this, arguments) +
@@ -171,6 +176,14 @@
 
     Game_CharacterBase.prototype.getDeltaSpeed = function() {
         return param.deltaSpeed;
+    };
+
+    //=============================================================================
+    // Game_Follower
+    //  実移動速度を再定義
+    //=============================================================================
+    Game_Follower.prototype.realMoveSpeed = function() {
+        return _Game_CharacterBase_realMoveSpeed.apply(this, arguments);
     };
 })();
 
