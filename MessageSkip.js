@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2018/02/16 オート待機フレーム数の計算式にウィンドウに表示した文字数を組み込める機能を追加
 // 1.7.0 2017/12/12 SkipAlreadyReadMessage.jsとの連携したときに当プラグインのスキップ機能が既読スキップになるよう修正
 //                  スキップピクチャの条件スイッチが0(指定なし)のときに同ピクチャが表示されない問題を修正
 // 1.6.1 2017/09/21 オートモード時 改ページを伴わない入力待ちの後のメッセージを一瞬でスキップする問題を修正(by DarkPlasmaさん)
@@ -66,9 +67,8 @@
  * @type boolean
  *
  * @param AutoWaitFrame
- * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]が指定できます。
- * @default 240
- * @type number
+ * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]および計算式が指定できます。
+ * @default 100 + textSize * 10
  *
  * @param ResetOnEventEnd
  * @desc イベント終了と共にスキップ、オート状態を解除します。(ON/OFF)
@@ -135,6 +135,13 @@
  * 当プラグインのスキップ機能は「既読スキップ」機能になります。
  * http://makonet.sakura.ne.jp/rpg_tkool/
  *
+ * ・パラメータ「オート待機フレーム」を設定するとオートモード時の待機フレームを変更できます。
+ * 制御文字\v[n]のほか、JavaScript計算式が使えます。
+ * さらにtextSizeで表示文字数を計算式に組み込むことができます。
+ *
+ * 指定例：
+ * 100 + textSize * 10
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -179,9 +186,8 @@
  * @type boolean
  *
  * @param オート待機フレーム
- * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]が指定できます。
- * @default 240
- * @type number
+ * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]および計算式が指定できます。
+ * @default 100 + textSize * 10
  *
  * @param イベント終了で解除
  * @desc イベント終了と共にスキップ、オート状態を解除します。(ON/OFF)
@@ -248,6 +254,13 @@
  * 当プラグインのスキップ機能は「既読スキップ」機能になります。
  * http://makonet.sakura.ne.jp/rpg_tkool/
  *
+ * ・パラメータ「オート待機フレーム」を設定するとオートモード時の待機フレームを変更できます。
+ * 制御文字\v[n]のほか、JavaScript計算式が使えます。
+ * さらにtextSizeで表示文字数を計算式に組み込むことができます。
+ *
+ * 指定例：
+ * 100 + textSize * 10
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -255,6 +268,23 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+
+/**
+ * メッセージボタンスプライト
+ * @constructor
+ */
+function Sprite_MessageButton() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * アイコン描画用スプライト
+ * @constructor
+ */
+function Sprite_Frame() {
+    this.initialize.apply(this, arguments);
+}
+
 (function() {
     'use strict';
     var pluginName = 'MessageSkip';
@@ -452,14 +482,14 @@
         if (paramPictureAnchor === 1 || paramPictureAnchor === 3) {
             originalX += this.width;
         }
-        return originalX
+        return originalX;
     };
 
     Window_Message.prototype.getRelativeButtonY = function(originalY) {
         if (paramPictureAnchor === 2 || paramPictureAnchor === 3) {
             originalY += this.height;
         }
-        return originalY
+        return originalY;
     };
 
     var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
@@ -469,7 +499,10 @@
     };
 
     Window_Message.prototype.initializeMessageAutoCount = function() {
-        this._messageAutoCount = parseInt(convertEscapeCharacters(getParamString(['AutoWaitFrame', 'オート待機フレーム'], 1)));
+        // use in eval
+        var textSize = this._textState ? this._textState.text.length : 0;
+        var paramValue = convertEscapeCharacters(getParamString(['AutoWaitFrame', 'オート待機フレーム'])) || 1;
+        this._messageAutoCount = eval(paramValue);
     };
 
     var _Window_Message_update      = Window_Message.prototype.update;
@@ -605,10 +638,6 @@
     // Sprite_MessageButton
     //  メッセージボタン描画用スプライトです。
     //=============================================================================
-    function Sprite_MessageButton() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_MessageButton.prototype             = Object.create(Sprite.prototype);
     Sprite_MessageButton.prototype.constructor = Sprite_MessageButton;
 
@@ -638,7 +667,7 @@
         var realX = targetX + this._frame.width * this.anchor.x;
         var realY = targetY + this._frame.height * this.anchor.y;
         var triggeredOk = (pressed ? TouchInput.isPressed() : TouchInput.isTriggered());
-        return triggeredOk && this.isInSprite(realX, realY)
+        return triggeredOk && this.isInSprite(realX, realY);
     };
 
     Sprite_MessageButton.prototype.isInSprite = function(targetX, targetY) {
@@ -650,10 +679,6 @@
     // Sprite_Frame
     //  アイコン描画用スプライトです。
     //=============================================================================
-    function Sprite_Frame() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_Frame.prototype             = Object.create(Sprite.prototype);
     Sprite_Frame.prototype.constructor = Sprite_Frame;
 
