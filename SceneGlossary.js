@@ -6,10 +6,11 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2018/02/17 未入手の用語を？？？等で表記できる機能を追加
 // 2.2.1 2018/01/20 setMaxItem.jsとの競合を解消。他のプラグインから用語辞典ウィンドウを改変できるように定義をグローバル領域に移動
 // 2.2.0 2018/01/14 複数のカテゴリに属する用語を作成できる機能を追加
 // 2.1.0 2017/12/12 入手履歴使用有無と用語リストウィンドウの横幅を、辞書ごとに別々に設定できるようになりました。
-// 2.0.1 2017/12/10 2.0.0においてYEP_MainMenuManager.jsとの連携時、ヘルプに示している登録内容で実行するとエラーになったいた問題を修正
+// 2.0.1 2017/12/10 2.0.0においてYEP_MainMenuManager.jsとの連携時、ヘルプに示している登録内容で実行するとエラーになっていた問題を修正
 // 2.0.0 2017/12/09 用語辞典を好きなだけ追加し、各辞典ごとに仕様や表示内容をカスタマイズできる機能を追加
 //                  用語カテゴリを変更できるコマンドを追加、アイテムごとに使用可否を設定できる機能を追加
 //                  アイテム使用時に使用したアイテムIDを変数に格納する機能と、任意のスイッチを変更できる機能を追加
@@ -389,6 +390,11 @@
  * @default 240
  * @type number
  * @parent Layout
+ *
+ * @param VisibleItemNotYet
+ * @text 未入手アイテムの表示
+ * @desc 未入手アイテムを指定した名前（？？？等）で表示します。指定しない場合この機能は無効になります。
+ * @default
  */
 
 /*:ja
@@ -753,6 +759,11 @@
  * @desc 用語集リストのウィンドウ横幅です。
  * @default 240
  * @type number
+ *
+ * @param VisibleItemNotYet
+ * @text 未入手アイテムの表示
+ * @desc 未入手アイテムを指定した名前（？？？等）で表示します。指定しない場合この機能は無効になります。
+ * @default
  */
 
 /**
@@ -957,21 +968,9 @@ function Window_GlossaryComplete() {
         this._itemHistory   = this._itemHistory || {};
         this._weaponHistory = this._weaponHistory || {};
         this._armorHistory  = this._armorHistory || {};
-        this.getAllMaterials().forEach(function(item) {
+        this.items().concat(this.weapons()).concat(this.armors()).forEach(function(item) {
             this.gainItemHistory(item);
         }, this);
-    };
-
-    Game_Party.prototype.getAllMaterials = function() {
-        return this.items().concat(this.weapons()).concat(this.armors());
-    };
-
-    Game_Party.prototype.getAllMaterialsHistories = function() {
-        return this.swapItemHash(this.getAllMaterials.bind(this));
-    };
-
-    Game_Party.prototype.getMaterialList = function() {
-        return this._glossarySetting.UseItemHistory ? this.getAllMaterialsHistories() : this.getAllMaterials();
     };
 
     Game_Party.prototype.isGlossaryItem = function(item) {
@@ -1037,7 +1036,8 @@ function Window_GlossaryComplete() {
 
     Game_Party.prototype.getAllGlossaryCategory = function() {
         var list = [];
-        this.getAllGlossaryList(true, true, '').forEach(function(item) {
+        var visibleNotYet = this.isUseGlossaryVisibleItemNotYet();
+        this.getAllGlossaryList(true, !visibleNotYet, '').forEach(function(item) {
             this.getGlossaryCategoryList(item).forEach(function(category) {
                 if (category && !list.contains(category)) {
                     list.push(category);
@@ -1121,7 +1121,12 @@ function Window_GlossaryComplete() {
     };
 
     Game_Party.prototype.setConfirmedGlossaryItem = function(item) {
-        if (!this._confirmedGlossaryItems) this._confirmedGlossaryItems = [];
+        if (!this._confirmedGlossaryItems) {
+            this._confirmedGlossaryItems = [];
+        }
+        if (!this.hasGlossary(item)) {
+            return false;
+        }
         if (!this._confirmedGlossaryItems.contains(item.id)) {
             this._confirmedGlossaryItems.push(item.id);
             return true;
@@ -1130,6 +1135,9 @@ function Window_GlossaryComplete() {
     };
 
     Game_Party.prototype.isConfirmedGlossaryItem = function(item) {
+        if (!this.hasGlossary(item)) {
+            return true;
+        }
         return this._confirmedGlossaryItems ? this._confirmedGlossaryItems.contains(item.id) : false;
     };
 
@@ -1236,6 +1244,14 @@ function Window_GlossaryComplete() {
         return this._glossarySetting.ShowingItemNumber;
     };
 
+    Game_Party.prototype.isUseGlossaryVisibleItemNotYet = function() {
+        return !!this._glossarySetting.VisibleItemNotYet;
+    };
+
+    Game_Party.prototype.getTextItemNotYet = function() {
+        return this._glossarySetting.VisibleItemNotYet;
+    };
+
     Game_Party.prototype.changeGlossaryCategory = function(itemId, newCategory) {
         if (!this._customGlossaryCategoryList) {
             this._customGlossaryCategoryList = [];
@@ -1294,17 +1310,17 @@ function Window_GlossaryComplete() {
     var _Window_MenuCommand_addOriginalCommands      = Window_MenuCommand.prototype.addOriginalCommands;
     Window_MenuCommand.prototype.addOriginalCommands = function() {
         _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
-        for (var i = 0; i < param.GlossaryInfo.length; i++) {
-            var glossaryName = param.GlossaryInfo[i].CommandName;
-            if (Scene_Menu.isVisibleGlossaryCommand(i)) {
+        param.GlossaryInfo.forEach(function(glossaryInfo, index) {
+            var glossaryName = glossaryInfo.CommandName;
+            if (Scene_Menu.isVisibleGlossaryCommand(index)) {
                 if (typeof TranslationManager !== 'undefined') {
                     TranslationManager.translateIfNeed(glossaryName, function(translatedText) {
                         glossaryName = translatedText;
                     });
                 }
-                this.addCommand(glossaryName, 'glossary' + String(i + 1), this.isGlossaryEnabled(i));
+                this.addCommand(glossaryName, 'glossary' + String(index + 1), this.isGlossaryEnabled(index));
             }
-        }
+        }, this);
     };
 
     Window_MenuCommand.prototype.isGlossaryEnabled = function() {
@@ -1551,11 +1567,15 @@ function Window_GlossaryComplete() {
     // Window_Base
     //  必要なら制御文字変換を行ってテキストを表示します。
     //=============================================================================
-    Window_Base.prototype.drawTextExIfNeed = function(text, x, y, maxWidth) {
+    Window_Base.prototype.drawTextExIfNeed = function(text, x, y, maxWidth, align) {
         if (text.match(/\\/)) {
+            if (align && align !== 'left') {
+                var width = this.drawTextEx(text, x, -this.lineHeight());
+                x += maxWidth - width / (align === 'center' ? 2 : 1);
+            }
             this.drawTextEx(text, x, y);
         } else {
-            this.drawText(text, x, y, maxWidth);
+            this.drawText(text, x, y, maxWidth, align);
         }
     };
 
@@ -1677,7 +1697,9 @@ function Window_GlossaryComplete() {
             var iconBoxWidth = item.iconIndex > 0 ? Window_Base._iconWidth + 4 : 0;
             this.drawIcon(item.iconIndex, x + 2, y + 2);
             this.setGlossaryColor(item);
-            this.drawTextExIfNeed(item.name, x + iconBoxWidth, y, width - iconBoxWidth);
+            var notYetName = $gameParty.getTextItemNotYet();
+            var name = $gameParty.hasGlossary(item) ? item.name : notYetName;
+            this.drawTextExIfNeed(name, x + iconBoxWidth, y, width - iconBoxWidth);
             this.changePaintOpacity(1);
             this.resetTextColor();
         }
@@ -1690,6 +1712,9 @@ function Window_GlossaryComplete() {
     };
 
     Window_GlossaryList.prototype.isEnabled = function(item) {
+        if (!$gameParty.hasGlossary(item)) {
+            return false;
+        }
         if (!this.canItemUse()) {
             return true;
         }
@@ -1712,7 +1737,9 @@ function Window_GlossaryComplete() {
         var prevItem = this.item();
         if (prevItem) {
             var result = $gameParty.setConfirmedGlossaryItem(prevItem);
-            if (result) this.refresh();
+            if (result) {
+                this.drawItem(this._index);
+            }
         }
         Window_ItemList.prototype.select.apply(this, arguments);
         this._glossaryWindow.refresh(this.item());
@@ -1734,7 +1761,7 @@ function Window_GlossaryComplete() {
     };
 
     Window_GlossaryList.prototype.makeItemList = function() {
-        this._data = this.getMaterialList().filter(function(item) {
+        this._data = this.getItemList().filter(function(item) {
             var isInclude = this.includes(item);
             if (isInclude) {
                 item.sortOrder = getMetaValues(item, ['Order', '表示順']) || item.id;
@@ -1748,8 +1775,9 @@ function Window_GlossaryComplete() {
             itemA.sortOrder - itemB.sortOrder || itemA.id - itemB.id;
     };
 
-    Window_GlossaryList.prototype.getMaterialList = function() {
-        return $gameParty.getMaterialList();
+    Window_GlossaryList.prototype.getItemList = function() {
+        var visibleNotYet = $gameParty.isUseGlossaryVisibleItemNotYet();
+        return $gameParty.getAllGlossaryList(true, !visibleNotYet, this._category);
     };
 
     Window_GlossaryList.prototype.canItemUse = function() {
@@ -1847,7 +1875,9 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.calcMaxPages = function(index) {
-        if (!index) index = 0;
+        if (!index) {
+            index = 0;
+        }
         var exist = !!this.getPictureName(index) || !!this.getDescription(index);
         return (exist && index < 100) ? this.calcMaxPages(index + 1) : index;
     };
@@ -1870,7 +1900,7 @@ function Window_GlossaryComplete() {
 
     Window_Glossary.prototype.refresh = function(item) {
         this._itemData = item;
-        this._maxPages = item ? this.calcMaxPages() : 1;
+        this._maxPages = item && $gameParty.hasGlossary(item) ? this.calcMaxPages() : 1;
         this.drawItem(0, true);
     };
 
@@ -1904,7 +1934,9 @@ function Window_GlossaryComplete() {
         this.contents.clear();
         this._pageIndex = index;
         this.updateArrows();
-        if (!this._itemData) return;
+        if (!this._itemData || !$gameParty.hasGlossary(this._itemData)) {
+            return;
+        }
         var pictureName = this.getPictureName(index);
         if (pictureName) {
             var bitmap = ImageManager.loadPicture(pictureName, 0);
