@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2018/02/18 イベント終了時にオート、スキップを解除するかどうかを任意のスイッチで判定できるように仕様変更
 // 1.8.0 2018/02/16 オート待機フレーム数の計算式にウィンドウに表示した文字数を組み込める機能を追加
 // 1.7.0 2017/12/12 SkipAlreadyReadMessage.jsとの連携したときに当プラグインのスキップ機能が既読スキップになるよう修正
 //                  スキップピクチャの条件スイッチが0(指定なし)のときに同ピクチャが表示されない問題を修正
@@ -70,10 +71,10 @@
  * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]および計算式が指定できます。
  * @default 100 + textSize * 10
  *
- * @param ResetOnEventEnd
- * @desc イベント終了と共にスキップ、オート状態を解除します。(ON/OFF)
- * @default true
- * @type boolean
+ * @param ResetOnEndSwitch
+ * @desc 指定した番号のスイッチがONのとき、イベント終了時にスキップ、オート状態を解除します。0の場合は常に解除します。
+ * @default 0
+ * @type switch
  *
  * @param SkipPicture
  * @desc ウィンドウ内に表示するスキップピクチャのファイル名です。クリックするとスキップモードになります。
@@ -189,10 +190,10 @@
  * @desc オートモードが有効の場合にメッセージを表示しておくフレーム数。制御文字\v[n]および計算式が指定できます。
  * @default 100 + textSize * 10
  *
- * @param イベント終了で解除
- * @desc イベント終了と共にスキップ、オート状態を解除します。(ON/OFF)
- * @default true
- * @type boolean
+ * @param 終了解除スイッチID
+ * @desc 指定した番号のスイッチがONのとき、イベント終了時にスキップ、オート状態を解除します。0の場合は常に解除します。
+ * @default 0
+ * @type switch
  *
  * @param スキップピクチャ
  * @desc ウィンドウ内に表示するスキップピクチャのファイル名です。クリックするとスキップモードになります。
@@ -384,7 +385,7 @@ function Sprite_Frame() {
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.apply(this, arguments);
         this.clearSkipInfo();
-        this._autoClearSkip = getParamBoolean(['ResetOnEventEnd', 'イベント終了で解除']);
+        this._autoClearSkipSwitch = getParamNumber(['ResetOnEndSwitch', '終了解除スイッチID']);
     };
 
     Game_Message.prototype.toggleSkip = function() {
@@ -420,7 +421,9 @@ function Sprite_Frame() {
     };
 
     Game_Message.prototype.terminateEvent = function() {
-        if (this._autoClearSkip) this.clearSkipInfo();
+        if (!this._autoClearSkipSwitch || $gameSwitches.value(this._autoClearSkipSwitch)) {
+            this.clearSkipInfo();
+        }
     };
 
     //=============================================================================
