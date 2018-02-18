@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.3 2018/02/18 2.4.1の機能に加えて他のエディタから起動したとき全般で戦闘テストができるようにしました。
 // 2.4.2 2018/02/18 ヘルプの記述を追加
 // 2.4.1 2018/02/18 ブラウザ起動時に戦闘テストができる機能を追加しました。オプションのbtestは利用者が付与してください。
 // 2.4.0 2018/02/15 ブラウザ起動時もテストプレーと判断した場合は一部の機能が使えるようにしました。
@@ -282,7 +283,7 @@
  *
  * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、起動URLのオプションに
  * 「test」もしくは「best」を付与してください。
- * ただしNW.js由来のいくつかの機能が無効になります。
+ * ただしNW.js由来のいくつかの機能は無効になります。
  *
  * This plugin is released under the MIT License.
  */
@@ -547,7 +548,7 @@
  *
  * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、起動URLのオプションに
  * 「test」もしくは「best」を付与してください。
- * ただしNW.js由来のいくつかの機能が無効になります。
+ * ただしNW.js由来のいくつかの機能は無効になります。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -1192,18 +1193,31 @@ function Controller_NwJs() {
         return _DataManager_loadGameWithoutRescue.apply(this, arguments);
     };
 
-    var _DataManager_loadDatabase = DataManager.loadDatabase;
-    DataManager.loadDatabase = function() {
-        if (this.isBattleTest() && !Utils.isNwjs()) {
+    const _DataManager_loadDatabase = DataManager.loadDatabase;
+    DataManager.loadDatabase        = function() {
+        if (this.isNeedSuppressBtest()) {
             this._suppressBattleTest = true;
         }
         _DataManager_loadDatabase.apply(this, arguments);
         this._suppressBattleTest = false;
     };
 
-    var _DataManager_isBattleTest = DataManager.isBattleTest;
-    DataManager.isBattleTest = function() {
+    const _DataManager_isBattleTest = DataManager.isBattleTest;
+    DataManager.isBattleTest        = function() {
         return this._suppressBattleTest ? false : _DataManager_isBattleTest.apply(this, arguments);
+    };
+
+    DataManager.isNeedSuppressBtest = function() {
+        if (!this.isBattleTest()) {
+            return false;
+        }
+        if (Utils.isNwjs()) {
+            return this._databaseFiles.some(function(databaseFile) {
+                return !StorageManager.isExistTestData(databaseFile.src);
+            });
+        } else {
+            return true;
+        }
     };
 
     //=============================================================================
@@ -1229,11 +1243,17 @@ function Controller_NwJs() {
         return null;
     };
 
+    StorageManager.isExistTestData = function(fileName) {
+        const fs       = require('fs');
+        const path     = require('path');
+        const filePath = path.join(path.dirname(process.mainModule.filename), 'data/Test_' + fileName);
+        return fs.existsSync(filePath);
+    };
+
     //=============================================================================
     // Scene_Base
     //  マップの高速化を提供します。
     //=============================================================================
-
     const _Scene_Base_fadeSpeed    = Scene_Base.prototype.fadeSpeed;
     Scene_Base.prototype.fadeSpeed = function() {
         return SceneManager.isRapid() ? 1 : _Scene_Base_fadeSpeed.apply(this, arguments);
@@ -1396,7 +1416,7 @@ function Controller_NwJs() {
     //  Nw.jsのAPI呼び出しを管理します。
     //=============================================================================
     Controller_NwJs.prototype.constructor = Controller_NwJs;
-    Controller_NwJs.prototype.initialize = function() {
+    Controller_NwJs.prototype.initialize  = function() {
         this._nwGui           = require('nw.gui');
         this._devTool         = null;
         this._devToolMinimize = false;
