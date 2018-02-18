@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.4 2018/02/19 カレンダーの初期表示をtrueに変更しました。
 // 1.9.3 2017/11/18 マップロード時に色調を時間に合わせて瞬間変更していた仕様を撤廃
 // 1.9.2 2017/11/02 イベント実行中に時間を変更した場合にアナログ時計の表示が変更されない問題を修正
 // 1.9.1 2017/11/02 時間経過の初期状態を「停止」から「開始」に変更
@@ -50,7 +51,7 @@
 /*:
  * @plugindesc ゲーム内時間の導入プラグイン
  * @author トリアコンタン
- * 
+ *
  * @param 月ごとの日数配列
  * @desc 各月の日数の配列です。カンマ区切りで指定してください。個数は自由です。
  * @default 31,28,31,30,31,30,31,31,30,31,30,31
@@ -340,11 +341,35 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/**
+ * ゲーム内時間を扱うゲームオブジェクトです。
+ * @constructor
+ */
 function Game_Chronus() {
     this.initialize.apply(this, arguments);
 }
 
+/**
+ * ゲーム内タイマーを扱うゲームオブジェクトです。
+ * @constructor
+ */
 function Game_ChronusTimer() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * 時計画像を扱うスプライトです。
+ * @constructor
+ */
+function Sprite_Chronicle_Clock() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * ゲーム内時間を描画するウィンドウです。
+ * @constructor
+ */
+function Window_Chronus() {
     this.initialize.apply(this, arguments);
 }
 
@@ -744,10 +769,6 @@ function Game_ChronusTimer() {
     // Window_Chronus
     //  ゲーム内時間情報を描画するウィンドウです。
     //=============================================================================
-    function Window_Chronus() {
-        this.initialize.apply(this, arguments);
-    }
-
     Window_Chronus.prototype             = Object.create(Window_Base.prototype);
     Window_Chronus.prototype.constructor = Window_Chronus;
 
@@ -818,10 +839,6 @@ function Game_ChronusTimer() {
     // Sprite_Chronicle_Clock
     //  アナログ時計表示スプライトクラスです。
     //=============================================================================
-    function Sprite_Chronicle_Clock() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_Chronicle_Clock.prototype             = Object.create(Sprite.prototype);
     Sprite_Chronicle_Clock.prototype.constructor = Sprite_Chronicle_Clock;
 
@@ -910,16 +927,14 @@ function Game_ChronusTimer() {
     Game_Chronus.prototype.initialize = function() {
         this._stop            = false;        // 停止フラグ（全ての加算に対して有効。ただし手動による加算は例外）
         this._disableTint     = false;        // 色調変更禁止フラグ
-        this._calendarVisible = false;        // カレンダー表示フラグ
+        this._calendarVisible = true;         // カレンダー表示フラグ
         this._disableWeather  = false;        // 天候制御禁止フラグ
         this._weatherType     = 0;            // 天候タイプ(0:なし 1:雨 2:嵐 :3雪)
         this._weatherPower    = 0;            // 天候の強さ
-        this._weatherCounter  = 0;            // 同一天候の維持時間
         this._weatherSnowLand = false;        // 降雪地帯フラグ
-        this._clockVisible    = false;        // アナログ時計表示フラグ
+        this._clockVisible    = true;         // アナログ時計表示フラグ
         this._realTime        = false;        // 実時間フラグ
         this._badWeaterLevel  = 0;            // 悪天候の度合い
-        this._rainyPercent    = 0;            // 降水確率
         this._frameCount      = 0;
         this._demandRefresh   = false;
         this._prevHour        = -1;
@@ -981,7 +996,7 @@ function Game_ChronusTimer() {
         }
         this._timers = this._timers.filter(function(timer) {
             return timer.update();
-        })
+        });
     };
 
     Game_Chronus.prototype.isRealTime = function() {
@@ -1415,7 +1430,7 @@ function Game_ChronusTimer() {
 
     Game_Chronus.prototype.getValuePadding = function(value, digit, padChar) {
         if (arguments.length === 2) padChar = '0';
-        var result = "";
+        var result = '';
         for (var i = 0; i < digit; i++) result += padChar;
         result += value;
         return result.substr(-digit);
