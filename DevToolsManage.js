@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.2 2018/02/18 ヘルプの記述を追加
 // 2.4.1 2018/02/18 ブラウザ起動時に戦闘テストができる機能を追加しました。オプションのbtestは利用者が付与してください。
 // 2.4.0 2018/02/15 ブラウザ起動時もテストプレーと判断した場合は一部の機能が使えるようにしました。
 // 2.3.4 2017/12/02 リファクタリング
@@ -279,6 +280,10 @@
  * 画面キャプチャ管理プラグインと連携すると画面キャプチャ用のメニューバーが表示されます。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js
  *
+ * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、起動URLのオプションに
+ * 「test」もしくは「best」を付与してください。
+ * ただしNW.js由来のいくつかの機能が無効になります。
+ *
  * This plugin is released under the MIT License.
  */
 
@@ -540,6 +545,10 @@
  * 画面キャプチャ管理プラグインと連携すると画面キャプチャ用のメニューバーが表示されます。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js
  *
+ * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、起動URLのオプションに
+ * 「test」もしくは「best」を付与してください。
+ * ただしNW.js由来のいくつかの機能が無効になります。
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -575,6 +584,15 @@
  */
 
 var p = null;
+
+/**
+ * Controller_NwJs
+ * NW.jsのウィンドウを操作します。
+ * @constructor
+ */
+function Controller_NwJs() {
+    this.initialize.apply(this, arguments);
+}
 
 (function() {
     'use strict';
@@ -996,7 +1014,6 @@ var p = null;
             var style_height = parseInt(Graphics._canvas.style.height, 10);
             var height_diff  = SceneManager._screenHeight - style_height;
             if (height_diff !== 0) {
-                console.log('style.height = ' + style_height + ', diff = ' + height_diff);
                 gameWindow.moveBy(0, -height_diff);
                 gameWindow.resizeBy(0, height_diff);
             }
@@ -1378,12 +1395,7 @@ var p = null;
     // Controller_NwJs
     //  Nw.jsのAPI呼び出しを管理します。
     //=============================================================================
-    function Controller_NwJs() {
-        this.initialize.apply(this, arguments);
-    }
-
     Controller_NwJs.prototype.constructor = Controller_NwJs;
-
     Controller_NwJs.prototype.initialize = function() {
         this._nwGui           = require('nw.gui');
         this._devTool         = null;
@@ -1429,7 +1441,7 @@ var p = null;
 
     Controller_NwJs.prototype.makeMenuItem = function(commandInfo, menuObject) {
         const menuItem = new this._nwGui.MenuItem({
-            label: commandInfo.name + (commandInfo.key ? '(' + commandInfo.key + ')' : ''),
+            label: commandInfo.name + (commandInfo.key && commandInfo.key[0] === 'F' ? '(' + commandInfo.key + ')' : ''),
             type : commandInfo.type,
         });
         if (menuObject === this._menuClick) {
