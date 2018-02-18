@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2018/02/18 ブラウザ起動時に戦闘テストができる機能を追加しました。オプションのbtestは利用者が付与してください。
 // 2.4.0 2018/02/15 ブラウザ起動時もテストプレーと判断した場合は一部の機能が使えるようにしました。
 // 2.3.4 2017/12/02 リファクタリング
 // 2.3.2 2017/11/23 Fix missing menu bar height at SceneManager.setWindowSizeForMenuBar
@@ -713,7 +714,7 @@ var p = null;
     };
 
     // テストプレー時以外は以降の機能を無効
-    if (!Utils.isOptionValid('test')) {
+    if (!Utils.isOptionValid('test') && !DataManager.isBattleTest()) {
         console.log(pluginName + ' is valid only test play!');
         return;
     }
@@ -776,7 +777,7 @@ var p = null;
         if (!Utils.isNwjs()) {
             return;
         }
-        this._freeze = false;
+        this._freeze  = false;
         this._nwJsGui = new Controller_NwJs();
         if (paramStartupOnTop) {
             this._nwJsGui.toggleAlwaysOnTop();
@@ -993,7 +994,7 @@ var p = null;
 
         setTimeout(function() { // Fix missing menu bar height
             var style_height = parseInt(Graphics._canvas.style.height, 10);
-            var height_diff = SceneManager._screenHeight - style_height;
+            var height_diff  = SceneManager._screenHeight - style_height;
             if (height_diff !== 0) {
                 console.log('style.height = ' + style_height + ', diff = ' + height_diff);
                 gameWindow.moveBy(0, -height_diff);
@@ -1016,8 +1017,8 @@ var p = null;
                 _SceneManager_requestUpdate.apply(this, arguments);
                 this._updateRateCount = 0;
             } else if (!this._stopped) {
-                    requestAnimationFrame(this.requestUpdate.bind(this));
-                }
+                requestAnimationFrame(this.requestUpdate.bind(this));
+            }
         } else {
             this._updateRateCount = 0;
             _SceneManager_requestUpdate.apply(this, arguments);
@@ -1172,6 +1173,20 @@ var p = null;
     DataManager.loadGameWithoutRescue        = function(savefileId) {
         this.encodeSaveGame(savefileId);
         return _DataManager_loadGameWithoutRescue.apply(this, arguments);
+    };
+
+    var _DataManager_loadDatabase = DataManager.loadDatabase;
+    DataManager.loadDatabase = function() {
+        if (this.isBattleTest() && !Utils.isNwjs()) {
+            this._suppressBattleTest = true;
+        }
+        _DataManager_loadDatabase.apply(this, arguments);
+        this._suppressBattleTest = false;
+    };
+
+    var _DataManager_isBattleTest = DataManager.isBattleTest;
+    DataManager.isBattleTest = function() {
+        return this._suppressBattleTest ? false : _DataManager_isBattleTest.apply(this, arguments);
     };
 
     //=============================================================================
