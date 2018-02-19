@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2018/02/20 不透明度をメモ欄で設定できる機能を追加
 // 1.8.0 2017/08/27 マップで使用しているタイルセット以外のタイルセットを使ったイベントを作成できる機能を追加
 // 1.7.0 2017/08/24 画像を別のものに変更するスクリプトを追加
 // 1.6.1 2017/08/06 ヘルプを修正
@@ -165,6 +166,12 @@
  * 指定したページが有効になった場合の色調(-255～255)を設定します。
  *
  * 例：<CG色調:1,-255,0,255> or <CGTone:1,-255,0,255>
+ *
+ * <CG不透明度:（ページ数）,（合成方法）>
+ * 指定したページが有効になった場合のグラフィックの不透明度を設定します。
+ * 0:透明 - 255:不透明
+ *
+ * 例：<CG不透明度:1,64> or <CGOpacity:1,64>
  *
  * 〇スクリプト（高度な設定。移動ルートの指定からスクリプトで実行）
  *
@@ -530,6 +537,10 @@
         cgParams = this.getMetaCg(['色調', 'Tone']);
         if (cgParams) {
             this.setTone(getArgNumber(cgParams[1]), getArgNumber(cgParams[2]), getArgNumber(cgParams[3]));
+        }
+        cgParams = this.getMetaCg(['不透明度', 'Opacity']);
+        if (cgParams) {
+            this.setOpacity(getArgNumber(cgParams[1]));
         }
     };
 
