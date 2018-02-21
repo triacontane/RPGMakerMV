@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.6.0 2018/02/22 ガチャのロット数に変数を使用できるよう修正
 // 1.5.0 2018/01/14 新規アイテム入手時にアニメーションを設定できる機能を追加
 // 1.4.0 2017/12/05 ガチャの演出を省略できるスイッチを追加。アイテム入手時に効果音を演奏する機能を追加。
 // 1.3.0 2017/11/11 新規アイテム入手時に通知する機能を追加
@@ -273,6 +274,7 @@
  * ・10連ガチャの機能を追加
  * ・新規アイテム入手時の通知とエフェクトを追加（新規アイテムのエフェクトは最後のコマで停止します）
  * ・ガチャの演出をカットするスイッチを追加
+ * ・ガチャのロット数に変数を使用できるよう修正
  *
  *
  * Plugin Command:
@@ -413,7 +415,6 @@
         this._windowFadeSprite      = null;
         this._screenFadeOutDuration = 0;
         this._screenFadeInDuration  = 0;
-
         this._lot      = [];
         this._itemList = {};
 
@@ -422,7 +423,7 @@
         for (i = 1; i < $dataItems.length; i++) {
             item = $dataItems[i];
             if ($gameSystem.isInGacha(item)) {
-                numLot = Number(item.meta.gachaNumLot || '0');
+                numLot = this.getItemNumLot(item);
                 for (j = 0; j < numLot; j++) {
                     this._lot.push(item);
                 }
@@ -431,7 +432,7 @@
         for (i = 1; i < $dataWeapons.length; i++) {
             item = $dataWeapons[i];
             if ($gameSystem.isInGacha(item)) {
-                numLot = Number(item.meta.gachaNumLot || '0');
+                numLot = this.getItemNumLot(item);
                 for (j = 0; j < numLot; j++) {
                     this._lot.push(item);
                 }
@@ -440,12 +441,23 @@
         for (i = 1; i < $dataArmors.length; i++) {
             item = $dataArmors[i];
             if ($gameSystem.isInGacha(item)) {
-                numLot = Number(item.meta.gachaNumLot || '0');
+                numLot = this.getItemNumLot(item);
                 for (j = 0; j < numLot; j++) {
                     this._lot.push(item);
                 }
             }
         }
+    };
+
+    Scene_Gacha.prototype.getItemNumLot = function(item) {
+        var text = item.meta.gachaNumLot || '0';
+        text = text.replace(/\\V\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\\V\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        return parseInt(text) || 0;
     };
 
     Scene_Gacha.prototype.create = function() {
