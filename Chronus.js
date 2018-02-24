@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2018/02/24 日付フォーマットに基づいて計算した時間を変数に自動設定する機能を追加
 // 1.9.4 2018/02/19 カレンダーの初期表示をtrueに変更しました。
 // 1.9.3 2017/11/18 マップロード時に色調を時間に合わせて瞬間変更していた仕様を撤廃
 // 1.9.2 2017/11/02 イベント実行中に時間を変更した場合にアナログ時計の表示が変更されない問題を修正
@@ -146,6 +147,16 @@
  * @desc 指定した番号のゲーム変数に「天候」のIDが自動設定されます。
  * 0:なし 1:雨 2:嵐 3:雪
  * @default 0
+ *
+ * @param フォーマット時間の変数
+ * @type variable
+ * @desc 「フォーマット時間の計算式」に基づいて計算した結果が自動設定されます。
+ * @default 0
+ *
+ * @param フォーマット時間の計算式
+ * @desc 日時フォーマットを使った計算式の内容です。
+ * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
+ * @default HH24 * 60 + MI
  *
  * @param 日時フォーマット1
  * @desc マップ上の日付ウィンドウ1行目に表示される文字列です。
@@ -1324,6 +1335,7 @@ function Window_Chronus() {
         this.setGameVariableSub('天候IDのゲーム変数', this.getWeatherTypeId.bind(this));
         this.setGameVariableSub('累計時間のゲーム変数', this.getTotalTime.bind(this));
         this.setGameVariableSub('累計日数のゲーム変数', this.getTotalDay.bind(this));
+        this.setGameVariableSub('フォーマット時間の変数', this.getFormatTimeFormula.bind(this));
     };
 
     Game_Chronus.prototype.setGameVariableSub = function(paramName, callBack) {
@@ -1377,36 +1389,46 @@ function Window_Chronus() {
         return this.isRealTime() ? this._nowDate.getMinutes() : this._timeMeter % 60;
     };
 
+    Game_Chronus.prototype.getFormatTimeFormula = function() {
+        this._disablePadding = true;
+        var formula = this.convertDateFormatText(getParamString('フォーマット時間の計算式'));
+        this._disablePadding = false;
+        return eval(formula);
+    };
+
     Game_Chronus.prototype.getDateFormat = function(index) {
-        var format = getParamString('日時フォーマット' + String(index));
-        format     = format.replace(/(YYYY)/gi, function() {
+        return this.convertDateFormatText(getParamString('日時フォーマット' + String(index)));
+    };
+
+    Game_Chronus.prototype.convertDateFormatText = function(format) {
+        format = format.replace(/(YYYY)/gi, function() {
             return this.getValuePadding(this.getYear(), arguments[1].length);
         }.bind(this));
-        format     = format.replace(/MON/gi, function() {
+        format = format.replace(/MON/gi, function() {
             return this._monthNames[this.getMonth() - 1];
         }.bind(this));
-        format     = format.replace(/MM/gi, function() {
+        format = format.replace(/MM/gi, function() {
             return this.getValuePadding(this.getMonth(), String(this.getMonthOfYear()).length);
         }.bind(this));
-        format     = format.replace(/DD/gi, function() {
+        format = format.replace(/DD/gi, function() {
             return this.getValuePadding(this.getDay(),
                 String(this.getDaysOfMonth(this.getMonth())).length);
         }.bind(this));
-        format     = format.replace(/HH24/gi, function() {
+        format = format.replace(/HH24/gi, function() {
             return this.getValuePadding(this.getHour(), 2);
         }.bind(this));
-        format     = format.replace(/HH/gi, function() {
+        format = format.replace(/HH/gi, function() {
             return this.getValuePadding(this.getHour() % 12, 2);
         }.bind(this));
-        format     = format.replace(/AM/gi, function() {
+        format = format.replace(/AM/gi, function() {
             return Math.floor(this.getHour() / 12) === 0 ?
                 $gameSystem.isJapanese() ? '午前' : 'Morning  ' :
                 $gameSystem.isJapanese() ? '午後' : 'Afternoon';
         }.bind(this));
-        format     = format.replace(/MI/gi, function() {
+        format = format.replace(/MI/gi, function() {
             return this.getValuePadding(this.getMinute(), 2);
         }.bind(this));
-        format     = format.replace(/DY/gi, function() {
+        format = format.replace(/DY/gi, function() {
             return this.getWeekName();
         }.bind(this));
         return format;
@@ -1429,6 +1451,9 @@ function Window_Chronus() {
     };
 
     Game_Chronus.prototype.getValuePadding = function(value, digit, padChar) {
+        if (this._disablePadding) {
+            return value;
+        }
         if (arguments.length === 2) padChar = '0';
         var result = '';
         for (var i = 0; i < digit; i++) result += padChar;
