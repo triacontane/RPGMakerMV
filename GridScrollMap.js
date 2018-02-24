@@ -1,18 +1,19 @@
 //=============================================================================
 // GridScrollMap.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2018/02/25 パラメータの型指定機能に対応。スクロール速度の下限を緩和
 // 1.2.0 2016/11/08 スクロール中のみ指定したスイッチをONにできる機能を追加
 // 1.1.0 2016/06/29 タッチ移動でマップの境界線に移動した際に画面をスクロールする機能を追加
 //                  半歩移動プラグインとの競合を解消
 //                  コードのリファクタリング
 // 1.0.0 2015/11/18 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -22,16 +23,21 @@
  * @author トリアコンタン
  * 
  * @param スクロール速度
- * @desc 画面をスクロールする速度です。(6-8)
+ * @desc 画面をスクロールする速度です。設定値は1～8ですが低い値を設定すると異常に遅くなります。
  * @default 7
+ * @type number
+ * @min 1
+ * @max 8
  *
  * @param タッチ移動スクロール
  * @desc タッチ移動で境界線に移動した際に自動で一歩前進します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param トリガースイッチ番号
  * @desc スクロール開始と共に指定した番号のスイッチをONにすることができます。スクロールが終了すると自動でOFFに戻ります。
  * @default 0
+ * @type switch
  * 
  * @help マップ画面のスクロールをプレイヤーと同期せず
  * プレイヤーが画面外に出たら一画面分をスクロールする方式に
@@ -72,7 +78,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -85,7 +91,7 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramScrollSpeed     = getParamNumber(['ScrollSpeed', 'スクロール速度'], 6, 8);
+    var paramScrollSpeed     = getParamNumber(['ScrollSpeed', 'スクロール速度'], 1, 8);
     var paramTouchMoveScroll = getParamBoolean(['TouchMoveScroll', 'タッチ移動スクロール']);
     var paramTriggerSwitch   = getParamNumber(['TriggerSwitch', 'トリガースイッチ番号'], 0);
 
