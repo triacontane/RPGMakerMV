@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.9 2018/02/28 選択可能対象が存在しないスキルは、敵キャラの使用スキルから除外するよう修正
 // 1.1.8 2018/02/27 スクリプトに関するヘルプの記述が間違っていたので修正
 // 1.1.7 2017/07/26 ステート全体化プラグイン（StateTotalization.js）との競合を解消
 // 1.1.6 2017/06/28 混乱ステート拡張プラグイン（ConfusionExtend.js）との競合を解消
@@ -240,7 +241,7 @@
             targets = this.targetsForFriends();
         }
         BattleManager.setTargetAction(null);
-        return targets.length > 0;
+        return targets.length > 0 && targets[0] !== null;
     };
 
     var _Game_Action_subject = Game_Action.prototype.subject;
