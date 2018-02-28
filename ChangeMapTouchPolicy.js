@@ -1,15 +1,16 @@
 //=============================================================================
 // ChangeMapTouchPolicy.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015-2018 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/03/01 パラメータの型指定機能に対応。マップタッチ移動時の強制ダッシュを無効にする機能を追加。
 // 1.0.1 2016/09/11 レベル「簡易」の時の押し続け判定を変更
 // 1.0.0 2015/11/18 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -20,7 +21,19 @@
  *
  * @param initPolicyLevel
  * @desc Initial value of policy level
- * @default 3
+ * @option 1 : invalid
+ * @value 1
+ * @option 2 : simple
+ * @value 2
+ * @option 3 : normal
+ * @value 3
+ * @option 4 : excessive
+ * @value 4
+ *
+ * @param invalidForceDash
+ * @desc マップタッチ移動時の強制ダッシュを無効にしてShiftキーを押している間のみダッシュします。スマホ版は除く。
+ * @default false
+ * @type boolean
  *
  * @help Plugin that change policy of 'map touch'
  * There are four stages
@@ -39,11 +52,27 @@
 /*:ja
  * @plugindesc マップタッチ仕様変更プラグイン
  * @author トリアコンタン
- * 
- * @param 仕様レベル初期値
+ *
+ * @param initPolicyLevel
+ * @text 仕様レベル初期値
  * @desc 初期状態でのマップタッチの仕様レベル
  * @default 3
- * 
+ * @type select
+ * @option 1 : 無効
+ * @value 1
+ * @option 2 : 簡易
+ * @value 2
+ * @option 3 : 通常
+ * @value 3
+ * @option 4 : 過剰
+ * @value 4
+ *
+ * @param invalidForceDash
+ * @text 強制ダッシュ無効
+ * @desc マップタッチ移動時の強制ダッシュを無効にしてShiftキーを押している間のみダッシュします。スマホ版は除く。
+ * @default false
+ * @type boolean
+ *
  * @help マップをタッチした際の移動の仕方を4種類から変更できます。
  * パラメータの「仕様レベル初期値」を設定してください。
  * 1 : 無効「マップをタッチしてもプレイヤーは動きません」
@@ -67,73 +96,45 @@
  *  このプラグインはもうあなたのものです。
  */
 (function () {
-    var pluginName = 'ChangeMapTouchPolicy';
 
-    //=============================================================================
-    // PluginManager
-    //  多言語とnullに対応したパラメータの取得を行います。
-    //  このコードは自動生成され、全てのプラグインで同じものが使用されます。
-    //=============================================================================
-    PluginManager.getParamString = function(pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        return value == null ? '' : value;
+    var getArgNumber = function (arg, min, max) {
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(convertEscapeCharacters(arg)) || 0).clamp(min, max);
     };
 
-    PluginManager.getParamNumber = function(pluginName, paramEngName, paramJpgName, min, max) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        if (arguments.length <= 3) min = -Infinity;
-        if (arguments.length <= 4) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    PluginManager.getParamBoolean = function(pluginName, paramEngName, paramJpgName) {
-        var value = this.getParamOther(pluginName, paramEngName, paramJpgName);
-        return (value || '').toUpperCase() == 'ON';
-    };
-
-    PluginManager.getParamOther = function(pluginName, paramEngName, paramJpgName) {
-        var value = this.parameters(pluginName)[paramEngName];
-        if (value == null) value = this.parameters(pluginName)[paramJpgName];
-        return value;
-    };
-
-    PluginManager.getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
-
-    PluginManager.checkCommandName = function(command, value) {
-        return this.getCommandName(command) === value;
-    };
-
-    PluginManager.getArgString = function (index, args) {
-        return PluginManager.convertEscapeCharacters(args[index]);
-    };
-
-    PluginManager.getArgNumber = function (index, args, min, max) {
-        if (arguments.length <= 2) min = -Infinity;
-        if (arguments.length <= 3) max = Infinity;
-        return (parseInt(PluginManager.convertEscapeCharacters(args[index]), 10) || 0).clamp(min, max);
-    };
-
-    PluginManager.convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            return this.actorName(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            return this.partyMemberName(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return text;
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
+
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+
+    var param = createPluginParameter('ChangeMapTouchPolicy');
+
 
     //=============================================================================
     // Game_Interpreter
@@ -141,9 +142,9 @@
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
-        _Game_Interpreter_pluginCommand.call(this, command, args);
-        if (PluginManager.checkCommandName(command, 'CHANGE_MTP')) {
-            $gameSystem._mapTouchPolicy = PluginManager.getArgNumber(0, args, 1, 4);
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        if (command.toUpperCase() === 'CHANGE_MTP') {
+            $gameSystem._mapTouchPolicy = getArgNumber(args[0], 1, 4);
         }
     };
 
@@ -153,7 +154,7 @@
     //=============================================================================
     var _Game_Temp_initialize = Game_Temp.prototype.initialize;
     Game_Temp.prototype.initialize = function() {
-        _Game_Temp_initialize.call(this);
+        _Game_Temp_initialize.apply(this, arguments);
         this._moveStart = false;
     };
 
@@ -163,8 +164,19 @@
     //=============================================================================
     var _Game_System_initialize = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
-        _Game_System_initialize.call(this);
-        this._mapTouchPolicy = PluginManager.getParamNumber(pluginName, 'initPolicyLevel', '仕様レベル初期値', 1, 4);
+        _Game_System_initialize.apply(this, arguments);
+        this._mapTouchPolicy = param.initPolicyLevel;
+    };
+
+    var _Game_Player_updateDashing = Game_Player.prototype.updateDashing;
+    Game_Player.prototype.updateDashing = function() {
+        _Game_Player_updateDashing.apply(this, arguments);
+        if (!param.invalidForceDash || Utils.isMobileDevice() || this.isMoving()) {
+            return;
+        }
+        if (this.canMove() && !this.isInVehicle() && !$gameMap.isDashDisabled()) {
+            this._dashing = this.isDashButtonPressed();
+        }
     };
 
     //=============================================================================
