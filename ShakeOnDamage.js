@@ -1,11 +1,12 @@
 //=============================================================================
 // ShakeOnDamage.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2018/03/04 YEP_BattleEngineCore.jsとの競合を解消
 // 1.1.0 2017/08/19 パラメータに計算式を使用できる機能を追加
 // 1.0.0 2017/08/13 初版
 // ----------------------------------------------------------------------------
@@ -178,40 +179,36 @@
     };
 
     //=============================================================================
-    // Window_BattleLog
+    // Game_Actor
     //  ダメージ時の振動を実装します。
     //=============================================================================
-    var _Window_BattleLog_performDamage      = Window_BattleLog.prototype.performDamage;
-    Window_BattleLog.prototype.performDamage = function(target) {
-        _Window_BattleLog_performDamage.apply(this, arguments);
-        if (target.isActor()) {
-            this.shakeOnDamage(target);
-        }
+    var _Game_Actor_performDamage      = Game_Actor.prototype.performDamage;
+    Game_Actor.prototype.performDamage = function() {
+        _Game_Actor_performDamage.apply(this, arguments);
+        this.shakeOnDamage();
     };
 
-    Window_BattleLog.prototype.shakeOnDamage = function(target) {
-        this._targetOnDamage = target;
-        var power    = target.isCriticalForShake() ? this.getCriticalDamageShakePower() : this.getDamageShakePower();
+    Game_Actor.prototype.shakeOnDamage = function() {
+        var power    = this.isCriticalForShake() ? this.getCriticalDamageShakePower() : this.getDamageShakePower();
         var speed    = this.convertShakeParameter(param.shakeSpeed);
         var duration = this.convertShakeParameter(param.shakeDuration);
         $gameScreen.startShake(power, speed, duration);
-        target.setCriticalForShake(false);
-        this._targetOnDamage = null;
+        this.setCriticalForShake(false);
     };
 
-    Window_BattleLog.prototype.getDamageShakePower = function() {
+    Game_Actor.prototype.getDamageShakePower = function() {
         return this.convertShakeParameter(param.shakePower);
     };
 
-    Window_BattleLog.prototype.getCriticalDamageShakePower = function() {
+    Game_Actor.prototype.getCriticalDamageShakePower = function() {
         var power = param.criticalShakePower !== '' ? param.criticalShakePower : param.shakePower;
         return this.convertShakeParameter(power);
     };
 
-    Window_BattleLog.prototype.convertShakeParameter = function(param) {
+    Game_Actor.prototype.convertShakeParameter = function(param) {
         var convertParam = convertEscapeCharacters(param);
         // use in eval
-        var a = this._targetOnDamage;
+        var a = this;
         var r = a.hpRate() * 100;
         return isNaN(Number(convertParam)) ? eval(convertParam) : parseInt(convertParam);
     };
