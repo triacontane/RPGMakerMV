@@ -1,11 +1,12 @@
 //=============================================================================
 // FailureEffect.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2018/03/03 失敗時はクリティカルヒットしないよう仕様変更
 // 1.1.0 2017/10/04 ダメージが整数にならない場合がある不具合を修正
 //                  失敗時にメッセージを出力する機能を追加
 // 1.0.0 2017/10/02 初版
@@ -145,7 +146,7 @@
     var getArgArrayString = function(args) {
         return args.split(',').map(function(value) {
             return value.trim();
-        })
+        });
     };
 
     //=============================================================================
@@ -178,6 +179,15 @@
     Game_Action.prototype.makeDamageValue = function(target, critical) {
         var damage = _Game_Action_makeDamageValue.apply(this, arguments);
         return local.originalHit ? damage : Math.floor(damage * this.getFailureRate() / 100);
+    };
+
+    var _Game_Action_itemCri = Game_Action.prototype.itemCri;
+    Game_Action.prototype.itemCri = function(target) {
+        var result = _Game_Action_itemCri.apply(this, arguments);
+        if (!local.originalHit) {
+            result = 0;
+        }
+        return result;
     };
 
     Game_Action.prototype.getFailureRate = function() {
