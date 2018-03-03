@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.2 2018/03/03 画面起動時のパフォーマンスを改善
+//                  コモンイベントを実行するアイテムの使用時に内容次第でエラーになっていた問題を修正
 // 2.3.1 2018/02/24 用語情報を設定していない場合のエラーメッセージを言語別に表示するよう修正。ヘルプを分かりやすく修正。
 // 2.3.0 2018/02/17 未入手の用語を？？？等で表記できる機能を追加
 // 2.2.1 2018/01/20 setMaxItem.jsとの競合を解消。他のプラグインから用語辞典ウィンドウを改変できるように定義をグローバル領域に移動
@@ -867,13 +869,32 @@ function Window_GlossaryComplete() {
         if (text === null || text === undefined) {
             text = evalFlg ? '0' : '';
         }
-        var window = SceneManager._scene._windowLayer.children[0];
-        if (window) {
-            var result = window.convertEscapeCharacters(text);
-            return evalFlg ? eval(result) : result;
+        if (SceneManager._scene._windowLayer) {
+            var winObj = SceneManager._scene._windowLayer.children[0];
+            text = winObj.convertEscapeCharacters(text);
         } else {
-            return text;
+            text = convertEscapeCharacters(text);
         }
+        return evalFlg ? eval(text) : text;
+    };
+
+    var convertEscapeCharacters = function(text) {
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)]/gi, function() {
+            return this.actorName(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)]/gi, function() {
+            return this.partyMemberName(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     //=============================================================================
@@ -1759,7 +1780,9 @@ function Window_GlossaryComplete() {
             }
         }
         Window_ItemList.prototype.select.apply(this, arguments);
-        this._glossaryWindow.refresh(this.item());
+        if (this.item() && prevItem !== this.item()) {
+            this._glossaryWindow.refresh(this.item());
+        }
         if (index >= 0) {
             $gameParty.setGlossaryListIndex(index);
         }
