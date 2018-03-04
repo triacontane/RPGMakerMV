@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2018/03/04 縦及び横でアニメーションピクチャを表示した後、同じ番号でピクチャの表示をすると正常に表示されない場合がある不具合を修正
 // 1.5.1 2017/08/22 アニメーション再生中に、セル数が少ない別のアニメーションに切り替えたときにエラーが発生する場合がある現象を修正
 // 1.5.0 2017/07/03 ループしないアニメーションの終了後に最初のセルに戻るかどうかを選択できる機能を追加
 // 1.4.0 2016/09/03 アニメーションに合わせて指定したSEを演奏する機能を追加
@@ -218,23 +219,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
-        try {
-            this.pluginCommandPictureAnimation(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandPictureAnimation(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandPictureAnimation = function(command, args) {
@@ -523,7 +508,9 @@
 
     Game_Picture.prototype.stopAnimationFrame = function(forceFlg) {
         this._loopFlg = false;
-        if (forceFlg) this._animationFlg = false;
+        if (forceFlg) {
+            this._animationFlg = false;
+        }
     };
 
     Game_Picture.prototype.hasAnimationFrame = function() {
@@ -608,8 +595,10 @@
             case 'H':
                 var width = sprite.bitmap.width / this.picture().cellNumber();
                 var x     = cellCount * width;
-                sprite.setFrame(x, 0, width, this.bitmap.height);
+                sprite.setFrame(x, 0, width, sprite.bitmap.height);
                 break;
+            default:
+                sprite.setFrame(0, 0, this.bitmap.width, this.bitmap.height);
         }
     };
 
