@@ -1,11 +1,12 @@
 //=============================================================================
 // EventDebugger.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
 // 1.4.1 2017/10/29 アイテムからコモンイベントを実行した後にマップイベントを実行したときのスクリプトエラー情報が間違っていた問題を修正
 // 1.4.0 2017/10/28 スクリプトエラーが発生したときの行番号を出力する機能を追加
 //                  型指定機能に対応
@@ -135,6 +136,16 @@
  * @option F11
  * @option F12
  *
+ * @param Ctrl同時押し
+ * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
+ * @param Alt同時押し
+ * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
  * @param MaxWatchNum
  * @desc 監視する変数の最大数です。あまりに大きな値を指定するとパフォーマンスが低下する可能性があります。
  * @default 3
@@ -185,6 +196,16 @@
  * @option F10
  * @option F11
  * @option F12
+ *
+ * @param SimultaneousCtrl
+ * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
+ * @param SimultaneousAlt
+ * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
  *
  * @param ScriptDebug
  * @desc イベントコマンドの「スクリプト」でエラーが発生した際の動作を設定します。0:エラー(通常通り) 1:ステップ実行 2:無視
@@ -568,6 +589,8 @@ function DebugManager() {
     param.cancelHandler       = getParamString(['CancelHandler', 'キャンセル動作']);
     param.scriptDebug         = getParamNumber(['ScriptDebug', 'スクリプトデバッグ'], 0, 2);
     param.disableDebugCtrlKey = getParamBoolean(['DisableDebugCtrlKey', 'CTRLで無効化']);
+    param.simultaneousCtrl    = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
+    param.simultaneousAlt     = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
 
     const pluginCommandMap = new Map([
         ['B', 'setBreakPoint'],
@@ -601,8 +624,9 @@ function DebugManager() {
     //=============================================================================
     const _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown        = function(event) {
-        if (this.onKeyDownForEventDebugger(event)) {
-            _SceneManager_onKeyDown.apply(this, arguments);
+        _SceneManager_onKeyDown.apply(this, arguments);
+        if (param.simultaneousCtrl === event.ctrlKey && param.simultaneousAlt === event.altKey) {
+            this.onKeyDownForEventDebugger(event);
         }
     };
 
@@ -646,7 +670,7 @@ function DebugManager() {
         if (DebugManager.isValid()) {
             this.stopDebug();
         }
-        _SceneManager_changeScene.apply(this, arguments)
+        _SceneManager_changeScene.apply(this, arguments);
     };
 
     SceneManager.stopDebug = function() {
@@ -1021,7 +1045,7 @@ function DebugManager() {
     DebugManager.isAutoBreak = function() {
         return this._autoBreakFormulas.some(function(formula) {
             return eval(convertEscapeCharacters(formula));
-        })
+        });
     };
 
     //=============================================================================
@@ -1057,7 +1081,7 @@ function DebugManager() {
         this.setPageIndex();
     };
 
-    const _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
+    const _Game_Interpreter_terminate    = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
         this._commonEventId = 0;
@@ -1149,7 +1173,7 @@ function DebugManager() {
                 `- Error Process Line : ${this.getProcessLine()}\n`,
                 `- Error Process Name : ${this.getProcessName()}\n`,
                 `- Error Script Text\n${script}`,
-                `- Error Detail`
+                '- Error Detail'
             ];
             console.log.apply(console, logValue);
             console.error(e.stack);
@@ -1176,7 +1200,7 @@ function DebugManager() {
         if (this._commonEventId) {
             return `Common Event ID:${this._commonEventId}`;
         } else if (this._battlePageIndex) {
-            return `Battle Event Page:${this._battlePageIndex}`
+            return `Battle Event Page:${this._battlePageIndex}`;
         } else if (DataManager.isEventTest()) {
             return 'Event Test';
         } else {
@@ -1199,7 +1223,7 @@ function DebugManager() {
         if (this._commonEventId) {
             return $dataCommonEvents[this._commonEventId].name;
         } else if (this._battlePageIndex) {
-            return `バトルイベント　スパン : ${Game_Interpreter.battleSpanNames[this._battleSpan]}`
+            return `バトルイベント　スパン : ${Game_Interpreter.battleSpanNames[this._battleSpan]}`;
         } else if (DataManager.isEventTest()) {
             return 'イベントテスト';
         } else {
@@ -1218,7 +1242,7 @@ function DebugManager() {
     };
 
     Game_Interpreter.prototype.isWait = function() {
-        return this._waitCount > 0 || this._waitMode
+        return this._waitCount > 0 || this._waitMode;
     };
 
     Game_Interpreter.prototype.getIndex = function() {
@@ -1309,9 +1333,7 @@ function DebugManager() {
                 this.createWatcherWindow();
                 this.toggleDebugWindow();
             }
-        } else {
-            if (this._watcherWindow) this.removeWatcherWindow();
-        }
+        } else if (this._watcherWindow) this.removeWatcherWindow();
     };
 
     Scene_Base.prototype.createInterpreterWindow = function() {
@@ -1422,7 +1444,7 @@ function DebugManager() {
 
         drawText(text, line) {
             this.contents.drawText(text, 0, this.lineHeight() * line, this.contentsWidth(), this.lineHeight(), 1);
-        };
+        }
 
         update() {
             super.update();
@@ -1507,7 +1529,7 @@ function DebugManager() {
                 }
             }
             return -1;
-        };
+        }
 
         commandName(index) {
             let commandValue = '';
