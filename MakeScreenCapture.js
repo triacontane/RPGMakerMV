@@ -1,11 +1,12 @@
 //=============================================================================
 // MakeScreenCapture.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.2 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
 // 1.7.1 2017/11/11 総合開発支援プラグインとの連携による修正
 // 1.7.0 2017/08/13 パラメータの型指定機能に対応
 // 1.6.0 2016/12/25 jpg保存時の拡張子を「jpeg」→「jpg」に変更
@@ -27,7 +28,7 @@
 //                  高度な設定項目の追加
 // 1.0.0 2016/02/24 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -92,6 +93,16 @@
  * @option F10
  * @option F11
  * @option F12
+ *
+ * @param SimultaneousCtrl
+ * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
+ * @param SimultaneousAlt
+ * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
  *
  * @param FileName
  * @desc 画像のファイル名です。
@@ -265,6 +276,16 @@
  * @option F11
  * @option F12
  *
+ * @param Ctrl同時押し
+ * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
+ * @param Alt同時押し
+ * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
  * @param ファイル名
  * @desc 画像のファイル名です。
  * プラグインコマンドから実行した場合は参照されません。
@@ -284,7 +305,7 @@
  * @option webp
  *
  * @param 連番桁数
- * @desc キャプチャファイルの連番桁数です。
+ * @desc キャプチャファイルの連番桁数です。数値はゲーム実行の度に初期化されるのでご注意ください。
  * @default 2
  * @type number
  *
@@ -465,6 +486,8 @@
     var paramSeName             = getParamString(['SeName', '効果音']);
     var paramTimeStamp          = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
     var paramJpegQuality        = getParamNumber(['JpegQuality', 'JPEG品質']);
+    var paramSimultaneousCtrl   = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
+    var paramSimultaneousAlt    = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
 
     //=============================================================================
     // Game_Interpreter
@@ -473,23 +496,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandMakeScreenCapture(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandMakeScreenCapture(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandMakeScreenCapture = function(command, args) {
@@ -689,7 +696,7 @@
     var _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown      = function(event) {
         _SceneManager_onKeyDown.apply(this, arguments);
-        if (Utils.isTestCapture()) {
+        if (paramSimultaneousCtrl === event.ctrlKey && paramSimultaneousAlt === event.altKey && Utils.isTestCapture()) {
             this.onKeyDownForCapture(event);
         }
     };
