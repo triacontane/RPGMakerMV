@@ -1,11 +1,13 @@
 //=============================================================================
 // DevToolsManage.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.5 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
+// 2.4.4 2018/03/03 ブレークポイントから再開したときにキー入力が押しっぱなし扱いになってしまう場合があるMVの仕様を考慮。
 // 2.4.3 2018/02/18 2.4.1の機能に加えて他のエディタから起動したとき全般で戦闘テストができるようにしました。
 // 2.4.2 2018/02/18 ヘルプの記述を追加
 // 2.4.1 2018/02/18 ブラウザ起動時に戦闘テストができる機能を追加しました。オプションのbtestは利用者が付与してください。
@@ -173,6 +175,16 @@
  * @option F10
  * @option F11
  * @option F12
+ *
+ * @param SimultaneousCtrl
+ * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
+ * @param SimultaneousAlt
+ * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
  *
  * @param ShowFPS
  * @desc 初期状態で画面左上にFPSもしくはMSを表示します（FPS/MS/OFF）。
@@ -437,6 +449,16 @@
  * @option F11
  * @option F12
  *
+ * @param Ctrl同時押し
+ * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
+ * @param Alt同時押し
+ * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
  * @param FPS表示
  * @desc 初期状態で画面左上にFPSを表示します。（FPS/MS/OFF）
  * @default OFF
@@ -549,6 +571,11 @@
  * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、起動URLのオプションに
  * 「test」もしくは「best」を付与してください。
  * ただしNW.js由来のいくつかの機能は無効になります。
+ *
+ * 外部エディタから起動する場合、以下の起動パラメータが指定可能です。
+ * この指定はプラグインパラメータより優先されます。
+ * devToolOff : デベロッパツールが起動しなくなります。
+ * onTop : 最前面に画面を表示します。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -671,6 +698,8 @@ function Controller_NwJs() {
     const paramOutputStartupInfo = getParamBoolean(['OutputStartupInfo', '起動時情報出力']);
     const paramStartupOnTop      = getParamBoolean(['StartupOnTop', '最前面で起動']);
     const paramUseReloadData     = getParamBoolean(['UseReloadData', 'リロード機能を使う']);
+    const paramSimultaneousCtrl  = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
+    const paramSimultaneousAlt  = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
 
     //=============================================================================
     // Graphics
@@ -798,7 +827,7 @@ function Controller_NwJs() {
         }
         this._freeze  = false;
         this._nwJsGui = new Controller_NwJs();
-        if (paramStartupOnTop) {
+        if (this.isAlwaysOnTop()) {
             this._nwJsGui.toggleAlwaysOnTop();
         }
     };
@@ -818,6 +847,10 @@ function Controller_NwJs() {
 
     SceneManager.getNwJs = function() {
         return this._nwJsGui;
+    };
+
+    SceneManager.isAlwaysOnTop = function() {
+        return paramStartupOnTop || Utils.isOptionValid('onTop');
     };
 
     SceneManager.toggleFreeze = function() {
@@ -841,7 +874,9 @@ function Controller_NwJs() {
     const _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown        = function(event) {
         _SceneManager_onKeyDown.apply(this, arguments);
-        this.onKeyDownForDevToolManage(event);
+        if (paramSimultaneousCtrl === event.ctrlKey && paramSimultaneousAlt === event.altKey) {
+            this.onKeyDownForDevToolManage(event);
+        }
     };
 
     SceneManager.onKeyDownForDevToolManage = function(event) {
@@ -1051,6 +1086,11 @@ function Controller_NwJs() {
             this.renderScene();
             this.requestUpdate();
         } else {
+            const newTime = this._getTimeInMsWithoutMobileSafari();
+            // for break point
+            if (newTime - this._currentTime > 1000) {
+                Input.clear();
+            }
             _SceneManager_updateMain.apply(this, arguments);
         }
     };
@@ -1435,12 +1475,16 @@ function Controller_NwJs() {
         }
         this.initClickMenu();
         this.addEventListener();
-        switch (paramStartupDevTool) {
+        switch (this.isStartUpDevTool()) {
             case 'ON':
             case 'MINIMIZE':
                 this.showDevTools();
                 break;
         }
+    };
+
+    Controller_NwJs.prototype.isStartUpDevTool = function() {
+        return paramStartupDevTool && !Utils.isOptionValid('devToolOff');
     };
 
     Controller_NwJs.prototype.initClickMenu = function() {
@@ -1460,8 +1504,11 @@ function Controller_NwJs() {
     };
 
     Controller_NwJs.prototype.makeMenuItem = function(commandInfo, menuObject) {
+        const ctrl = paramSimultaneousCtrl ? 'Ctrl+' : '';
+        const alt = paramSimultaneousAlt ? 'Alt+' : '';
+        const key = commandInfo.key && commandInfo.key[0] === 'F' ? commandInfo.key : '';
         const menuItem = new this._nwGui.MenuItem({
-            label: commandInfo.name + (commandInfo.key && commandInfo.key[0] === 'F' ? '(' + commandInfo.key + ')' : ''),
+            label: commandInfo.name + (key ? `(${ctrl}${alt}${key})` : ''),
             type : commandInfo.type,
         });
         if (menuObject === this._menuClick) {
