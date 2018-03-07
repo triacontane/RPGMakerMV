@@ -1,11 +1,12 @@
 //=============================================================================
 // SyncVariable.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2018/03/07 同期をスイッチにより一時停止できる機能を追加
 // 1.2.1 2017/06/10 戦闘中にも同期できる設定を追加
 // 1.2.0 2017/06/10 同期をマップ画面でのみ行うよう修正。ロードおよびニューゲーム時に確実に受信するよう修正
 // 1.1.4 2017/06/02 ゲームデータ作成前にデータ受信した際にエラーになる問題を修正
@@ -31,26 +32,37 @@
  * @param 同期開始変数番号
  * @desc 同期対象になる変数の番号の開始位置です。
  * @default 0
+ * @type variable
  *
  * @param 同期終了変数番号
  * @desc 同期対象になる変数の番号の終了位置です。
  * @default 0
+ * @type variable
  *
  * @param 同期開始スイッチ番号
  * @desc 同期対象になるスイッチの番号の開始位置です。
  * @default 0
+ * @type switch
  *
  * @param 同期終了スイッチ番号
  * @desc 同期対象になるスイッチの番号の終了位置です。
  * @default 0
+ * @type switch
+ *
+ * @param 同期停止スイッチ番号
+ * @desc 指定された番号のスイッチがONのとき、同期を停止します。
+ * @default 0
+ * @type switch
  * 
  * @param 認証ファイル形式
  * @desc 認証ファイルの形式をJSON形式で作成します。ブラウザ実行時にファイルをうまく読み込めない場合、ONにしてください。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 戦闘中同期
  * @desc 戦闘中も変数変化による同期を実施するようになります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help ゲームをプレーしている全てのユーザ間で指定範囲内のスイッチ、変数の値を
  * 同期し、共有できるようになります。
@@ -186,6 +198,7 @@ function SyncManager() {
     var paramSyncSwitchEnd     = getParamNumber(['SyncSwitchEnd', '同期終了スイッチ番号'], 0, 5000);
     var paramAuthFileFormat    = getParamBoolean(['AuthFileFormat', '認証ファイル形式']);
     var paramSyncInBattle      = getParamBoolean(['SyncInBattle', '戦闘中同期']);
+    var paramSyncStopSwitch    = getParamNumber(['SyncStopSwitch', '同期停止スイッチ番号'], 0, 5000);
 
     //=============================================================================
     // Game_Interpreter
@@ -194,23 +207,7 @@ function SyncManager() {
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandSyncVariable(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandSyncVariable(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandSyncVariable = function(command, args) {
@@ -331,7 +328,11 @@ function SyncManager() {
     };
 
     SyncManager.canUse = function() {
-        return this._online && this._authority && $gameSwitches && $gameVariables
+        return this._online && this._authority && $gameSwitches && $gameVariables && this.isValidSwitch();
+    };
+
+    SyncManager.isValidSwitch = function() {
+        return !paramSyncStopSwitch || $gameSwitches.value(paramSyncStopSwitch)
     };
 
     SyncManager.setNeedUpload = function() {
