@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageWindowHidden.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2018/03/10 指定したスイッチがONの間はウィンドウ消去を無効化できる機能を追加
 // 1.3.2 2017/08/02 ponidog_BackLog_utf8.jsとの競合を解消
 // 1.3.1 2017/07/03 古いYEP_MessageCore.jsのネーム表示ウィンドウが再表示できない不具合の修正(by DarkPlasmaさま)
 // 1.3.0 2017/03/16 連動して非表示にできるピクチャを複数指定できる機能を追加
@@ -18,7 +19,7 @@
 // 1.0.1 2015/12/31 コメント追加＋英語対応（仕様に変化なし）
 // 1.0.0 2015/12/30 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -31,10 +32,19 @@
  * @desc Trigger button
  * (light_click or shift or control)
  * @default light_click
+ * @type select
+ * @option light_click
+ * @option shift
+ * @option control
  *
  * @param LinkPictureNumber
  * @desc Picture number of window show/hide
  * @default
+ *
+ * @param DisableSwitchId
+ * @desc 指定した番号のスイッチがONのとき、プラグインの機能が無効になります。
+ * @default 0
+ * @type switch
  *
  * @help Erase message window (and restore) when triggered
  *
@@ -48,10 +58,19 @@
  * @desc ウィンドウを消去するボタンです。
  * (右クリック or shift or control)
  * @default 右クリック
+ * @type select
+ * @option 右クリック
+ * @option shift
+ * @option control
  *
  * @param 連動ピクチャ番号
  * @desc ウィンドウ消去時に連動して不透明度を[0]にするピクチャの番号です。カンマ「,」区切りで複数指定できます。
  * @default
+ *
+ * @param 無効スイッチ番号
+ * @desc 指定した番号のスイッチがONのとき、プラグインの機能が無効になります。
+ * @default 0
+ * @type switch
  *
  * @help メッセージウィンドウを表示中に指定したボタンを押下することで
  * メッセージウィンドウを消去します。もう一度押すと戻ります。
@@ -111,12 +130,20 @@
         return values;
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamOther(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value, 10) || 0).clamp(min, max);
+    };
+
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
     var param                = {};
     param.triggerButton      = getParamString(['TriggerButton', 'ボタン名称']).toLowerCase();
     param.linkPictureNumbers = getParamArrayNumber(['LinkPictureNumber', '連動ピクチャ番号']);
+    param.disableSwitchId    = getParamNumber(['DisableSwitchId', '無効スイッチ番号'], 0, 5000);
 
     //=============================================================================
     // Game_Picture
@@ -208,6 +235,9 @@
     };
 
     Window_Message.prototype.isTriggeredHidden = function() {
+        if (param.disableSwitchId > 0 && $gameSwitches.value(param.disableSwitchId)) {
+            return false;
+        }
         switch (param.triggerButton) {
             case '':
             case '右クリック':
