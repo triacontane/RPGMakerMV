@@ -1,11 +1,12 @@
 //=============================================================================
 // CounterExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 Triacontane
+// (C)2016-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.4 2018/03/10 反撃条件にスクリプトを使用する際、攻撃してきた相手の情報をtargetで正しく取得できていなかった問題を修正
 // 1.4.3 2017/08/09 反撃条件に属性を指定する際に「通常攻撃」を指定した場合も考慮する関数を追加
 // 1.4.2 2017/07/12 複数のバトラーが同時に反撃を行った場合に全員分の反撃が正常に行われない問題を修正
 // 1.4.1 2017/07/11 1.4.0の機能追加以降、スキル反撃を行うとアクター本来の行動がキャンセルされる場合がある問題を修正
@@ -21,7 +22,7 @@
 // 1.1.0 2016/11/20 特定のスキルによる反撃や反撃条件を細かく指定できる機能を追加
 // 1.0.0 2016/11/15 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -479,7 +480,7 @@ var Imported = Imported || {};
             return 0;
         }
         var rateMetaNames = this.getMetaNamesForCounterExtend(['反撃条件', 'CounterCond'], magicFlg, depth);
-        var counterRate   = target.getCounterCustomRate(rateMetaNames, this, target);
+        var counterRate   = target.getCounterCustomRate(rateMetaNames, this, this.subject());
         if (counterRate > 0 || depth > 100) {
             return counterRate;
         } else {
