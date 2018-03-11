@@ -1,11 +1,12 @@
 //=============================================================================
 // SceneGlossary.js
 // ----------------------------------------------------------------------------
-// (c) 2015-2017 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2018/03/11 モンスター辞典を作成するための各種支援機能を追加しました。
 // 2.3.2 2018/03/03 画面起動時のパフォーマンスを改善
 //                  コモンイベントを実行するアイテムの使用時に内容次第でエラーになっていた問題を修正
 // 2.3.1 2018/02/24 用語情報を設定していない場合のエラーメッセージを言語別に表示するよう修正。ヘルプを分かりやすく修正。
@@ -124,8 +125,12 @@
  * @parent Layout
  *
  * @param AutoAddition
- * @text 自動登録
  * @desc 文章の表示の命令中に同一単語が出現した場合に自動登録します。(ON/OFF)
+ * @default false
+ * @type boolean
+ *
+ * @param AutoAdditionEnemy
+ * @desc 敵キャラを撃破したときに敵キャラと同名の単語を自動登録します。(ON/OFF)
  * @default false
  * @type boolean
  *
@@ -198,16 +203,31 @@
  * 2.「名前」に用語の名称を設定
  *
  * 3.「メモ欄」に以下の通り記述(不要な項目は省略可能)
- * <SG説明:説明文>           // 用語の説明文
+ * <SG説明:説明文>           // 用語の説明文(※1)
+ * <SG共通説明:説明文>       // 用語の共通説明文(使い回し用)
  * <SGカテゴリ:カテゴリ名>   // 用語の属するカテゴリの名称
  * <SG手動>                  // 用語を自動登録の対象から除外する
  * <SGピクチャ:ファイル名>   // 用語のピクチャのファイル名
+ * <SG敵キャラ:敵キャラID>   // ピクチャの代わりに敵キャラの画像を表示(※2)
  * <SGピクチャ位置:text>     // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
  *  under:テキストの下
  * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
  * <SGピクチャ揃え:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
+ *
+ * ※1 以下の特殊な制御文字が使用できます。
+ * \COMMON[1]  // ID[1]のアイテムの<SG共通説明:aaa>に置き換えられます。
+ * \mhp[3]     // 対象敵キャラの最大HP(3桁でゼロ埋め)
+ * \mmp[3]     // 対象敵キャラの最大MP(3桁でゼロ埋め)
+ * \atk[3]     // 対象敵キャラの攻撃力(3桁でゼロ埋め)
+ * \def[3]     // 対象敵キャラの防御力(3桁でゼロ埋め)
+ * \mag[3]     // 対象敵キャラの魔法力(3桁でゼロ埋め)
+ * \mdf[3]     // 対象敵キャラの魔法防御(3桁でゼロ埋め)
+ * \agi[3]     // 対象敵キャラの敏捷性(3桁でゼロ埋め)
+ * \luk[3]     // 対象敵キャラの運(3桁でゼロ埋め)
+ *
+ * ※2 敵キャラIDを省略すると用語アイテムと同名の敵キャラ自動で設定されます。
  *
  * さらに、一つの用語で複数のページを使用することができます。
  * ページは方向キーの左右で切り替えます。
@@ -232,9 +252,9 @@
  *
  * ・追加機能1
  * 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に
- * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入してください。
+ * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入します。
  * アイテム図鑑、武器図鑑、防具図鑑も作成できます。
- * この機能を利用する場合はパラメータ「入手履歴を使用」を有効にしてください。
+ * この機能を利用する場合はパラメータ「入手履歴を使用」を有効にします。
  *
  * ・追加機能2
  * 用語リストはデフォルトではアイテムID順に表示されますが、
@@ -242,6 +262,12 @@
  * 同一の表示順が重複した場合はIDの小さい方が先に表示されます。
  * <SG表示順:5> // ID[5]と同じ並び順で表示されます。
  * <SGOrder:5>  // 同上
+ *
+ * ・追加機能3
+ * モンスター辞典の作成を支援します。
+ * 1. パラメータ「敵キャラ自動登録」で戦闘した敵キャラと同名の用語を取得
+ * 2. メモ欄<SG敵キャラ>で対象敵キャラの画像を表示
+ * 3. \mhp[3]等の制御文字で対象敵キャラのパラメータを表示
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -481,6 +507,12 @@
  * @default false
  * @type boolean
  *
+ * @param AutoAdditionEnemy
+ * @text 敵キャラ自動登録
+ * @desc 敵キャラを撃破したときに敵キャラと同名の単語を自動登録します。(ON/OFF)
+ * @default false
+ * @type boolean
+ *
  * @param SwitchAutoAdd
  * @text 自動登録IDスイッチ
  * @desc 用語アイテムの自動登録が行われた際に指定した番号のスイッチがONになります。何らかの通知を行いたい場合に指定します。
@@ -554,16 +586,31 @@
  * 2.「名前」に用語の名称を設定
  *
  * 3.「メモ欄」に以下の通り記述(不要な項目は省略可能)
- * <SG説明:説明文>           // 用語の説明文
+ * <SG説明:説明文>           // 用語の説明文(※1)
+ * <SG共通説明:説明文>       // 用語の共通説明文(使い回し用)
  * <SGカテゴリ:カテゴリ名>   // 用語の属するカテゴリの名称
  * <SG手動>                  // 用語を自動登録の対象から除外する
  * <SGピクチャ:ファイル名>   // 用語のピクチャのファイル名
+ * <SG敵キャラ:敵キャラID>   // ピクチャの代わりに敵キャラの画像を表示(※2)
  * <SGピクチャ位置:text>     // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
  *  under:テキストの下
  * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
  * <SGピクチャ揃え:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
+ *
+ * ※1 以下の特殊な制御文字が使用できます。
+ * \COMMON[1]  // ID[1]のアイテムの<SG共通説明:aaa>に置き換えられます。
+ * \mhp[3]     // 対象敵キャラの最大HP(3桁でゼロ埋め)
+ * \mmp[3]     // 対象敵キャラの最大MP(3桁でゼロ埋め)
+ * \atk[3]     // 対象敵キャラの攻撃力(3桁でゼロ埋め)
+ * \def[3]     // 対象敵キャラの防御力(3桁でゼロ埋め)
+ * \mag[3]     // 対象敵キャラの魔法力(3桁でゼロ埋め)
+ * \mdf[3]     // 対象敵キャラの魔法防御(3桁でゼロ埋め)
+ * \agi[3]     // 対象敵キャラの敏捷性(3桁でゼロ埋め)
+ * \luk[3]     // 対象敵キャラの運(3桁でゼロ埋め)
+ *
+ * ※2 敵キャラIDを省略すると用語アイテムと同名の敵キャラ自動で設定されます。
  *
  * さらに、一つの用語で複数のページを使用することができます。
  * ページは方向キーの左右で切り替えます。
@@ -588,9 +635,9 @@
  *
  * ・追加機能1
  * 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に
- * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入してください。
+ * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入します。
  * アイテム図鑑、武器図鑑、防具図鑑も作成できます。
- * この機能を利用する場合はパラメータ「入手履歴を使用」を有効にしてください。
+ * この機能を利用する場合はパラメータ「入手履歴を使用」を有効にします。
  *
  * ・追加機能2
  * 用語リストはデフォルトではアイテムID順に表示されますが、
@@ -598,6 +645,12 @@
  * 同一の表示順が重複した場合はIDの小さい方が先に表示されます。
  * <SG表示順:5> // ID[5]と同じ並び順で表示されます。
  * <SGOrder:5>  // 同上
+ *
+ * ・追加機能3
+ * モンスター辞典の作成を支援します。
+ * 1. パラメータ「敵キャラ自動登録」で戦闘した敵キャラと同名の用語を取得
+ * 2. メモ欄<SG敵キャラ>で対象敵キャラの画像を表示
+ * 3. \mhp[3]等の制御文字で対象敵キャラのパラメータを表示
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -861,6 +914,9 @@ function Window_GlossaryComplete() {
     };
 
     var getArgString = function(arg, upperFlg) {
+        if (arg !== String(arg)) {
+            return arg;
+        }
         arg = convertEscapeCharactersAndEval(arg, false);
         return upperFlg ? arg.toUpperCase() : arg;
     };
@@ -871,7 +927,7 @@ function Window_GlossaryComplete() {
         }
         if (SceneManager._scene._windowLayer) {
             var winObj = SceneManager._scene._windowLayer.children[0];
-            text = winObj.convertEscapeCharacters(text);
+            text       = winObj.convertEscapeCharacters(text);
         } else {
             text = convertEscapeCharacters(text);
         }
@@ -1071,7 +1127,7 @@ function Window_GlossaryComplete() {
     };
 
     Game_Party.prototype.getAllGlossaryCategory = function() {
-        var list = [];
+        var list          = [];
         var visibleNotYet = this.isUseGlossaryVisibleItemNotYet();
         this.getAllGlossaryList(true, !visibleNotYet, '').forEach(function(item) {
             this.getGlossaryCategoryList(item).forEach(function(category) {
@@ -1094,14 +1150,24 @@ function Window_GlossaryComplete() {
         return orderA - orderB;
     };
 
-    Game_Party.prototype.gainGlossaryFromText = function(text) {
+    Game_Party.prototype.gainGlossaryFromText = function(text, setVariable) {
         this.getAllHiddenGlossaryList().forEach(function(item) {
             if (!this.hasItem(item) && this.isAutoGlossaryWord(item) && text.contains(item.name)) {
-                if (param.SwitchAutoAdd > 0) $gameSwitches.setValue(param.SwitchAutoAdd, true);
-                if (param.VariableAutoAdd > 0) $gameVariables.setValue(param.VariableAutoAdd, item.id);
+                if (setVariable) {
+                    this.setAutoAdditionTrigger(item);
+                }
                 this.gainGlossary(item);
             }
         }.bind(this));
+    };
+
+    Game_Party.prototype.setAutoAdditionTrigger = function(item) {
+        if (param.SwitchAutoAdd > 0) {
+            $gameSwitches.setValue(param.SwitchAutoAdd, true);
+        }
+        if (param.VariableAutoAdd > 0) {
+            $gameVariables.setValue(param.VariableAutoAdd, item.id);
+        }
     };
 
     Game_Party.prototype.isAutoGlossaryWord = function(item) {
@@ -1311,6 +1377,24 @@ function Window_GlossaryComplete() {
 
     Game_Party.prototype.getGlossaryListWidth = function() {
         return this._glossarySetting.GlossaryListWidth || 160;
+    };
+
+    //=============================================================================
+    // Game_Troop
+    //  敵キャラの名前を自動登録します。
+    //=============================================================================
+    var _Game_Troop_setup      = Game_Troop.prototype.setup;
+    Game_Troop.prototype.setup = function(troopId) {
+        _Game_Troop_setup.apply(this, arguments);
+        if (param.AutoAdditionEnemy) {
+            this.addEnemyGlossary();
+        }
+    };
+
+    Game_Troop.prototype.addEnemyGlossary = function() {
+        this.members().forEach(function(enemy) {
+            $gameParty.gainGlossaryFromText(enemy.originalName());
+        });
     };
 
     //=============================================================================
@@ -1736,7 +1820,7 @@ function Window_GlossaryComplete() {
             this.drawIcon(item.iconIndex, x + 2, y + 2);
             this.setGlossaryColor(item);
             var notYetName = $gameParty.getTextItemNotYet();
-            var name = $gameParty.hasGlossary(item) ? item.name : notYetName;
+            var name       = $gameParty.hasGlossary(item) ? item.name : notYetName;
             this.drawTextExIfNeed(name, x + iconBoxWidth, y, width - iconBoxWidth);
             this.changePaintOpacity(1);
             this.resetTextColor();
@@ -1907,6 +1991,7 @@ function Window_GlossaryComplete() {
         this._maxPages  = 1;
         this._itemData  = null;
         this._pageIndex = 0;
+        this._enemy     = null;
         Window_Base.prototype.initialize.call(this, x, y, width, height);
     };
 
@@ -1926,8 +2011,37 @@ function Window_GlossaryComplete() {
         return this.getMetaContents(['ピクチャ', 'Picture'], index);
     };
 
+    Window_Glossary.prototype.getEnemyData = function(index) {
+        var id = this.getMetaContents(['敵キャラ', 'Enemy'], index);
+        var enemy;
+        if (id === true) {
+            var optEnemy = $dataEnemies.filter(function(enemy) {
+                return enemy && enemy.name === this._itemData.name;
+            }, this);
+            enemy        = optEnemy.length > 0 ? optEnemy[0] : null;
+        } else {
+            enemy = $dataEnemies[parseInt(id)] || null;
+        }
+        this._enemy = enemy;
+        return enemy;
+    };
+
     Window_Glossary.prototype.getDescription = function(index) {
-        return this.getMetaContents(['説明', 'Description'], index);
+        var description = this.getMetaContents(['説明', 'Description'], index);
+        if (!description) {
+            return description;
+        }
+        var prevData = this._itemData;
+        description = description.replace(/\x1bCOMMON\[(\d+)]/gi, function() {
+            this._itemData = $dataItems[parseInt(arguments[1])];
+            return this.getCommonDescription();
+        }.bind(this));
+        this._itemData = prevData;
+        return description;
+    };
+
+    Window_Glossary.prototype.getCommonDescription = function() {
+        return this.getMetaContents(['共通説明', 'CommonDescription'], 0);
     };
 
     Window_Glossary.prototype.getMetaContents = function(names, index) {
@@ -1940,6 +2054,7 @@ function Window_GlossaryComplete() {
 
     Window_Glossary.prototype.refresh = function(item) {
         this._itemData = item;
+        this._enemy    = null;
         this._maxPages = item && $gameParty.hasGlossary(item) ? this.calcMaxPages() : 1;
         this.drawItem(0, true);
     };
@@ -1977,14 +2092,28 @@ function Window_GlossaryComplete() {
         if (!this._itemData || !$gameParty.hasGlossary(this._itemData)) {
             return;
         }
-        var pictureName = this.getPictureName(index);
-        if (pictureName) {
-            var bitmap = ImageManager.loadPicture(pictureName, 0);
+        var bitmap = this.getGlossaryBitmap(index);
+        if (bitmap) {
             bitmap.addLoadListener(this.drawItemSub.bind(this, bitmap));
         } else {
             this.drawItemSub(null);
         }
         if (!noSound) SoundManager.playCursor();
+    };
+
+    Window_Glossary.prototype.getGlossaryBitmap = function(index) {
+        var pictureName = this.getPictureName(index);
+        if (pictureName) {
+            return ImageManager.loadPicture(pictureName, 0);
+        } else {
+            var enemy = this.getEnemyData(index);
+            if (enemy) {
+                var methodName = $gameSystem.isSideView() ? 'loadSvEnemy' : 'loadEnemy';
+                return ImageManager[methodName](enemy.battlerName, enemy.battlerHue);
+            } else {
+                return null;
+            }
+        }
     };
 
     Window_Glossary.prototype.updateArrows = function() {
@@ -2036,6 +2165,9 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.drawItemText = function(text, y) {
+        if (this._enemy) {
+            text = this.convertEnemyData(text);
+        }
         if (typeof TranslationManager !== 'undefined') {
             TranslationManager.getTranslatePromise(text).then(function(translatedText) {
                 this.drawTextEx(translatedText, 0, y);
@@ -2043,6 +2175,23 @@ function Window_GlossaryComplete() {
         } else {
             this.drawTextEx(text, 0, y);
         }
+    };
+
+    Window_Glossary._paramNames = [
+        'MHP', 'MMP', 'ATK', 'DEF', 'MAG', 'MDF', 'AGI', 'LUK'
+    ];
+
+    Window_Glossary.prototype.convertEnemyData = function(text) {
+        var e = this._enemy;
+        text = text.replace(/\x1b(MHP|MMP|ATK|DEF|MAG|MDF|AGI|LUK)\[(\d+)]/gi, function() {
+            var index = Window_Glossary._paramNames.indexOf(arguments[1].toUpperCase());
+            var param = e.params[index];
+            return param.padZero(parseInt(arguments[2]));
+        });
+        text = text.replace(/\x1bSCRIPT{(\s+)}/gi, function() {
+            return eval(arguments[1]);
+        });
+        return text;
     };
 
     Window_Glossary.prototype.processNormalCharacter = function(textState) {
