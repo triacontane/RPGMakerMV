@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.3 2018/03/11 YEP_BuffsStatesCore.jsとの競合を解消
 // 1.3.2 2017/06/22 一度に複数のステートが解除された場合に一部アイコンが正しく消去されない問題を修正
 // 1.3.1 2017/05/05 残りターン数のフォントサイズ指定機能を追加
 // 1.3.0 2017/05/05 味方の残りターン数も表示する機能を追加
@@ -129,6 +130,15 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/**
+ * Sprite_StateIconChild
+ * ステートアイコンを回転表示させるためのクラスです。
+ * @constructor
+ */
+function Sprite_StateIconChild() {
+    this.initialize.apply(this, arguments);
+}
+
 (function() {
     'use strict';
     var pluginName = 'StateRingIcon';
@@ -172,7 +182,7 @@
     // Game_BattlerBase
     //  ステートの残りターン数を取得します。
     //=============================================================================
-    Game_BattlerBase.prototype.stateTurns = function() {
+    Game_BattlerBase.prototype.getStateTurns = function() {
         var stateTurns = this.states().map(function(state) {
             if (state.iconIndex <= 0) {
                 return null;
@@ -187,14 +197,14 @@
         });
     };
 
-    Game_BattlerBase.prototype.buffTurns = function() {
+    Game_BattlerBase.prototype.getBuffTurns = function() {
         return this._buffTurns.filter(function(turns, index) {
             return this._buffs[index] !== 0;
         }, this);
     };
 
-    Game_BattlerBase.prototype.allTurns = function() {
-        return this.stateTurns().concat(this.buffTurns());
+    Game_BattlerBase.prototype.getAllTurns = function() {
+        return this.getStateTurns().concat(this.getBuffTurns());
     };
 
     //=============================================================================
@@ -250,7 +260,7 @@
     };
 
     Sprite_StateIcon.prototype.updateTurns = function() {
-        var turns = this._battler.allTurns();
+        var turns = this._battler.getAllTurns();
         this._icons.forEach(function(icon, index) {
             this._iconsSprites[index].setIconTurn(turns[index]);
         }, this);
@@ -304,12 +314,7 @@
 
     //=============================================================================
     // Sprite_StateIconChild
-    //  ステートアイコンを回転させます。
     //=============================================================================
-    function Sprite_StateIconChild() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_StateIconChild.prototype             = Object.create(Sprite_StateIcon.prototype);
     Sprite_StateIconChild.prototype.constructor = Sprite_StateIconChild;
 
@@ -376,7 +381,7 @@
         };
 
         Window_BattleStatus.prototype.drawActorIconsTurn = function(actor, x, y) {
-            var turns = actor.allTurns();
+            var turns = actor.getAllTurns();
             this.contents.fontSize = paramFontSize;
             for (var i = 0; i < this._drawIconCount; i++) {
                 this.drawText(turns[i], x + Window_Base._iconWidth * i, y + 2, Window_Base._iconWidth, 'right');
