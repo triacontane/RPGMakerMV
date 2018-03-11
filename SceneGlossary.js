@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2018/03/11 画像の表示位置と表示優先度のパラメータを分けました。
+//                  モンスターの報酬情報を記入できる制御文字を追加
 // 2.4.0 2018/03/11 モンスター辞典を作成するための各種支援機能を追加しました。
 // 2.3.2 2018/03/03 画面起動時のパフォーマンスを改善
 //                  コモンイベントを実行するアイテムの使用時に内容次第でエラーになっていた問題を修正
@@ -104,6 +106,14 @@
  * @option left
  * @option center
  * @option right
+ * @parent Layout
+ *
+ * @param PicturePriority
+ * @desc 画像の表示プライオリティです。(top:テキストの上 bottom:テキストの下)
+ * @default top
+ * @type select
+ * @option top
+ * @option bottom
  * @parent Layout
  *
  * @param ThroughBackPicture
@@ -211,7 +221,8 @@
  * <SG敵キャラ:敵キャラID>   // ピクチャの代わりに敵キャラの画像を表示(※2)
  * <SGピクチャ位置:text>     // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
- *  under:テキストの下
+ * <SGピクチャ優先度:top>    // ピクチャの表示プライオリティ
+ *  top:テキストの上 bottom:テキストの下
  * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
  * <SGピクチャ揃え:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
@@ -226,6 +237,9 @@
  * \mdf[3]     // 対象敵キャラの魔法防御(3桁でゼロ埋め)
  * \agi[3]     // 対象敵キャラの敏捷性(3桁でゼロ埋め)
  * \luk[3]     // 対象敵キャラの運(3桁でゼロ埋め)
+ * \exp[3]     // 対象敵キャラの獲得経験値(3桁でゼロ埋め)
+ * \money[3]   // 対象敵キャラの獲得ゴールド(3桁でゼロ埋め)
+ * \drop[1]    // 対象敵キャラの[1]番目のドロップアイテム
  *
  * ※2 敵キャラIDを省略すると用語アイテムと同名の敵キャラ自動で設定されます。
  *
@@ -480,6 +494,15 @@
  * @option right
  * @parent Layout
  *
+ * @param PicturePriority
+ * @text 画像の優先度
+ * @desc 画像の表示プライオリティです。(top:テキストの上 bottom:テキストの下)
+ * @default top
+ * @type select
+ * @option top
+ * @option bottom
+ * @parent Layout
+ *
  * @param ThroughBackPicture
  * @text 背景ピクチャ透過
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
@@ -594,7 +617,8 @@
  * <SG敵キャラ:敵キャラID>   // ピクチャの代わりに敵キャラの画像を表示(※2)
  * <SGピクチャ位置:text>     // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
- *  under:テキストの下
+ * <SGピクチャ優先度:top>    // ピクチャの表示プライオリティ
+ *  top:テキストの上 bottom:テキストの下
  * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
  * <SGピクチャ揃え:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
@@ -609,6 +633,9 @@
  * \mdf[3]     // 対象敵キャラの魔法防御(3桁でゼロ埋め)
  * \agi[3]     // 対象敵キャラの敏捷性(3桁でゼロ埋め)
  * \luk[3]     // 対象敵キャラの運(3桁でゼロ埋め)
+ * \exp[3]     // 対象敵キャラの獲得経験値(3桁でゼロ埋め)
+ * \money[3]   // 対象敵キャラの獲得ゴールド(3桁でゼロ埋め)
+ * \drop[1]    // 対象敵キャラの[1]番目のドロップアイテム
  *
  * ※2 敵キャラIDを省略すると用語アイテムと同名の敵キャラ自動で設定されます。
  *
@@ -2029,7 +2056,7 @@ function Window_GlossaryComplete() {
     Window_Glossary.prototype.getDescription = function(index) {
         var description = this.getMetaContents(['説明', 'Description'], index);
         if (!description) {
-            return description;
+            return '';
         }
         var prevData = this._itemData;
         description = description.replace(/\x1bCOMMON\[(\d+)]/gi, function() {
@@ -2037,6 +2064,9 @@ function Window_GlossaryComplete() {
             return this.getCommonDescription();
         }.bind(this));
         this._itemData = prevData;
+        if (this._enemy) {
+            description = this.convertEnemyData(description);
+        }
         return description;
     };
 
@@ -2124,24 +2154,30 @@ function Window_GlossaryComplete() {
     Window_Glossary.prototype.drawItemSub = function(bitmap) {
         var item = this._itemData;
         var text = this.getDescription(this._pageIndex);
-        if (text === null) return;
+        var textHandler;
+        var pictureHandler;
         switch (this.getPicturePosition(item)) {
-            case 'under':
-                this.drawPicture(item, bitmap, text, 0);
-                this.drawItemText(text, 0);
-                break;
             case 'top':
-                this.drawPicture(item, bitmap, text, 0);
-                this.drawItemText(text, this.calcItemPictureHeight(item, bitmap, text));
+                textHandler = this.drawItemText.bind(this, text, this.calcItemPictureHeight(item, bitmap, text));
+                pictureHandler = this.drawPicture.bind(this, item, bitmap, text, 0);
                 break;
             case 'bottom':
-                this.drawItemText(text, 0);
-                this.drawPicture(item, bitmap, text, this.contentsHeight() - this.calcItemPictureHeight(item, bitmap, text));
+                textHandler = this.drawItemText.bind(this, text, 0);
+                var y = this.contentsHeight() - this.calcItemPictureHeight(item, bitmap, text);
+                pictureHandler = this.drawPicture.bind(this, item, bitmap, text, y);
                 break;
+            case 'text':
             default :
-                this.drawItemText(text, 0);
-                this.drawPicture(item, bitmap, text, this.calcItemTextHeight(text));
+                textHandler = this.drawItemText.bind(this, text, 0);
+                pictureHandler = this.drawPicture.bind(this, item, bitmap, text, this.calcItemTextHeight(text));
                 break;
+        }
+        if (this.getPicturePriority(item) === 'bottom') {
+            pictureHandler();
+            textHandler();
+        } else {
+            textHandler();
+            pictureHandler();
         }
     };
 
@@ -2155,6 +2191,11 @@ function Window_GlossaryComplete() {
         return align ? align.toLowerCase() : param.PictureAlign;
     };
 
+    Window_Glossary.prototype.getPicturePriority = function(item) {
+        var align = getMetaValues(item, ['ピクチャ優先度', 'PicturePriority'], this._pageIndex);
+        return align ? align.toLowerCase() : param.PicturePriority;
+    };
+
     Window_Glossary.prototype.calcItemTextHeight = function(text) {
         var textState = {index: 0, x: 0, y: 0, left: 0, text: text};
         return this.calcTextHeight(textState, true) + 4;
@@ -2165,9 +2206,6 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.drawItemText = function(text, y) {
-        if (this._enemy) {
-            text = this.convertEnemyData(text);
-        }
         if (typeof TranslationManager !== 'undefined') {
             TranslationManager.getTranslatePromise(text).then(function(translatedText) {
                 this.drawTextEx(translatedText, 0, y);
@@ -2182,11 +2220,26 @@ function Window_GlossaryComplete() {
     ];
 
     Window_Glossary.prototype.convertEnemyData = function(text) {
-        var e = this._enemy;
+        var enemy = this._enemy;
+        var gameEnemy = new Game_Enemy(enemy.id, 0, 0);
         text = text.replace(/\x1b(MHP|MMP|ATK|DEF|MAG|MDF|AGI|LUK)\[(\d+)]/gi, function() {
             var index = Window_Glossary._paramNames.indexOf(arguments[1].toUpperCase());
-            var param = e.params[index];
+            var param = enemy.params[index];
             return param.padZero(parseInt(arguments[2]));
+        });
+        text = text.replace(/\x1bEXP\[(\d+)]/gi, function() {
+            return enemy.exp.padZero(parseInt(arguments[1]));
+        });
+        text = text.replace(/\x1bMONEY\[(\d+)]/gi, function() {
+            return enemy.gold.padZero(parseInt(arguments[1]));
+        });
+        text = text.replace(/\x1bDROP\[(\d+)]/gi, function() {
+            var drop = enemy.dropItems[parseInt(arguments[1]) - 1];
+            if (drop) {
+                var item = gameEnemy.itemObject(drop.kind, drop.dataId);
+                return item ? `\\i[${item.iconIndex}]${item.name}` : '';
+            }
+            return '';
         });
         text = text.replace(/\x1bSCRIPT{(\s+)}/gi, function() {
             return eval(arguments[1]);
