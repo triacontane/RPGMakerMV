@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2018/03/12 ランダム生成で対象座標が見付からず失敗した場合、エラーではなく警告になるよう仕様変更
 // 1.8.0 2018/02/07 場所移動時にセルフスイッチがクリアされなくなる機能を追加
 // 1.7.0 2017/09/17 プラグインコマンドにテンプレートイベントのセルフ変数「\sv[n]」が利用できる機能を追加
 // 1.6.0 2017/09/15 座標を指定する際、小数を指定できるよう修正（半歩移動プラグイン等との組み合わせを想定）
@@ -123,6 +124,10 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/**
+ * 動的生成イベントを扱うクラスです。
+ * @constructor
+ */
 function Game_PrefabEvent() {
     this.initialize.apply(this, arguments);
 }
@@ -370,7 +375,7 @@ function Game_PrefabEvent() {
             this.spawnEvent(originalEventId, position.x, position.y, isTemplate);
         } else {
             console.log(conditionMap);
-            throw new Error('座標の取得に失敗しました。');
+            console.warn('座標の取得に失敗しました。');
         }
     };
 
