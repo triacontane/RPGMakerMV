@@ -1,11 +1,12 @@
 //=============================================================================
 // AttackChain.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2018/03/12 ダメージの桁数が多い場合に表示が見きれる場合がある問題を修正
 // 1.4.1 2017/09/19 連携表示の単位の表示倍率を調整できる機能を追加
 // 1.4.0 2017/09/18 一定連携以上でスキルが別のスキルに変化する機能を追加
 // 1.3.2 2017/07/16 EST_BATTLE_ROYALE_EVO.jsとの競合を解消
@@ -249,6 +250,22 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+
+/**
+ * 連携数を表示するスプライトです。
+ * @constructor
+ */
+function Sprite_ChainCount() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * 連携ダメージを表示するスプライトです。
+ * @constructor
+ */
+function Sprite_ChainDamage() {
+    this.initialize.apply(this, arguments);
+}
 
 (function() {
     'use strict';
@@ -647,12 +664,7 @@
 
     //=============================================================================
     // Sprite_ChainCount
-    //  連携数を表示します。
     //=============================================================================
-    function Sprite_ChainCount() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_ChainCount.prototype             = Object.create(Sprite.prototype);
     Sprite_ChainCount.prototype.constructor = Sprite_ChainCount;
 
@@ -660,16 +672,7 @@
         Sprite.prototype.initialize.call(this);
         this._chainValue = 0;
         this._duration   = 0;
-        this.createBitmap();
         this.update();
-        this.initPosition();
-    };
-
-    Sprite_ChainCount.prototype.initPosition = function() {
-        this.anchor.x = 0.5;
-        this.anchor.y = 0.5;
-        this.x        = this.getInitX() + this.width / 2;
-        this.y        = this.getInitY() + this.height / 2;
     };
 
     Sprite_ChainCount.prototype.createBitmap = function() {
@@ -681,6 +684,14 @@
         this.bitmap.fontItalic   = true;
         this.bitmap.outlineWidth = this.getOutlineWidth();
         this.bitmap.outlineColor = 'white';
+        this.updatePlacement();
+    };
+
+    Sprite_ChainCount.prototype.updatePlacement = function() {
+        this.anchor.x = 0.5;
+        this.anchor.y = 0.5;
+        this.x        = this.getInitX() + this.width / 2;
+        this.y        = this.getInitY() + this.height / 2;
     };
 
     Sprite_ChainCount.prototype.update = function() {
@@ -735,11 +746,11 @@
     };
 
     Sprite_ChainCount.prototype.getValueLength = function() {
-        return 4;
+        return this._chainValue.toString().length;
     };
 
     Sprite_ChainCount.prototype.getCharNumber = function() {
-        return this.getValueLength() + this.getChainUnit().length;
+        return this.getValueLength() + this.getChainUnit().length * 2;
     };
 
     Sprite_ChainCount.prototype.getInitX = function() {
@@ -755,7 +766,7 @@
     };
 
     Sprite_ChainCount.prototype.getFontSize = function() {
-        return param.fontSize
+        return param.fontSize;
     };
 
     Sprite_ChainCount.prototype.getChainUnit = function() {
@@ -771,7 +782,7 @@
     };
 
     Sprite_ChainCount.prototype.refresh = function() {
-        this.bitmap.clear();
+        this.createBitmap();
         this.refreshText(this._chainValue, this.getChainUnit());
         this.refreshScale();
         this._duration = param.duration || Infinity;
@@ -801,18 +812,9 @@
 
     //=============================================================================
     // Sprite_ChainDamage
-    //  連携ダメージを表示します。
     //=============================================================================
-    function Sprite_ChainDamage() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_ChainDamage.prototype             = Object.create(Sprite_ChainCount.prototype);
     Sprite_ChainDamage.prototype.constructor = Sprite_ChainDamage;
-
-    Sprite_ChainDamage.prototype.getValueLength = function() {
-        return 6;
-    };
 
     Sprite_ChainDamage.prototype.getChainValue = function() {
         return this.getChainParty().getChainDamage();
