@@ -1,14 +1,15 @@
 //=============================================================================
 // SelfSwitchTemporary.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2018/03/16 セルフスイッチが切り替わった際、イベントページが切り替わらない問題を修正
 // 1.0.0 2017/04/26 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -118,6 +119,7 @@
         selfSwitchTypes.forEach(function(selfSwitchType) {
             $gameSelfSwitches.setValue([mapId, eventId, selfSwitchType.toUpperCase()], false);
         });
+        this.refresh();
     };
 })();
 
