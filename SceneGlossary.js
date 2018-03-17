@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2018/03/17 テキストのY座標を数値指定できる機能を追加
 // 2.5.0 2018/03/11 画像の表示位置と表示優先度のパラメータを分けました。
 //                  モンスターの報酬情報を記入できる制御文字を追加
 // 2.4.0 2018/03/11 モンスター辞典を作成するための各種支援機能を追加しました。
@@ -85,7 +86,7 @@
  * @parent Layout
  *
  * @param AutoResizePicture
- * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
+ * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。テキスト位置を指定した場合は無効です。
  * @default true
  * @type boolean
  * @parent Layout
@@ -98,6 +99,11 @@
  * @option bottom
  * @option text
  * @parent Layout
+ *
+ * @param TextPosition
+ * @desc テキストの表示Y座標です。0の場合は画像の表示位置によって自動設定されます。
+ * @default 0
+ * @type number
  *
  * @param PictureAlign
  * @desc 画像の揃えです。(left:左揃え center:中央揃え right:右揃え)
@@ -221,6 +227,7 @@
  * <SG敵キャラ:敵キャラID>   // ピクチャの代わりに敵キャラの画像を表示(※2)
  * <SGピクチャ位置:text>     // ピクチャの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
+ * <SGテキスト位置:100>      // テキストの表示位置
  * <SGピクチャ優先度:top>    // ピクチャの表示プライオリティ
  *  top:テキストの上 bottom:テキストの下
  * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
@@ -469,7 +476,7 @@
  *
  * @param AutoResizePicture
  * @text 画像の自動縮小
- * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。(ON/OFF)
+ * @desc ウィンドウ内にピクチャを表示する際、表示可能なように自動で縮小されます。テキスト位置を指定した場合は無効です。
  * @default true
  * @type boolean
  * @parent Layout
@@ -483,6 +490,12 @@
  * @option bottom
  * @option text
  * @parent Layout
+ *
+ * @param TextPosition
+ * @text テキストの表示位置
+ * @desc テキストの表示Y座標です。0の場合は画像の表示位置によって自動設定されます。
+ * @default 0
+ * @type number
  *
  * @param PictureAlign
  * @text 画像の揃え
@@ -616,6 +629,7 @@
  * <SGピクチャ:ファイル名>   // 用語のピクチャのファイル名
  * <SG敵キャラ:敵キャラID>   // ピクチャの代わりに敵キャラの画像を表示(※2)
  * <SGピクチャ位置:text>     // ピクチャの表示位置
+ * <SGテキスト位置:100>      // テキストの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
  * <SGピクチャ優先度:top>    // ピクチャの表示プライオリティ
  *  top:テキストの上 bottom:テキストの下
@@ -2152,27 +2166,32 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.drawItemSub = function(bitmap) {
-        var item = this._itemData;
         var text = this.getDescription(this._pageIndex);
+        var textPos = this.getTextPosition();
         var textHandler;
         var pictureHandler;
-        switch (this.getPicturePosition(item)) {
+        var y;
+        switch (this.getPicturePosition()) {
             case 'top':
-                textHandler = this.drawItemText.bind(this, text, this.calcItemPictureHeight(item, bitmap, text));
-                pictureHandler = this.drawPicture.bind(this, item, bitmap, text, 0);
+                if (!textPos) {
+                    textPos = this.calcItemPictureHeight(bitmap, text);
+                }
+                textHandler = this.drawItemText.bind(this, text, textPos);
+                pictureHandler = this.drawPicture.bind(this, bitmap, text, 0);
                 break;
             case 'bottom':
-                textHandler = this.drawItemText.bind(this, text, 0);
-                var y = this.contentsHeight() - this.calcItemPictureHeight(item, bitmap, text);
-                pictureHandler = this.drawPicture.bind(this, item, bitmap, text, y);
+                textHandler = this.drawItemText.bind(this, text, textPos);
+                y = this.contentsHeight() - this.calcItemPictureHeight(bitmap, text);
+                pictureHandler = this.drawPicture.bind(this, bitmap, text, y);
                 break;
             case 'text':
             default :
-                textHandler = this.drawItemText.bind(this, text, 0);
-                pictureHandler = this.drawPicture.bind(this, item, bitmap, text, this.calcItemTextHeight(text));
+                textHandler = this.drawItemText.bind(this, text, textPos);
+                y = this.calcItemTextHeight(text) + textPos;
+                pictureHandler = this.drawPicture.bind(this, bitmap, text, y);
                 break;
         }
-        if (this.getPicturePriority(item) === 'bottom') {
+        if (this.getPicturePriority() === 'bottom') {
             pictureHandler();
             textHandler();
         } else {
@@ -2181,18 +2200,23 @@ function Window_GlossaryComplete() {
         }
     };
 
-    Window_Glossary.prototype.getPicturePosition = function(item) {
-        var position = getMetaValues(item, ['ピクチャ位置', 'PicturePosition'], this._pageIndex);
+    Window_Glossary.prototype.getPicturePosition = function() {
+        var position = getMetaValues(this._itemData, ['ピクチャ位置', 'PicturePosition'], this._pageIndex);
         return position ? position.toLowerCase() : param.PicturePosition;
     };
 
-    Window_Glossary.prototype.getPictureAlign = function(item) {
-        var align = getMetaValues(item, ['ピクチャ揃え', 'PictureAlign'], this._pageIndex);
+    Window_Glossary.prototype.getTextPosition = function() {
+        var position = getMetaValues(this._itemData, ['テキスト位置', 'TextPosition'], this._pageIndex);
+        return position ? parseInt(position) : param.TextPosition || 0;
+    };
+
+    Window_Glossary.prototype.getPictureAlign = function() {
+        var align = getMetaValues(this._itemData, ['ピクチャ揃え', 'PictureAlign'], this._pageIndex);
         return align ? align.toLowerCase() : param.PictureAlign;
     };
 
-    Window_Glossary.prototype.getPicturePriority = function(item) {
-        var align = getMetaValues(item, ['ピクチャ優先度', 'PicturePriority'], this._pageIndex);
+    Window_Glossary.prototype.getPicturePriority = function() {
+        var align = getMetaValues(this._itemData, ['ピクチャ優先度', 'PicturePriority'], this._pageIndex);
         return align ? align.toLowerCase() : param.PicturePriority;
     };
 
@@ -2201,8 +2225,8 @@ function Window_GlossaryComplete() {
         return this.calcTextHeight(textState, true) + 4;
     };
 
-    Window_Glossary.prototype.calcItemPictureHeight = function(item, bitmap, text) {
-        return bitmap ? bitmap.height * this.getPictureScale(item, bitmap, text) + 4 : 0;
+    Window_Glossary.prototype.calcItemPictureHeight = function(bitmap, text) {
+        return bitmap ? bitmap.height * this.getPictureScale(this._itemData, bitmap, text) + 4 : 0;
     };
 
     Window_Glossary.prototype.drawItemText = function(text, y) {
@@ -2257,8 +2281,9 @@ function Window_GlossaryComplete() {
         Window_Base.prototype.processNormalCharacter.apply(this, arguments);
     };
 
-    Window_Glossary.prototype.drawPicture = function(item, bitmap, text, y) {
+    Window_Glossary.prototype.drawPicture = function(bitmap, text, y) {
         if (!bitmap) return;
+        var item = this._itemData;
         var scale = this.getPictureScale(item, bitmap, text);
         var dw    = bitmap.width * scale;
         var dy    = bitmap.height * scale;
@@ -2282,7 +2307,7 @@ function Window_GlossaryComplete() {
         var metaValue = getMetaValues(item, ['ピクチャ拡大率', 'PictureScale'], this._pageIndex);
         if (metaValue) {
             scale = getArgNumber(metaValue);
-        } else if (param.AutoResizePicture) {
+        } else if (param.AutoResizePicture && this.getTextPosition() === 0) {
             var mw = this.contentsWidth();
             var mh = this.contentsHeight() - this.calcItemTextHeight(text);
             scale  = Math.min(mw / bitmap.width, mh / bitmap.height, 1);
