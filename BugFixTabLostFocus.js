@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/03/17 実装方法をシンプルに変更
 // 1.0.0 2017/07/19 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -19,11 +20,14 @@
  *
  * @help 特定条件(※1)でタブキーを押下したときに発生するロストフォーカスによって
  * キー入力がクリアされてしまう現象を防ぎます。
+ * この現象はGame.exeでのみ発生します。
  *
  * ※1 起動後、初めてタブキーを押下した場合や、マウス操作後に押下した場合など
  *
  * この現象によってタブの初回キー入力が無効になるほか、
  * 他のキーを押し続けもすべて解除されてしまいます。
+ * また、一度でもTabキーを押下した後で、別のキーを押し続けたまま
+ * ロストフォーカスすると対象キーをずっと押し続けたままになってしまいます。
  *
  * This plugin is released under the MIT License.
  */
@@ -33,11 +37,14 @@
  *
  * @help 特定条件(※1)でタブキーを押下したときに発生するロストフォーカスによって
  * キー入力がクリアされてしまう現象を防ぎます。
+ * この現象はGame.exeでのみ発生します。
  *
  * ※1 起動後、初めてタブキーを押下した場合や、マウス操作後に押下した場合など
  *
  * この現象によってタブの初回キー入力が無効になるほか、
  * 他のキーを押し続けもすべて解除されてしまいます。
+ * また、一度でもTabキーを押下した後で、別のキーを押し続けたまま
+ * ロストフォーカスすると対象キーをずっと押し続けたままになってしまいます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -50,27 +57,9 @@
 (function() {
     'use strict';
 
-    var _Input_update = Input.update;
-    Input.update = function() {
-        _Input_update.apply(this, arguments);
-        this._preventClearOnLostFocus = false;
-    };
-
-    var _Input__onKeyDown = Input._onKeyDown;
-    Input._onKeyDown = function(event) {
-        _Input__onKeyDown.apply(this, arguments);
-        if (event.keyCode === 9) {
-            this._preventClearOnLostFocus = true;
-        }
-    };
-
-    var _Input__onLostFocus = Input._onLostFocus;
-    Input._onLostFocus = function() {
-        if (this._preventClearOnLostFocus) {
-            this._preventClearOnLostFocus = false;
-            return;
-        }
-        _Input__onLostFocus.apply(this, arguments);
+    var _Input__shouldPreventDefault = Input._shouldPreventDefault;
+    Input._shouldPreventDefault = function(keyCode) {
+        return _Input__shouldPreventDefault.apply(this, arguments) || keyCode === 9; // Tab
     };
 })();
 
