@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2018/03/17 最前面に表示しているとき、画面がフォーカスを失うと画面自動で右寄せになる機能を追加
+//                  最新のNW.jsで使用できなくなる一部機能を削除
 // 2.4.5 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
 // 2.4.4 2018/03/03 ブレークポイントから再開したときにキー入力が押しっぱなし扱いになってしまう場合があるMVの仕様を考慮。
 // 2.4.3 2018/02/18 2.4.1の機能に加えて他のエディタから起動したとき全般で戦闘テストができるようにしました。
@@ -62,34 +64,7 @@
  * @param StartupDevTool
  * @desc It will start the developer tools at the start of the game.
  * @default true
- * @type select
- * @option ON
- * @option OFF
- * @option MINIMIZE
- *
- * @param DevToolsPosition
- * @desc Developer tool's position(X, Y, Width, Height) Separated comma(ex:0,0,800,600)
- * @default
- * @type struct<devPosition>
- * @default
- *
- * @param FuncKeyMinimize
- * @desc デベロッパツールの最小化/復帰の切り替えを行うキーです(F1～F12)。
- * このキーをCtrlと一緒に押すとデベロッパツールとゲーム画面を閉じます。
- * @default F8
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
+ * @type boolean
  *
  * @param FuncKeyReload
  * @desc 画面のリロードを行うキーです(F1～F12)。デフォルトF5キーと同様の役割を持ちます。
@@ -196,7 +171,7 @@
  *
  * @param CutTitle
  * @desc タイトル画面をとばして最新のセーブファイルをロードします。
- * セーブファイルがなければニューゲームになります。（ON/OFF）
+ * 起動時にCTRLを押し続けるとカットが無効になります。
  * @default false
  * @type boolean
  *
@@ -256,6 +231,11 @@
  * @default true
  * @type boolean
  *
+ * @param ShiftRightOnBlur
+ * @desc ゲーム画面が最前面に表示されているときにフォーカスを失うと、指定した座標分画面を右寄せします。
+ * @default 640
+ * @type number
+ *
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
  * また、UserAgentやコアスクリプトのバージョン等役立つ情報をログに出力します。
@@ -305,40 +285,9 @@
  * @author トリアコンタン
  *
  * @param 開始時に起動
- * @desc ゲーム開始時に同時にデベロッパツールを起動します。(MINIMIZE:最小化で起動)
- * @default ON
- * @type select
- * @option 起動する
- * @value ON
- * @option 起動しない
- * @value OFF
- * @option 最小化で起動
- * @value MINIMIZE
- *
- * @param デベロッパツール表示位置
- * @desc デベロッパツールの表示座標です。X、Y、横幅、高さを指定します。指定しない場合自動調整されます。
- * @default
- * @type struct<devPosition>
- * @default
- *
- * @param 最小化切替キー
- * @desc デベロッパツールの最小化/復帰の切り替えを行うキーです(F1～F12)。
- * このキーをCtrlと一緒に押すとデベロッパツールとゲーム画面を閉じます。
- * @default F8
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
+ * @desc ゲーム開始時に同時にデベロッパツールを起動します。
+ * @default true
+ * @type boolean
  *
  * @param リロードキー
  * @desc 画面のリロードを行うキーです(F1～F12)。デフォルトF5キーと同様の役割を持ちます。
@@ -469,7 +418,7 @@
  *
  * @param タイトルカット
  * @desc タイトル画面をとばして最新のセーブファイルをロードします。
- * セーブファイルがなければニューゲームになります。（ON/OFF）
+ * 起動時にCTRLを押し続けるとカットが無効になります。
  * @default false
  * @type boolean
  *
@@ -530,6 +479,11 @@
  * @default true
  * @type boolean
  *
+ * @param 右寄せ座標
+ * @desc ゲーム画面が最前面に表示されているときにフォーカスを失うと、指定した座標分画面を右寄せします。
+ * @default 640
+ * @type number
+ *
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
  * また、UserAgentやコアスクリプトのバージョン等役立つ情報をログに出力します。
@@ -581,34 +535,6 @@
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
- */
-/*~struct~devPosition:
- * @param x
- * @desc デベロッパツールのX座標です。
- * @type number
- * @param y
- * @desc デベロッパツールのY座標です。
- * @type number
- * @param width
- * @desc デベロッパツールの横幅です。
- * @type number
- * @param height
- * @desc デベロッパツールの高さです。
- * @type number
- */
-/*~struct~devPosition:ja
- * @param x
- * @desc デベロッパツールのX座標です。
- * @type number
- * @param y
- * @desc デベロッパツールのY座標です。
- * @type number
- * @param width
- * @desc デベロッパツールの横幅です。
- * @type number
- * @param height
- * @desc デベロッパツールの高さです。
- * @type number
  */
 
 var p = null;
@@ -665,22 +591,7 @@ function Controller_NwJs() {
         return null;
     };
 
-    const getParamJson = function(paramNames, defaultValue) {
-        let value = getParamOther(paramNames);
-        try {
-            value = JSON.parse(value);
-            if (value === null) {
-                value = defaultValue;
-            }
-        } catch (e) {
-            alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nName:[${paramNames}]\nValue:${value}`);
-        }
-        return value;
-    };
-
-    const paramStartupDevTool    = getParamString(['StartupDevTool', '開始時に起動'], true);
-    const paramDevToolsPosition  = getParamJson(['DevToolsPosition', 'デベロッパツール表示位置']);
-    const paramFuncKeyMinimize   = getParamString(['FuncKeyMinimize', '最小化切替キー']);
+    const paramStartupDevTool    = getParamBoolean(['StartupDevTool', '開始時に起動']);
     const paramFuncKeyReload     = getParamString(['FuncKeyReload', 'リロードキー']);
     const paramFuncKeyOnTop      = getParamString(['FuncKeyOnTop', '最前面に表示キー']);
     const paramFuncKeyRapidGame  = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
@@ -699,7 +610,8 @@ function Controller_NwJs() {
     const paramStartupOnTop      = getParamBoolean(['StartupOnTop', '最前面で起動']);
     const paramUseReloadData     = getParamBoolean(['UseReloadData', 'リロード機能を使う']);
     const paramSimultaneousCtrl  = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
-    const paramSimultaneousAlt  = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
+    const paramSimultaneousAlt   = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
+    const paramShiftRightOnBlur  = getParamNumber(['ShiftRightOnBlur', '右寄せ座標'], -1000, 1000);
 
     //=============================================================================
     // Graphics
@@ -808,6 +720,11 @@ function Controller_NwJs() {
         F12: 123
     };
 
+    var _Input__shouldPreventDefault = Input._shouldPreventDefault;
+    Input._shouldPreventDefault = function(keyCode) {
+        return _Input__shouldPreventDefault.apply(this, arguments) || keyCode === 9; // Tab
+    };
+
     //=============================================================================
     // SceneManager
     //  状況に応じてデベロッパツールを自動制御します。
@@ -834,7 +751,6 @@ function Controller_NwJs() {
 
     SceneManager.initDevCommand = function() {
         this.devCommands = [
-            {code: 101, use: true, name: 'DEVツール最小化', key: paramFuncKeyMinimize, type: 'checkbox'},
             {code: 102, use: true, name: '最前面に表示', key: paramFuncKeyOnTop, type: 'checkbox'},
             {code: 103, use: true, name: 'リロード', key: paramFuncKeyReload, type: 'normal'},
             {code: 104, use: true, name: '高速モード切替', key: paramFuncKeyRapidGame, type: 'checkbox'},
@@ -856,6 +772,7 @@ function Controller_NwJs() {
     SceneManager.toggleFreeze = function() {
         Input.clear();
         this._freeze = !this._freeze;
+        this.updateDocumentTitle();
         return this._freeze;
     };
 
@@ -894,15 +811,6 @@ function Controller_NwJs() {
     SceneManager.executeDevCommand = function(code, event) {
         const command = this['executeDevCommand' + code];
         return command ? command.call(SceneManager, event) : null;
-    };
-
-    SceneManager.executeDevCommand101 = function(event) {
-        if (event && event.ctrlKey) {
-            this._nwJsGui.closeDevTools();
-            return false;
-        } else {
-            return this._nwJsGui.toggleDevTools();
-        }
     };
 
     SceneManager.executeDevCommand102 = function() {
@@ -954,7 +862,9 @@ function Controller_NwJs() {
         if (!this.originalTitle) {
             this.originalTitle = document.title;
         }
-        document.title = this.originalTitle + this.addDocumentTitleRapidOrSlow() + this.addDocumentTitleAlwaysOnTop();
+        document.title = this.originalTitle + this.addDocumentTitleRapidOrSlow() +
+            this.addDocumentTitleAlwaysOnTop() +
+            this.addDocumentTitleFreeze();
     };
 
     SceneManager.addDocumentTitleRapidOrSlow = function() {
@@ -969,6 +879,10 @@ function Controller_NwJs() {
 
     SceneManager.addDocumentTitleAlwaysOnTop = function() {
         return this._nwJsGui.isOnTop() ? ' [!!!Always On Top!!!]' : '';
+    };
+
+    SceneManager.addDocumentTitleFreeze = function() {
+        return this._freeze ? ' [!!!Freeze!!!]' : '';
     };
 
     SceneManager.isCurrentScene = function(sceneClass) {
@@ -1098,10 +1012,12 @@ function Controller_NwJs() {
     const _SceneManager_updateScene = SceneManager.updateScene;
     SceneManager.updateScene        = function() {
         this.updateScript();
-        if (this.isUsingReload() && DataManager.isDatabaseLoaded()) {
+        if (this.isUsingReload()) {
             this.updateDataReload();
         }
-        if (this._freeze || this.isReloading()) return;
+        if (this._freeze || this.isReloading()) {
+            return;
+        }
         _SceneManager_updateScene.apply(this, arguments);
     };
 
@@ -1116,22 +1032,26 @@ function Controller_NwJs() {
     };
 
     SceneManager.updateDataReload = function() {
-        if (this.isOnFocusGameWindow()) {
-            this.reloadSystemData();
-            this._dataSystemLoading = true;
-            return;
+        if (this.isOnFocusGameWindow() && !this._reloadGenerator) {
+            this._reloadGenerator = this.reloadGenerator();
         }
-        if (this._dataSystemLoading) {
-            this._dataSystemLoading = false;
-            if (this._preVersionId !== $dataSystem.versionId) {
-                this.reloadAllData();
-                this._dataBaseLoading = true;
-                return;
+        if (this._reloadGenerator && DataManager.isDatabaseLoaded()) {
+            if (!this._reloadGenerator.next().value) {
+                this._reloadGenerator = null;
             }
         }
-        if (this._dataBaseLoading) {
-            this._dataBaseLoading = false;
+    };
+
+    SceneManager.reloadGenerator = function*() {
+        this._preVersionId = DataManager.reloadSystemData();
+        yield true;
+        if (this._preVersionId !== $dataSystem.versionId) {
+            this.reloadMapData();
+            DataManager.loadDatabase();
+            console.log('Database Reload');
+            yield true;
         }
+        return false;
     };
 
     SceneManager.isOnFocusGameWindow = function() {
@@ -1142,30 +1062,17 @@ function Controller_NwJs() {
         return false;
     };
 
-    SceneManager.reloadSystemData = function() {
-        for (let i = 0; i < DataManager._databaseFiles.length; i++) {
-            const name = DataManager._databaseFiles[i].name;
-            if (name === '$dataSystem') {
-                this._preVersionId = $dataSystem.versionId;
-                DataManager.loadDataFile(name, DataManager._databaseFiles[i].src);
-                return;
-            }
-        }
-    };
-
-    SceneManager.reloadAllData = function() {
+    SceneManager.reloadMapData = function() {
         if (this._scene instanceof Scene_Map && $gamePlayer.canMove()) {
-            console.log('Map Reload');
             $gamePlayer.reserveTransfer(
                 $gameMap.mapId(), $gamePlayer.x, $gamePlayer.y, $gamePlayer.direction(), 2);
-            $gamePlayer._needsMapReload = true;
+            $gamePlayer.requestMapReload();
+            console.log('Map Reload');
         }
-        console.log('Data Reload');
-        DataManager.loadDatabase();
     };
 
     SceneManager.isReloading = function() {
-        return this._dataSystemLoading || this._dataBaseLoading;
+        return !!this._reloadGenerator;
     };
 
     //=============================================================================
@@ -1260,6 +1167,18 @@ function Controller_NwJs() {
         }
     };
 
+    DataManager.reloadSystemData = function() {
+        for (let i = 0; i < this._databaseFiles.length; i++) {
+            const name = this._databaseFiles[i].name;
+            if (name === '$dataSystem') {
+                var preVersionId = $dataSystem.versionId;
+                this.loadDataFile(name, this._databaseFiles[i].src);
+                return preVersionId;
+            }
+        }
+        return null;
+    };
+
     //=============================================================================
     // StorageManager
     //  jsonセーブファイルの読み込みと書き込みを行います。
@@ -1323,7 +1242,7 @@ function Controller_NwJs() {
     };
 
     Scene_Boot.prototype.cutSceneTitle = function() {
-        if (paramCutTitle && !DataManager.isBattleTest() && !DataManager.isEventTest()) {
+        if (paramCutTitle && !DataManager.isBattleTest() && !DataManager.isEventTest() && !Input.isPressed('control')) {
             if (!this.goToLatestContinue()) {
                 this.goToNewGame();
             }
@@ -1458,8 +1377,6 @@ function Controller_NwJs() {
     Controller_NwJs.prototype.constructor = Controller_NwJs;
     Controller_NwJs.prototype.initialize  = function() {
         this._nwGui           = require('nw.gui');
-        this._devTool         = null;
-        this._devToolMinimize = false;
         this._onFocus         = false;
         this._menuBar         = this.getWindow().menu;
         this._menuClick       = null;
@@ -1469,18 +1386,19 @@ function Controller_NwJs() {
     };
 
     Controller_NwJs.prototype.initSetting = function() {
+        this.addEventListener();
         if (paramMenuBarVisible) {
             this.makeMenu(this._menuBar);
             this.setMenuBar(this._menuBar);
         }
         this.initClickMenu();
-        this.addEventListener();
-        switch (this.isStartUpDevTool()) {
-            case 'ON':
-            case 'MINIMIZE':
-                this.showDevTools();
-                break;
+        if (this.isStartUpDevTool()) {
+            this.showDevTools();
         }
+        setTimeout(function() {
+            this.addOnFocusListener();
+            SceneManager.updateDocumentTitle();
+        }.bind(this), 1000);
     };
 
     Controller_NwJs.prototype.isStartUpDevTool = function() {
@@ -1504,9 +1422,9 @@ function Controller_NwJs() {
     };
 
     Controller_NwJs.prototype.makeMenuItem = function(commandInfo, menuObject) {
-        const ctrl = paramSimultaneousCtrl ? 'Ctrl+' : '';
-        const alt = paramSimultaneousAlt ? 'Alt+' : '';
-        const key = commandInfo.key && commandInfo.key[0] === 'F' ? commandInfo.key : '';
+        const ctrl     = paramSimultaneousCtrl ? 'Ctrl+' : '';
+        const alt      = paramSimultaneousAlt ? 'Alt+' : '';
+        const key      = commandInfo.key && commandInfo.key[0] === 'F' ? commandInfo.key : '';
         const menuItem = new this._nwGui.MenuItem({
             label: commandInfo.name + (key ? `(${ctrl}${alt}${key})` : ''),
             type : commandInfo.type,
@@ -1542,16 +1460,43 @@ function Controller_NwJs() {
     };
 
     Controller_NwJs.prototype.addEventListener = function() {
-        const currentWin = this.getWindow();
-        currentWin.removeAllListeners();
-        currentWin.on('focus', function() {
-            this._onFocus = true;
-        }.bind(this));
         document.addEventListener('mousedown', function(event) {
             if (event.button === paramClickMenu) {
                 this._menuClick.popup(event.pageX, event.pageY);
             }
         }.bind(this));
+    };
+
+    Controller_NwJs.prototype.addOnFocusListener = function() {
+        const currentWin = this.getWindow();
+        currentWin.removeAllListeners();
+        currentWin.on('focus', this.onFocus.bind(this));
+        currentWin.on('blur', this.onBlur.bind(this));
+    };
+
+    Controller_NwJs.prototype.onFocus = function() {
+        if (this._disableScreenShift) {
+            return;
+        }
+        this._onFocus = true;
+        setTimeout(function() {
+            if (this._moveOnBlur) {
+                this.getWindow().moveBy(-paramShiftRightOnBlur, 0);
+                this._moveOnBlur = false;
+            }
+        }.bind(this), 100);
+    };
+
+    Controller_NwJs.prototype.onBlur = function() {
+        if (this._disableScreenShift) {
+            return;
+        }
+        setTimeout(function() {
+            if (!this._moveOnBlur && this._onTop) {
+                this.getWindow().moveBy(paramShiftRightOnBlur, 0);
+                this._moveOnBlur = true;
+            }
+        }.bind(this), 100);
     };
 
     Controller_NwJs.prototype.getWindow = function() {
@@ -1582,82 +1527,19 @@ function Controller_NwJs() {
     };
 
     Controller_NwJs.prototype.showDevTools = function() {
-        if (!this.isDevToolsOpen() || !this._devTool) {
-            const devTool = this.getWindow().showDevTools();
-            if (devTool) {
-                this.setDevToolPosition(devTool);
-            } else {
-                setTimeout(function() {
-                    this.getWindow().focus();
-                }.bind(this), 1000);
-            }
-        } else {
-            this._devTool.restore();
-        }
-        this.focus();
-    };
-
-    Controller_NwJs.prototype.isDevToolsOpen = function() {
-        var gameWindow = this.getWindow();
-        return gameWindow.isDevToolsOpen && gameWindow.isDevToolsOpen();
-    };
-
-    Controller_NwJs.prototype.setDevToolPosition = function(devTool) {
-        if (paramDevToolsPosition && paramDevToolsPosition.width > 0 && paramDevToolsPosition.height > 0) {
-            devTool.moveTo(paramDevToolsPosition.x, paramDevToolsPosition.y);
-            devTool.resizeTo(paramDevToolsPosition.width, paramDevToolsPosition.height);
-        } else {
-            devTool.moveTo(0, 0);
-            devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-        }
-        if (!this._devTool) {
-            this.addEventListenerDevTools(devTool);
-            this._devTool = devTool;
-        }
-    };
-
-    Controller_NwJs.prototype.addEventListenerDevTools = function(devTool) {
-        devTool.removeAllListeners();
-        devTool.on('minimize', function() {
-            this._devToolMinimize = true;
+        this._disableScreenShift = true;
+        this.getWindow().showDevTools();
+        setTimeout(function() {
             this.focus();
-        }.bind(this));
-        devTool.on('restore', function() {
-            this._devToolMinimize = false;
-            this.focus();
-        }.bind(this));
-        devTool.on('loaded', function() {
-            if (paramStartupDevTool === 'MINIMIZE') {
-                this._devTool.minimize();
-            }
-            SceneManager.updateDocumentTitle();
-        }.bind(this));
-        devTool.on('closed', function() {
-            this.getWindow().close();
-        }.bind(this));
-    };
-
-    Controller_NwJs.prototype.toggleDevTools = function() {
-        if (this._devTool) {
-            if (this._devToolMinimize) {
-                this._devTool.restore();
-            } else {
-                this._devTool.minimize();
-            }
-            this.focus();
-            return !this._devToolMinimize;
-        } else {
-            this.showDevTools(false);
-            return false;
-        }
-    };
-
-    Controller_NwJs.prototype.closeDevTools = function() {
-        if (this.getWindow().isDevToolsOpen()) this.getWindow().closeDevTools();
+        }.bind(this), 1000);
     };
 
     Controller_NwJs.prototype.focus = function() {
+        this._disableScreenShift = true;
         this.getWindow().focus();
+        setTimeout(function() {
+            this._disableScreenShift = false;
+        }.bind(this), 500);
     };
 
     Controller_NwJs.prototype.readClipboard = function(mode) {
