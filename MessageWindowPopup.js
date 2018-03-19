@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.8 2018/03/19 プラグインを未適用の状態でセーブしたデータをロードするとエラーになる現象を修正
 // 2.9.7 2018/01/30 BetweenCharacters.jsとの競合を解消
 // 2.9.6 2018/01/15 MPP_MessageEX.jsとの競合を解消、パラメータの型指定誤りを修正、2.9.1の修正の取り込みが一部間違っていた問題を修正
 // 2.9.5 2018/01/12 KMS_DebugUtil.jsとの競合を解消
@@ -1084,7 +1085,7 @@
     var _Window_Message_loadWindowskin      = Window_Message.prototype.loadWindowskin;
     Window_Message.prototype.loadWindowskin = function() {
         var popupWindowSkin = $gameSystem.getPopupWindowSkin();
-        if (this._windowSkinName !== popupWindowSkin) {
+        if (this._windowSkinName !== popupWindowSkin || !popupWindowSkin) {
             this._windowSkinName = popupWindowSkin;
             _Window_Message_loadWindowskin.apply(this, arguments);
         }
