@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.11.7 2016/02/01 プラグインが未適用の状態でセーブされたデータをロードした際、一部の処理に差異が出る問題を修正
+// 1.11.8 2018/03/21 プレイヤーが向きが固定されているとき、プレイヤー接触のイベントをプレイヤーの進行方向を基準に判定するよう修正
+// 1.11.7 2018/02/01 プラグインが未適用の状態でセーブされたデータをロードした際、一部の処理に差異が出る問題を修正
 // 1.11.6 2018/01/28 プライオリティが通常キャラと同じイベントに対して拡張トリガーが適用されない問題を修正
 // 1.11.5 2018/01/24 KhasAdvancedLightingとの競合を解消
 // 1.11.4 2017/12/31 PD_8DirDash.jsとの併用時、タッチ移動で斜め移動できるよう修正
@@ -1052,8 +1053,10 @@
     Game_CharacterBase.prototype.checkEventTriggerTouchFront = function(d) {
         var halfPositionCount  = localHalfPositionCount;
         localHalfPositionCount = 0;
+        this._frontDirection = d;
         _Game_CharacterBase_checkEventTriggerTouchFront.apply(this, arguments);
         localHalfPositionCount = halfPositionCount;
+        this._frontDirection = 0;
     };
 
     Game_CharacterBase.prototype.getDistanceForHalfMove = function(character) {
@@ -1298,7 +1301,7 @@
     var _Game_Player_startMapEvent2     = Game_Player.prototype.startMapEvent;
     Game_Player.prototype.startMapEvent = function(x, y, triggers, normal) {
         if (normal && this.isHalfMove()) {
-            var d = this.direction();
+            var d = this._frontDirection || this.direction();
             if (!this.canPass(this.x, this.y, d)) {
                 _Game_Player_startMapEvent2.apply(this, arguments);
                 arguments[0] = $gameMap.roundHalfXWithDirection(x, 10 - d);
@@ -1314,7 +1317,7 @@
     Game_Player.prototype.triggerTouchAction = function() {
         var result = _Game_Player_triggerTouchAction.apply(this, arguments);
         if (!result && $gameTemp.isDestinationValid()) {
-            var direction    = this.direction();
+            var direction    = this._frontDirection || this.direction();
             var x1           = this.x;
             var y1           = this.y;
             var x2           = $gameMap.roundHalfXWithDirection(x1, direction);
@@ -1486,7 +1489,7 @@
 
     var _Game_Event_checkEventTriggerTouch2     = Game_Event.prototype.checkEventTriggerTouch;
     Game_Event.prototype.checkEventTriggerTouch = function(x, y) {
-        var d = this.direction();
+        var d = this._frontDirection || this.direction();
         _Game_Event_checkEventTriggerTouch2.apply(this, arguments);
         arguments[0] = $gameMap.roundHalfXWithDirection(x, 10 - d);
         arguments[1] = $gameMap.roundHalfYWithDirection(y, 10 - d);
