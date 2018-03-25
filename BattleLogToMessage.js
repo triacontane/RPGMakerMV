@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2018/03/25 バトルログに表示する内容が空の時、ウィンドウを非表示にできる機能を追加
 // 1.5.0 2018/03/25 バトルログの行数を変更できる機能を追加。表示するメッセージが空の場合はメッセージ表示をしないよう変更
 // 1.4.1 2018/02/10 戦闘終了のメッセージ表示後にログウィンドウが一瞬だけ残ってしまう現象を修正
 // 1.4.0 2018/02/10 メッセージウィンドウを画面上部に固定できる機能を追加
@@ -49,9 +50,14 @@
  * @type number
  *
  * @param MessageLines
- * @desc ウィンドウの行数です。
+ * @desc ウィンドウの行数です。行数を減らすとダメージ表示等のメッセージが表示されなくなる場合があります。
  * @default 4
  * @type number
+ *
+ * @param HiddenIfEmpty
+ * @desc ウィンドウに表示する内容がないとき、ウィンドウが非表示になります。
+ * @default false
+ * @type boolean
  *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
@@ -89,9 +95,14 @@
  * @type number
  *
  * @param メッセージ行数
- * @desc ウィンドウの行数です。
+ * @desc ウィンドウの行数です。行数を減らすとダメージ表示等のメッセージが表示されなくなる場合があります。
  * @default 4
  * @type number
+ *
+ * @param 空の場合に非表示
+ * @desc ウィンドウに表示する内容がないとき、ウィンドウが非表示になります。
+ * @default false
+ * @type boolean
  *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
@@ -154,6 +165,7 @@
     var paramMessageSpeed     = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
     var paramWaitForEndAction = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
     var paramMessageLines     = getParamNumber(['MessageLines', 'メッセージ行数'], 1);
+    var paramHiddenIfEmpty    = getParamBoolean(['HiddenIfEmpty', '空の場合に非表示']);
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
@@ -199,7 +211,6 @@
         this._logWindow.hide();
         _BattleManager_displayRewards.apply(this, arguments);
     };
-
 
     SceneManager.isBattleScene = function() {
         return this._scene instanceof Scene_Battle;
@@ -270,6 +281,19 @@
         _Window_BattleLog_update.apply(this, arguments);
     };
 
+    var _Window_BattleLog_refresh      = Window_BattleLog.prototype.refresh;
+    Window_BattleLog.prototype.refresh = function() {
+        _Window_BattleLog_refresh.apply(this, arguments);
+        if (!paramHiddenIfEmpty) {
+            return;
+        }
+        if (this._lines.length <= 0) {
+            this.hide();
+        } else {
+            this.show();
+        }
+    };
+
     var _Window_BattleLog_messageSpeed      = Window_BattleLog.prototype.messageSpeed;
     Window_BattleLog.prototype.messageSpeed = function() {
         return (paramMessageSpeed ? $gameVariables.value(paramMessageSpeed) :
@@ -310,7 +334,7 @@
         }
     };
 
-    var _Window_Message_numVisibleRows = Window_Message.prototype.numVisibleRows;
+    var _Window_Message_numVisibleRows      = Window_Message.prototype.numVisibleRows;
     Window_Message.prototype.numVisibleRows = function() {
         if (SceneManager.isBattleScene() && paramMessageLines !== 4) {
             return paramMessageLines;
