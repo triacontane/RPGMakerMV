@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.1 2018/03/25 BGMが演奏されていないときに高速モードを切り替えるとエラーになる問題を修正
 // 2.5.0 2018/03/17 最前面に表示しているとき、画面がフォーカスを失うと画面自動で右寄せになる機能を追加
 //                  最新のNW.jsで使用できなくなる一部機能を削除
 // 2.4.5 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
@@ -852,8 +853,10 @@ function Controller_NwJs() {
     SceneManager.toggleRapid = function() {
         this._rapidGame = !this._rapidGame;
         const bgm       = AudioManager.saveBgm();
-        AudioManager.playBgm(bgm, bgm.pos);
-        AudioManager._bgmBuffer.play(true, bgm.pos);
+        if (bgm.name) {
+            AudioManager.playBgm(bgm, bgm.pos);
+            AudioManager._bgmBuffer.play(true, bgm.pos);
+        }
         this.updateDocumentTitle();
         return this.isRapid();
     };
