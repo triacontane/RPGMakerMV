@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2018/03/25 バトルログの行数を変更できる機能を追加。表示するメッセージが空の場合はメッセージ表示をしないよう変更
 // 1.4.1 2018/02/10 戦闘終了のメッセージ表示後にログウィンドウが一瞬だけ残ってしまう現象を修正
 // 1.4.0 2018/02/10 メッセージウィンドウを画面上部に固定できる機能を追加
 // 1.3.0 2016/10/25 バトルイベント実行中などでログウィンドウを閉じることのできる機能を追加
@@ -47,6 +48,11 @@
  * @default 0
  * @type number
  *
+ * @param MessageLines
+ * @desc ウィンドウの行数です。
+ * @default 4
+ * @type number
+ *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -80,6 +86,11 @@
  * @param 行動終了後ウェイト
  * @desc 行動終了後、メッセージをクリアする前に指定したフレーム数だけウェイトを掛けます。
  * @default 0
+ * @type number
+ *
+ * @param メッセージ行数
+ * @desc ウィンドウの行数です。
+ * @default 4
  * @type number
  *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
@@ -142,6 +153,7 @@
     var paramMessagePosUpper  = getParamBoolean(['MessagePosUpper', 'メッセージ上部配置']);
     var paramMessageSpeed     = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
     var paramWaitForEndAction = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
+    var paramMessageLines     = getParamNumber(['MessageLines', 'メッセージ行数'], 1);
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
@@ -183,9 +195,14 @@
     };
 
     var _BattleManager_displayRewards = BattleManager.displayRewards;
-    BattleManager.displayRewards = function() {
+    BattleManager.displayRewards      = function() {
         this._logWindow.hide();
         _BattleManager_displayRewards.apply(this, arguments);
+    };
+
+
+    SceneManager.isBattleScene = function() {
+        return this._scene instanceof Scene_Battle;
     };
 
     //=============================================================================
@@ -218,7 +235,7 @@
 
     Scene_Battle.prototype.adjustWindowMessagePositions = function() {
         this._messageWindow.y = 0;
-        this._logWindow.y = 0;
+        this._logWindow.y     = 0;
     };
 
     var _Scene_Battle_updateWindowPositions      = Scene_Battle.prototype.updateWindowPositions;
@@ -244,7 +261,7 @@
     };
 
     Window_BattleLog.prototype.maxLines = function() {
-        return 4;
+        return paramMessageLines || 4;
     };
 
     var _Window_BattleLog_update      = Window_BattleLog.prototype.update;
@@ -271,17 +288,34 @@
         _Window_BattleLog_endAction.apply(this, arguments);
     };
 
+    var _Window_BattleLog_addText      = Window_BattleLog.prototype.addText;
+    Window_BattleLog.prototype.addText = function(text) {
+        if (!text) {
+            return;
+        }
+        _Window_BattleLog_addText.apply(this, arguments);
+    };
+
     Window_BattleLog.prototype.drawBackground = function() {};
 
     //=============================================================================
     // Window_Message
     //  戦闘中はメッセージウィンドウを上部に固定します。
     //=============================================================================
-    var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
+    var _Window_Message_updatePlacement      = Window_Message.prototype.updatePlacement;
     Window_Message.prototype.updatePlacement = function() {
         _Window_Message_updatePlacement.apply(this, arguments);
         if ($gameParty.inBattle() && paramMessagePosUpper) {
             this.y = 0;
+        }
+    };
+
+    var _Window_Message_numVisibleRows = Window_Message.prototype.numVisibleRows;
+    Window_Message.prototype.numVisibleRows = function() {
+        if (SceneManager.isBattleScene() && paramMessageLines !== 4) {
+            return paramMessageLines;
+        } else {
+            return _Window_Message_numVisibleRows.apply(this, arguments);
         }
     };
 
@@ -292,6 +326,14 @@
     var _Game_Battler_startDamagePopup      = Game_Battler.prototype.startDamagePopup;
     Game_Battler.prototype.startDamagePopup = function() {
         if (!paramSuppressPopup) _Game_Battler_startDamagePopup.apply(this, arguments);
+    };
+
+    var _Game_Message_add      = Game_Message.prototype.add;
+    Game_Message.prototype.add = function(text) {
+        if (!text && $gameParty.inBattle()) {
+            return;
+        }
+        _Game_Message_add.apply(this, arguments);
     };
 })();
 
