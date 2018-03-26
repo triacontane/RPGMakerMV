@@ -1,16 +1,17 @@
 //=============================================================================
 // MovieManager.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2018/03/27 Saba_SimpleScenario.jsとの競合を解消（こちらの設定で上書き）
 // 1.0.2 2018/01/30 ヘルプの記述を修正
 // 1.0.1 2016/06/24 メニューを開いたときに最後に表示していたムービーが写り込む不具合を修正
 // 1.0.0 2016/06/09 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -331,8 +332,10 @@ function MovieManager() {
 
     var _Game_Interpreter_command261      = Game_Interpreter.prototype.command261;
     Game_Interpreter.prototype.command261 = function() {
-        _Game_Interpreter_command261.apply(this, arguments);
+        var result = _Game_Interpreter_command261.apply(this, arguments);
         this._waitMode = '';
+        $gameTemp.sabaWaitForMovieMode = 0;
+        return result;
     };
 
     //=============================================================================
