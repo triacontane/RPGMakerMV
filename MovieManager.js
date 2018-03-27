@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.4 2018/03/28 ムービー再生後、ロード完了前にムービーを停止するとムービーが停止されない問題を修正
 // 1.0.3 2018/03/27 Saba_SimpleScenario.jsとの競合を解消（こちらの設定で上書き）
 // 1.0.2 2018/01/30 ヘルプの記述を修正
 // 1.0.1 2016/06/24 メニューを開いたときに最後に表示していたムービーが写り込む不具合を修正
@@ -195,6 +196,10 @@ function MovieManager() {
     };
 
     Graphics.stopVideo = function() {
+        if (!this._isVideoVisible() && this.isVideoLoading()) {
+            this._needVideoStop = true;
+        }
+        this._video.pause();
         this._updateVisibility(false);
     };
 
@@ -229,7 +234,12 @@ function MovieManager() {
     var _Graphics__onVideoLoad = Graphics._onVideoLoad;
     Graphics._onVideoLoad      = function() {
         _Graphics__onVideoLoad.apply(this, arguments);
-        this.setVideoContentsScale(this._video.scaleX, this._video.scaleY);
+        if (this._needVideoStop) {
+            this._needVideoStop = false;
+            this.stopVideo();
+        } else {
+            this.setVideoContentsScale(this._video.scaleX, this._video.scaleY);
+        }
     };
 
     var _Graphics__updateVideo = Graphics._updateVideo;
@@ -338,6 +348,12 @@ function MovieManager() {
         return result;
     };
 
+    var _Game_Interpreter_command354 = Game_Interpreter.prototype.command354;
+    Game_Interpreter.prototype.command354 = function() {
+        MovieManager.stop();
+        return  _Game_Interpreter_command354.apply(this, arguments);
+    };
+
     //=============================================================================
     // SceneManager
     //  動画管理モジュールを操作します。
@@ -428,7 +444,6 @@ function MovieManager() {
     };
 
     MovieManager.stop = function() {
-        this.pause();
         Graphics.stopVideo();
         this.initTarget();
     };
@@ -529,4 +544,3 @@ function MovieManager() {
         return this.getVideo().y;
     };
 })();
-
