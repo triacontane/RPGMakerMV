@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2018/03/29 処理の軽量化
 // 1.2.0 2017/04/23 ランダム要素を簡単に扱える関数を追加
 // 1.1.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.1.0 2016/06/15 スクリプト「data」で対象のオブジェクトを参照できる機能を追加
@@ -90,35 +91,21 @@
         text = text.replace(/&lt;?/gi, '<');
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
             return $gameVariables.value(parseInt(arguments[1], 10));
         }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1], 10));
-        }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            var actor = parseInt(arguments[1], 10) >= 1 ? $gameActors.actor(parseInt(arguments[1], 10)) : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            var actor = parseInt(arguments[1], 10) >= 1 ? $gameParty.members()[parseInt(arguments[1], 10) - 1] : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
         return text;
     };
 
     var random = function(percent) {
         return Math.random() < percent / 100;
     };
-    
+
     //=============================================================================
     // Game_BattlerBase
     //  特徴に条件を設定します。
     //=============================================================================
-    var _Game_BattlerBase_allTraits = Game_BattlerBase.prototype.allTraits;
     Game_BattlerBase.prototype.allTraits = function() {
-        _Game_BattlerBase_allTraits.apply(this, arguments);
         return this.traitObjects().reduce(function(r, obj) {
             for (var i = 0, n = obj.traits.length; i < n; i++) {
                 if (this.isValidTrait(i, obj)) r.push(obj.traits[i]);
@@ -129,11 +116,16 @@
 
     Game_BattlerBase.prototype.isValidTrait = function(i, obj) {
         var id = String(i + 1);
-        var result = true;
-        if (!this.isValidTraitSwitch(id , obj)) result = false;
-        if (!this.isValidTraitState (id , obj)) result = false;
-        if (!this.isValidTraitScript(id , obj)) result = false;
-        return result;
+        if (!this.isValidTraitSwitch(id , obj)) {
+            return false;
+        }
+        if (!this.isValidTraitState (id , obj)) {
+            return false;
+        }
+        if (!this.isValidTraitScript(id , obj)) {
+            return false;
+        }
+        return true;
     };
 
     Game_BattlerBase.prototype.isValidTraitSwitch = function(id, obj) {
@@ -151,12 +143,7 @@
     Game_BattlerBase.prototype.isValidTraitScript = function(id, obj) {
         var metaValue = getMetaValues(obj, [id + 'スクリプト', id + 'Script']);
         if (!metaValue) return true;
-        var data = this;
-        try {
-            return eval(getArgString(metaValue));
-        } catch (e) {
-            throw new Error(pluginName + 'で指定したスクリプト実行中にエラーが発生しました。実行内容:' + metaValue);
-        }
+        return eval(getArgString(metaValue));
     };
 })();
 
