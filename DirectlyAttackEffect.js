@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2018/03/31 直接エフェクト行動後、アクターのターンが回ってきたとき選択中に一歩前進しなくなる問題を修正
 // 1.2.0 2018/01/16 スキル実行時の移動中にSVモーションを適用できる機能を追加
 // 1.1.4 2017/06/04 残像を使用する設定で複数のキャラクターに対して連続でアニメーションを再生すると処理落ちする問題を修正
 // 1.1.3 2017/06/04 StateRolling.jsとの競合を解消
@@ -326,6 +327,30 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/**
+ * アクターの残像を表示するスプライトです。
+ * @constructor
+ */
+function Sprite_AfterimageActor() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * 敵キャラの残像を表示するスプライトです。
+ * @constructor
+ */
+function Sprite_AfterimageEnemy() {
+    this.initialize.apply(this, arguments);
+}
+
+/**
+ * ダミースプライトです。
+ * @constructor
+ */
+function Sprite_Dummy() {
+    this.initialize.apply(this, arguments);
+}
+
 (function() {
     'use strict';
     var pluginName    = 'DirectlyAttackEffect';
@@ -531,6 +556,12 @@
 
     Game_Battler.prototype.resetDirectlyReturnRequest = function() {
         this._directlyReturn = false;
+    };
+
+    var _Game_Battler_onTurnEnd = Game_Battler.prototype.onTurnEnd;
+    Game_Battler.prototype.onTurnEnd = function() {
+        _Game_Battler_onTurnEnd.apply(this, arguments);
+        this.initDirectlyAttack();
     };
 
     //=============================================================================
@@ -997,8 +1028,9 @@
         return x;
     };
 
+    // for YEP_BattleEngineCore.js
     Sprite_Battler.prototype.moveForward = function() {
-
+        // do nothing
     };
 
     //=============================================================================
@@ -1074,10 +1106,6 @@
     // Sprite_AfterimageActor
     //  アクターの残像クラス
     //=============================================================================
-    function Sprite_AfterimageActor() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_AfterimageActor.prototype             = Object.create(Sprite_Actor.prototype);
     Sprite_AfterimageActor.prototype.constructor = Sprite_AfterimageActor;
 
@@ -1152,10 +1180,6 @@
     // Sprite_AfterimageEnemy
     //  敵キャラの残像クラス
     //=============================================================================
-    function Sprite_AfterimageEnemy() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_AfterimageEnemy.prototype             = Object.create(Sprite_Enemy.prototype);
     Sprite_AfterimageEnemy.prototype.constructor = Sprite_AfterimageEnemy;
 
@@ -1180,10 +1204,6 @@
     // Sprite_Dummy
     //  ダミースプライト
     //=============================================================================
-    function Sprite_Dummy() {
-        this.initialize.apply(this, arguments);
-    }
-
     Sprite_Dummy.prototype.initialize = function() {};
 
     Sprite_Dummy.prototype.constructor = Sprite_Dummy;
