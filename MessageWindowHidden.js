@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2018/03/31 消去するトリガーを複数指定できる機能を追加。パラメータの指定方法を見直し。
 // 1.4.0 2018/03/10 指定したスイッチがONの間はウィンドウ消去を無効化できる機能を追加
 // 1.3.2 2017/08/02 ponidog_BackLog_utf8.jsとの競合を解消
 // 1.3.1 2017/07/03 古いYEP_MessageCore.jsのネーム表示ウィンドウが再表示できない不具合の修正(by DarkPlasmaさま)
@@ -28,20 +29,25 @@
  * @plugindesc Erase message window
  * @author triacontane
  *
- * @param TriggerButton
- * @desc Trigger button
+ * @param triggerButton
+ * @desc Trigger buttons
  * (light_click or shift or control)
- * @default light_click
- * @type select
+ * @default ["light_click"]
+ * @type combo[]
  * @option light_click
  * @option shift
  * @option control
+ * @option tab
+ * @option pageup
+ * @option pagedown
+ * @option debug
  *
- * @param LinkPictureNumber
+ * @param linkPictureNumbers
  * @desc Picture number of window show/hide
  * @default
+ * @type number[]
  *
- * @param DisableSwitchId
+ * @param disableSwitchId
  * @desc 指定した番号のスイッチがONのとき、プラグインの機能が無効になります。
  * @default 0
  * @type switch
@@ -54,20 +60,27 @@
  * @plugindesc メッセージウィンドウ一時消去プラグイン
  * @author トリアコンタン
  *
- * @param ボタン名称
- * @desc ウィンドウを消去するボタンです。
- * (右クリック or shift or control)
- * @default 右クリック
- * @type select
+ * @param triggerButton
+ * @text ボタン名称
+ * @desc ウィンドウを消去するボタンです。(複数登録可能) プラグイン等で入力可能なボタンを追加した場合は直接入力
+ * @default ["右クリック"]
+ * @type combo[]
  * @option 右クリック
  * @option shift
  * @option control
+ * @option tab
+ * @option pageup
+ * @option pagedown
+ * @option debug
  *
- * @param 連動ピクチャ番号
- * @desc ウィンドウ消去時に連動して不透明度を[0]にするピクチャの番号です。カンマ「,」区切りで複数指定できます。
+ * @param linkPictureNumbers
+ * @text 連動ピクチャ番号
+ * @desc ウィンドウ消去時に連動して不透明度を[0]にするピクチャの番号です。
  * @default
+ * @type number[]
  *
- * @param 無効スイッチ番号
+ * @param disableSwitchId
+ * @text 無効スイッチ番号
  * @desc 指定した番号のスイッチがONのとき、プラグインの機能が無効になります。
  * @default 0
  * @type switch
@@ -79,6 +92,9 @@
  * 背景に特定のピクチャを使用している場合などに指定してください。
  * 再表示すると不透明度は[255]になります。
  *
+ * ver2.0.0よりパラメータの指定方法が一部変更になりました。
+ * 以前のバージョンを使っていた方は再設定をお願いします。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -88,62 +104,31 @@
  */
 (function() {
     'use strict';
-    var pluginName = 'MessageWindowHidden';
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value == null ? '' : value;
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamArrayString = function(paramNames) {
-        var values = getParamString(paramNames).split(',');
-        for (var i = 0; i < values.length; i++) {
-            values[i] = values[i].trim();
-        }
-        return values;
-    };
-
-    var getParamArrayNumber = function(paramNames, min, max) {
-        var values = getParamArrayString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        for (var i = 0; i < values.length; i++) {
-            if (!isNaN(parseInt(values[i], 10))) {
-                values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
-            } else {
-                values.splice(i--, 1);
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
             }
-        }
-        return values;
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param                = {};
-    param.triggerButton      = getParamString(['TriggerButton', 'ボタン名称']).toLowerCase();
-    param.linkPictureNumbers = getParamArrayNumber(['LinkPictureNumber', '連動ピクチャ番号']);
-    param.disableSwitchId    = getParamNumber(['DisableSwitchId', '無効スイッチ番号'], 0, 5000);
+    var param = createPluginParameter('MessageWindowHidden');
 
     //=============================================================================
     // Game_Picture
@@ -199,6 +184,9 @@
     };
 
     Window_Message.prototype.linkPictures = function(opacity) {
+        if (!param.linkPictureNumbers) {
+            return;
+        }
         param.linkPictureNumbers.forEach(function(pictureId) {
             this.linkPicture(opacity, pictureId);
         }, this);
@@ -225,9 +213,7 @@
         return this._nameWindow && typeof Window_NameBox !== 'undefined';
     };
 
-    /**
-     * 古いYEP_MessageCore.jsでは、ネーム表示ウィンドウはsubWindowsに含まれる
-     */
+    // 古いYEP_MessageCore.jsでは、ネーム表示ウィンドウはsubWindowsに含まれる
     Window_Message.prototype.nameWindowIsSubWindow = function() {
         return this.subWindows().filter(function(subWindow) {
             return subWindow === this._nameWindow;
@@ -238,16 +224,18 @@
         if (param.disableSwitchId > 0 && $gameSwitches.value(param.disableSwitchId)) {
             return false;
         }
-        switch (param.triggerButton) {
-            case '':
-            case '右クリック':
-            case 'light_click':
-                return TouchInput.isCancelled();
-            case 'ok':
-                return false;
-            default:
-                return Input.isTriggered(param.triggerButton);
-        }
+        return param.triggerButton.some(function(button) {
+            switch (button) {
+                case '':
+                case '右クリック':
+                case 'light_click':
+                    return TouchInput.isCancelled();
+                case 'ok':
+                    return false;
+                default:
+                    return Input.isTriggered(button);
+            }
+        });
     };
 
     var _Window_Message_updateInput      = Window_Message.prototype.updateInput;
