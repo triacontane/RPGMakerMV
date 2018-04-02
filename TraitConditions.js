@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2018/04/03 ヘルプの記載が誤っていたので、ヘルプに合わせて実装を修正
 // 1.2.1 2018/03/29 処理の軽量化
 // 1.2.0 2017/04/23 ランダム要素を簡単に扱える関数を追加
 // 1.1.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
@@ -57,7 +58,6 @@
 
 (function () {
     'use strict';
-    var pluginName    = 'TraitConditions';
     var metaTagPrefix = 'TC';
 
     var getArgString = function (arg, upperFlg) {
@@ -141,9 +141,16 @@
     };
 
     Game_BattlerBase.prototype.isValidTraitScript = function(id, obj) {
+        if (this._calcScript) {
+            return false;
+        }
         var metaValue = getMetaValues(obj, [id + 'スクリプト', id + 'Script']);
         if (!metaValue) return true;
-        return eval(getArgString(metaValue));
+        this._calcScript = true;
+        var data = this;
+        var result = eval(getArgString(metaValue));
+        this._calcScript = false;
+        return result;
     };
 })();
 
