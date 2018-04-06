@@ -1,11 +1,12 @@
 //=============================================================================
 // DirectlyAttackEffect.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2018/04/07 AnimatedSVEnemies.jsとの競合を解消
 // 1.2.1 2018/03/31 直接エフェクト行動後、アクターのターンが回ってきたとき選択中に一歩前進しなくなる問題を修正
 // 1.2.0 2018/01/16 スキル実行時の移動中にSVモーションを適用できる機能を追加
 // 1.1.4 2017/06/04 残像を使用する設定で複数のキャラクターに対して連続でアニメーションを再生すると処理落ちする問題を修正
@@ -632,6 +633,11 @@ function Sprite_Dummy() {
         var info = this._directlyAdditionalInfo;
         return Game_Battler.prototype.hasDirectoryAttack.apply(this, arguments) &&
             ((!info.actorOnly && paramValidEnemy) || info.enemyOnly);
+    };
+
+    // for AnimatedSVEnemies.js
+    Game_Enemy.prototype.requestCustomMotion = function(tagNames) {
+        // do nothing
     };
 
     //=============================================================================
