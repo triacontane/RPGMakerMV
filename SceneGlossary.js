@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2018/04/07 用語選択からカテゴリ選択に戻ったときに、最後に選択していた用語の情報が残ってしまう問題を修正
 // 2.6.0 2018/03/17 テキストのY座標を数値指定できる機能を追加
 // 2.5.0 2018/03/11 画像の表示位置と表示優先度のパラメータを分けました。
 //                  モンスターの報酬情報を記入できる制御文字を追加
@@ -1907,6 +1908,8 @@ function Window_GlossaryComplete() {
         Window_ItemList.prototype.select.apply(this, arguments);
         if (this.item() && prevItem !== this.item()) {
             this._glossaryWindow.refresh(this.item());
+        } else if (!this.item()) {
+            this._glossaryWindow.clearItem();
         }
         if (index >= 0) {
             $gameParty.setGlossaryListIndex(index);
@@ -2143,6 +2146,10 @@ function Window_GlossaryComplete() {
             this.drawItemSub(null);
         }
         if (!noSound) SoundManager.playCursor();
+    };
+
+    Window_Glossary.prototype.clearItem = function() {
+        this.contents.clear();
     };
 
     Window_Glossary.prototype.getGlossaryBitmap = function(index) {
