@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.2 2018/04/11 時間表示方法(実時間、ゲーム時間)を切り替えた直後に、時間変数の値が更新されない問題を修正
 // 1.10.1 2018/03/07 場所移動の際、移動先マップの色調有効フラグが異なっていた場合に、色調がリフレッシュされない問題を修正
 // 1.10.0 2018/02/24 日付フォーマットに基づいて計算した時間を変数に自動設定する機能を追加
 // 1.9.4 2018/02/19 カレンダーの初期表示をtrueに変更しました。
@@ -1203,10 +1204,12 @@ function Window_Chronus() {
 
     Game_Chronus.prototype.setTimeReal = function() {
         this._realTime = true;
+        this.setGameVariable();
     };
 
     Game_Chronus.prototype.setTimeVirtual = function() {
         this._realTime = false;
+        this.setGameVariable();
     };
 
     Game_Chronus.prototype.onBattleEnd = function() {
