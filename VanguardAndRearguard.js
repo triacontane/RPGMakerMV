@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.3 2018/04/10 前衛に詰める機能有効時、控えのメンバーがいるときに戦闘メンバーを全員後衛にできてしまう問題を修正
 // 1.5.2 2018/01/07 FTKR_CSS_MenuStatus.jsとの競合を解消
 // 1.5.1 2017/10/25 ヘルプの英語化対応
 // 1.5.0 2017/08/18 前衛が全滅したときに後衛が前衛に詰められる設定を追加
@@ -532,7 +533,7 @@
                 return false;
             }
             return true;
-        })
+        });
     };
 
     //=============================================================================
@@ -581,7 +582,11 @@
     };
 
     Game_Unit.prototype.isNeedShiftVanguard = function(exceptionBattler) {
-        return paramShiftVanguard && !this.isAliveVanguardMember(exceptionBattler);
+        var inBattle = this._inBattle;
+        this._inBattle = true;
+        var result = paramShiftVanguard && !this.isAliveVanguardMember(exceptionBattler);
+        this._inBattle = inBattle;
+        return result;
     };
 
     Game_Unit.prototype.isAliveVanguardMember = function(exceptionBattler) {
