@@ -1,11 +1,12 @@
 ﻿//=============================================================================
 // PictureCallCommon.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2017 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.6 2018/04/12 ヘルプの記述を微修正
 // 1.10.5 2017/12/17 コモンイベントを実行するタイプのボタンは、イベント実行中に無効になるよう仕様変更
 // 1.10.4 2017/11/01 ピクチャコモンが呼ばれる瞬間に対象ピクチャが表示されていない場合はイベントを呼ばない仕様に変更
 // 1.10.3 2017/10/28 ピクチャタッチイベントの呼び出し待機中に戦闘に突入すると、戦闘画面表示後に実行されてしまう問題を修正
@@ -55,28 +56,34 @@
  *
  * @param 透明色を考慮
  * @desc クリックされた箇所が透明色だった場合は、クリックを無効にする。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ピクチャ番号の変数番号
  * @desc ピクチャクリック時にピクチャ番号を格納するゲーム変数の番号。
  * @default 0
+ * @type variable
  *
  * @param ポインタX座標の変数番号
  * @desc マウスカーソルもしくはタッチした位置のX座標を常に格納するゲーム変数の番号
  * @default 0
+ * @type variable
  *
  * @param ポインタY座標の変数番号
  * @desc マウスカーソルもしくはタッチした位置のY座標を常に格納するゲーム変数の番号
  * @default 0
+ * @type variable
  *
  * @param タッチ操作抑制
  * @desc トリガー条件を満たした際にタッチ情報をクリアします。(ON/OFF)
  * 他のタッチ操作と動作が重複する場合にONにします。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 戦闘中常にコモン実行
  * @desc 戦闘中にピクチャをクリックしたとき、常にコモンイベントを実行します。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help ピクチャをクリックすると、指定したコモンイベントが
  * 呼び出される、もしくは任意のスイッチをONにするプラグインコマンドを提供します。
@@ -121,12 +128,12 @@
  *  　：ピクチャのボタン化 \v[1] \v[2] \v[3] OFF
  *
  *  ピクチャのスイッチ化 or
- *  P_CALL_SWITCH [ピクチャ番号] [スイッチID] [トリガー] [透明色を考慮]:
+ *  P_CALL_SWITCH [ピクチャ番号] [スイッチID] [トリガー] [透明色を考慮]
  *  　　ピクチャの領域内でトリガー条件を満たした場合に、任意のスイッチをONにします。
  *  　　トリガーの設定などは、ピクチャのボタン化と同一です。
  *
  *  ピクチャのキーバインド or
- *  P_CALL_KEY_BIND [ピクチャ番号] [ボタン名称] [トリガー] [透明色を考慮]:
+ *  P_CALL_KEY_BIND [ピクチャ番号] [ボタン名称] [トリガー] [透明色を考慮]
  *  　　ピクチャの領域内でトリガー条件を満たした場合に、任意のボタンを押したことにします。
  *  　　ボタン名の設定は以下の通りです。(Windows基準)
  *  ok      : Enter,Z
@@ -197,27 +204,33 @@
  *
  * @param TransparentConsideration
  * @desc if click position is transparent, click is disabled.
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param GameVariablePictureNum
  * @desc Game variable number that stores the picture number when common event called.
  * @default 0
+ * @type variable
  *
  * @param GameVariableTouchX
  * @desc Game variable number that stores touch x position
  * @default 0
+ * @type variable
  *
  * @param GameVariableTouchY
  * @desc Game variable number that stores touch y position
  * @default 0
+ * @type variable
  *
  * @param SuppressTouch
  * @desc Suppress touch event for others(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param AlwaysCommonInBattle
  * @desc Always execute common event in battle(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  * 
  * @help When clicked picture, call common event.
  *
@@ -740,12 +753,10 @@
                 this._onMouse    = true;
                 this._wasOnMouse = true;
             }
-        } else {
-            if (this._wasOnMouse) {
+        } else if (this._wasOnMouse) {
                 this._outMouse   = true;
                 this._wasOnMouse = false;
             }
-        }
     };
 
     Sprite_Picture.prototype.isIncludePointer = function() {
@@ -970,7 +981,7 @@
             } else {
                 this._bindKeyStateFrames.set(keyName, frame);
             }
-        }, this)
+        }, this);
     };
 
     //=============================================================================
