@@ -208,7 +208,7 @@
  * set "item type" to "hidden item A" or "hidden item B"
  *
  * 2. Set note param
- * <SGDescription:xxx> // Description of Glossary
+ * <SGDescription:xxx> // Description of Glossary *1
  * <SGCategory:xxx>    // Category of Glossary
  * <SGManual>          // Exclude terms from automatic registration
  * <SGPicture:filename> // Filename of the term picture
@@ -221,6 +221,20 @@
  * <SGPictureScale:0.5>    // Picture scale
  * <SGPictureAlign:right>    // Picture align
  *  left, center, right
+ *
+ * *1 Escape Characters
+ * \COMMON[1]  // It is replaced by aaa(<CommonDescription:aaa>)
+ * \mhp[3]     // Enemy Max HP(Zero padding 3)
+ * \mmp[3]     // Max MP
+ * \atk[3]     // Atk
+ * \def[3]     // Def
+ * \mag[3]     // Mag
+ * \mdf[3]     // Mdf
+ * \agi[3]     // Agi
+ * \luk[3]     // Luk
+ * \exp[3]     // Exp
+ * \money[3]   // Gold
+ * \drop[1]    // Drop item 1
  *
  * you can use multiple pages with one term.
  * The pages are switched with the direction keys.
