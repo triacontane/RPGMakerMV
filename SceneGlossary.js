@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.2 2018/04/19 ヘルプの一部を英語化
 // 2.6.1 2018/04/07 用語選択からカテゴリ選択に戻ったときに、最後に選択していた用語の情報が残ってしまう問題を修正
 // 2.6.0 2018/03/17 テキストのY座標を数値指定できる機能を追加
 // 2.5.0 2018/03/11 画像の表示位置と表示優先度のパラメータを分けました。
@@ -185,150 +186,81 @@
  * @noteType file
  * @noteData items
  *
- * @help ゲームに登場する用語を閲覧できる画面を追加します。
- * 用語を解説する画像およびテキスト説明がウィンドウに表示されます。
+ * @help Add a screen that allows you to view the terms that appear in the game.
+ * Images and text descriptions describing the terms are displayed in the window.
  *
- * ・使い方
- * 1. 用語として扱うアイテムをデータベースから登録してください。
- * 詳細な登録方法は、後述の「データ登録方法」をご参照ください。
+ * How to use
+ * 1. Register items to be treated as terms from the database.
  *
- * 2. パラメータの「GlossaryInfo」を設定してください。（項目をダブルクリック）
- * 当該パラメータを設定せずにプラグインコマンドから用語辞典を起動すると
- * エラーになるので注意してください。
+ * 2. Set the parameter "GlossaryInfo".
  *
- * ※バージョン2.0.0よりパラメータの構成が変わりました。
- * 以前のバージョンを使っていた場合はパラメータを再設定する必要があります。
+ * Terms can be browsed by acquiring the target item, and there is
+ * also a function to register automatically
+ * when the same word appears in the command of displaying sentences.
+ * (It is also possible to specify a specific term outside the scope
+ * of automatic registration)
  *
- * 用語は対象アイテムを取得することで閲覧可能になるほか、文章の表示の命令中で
- * 同一単語が出現した場合に自動的に登録する機能もあります。
- * （特定の用語を自動登録の対象外に指定することも可能です）
+ * You can switch from menu scene and plugin command to
+ * glossary scene.
  *
- * 用語はすべてを一つのウィンドウで表示する方式と
- * カテゴリごとに分類して表示する方式が選択できます。
- * パラメータから表示方法を選択してください。
- * カテゴリごとに表示する場合はメモ欄に「<SGカテゴリ:XXX>」を指定してください。
- * カテゴリをカンマ区切りで指定すると、複数のカテゴリに所属できます。
+ * How to register data
+ * 1. Register new data in item database and
+ * set "item type" to "hidden item A" or "hidden item B"
  *
- * 例：<SGカテゴリ:XXX,YYY>
+ * 2. Set note param
+ * <SGDescription:xxx> // Description of Glossary
+ * <SGCategory:xxx>    // Category of Glossary
+ * <SGManual>          // Exclude terms from automatic registration
+ * <SGPicture:filename> // Filename of the term picture
+ * <SGEnemy:1>          // Enemy instead of the picture
+ * <SGPicturePosition:text> // Picture position
+ *  top, bottom, text
+ * <SGTextPosition:100>      // Text position
+ * <SGPicturePriority:top>    // Picture priority
+ *  top, bottom
+ * <SGPictureScale:0.5>    // Picture scale
+ * <SGPictureAlign:right>    // Picture align
+ *  left, center, right
  *
- * メニュー画面およびプラグインコマンドから用語集画面に遷移できます。
+ * you can use multiple pages with one term.
+ * The pages are switched with the direction keys.
+ * <SGDescription2:xxx>
+ * <SGPicture2:filename>
+ * <SGPicturePosition2:text>
  *
- * ・データ登録方法
- * 1.アイテムデータベースに新規データを登録して
- * 「アイテムタイプ」を「隠しアイテムA」もしくは「隠しアイテムB」に設定
+ * The same is true for the third and subsequent pages, up to 99 pages can be specified.
+ * Do not attach "1" to the first page when displaying multiple pages.
+ * NG:<SGDescription1:xxx>
  *
- * 2.「名前」に用語の名称を設定
+ * The following tags are required when displaying terms in different type of dictionary.
+ * <SGType:2>   // Type of Glossary
  *
- * 3.「メモ欄」に以下の通り記述(不要な項目は省略可能)
- * <SG説明:説明文>           // 用語の説明文(※1)
- * <SG共通説明:説明文>       // 用語の共通説明文(使い回し用)
- * <SGカテゴリ:カテゴリ名>   // 用語の属するカテゴリの名称
- * <SG手動>                  // 用語を自動登録の対象から除外する
- * <SGピクチャ:ファイル名>   // 用語のピクチャのファイル名
- * <SG敵キャラ:敵キャラID>   // ピクチャの代わりに敵キャラの画像を表示(※2)
- * <SGピクチャ位置:text>     // ピクチャの表示位置
- *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
- * <SGテキスト位置:100>      // テキストの表示位置
- * <SGピクチャ優先度:top>    // ピクチャの表示プライオリティ
- *  top:テキストの上 bottom:テキストの下
- * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
- * <SGピクチャ揃え:right>    // ピクチャの揃え
- *  left:左揃え center:中央揃え right:右揃え
+ * Plugin Command
  *
- * ※1 以下の特殊な制御文字が使用できます。
- * \COMMON[1]  // ID[1]のアイテムの<SG共通説明:aaa>に置き換えられます。
- * \mhp[3]     // 対象敵キャラの最大HP(3桁でゼロ埋め)
- * \mmp[3]     // 対象敵キャラの最大MP(3桁でゼロ埋め)
- * \atk[3]     // 対象敵キャラの攻撃力(3桁でゼロ埋め)
- * \def[3]     // 対象敵キャラの防御力(3桁でゼロ埋め)
- * \mag[3]     // 対象敵キャラの魔法力(3桁でゼロ埋め)
- * \mdf[3]     // 対象敵キャラの魔法防御(3桁でゼロ埋め)
- * \agi[3]     // 対象敵キャラの敏捷性(3桁でゼロ埋め)
- * \luk[3]     // 対象敵キャラの運(3桁でゼロ埋め)
- * \exp[3]     // 対象敵キャラの獲得経験値(3桁でゼロ埋め)
- * \money[3]   // 対象敵キャラの獲得ゴールド(3桁でゼロ埋め)
- * \drop[1]    // 対象敵キャラの[1]番目のドロップアイテム
+ * GLOSSARY_GAIN_ALL
+ *  All terms registered in the database will be in acquisition state.
  *
- * ※2 敵キャラIDを省略すると用語アイテムと同名の敵キャラ自動で設定されます。
+ * GLOSSARY_CALL [Type]
+ *  Call the glossary screen.
+ *  If the type is omitted, it will be automatically set to "1".
+ * ex：GLOSSARY_CALL 1
  *
- * さらに、一つの用語で複数のページを使用することができます。
- * ページは方向キーの左右で切り替えます。
- * <SG説明2:説明文>          // 2ページ目の用語の説明文
- * <SGピクチャ2:ファイル名>  // 2ページ目の用語のピクチャのファイル名
- * <SGピクチャ位置2:text>    // 2ページ目のピクチャの表示位置
+ * GLOSSARY_BACK
+ *  Call up the glossary screen with reselecting the last selected item.
+ * ex：GLOSSARY_BACK
  *
- * 3ページ目以降も同様で、最大99ページまで指定できます。
- * 複数ページ表示する場合の1ページ目には「1」をつけないでください。
- * NG:<SG説明1:説明文>
+ * GLOSSARY_ITEM_CHANGE_CATEGORY [Item id] [new category]
+ *  Change the category of the item with the specified ID to another one.
+ * ex：GLOSSARY_ITEM_CATEGORY_CHANGE 10 AAA
+ * Only items can be changed. Weapons and armors can not be changed.
  *
- * 種別の異なる用語辞典に用語を表示する場合は以下のタグが必要です。
- * <SG種別:2>   // 用語の属する種別番号
+ * GLOSSARY_ITEM_CHANGE_USABLE [Item id] [ON or OFF]
+ *  Change prohibition of items with the specified ID.
+ *  (ON: Possible OFF: Prohibited)
+ * ex：GLOSSARY_ITEM_CHANGE_USABLE 10 ON
+ * Only items can be changed. Weapons and armors can not be changed.
  *
- * 「YEP_MainMenuManager.js」と連携して、コマンドの表示制御を行うには
- * 「コマンド名称」の項目を空にした上で「YEP_MainMenuManager.js」の
- * パラメータを以下の通り設定してください。
- *
- * Menu X Name      : '用語辞典1'
- * Menu X Symbol    : glossary1
- * Menu X Main Bind : this.commandGlossary.bind(this, 1)
- *
- * ・追加機能1
- * 隠しアイテムでない「アイテム」「武器」「防具」も辞書画面に
- * 表示できるようになりました。隠しアイテムと同じ内容をメモ欄に記入します。
- * アイテム図鑑、武器図鑑、防具図鑑も作成できます。
- * この機能を利用する場合はパラメータ「入手履歴を使用」を有効にします。
- *
- * ・追加機能2
- * 用語リストはデフォルトではアイテムID順に表示されますが、
- * 以下のタグで表示順を個別に設定することができます。
- * 同一の表示順が重複した場合はIDの小さい方が先に表示されます。
- * <SG表示順:5> // ID[5]と同じ並び順で表示されます。
- * <SGOrder:5>  // 同上
- *
- * ・追加機能3
- * モンスター辞典の作成を支援します。
- * 1. パラメータ「敵キャラ自動登録」で戦闘した敵キャラと同名の用語を取得
- * 2. メモ欄<SG敵キャラ>で対象敵キャラの画像を表示
- * 3. \mhp[3]等の制御文字で対象敵キャラのパラメータを表示
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * GLOSSARY_GAIN_ALL or 用語集全取得
- *  データベースに登録している全ての用語を取得状態にします。
- *  対象は「隠しアイテム」扱いの用語のみですが、パラメータ「入手履歴を使用」が
- *  有効な場合は全てのアイテムを解禁します。（アイテム自体は取得しません）
- *
- * GLOSSARY_CALL or 用語集画面の呼び出し [種別]
- *  用語集画面を呼び出します。
- *  種別を省略すると、自動で「1」になります。
- * 例：GLOSSARY_CALL 2
- *
- * GLOSSARY_BACK or 用語集画面に戻る
- *  最後に選択していた項目を再選択した状態で用語集画面を呼び出します。
- * 例：GLOSSARY_BACK
- *
- * GLOSSARY_ITEM_CHANGE_CATEGORY [アイテムID] [新カテゴリ]
- * 用語アイテムのカテゴリ変更 [アイテムID] [新カテゴリ]
- *  指定したIDのアイテムのカテゴリを別のものに変更します。　
- * 例：GLOSSARY_ITEM_CATEGORY_CHANGE 10 AAA
- * ※ 変更可能なのはアイテムのみです。武器と防具は変更できません。
- *
- * GLOSSARY_ITEM_CHANGE_USABLE [アイテムID] [ON or OFF]
- * 用語アイテムの使用禁止 [アイテムID] [ON or OFF]
- *  指定したIDのアイテムの使用禁止を変更します。(ON:可能 OFF:禁止)
- * 例：GLOSSARY_ITEM_CHANGE_USABLE 10 ON
- * ※ 変更可能なのはアイテムのみです。武器と防具は変更できません。
- *
- * ・スクリプト詳細
- * itemIdが用語アイテムとして使用可能なときにtrueを返します。
- * $gameParty.isUsableGlossaryItem(itemId);
- *
- * 利用規約：
- *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
- *  についても制限はありません。
- *  このプラグインはもうあなたのものです。
+ * This software is released under the MIT License. Check header.
  */
 
 /*~struct~GlossaryData:
