@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2018/04/25 スキルに対して個別に反撃されやすさを設定できるようになりました。
 // 1.4.4 2018/03/10 反撃条件にスクリプトを使用する際、攻撃してきた相手の情報をtargetで正しく取得できていなかった問題を修正
 // 1.4.3 2017/08/09 反撃条件に属性を指定する際に「通常攻撃」を指定した場合も考慮する関数を追加
 // 1.4.2 2017/07/12 複数のバトラーが同時に反撃を行った場合に全員分の反撃が正常に行われない問題を修正
@@ -124,6 +125,12 @@
  * <CE_CrossCounter>     # 同上
  * ※クロスカウンターはスキルによる反撃の場合のみ有効です。
  *
+ * 8. スキルに対して個別に反撃のされやすさを設定できます。
+ * スキルのメモ欄に以下の通り入力してください。
+ * <CE_反撃増減:50> # 相手の反撃確率が50%増加する
+ * <CE_反撃増減:-100> # 相手の反撃確率が100%減少する
+ * ※確率は元の値に乗算ではなく加算(減算)となります。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -224,6 +231,12 @@
  * <CE_クロスカウンター> # 相手の攻撃を受けてから反撃します。
  * <CE_CrossCounter>     # 同上
  * ※クロスカウンターはスキルによる反撃の場合のみ有効です。
+ *
+ * 8. スキルに対して個別に反撃のされやすさを設定できます。
+ * スキルのメモ欄に以下の通り入力してください。
+ * <CE_反撃増減:50> # 相手の反撃確率が50%増加する
+ * <CE_反撃増減:-100> # 相手の反撃確率が100%減少する
+ * ※確率は元の値に乗算ではなく加算(減算)となります。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -450,24 +463,31 @@ var Imported = Imported || {};
     // Game_Action
     //  魔法反撃を可能にします。
     //=============================================================================
+    Game_Action.prototype.getCounterAdditionalRate = function() {
+        var rate = getMetaValues(this.item(), ['反撃増減', 'CounterAdditional']);
+        return rate ? parseInt(rate) / 100 : 0;
+    };
+
     var _Game_Action_itemCnt      = Game_Action.prototype.itemCnt;
     Game_Action.prototype.itemCnt = function(target) {
+        // invalid by user action
         if (this.subject().isCounterSubject()) {
             return 0;
         }
         var cnt = _Game_Action_itemCnt.apply(this, arguments);
+        var additionalCnt = this.getCounterAdditionalRate();
         if (this.isMagical()) {
-            return this.itemMagicCnt(target);
+            return this.itemMagicCnt(target, additionalCnt);
         } else {
             var rate = this.reserveTargetCounterSkillId(target, false, 0);
-            return rate * cnt;
+            return rate * (cnt + additionalCnt);
         }
     };
 
-    Game_Action.prototype.itemMagicCnt = function(target) {
+    Game_Action.prototype.itemMagicCnt = function(target, additionalCnt) {
         if (target.isValidMagicCounter() && this.isMagical() && target.canMove()) {
             var rate = this.reserveTargetCounterSkillId(target, true, 0);
-            return rate * (target.getMagicCounterRate() || target.cnt);
+            return rate * ((target.getMagicCounterRate() || target.cnt) + additionalCnt);
         } else {
             return 0;
         }
