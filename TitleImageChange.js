@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2018/04/26 ニューゲーム開始後、一度もセーブしていないデータで進行状況のみをセーブするスクリプトを実行しても設定が反映されない問題を修正
 // 1.4.1 2017/07/20 1.4.0で追加した機能で画像やBGMを4つ以上しないとタイトルがずれてしまう問題を修正
 // 1.4.0 2017/02/12 画像やBGMを4つ以上指定できる機能を追加
 // 1.3.1 2017/02/04 簡単な競合対策
@@ -210,9 +211,11 @@
     };
 
     DataManager.getFirstPriorityGradeVariable = function() {
+        this._loadGrade = true;
         var globalInfo    = this.loadGlobalInfo().filter(function(data, id) {
             return this.isThisGameFile(id);
         }, this);
+        this._loadGrade = false;
         var gradeVariable = 0;
         if (globalInfo && globalInfo.length > 0) {
             var sortedGlobalInfo = globalInfo.clone().sort(this._compareOrderForGradeVariable);
@@ -221,6 +224,21 @@
             }
         }
         return gradeVariable;
+    };
+
+    var _DataManager_loadGlobalInfo = DataManager.loadGlobalInfo;
+    DataManager.loadGlobalInfo = function() {
+        if (this._loadGrade) {
+            try {
+                var json = StorageManager.load(0);
+                return json ? JSON.parse(json) : [];
+            } catch (e) {
+                console.error(e);
+                return [];
+            }
+        } else {
+            return _DataManager_loadGlobalInfo.apply(this, arguments);
+        }
     };
 
     DataManager._compareOrderForGradeVariable = function(a, b) {
