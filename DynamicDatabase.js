@@ -1,11 +1,13 @@
 //=============================================================================
 // DynamicDatabase.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.8 2018/04/29 アクターの名前、二つ名、プロフィールについて一部の制御文字が正常に動作していなかった問題を修正
+// 1.2.7 2017/10/07 リファクタリング
 // 1.2.6 2017/06/09 全設定一覧のスプレッドシートへのリンクを説明に追加
 // 1.2.5 2017/06/02 1.2.4の修正により動作しなくなっていた問題を修正
 // 1.2.4 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
@@ -19,7 +21,7 @@
 // 1.0.1 2016/01/03 iterateとisEmptyが重複定義されないよう対応
 // 1.0.0 2015/12/28 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -45,7 +47,7 @@
  * 　<DD価格:\V[10] * 2>
  *
  * 設定例２（武器の攻撃力に、元の値と10番の変数の値との乗算値を設定したい場合）
- * 　<DD攻撃力:元の値 * \V[10]>
+ * 　<DD攻撃力:prev * \V[10]>
  *
  * 対象データベースは以下の全項目になります。
  * 　アクター（特徴のみ）
@@ -85,12 +87,40 @@
         _Scene_Boot_start.call(this);
         DynamicDatabaseManager.makeDynamicDatabase();
     };
+
+    //=============================================================================
+    // Game_Actor
+    //  アクター名、二つ名、プロフィールについて変更されるまではDBから再取得するよう修正
+    //=============================================================================
+    var _Game_Actor_setup = Game_Actor.prototype.setup;
+    Game_Actor.prototype.setup = function(actorId) {
+        _Game_Actor_setup.apply(this, arguments);
+        this._nickname = null;
+        this._profile = null;
+        this._name = null;
+    };
+
+    var _Game_Actor_name = Game_Actor.prototype.name;
+    Game_Actor.prototype.name = function() {
+        return this._name !== null ? _Game_Actor_name.apply(this, arguments) : this.actor().name;
+    };
+
+    var _Game_Actor_nickname = Game_Actor.prototype.nickname;
+    Game_Actor.prototype.nickname = function() {
+        return this._nickname !== null ? _Game_Actor_nickname.apply(this, arguments) : this.actor().nickname;
+    };
+
+    var _Game_Actor_profile = Game_Actor.prototype.profile;
+    Game_Actor.prototype.profile = function() {
+        return this._profile !== null ? _Game_Actor_profile.apply(this, arguments) : this.actor().profile;
+    };
 })();
 
-//=============================================================================
-// DynamicDatabaseManager
-//  ダイナミックデータベースの構築処理を定義します。
-//=============================================================================
+/**
+ * DynamicDatabaseManager
+ *  ダイナミックデータベースの構築処理を定義します。
+ * @constructor
+ */
 function DynamicDatabaseManager() {
     throw new Error('This is a static class');
 }
@@ -225,7 +255,9 @@ DynamicDatabaseManager._getMaxLength = function(keyName) {
     this._iterate(this._targetDynamicDatabase, function(dataKey) {
         var dataArray = window[dataKey];
         dataArray.forEach(function(data) {
-            if (data != null && data.hasOwnProperty(keyName)) length = Math.max(data[keyName].length, length);
+            if (data && data.hasOwnProperty(keyName)) {
+                length = Math.max(data[keyName].length, length);
+            }
         });
     });
     return length;
@@ -234,7 +266,7 @@ DynamicDatabaseManager._getMaxLength = function(keyName) {
 DynamicDatabaseManager._makeDynamicData = function(dataArray, columnMap) {
     this._columnMapper = columnMap;
     dataArray.forEach(function(data) {
-        if (data != null) {
+        if (data) {
             this._targetData = data;
             this._iterate(data, function(key, value) {
                 this._makeProperty(data, key, key, value);
@@ -244,23 +276,31 @@ DynamicDatabaseManager._makeDynamicData = function(dataArray, columnMap) {
 };
 
 DynamicDatabaseManager._makeProperty = function(parent, keyPath, key, child) {
-    if (key === 'meta') return;
+    if (key === 'meta') {
+        return;
+    }
     switch (typeof child) {
         case 'string':
-            if (child.match(/\\/g))
+            if (child.match(/\\/g)) {
                 this._makePropertyString(parent, key, child);
+            }
             break;
         case 'boolean':
         case 'number':
-            if (this._isEmpty(parent.meta)) return;
+            if (this._isEmpty(parent.meta)) {
+                return;
+            }
             var propName = this._columnMapper[keyPath] || this._columnMapperCoomon[keyPath];
             var metaTag  = 'DD' + propName;
-            if (propName != null && parent.meta[metaTag] != null)
+            if (propName != null && parent.meta[metaTag] != null)  {
                 this._makePropertyFormula(parent, key, child, metaTag);
+            }
             parent[propName] = child;
             break;
         case 'object':
-            if (!child || this._isEmpty(parent.meta)) return;
+            if (!child || this._isEmpty(parent.meta)) {
+                return;
+            }
             child.meta = parent.meta;
             this._iterate(child, function(valuesKey, valuesItem) {
                 this._makeProperty(child, keyPath + '_' + valuesKey, valuesKey, valuesItem);
@@ -270,27 +310,21 @@ DynamicDatabaseManager._makeProperty = function(parent, keyPath, key, child) {
 };
 
 DynamicDatabaseManager._makePropertyFormula = function(parent, key, child, metaTag) {
-    var data = this._targetData, データ = this._targetData;
+    var data = this._targetData;
     Object.defineProperty(parent, key, {
-        get         : function() {
-            try {
-                var prev   = child, 元の値 = child;
-                var result = eval(DynamicDatabaseManager._convertEscapeCharacters(this.meta[metaTag]));
-                return typeof child === 'number' ? result : result == true;
-            } catch (e) {
-                return DynamicDatabaseManager._processEvalException(e, this.meta[metaTag]);
-            }
-        },
-        configurable: false
+        get: function() {
+            var prev   = child;
+            var result = eval(DynamicDatabaseManager._convertEscapeCharacters(this.meta[metaTag]));
+            return typeof child === 'number' ? result : !!result;
+        }
     });
 };
 
 DynamicDatabaseManager._makePropertyString = function(parent, key, child) {
     Object.defineProperty(parent, key, {
-        get         : function() {
+        get: function() {
             return DynamicDatabaseManager._convertEscapeCharacters(child);
-        },
-        configurable: false
+        }
     });
 };
 
@@ -308,30 +342,14 @@ DynamicDatabaseManager._convertEscapeCharacters = function(text) {
     });
     text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
         var n     = parseInt(arguments[1]);
-        var actor = n >= 1 && $gameActors ? $gameActors.actor(n) : null;
+        var actor = (n >= 1 && $gameActors ? $gameActors.actor(n) : null);
         return actor ? actor.name() : '';
     });
     text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
         var n     = parseInt(arguments[1]);
-        var actor = n >= 1 && $gameParty ? $gameParty.members()[n - 1] : null;
+        var actor = (n >= 1 && $gameParty ? $gameParty.members()[n - 1] : null);
         return actor ? actor.name() : '';
     });
     text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
     return text;
-};
-
-DynamicDatabaseManager._processEvalException = function(e, formula) {
-    if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-        var window = require('nw.gui').Window.get();
-        if (!window.isDevToolsOpen()) {
-            var devTool = window.showDevTools();
-            devTool.moveTo(0, 0);
-            devTool.resizeTo(Graphics.width, Graphics.height);
-            window.focus();
-        }
-    }
-    console.log('計算式の評価中にエラーが発生しました。強制的に 0 が返却されます。');
-    console.log('- 計算式     : ' + formula);
-    console.log('- エラー原因 : ' + e.toString());
-    return 0;
 };
