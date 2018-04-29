@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.9 2018/04/29 イベントすり抜けのパラメータがOFFかつイベントとプレイヤーが重なったときに移動不可となる問題を修正
+//                   パラメータ「強制中無効」が有効なとき、対象キャラが半歩位置にいると強制中でも半歩移動になってしまう問題を修正（一部制約あり）
 // 1.11.8 2018/03/21 プレイヤーが向きが固定されているとき、プレイヤー接触のイベントをプレイヤーの進行方向を基準に判定するよう修正
 // 1.11.7 2018/02/01 プラグインが未適用の状態でセーブされたデータをロードした際、一部の処理に差異が出る問題を修正
 // 1.11.6 2018/01/28 プライオリティが通常キャラと同じイベントに対して拡張トリガーが適用されない問題を修正
@@ -362,6 +364,11 @@
  * 他のプラグインと併用する場合は、それぞれの配布元の規約や注意事項を
  * あらかじめご確認ください。
  *
+ * 注意事項
+ * 「強制中無効」のパラメータをONにして移動ルート強制した場合、フォロワーの動きや通行判定が
+ * 一部おかしくなる問題があり、現在は未解決です。同パラメータを有効にする場合は
+ * ご注意ください。
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -714,6 +721,9 @@
         var halfPositionCount  = localHalfPositionCount;
         localHalfPositionCount = 0;
         if (!this.isHalfMove()) {
+            if (this.isHalfPosX() || this.isHalfPosY()) {
+                return true;
+            }
             var x5 = $gameMap.roundXWithDirection(x, d);
             var y5 = $gameMap.roundYWithDirection(y, d);
             result = alias(x, y, d) && !$gameMap.isLowerNp(x5, y5);
@@ -1018,7 +1028,7 @@
         var events = $gameMap.eventsXyUnitNt(x, y);
         var result = false;
         events.forEach(function(event) {
-            if (event.isNormalPriority() && !event.isHalfThrough(y)) {
+            if (event.isNormalPriority() && !event.isHalfThrough(y) && !event.pos(this.x, this.y)) {
                 this.collidedToEvent(event);
                 result = true;
             }
@@ -1599,8 +1609,10 @@
     //  移動ルート強制中は半歩移動を無効にします。
     //=============================================================================
     Game_Character.prototype.isHalfMove = function() {
-        return (Game_CharacterBase.prototype.isHalfMove.call(this) &&
-            (!this._moveRouteForcing || !paramDisableForcing)) || this.isHalfPosX() || this.isHalfPosY();
+        if (this._moveRouteForcing && paramDisableForcing) {
+            return false;
+        }
+        return Game_CharacterBase.prototype.isHalfMove.call(this) || this.isHalfPosX() || this.isHalfPosY();
     };
 
     //=============================================================================
