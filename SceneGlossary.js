@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2018/04/30 ひとつの用語に対して複数の画像を表示できる機能を追加
 // 2.6.2 2018/04/19 ヘルプの一部を英語化
 // 2.6.1 2018/04/07 用語選択からカテゴリ選択に戻ったときに、最後に選択していた用語の情報が残ってしまう問題を修正
 // 2.6.0 2018/03/17 テキストのY座標を数値指定できる機能を追加
@@ -639,6 +640,15 @@
  * 1. パラメータ「敵キャラ自動登録」で戦闘した敵キャラと同名の用語を取得
  * 2. メモ欄<SG敵キャラ>で対象敵キャラの画像を表示
  * 3. \mhp[3]等の制御文字で対象敵キャラのパラメータを表示
+ *
+ * ・追加機能4
+ * ひとつの用語に対して複数のピクチャを表示することができます。
+ * メモ欄に以下のタグを記述し、ファイル名、X座標、Y座標をカンマ区切りで
+ * 指定してください。
+ * <SG追加1ピクチャ:aaa,1,2> // ピクチャ「aaa」をX[1] Y[2]に表示
+ *
+ * さらに追加で表示させたい場合は以下のように記述してください。
+ * <SG追加2ピクチャ:bbb,2,3>
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -2016,13 +2026,17 @@ function Window_GlossaryComplete() {
         return enemy;
     };
 
+    Window_Glossary.prototype.getPlusPictureData = function(imageIndex, index) {
+        return this.getMetaContents([`追加${imageIndex}ピクチャ`, `Plus${imageIndex}Picture`], index);
+    };
+
     Window_Glossary.prototype.getDescription = function(index) {
         var description = this.getMetaContents(['説明', 'Description'], index);
         if (!description) {
             return '';
         }
-        var prevData = this._itemData;
-        description = description.replace(/\x1bCOMMON\[(\d+)]/gi, function() {
+        var prevData   = this._itemData;
+        description    = description.replace(/\x1bCOMMON\[(\d+)]/gi, function() {
             this._itemData = $dataItems[parseInt(arguments[1])];
             return this.getCommonDescription();
         }.bind(this));
@@ -2119,7 +2133,7 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.drawItemSub = function(bitmap) {
-        var text = this.getDescription(this._pageIndex);
+        var text    = this.getDescription(this._pageIndex);
         var textPos = this.getTextPosition();
         var textHandler;
         var pictureHandler;
@@ -2129,18 +2143,18 @@ function Window_GlossaryComplete() {
                 if (!textPos) {
                     textPos = this.calcItemPictureHeight(bitmap, text);
                 }
-                textHandler = this.drawItemText.bind(this, text, textPos);
+                textHandler    = this.drawItemText.bind(this, text, textPos);
                 pictureHandler = this.drawPicture.bind(this, bitmap, text, 0);
                 break;
             case 'bottom':
-                textHandler = this.drawItemText.bind(this, text, textPos);
-                y = this.contentsHeight() - this.calcItemPictureHeight(bitmap, text);
+                textHandler    = this.drawItemText.bind(this, text, textPos);
+                y              = this.contentsHeight() - this.calcItemPictureHeight(bitmap, text);
                 pictureHandler = this.drawPicture.bind(this, bitmap, text, y);
                 break;
             case 'text':
             default :
-                textHandler = this.drawItemText.bind(this, text, textPos);
-                y = this.calcItemTextHeight(text) + textPos;
+                textHandler    = this.drawItemText.bind(this, text, textPos);
+                y              = this.calcItemTextHeight(text) + textPos;
                 pictureHandler = this.drawPicture.bind(this, bitmap, text, y);
                 break;
         }
@@ -2151,6 +2165,31 @@ function Window_GlossaryComplete() {
             textHandler();
             pictureHandler();
         }
+        this.drawPlusPictures();
+    };
+
+    Window_Glossary.prototype.drawPlusPictures = function() {
+        var pictureData = null;
+        var imageIndex  = 1;
+        do {
+            pictureData = this.getPlusPictureData(imageIndex, this._pageIndex);
+            if (pictureData) {
+                imageIndex++;
+                this.drawPlusPicture.apply(this, pictureData.split(','));
+            }
+        } while (pictureData);
+    };
+
+    Window_Glossary.prototype.drawPlusPicture = function(pictureName, xText, yText) {
+        var bitmap = ImageManager.loadPicture(pictureName);
+        if (!bitmap) {
+            return;
+        }
+        bitmap.addLoadListener(function() {
+            var x = parseInt(xText) || 0;
+            var y = parseInt(yText) || 0;
+            this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
+        }.bind(this));
     };
 
     Window_Glossary.prototype.getPicturePosition = function() {
@@ -2197,20 +2236,20 @@ function Window_GlossaryComplete() {
     ];
 
     Window_Glossary.prototype.convertEnemyData = function(text) {
-        var enemy = this._enemy;
+        var enemy     = this._enemy;
         var gameEnemy = new Game_Enemy(enemy.id, 0, 0);
-        text = text.replace(/\x1b(MHP|MMP|ATK|DEF|MAG|MDF|AGI|LUK)\[(\d+)]/gi, function() {
+        text          = text.replace(/\x1b(MHP|MMP|ATK|DEF|MAG|MDF|AGI|LUK)\[(\d+)]/gi, function() {
             var index = Window_Glossary._paramNames.indexOf(arguments[1].toUpperCase());
             var param = enemy.params[index];
             return param.padZero(parseInt(arguments[2]));
         });
-        text = text.replace(/\x1bEXP\[(\d+)]/gi, function() {
+        text          = text.replace(/\x1bEXP\[(\d+)]/gi, function() {
             return enemy.exp.padZero(parseInt(arguments[1]));
         });
-        text = text.replace(/\x1bMONEY\[(\d+)]/gi, function() {
+        text          = text.replace(/\x1bMONEY\[(\d+)]/gi, function() {
             return enemy.gold.padZero(parseInt(arguments[1]));
         });
-        text = text.replace(/\x1bDROP\[(\d+)]/gi, function() {
+        text          = text.replace(/\x1bDROP\[(\d+)]/gi, function() {
             var drop = enemy.dropItems[parseInt(arguments[1]) - 1];
             if (drop) {
                 var item = gameEnemy.itemObject(drop.kind, drop.dataId);
@@ -2218,7 +2257,7 @@ function Window_GlossaryComplete() {
             }
             return '';
         });
-        text = text.replace(/\x1bSCRIPT{(\s+)}/gi, function() {
+        text          = text.replace(/\x1bSCRIPT{(\s+)}/gi, function() {
             return eval(arguments[1]);
         });
         return text;
@@ -2236,7 +2275,7 @@ function Window_GlossaryComplete() {
 
     Window_Glossary.prototype.drawPicture = function(bitmap, text, y) {
         if (!bitmap) return;
-        var item = this._itemData;
+        var item  = this._itemData;
         var scale = this.getPictureScale(item, bitmap, text);
         var dw    = bitmap.width * scale;
         var dy    = bitmap.height * scale;
@@ -2253,6 +2292,7 @@ function Window_GlossaryComplete() {
                 break;
         }
         this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y, dw, dy);
+        this.drawPlusPicture();
     };
 
     Window_Glossary.prototype.getPictureScale = function(item, bitmap, text) {
