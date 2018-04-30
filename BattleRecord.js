@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2018/04/30 ゴールドの増減について所持ゴールドを以上の額を減算したときの消費量が誤っていた問題を修正
 // 1.2.1 2017/05/20 プラグイン未適用のデータをロードしたときに一部のスクリプトが実行エラーになる問題を修正
 // 1.2.0 2016/12/25 アイテムの売買履歴を保持して取得できる機能を追加
 // 1.1.3 2016/12/05 装備変更時に装備品の入手数がカウントアップされていた不具合を修正
@@ -660,11 +661,13 @@ function Game_TradeRecord() {
 
     var _Game_Party_gainGold      = Game_Party.prototype.gainGold;
     Game_Party.prototype.gainGold = function(amount) {
+        var prevGold = this._gold;
         _Game_Party_gainGold.apply(this, arguments);
-        if (amount >= 0) {
-            this.recordGainGold(amount);
+        var deltaGold = this._gold - prevGold;
+        if (deltaGold >= 0) {
+            this.recordGainGold(deltaGold);
         } else {
-            this.recordLoseGold(-amount);
+            this.recordLoseGold(-deltaGold);
         }
     };
 
