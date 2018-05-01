@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2018/05/01 スキップモードとオートモードをスイッチで自動制御できる機能を追加
 // 1.9.0 2018/02/18 イベント終了時にオート、スキップを解除するかどうかを任意のスイッチで判定できるように仕様変更
 // 1.8.0 2018/02/16 オート待機フレーム数の計算式にウィンドウに表示した文字数を組み込める機能を追加
 // 1.7.0 2017/12/12 SkipAlreadyReadMessage.jsとの連携したときに当プラグインのスキップ機能が既読スキップになるよう修正
@@ -51,6 +52,16 @@
  * @option control
  * @option tab
  * @option A
+ *
+ * @param SkipSwitchId
+ * @desc 指定した番号のスイッチがONになっている場合は常にスキップします。
+ * @default 0
+ * @type switch
+ *
+ * @param AutoSwitchIId
+ * @desc 指定した番号のスイッチがONになっている場合は常にオートします。スキップが優先されます。
+ * @default 0
+ * @type switch
  *
  * @param SkipIcon
  * @desc メッセージスキップ中にウィンドウ右下に表示されるアイコン
@@ -147,6 +158,7 @@
  *
  * This plugin is released under the MIT License.
  */
+
 /*:ja
  * @plugindesc メッセージスキッププラグイン
  * @author トリアコンタン
@@ -170,6 +182,16 @@
  * @option control
  * @option tab
  * @option A
+ *
+ * @param スキップスイッチ
+ * @desc 指定した番号のスイッチがONになっている場合は常にスキップします。
+ * @default 0
+ * @type switch
+ *
+ * @param オートスイッチ
+ * @desc 指定した番号のスイッチがONになっている場合は常にオートします。スキップが優先されます。
+ * @default 0
+ * @type switch
  *
  * @param スキップアイコン
  * @desc メッセージスキップ中にウィンドウ右下に表示されるアイコン
@@ -376,6 +398,8 @@ function Sprite_Frame() {
     var paramPictureAnchor   = getParamNumber(['PictureAnchor', 'ボタン原点']);
     var paramPictureSwitchId = getParamNumber(['PictureSwitchId', 'ボタン表示スイッチID'], 0);
     var paramPressingSkip    = getParamBoolean(['PressingSkip', '押し続けスキップ']);
+    var paramSkipSwitchId    = getParamNumber(['SkipSwitchId', 'スキップスイッチ'], 0);
+    var paramAutoSwitchIId   = getParamNumber(['AutoSwitchIId', 'オートスイッチ'], 0);
 
     //=============================================================================
     // Game_Message
@@ -503,8 +527,8 @@ function Sprite_Frame() {
 
     Window_Message.prototype.initializeMessageAutoCount = function() {
         // use in eval
-        var textSize = this._textState ? this._textState.text.length : 0;
-        var paramValue = convertEscapeCharacters(getParamString(['AutoWaitFrame', 'オート待機フレーム'])) || 1;
+        var textSize           = this._textState ? this._textState.text.length : 0;
+        var paramValue         = convertEscapeCharacters(getParamString(['AutoWaitFrame', 'オート待機フレーム'])) || 1;
         this._messageAutoCount = eval(paramValue);
     };
 
@@ -565,14 +589,30 @@ function Sprite_Frame() {
         if (this.isClosed()) return;
         if (this.isAnySubWindowActive()) {
             $gameMessage.clearSkipInfo();
-        } else if (!paramPressingSkip && this.isTriggeredMessageSkip()) {
+        } else {
+            this.setSkipAutoFlagByTrigger();
+            this.setSkipAutoFlagBySwitch();
+        }
+        this.updateSkipForSkipAlreadyReadMessage();
+    };
+
+    Window_Message.prototype.setSkipAutoFlagByTrigger = function() {
+        if (!paramPressingSkip && this.isTriggeredMessageSkip()) {
             $gameMessage.toggleSkip();
         } else if (this.isTriggeredMessageAuto()) {
             $gameMessage.toggleAuto();
         } else if (paramPressingSkip) {
             $gameMessage.setSkipFlg(this.isPressedMessageSkip());
         }
-        this.updateSkipForSkipAlreadyReadMessage();
+    };
+
+    Window_Message.prototype.setSkipAutoFlagBySwitch = function() {
+        if (paramSkipSwitchId > 0) {
+            $gameMessage.setSkipFlg($gameSwitches.value(paramSkipSwitchId));
+        }
+        if (paramAutoSwitchIId > 0) {
+            $gameMessage.setAutoFlg($gameSwitches.value(paramAutoSwitchIId));
+        }
     };
 
     // for SkipAlreadyReadMessage.js
@@ -667,8 +707,8 @@ function Sprite_Frame() {
     };
 
     Sprite_MessageButton.prototype.isTriggered = function(targetX, targetY, pressed) {
-        var realX = targetX + this._frame.width * this.anchor.x;
-        var realY = targetY + this._frame.height * this.anchor.y;
+        var realX       = targetX + this._frame.width * this.anchor.x;
+        var realY       = targetY + this._frame.height * this.anchor.y;
         var triggeredOk = (pressed ? TouchInput.isPressed() : TouchInput.isTriggered());
         return triggeredOk && this.isInSprite(realX, realY);
     };
