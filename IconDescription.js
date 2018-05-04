@@ -1,16 +1,18 @@
 //=============================================================================
 // IconDescription.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015-2018Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2018 05/05 古いコアスクリプト用の設定を削除
+//                  バトル画面で除去されたステータスアイコンの説明が残ってしまう問題を修正
 // 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
 // 1.0.1 2016/05/31 ウィンドウが重なったときに裏側のウィンドウのアイコンに反応する不具合を修正
 // 1.0.0 2016/03/16 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -25,11 +27,6 @@
  * @require 1
  * @dir audio/se/
  * @type file
- *
- * @param ウィンドウ透過
- * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
- * 他のプラグインで同様機能を実現している場合はOFF。
- * @default OFF
  *
  * @help ウィンドウ内に表示されたアイコンをクリック or タッチすると
  * あらかじめ登録しておいた説明が表示されます。
@@ -94,7 +91,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() == 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'FALSE';
     };
 
     var getParamOther = function(paramNames) {
@@ -150,23 +147,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandIconDescription(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandIconDescription(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandIconDescription = function (command, args) {
@@ -258,7 +239,7 @@
         }
         if (!this._captionWindow) {
             this._captionWindow = new Window_Caption(TouchInput.x, TouchInput.y, text);
-            this.parent.addChild(this._captionWindow);
+            this.parent.parent.addChild(this._captionWindow);
         } else {
             this._captionWindow.refresh(text);
             this._captionWindow.x = TouchInput.x;
@@ -268,7 +249,7 @@
     };
 
     Window_Base.prototype.eraseCaption = function() {
-        this.parent.removeChild(this._captionWindow);
+        this.parent.parent.removeChild(this._captionWindow);
         this._captionWindow = null;
         TouchInput.clear();
     };
@@ -280,9 +261,20 @@
     Window_Base.prototype.isTouchedInsideFrame = Window_Selectable.prototype.isTouchedInsideFrame;
 
     //=============================================================================
-    // Window_Caption
-    //  アイコン画像に対応するヘルプを表示します。
+    // Window_Selectable
+    //  再描画時にアイコンリストを初期化します。
     //=============================================================================
+    var _Window_Selectable_drawAllItems = Window_Selectable.prototype.drawAllItems;
+    Window_Selectable.prototype.drawAllItems = function() {
+        this._iconRects = {};
+        _Window_Selectable_drawAllItems.apply(this, arguments);
+    };
+
+    /**
+     * Window_Caption
+     * アイコン画像に対応するヘルプを表示します。
+     * @constructor
+     */
     function Window_Caption() {
         this.initialize.apply(this, arguments);
     }
@@ -326,19 +318,5 @@
     Window_Caption.prototype.standardFontSize = function() {
         return settings.captionInfo.fontSize;
     };
-
-    //=============================================================================
-    // ウィンドウを透過して重なり合ったときの表示を自然にします。
-    //=============================================================================
-    if (paramThroughWindow && !WindowLayer.throughWindow) {
-        WindowLayer.throughWindow = true;
-        //=============================================================================
-        //  WindowLayer
-        //   ウィンドウのマスク処理を除去します。
-        //=============================================================================
-        WindowLayer.prototype._maskWindow = function(window) {};
-
-        WindowLayer.prototype._canvasClearWindowRect = function(renderSession, window) {};
-    }
 })();
 
