@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2018/05/05 YEP_MessageCore.jsが有効な場合、メッセージウィンドウの行数はYEP_MessageCore.jsを優先するよう修正
 // 1.6.0 2018/03/25 バトルログに表示する内容が空の時、ウィンドウを非表示にできる機能を追加
 // 1.5.0 2018/03/25 バトルログの行数を変更できる機能を追加。表示するメッセージが空の場合はメッセージ表示をしないよう変更
 // 1.4.1 2018/02/10 戦闘終了のメッセージ表示後にログウィンドウが一瞬だけ残ってしまう現象を修正
@@ -164,7 +165,7 @@
     var paramMessagePosUpper  = getParamBoolean(['MessagePosUpper', 'メッセージ上部配置']);
     var paramMessageSpeed     = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
     var paramWaitForEndAction = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
-    var paramMessageLines     = getParamNumber(['MessageLines', 'メッセージ行数'], 1);
+    var paramMessageLines     = getParamNumber(['MessageLines', 'メッセージ行数'], 0);
     var paramHiddenIfEmpty    = getParamBoolean(['HiddenIfEmpty', '空の場合に非表示']);
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
@@ -336,7 +337,7 @@
 
     var _Window_Message_numVisibleRows      = Window_Message.prototype.numVisibleRows;
     Window_Message.prototype.numVisibleRows = function() {
-        if (SceneManager.isBattleScene() && paramMessageLines !== 4) {
+        if (SceneManager.isBattleScene() && paramMessageLines > 0 && !$gameSystem.messageRows) {
             return paramMessageLines;
         } else {
             return _Window_Message_numVisibleRows.apply(this, arguments);
