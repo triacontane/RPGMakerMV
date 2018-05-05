@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.5 2018/05/05 1.4.4で動的データベース構築プラグインとの競合が発生していたので解消
 // 1.4.4 2018/05/04 装備封印で外れた場合に変数の増減が行われない問題を修正
 // 1.4.3 2018/01/27 DynamicVariables.jsとの連携機能を追加
 // 1.4.2 2017/08/29 HIME_EquipSlotsCore.jsとの競合を解消
@@ -294,7 +295,7 @@
             _Game_Actor_releaseUnequippableItems.apply(this, arguments);
             return;
         }
-        var prevEquips = JsonEx.makeDeepCopy(this.equips());
+        var prevEquips = this.equips();
         _Game_Actor_releaseUnequippableItems.apply(this, arguments);
         prevEquips.forEach(function(prevEquip, index) {
             var equip = this._equips[index].object();
