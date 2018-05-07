@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.1 2018/05/07 オートモードで途中に「\!」が含まれる場合の待機フレームが正しく計算されない問題を修正
 // 1.10.0 2018/05/01 スキップモードとオートモードをスイッチで自動制御できる機能を追加
 // 1.9.0 2018/02/18 イベント終了時にオート、スキップを解除するかどうかを任意のスイッチで判定できるように仕様変更
 // 1.8.0 2018/02/16 オート待機フレーム数の計算式にウィンドウに表示した文字数を組み込める機能を追加
@@ -527,7 +528,15 @@ function Sprite_Frame() {
 
     Window_Message.prototype.initializeMessageAutoCount = function() {
         // use in eval
-        var textSize           = this._textState ? this._textState.text.length : 0;
+        var textSize = 0;
+        if (this._textState) {
+            var index = this._textState.index;
+            var text  = this._textState.text;
+            while (text[index] && !(text[index] === '\x1b' && text[index + 1] === '!')) {
+                index++;
+            }
+            textSize = index - this._textState.index;
+        }
         var paramValue         = convertEscapeCharacters(getParamString(['AutoWaitFrame', 'オート待機フレーム'])) || 1;
         this._messageAutoCount = eval(paramValue);
     };
