@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2018/05/13 1.1.0でエラーになる問題を修正
 // 1.1.0 2018/05/13 バックアップフォルダを時間単位で作成できる機能を追加
 // 1.0.0 2018/04/21 初版
 // ----------------------------------------------------------------------------
@@ -210,7 +211,7 @@
             return '';
         }
         var date = new Date();
-        return `_${date.getHour().padZero(2)}${date.getMinutes().padZero(2)}${date.getSeconds().padZero(2)}`;
+        return `_${date.getHours().padZero(2)}${date.getMinutes().padZero(2)}${date.getSeconds().padZero(2)}`;
     };
 
     StorageManager.makeBackupDirectory = function(type) {
