@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/05/13 バックアップフォルダを時間単位で作成できる機能を追加
 // 1.0.0 2018/04/21 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -26,6 +27,11 @@
  * @default false
  * @type boolean
  *
+ * @param timeUnit
+ * @desc 有効にすると時間単位でフォルダを作成します。無効にすると日付単位でフォルダを作成します。
+ * @default false
+ * @type boolean
+ *
  * @help BackUpDatabase.js
  *
  * ゲームを起動するたびにデータフォルダ一式を所定の場所にコピーします。
@@ -34,7 +40,7 @@
  * 通常プレー、戦闘テスト、イベントテスト、ブラウザプレーでは何もしません。
  *
  * なお、プラグインの動作テストは十分に行っていますが、
- * 当プラグインは問題発生時にプロジェクトの復元を保証するものではありません。
+ * 当プラグインは問題発生時のプロジェクトの復元を常に保証するものではありません。
  *
  * This plugin is released under the MIT License.
  */
@@ -53,6 +59,12 @@
  * @default false
  * @type boolean
  *
+ * @param timeUnit
+ * @text 時間単位でフォルダ作成
+ * @desc 有効にすると時間単位でフォルダを作成します。無効にすると日付単位でフォルダを作成します。
+ * @default false
+ * @type boolean
+ *
  * @help BackUpDatabase.js
  *
  * ゲームを起動するたびにデータフォルダ一式を所定の場所にコピーします。
@@ -61,7 +73,7 @@
  * 通常プレー、戦闘テスト、イベントテスト、ブラウザプレーでは何もしません。
  *
  * なお、プラグインの動作テストは十分に行っていますが、
- * 当プラグインは問題発生時にプロジェクトの復元を保証するものではありません。
+ * 当プラグインは問題発生時のプロジェクトの復元を常に保証するものではありません。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -190,7 +202,15 @@
 
     StorageManager.getBackupPath = function(prefix) {
         var date = new Date();
-        return `${prefix}_${date.getFullYear()}-${(date.getMonth() + 1).padZero(2)}-${date.getDate().padZero(2)}/`;
+        return `${prefix}_${date.getFullYear()}-${(date.getMonth() + 1).padZero(2)}-${date.getDate().padZero(2)}${this.getBackupTimePath()}/`;
+    };
+
+    StorageManager.getBackupTimePath = function() {
+        if (!param.timeUnit) {
+            return '';
+        }
+        var date = new Date();
+        return `_${date.getHour().padZero(2)}${date.getMinutes().padZero(2)}${date.getSeconds().padZero(2)}`;
     };
 
     StorageManager.makeBackupDirectory = function(type) {
