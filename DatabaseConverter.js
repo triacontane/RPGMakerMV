@@ -6,7 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.0.0 2018/05/13 初版
+// 0.1.0 2018/05/13 テスト版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
@@ -1160,6 +1160,10 @@
         }
     }
 
+    //=============================================================================
+    // DataManager
+    //  起動時の自動読み込みを追加します。
+    //=============================================================================
     var _DataManager_loadDatabase = DataManager.loadDatabase;
     DataManager.loadDatabase      = function() {
         if (!this.isEventTest() && !this._databaseImport) {
@@ -1174,6 +1178,7 @@
 
     //=============================================================================
     // StorageManager
+    //  データベースの同期ロードとセーブを追加します。
     //=============================================================================
     StorageManager.loadDataBaseFileSync = function(fileName) {
         try {
@@ -1222,6 +1227,7 @@
 
     //=============================================================================
     // Scene_Boot
+    //  変換オブジェクトの準備完了を待ちます。
     //=============================================================================
     const _Scene_Boot_isReady    = Scene_Boot.prototype.isReady;
     Scene_Boot.prototype.isReady = function() {
