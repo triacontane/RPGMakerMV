@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.2 2018/05/17 ランダム生成の試行回数をパラメータから設定できるように仕様変更
 // 1.8.1 2018/03/12 ランダム生成で対象座標が見付からず失敗した場合、エラーではなく警告になるよう仕様変更
 // 1.8.0 2018/02/07 場所移動時にセルフスイッチがクリアされなくなる機能を追加
 // 1.7.0 2017/09/17 プラグインコマンドにテンプレートイベントのセルフ変数「\sv[n]」が利用できる機能を追加
@@ -43,6 +44,12 @@
  * @desc 有効にすると場所移動時にセルフスイッチをクリアしなくなります。イベントの消去を実行した場合はクリアされます。
  * @default false
  * @type boolean
+ *
+ * @param tryRandomCount
+ * @text 試行回数
+ * @desc ランダム生成をする際の試行回数です。イベント生成に失敗する場合は数値を大きくしてください。
+ * @default 1000
+ * @type number
  *
  * @help イベントをコピーして動的に生成します。
  * コピーした一時イベントは、イベントコマンド「イベントの一時消去」によって
@@ -422,11 +429,12 @@ function Game_PrefabEvent() {
 
     Game_Map.prototype.getConditionalValidPosition = function(conditions) {
         var x, y, count = 0;
+        var tryCount = param.tryRandomCount || 1000;
         do {
             x = Math.randomInt($dataMap.width);
             y = Math.randomInt($dataMap.height);
-        } while (!conditions.every(this.checkValidPosition.bind(this, x, y)) && ++count < 1000);
-        return count < 1000 ? {x: x, y: y} : null;
+        } while (!conditions.every(this.checkValidPosition.bind(this, x, y)) && ++count < tryCount);
+        return count < tryCount ? {x: x, y: y} : null;
     };
 
     Game_Map.prototype.checkValidPosition = function(x, y, condition) {
