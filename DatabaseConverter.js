@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 0.3.0 2018/05/17 オートインポート機能がパラメータ設定に拘わらず有効になっていた問題を修正
+//                  マップIDに歯抜けがあった場合、出力エラーになる問題を修正
+//                  イベントテストの実行内容を出力する機能を追加
 // 0.2.0 2018/05/14 ヘルプ修正
 // 0.1.0 2018/05/13 テスト版
 // ----------------------------------------------------------------------------
@@ -66,6 +69,12 @@
  * @default false
  * @type boolean
  *
+ * @param exportEventTest
+ * @text イベントテスト出力
+ * @desc イベントテスト実行時に実行内容を出力します。ただし本プラグインのコマンドを実行した場合は出力されません。
+ * @default true
+ * @type boolean
+ *
  * @param commandPrefix
  * @text メモ欄接頭辞
  * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
@@ -113,39 +122,52 @@
  *
  * ・マップイベント
  * マップイベントの実行内容を入出力します。ファイル名は「MapXXX」です。
+ * シート名に「イベントID」および「イベントページ」が出力されます。
+ *
+ * ・イベントテスト
+ * イベントテストで選択した実行内容を出力します。
+ * ファイル名は「Test_Event」です。出力のみに対応しています。
  *
  * --------------------------------------
  * 出力対象フォーマット
  * --------------------------------------
  * Excelファイル以外にもCSVやOpenDocument Spreadsheetなど
- * 7種類のフォーマットに対応しています。
- * プラグインパラメータから変更可能です。
+ * 以下のフォーマットに対応しています。プラグインパラメータから変更可能です。
+ *
+ * xlsx : Excel2007以降の一般的な形式です。
+ * xlsm : Excel2007以降のマクロ付き形式です。
+ * xlsb : Excel2007以降のバイナリ形式です。容量や速度面で優れています。
+ * ods  : 特定のベンダに依存しないオープンなファイル形式です。
+ * fods : 特定のベンダに依存しないオープンなXMLテキストファイル形式です。
+ * csv  : カンマ区切りのテキストファイル形式です。
+ * txt  : タブ区切りのテキストファイル形式です。
  *
  * --------------------------------------
  * 出力ファイル詳細
  * --------------------------------------
- * 1. 出力時に同名のファイルが存在した場合は上書きされます。
+ * 1. 出力時に同名のファイルが存在した場合は上書きされます。(※1)
  * 2. シート名にはデータ種別が出力されるので編集しないでください。
  * 3. 出力ファイルの1行目には入出力に必須な情報(プロパティ名)が出力されます。
  *    ここも編集しないでください。
  * 4. 2行目には項目の日本語名が出力されます。読み込み時は無視されます。
  * 5. 配列項目（特徴など）は一部除きjson文字列で出力されます。編集は非推奨です。
  * 6. 数値や文字列は編集できますが、整合性のない値の入力には注意してください。
- * 7. Excel計算式は実行結果がデータベースの値として読み込まれます。
- * 8. 書式設定や行列の設定、マクロの追加などは影響を与えません。
+ * 7. Excel計算式は計算結果がデータベースの値として読み込まれます。
+ * 8. 書式設定や行列の設定、マクロの追加などは自由です。
  * 9. データベースは読み込み時にID列でソートされます。重複はエラーになります。
  *
+ * ※1 同名ファイルを開いているとエラーになるのでファイルを閉じてください。
  * --------------------------------------
  * 注意事項
  * --------------------------------------
- * 当プラグインの機能を使用する前に「必ず」プロジェクト以下の「data」フォルダの
- * バックアップを取得してください。
+ * 当プラグインの機能を使用する前にプロジェクト以下の「data」フォルダの
+ * バックアップを「必ず」取得してください。
  *
- * 「data」フォルダの内容を自動でバックアップするプラグインも別途配布しています。
+ * 「data」フォルダの内容を自動でバックアップするプラグインも配布しています。
  * こちらのご利用もご検討ください。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/BackUpDatabase.js
  *
- * いかなる場合でも破損したプロジェクトの復元には応じられませんのでご注意ください。
+ * いかなる場合も破損したプロジェクトの復元には応じられませんのでご注意ください。
  *
  * 本プラグインの機能は「イベントテスト」から実行した場合のみ有効です。
  * 通常のテストプレーおよび製品版には影響を与えません。
@@ -365,6 +387,14 @@
         SceneManager.executeDataImport(new ConvertTargetMapEvent(args, mapId));
     };
 
+    const _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
+    Game_Interpreter.prototype.terminate = function() {
+        _Game_Interpreter_terminate.apply(this, arguments);
+        if (DataManager.isEventTest() && this._depth === 0 && param.exportEventTest) {
+            SceneManager.executeDataExport(new ConvertTargetTestEvent());
+        }
+    };
+
     //=============================================================================
     // SceneManager
     //  シート変換オブジェクトを生成、管理します。
@@ -410,10 +440,10 @@
     };
 
     SceneManager._pause = function(handler) {
-        console.log('Press or Click any key');
+        console.log('Press or Click any key to shutdown....');
         setInterval(function() {
             if (Object.keys(Input._currentState).length > 0 || TouchInput.isPressed()) handler();
-        }, 100);
+        }, 10);
     };
 
     /**
@@ -437,7 +467,7 @@
         }
 
         isReady() {
-            return this._loaded;
+            return this._loaded && !this._serializer;
         }
 
         addLoadListener(callBack) {
@@ -616,7 +646,7 @@
                 workbook.SheetNames.push(databaseName);
                 workbook.Sheets[databaseName] = this._workBook.Sheets[databaseName];
                 this.writeWorkbookFile(databaseName, workbook);
-            });
+            }.bind(this));
         }
 
         readAllWorkbook() {
@@ -627,7 +657,7 @@
                     workbook.SheetNames.push(databaseName);
                     workbook.Sheets[databaseName] = singleWork.Sheets['Sheet1'];
                 }
-            });
+            }.bind(this));
             return workbook;
         }
     }
@@ -1087,6 +1117,28 @@
     }
 
     /**
+     * ConvertTargetTestEvent
+     * イベントテスト用の変換対象クラス
+     */
+    class ConvertTargetTestEvent extends AbstractConvertTargetEvent {
+        setupTargetList() {
+            this._targetList = ['EventTest'];
+        }
+
+        getFileName() {
+            return 'Test_Event';
+        }
+
+        getList() {
+            return this._database;
+        }
+
+        setList(name, list) {
+            this._database = list;
+        }
+    }
+
+    /**
      * DataSerializer
      *  Game_SheetConverterAbstract内部で使用されるデータ変換クラスです。
      */
@@ -1097,6 +1149,9 @@
         }
 
         serializeData(dataList) {
+            dataList = dataList.filter(function(dataItem) {
+                return !!dataItem;
+            });
             dataList.forEach(this._parseForSerialize, this);
             this._addColumnDescriptions(dataList);
             return this._utils.json_to_sheet(dataList);
@@ -1114,7 +1169,6 @@
             Object.keys(this._target.getObjectProperties()).forEach(function(property) {
                 this._parseObjectForSerialize(property, dataItem);
             }, this);
-
         }
 
         _parseArrayForSerialize(propName, dataItem) {
@@ -1206,7 +1260,7 @@
     //=============================================================================
     var _DataManager_loadDatabase = DataManager.loadDatabase;
     DataManager.loadDatabase      = function() {
-        if (!this.isEventTest() && !this._databaseImport) {
+        if (!this.isEventTest() && !this._databaseImport && param.autoImport) {
             SceneManager.executeDataImportSync(function() {
                 _DataManager_loadDatabase.apply(this, arguments);
             }.bind(this));
