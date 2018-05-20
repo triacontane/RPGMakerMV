@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.0 2018/05/20 正式版リファクタリング
 // 0.3.0 2018/05/17 オートインポート機能がパラメータ設定に拘わらず有効になっていた問題を修正
 //                  マップIDに歯抜けがあった場合、出力エラーになる問題を修正
 //                  イベントテストの実行内容を出力する機能を追加
@@ -257,49 +258,19 @@
  * @default
  */
 
+/**
+ * ConverterManager
+ * コンバータを管理します。
+ * @constructor
+ */
+function ConverterManager() {
+    this.initialize.apply(this, arguments);
+}
+
 (function() {
     'use strict';
 
-    /**
-     * Convert escape characters.(require any window object)
-     * @param text Target text
-     * @returns {String} Converted text
-     */
-    const convertEscapeCharacters = function(text) {
-        const windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
-    };
-
-    /**
-     * Convert escape characters.(for text array)
-     * @param texts Target text array
-     * @returns {Array<String>} Converted text array
-     */
-    const convertEscapeCharactersAll = function(texts) {
-        return texts.map(function(text) {
-            return convertEscapeCharacters(text);
-        });
-    };
-
-    /**
-     * Set plugin command to method
-     * @param commandName plugin command name
-     * @param methodName execute method(Game_Interpreter)
-     */
-    const setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(param.commandPrefix + commandName, methodName);
-    };
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(ExcelDataConverter)
-     * @returns {Object} Created parameter
-     */
-    const createPluginParameter = function(pluginName) {
-        const parameter = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
+    let param = {};
 
     const paramReplacer = function(key, value) {
         if (value === 'null' || value === null) {
@@ -323,108 +294,184 @@
         }
     };
 
-    const param = createPluginParameter('DatabaseConverter');
+    if (typeof Utils !== 'undefined' && Utils.RPGMAKER_NAME === 'MV') {
+        /**
+         * Convert escape characters.(require any window object)
+         * @param text Target text
+         * @returns {String} Converted text
+         */
+        const convertEscapeCharacters = function(text) {
+            const windowLayer = SceneManager._scene._windowLayer;
+            return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
+        };
 
-    if (param.originalDataLoad && !DataManager.isEventTest()) {
-        param.targetDatabase.forEach(function(databaseInfo) {
-            const srcName = `${databaseInfo.JsonName}.json`;
-            const exist   = DataManager._databaseFiles.some(function(fileInfo) {
-                return fileInfo.src === srcName;
+        /**
+         * Convert escape characters.(for text array)
+         * @param texts Target text array
+         * @returns {Array<String>} Converted text array
+         */
+        const convertEscapeCharactersAll = function(texts) {
+            return texts.map(function(text) {
+                return convertEscapeCharacters(text);
             });
-            if (!exist) {
-                DataManager._databaseFiles.push({name: databaseInfo.VariableName, src: srcName});
+        };
+
+        /**
+         * Set plugin command to method
+         * @param commandName plugin command name
+         * @param methodName execute method(Game_Interpreter)
+         */
+        const setPluginCommand = function(commandName, methodName) {
+            pluginCommandMap.set(param.commandPrefix + commandName, methodName);
+        };
+
+        /**
+         * Create plugin parameter. param[paramName] ex. param.commandPrefix
+         * @param pluginName plugin name(ExcelDataConverter)
+         * @returns {Object} Created parameter
+         */
+        const createPluginParameter = function(pluginName) {
+            const parameter = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+            PluginManager.setParameters(pluginName, parameter);
+            return parameter;
+        };
+        param = createPluginParameter('DatabaseConverter');
+
+        if (param.originalDataLoad && !DataManager.isEventTest()) {
+            param.targetDatabase.forEach(function(databaseInfo) {
+                const srcName = `${databaseInfo.JsonName}.json`;
+                const exist   = DataManager._databaseFiles.some(function(fileInfo) {
+                    return fileInfo.src === srcName;
+                });
+                if (!exist) {
+                    DataManager._databaseFiles.push({name: databaseInfo.VariableName, src: srcName});
+                }
+            });
+        }
+
+        if (!Utils.isOptionValid('test') && !DataManager.isEventTest()) {
+            return;
+        }
+
+        const pluginCommandMap = new Map();
+        setPluginCommand('EXPORT_DATABASE', 'exportDatabase');
+        setPluginCommand('IMPORT_DATABASE', 'importDatabase');
+        setPluginCommand('EXPORT_COMMON_EVENT', 'exportCommonEvent');
+        setPluginCommand('IMPORT_COMMON_EVENT', 'importCommonEvent');
+        setPluginCommand('EXPORT_MAP_EVENT', 'exportMapEvent');
+        setPluginCommand('IMPORT_MAP_EVENT', 'importMapEvent');
+
+        //=============================================================================
+        // Game_Interpreter
+        //=============================================================================
+        const _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
+        Game_Interpreter.prototype.pluginCommand = function(command, args) {
+            _Game_Interpreter_pluginCommand.apply(this, arguments);
+            const pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
+            if (pluginCommandMethod) {
+                this[pluginCommandMethod](convertEscapeCharactersAll(args));
             }
-        });
+        };
+
+        Game_Interpreter.prototype.exportDatabase = function() {
+            ConverterManager.executeDataExport(new ConvertTargetDatabase(false));
+        };
+
+        Game_Interpreter.prototype.importDatabase = function() {
+            ConverterManager.executeDataImport(new ConvertTargetDatabase(false));
+        };
+
+        Game_Interpreter.prototype.exportCommonEvent = function(args) {
+            ConverterManager.executeDataExport(new ConvertTargetCommonEvent(args));
+        };
+
+        Game_Interpreter.prototype.importCommonEvent = function(args) {
+            ConverterManager.executeDataImport(new ConvertTargetCommonEvent(args));
+        };
+
+        Game_Interpreter.prototype.exportMapEvent = function(args) {
+            const mapId = parseInt(args.shift());
+            ConverterManager.executeDataExport(new ConvertTargetMapEvent(args, mapId));
+        };
+
+        Game_Interpreter.prototype.importMapEvent = function(args) {
+            const mapId = parseInt(args.shift());
+            ConverterManager.executeDataImport(new ConvertTargetMapEvent(args, mapId));
+        };
+
+        const _Game_Interpreter_terminate    = Game_Interpreter.prototype.terminate;
+        Game_Interpreter.prototype.terminate = function() {
+            _Game_Interpreter_terminate.apply(this, arguments);
+            if (DataManager.isEventTest() && this._depth === 0 && param.exportEventTest) {
+                ConverterManager.executeDataExport(new ConvertTargetTestEvent());
+            }
+        };
+
+        //=============================================================================
+        // SceneManager
+        //  コンバータマネージャーを追加定義します。
+        //=============================================================================
+        const _SceneManager_initialize = SceneManager.initialize;
+        SceneManager.initialize        = function() {
+            _SceneManager_initialize.apply(this, arguments);
+            ConverterManager.initialize();
+        };
+
+        //=============================================================================
+        // DataManager
+        //  起動時の自動読み込みを追加します。
+        //=============================================================================
+        var _DataManager_loadDatabase = DataManager.loadDatabase;
+        DataManager.loadDatabase      = function() {
+            if (!this.isEventTest() && !this._databaseImport && param.autoImport) {
+                ConverterManager.executeDataImportSync(function() {
+                    _DataManager_loadDatabase.apply(this, arguments);
+                }.bind(this));
+                this._databaseImport = true;
+            } else {
+                _DataManager_loadDatabase.apply(this, arguments);
+            }
+        };
+
+        //=============================================================================
+        // Scene_Boot
+        //  変換オブジェクトの準備完了を待ちます。
+        //=============================================================================
+        const _Scene_Boot_isReady    = Scene_Boot.prototype.isReady;
+        Scene_Boot.prototype.isReady = function() {
+            return _Scene_Boot_isReady.apply(this, arguments) && ConverterManager.isSheetDataConverterReady();
+        };
     }
 
-    if (!Utils.isOptionValid('test') && !DataManager.isEventTest()) {
-        return;
-    }
-
-    const pluginCommandMap = new Map();
-    setPluginCommand('EXPORT_DATABASE', 'exportDatabase');
-    setPluginCommand('IMPORT_DATABASE', 'importDatabase');
-    setPluginCommand('EXPORT_COMMON_EVENT', 'exportCommonEvent');
-    setPluginCommand('IMPORT_COMMON_EVENT', 'importCommonEvent');
-    setPluginCommand('EXPORT_MAP_EVENT', 'exportMapEvent');
-    setPluginCommand('IMPORT_MAP_EVENT', 'importMapEvent');
-
     //=============================================================================
-    // Game_Interpreter
-    //=============================================================================
-    const _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        const pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertEscapeCharactersAll(args));
-        }
-    };
-
-    Game_Interpreter.prototype.exportDatabase = function() {
-        SceneManager.executeDataExport(new ConvertTargetDatabase(false));
-    };
-
-    Game_Interpreter.prototype.importDatabase = function() {
-        SceneManager.executeDataImport(new ConvertTargetDatabase(false));
-    };
-
-    Game_Interpreter.prototype.exportCommonEvent = function(args) {
-        SceneManager.executeDataExport(new ConvertTargetCommonEvent(args));
-    };
-
-    Game_Interpreter.prototype.importCommonEvent = function(args) {
-        SceneManager.executeDataImport(new ConvertTargetCommonEvent(args));
-    };
-
-    Game_Interpreter.prototype.exportMapEvent = function(args) {
-        const mapId = parseInt(args.shift());
-        SceneManager.executeDataExport(new ConvertTargetMapEvent(args, mapId));
-    };
-
-    Game_Interpreter.prototype.importMapEvent = function(args) {
-        const mapId = parseInt(args.shift());
-        SceneManager.executeDataImport(new ConvertTargetMapEvent(args, mapId));
-    };
-
-    const _Game_Interpreter_terminate = Game_Interpreter.prototype.terminate;
-    Game_Interpreter.prototype.terminate = function() {
-        _Game_Interpreter_terminate.apply(this, arguments);
-        if (DataManager.isEventTest() && this._depth === 0 && param.exportEventTest) {
-            SceneManager.executeDataExport(new ConvertTargetTestEvent());
-        }
-    };
-
-    //=============================================================================
-    // SceneManager
+    // ConverterManager
     //  シート変換オブジェクトを生成、管理します。
     //=============================================================================
-    const _SceneManager_initialize = SceneManager.initialize;
-    SceneManager.initialize        = function() {
-        _SceneManager_initialize.apply(this, arguments);
+    ConverterManager.initialize = function() {
         this._sheetDataConverter = AbstractSheetConverter.getInstance(param.fileFormat);
+        this._sheetJs            = new SheetJsCreator();
     };
 
-    SceneManager.isSheetDataConverterReady = function() {
-        return this._sheetDataConverter.isReady();
+    ConverterManager.isSheetDataConverterReady = function() {
+        return this._sheetJs.isReady() && this._sheetDataConverter.isReady();
     };
 
-    SceneManager.executeDataImportSync = function(callBack) {
-        this._sheetDataConverter.addLoadListener(function() {
+    ConverterManager.executeDataImportSync = function(callBack) {
+        this._sheetJs.addLoadListener(function() {
             this._sheetDataConverter.executeImport(new ConvertTargetDatabase(true));
             callBack();
         }.bind(this));
     };
 
-    SceneManager.executeDataExport = function(target) {
+    ConverterManager.executeDataExport = function(target) {
         this._executeDataConvert('executeExport', target);
     };
 
-    SceneManager.executeDataImport = function(target) {
+    ConverterManager.executeDataImport = function(target) {
         this._executeDataConvert('executeImport', target);
     };
 
-    SceneManager._executeDataConvert = function(process, target) {
+    ConverterManager._executeDataConvert = function(process, target) {
         if (!this.isSheetDataConverterReady()) {
             return;
         }
@@ -436,38 +483,40 @@
         setTimeout(function() {
             nwWin.focus();
         }, 500);
-        this._pause(this.terminate.bind(this));
+        this._pause();
     };
 
-    SceneManager._pause = function(handler) {
+    ConverterManager._pause = function() {
         console.log('Press or Click any key to shutdown....');
         setInterval(function() {
-            if (Object.keys(Input._currentState).length > 0 || TouchInput.isPressed()) handler();
+            if (Object.keys(Input._currentState).length > 0 || TouchInput.isPressed()) SceneManager.terminate();
         }, 10);
     };
 
+    ConverterManager.getDatabasePath = function() {
+        return this.getRelativePath('data/');
+    };
+
+    ConverterManager.getRelativePath = function(subPath) {
+        const path = require('path');
+        const base = path.dirname(process.mainModule.filename);
+        return path.join(base, subPath);
+    };
+
     /**
-     * AbstractSheetConverter
-     * データベースとシートファイルの相互変換を行う抽象クラスです。
+     * SheetJsCreator
+     * SheetJsライブラリをダウンロードして保持します。
      */
-    class AbstractSheetConverter {
-        constructor(format) {
-            const directory = this._getTargetDirectory();
-            if (!StorageManager.makeSheetDirectoryIfNeed(directory)) {
-                throw new Error(`シート出力ディレクトリ[${directory}]が見付かりませんでした。`);
-            }
-            this._format       = format;
-            this._directory    = directory;
-            this._urlIndex     = 0;
+    class SheetJsCreator {
+        constructor() {
             this._loaded       = false;
             this._loadListener = [];
-            this._serializer   = null;
-            this._target       = null;
+            this._urlIndex     = 0;
             this._loadSheetJs();
         }
 
         isReady() {
-            return this._loaded && !this._serializer;
+            return this._loaded;
         }
 
         addLoadListener(callBack) {
@@ -476,90 +525,6 @@
             } else {
                 this._loadListener.push(callBack);
             }
-        }
-
-        executeExport(target) {
-            this._target     = target;
-            this._workBook   = this._createWorkBook();
-            this._serializer = new DataSerializer(target);
-            this._target.execute(this._exportItem.bind(this));
-            this.writeAllWorkbook();
-        }
-
-        _createWorkBook() {
-            return {SheetNames: [], Sheets: {}};
-        }
-
-        _exportItem(dataName) {
-            console.log('Export ' + dataName);
-            const data = this._target.load(dataName);
-            if (!data) {
-                return;
-            }
-            this._workBook.SheetNames.push(dataName);
-            this._workBook.Sheets[dataName] = this._serializer.serializeData(data);
-        }
-
-        /**
-         * writeAllWorkbook
-         * @abstract
-         */
-        writeAllWorkbook() {}
-
-        writeWorkbookFile(dataBaseName, workbookData) {
-            const writeOption = {bookType: this._format};
-            const path = this._getTargetFilePath(this._target.getFileName() + param.ExportPrefix, dataBaseName);
-            try {
-                XLSX.writeFile(workbookData, path, writeOption);
-            } catch (e) {
-                if (e.code === 'EBUSY') {
-                    throw new Error(`ファイル[${path}]の書き出しに失敗しました。ファイルを開いている可能性があります。`);
-                } else {
-                    throw e;
-                }
-            }
-        }
-
-        executeImport(target) {
-            this._target     = target;
-            this._workBook   = this.readAllWorkbook();
-            this._serializer = new DataSerializer(target);
-            this._target.execute(this._importItem.bind(this));
-        }
-
-        _importItem(dataName) {
-            console.log('Import ' + dataName);
-            const data = this._serializer.deserializeData(this._workBook.Sheets[dataName]);
-            this._target.save(dataName, data);
-        }
-
-        /**
-         * readAllWorkbook
-         * @abstract
-         */
-        readAllWorkbook() {}
-
-        readWorkbookFile(dataBaseName) {
-            const readOption = {};
-            const path = this._getTargetFilePath(this._target.getFileName(), dataBaseName);
-            try {
-                return XLSX.readFile(path, readOption);
-            } catch (e) {
-                if (e.code === 'ENOENT') {
-                    throw new Error(`ファイル[${path}]が見付かりませんでした。`);
-                } else {
-                    throw e;
-                }
-            }
-        }
-
-        _getTargetDirectory() {
-            const path = param.excelDataPath;
-            return (!path.match(/^[A-Z]:/) ? StorageManager.getRelativePath(path) : path);
-        }
-
-        _getTargetFilePath(baseName, dataName) {
-            return `${this._directory}/${baseName}${dataName}.${this._format}`;
         }
 
         _loadSheetJs() {
@@ -598,6 +563,162 @@
             } else {
                 throw new Error('CDNサーバからのライブラリダウンロードに失敗しました。マニュアルダウンロードをお試しください。');
             }
+        }
+    }
+
+    /**
+     * 変換のためのデータファイルのロード・セーブを行います。
+     * SheetJsライブラリをダウンロードして保持します。
+     */
+    class ConverterStorage {
+        loadDataBaseFileSync(fileName) {
+            try {
+                const filePath = this.getDatabaseFullPath(fileName);
+                return JSON.parse(require('fs').readFileSync(filePath, {encoding: 'utf8'}));
+            } catch (e) {
+                console.error('Fail to Load ' + fileName);
+                return [null, {id: 1, name: ' '}];
+            }
+        }
+
+        saveDataBaseFile(fileName, data, sync) {
+            try {
+                const filePath  = this.getDatabaseFullPath(fileName);
+                const fs        = require('fs');
+                const writeFunc = sync ? fs.writeFileSync : fs.writeFile;
+                writeFunc(filePath, JSON.stringify(data), {encoding: 'utf8'});
+            } catch (e) {
+                console.error('Fail to Save ' + fileName);
+                throw e;
+            }
+        }
+
+        getDatabaseFullPath(fileName) {
+            return ConverterManager.getDatabasePath() + fileName + '.json';
+        }
+    }
+
+    /**
+     * AbstractSheetConverter
+     * データベースとシートファイルの相互変換を行う抽象クラスです。
+     */
+    class AbstractSheetConverter {
+        constructor(format) {
+            const directory = this._getTargetDirectory();
+            if (!this._makeSheetDirectoryIfNeed(directory)) {
+                throw new Error(`シート出力ディレクトリ[${directory}]が見付かりませんでした。`);
+            }
+            this._format     = format;
+            this._directory  = directory;
+            this._serializer = null;
+            this._target     = null;
+        }
+
+        _makeSheetDirectoryIfNeed(filePath) {
+            const fs = require('fs');
+            if (!fs.existsSync(filePath)) {
+                try {
+                    fs.mkdirSync(filePath);
+                } catch (e) {
+                    console.error(e);
+                    return false;
+                }
+            }
+            return fs.existsSync(filePath);
+        }
+
+        isReady() {
+            return !this._serializer;
+        }
+
+        executeExport(target) {
+            this._target     = target;
+            this._workBook   = this._createWorkBook();
+            this._serializer = new DataSerializer(target);
+            this._target.execute(this._exportItem.bind(this));
+            this.writeAllWorkbook();
+        }
+
+        _createWorkBook() {
+            return {SheetNames: [], Sheets: {}};
+        }
+
+        _exportItem(dataName) {
+            console.log('Export ' + dataName);
+            const data = this._target.load(dataName);
+            if (!data) {
+                return;
+            }
+            this._workBook.SheetNames.push(dataName);
+            this._workBook.Sheets[dataName] = this._serializer.serializeData(data);
+        }
+
+        /**
+         * writeAllWorkbook
+         * @abstract
+         */
+        writeAllWorkbook() {}
+
+        writeWorkbookFile(dataBaseName, workbookData) {
+            const writeOption = {bookType: this._format};
+            const path        = this._getTargetFilePath(this._target.getFileName() + param.ExportPrefix, dataBaseName);
+            try {
+                XLSX.writeFile(workbookData, path, writeOption);
+            } catch (e) {
+                if (e.code === 'EBUSY') {
+                    throw new Error(`ファイル[${path}]の書き出しに失敗しました。ファイルを開いている可能性があります。`);
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        executeImport(target) {
+            this._target     = target;
+            this._workBook   = this.readAllWorkbook();
+            this._serializer = new DataSerializer(target);
+            this._target.execute(this._importItem.bind(this));
+        }
+
+        _importItem(dataName) {
+            const sheetData = this._workBook.Sheets[dataName];
+            if (!sheetData) {
+                console.warn('Skip Import ' + dataName);
+                return;
+            } else {
+                console.log('Import ' + dataName);
+            }
+            const data = this._serializer.deserializeData(sheetData);
+            this._target.save(dataName, data);
+        }
+
+        /**
+         * readAllWorkbook
+         * @abstract
+         */
+        readAllWorkbook() {}
+
+        readWorkbookFile(dataBaseName) {
+            const readOption = {};
+            const path       = this._getTargetFilePath(this._target.getFileName(), dataBaseName);
+            try {
+                return XLSX.readFile(path, readOption);
+            } catch (e) {
+                if (e.code === 'ENOENT') {
+                    throw new Error(`ファイル[${path}]が見付かりませんでした。`);
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        _getTargetDirectory() {
+            const path = param.excelDataPath;
+            return (!path.match(/^[A-Z]:/) ? ConverterManager.getRelativePath(path) : path);
+        }
+
+        _getTargetFilePath(baseName, dataName) {
+            return `${this._directory}/${baseName}${dataName}.${this._format}`;
         }
 
         static getInstance(format) {
@@ -688,7 +809,8 @@
     class ConvertTargetDatabase extends InterfaceConvertTarget {
         constructor(sync) {
             super();
-            this._sync = sync;
+            this._sync    = sync;
+            this._storage = new ConverterStorage();
         }
 
         execute(process) {
@@ -702,14 +824,14 @@
         }
 
         load(name) {
-            const data = StorageManager.loadDataBaseFileSync(name);
+            const data = this._storage.loadDataBaseFileSync(name);
             data.shift(0);
             return data;
         }
 
         save(name, data) {
             data[0] = null;
-            StorageManager.saveDataBaseFile(name, data, this._sync);
+            this._storage.saveDataBaseFile(name, data, this._sync);
         }
 
         appendData(database, dataItem) {
@@ -719,137 +841,147 @@
             if (!dataItem.hasOwnProperty('name')) {
                 dataItem.name = '';
             }
+            if (!dataItem.hasOwnProperty('note')) {
+                dataItem.note = '';
+            }
             database[dataItem.id] = dataItem;
         }
 
         getColumnDescriptions() {
-            return {
-                id                 : 'ID',
-                name               : '名前',
-                description        : '説明',
-                traits             : '特徴',
-                effects            : '効果',
-                note               : 'メモ',
-                actions            : '行動',
-                dropItems          : 'ドロップアイテム',
-                members            : 'メンバー',
-                animationId        : 'アニメーション',
-                hitType            : '命中タイプ',
-                iconIndex          : 'アイコン',
-                occasion           : '使用可能時',
-                repeats            : '連続回数',
-                scope              : '範囲',
-                speed              : '速度補正',
-                successRate        : '成功率',
-                tpCost             : '消費TP',
-                tpGain             : '得TP',
-                mpCost             : '消費MP',
-                damage_elementId   : '属性',
-                damage_type        : 'タイプ',
-                damage_variance    : '分散度',
-                damage_critical    : '会心',
-                damage_formula     : '計算式',
-                price              : '価格',
-                params0            : '最大HP',
-                params1            : '最大MP',
-                params2            : '攻撃力',
-                params3            : '防御力',
-                params4            : '魔法力',
-                params5            : '魔法防御',
-                params6            : '敏捷性',
-                params7            : '運',
-                stypeId            : 'スキルタイプ',
-                requiredWtypeId1   : '武器タイプ1',
-                requiredWtypeId2   : '武器タイプ2',
-                itypeId            : 'アイテムタイプ',
-                consumable         : '消耗',
-                wtypeId            : '武器タイプ',
-                atypeId            : '防具タイプ',
-                etypeId            : '装備タイプ',
-                battlerHue         : '色相',
-                exp                : '経験値',
-                gold               : '所持金',
-                autoRemovalTiming  : '自動解除のタイミング',
-                chanceByDamage     : 'ダメージで解除_ダメージ',
-                maxTurns           : '継続ターン数_最大',
-                minTurns           : '継続ターン数_最小',
-                motion             : '[SV] モーション',
-                overlay            : '[SV] 重ね合わせ',
-                priority           : '優先度',
-                removeAtBattleEnd  : '戦闘終了時に解除',
-                removeByDamage     : 'ダメージで解除',
-                removeByRestriction: '行動制約で解除',
-                removeByWalking    : '歩数で解除',
-                restriction        : '行動制約',
-                stepsToRemove      : '歩数で解除_歩数',
-                battlerName        : '[SV] 戦闘キャラ',
-                characterIndex     : '歩行キャラ_インデックス',
-                characterName      : '歩行キャラ_ファイル名',
-                classId            : '職業',
-                equips             : '装備',
-                faceIndex          : '顔_インデックス',
-                faceName           : '顔_ファイル名',
-                initialLevel       : '初期レベル',
-                maxLevel           : '最大レベル',
-                nickname           : '二つ名',
-                profile            : 'プロフィール',
-                expParams          : '経験値曲線',
-                learnings          : '習得するスキル',
-                damage             : 'ダメージ',
-                message1           : 'メッセージ1',
-                message2           : 'メッセージ2',
-                pages              : 'バトルイベント',
-                message3           : 'メッセージ3',
-                message4           : 'メッセージ4',
-                releaseByDamage    : 'ダメージで解除_チェック',
-                flags              : 'マップデータ',
-                mode               : 'モード',
-                list               : '実行内容',
-                switchId           : 'スイッチ',
-                trigger            : 'トリガー',
-                tilesetNames       : '画像',
-                expanded           : '展開状態',
-                order              : '並び順',
-                parentId           : '親マップID',
-                scrollX            : 'スクロールX',
-                scrollY            : 'スクロールY'
-            };
+            return ConvertTargetDatabase._commonDescriptions;
         }
 
         getArrayProperties() {
-            return [
-                'equips',
-                'traits',
-                'expParams',
-                'learnings',
-                'effects',
-                'actions',
-                'dropItems',
-                'members',
-                'pages',
-                'flags',
-                'tilesetNames',
-                'list'
-            ];
+            return ConvertTargetDatabase._arrayProperties;
         }
 
         getSplitProperties() {
-            return ['params'];
+            return ConvertTargetDatabase._splitProperties;
         }
 
         getObjectProperties() {
-            return {
-                damage: [
-                    'critical',
-                    'elementId',
-                    'formula',
-                    'type',
-                    'variance'
-                ]
-            };
+            return ConvertTargetDatabase._objectProperties;
         }
 
     }
+    ConvertTargetDatabase._commonDescriptions = {
+        id                 : 'ID',
+        name               : '名前',
+        description        : '説明',
+        traits             : '特徴',
+        effects            : '効果',
+        note               : 'メモ',
+        actions            : '行動',
+        dropItems          : 'ドロップアイテム',
+        members            : 'メンバー',
+        animationId        : 'アニメーション',
+        hitType            : '命中タイプ',
+        iconIndex          : 'アイコン',
+        occasion           : '使用可能時',
+        repeats            : '連続回数',
+        scope              : '範囲',
+        speed              : '速度補正',
+        successRate        : '成功率',
+        tpCost             : '消費TP',
+        tpGain             : '得TP',
+        mpCost             : '消費MP',
+        damage_elementId   : '属性',
+        damage_type        : 'タイプ',
+        damage_variance    : '分散度',
+        damage_critical    : '会心',
+        damage_formula     : '計算式',
+        price              : '価格',
+        params0            : '最大HP',
+        params1            : '最大MP',
+        params2            : '攻撃力',
+        params3            : '防御力',
+        params4            : '魔法力',
+        params5            : '魔法防御',
+        params6            : '敏捷性',
+        params7            : '運',
+        stypeId            : 'スキルタイプ',
+        requiredWtypeId1   : '武器タイプ1',
+        requiredWtypeId2   : '武器タイプ2',
+        itypeId            : 'アイテムタイプ',
+        consumable         : '消耗',
+        wtypeId            : '武器タイプ',
+        atypeId            : '防具タイプ',
+        etypeId            : '装備タイプ',
+        battlerHue         : '色相',
+        exp                : '経験値',
+        gold               : '所持金',
+        autoRemovalTiming  : '自動解除のタイミング',
+        chanceByDamage     : 'ダメージで解除_ダメージ',
+        maxTurns           : '継続ターン数_最大',
+        minTurns           : '継続ターン数_最小',
+        motion             : '[SV] モーション',
+        overlay            : '[SV] 重ね合わせ',
+        priority           : '優先度',
+        removeAtBattleEnd  : '戦闘終了時に解除',
+        removeByDamage     : 'ダメージで解除',
+        removeByRestriction: '行動制約で解除',
+        removeByWalking    : '歩数で解除',
+        restriction        : '行動制約',
+        stepsToRemove      : '歩数で解除_歩数',
+        battlerName        : '[SV] 戦闘キャラ',
+        characterIndex     : '歩行キャラ_インデックス',
+        characterName      : '歩行キャラ_ファイル名',
+        classId            : '職業',
+        equips             : '装備',
+        faceIndex          : '顔_インデックス',
+        faceName           : '顔_ファイル名',
+        initialLevel       : '初期レベル',
+        maxLevel           : '最大レベル',
+        nickname           : '二つ名',
+        profile            : 'プロフィール',
+        expParams          : '経験値曲線',
+        learnings          : '習得するスキル',
+        damage             : 'ダメージ',
+        message1           : 'メッセージ1',
+        message2           : 'メッセージ2',
+        pages              : 'バトルイベント',
+        message3           : 'メッセージ3',
+        message4           : 'メッセージ4',
+        releaseByDamage    : 'ダメージで解除_チェック',
+        flags              : 'マップデータ',
+        mode               : 'モード',
+        list               : '実行内容',
+        switchId           : 'スイッチ',
+        trigger            : 'トリガー',
+        tilesetNames       : '画像',
+        expanded           : '展開状態',
+        order              : '並び順',
+        parentId           : '親マップID',
+        scrollX            : 'スクロールX',
+        scrollY            : 'スクロールY'
+    };
+
+    ConvertTargetDatabase._arrayProperties = [
+        'equips',
+        'traits',
+        'expParams',
+        'learnings',
+        'effects',
+        'actions',
+        'dropItems',
+        'members',
+        'pages',
+        'flags',
+        'tilesetNames',
+        'list'
+    ];
+
+    ConvertTargetDatabase._splitProperties = ['params'];
+
+    ConvertTargetDatabase._objectProperties = {
+        damage: [
+            'critical',
+            'elementId',
+            'formula',
+            'type',
+            'variance'
+        ]
+    };
 
     /**
      * AbstractConvertTargetEvent
@@ -858,13 +990,14 @@
     class AbstractConvertTargetEvent extends InterfaceConvertTarget {
         constructor(eventIdList, mapId) {
             super();
-            this._mapId = mapId;
+            this._mapId   = mapId;
+            this._storage = new ConverterStorage();
             this.setup(eventIdList);
         }
 
         setup(eventIdList) {
             this._dataName = this.getFileName();
-            this._database = StorageManager.loadDataBaseFileSync(this._dataName);
+            this._database = this._storage.loadDataBaseFileSync(this._dataName);
             this.setupTargetList(eventIdList);
         }
 
@@ -890,31 +1023,38 @@
             });
             this.setList(name, list);
             if (this._targetList.indexOf(name) === this._targetList.length - 1) {
-                StorageManager.saveDataBaseFile(this._dataName, this._database, false);
+                this._storage.saveDataBaseFile(this._dataName, this._database, false);
             }
         }
 
         getColumnDescriptions() {
-            return {
-                code       : 'イベントコード',
-                indent     : 'インデント',
-                codeName   : 'イベント内容',
-                parameters0: 'パラメータリスト',
-            };
+            return AbstractConvertTargetEvent._commonDescriptions;
         }
 
         getArrayProperties() {
-            return [];
+            return AbstractConvertTargetEvent._arrayProperties;
         }
 
         getSplitProperties() {
-            return ['parameters'];
+            return AbstractConvertTargetEvent._splitProperties;
         }
 
         getObjectProperties() {
-            return {};
+            return AbstractConvertTargetEvent._objectProperties;
         }
     }
+    AbstractConvertTargetEvent._commonDescriptions = {
+        code       : 'イベントコード',
+        indent     : 'インデント',
+        codeName   : 'イベント内容',
+        parameters0: 'パラメータリスト',
+    };
+
+    AbstractConvertTargetEvent._arrayProperties = [];
+
+    AbstractConvertTargetEvent._splitProperties = ['parameters'];
+
+    AbstractConvertTargetEvent._objectProperties = {};
 
     AbstractConvertTargetEvent._eventNamesMap = {
         0  : '空行',
@@ -1133,8 +1273,8 @@
             return this._database;
         }
 
-        setList(name, list) {
-            this._database = list;
+        setList() {
+            this._database = arguments[1];
         }
     }
 
@@ -1253,78 +1393,4 @@
             });
         }
     }
-
-    //=============================================================================
-    // DataManager
-    //  起動時の自動読み込みを追加します。
-    //=============================================================================
-    var _DataManager_loadDatabase = DataManager.loadDatabase;
-    DataManager.loadDatabase      = function() {
-        if (!this.isEventTest() && !this._databaseImport && param.autoImport) {
-            SceneManager.executeDataImportSync(function() {
-                _DataManager_loadDatabase.apply(this, arguments);
-            }.bind(this));
-            this._databaseImport = true;
-        } else {
-            _DataManager_loadDatabase.apply(this, arguments);
-        }
-    };
-
-    //=============================================================================
-    // StorageManager
-    //  データベースの同期ロードとセーブを追加します。
-    //=============================================================================
-    StorageManager.loadDataBaseFileSync = function(fileName) {
-        try {
-            const filePath = this.getDatabasePath(fileName);
-            return JSON.parse(require('fs').readFileSync(filePath, {encoding: 'utf8'}));
-        } catch (e) {
-            console.error('Fail to Load ' + fileName);
-            return [null, {id: 1, name: ' '}];
-        }
-    };
-
-    StorageManager.saveDataBaseFile = function(fileName, data, sync) {
-        try {
-            const filePath  = this.getDatabasePath(fileName);
-            const fs        = require('fs');
-            const writeFunc = sync ? fs.writeFileSync : fs.writeFile;
-            writeFunc(filePath, JSON.stringify(data), {encoding: 'utf8'});
-        } catch (e) {
-            console.error('Fail to Save ' + fileName);
-            throw e;
-        }
-    };
-
-    StorageManager.getDatabasePath = function(fileName) {
-        return this.getRelativePath('data/') + fileName + '.json';
-    };
-
-    StorageManager.getRelativePath = function(subPath) {
-        const path = require('path');
-        const base = path.dirname(process.mainModule.filename);
-        return path.join(base, subPath);
-    };
-
-    StorageManager.makeSheetDirectoryIfNeed = function(filePath) {
-        const fs = require('fs');
-        if (!fs.existsSync(filePath)) {
-            try {
-                fs.mkdirSync(filePath);
-            } catch (e) {
-                console.error(e);
-                return false;
-            }
-        }
-        return fs.existsSync(filePath);
-    };
-
-    //=============================================================================
-    // Scene_Boot
-    //  変換オブジェクトの準備完了を待ちます。
-    //=============================================================================
-    const _Scene_Boot_isReady    = Scene_Boot.prototype.isReady;
-    Scene_Boot.prototype.isReady = function() {
-        return _Scene_Boot_isReady.apply(this, arguments) && SceneManager.isSheetDataConverterReady();
-    };
 })();
