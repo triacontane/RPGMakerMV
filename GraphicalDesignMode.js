@@ -1,11 +1,12 @@
 //=============================================================================
 // GraphicalDesignMode.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.2 2018/05/20 YEP_BattleEngineCore.jsとの併用時、デザインモードで一部ウィンドウで透明状態の切り替えが機能しない競合を解消
 // 2.8.1 2018/01/30 最新のNW.jsで動作するよう修正
 // 2.8.0 2017/07/26 コンソールからの関数実行で直前に編集したウィンドウの位置を変更できる機能を追加
 // 2.7.0 2017/04/11 2.6.0の修正で追加ウィンドウの位置変更が正常に動作しない問題を修正
@@ -30,7 +31,7 @@
 // 1.0.0 2016/03/13 初版
 // 0.9.0 2016/03/05 ベータ版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -1153,6 +1154,8 @@ var $dataContainerProperties = null;
         //   通常のタッチ操作を無効化します。
         //=============================================================================
         Window_Selectable.prototype.processTouch = function() {};
+        Window_BattleActor.prototype.processTouch = function() {};
+        Window_BattleEnemy.prototype.processTouch = function() {};
     }
 
     //=============================================================================
@@ -1634,10 +1637,11 @@ var $dataContainerProperties = null;
         }
     };
 
-    //=============================================================================
-    // Window_Custom
-    //  任意配置可能なウィンドウです。
-    //=============================================================================
+    /**
+     * Window_Custom
+     * 任意配置可能なウィンドウです。
+     * @constructor
+     */
     function Window_Custom() {
         this.initialize.apply(this, arguments);
     }
@@ -1691,7 +1695,7 @@ var $dataContainerProperties = null;
 
     Window_Custom.prototype.changeTextAlign = function(text) {
         this._textAlign = 0;
-        text            = text.replace(/\\al\[(.*)\]/gi, function() {
+        text            = text.replace(/\\al\[(.*)]/gi, function() {
             this._textAlign = Window_Custom._textAligns[arguments[1].toLowerCase()] || 0;
             return '';
         }.bind(this));
