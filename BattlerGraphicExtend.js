@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2018/05/20 YEP_X_ActSeqPack2.jsとの併用時、当該プラグインで透明度が変更された場合は、こちらの透明度変更機能を無効化するよう変更
 // 1.2.1 2018/05/20 YEP_X_ActSeqPack2.jsとの併用時、当該プラグインのバトラー反転機能が正常に機能しない競合を解消
 // 1.2.0 2016/10/02 メモ欄の適用範囲をステートから特徴を有するデータベース項目に拡張しました。
 // 1.1.3 2016/08/27 YEP_X_ActSeqPack2.jsとの競合を解消
@@ -425,6 +426,10 @@
     };
 
     Sprite_Battler.prototype.updateOpacityForBge = function() {
+        // for YEP_X_ActSeqPack2.js
+        if (this._opacityRate) {
+            return;
+        }
         var sprite     = this.getMainSprite();
         sprite.opacity = this._battler.getOpacity();
     };
