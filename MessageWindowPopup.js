@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.0 2018/05/20 ポーズサインのテール化機能を使わない設定を追加しました。
 // 2.9.8 2018/03/19 プラグインを未適用の状態でセーブしたデータをロードするとエラーになる現象を修正
 // 2.9.7 2018/01/30 BetweenCharacters.jsとの競合を解消
 // 2.9.6 2018/01/15 MPP_MessageEX.jsとの競合を解消、パラメータの型指定誤りを修正、2.9.1の修正の取り込みが一部間違っていた問題を修正
@@ -146,6 +147,11 @@
  * @default 60
  * @type number
  *
+ * @param NoUseTail
+ * @desc ポーズサインのテール化機能を無効化します。デフォルトの位置に表示されます。
+ * @default false
+ * @type boolean
+ *
  * @help Change the message window from fixed to popup
  *
  * Plugin Command
@@ -269,6 +275,11 @@
  * @desc ウィンドウを振動させる時間(フレーム)です。制御文字\v[n]が利用できます。0を指定するとずっと振動し続けます。
  * @default 60
  * @type number
+ *
+ * @param テールを使わない
+ * @desc ポーズサインのテール化機能を無効化します。デフォルトの位置に表示されます。
+ * @default false
+ * @type boolean
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
@@ -498,6 +509,7 @@
     var paramInnerScreen    = getParamBoolean(['InnerScreen', '画面内に収める']);
     var paramShakeSpeed     = getParamString(['ShakeSpeed', '振動の速さ']);
     var paramShakeDuration  = getParamString(['ShakeDuration', '振動時間']);
+    var paramNoUseTail      = getParamBoolean(['NoUseTail', 'テールを使わない']);
 
     //=============================================================================
     // Game_Interpreter
@@ -935,7 +947,9 @@
         if (lowerFlg) {
             this.y = character.getRealScreenY() + 8;
         }
-        this.setPauseSignToTail(lowerFlg);
+        if (!paramNoUseTail) {
+            this.setPauseSignToTail(lowerFlg);
+        }
     };
 
     Window_Base.prototype.setPopupAdjustInnerScreen = function() {
@@ -1201,6 +1215,9 @@
             width += adjust[0];
             height += adjust[1];
         }
+        if (paramNoUseTail) {
+            height += 8;
+        }
         this.width  = width;
         this.height = height;
         this.resetFontSettings();
@@ -1264,7 +1281,7 @@
     };
 
     Window_Message.prototype.processVirtualNormalCharacter = function(textState) {
-        var c              = textState.text[textState.index++];
+        var c = textState.text[textState.index++];
         textState.x += this.textWidth(c);
         // Resolve conflict for BetweenCharacters.js
         if (this.getBetweenCharacters) {
