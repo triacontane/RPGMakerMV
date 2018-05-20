@@ -1,11 +1,12 @@
 //=============================================================================
 // BattlerGraphicExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2018/05/20 YEP_X_ActSeqPack2.jsとの併用時、当該プラグインのバトラー反転機能が正常に機能しない競合を解消
 // 1.2.0 2016/10/02 メモ欄の適用範囲をステートから特徴を有するデータベース項目に拡張しました。
 // 1.1.3 2016/08/27 YEP_X_ActSeqPack2.jsとの競合を解消
 // 1.1.2 2016/08/27 消滅エフェクトが機能しない競合を抑えるために条件を一部変更
@@ -16,7 +17,7 @@
 //                  武器グラフィックにも不透明度と合成方法を適用するよう修正
 // 1.0.0 2016/06/17 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -418,7 +419,8 @@
 
     Sprite_Battler.prototype.updateScale = function() {
         var battler  = this._battler;
-        this.scale.x = battler.getScaleX();
+        var mirror = this.scale.x < 0 ? -1 : 1;
+        this.scale.x = battler.getScaleX() * mirror;
         this.scale.y = battler.getScaleY();
     };
 
