@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/05/22 プラグインの機能を無効化するスイッチを追加
 // 1.0.0 2018/05/20 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -26,6 +27,11 @@
  * @desc ヘルプウィンドウの高さを変更したい場合は指定してください。0の場合は何もしません。
  * @default 0
  * @type number
+ *
+ * @param validSwitch
+ * @desc 指定した番号のスイッチがONのときのみプラグインが有効になります。0の場合は常に有効になります。
+ * @default 0
+ * @type switch
  *
  * @param notePrefix
  * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
@@ -55,6 +61,12 @@
  * @desc ヘルプウィンドウの高さを変更したい場合は指定してください。0の場合は何もしません。
  * @default 0
  * @type number
+ *
+ * @param validSwitch
+ * @text 有効スイッチ
+ * @desc 指定した番号のスイッチがONのときのみプラグインが有効になります。0の場合は常に有効になります。
+ * @default 0
+ * @type switch
  *
  * @param notePrefix
  * @text メモ欄接頭辞
@@ -153,12 +165,16 @@
     var _Window_Help_setItem = Window_Help.prototype.setItem;
     Window_Help.prototype.setItem = function(item) {
         _Window_Help_setItem.apply(this, arguments);
-        if (!item) {
+        if (!item || !this.isValidDescriptionExtend()) {
             return;
         }
         var extendText = getMetaValues(item, ['拡張説明', 'ExtendDesc']);
         if (extendText) {
             this.setText((param.swapDescription ? '' : this._text + '\n') + extendText);
         }
+    };
+
+    Window_Help.prototype.isValidDescriptionExtend = function() {
+        return !param.validSwitch || $gameSwitches.value(param.validSwitch)
     };
 })();
