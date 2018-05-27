@@ -1,4 +1,4 @@
-//=============================================================================
+﻿//=============================================================================
 // BattlerGraphicExtend.js
 // ----------------------------------------------------------------------------
 // (C)2015-2018 Triacontane
@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2018/05/27 YEP_X_AnimatedSVEnemies.jsおよびBattleMotion.jsとの併用時、SVエネミーの反転が行われない問題を修正
 // 1.2.2 2018/05/20 YEP_X_ActSeqPack2.jsとの併用時、当該プラグインで透明度が変更された場合は、こちらの透明度変更機能を無効化するよう変更
 // 1.2.1 2018/05/20 YEP_X_ActSeqPack2.jsとの併用時、当該プラグインのバトラー反転機能が正常に機能しない競合を解消
 // 1.2.0 2016/10/02 メモ欄の適用範囲をステートから特徴を有するデータベース項目に拡張しました。
@@ -419,8 +420,8 @@
     };
 
     Sprite_Battler.prototype.updateScale = function() {
+        var mirror   = this.scale.x < 0 ? -1 : 1;
         var battler  = this._battler;
-        var mirror = this.scale.x < 0 ? -1 : 1;
         this.scale.x = battler.getScaleX() * mirror;
         this.scale.y = battler.getScaleY();
     };
@@ -476,7 +477,7 @@
         return this._mainSprite;
     };
 
-    var _Sprite_Actor_updatePosition = Sprite_Actor.prototype.hasOwnProperty('updatePosition') ?
+    var _Sprite_Actor_updatePosition      = Sprite_Actor.prototype.hasOwnProperty('updatePosition') ?
         Sprite_Actor.prototype.updatePosition : null;
     Sprite_Actor.prototype.updatePosition = function() {
         if (_Sprite_Actor_updatePosition) {
@@ -508,11 +509,17 @@
     // Sprite_Enemy
     //  ステートによるエフェクトを反映させます。
     //=============================================================================
+    var _Sprite_Enemy_updateScale      = Sprite_Enemy.prototype.updateScale;
     Sprite_Enemy.prototype.updateScale = function() {
-        Sprite_Battler.prototype.updateScale.call(this);
+        if (_Sprite_Enemy_updateScale) {
+            _Sprite_Enemy_updateScale.apply(this, arguments);
+        } else {
+            Sprite_Battler.prototype.updateScale.call(this);
+        }
         var battler = this._battler;
         this.children.forEach(function(sprite) {
-            sprite.scale.x = 1 / battler.getScaleX();
+            var mirror     = sprite.scale.x < 0 ? -1 : 1;
+            sprite.scale.x = 1 / battler.getScaleX() * mirror;
             sprite.scale.y = 1 / battler.getScaleY();
         });
     };
@@ -521,4 +528,3 @@
         return !this._appeared;
     };
 })();
-
