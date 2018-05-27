@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2018/05/27 セルフ変数のキーに数値ではなく文字列を使用できるよう修正
 // 1.7.1 2017/09/01 スクリプトヘルプの誤記を修正
 // 1.7.0 2017/08/29 プラグインコマンドで制御文字\sv[n]が利用できる機能を追加
 // 1.6.1 2017/08/26 セルフ変数に文字列が入っている場合でも出現条件の注釈が正しく動作するよう修正
@@ -332,17 +333,17 @@ var $dataTemplateEvents = null;
         if (isNotAString(text)) text = '';
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bN\[(\d+)]/gi, function() {
             var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
             return actor ? actor.name() : '';
         }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bP\[(\d+)]/gi, function() {
             var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
             return actor ? actor.name() : '';
         }.bind(this));
@@ -355,13 +356,13 @@ var $dataTemplateEvents = null;
     };
 
     var isExistPlugin = function(pluginName) {
-        return Object.keys(PluginManager.parameters(pluginName)).length > 0
+        return Object.keys(PluginManager.parameters(pluginName)).length > 0;
     };
 
     var convertAllArguments = function(args) {
         return args.map(function(arg) {
             return convertEscapeCharacters(arg);
-        })
+        });
     };
 
     var setPluginCommand = function(commandName, methodName) {
@@ -431,15 +432,15 @@ var $dataTemplateEvents = null;
     };
 
     Game_Interpreter.prototype.execControlSelfVariable = function(args) {
-        var selfIndex   = getArgNumber(args[0], 0);
+        var selfIndex   = getArgNumber(args[0], 0) || args[0];
         var controlType = getArgNumber(args[1], 0, 5);
         var operand     = isNaN(Number(args[2])) ? args[2] : getArgNumber(args[2]);
         this.controlSelfVariable(selfIndex, controlType, operand, false);
     };
 
     Game_Interpreter.prototype.execControlSelfVariableRange = function(args) {
-        var selfStartIndex = getArgNumber(args[0], 0);
-        var selfEndIndex   = getArgNumber(args[1], 0);
+        var selfStartIndex = getArgNumber(args[0], 0) || args[0];
+        var selfEndIndex   = getArgNumber(args[1], 0) || args[0];
         var controlType    = getArgNumber(args[2], 0, 5);
         var operand        = isNaN(Number(args[3])) ? args[3] : getArgNumber(args[3]);
         this.controlSelfVariableRange(selfStartIndex, selfEndIndex, controlType, operand, false);
@@ -566,8 +567,8 @@ var $dataTemplateEvents = null;
     };
 
     Game_SelfSwitches.prototype.convertSelfVariableCharacter = function(eventId, text, scriptFlag) {
-        text = text.replace(/\x1bSV\[(\d+)\]/gi, function() {
-            var key   = this.makeSelfVariableKey(eventId, parseInt(arguments[1]));
+        text = text.replace(/\x1bSV\[(\w+)]/gi, function() {
+            var key   = this.makeSelfVariableKey(eventId, arguments[1]);
             var value = this.getVariableValue(key);
             return isNotAString(value) || !scriptFlag ? value : '\'' + value + '\'';
         }.bind(this));
@@ -625,6 +626,7 @@ var $dataTemplateEvents = null;
         }
     };
 
+    Game_Event._userScripts = ['getTemplateId', 'getTemplateName'];
     Game_Event.prototype.getTemplateId = function() {
         return this._templateId;
     };
@@ -666,28 +668,16 @@ var $dataTemplateEvents = null;
     };
 
     Game_Event.prototype.getStartComment = function(page) {
-        var index   = 0;
-        var comment = '';
-        while (true) {
-            var currentComment = this.getCurrentComment(page, index);
-            if (currentComment) {
-                comment += currentComment;
-                index++;
-            } else {
-                break;
-            }
-        }
-        return comment
-    };
-
-    Game_Event.prototype.getCurrentComment = function(page, index) {
-        var command = page.list[index];
-        return command && (command.code === 108 || command.code === 408) ? command.parameters[0] : '';
+        return page.list.filter(function(command) {
+            return command && (command.code === 108 || command.code === 408);
+        }).reduce(function(prev, command) {
+            return prev + command.parameters[0];
+        }, '');
     };
 
     Game_Event.prototype.execConditionScriptForSelfVariable = function(note) {
         var scripts = [];
-        note.replace(/\\TE\{(.+?)\}/gi, function() {
+        note.replace(/\\TE{(.+?)}/gi, function() {
             scripts.push(arguments[1]);
         }.bind(this));
         return scripts.every(function(script) {
