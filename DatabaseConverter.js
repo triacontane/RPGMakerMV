@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2018/05/30 移動ルートの設定のコマンドをインポートした際、一部の数値がundefinedとなってしまう問題を修正
 // 1.0.1 2018/05/20 オリジナルデータの作成方法をヘルプに追加
 // 1.0.0 2018/05/20 正式版リファクタリング
 // 0.3.0 2018/05/17 オートインポート機能がパラメータ設定に拘わらず有効になっていた問題を修正
@@ -287,6 +288,7 @@ function ConverterManager() {
     'use strict';
 
     let param = {};
+    const pluginCommandMap = new Map();
 
     const paramReplacer = function(key, value) {
         if (value === 'null' || value === null) {
@@ -369,7 +371,6 @@ function ConverterManager() {
             return;
         }
 
-        const pluginCommandMap = new Map();
         setPluginCommand('EXPORT_DATABASE', 'exportDatabase');
         setPluginCommand('IMPORT_DATABASE', 'importDatabase');
         setPluginCommand('EXPORT_COMMON_EVENT', 'exportCommonEvent');
@@ -517,6 +518,10 @@ function ConverterManager() {
         const path = require('path');
         const base = path.dirname(process.mainModule.filename);
         return path.join(base, subPath);
+    };
+
+    ConverterManager.setParameter = function(name, value) {
+        param[name] = value;
     };
 
     /**
@@ -1364,7 +1369,7 @@ function ConverterManager() {
         }
 
         deserializeData(sheetData) {
-            const convertData = JSON.parse(JSON.stringify(this._utils.sheet_to_json(sheetData), paramReplacer));
+            const convertData = JSON.parse(JSON.stringify(this._utils.sheet_to_json(sheetData)), paramReplacer);
             const database    = [];
             convertData.shift();
             convertData.forEach(function(dataItem) {
