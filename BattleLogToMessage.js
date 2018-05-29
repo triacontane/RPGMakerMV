@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2018/05/30 スキル名、アイテム名を簡易表示する機能を追加
 // 1.6.1 2018/05/05 YEP_MessageCore.jsが有効な場合、メッセージウィンドウの行数はYEP_MessageCore.jsを優先するよう修正
 // 1.6.0 2018/03/25 バトルログに表示する内容が空の時、ウィンドウを非表示にできる機能を追加
 // 1.5.0 2018/03/25 バトルログの行数を変更できる機能を追加。表示するメッセージが空の場合はメッセージ表示をしないよう変更
@@ -16,7 +17,7 @@
 // 1.1.0 2016/10/14 ダメージのポップアップを抑制する機能を追加
 // 1.0.0 2016/10/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -57,6 +58,11 @@
  *
  * @param HiddenIfEmpty
  * @desc ウィンドウに表示する内容がないとき、ウィンドウが非表示になります。
+ * @default false
+ * @type boolean
+ *
+ * @param SkillViewSimplified
+ * @desc スキルおよびアイテムの表示を名称のみの中央表示に切り替えます。
  * @default false
  * @type boolean
  *
@@ -102,6 +108,11 @@
  *
  * @param 空の場合に非表示
  * @desc ウィンドウに表示する内容がないとき、ウィンドウが非表示になります。
+ * @default false
+ * @type boolean
+ *
+ * @param スキル名簡易表示
+ * @desc スキルおよびアイテムの表示を名称のみの中央表示に切り替えます。
  * @default false
  * @type boolean
  *
@@ -160,13 +171,14 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramStatusPosUpper   = getParamBoolean(['StatusPosUpper', 'ステータス上部配置']);
-    var paramSuppressPopup    = getParamBoolean(['SuppressPopup', 'ポップアップ抑制']);
-    var paramMessagePosUpper  = getParamBoolean(['MessagePosUpper', 'メッセージ上部配置']);
-    var paramMessageSpeed     = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
-    var paramWaitForEndAction = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
-    var paramMessageLines     = getParamNumber(['MessageLines', 'メッセージ行数'], 0);
-    var paramHiddenIfEmpty    = getParamBoolean(['HiddenIfEmpty', '空の場合に非表示']);
+    var paramStatusPosUpper      = getParamBoolean(['StatusPosUpper', 'ステータス上部配置']);
+    var paramSuppressPopup       = getParamBoolean(['SuppressPopup', 'ポップアップ抑制']);
+    var paramMessagePosUpper     = getParamBoolean(['MessagePosUpper', 'メッセージ上部配置']);
+    var paramMessageSpeed        = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
+    var paramWaitForEndAction    = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
+    var paramMessageLines        = getParamNumber(['MessageLines', 'メッセージ行数'], 0);
+    var paramHiddenIfEmpty       = getParamBoolean(['HiddenIfEmpty', '空の場合に非表示']);
+    var paramSkillViewSimplified = getParamBoolean(['SkillViewSimplified', 'スキル名簡易表示']);
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
@@ -322,6 +334,32 @@
     };
 
     Window_BattleLog.prototype.drawBackground = function() {};
+
+    if (paramSkillViewSimplified) {
+        Window_BattleLog.prototype.displayAction = function(subject, item) {
+            this.push('addText', item.name);
+            this._displayCenterText = item.name;
+        };
+
+        var _Window_BattleLog_drawLineText = Window_BattleLog.prototype.drawLineText;
+        Window_BattleLog.prototype.drawLineText = function(index) {
+            if (this._displayCenterText === this._lines[index]) {
+                var rect = this.itemRectForText(index);
+                var realWidth = this.drawTextEx(this._lines[index], rect.x, -rect.height, rect.width);
+                rect.x += (rect.width / 2 - realWidth / 2);
+                this.contents.clearRect(rect.x, rect.y, rect.width, rect.height);
+                this.drawTextEx(this._lines[index], rect.x, rect.y, rect.width);
+            } else {
+                _Window_BattleLog_drawLineText.apply(this, arguments);
+            }
+        };
+
+        var _Window_BattleLog_endAction2 = Window_BattleLog.prototype.endAction;
+        Window_BattleLog.prototype.endAction = function(subject) {
+            this._displayCenterText = null;
+            _Window_BattleLog_endAction2.apply(this, arguments);
+        };
+    }
 
     //=============================================================================
     // Window_Message
