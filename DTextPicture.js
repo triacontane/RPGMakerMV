@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.1 2018/05/30 アウトラインカラー取得で0およびその他の文字列を指定したときに正しく色が設定されない問題を修正(by奏ねこまさん)
 // 1.10.0 2017/02/12 アウトラインカラーをウィンドウカラー番号から指定できる機能を追加
 // 1.9.0 2017/08/20 ウィンドウつきピクチャが重なったときにウィンドウがピクチャの下に表示される問題を修正
 // 1.8.6 2017/06/28 フォント変更機能のヘルプが抜けていたので追加
@@ -558,10 +559,10 @@
                 case 'OC':
                     var colorCode = this.hiddenWindow.obtainEscapeParamString(textState);
                     var colorIndex = Number(colorCode);
-                    if (!isNaN(colorIndex) && colorIndex > 0) {
+                    if (!isNaN(colorIndex)) {
                         bitmap.outlineColor = this.hiddenWindow.textColor(colorIndex);
                     } else {
-                        bitmap.outlineColor = this.hiddenWindow.obtainEscapeParamString(textState);
+                        bitmap.outlineColor = colorCode;
                     }
                     break;
                 case 'OW':
