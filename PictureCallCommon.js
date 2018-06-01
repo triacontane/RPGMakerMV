@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.7 2018/06/01 イベント「戦闘の処理」による戦闘の場合、「戦闘中に常にコモン実行」の機能が使えない問題を修正
 // 1.10.6 2018/04/12 ヘルプの記述を微修正
 // 1.10.5 2017/12/17 コモンイベントを実行するタイプのボタンは、イベント実行中に無効になるよう仕様変更
 // 1.10.4 2017/11/01 ピクチャコモンが呼ばれる瞬間に対象ピクチャが表示されていない場合はイベントを呼ばない仕様に変更
@@ -434,7 +435,7 @@
             $gameSwitches.setValue(param * -1, true);
         }
         if (this.isTouchPictureCallCommon()) {
-            if ($gameMap.isEventRunning()) {
+            if ($gameMap.isEventRunning() && !$gameParty.inBattle()) {
                 this._touchPictureParam = null;
                 return;
             }
