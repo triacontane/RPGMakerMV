@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2018/06/03 攻撃中バトラーを消去する機能を追加
 // 1.2.2 2018/04/07 AnimatedSVEnemies.jsとの競合を解消
 // 1.2.1 2018/03/31 直接エフェクト行動後、アクターのターンが回ってきたとき選択中に一歩前進しなくなる問題を修正
 // 1.2.0 2018/01/16 スキル実行時の移動中にSVモーションを適用できる機能を追加
@@ -99,6 +100,8 @@
  * <DAEStartMotion:dead>    # 同上
  * <DAE終了モーション:dead> # 攻撃終了時のモーションが「戦闘不能」になります。
  * <DAEEndMotion:dead>      # 同上
+ * <DAEVanish>              # 攻撃動作中、バトラーが非表示になります。
+ * <DAE消滅>                # 同上
  *
  * ※モーションの種類については後述
  *
@@ -250,6 +253,8 @@
  * <DAEStartMotion:dead>    # 同上
  * <DAE終了モーション:dead> # 攻撃終了時のモーションが「戦闘不能」になります。
  * <DAEEndMotion:dead>      # 同上
+ * <DAEVanish>              # 攻撃動作中、バトラーが非表示になります。
+ * <DAE消滅>                # 同上
  *
  * ※モーションの種類については後述
  *
@@ -456,6 +461,7 @@ function Sprite_Dummy() {
         this._directlyAttackInfo     = null;
         this._directlyReturnInfo     = null;
         this._directlyAdditionalInfo = null;
+        this._vanish = false;
     };
 
     Game_Battler.prototype.setDirectlyAttack = function(target, action) {
@@ -499,6 +505,7 @@ function Sprite_Dummy() {
         var enemyOnly = getMetaValues(item, ['敵キャラのみ', 'EnemyOnly']);
         if (enemyOnly) info.enemyOnly = true;
         this._directlyAdditionalInfo = info;
+        this._vanish = getMetaValues(item, ['消滅', 'Vanish']);
     };
 
     Game_Battler.prototype.makeDirectlyInfo = function(target, args) {
@@ -563,6 +570,10 @@ function Sprite_Dummy() {
     Game_Battler.prototype.onTurnEnd = function() {
         _Game_Battler_onTurnEnd.apply(this, arguments);
         this.initDirectlyAttack();
+    };
+
+    Game_Battler.prototype.isVanish = function() {
+        return this._vanish;
     };
 
     //=============================================================================
@@ -840,6 +851,7 @@ function Sprite_Dummy() {
     Sprite_Battler.prototype.startAttackMotion = function(x, y, attackInfo, returnFlg) {
         if (this.isPlayingAttackMotion()) return;
         var additionalInfo = this._battler.getDirectoryAddition();
+        this._returnMotion = returnFlg;
         if (!returnFlg) {
             var newPos          = this.shiftAttackMotion(x, y, additionalInfo);
             this._targetAttackX = newPos.x;
@@ -860,7 +872,7 @@ function Sprite_Dummy() {
             this._attackZ = this._targetAttackZ;
         } else {
             this.setPriorityMostFront();
-            if (additionalInfo.afterimage && !paramNoAfterimage) {
+            if (additionalInfo.afterimage && !paramNoAfterimage && !this._battler.isVanish()) {
                 this.setVisibleAfterImage(true);
             }
         }
@@ -901,21 +913,33 @@ function Sprite_Dummy() {
     };
 
     Sprite_Battler.prototype.updateAttackMotion = function() {
-        if (this._attackDuration > 0) {
-            var d         = this._attackDuration;
-            this._attackX = (this._attackX * (d - 1) + this._targetAttackX) / d;
-            this._attackY = (this._attackY * (d - 1) + this._targetAttackY) / d;
-            this._attackZ = (this._attackZ * (d - 1) + this._targetAttackZ) / d;
-            this._attackDuration--;
-            if (this.isAttackMotionHidden()) this.getMainSprite().opacity = this.getAttackMotionOpacity();
-            if (this._attackDuration === 0) {
-                this.onMoveEnd();
-                if (this._attackX === 0 && this._attackY === 0) {
-                    this._spriteSet.resetBattlerOrder();
-                }
-                this._attackEndFrame = Graphics.frameCount;
-                this.setVisibleAfterImage(false);
-            }
+        if (!this._attackDuration) {
+            return;
+        }
+        var d         = this._attackDuration;
+        this._attackX = (this._attackX * (d - 1) + this._targetAttackX) / d;
+        this._attackY = (this._attackY * (d - 1) + this._targetAttackY) / d;
+        this._attackZ = (this._attackZ * (d - 1) + this._targetAttackZ) / d;
+        this._attackDuration--;
+        if (this._battler.isVanish()) {
+            this.opacity = 0;
+        } else if (this.isAttackMotionHidden()) {
+            this.getMainSprite().opacity = this.getAttackMotionOpacity();
+        }
+        if (this._attackDuration === 0) {
+            this.onAttackMotionEnd();
+        }
+    };
+
+    Sprite_Battler.prototype.onAttackMotionEnd = function() {
+        this.onMoveEnd();
+        if (this._attackX === 0 && this._attackY === 0) {
+            this._spriteSet.resetBattlerOrder();
+        }
+        this._attackEndFrame = Graphics.frameCount;
+        this.setVisibleAfterImage(false);
+        if (this._battler.isVanish() && this._returnMotion) {
+            this.opacity = 255;
         }
     };
 
