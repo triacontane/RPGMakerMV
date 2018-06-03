@@ -1,11 +1,12 @@
 //=============================================================================
 // StateRingIcon.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2018/06/04 Battle_Hud使用時にも味方のステートターン数が表示される機能を追加
 // 1.3.3 2018/03/11 YEP_BuffsStatesCore.jsとの競合を解消
 // 1.3.2 2017/06/22 一度に複数のステートが解除された場合に一部アイコンが正しく消去されない問題を修正
 // 1.3.1 2017/05/05 残りターン数のフォントサイズ指定機能を追加
@@ -15,7 +16,7 @@
 // 1.1.0 2017/02/28 ステートアイコンを横に並べる機能を追加。ステート数によって演出を分けることもできます。
 // 1.0.0 2016/08/08 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -397,6 +398,35 @@ function Sprite_StateIconChild() {
                 this._drawIconCount++;
             }
         };
+
+        if (typeof Battle_Hud !== 'undefined') {
+            var _Battle_Hud_create_states = Battle_Hud.prototype.create_states;
+            Battle_Hud.prototype.create_states = function() {
+                if (String(Moghunter.bhud_states_visible) !== 'true') {
+                    return;
+                }
+                this.removeChild(this._state_icon_turn);
+                if (!this._battler) {
+                    return;
+                }
+                this._state_icon_turn = new Sprite(new Bitmap(Window_Base._iconWidth, Window_Base._iconHeight));
+                this._state_icon_turn.x = this._pos_x + Moghunter.bhud_states_pos_x;
+                this._state_icon_turn.y = this._pos_y + Moghunter.bhud_states_pos_y;
+                this._state_icon_turn.bitmap.fontSize = paramFontSize;
+                _Battle_Hud_create_states.apply(this, arguments);
+                this.addChild(this._state_icon_turn);
+            };
+
+            var _Battle_Hud_refresh_states = Battle_Hud.prototype.refresh_states;
+            Battle_Hud.prototype.refresh_states = function() {
+                _Battle_Hud_refresh_states.apply(this, arguments);
+                this._state_icon_turn.bitmap.clear();
+                var turn = this._battler.getAllTurns()[0];
+                if (turn) {
+                    this._state_icon_turn.bitmap.drawText(turn, 0, 0, Window_Base._iconWidth, Window_Base._iconHeight, 'right');
+                }
+            };
+        }
     }
 })();
 
