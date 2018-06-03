@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.10 2018/06/04 DeadOrAliveItem.jsとの競合を解消
 // 1.1.9 2018/02/28 選択可能対象が存在しないスキルは、敵キャラの使用スキルから除外するよう修正
 // 1.1.8 2018/02/27 スクリプトに関するヘルプの記述が間違っていたので修正
 // 1.1.7 2017/07/26 ステート全体化プラグイン（StateTotalization.js）との競合を解消
@@ -66,6 +67,9 @@
  *
  * 主にスキルによる一時的な無敵状態の演出に利用できます。
  *
+ * 競合情報
+ * DeadOrAliveItem.jsと併用する場合は当プラグインを下に配置してください。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -111,6 +115,9 @@
  * <RTS_Invincible> # 同上
  *
  * 主にスキルによる一時的な無敵状態の演出に利用できます。
+ *
+ * 競合情報
+ * DeadOrAliveItem.jsと併用する場合は当プラグインを下に配置してください。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -304,6 +311,15 @@
 
     Game_Unit.prototype.setNeedOriginalMember = function(value) {
         this._needOriginalMember = value;
+    };
+
+    // for DeadOrAliveItem.js
+    var _Game_Unit_smoothTargetDeadOrAlive = Game_Unit.prototype.smoothTargetDeadOrAlive;
+    Game_Unit.prototype.smoothTargetDeadOrAlive = function(index) {
+        this._needOriginalMember = true;
+        var member = _Game_Unit_smoothTargetDeadOrAlive.apply(this, arguments);
+        this._needOriginalMember = false;
+        return member;
     };
 
     //=============================================================================
