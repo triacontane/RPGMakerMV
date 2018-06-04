@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.1 2018/06/05 メモ欄タグで変数指定＋並列処理で変数操作にて発生するいくつかの問題を修正（奏ねこま様）
 // 1.9.0 2018/02/20 不透明度をメモ欄で設定できる機能を追加
 // 1.8.0 2017/08/27 マップで使用しているタイルセット以外のタイルセットを使ったイベントを作成できる機能を追加
 // 1.7.0 2017/08/24 画像を別のものに変更するスクリプトを追加
@@ -494,10 +495,24 @@
 
     var _Game_Event_refresh = Game_Event.prototype.refresh;
     Game_Event.prototype.refresh = function() {
+        // added by nekoma start
+        var moveRoute = this._moveRoute;
+        var moveRouteIndex = this._moveRouteIndex;
+        var moveRouteForcing = this._moveRouteForcing;
+        var starting = this._starting;
+        // added by nekoma end
         if (this._graphicDynamic) {
             this._pageIndex = -1;
         }
         _Game_Event_refresh.apply(this, arguments);
+        // added by nekoma start
+        if (this._graphicDynamic) {
+            this._moveRoute = moveRoute;
+            this._moveRouteIndex = moveRouteIndex;
+            this._moveRouteForcing = moveRouteForcing;
+            this._starting = starting;
+        }
+        // added by nekoma end
     };
 
     var _Game_Event_setupPageSettings      = Game_Event.prototype.setupPageSettings;
