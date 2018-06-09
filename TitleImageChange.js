@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.3 2018/06/09 セーブファイル数の上限を大きく増やしている場合にタイトル画面の表示が遅くなる現象を修正
 // 1.4.2 2018/04/26 ニューゲーム開始後、一度もセーブしていないデータで進行状況のみをセーブするスクリプトを実行しても設定が反映されない問題を修正
 // 1.4.1 2017/07/20 1.4.0で追加した機能で画像やBGMを4つ以上しないとタイトルがずれてしまう問題を修正
 // 1.4.0 2017/02/12 画像やBGMを4つ以上指定できる機能を追加
@@ -229,13 +230,16 @@
     var _DataManager_loadGlobalInfo = DataManager.loadGlobalInfo;
     DataManager.loadGlobalInfo = function() {
         if (this._loadGrade) {
-            try {
-                var json = StorageManager.load(0);
-                return json ? JSON.parse(json) : [];
-            } catch (e) {
-                console.error(e);
-                return [];
+            if (!this._globalInfo) {
+                try {
+                    var json = StorageManager.load(0);
+                    this._globalInfo = json ? JSON.parse(json) : [];
+                } catch (e) {
+                    console.error(e);
+                    this._globalInfo = [];
+                }
             }
+            return this._globalInfo;
         } else {
             return _DataManager_loadGlobalInfo.apply(this, arguments);
         }
