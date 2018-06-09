@@ -224,7 +224,7 @@
             }
             targets = targetsForRandom;
         }
-        if (this.isScopeExtendInfo(['グループ', 'Group']) && targets.length > 0) {
+        if (this.isScopeExtendInfo(['グループ', 'Group']) && targets[0]) {
             var targetsForGroup, prevTarget = targets[0];
             if (prevTarget.isActor()) {
                 targetsForGroup = prevTarget.friendsUnit().aliveMembers();
