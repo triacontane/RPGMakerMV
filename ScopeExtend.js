@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2018/06/09　範囲が「なし」になっているグループ攻撃使用時にエラーになる問題を修正
 // 1.6.0 2017/07/09 「敵単体（戦闘不能）」および「敵全体（戦闘不能）」の効果範囲を追加
 // 1.5.1 2017/02/21 グループ対象に指定したスキルが「隠れ状態」の敵にも当たってしまう問題を修正
 // 1.5.0 2016/12/02 味方に対してN回ランダム選択できる機能を追加
@@ -223,7 +224,7 @@
             }
             targets = targetsForRandom;
         }
-        if (this.isScopeExtendInfo(['グループ', 'Group'])) {
+        if (this.isScopeExtendInfo(['グループ', 'Group']) && targets.length > 0) {
             var targetsForGroup, prevTarget = targets[0];
             if (prevTarget.isActor()) {
                 targetsForGroup = prevTarget.friendsUnit().aliveMembers();
