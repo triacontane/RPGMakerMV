@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2018/06/10 1.4.0の修正でステートアイコンが変化したときに常に先頭のターンが表示される問題を修正
 // 1.4.0 2018/06/04 Battle_Hud使用時にも味方のステートターン数が表示される機能を追加
 // 1.3.3 2018/03/11 YEP_BuffsStatesCore.jsとの競合を解消
 // 1.3.2 2017/06/22 一度に複数のステートが解除された場合に一部アイコンが正しく消去されない問題を修正
@@ -419,9 +420,9 @@ function Sprite_StateIconChild() {
 
             var _Battle_Hud_refresh_states = Battle_Hud.prototype.refresh_states;
             Battle_Hud.prototype.refresh_states = function() {
+                var turn = this._battler.getAllTurns()[this._states_data[1]];
                 _Battle_Hud_refresh_states.apply(this, arguments);
                 this._state_icon_turn.bitmap.clear();
-                var turn = this._battler.getAllTurns()[0];
                 if (turn) {
                     this._state_icon_turn.bitmap.drawText(turn, 0, 0, Window_Base._iconWidth, Window_Base._iconHeight, 'right');
                 }
