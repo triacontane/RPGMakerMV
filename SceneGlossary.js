@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2018/06/14 収集率算出の対象から外せる用語を指定できる機能を追加
 // 2.7.0 2018/04/30 ひとつの用語に対して複数の画像を表示できる機能を追加
 // 2.6.2 2018/04/19 ヘルプの一部を英語化
 // 2.6.1 2018/04/07 用語選択からカテゴリ選択に戻ったときに、最後に選択していた用語の情報が残ってしまう問題を修正
@@ -222,6 +223,7 @@
  * <SGPictureScale:0.5>    // Picture scale
  * <SGPictureAlign:right>    // Picture align
  *  left, center, right
+ * <SGNoCollect>            // Glossary No Collect
  *
  * *1 Escape Characters
  * \COMMON[1]  // It is replaced by aaa(<CommonDescription:aaa>)
@@ -584,6 +586,7 @@
  * <SGピクチャ拡大率:0.5>    // ピクチャの拡大率
  * <SGピクチャ揃え:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
+ * <SG収集対象外>            // 用語を収集率算出の対象外に設定
  *
  * ※1 以下の特殊な制御文字が使用できます。
  * \COMMON[1]  // ID[1]のアイテムの<SG共通説明:aaa>に置き換えられます。
@@ -1112,6 +1115,9 @@ function Window_GlossaryComplete() {
     Game_Party.prototype.getHasGlossaryPercent = function(categoryName) {
         var hasCount = 0, allCount = 0;
         this.getAllGlossaryList(true, false, categoryName).forEach(function(item) {
+            if (getMetaValues(item, ['収集対象外', 'NoCollect'])) {
+                return;
+            }
             if (this.hasGlossary(item)) {
                 hasCount++;
             }
