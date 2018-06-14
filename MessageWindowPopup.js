@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.1 2018/06/15 ウィンドウ連携が有効かつ、フキダシウィンドウを1回も表示していない場合に選択肢ウィンドウが見えなくなる問題を修正
 // 2.10.0 2018/05/20 ポーズサインのテール化機能を使わない設定を追加しました。
 // 2.9.8 2018/03/19 プラグインを未適用の状態でセーブしたデータをロードするとエラーになる現象を修正
 // 2.9.7 2018/01/30 BetweenCharacters.jsとの競合を解消
@@ -1385,7 +1386,7 @@
     };
 
     Window_ChoiceList.prototype.isPopup = function() {
-        return this._messageWindow.isPopup();
+        return this._messageWindow.isPopup() && this._messageWindow.isOpen();
     };
 
     var _Window_ChoiceList_numVisibleRows      = Window_ChoiceList.prototype.numVisibleRows;
@@ -1425,13 +1426,13 @@
     };
 
     Window_NumberInput.prototype.isPopup = function() {
-        return this._messageWindow.isPopup();
+        return this._messageWindow.isPopup() && this._messageWindow.isOpen();
     };
 
     // Resolve conflict for KMS_DebugUtil.js
     if (isExistPlugin('KMS_DebugUtil')) {
         Window_NumberInput.prototype.isPopup = function() {
-            return this._messageWindow && this._messageWindow.isPopup();
+            return this._messageWindow && this._messageWindow.isPopup() && this._messageWindow.isOpen();
         };
     }
 
