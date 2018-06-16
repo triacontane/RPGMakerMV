@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2018/06/17 パラメータの型指定機能に対応
+//                  ステートの解除タイミングが「行動終了時」の場合の表示ターン数を1加算しました。
 // 1.4.1 2018/06/10 1.4.0の修正でステートアイコンが変化したときに常に先頭のターンが表示される問題を修正
 // 1.4.0 2018/06/04 Battle_Hud使用時にも味方のステートターン数が表示される機能を追加
 // 1.3.3 2018/03/11 YEP_BuffsStatesCore.jsとの競合を解消
@@ -29,14 +31,17 @@
  * @param RadiusX
  * @desc 横方向の半径の値です。
  * @default 64
+ * @type number
  *
  * @param RadiusY
  * @desc 縦方向の半径の値です。
  * @default 16
+ * @type number
  *
  * @param CycleDuration
  * @desc アイコンが一周するのに掛かる時間(フレーム数)です。0に指定すると回転しなくなります。
  * @default 60
+ * @type number
  *
  * @param LineViewLimit
  * @desc ステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
@@ -44,30 +49,47 @@
  *
  * @param Reverse
  * @desc 回転方向が反時計回りになります。(Default:OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param ShowTurnCount
  * @desc ステートの残りターン数を表示します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param TurnCountX
  * @desc ターン数のX座標表示位置を調整します。デフォルトはアイコンの右下になります。
  * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
  *
  * @param TurnCountY
  * @desc ターン数のY座標表示位置を調整します。デフォルトはアイコンの右下になります。
  * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
  *
  * @param ShowActorTurnCount
  * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param FontSize
  * @desc 残りターン数表示のフォントサイズです。
  * @default 32
+ * @type number
  *
- * @help 敵キャラのステートが複数有効になった場合の
- * ステートアイコンを時計回りに回転させてリングで表現します。
+ * @help 敵キャラのステートが複数有効になった場合のステートアイコンを時計回りに
+ * 回転させてリング表示したり一列に並べて表示したりできます。
+ *
+ * また、各ステートの残りターンを表示することもできます。
+ * ・ステート解除のタイミングが「なし」でない場合のみ表示されます。
+ * ・コアスクリプトで管理しているターン数の都合上、ステート解除のタイミングが
+ * 　「行動終了時」の場合、設定したターン数よりも1大きい数から表示されます。
+ *
+ * このプラグインにはプラグインコマンドはありません。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -80,49 +102,64 @@
  * @param X半径
  * @desc 横方向の半径の値です。(Default:64)
  * @default 64
+ * @type number
  *
  * @param Y半径
  * @desc 縦方向の半径の値です。(Default:16)
  * @default 16
+ * @type number
  *
  * @param 周期
  * @desc アイコンが一周するのに掛かる時間(フレーム数)です。0に指定すると回転しなくなります。
  * @default 60
+ * @type number
  *
  * @param 一列配置上限
  * @desc ステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
  * @default 1
+ * @type number
  *
  * @param 反時計回り
  * @desc 回転方向が反時計回りになります。(Default:OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param ターン数表示
  * @desc ステートの残りターン数を表示します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ターン数X座標
  * @desc ターン数のX座標表示位置を調整します。デフォルトはアイコンの右下になります。
  * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
  *
  * @param ターン数Y座標
  * @desc ターン数のY座標表示位置を調整します。デフォルトはアイコンの右下になります。
  * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
  *
  * @param 味方ターン数表示
  * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param フォントサイズ
  * @desc 残りターン数表示のフォントサイズです。
  * @default 32
+ * @type number
  *
  * @help 敵キャラのステートが複数有効になった場合のステートアイコンを時計回りに
  * 回転させてリング表示したり一列に並べて表示したりできます。
  *
  * また、各ステートの残りターンを表示することもできます。
- *
- * 追加機能として、味方のステートの残りターンを表示することもできます。
+ * ・ステート解除のタイミングが「なし」でない場合のみ表示されます。
+ * ・コアスクリプトで管理しているターン数の都合上、ステート解除のタイミングが
+ * 　「行動終了時」の場合、設定したターン数よりも1大きい数から表示されます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -154,7 +191,7 @@ function Sprite_StateIconChild() {
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
@@ -191,7 +228,7 @@ function Sprite_StateIconChild() {
             } else if (state.autoRemovalTiming <= 0) {
                 return '';
             } else {
-                return Math.ceil(this._stateTurns[state.id]);
+                return Math.ceil(this._stateTurns[state.id]) + (state.autoRemovalTiming === 1 ? 1 : 0);
             }
         }, this);
         return stateTurns.filter(function(turns) {
