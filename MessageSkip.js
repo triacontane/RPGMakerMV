@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2018/06/16 オート及びスキップの機能を一時的に無効化するスイッチを追加
 // 1.10.1 2018/05/07 オートモードで途中に「\!」が含まれる場合の待機フレームが正しく計算されない問題を修正
 // 1.10.0 2018/05/01 スキップモードとオートモードをスイッチで自動制御できる機能を追加
 // 1.9.0 2018/02/18 イベント終了時にオート、スキップを解除するかどうかを任意のスイッチで判定できるように仕様変更
@@ -136,6 +137,11 @@
  * @default 0
  * @type number
  *
+ * @param InvalidSwitchId
+ * @desc 指定したスイッチがONのときプラグインの全機能が無効になります。
+ * @default 0
+ * @type switch
+ *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
  * イベントが終了すると自働でスキップやオートモードは解除されます。
  * 並列実行イベントは、通常イベントが実行中でない場合のみ解除されます。
@@ -265,6 +271,11 @@
  * @desc ウィンドウ内に表示するオートピクチャのY座標です。
  * @default 0
  * @type number
+ *
+ * @param 無効化スイッチ
+ * @desc 指定したスイッチがONのときプラグインの全機能が無効になります。
+ * @default 0
+ * @type switch
  *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
  * イベントが終了すると自働でスキップやオートモードは解除されます。
@@ -401,6 +412,7 @@ function Sprite_Frame() {
     var paramPressingSkip    = getParamBoolean(['PressingSkip', '押し続けスキップ']);
     var paramSkipSwitchId    = getParamNumber(['SkipSwitchId', 'スキップスイッチ'], 0);
     var paramAutoSwitchIId   = getParamNumber(['AutoSwitchIId', 'オートスイッチ'], 0);
+    var paramInvalidSwitchId = getParamNumber(['InvalidSwitchId', '無効化スイッチ'], 0);
 
     //=============================================================================
     // Game_Message
@@ -527,7 +539,6 @@ function Sprite_Frame() {
     };
 
     Window_Message.prototype.initializeMessageAutoCount = function() {
-        // use in eval
         var textSize = 0;
         if (this._textState) {
             var index = this._textState.index;
@@ -535,6 +546,7 @@ function Sprite_Frame() {
             while (text[index] && !(text[index] === '\x1b' && text[index + 1] === '!')) {
                 index++;
             }
+            // use in eval
             textSize = index - this._textState.index;
         }
         var paramValue         = convertEscapeCharacters(getParamString(['AutoWaitFrame', 'オート待機フレーム'])) || 1;
@@ -616,6 +628,11 @@ function Sprite_Frame() {
     };
 
     Window_Message.prototype.setSkipAutoFlagBySwitch = function() {
+        if (paramInvalidSwitchId > 0 && $gameSwitches.value(paramInvalidSwitchId)) {
+            $gameMessage.setSkipFlg(false);
+            $gameMessage.setAutoFlg(false);
+            return;
+        }
         if (paramSkipSwitchId > 0) {
             $gameMessage.setSkipFlg($gameSwitches.value(paramSkipSwitchId));
         }
@@ -712,6 +729,10 @@ function Sprite_Frame() {
     };
 
     Sprite_MessageButton.prototype.updateVisibility = function() {
+        if (paramInvalidSwitchId > 0 && $gameSwitches.value(paramInvalidSwitchId)) {
+            this.visible = false;
+            return;
+        }
         this.visible = (!paramPictureSwitchId || $gameSwitches.value(paramPictureSwitchId));
     };
 
