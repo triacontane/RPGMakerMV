@@ -1,11 +1,12 @@
 //=============================================================================
 // MoviePicture.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2018/06/17 ピクチャの消去によって動画再生を終了した場合に、再生速度と音量が初期化されない問題を修正
 // 1.3.1 2017/08/27 二連続で再生したときに動画の音量同期機能が正常に動作しない問題を修正
 // 1.3.0 2017/08/26 動画の音量をいずれかのオーディオ音量と同期させる機能を追加
 // 1.2.0 2017/08/18 動画の再生速度(倍率)を変更できるプラグインコマンドを追加
@@ -521,8 +522,6 @@
             $gameScreen.erasePicture(this._pictureId);
             this.visible = false;
         }
-        this._volume = null;
-        this._speed  = null;
     };
 
     Sprite_Picture.prototype.clearVideo = function() {
@@ -532,6 +531,8 @@
             picture.setVideoPosition(this.bitmap.getCurrentTime());
         }
         this.bitmap.destroy();
+        this._volume = null;
+        this._speed  = null;
     };
 
     Sprite_Picture.prototype.isVideoPicture = function() {
@@ -597,7 +598,7 @@
     //  戦闘開始時にマップピクチャが一瞬読み込まれてしまう現象を回避します
     //=============================================================================
     SceneManager.isBattleStartUnexpectedLoad = function() {
-        return this._scene instanceof Scene_Battle && !$gameParty.inBattle()
+        return this._scene instanceof Scene_Battle && !$gameParty.inBattle();
     };
 
     //=============================================================================
@@ -625,10 +626,11 @@
         return false;
     };
 
-    //=============================================================================
-    // Bitmap_Video
-    //  動画ビットマップクラスです。
-    //=============================================================================
+    /**
+     * Bitmap_Video
+     * 動画ビットマップクラスです。
+     * @constructor
+     */
     function Bitmap_Video() {
         this.initialize.apply(this, arguments);
     }
@@ -761,10 +763,11 @@
         this._video.playbackRate = value;
     };
 
-    //=============================================================================
-    // Bitmap_DrawVideo
-    //  drawImageで実装する動画ビットマップクラスです。
-    //=============================================================================
+    /**
+     * Bitmap_DrawVideo
+     * drawImageで実装する動画ビットマップクラスです。
+     * @constructor
+     */
     function Bitmap_DrawVideo() {
         this.initialize.apply(this, arguments);
     }
