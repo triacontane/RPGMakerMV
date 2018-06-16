@@ -60,7 +60,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc 呪われたプラグイン
+ * @plugindesc 呪いのプラグイン
  * @author トリアコンタン
  *
  * @param priority
