@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.4 2018/06/17 YEP_X_AnimatedSVEnemies.jsとの併用時、敵キャラに対する本プラグインのエフェクトの一部が反映されない競合を修正
 // 1.2.3 2018/05/27 YEP_X_AnimatedSVEnemies.jsおよびBattleMotion.jsとの併用時、SVエネミーの反転が行われない問題を修正
 // 1.2.2 2018/05/20 YEP_X_ActSeqPack2.jsとの併用時、当該プラグインで透明度が変更された場合は、こちらの透明度変更機能を無効化するよう変更
 // 1.2.1 2018/05/20 YEP_X_ActSeqPack2.jsとの併用時、当該プラグインのバトラー反転機能が正常に機能しない競合を解消
@@ -462,7 +463,7 @@
     };
 
     Sprite_Battler.prototype.getMainSprite = function() {
-        return this;
+        return this._mainSprite ? this._mainSprite : this;
     };
 
     Sprite_Battler.prototype.isNeedDeadEffect = function() {
@@ -473,10 +474,6 @@
     // Sprite_Actor
     //  ステートによるエフェクトを反映させます。
     //=============================================================================
-    Sprite_Actor.prototype.getMainSprite = function() {
-        return this._mainSprite;
-    };
-
     var _Sprite_Actor_updatePosition      = Sprite_Actor.prototype.hasOwnProperty('updatePosition') ?
         Sprite_Actor.prototype.updatePosition : null;
     Sprite_Actor.prototype.updatePosition = function() {
@@ -490,8 +487,8 @@
         this._weaponSprite.y = altitude;
     };
 
-    Sprite_Actor.prototype.updateOpacity = function() {
-        Sprite_Battler.prototype.updateOpacity.call(this);
+    Sprite_Actor.prototype.updateOpacityForBge = function() {
+        Sprite_Battler.prototype.updateOpacityForBge.call(this);
         this._weaponSprite.opacity = this._battler.getOpacity();
     };
 
