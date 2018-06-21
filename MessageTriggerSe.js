@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/06/22 メッセージに続きがある場合のみ効果音を演奏する設定を追加
 // 1.1.0 2017/12/06 効果音の音量、ピッチ、左右バランスを後から変更できる機能を追加
 // 1.0.0 2017/12/05 初版
 // ----------------------------------------------------------------------------
@@ -18,15 +19,23 @@
  * @plugindesc メッセージ送りSEプラグイン
  * @author トリアコンタン
  *
- * @param 有効スイッチID
+ * @param validateSwitchId
+ * @text 有効スイッチID
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効となります。
  * @default 0
  * @type switch
  *
- * @param 効果音
+ * @param soundEffect
+ * @text 効果音
  * @desc ページ送り時に演奏される効果音情報です。
  * @default
  * @type struct<SE>
+ *
+ * @param doseContinueOnly
+ * @text 続きがある場合のみ
+ * @desc メッセージに続きがある場合のみメッセージ送りSEを演奏します。
+ * @default false
+ * @type boolean
  *
  * @help MessageTriggerSe.js
  *
@@ -83,49 +92,39 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'MessageTriggerSe';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name !== undefined) return name;
-        }
-        alert('Fail to load plugin parameter of ' + pluginName);
-        return null;
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    var getParamJson = function(paramNames, defaultValue) {
-        var value = getParamString(paramNames) || null;
-        try {
-            value = JSON.parse(value);
-            if (value === null) {
-                value = defaultValue;
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
             }
-        } catch (e) {
-            alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nName:${paramNames}\nValue:${value}`);
-            value = defaultValue;
-        }
-        return value;
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
 
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param              = {};
-    param.validateSwitchId = getParamNumber(['ValidateSwitchId', '有効スイッチID'], 0);
-    param.soundEffect      = getParamJson(['SoundEffect', '効果音'], {});
+    var param = createPluginParameter('MessageTriggerSe');
 
     //=============================================================================
     // Game_System
@@ -175,7 +174,11 @@
         var wasPause = this.pause;
         var input = _Window_Message_updateInput.apply(this, arguments);
         if (wasPause && !this.pause) {
-            this.playMessageTriggerSe();
+            if (this.doesContinue()) {
+                this.playMessageTriggerSe();
+            } else {
+                this._needMessageSe = true;
+            }
         }
         return input;
     };
@@ -183,16 +186,26 @@
     var _Window_Message_terminateMessage = Window_Message.prototype.terminateMessage;
     Window_Message.prototype.terminateMessage = function() {
         if (this._pauseSkip) {
-            this.playMessageTriggerSe();
+            this._needMessageSe = true;
         }
         _Window_Message_terminateMessage.apply(this, arguments);
     };
 
-    Window_Message.prototype.playMessageTriggerSe = function() {
-        if (!this.isValidMessageTriggerSe()) {
-            return;
+    var _Window_Message_checkToNotClose = Window_Message.prototype.checkToNotClose;
+    Window_Message.prototype.checkToNotClose = function() {
+        if (this.isClosing() && this.isOpen() && this._needMessageSe) {
+            if (this.doesContinue() || !param.doseContinueOnly) {
+                this.playMessageTriggerSe();
+            }
+            this._needMessageSe = false;
         }
-        AudioManager.playSe($gameSystem.getMessageTriggerSe());
+        _Window_Message_checkToNotClose.apply(this, arguments);
+    };
+
+    Window_Message.prototype.playMessageTriggerSe = function() {
+        if (this.isValidMessageTriggerSe()) {
+            AudioManager.playSe($gameSystem.getMessageTriggerSe());
+        }
     };
 
     Window_Message.prototype.isValidMessageTriggerSe = function() {
