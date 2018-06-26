@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2018/06/27 ウィンドウが閉じている最中にGDM_LOCK_MESSAGE_WINDOWが実行されたとき、閉じ終わるまで実行を待機するよう修正
 // 2.8.2 2018/05/20 YEP_BattleEngineCore.jsとの併用時、デザインモードで一部ウィンドウで透明状態の切り替えが機能しない競合を解消
 // 2.8.1 2018/01/30 最新のNW.jsで動作するよう修正
 // 2.8.0 2017/07/26 コンソールからの関数実行で直前に編集したウィンドウの位置を変更できる機能を追加
@@ -1197,7 +1198,12 @@ var $dataContainerProperties = null;
                 break;
             case '固定_メッセージウィンドウ' :
             case '_LOCK_MESSAGE_WINDOW':
-                SceneManager._scene._messageWindow.lockPosition();
+                var win = SceneManager._scene._messageWindow;
+                if (win.isClosing()) {
+                    win.setCloseListener(win.lockPosition)
+                } else {
+                    win.lockPosition();
+                }
                 break;
             case '解除_選択肢ウィンドウ' :
             case '_UNLOCK_CHOICE_WINDOW':
@@ -1205,7 +1211,12 @@ var $dataContainerProperties = null;
                 break;
             case '固定_選択肢ウィンドウ' :
             case '_LOCK_CHOICE_WINDOW':
-                SceneManager._scene._messageWindow._choiceWindow.lockPosition();
+                var win = SceneManager._scene._messageWindow._choiceWindow;
+                if (win.isClosing()) {
+                    win.setCloseListener(win.lockPosition)
+                } else {
+                    win.lockPosition();
+                }
                 break;
         }
     };
@@ -1635,6 +1646,20 @@ var $dataContainerProperties = null;
         if (!paramBackgroundFixed) {
             _Window_Base_setBackgroundType.apply(this, arguments);
         }
+    };
+
+    var _Window_Base_updateClose = Window_Base.prototype.updateClose;
+    Window_Base.prototype.updateClose = function() {
+        var prevClose = this.isClosing();
+        _Window_Base_updateClose.apply(this, arguments);
+        if (this._callBack && prevClose && !this.isClosing()) {
+            this._callBack();
+            this._callBack = null;
+        }
+    };
+
+    Window_Base.prototype.setCloseListener = function(callBack) {
+        this._callBack = callBack;
     };
 
     /**
