@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2018/06/27 1.1.1の対応により発生したYEP_BattleEngineCore.jsとの競合を解消
 // 1.1.1 2017/12/24 GALV_LayerGraphics.jsと併用したときに画像がちらつく競合を解消
 // 1.1.0 2017/10/01 パラメータの型指定機能に対応
 // 1.0.0 2017/03/20 初版
@@ -242,7 +243,9 @@
         var index = this._battleField.getChildIndex(this._back2Sprite);
         this._battleField.addChildAt(this._pictureContainerLower, index + 1);
         // resolve conflict for GALV_LayerGraphics.js
-        this._pictureContainerLower.z = 2;
+        if (typeof Imported !== 'undefined' && Imported.Galv_LayerGraphics) {
+            this._pictureContainerLower.z = 2;
+        }
     };
 
     //=============================================================================
