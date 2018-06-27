@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.3 2018/06/28 出力パスの算出方法を変更
 // 1.7.2 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
 // 1.7.1 2017/11/11 総合開発支援プラグインとの連携による修正
 // 1.7.0 2017/08/13 パラメータの型指定機能に対応
@@ -112,7 +113,7 @@
  * @param Location
  * @desc ファイルの出力パスです。相対パス、絶対パスが利用できます。
  * 区切り文字は「/」もしくは「\」で指定してください。
- * @default /captures
+ * @default captures
  *
  * @param FileFormat
  * @desc 画像のデフォルト保存形式です。(png/jpeg/webp)
@@ -294,7 +295,7 @@
  * @param 出力場所
  * @desc ファイルの出力パスです。相対パス、絶対パスが利用できます。
  * 区切り文字は「/」もしくは「\」で指定してください。
- * @default /captures
+ * @default captures
  *
  * @param 保存形式
  * @desc 画像のデフォルト保存形式です。(png/jpeg/webp)
@@ -747,15 +748,12 @@
     };
 
     StorageManager.localImgFileDirectoryPath = function() {
-        var path = paramLocation;
-        if (!path.match(/^[A-Z]:/)) {
-            path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, path);
-            if (path.match(/^\/([A-Z]:)/)) {
-                path = path.slice(1);
-            }
+        var filePath = paramLocation;
+        if (!filePath.match(/^[A-Z]:/)) {
+            var path = require('path');
+            filePath = path.join(path.dirname(process.mainModule.filename), filePath);
         }
-        if (!path.match(/\/$/)) path += '/';
-        return decodeURIComponent(path);
+        return decodeURIComponent(filePath.match(/\/$/) ? filePath : filePath + '/');
     };
 
     StorageManager.getLocalImgFileName = function(fileName) {
