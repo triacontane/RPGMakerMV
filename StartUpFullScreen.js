@@ -1,14 +1,15 @@
 //=============================================================================
 // StartUpFullScreen.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2018/06/30 タイトルコマンドウィンドウのY座標整数になっていなかった問題を修正
 // 1.0.0 2016/03/06 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -137,7 +138,7 @@ function Scene_Terminate() {
     var _Window_TitleCommand_updatePlacement = Window_TitleCommand.prototype.updatePlacement;
     Window_TitleCommand.prototype.updatePlacement = function() {
         _Window_TitleCommand_updatePlacement.apply(this, arguments);
-        if (paramShutdown) this.y += this.height / 8;
+        if (paramShutdown) this.y += Math.floor(this.height / 8);
     };
 
     //=============================================================================
