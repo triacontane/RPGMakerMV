@@ -1,15 +1,16 @@
 //=============================================================================
 // InitialState.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/07/08 複数の初期ステートを設定できる機能を追加
 // 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2017/01/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -24,6 +25,9 @@
  *
  * <ISステート:3> # 戦闘開始時にステートID[3]が自動で付与されます。
  * <ISState:3>    # 同上
+ *
+ * 複数のステートを設定したい場合は、カンマ区切りでIDを指定してください。
+ * 例：<IS_ステート:3,4,5>
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -40,6 +44,9 @@
  * <IS_ステート:3> # 戦闘開始時にステートID[3]が自動で付与されます。
  * <IS_State:3>    # 同上
  *
+ * 複数のステートを設定したい場合は、カンマ区切りでIDを指定してください。
+ * 例：<IS_ステート:3,4,5>
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -52,10 +59,8 @@
     'use strict';
     var metaTagPrefix = 'IS_';
 
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+    var parseArgs = function(arg) {
+        return JSON.parse('[' + convertEscapeCharacters(arg) + ']');
     };
 
     var getMetaValue = function(object, name) {
@@ -85,10 +90,16 @@
     };
 
     Game_Enemy.prototype.setupInitialState = function() {
-        var state = getMetaValues(this.enemy(), ['State', 'ステート']);
-        if (state) this.addState(getArgNumber(state), 1);
+        var stateList = getMetaValues(this.enemy(), ['State', 'ステート']);
+        if (!stateList) {
+            return;
+        }
+        parseArgs(stateList).forEach(function(state) {
+            if (state > 0) {
+                this.addState(state);
+            }
+        }, this);
     };
 })();
-
 
 
