@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.1 2018/07/11 文章の最後の自動改行位置が正しく判定されないケースがある問題を修正
 // 2.8.0 2018/06/14 収集率算出の対象から外せる用語を指定できる機能を追加
 // 2.7.0 2018/04/30 ひとつの用語に対して複数の画像を表示できる機能を追加
 // 2.6.2 2018/04/19 ヘルプの一部を英語化
@@ -2270,7 +2271,7 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.processNormalCharacter = function(textState) {
-        var c = textState.text[textState.index + 1];
+        var c = textState.text[textState.index];
         var w = this.textWidth(c);
         if (textState.x + w > this.contentsWidth()) {
             this.processNewLine(textState);
