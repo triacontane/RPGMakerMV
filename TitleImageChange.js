@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.4 2018/07/11 1.4.3の修正でタイトル画面が変更される条件を満たした状態でセーブ後にタイトルに戻るで再表示しても変更が反映されない問題を修正
 // 1.4.3 2018/06/09 セーブファイル数の上限を大きく増やしている場合にタイトル画面の表示が遅くなる現象を修正
 // 1.4.2 2018/04/26 ニューゲーム開始後、一度もセーブしていないデータで進行状況のみをセーブするスクリプトを実行しても設定が反映されない問題を修正
 // 1.4.1 2017/07/20 1.4.0で追加した機能で画像やBGMを4つ以上しないとタイトルがずれてしまう問題を修正
@@ -273,6 +274,12 @@
         if (paramPriorityVariable > 0) {
             info.priorityVariable = $gameVariables.value(paramPriorityVariable);
         }
+    };
+
+    var _DataManager_saveGlobalInfo = DataManager.saveGlobalInfo;
+    DataManager.saveGlobalInfo = function(info) {
+        _DataManager_saveGlobalInfo.apply(this, arguments);
+        this._globalInfo = null;
     };
 
     //=============================================================================
