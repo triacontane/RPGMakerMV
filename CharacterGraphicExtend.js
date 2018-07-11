@@ -1,11 +1,12 @@
 //=============================================================================
 // CharacterGraphicExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.2 2018/07/11 EventEffects.jsとの競合を解消
 // 1.9.1 2018/06/05 メモ欄タグで変数指定＋並列処理で変数操作にて発生するいくつかの問題を修正（奏ねこま様）
 // 1.9.0 2018/02/20 不透明度をメモ欄で設定できる機能を追加
 // 1.8.0 2017/08/27 マップで使用しているタイルセット以外のタイルセットを使ったイベントを作成できる機能を追加
@@ -30,7 +31,7 @@
 //                  移動ルートの指定のスクリプトから、回転角、拡大率、位置調整ができる機能を追加
 // 1.0.0 2016/01/08 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -200,6 +201,8 @@
  * ※2 インデックスの指定を省略した場合、変更前の値が維持されます。
  *
  * このプラグインにはプラグインコマンドはありません。
+ *
+ * EventEffects.jsと併用する場合は、本プラグインを下に配置してください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -686,6 +689,15 @@
         if (this.rotation !== angle) this.rotation = angle;
         var tone = this._character.tone();
         if (tone) this.setColorTone(tone);
+    };
+
+    // Resolve conflict by EventEffects.js
+    var _Sprite_Character_updateAngle = Sprite_Character.prototype.updateAngle;
+    Sprite_Character.prototype.updateAngle = function() {
+        if (this._character.originY() != null) {
+            return;
+        }
+        _Sprite_Character_updateAngle.apply(this, arguments);
     };
 
     var _Sprite_Character_setFrame      = Sprite_Character.prototype.setFrame;
