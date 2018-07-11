@@ -1,11 +1,12 @@
 //=============================================================================
 // DynamicBattlerParam.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2018/07/11 計算式の対象が追加能力値もしくは特殊能力値、計算式で参照する能力値を装備品やバフを適用した能力値になるよう仕様変更しました
 // 1.2.1 2017/10/31 1.2.0でデバッグ用のコードが混入していたので修正
 // 1.2.0 2017/10/28 追加能力値および特殊能力値についても計算式を適用できる機能を追加
 // 1.1.0 2017/08/14 計算式でパラメータを取得する際に装備品による変動分を含まないよう修正
@@ -173,8 +174,18 @@
  * <DBP_Exr:[formula]> # Apply formula to Exr
  *
  * 計算式に使用できる要素は以下の通りです。
- * 各パラメータの値は本プラグインや装備品による変動を
- * 含まないバトラー本来のパラメータとなります。
+ * 各パラメータの値は以下の仕様に従います。
+ *
+ * ・計算式の対象が通常能力値(最大HP～運)の場合
+ * 装備品、バフによる変動を考慮しないバトラー本来のパラメータとなります。
+ * これは装備品やバフの効果が二重に適用されてしまう現象を防ぐためです。
+ *
+ * ・計算式の対象が追加能力値もしくは特殊能力値(命中率～経験獲得率)の場合
+ * 装備品、バフによる変動を考慮したパラメータとなります。
+ *
+ * ※いずれの場合も本プラグインによる変動は含まれません。
+ * これは計算式の参照元にさらに計算式を適用しようとして処理が循環したり
+ * 著しくパフォーマンスが低下するのを避けるためです。
  *
  * param # データベースで指定した元々の値
  * a.hp  # HP
@@ -329,14 +340,14 @@
  * 設定はメモ欄が優先されますが、プラグインパラメータが未指定の場合は
  * メモ欄も含めて参照されません。（パフォーマンス維持のため）
  *
+ * <DBP_最大HP:[計算式]>   # 最大HPに計算式を適用
+ * <DBP_最大MP:[計算式]>   # 最大MPに計算式を適用
  * <DBP_攻撃力:[計算式]>   # 攻撃力に計算式を適用
  * <DBP_防御力:[計算式]>   # 防御力に計算式を適用
  * <DBP_魔法力:[計算式]>   # 魔法力に計算式を適用
  * <DBP_魔法防御:[計算式]> # 魔法防御に計算式を適用
  * <DBP_敏捷性:[計算式]>   # 敏捷性に計算式を適用
  * <DBP_運:[計算式]>       # 運に計算式を適用
- * <DBP_最大HP:[計算式]>   # 最大HPに計算式を適用
- * <DBP_最大MP:[計算式]>   # 最大MPに計算式を適用
  * <DBP_命中率:[計算式]>   # 命中率に計算式を適用
  * <DBP_回避率:[計算式]>   # 回避率に計算式を適用
  * <DBP_会心率:[計算式]>   # 会心率に計算式を適用
@@ -359,8 +370,18 @@
  * <DBP_経験獲得率:[計算式]>   # 経験獲得率に計算式を適用
  *
  * 計算式に使用できる要素は以下の通りです。
- * 各パラメータの値は本プラグインや装備品による変動を
- * 含まないバトラー本来のパラメータとなります。
+ * 各パラメータの値は以下の仕様に従います。
+ *
+ * ・計算式の対象が通常能力値(最大HP～運)の場合
+ * 装備品、バフによる変動を考慮しないバトラー本来のパラメータとなります。
+ * これは装備品やバフの効果が二重に適用されてしまう現象を防ぐためです。
+ *
+ * ・計算式の対象が追加能力値もしくは特殊能力値(命中率～経験獲得率)の場合
+ * 装備品、バフによる変動を考慮したパラメータとなります。
+ *
+ * ※いずれの場合も本プラグインによる変動は含まれません。
+ * これは計算式の参照元にさらに計算式を適用しようとして処理が循環したり
+ * 著しくパフォーマンスが低下するのを避けるためです。
  *
  * param # データベースで指定した元々の値
  * a.hp  # HP
@@ -532,15 +553,17 @@
         return convertEscapeCharacters(noteFormula || formula);
     };
 
-    Game_BattlerBase.prototype.getDynamicParam = function(paramId, param) {
+    Game_BattlerBase.prototype.getDynamicParam = function(paramId, param, baseFlag) {
         if (this._calcParameter) {
             return param;
         }
         this._calcParameter = true;
+        this._baseFlag = baseFlag;
         var formula = this.getParamFormula(paramId);
         var a = this;
         var dynamicParam = formula ? this.roundParamIfNeed(paramId, eval(formula)) : param;
         this._calcParameter = false;
+        this._baseFlag = false;
         return dynamicParam;
     };
 
@@ -559,7 +582,7 @@
     var _Game_BattlerBase_param = Game_BattlerBase.prototype.param;
     Game_BattlerBase.prototype.param = function(paramId) {
         if (this._calcParameter) {
-            return this.paramBase(paramId);
+            return this._baseFlag ? this.paramBase(paramId) : _Game_BattlerBase_param.apply(this, arguments);
         } else {
             return _Game_BattlerBase_param.apply(this, arguments);
         }
@@ -571,7 +594,7 @@
             return _Game_BattlerBase_xparam.apply(this, arguments);
         } else {
             var paramId = xparamId + Game_BattlerBase._paramNames.length;
-            return this.getDynamicParam(paramId, _Game_BattlerBase_xparam.apply(this, arguments));
+            return this.getDynamicParam(paramId, _Game_BattlerBase_xparam.apply(this, arguments), false);
         }
     };
 
@@ -581,18 +604,18 @@
             return _Game_BattlerBase_sparam.apply(this, arguments);
         } else {
             var paramId = sparamId + Game_BattlerBase._paramNames.length + Game_BattlerBase._xParamNames.length;
-            return this.getDynamicParam(paramId, _Game_BattlerBase_sparam.apply(this, arguments));
+            return this.getDynamicParam(paramId, _Game_BattlerBase_sparam.apply(this, arguments), false);
         }
     };
 
     var _Game_Actor_paramBase = Game_Actor.prototype.paramBase;
     Game_Actor.prototype.paramBase = function(paramId) {
-        return this.getDynamicParam(paramId, _Game_Actor_paramBase.apply(this, arguments));
+        return this.getDynamicParam(paramId, _Game_Actor_paramBase.apply(this, arguments), true);
     };
 
     var _Game_Enemy_paramBase = Game_Enemy.prototype.paramBase;
     Game_Enemy.prototype.paramBase = function(paramId) {
-        return this.getDynamicParam(paramId, _Game_Enemy_paramBase.apply(this, arguments));
+        return this.getDynamicParam(paramId, _Game_Enemy_paramBase.apply(this, arguments), true);
     };
 })();
 
