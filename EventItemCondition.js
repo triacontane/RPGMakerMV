@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/07/13 パラメータの型指定機能に対応。条件を満たしたアイテムの文字色を変える機能を追加
 // 1.1.1 2017/05/04 1.1.0で<EICScript:s>タグが正しく機能しない場合がある問題を修正
 // 1.1.0 2017/05/04 ウィンドウを表示中にリフレッシュする機能を追加
 // 1.0.1 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
@@ -22,11 +23,21 @@
  *
  * @param DefaultVisible
  * @desc メモ欄が指定されていないアイテムの表示可否です。OFFにするとメモ欄に指定がないアイテムは表示されません。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param RefreshSwitchId
  * @desc 指定したIDのスイッチがONになるとウィンドウを再描画します。描画後、スイッチは自動でOFFになります。
  * @default 0
+ * @type switch
+ *
+ * @param TextColor
+ * @text テキストカラー番号
+ * @desc 指定すると条件を満たしたときに文字色が変化します。(条件を満たさないときは通常表示となります)
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 20
  *
  * @help イベントコマンド「アイテム選択の処理」において
  * 表示可否の条件をアイテムごとに設定できます。
@@ -39,19 +50,35 @@
  * > → &gt;
  * 例：<EICスクリプト:\v[1] &gt; 10> // 変数[1]が10より大きい場合
  *
+ * 「条件を満たさないアイテムを非表示」ではなく
+ * 「条件を満たしたアイテムの文字色を変える」仕様にもできます。
+ * その場合は、パラメータ「テキストカラー番号」を指定してください。
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc アイテム選択の表示条件プラグイン
  * @author トリアコンタン
  *
- * @param デフォルト表示可否
+ * @param DefaultVisible
+ * @text デフォルト表示可否
  * @desc メモ欄が指定されていないアイテムの表示可否です。OFFにするとメモ欄に指定がないアイテムは表示されません。
- * @default ON
+ * @default true
+ * @type boolean
  *
- * @param 再描画スイッチID
+ * @param RefreshSwitchId
+ * @text 再描画スイッチID
  * @desc 指定したIDのスイッチがONになるとウィンドウを再描画します。描画後、スイッチは自動でOFFになります。
  * @default 0
+ * @type switch
+ *
+ * @param TextColor
+ * @text テキストカラー番号
+ * @desc 指定すると条件を満たしたときに文字色が変化します。(条件を満たさないときは通常表示となります)
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 20
  *
  * @help イベントコマンド「アイテム選択の処理」において
  * 表示可否の条件をアイテムごとに設定できます。
@@ -66,6 +93,10 @@
  * > → &gt;
  * 例：<EICスクリプト:\v[1] &gt; 10> // 変数[1]が10より大きい場合
  *
+ * 「条件を満たさないアイテムを非表示」ではなく
+ * 「条件を満たしたアイテムの文字色を変える」仕様にもできます。
+ * その場合は、パラメータ「テキストカラー番号」を指定してください。
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -76,29 +107,7 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'EventItemCondition';
     var metaTagPrefix = 'EIC';
-
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
-    };
 
     var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
@@ -133,11 +142,31 @@
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramDefaultVisible  = getParamBoolean(['DefaultVisible', 'デフォルト表示可否']);
-    var paramRefreshSwitchId = getParamNumber(['RefreshSwitchId', '再描画スイッチID'], 0);
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+
+    var param = createPluginParameter('EventItemCondition');
 
     //=============================================================================
     // Window_EventItem
@@ -146,12 +175,18 @@
     var _Window_EventItem_includes      = Window_EventItem.prototype.includes;
     Window_EventItem.prototype.includes = function(item) {
         var result = _Window_EventItem_includes.apply(this, arguments);
-        if (result) {
+        if (result && !param.TextColor) {
             this._existCondition = false;
-            result               = this.isOkEventItemSwitch(item) && this.isOkEventItemScript(item);
-            if (!this._existCondition) result = paramDefaultVisible;
+            result = this.isOkEventItem(item);
+            if (!this._existCondition) {
+                result = param.DefaultVisible;
+            }
         }
         return result;
+    };
+
+    Window_EventItem.prototype.isOkEventItem = function(item) {
+        return this.isOkEventItemSwitch(item) && this.isOkEventItemScript(item);
     };
 
     Window_EventItem.prototype.isOkEventItemSwitch = function(item) {
@@ -179,11 +214,34 @@
     };
 
     Window_EventItem.prototype.updateAutoRefresh = function() {
-        if ($gameSwitches.value(paramRefreshSwitchId) && this.openness === 255) {
-            $gameSwitches.setValue(paramRefreshSwitchId, false);
+        if ($gameSwitches.value(param.RefreshSwitchId) && this.openness === 255) {
+            $gameSwitches.setValue(param.RefreshSwitchId, false);
             this.refresh();
             this.select(0);
         }
+    };
+
+    var _Window_EventItem_drawItemName = Window_EventItem.prototype.drawItemName;
+    Window_EventItem.prototype.drawItemName = function(item, x, y, width) {
+        this._existCondition = false;
+        var needChange = param.TextColor > 0 && this.isOkEventItem(item) && this._existCondition;
+        if (needChange) {
+            this.changeTextColor(this.textColor(param.TextColor));
+            this._textColorResetDiaabled = true;
+        }
+        _Window_EventItem_drawItemName.apply(this, arguments);
+        if (needChange) {
+            this._textColorResetDiaabled = false;
+            this.resetTextColor();
+        }
+    };
+
+    var _Window_EventItem_resetTextColor = Window_EventItem.prototype.resetTextColor;
+    Window_EventItem.prototype.resetTextColor = function() {
+        if (this._textColorResetDiaabled) {
+            return;
+        }
+        _Window_EventItem_resetTextColor.apply(this, arguments);
     };
 })();
 
