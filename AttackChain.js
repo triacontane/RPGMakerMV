@@ -1,11 +1,12 @@
 //=============================================================================
 // AttackChain.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2018/07/20 味方のみコンボ継続する設定を追加
 // 1.4.2 2018/03/12 ダメージの桁数が多い場合に表示が見きれる場合がある問題を修正
 // 1.4.1 2017/09/19 連携表示の単位の表示倍率を調整できる機能を追加
 // 1.4.0 2017/09/18 一定連携以上でスキルが別のスキルに変化する機能を追加
@@ -100,6 +101,11 @@
  * @param SkillChangeMessage
  * @desc A message when a skill change has occurred through cooperation. %1:before skill %2:after skill
  * @default %1 changed to %2!
+ *
+ * @param PartyOnly
+ * @desc Not be effective for troop
+ * @default false
+ * @type boolean
  *
  * @help During battle, damage magnification will rise when friendly attacks are continuous.
  * Maximum collaboration damage is displayed simultaneously with the number of chains.
@@ -205,6 +211,11 @@
  * @desc 指定したスイッチがONのとき最大連携数および最大ダメージのカウントが無効になります。
  * @default 0
  * @type switch
+ *
+ * @param 味方のみに適用
+ * @desc プラグインの効果が敵グループには作用しなくなります。
+ * @default false
+ * @type boolean
  *
  * @param スキル変化メッセージ
  * @desc 連携によってスキル変化が起こった場合のメッセージです。%1:変化前スキル名 %2:変化後スキル名
@@ -356,6 +367,7 @@ function Sprite_ChainDamage() {
     param.cancelMiss         = getParamBoolean(['CancelMiss', 'ミスで解除']);
     param.cancelNoAttack     = getParamBoolean(['CancelNoAttack', '攻撃以外で解除']);
     param.cancelOpposite     = getParamBoolean(['CancelOpposite', '相手行動で解除']);
+    param.partyOnly          = getParamBoolean(['PartyOnly', '味方のみに適用']);
     param.invalidSwitchId    = getParamNumber(['InvalidSwitchId', '無効スイッチ番号'], 0);
     param.skillChangeMessage = getParamString(['SkillChangeMessage', 'スキル変化メッセージ']);
 
@@ -393,6 +405,9 @@ function Sprite_ChainDamage() {
     };
 
     Game_Unit.prototype.addChainCount = function(damage) {
+        if (!this.isUseChain()) {
+            return;
+        }
         this._chainCount = this.getChainCount() + 1;
         this.opponentsUnit().resetChainCount();
         if (this.isCountMaxChain() && (this._chainCount > this._maxChain || !this._maxChain)) {
@@ -431,8 +446,16 @@ function Sprite_ChainDamage() {
         return $gameTroop;
     };
 
+    Game_Party.prototype.isUseChain = function() {
+        return true;
+    };
+
     Game_Troop.prototype.opponentsUnit = function() {
         return $gameParty;
+    };
+
+    Game_Troop.prototype.isUseChain = function() {
+        return !param.partyOnly;
     };
 
     //=============================================================================
