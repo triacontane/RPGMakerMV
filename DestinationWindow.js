@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2018/07/20 行動目標ウィンドウの内容を複数行表示できる機能を追加
 // 1.4.0 2017/11/15 行動目標ウィンドウの文字列揃えを中央揃え、右揃えにできる機能を追加
 // 1.3.0 2017/11/11 マップ画面のウィンドウを一定時間で消去できる機能を追加
 // 1.2.1 2017/05/22 専用ウィンドウスキンを指定した状態でセーブ＆ロードした際にテキスト色が黒くなる問題を修正
@@ -199,6 +200,8 @@
  * ただし、以下の制御文字が無効になります。
  * \i[n]、\c[n]、\{、\}
  *
+ * 複数行の目標を表示したい場合は、文章中に改行「\n」を挿入してください。
+ *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
@@ -253,7 +256,7 @@
     var concatAllArguments = function(args) {
         return args.reduce(function(prevValue, arg) {
             return prevValue + ' ' + arg;
-        }, '');
+        }, '').replace(/^ /, '');
     };
 
     var setPluginCommand = function(commandName, methodName) {
@@ -313,12 +316,12 @@
     //  目標テキストを追加定義します。
     //=============================================================================
     Game_System.prototype.setDestination = function(value) {
-        this._destinationText = value;
+        this._destinationTextList = value.split('\\n');
         this.resetDestinationFrame();
     };
 
     Game_System.prototype.getDestination = function() {
-        return this._destinationText || '';
+        return this._destinationTextList || [];
     };
 
     Game_System.prototype.setDestinationIcon = function(value) {
@@ -394,6 +397,7 @@
     Window_Destination.prototype.initialize = function(x, y, width, height) {
         Window_Base.prototype.initialize.call(this, x, y, width, height || this.fittingHeight(1));
         this._text      = '';
+        this._textList  = [];
         this._iconIndex = 0;
         this.update();
         this.opacity = this.isVisible() ? 255 : 0;
@@ -440,19 +444,29 @@
     };
 
     Window_Destination.prototype.updateText = function() {
-        var text      = this.convertEscapeCharacters($gameSystem.getDestination());
+        var textList  = $gameSystem.getDestination();
         var iconIndex = getArgNumber(this.convertEscapeCharacters($gameSystem.getDestinationIcon()), 0);
-        if (this._text === text && this._iconIndex === iconIndex) return;
-        this._text      = text;
-        this._iconIndex = iconIndex;
-        this.drawDestination();
+        if (textList.length !== this._textList.length) {
+            this.height = this.fittingHeight(textList.length);
+            this.createContents();
+            this._textList = [];
+        }
+        textList.forEach(function(text, index) {
+            if (this._textList[index] === text && this._iconIndex === iconIndex) {
+                return;
+            }
+            this._textList[index] = text;
+            this._text      = text;
+            this._iconIndex = iconIndex;
+            this.drawDestination(index);
+        }, this);
     };
 
-    Window_Destination.prototype.drawDestination = function() {
-        this.contents.clear();
+    Window_Destination.prototype.drawDestination = function(lineNumber) {
+        this.contents.clearRect(0, lineNumber * this.lineHeight(), this.contentsWidth(), this.lineHeight());
         var x = this.getContentsX();
-        var y = this.contentsHeight() / 2 - this.contents.fontSize / 2 - 4;
-        if (this._iconIndex > 0) {
+        var y = lineNumber * this.lineHeight() + this.lineHeight() / 2 - this.contents.fontSize / 2 - 4;
+        if (this._iconIndex > 0 && lineNumber === 0) {
             this.drawIcon(this._iconIndex, x, y);
             x += Window_Base._iconWidth;
         }
@@ -482,7 +496,7 @@
     };
 
     Window_Destination.prototype.getFadeValue = function() {
-        return 255 / param.fadeFrame
+        return 255 / param.fadeFrame;
     };
 
     Window_Destination.prototype.isVisible = function() {
@@ -494,7 +508,7 @@
     };
 
     Window_Destination.prototype.isExistText = function() {
-        return !!this._text || !!this._iconIndex;
+        return this._textList.length > 0 || !!this._iconIndex;
     };
 
     Window_Destination.prototype.isEventRunning = function() {
