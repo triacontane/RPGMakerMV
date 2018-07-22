@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageSpeedCustomize.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2018/07/22 瞬間表示機能が有効なとき、\!を使用すると以後のメッセージまで瞬間表示されてしまう問題を修正
 // 1.2.1 2017/12/30 パラメータの型指定機能に対応し、ヘルプの記述を修正
 // 1.2.0 2016/11/05 ノベルゲーム総合プラグインから、メッセージ表示速度を調整する制御文字を流用
 // 1.1.2 2016/07/24 複数行「\>」が指定されている場合もデフォルトと同じ動作をするよう修正
@@ -13,7 +14,7 @@
 // 1.1.0 2016/07/12 文章の表示中に決定キーもしくは左クリックで文章を瞬間表示する機能を追加
 // 1.0.0 2016/04/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -123,7 +124,7 @@
 
     var _Window_Message_updateWait = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
-        if (paramRapidShow && this._textState && this.isTriggered()) {
+        if (paramRapidShow && this._textState && this.isTriggered() && !this.pause) {
             this._showAll = true;
         }
         return _Window_Message_updateWait.apply(this, arguments);
@@ -140,6 +141,12 @@
             }
         }
         return _Window_Message_updateMessage.apply(this, arguments);
+    };
+
+    var _Window_Message_startPause = Window_Message.prototype.startPause;
+    Window_Message.prototype.startPause = function() {
+        _Window_Message_startPause.apply(this, arguments);
+        this._showAll = false;
     };
 
     Window_Message.prototype.getMessageSpeed = function() {
