@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.9 2018/08/04 1.2.8の修正により、レベルアップメッセージなどでアクター名が正常に取得できなくなっていた問題を修正
 // 1.2.8 2018/04/29 アクターの名前、二つ名、プロフィールについて一部の制御文字が正常に動作していなかった問題を修正
 // 1.2.7 2017/10/07 リファクタリング
 // 1.2.6 2017/06/09 全設定一覧のスプレッドシートへのリンクを説明に追加
@@ -95,25 +96,37 @@
     var _Game_Actor_setup = Game_Actor.prototype.setup;
     Game_Actor.prototype.setup = function(actorId) {
         _Game_Actor_setup.apply(this, arguments);
-        this._nickname = null;
-        this._profile = null;
-        this._name = null;
+        this.__nickname = null;
+        this.__profile = null;
+        this.__name = null;
     };
 
-    var _Game_Actor_name = Game_Actor.prototype.name;
-    Game_Actor.prototype.name = function() {
-        return this._name !== null ? _Game_Actor_name.apply(this, arguments) : this.actor().name;
-    };
+    Object.defineProperty(Game_Actor.prototype, '_profile', {
+        get: function() {
+            return this.__profile !== null ? this.__profile : this.actor().profile;
+        },
+        set: function(name) {
+            this.__profile = name;
+        },
+    });
 
-    var _Game_Actor_nickname = Game_Actor.prototype.nickname;
-    Game_Actor.prototype.nickname = function() {
-        return this._nickname !== null ? _Game_Actor_nickname.apply(this, arguments) : this.actor().nickname;
-    };
+    Object.defineProperty(Game_Actor.prototype, '_nickname', {
+        get: function() {
+            return this.__nickname !== null ? this.__nickname : this.actor().nickname;
+        },
+        set: function(name) {
+            this.__nickname = name;
+        },
+    });
 
-    var _Game_Actor_profile = Game_Actor.prototype.profile;
-    Game_Actor.prototype.profile = function() {
-        return this._profile !== null ? _Game_Actor_profile.apply(this, arguments) : this.actor().profile;
-    };
+    Object.defineProperty(Game_Actor.prototype, '_name', {
+        get: function() {
+            return this.__name !== null ? this.__name : this.actor().name;
+        },
+        set: function(name) {
+            this.__name = name;
+        },
+    });
 })();
 
 /**
