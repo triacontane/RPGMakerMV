@@ -1,17 +1,18 @@
 //=============================================================================
 // StateChangeIfRemove.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/08/05 ステート解除でスイッチを操作する機能を追加
 // 1.1.2 2017/07/12 YEP_BattleEngineCore.jsと組み合わせたときに戦闘不能へのステート変化ができない競合を解消
 // 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.0 2016/02/07 解除条件によって様々なステートIDを付与できる機能を追加
 // 1.0.0 2016/02/04 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -39,6 +40,10 @@
  *     ターン経過等で自動解除されたときに（ステートID）を付与。
  * 例：<SCアイテムで解除:3>
  *     <SC歩数で解除:\v[1]>
+ *
+ * <SC解除トリガースイッチ:（スイッチID）>
+ *     ステートが解除されたときにスイッチをONにします。
+ * 例：<SC解除トリガースイッチ:10>
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -137,6 +142,32 @@
 
     Game_Battler.prototype.hasState = function(stateId) {
         return this._states.indexOf(stateId) >= 0;
+    };
+
+    //=============================================================================
+    // Game_BattlerBase
+    //  ステート解除によるスイッチ操作を実装します。
+    //=============================================================================
+    var _Game_BattlerBase_clearStates = Game_BattlerBase.prototype.clearStates;
+    Game_BattlerBase.prototype.clearStates = function() {
+        if (this._states) {
+            this._states.forEach(this.setSwitchOnRemoveState, this);
+        }
+        _Game_BattlerBase_clearStates.apply(this, arguments);
+    };
+
+    var _Game_BattlerBase_removeState = Game_Battler.prototype.eraseState;
+    Game_BattlerBase.prototype.eraseState = function(stateId) {
+        _Game_BattlerBase_removeState.apply(this, arguments);
+        this.setSwitchOnRemoveState(stateId);
+    };
+
+    Game_BattlerBase.prototype.setSwitchOnRemoveState = function(stateId) {
+        var id = $dataStates[stateId].meta['SC解除トリガースイッチ'];
+        if (!id) {
+            return;
+        }
+        $gameSwitches.setValue(getArgNumber(id), true);
     };
 
     //=============================================================================
