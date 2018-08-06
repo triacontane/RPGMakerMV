@@ -1,16 +1,17 @@
 //=============================================================================
 // NpcFollower.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2018/08/06 コアスクリプトが1.6.0より古い場合にエラーになる記述を修正
 // 1.0.2 2017/01/17 プラグインコマンドが小文字でも動作するよう修正（byこまちゃん先輩）
 // 1.0.1 2016/07/17 セーブデータをロードした際のエラーになる現象の修正
 // 1.0.0 2016/07/14 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -127,23 +128,7 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix, 'i'))) return;
-        try {
-            this.pluginCommandNpcFollower(command.replace(new RegExp(metaTagPrefix, 'i'), ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandNpcFollower(command.replace(new RegExp(metaTagPrefix, 'i'), ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandNpcFollower = function(command, args) {
