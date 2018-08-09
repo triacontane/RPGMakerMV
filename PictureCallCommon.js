@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2018/08/10 なでなで機能に透過設定が正しく適用されない問題を修正
+//                   なでなで機能にもプラグインコマンドから透過設定を変更できる機能を追加
 // 1.10.8 2018/06/16 Boolean型のパラメータが一部正常に取得できていなかった問題を修正
 // 1.10.7 2018/06/01 イベント「戦闘の処理」による戦闘の場合、「戦闘中に常にコモン実行」の機能が使えない問題を修正
 // 1.10.6 2018/04/12 ヘルプの記述を微修正
@@ -156,14 +158,14 @@
  *  　：ピクチャのボタン化解除 \v[1]
  *
  *  ピクチャのなでなで設定 or
- *  P_STROKE [ピクチャ番号] [変数番号]
+ *  P_STROKE [ピクチャ番号] [変数番号] [透明色を考慮]
  *  　　指定したピクチャの上でマウスやタッチを動かすと、
  *  　　速さに応じた値が指定した変数に値が加算されるようになります。
  *  　　この設定はピクチャを差し替えたり、一時的に非表示にしても有効です。
  *  　　10秒でだいたい1000くらいまで溜まります。
  *
- *  例：P_STROKE 1 2
- *  　：ピクチャのなでなで設定 \v[1] \v[2]
+ *  例：P_STROKE 1 2 ON
+ *  　：ピクチャのなでなで設定 \v[1] \v[2] OFF
  *
  *  ピクチャのなでなで解除 or
  *  P_STROKE_REMOVE [ピクチャ番号]
@@ -233,7 +235,7 @@
  * @desc Always execute common event in battle(ON/OFF)
  * @default false
  * @type boolean
- * 
+ *
  * @help When clicked picture, call common event.
  *
  * Plugin Command
@@ -369,7 +371,8 @@
             case 'ピクチャのなでなで設定':
                 pictureId   = getArgNumber(args[0], 1, $gameScreen.maxPictures());
                 variableNum = getArgNumber(args[1], 1, $dataSystem.variables.length - 1);
-                $gameScreen.setPictureStroke(pictureId, variableNum);
+                transparent = (args.length > 2 ? getArgBoolean(args[2]) : null);
+                $gameScreen.setPictureStroke(pictureId, variableNum, transparent);
                 break;
             case 'P_STROKE_REMOVE' :
             case 'ピクチャのなでなで解除':
@@ -546,8 +549,10 @@
         this._pictureCidArray[this.realPictureId(pictureId)] = [];
     };
 
-    Game_Screen.prototype.setPictureStroke = function(pictureId, variableNum) {
-        this._pictureSidArray[this.realPictureId(pictureId)] = variableNum;
+    Game_Screen.prototype.setPictureStroke = function(pictureId, variableNum, transparent) {
+        var realPictureId = this.realPictureId(pictureId);
+        this._pictureSidArray[realPictureId] = variableNum;
+        this._pictureTransparentArray[realPictureId] = transparent;
     };
 
     Game_Screen.prototype.removePictureStroke = function(pictureId) {
@@ -767,7 +772,7 @@
 
     Sprite_Picture.prototype.updateStroke = function() {
         var strokeNum = $gameScreen.getPictureSid(this._pictureId);
-        if (strokeNum > 0 && TouchInput.isPressed()) {
+        if (strokeNum > 0 && TouchInput.isPressed() && this.isIncludePointer()) {
             var value = $gameVariables.value(strokeNum);
             $gameVariables.setValue(strokeNum, value + TouchInput.pressedDistance);
         }
