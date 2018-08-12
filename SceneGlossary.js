@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2018/08/12 スイッチにより特定の用語の文字色を変更できる機能を追加
 // 2.8.1 2018/07/11 文章の最後の自動改行位置が正しく判定されないケースがある問題を修正
 // 2.8.0 2018/06/14 収集率算出の対象から外せる用語を指定できる機能を追加
 // 2.7.0 2018/04/30 ひとつの用語に対して複数の画像を表示できる機能を追加
@@ -219,12 +220,13 @@
  * <SGPicturePosition:text> // Picture position
  *  top, bottom, text
  * <SGTextPosition:100>      // Text position
- * <SGPicturePriority:top>    // Picture priority
+ * <SGPicturePriority:top>   // Picture priority
  *  top, bottom
- * <SGPictureScale:0.5>    // Picture scale
- * <SGPictureAlign:right>    // Picture align
+ * <SGPictureScale:0.5>     // Picture scale
+ * <SGPictureAlign:right>   // Picture align
  *  left, center, right
  * <SGNoCollect>            // Glossary No Collect
+ * <SGTextColorChange:1,10> // If switch[1] ON. Change color[10]
  *
  * *1 Escape Characters
  * \COMMON[1]  // It is replaced by aaa(<CommonDescription:aaa>)
@@ -588,6 +590,7 @@
  * <SGピクチャ揃え:right>    // ピクチャの揃え
  *  left:左揃え center:中央揃え right:右揃え
  * <SG収集対象外>            // 用語を収集率算出の対象外に設定
+ * <SGテキスト色変化:1,10>   // スイッチ[1]がONのとき文字色を[10]に変更
  *
  * ※1 以下の特殊な制御文字が使用できます。
  * \COMMON[1]  // ID[1]のアイテムの<SG共通説明:aaa>に置き換えられます。
@@ -1834,8 +1837,21 @@ function Window_GlossaryComplete() {
 
     Window_GlossaryList.prototype.setGlossaryColor = function(item) {
         this.changePaintOpacity(this.isEnabled(item));
-        var colorIndex = $gameParty.isConfirmedGlossaryItem(item) ? 0 : param.NewGlossaryColor;
-        this.changeTextColor(this.textColor(colorIndex));
+        this.changeTextColor(this.textColor(this.getGlossaryColorIndex(item)));
+    };
+
+    Window_GlossaryList.prototype.getGlossaryColorIndex = function(item) {
+        if (!$gameParty.isConfirmedGlossaryItem(item)) {
+            return param.NewGlossaryColor;
+        }
+        var colorChange = getMetaValues(item, ['TextColorChange', 'テキスト色変化']);
+        if (colorChange) {
+            var switchId = getArgNumber(colorChange.split(',')[0], 0);
+            if ($gameSwitches.value(switchId)) {
+                return getArgNumber(colorChange.split(',')[1], 0);
+            }
+        }
+        return 0;
     };
 
     Window_GlossaryList.prototype.isEnabled = function(item) {
