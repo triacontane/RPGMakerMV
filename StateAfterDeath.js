@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2018/08/12 継続ステートが戦闘不能後にターン数で解除されなくなっていた問題を修正
  1.0.0 2018/08/12 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -86,12 +87,17 @@
         param.states = [];
     }
 
-    var _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
+    var _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
-        var stillStates = this._states.filter(function(stateId) {
+        var stillStates     = this._states.filter(function(stateId) {
             return param.states.contains(stateId);
         });
+        var stillStateTurns = {};
+        stillStates.forEach(function(stateId) {
+            stillStateTurns[stateId] = this._stateTurns[stateId];
+        }, this);
         _Game_BattlerBase_die.apply(this, arguments);
-        this._states = this._states.concat(stillStates);
+        this._states     = this._states.concat(stillStates);
+        this._stateTurns = stillStateTurns;
     };
 })();
