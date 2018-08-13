@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2018/08/14 効果音のインデックスに制御文字が使えるよう修正
  1.0.0 2018/08/14 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -31,6 +32,9 @@
  * \se[n] n : パラメータで指定した効果音の番号(1～)
  * 例：\se[3]
  *
+ * 番号を変数の値から指定する場合は以下の通りです。
+ * \se[\v[1]]
+ *
  * ※このプラグインはバトルログ用です。文章の表示では使えません。
  *　
  * このプラグインにはプラグインコマンドはありません。
@@ -55,6 +59,9 @@
  *
  * \se[n] n : パラメータで指定した効果音の番号(1～)
  * 例：\se[3]
+ *
+ * 番号を変数の値から指定する場合は以下の通りです。
+ * \se[\v[1]]
  *
  * ※このプラグインはバトルログ用です。文章の表示では使えません。
  *　
@@ -133,14 +140,15 @@
      */
     var _Window_BattleLog_addText = Window_BattleLog.prototype.addText;
     Window_BattleLog.prototype.addText = function(text) {
-        arguments[0] = text.replace(/\\se\[(\d+)]/gi, function() {
-            var index = parseInt(this.convertEscapeCharacters(arguments[1])) - 1;
+        this.convertEscapeCharacters(text).replace(/\x1bSE\[(\d+)]/gi, function() {
+            var index = parseInt(arguments[1]) - 1;
             var se = param.soundEffectList[index];
             if (se) {
                 AudioManager.playSe(se);
             }
             return '';
         }.bind(this));
+        arguments[0] = text.replace(/\\SE\[.+]/gi, '');
         _Window_BattleLog_addText.apply(this, arguments);
     }
 })();
