@@ -1,11 +1,12 @@
 //=============================================================================
 // GraphicalDesignMode.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.0 2018/08/18 メッセージウィンドウおよびサブウィンドウを本プラグインから触れないようにする設定を追加
 // 2.9.1 2018/07/10 コアスクリプト1.6.1以降で装備スロットウィンドウを動かした状態で装備画面を起動するとエラーになる問題を修正
 // 2.9.0 2018/06/27 ウィンドウが閉じている最中にGDM_LOCK_MESSAGE_WINDOWが実行されたとき、閉じ終わるまで実行を待機するよう修正
 // 2.8.2 2018/05/20 YEP_BattleEngineCore.jsとの併用時、デザインモードで一部ウィンドウで透明状態の切り替えが機能しない競合を解消
@@ -111,6 +112,11 @@
  *
  * @param 右クリックで消去
  * @desc デザインモードで右クリックしたときにウィンドウ全体を非表示にします。(OFFの場合は枠のみ消去)
+ * @default false
+ * @type boolean
+ *
+ * @param メッセージウィンドウを無視
+ * @desc メッセージ、選択肢、数値入力ウィンドウを本プラグインで触れないようにします。変更した位置はリセットされません。
  * @default false
  * @type boolean
  *
@@ -451,6 +457,7 @@ var $dataContainerProperties = null;
     var paramIconSizeScale   = getParamBoolean(['IconSizeScale', 'アイコンサイズ調整']);
     var paramBackgroundFixed = getParamBoolean(['BackgroundFixed', '背景表示可否固定']);
     var paramRightClickHide  = getParamBoolean(['RightClickHide', '右クリックで消去']);
+    var paramIgnoreMesWindow = getParamBoolean(['IgnoreMesWindow', 'メッセージウィンドウを無視']);
 
     //=============================================================================
     // Utils
@@ -803,6 +810,12 @@ var $dataContainerProperties = null;
             }
             return result;
         };
+
+        if (paramIgnoreMesWindow) {
+            Window_Message.prototype.processDesign = function() {};
+            Window_NumberInput.prototype.processDesign = function() {};
+            Window_ChoiceList.prototype.processDesign = function() {};
+        }
 
         PIXI.Container.prototype.processPosition = function() {
             if (SceneManager.isWindowPositionChanged(this)) {
