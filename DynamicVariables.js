@@ -1,11 +1,12 @@
 //=============================================================================
 // DynamicVariables.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/08/19 イベントページの出現条件および敵キャラの行動パターンで各オブジェクトおよびデータを参照できる機能を追加
 // 1.0.5 2018/01/27 1.0.4の更新でもともと入っていた値の取得方法をvalueに変更
 // 1.0.4 2018/01/15 実行時に対象スイッチIDおよび代入されているもとの値を参照できる機能を追加
 // 1.0.3 2017/08/12 パラメータの型指定機能に対応
@@ -62,6 +63,16 @@
  * ※ Math.max以外にも一般的なMathモジュールのメソッドが使用可能です。
  *    また、他のゲームオブジェクト、データオブジェクトも同じ記法で参照できます。
  *    いずれも利用には、多少のJavaScriptの知識が必要になります。
+ *
+ * イベントページの出現条件でスイッチを参照する場合、追加で以下の変数が使えます。
+ * e         # イベントオブジェクトへの参照
+ * d         # イベントデータへの参照
+ *
+ * 敵キャラの行動パターンでスイッチを参照する場合、追加で以下の変数が使えます。
+ * e         # 敵キャラオブジェクトへの参照
+ * d         # 敵キャラデータへの参照
+ *
+ * 上記以外の状況でeやdを参照するとエラーになるで注意してください。
  *
  * 動的変数は、指定範囲内の変数およびスイッチを参照するすべての箇所(※)で有効です。
  * また、範囲内の変数及びスイッチに対する値の設定は無視されます。
@@ -264,6 +275,10 @@
     var paramDynamicVariableEnd   = getParamNumber(['DynamicVariableEnd', '動的変数終了位置'], 0);
     var paramValidException       = getParamBoolean(['ValidException', '例外処理']);
 
+    // eval参照用
+    var e = null;
+    var d = null;
+
     //=============================================================================
     // Game_Variables
     //  動的変数の取得処理を追加定義します。
@@ -345,7 +360,7 @@
         return _Game_Switches_value.apply(this, arguments);
     };
 
-    Game_Switches.prototype.getDynamicValue  = Game_Variables.prototype.getDynamicValue;
+    Game_Switches.prototype.getDynamicValue = Game_Variables.prototype.getDynamicValue;
 
     //=============================================================================
     // Game_Event
@@ -367,6 +382,30 @@
             this.refresh();
         }
         _Game_Event_update.apply(this, arguments);
+    };
+
+    var _Game_Event_meetsConditions      = Game_Event.prototype.meetsConditions;
+    Game_Event.prototype.meetsConditions = function(page) {
+        e          = this;
+        d          = this.event();
+        var result = _Game_Event_meetsConditions.apply(this, arguments);
+        e          = null;
+        d          = null;
+        return result;
+    };
+
+    /**
+     * Game_Enemy
+     * 敵キャラ情報をスクリプト実行用に記憶します。
+     */
+    var _Game_Enemy_meetsSwitchCondition      = Game_Enemy.prototype.meetsSwitchCondition;
+    Game_Enemy.prototype.meetsSwitchCondition = function(param) {
+        e          = this;
+        d          = this.enemy();
+        var result = _Game_Enemy_meetsSwitchCondition.apply(this, arguments);
+        e          = null;
+        d          = null;
+        return result;
     };
 })();
 
