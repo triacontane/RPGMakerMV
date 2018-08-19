@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2018/08/19 コスト不足で反撃が失敗した場合に任意のステートを解除できる機能を追加
+//                  魔法反撃に対してコスト不足時発動失敗する機能が正常に動いていなかった問題を修正
 // 1.5.0 2018/04/25 スキルに対して個別に反撃されやすさを設定できるようになりました。
 // 1.4.4 2018/03/10 反撃条件にスクリプトを使用する際、攻撃してきた相手の情報をtargetで正しく取得できていなかった問題を修正
 // 1.4.3 2017/08/09 反撃条件に属性を指定する際に「通常攻撃」を指定した場合も考慮する関数を追加
@@ -131,6 +133,10 @@
  * <CE_反撃増減:-100> # 相手の反撃確率が100%減少する
  * ※確率は元の値に乗算ではなく加算(減算)となります。
  *
+ * 9. コスト不足で反撃が失敗した場合、任意のステートを解除できます。
+ * <CE_ステート解除:1> # コスト不足で反撃が失敗するとステート[1]が解除
+ * <CE_StateClear:1>   # 同上
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -237,6 +243,10 @@
  * <CE_反撃増減:50> # 相手の反撃確率が50%増加する
  * <CE_反撃増減:-100> # 相手の反撃確率が100%減少する
  * ※確率は元の値に乗算ではなく加算(減算)となります。
+ *
+ * 9. コスト不足で反撃が失敗した場合、任意のステートを解除できます。
+ * <CE_ステート解除:1> # コスト不足で反撃が失敗するとステート[1]が解除
+ * <CE_StateClear:1>   # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -366,7 +376,10 @@ var Imported = Imported || {};
     };
 
     Game_BattlerBase.prototype.getCounterCustomRate = function(names, action, target) {
-        if (!target.canPaySkillCostForCounter()) return 0;
+        if (!this.canPaySkillCostForCounter()) {
+            this.eraseStateCounterFailure();
+            return 0;
+        }
         var counterCondition;
         this.traitObjects().some(function(traitObject) {
             var metaValue = getMetaValues(traitObject, names);
@@ -377,6 +390,21 @@ var Imported = Imported || {};
             return false;
         }.bind(this));
         return counterCondition ? this.executeCounterScript(counterCondition, action, target) : 1;
+    };
+
+    Game_BattlerBase.prototype.eraseStateCounterFailure = function() {
+        var stateId = 0;
+        this.traitObjects().some(function(traitObject) {
+            var metaValue = getMetaValues(traitObject, ['ステート解除', 'StateClear']);
+            if (metaValue) {
+                stateId = getArgEval(metaValue, 1);
+                return true;
+            }
+            return false;
+        }.bind(this));
+        if (stateId > 0) {
+            this.eraseState(stateId);
+        }
     };
 
     Game_BattlerBase.prototype.executeCounterScript = function(counterCondition, action, target) {
