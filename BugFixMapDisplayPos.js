@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2018/08/22 座標が1/8単位になるよう微修正
  1.0.0 2018/08/21 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -50,11 +51,21 @@
 
     var _Game_Map_screenTileX = Game_Map.prototype.screenTileX;
     Game_Map.prototype.screenTileX = function() {
-        return Math.round(_Game_Map_screenTileX.apply(this, arguments));
+        return Math.round(_Game_Map_screenTileX.apply(this, arguments) * 8) / 8;
     };
 
     var _Game_Map_screenTileY = Game_Map.prototype.screenTileY;
     Game_Map.prototype.screenTileY = function() {
-        return Math.round(_Game_Map_screenTileY.apply(this, arguments));
+        return Math.round(_Game_Map_screenTileY.apply(this, arguments) * 8) / 8;
+    };
+
+    var _Game_Player_centerX = Game_Player.prototype.centerX;
+    Game_Player.prototype.centerX = function() {
+        return Math.round(_Game_Player_centerX.apply(this, arguments) * 8) / 8;
+    };
+
+    var _Game_Player_centerY = Game_Player.prototype.centerY;
+    Game_Player.prototype.centerY = function() {
+        return Math.round(_Game_Player_centerY.apply(this, arguments) * 8) / 8;
     };
 })();
