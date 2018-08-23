@@ -1,11 +1,12 @@
 //=============================================================================
 // HalfMove.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.0 2018/08/24 移動不可の地形およびリージョンを複数指定できる機能を追加
 // 1.11.11 2018/08/23 1.11.10の修正で横一列の通路上で上に半歩上に移動できない不具合を修正
 // 1.11.10 2018/06/22 移動不可タイルに乗っているとき半歩上に移動できてしまう現象を修正
 // 1.11.9 2018/04/29 イベントすり抜けのパラメータがOFFかつイベントとプレイヤーが重なったときに移動不可となる問題を修正
@@ -221,53 +222,53 @@
  *
  * @param 上半分移動不可地形
  * @desc 上半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 上半分移動不可Region
  * @desc 上半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 下半分移動不可地形
  * @desc 下半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 下半分移動不可Region
  * @desc 下半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 右半分移動不可地形
  * @desc 右半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 右半分移動不可Region
  * @desc 右半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 左半分移動不可地形
  * @desc 左半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 左半分移動不可Region
  * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 全方向移動不可地形
  * @desc 全方向通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param 全方向移動不可Region
  * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
- * @type number
+ * @default ["0"]
+ * @type number[]
  *
  * @param イベント複数起動防止
  * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
@@ -398,6 +399,17 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
+    var getParamArrayNumber = function(paramNames) {
+        var paramReplacer = function(key, value) {
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        return JSON.parse(JSON.stringify(getParamOther(paramNames), paramReplacer));
+    };
+
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -468,16 +480,16 @@
     var paramDiagonalSlow       = getParamBoolean(['DiagonalSlow', '斜め移動中減速']);
     var paramTriggerExpansion   = getParamBoolean(['TriggerExpansion', 'トリガー拡大']);
     var paramAdjustmentRealStep = getParamBoolean(['AdjustmentRealStep', '実歩数調整']);
-    var paramUpperNpTerrainTag  = getParamNumber(['UpperNpTerrainTag', '上半分移動不可地形'], 0);
-    var paramUpperNpRegionId    = getParamNumber(['UpperNpRegionId', '上半分移動不可Region'], 0);
-    var paramLowerNpTerrainTag  = getParamNumber(['LowerNpTerrainTag', '下半分移動不可地形'], 0);
-    var paramLowerNpRegionId    = getParamNumber(['LowerNpRegionId', '下半分移動不可Region'], 0);
-    var paramRightNpTerrainTag  = getParamNumber(['RightNpTerrainTag', '右半分移動不可地形'], 0);
-    var paramRightNpRegionId    = getParamNumber(['RightNpRegionId', '右半分移動不可Region'], 0);
-    var paramLeftNpTerrainTag   = getParamNumber(['LeftNpTerrainTag', '左半分移動不可地形'], 0);
-    var paramLeftNpRegionId     = getParamNumber(['LeftNpRegionId', '左半分移動不可Region'], 0);
-    var paramAllNpTerrainTag    = getParamNumber(['AllNpTerrainTag', '全方向移動不可地形'], 0);
-    var paramAllNpRegionId      = getParamNumber(['AllNpRegionId', '全方向移動不可Region'], 0);
+    var paramUpperNpTerrainTag  = getParamArrayNumber(['UpperNpTerrainTag', '上半分移動不可地形']);
+    var paramUpperNpRegionId    = getParamArrayNumber(['UpperNpRegionId', '上半分移動不可Region']);
+    var paramLowerNpTerrainTag  = getParamArrayNumber(['LowerNpTerrainTag', '下半分移動不可地形']);
+    var paramLowerNpRegionId    = getParamArrayNumber(['LowerNpRegionId', '下半分移動不可Region']);
+    var paramRightNpTerrainTag  = getParamArrayNumber(['RightNpTerrainTag', '右半分移動不可地形']);
+    var paramRightNpRegionId    = getParamArrayNumber(['RightNpRegionId', '右半分移動不可Region']);
+    var paramLeftNpTerrainTag   = getParamArrayNumber(['LeftNpTerrainTag', '左半分移動不可地形']);
+    var paramLeftNpRegionId     = getParamArrayNumber(['LeftNpRegionId', '左半分移動不可Region']);
+    var paramAllNpTerrainTag    = getParamArrayNumber(['AllNpTerrainTag', '全方向移動不可地形']);
+    var paramAllNpRegionId      = getParamArrayNumber(['AllNpRegionId', '全方向移動不可Region']);
     var paramMultiStartDisable  = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
     var paramEventOverlap       = getParamBoolean(['EventOverlap', 'イベント位置重複OK']);
     var param8MoveSwitch        = getParamNumber(['8MoveSwitch', '8方向移動スイッチ'], 0);
@@ -608,28 +620,52 @@
     };
 
     Game_Map.prototype.isUpperNp = function(x, y) {
-        return (paramUpperNpTerrainTag > 0 && paramUpperNpTerrainTag === this.terrainTag(x, y)) ||
-            (paramUpperNpRegionId > 0 && paramUpperNpRegionId === this.regionId(x, y));
+        return this.isIncludeTerrainTag(x, y, paramUpperNpTerrainTag) ||
+            this.isIncludeRegionId(x, y, paramUpperNpRegionId);
     };
 
     Game_Map.prototype.isLowerNp = function(x, y) {
-        return (paramLowerNpTerrainTag > 0 && paramLowerNpTerrainTag === this.terrainTag(x, y)) ||
-            (paramLowerNpRegionId > 0 && paramLowerNpRegionId === this.regionId(x, y));
+        return this.isIncludeTerrainTag(x, y, paramLowerNpTerrainTag) ||
+            this.isIncludeRegionId(x, y, paramLowerNpRegionId);
     };
 
     Game_Map.prototype.isRightNp = function(x, y) {
-        return (paramRightNpTerrainTag > 0 && paramRightNpTerrainTag === this.terrainTag(x, y)) ||
-            (paramRightNpRegionId > 0 && paramRightNpRegionId === this.regionId(x, y));
+        return this.isIncludeTerrainTag(x, y, paramRightNpTerrainTag) ||
+            this.isIncludeRegionId(x, y, paramRightNpRegionId);
     };
 
     Game_Map.prototype.isLeftNp = function(x, y) {
-        return (paramLeftNpTerrainTag > 0 && paramLeftNpTerrainTag === this.terrainTag(x, y)) ||
-            (paramLeftNpRegionId > 0 && paramLeftNpRegionId === this.regionId(x, y));
+        return this.isIncludeTerrainTag(x, y, paramLeftNpTerrainTag) ||
+            this.isIncludeRegionId(x, y, paramLeftNpRegionId);
     };
 
     Game_Map.prototype.isAllNp = function(x, y) {
-        return (paramAllNpTerrainTag > 0 && paramAllNpTerrainTag === this.terrainTag(x, y)) ||
-            (paramAllNpRegionId > 0 && paramAllNpRegionId === this.regionId(x, y));
+        return this.isIncludeTerrainTag(x, y, paramAllNpTerrainTag) ||
+            this.isIncludeRegionId(x, y, paramAllNpRegionId);
+    };
+
+    Game_Map.prototype.isIncludeTerrainTag = function(x, y, tags) {
+        if (!Array.isArray(tags)) {
+            tags = [tags];
+        }
+        if (tags[0] <= 0) {
+            return false;
+        }
+        return tags.some(function(tag) {
+            return tag === this.terrainTag(x, y);
+        }, this);
+    };
+
+    Game_Map.prototype.isIncludeRegionId = function(x, y, tags) {
+        if (!Array.isArray(tags)) {
+            tags = [tags];
+        }
+        if (tags[0] <= 0) {
+            return false;
+        }
+        return tags.some(function(tag) {
+            return tag === this.regionId(x, y);
+        }, this);
     };
 
     var _Game_Map_checkLayeredTilesFlags      = Game_Map.prototype.checkLayeredTilesFlags;
