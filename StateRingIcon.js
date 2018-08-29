@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2018/08/30 StateRolling.jsとの競合を解消
 // 1.5.0 2018/06/17 パラメータの型指定機能に対応
 //                  ステートの解除タイミングが「行動終了時」の場合の表示ターン数を1加算しました。
 // 1.4.1 2018/06/10 1.4.0の修正でステートアイコンが変化したときに常に先頭のターンが表示される問題を修正
@@ -280,7 +281,7 @@ function Sprite_StateIconChild() {
         } else {
             this.updateNormalPosition();
         }
-        if (paramShowTurnCount) {
+        if (this._battler && paramShowTurnCount) {
             this.updateTurns();
         }
         this._sortChildren();
