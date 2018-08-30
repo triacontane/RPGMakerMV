@@ -1,11 +1,12 @@
 //=============================================================================
 // AutoLoad.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2018/08/30 MadeWithMv.jsとの競合を解消
 // 1.2.2 2018/01/10 マップ画面を使った独自のタイトルでセーブ時のピクチャが表示されていた問題を修正
 // 1.2.1 2016/09/18 YEP_EquipCore.jsとの競合を解消
 // 1.2.0 2016/09/17 マップ画面を使った独自のタイトル画面が作成できる機能を追加
@@ -113,6 +114,8 @@
  * AL_MOVE_LAST_SAVEPOINT  # 同上
  * AL_初期位置へ移動       # データベース上のパーティの初期位置へ移動します。
  * AL_MOVE_INITIAL_POINT   # 同上
+ *
+ * MadeWithMv.jsと併用するときは、このプラグインを下に配置してください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -285,7 +288,7 @@
     var _Scene_Boot_start      = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
-        if (!DataManager.isBattleTest() && !DataManager.isEventTest()) {
+        if (!DataManager.isBattleTest() && !DataManager.isEventTest() && typeof Scene_Splash === 'undefined') {
             this.goToAutoLoad();
         }
     };
@@ -321,6 +324,19 @@
     //=============================================================================
     if (paramCompletelySkip || paramTitleMapId > 0) {
         Scene_Title = Scene_Boot;
+    }
+
+    if (typeof Scene_Splash !== 'undefined') {
+        Scene_Splash.prototype.goToAutoLoad = Scene_Boot.prototype.goToAutoLoad;
+        Scene_Splash.prototype.goToNewGame = Scene_Boot.prototype.goToNewGame;
+
+        var _Scene_Splash_gotoTitleOrTest = Scene_Splash.prototype.gotoTitleOrTest;
+        Scene_Splash.prototype.gotoTitleOrTest = function() {
+            _Scene_Splash_gotoTitleOrTest.apply(this, arguments);
+            if (SceneManager.isNextScene(Scene_Title)) {
+                this.goToAutoLoad();
+            }
+        };
     }
 })();
 
