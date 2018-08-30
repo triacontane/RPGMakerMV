@@ -1,11 +1,12 @@
 //=============================================================================
 // SceneGlossary.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.1 2018/08/30 敵キャラ情報を2ページ目に出力しようとしたときのメモ欄の指定方法がヘルプと異なっていたのでヘルプに合わせて修正
 // 2.9.0 2018/08/12 スイッチにより特定の用語の文字色を変更できる機能を追加
 // 2.8.1 2018/07/11 文章の最後の自動改行位置が正しく判定されないケースがある問題を修正
 // 2.8.0 2018/06/14 収集率算出の対象から外せる用語を指定できる機能を追加
@@ -2034,8 +2035,8 @@ function Window_GlossaryComplete() {
         return this.getMetaContents(['ピクチャ', 'Picture'], index);
     };
 
-    Window_Glossary.prototype.getEnemyData = function(index) {
-        var id = this.getMetaContents(['敵キャラ', 'Enemy'], index);
+    Window_Glossary.prototype.getEnemyData = function() {
+        var id = this.getMetaContents(['敵キャラ', 'Enemy']);
         var enemy;
         if (id === true) {
             var optEnemy = $dataEnemies.filter(function(enemy) {
@@ -2140,7 +2141,7 @@ function Window_GlossaryComplete() {
         if (pictureName) {
             return ImageManager.loadPicture(pictureName, 0);
         } else {
-            var enemy = this.getEnemyData(index);
+            var enemy = this.getEnemyData();
             if (enemy) {
                 var methodName = $gameSystem.isSideView() ? 'loadSvEnemy' : 'loadEnemy';
                 return ImageManager[methodName](enemy.battlerName, enemy.battlerHue);
