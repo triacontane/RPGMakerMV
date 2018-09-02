@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.2 2018/09/02 ピクチャを指定していると敵キャラデータの取得が行われない問題を修正
 // 2.9.1 2018/08/31 敵キャラのパラメータ出力機能を使う際、敵キャラの画像を表示したページでないとパラメータ表示できない問題を修正
 // 2.9.0 2018/08/12 スイッチにより特定の用語の文字色を変更できる機能を追加
 // 2.8.1 2018/07/11 文章の最後の自動改行位置が正しく判定されないケースがある問題を修正
@@ -2140,10 +2141,10 @@ function Window_GlossaryComplete() {
 
     Window_Glossary.prototype.getGlossaryBitmap = function(index) {
         var pictureName = this.getPictureName(index);
+        var enemy = this.getEnemyData(index);
         if (pictureName) {
             return ImageManager.loadPicture(pictureName, 0);
         } else {
-            var enemy = this.getEnemyData(index);
             if (enemy) {
                 var methodName = $gameSystem.isSideView() ? 'loadSvEnemy' : 'loadEnemy';
                 return ImageManager[methodName](enemy.battlerName, enemy.battlerHue);
