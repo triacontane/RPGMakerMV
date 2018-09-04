@@ -1,15 +1,17 @@
 //=============================================================================
 // FootstepSound.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2018/09/05 プレイヤーの足音を無効化するスイッチを指定できる機能を追加
+//                  パラメータの型指定機能に対応
 // 1.1.0 2017/06/23 立ち止まったときに足音演奏間隔をリセットする機能を追加
 // 1.0.0 2016/02/18 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -18,15 +20,27 @@
  * @plugindesc 足音プラグイン
  * @author トリアコンタン
  *
- * @param イベント実行中無効
+ * @param EventRunningInvalid
+ * @text イベント実行中無効
  * @desc イベント実行中は足音を無効にする。（ON/OFF）
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @param 立ち止まるとリセット
+ * @param ResetIfStop
+ * @text 立ち止まるとリセット
  * @desc 演奏間隔が設定されている場合、立ち止まることでリセットされます。（ON/OFF）
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @help 以下の状況下で指定した足音効果音を演奏します。
+ * @param InvalidSwitchId
+ * @text 無効スイッチID
+ * @desc 指定したスイッチがONのときプレイヤーの足音が無効になります。指定しない場合は常に有効になります。
+ * @default 0
+ * @type switch
+ *
+ * @help version 2.0.0以降に差し替えた場合はパラメータの再設定が必要です。
+ *
+ * 以下の状況下で指定した足音効果音を演奏します。
  * 数字の小さい方が優先度が高いです。
  * 1.  飛行船乗船時
  * 2.  大型船乗船時
@@ -168,23 +182,31 @@
     //=============================================================================
     // ユーザ書き換え領域 - 終了 -
     //=============================================================================
-    var pluginName = 'FootstepSound';
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
-
-    var getParamOther            = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-    var paramEventRunningInvalid = getParamBoolean(['イベント実行中無効', 'EventRunningInvalid']);
-    var paramResetIfStop         = getParamBoolean(['立ち止まるとリセット', 'ResetIfStop']);
+    var param = createPluginParameter('FootstepSound');
 
     var getCommandName = function(command) {
         return (command || '').toUpperCase();
@@ -197,23 +219,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandFootstep(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandFootstep(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandFootstep = function(command, args) {
@@ -249,7 +255,7 @@
     Game_CharacterBase.prototype.increaseSteps = function() {
         _Game_CharacterBase_increaseSteps.apply(this, arguments);
         if (!this.isPlayStepSound() || $gameSystem.footstepDisable ||
-            ($gameMap.isEventRunning() && paramEventRunningInvalid)) return;
+            ($gameMap.isEventRunning() && param.EventRunningInvalid)) return;
         var soundsHash = [
             {key: 'airship', condition: this.isInAirship.bind(this)},
             {key: 'ship', condition: this.isInShip.bind(this)},
@@ -288,7 +294,7 @@
     };
 
     Game_CharacterBase.prototype.noCondition = function() {
-        return true
+        return true;
     };
 
     Game_CharacterBase.prototype.isOnDamageFloor = function() {
@@ -321,16 +327,16 @@
 
     //=============================================================================
     // Game_Player
-    //  キャラクターごとの足音演奏フラグ（プレイヤーは常にON）
+    //  キャラクターごとの足音演奏取得
     //=============================================================================
     Game_Player.prototype.isPlayStepSound = function() {
-        return true;
+        return !$gameSwitches.value(param.InvalidSwitchId);
     };
 
     var _Game_Player_updateNonmoving      = Game_Player.prototype.updateNonmoving;
     Game_Player.prototype.updateNonmoving = function(wasMoving) {
         _Game_Player_updateNonmoving.apply(this, arguments);
-        if (!wasMoving && paramResetIfStop) {
+        if (!wasMoving && param.ResetIfStop) {
             this.resetStepCountForSound();
         }
     };
