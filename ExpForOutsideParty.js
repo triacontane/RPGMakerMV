@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2018/09/06 アクターが抜けている状態でセーブしたデータに対して本プラグインを適用して戦闘終了するとエラーになる問題を修正
  1.0.0 2018/09/04 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -101,7 +102,7 @@
     Game_Actors.prototype.gainExpWithoutParty = function(exp) {
         var partyMember = $gameParty.allMembers();
         this._data.filter(function(actor) {
-            return !partyMember.contains(actor);
+            return actor && !partyMember.contains(actor);
         }).forEach(function(actor) {
             actor.gainExp(exp);
         });
