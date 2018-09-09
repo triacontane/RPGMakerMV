@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2018/09/10 StateRolling.jsとの連携時、アクターのアイコン表示はStateRolling.jsを優先するよう修正
 // 1.5.1 2018/08/30 StateRolling.jsとの競合を解消
 // 1.5.0 2018/06/17 パラメータの型指定機能に対応
 //                  ステートの解除タイミングが「行動終了時」の場合の表示ターン数を1加算しました。
@@ -258,7 +259,12 @@ function Sprite_StateIconChild() {
         this._iconsSprites = [];
     };
 
+    var _Sprite_StateIcon_update = Sprite_StateIcon.prototype.update;
     Sprite_StateIcon.prototype.update = function() {
+        if (this._battler && !this._battler.isEnemy()) {
+            _Sprite_StateIcon_update.apply(this, arguments);
+            return;
+        }
         Sprite.prototype.update.call(this);
         this._animationCount++;
         if (this._animationCount >= this.getCycleDuration()) {
