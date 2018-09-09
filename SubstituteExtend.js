@@ -1,16 +1,17 @@
 //=============================================================================
 // SubstituteExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/09/09 身代わりを無効にするスキルやアイテムを直接指定できる機能を追加
 // 1.0.2 2017/08/22 身代わり条件「必中以外」を無効にした場合でも必中攻撃に対する身代わりが発動しない場合がある問題を修正
 // 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2017/02/05 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -93,6 +94,11 @@
  * <SE_SubstituteSkillId:5> # 同上
  *
  * ※1 ダメージポップアップやアニメーション等の演出は表示されません。
+ *
+ * 4. 身代わりを無効にするスキルを個別指定できます。
+ * スキルもしくはアイテムのメモ欄に以下の通り指定してください。
+ * <SE_身代わり無効>
+ * <SE_SubstituteInvalid>
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -182,6 +188,11 @@
  *
  * ※1 ダメージポップアップやアニメーション等の演出は表示されません。
  *
+ * 4. 身代わりを無効にするスキルを個別指定できます。
+ * スキルもしくはアイテムのメモ欄に以下の通り指定してください。
+ * <SE_身代わり無効>
+ * <SE_SubstituteInvalid>
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -227,7 +238,12 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
+        if (text == null) {
+            text = '';
+        }
+        if (text === true) {
+            return text;
+        }
         var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
@@ -260,7 +276,8 @@
             (param.condDying || this.isValidSubstituteTargetHpRate()) &&
             this.isValidSubstituteSwitch() &&
             this.isValidSubstituteRestriction() &&
-            this.isValidSubstituteFormula();
+            this.isValidSubstituteFormula() &&
+            this.isValidSubstituteSkill();
     };
 
     Game_BattlerBase.prototype.isValidSubstituteHpRate = function() {
@@ -302,6 +319,10 @@
             return eval(convertEscapeTags(formula));
         }
         return true;
+    };
+
+    Game_BattlerBase.prototype.isValidSubstituteSkill = function() {
+        return !getMetaValues(BattleManager.getSubstituteAction().item(), ['SubstituteInvalid', '身代わり無効']);
     };
 
     Game_BattlerBase.prototype.isEqualSubstituteRestrictionId = function(restrictionId) {
