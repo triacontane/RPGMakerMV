@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.0 2018/09/13 説明文に対象アイテムデータの説明や価格を埋め込める制御文字を追加
 // 2.9.2 2018/09/02 ピクチャを指定していると敵キャラデータの取得が行われない問題を修正
 // 2.9.1 2018/08/31 敵キャラのパラメータ出力機能を使う際、敵キャラの画像を表示したページでないとパラメータ表示できない問題を修正
 // 2.9.0 2018/08/12 スイッチにより特定の用語の文字色を変更できる機能を追加
@@ -243,6 +244,9 @@
  * \exp[3]     // Exp
  * \money[3]   // Gold
  * \drop[1]    // Drop item 1
+ * \DATA[prop] // 対象データのプロパティ「prop」に置き換えられます。(下記参照)
+ * \DATA[description] // 対象データの説明
+ * \DATA[price]       // 対象データの価格
  *
  * you can use multiple pages with one term.
  * The pages are switched with the direction keys.
@@ -607,6 +611,9 @@
  * \exp[3]     // 対象敵キャラの獲得経験値(3桁でゼロ埋め)
  * \money[3]   // 対象敵キャラの獲得ゴールド(3桁でゼロ埋め)
  * \drop[1]    // 対象敵キャラの[1]番目のドロップアイテム
+ * \DATA[prop] // 対象データのプロパティ「prop」に置き換えられます。(下記参照)
+ * \DATA[description] // 対象データの説明
+ * \DATA[price]       // 対象データの価格
  *
  * ※2 敵キャラIDを省略すると用語アイテムと同名の敵キャラ自動で設定されます。
  *
@@ -2062,6 +2069,9 @@ function Window_GlossaryComplete() {
         if (!description) {
             return '';
         }
+        description    = description.replace(/\x1bDATA\[(\w+)]/gi, function() {
+            return this._itemData[arguments[1]];
+        }.bind(this));
         var prevData   = this._itemData;
         description    = description.replace(/\x1bCOMMON\[(\d+)]/gi, function() {
             this._itemData = $dataItems[parseInt(arguments[1])];
@@ -2141,7 +2151,7 @@ function Window_GlossaryComplete() {
 
     Window_Glossary.prototype.getGlossaryBitmap = function(index) {
         var pictureName = this.getPictureName(index);
-        var enemy = this.getEnemyData(index);
+        var enemy       = this.getEnemyData(index);
         if (pictureName) {
             return ImageManager.loadPicture(pictureName, 0);
         } else {
