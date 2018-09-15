@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2018/09/16 一度もパーティに加わっていないアクターも対しても経験値が加算される場合がある問題を修正
+                  パーティ外アクターのレベルアップ時にメッセージを表示するかどうかを選択できる機能を追加
  1.0.1 2018/09/06 アクターが抜けている状態でセーブしたデータに対して本プラグインを適用して戦闘終了するとエラーになる問題を修正
  1.0.0 2018/09/04 初版
 ----------------------------------------------------------------------------
@@ -23,10 +25,16 @@
  * @default 100
  * @type number
  *
+ * @param showLevelUpMessage
+ * @desc パーティ外の仲間がレベルアップしたときにメッセージを表示するかどうかを選択します。
+ * @default true
+ * @type boolean
+ *
  * @help ExpForOutsideParty.js
  *
  * パーティ外のアクターに対しても戦闘で得た経験値のうち一定量を
  * 取得可能にします。
+ * ただし、本プラグインを適用前のセーブデータには使用できません。
  *　
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -42,10 +50,17 @@
  * @default 100
  * @type number
  *
+ * @param showLevelUpMessage
+ * @text レベルアップメッセージ表示
+ * @desc パーティ外の仲間がレベルアップしたときにメッセージを表示するかどうかを選択します。
+ * @default true
+ * @type boolean
+ *
  * @help ExpForOutsideParty.js
  *
  * パーティ外のアクターに対しても戦闘で得た経験値のうち一定量を
  * 取得可能にします。
+ * ただし、本プラグインを適用前のセーブデータには使用できません。
  *　
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -102,10 +117,27 @@
     Game_Actors.prototype.gainExpWithoutParty = function(exp) {
         var partyMember = $gameParty.allMembers();
         this._data.filter(function(actor) {
-            return actor && !partyMember.contains(actor);
+            return actor && !partyMember.contains(actor) && actor.isInPartyAtLeastOnce();
         }).forEach(function(actor) {
             actor.gainExp(exp);
         });
+    };
+
+    var _Game_Actor_shouldDisplayLevelUp = Game_Actor.prototype.shouldDisplayLevelUp;
+    Game_Actor.prototype.shouldDisplayLevelUp = function() {
+        if (!$gameParty.allMembers().contains(this)) {
+            return param.showLevelUpMessage;
+        } else {
+            return _Game_Actor_shouldDisplayLevelUp.apply(this, arguments);
+        }
+    };
+
+    Game_Actor.prototype.addParty = function() {
+        this._addParty = true;
+    };
+
+    Game_Actor.prototype.isInPartyAtLeastOnce = function() {
+        return this._addParty;
     };
 
     /**
@@ -119,5 +151,19 @@
         } else {
             return _Game_Actor_benchMembersExpRate.apply();
         }
+    };
+
+    var _Game_Party_addActor = Game_Party.prototype.addActor;
+    Game_Party.prototype.addActor = function(actorId) {
+        _Game_Party_addActor.apply(this, arguments);
+        $gameActors.actor(actorId).addParty();
+    };
+
+    var _Game_Party_setupStartingMembers = Game_Party.prototype.setupStartingMembers;
+    Game_Party.prototype.setupStartingMembers = function() {
+        _Game_Party_setupStartingMembers.apply(this, arguments);
+        this._actors.forEach(function(actorId) {
+            $gameActors.actor(actorId).addParty();
+        });
     };
 })();
