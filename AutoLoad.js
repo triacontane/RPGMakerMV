@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.4 2018/09/16 LoadPoint.jsとの競合を解消
 // 1.2.3 2018/08/30 MadeWithMv.jsとの競合を解消
 // 1.2.2 2018/01/10 マップ画面を使った独自のタイトルでセーブ時のピクチャが表示されていた問題を修正
 // 1.2.1 2016/09/18 YEP_EquipCore.jsとの競合を解消
@@ -230,6 +231,9 @@
             this.reserveTransfer(this._lastSaveMapId, this._lastSaveX, this._lastSaveY, this.direction(), 0);
             this._requestLoad = true;
         }
+        if ($gamePlayer.moveLoadPoint) {
+            $gamePlayer.moveLoadPoint();
+        }
     };
 
     var _Game_Player_clearTransferInfo = Game_Player.prototype.clearTransferInfo;
@@ -303,6 +307,9 @@
             } else{
                 $gameScreenBack = $gameScreen;
                 $gameScreen = new Game_Screen();
+            }
+            if ($gamePlayer.moveLoadPoint) {
+                $gamePlayer.moveLoadPoint();
             }
         } else if (paramCompletelySkip || paramTitleMapId > 0) {
             this.goToNewGame();
