@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/09/16 パラメータの型指定機能に対応
 // 1.0.2 2016/12/10 ロードした際に、ロード元でイベントが実行中だった場合に続きが実行されてしまう現象を修正
 // 1.0.1 2016/10/30 少しリファクタリング
 // 1.0.0 2016/10/29 初版
@@ -22,18 +23,22 @@
  * @param MapIDVariable
  * @desc ロード地点のマップIDを記憶する変数番号です。
  * @default 0
+ * @type variable
  *
  * @param MapXVariable
  * @desc ロード地点のX座標を記憶する変数番号です。
  * @default 0
+ * @type variable
  *
  * @param MapYVariable
  * @desc ロード地点のY座標を記憶する変数番号です。
  * @default 0
+ * @type variable
  *
  * @param DirectionVariable
  * @desc ロード地点のプレイヤーの向きを記憶する変数番号です。
  * @default 0
+ * @type variable
  *
  * @help コンティニュー時に、セーブした場所ではなく
  * あらかじめ記憶しておいたロード地点から再開します。
@@ -62,18 +67,22 @@
  * @param マップID変数
  * @desc ロード地点のマップIDを記憶する変数番号です。
  * @default 0
+ * @type variable
  *
  * @param X座標変数
  * @desc ロード地点のX座標を記憶する変数番号です。
  * @default 0
+ * @type variable
  *
  * @param Y座標変数
  * @desc ロード地点のY座標を記憶する変数番号です。
  * @default 0
+ * @type variable
  *
  * @param 向き変数
  * @desc ロード地点のプレイヤーの向きを記憶する変数番号です。
  * @default 0
+ * @type variable
  *
  * @help コンティニュー時に、セーブした場所ではなく
  * あらかじめ記憶しておいたロード地点から再開します。
