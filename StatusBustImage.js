@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.2 2018/09/17 TMSoloMenu.jsと両立できるよう修正（TMSoloMenu.js側の修正も必須）
 // 1.7.1 2017/02/02 特定条件下で戦闘画面にもバストアップが表示されていた問題を修正
 // 1.7.0 2017/09/25 ベース画像と追加画像に原点を変更できる機能を追加
 // 1.6.0 2017/09/25 バストアップ画像に表情差分用の追加グラフィックを重ねて表示できる機能を追加
@@ -602,6 +603,20 @@
     Window_MenuStatus.prototype.getBustPosition = function() {
         return [paramMainBustImageX, paramMainBustImageY];
     };
+
+    // Resolve conflict for TMSoloMenu.js
+    if (typeof Window_SoloStatus !== 'undefined') {
+        var _Window_SoloStatus_refresh      = Window_SoloStatus.prototype.refresh;
+        Window_SoloStatus.prototype.refresh = function() {
+            _Window_SoloStatus_refresh.apply(this, arguments);
+            this._actor = $gameParty.members()[0];
+            this.refreshBust();
+        };
+
+        Window_SoloStatus.prototype.getBustPosition = function() {
+            return [paramMainBustImageX, paramMainBustImageY];
+        };
+    }
 
     //=============================================================================
     // Window_Status
