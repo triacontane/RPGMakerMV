@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/09/19 戦闘中常にステータスウィンドウを表示する機能を追加
 // 1.1.0 2017/11/03 戦闘中常にパーティコマンドウィンドウを表示する機能を追加
 // 1.0.0 2017/05/18 初版
 // ----------------------------------------------------------------------------
@@ -28,6 +29,11 @@
  * @default false
  * @type boolean
  *
+ * @param ShowStatusAlways
+ * @desc ステータスウィンドウを常に開いた状態にします。
+ * @default false
+ * @type boolean
+ *
  * @help 戦闘のレイアウトをRPGツクール2003に近づけます。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -45,6 +51,11 @@
  *
  * @param コマンド常時表示
  * @desc 戦闘中常にパーティコマンドウィンドウを表示します。ステータスウィンドウは常に左端に固定されます。
+ * @default false
+ * @type boolean
+ *
+ * @param ステータスを常に開く
+ * @desc ステータスウィンドウを常に開いた状態にします。
  * @default false
  * @type boolean
  *
@@ -86,6 +97,7 @@
     var param               = {};
     param.hideGauge         = getParamBoolean(['HideGauge', 'ゲージ非表示']);
     param.showCommandAlways = getParamBoolean(['ShowCommandAlways', 'コマンド常時表示']);
+    param.showStatusAlways  = getParamBoolean(['ShowStatusAlways', 'ステータスを常に開く']);
 
     //=============================================================================
     // Window_Base
@@ -96,6 +108,10 @@
         if (param.hideGauge) return;
         _Window_Base_drawGauge.apply(this, arguments);
     };
+
+    if (param.showStatusAlways) {
+        Window_BattleStatus.prototype.close = function () {};
+    }
 
     var _Scene_Battle_createAllWindows      = Scene_Battle.prototype.createAllWindows;
     Scene_Battle.prototype.createAllWindows = function() {
