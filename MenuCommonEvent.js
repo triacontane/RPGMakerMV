@@ -1,11 +1,12 @@
 //=============================================================================
 // MenuCommonEvent.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2018/09/23 対象イベントの並列実行を停止するコマンドを追加
 // 1.2.0 2017/12/24 公式ガチャプラグインと連携できるよう修正
 // 1.1.3 2017/12/02 NobleMushroom.jsとの競合を解消
 // 1.1.2 2017/11/18 コモンイベントを一切指定しない状態でメニューを開くとエラーになる現象を修正
@@ -241,6 +242,8 @@
  * DISABLE_WINDOW_CONTROL  # 同上
  * ウィンドウ操作許可      # 禁止したメニュー画面のウィンドウ操作を許可します。
  * ENABLE_WINDOW_CONTROL   # 同上
+ * イベントの実行停止      # イベントの並列実行を停止します。画面遷移して戻ると再実行されます。
+ * STOP_EVENT              # 同上
  *
  * プラグインコメント名が他のプラグインと被っている場合はパラメータの
  * 「コマンド接頭辞」に値を設定してください。
@@ -406,7 +409,7 @@
                 });
             }
         } catch (e) {
-            alert(`!!!Plugin param is wrong.!!!\nPlugin:.js\nName:[]\nValue:`);
+            alert('!!!Plugin param is wrong.!!!\nPlugin:.js\nName:[]\nValue:');
             value = defaultValue;
         }
         return value;
@@ -425,7 +428,7 @@
     var convertAllArguments = function(args) {
         return args.map(function(arg) {
             return convertEscapeCharacters(arg);
-        })
+        });
     };
 
     var setPluginCommand = function(commandName, methodName) {
@@ -451,6 +454,8 @@
     setPluginCommand('DISABLE_WINDOW_CONTROL', 'execDisableWindowControl');
     setPluginCommand('ウィンドウ操作許可', 'execEnableWindowControl');
     setPluginCommand('ENABLE_WINDOW_CONTROL', 'execEnableWindowControl');
+    setPluginCommand('イベントの実行停止', 'execStopEvent');
+    setPluginCommand('STOP_EVENT', 'execStopEvent');
 
     //=============================================================================
     // Game_Interpreter
@@ -503,6 +508,14 @@
         }
     };
 
+    Game_Interpreter.prototype.execStopEvent = function() {
+        this._menuCommonStop = true;
+    };
+
+    Game_Interpreter.prototype.isMenuCommonStop = function() {
+        return this._menuCommonStop;
+    };
+
     //=============================================================================
     // Game_Temp
     //  メニューコモンイベントを作成、更新します。
@@ -527,7 +540,7 @@
         if (commonEventId > 0) {
             var commonEvent = new Game_MenuCommonEvent(commonEventId);
             if (commonEvent.event()) {
-                return commonEvent
+                return commonEvent;
             }
         }
         return null;
@@ -551,7 +564,7 @@
     };
 
     Game_Temp.prototype.isInMenu = function() {
-        return this.getSceneIndex() >= 0
+        return this.getSceneIndex() >= 0;
     };
 
     Game_Temp.prototype.clearSceneInformation = function() {
@@ -605,8 +618,13 @@
 
     var _Game_MenuCommonEvent_update      = Game_MenuCommonEvent.prototype.update;
     Game_MenuCommonEvent.prototype.update = function() {
-        if (this._interpreter && !this._interpreter.isRunning()) {
-            this._interpreter.execEnableWindowControl();
+        if (this._interpreter) {
+            if (!this._interpreter.isRunning()) {
+                this._interpreter.execEnableWindowControl();
+            }
+            if (this._interpreter.isMenuCommonStop()) {
+                return;
+            }
         }
         _Game_MenuCommonEvent_update.apply(this, arguments);
     };
