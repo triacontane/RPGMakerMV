@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2018/09/25 ヘルプ修正
 // 1.0.0 2017/09/15 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -24,8 +25,8 @@
  *
  * @help AudioThroughIfMute.js
  *
- * 設定でボリュームもしくはマスターボリュームが設定されている場合もしくは
- * 任意のスイッチがONになっている場合に、音声ファイルをダウンロードしなくなります。
+ * 設定でボリュームもしくはマスターボリュームが0に設定されている場合もしくは
+ * 任意のスイッチがONになっている場合に、音声ファイルを演奏および読み込みしなくなります。
  *
  * ブラウザ作品をモバイルネットワーク環境でプレーする際に通信量を
  * 抑制することができます。
@@ -35,7 +36,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc AudioThroughIfMuteプラグイン
+ * @plugindesc ミュート時の演奏省略プラグイン
  * @author トリアコンタン
  *
  * @param 音声無効スイッチ番号
@@ -45,8 +46,8 @@
  *
  * @help AudioThroughIfMute.js
  *
- * 設定でボリュームもしくはマスターボリュームが設定されている場合もしくは
- * 任意のスイッチがONになっている場合に、音声ファイルをダウンロードしなくなります。
+ * 設定でボリュームもしくはマスターボリュームが0に設定されている場合もしくは
+ * 任意のスイッチがONになっている場合に、音声ファイルを演奏および読み込みしなくなります。
  *
  * ブラウザ作品をモバイルネットワーク環境でプレーする際などに
  * 通信量を抑制することができます。
@@ -147,7 +148,7 @@
     };
 
     AudioManager.isMuteSwitchValid = function() {
-        return $gameSwitches.value(param.audioThroughSwitchId)
+        return $gameSwitches.value(param.audioThroughSwitchId);
     };
 })();
 
