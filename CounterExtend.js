@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2018/09/26 「戦闘行動の強制」を使用しない反撃方法を追加しました。動作に若干の違いがあります
 // 1.6.0 2018/08/19 コスト不足で反撃が失敗した場合に任意のステートを解除できる機能を追加
 //                  魔法反撃に対してコスト不足時発動失敗する機能が正常に動いていなかった問題を修正
 // 1.5.0 2018/04/25 スキルに対して個別に反撃されやすさを設定できるようになりました。
@@ -44,6 +45,11 @@
  * @default false
  * @type boolean
  *
+ * @param UsingForceAction
+ * @desc 戦闘行動の強制によって反撃を実現します。通常はONで、希望通りの動作をしない場合は試してみてください。
+ * @default true
+ * @type boolean
+ *
  * @help 反撃の仕様を拡張します。
  * 魔法に対する反撃や、特定のスキルを使った反撃、
  * 特定の条件下でのみ発動する反撃などが作成できます。
@@ -136,6 +142,17 @@
  * 9. コスト不足で反撃が失敗した場合、任意のステートを解除できます。
  * <CE_ステート解除:1> # コスト不足で反撃が失敗するとステート[1]が解除
  * <CE_StateClear:1>   # 同上
+ *
+ * ※  パラメータ「戦闘行動強制による反撃」による動作の違い
+ * パラメータ「戦闘行動強制による反撃」を有効にすると以下の動作となります。
+ * 1. クロスカウンターが動作する
+ * 2. 反撃スキルに設定した「効果範囲」および「連続回数」が有効になる
+ * 3. 複数回行動する敵の場合、敵の全行動が終わってから反撃する
+ *
+ * 逆に無効にすると以下の動作となります。
+ * 1. クロスカウンターが動作しない
+ * 2. 反撃スキルに設定した「効果範囲」および「連続回数」が無視される
+ * 3. 複数回行動する敵の場合、敵の行動ごとに反撃を実行する
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -155,6 +172,11 @@
  * @default false
  * @type boolean
  *
+ * @param 戦闘行動強制による反撃
+ * @desc 戦闘行動の強制によって反撃を実現します。通常はONで、希望通りの動作をしない場合は試してみてください。
+ * @default true
+ * @type boolean
+ *
  * @help 反撃の仕様を拡張します。
  * 魔法に対する反撃や、特定のスキルを使った反撃、
  * 特定の条件下でのみ発動する反撃などが作成できます。
@@ -247,6 +269,17 @@
  * 9. コスト不足で反撃が失敗した場合、任意のステートを解除できます。
  * <CE_ステート解除:1> # コスト不足で反撃が失敗するとステート[1]が解除
  * <CE_StateClear:1>   # 同上
+ *
+ * ※  パラメータ「戦闘行動強制による反撃」による動作の違い
+ * パラメータ「戦闘行動強制による反撃」を有効にすると以下の動作となります。
+ * 1. クロスカウンターが動作する
+ * 2. 反撃スキルに設定した「効果範囲」および「連続回数」が有効になる
+ * 3. 複数回行動する敵の場合、敵の全行動が終わってから反撃する
+ *
+ * 逆に無効にすると以下の動作となります。
+ * 1. クロスカウンターが動作しない
+ * 2. 反撃スキルに設定した「効果範囲」および「連続回数」が無視される
+ * 3. 複数回行動する敵の場合、敵の行動ごとに反撃を実行する
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -319,6 +352,7 @@ var Imported = Imported || {};
     //=============================================================================
     var paramPayCounterCost      = getParamBoolean(['PayCounterCost', '反撃コスト消費']);
     var paramFailureCostShortage = getParamBoolean(['FailureCostShortage', 'コスト不足で失敗']);
+    var paramUsingForceAction    = getParamBoolean(['UsingForceAction', '戦闘行動強制による反撃']);
 
     //=============================================================================
     // Game_BattlerBase
@@ -582,11 +616,19 @@ var Imported = Imported || {};
         if (!target.isReserveCounterSkill()) {
             _BattleManager_invokeCounterAttack.apply(this, arguments);
         } else {
-            if (target.isCrossCounter()) {
-                this.invokeNormalAction(subject, target);
-            }
-            if (!target.isCounterSubject()) {
-                this.prepareCounterSkill(subject, target);
+            if (paramUsingForceAction) {
+                if (target.isCrossCounter()) {
+                    this.invokeNormalAction(subject, target);
+                }
+                if (!target.isCounterSubject()) {
+                    this.prepareCounterSkill(subject, target);
+                }
+            } else {
+                var action = new Game_Action(target);
+                action.setSkill(target.getCounterSkillId());
+                action.apply(subject);
+                this._logWindow.displaySkillCounter(target);
+                this._logWindow.displayActionResults(target, subject);
             }
         }
         if (target.isCounterCancel()) {
