@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2018/09/25 イベント画像をトリミングして表示できる機能を追加
 // 1.9.2 2018/07/11 EventEffects.jsとの競合を解消
 // 1.9.1 2018/06/05 メモ欄タグで変数指定＋並列処理で変数操作にて発生するいくつかの問題を修正（奏ねこま様）
 // 1.9.0 2018/02/20 不透明度をメモ欄で設定できる機能を追加
@@ -174,6 +175,11 @@
  * 0:透明 - 255:不透明
  *
  * 例：<CG不透明度:1,64> or <CGOpacity:1,64>
+ *
+ * <CGトリミング:（ページ数）,（X座標）,（Y座標）,（横幅）,（縦幅）>
+ * 画像を指定した矩形でトリミングして表示します。
+ *
+ * 例：<CGトリミング:1,0,0,24,24> or <CGトリミング:1,0,0,24,24>
  *
  * 〇スクリプト（高度な設定。移動ルートの指定からスクリプトで実行）
  *
@@ -421,6 +427,10 @@
         return this._tileBlockHeight;
     };
 
+    Game_CharacterBase.prototype.getTrimRect = function() {
+        return this._trimRect || null;
+    };
+
     var _Game_CharacterBase_pos      = Game_CharacterBase.prototype.pos;
     Game_CharacterBase.prototype.pos = function(x, y) {
         if (this.tileBlockWidth() >= 2) {
@@ -559,6 +569,10 @@
         cgParams = this.getMetaCg(['不透明度', 'Opacity']);
         if (cgParams) {
             this.setOpacity(getArgNumber(cgParams[1]));
+        }
+        cgParams = this.getMetaCg(['トリミング', 'Trimming']);
+        if (cgParams) {
+            this._trimRect = new Rectangle(getArgNumber(cgParams[1]), getArgNumber(cgParams[2]), getArgNumber(cgParams[3]), getArgNumber(cgParams[4]));
         }
     };
 
@@ -702,8 +716,13 @@
 
     var _Sprite_Character_setFrame      = Sprite_Character.prototype.setFrame;
     Sprite_Character.prototype.setFrame = function(sx, sy, pw, ph) {
-        _Sprite_Character_setFrame.call(this, sx, sy,
-            pw * this._character.tileBlockWidth(), ph * this._character.tileBlockHeight());
+        var rect = this._character.getTrimRect();
+        if (rect) {
+            _Sprite_Character_setFrame.call(this, sx + rect.x, sy + rect.y, rect.width, rect.height);
+        } else {
+            _Sprite_Character_setFrame.call(this, sx, sy,
+                pw * this._character.tileBlockWidth(), ph * this._character.tileBlockHeight());
+        }
     };
 
     var _Sprite_Character_isImageChanged      = Sprite_Character.prototype.isImageChanged;
