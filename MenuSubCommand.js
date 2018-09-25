@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2018/09/26 サブコマンドを横並べにするオプションを追加
 // 2.2.1 2018/01/28 サブコマンドを選択後メニューに戻って通常コマンドを選択し、さらにメニューに戻ったときに最初のサブコマンドが展開される問題を修正
 // 2.2.0 2018/01/07 同名の親コマンドを指定できる機能を追加
 // 2.1.0 2017/12/24 対象メンバーを選択するサブコマンド選択時にメニューコマンドをその名前に置き換える処理を追加
@@ -62,6 +63,11 @@
  * @param HideGameEnd
  * @desc メインメニューからゲーム終了を消去します。
  * @default OFF
+ *
+ * @param HorizontalSubMenu
+ * @desc サブメニューを横並べにします。
+ * @default false
+ * @type boolean
  *
  * @help MenuSubCommand.js
  *
@@ -140,6 +146,11 @@
  *
  * @param ゲーム終了消去
  * @desc メインメニューからゲーム終了を消去します。
+ * @default false
+ * @type boolean
+ *
+ * @param 横並びサブメニュー
+ * @desc サブメニューを横並べにします。
  * @default false
  * @type boolean
  *
@@ -365,6 +376,7 @@
     param.windowSkin            = getParamString(['WindowSkin', 'ウィンドウスキン']);
     param.hideOption            = getParamBoolean(['HideOption', 'オプション消去']);
     param.hideGameEnd           = getParamBoolean(['HideGameEnd', 'ゲーム終了消去']);
+    param.horizontalSubMenu     = getParamBoolean(['HorizontalSubMenu', '横並びサブメニュー']);
 
     //=============================================================================
     // Game_Temp
@@ -881,6 +893,14 @@
                 this.addCommand(subMenu.getName(), 'ok', subMenu.isEnable(), subMenu);
             }
         }, this);
+    };
+
+    Window_MenuSubCommand.prototype.numVisibleRows = function () {
+        return param.horizontalSubMenu ? 1 : Window_Command.prototype.numVisibleRows.call(this);
+    };
+
+    Window_MenuSubCommand.prototype.maxCols = function() {
+        return param.horizontalSubMenu ? this.maxItems() : 1;
     };
 
     Window_MenuSubCommand.prototype.windowWidth = function() {
