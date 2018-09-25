@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2018/09/25 全体化ステートを有するアクターの対象を戦闘メンバーのみにするかどうかの設定を追加
 // 1.0.2 2017/04/02 英語ヘルプ作成
 // 1.0.1 2017/04/23 少しだけリファクタリング
 // 1.0.0 2017/04/23 初版
@@ -18,6 +19,11 @@
 /*:
  * @plugindesc StateTotalizationPlugin
  * @author triacontane
+ *
+ * @param battleMemberOnly
+ * @desc 全体化ステートを有するアクターの対象を戦闘メンバーに限定します。OFFにすると非戦闘メンバーのステートも全体化します。
+ * @type boolean
+ * @default true
  *
  * @help Change the effect of some states to "all friends".
  * Please describe it in the memo field of the state as follows.
@@ -37,6 +43,12 @@
 /*:ja
  * @plugindesc ステート全体化プラグイン
  * @author トリアコンタン
+ *
+ * @param battleMemberOnly
+ * @text 戦闘メンバーのみ
+ * @desc 全体化ステートを有するアクターの対象を戦闘メンバーに限定します。OFFにすると非戦闘メンバーのステートも全体化します。
+ * @type boolean
+ * @default true
  *
  * @help 一部のステートの効果を「味方全体」にします。
  * ステートのメモ欄に以下の通り記述してください。
@@ -59,6 +71,31 @@
     'use strict';
     var metaTagPrefix = 'ST_';
 
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+    var param = createPluginParameter('StateTotalization');
+
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
@@ -75,6 +112,18 @@
     };
 
     //=============================================================================
+    // Game_Unit
+    //  全体化ステートを対象メンバーを取得します。
+    //=============================================================================
+    Game_Unit.prototype.getStateTotalizationMember = function() {
+        return this.members();
+    };
+
+    Game_Party.prototype.getStateTotalizationMember = function() {
+        return param.battleMemberOnly ? Game_Unit.prototype.getStateTotalizationMember.call(this) : this.allMembers();
+    };
+
+    //=============================================================================
     // Game_BattlerBase
     //  全体化ステートを追加定義します。
     //=============================================================================
@@ -85,7 +134,7 @@
     };
 
     Game_BattlerBase.prototype.getPartyTotalizationStates = function() {
-        return this.friendsUnit().members().reduce(function(totalizationStates, member) {
+        return this.friendsUnit().getStateTotalizationMember().reduce(function(totalizationStates, member) {
             return member !== this ? totalizationStates.concat(member.getTotalizationStates()) : totalizationStates;
         }, []);
     };
