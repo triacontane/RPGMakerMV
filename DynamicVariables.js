@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2018/09/27 テストプレー時はパラメータ「例外処理」の値に関係なくスクリプトエラーで異常終了しないよう修正
 // 1.1.0 2018/08/19 イベントページの出現条件および敵キャラの行動パターンで各オブジェクトおよびデータを参照できる機能を追加
 // 1.0.5 2018/01/27 1.0.4の更新でもともと入っていた値の取得方法をvalueに変更
 // 1.0.4 2018/01/15 実行時に対象スイッチIDおよび代入されているもとの値を参照できる機能を追加
@@ -330,7 +331,7 @@
         var gTroop        = $gameTroop;
         var gMap          = $gameMap;
         var gPlayer       = $gamePlayer;
-        if (paramValidException) {
+        if (paramValidException || $gameTemp.isPlaytest()) {
             try {
                 return eval(dynamicScript);
             } catch (e) {
