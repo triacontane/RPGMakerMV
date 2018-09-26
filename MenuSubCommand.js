@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2018/09/26 サブコマンドを逐次消去するオプションを追加
 // 2.3.0 2018/09/26 サブコマンドを横並べにするオプションを追加
 // 2.2.1 2018/01/28 サブコマンドを選択後メニューに戻って通常コマンドを選択し、さらにメニューに戻ったときに最初のサブコマンドが展開される問題を修正
 // 2.2.0 2018/01/07 同名の親コマンドを指定できる機能を追加
@@ -67,6 +68,11 @@
  * @param HorizontalSubMenu
  * @desc サブメニューを横並べにします。
  * @default false
+ * @type boolean
+ *
+ * @param ClearSubMenuOneByOne
+ * @desc サブメニューを逐次消去します
+ * @default true
  * @type boolean
  *
  * @help MenuSubCommand.js
@@ -152,6 +158,11 @@
  * @param 横並びサブメニュー
  * @desc サブメニューを横並べにします。
  * @default false
+ * @type boolean
+ *
+ * @param サブメニュー逐次消去
+ * @desc サブメニューを逐次消去します
+ * @default true
  * @type boolean
  *
  * @help MenuSubCommand.js
@@ -377,6 +388,7 @@
     param.hideOption            = getParamBoolean(['HideOption', 'オプション消去']);
     param.hideGameEnd           = getParamBoolean(['HideGameEnd', 'ゲーム終了消去']);
     param.horizontalSubMenu     = getParamBoolean(['HorizontalSubMenu', '横並びサブメニュー']);
+    param.clearSubMenuOneByObe  = getParamBoolean(['ClearSubMenuOneByOne', 'サブメニュー逐次消去']);
 
     //=============================================================================
     // Game_Temp
@@ -650,7 +662,11 @@
         if (subCommands.length === 1) {
             this.onSubCommandOk(subCommands[0]);
         } else {
-            this.createSubMenuCommandWindow(parentName);
+            if (!param.clearSubMenuOneByObe && this._subMenuWindow) {
+                this._subMenuWindow.activate();
+            } else {
+                this.createSubMenuCommandWindow(parentName);
+            }
         }
     };
 
@@ -681,7 +697,11 @@
             this._statusWindow.activate();
             this._statusWindow.setHandler('ok', this.executeSubCommand.bind(this));
             this._statusWindow.setHandler('cancel', this.onPersonalCancel.bind(this));
-            this.removeSubMenuCommandWindow();
+            if (param.clearSubMenuOneByObe) {
+                this.removeSubMenuCommandWindow();
+            } else {
+                this._subMenuWindow.deactivate();
+            }
         } else {
             this.executeSubCommand();
         }
