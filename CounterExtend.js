@@ -1,11 +1,13 @@
 //=============================================================================
 // CounterExtend.js
 // ----------------------------------------------------------------------------
-// (C)2016-2018 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2018/09/26 「戦闘行動の強制」を使用しない反撃方法でスキルアニメーションとコモンイベントが呼ばれない問題を修正
+//                  反撃が失敗しなかった場合も任意のステートを解除できる機能を追加
 // 1.7.0 2018/09/26 「戦闘行動の強制」を使用しない反撃方法を追加しました。動作に若干の違いがあります
 // 1.6.0 2018/08/19 コスト不足で反撃が失敗した場合に任意のステートを解除できる機能を追加
 //                  魔法反撃に対してコスト不足時発動失敗する機能が正常に動いていなかった問題を修正
@@ -49,6 +51,17 @@
  * @desc 戦闘行動の強制によって反撃を実現します。通常はONで、希望通りの動作をしない場合は試してみてください。
  * @default true
  * @type boolean
+ *
+ * @param EraseStateTiming
+ * @desc 反撃後にメモ欄で指定したステートを解除できます。メモ欄の指定がなければ解除されません。
+ * @default 0
+ * @type select
+ * @option Failure
+ * @value 0
+ * @option Success
+ * @value 1
+ * @option Always
+ * @value 2
  *
  * @help 反撃の仕様を拡張します。
  * 魔法に対する反撃や、特定のスキルを使った反撃、
@@ -148,11 +161,15 @@
  * 1. クロスカウンターが動作する
  * 2. 反撃スキルに設定した「効果範囲」および「連続回数」が有効になる
  * 3. 複数回行動する敵の場合、敵の全行動が終わってから反撃する
+ * 4. 複数人が反撃しかつ反撃スキルにコモンイベントを設定していた場合、
+ *    反撃したバトラー全員のコモンイベントが実行される。
  *
  * 逆に無効にすると以下の動作となります。
  * 1. クロスカウンターが動作しない
  * 2. 反撃スキルに設定した「効果範囲」および「連続回数」が無視される
  * 3. 複数回行動する敵の場合、敵の行動ごとに反撃を実行する
+ * 4. 複数人が反撃しかつ反撃スキルにコモンイベントを設定していた場合、
+ *    最後に反撃したバトラーのコモンイベントのみが実行される。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -162,20 +179,35 @@
  * @plugindesc 反撃拡張プラグイン
  * @author トリアコンタン
  *
- * @param 反撃コスト消費
+ * @param PayCounterCost
+ * @text 反撃コスト消費
  * @desc 固有スキルによる反撃がコスト消費するかどうかを設定します。(ON/OFF)
  * @default false
  * @type boolean
  *
- * @param コスト不足で失敗
+ * @param FailureCostShortage
+ * @text コスト不足で失敗
  * @desc 固有スキルによる反撃がコスト不足の場合、反撃は行いません。(ON/OFF)
  * @default false
  * @type boolean
  *
- * @param 戦闘行動強制による反撃
+ * @param UsingForceAction
+ * @text 戦闘行動強制による反撃
  * @desc 戦闘行動の強制によって反撃を実現します。通常はONで、希望通りの動作をしない場合は試してみてください。
  * @default true
  * @type boolean
+ *
+ * @param EraseStateTiming
+ * @text ステート解除タイミング
+ * @desc 反撃後にメモ欄で指定したステートを解除できます。メモ欄の指定がなければ解除されません。
+ * @default 0
+ * @type select
+ * @option 失敗した場合(コスト不足により)
+ * @value 0
+ * @option 成功した場合
+ * @value 1
+ * @option 常に
+ * @value 2
  *
  * @help 反撃の仕様を拡張します。
  * 魔法に対する反撃や、特定のスキルを使った反撃、
@@ -293,22 +325,7 @@ var Imported = Imported || {};
 
 (function() {
     'use strict';
-    var pluginName    = 'CounterExtend';
     var metaTagPrefix = 'CE_';
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
-    };
 
     var getArgEval = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
@@ -350,9 +367,30 @@ var Imported = Imported || {};
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramPayCounterCost      = getParamBoolean(['PayCounterCost', '反撃コスト消費']);
-    var paramFailureCostShortage = getParamBoolean(['FailureCostShortage', 'コスト不足で失敗']);
-    var paramUsingForceAction    = getParamBoolean(['UsingForceAction', '戦闘行動強制による反撃']);
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+    var param = createPluginParameter('CounterExtend');
 
     //=============================================================================
     // Game_BattlerBase
@@ -411,7 +449,9 @@ var Imported = Imported || {};
 
     Game_BattlerBase.prototype.getCounterCustomRate = function(names, action, target) {
         if (!this.canPaySkillCostForCounter()) {
-            this.eraseStateCounterFailure();
+            if (param.EraseStateTiming !== 1) {
+                this.eraseStateCounterFailure();
+            }
             return 0;
         }
         var counterCondition;
@@ -470,7 +510,7 @@ var Imported = Imported || {};
     };
 
     Game_BattlerBase.prototype.canPaySkillCostForCounter = function() {
-        return !paramFailureCostShortage || !this._reserveCounterSkillId ||
+        return !param.FailureCostShortage || !this._reserveCounterSkillId ||
             this.canPaySkillCost($dataSkills[this._reserveCounterSkillId]);
     };
 
@@ -480,7 +520,7 @@ var Imported = Imported || {};
     //=============================================================================
     var _Game_Battler_useItem      = Game_Battler.prototype.useItem;
     Game_Battler.prototype.useItem = function(item) {
-        if (this.isCounterSubject() && !paramPayCounterCost) return;
+        if (this.isCounterSubject() && !param.PayCounterCost) return;
         _Game_Battler_useItem.apply(this, arguments);
         this.refresh();
     };
@@ -506,6 +546,9 @@ var Imported = Imported || {};
         }
         this._nativeActions  = null;
         this._counterSubject = false;
+        if (param.EraseStateTiming !== 0) {
+            this.eraseStateCounterFailure();
+        }
     };
 
     Game_Battler.prototype.isCounterSubject = function() {
@@ -616,19 +659,22 @@ var Imported = Imported || {};
         if (!target.isReserveCounterSkill()) {
             _BattleManager_invokeCounterAttack.apply(this, arguments);
         } else {
-            if (paramUsingForceAction) {
+            if (param.UsingForceAction) {
                 if (target.isCrossCounter()) {
                     this.invokeNormalAction(subject, target);
                 }
                 if (!target.isCounterSubject()) {
                     this.prepareCounterSkill(subject, target);
                 }
-            } else {
+            } else if (subject.isAlive()) {
                 var action = new Game_Action(target);
                 action.setSkill(target.getCounterSkillId());
                 action.apply(subject);
-                this._logWindow.displaySkillCounter(target);
-                this._logWindow.displayActionResults(target, subject);
+                action.applyGlobal();
+                this._logWindow.displaySkillCounterAction(subject, target, action);
+                if (param.EraseStateTiming !== 0) {
+                    target.eraseStateCounterFailure();
+                }
             }
         }
         if (target.isCounterCancel()) {
@@ -675,6 +721,14 @@ var Imported = Imported || {};
         if (this.popupCounter) {
             this.popupCounter(subject);
         }
+    };
+
+    Window_BattleLog.prototype.displaySkillCounterAction = function(subject, target, action) {
+        this.displaySkillCounter(target);
+        this.startAction(target, action, [subject]);
+        this.push('waitForAnimation');
+        this.displayActionResults(target, subject);
+        this.endAction(target);
     };
 
     var _Window_BattleLog_updateWaitMode      = Window_BattleLog.prototype.updateWaitMode;
