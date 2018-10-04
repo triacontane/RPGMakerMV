@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.1 2018/10/05 敵キャラやピクチャを表示する際、エディタで元画像にインデックス1以外を指定していると画像が表示されない問題を修正
 // 1.10.0 2018/09/25 イベント画像をトリミングして表示できる機能を追加
 // 1.9.2 2018/07/11 EventEffects.jsとの競合を解消
 // 1.9.1 2018/06/05 メモ欄タグで変数指定＋並列処理で変数操作にて発生するいくつかの問題を修正（奏ねこま様）
@@ -282,19 +283,19 @@
     //  拡張するプロパティを定義します。
     //=============================================================================
     var _DataManager_extractMetadata = DataManager.extractMetadata;
-    DataManager.extractMetadata = function(data) {
+    DataManager.extractMetadata      = function(data) {
         _DataManager_extractMetadata.apply(this, arguments);
         this.extractMetadataArray(data);
     };
 
     DataManager.extractMetadataArray = function(data) {
-        var re = /<([^<>:]+)(:?)([^>]*)>/g;
+        var re         = /<([^<>:]+)(:?)([^>]*)>/g;
         data.metaArray = {};
-        var match = true;
+        var match      = true;
         while (match) {
             match = re.exec(data.note);
             if (match) {
-                var metaName = match[1];
+                var metaName             = match[1];
                 data.metaArray[metaName] = data.metaArray[metaName] || [];
                 data.metaArray[metaName].push(match[2] === ':' ? match[3] : true);
             }
@@ -305,7 +306,7 @@
     // Game_System
     //  ロード時にプレイヤーの初期化が必要な場合は初期化します。
     //=============================================================================
-    var _Game_System_onAfterLoad = Game_System.prototype.onAfterLoad;
+    var _Game_System_onAfterLoad      = Game_System.prototype.onAfterLoad;
     Game_System.prototype.onAfterLoad = function() {
         _Game_System_onAfterLoad.apply(this, arguments);
         if (!$gamePlayer.hasOwnProperty('_customResource')) {
@@ -451,7 +452,7 @@
     };
 
     var _Game_CharacterBase_screenZ      = Game_CharacterBase.prototype.screenZ;
-    Game_CharacterBase.prototype.screenZ  = function() {
+    Game_CharacterBase.prototype.screenZ = function() {
         return this._customPriority >= 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
     };
 
@@ -506,13 +507,13 @@
         return params.length > 1 && (pageIndex === this._pageIndex + 1 || params[0].toUpperCase() === 'A');
     };
 
-    var _Game_Event_refresh = Game_Event.prototype.refresh;
+    var _Game_Event_refresh      = Game_Event.prototype.refresh;
     Game_Event.prototype.refresh = function() {
         // added by nekoma start
-        var moveRoute = this._moveRoute;
-        var moveRouteIndex = this._moveRouteIndex;
+        var moveRoute        = this._moveRoute;
+        var moveRouteIndex   = this._moveRouteIndex;
         var moveRouteForcing = this._moveRouteForcing;
-        var starting = this._starting;
+        var starting         = this._starting;
         // added by nekoma end
         if (this._graphicDynamic) {
             this._pageIndex = -1;
@@ -520,10 +521,10 @@
         _Game_Event_refresh.apply(this, arguments);
         // added by nekoma start
         if (this._graphicDynamic) {
-            this._moveRoute = moveRoute;
-            this._moveRouteIndex = moveRouteIndex;
+            this._moveRoute        = moveRoute;
+            this._moveRouteIndex   = moveRouteIndex;
             this._moveRouteForcing = moveRouteForcing;
-            this._starting = starting;
+            this._starting         = starting;
         }
         // added by nekoma end
     };
@@ -598,6 +599,7 @@
             this._graphicColumns = 1;
             this._graphicRows    = 1;
             arguments[0]         = cgParams[1];
+            arguments[1]         = 0;
         }
         cgParams = this.getMetaCg(['敵キャラ', 'Enemy']);
         if (cgParams) {
@@ -605,6 +607,7 @@
             this._graphicColumns = 1;
             this._graphicRows    = 1;
             arguments[0]         = cgParams[1];
+            arguments[1]         = 0;
         }
         cgParams = this.getMetaCg(['アイコン', 'Icon']);
         if (cgParams) {
@@ -628,6 +631,7 @@
             this._graphicColumns = 1;
             this._graphicRows    = 1;
             arguments[0]         = cgParams[1];
+            arguments[1]         = 0;
         }
         cgParams = this.getMetaCg(['アクター', 'Actor']);
         if (cgParams) {
@@ -653,12 +657,12 @@
     // Sprite_Character
     //  拡張したプロパティに基づいてエフェクトを反映させます。
     //=============================================================================
-    var _Sprite_Character_tilesetBitmap = Sprite_Character.prototype.tilesetBitmap;
+    var _Sprite_Character_tilesetBitmap      = Sprite_Character.prototype.tilesetBitmap;
     Sprite_Character.prototype.tilesetBitmap = function(tileId) {
-        var customTilesetId = this._character.customTilesetId();
+        var customTilesetId   = this._character.customTilesetId();
         this._customTilesetId = customTilesetId;
         if (customTilesetId) {
-            var tileset = $dataTilesets[customTilesetId];
+            var tileset   = $dataTilesets[customTilesetId];
             var setNumber = 5 + Math.floor(tileId / 256);
             return ImageManager.loadTileset(tileset.tilesetNames[setNumber]);
         } else {
@@ -673,7 +677,7 @@
         this.updateExtend();
     };
 
-    var _Sprite_Character_update = Sprite_Character.prototype.update;
+    var _Sprite_Character_update      = Sprite_Character.prototype.update;
     Sprite_Character.prototype.update = function() {
         _Sprite_Character_update.apply(this, arguments);
         // for T_dashMotion.js
@@ -706,7 +710,7 @@
     };
 
     // Resolve conflict by EventEffects.js
-    var _Sprite_Character_updateAngle = Sprite_Character.prototype.updateAngle;
+    var _Sprite_Character_updateAngle      = Sprite_Character.prototype.updateAngle;
     Sprite_Character.prototype.updateAngle = function() {
         if (this._character.originY() != null) {
             return;
