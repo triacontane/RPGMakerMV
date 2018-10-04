@@ -1,11 +1,12 @@
 //=============================================================================
 // BigEnemy.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2018/10/05 連続回数が2以上のダメージを表示する際、一瞬だけおかしな位置に表示される問題を修正
 // 2.0.1 2017/03/16 2.0.0で巨大サイズ以外の敵に対するポップアップが表示されなくなっていた問題を修正
 // 2.0.0 2017/01/05 アニメーションの表示位置を補正
 // 1.0.1 2016/11/17 YEP_CoreEngine.jsで画面サイズを変更すると、位置の不整合が起きる現象に対応
@@ -102,9 +103,7 @@
 
     Sprite_Enemy.prototype.adjustDamagePopup = function() {
         if (this._damages.length > 0) {
-            for (var i = 0; i < this._damages.length; i++) {
-                this._damages[i].y -= (this.y - this._originalY);
-            }
+            this._damages[this._damages.length - 1].y -= (this.y - this._originalY);
         }
     };
 })();
