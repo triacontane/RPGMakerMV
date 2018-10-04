@@ -1,11 +1,12 @@
 //=============================================================================
 // CrossSave.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2018/10/05 ツクール本体v1.6.0以降に対応
 // 1.1.0 2017/10/19 サーバ種別を指定できる機能を追加
 //                  型指定機能に対応
 // 1.0.7 2017/10/04 ネットワークセーブの限界容量を再度緩和
@@ -17,7 +18,7 @@
 // 1.0.1 2016/05/29 ヘルプの記述ミスを修正
 // 1.0.0 2016/05/23 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -25,7 +26,7 @@
 /*:
  * @plugindesc クロスセーブプラグイン
  * @author トリアコンタン
- * 
+ *
  * @param ユーザID
  * @desc 本プラグインを利用するためのユーザIDです。MilkcocoaのユーザIDではありません。12文字以下で指定してください。
  * @default
@@ -58,7 +59,7 @@
  * @desc セーブ画面、ロード画面の先頭行にネットワークセーブ、ロードのコマンドを追加します。
  * @default true
  * @type boolean
- * 
+ *
  * @param 背景ピクチャ
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
  * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
@@ -177,7 +178,7 @@
  *
  * 2. 本プラグインは試験運用中です。利用状況によっては
  * サービスの運用を停止せざるを得ない場合があります。
- * 
+ *
  * 3. 認証ファイルとはセキュリティを担保するものではなく
  * 共有スペース内で同一のユーザIDが使用されないように区切る
  * ためのものです。
@@ -1032,12 +1033,7 @@ function CrossSaveManager() {
 
     CrossSaveManager.showDevTools = function() {
         var nwWin = require('nw.gui').Window.get();
-        if (!nwWin.isDevToolsOpen()) {
-            var devTool = nwWin.showDevTools();
-            devTool.moveTo(0, 0);
-            devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-            nwWin.focus();
-        }
+        nwWin.showDevTools();
     };
 
     CrossSaveManager.pause = function(handler) {
