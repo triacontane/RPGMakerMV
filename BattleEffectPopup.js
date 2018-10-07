@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.2 2018/10/07 プラグインコマンド「対象者ポップアップ」にて競合等の理由で対象が見付からない場合にエラーを回避するよう修正
 // 1.7.1 2017/08/03 YEP_BattleEngineCore.jsと併用したときに、メッセージの種類によってポップアップ位置が変化する問題を修正
 // 1.7.0 2017/06/13 行動がガード（耐性によって完全に防がれた）された場合のポップアップを追加
 // 1.6.0 2017/06/10 行動が無効だった場合のポップアップを追加
@@ -97,7 +98,7 @@
  * @param 魔法反射カラー
  * @desc 魔法反射発生時の文字のフラッシュ色です。
  * @default 0,128,255,255
- * 
+ *
  * @param 反撃
  * @desc 反撃時のポップアップメッセージまたはファイル名です。
  * @default Counter!
@@ -108,7 +109,7 @@
  * @param 反撃カラー
  * @desc 反撃発生時の文字のフラッシュ色です。
  * @default 0,128,255,255
- * 
+ *
  * @param 弱点
  * @desc 弱点時のポップアップメッセージまたはファイル名です。
  * @default Weakness!
@@ -123,7 +124,7 @@
  * @param 弱点閾値
  * @desc この値以上なら弱点と見なします。百分率で指定します。
  * @default 200
- * 
+ *
  * @param 耐性
  * @desc 弱点時のポップアップメッセージまたはファイル名です。
  * @default Resistance!
@@ -392,7 +393,12 @@
                 var unit   = action.isForOpponent() ? action.opponentsUnit() : action.friendsUnit();
                 var index  = BattleManager._subject._lastTargetIndex;
                 var target = unit.members()[index];
-                target.startMessagePopup(getArgString(args[0]), getArgArrayNumber(args[1], 0, 256));
+                if (target) {
+                    target.startMessagePopup(getArgString(args[0]), getArgArrayNumber(args[1], 0, 256));
+                } else {
+                    console.error('対象者ポップアップのターゲットが見付かりませんでした。index : ' + index);
+                    console.error(unit.members());
+                }
                 break;
         }
     };
