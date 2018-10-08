@@ -1,11 +1,12 @@
 ﻿//=============================================================================
 // Chronus.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.3 2018/10/08 プラグインコマンドで天候変化を無効にした場合でも、内部で制御している天候による色調の調整が反映されてしまう問題を修正
 // 1.10.2 2018/04/11 時間表示方法(実時間、ゲーム時間)を切り替えた直後に、時間変数の値が更新されない問題を修正
 // 1.10.1 2018/03/07 場所移動の際、移動先マップの色調有効フラグが異なっていた場合に、色調がリフレッシュされない問題を修正
 // 1.10.0 2018/02/24 日付フォーマットに基づいて計算した時間を変数に自動設定する機能を追加
@@ -1069,7 +1070,12 @@ function Window_Chronus() {
     };
 
     Game_Chronus.prototype.updateWeather = function() {
-        this.updateBatWeatherLevel();
+        if (!this._disableWeather) {
+            this.updateBatWeatherLevel();
+        } else {
+            this._weatherType  = 0;
+            this._weatherPower = 0;
+        }
         this.refreshWeather(false);
     };
 
