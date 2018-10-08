@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2018/10/08 戦闘強制敗北、戦闘強制中断の機能を追加
 // 2.5.1 2018/03/25 BGMが演奏されていないときに高速モードを切り替えるとエラーになる問題を修正
 // 2.5.0 2018/03/17 最前面に表示しているとき、画面がフォーカスを失うと画面自動で右寄せになる機能を追加
 //                  最新のNW.jsで使用できなくなる一部機能を削除
@@ -104,6 +105,60 @@
  * @param FuncKeyRapidGame
  * @desc ゲームを高速化するキーです。(F1～F12)。
  * @default F10
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
+ *
+ * @param FuncKeyForceVictory
+ * @desc 戦闘を勝利扱いで強制終了するキーです。(F1～F12)。
+ * @default
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
+ *
+ * @param FuncKeyForceDefeat
+ * @desc 戦闘を敗北扱いで強制終了するキーです。(F1～F12)。
+ * @default
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
+ *
+ * @param FuncKeyForceAbort
+ * @desc 戦闘を中断扱いで強制終了するキーです。(F1～F12)。
+ * @default
+ * @type select
  * @option none
  * @option F1
  * @option F2
@@ -245,38 +300,48 @@
  * 1. ゲーム開始時にデベロッパツールが自動で立ち上がります。(通常はF8で起動)
  *    OFFにしていた場合でもエラーが発生すると自動で立ち上がります。
  *
- * 2. ゲーム画面を常に最前面に表示してくれます。画面を見ながら作業をする場合に便利です。
- *    ゲーム中にメニューバーから切り替えできます。
+ * 2. ゲーム画面を常に最前面に表示してくれます。画面を見ながら作業をする場合に
+ *    便利です。ゲーム中にメニューバーから切り替えできます。
  *
- * 3. マップやイベントを修正して再保存すると、ゲーム画面にフォーカスを戻した瞬間に
- *    マップとデータベースを自動でリロードしてくれます。
+ * 3. マップやイベントを修正して再保存すると、ゲーム画面にフォーカスを戻した
+ *    瞬間にマップとデータベースを自動でリロードしてくれます。
  *
  * 4. タイトル画面を飛ばして最新のセーブファイルをロードできます。
  *
- * 5. マップ上でのゲームのスピードを高速化(8倍速まで)できます。
+ * 5. マップ上でのゲームのスピードを高速化(16倍速まで)できます。
  *    (マップ上で高速、フェードアウト、メッセージ表示の高速スキップ)
- *    ゲームスピードが高速の場合は、BGMのピッチが変化します。
+ *    逆に低速化(1/60倍速まで)することもできます。速度倍率に負の値を設定して
+ *    ください。ゲームスピードが変化した場合は、BGMのピッチが変化します。
  *
  * 6. 強制的に敵を全滅させて勝利することができます。報酬も取得できます。
+ *    強制敗北、強制中断も可能です。
  *
  * 7. 任意のスクリプトを毎フレーム実行させることができます。
  *    スクリプトの戻り値が変化したときのみ結果をコンソールに出力します。
  *
  * 8. ゲーム画面の更新を一時的に止めて画面をフリーズさせることができます。
  *
- * 9. セーブデータを保存する際にエンコーディングせずjson形式のままセーブ・ロードできます。
+ * 9. セーブデータを保存する際にエンコーディングせずjson形式のまま
+ *    セーブ・ロードできます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
- * ver2.2.0にて型指定機能に対応したことで一部パラメータの再設定が必要になりました。
- * それ以前からアップデートした場合プラグイン管理画面から一度、削除して再設定してください。
- *
- * 画面キャプチャ管理プラグインと連携すると画面キャプチャ用のメニューバーが表示されます。
+ * 画面キャプチャ管理プラグインと連携すると画面キャプチャ用の
+ * メニューバーが表示されます。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js
  *
- * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、起動URLのオプションに
- * 「test」もしくは「best」を付与してください。
+ * ・高度な設定
+ * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、
+ * 起動URLのオプションに「test」もしくは「best」を付与してください。
  * ただしNW.js由来のいくつかの機能は無効になります。
+ *
+ * 通常、ブラウザなど外部からゲーム起動の場合、戦闘テストは実行できませんが、
+ * 当プラグインを有効にしていると戦闘テストが可能です。
+ *
+ * 外部エディタから起動する場合、以下の起動パラメータが指定可能です。
+ * この指定はプラグインパラメータより優先されます。
+ * devToolOff : デベロッパツールが起動しなくなります。
+ * onTop : 最前面に画面を表示します。
  *
  * This plugin is released under the MIT License.
  */
@@ -347,6 +412,42 @@
  *
  * @param 強制戦闘勝利キー
  * @desc 戦闘を勝利扱いで強制終了するキーです。(F1～F12)。
+ * @default
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
+ *
+ * @param 強制戦闘敗北キー
+ * @desc 戦闘を敗北扱いで強制終了するキーです。(F1～F12)。
+ * @default
+ * @type select
+ * @option none
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
+ *
+ * @param 強制戦闘中断キー
+ * @desc 戦闘を中断扱いで強制終了するキーです。(F1～F12)。
  * @default
  * @type select
  * @option none
@@ -493,39 +594,43 @@
  * 1. ゲーム開始時にデベロッパツールが自動で立ち上がります。(通常はF8で起動)
  *    OFFにしていた場合でもエラーが発生すると自動で立ち上がります。
  *
- * 2. ゲーム画面を常に最前面に表示してくれます。画面を見ながら作業をする場合に便利です。
- *    ゲーム中にメニューバーから切り替えできます。
+ * 2. ゲーム画面を常に最前面に表示してくれます。画面を見ながら作業をする場合に
+ *    便利です。ゲーム中にメニューバーから切り替えできます。
  *
- * 3. マップやイベントを修正して再保存すると、ゲーム画面にフォーカスを戻した瞬間に
- *    マップとデータベースを自動でリロードしてくれます。
+ * 3. マップやイベントを修正して再保存すると、ゲーム画面にフォーカスを戻した
+ *    瞬間にマップとデータベースを自動でリロードしてくれます。
  *
  * 4. タイトル画面を飛ばして最新のセーブファイルをロードできます。
  *
  * 5. マップ上でのゲームのスピードを高速化(16倍速まで)できます。
  *    (マップ上で高速、フェードアウト、メッセージ表示の高速スキップ)
- *    逆に低速化(1/60倍速まで)することもできます。速度倍率に負の値を設定してください。
- *    ゲームスピードが変化した場合は、BGMのピッチが変化します。
+ *    逆に低速化(1/60倍速まで)することもできます。速度倍率に負の値を設定して
+ *    ください。ゲームスピードが変化した場合は、BGMのピッチが変化します。
  *
  * 6. 強制的に敵を全滅させて勝利することができます。報酬も取得できます。
+ *    強制敗北、強制中断も可能です。
  *
  * 7. 任意のスクリプトを毎フレーム実行させることができます。
  *    スクリプトの戻り値が変化したときのみ結果をコンソールに出力します。
  *
  * 8. ゲーム画面の更新を一時的に止めて画面をフリーズさせることができます。
  *
- * 9. セーブデータを保存する際にエンコーディングせずjson形式のままセーブ・ロードできます。
+ * 9. セーブデータを保存する際にエンコーディングせずjson形式のまま
+ *    セーブ・ロードできます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
- * ver2.2.0にて型指定機能に対応したことで一部パラメータの再設定が必要になりました。
- * それ以前からアップデートした場合プラグイン管理画面から一度、削除して再設定してください。
- *
- * 画面キャプチャ管理プラグインと連携すると画面キャプチャ用のメニューバーが表示されます。
+ * 画面キャプチャ管理プラグインと連携すると画面キャプチャ用の
+ * メニューバーが表示されます。
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MakeScreenCapture.js
  *
- * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、起動URLのオプションに
- * 「test」もしくは「best」を付与してください。
+ * ・高度な設定
+ * ブラウザ起動時でも当プラグインのデバッグ機能を有効にしたい場合は、
+ * 起動URLのオプションに「test」もしくは「best」を付与してください。
  * ただしNW.js由来のいくつかの機能は無効になります。
+ *
+ * 通常、ブラウザなど外部からゲーム起動の場合、戦闘テストは実行できませんが、
+ * 当プラグインを有効にしていると戦闘テストが可能です。
  *
  * 外部エディタから起動する場合、以下の起動パラメータが指定可能です。
  * この指定はプラグインパラメータより優先されます。
@@ -596,7 +701,9 @@ function Controller_NwJs() {
     const paramFuncKeyReload     = getParamString(['FuncKeyReload', 'リロードキー']);
     const paramFuncKeyOnTop      = getParamString(['FuncKeyOnTop', '最前面に表示キー']);
     const paramFuncKeyRapidGame  = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
-    const paramFuncKeyVictory    = getParamString(['FuncKeyVictory', '強制戦闘勝利キー']);
+    const paramFuncKeyVictory    = getParamString(['FuncKeyForceVictory', '強制戦闘勝利キー']);
+    const paramFuncKeyDefeat     = getParamString(['FuncKeyForceDefeat', '強制戦闘敗北キー']);
+    const paramFuncKeyAbort      = getParamString(['FuncKeyForceAbort', '強制戦闘中断キー']);
     const paramFuncKeyScript     = getParamString(['FuncKeyScript', 'スクリプト実行キー']);
     const paramFuncKeyFreeze     = getParamString(['FuncKeyFreeze', 'フリーズキー']);
     const paramShowFPS           = getParamString(['ShowFPS', 'FPS表示'], true);
@@ -722,7 +829,7 @@ function Controller_NwJs() {
     };
 
     var _Input__shouldPreventDefault = Input._shouldPreventDefault;
-    Input._shouldPreventDefault = function(keyCode) {
+    Input._shouldPreventDefault      = function(keyCode) {
         return _Input__shouldPreventDefault.apply(this, arguments) || keyCode === 9; // Tab
     };
 
@@ -758,7 +865,9 @@ function Controller_NwJs() {
             {code: 105, use: true, name: '戦闘強制勝利', key: paramFuncKeyVictory, type: 'normal'},
             {code: 106, use: true, name: '常駐スクリプト実行', key: paramFuncKeyScript, type: 'normal'},
             {code: 107, use: true, name: '画面フリーズ', key: paramFuncKeyFreeze, type: 'checkbox'},
-            {code: 108, use: !!SceneManager.takeCapture, name: '画面キャプチャ', key: null, type: 'normal'}
+            {code: 108, use: !!SceneManager.takeCapture, name: '画面キャプチャ', key: null, type: 'normal'},
+            {code: 109, use: true, name: '戦闘強制敗北', key: paramFuncKeyDefeat, type: 'normal'},
+            {code: 110, use: true, name: '戦闘強制中断', key: paramFuncKeyAbort, type: 'normal'},
         ];
     };
 
@@ -840,6 +949,14 @@ function Controller_NwJs() {
 
     SceneManager.executeDevCommand108 = function() {
         return this.takeCapture();
+    };
+
+    SceneManager.executeDevCommand109 = function() {
+        BattleManager.forceDefect();
+    };
+
+    SceneManager.executeDevCommand110 = function() {
+        BattleManager.forceAbort();
     };
 
     SceneManager.isRapid = function() {
@@ -1045,7 +1162,7 @@ function Controller_NwJs() {
         }
     };
 
-    SceneManager.reloadGenerator = function*() {
+    SceneManager.reloadGenerator = function* () {
         this._preVersionId = DataManager.reloadSystemData();
         yield true;
         if (this._preVersionId !== $dataSystem.versionId) {
@@ -1083,7 +1200,7 @@ function Controller_NwJs() {
     //  強制勝利を追加定義します。
     //=============================================================================
     BattleManager.forceVictory = function() {
-        if (SceneManager.isCurrentScene(Scene_Battle) && !this.isBattleAlreadyEnd()) {
+        if (this.canExecuteBattleEndProcess()) {
             $gameTroop.members().forEach(function(enemy) {
                 enemy.addNewState(enemy.deathStateId());
             });
@@ -1091,8 +1208,27 @@ function Controller_NwJs() {
         }
     };
 
-    BattleManager.isBattleAlreadyEnd = function() {
-        return this._phase === 'battleEnd';
+    BattleManager.forceDefect = function() {
+        if (this.canExecuteBattleEndProcess()) {
+            $gameParty.members().forEach(function(actor) {
+                actor.addNewState(actor.deathStateId());
+            });
+            this.processDefeat();
+        }
+    };
+
+    BattleManager.forceAbort = function() {
+        if (this.canExecuteBattleEndProcess()) {
+            $gameParty.performEscape();
+            SoundManager.playEscape();
+            this.displayEscapeSuccessMessage();
+            this._escaped = true;
+            this.processAbort();
+        }
+    };
+
+    BattleManager.canExecuteBattleEndProcess = function() {
+        return SceneManager.isCurrentScene(Scene_Battle) && this._phase !== 'battleEnd';
     };
 
     //=============================================================================
@@ -1379,11 +1515,11 @@ function Controller_NwJs() {
     //=============================================================================
     Controller_NwJs.prototype.constructor = Controller_NwJs;
     Controller_NwJs.prototype.initialize  = function() {
-        this._nwGui           = require('nw.gui');
-        this._onFocus         = false;
-        this._menuBar         = this.getWindow().menu;
-        this._menuClick       = null;
-        this._onTop           = false;
+        this._nwGui     = require('nw.gui');
+        this._onFocus   = false;
+        this._menuBar   = this.getWindow().menu;
+        this._menuClick = null;
+        this._onTop     = false;
         this.setOnFocus(false);
         this.initSetting();
     };
@@ -1443,7 +1579,7 @@ function Controller_NwJs() {
     };
 
     Controller_NwJs.prototype.getSortedDevCommands = function() {
-        return SceneManager.devCommands.sort(function(a, b) {
+        return SceneManager.devCommands.filter(command => command.key && command.key !== 'none').sort(function(a, b) {
             if (a.key && b.key) {
                 return Input.functionReverseMapper[a.key] - Input.functionReverseMapper[b.key];
             } else if (a.key || b.key) {
