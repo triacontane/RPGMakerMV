@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2018/10/08 浮遊イベントの影を非表示にできる機能を追加
 // 1.3.0 2018/01/24 イベントを初期状態で浮遊させる機能を追加
 // 1.2.0 2018/01/07 プレイヤーの浮遊とフォロワーと連動させるかどうかを選択できる機能を追加
 // 1.1.2 2016/07/31 パラメータ名の変換ミス修正(敷居値→閾値)
@@ -176,6 +177,10 @@
  * イベントのメモ欄に以下の通り記述すると、イベントが初期状態で浮遊します。
  * <FCAltitude:24> # 高さ[24]で浮遊します。
  * <FC高度:24>     # 同上
+ *
+ * イベントのメモ欄に以下の通り記述すると、浮遊時に影が表示されなくなります。
+ * <FC影なし>
+ * <FCNoShadow>
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -370,7 +375,7 @@
     };
 
     Game_CharacterBase.prototype.isShadowVisible = function() {
-        return this.isFloating() && (this._characterName || this._tileId);
+        return this.isFloating() && (this._characterName || this._tileId) && this.isNeedShadow();
     };
 
     Game_CharacterBase.prototype.isNeedFloat = function() {
@@ -400,6 +405,10 @@
     Game_CharacterBase.prototype.update = function() {
         _Game_CharacterBase_update.apply(this, arguments);
         this.updateFloating();
+    };
+
+    Game_CharacterBase.prototype.isNeedShadow = function() {
+        return true;
     };
 
     Game_CharacterBase.prototype.updateFloating = function() {
@@ -455,6 +464,7 @@
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         var altitude = getMetaValues(this.event(), ['高度', 'Altitude']);
+        this._noShadow = !!getMetaValues(this.event(), ['影なし', 'NoShadow']);
         if (altitude !== undefined) {
             this.setInitAltitude(parseInt(altitude || 24));
         }
@@ -464,6 +474,10 @@
         this.float(false, altitude);
         this._altitude = this._maxAltitude;
         this.refreshBushDepth();
+    };
+
+    Game_Event.prototype.isNeedShadow = function() {
+        return this._noShadow;
     };
 
     //=============================================================================
