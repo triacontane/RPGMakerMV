@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2018/10/13 公式プラグイン「TextDecoration.js」の設定を動的文字列に適用できる機能を追加
 // 1.10.1 2018/05/30 アウトラインカラー取得で0およびその他の文字列を指定したときに正しく色が設定されない問題を修正(by奏ねこまさん)
 // 1.10.0 2017/02/12 アウトラインカラーをウィンドウカラー番号から指定できる機能を追加
 // 1.9.0 2017/08/20 ウィンドウつきピクチャが重なったときにウィンドウがピクチャの下に表示される問題を修正
@@ -179,23 +180,48 @@
 
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\,\s*(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+),\s*(\d+)]/gi, function() {
             var number = parseInt(arguments[1], 10);
             usingVariables.push(number);
             return $gameVariables.value(number);
         }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
             var number = parseInt(arguments[1], 10);
             usingVariables.push(number);
             return $gameVariables.value(number);
         }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
             var number = parseInt(arguments[1], 10);
             usingVariables.push(number);
             return $gameVariables.value(number);
         }.bind(this));
         return usingVariables;
     };
+
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+    var textDecParam = createPluginParameter('TextDecoration');
 
     //=============================================================================
     // Game_Interpreter
@@ -390,26 +416,26 @@
     var _Window_Base_convertEscapeCharacters      = Window_Base.prototype.convertEscapeCharacters;
     Window_Base.prototype.convertEscapeCharacters = function(text) {
         text = _Window_Base_convertEscapeCharacters.call(this, text);
-        text = text.replace(/\x1bV\[(\d+)\,\s*(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+),\s*(\d+)]/gi, function() {
             return this.getVariablePadZero($gameVariables.value(parseInt(arguments[1], 10)), arguments[2]);
         }.bind(this));
-        text = text.replace(/\x1bITEM\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bITEM\[(\d+)]/gi, function() {
             var item = $dataItems[getArgNumber(arguments[1], 1, $dataItems.length)];
             return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
         }.bind(this));
-        text = text.replace(/\x1bWEAPON\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bWEAPON\[(\d+)]/gi, function() {
             var item = $dataWeapons[getArgNumber(arguments[1], 1, $dataWeapons.length)];
             return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
         }.bind(this));
-        text = text.replace(/\x1bARMOR\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bARMOR\[(\d+)]/gi, function() {
             var item = $dataArmors[getArgNumber(arguments[1], 1, $dataArmors.length)];
             return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
         }.bind(this));
-        text = text.replace(/\x1bSKILL\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bSKILL\[(\d+)]/gi, function() {
             var item = $dataSkills[getArgNumber(arguments[1], 1, $dataSkills.length)];
             return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
         }.bind(this));
-        text = text.replace(/\x1bSTATE\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bSTATE\[(\d+)]/gi, function() {
             var item = $dataStates[getArgNumber(arguments[1], 1, $dataStates.length)];
             return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
         }.bind(this));
@@ -433,7 +459,7 @@
     };
 
     Sprite_Picture.prototype.updateFrameWindow = function() {
-        var padding = this._frameWindow.standardPadding();
+        var padding         = this._frameWindow.standardPadding();
         this._frameWindow.x = this.x - (this.anchor.x * this.width * this.scale.x) - padding;
         this._frameWindow.y = this.y - (this.anchor.y * this.height * this.scale.y) - padding;
         if (!this.visible) {
@@ -449,8 +475,8 @@
     };
 
     Sprite_Picture.prototype.adjustScaleFrameWindow = function() {
-        var padding = this._frameWindow.standardPadding();
-        var newFrameWidth = Math.floor(this.width * this.scale.x + padding * 2);
+        var padding        = this._frameWindow.standardPadding();
+        var newFrameWidth  = Math.floor(this.width * this.scale.x + padding * 2);
         var newFrameHeight = Math.floor(this.height * this.scale.x + padding * 2);
         if (this._frameWindow.width !== newFrameWidth || this._frameWindow.height !== newFrameHeight) {
             this._frameWindow.move(this._frameWindow.x, this._frameWindow.y, newFrameWidth, newFrameHeight);
@@ -493,6 +519,7 @@
         this._processText(bitmapVirtual);
         this.hiddenWindow.resetFontSettings(this.dTextInfo);
         this.bitmap          = new Bitmap(bitmapVirtual.width, bitmapVirtual.height);
+        this.applyTextDecoration();
         this.bitmap.fontFace = this.hiddenWindow.contents.fontFace;
         if (this.dTextInfo.color) {
             this.bitmap.fillAll(this.dTextInfo.color);
@@ -510,9 +537,17 @@
         this.hiddenWindow = null;
     };
 
+    Sprite_Picture.prototype.applyTextDecoration = function() {
+        if (textDecParam.Mode >= 0) {
+            this.bitmap.outlineColor =
+                'rgba(%1,%2,%3,%4)'.format(textDecParam.Red, textDecParam.Green, textDecParam.Blue, textDecParam.Alpha / 255);
+            this.bitmap.decorationMode = textDecParam.Mode;
+        }
+    };
+
     Sprite_Picture.prototype.makeFrameWindow = function(width, height) {
-        var padding             = this.hiddenWindow.standardPadding();
-        this._frameWindow       = new Window_Base(0, 0, width + padding * 2, height + padding * 2);
+        var padding       = this.hiddenWindow.standardPadding();
+        this._frameWindow = new Window_Base(0, 0, width + padding * 2, height + padding * 2);
     };
 
     Sprite_Picture.prototype._processText = function(bitmap) {
@@ -557,7 +592,7 @@
                     }
                     break;
                 case 'OC':
-                    var colorCode = this.hiddenWindow.obtainEscapeParamString(textState);
+                    var colorCode  = this.hiddenWindow.obtainEscapeParamString(textState);
                     var colorIndex = Number(colorCode);
                     if (!isNaN(colorIndex)) {
                         bitmap.outlineColor = this.hiddenWindow.textColor(colorIndex);
@@ -614,7 +649,7 @@
         this.height = 0;
     };
 
-    Bitmap_Virtual.prototype.drawText = function(text, x, y, maxWidth, lineHeight, align) {
+    Bitmap_Virtual.prototype.drawText = function(text, x, y) {
         var baseWidth = this.window.textWidth(text);
         var fontSize  = this.window.contents.fontSize;
         if (this.fontItalic) {
@@ -678,7 +713,7 @@
     };
 
     Window_Hidden.prototype.obtainEscapeParamString = function(textState) {
-        var arr = /^\[.+?\]/.exec(textState.text.slice(textState.index));
+        var arr = /^\[.+?]/.exec(textState.text.slice(textState.index));
         if (arr) {
             textState.index += arr[0].length;
             return arr[0].substring(1, arr[0].length - 1);
