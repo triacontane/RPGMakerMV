@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.1 2018/10/13 すり抜けが設定が無効なイベントのページが切り替わったとき、すり抜け設定が有効になってしまう場合がある不具合を修正
 // 1.12.0 2018/08/24 移動不可の地形およびリージョンを複数指定できる機能を追加
 // 1.11.11 2018/08/23 1.11.10の修正で横一列の通路上で上に半歩上に移動できない不具合を修正
 // 1.11.10 2018/06/22 移動不可タイルに乗っているとき半歩上に移動できてしまう現象を修正
@@ -509,7 +510,7 @@
         this.pluginCommandHalfMove(command, args);
     };
 
-    Game_Interpreter.prototype.pluginCommandHalfMove = function(command, args) {
+    Game_Interpreter.prototype.pluginCommandHalfMove = function(command) {
         switch (getCommandName(command)) {
             case '半歩移動禁止' :
             case 'HALF_MOVE_DISABLE':
@@ -544,7 +545,7 @@
         }.bind(this));
     };
 
-    var _Game_System_onAfterLoad = Game_System.prototype.onAfterLoad;
+    var _Game_System_onAfterLoad      = Game_System.prototype.onAfterLoad;
     Game_System.prototype.onAfterLoad = function() {
         _Game_System_onAfterLoad.apply(this, arguments);
         $gamePlayer.initMembersForHalfMoveIfNeed();
@@ -1103,10 +1104,10 @@
     Game_CharacterBase.prototype.checkEventTriggerTouchFront = function(d) {
         var halfPositionCount  = localHalfPositionCount;
         localHalfPositionCount = 0;
-        this._frontDirection = d;
+        this._frontDirection   = d;
         _Game_CharacterBase_checkEventTriggerTouchFront.apply(this, arguments);
         localHalfPositionCount = halfPositionCount;
-        this._frontDirection = 0;
+        this._frontDirection   = 0;
     };
 
     Game_CharacterBase.prototype.getDistanceForHalfMove = function(character) {
@@ -1483,6 +1484,7 @@
         this._can8moveDisable  = getMetaValues(this.event(), ['8MoveDisable', '8方向移動禁止']);
         var metaValue          = getMetaValues(this.event(), ['TriggerExpansion', 'トリガー拡大']);
         this._triggerExpansion = metaValue ? getArgBoolean(metaValue) : paramTriggerExpansion;
+        this._expansionArea    = this.getExpansionArea();
     };
 
     var _Game_Event_setupPage      = Game_Event.prototype.setupPage;
@@ -1496,7 +1498,7 @@
         if (metaValue) {
             this._customExpansion = true;
             return getArgArrayFloat(metaValue, 0);
-        } else if (this.isNormalPriority() && !this.isThroughEnable()) {
+        } else if (this.isNormalPriority() && this.isThroughEnable()) {
             return [0, 0.5, 0.5, 0];
         } else {
             return [0.5, 0.5, 0.5, 0.5];
