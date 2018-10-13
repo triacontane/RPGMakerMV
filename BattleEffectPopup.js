@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2018/10/13 パラメータの型指定機能に対応
+//                  コモンイベントが呼び出された場合は無効ポップアップを出さないよう仕様変更
 // 1.7.2 2018/10/07 プラグインコマンド「対象者ポップアップ」にて競合等の理由で対象が見付からない場合にエラーを回避するよう修正
 // 1.7.1 2017/08/03 YEP_BattleEngineCore.jsと併用したときに、メッセージの種類によってポップアップ位置が変化する問題を修正
 // 1.7.0 2017/06/13 行動がガード（耐性によって完全に防がれた）された場合のポップアップを追加
@@ -170,15 +172,18 @@
  *
  * @param イタリック表示
  * @desc ポップアップがイタリック体で表示されます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 縁取り表示
  * @desc ポップアップが縁取り表示されます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 画像使用
  * @desc 各種ポップアップに任意のピクチャ(img/pictures)を使用します。メッセージの代わりにファイル名を入力してください。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @noteParam BEPメッセージ
  * @noteRequire 1
@@ -267,7 +272,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -480,7 +485,7 @@
     };
 
     Game_ActionResult.prototype.isInvalid = function() {
-        return !this.success && !this.missed && !this.evaded;
+        return !this.success && !this.missed && !this.evaded && !$gameTemp.isCommonEventReserved();
     };
 
     Game_ActionResult.prototype.isGuarded = function() {
