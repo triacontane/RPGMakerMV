@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.2 2018/10/14 OnlineAvatar.jsとの併用時、起動時にエラーになる問題を解消
 // 1.8.1 2018/10/14 ParallaxTitle.jsとの競合を解消
 // 1.8.0 2018/05/27 セルフ変数のキーに数値ではなく文字列を使用できるよう修正
 // 1.7.1 2017/09/01 スクリプトヘルプの誤記を修正
@@ -778,6 +779,10 @@ var $dataTemplateEvents = null;
     Scene_Boot.prototype.templateMapLoadGenerator = function*() {
         while (!DataManager.isMapLoaded()) {
             yield false;
+        }
+        // Resolve conflict for OnlineAvatar.js
+        if (!$gamePlayer) {
+            $gamePlayer = {isTransferring:function() {}};
         }
         DataManager.loadMapData(paramTemplateMapId);
         while (!DataManager.isMapLoaded()) {
