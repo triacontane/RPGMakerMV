@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2018/10/14 カレンダーの枠を非表示にできる機能を追加
 // 1.10.3 2018/10/08 プラグインコマンドで天候変化を無効にした場合でも、内部で制御している天候による色調の調整が反映されてしまう問題を修正
 // 1.10.2 2018/04/11 時間表示方法(実時間、ゲーム時間)を切り替えた直後に、時間変数の値が更新されない問題を修正
 // 1.10.1 2018/03/07 場所移動の際、移動先マップの色調有効フラグが異なっていた場合に、色調がリフレッシュされない問題を修正
@@ -190,6 +191,11 @@
  * @type number
  * @desc カレンダーの背景の不透明度(0-255)です。
  * @default 192
+ *
+ * @param カレンダー枠の非表示
+ * @type boolean
+ * @desc カレンダーのウィンドウ枠を非表示にします。
+ * @default false
  *
  * @param カレンダー余白
  * @type number
@@ -514,13 +520,14 @@ function Window_Chronus() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramAutoAddInterval  = getParamNumber('自然時間加算間隔', 1) || 60;
-    var paramCalendarFontSize = getParamNumber('カレンダーフォントサイズ', 0);
-    var paramCalendarOpacity  = getParamNumber('カレンダー不透明度', 0);
-    var paramCalendarPadding  = getParamNumber('カレンダー余白', 8);
-    var paramClockBaseFile    = getParamString('文字盤画像ファイル');
-    var paramMinutesHandFile  = getParamString('長針画像ファイル');
-    var paramHourHandFile     = getParamString('短針画像ファイル');
+    var paramAutoAddInterval     = getParamNumber('自然時間加算間隔', 1) || 60;
+    var paramCalendarFontSize    = getParamNumber('カレンダーフォントサイズ', 0);
+    var paramCalendarOpacity     = getParamNumber('カレンダー不透明度', 0);
+    var paramCalendarPadding     = getParamNumber('カレンダー余白', 8);
+    var paramClockBaseFile       = getParamString('文字盤画像ファイル');
+    var paramMinutesHandFile     = getParamString('長針画像ファイル');
+    var paramHourHandFile        = getParamString('短針画像ファイル');
+    var paramCalendarFrameHidden = getParamBoolean('カレンダー枠の非表示');
 
     //=============================================================================
     // Game_Interpreter
@@ -792,6 +799,9 @@ function Window_Chronus() {
         this.createContents();
         this.x = getParamNumber('カレンダー表示X座標');
         this.y = getParamNumber('カレンダー表示Y座標');
+        if (paramCalendarFrameHidden) {
+            this.opacity = 0;
+        }
         this.refresh();
     };
 
@@ -1402,7 +1412,7 @@ function Window_Chronus() {
 
     Game_Chronus.prototype.getFormatTimeFormula = function() {
         this._disablePadding = true;
-        var formula = this.convertDateFormatText(getParamString('フォーマット時間の計算式'));
+        var formula          = this.convertDateFormatText(getParamString('フォーマット時間の計算式'));
         this._disablePadding = false;
         return eval(formula);
     };
