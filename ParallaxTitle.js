@@ -1,17 +1,18 @@
 //=============================================================================
 // ParallaxTitle.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/10/14 TemplateEvent.jsとの競合を解消
 // 1.1.0 2016/11/23 遠景のスクロール速度がマップとずれていた問題を修正
 //                  ニューゲーム時にスクロール位置を引き継ぐ設定を追加
 //                  ニューゲーム選択時にフェードアウトしなくなる設定を追加
 // 1.0.0 2016/11/09 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -23,18 +24,22 @@
  * @param ParallaxSettingMapId
  * @desc 指定したIDのマップの「マップ設定」の「遠景」設定をタイトル画面に適用します。
  * @default 0
+ * @type number
  *
  * @param ViewForeground
  * @desc もともとのタイトル画面より上に表示します。霧のような演出に使えます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param InheritScroll
  * @desc ニューゲーム時に遠景のスクロール状態を引き継ぎます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param NoFadeout
  * @desc ニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help タイトル画面に追加で遠景を指定できます。
  * 遠景はマップ画面と同様に縦横にループし、自動スクロールできます。
@@ -53,18 +58,22 @@
  * @param 遠景設定マップID
  * @desc 指定したIDのマップの「マップ設定」の「遠景」設定をタイトル画面に適用します。
  * @default 0
+ * @type number
  *
  * @param 近景表示
  * @desc もともとのタイトル画面より上に表示します。霧のような演出に使えます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param スクロール引き継ぎ
  * @desc ニューゲーム時に遠景のスクロール状態を引き継ぎます。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param フェードアウト無効
  * @desc ニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help タイトル画面に追加で遠景を指定できます。
  * 遠景はマップ画面と同様に縦横にループし、自動スクロールできます。
@@ -104,7 +113,7 @@ var $dataTitleMap = null;
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     //=============================================================================
@@ -150,21 +159,27 @@ var $dataTitleMap = null;
     var _Scene_Boot_create      = Scene_Boot.prototype.create;
     Scene_Boot.prototype.create = function() {
         _Scene_Boot_create.apply(this, arguments);
-        DataManager.loadMapData(paramParallaxSettingMapId);
+        this._parallaxMapGenerator = this.parallaxMapLoadGenerator();
+        $dataMap = {};
     };
 
     var _Scene_Boot_isReady      = Scene_Boot.prototype.isReady;
     Scene_Boot.prototype.isReady = function() {
-        if (!this._parallaxMapLoaded && DataManager.isMapLoaded()) {
-            this.onParallaxMapLoaded();
-            this._parallaxMapLoaded = true;
-        }
-        return this._parallaxMapLoaded && _Scene_Boot_isReady.apply(this, arguments);
+        var isReady = _Scene_Boot_isReady.apply(this, arguments);
+        return this._parallaxMapGenerator.next().done && isReady;
     };
 
-    Scene_Boot.prototype.onParallaxMapLoaded = function() {
+    Scene_Boot.prototype.parallaxMapLoadGenerator = function*() {
+        while (!DataManager.isMapLoaded()) {
+            yield false;
+        }
+        DataManager.loadMapData(paramParallaxSettingMapId);
+        while (!DataManager.isMapLoaded()) {
+            yield false;
+        }
         $dataTitleMap = $dataMap;
-        $dataMap      = null;
+        $dataMap = {};
+        return true;
     };
 
     //=============================================================================
