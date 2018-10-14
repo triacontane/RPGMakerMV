@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.1 2018/10/14 実時間表示に切り替えてから内部時間に反映されるまでにラグがある問題の修正
 // 1.11.0 2018/10/14 カレンダーの枠を非表示にできる機能を追加
 // 1.10.3 2018/10/08 プラグインコマンドで天候変化を無効にした場合でも、内部で制御している天候による色調の調整が反映されてしまう問題を修正
 // 1.10.2 2018/04/11 時間表示方法(実時間、ゲーム時間)を切り替えた直後に、時間変数の値が更新されない問題を修正
@@ -1006,9 +1007,15 @@ function Window_Chronus() {
         if (this.isTimeStop()) return;
         this._frameCount++;
         if (this._frameCount >= paramAutoAddInterval) {
-            if (this.isRealTime()) this._nowDate.setTime(Date.now());
+            if (this.isRealTime()) {
+                this.updateRealTime();
+            }
             this.addTime();
         }
+    };
+
+    Game_Chronus.prototype.updateRealTime = function() {
+        this._nowDate.setTime(Date.now());
     };
 
     Game_Chronus.prototype.updateTimer = function() {
@@ -1220,6 +1227,7 @@ function Window_Chronus() {
 
     Game_Chronus.prototype.setTimeReal = function() {
         this._realTime = true;
+        this.updateRealTime();
         this.setGameVariable();
     };
 
