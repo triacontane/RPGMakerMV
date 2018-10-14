@@ -1,11 +1,12 @@
 //=============================================================================
 // FavouriteEquips.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2018/10/14 セーブ＆ロードを挟むとお気に入り装備が復元されない問題を修正
 // 1.0.0 2017/10/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -96,7 +97,7 @@
     var convertAllArguments = function(args) {
         return args.map(function(arg) {
             return convertEscapeCharacters(arg);
-        })
+        });
     };
 
     var setPluginCommand = function(commandName, methodName) {
@@ -169,6 +170,11 @@
         favouriteEquips.forEach(function(equipItem, slotId) {
             if (!equipItem) {
                 return;
+            }
+            if (equipItem.wtypeId !== undefined) {
+                equipItem = $dataWeapons[equipItem.id];
+            } else {
+                equipItem = $dataArmors[equipItem.id];
             }
             this.changeEquip(slotId, equipItem);
         }, this);
