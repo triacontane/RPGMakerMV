@@ -1,11 +1,12 @@
 //=============================================================================
 // TemplateEvent.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2018/10/14 ParallaxTitle.jsとの競合を解消
 // 1.8.0 2018/05/27 セルフ変数のキーに数値ではなく文字列を使用できるよう修正
 // 1.7.1 2017/09/01 スクリプトヘルプの誤記を修正
 // 1.7.0 2017/08/29 プラグインコマンドで制御文字\sv[n]が利用できる機能を追加
@@ -212,7 +213,7 @@
  *  イベントIDに数値以外を指定すると、イベント名として扱われ
  *  イベント名が一致するイベントの処理を呼び出します。
  *  テンプレートイベントに記述した場合以外でも有効です。
- *  
+ *
  *  例1:ID[5]のイベントの1ページ目を呼び出します。
  *  TEマップイベント呼び出し 5 1
  *
@@ -764,21 +765,27 @@ var $dataTemplateEvents = null;
     var _Scene_Boot_create      = Scene_Boot.prototype.create;
     Scene_Boot.prototype.create = function() {
         _Scene_Boot_create.apply(this, arguments);
-        DataManager.loadMapData(paramTemplateMapId);
+        this._templateMapGenerator = this.templateMapLoadGenerator();
+        $dataMap = {};
     };
 
     var _Scene_Boot_isReady      = Scene_Boot.prototype.isReady;
     Scene_Boot.prototype.isReady = function() {
-        if (!this._mapLoaded && DataManager.isMapLoaded()) {
-            this.onTemplateMapLoaded();
-            this._mapLoaded = true;
-        }
-        return this._mapLoaded && _Scene_Boot_isReady.apply(this, arguments);
+        var isReady = _Scene_Boot_isReady.apply(this, arguments);
+        return this._templateMapGenerator.next().done && isReady;
     };
 
-    Scene_Boot.prototype.onTemplateMapLoaded = function() {
+    Scene_Boot.prototype.templateMapLoadGenerator = function*() {
+        while (!DataManager.isMapLoaded()) {
+            yield false;
+        }
+        DataManager.loadMapData(paramTemplateMapId);
+        while (!DataManager.isMapLoaded()) {
+            yield false;
+        }
         $dataTemplateEvents = $dataMap.events;
-        $dataMap            = undefined;
+        $dataMap = {};
+        return true;
     };
 })();
 
