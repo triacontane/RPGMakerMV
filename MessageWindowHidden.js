@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2018/10/10 戦闘中にプラグインを無効化できる機能を追加。
 // 2.0.0 2018/03/31 消去するトリガーを複数指定できる機能を追加。パラメータの指定方法を見直し。
 // 1.4.0 2018/03/10 指定したスイッチがONの間はウィンドウ消去を無効化できる機能を追加
 // 1.3.2 2017/08/02 ponidog_BackLog_utf8.jsとの競合を解消
@@ -52,6 +53,11 @@
  * @default 0
  * @type switch
  *
+ * @param disableInBattle
+ * @desc trueのとき、戦闘中にプラグインの機能を無効にします。
+ * @default false
+ * @type boolean
+ *
  * @help Erase message window (and restore) when triggered
  *
  * This plugin is released under the MIT License.
@@ -84,6 +90,12 @@
  * @desc 指定した番号のスイッチがONのとき、プラグインの機能が無効になります。
  * @default 0
  * @type switch
+ *
+ * @param disableInBattle
+ * @text 戦闘中無効化
+ * @desc trueのとき、戦闘中にプラグインの機能を無効にします。
+ * @default false
+ * @type boolean
  *
  * @help メッセージウィンドウを表示中に指定したボタンを押下することで
  * メッセージウィンドウを消去します。もう一度押すと戻ります。
@@ -220,8 +232,13 @@
         }, this).length > 0;
     };
 
+    Window_Message.prototype.disableWindowHidden = function () {
+        return (param.disableSwitchId > 0 && $gameSwitches.value(param.disableSwitchId)) ||
+            (param.disableInBattle && $gameParty.inBattle());
+    };
+
     Window_Message.prototype.isTriggeredHidden = function() {
-        if (param.disableSwitchId > 0 && $gameSwitches.value(param.disableSwitchId)) {
+        if (this.disableWindowHidden()) {
             return false;
         }
         return param.triggerButton.some(function(button) {
