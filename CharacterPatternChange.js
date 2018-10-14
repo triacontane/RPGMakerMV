@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2018/10/14 アニメーションパターンの変更有無をスイッチで切り替える機能を追加
  1.0.0 2018/10/14 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -31,6 +32,21 @@
  * @desc フォロワーのアニメーションパターンを「1 - 2 - 3」に変更します。
  * @default true
  * @type boolean
+ *
+ * @param validSwitchPlayer
+ * @desc プレイヤーのパターンが変更されるためのスイッチIDです。0にすると常に有効となります。
+ * @default 0
+ * @type switch
+ *
+ * @param validSwitchEvent
+ * @desc イベントのパターンが変更されるためのスイッチIDです。0にすると常に有効となります。
+ * @default 0
+ * @type switch
+ *
+ * @param validSwitchFollower
+ * @desc フォロワーのパターンが変更されるためのスイッチIDです。0にすると常に有効となります。
+ * @default 0
+ * @type switch
  *
  * @help CharacterPatternChange.js
  *
@@ -64,6 +80,24 @@
  * @desc フォロワーのアニメーションパターンを「1 - 2 - 3」に変更します。
  * @default true
  * @type boolean
+ *
+ * @param validSwitchPlayer
+ * @text プレイヤー有効スイッチ
+ * @desc プレイヤーのパターンが変更されるためのスイッチIDです。0にすると常に有効となります。
+ * @default 0
+ * @type switch
+ *
+ * @param validSwitchEvent
+ * @text イベント有効スイッチ
+ * @desc イベントのパターンが変更されるためのスイッチIDです。0にすると常に有効となります。
+ * @default 0
+ * @type switch
+ *
+ * @param validSwitchFollower
+ * @text フォロワー有効スイッチ
+ * @desc フォロワーのパターンが変更されるためのスイッチIDです。0にすると常に有効となります。
+ * @default 0
+ * @type switch
  *
  * @help CharacterPatternChange.js
  *
@@ -109,20 +143,62 @@
 
     var param = createPluginParameter('CharacterPatternChange');
 
+    /**
+     * Game_CharacterBase
+     */
     Game_CharacterBase._simplePattern = 3;
-
-    var _Game_Player_maxPattern = Game_Player.prototype.maxPattern;
-    Game_Player.prototype.maxPattern = function() {
-        return param.player ? Game_CharacterBase._simplePattern : _Game_Player_maxPattern.apply(this, arguments);
+    var _Game_CharacterBase_maxPattern = Game_CharacterBase.prototype.maxPattern;
+    Game_CharacterBase.prototype.maxPattern = function() {
+        return this.isValidChangePattern() ? Game_CharacterBase._simplePattern : _Game_CharacterBase_maxPattern.apply(this, arguments);
     };
 
-    var _Game_Follower_maxPattern = Game_Follower.prototype.maxPattern;
-    Game_Follower.prototype.maxPattern = function() {
-        return param.follower ? Game_CharacterBase._simplePattern : _Game_Follower_maxPattern.apply(this, arguments);
+    Game_CharacterBase.prototype.isValidChangePattern = function() {
+        return this.isValidChangePatternParam() && this.isValidChangePatternSwitch();
     };
 
-    var _Game_Event_maxPattern = Game_Event.prototype.maxPattern;
-    Game_Event.prototype.maxPattern = function() {
-        return param.event ? Game_CharacterBase._simplePattern : _Game_Event_maxPattern.apply(this, arguments);
+    Game_CharacterBase.prototype.isValidChangePatternParam = function() {
+        return false;
+    };
+
+    Game_CharacterBase.prototype.isValidChangePatternSwitch = function() {
+        var id = this.getValidChangeSwitchId();
+        return id === 0 || $gameSwitches.value(id);
+    };
+
+    Game_CharacterBase.prototype.getValidChangeSwitchId = function() {
+        return 0;
+    };
+
+    /**
+     * Game_Player
+     */
+    Game_Player.prototype.isValidChangePatternParam = function() {
+        return param.player;
+    };
+
+    Game_Player.prototype.getValidChangeSwitchId = function() {
+        return param.validSwitchPlayer;
+    };
+
+    /**
+     * Game_Follower
+     */
+    Game_Follower.prototype.isValidChangePatternParam = function() {
+        return param.follower;
+    };
+
+    Game_Follower.prototype.getValidChangeSwitchId = function() {
+        return param.validSwitchFollower;
+    };
+
+    /**
+     * Game_Event
+     */
+    Game_Event.prototype.isValidChangePatternParam = function() {
+        return param.event;
+    };
+
+    Game_Event.prototype.getValidChangeSwitchId = function() {
+        return param.validSwitchEvent;
     };
 })();
