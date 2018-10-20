@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.1 2018/10/20 プラグイン等でGame_Variables.prototype.setValueを呼んだとき、変数の添え字に文字列型の数値を渡した場合も変数のリアルタイム表示が効くよう修正
 // 1.11.0 2018/10/13 公式プラグイン「TextDecoration.js」の設定を動的文字列に適用できる機能を追加
 // 1.10.1 2018/05/30 アウトラインカラー取得で0およびその他の文字列を指定したときに正しく色が設定されない問題を修正(by奏ねこまさん)
 // 1.10.0 2017/02/12 アウトラインカラーをウィンドウカラー番号から指定できる機能を追加
@@ -274,6 +275,7 @@
     //=============================================================================
     var _Game_Variables_setValue      = Game_Variables.prototype.setValue;
     Game_Variables.prototype.setValue = function(variableId, value) {
+        variableId = parseInt(variableId);
         if (this.value(variableId) !== value) {
             this._changedVariables = this.getChangedVariables();
             if (!this._changedVariables.contains(variableId)) {
