@@ -1,11 +1,13 @@
 //=============================================================================
 // TemplateEvent.js
 // ----------------------------------------------------------------------------
-// (C) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2018/10/21 イベント設定の項目ごとにテンプレートイベントの設定を固有イベントで上書きできるよう修正
+//                  それに伴い、上書きに関する既存設定を見直しました。
 // 1.8.3 2018/10/16 1.8.2の競合対策によって、別のプラグインと競合が発生する可能性がある記述を修正
 // 1.8.2 2018/10/14 OnlineAvatar.jsとの併用時、起動時にエラーになる問題を解消
 // 1.8.1 2018/10/14 ParallaxTitle.jsとの競合を解消
@@ -46,8 +48,13 @@
  * @default false
  * @type boolean
  *
- * @param NoOverride
- * @desc Even if a graphic is specified for a specific event, it will not overwrite the setting.
+ * @param OverrideTarget
+ * @desc メモ欄で上書き(テンプレートイベントより固有イベントの設定を優先)指定したイベントの上書き対象項目を設定します。
+ * @default
+ * @type struct<override>
+ *
+ * @param AutoOverride
+ * @desc メモ欄で上書き設定をしなくても「上書き対象項目」の設定を上書きします。
  * @default false
  * @type boolean
  *
@@ -119,18 +126,27 @@
  * @plugindesc テンプレートイベントプラグイン
  * @author トリアコンタン
  *
- * @param テンプレートマップID
+ * @param TemplateMapId
+ * @text テンプレートマップID
  * @desc テンプレートイベントが存在するマップIDです。
  * @default 1
  * @type number
  *
- * @param イベントIDを維持
+ * @param KeepEventId
+ * @text イベントIDを維持
  * @desc マップイベントを呼び出す際に、呼び出し元のイベントIDを維持します。対象を「このイベント」にした際の挙動が変わります。
  * @default false
  * @type boolean
  *
- * @param 上書き禁止
- * @desc 固有イベントにグラフィックが指定されていた場合でも、設定の上書きを行いません。
+ * @param OverrideTarget
+ * @text 上書き対象項目
+ * @desc メモ欄で上書き(テンプレートイベントより固有イベントの設定を優先)指定したイベントの上書き対象項目を設定します。
+ * @default
+ * @type struct<override>
+ *
+ * @param AutoOverride
+ * @text 自動上書き
+ * @desc メモ欄で上書き設定をしなくても「上書き対象項目」の設定を上書きします。
  * @default false
  * @type boolean
  *
@@ -159,8 +175,8 @@
  * <TE:\v[1]> テンプレートマップのID[変数[1]の値]のイベントに置き換わります。
  *
  * 原則、初期配置以外の全設定はテンプレートイベントの設定に置き換わりますが
- * 例外としてグラフィックを指定していた場合とメモ欄(※1)を記述した場合は
- * 以下の設定について固有イベントの設定を優先します。
+ * 例外としてメモ欄(※1)を記述した場合は
+ * 以下の任意の設定について固有イベントの設定で上書きします。
  * ・画像
  * ・自律移動
  * ・オプション
@@ -283,33 +299,50 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~override:
+ *
+ * @param Image
+ * @text 画像
+ * @desc イベントの画像および画像インデックスです。
+ * @type boolean
+ * @default false
+ *
+ * @param Direction
+ * @text 向き
+ * @desc イベントの向き及びアニメパターンです。
+ * @type boolean
+ * @default false
+ *
+ * @param Move
+ * @text 自律移動
+ * @desc イベントの自律移動です。
+ * @type boolean
+ * @default false
+ *
+ * @param Priority
+ * @text プライオリティ
+ * @desc イベントのプライオリティです。
+ * @type boolean
+ * @default false
+ *
+ * @param Trigger
+ * @text トリガー
+ * @desc イベントのトリガーです。
+ * @type boolean
+ * @default false
+ *
+ * @param Option
+ * @text オプション
+ * @desc イベントのオプションです。
+ * @type boolean
+ * @default false
+ */
+
 var $dataTemplateEvents = null;
 
 (function() {
     'use strict';
-    var pluginName    = 'TemplateEvent';
     var metaTagPrefix = 'TE';
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
 
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
@@ -385,9 +418,30 @@ var $dataTemplateEvents = null;
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramTemplateMapId = getParamNumber(['TemplateMapId', 'テンプレートマップID'], 1);
-    var paramKeepEventId   = getParamBoolean(['KeepEventId', 'イベントIDを維持']);
-    var paramNoOverride    = getParamBoolean(['NoOverride', '上書き禁止']);
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+    var param = createPluginParameter('TemplateEvent');
 
     //=============================================================================
     // Game_Interpreter
@@ -459,14 +513,14 @@ var $dataTemplateEvents = null;
     Game_Interpreter.prototype.callMapEventById = function(pageIndex, eventId) {
         var event = $gameMap.event(eventId);
         if (event) {
-            this.setupAnotherList(paramKeepEventId ? null : eventId, event.getPages(), pageIndex);
+            this.setupAnotherList(param.KeepEventId ? null : eventId, event.getPages(), pageIndex);
         }
     };
 
     Game_Interpreter.prototype.callMapEventByName = function(pageIndex, eventName) {
         var event = DataManager.searchDataItem($dataMap.events, 'name', eventName);
         if (event) {
-            this.setupAnotherList(paramKeepEventId ? null : event.id, event.pages, pageIndex);
+            this.setupAnotherList(param.KeepEventId ? null : event.id, event.pages, pageIndex);
         }
     };
 
@@ -595,22 +649,61 @@ var $dataTemplateEvents = null;
 
     var _Game_Event_setupPageSettings      = Game_Event.prototype.setupPageSettings;
     Game_Event.prototype.setupPageSettings = function() {
-        if (this.hasTemplate() && this.isOverrideProperty()) {
-            this._needOriginalPage = true;
-        }
         _Game_Event_setupPageSettings.apply(this, arguments);
-        this._needOriginalPage = false;
+        if (this.hasTemplate() && param.OverrideTarget && this._override) {
+            this.overridePageSettings();
+        }
     };
 
-    var _Game_Event_page      = Game_Event.prototype.page;
-    Game_Event.prototype.page = function() {
-        return this._needOriginalPage ? this.getOriginalPage() : _Game_Event_page.apply(this, arguments);
-    };
-
-    Game_Event.prototype.isOverrideProperty = function() {
+    Game_Event.prototype.overridePageSettings = function() {
         var page = this.getOriginalPage();
-        if (!page) return false;
-        return (!paramNoOverride && (page.image.tileId > 0 || page.image.characterName)) || this._override;
+        if (!page) {
+            return;
+        }
+        var image = page.image;
+        var target = param.OverrideTarget;
+        if (target.Image) {
+            if (image.tileId > 0) {
+                this.setTileImage(image.tileId);
+            } else {
+                this.setImage(image.characterName, image.characterIndex);
+            }
+        }
+        if (target.Direction) {
+            if (this._originalDirection !== image.direction) {
+                this._originalDirection = image.direction;
+                this._prelockDirection = 0;
+                this.setDirectionFix(false);
+                this.setDirection(image.direction);
+            }
+            if (this._originalPattern !== image.pattern) {
+                this._originalPattern = image.pattern;
+                this.setPattern(image.pattern);
+            }
+        }
+        if (target.Move) {
+            this.setMoveSpeed(page.moveSpeed);
+            this.setMoveFrequency(page.moveFrequency);
+            this.setMoveRoute(page.moveRoute);
+            this._moveType = page.moveType;
+        }
+        if (target.Priority) {
+            this.setPriorityType(page.priorityType);
+        }
+        if (target.Option) {
+            this.setWalkAnime(page.walkAnime);
+            this.setStepAnime(page.stepAnime);
+            this.setDirectionFix(page.directionFix);
+            this.setThrough(page.through);
+        }
+        if (target.Trigger) {
+            this._trigger = page.trigger;
+            if (this._trigger === 4) {
+                this._interpreter = new Game_Interpreter();
+            } else {
+                this._interpreter = null;
+            }
+        }
     };
 
     Game_Event.prototype.setTemplate = function(event) {
@@ -622,7 +715,7 @@ var $dataTemplateEvents = null;
                 if (template) templateId = template.id;
             }
             this._templateId = templateId;
-            this._override   = !!getMetaValues(event, ['OverRide', '上書き']);
+            this._override   = param.AutoOverride || !!getMetaValues(event, ['OverRide', '上書き']);
         } else {
             this._templateId = 0;
             this._override   = false;
@@ -785,7 +878,7 @@ var $dataTemplateEvents = null;
         if (!$gamePlayer) {
             $gamePlayer = {isTransferring:function() {}};
         }
-        DataManager.loadMapData(paramTemplateMapId);
+        DataManager.loadMapData(param.TemplateMapId);
         $gamePlayer = null;
         while (!DataManager.isMapLoaded()) {
             yield false;
