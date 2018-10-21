@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2018/10/21 前衛・後衛の仕様を味方側もしくは敵側のみに適用できる機能を追加
 // 1.5.4 2018/05/27 前衛のみ、後衛のみのスキルについて効果範囲を単体にすると対象外のバトラーを選択できてしまう制約事項を明記
 // 1.5.3 2018/04/10 前衛に詰める機能有効時、控えのメンバーがいるときに戦闘メンバーを全員後衛にできてしまう問題を修正
 // 1.5.2 2018/01/07 FTKR_CSS_MenuStatus.jsとの競合を解消
@@ -86,6 +87,16 @@
  * @param ShiftVanguard
  * @desc At the time the wiped out, the guards will be forcibly moved to vanguard.
  * @default false
+ * @type boolean
+ *
+ * @param ValidActor
+ * @desc 前衛・後衛の仕様をアクター側に適用します。
+ * @default true
+ * @type boolean
+ *
+ * @param ValidEnemy
+ * @desc 前衛・後衛の仕様を敵キャラ側に適用します。
+ * @default true
  * @type boolean
  *
  * @help We add the concept of "vanguard" "rearguard" to battle.
@@ -198,6 +209,16 @@
  * @param 前衛に詰める
  * @desc 前衛が全滅した時点で後衛が強制的に前衛に移動します。また、前衛がいない状態では後衛に移動できなくなります。
  * @default false
+ * @type boolean
+ *
+ * @param アクターに適用
+ * @desc 前衛・後衛の仕様をアクター側に適用します。
+ * @default true
+ * @type boolean
+ *
+ * @param 敵キャラに適用
+ * @desc 前衛・後衛の仕様を敵キャラ側に適用します。
+ * @default true
  * @type boolean
  *
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
@@ -338,6 +359,8 @@
     var paramHiddenIcon       = getParamBoolean(['HiddenIcon', 'アイコン非表示']);
     var paramFaceShift        = getParamBoolean(['FaceShift', 'フェイスシフト']);
     var paramShiftVanguard    = getParamBoolean(['ShiftVanguard', '前衛に詰める']);
+    var paramValidEnemy       = getParamBoolean(['ValidEnemy', '敵キャラに適用']);
+    var paramValidActor       = getParamBoolean(['ValidActor', 'アクターに適用']);
 
     //=============================================================================
     // Game_Interpreter
@@ -379,7 +402,7 @@
         this.setFormationState(prevVanguard);
     };
 
-    var _Game_BattlerBase_addNewState = Game_BattlerBase.prototype.addNewState;
+    var _Game_BattlerBase_addNewState      = Game_BattlerBase.prototype.addNewState;
     Game_BattlerBase.prototype.addNewState = function(stateId) {
         _Game_BattlerBase_addNewState.apply(this, arguments);
         if (stateId === this.deathStateId()) {
@@ -387,13 +410,16 @@
         }
     };
 
-    var _Game_BattlerBase_hide = Game_BattlerBase.prototype.hide;
+    var _Game_BattlerBase_hide      = Game_BattlerBase.prototype.hide;
     Game_BattlerBase.prototype.hide = function() {
         _Game_BattlerBase_hide.apply(this, arguments);
         this.friendsUnit().shiftVanguard();
     };
 
     Game_BattlerBase.prototype.setFormationState = function(vanguardFlg) {
+        if (!this.isValidFormationState()) {
+            return;
+        }
         if (this.friendsUnit().isNeedShiftVanguard(this)) {
             vanguardFlg = true;
         }
@@ -413,6 +439,10 @@
             return true;
         }
         return false;
+    };
+
+    Game_BattlerBase.prototype.isValidFormationState = function() {
+        return true;
     };
 
     Game_BattlerBase.prototype.isVanguard = function() {
@@ -507,6 +537,10 @@
         }
     };
 
+    Game_Actor.prototype.isValidFormationState = function() {
+        return paramValidActor;
+    };
+
     //=============================================================================
     // Game_Enemy
     //  前衛・後衛ステートの初期値を設定します。
@@ -537,6 +571,10 @@
             }
             return true;
         });
+    };
+
+    Game_Enemy.prototype.isValidFormationState = function() {
+        return paramValidEnemy;
     };
 
     //=============================================================================
@@ -585,9 +623,9 @@
     };
 
     Game_Unit.prototype.isNeedShiftVanguard = function(exceptionBattler) {
-        var inBattle = this._inBattle;
+        var inBattle   = this._inBattle;
         this._inBattle = true;
-        var result = paramShiftVanguard && !this.isAliveVanguardMember(exceptionBattler);
+        var result     = paramShiftVanguard && !this.isAliveVanguardMember(exceptionBattler);
         this._inBattle = inBattle;
         return result;
     };
@@ -610,7 +648,7 @@
     // Game_Troop
     //  敵キャラの前衛・後衛状態を初期設定します。
     //=============================================================================
-    var _Game_Troop_setup = Game_Troop.prototype.setup;
+    var _Game_Troop_setup      = Game_Troop.prototype.setup;
     Game_Troop.prototype.setup = function(troopId) {
         _Game_Troop_setup.apply(this, arguments);
         this.members().forEach(function(enemy) {
@@ -706,13 +744,13 @@
         Window_Base.prototype.drawActorFace.apply(this, arguments);
     };
 
-    Window_MenuStatus.prototype.drawActorSimpleStatus = function(actor, x, y, width) {
-        if (actor.isRearguard()) {
-            arguments[1] += Window_MenuStatus.shiftWidth;
-            arguments[3] -= Window_MenuStatus.shiftWidth;
-        }
-        Window_Base.prototype.drawActorSimpleStatus.apply(this, arguments);
-    };
+//    Window_MenuStatus.prototype.drawActorSimpleStatus = function(actor, x, y, width) {
+//        if (actor.isRearguard()) {
+//            arguments[1] += Window_MenuStatus.shiftWidth;
+//            arguments[3] -= Window_MenuStatus.shiftWidth;
+//        }
+//        Window_Base.prototype.drawActorSimpleStatus.apply(this, arguments);
+//    };
 
     var _Window_MenuStatus_drawCssActorStatus = Window_MenuStatus.prototype.drawCssActorStatus;
     if (_Window_MenuStatus_drawCssActorStatus) {
@@ -720,7 +758,7 @@
             var spaceArray = FTKR.CSS.MS.simpleStatus.space.split(',').num();
             if (!this._shiftWidth) {
                 this._defaultSpace = spaceArray[1];
-                this._shiftWidth = Math.min(this._defaultSpace, Window_MenuStatus.shiftWidth);
+                this._shiftWidth   = Math.min(this._defaultSpace, Window_MenuStatus.shiftWidth);
             }
             if (actor.isRearguard()) {
                 arguments[2] += this._shiftWidth;
