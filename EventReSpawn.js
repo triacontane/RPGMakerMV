@@ -1,11 +1,12 @@
 //=============================================================================
 // EventReSpawn.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.3 2018/10/25 YEP_EventMiniLabel.jsと併用した際、動的生成イベントを「イベント消去」するとエラーになる競合を修正
 // 1.8.2 2018/05/17 ランダム生成の試行回数をパラメータから設定できるように仕様変更
 // 1.8.1 2018/03/12 ランダム生成で対象座標が見付からず失敗した場合、エラーではなく警告になるよう仕様変更
 // 1.8.0 2018/02/07 場所移動時にセルフスイッチがクリアされなくなる機能を追加
@@ -124,6 +125,8 @@
  *
  * 「TemplateEvent.js」取得元
  * https://github.com/triacontane/RPGMakerMV
+ *
+ * YEP_EventMiniLabel.jsと併用する場合、当プラグインを下に配置してください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -660,5 +663,15 @@ function Game_PrefabEvent() {
         _DataManager_onLoad.apply(this, arguments);
         if (object === $dataMap && $gameMap) $gameMap.restoreLinkPrefabEvents();
     };
+
+    if (typeof Window_EventMiniLabel !== 'undefined') {
+        var _Window_EventMiniLabel_gatherDisplayData = Window_EventMiniLabel.prototype.gatherDisplayData
+        Window_EventMiniLabel.prototype.gatherDisplayData = function() {
+            if (!this._character.event()) {
+                return;
+            }
+            _Window_EventMiniLabel_gatherDisplayData.apply(this, arguments);
+        };
+    }
 })();
 
