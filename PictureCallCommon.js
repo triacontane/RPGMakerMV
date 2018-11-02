@@ -1,11 +1,12 @@
 ﻿//=============================================================================
 // PictureCallCommon.js
 // ----------------------------------------------------------------------------
-// (C)2015-2017 Triacontane
+// (C)2015 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.0 2018/11/02 すべてのピクチャタッチを無効にできるスイッチを追加
 // 1.11.0 2018/08/10 なでなで機能に透過設定が正しく適用されない問題を修正
 //                   なでなで機能にもプラグインコマンドから透過設定を変更できる機能を追加
 // 1.10.8 2018/06/16 Boolean型のパラメータが一部正常に取得できていなかった問題を修正
@@ -88,6 +89,11 @@
  * @desc 戦闘中にピクチャをクリックしたとき、常にコモンイベントを実行します。(ON/OFF)
  * @default false
  * @type boolean
+ *
+ * @param 無効スイッチ
+ * @desc 指定した番号のスイッチがONになっている場合、すべてのピクチャタッチが無効になります。
+ * @default 0
+ * @type switch
  *
  * @help ピクチャをクリックすると、指定したコモンイベントが
  * 呼び出される、もしくは任意のスイッチをONにするプラグインコマンドを提供します。
@@ -236,6 +242,11 @@
  * @default false
  * @type boolean
  *
+ * @param InvalidSwitchId
+ * @desc 指定した番号のスイッチがONになっている場合、すべてのピクチャタッチが無効になります。
+ * @default 0
+ * @type switch
+ *
  * @help When clicked picture, call common event.
  *
  * Plugin Command
@@ -328,6 +339,7 @@
     var paramTransparentConsideration = getParamBoolean(['TransparentConsideration', '透明色を考慮']);
     var paramSuppressTouch            = getParamBoolean(['SuppressTouch', 'タッチ操作抑制']);
     var paramAlwaysCommonInBattle     = getParamBoolean(['AlwaysCommonInBattle', '戦闘中常にコモン実行']);
+    var paramInvalidSwitchId          = getParamNumber(['InvalidSwitchId', '無効スイッチ'], 0);
 
     //=============================================================================
     // Game_Interpreter
@@ -625,6 +637,9 @@
     //  ピクチャに対する繰り返し処理を追加定義します。
     //=============================================================================
     Scene_Base.prototype.updateTouchPictures = function() {
+        if (paramInvalidSwitchId && $gameSwitches.value(paramInvalidSwitchId)) {
+            return;
+        }
         this._spriteset.iteratePictures(function(picture) {
             if (typeof picture.callTouch === 'function') picture.callTouch();
             return $gameTemp.pictureCommonId() === 0;
