@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.3 2018/11/04 GraphicalDesignMode.jsとの間で競合が発生する場合がある問題を修正
 // 1.7.2 2018/09/17 TMSoloMenu.jsと両立できるよう修正（TMSoloMenu.js側の修正も必須）
 // 1.7.1 2017/02/02 特定条件下で戦闘画面にもバストアップが表示されていた問題を修正
 // 1.7.0 2017/09/25 ベース画像と追加画像に原点を変更できる機能を追加
@@ -637,6 +638,9 @@
     //  バスト画像表示用スプライトを追加定義します。
     //=============================================================================
     Window_EquipItem.prototype.refresh = function() {
+        if (!this._actor) {
+            return;
+        }
         Window_ItemList.prototype.refresh.apply(this, arguments);
         this.refreshBust();
     };
