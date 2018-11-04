@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.2 2018/11/04 1.11.8の修正後、一部環境でゲーム画面のFPS低下が起きていた現象を修正
 // 1.12.1 2018/10/13 すり抜けが設定が無効なイベントのページが切り替わったとき、すり抜け設定が有効になってしまう場合がある不具合を修正
 // 1.12.0 2018/08/24 移動不可の地形およびリージョンを複数指定できる機能を追加
 // 1.11.11 2018/08/23 1.11.10の修正で横一列の通路上で上に半歩上に移動できない不具合を修正
@@ -735,6 +736,7 @@
         this._eventWidth      = null;
         this._eventHeight     = null;
         this._customExpansion = false;
+        this._frontDirection  = 0;
     };
 
     Game_Player.prototype.initMembersForHalfMoveIfNeed = function() {
