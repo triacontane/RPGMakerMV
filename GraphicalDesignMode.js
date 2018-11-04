@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.1 2018/11/06 BattleFormation.jsとの競合を解消
 // 2.10.0 2018/08/18 メッセージウィンドウおよびサブウィンドウを本プラグインから触れないようにする設定を追加
 // 2.9.1 2018/07/10 コアスクリプト1.6.1以降で装備スロットウィンドウを動かした状態で装備画面を起動するとエラーになる問題を修正
 // 2.9.0 2018/06/27 ウィンドウが閉じている最中にGDM_LOCK_MESSAGE_WINDOWが実行されたとき、閉じ終わるまで実行を待機するよう修正
@@ -1558,7 +1559,8 @@ var $dataContainerProperties = null;
     var _Window_Selectable_initialize      = Window_Selectable.prototype.initialize;
     Window_Selectable.prototype.initialize = function(x, y, width, height) {
         _Window_Selectable_initialize.apply(this, arguments);
-        this._customLineNumber = this.maxRows();
+        // Resolve conflict for BattleFormation.js
+        this._customLineNumber = this.maxRows ? this.maxRows() : 0;
     };
 
     var _Window_Base_standardFontFace      = Window_Base.prototype.standardFontFace;
