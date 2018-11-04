@@ -1,11 +1,12 @@
 //=============================================================================
 // NearEventSensor.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2018/11/05 マップ移動時にすでに検知範囲内に入っていたイベントについて、一度範囲外に出ないと反応しない問題を修正
 // 2.1.0 2017/10/23 特定のスイッチもしくはセルフスイッチが有効なときのみ感知エフェクトを出す機能を追加
 //                  パラメータの型指定機能に対応
 // 2.0.0 2016/08/27 フラッシュの代わりにフキダシアイコンを利用できる機能を追加
@@ -14,7 +15,7 @@
 // 1.0.1 2015/11/01 既存コードの再定義方法を修正（内容に変化なし）
 // 1.0.0 2015/10/31 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -196,7 +197,7 @@
                 value = defaultValue;
             }
         } catch (e) {
-            alert(`!!!Plugin param is wrong.!!!\nPlugin:.js\nName:[]\nValue:`);
+            alert('!!!Plugin param is wrong.!!!\nPlugin:NearEventSensor.js');
             value = defaultValue;
         }
         return value;
@@ -300,6 +301,12 @@
     // Game_Event
     //  プレイヤーとの距離を測り、必要な場合にエフェクトさせる機能を追加定義します。
     //=============================================================================
+    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    Game_Event.prototype.initialize = function(mapId, eventId) {
+        _Game_Event_initialize.apply(this, arguments);
+        this._balloonInterval = 0;
+    };
+
     var _Game_EventUpdate       = Game_Event.prototype.update;
     Game_Event.prototype.update = function() {
         _Game_EventUpdate.apply(this, arguments);
