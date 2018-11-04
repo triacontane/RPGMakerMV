@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2018/11/05 フキダシの表示完了までウェイトするかどうかの設定を追加
 // 2.1.1 2018/11/05 マップ移動時にすでに検知範囲内に入っていたイベントについて、一度範囲外に出ないと反応しない問題を修正
 // 2.1.0 2017/10/23 特定のスイッチもしくはセルフスイッチが有効なときのみ感知エフェクトを出す機能を追加
 //                  パラメータの型指定機能に対応
@@ -91,6 +92,11 @@
  * @desc フキダシを表示する間隔のフレーム数です。
  * @default 15
  * @type number
+ *
+ * @param フキダシ完了までウェイト
+ * @desc 範囲内に居続けた場合の連続フキダシ表示で、フキダシの表示が終わるのを待ってから次のフキダシの表示します。
+ * @default true
+ * @type boolean
  *
  * @param 向きを考慮
  * @desc プレイヤーがイベントの方を向いている場合のみエフェクトを有効にします。(ON/OFF)
@@ -244,6 +250,7 @@
     var paramFlashDuration    = getParamNumber(['FlashDuration', 'フラッシュ時間'], 1);
     var paramBalloonInterval  = getParamNumber(['BalloonInterval', 'フキダシ間隔'], 0);
     var paramConsiderationDir = getParamBoolean(['ConsiderationDir', '向きを考慮']);
+    var paramWaitForBalloon   = getParamBoolean(['WaitForBalloon', 'フキダシ完了までウェイト']);
     if (paramFlashColor) {
         paramFlashColor = [paramFlashColor.Red, paramFlashColor.Green, paramFlashColor.Blue, paramFlashColor.Alpha];
     }
@@ -321,7 +328,7 @@
                 this.startFlash(paramFlashColor.clone(), paramFlashDuration);
             }
             var balloonId = this.getSensorBalloonId();
-            if (!this.isBalloonPlaying() && balloonId) {
+            if (balloonId && (!paramWaitForBalloon || !this.isBalloonPlaying())) {
                 if (this._balloonInterval <= 0) {
                     this.requestBalloon(balloonId);
                     this._balloonInterval = paramBalloonInterval;
