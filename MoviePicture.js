@@ -1,11 +1,12 @@
 //=============================================================================
 // MoviePicture.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.3 2018/11/08 再生開始直後に停止したとき、特定条件下で正常に停止しない問題を修正
 // 1.3.2 2018/06/17 ピクチャの消去によって動画再生を終了した場合に、再生速度と音量が初期化されない問題を修正
 // 1.3.1 2017/08/27 二連続で再生したときに動画の音量同期機能が正常に動作しない問題を修正
 // 1.3.0 2017/08/26 動画の音量をいずれかのオーディオ音量と同期させる機能を追加
@@ -533,6 +534,8 @@
         this.bitmap.destroy();
         this._volume = null;
         this._speed  = null;
+        this._pause = null;
+        this._playStart = false;
     };
 
     Sprite_Picture.prototype.isVideoPicture = function() {
