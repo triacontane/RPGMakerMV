@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2018/11/11 全イベントの不可視化を無効にできるスイッチの追加
  1.1.0 2018/11/11 最小不透明度を設定できる機能を追加
  1.0.0 2018/11/11 初版
 ----------------------------------------------------------------------------
@@ -34,6 +35,11 @@
  * @option B
  * @option C
  * @option D
+ *
+ * @param visibleSwitch
+ * @desc 指定したIDのスイッチがONのとき、全イベントの不可視化が無効になります。
+ * @default 0
+ * @type switch
  *
  * @param minimumOpacity
  * @desc どれだけ離れても最低限、以下の不透明度を保ちます。(0-255)
@@ -81,6 +87,12 @@
  * @option B
  * @option C
  * @option D
+ *
+ * @param visibleSwitch
+ * @text 可視化スイッチ
+ * @desc 指定したIDのスイッチがONのとき、全イベントの不可視化が無効になります。
+ * @default 0
+ * @type switch
  *
  * @param minimumOpacity
  * @text 最小不透明度
@@ -240,11 +252,16 @@
     };
 
     Game_Event.prototype.isPhantom = function() {
-        return this._visibleDistance > 0 && !(param.visibleSelfSwitch && this.isValidVisibleSelfSwitch());
+        return this._visibleDistance > 0 && !this.isValidVisibleSelfSwitch() && !this.isValidVisibleSwitch();
     };
 
-    Game_Event.prototype.isValidVisibleSelfSwitch = function(key) {
-        return $gameSelfSwitches.value([$gameMap.mapId(), this.eventId(), param.visibleSelfSwitch]);
+    Game_Event.prototype.isValidVisibleSelfSwitch = function() {
+        var key = [$gameMap.mapId(), this.eventId(), param.visibleSelfSwitch];
+        return param.visibleSelfSwitch && $gameSelfSwitches.value(key);
+    };
+
+    Game_Event.prototype.isValidVisibleSwitch = function() {
+        return param.visibleSwitch && $gameSwitches.value(param.visibleSwitch);
     };
 
     Game_Event.prototype.getPhantomOpacity = function() {
