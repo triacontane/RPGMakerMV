@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2018/11/11 一部、無駄な処理を行っていたのを修正
  1.2.0 2018/11/11 全イベントの不可視化を無効にできるスイッチの追加
  1.1.0 2018/11/11 最小不透明度を設定できる機能を追加
  1.0.0 2018/11/11 初版
@@ -230,7 +231,7 @@
     Game_CharacterBase.prototype.opacity = function() {
         var opacity = _Game_CharacterBase_opacity.apply(this, arguments);
         var phantomOpacity = this.getPhantomOpacity();
-        return phantomOpacity !== 1 ? Math.max(Math.floor(opacity * this.getPhantomOpacity()), param.minimumOpacity) : opacity;
+        return phantomOpacity !== 1 ? Math.max(Math.floor(opacity * phantomOpacity), param.minimumOpacity) : opacity;
     };
 
     Game_CharacterBase.prototype.getPhantomOpacity = function() {
