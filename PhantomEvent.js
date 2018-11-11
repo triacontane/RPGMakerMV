@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2018/11/11 最小不透明度を設定できる機能を追加
  1.0.0 2018/11/11 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -33,6 +34,13 @@
  * @option B
  * @option C
  * @option D
+ *
+ * @param minimumOpacity
+ * @desc どれだけ離れても最低限、以下の不透明度を保ちます。(0-255)
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 255
  *
  * @param commandPrefix
  * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
@@ -73,6 +81,14 @@
  * @option B
  * @option C
  * @option D
+ *
+ * @param minimumOpacity
+ * @text 最小不透明度
+ * @desc どれだけ離れても最低限、以下の不透明度を保ちます。(0-255)
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 255
  *
  * @param commandPrefix
  * @text メモ欄接頭辞
@@ -202,7 +218,7 @@
     Game_CharacterBase.prototype.opacity = function() {
         var opacity = _Game_CharacterBase_opacity.apply(this, arguments);
         var phantomOpacity = this.getPhantomOpacity();
-        return phantomOpacity !== 1 ? Math.floor(opacity * this.getPhantomOpacity()) : opacity;
+        return phantomOpacity !== 1 ? Math.max(Math.floor(opacity * this.getPhantomOpacity()), param.minimumOpacity) : opacity;
     };
 
     Game_CharacterBase.prototype.getPhantomOpacity = function() {
