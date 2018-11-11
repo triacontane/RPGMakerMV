@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.0 2018/11/11 ポップアップウィンドウの横幅と高さの最小値を変数から取得できる機能を追加
 // 2.10.2 2018/11/07 ポップアップ用のウィンドウスキン設定後、メニューを開くか場所移動すると設定が戻ってしまう問題を修正
 // 2.10.1 2018/06/15 ウィンドウ連携が有効かつ、フキダシウィンドウを1回も表示していない場合に選択肢ウィンドウが見えなくなる問題を修正
 // 2.10.0 2018/05/20 ポーズサインのテール化機能を使わない設定を追加しました。
@@ -154,6 +155,16 @@
  * @default false
  * @type boolean
  *
+ * @param MinWidthVariableId
+ * @desc 指定した番号の変数の値が、フキダシウィンドウの横幅の最小値（単位はピクセル数）となります。
+ * @default 0
+ * @type variable
+ *
+ * @param MinHeightVariableId
+ * @desc 指定した番号の変数の値が、フキダシウィンドウの高さの最小値（単位はピクセル数）となります。
+ * @default 0
+ * @type variable
+ *
  * @help Change the message window from fixed to popup
  *
  * Plugin Command
@@ -282,6 +293,16 @@
  * @desc ポーズサインのテール化機能を無効化します。デフォルトの位置に表示されます。
  * @default false
  * @type boolean
+ *
+ * @param 最小横幅取得変数ID
+ * @desc 指定した番号の変数の値が、フキダシウィンドウの横幅の最小値（単位はピクセル数）となります。
+ * @default 0
+ * @type variable
+ *
+ * @param 最小高さ取得変数ID
+ * @desc 指定した番号の変数の値が、フキダシウィンドウの高さの最小値（単位はピクセル数）となります。
+ * @default 0
+ * @type variable
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
@@ -498,20 +519,22 @@
     //=============================================================================
     // パラメータのバリデーション
     //=============================================================================
-    var paramThroughWindow  = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
-    var paramFaceScale      = getParamNumber(['FaceScale', 'フェイス倍率'], 1, 100);
-    var paramFontSize       = getParamNumber(['FontSize', 'フォントサイズ'], 1);
-    var paramPadding        = getParamNumber(['Padding', '余白'], 1);
-    var paramLinkage        = getParamBoolean(['WindowLinkage', 'ウィンドウ連携']);
-    var paramBetweenLines   = getParamNumber(['BetweenLines', '行間'], 0);
-    var paramAutoPopup      = getParamBoolean(['AutoPopup', '自動設定']);
-    var paramFontSizeRange  = getParamNumber(['FontSizeRange', 'フォントサイズ増減幅'], 0);
-    var paramFontUpperLimit = getParamNumber(['FontUpperLimit', 'フォントサイズ上限'], 0);
-    var paramFontLowerLimit = getParamNumber(['FontLowerLimit', 'フォントサイズ下限'], 0);
-    var paramInnerScreen    = getParamBoolean(['InnerScreen', '画面内に収める']);
-    var paramShakeSpeed     = getParamString(['ShakeSpeed', '振動の速さ']);
-    var paramShakeDuration  = getParamString(['ShakeDuration', '振動時間']);
-    var paramNoUseTail      = getParamBoolean(['NoUseTail', 'テールを使わない']);
+    var paramThroughWindow       = getParamBoolean(['ThroughWindow', 'ウィンドウ透過']);
+    var paramFaceScale           = getParamNumber(['FaceScale', 'フェイス倍率'], 1, 100);
+    var paramFontSize            = getParamNumber(['FontSize', 'フォントサイズ'], 1);
+    var paramPadding             = getParamNumber(['Padding', '余白'], 1);
+    var paramLinkage             = getParamBoolean(['WindowLinkage', 'ウィンドウ連携']);
+    var paramBetweenLines        = getParamNumber(['BetweenLines', '行間'], 0);
+    var paramAutoPopup           = getParamBoolean(['AutoPopup', '自動設定']);
+    var paramFontSizeRange       = getParamNumber(['FontSizeRange', 'フォントサイズ増減幅'], 0);
+    var paramFontUpperLimit      = getParamNumber(['FontUpperLimit', 'フォントサイズ上限'], 0);
+    var paramFontLowerLimit      = getParamNumber(['FontLowerLimit', 'フォントサイズ下限'], 0);
+    var paramInnerScreen         = getParamBoolean(['InnerScreen', '画面内に収める']);
+    var paramShakeSpeed          = getParamString(['ShakeSpeed', '振動の速さ']);
+    var paramShakeDuration       = getParamString(['ShakeDuration', '振動時間']);
+    var paramNoUseTail           = getParamBoolean(['NoUseTail', 'テールを使わない']);
+    var paramMinWidthVariableId  = getParamNumber(['MinWidthVariableId', '最小横幅取得変数ID']);
+    var paramMinHeightVariableId = getParamNumber(['MinHeightVariableId', '最小高さ取得変数ID']);
 
     //=============================================================================
     // Game_Interpreter
@@ -1222,10 +1245,19 @@
         if (paramNoUseTail) {
             height += 8;
         }
-        this.width  = width;
-        this.height = height;
+        this.width  = Math.max(width, this.getMinimumWidth());
+        this.height = Math.max(height, this.getMinimumHeight());
         this.resetFontSettings();
     };
+
+    Window_Message.prototype.getMinimumWidth = function() {
+        return $gameVariables.value(paramMinWidthVariableId);
+    };
+
+    Window_Message.prototype.getMinimumHeight = function() {
+        return $gameVariables.value(paramMinHeightVariableId);
+    };
+
 
     Window_Message.prototype.getSubWindowPosition = function() {
         var pos = new Point();
