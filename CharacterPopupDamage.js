@@ -1,11 +1,13 @@
 //=============================================================================
 // CharacterPopupDamage.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2018/11/11 プラグインの型指定機能に対応
+//                  ポップアップ効果音を消音できるスイッチを追加
 // 1.5.1 2017/11/10 コピペミスによる誤記を修正
 // 1.5.0 2017/04/23 ポップアップ時にキャラクターをフラッシュさせる機能を追加
 // 1.4.0 2017/03/03 ピクチャより前面にポップアップできる設定を追加
@@ -22,7 +24,7 @@
 // 1.0.1 2016/04/10 HPの増減との連動で増やすと減らすが逆に解釈されていたのを修正
 // 1.0.0 2016/04/09 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -33,7 +35,13 @@
  *
  * @param 効果音演奏
  * @desc 状況に応じたシステム効果音を自動演奏します。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
+ *
+ * @param 消音スイッチID
+ * @desc 指定したIDのスイッチがONになっているとき、システム効果音が自動演奏されなくなります。
+ * @default 0
+ * @type switch
  *
  * @param X座標補正
  * @desc ポップアップ位置のX座標を補正します。
@@ -45,23 +53,28 @@
  *
  * @param HP自動ポップアップ
  * @desc HPの増減を自動ポップアップの対象にします。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param MP自動ポップアップ
  * @desc MPの増減を自動ポップアップの対象にします。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param TP自動ポップアップ
  * @desc TPの増減を自動ポップアップの対象にします。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 増加自動ポップアップ
  * @desc パラメータの増加を自動ポップアップの対象にします。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 減少自動ポップアップ
  * @desc パラメータの減少を自動ポップアップの対象にします。(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param MPダメージ音
  * @desc MPダメージ時の効果音ファイル名を別途指定(audio/se)します。何も指定しないとHPと同じになります。
@@ -69,7 +82,8 @@
  *
  * @param 回転
  * @desc 数字の回転運動を有効にします。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param X方向半径
  * @desc 数字を回転させる場合のX方向の半径です。
@@ -93,7 +107,8 @@
  *
  * @param 最前面表示
  * @desc ポップアップをピクチャより前面に表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help マップ画面でイベントやプレイヤーに数字をポップアップさせる機能を提供します。
  * マップ上でのダメージや回復の演出に利用できます。演出は戦闘時のものと同一です。
@@ -191,7 +206,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamNumber = function(paramNames, min, max) {
@@ -239,22 +254,23 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramPlaySe          = getParamBoolean(['PlaySe', '効果音演奏']);
-    var paramOffsetX         = getParamNumber(['OffsetX', 'X座標補正']);
-    var paramOffsetY         = getParamNumber(['OffsetY', 'Y座標補正']);
-    var paramTpAutoPop       = getParamBoolean(['TPAutoPop', 'TP自動ポップアップ']);
-    var paramMpAutoPop       = getParamBoolean(['MPAutoPop', 'MP自動ポップアップ']);
-    var paramHpAutoPop       = getParamBoolean(['HPAutoPop', 'HP自動ポップアップ']);
-    var paramIncreaseAutoPop = getParamBoolean(['IncreaseAutoPop', '増加自動ポップアップ']);
-    var paramDecreaseAutoPop = getParamBoolean(['DecreaseAutoPop', '減少自動ポップアップ']);
-    var paramMpDamageSe      = getParamString(['MPDamageSe', 'MPダメージ音']);
-    var paramRotation        = getParamBoolean(['Rotation', '回転']);
-    var paramRadiusX         = getParamNumber(['RadiusX', 'X方向半径']);
-    var paramRadiusY         = getParamNumber(['RadiusY', 'Y方向半径']);
-    var paramRotateSpeed     = getParamNumber(['RotateSpeed', '回転速度']);
-    var paramScale           = getParamNumber(['Scale', '拡大率']);
-    var paramScaleDelta      = getParamNumber(['ScaleDelta', '拡大率変化値']);
-    var paramOnTop           = getParamBoolean(['OnTop', '最前面表示']);
+    var paramPlaySe           = getParamBoolean(['PlaySe', '効果音演奏']);
+    var paramSuppressSwitchId = getParamNumber(['SuppressSwitchId', '消音スイッチID'], 0);
+    var paramOffsetX          = getParamNumber(['OffsetX', 'X座標補正']);
+    var paramOffsetY          = getParamNumber(['OffsetY', 'Y座標補正']);
+    var paramTpAutoPop        = getParamBoolean(['TPAutoPop', 'TP自動ポップアップ']);
+    var paramMpAutoPop        = getParamBoolean(['MPAutoPop', 'MP自動ポップアップ']);
+    var paramHpAutoPop        = getParamBoolean(['HPAutoPop', 'HP自動ポップアップ']);
+    var paramIncreaseAutoPop  = getParamBoolean(['IncreaseAutoPop', '増加自動ポップアップ']);
+    var paramDecreaseAutoPop  = getParamBoolean(['DecreaseAutoPop', '減少自動ポップアップ']);
+    var paramMpDamageSe       = getParamString(['MPDamageSe', 'MPダメージ音']);
+    var paramRotation         = getParamBoolean(['Rotation', '回転']);
+    var paramRadiusX          = getParamNumber(['RadiusX', 'X方向半径']);
+    var paramRadiusY          = getParamNumber(['RadiusY', 'Y方向半径']);
+    var paramRotateSpeed      = getParamNumber(['RotateSpeed', '回転速度']);
+    var paramScale            = getParamNumber(['Scale', '拡大率']);
+    var paramScaleDelta       = getParamNumber(['ScaleDelta', '拡大率変化値']);
+    var paramOnTop            = getParamBoolean(['OnTop', '最前面表示']);
 
     //=============================================================================
     // Game_Interpreter
@@ -506,7 +522,9 @@
         this._damagePopup = true;
         if (!this._damageInfo) this._damageInfo = [];
         var damageInfo = {value: value, critical: critical, mpFlg: mpFlg, mirror: mirror};
-        if (paramPlaySe) this.playPopupSe(damageInfo);
+        if (this.isPlayPopupSe()) {
+            this.playPopupSe(damageInfo);
+        }
         this._damageInfo.push(damageInfo);
     };
 
@@ -527,6 +545,10 @@
 
     Game_CharacterBase.prototype.shiftDamageInfo = function() {
         return this._damageInfo ? this._damageInfo.shift() : null;
+    };
+
+    Game_CharacterBase.prototype.isPlayPopupSe = function() {
+        return paramPlaySe && !$gameSwitches.value(paramSuppressSwitchId)
     };
 
     //=============================================================================
