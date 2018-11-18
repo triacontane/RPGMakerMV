@@ -1,17 +1,18 @@
 //=============================================================================
 // DynamicActorGraphic.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/11/18 プレイヤーの残MPに応じてグラフィックを変更する機能を追加
 // 1.1.0 2017/05/24 特定のスイッチがONのときにグラフィックを変更する機能を追加
 // 1.0.2 2017/02/07 端末依存の記述を削除
 // 1.0.1 2017/01/21 ステートアイコンの並び順が逆になっていた不具合を修正
 // 1.0.0 2016/12/31 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -31,6 +32,12 @@
  * <DAG_FACE_HP10:test,2>      # HP残量10%以下でtest.pngの2番目の画像を
  *                             # 顔グラフィックに指定します。
  * <DAG_BATTLER_HP30:test>     # HP残量30%以下でtest.pngを
+ *                             # バトラーグラフィックに指定します。
+ * <DAG_CHARACTER_MP50:test,2> # MP残量50%以下でtest.pngの2番目の画像を
+ *                             # 歩行グラフィックに指定します。(HPは10%刻みで指定)
+ * <DAG_FACE_MP10:test,2>      # MP残量10%以下でtest.pngの2番目の画像を
+ *                             # 顔グラフィックに指定します。
+ * <DAG_BATTLER_MP30:test>     # MP残量30%以下でtest.pngを
  *                             # バトラーグラフィックに指定します。
  * <DAG_CHARACTER_ST5:test,2>  # ステート[5]有効時にtest.pngの2番目の画像を
  *                             # 歩行グラフィックに指定します。
@@ -67,6 +74,12 @@
  * <DAG_FACE_HP10:test,2>      # HP残量10%以下でtest.pngの2番目の画像を
  *                             # 顔グラフィックに指定します。
  * <DAG_BATTLER_HP30:test>     # HP残量30%以下でtest.pngを
+ *                             # バトラーグラフィックに指定します。
+ * <DAG_CHARACTER_MP50:test,2> # MP残量50%以下でtest.pngの2番目の画像を
+ *                             # 歩行グラフィックに指定します。(HPは10%刻みで指定)
+ * <DAG_FACE_MP10:test,2>      # MP残量10%以下でtest.pngの2番目の画像を
+ *                             # 顔グラフィックに指定します。
+ * <DAG_BATTLER_MP30:test>     # MP残量30%以下でtest.pngを
  *                             # バトラーグラフィックに指定します。
  * <DAG_CHARACTER_ST5:test,2>  # ステート[5]有効時にtest.pngの2番目の画像を
  *                             # 歩行グラフィックに指定します。
@@ -162,6 +175,7 @@
         this.initCustomGraphic();
         this.refreshCustomGraphicForState();
         this.refreshCustomGraphicForHpRate();
+        this.refreshCustomGraphicForMpRate();
         this.refreshCustomGraphicForSwitch();
         $gamePlayer.refresh();
     };
@@ -182,6 +196,16 @@
             this.setCharacterCustom(getMetaValue(actor, 'CHARACTER_HP' + String(hpRate)));
             this.setFaceCustom(getMetaValue(actor, 'FACE_HP' + String(hpRate)));
             this.setBattlerCustom(getMetaValue(actor, 'BATTLER_HP' + String(hpRate)));
+        }
+    };
+
+    Game_Actor.prototype.refreshCustomGraphicForMpRate = function() {
+        var actor = this.actor();
+        for (var mpRate = 10; mpRate <= 100; mpRate += 10) {
+            if (this.mpRate() > mpRate / 100) continue;
+            this.setCharacterCustom(getMetaValue(actor, 'CHARACTER_MP' + String(mpRate)));
+            this.setFaceCustom(getMetaValue(actor, 'FACE_MP' + String(mpRate)));
+            this.setBattlerCustom(getMetaValue(actor, 'BATTLER_MP' + String(mpRate)));
         }
     };
 
@@ -306,6 +330,5 @@
         _Scene_MenuBase_create.apply(this, arguments);
     };
 })();
-
 
 
