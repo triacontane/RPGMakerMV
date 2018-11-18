@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2018/11/18 イベントとの距離が一定以内の場合にセルフスイッチをONにする機能を追加
  1.2.1 2018/11/11 一部、無駄な処理を行っていたのを修正
  1.2.0 2018/11/11 全イベントの不可視化を無効にできるスイッチの追加
  1.1.0 2018/11/11 最小不透明度を設定できる機能を追加
@@ -48,6 +49,17 @@
  * @type number
  * @min 0
  * @max 255
+ *
+ * @param distanceTriggerSelfSwitch
+ * @desc イベントのメモ欄で指定した距離より近づいたときに自動でONになるセルフスイッチ番号です。
+ * @default
+ * @type select
+ * @option none
+ * @value
+ * @option A
+ * @option B
+ * @option C
+ * @option D
  *
  * @param commandPrefix
  * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
@@ -102,6 +114,18 @@
  * @type number
  * @min 0
  * @max 255
+ *
+ * @param distanceTriggerSelfSwitch
+ * @text 距離トリガーセルフスイッチ
+ * @desc イベントのメモ欄で指定した距離より近づいたときに自動でONになるセルフスイッチ番号です。
+ * @default
+ * @type select
+ * @option none
+ * @value
+ * @option A
+ * @option B
+ * @option C
+ * @option D
  *
  * @param commandPrefix
  * @text メモ欄接頭辞
@@ -246,6 +270,7 @@
     Game_Event.prototype.initialize = function() {
         _Game_Event_initialize.apply(this, arguments);
         this._visibleDistance = parseInt(getMetaValues(this.event(), ['可視距離', 'VisibleDistance'])) * $gameMap.tileWidth() || 0;
+        this._triggerDistance = parseInt(getMetaValues(this.event(), ['トリガー距離', 'TriggerDistance'])) * $gameMap.tileWidth() || 0;
     };
 
     Game_Event.prototype.getDistanceFromPlayer = function() {
@@ -269,7 +294,21 @@
         if (!this.isPhantom()) {
             return 1;
         }
-        var d = this.getDistanceFromPlayer() - this._visibleDistance;
+        var distanceFromPlayer = this.getDistanceFromPlayer();
+        this.updateDistanceTrigger(distanceFromPlayer);
+        var d = distanceFromPlayer - this._visibleDistance;
         return Math.min(1 - d / ((param.invisibleDistance || 1) * $gameMap.tileWidth()), 1);
+    };
+
+    Game_Event.prototype.updateDistanceTrigger = function(distanceFromPlayer) {
+        var switchId = param.distanceTriggerSelfSwitch;
+        if (switchId && this._triggerDistance > 0) {
+            var key = [$gameMap.mapId(), this.eventId(), switchId];
+            var oldValue = $gameSelfSwitches.value(key);
+            var newValue = distanceFromPlayer <= this._triggerDistance;
+            if (oldValue !== newValue) {
+                $gameSelfSwitches.setValue(key, newValue);
+            }
+        }
     };
 })();
