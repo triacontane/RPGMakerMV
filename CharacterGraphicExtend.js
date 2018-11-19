@@ -6,10 +6,12 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.2 2018/11/19 UltraMode7との競合を解消(by けんせい様)
+//                   TMNamePop.jsとの併用時、ネームポップがイベント画像の傾き、反転に影響されないよう修正
 // 1.10.1 2018/10/05 敵キャラやピクチャを表示する際、エディタで元画像にインデックス1以外を指定していると画像が表示されない問題を修正
 // 1.10.0 2018/09/25 イベント画像をトリミングして表示できる機能を追加
 // 1.9.2 2018/07/11 EventEffects.jsとの競合を解消
-// 1.9.1 2018/06/05 メモ欄タグで変数指定＋並列処理で変数操作にて発生するいくつかの問題を修正（奏ねこま様）
+// 1.9.1 2018/06/05 メモ欄タグで変数指定＋並列処理で変数操作にて発生するいくつかの問題を修正（by 奏ねこま様）
 // 1.9.0 2018/02/20 不透明度をメモ欄で設定できる機能を追加
 // 1.8.0 2017/08/27 マップで使用しているタイルセット以外のタイルセットを使ったイベントを作成できる機能を追加
 // 1.7.0 2017/08/24 画像を別のものに変更するスクリプトを追加
@@ -684,7 +686,25 @@
         if (this.updateDashMotion) {
             this.resolveConflictForDashMotion();
         }
+
+        // for UltraMode7.jp PRTN added ----
+        if ($gameMap.useUltraMode7) {
+            this.resolveConflictForUltraMode7();
+        }
     };
+
+    // PRTN added ---------
+    Sprite_Character.prototype.resolveConflictForUltraMode7 = function() {
+        if (this._character.scaleY() !== 100) {
+            this.scale.x = this._character.scaleX() / 100 * this.scale.x;
+            this.scale.y = this._character.scaleY() / 100 * this.scale.y;
+        }
+        if (this._character.angle() !== 0) {
+            var angle = this._character.angle() * Math.PI / 180;
+            if (this.rotation !== angle) this.rotation = angle;
+        }
+    };
+    // --------------------
 
     Sprite_Character.prototype.resolveConflictForDashMotion = function() {
         if (this._character.scaleY() !== 100) {
@@ -697,8 +717,15 @@
     };
 
     Sprite_Character.prototype.updateExtend = function() {
-        this.scale.x = this._character.scaleX() / 100;
-        this.scale.y = this._character.scaleY() / 100;
+        var scaleX = this._character.scaleX() / 100;
+        var scaleY = this._character.scaleY() / 100;
+        this.scale.x = scaleX;
+        this.scale.y = scaleY;
+        // for TMNamePop.js
+        if (this._namePop && this._namePopSprite) {
+            this._namePopSprite.scale.x = scaleX;
+            this._namePopSprite.scale.y = scaleY;
+        }
         var originX  = this._character.originX();
         if (originX != null) this.anchor.x = originX;
         var originY = this._character.originY();
