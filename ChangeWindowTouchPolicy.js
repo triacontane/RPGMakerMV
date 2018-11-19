@@ -1,15 +1,16 @@
 //=============================================================================
 // ChangeWindowTouchPolicy.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2018/11/19 プラグインによって追加されたウィンドウの実装次第で挙動がおかしくなる現象を修正
 // 1.1.0 2016/06/03 モバイルデバイスでウィンドウのカーソルを1回で決定できる機能を追加
 // 1.0.0 2015/12/20 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -85,7 +86,12 @@
     // Window_Selectable
     //  タッチ周りの仕様を書き換えのため元の処理を上書き
     //=============================================================================
+    var _Window_Selectable_processTouch = Window_Selectable.prototype.processTouch;
     Window_Selectable.prototype.processTouch = function() {
+        if (this.maxItems() === 0) {
+            _Window_Selectable_processTouch.apply(this, arguments);
+            return;
+        }
         if (this.isOpenAndActive()) {
             if ((TouchInput.isMoved() || TouchInput.isTriggered()) && this.isTouchedInsideFrame()) {
                 this.onTouch(TouchInput.isTriggered());
