@@ -1,11 +1,12 @@
 //=============================================================================
 // DirectlyAttackEffect.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2018/11/21 残像の表示可否をアクター、敵キャラごとにスイッチで制御できる機能を追加
 // 1.3.0 2018/06/03 攻撃中バトラーを消去する機能を追加
 // 1.2.2 2018/04/07 AnimatedSVEnemies.jsとの競合を解消
 // 1.2.1 2018/03/31 直接エフェクト行動後、アクターのターンが回ってきたとき選択中に一歩前進しなくなる問題を修正
@@ -54,6 +55,16 @@
  * @desc ONにすると戦闘中は常に残像が表示されます。他のプラグインとの連携がしやすくなります。
  * @default false
  * @type boolean
+ *
+ * @param ActorAfterimageSwitch
+ * @desc 指定した番号のスイッチがONのときだけアクターに残像が表示されます。指定しない場合は常に表示されます。
+ * @default 0
+ * @type switch
+ *
+ * @param EnemyAfterimageSwitch
+ * @desc 指定した番号のスイッチがONのときだけ敵キャラに残像が表示されます。指定しない場合は常に表示されます。
+ * @default 0
+ * @type switch
  *
  * @help スキル実行時にターゲットまで近寄ってから実行します。
  * 追加で以下の機能を実装します。
@@ -176,6 +187,7 @@
  *
  * This plugin is released under the MIT License.
  */
+
 /*:ja
  * @plugindesc 直接攻撃演出プラグイン
  * @author トリアコンタン
@@ -207,6 +219,16 @@
  * @desc ONにすると戦闘中は常に残像が表示されます。他のプラグインとの連携がしやすくなります。
  * @default false
  * @type boolean
+ *
+ * @param アクター残像スイッチID
+ * @desc 指定した番号のスイッチがONのときだけアクターに残像が表示されます。指定しない場合は常に表示されます。
+ * @default 0
+ * @type switch
+ *
+ * @param 敵キャラ残像スイッチID
+ * @desc 指定した番号のスイッチがONのときだけ敵キャラに残像が表示されます。指定しない場合は常に表示されます。
+ * @default 0
+ * @type switch
  *
  * @help スキル実行時にターゲットまで近寄ってから実行します。
  * 追加で以下の機能を実装します。
@@ -440,12 +462,14 @@ function Sprite_Dummy() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramAltitude         = getParamNumber(['Altitude', '高度'], 0);
-    var paramDuration         = getParamNumber(['Duration', 'フレーム数'], 1);
-    var paramValidActor       = getParamBoolean(['ValidActor', 'アクターに適用']);
-    var paramValidEnemy       = getParamBoolean(['ValidEnemy', '敵キャラに適用']);
-    var paramNoAfterimage     = getParamBoolean(['NoAfterimage', '残像不使用']);
-    var paramAlwaysAfterimage = getParamBoolean(['AlwaysAfterimage', '常時残像使用']);
+    var paramAltitude              = getParamNumber(['Altitude', '高度'], 0);
+    var paramDuration              = getParamNumber(['Duration', 'フレーム数'], 1);
+    var paramValidActor            = getParamBoolean(['ValidActor', 'アクターに適用']);
+    var paramValidEnemy            = getParamBoolean(['ValidEnemy', '敵キャラに適用']);
+    var paramNoAfterimage          = getParamBoolean(['NoAfterimage', '残像不使用']);
+    var paramAlwaysAfterimage      = getParamBoolean(['AlwaysAfterimage', '常時残像使用']);
+    var paramActorAfterimageSwitch = getParamNumber(['ActorAfterimageSwitch', 'アクター残像スイッチID'], 0);
+    var paramEnemyAfterimageSwitch = getParamNumber(['EnemyAfterimageSwitch', '敵キャラ残像スイッチID'], 0);
 
     //=============================================================================
     // Game_Battler
@@ -461,7 +485,7 @@ function Sprite_Dummy() {
         this._directlyAttackInfo     = null;
         this._directlyReturnInfo     = null;
         this._directlyAdditionalInfo = null;
-        this._vanish = false;
+        this._vanish                 = false;
     };
 
     Game_Battler.prototype.setDirectlyAttack = function(target, action) {
@@ -505,7 +529,7 @@ function Sprite_Dummy() {
         var enemyOnly = getMetaValues(item, ['敵キャラのみ', 'EnemyOnly']);
         if (enemyOnly) info.enemyOnly = true;
         this._directlyAdditionalInfo = info;
-        this._vanish = getMetaValues(item, ['消滅', 'Vanish']);
+        this._vanish                 = getMetaValues(item, ['消滅', 'Vanish']);
     };
 
     Game_Battler.prototype.makeDirectlyInfo = function(target, args) {
@@ -566,7 +590,7 @@ function Sprite_Dummy() {
         this._directlyReturn = false;
     };
 
-    var _Game_Battler_onTurnEnd = Game_Battler.prototype.onTurnEnd;
+    var _Game_Battler_onTurnEnd      = Game_Battler.prototype.onTurnEnd;
     Game_Battler.prototype.onTurnEnd = function() {
         _Game_Battler_onTurnEnd.apply(this, arguments);
         this.initDirectlyAttack();
@@ -765,7 +789,7 @@ function Sprite_Dummy() {
     };
 
     Sprite_Battler.prototype.setVisibleAfterImage = function(value) {
-        this._visibleAfterimage = value || paramAlwaysAfterimage;
+        this._visibleAfterimage = (value || paramAlwaysAfterimage) && this.isValidAfterImageSwitch();
     };
 
     var _Sprite_Battler_setBattler      = Sprite_Battler.prototype.setBattler;
@@ -1063,6 +1087,10 @@ function Sprite_Dummy() {
         // do nothing
     };
 
+    Sprite_Battler.prototype.isValidAfterImageSwitch = function() {
+        return true;
+    };
+
     //=============================================================================
     // Sprite_Actor
     //  ターゲットへの直接攻撃演出を追加定義します。
@@ -1112,6 +1140,10 @@ function Sprite_Dummy() {
         return {motion: this._motion, pattern: this._pattern};
     };
 
+    Sprite_Actor.prototype.isValidAfterImageSwitch = function() {
+        return paramActorAfterimageSwitch <= 0 || $gameSwitches.value(paramActorAfterimageSwitch);
+    };
+
     //=============================================================================
     // Sprite_Enemy
     //  ターゲットへの直接攻撃演出を追加定義します。
@@ -1130,6 +1162,10 @@ function Sprite_Dummy() {
 
     Sprite_Enemy.prototype.getMainSprite = function() {
         return this;
+    };
+
+    Sprite_Enemy.prototype.isValidAfterImageSwitch = function() {
+        return paramEnemyAfterimageSwitch <= 0 || $gameSwitches.value(paramEnemyAfterimageSwitch);
     };
 
     //=============================================================================
