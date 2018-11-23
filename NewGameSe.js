@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2018/11/23 ニューゲーム以外でも専用効果音が演奏できるよう修正
  1.0.0 2018/08/03 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -22,6 +23,11 @@
  * @default
  * @type struct<AudioSe>
  *
+ * @param includeContinue
+ * @desc コンティニュー、オプション選択時も専用効果音を演奏します。
+ * @default false
+ * @type boolean
+ *
  * @help NewGameSe.js
  *
  * ニューゲーム選択時のみ専用の効果音を演奏します。
@@ -37,6 +43,12 @@
  * @desc ニューゲーム選択時の効果音情報です。
  * @default
  * @type struct<AudioSe>
+ *
+ * @param includeContinue
+ * @text コンティニューも含む
+ * @desc コンティニュー、オプション選択時も専用効果音を演奏します。
+ * @default false
+ * @type boolean
  *
  * @help NewGameSe.js
  *
@@ -111,10 +123,14 @@
 
     var _Window_TitleCommand_playOkSound = Window_TitleCommand.prototype.playOkSound;
     Window_TitleCommand.prototype.playOkSound = function() {
-        if (param.soundEffect && this.currentSymbol() === 'newGame') {
+        if (param.soundEffect && this.isNeedTitleSound()) {
             AudioManager.playStaticSe(param.soundEffect);
         } else {
             _Window_TitleCommand_playOkSound.apply(this, arguments);
         }
+    };
+
+    Window_TitleCommand.prototype.isNeedTitleSound = function() {
+        return this.currentSymbol() === 'newGame' || param.includeContinue
     };
 })();
