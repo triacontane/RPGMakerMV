@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2018/11/25 サブメニューの絶対座標と揃えを設定できる機能を追加
+//                  MOG_SceneMenu.jsとの競合を解消
 // 2.4.1 2018/11/24 用語辞典プラグインと連携する方法をヘルプに記載
 // 2.4.0 2018/09/26 サブコマンドを逐次消去するオプションを追加
 // 2.3.0 2018/09/26 サブコマンドを横並べにするオプションを追加
@@ -75,6 +77,27 @@
  * @desc サブメニューを逐次消去します
  * @default true
  * @type boolean
+ *
+ * @param SubMenuX
+ * @desc 指定するとサブコマンドのX座標が固定値になります。
+ * @default 0
+ * @type number
+ *
+ * @param SubMenuY
+ * @desc 指定するとサブコマンドのY座標が固定値になります。
+ * @default 0
+ * @type number
+ *
+ * @param SubMenuAlign
+ * @desc サブコマンドの揃えを設定します。
+ * @default
+ * @type select
+ * @option Left(default)
+ * @value
+ * @option Center
+ * @value center
+ * @option Right
+ * @value right
  *
  * @help MenuSubCommand.js
  *
@@ -170,6 +193,27 @@
  * @desc サブメニューを逐次消去します
  * @default true
  * @type boolean
+ *
+ * @param サブメニューX座標
+ * @desc 指定するとサブコマンドのX座標が固定値になります。
+ * @default 0
+ * @type number
+ *
+ * @param サブメニューY座標
+ * @desc 指定するとサブコマンドのY座標が固定値になります。
+ * @default 0
+ * @type number
+ *
+ * @param サブメニュー揃え
+ * @desc サブコマンドの揃えを設定します。
+ * @default
+ * @type select
+ * @option 左揃え(デフォルト)
+ * @value
+ * @option 中央揃え
+ * @value center
+ * @option 右揃え
+ * @value right
  *
  * @help MenuSubCommand.js
  *
@@ -400,6 +444,9 @@
     param.hideGameEnd           = getParamBoolean(['HideGameEnd', 'ゲーム終了消去']);
     param.horizontalSubMenu     = getParamBoolean(['HorizontalSubMenu', '横並びサブメニュー']);
     param.clearSubMenuOneByObe  = getParamBoolean(['ClearSubMenuOneByOne', 'サブメニュー逐次消去']);
+    param.subMenuX              = getParamNumber(['SubMenuX', 'サブメニューX座標']);
+    param.subMenuY              = getParamNumber(['SubMenuY', 'サブメニューY座標']);
+    param.subMenuAlign          = getParamString(['SubMenuAlign', 'サブメニュー揃え']);
 
     //=============================================================================
     // Game_Temp
@@ -419,7 +466,7 @@
         /* 最後に選択したサブコマンド */
         this._lastSubCommand = {
             parent: null,
-            index: 0
+            index : 0
         };
     };
 
@@ -443,25 +490,25 @@
     /**
      * 最後に選択したサブコマンドを取得する
      */
-    Game_Temp.prototype.getLastSubCommand = function () {
+    Game_Temp.prototype.getLastSubCommand = function() {
         return this._lastSubCommand;
     };
 
-    Game_Temp.prototype.setLastSubCommandParent = function (parentName) {
+    Game_Temp.prototype.setLastSubCommandParent = function(parentName) {
         this._lastSubCommand.parent = parentName;
     };
 
-    Game_Temp.prototype.setLastSubCommandIndex = function (index) {
+    Game_Temp.prototype.setLastSubCommandIndex = function(index) {
         this._lastSubCommand.index = index;
     };
 
     /**
      * 最後に選択したサブコマンドをリセットする
      */
-    Game_Temp.prototype.resetLastSubCommand = function () {
+    Game_Temp.prototype.resetLastSubCommand = function() {
         this._lastSubCommand = {
             parent: null,
-            index: 0
+            index : 0
         };
     };
 
@@ -686,8 +733,7 @@
         this._subMenuWindow.updatePlacement(this._commandWindow);
         this._subMenuWindow.setHandler('ok', this.onSubCommandOk.bind(this));
         this._subMenuWindow.setHandler('cancel', this.onSubCommandCancel.bind(this));
-        var index = this.getChildIndex(this._windowLayer) + 1;
-        this.addChildAt(this._subMenuWindow, index);
+        this.addChild(this._subMenuWindow);
     };
 
     Scene_Menu.prototype.removeSubMenuCommandWindow = function() {
@@ -723,19 +769,18 @@
         this._commandWindow.activate();
     };
 
-    var _Scene_Menu_onPersonalCancel = Scene_Menu.prototype.onPersonalCancel;
-    Scene_Menu.prototype.onPersonalCancel = function () {
+    var _Scene_Menu_onPersonalCancel      = Scene_Menu.prototype.onPersonalCancel;
+    Scene_Menu.prototype.onPersonalCancel = function() {
         _Scene_Menu_onPersonalCancel.apply(this);
         this._commandWindow.maskOff();
         /* 最後に選択していたメニューにカーソルを合わせる */
         this.selectLastCommand();
     };
 
-
     /**
      * 最後に選択していたメニューにカーソルを合わせる
      */
-    Scene_Menu.prototype.selectLastCommand = function () {
+    Scene_Menu.prototype.selectLastCommand = function() {
         var lastSubCommand = $gameTemp.getLastSubCommand();
         if (lastSubCommand.parent) {
             this._commandWindow.selectSymbol('parent' + lastSubCommand.parent);
@@ -789,7 +834,7 @@
     /**
      * メニューから抜ける際に最後に選択したサブコマンドをリセットする
      */
-    var _Scene_Menu_terminate = Scene_Menu.prototype.terminate;
+    var _Scene_Menu_terminate      = Scene_Menu.prototype.terminate;
     Scene_Menu.prototype.terminate = function() {
         _Scene_Menu_terminate.apply(this, arguments);
         if (!this._subCommandSelected) {
@@ -797,12 +842,20 @@
         }
     };
 
+    var _Scene_Menu_createField      = Scene_Menu.prototype.createField;
+    Scene_Menu.prototype.createField = function() {
+        _Scene_Menu_createField.apply(this, arguments);
+        if (this._subMenuWindow) {
+            this.addChild(this._subMenuWindow);
+        }
+    };
+
     //=============================================================================
     // Window_MenuCommand
     //  サブコマンドを追加します。
     //=============================================================================
-    var _Window_MenuCommand_initialize = Window_MenuCommand.prototype.initialize;
-    Window_MenuCommand.prototype.initialize = function () {
+    var _Window_MenuCommand_initialize          = Window_MenuCommand.prototype.initialize;
+    Window_MenuCommand.prototype.initialize     = function() {
         this._maskedName = {};
         _Window_MenuCommand_initialize.apply(this);
     };
@@ -882,13 +935,13 @@
         return this.maxCols() >= this.maxPageRows();
     };
 
-    Window_MenuCommand.prototype.maskCommand = function (maskName) {
-        this._maskedName = {};
+    Window_MenuCommand.prototype.maskCommand = function(maskName) {
+        this._maskedName                                 = {};
         this._maskedName[this.commandName(this.index())] = maskName;
         this.refresh();
     };
 
-    Window_MenuCommand.prototype.maskOff = function () {
+    Window_MenuCommand.prototype.maskOff = function() {
         this._maskedName = {};
         this.refresh();
     };
@@ -926,7 +979,7 @@
         }, this);
     };
 
-    Window_MenuSubCommand.prototype.numVisibleRows = function () {
+    Window_MenuSubCommand.prototype.numVisibleRows = function() {
         return param.horizontalSubMenu ? 1 : Window_Command.prototype.numVisibleRows.call(this);
     };
 
@@ -947,8 +1000,8 @@
     };
 
     Window_MenuSubCommand.prototype.updatePlacement = function(commandWindow) {
-        this.x = commandWindow.calculateSubCommandX(this.width);
-        this.y = commandWindow.calculateSubCommandY(this.height);
+        this.x = param.subMenuX || commandWindow.calculateSubCommandX(this.width);
+        this.y = param.subMenuY || commandWindow.calculateSubCommandY(this.height);
     };
 
     Window_MenuSubCommand.prototype.standardFontSize = function() {
@@ -965,6 +1018,11 @@
         } else {
             Window_Command.prototype.loadWindowskin.call(this);
         }
+    };
+
+    var _Window_MenuSubCommand_itemTextAlign = Window_MenuSubCommand.prototype.itemTextAlign;
+    Window_MenuSubCommand.prototype.itemTextAlign = function() {
+        return param.subMenuAlign || _Window_MenuSubCommand_itemTextAlign.apply(this, arguments);
     };
 
     //=============================================================================
