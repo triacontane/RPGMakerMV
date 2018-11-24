@@ -1,11 +1,12 @@
 //=============================================================================
 // DTextPicture.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.0 2018/11/25 背景色のグラデーションを設定できる機能を追加
 // 1.12.0 2018/11/08 背景ウィンドウの透明度と文字列ピクチャの透明度を連動させるよう仕様変更
 // 1.11.1 2018/10/20 プラグイン等でGame_Variables.prototype.setValueを呼んだとき、変数の添え字に文字列型の数値を渡した場合も変数のリアルタイム表示が効くよう修正
 // 1.11.0 2018/10/13 公式プラグイン「TextDecoration.js」の設定を動的文字列に適用できる機能を追加
@@ -89,6 +90,13 @@
  *  例：D_TEXT_SETTING BG_COLOR black
  *      D_TEXT_SETTING BG_COLOR #336699
  *      D_TEXT_SETTING BG_COLOR rgba(255,255,255,0.5)
+ *
+ *  背景色のグラデーションをピクセル数で指定できます。
+ *  D_TEXT_SETTING BG_GRADATION_RIGHT [ピクセル数]
+ *  D_TEXT_SETTING BG_GRADATION_LEFT [ピクセル数]
+ *
+ *  例：D_TEXT_SETTING BG_GRADATION_RIGHT 50
+ *  　　D_TEXT_SETTING BG_GRADATION_LEFT 50
  *
  *  D_TEXT_SETTING REAL_TIME ON : 制御文字で表示した変数のリアルタイム表示
  *
@@ -223,7 +231,7 @@
         PluginManager.setParameters(pluginName, parameter);
         return parameter;
     };
-    var textDecParam = createPluginParameter('TextDecoration');
+    var textDecParam          = createPluginParameter('TextDecoration');
 
     //=============================================================================
     // Game_Interpreter
@@ -254,6 +262,12 @@
                         break;
                     case 'BG_COLOR' :
                         $gameScreen.dTextBackColor = getArgString(connectArgs(args, 1));
+                        break;
+                    case 'BG_GRADATION_LEFT' :
+                        $gameScreen.dTextGradationLeft = getArgNumber(args[1], 0);
+                        break;
+                    case 'BG_GRADATION_RIGHT' :
+                        $gameScreen.dTextGradationRight = getArgNumber(args[1], 0);
                         break;
                     case 'FONT':
                         args.shift();
@@ -305,15 +319,17 @@
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
-        this.dTextValue      = null;
-        this.dTextOriginal   = null;
-        this.dTextRealTime   = null;
-        this.dTextSize       = 0;
-        this.dTextAlign      = 0;
-        this.dTextBackColor  = null;
-        this.dTextFont       = null;
-        this.dUsingVariables = null;
-        this.dWindowFrame    = null;
+        this.dTextValue          = null;
+        this.dTextOriginal       = null;
+        this.dTextRealTime       = null;
+        this.dTextSize           = 0;
+        this.dTextAlign          = 0;
+        this.dTextBackColor      = null;
+        this.dTextFont           = null;
+        this.dUsingVariables     = null;
+        this.dWindowFrame        = null;
+        this.dTextGradationRight = 0;
+        this.dTextGradationLeft  = 0;
     };
 
     Game_Screen.prototype.setDTextPicture = function(value, size) {
@@ -338,7 +354,9 @@
             usingVariables: this.dUsingVariables,
             realTime      : this.dTextRealTime,
             originalValue : this.dTextOriginal,
-            windowFrame   : this.dWindowFrame
+            windowFrame   : this.dWindowFrame,
+            gradationLeft : this.dTextGradationLeft,
+            gradationRight: this.dTextGradationRight,
         };
     };
 
@@ -462,9 +480,9 @@
     };
 
     Sprite_Picture.prototype.updateFrameWindow = function() {
-        var padding         = this._frameWindow.standardPadding();
-        this._frameWindow.x = this.x - (this.anchor.x * this.width * this.scale.x) - padding;
-        this._frameWindow.y = this.y - (this.anchor.y * this.height * this.scale.y) - padding;
+        var padding               = this._frameWindow.standardPadding();
+        this._frameWindow.x       = this.x - (this.anchor.x * this.width * this.scale.x) - padding;
+        this._frameWindow.y       = this.y - (this.anchor.y * this.height * this.scale.y) - padding;
         this._frameWindow.opacity = this.opacity;
         if (!this.visible) {
             this.removeFrameWindow();
@@ -522,11 +540,23 @@
         var bitmapVirtual = new Bitmap_Virtual();
         this._processText(bitmapVirtual);
         this.hiddenWindow.resetFontSettings(this.dTextInfo);
-        this.bitmap          = new Bitmap(bitmapVirtual.width, bitmapVirtual.height);
+        this.bitmap = new Bitmap(bitmapVirtual.width, bitmapVirtual.height);
         this.applyTextDecoration();
         this.bitmap.fontFace = this.hiddenWindow.contents.fontFace;
         if (this.dTextInfo.color) {
             this.bitmap.fillAll(this.dTextInfo.color);
+            var h              = this.bitmap.height;
+            var w              = this.bitmap.width;
+            var gradationLeft  = this.dTextInfo.gradationLeft;
+            if (gradationLeft > 0) {
+                this.bitmap.clearRect(0, 0, gradationLeft, h);
+                this.bitmap.gradientFillRect(0, 0, gradationLeft, h, 'rgba(0, 0, 0, 0)', this.dTextInfo.color, false);
+            }
+            var gradationRight = this.dTextInfo.gradationRight;
+            if (gradationRight > 0) {
+                this.bitmap.clearRect(w - gradationRight, 0, gradationRight, h);
+                this.bitmap.gradientFillRect(w - gradationRight, 0, gradationRight, h, this.dTextInfo.color, 'rgba(0, 0, 0, 0)', false);
+            }
         }
         this._processText(this.bitmap);
         this._colorTone = [0, 0, 0, 0];
@@ -543,7 +573,7 @@
 
     Sprite_Picture.prototype.applyTextDecoration = function() {
         if (textDecParam.Mode >= 0) {
-            this.bitmap.outlineColor =
+            this.bitmap.outlineColor   =
                 'rgba(%1,%2,%3,%4)'.format(textDecParam.Red, textDecParam.Green, textDecParam.Blue, textDecParam.Alpha / 255);
             this.bitmap.decorationMode = textDecParam.Mode;
         }
