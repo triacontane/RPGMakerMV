@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.0 2018/11/24 カテゴリ選択中でも収集率が表示されるよう修正
+//                   一部の処理を軽量化
 // 2.10.0 2018/09/13 説明文に対象アイテムデータの説明や価格を埋め込める制御文字を追加
 // 2.9.2 2018/09/02 ピクチャを指定していると敵キャラデータの取得が行われない問題を修正
 // 2.9.1 2018/08/31 敵キャラのパラメータ出力機能を使う際、敵キャラの画像を表示したページでないとパラメータ表示できない問題を修正
@@ -420,6 +422,7 @@
  * @param GlossaryInfo
  * @text 用語情報(設定必須)
  * @desc 用語辞典情報です。任意の用語辞典を追加できます。必ず1件以上の用語を登録してください。
+ * @default ["{\"GlossaryType\":\"1\",\"CommandName\":\"用語辞典\",\"UseCategory\":\"false\",\"CommandSwitchId\":\"0\",\"BackPicture\":\"\",\"SelectAction\":\"0\",\"SelectSwitchId\":\"0\",\"SelectVariableId\":\"0\",\"ConfirmMessage\":\"false\",\"ConfirmUse\":\"使う\",\"ConfirmNoUse\":\"やめる\",\"GlossaryHelp\":\"ゲーム中に登場する用語を解説しています。\",\"CategoryHelp\":\"カテゴリを選択してください。\",\"ConfirmHelp\":\"\",\"UsingHelp\":\"\",\"CompleteView\":\"false\",\"CompleteMessage\":\"収集率 \\\\c[2]%1\\\\c[0] ％\",\"ShowingItemNumber\":\"false\",\"UsableDefault\":\"true\",\"UseItemHistory\":\"false\",\"GlossaryListWidth\":\"240\",\"VisibleItemNotYet\":\"\"}"]
  * @type struct<GlossaryData>[]
  *
  * @param Layout
@@ -920,7 +923,7 @@ function Window_GlossaryComplete() {
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return convertEscapeCharactersAndEval(arg, true).clamp(min, max);
+        return convertEscapeCharactersAndParse(arg, true).clamp(min, max);
     };
 
     var getArgBoolean = function(arg) {
@@ -931,13 +934,13 @@ function Window_GlossaryComplete() {
         if (arg !== String(arg)) {
             return arg;
         }
-        arg = convertEscapeCharactersAndEval(arg, false);
+        arg = convertEscapeCharactersAndParse(arg, false);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var convertEscapeCharactersAndEval = function(text, evalFlg) {
+    var convertEscapeCharactersAndParse = function(text, toNumber) {
         if (text === null || text === undefined) {
-            text = evalFlg ? '0' : '';
+            text = toNumber ? '0' : '';
         }
         if (SceneManager._scene._windowLayer) {
             var winObj = SceneManager._scene._windowLayer.children[0];
@@ -945,7 +948,7 @@ function Window_GlossaryComplete() {
         } else {
             text = convertEscapeCharacters(text);
         }
-        return evalFlg ? eval(text) : text;
+        return toNumber ? parseInt(text) : text;
     };
 
     var convertEscapeCharacters = function(text) {
@@ -1544,6 +1547,7 @@ function Window_GlossaryComplete() {
     Scene_Glossary.prototype.createGlossaryCategoryWindow = function() {
         this._glossaryCategoryWindow = new Window_GlossaryCategory(this._glossaryListWindow);
         this._glossaryCategoryWindow.setHandler('cancel', this.escapeScene.bind(this));
+        this._glossaryCategoryWindow.setHandler('select', this.refreshCompleteWindow.bind(this));
         this._glossaryCategoryWindow.setHandler('ok', this.onOkGlossaryCategory.bind(this));
         this.addWindow(this._glossaryCategoryWindow);
     };
@@ -1671,19 +1675,20 @@ function Window_GlossaryComplete() {
         }
         this._glossaryListWindow.deactivateAndHide();
         this._glossaryListWindow.deselect();
-        this._glossaryCompleteWindow.clear();
+        this.refreshCompleteWindow();
         this._confirmWindow.deactivateAndHide();
         this.updateHelp(this._helpTexts[1]);
     };
 
     Scene_Glossary.prototype.activateListWindow = function(indexInit) {
         this._glossaryListWindow.setItemHandler(this.onOkGlossaryList.bind(this));
+        this._glossaryListWindow.refresh();
         this._glossaryListWindow.activateAndShow();
         if (indexInit) {
             this._glossaryListWindow.select(0);
         }
         this._glossaryCategoryWindow.deactivateAndHide();
-        this._glossaryCompleteWindow.refresh();
+        this.refreshCompleteWindow();
         this._confirmWindow.deactivateAndHide();
         this.updateHelp(this._helpTexts[0]);
     };
@@ -1700,6 +1705,12 @@ function Window_GlossaryComplete() {
 
     Scene_Glossary.prototype.escapeScene = function() {
         this.popScene();
+    };
+
+    Scene_Glossary.prototype.refreshCompleteWindow = function() {
+        if (this._glossaryCompleteWindow.visible) {
+            this._glossaryCompleteWindow.refresh();
+        }
     };
 
     //=============================================================================
@@ -1773,9 +1784,10 @@ function Window_GlossaryComplete() {
 
     Window_GlossaryCategory.prototype.select = function(index) {
         Window_Selectable.prototype.select.apply(this, arguments);
-        this._glossaryListWindow.setCategory(this.item());
+        this._glossaryListWindow.setGlossaryOnly(this.item());
         if (index >= 0) {
             $gameParty.setGlossaryCategoryIndex(index);
+            this.callHandler('select');
         }
     };
 
@@ -1951,6 +1963,10 @@ function Window_GlossaryComplete() {
         } else {
             this.removeHandler('ok');
         }
+    };
+
+    Window_GlossaryList.prototype.setGlossaryOnly = function(category) {
+        this._category = category;
     };
 
     //=============================================================================
