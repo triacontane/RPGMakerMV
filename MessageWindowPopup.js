@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.1 2018/11/26 MPP_MessageEX.jsとの競合を解消(ネームウィンドウの表示不整合)
 // 2.11.0 2018/11/11 ポップアップウィンドウの横幅と高さの最小値を変数から取得できる機能を追加
 // 2.10.2 2018/11/07 ポップアップ用のウィンドウスキン設定後、メニューを開くか場所移動すると設定が戻ってしまう問題を修正
 // 2.10.1 2018/06/15 ウィンドウ連携が有効かつ、フキダシウィンドウを1回も表示していない場合に選択肢ウィンドウが見えなくなる問題を修正
@@ -1197,8 +1198,13 @@
             this._choiceWindow.updatePlacementPopup();
         }
         this._numberWindow.updatePlacementPopup();
+        // Resolve conflict for YEP_MessageCore.js and MPP_MessageEX.js
         if (this._nameWindow && checkTypeFunction(this._nameWindow.updatePlacementPopup)) {
             this._nameWindow.updatePlacementPopup();
+            if (isExistPlugin('MPP_MessageEX')) {
+                this._nameWindow.y = this.y - this._nameWindow.height;
+                this._nameWindow.x = this.x;
+            }
         }
     };
 
