@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.2 2018/11/26 ポップアップ用のウィンドウスキン設定後、ポップアップを解除してもスキンがそのままになってしまう場合がある問題を修正
 // 2.11.1 2018/11/26 MPP_MessageEX.jsとの競合を解消(ネームウィンドウの表示不整合)
 // 2.11.0 2018/11/11 ポップアップウィンドウの横幅と高さの最小値を変数から取得できる機能を追加
 // 2.10.2 2018/11/07 ポップアップ用のウィンドウスキン設定後、メニューを開くか場所移動すると設定が戻ってしまう問題を修正
@@ -1129,8 +1130,8 @@
             if (this.isPopup()) {
                 this._windowSkinName = popupWindowSkin;
             }
-            _Window_Message_loadWindowskin.apply(this, arguments);
         }
+        _Window_Message_loadWindowskin.apply(this, arguments);
     };
 
     Window_Message.prototype.updateTargetCharacterId = function() {
