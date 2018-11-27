@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2018/11/28 BugFixWaitOfTextEnd.jsと組み合わせたとき、末尾の動作がおかしくなる問題を修正
 // 1.2.2 2018/07/22 瞬間表示機能が有効なとき、\!を使用すると以後のメッセージまで瞬間表示されてしまう問題を修正
 // 1.2.1 2017/12/30 パラメータの型指定機能に対応し、ヘルプの記述を修正
 // 1.2.0 2016/11/05 ノベルゲーム総合プラグインから、メッセージ表示速度を調整する制御文字を流用
@@ -136,7 +137,7 @@
         if (this._textState && !this._lineShowFast) {
             if (speed <= 0 || this._showAll) {
                 this._showFast = true;
-            } else {
+            } else if (!this.isEndOfText(this._textState)) {
                 this._waitCount = speed - 1;
             }
         }
