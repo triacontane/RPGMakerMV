@@ -1,11 +1,12 @@
 //=============================================================================
 // WindowBackImage.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2018/11/29 ウィンドウ背景を有効にするかどうかを動的に制御するスイッチを追加
 // 1.1.0 2017/11/19 拡大率を設定できる機能を追加
 // 1.0.0 2017/11/18 初版
 // ----------------------------------------------------------------------------
@@ -216,11 +217,16 @@
  * @type number
  * @min -2000
  * @max 2000
+ *
+ * @param SwitchId
+ * @desc 指定したスイッチがONのときのみウィンドウを差し替えます。
+ * @default 0
+ * @type switch
  */
 
 (function() {
     'use strict';
-    var pluginName    = 'WindowBackImage';
+    var pluginName = 'WindowBackImage';
 
     //=============================================================================
     // ローカル関数
@@ -248,7 +254,7 @@
                 });
             }
         } catch (e) {
-            alert(`!!!Plugin param is wrong.!!!\nPlugin:.js\nName:[]\nValue:`);
+            alert('!!!Plugin param is wrong.!!!\nPlugin:.js\nName:[]\nValue:');
             value = defaultValue;
         }
         return value;
@@ -268,19 +274,21 @@
     // Window
     //  専用の背景画像を設定します。
     //=============================================================================
-    var _Window__createAllParts = Window.prototype._createAllParts;
+    var _Window__createAllParts      = Window.prototype._createAllParts;
     Window.prototype._createAllParts = function() {
         _Window__createAllParts.apply(this, arguments);
         var backImageData = this.getBackImageData();
         if (backImageData) {
             this._createBackImage(backImageData['ImageFile']);
             this._setBackImageProperty(backImageData);
+            this._backImageSwitchId = backImageData['SwitchId'];
         }
+
     };
 
     Window.prototype._setBackImageProperty = function(backImageData) {
-        this._backImageDx = parseInt(backImageData['OffsetX']) || 0;
-        this._backImageDy = parseInt(backImageData['OffsetY']) || 0;
+        this._backImageDx                   = parseInt(backImageData['OffsetX']) || 0;
+        this._backImageDy                   = parseInt(backImageData['OffsetY']) || 0;
         this._windowBackImageSprite.scale.x = (parseInt(backImageData['ScaleX']) || 100) / 100;
         this._windowBackImageSprite.scale.y = (parseInt(backImageData['ScaleY']) || 100) / 100;
     };
@@ -291,10 +299,10 @@
      * @private
      */
     Window.prototype._createBackImage = function(fileName) {
-        this._windowBackSprite.visible = false;
+        this._windowBackSprite.visible  = false;
         this._windowFrameSprite.visible = false;
-        var bitmap = ImageManager.loadPicture(fileName);
-        this._windowBackImageSprite = new Sprite_WindowBackImage(bitmap);
+        var bitmap                      = ImageManager.loadPicture(fileName);
+        this._windowBackImageSprite     = new Sprite_WindowBackImage(bitmap);
         this._windowSpriteContainer.addChild(this._windowBackImageSprite);
     };
 
@@ -305,7 +313,7 @@
         }, this)[0];
     };
 
-    var _Window__refreshAllParts = Window.prototype._refreshAllParts;
+    var _Window__refreshAllParts      = Window.prototype._refreshAllParts;
     Window.prototype._refreshAllParts = function() {
         if (this._windowBackImageSprite) {
             this._refreshBackImage();
@@ -322,6 +330,17 @@
         this._windowBackImageSprite.y = this.height / 2 + this._backImageDy;
     };
 
+    var _Window_update      = Window.prototype.update;
+    Window.prototype.update = function() {
+        _Window_update.apply(this, arguments);
+        if (this._backImageSwitchId > 0 && $gameSwitches && this._windowBackImageSprite) {
+            var visible                         = $gameSwitches.value(this._backImageSwitchId);
+            this._windowBackSprite.visible      = !visible;
+            this._windowFrameSprite.visible     = !visible;
+            this._windowBackImageSprite.visible = visible;
+        }
+    };
+
     //=============================================================================
     // Sprite_WindowBackImage
     //  ウィンドウ背景画像のスプライトです。
@@ -330,12 +349,12 @@
         this.initialize.apply(this, arguments);
     }
 
-    Sprite_WindowBackImage.prototype = Object.create(Sprite.prototype);
+    Sprite_WindowBackImage.prototype             = Object.create(Sprite.prototype);
     Sprite_WindowBackImage.prototype.constructor = Sprite_WindowBackImage;
 
     Sprite_WindowBackImage.prototype.initialize = function(bitmap) {
         Sprite.prototype.initialize.call(this);
-        this.bitmap = bitmap;
+        this.bitmap   = bitmap;
         this.anchor.x = 0.5;
         this.anchor.y = 0.5;
     };
