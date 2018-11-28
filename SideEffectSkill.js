@@ -1,11 +1,12 @@
 //=============================================================================
 // SideEffectSkill.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2018/11/29 行動が会心だった場合のみ副作用を適用できる機能を追加
 // 1.2.3 2017/10/10 0ターン目に戦闘行動の強制を実行するとエラーになる問題の修正
 // 1.2.2 2017/10/07 ターン終了時の副作用を持つスキルでトドメをさした場合、次の戦闘のターン終了時に副作用が発生する問題を修正
 // 1.2.1 2017/06/10 自動戦闘が有効なアクターがいる場合に一部機能が正常に動作しない問題を修正
@@ -16,7 +17,7 @@
 // 1.0.1 2016/10/10 タイミングが「スキル使用時」「ターン開始時」以外のものについて、対象者にも効果が適用されていた問題を修正
 // 1.0.0 2016/09/25 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -76,6 +77,8 @@
  * <SES_MissOnly>          # 同上
  * <SES_弱点時のみ>        # 行動が弱点を突いた場合のみ副作用を適用
  * <SES_EffectiveOnly>     # 同上
+ * <SES_会心時のみ>        # 行動が会心だった場合のみ副作用を適用
+ * <SES_CriticalOnly>      # 同上
  *
  * 複数指定する場合、[,]で区切ってください。効果の番号が[1]が先頭です。
  * また入力時副作用は敵キャラ専用です。
@@ -148,6 +151,8 @@
  * <SES_MissOnly>          # 同上
  * <SES_弱点時のみ>        # 行動が弱点を突いた場合のみ副作用を適用
  * <SES_EffectiveOnly>     # 同上
+ * <SES_会心時のみ>        # 行動が会心だった場合のみ副作用を適用
+ * <SES_CriticalOnly>      # 同上
  *
  * 複数指定する場合、[,]で区切ってください。効果の番号が[1]が先頭です。
  * また入力時副作用は敵キャラ専用です。
@@ -415,6 +420,12 @@
         this.applyItemSideEffect('sideEffectOnUsing');
     };
 
+    var _Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
+    Game_Action.prototype.makeDamageValue = function(target, critical) {
+        this._criticalForSideEffect = critical;
+        return _Game_Action_makeDamageValue.apply(this, arguments);
+    };
+
     var _Game_Action_applyItemUserEffect      = Game_Action.prototype.applyItemUserEffect;
     Game_Action.prototype.applyItemUserEffect = function(target) {
         _Game_Action_applyItemUserEffect.apply(this, arguments);
@@ -449,7 +460,8 @@
         } else {
             return this.isValidSideEffectForSuccess() &&
                 this.isValidSideEffectForFailure() &&
-                this.isValidSideEffectForEffective();
+                this.isValidSideEffectForEffective() &&
+                this.isValidSideEffectForCritical();
         }
     };
 
@@ -463,6 +475,10 @@
 
     Game_Action.prototype.isValidSideEffectForEffective = function() {
         return this._effectiveForSideEffect || !getMetaValues(this.item(), ['EffectiveOnly', '弱点時のみ']);
+    };
+
+    Game_Action.prototype.isValidSideEffectForCritical = function() {
+        return this._criticalForSideEffect || !getMetaValues(this.item(), ['CriticalOnly', '会心時のみ']);
     };
 
     Game_Action.prototype.applyItemSideEffectGlobal = function(property) {
@@ -548,7 +564,7 @@
 
     Window_BattleLog.prototype.countTextStack = function() {
         return this._methods.reduce(function(prevValue, method) {
-            return prevValue + (method.name === 'addText' ? 1 : 0)
+            return prevValue + (method.name === 'addText' ? 1 : 0);
         }, 0);
     };
 })();
