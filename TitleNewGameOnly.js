@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2018/12/01 スタート文字列のY座標を調整できるようにしました。
 // 2.0.0 2017/03/01 セーブファイルが存在する場合の動作を3通りから選択できる機能を追加
 // 1.3.0 2017/06/12 型指定機能に対応
 // 1.2.0 2016/12/25 専用のスタート効果音を設定できる機能を追加
@@ -50,6 +51,14 @@
  * @desc スタートしたときの効果音情報です。指定しない場合はシステム効果音の決定が演奏されます。
  * @default
  * @type struct<AudioSe>
+ *
+ * @param adjustY
+ * @text Y座標調整値
+ * @desc スタート文字列の表示Y座標を補正します。
+ * @default 0
+ * @min -9999
+ * @max 9999
+ * @type number
  *
  * @help タイトル画面の選択肢をニューゲームのみにします。
  * 決定ボタンを押すか画面をクリックするとゲームが始まります。
@@ -143,7 +152,8 @@
         PluginManager.setParameters(pluginName, parameter);
         return parameter;
     };
-    var param                 = createPluginParameter('TitleNewGameOnly');
+
+    var param = createPluginParameter('TitleNewGameOnly');
 
     //=============================================================================
     // Scene_Title
@@ -163,7 +173,7 @@
         this.updateNewGameOnly();
     };
 
-    var _Scene_Title_terminate = Scene_Title.prototype.terminate;
+    var _Scene_Title_terminate      = Scene_Title.prototype.terminate;
     Scene_Title.prototype.terminate = function() {
         _Scene_Title_terminate.apply(this, arguments);
         if (this._sceneLoad) {
@@ -184,7 +194,7 @@
         this.playStartSe();
         if (this.isContinueEnabled()) {
             if (param.fileExistAction === 2) {
-                var result    = DataManager.loadGame(DataManager.latestSavefileId());
+                var result      = DataManager.loadGame(DataManager.latestSavefileId());
                 this._sceneLoad = new Scene_Load();
                 if (result) {
                     this._sceneLoad.onLoadSuccess();
@@ -255,7 +265,7 @@
 
     Sprite_GameStart.prototype.initialize = function() {
         Sprite_Base.prototype.initialize.call(this);
-        this.y             = Graphics.height - 160;
+        this.y             = Graphics.height - 160 + (param.adjustY || 0);
         this.opacity_shift = -2;
     };
 
@@ -271,7 +281,6 @@
         this.bitmap.textColor  = font.color;
         this.bitmap.drawText(param.startString, 0, 0, Graphics.width, font.size, 'center');
     };
-
 
     Sprite_GameStart.prototype.update = function() {
         this.opacity += this.opacity_shift;
