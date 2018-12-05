@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2018/12/06 BMSP_StateDisplayExtension.jsと共存できる機能を追加
 // 1.5.2 2018/09/10 StateRolling.jsとの連携時、アクターのアイコン表示はStateRolling.jsを優先するよう修正
 // 1.5.1 2018/08/30 StateRolling.jsとの競合を解消
 // 1.5.0 2018/06/17 パラメータの型指定機能に対応
@@ -97,6 +98,7 @@
  *
  * This plugin is released under the MIT License.
  */
+
 /*:ja
  * @plugindesc リングステートプラグイン
  * @author トリアコンタン
@@ -259,7 +261,7 @@ function Sprite_StateIconChild() {
         this._iconsSprites = [];
     };
 
-    var _Sprite_StateIcon_update = Sprite_StateIcon.prototype.update;
+    var _Sprite_StateIcon_update      = Sprite_StateIcon.prototype.update;
     Sprite_StateIcon.prototype.update = function() {
         if (this._battler && !this._battler.isEnemy()) {
             _Sprite_StateIcon_update.apply(this, arguments);
@@ -423,16 +425,38 @@ function Sprite_StateIconChild() {
         Window_BattleStatus.prototype.drawActorIcons = function(actor, x, y, width) {
             this._drawIconCount = 0;
             _Window_BattleStatus_drawActorIcons.apply(this, arguments);
-            this.drawActorIconsTurn(actor, x, y);
+            if (this.areaManager) {
+                this.drawActorIconsTurnForBmsp(actor);
+            } else {
+                this.drawActorIconsTurn(actor, x, y);
+            }
         };
 
         Window_BattleStatus.prototype.drawActorIconsTurn = function(actor, x, y) {
-            var turns = actor.getAllTurns();
+            var turns              = actor.getAllTurns();
             this.contents.fontSize = paramFontSize;
             for (var i = 0; i < this._drawIconCount; i++) {
                 this.drawText(turns[i], x + Window_Base._iconWidth * i, y + 2, Window_Base._iconWidth, 'right');
             }
             this.resetFontSettings();
+            this._drawIconCount = undefined;
+        };
+
+        Window_BattleStatus.prototype.drawActorIconsTurnForBmsp = function(actor) {
+            var turns = actor.getAllTurns();
+            for (var i = 0; i < turns.length; i++) {
+                var areaName          = 'stateIcons_actor' + actor.actorId();
+                var area              = this.areaManager.getArea(areaName);
+                var pw                = Window_Base._iconWidth;
+                var ph                = Window_Base._iconHeight;
+                var column            = Math.floor(144 / pw);
+                var panelIndex        = Math.floor(i / column);
+                var icons             = actor.allIcons();
+                var panelHeader       = 'stateIcons' + icons.join('-') + '_';
+                var panel             = area.getPanel(panelHeader + panelIndex);
+                panel.bitmap.fontSize = paramFontSize;
+                panel.bitmap.drawText(String(turns[0]), pw * (i % column), 0, pw, ph, 'right');
+            }
             this._drawIconCount = undefined;
         };
 
@@ -445,7 +469,7 @@ function Sprite_StateIconChild() {
         };
 
         if (typeof Battle_Hud !== 'undefined') {
-            var _Battle_Hud_create_states = Battle_Hud.prototype.create_states;
+            var _Battle_Hud_create_states      = Battle_Hud.prototype.create_states;
             Battle_Hud.prototype.create_states = function() {
                 if (String(Moghunter.bhud_states_visible) !== 'true') {
                     return;
@@ -454,15 +478,15 @@ function Sprite_StateIconChild() {
                 if (!this._battler) {
                     return;
                 }
-                this._state_icon_turn = new Sprite(new Bitmap(Window_Base._iconWidth, Window_Base._iconHeight));
-                this._state_icon_turn.x = this._pos_x + Moghunter.bhud_states_pos_x;
-                this._state_icon_turn.y = this._pos_y + Moghunter.bhud_states_pos_y;
+                this._state_icon_turn                 = new Sprite(new Bitmap(Window_Base._iconWidth, Window_Base._iconHeight));
+                this._state_icon_turn.x               = this._pos_x + Moghunter.bhud_states_pos_x;
+                this._state_icon_turn.y               = this._pos_y + Moghunter.bhud_states_pos_y;
                 this._state_icon_turn.bitmap.fontSize = paramFontSize;
                 _Battle_Hud_create_states.apply(this, arguments);
                 this.addChild(this._state_icon_turn);
             };
 
-            var _Battle_Hud_refresh_states = Battle_Hud.prototype.refresh_states;
+            var _Battle_Hud_refresh_states      = Battle_Hud.prototype.refresh_states;
             Battle_Hud.prototype.refresh_states = function() {
                 var turn = this._battler.getAllTurns()[this._states_data[1]];
                 _Battle_Hud_refresh_states.apply(this, arguments);
