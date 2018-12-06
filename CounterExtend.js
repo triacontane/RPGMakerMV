@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2018/12/07 相手が攻撃してきたスキルで反撃する機能を追加
 // 1.7.1 2018/09/26 「戦闘行動の強制」を使用しない反撃方法でスキルアニメーションとコモンイベントが呼ばれない問題を修正
 //                  反撃が失敗しなかった場合も任意のステートを解除できる機能を追加
 // 1.7.0 2018/09/26 「戦闘行動の強制」を使用しない反撃方法を追加しました。動作に若干の違いがあります
@@ -94,6 +95,8 @@
  *
  * 反撃スキルは、通常は攻撃してきた相手をターゲットとしますが
  * 味方対象のスキルなどは自分や味方に対して使用します。
+ *
+ * IDに[0]を指定すると、相手が攻撃してきたスキルで反撃します。
  *
  * 3. 反撃条件をJavaScript計算式の評価結果を利用できます。
  * 反撃条件を満たさない場合は反撃は実行されません。
@@ -240,6 +243,8 @@
  *
  * 反撃スキルは、通常は攻撃してきた相手をターゲットとしますが
  * 味方対象のスキルなどは自分や味方に対して使用します。
+ *
+ * IDに[0]を指定すると、相手が攻撃してきたスキルで反撃します。
  *
  * 3. 反撃条件をJavaScript計算式の評価結果を利用できます。
  * 反撃条件を満たさない場合は反撃は実行されません。
@@ -434,12 +439,12 @@ var Imported = Imported || {};
         return counterAnimationId;
     };
 
-    Game_BattlerBase.prototype.reserveCounterSkillId = function(names) {
+    Game_BattlerBase.prototype.reserveCounterSkillId = function(names, originalSkillId) {
         this._reserveCounterSkillId = 0;
         this.traitObjects().some(function(traitObject) {
             var metaValue = getMetaValues(traitObject, names);
             if (metaValue) {
-                this._reserveCounterSkillId = getArgEval(metaValue, 1);
+                this._reserveCounterSkillId = getArgEval(metaValue, 0) || originalSkillId;
                 return true;
             }
             return false;
@@ -600,7 +605,7 @@ var Imported = Imported || {};
 
     Game_Action.prototype.reserveTargetCounterSkillId = function(target, magicFlg, depth) {
         var skillMetaNames = this.getMetaNamesForCounterExtend(['反撃スキルID', 'CounterSkillId'], magicFlg, depth);
-        var counterSkill   = target.reserveCounterSkillId(skillMetaNames);
+        var counterSkill   = target.reserveCounterSkillId(skillMetaNames, this.item().id);
         if (counterSkill === 0 && depth > 0) {
             return 0;
         }
