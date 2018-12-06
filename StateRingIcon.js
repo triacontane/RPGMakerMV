@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2018/12/07 1.6.0で一部処理に誤りがあったので修正
 // 1.6.0 2018/12/06 BMSP_StateDisplayExtension.jsと共存できる機能を追加
 // 1.5.2 2018/09/10 StateRolling.jsとの連携時、アクターのアイコン表示はStateRolling.jsを優先するよう修正
 // 1.5.1 2018/08/30 StateRolling.jsとの競合を解消
@@ -443,20 +444,22 @@ function Sprite_StateIconChild() {
         };
 
         Window_BattleStatus.prototype.drawActorIconsTurnForBmsp = function(actor) {
-            var turns = actor.getAllTurns();
+            var turns       = actor.getAllTurns();
+            var areaName    = 'stateIcons_actor' + actor.actorId();
+            var area        = this.areaManager.getArea(areaName);
+            var pw          = Window_Base._iconWidth;
+            var ph          = Window_Base._iconHeight;
+            var column      = Math.floor(144 / pw);
+            var icons       = actor.allIcons();
+            var panelHeader = 'stateIcons' + icons.join('-') + '_';
             for (var i = 0; i < turns.length; i++) {
-                var areaName          = 'stateIcons_actor' + actor.actorId();
-                var area              = this.areaManager.getArea(areaName);
-                var pw                = Window_Base._iconWidth;
-                var ph                = Window_Base._iconHeight;
-                var column            = Math.floor(144 / pw);
-                var panelIndex        = Math.floor(i / column);
-                var icons             = actor.allIcons();
-                var panelHeader       = 'stateIcons' + icons.join('-') + '_';
-                var panel             = area.getPanel(panelHeader + panelIndex);
+                var panelName = panelHeader + Math.floor(i / column);
+                var panel      = area.getPanel(panelName);
                 panel.bitmap.fontSize = paramFontSize;
-                panel.bitmap.drawText(String(turns[0]), pw * (i % column), 0, pw, ph, 'right');
+                panel.bitmap.drawText(String(turns[i]), pw * (i % column), 0, pw, ph, 'right');
+                area.removePanel(panelName, true);
             }
+            area.lazyCommit();
             this._drawIconCount = undefined;
         };
 
