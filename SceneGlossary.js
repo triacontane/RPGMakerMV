@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.1 2018/12/07 収集率を取得できるスクリプトをヘルプに記載
 // 2.11.0 2018/11/24 カテゴリ選択中でも収集率が表示されるよう修正
 //                   一部の処理を軽量化
 // 2.10.0 2018/09/13 説明文に対象アイテムデータの説明や価格を埋め込める制御文字を追加
@@ -703,6 +704,10 @@
  * itemIdが用語アイテムとして使用可能なときにtrueを返します。
  * $gameParty.isUsableGlossaryItem(itemId);
  *
+ * 指定したカテゴリ名および用語種別名に対応する収集率を返します。
+ * 用語種別を省略した場合は[1]が設定されます。
+ * $gameParty.getCompleteRate(categoryName, typeName);
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -1139,7 +1144,15 @@ function Window_GlossaryComplete() {
             }
             allCount++;
         }.bind(this));
-        return Math.floor(hasCount / allCount * 100);
+        return allCount > 0 ? Math.floor(hasCount / allCount * 100) : 0;
+    };
+
+    Game_Party.prototype.getCompleteRate = function(categoryName, typeName) {
+        if (!typeName) {
+            typeName = 1;
+        }
+        this.setSelectedGlossaryType(typeName);
+        return this.getHasGlossaryPercent(categoryName);
     };
 
     Game_Party.prototype.hasGlossaryCategory = function(item, categoryName) {
