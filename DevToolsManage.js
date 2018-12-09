@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2018/12/09 マップリロード機能で再読込したときに一時消去されたイベントが再表示されないよう仕様変更
 // 2.6.0 2018/10/08 戦闘強制敗北、戦闘強制中断の機能を追加
 // 2.5.1 2018/03/25 BGMが演奏されていないときに高速モードを切り替えるとエラーになる問題を修正
 // 2.5.0 2018/03/17 最前面に表示しているとき、画面がフォーカスを失うと画面自動で右寄せになる機能を追加
@@ -865,7 +866,7 @@ function Controller_NwJs() {
             {code: 105, use: true, name: '戦闘強制勝利', key: paramFuncKeyVictory, type: 'normal'},
             {code: 106, use: true, name: '常駐スクリプト実行', key: paramFuncKeyScript, type: 'normal'},
             {code: 107, use: true, name: '画面フリーズ', key: paramFuncKeyFreeze, type: 'checkbox'},
-            {code: 108, use: !!SceneManager.takeCapture, name: '画面キャプチャ', key: null, type: 'normal'},
+            {code: 108, use: !!SceneManager.takeCapture, name: '画面キャプチャ', key: true, type: 'normal'},
             {code: 109, use: true, name: '戦闘強制敗北', key: paramFuncKeyDefeat, type: 'normal'},
             {code: 110, use: true, name: '戦闘強制中断', key: paramFuncKeyAbort, type: 'normal'},
         ];
@@ -1507,6 +1508,32 @@ function Controller_NwJs() {
 
     Game_Player.prototype.getInformation = function() {
         return 'Player' + Game_Character.prototype.getInformation.call(this);
+    };
+
+    Game_Player.prototype.isNeedMapReload = function() {
+        return this._needsMapReload;
+    };
+
+    const _Game_Map_eraseEvent = Game_Map.prototype.eraseEvent;
+    Game_Map.prototype.eraseEvent = function(eventId) {
+        _Game_Map_eraseEvent.apply(this, arguments);
+        this._eraseEvents.push(eventId);
+    };
+
+    const _Game_Map_setupEvents = Game_Map.prototype.setupEvents;
+    Game_Map.prototype.setupEvents = function() {
+        _Game_Map_setupEvents.apply(this, arguments);
+        if (this._eraseEvents && $gamePlayer.isNeedMapReload()) {
+            this.restoreEventErase();
+        } else {
+            this._eraseEvents = [];
+        }
+    };
+
+    Game_Map.prototype.restoreEventErase = function() {
+        this._eraseEvents.forEach(eventId => {
+            this._events[eventId].erase();
+        });
     };
 
     //=============================================================================
