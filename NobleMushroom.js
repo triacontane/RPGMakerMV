@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.3 2018/12/14 ロード、クイックロード時に決定ボタンを押し続けているとロード処理が繰り返されてしまう問題を修正
+//                  アイコン画像が自動改行時に考慮されない問題を修正
 // 1.7.2 2018/09/25 MessageSkip.jsと組み合わせたときにオート待機フレームの際に取得するテキスト文字数が正しく取得できていなかった競合を解消
 // 1.7.1 2017/12/30 相対フォントサイズにマイナス値を設定しても反映されなかった問題を修正
 // 1.7.0 2017/12/17 ノベルメッセージの縦書きの対応
@@ -1205,7 +1207,6 @@
 
     Scene_Map.prototype.callQuickLoad = function() {
         this.processLoad(DataManager.latestSavefileId());
-        this._pauseWindow.activate();
     };
 
     Scene_Map.prototype.callToTitle = function() {
@@ -1221,7 +1222,7 @@
             this.createListWindow();
         }
         this._fileListWindow.setHandler('ok', this.onFileListWindowOk.bind(this));
-        this._fileListWindow.setHandler('cancel', this.closeListWindow.bind(this));
+        this._fileListWindow.setHandler('cancel', this.onFileListWindowCancel.bind(this));
         this._fileListWindow.setupForMapSave(this.firstSavefileIndex(), this._fileMode);
         this._pauseWindow.deactivate();
     };
@@ -1237,10 +1238,16 @@
     Scene_Map.prototype.onFileListWindowOk = function() {
         if (this.isFileModeSave()) {
             this.processSave(this.savefileId());
+            this._pauseWindow.activate();
         } else {
             this.processLoad(this.savefileId());
         }
         this.closeListWindow();
+    };
+
+    Scene_Map.prototype.onFileListWindowCancel = function() {
+        this.closeListWindow();
+        this._pauseWindow.activate();
     };
 
     Scene_Map.prototype.processSave = function(saveFileId) {
@@ -1270,7 +1277,6 @@
     Scene_Map.prototype.closeListWindow = function() {
         this._fileListWindow.close();
         this._fileListWindow.deactivate();
-        this._pauseWindow.activate();
     };
 
     var _Scene_Map_createMessageWindow      = Scene_Map.prototype.createMessageWindow;
@@ -1713,6 +1719,11 @@
     Window_NovelMessage.prototype.processAutoWordWrap = function(textState) {
         var c         = textState.text[textState.index];
         var textNextX = textState.x + (c ? this.textWidth(c) : 0);
+        var index = textState.index;
+        if (c === '\x1b' && this.obtainEscapeCode(textState) === 'I') {
+            textNextX = textState.x + Window_Base._iconWidth;
+        }
+        textState.index = index;
         var maxWidth  = (paramVerticalWriting ? this.contents.height : this.contents.width);
         if (textNextX > maxWidth && c !== '\n') {
             textState.index--;
