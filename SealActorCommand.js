@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2018/12/17 封印したコマンドを非表示ではなく使用禁止にできる機能を追加
 // 1.2.0 2017/03/08 アイテム使用をスキルのひとつとして作成できる機能を追加
 // 1.1.0 2017/02/23 封印対象にスキルを追加
 // 1.0.0 2017/02/22 初版
@@ -18,6 +19,11 @@
 /*:
  * @plugindesc SealActorCommandPlugin
  * @author triacontane
+ *
+ * @param commandDisable
+ * @desc 封印したコマンドを非表示ではなく使用禁止にします。
+ * @default false
+ * @type boolean
  *
  * @help アクターコマンド「攻撃」「防御」「アイテム」「スキル」を封印できます。
  * 封印されたコマンドはウィンドウから消失します。
@@ -60,6 +66,12 @@
 /*:ja
  * @plugindesc アクターコマンド封印プラグイン
  * @author トリアコンタン
+ *
+ * @param commandDisable
+ * @text コマンド使用禁止
+ * @desc 封印したコマンドを非表示ではなく使用禁止にします。
+ * @default false
+ * @type boolean
  *
  * @help アクターコマンド「攻撃」「防御」「アイテム」「スキル」を封印できます。
  * 封印されたコマンドはウィンドウから消失します。
@@ -140,6 +152,31 @@
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+    var param = createPluginParameter('SealActorCommand');
+
     //=============================================================================
     // Game_Actor
     //  コマンド封印が有効かどうかを判定します。
@@ -184,26 +221,58 @@
     //=============================================================================
     var _Window_ActorCommand_addAttackCommand = Window_ActorCommand.prototype.addAttackCommand;
     Window_ActorCommand.prototype.addAttackCommand = function() {
-        if (this._actor.isSealCommandAttack()) return;
+        if (this._actor.isSealCommandAttack()) {
+            if (param.commandDisable) {
+                _Window_ActorCommand_addAttackCommand.apply(this, arguments);
+                this.disableCommand('attack');
+            }
+            return;
+        }
         _Window_ActorCommand_addAttackCommand.apply(this, arguments);
     };
 
     var _Window_ActorCommand_addGuardCommand = Window_ActorCommand.prototype.addGuardCommand;
     Window_ActorCommand.prototype.addGuardCommand = function() {
-        if (this._actor.isSealCommandGuard()) return;
+        if (this._actor.isSealCommandGuard()) {
+            if (param.commandDisable) {
+                _Window_ActorCommand_addGuardCommand.apply(this, arguments);
+                this.disableCommand('guard');
+            }
+            return;
+        }
         _Window_ActorCommand_addGuardCommand.apply(this, arguments);
     };
 
     var _Window_ActorCommand_addItemCommand = Window_ActorCommand.prototype.addItemCommand;
     Window_ActorCommand.prototype.addItemCommand = function() {
-        if (this._actor.isSealCommandItem()) return;
+        if (this._actor.isSealCommandItem()) {
+            if (param.commandDisable) {
+                _Window_ActorCommand_addItemCommand.apply(this, arguments);
+                this.disableCommand('item');
+            }
+            return;
+        }
         _Window_ActorCommand_addItemCommand.apply(this, arguments);
     };
 
     var _Window_ActorCommand_addSkillCommands = Window_ActorCommand.prototype.addSkillCommands;
     Window_ActorCommand.prototype.addSkillCommands = function() {
-        if (this._actor.isSealCommandSkill()) return;
+        if (this._actor.isSealCommandSkill()) {
+            if (param.commandDisable) {
+                _Window_ActorCommand_addSkillCommands.apply(this, arguments);
+                this.disableCommand('skill');
+            }
+            return;
+        }
         _Window_ActorCommand_addSkillCommands.apply(this, arguments);
+    };
+
+    Window_ActorCommand.prototype.disableCommand = function(symbol) {
+        this._list.forEach(function(command) {
+            if (command.symbol === symbol) {
+                command.enabled = false;
+            }
+        });
     };
 
     //=============================================================================
