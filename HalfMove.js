@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.3 2018/12/19 プレイヤーに近づく、遠ざかる処理で特定条件下で正しく移動しない場合がある問題を修正
 // 1.12.2 2018/11/04 1.11.8の修正後、一部環境でゲーム画面のFPS低下が起きていた現象を修正
 // 1.12.1 2018/10/13 すり抜けが設定が無効なイベントのページが切り替わったとき、すり抜け設定が有効になってしまう場合がある不具合を修正
 // 1.12.0 2018/08/24 移動不可の地形およびリージョンを複数指定できる機能を追加
@@ -1218,8 +1219,10 @@
         var direction = this.getDiagonalTowardDirection(character.x, character.y);
         if (this.isDiagonalDirection(direction)) {
             this.executeDiagonalMove(direction);
-        }
-        if (!this.isMovementSucceeded()) {
+            if (!this.isMovementSucceeded()) {
+                _Game_Character_moveTowardCharacter.apply(this, arguments);
+            }
+        } else {
             _Game_Character_moveTowardCharacter.apply(this, arguments);
         }
     };
@@ -1233,8 +1236,10 @@
         var direction = 10 - this.getDiagonalTowardDirection(character.x, character.y);
         if (this.isDiagonalDirection(direction)) {
             this.executeDiagonalMove(direction);
-        }
-        if (!this.isMovementSucceeded()) {
+            if (!this.isMovementSucceeded()) {
+                _Game_Character_moveAwayFromCharacter.apply(this, arguments);
+            }
+        } else {
             _Game_Character_moveAwayFromCharacter.apply(this, arguments);
         }
     };
