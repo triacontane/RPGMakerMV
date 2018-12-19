@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2018/12/19 クロスカウンター有効時、攻撃によって戦闘不能になったバトラーの反撃が実行される問題を修正
 // 1.8.0 2018/12/07 相手が攻撃してきたスキルで反撃する機能を追加
 // 1.7.1 2018/09/26 「戦闘行動の強制」を使用しない反撃方法でスキルアニメーションとコモンイベントが呼ばれない問題を修正
 //                  反撃が失敗しなかった場合も任意のステートを解除できる機能を追加
@@ -395,7 +396,7 @@ var Imported = Imported || {};
         PluginManager.setParameters(pluginName, parameter);
         return parameter;
     };
-    var param = createPluginParameter('CounterExtend');
+    var param                 = createPluginParameter('CounterExtend');
 
     //=============================================================================
     // Game_BattlerBase
@@ -487,11 +488,11 @@ var Imported = Imported || {};
     };
 
     Game_BattlerBase.prototype.executeCounterScript = function(counterCondition, action, target) {
-        var skill      = action.item();
+        var skill     = action.item();
         // use in eval
-        var v          = $gameVariables.value.bind($gameVariables);
-        var s          = $gameSwitches.value.bind($gameSwitches);
-        var elementId  = skill.damage.elementId;
+        var v         = $gameVariables.value.bind($gameVariables);
+        var s         = $gameSwitches.value.bind($gameSwitches);
+        var elementId = skill.damage.elementId;
         var result;
         try {
             result = !!eval(counterCondition);
@@ -584,7 +585,7 @@ var Imported = Imported || {};
         if (this.subject().isCounterSubject()) {
             return 0;
         }
-        var cnt = _Game_Action_itemCnt.apply(this, arguments);
+        var cnt           = _Game_Action_itemCnt.apply(this, arguments);
         var additionalCnt = this.getCounterAdditionalRate();
         if (this.isMagical()) {
             return this.itemMagicCnt(target, additionalCnt);
@@ -663,23 +664,24 @@ var Imported = Imported || {};
     BattleManager.invokeCounterAttack      = function(subject, target) {
         if (!target.isReserveCounterSkill()) {
             _BattleManager_invokeCounterAttack.apply(this, arguments);
-        } else {
-            if (param.UsingForceAction) {
-                if (target.isCrossCounter()) {
-                    this.invokeNormalAction(subject, target);
+        } else if (param.UsingForceAction) {
+            if (target.isCrossCounter()) {
+                this.invokeNormalAction(subject, target);
+                if (target.isDead()) {
+                    return;
                 }
-                if (!target.isCounterSubject()) {
-                    this.prepareCounterSkill(subject, target);
-                }
-            } else if (subject.isAlive()) {
-                var action = new Game_Action(target);
-                action.setSkill(target.getCounterSkillId());
-                action.apply(subject);
-                action.applyGlobal();
-                this._logWindow.displaySkillCounterAction(subject, target, action);
-                if (param.EraseStateTiming !== 0) {
-                    target.eraseStateCounterFailure();
-                }
+            }
+            if (!target.isCounterSubject()) {
+                this.prepareCounterSkill(subject, target);
+            }
+        } else if (subject.isAlive()) {
+            var action = new Game_Action(target);
+            action.setSkill(target.getCounterSkillId());
+            action.apply(subject);
+            action.applyGlobal();
+            this._logWindow.displaySkillCounterAction(subject, target, action);
+            if (param.EraseStateTiming !== 0) {
+                target.eraseStateCounterFailure();
             }
         }
         if (target.isCounterCancel()) {
