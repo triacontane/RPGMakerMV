@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2018/12/22 禁止コマンドの上に文字を被せられる機能を追加
 // 1.3.0 2018/12/17 封印したコマンドを非表示ではなく使用禁止にできる機能を追加
 // 1.2.0 2017/03/08 アイテム使用をスキルのひとつとして作成できる機能を追加
 // 1.1.0 2017/02/23 封印対象にスキルを追加
@@ -24,6 +25,10 @@
  * @desc 封印したコマンドを非表示ではなく使用禁止にします。
  * @default false
  * @type boolean
+ *
+ * @param disableSign
+ * @desc 使用禁止にしたコマンドのうえに被せる文字列です。(コマンド使用禁止が有効な場合のみ機能します)
+ * @default \i[1]\i[1]\i[1]
  *
  * @help アクターコマンド「攻撃」「防御」「アイテム」「スキル」を封印できます。
  * 封印されたコマンドはウィンドウから消失します。
@@ -72,6 +77,11 @@
  * @desc 封印したコマンドを非表示ではなく使用禁止にします。
  * @default false
  * @type boolean
+ *
+ * @param disableSign
+ * @text 使用禁止サイン
+ * @desc 使用禁止にしたコマンドのうえに被せる文字列です。(コマンド使用禁止が有効な場合のみ機能します)
+ * @default \c[2]\i[1]禁止\i[1]
  *
  * @help アクターコマンド「攻撃」「防御」「アイテム」「スキル」を封印できます。
  * 封印されたコマンドはウィンドウから消失します。
@@ -273,6 +283,24 @@
                 command.enabled = false;
             }
         });
+    };
+
+    var _Window_ActorCommand_drawItem = Window_ActorCommand.prototype.drawItem;
+    Window_ActorCommand.prototype.drawItem = function(index) {
+        _Window_ActorCommand_drawItem.apply(this, arguments);
+        var sign = param.disableSign;
+        if (!this.isCommandEnabled(index) && sign) {
+            var rect = this.itemRectForText(index);
+            var width = this.drawTextEx(sign, this.windowWidth(), 0);
+            var height = this.calcTextHeight({text:sign}, false);
+            this.resetFontSettings();
+            this.resetTextColor();
+            this.changePaintOpacity(true);
+            this.drawTextEx(sign, rect.x + rect.width / 2 - width / 2, rect.y + rect.height / 2 - height / 2);
+            this.resetFontSettings();
+            this.resetTextColor();
+            this.changePaintOpacity(false);
+        }
     };
 
     //=============================================================================
