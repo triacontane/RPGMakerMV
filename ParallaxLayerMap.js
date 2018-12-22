@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2018/12/22 HalfMove.jsによる減速斜め移動など特定の条件下でマップの描画位置がずれる場合がある現象を修正
 // 1.1.1 2017/11/19 MOG_ChronoEngine.js等との競合を解消
 // 1.1.0 2017/09/20 ヘルプにサンプルマップの旨を記載
 // 1.1.0 2017/09/14 合成方法や不透明度の初期値を設定できるメモ欄を追加
@@ -233,11 +234,11 @@
     };
 
     Game_Event.prototype.getLayerX = function() {
-        return (this._additionalX || 0) - $gameMap.displayPixelX();
+        return (this._additionalX || 0) - Math.round($gameMap.displayPixelX());
     };
 
     Game_Event.prototype.getLayerY = function() {
-        return (this._additionalY || 0) - $gameMap.displayPixelY();
+        return (this._additionalY || 0) - Math.round($gameMap.displayPixelY());
     };
 
     //=============================================================================
