@@ -1,18 +1,19 @@
 //=============================================================================
 // RetryBattle.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2018/12/25 リトライを経て勝った、もしくは逃げた場合、それぞれの分岐を正常に通らない場合がある問題を修正
 // 1.1.1 2017/03/20 本体v1.3.4以降で、リトライ後のメニュー画面でコモンイベントアイテムが実行できていた問題を修正
 // 1.1.0 2016/07/26 リトライ後のメニュー画面でコモンイベントを実行するアイテム・スキルを実行すると正常に動作しない問題を修正
 //                  リトライ後のメニュー画面でゲーム終了を選択できないように修正
 //                  リトライ回数をカウントして、スクリプトから取得できる機能を追加
 // 1.0.0 2016/07/26 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -233,23 +234,7 @@
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         var commandPrefix = new RegExp('^' + metaTagPrefix);
         if (!command.match(commandPrefix)) return;
-        try {
-            this.pluginCommandRetryBattle(command.replace(commandPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandRetryBattle(command.replace(commandPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandRetryBattle = function(command) {
@@ -416,7 +401,10 @@
     DataManager.loadGameForRetry = function() {
         if (this._retryData) {
             var json = LZString.decompressFromBase64(this._retryData);
+            // without $gameMap because of 'victory or defeat'
+            var prevGameMap = $gameMap;
             this.extractSaveContents(JsonEx.parse(json));
+            $gameMap = prevGameMap;
         }
     };
 
