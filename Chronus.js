@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.0 2018/12/27 カレンダー表示に行間を設定できる機能を追加
 // 1.11.1 2018/10/14 実時間表示に切り替えてから内部時間に反映されるまでにラグがある問題の修正
 // 1.11.0 2018/10/14 カレンダーの枠を非表示にできる機能を追加
 // 1.10.3 2018/10/08 プラグインコマンドで天候変化を無効にした場合でも、内部で制御している天候による色調の調整が反映されてしまう問題を修正
@@ -172,6 +173,11 @@
  * @desc マップ上の日付ウィンドウ2行目に表示される文字列です。
  * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
  * @default AMHH時 MI分
+ *
+ * @param 日時フォーマット行間
+ * @type number
+ * @desc カレンダー表示の行間です。
+ * @default 0
  *
  * @param カレンダー表示X座標
  * @type number
@@ -529,6 +535,7 @@ function Window_Chronus() {
     var paramMinutesHandFile     = getParamString('長針画像ファイル');
     var paramHourHandFile        = getParamString('短針画像ファイル');
     var paramCalendarFrameHidden = getParamBoolean('カレンダー枠の非表示');
+    var paramCalendarLineSpacing = getParamNumber('日時フォーマット行間', 0);
 
     //=============================================================================
     // Game_Interpreter
@@ -815,7 +822,7 @@ function Window_Chronus() {
     };
 
     Window_Chronus.prototype.getDefaultHeight = function() {
-        return this.standardFontSize() * (this.getDateFormat(2) ? 2 : 1) + this.standardPadding() * 2;
+        return this.standardFontSize() * (this.getDateFormat(2) ? 2 : 1) + this.standardPadding() * 2 + paramCalendarLineSpacing;
     };
 
     Window_Chronus.prototype.standardPadding = function() {
@@ -840,7 +847,7 @@ function Window_Chronus() {
         var width  = this.contents.width;
         var height = this.lineHeight();
         this.contents.drawText(this.getDateFormat(1), 0, 0, width, height, 'left');
-        this.contents.drawText(this.getDateFormat(2), 0, height, width, height, 'left');
+        this.contents.drawText(this.getDateFormat(2), 0, height + paramCalendarLineSpacing, width, height, 'left');
     };
 
     Window_Chronus.prototype.update = function() {
