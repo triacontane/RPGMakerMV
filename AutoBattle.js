@@ -1,14 +1,15 @@
 //=============================================================================
 // AutoBattle.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2018/12/30 コマンド位置の指定のパラメータ設定が一部正常に機能していなかった問題を修正
 // 1.0.0 2016/09/29 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -164,7 +165,7 @@
         this.addCommand(paramPartyCommandName, 'auto');
         if (this._list[paramPartyCommandIndex]) {
             var command = this._list.pop();
-            this._list.splice(1, paramPartyCommandIndex, command);
+            this._list.splice(paramPartyCommandIndex, 0, command);
         }
     };
 
@@ -184,7 +185,7 @@
         this.addCommand(paramActorCommandName, 'auto');
         if (this._list[paramActorCommandIndex]) {
             var command = this._list.pop();
-            this._list.splice(1, paramActorCommandIndex, command);
+            this._list.splice(paramActorCommandIndex, 0, command);
         }
     };
 })();
