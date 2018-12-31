@@ -1,11 +1,12 @@
 //=============================================================================
 // VanguardAndRearguard.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2019/01/01 後衛の人数の上限を設定できる機能を追加
 // 1.6.0 2018/10/21 前衛・後衛の仕様を味方側もしくは敵側のみに適用できる機能を追加
 // 1.5.4 2018/05/27 前衛のみ、後衛のみのスキルについて効果範囲を単体にすると対象外のバトラーを選択できてしまう制約事項を明記
 // 1.5.3 2018/04/10 前衛に詰める機能有効時、控えのメンバーがいるときに戦闘メンバーを全員後衛にできてしまう問題を修正
@@ -98,6 +99,11 @@
  * @desc 前衛・後衛の仕様を敵キャラ側に適用します。
  * @default true
  * @type boolean
+ *
+ * @param RearguardLimit
+ * @desc 後衛になれるメンバーの上限です。0に設定すると無制限になります。
+ * @default 0
+ * @type number
  *
  * @help We add the concept of "vanguard" "rearguard" to battle.
  * After designating the state at "vanguard" and the state at "guard"
@@ -220,6 +226,11 @@
  * @desc 前衛・後衛の仕様を敵キャラ側に適用します。
  * @default true
  * @type boolean
+ *
+ * @param 後衛メンバー上限
+ * @desc 後衛になれるメンバーの上限です。0に設定すると無制限になります。
+ * @default 0
+ * @type number
  *
  * @help 戦闘に「前衛」「後衛」の概念を追加します。
  * 「前衛」時のステートと「後衛」時のステートを指定したうえで
@@ -361,6 +372,7 @@
     var paramShiftVanguard    = getParamBoolean(['ShiftVanguard', '前衛に詰める']);
     var paramValidEnemy       = getParamBoolean(['ValidEnemy', '敵キャラに適用']);
     var paramValidActor       = getParamBoolean(['ValidActor', 'アクターに適用']);
+    var paramRearguardLimit   = getParamNumber(['RearguardLimit', '後衛メンバー上限']);
 
     //=============================================================================
     // Game_Interpreter
@@ -441,6 +453,10 @@
         return false;
     };
 
+    Game_BattlerBase.prototype.isChangeableRearguard = function() {
+        return this.isRearguard() || paramRearguardLimit <= 0 || this.friendsUnit().rearguardMembers().length < paramRearguardLimit;
+    };
+
     Game_BattlerBase.prototype.isValidFormationState = function() {
         return true;
     };
@@ -474,6 +490,9 @@
     };
 
     Game_BattlerBase.prototype.isChangeableFormationState = function() {
+        if (!this.isChangeableRearguard()) {
+            return false;
+        }
         var battler = (this.isActor() ? this.actor() : this.isEnemy() ? this.enemy() : null);
         if (battler) {
             return !getMetaValues(battler, ['チェンジ禁止', 'ChangeDisable']);
