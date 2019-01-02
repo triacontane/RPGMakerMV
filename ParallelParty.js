@@ -1,11 +1,12 @@
 //=============================================================================
 // ParallelParty.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2019/01/02 用語辞典プラグイン使用時に用語履歴を常に継承できるよう修正
 // 1.2.1 2017/12/08 SceneGlossary.jsとの間で発生する可能性のある競合を解消
 // 1.2.0 2017/05/15 パーティを切り替えた際にリソースを統合できる機能を追加
 // 1.1.0 2017/05/13 パーティ間でリソースを共有する設定を追加、各パーティのマップ座標を記憶して自働で場所移動する機能を追加
@@ -226,16 +227,13 @@ function Game_Parties() {
     };
 
     Game_Party.prototype.inheritAllResources = function(prevParty) {
-        var resources       = prevParty.getAllResources();
-        this._items         = resources.items;
-        this._weapons       = resources.weapons;
-        this._armors        = resources.armors;
-        this._gold          = resources.gold;
-        this._steps         = resources.steps;
-        // for SceneGlossary.js
-        this._itemHistory   = resources.itemHistory;
-        this._weaponHistory = resources.weaponHistory;
-        this._armorHistory  = resources.armorHistory;
+        var resources = prevParty.getAllResources();
+        this._items   = resources.items;
+        this._weapons = resources.weapons;
+        this._armors  = resources.armors;
+        this._gold    = resources.gold;
+        this._steps   = resources.steps;
+        this.inheritItemHistory(prevParty);
     };
 
     Game_Party.prototype.combineAllResources = function(targetParty) {
@@ -254,6 +252,14 @@ function Game_Parties() {
         $gameParty.initAllItems();
         $gameParty.loseGold($gameParty.maxGold());
         $gameParty._steps = 0;
+    };
+
+    // for SceneGlossary.js
+    Game_Party.prototype.inheritItemHistory = function(prevParty) {
+        var resources       = prevParty.getAllResources();
+        this._itemHistory   = resources.itemHistory;
+        this._weaponHistory = resources.weaponHistory;
+        this._armorHistory  = resources.armorHistory;
     };
 
     Game_Party.prototype.moveSavedPosition = function() {
@@ -300,6 +306,8 @@ function Game_Parties() {
             currentParty.inheritAllResources($gameParty);
         } else if (resourceCombine) {
             currentParty.combineAllResources($gameParty);
+        } else {
+            currentParty.inheritItemHistory($gameParty);
         }
         if (param.savePosition) {
             this.moveSavedPosition();
