@@ -1,11 +1,12 @@
 //=============================================================================
 // StatusBustImage.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.4 2019/01/02 MOG_SceneMenu.jsと併用した場合、アイテムを使用時に2回使用してしまう場合がある問題を修正
 // 1.7.3 2018/11/04 GraphicalDesignMode.jsとの間で競合が発生する場合がある問題を修正
 // 1.7.2 2018/09/17 TMSoloMenu.jsと両立できるよう修正（TMSoloMenu.js側の修正も必須）
 // 1.7.1 2017/02/02 特定条件下で戦闘画面にもバストアップが表示されていた問題を修正
@@ -603,6 +604,14 @@
 
     Window_MenuStatus.prototype.getBustPosition = function() {
         return [paramMainBustImageX, paramMainBustImageY];
+    };
+
+    //=============================================================================
+    // Window_MenuActor
+    //  アクター選択ウィンドウにはバストアップは表示しない
+    //=============================================================================
+    Window_MenuActor.prototype.getBustPosition = function() {
+        return null;
     };
 
     // Resolve conflict for TMSoloMenu.js
