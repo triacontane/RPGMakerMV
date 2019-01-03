@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.2 2019/01/04 2.11.0の対応でピクチャの拡大率が機能しなくなっていた問題を修正
 // 2.11.1 2018/12/07 収集率を取得できるスクリプトをヘルプに記載
 // 2.11.0 2018/11/24 カテゴリ選択中でも収集率が表示されるよう修正
 //                   一部の処理を軽量化
@@ -953,7 +954,7 @@ function Window_GlossaryComplete() {
         } else {
             text = convertEscapeCharacters(text);
         }
-        return toNumber ? parseInt(text) : text;
+        return toNumber ? parseFloat(text) : text;
     };
 
     var convertEscapeCharacters = function(text) {
