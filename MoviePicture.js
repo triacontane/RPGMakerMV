@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2019/01/06 movieフォルダ以外の場所に配置されている動画ファイルを再生できる機能を追加
 // 1.3.3 2018/11/08 再生開始直後に停止したとき、特定条件下で正常に停止しない問題を修正
 // 1.3.2 2018/06/17 ピクチャの消去によって動画再生を終了した場合に、再生速度と音量が初期化されない問題を修正
 // 1.3.1 2017/08/27 二連続で再生したときに動画の音量同期機能が正常に動作しない問題を修正
@@ -54,25 +55,23 @@
  * Plugin Command
  *
  * MP_SET_MOVIE file  # 動画ファイル[file]を準備します。
- * MP_動画設定 file   # 同上
  * MP_SET_LOOP 1 on   # ピクチャ番号[1]の動画がループ再生されます。
- * MP_ループ設定 1 on # 同上(offでループ再生を解除します)
  * MP_SET_PAUSE 1 on  # ピクチャ番号[1]の動画が一時停止します。
- * MP_ポーズ設定 1 on # 同上(offで再生を再開します)
  * MP_SET_WAIT 1      # ピクチャ番号[1]の動画が再生するまでイベントを待機します。
- * MP_ウェイト設定 1  # 同上
  * MP_SET_VOLUME 1 50 # ピクチャ番号[1]の動画の音量を50%に設定します。
- * MP_音量設定 1 50   # 同上
  * MP_SET_SPEED 1 150 # ピクチャ番号[1]の動画の再生速度を150%に設定します。
- * MP_速度設定 1 150  # 同上
  *
- * 動画音量種別を設定します。設定する内容はプラグインパラメータ「動画音量種別」と
- * 同じです。プラグインパラメータの設定より優先されます。
- * MP_音量種別設定 BGM
+ * Prepare a video file that exists in a path other than the movie folder.
+ * The [path] you specify is relative to the path where the save folder exists.
+ * Extension is required.
+ * MP_SET_OUTER_MOVIE path # 動画ファイル[path]を準備します。拡張子必須
+ * MP_外部動画設定 path    # 同上
+ *
+ * Set the movie sound volume type.
  * MP_SET_VOLUME_TYPE BGM
  *
- * 注意：
- * サイズの大きな動画を複数再生すると、パフォーマンスが低下する可能性があります。
+ * Caution：
+ * If you play multiple large movies, the performance may be degraded.
  *
  * This plugin is released under the MIT License.
  */
@@ -120,6 +119,12 @@
  * MP_音量設定 1 50   # 同上
  * MP_SET_SPEED 1 150 # ピクチャ番号[1]の動画の再生速度を150%に設定します。
  * MP_速度設定 1 150  # 同上
+ *
+ * movieフォルダ以外のパスに存在する動画ファイルを準備します。
+ * 指定する[path]は、フルパスもしくはsaveフォルダの存在するパスからの相対パスです。
+ * 拡張子が必要です。
+ * MP_SET_OUTER_MOVIE path # 動画ファイル[path]を準備します。拡張子必須
+ * MP_外部動画設定 path    # 同上
  *
  * 動画音量種別を設定します。設定する内容はプラグインパラメータ「動画音量種別」と
  * 同じです。プラグインパラメータの設定より優先されます。
@@ -214,6 +219,8 @@
     setPluginCommand('音量設定', 'execSetVideoVolume');
     setPluginCommand('SET_VOLUME_TYPE', 'execSetVideoVolumeType');
     setPluginCommand('音量種別設定', 'execSetVideoVolumeType');
+    setPluginCommand('SET_OUTER_MOVIE', 'execSetOuterVideoPicture');
+    setPluginCommand('外部動画設定', 'execSetOuterVideoPicture');
 
     //=============================================================================
     // Game_Interpreter
@@ -229,7 +236,11 @@
     };
 
     Game_Interpreter.prototype.execSetVideoPicture = function(args) {
-        $gameScreen.setVideoPictureName(args[0], getArgBoolean(args[1]));
+        $gameScreen.setVideoPictureName(args[0], getArgBoolean(args[1]), false);
+    };
+
+    Game_Interpreter.prototype.execSetOuterVideoPicture = function(args) {
+        $gameScreen.setVideoPictureName(args[0], getArgBoolean(args[1]), true);
     };
 
     Game_Interpreter.prototype.execSetVideoLoop = function(args) {
@@ -301,9 +312,14 @@
     // Game_Screen
     //  動画ピクチャを準備します。
     //=============================================================================
-    Game_Screen.prototype.setVideoPictureName = function(movieName, useAlpha) {
-        this._videoPictureName = movieName;
-        this._videoUseAlpha    = useAlpha;
+    Game_Screen.prototype.setVideoPictureName = function(movieName, useAlpha, useOuter) {
+        this._videoUseAlpha = useAlpha;
+        if (useOuter && !movieName.match(/^[A-Z]:/)) {
+            const path = require('path');
+            this._videoPictureName = path.join(path.dirname(StorageManager.localFileDirectoryPath()), movieName);
+        } else {
+            this._videoPictureName = movieName;
+        }
     };
 
     Game_Screen.prototype.getVideoPictureName = function() {
@@ -532,9 +548,9 @@
             picture.setVideoPosition(this.bitmap.getCurrentTime());
         }
         this.bitmap.destroy();
-        this._volume = null;
-        this._speed  = null;
-        this._pause = null;
+        this._volume    = null;
+        this._speed     = null;
+        this._pause     = null;
         this._playStart = false;
     };
 
@@ -573,10 +589,17 @@
     //=============================================================================
     ImageManager.loadVideo = function(filename, alpha) {
         if (filename) {
-            var path = 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
-            return Bitmap_Video.load(path, false, this.getVideoClass(alpha));
+            return Bitmap_Video.load(this.getVideoFilePath(filename), false, this.getVideoClass(alpha));
         } else {
             return this.loadEmptyBitmap();
+        }
+    };
+
+    ImageManager.getVideoFilePath = function(filename) {
+        if (!filename.match(/^[A-Z]:/)) {
+            return 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
+        } else {
+            return filename;
         }
     };
 
