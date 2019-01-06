@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2018/01/06 MakeScreenMovie.jsを有効にしていると録画用のツールバーが表示される機能を追加
 // 2.7.0 2018/12/09 マップリロード機能で再読込したときに一時消去されたイベントが再表示されないよう仕様変更
 // 2.6.0 2018/10/08 戦闘強制敗北、戦闘強制中断の機能を追加
 // 2.5.1 2018/03/25 BGMが演奏されていないときに高速モードを切り替えるとエラーになる問題を修正
@@ -869,6 +870,7 @@ function Controller_NwJs() {
             {code: 108, use: !!SceneManager.takeCapture, name: '画面キャプチャ', key: true, type: 'normal'},
             {code: 109, use: true, name: '戦闘強制敗北', key: paramFuncKeyDefeat, type: 'normal'},
             {code: 110, use: true, name: '戦闘強制中断', key: paramFuncKeyAbort, type: 'normal'},
+            {code: 111, use: !!SceneManager.onKeyDownForScreenMovie, name: '画面録画', key: true, type: 'normal'},
         ];
     };
 
@@ -958,6 +960,10 @@ function Controller_NwJs() {
 
     SceneManager.executeDevCommand110 = function() {
         BattleManager.forceAbort();
+    };
+
+    SceneManager.executeDevCommand111 = function() {
+        this._screenRecorder.toggle();
     };
 
     SceneManager.isRapid = function() {
