@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2019/01/13 ウィンドウ背景の画像を複数表示できる機能を追加
+//                  ウィンドウ背景を指定した場合も元のウィンドウフレームを表示したままにできる機能を追加
 // 1.2.0 2018/11/29 ウィンドウ背景を有効にするかどうかを動的に制御するスイッチを追加
 // 1.1.0 2017/11/19 拡大率を設定できる機能を追加
 // 1.0.0 2017/11/18 初版
@@ -19,7 +21,8 @@
  * @plugindesc ウィンドウ背景画像指定プラグイン
  * @author トリアコンタン
  *
- * @param ウィンドウ画像情報
+ * @param windowImageInfo
+ * @text ウィンドウ画像情報
  * @desc 背景画像を差し替えるウィンドウの情報です。
  * @default
  * @type struct<WindowImages>[]
@@ -27,7 +30,9 @@
  * @help WindowBackImage.js
  *
  * ウィンドウの背景を任意の画像に置き換えます。
- * 画像が指定された場合、元のウィンドウフレームは非表示になります。
+ * 画像は複数指定可能で、それぞれに出現条件スイッチを指定できます。
+ * 画像が表示された場合、元のウィンドウフレームを非表示するかどうかを
+ * 選択できます。
  *
  * 背景画像はウィンドウのサイズにかかわらず、中央を原点に表示されます。
  * 拡大率と座標を補正することは可能ですがサイズが可変、不定のウィンドウに
@@ -218,6 +223,11 @@
  * @min -2000
  * @max 2000
  *
+ * @param WindowShow
+ * @desc 画像が表示されているときでもウィンドウの元背景を表示したままにします。
+ * @default false
+ * @type boolean
+ *
  * @param SwitchId
  * @desc 指定したスイッチがONのときのみウィンドウを差し替えます。
  * @default 0
@@ -226,49 +236,43 @@
 
 (function() {
     'use strict';
-    var pluginName = 'WindowBackImage';
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        alert('Fail to load plugin parameter of ' + pluginName);
-        return null;
-    };
-
-    var getParamArrayJson = function(paramNames, defaultValue) {
-        var value = getParamString(paramNames) || null;
-        try {
-            value = JSON.parse(value);
-            if (value === null) {
-                value = defaultValue;
-            } else {
-                value = value.map(function(valueData) {
-                    return JSON.parse(valueData);
-                });
-            }
-        } catch (e) {
-            alert('!!!Plugin param is wrong.!!!\nPlugin:.js\nName:[]\nValue:');
-            value = defaultValue;
-        }
-        return value;
-    };
 
     var getClassName = function(object) {
         return object.constructor.toString().replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
     };
 
     //=============================================================================
-    // パラメータの取得と整形
+    // ローカル関数
+    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    var param             = {};
-    param.windowImageInfo = getParamArrayJson(['WindowImageInfo', 'ウィンドウ画像情報'], []);
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+
+    var param = createPluginParameter('WindowBackImage');
+    if (!param.windowImageInfo) {
+        param.windowImageInfo = [];
+    }
 
     //=============================================================================
     // Window
@@ -277,13 +281,10 @@
     var _Window__createAllParts      = Window.prototype._createAllParts;
     Window.prototype._createAllParts = function() {
         _Window__createAllParts.apply(this, arguments);
-        var backImageData = this.getBackImageData();
-        if (backImageData) {
-            this._createBackImage(backImageData['ImageFile']);
-            this._setBackImageProperty(backImageData);
-            this._backImageSwitchId = backImageData['SwitchId'];
+        this._backImageDataList = this.initBackImageData();
+        if (this._backImageDataList.length >= 0) {
+            this._createBackImage();
         }
-
     };
 
     Window.prototype._setBackImageProperty = function(backImageData) {
@@ -295,27 +296,36 @@
 
     /**
      * 背景画像を作成します。
-     * @param fileName 背景画像のファイル名
      * @private
      */
-    Window.prototype._createBackImage = function(fileName) {
+    Window.prototype._createBackImage = function() {
         this._windowBackSprite.visible  = false;
         this._windowFrameSprite.visible = false;
-        var bitmap                      = ImageManager.loadPicture(fileName);
-        this._windowBackImageSprite     = new Sprite_WindowBackImage(bitmap);
-        this._windowSpriteContainer.addChild(this._windowBackImageSprite);
+        this._windowBackImageSprites    = [];
+        this._backImageDataList.forEach(function(backImageData) {
+            var bitmap     = ImageManager.loadPicture(backImageData['ImageFile']);
+            var sprite     = new Sprite_WindowBackImage(bitmap);
+            sprite.scale.x = (backImageData['ScaleX'] || 100) / 100;
+            sprite.scale.y = (backImageData['ScaleY'] || 100) / 100;
+            this._windowBackImageSprites.push(sprite);
+            this._windowSpriteContainer.addChild(sprite);
+        }, this);
     };
 
-    Window.prototype.getBackImageData = function() {
+    Window.prototype.initBackImageData = function() {
         var className = getClassName(this);
         return param.windowImageInfo.filter(function(data) {
             return data['WindowClass'] === className;
-        }, this)[0];
+        }, this);
+    };
+
+    Window.prototype.getBackImageDataItem = function(index, propName) {
+        return this._backImageDataList[index][propName];
     };
 
     var _Window__refreshAllParts      = Window.prototype._refreshAllParts;
     Window.prototype._refreshAllParts = function() {
-        if (this._windowBackImageSprite) {
+        if (this._windowBackImageSprites) {
             this._refreshBackImage();
         }
         _Window__refreshAllParts.apply(this, arguments);
@@ -326,19 +336,28 @@
      * @private
      */
     Window.prototype._refreshBackImage = function() {
-        this._windowBackImageSprite.x = this.width / 2 + this._backImageDx;
-        this._windowBackImageSprite.y = this.height / 2 + this._backImageDy;
+        this._windowBackImageSprites.forEach(function(sprite, index) {
+            sprite.x = this.width / 2 + this.getBackImageDataItem(index, 'OffsetX');
+            sprite.y = this.height / 2 + this.getBackImageDataItem(index, 'OffsetY');
+        }, this);
     };
 
     var _Window_update      = Window.prototype.update;
     Window.prototype.update = function() {
         _Window_update.apply(this, arguments);
-        if (this._backImageSwitchId > 0 && $gameSwitches && this._windowBackImageSprite) {
-            var visible                         = $gameSwitches.value(this._backImageSwitchId);
-            this._windowBackSprite.visible      = !visible;
-            this._windowFrameSprite.visible     = !visible;
-            this._windowBackImageSprite.visible = visible;
+        if (!this._windowBackImageSprites) {
+            return;
         }
+        var defaultVisible = true;
+        this._windowBackImageSprites.forEach(function(sprite, index) {
+            var switchId = this.getBackImageDataItem(index, 'SwitchId');
+            sprite.visible = !switchId || $gameSwitches.value(switchId);
+            if (sprite.visible && !this.getBackImageDataItem(index, 'WindowShow')) {
+                defaultVisible = false;
+            }
+        }, this);
+        this._windowBackSprite.visible  = defaultVisible;
+        this._windowFrameSprite.visible = defaultVisible;
     };
 
     //=============================================================================
