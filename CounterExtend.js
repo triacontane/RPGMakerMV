@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.2 2019/01/13 クロスカウンター有効時、反撃可能かどうかの再チェックを行うよう修正
+//                  「コスト不足で失敗」パラメータ有効時、スキル封印についても考慮するよう修正
 // 1.8.1 2018/12/19 クロスカウンター有効時、攻撃によって戦闘不能になったバトラーの反撃が実行される問題を修正
 // 1.8.0 2018/12/07 相手が攻撃してきたスキルで反撃する機能を追加
 // 1.7.1 2018/09/26 「戦闘行動の強制」を使用しない反撃方法でスキルアニメーションとコモンイベントが呼ばれない問題を修正
@@ -45,7 +47,7 @@
  * @type boolean
  *
  * @param FailureCostShortage
- * @desc 固有スキルによる反撃がコスト不足の場合、反撃は行いません。(ON/OFF)
+ * @desc 固有スキルによる反撃がコスト不足もしくは封印されている場合、反撃は行いません。(ON/OFF)
  * @default false
  * @type boolean
  *
@@ -191,7 +193,7 @@
  *
  * @param FailureCostShortage
  * @text コスト不足で失敗
- * @desc 固有スキルによる反撃がコスト不足の場合、反撃は行いません。(ON/OFF)
+ * @desc 固有スキルによる反撃がコスト不足もしくは封印されている場合、反撃は行いません。(ON/OFF)
  * @default false
  * @type boolean
  *
@@ -517,7 +519,7 @@ var Imported = Imported || {};
 
     Game_BattlerBase.prototype.canPaySkillCostForCounter = function() {
         return !param.FailureCostShortage || !this._reserveCounterSkillId ||
-            this.canPaySkillCost($dataSkills[this._reserveCounterSkillId]);
+            this.meetsSkillConditions($dataSkills[this._reserveCounterSkillId]);
     };
 
     //=============================================================================
@@ -667,7 +669,7 @@ var Imported = Imported || {};
         } else if (param.UsingForceAction) {
             if (target.isCrossCounter()) {
                 this.invokeNormalAction(subject, target);
-                if (target.isDead()) {
+                if (target.isDead() || this._action.itemCnt(target) <= 0) {
                     return;
                 }
             }
