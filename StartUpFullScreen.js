@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2019/01/14 1.0.3でコアスクリプトv1.6.1以前で逆に動作しなくなっていた問題を修正
 // 1.0.2 2019/01/14 コアスクリプトv1.6.1以降で正常に動作していなかった問題を修正
 // 1.0.1 2018/06/30 タイトルコマンドウィンドウのY座標整数になっていなかった問題を修正
 // 1.0.0 2016/03/06 初版
@@ -95,9 +96,22 @@ function Scene_Terminate() {
     //  privateメソッド「_requestFullScreen」を呼び出します。
     //=============================================================================
     Graphics.requestFullScreen = function() {
-        if (!this._isFullScreen()) {
+        if (!this._isFullScreenForPrevVersion()) {
             this._requestFullScreen();
         }
+    };
+
+    /**
+     * @static
+     * @method _isFullScreenForPrevVersion
+     * @return {Boolean}
+     * @private
+     */
+    Graphics._isFullScreenForPrevVersion = function() {
+        return document.fullscreenElement ||
+            document.mozFullScreen ||
+            document.webkitFullscreenElement ||
+            document.msFullscreenElement;
     };
 
     //=============================================================================
