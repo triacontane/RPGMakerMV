@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2019/01/14 MPP_ActiveTimeBattle.jsと併用したときにアクターコマンドからチェンジが選択できない競合を修正
 // 1.7.0 2019/01/01 後衛の人数の上限を設定できる機能を追加
 // 1.6.0 2018/10/21 前衛・後衛の仕様を味方側もしくは敵側のみに適用できる機能を追加
 // 1.5.4 2018/05/27 前衛のみ、後衛のみのスキルについて効果範囲を単体にすると対象外のバトラーを選択できてしまう制約事項を明記
@@ -730,8 +731,17 @@
     };
 
     Scene_Battle.prototype.commandChange = function() {
-        BattleManager.inputtingAction().setChange();
-        this.selectNextCommand();
+        // for MPP_ActiveTimeBattle.js
+        if (BattleManager.actor().onMadeAction) {
+            if (BattleManager.inputtingAction()) {
+                BattleManager.inputtingAction().setChange();
+                BattleManager.actor().onMadeAction();
+                this.selectNextCommand();
+            }
+        } else {
+            BattleManager.inputtingAction().setChange();
+            this.selectNextCommand();
+        }
     };
 
     //=============================================================================
