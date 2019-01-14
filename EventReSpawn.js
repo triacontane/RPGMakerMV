@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2019/01/14 地形タグとリージョンを複数指定できる機能を追加
 // 1.8.3 2018/10/25 YEP_EventMiniLabel.jsと併用した際、動的生成イベントを「イベント消去」するとエラーになる競合を修正
 // 1.8.2 2018/05/17 ランダム生成の試行回数をパラメータから設定できるように仕様変更
 // 1.8.1 2018/03/12 ランダム生成で対象座標が見付からず失敗した場合、エラーではなく警告になるよう仕様変更
@@ -87,6 +88,10 @@
  * ERS_MAKE_RANDOM 1 1 2 3 5 4  # 同上
  * ※ 通行可能かつ画面外かつプレイヤーもしくはイベントが存在せず
  *    地形タグが「5」でリージョンが「4」の位置の中からランダム
+ *
+ * 地形タグとリージョンは複数指定できます。
+ * カンマで数値を指定してください。
+ * ERS_MAKE_RANDOM 59 0 0 0 3,4 0 # 地形タグ[3][4]に配置
  *
  * また特に、a.b.c.の条件指定がやりにくかったため文章による指定も可能にしました。
  * 上記の条件は以下のように書き換えることができます。（順番入れ替えは不可）
@@ -301,8 +306,12 @@ function Game_PrefabEvent() {
         conditionMap.passable   = getArgNumber(args[1], 0);
         conditionMap.screen     = getArgNumber(args[2], 0);
         conditionMap.collided   = getArgNumber(args[3], 0);
-        conditionMap.terrainTag = getArgNumber(args[4], 0);
-        conditionMap.regionId   = getArgNumber(args[5], 0);
+        conditionMap.terrainTags = args[4].split(',').map(function (value) {
+            return getArgNumber(value, 0);
+        });
+        conditionMap.regionIds   = args[5].split(',').map(function (value) {
+            return getArgNumber(value, 0);
+        });
         $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0], extend), conditionMap, extend);
     };
 
@@ -374,11 +383,11 @@ function Game_PrefabEvent() {
         if (conditionMap.collided) {
             conditions.push(this.isErsCheckCollidedSomeone.bind(this, conditionMap.collided));
         }
-        if (conditionMap.terrainTag) {
-            conditions.push(this.isErsCheckTerrainTag.bind(this, conditionMap.terrainTag));
+        if (conditionMap.terrainTags) {
+            conditions.push(this.isErsCheckTerrainTag.bind(this, conditionMap.terrainTags));
         }
-        if (conditionMap.regionId) {
-            conditions.push(this.isErsCheckRegionId.bind(this, conditionMap.regionId));
+        if (conditionMap.regionIds) {
+            conditions.push(this.isErsCheckRegionId.bind(this, conditionMap.regionIds));
         }
         var position = this.getConditionalValidPosition(conditions);
         if (position) {
@@ -477,11 +486,15 @@ function Game_PrefabEvent() {
     };
 
     Game_Map.prototype.isErsCheckTerrainTag = function(type, x, y) {
-        return type === this.terrainTag(x, y);
+        return type.some(function (id) {
+            return !id || id === this.terrainTag(x, y);
+        }, this);
     };
 
     Game_Map.prototype.isErsCheckRegionId = function(type, x, y) {
-        return type === this.regionId(x, y);
+        return type.some(function (id) {
+            return !id || id === this.regionId(x, y);
+        }, this);
     };
 
     //=============================================================================
