@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2018/01/18 他のプラグインと連携しやすいように一部の実装を変更
 // 1.3.0 2018/09/23 対象イベントの並列実行を停止するコマンドを追加
 // 1.2.0 2017/12/24 公式ガチャプラグインと連携できるよう修正
 // 1.1.3 2017/12/02 NobleMushroom.jsとの競合を解消
@@ -648,7 +649,17 @@
         if (!this._messageWindow) {
             this.createMessageWindow();
         }
-        this.changeParentMessageWindow();
+        if (!this._scrollTextWindow) {
+            this.createScrollTextWindow();
+        }
+    };
+
+    var _Scene_MenuBase_start = Scene_MenuBase.prototype.start;
+    Scene_MenuBase.prototype.start = function() {
+        _Scene_MenuBase_start.apply(this, arguments);
+        if (this.hasCommonEvent()) {
+            this.changeParentMessageWindow();
+        }
     };
 
     Scene_MenuBase.prototype.hasCommonEvent = function() {
@@ -659,9 +670,16 @@
         Scene_Map.prototype.createMessageWindow.call(this);
     };
 
+    Scene_MenuBase.prototype.createScrollTextWindow = function() {
+        Scene_Map.prototype.createScrollTextWindow.call(this);
+    };
+
     Scene_MenuBase.prototype.changeParentMessageWindow = function() {
-        this._windowLayer.removeChild(this._messageWindow);
-        this.addChild(this._messageWindow);
+        this.addChild(this._windowLayer.removeChild(this._messageWindow));
+        this.addChild(this._windowLayer.removeChild(this._scrollTextWindow));
+        this._messageWindow.subWindows().forEach(function(win) {
+            this.addChild(this._windowLayer.removeChild(win));
+        }, this);
     };
 
     // Resolve conflict for NobleMushroom.js
@@ -669,6 +687,7 @@
     Scene_MenuBase.prototype.restoreImplementationWindowMessage = Scene_Map.prototype.restoreImplementationWindowMessage;
     Scene_MenuBase.prototype.onPause                            = Scene_Map.prototype.onPause;
     Scene_MenuBase.prototype.offPause                           = Scene_Map.prototype.offPause;
+    Scene_MenuBase._stopWindow = false;
 
     Scene_MenuBase.prototype.createSpriteset = function() {
         this._spriteset = new Spriteset_Menu();
@@ -691,19 +710,12 @@
 
     var _Scene_MenuBase_updateChildren      = Scene_MenuBase.prototype.updateChildren;
     Scene_MenuBase.prototype.updateChildren = function() {
-        if (this.hasCommonEvent()) {
-            this.children.forEach(function(child) {
-                if (child.update && !this.isStopWindow(child)) {
-                    child.update();
-                }
-            }, this);
-        } else {
-            _Scene_MenuBase_updateChildren.apply(this, arguments);
-        }
+        Scene_MenuBase._stopWindow = this.hasCommonEvent() && this.isNeedStopWindow();
+        _Scene_MenuBase_updateChildren.apply(this, arguments);
     };
 
-    Scene_MenuBase.prototype.isStopWindow = function(child) {
-        return child === this._windowLayer && ($gameTemp.isDisableWindowControl() || $gameMessage.isBusy());
+    Scene_MenuBase.prototype.isNeedStopWindow = function() {
+        return $gameTemp.isDisableWindowControl() || $gameMessage.isBusy();
     };
 
     Scene_MenuBase.prototype.updateCommonEvent = function() {
@@ -792,5 +804,21 @@
             }
         }
         return windowList;
+    };
+
+    //=============================================================================
+    // Window_Selectable
+    //  必要な場合にウィンドウの状態更新を停止します。
+    //=============================================================================
+    var _Window_Selectable_update = Window_Selectable.prototype.update;
+    Window_Selectable.prototype.update = function() {
+        if (Scene_MenuBase._stopWindow && this.isStopWindow()) {
+            return;
+        }
+        _Window_Selectable_update.apply(this, arguments);
+    };
+
+    Window_Selectable.prototype.isStopWindow = function() {
+        return !this._messageWindow;
     };
 })();
