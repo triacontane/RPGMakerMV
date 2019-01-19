@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.2 2019/01/19 後衛の人数の上限を設定できる機能で控えメンバーを常に含めた上限にするよう仕様変更
 // 1.7.1 2019/01/14 MPP_ActiveTimeBattle.jsと併用したときにアクターコマンドからチェンジが選択できない競合を修正
 // 1.7.0 2019/01/01 後衛の人数の上限を設定できる機能を追加
 // 1.6.0 2018/10/21 前衛・後衛の仕様を味方側もしくは敵側のみに適用できる機能を追加
@@ -455,7 +456,7 @@
     };
 
     Game_BattlerBase.prototype.isChangeableRearguard = function() {
-        return this.isRearguard() || paramRearguardLimit <= 0 || this.friendsUnit().rearguardMembers().length < paramRearguardLimit;
+        return this.isRearguard() || paramRearguardLimit <= 0 || this.friendsUnit().rearguardAllMembers().length < paramRearguardLimit;
     };
 
     Game_BattlerBase.prototype.isValidFormationState = function() {
@@ -621,6 +622,10 @@
         });
     };
 
+    Game_Unit.prototype.rearguardAllMembers = function() {
+        return this.rearguardMembers();
+    };
+
     Game_Unit.prototype.setDefeatCondition = function(value) {
         this._defeatCondition = value;
     };
@@ -661,6 +666,12 @@
         }
         this.aliveMembers().forEach(function(member) {
             member.setFormationState(true);
+        });
+    };
+
+    Game_Party.prototype.rearguardAllMembers = function() {
+        return this.allMembers().filter(function(member) {
+            return member.isRearguard();
         });
     };
 
