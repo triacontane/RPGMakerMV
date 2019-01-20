@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2019/01/20 MenuCommonEvent.jsとの競合によるエラーを解消
 // 1.1.2 2018/06/27 1.1.1の対応により発生したYEP_BattleEngineCore.jsとの競合を解消
 // 1.1.1 2017/12/24 GALV_LayerGraphics.jsと併用したときに画像がちらつく競合を解消
 // 1.1.0 2017/10/01 パラメータの型指定機能に対応
@@ -224,6 +225,10 @@
 
     Spriteset_Base.prototype.setMiddlePictureContainer = function() {
         this.addChild(this._pictureContainerMiddle);
+    };
+
+    Spriteset_Base.prototype.setLowerPictureContainer = function() {
+        this.addChild(this._pictureContainerLower);
     };
 
     //=============================================================================
