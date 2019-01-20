@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.3 2019/01/20 後衛の人数の上限が設定されているとき、控えメンバーは常に前衛に設定されるよう仕様変更
 // 1.7.2 2019/01/19 後衛の人数の上限を設定できる機能で控えメンバーを常に含めた上限にするよう仕様変更
 // 1.7.1 2019/01/14 MPP_ActiveTimeBattle.jsと併用したときにアクターコマンドからチェンジが選択できない競合を修正
 // 1.7.0 2019/01/01 後衛の人数の上限を設定できる機能を追加
@@ -456,7 +457,7 @@
     };
 
     Game_BattlerBase.prototype.isChangeableRearguard = function() {
-        return this.isRearguard() || paramRearguardLimit <= 0 || this.friendsUnit().rearguardAllMembers().length < paramRearguardLimit;
+        return this.isRearguard() || paramRearguardLimit <= 0 || this.friendsUnit().rearguardMembers().length < paramRearguardLimit;
     };
 
     Game_BattlerBase.prototype.isValidFormationState = function() {
@@ -622,10 +623,6 @@
         });
     };
 
-    Game_Unit.prototype.rearguardAllMembers = function() {
-        return this.rearguardMembers();
-    };
-
     Game_Unit.prototype.setDefeatCondition = function(value) {
         this._defeatCondition = value;
     };
@@ -669,10 +666,19 @@
         });
     };
 
-    Game_Party.prototype.rearguardAllMembers = function() {
-        return this.allMembers().filter(function(member) {
-            return member.isRearguard();
-        });
+    var _Game_Party_swapOrder = Game_Party.prototype.swapOrder;
+    Game_Party.prototype.swapOrder = function(index1, index2) {
+        _Game_Party_swapOrder.apply(this, arguments);
+        if (paramRearguardLimit <= 0) {
+            return;
+        }
+        var size = this.battleMembers().length;
+        if (index1 >= size) {
+            $gameActors.actor(this._actors[index1]).setFormationState(true);
+        }
+        if (index2 >= size) {
+            $gameActors.actor(this._actors[index2]).setFormationState(true);
+        }
     };
 
     //=============================================================================
@@ -765,7 +771,8 @@
             var pendingIndex = this._statusWindow.pendingIndex();
             var index        = this._statusWindow.index();
             var actor        = $gameParty.members()[index];
-            if (pendingIndex >= 0 && index === pendingIndex) {
+            if (pendingIndex >= 0 && index === pendingIndex &&
+                (index < $gameParty.battleMembers().length || paramRearguardLimit <= 0)) {
                 actor.changeFormationState();
             }
         }
@@ -784,13 +791,13 @@
         Window_Base.prototype.drawActorFace.apply(this, arguments);
     };
 
-//    Window_MenuStatus.prototype.drawActorSimpleStatus = function(actor, x, y, width) {
-//        if (actor.isRearguard()) {
-//            arguments[1] += Window_MenuStatus.shiftWidth;
-//            arguments[3] -= Window_MenuStatus.shiftWidth;
-//        }
-//        Window_Base.prototype.drawActorSimpleStatus.apply(this, arguments);
-//    };
+    Window_MenuStatus.prototype.drawActorSimpleStatus = function(actor, x, y, width) {
+        if (actor.isRearguard()) {
+            arguments[1] += Window_MenuStatus.shiftWidth;
+            arguments[3] -= Window_MenuStatus.shiftWidth;
+        }
+        Window_Base.prototype.drawActorSimpleStatus.apply(this, arguments);
+    };
 
     var _Window_MenuStatus_drawCssActorStatus = Window_MenuStatus.prototype.drawCssActorStatus;
     if (_Window_MenuStatus_drawCssActorStatus) {
