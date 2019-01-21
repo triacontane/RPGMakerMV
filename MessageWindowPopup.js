@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.12.0 2019/10/21 フキダシウィンドウの表示位置の上限と下限を設定できる機能を追加
+//                   フキダシウィンドウを画面上の任意の位置に表示できる機能を追加
 // 2.11.2 2018/11/26 ポップアップ用のウィンドウスキン設定後、ポップアップを解除してもスキンがそのままになってしまう場合がある問題を修正
 // 2.11.1 2018/11/26 MPP_MessageEX.jsとの競合を解消(ネームウィンドウの表示不整合)
 // 2.11.0 2018/11/11 ポップアップウィンドウの横幅と高さの最小値を変数から取得できる機能を追加
@@ -167,6 +169,26 @@
  * @default 0
  * @type variable
  *
+ * @param lowerLimitX
+ * @desc フキダシウィンドウの下限X座標です。
+ * @default 0
+ * @type number
+ *
+ * @param lowerLimitY
+ * @desc フキダシウィンドウの下限Y座標です。
+ * @default 0
+ * @type number
+ *
+ * @param upperLimitX
+ * @desc フキダシウィンドウの下限X座標です。
+ * @default 0
+ * @type number
+ *
+ * @param upperLimitY
+ * @desc フキダシウィンドウの下限Y座標です。
+ * @default 0
+ * @type number
+ *
  * @help Change the message window from fixed to popup
  *
  * Plugin Command
@@ -179,6 +201,10 @@
  * MWP_INVALID
  *  Popup window invalid
  * ex:MWP_INVALID
+ *
+ * MWP_FREE 100 200
+ * フキダシウィンドウフリー配置 100 200
+ * 指定した任意の位置にフキダシウィンドウを表示します。
  *
  * MWP_SETTING [parameter]
  *  Popup window setting. parameter are...
@@ -306,6 +332,30 @@
  * @default 0
  * @type variable
  *
+ * @param lowerLimitX
+ * @text 下限X座標
+ * @desc フキダシウィンドウの下限X座標です。
+ * @default 0
+ * @type number
+ *
+ * @param upperLimitX
+ * @text 上限X座標
+ * @desc フキダシウィンドウの上限X座標です。
+ * @default 0
+ * @type number
+ *
+ * @param lowerLimitY
+ * @text 下限Y座標
+ * @desc フキダシウィンドウの下限Y座標です。
+ * @default 0
+ * @type number
+ *
+ * @param upperLimitY
+ * @text 上限Y座標
+ * @desc フキダシウィンドウの上限Y座標です。
+ * @default 0
+ * @type number
+ *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
  *
@@ -377,6 +427,9 @@
  * 　　フキダシウィンドウ無効化 2
  * 　　フキダシウィンドウ無効化
  *
+ * MWP_FREE 100 200
+ * フキダシウィンドウフリー配置 100 200
+ * 指定した任意の位置にフキダシウィンドウを表示します。
  *
  * MWP_SETTING [設定内容] or
  * フキダシウィンドウ設定 [設定内容]
@@ -455,6 +508,7 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+
 (function() {
     'use strict';
     var pluginName = 'MessageWindowPopup';
@@ -537,6 +591,10 @@
     var paramNoUseTail           = getParamBoolean(['NoUseTail', 'テールを使わない']);
     var paramMinWidthVariableId  = getParamNumber(['MinWidthVariableId', '最小横幅取得変数ID']);
     var paramMinHeightVariableId = getParamNumber(['MinHeightVariableId', '最小高さ取得変数ID']);
+    var paramLowerLimitX         = getParamNumber(['lowerLimitX']);
+    var paramUpperLimitX         = getParamNumber(['upperLimitX']);
+    var paramLowerLimitY         = getParamNumber(['lowerLimitY']);
+    var paramUpperLimitY         = getParamNumber(['upperLimitY']);
 
     //=============================================================================
     // Game_Interpreter
@@ -552,6 +610,7 @@
         switch (getCommandName(command)) {
             case 'MWP_VALID' :
             case 'フキダシウィンドウ有効化':
+                $gameSystem.clearMessagePopupFree();
                 var eventId = this.getEventIdForMessagePopup(args[0]);
                 if (isNaN(eventId)) {
                     eventId = this.getEventIdFromEventName(eventId);
@@ -571,8 +630,15 @@
                     $gameSystem.setPopupFixLower(eventId);
                 }
                 break;
+            case 'MWP_FREE' :
+            case 'フキダシウィンドウフリー配置':
+                var x = getArgNumber(args[0]) || 0;
+                var y = getArgNumber(args[1]) || 0;
+                $gameSystem.setMessagePopupFree(x, y);
+                break;
             case 'MWP_INVALID':
             case 'フキダシウィンドウ無効化':
+                $gameSystem.clearMessagePopupFree();
                 if (imported_FTKR_EMW() && args[0]) {
                     var windowId2 = getArgNumber(args[0]);
                     if (windowId2 >= 0) $gameSystem.clearMessagePopupEx(windowId2);
@@ -725,8 +791,25 @@
         this._messagePopupPositionEvents = [];
     };
 
+    Game_System.prototype.setMessagePopupFree = function(x, y) {
+        this._messagePopupFreeX = x;
+        this._messagePopupFreeY = y;
+        this._messagePopupCharacterId = 1;
+    };
+
+    Game_System.prototype.clearMessagePopupFree = function() {
+        this.setMessagePopupFree(undefined, undefined);
+    };
+
     Game_System.prototype.getMessagePopupId = function() {
         return this._messagePopupCharacterId !== 0 ? this._messagePopupCharacterId : null;
+    };
+
+    Game_System.prototype.getMessagePopupFree = function() {
+        if (this._messagePopupFreeX === undefined || this._messagePopupFreeY === undefined) {
+            return null;
+        }
+        return {x: this._messagePopupFreeX, y: this._messagePopupFreeY};
     };
 
     Game_System.prototype.setPopupFixUpper = function(characterId) {
@@ -943,18 +1026,32 @@
     };
 
     Window_Base.prototype.setPopupPosition = function(character) {
-        this.setPopupBasePosition(character);
-        this.setPopupLowerPosition(character);
+        this._popupCharacter = character;
+        this._popupFreePos = $gameSystem.getMessagePopupFree();
+        this.setPopupBasePosition();
+        this.setPopupLowerPosition();
         this.setPopupAdjustInnerScreen();
         if (this._shakePower > 0) {
             this.setPopupShakePosition();
         }
     };
 
-    Window_Base.prototype.setPopupBasePosition = function(character) {
+    Window_Base.prototype.getPopupBaseX = function() {
+        return this._popupFreePos ? this._popupFreePos.x : this._popupCharacter.getRealScreenX();
+    };
+
+    Window_Base.prototype.getPopupBaseY = function() {
+        return this._popupFreePos ? this._popupFreePos.y : this._popupCharacter.getRealScreenY();
+    };
+
+    Window_Base.prototype.getHeightForPopup = function() {
+        return this._popupFreePos ? 0 : (this._popupCharacter.getHeightForPopup() + 8);
+    };
+
+    Window_Base.prototype.setPopupBasePosition = function() {
         var pos = $gameSystem.getPopupAdjustPosition();
-        this.x  = character.getRealScreenX() - this.width / 2 + (pos ? pos[0] : 0);
-        this.y  = character.getRealScreenY() - this.height - (character.getHeightForPopup() + 8) + (pos ? pos[1] : 0);
+        this.x  = this.getPopupBaseX() - this.width / 2 + (pos ? pos[0] : 0);
+        this.y  = this.getPopupBaseY() - this.height - this.getHeightForPopup() + (pos ? pos[1] : 0);
     };
 
     Window_Base.prototype.setPopupShakePosition = function() {
@@ -969,10 +1066,10 @@
         this._shakeCount++;
     };
 
-    Window_Base.prototype.setPopupLowerPosition = function(character) {
+    Window_Base.prototype.setPopupLowerPosition = function() {
         var lowerFlg = this.isPopupLower();
         if (lowerFlg) {
-            this.y = character.getRealScreenY() + 8;
+            this.y = this.getPopupBaseY() + 8;
         }
         if (!paramNoUseTail) {
             this.setPauseSignToTail(lowerFlg);
@@ -994,23 +1091,26 @@
 
     Window_Base.prototype.adjustPopupPositionX = function() {
         var deltaX = 0;
-        if (this.x < 0) {
-            deltaX = this.x;
-            this.x = 0;
+        var minX   = paramLowerLimitX || 0;
+        var maxX   = paramUpperLimitX || Graphics.boxWidth;
+        if (this.x < minX) {
+            deltaX = this.x - minX;
+            this.x = minX;
         }
-        if (this.x + this.width > Graphics.boxWidth) {
-            deltaX = this.x + this.width - Graphics.boxWidth;
-            this.x = Graphics.boxWidth - this.width;
+        if (this.x + this.width > maxX) {
+            deltaX = this.x + this.width - maxX;
+            this.x = maxX - this.width;
         }
         return deltaX;
     };
 
     Window_Base.prototype.adjustPopupPositionY = function() {
         var minY = (this._pauseSignLower ? this._windowPauseSignSprite.height / 2 : 0);
+        minY += paramLowerLimitY || 0;
         if (this.y < minY) {
             this.y = minY;
         }
-        var maxY = Graphics.boxHeight - this._windowPauseSignSprite.height / 2;
+        var maxY = (paramUpperLimitY || Graphics.boxHeight) - this._windowPauseSignSprite.height / 2;
         if (this.y + this.height > maxY) {
             this.y = maxY - this.height;
         }
@@ -1264,7 +1364,6 @@
     Window_Message.prototype.getMinimumHeight = function() {
         return $gameVariables.value(paramMinHeightVariableId);
     };
-
 
     Window_Message.prototype.getSubWindowPosition = function() {
         var pos = new Point();
