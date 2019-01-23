@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.3.1 2018/01/18 他のプラグインと連携しやすいように一部の実装を変更
+// 1.3.2 2019/01/23 1.3.1の修正でGUI画面デザインプラグインと共存できなくなっていた問題を修正
+// 1.3.1 2019/01/18 他のプラグインと連携しやすいように一部の実装を変更
 // 1.3.0 2018/09/23 対象イベントの並列実行を停止するコマンドを追加
 // 1.2.0 2017/12/24 公式ガチャプラグインと連携できるよう修正
 // 1.1.3 2017/12/02 NobleMushroom.jsとの競合を解消
@@ -652,13 +653,18 @@
         if (!this._scrollTextWindow) {
             this.createScrollTextWindow();
         }
+        this.changeParentMessageWindow();
     };
 
     var _Scene_MenuBase_start = Scene_MenuBase.prototype.start;
     Scene_MenuBase.prototype.start = function() {
         _Scene_MenuBase_start.apply(this, arguments);
         if (this.hasCommonEvent()) {
-            this.changeParentMessageWindow();
+            this.addChild(this._messageWindow);
+            this.addChild(this._scrollTextWindow);
+            this._messageWindow.subWindows().forEach(function(win) {
+                this.addChild(win);
+            }, this);
         }
     };
 
