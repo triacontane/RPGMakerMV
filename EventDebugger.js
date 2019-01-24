@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2019/01/25 本体バージョン1.6.0で正常に動作しない問題を修正
 // 1.5.0 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
 // 1.4.1 2017/10/29 アイテムからコモンイベントを実行した後にマップイベントを実行したときのスクリプトエラー情報が間違っていた問題を修正
 // 1.4.0 2017/10/28 スクリプトエラーが発生したときの行番号を出力する機能を追加
@@ -135,16 +136,6 @@
  * @option F10
  * @option F11
  * @option F12
- *
- * @param Ctrl同時押し
- * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
- * @default false
- * @type boolean
- *
- * @param Alt同時押し
- * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
- * @default false
- * @type boolean
  *
  * @param MaxWatchNum
  * @desc 監視する変数の最大数です。あまりに大きな値を指定するとパフォーマンスが低下する可能性があります。
@@ -432,6 +423,16 @@
  * @option F11
  * @option F12
  *
+ * @param Ctrl同時押し
+ * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
+ * @param Alt同時押し
+ * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
+ * @default false
+ * @type boolean
+ *
  * @param スクリプトデバッグ
  * @desc イベントコマンドの「スクリプト」でエラーが発生した際の動作を設定します。0:エラー(通常通り) 1:ステップ実行 2:無視
  * @default 1
@@ -631,7 +632,6 @@ function DebugManager() {
     };
 
     SceneManager.onKeyDownForEventDebugger = function(event) {
-        if (event.ctrlKey || event.altKey) return true;
         let keyDownValid = false;
         switch (event.keyCode) {
             case Input.functionReverseMapper[param.stepStart]:
@@ -909,12 +909,7 @@ function DebugManager() {
     DebugManager.showDevTools = function() {
         if (!Utils.isNwjs()) return;
         const nwWin = require('nw.gui').Window.get();
-        if (!nwWin.isDevToolsOpen()) {
-            const devTool = nwWin.showDevTools();
-            devTool.moveTo(0, 0);
-            devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-            nwWin.focus();
-        }
+        nwWin.showDevTools();
     };
 
     DebugManager.getInterpreter = function() {
