@@ -1,11 +1,12 @@
 //=============================================================================
 // AutomaticState.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2019/01/27 AS武器装備およびAS防具装備のタグが敵にも適用される問題を修正
 // 1.4.0 2017/09/13 自動ステート対象をアクター、敵キャラIDで限定するときに複数指定できる機能を追加
 // 1.3.1 2017/08/06 メモリ上にロードされていないアクターの自動ステートチェックが実行されるとエラーになる現象を修正
 //                  処理の軽量化
@@ -160,19 +161,16 @@
         DataManager.iterateAutomaticState(function(state) {
             if (!state || isEmpty(state.meta)) return;
             var stateId = state.id;
-            var result = this.isAutomaticValid(state);
-            if (result === null) return;
+            var result = this.isAutomaticValid(state, false);
             if (result) {
                 if (!this.isStateAffected(stateId) && this.isStateAddable(stateId)) {
                     this.addState(stateId);
                     if ($gameSystem.automaticStateAddMessage) this.showAddedStates();
                     this._result.deleteAddedStates(stateId);
                 }
-            } else {
-                if (this.isStateAffected(stateId)) {
-                    this.removeState(stateId);
-                    this._result.deleteRemovedStates(stateId);
-                }
+            } else if (result === false && this.isStateAffected(stateId)) {
+                this.removeState(stateId);
+                this._result.deleteRemovedStates(stateId);
             }
         }.bind(this));
     };
@@ -182,10 +180,8 @@
 
     Game_BattlerBase.prototype.isAutomaticValid = function(state, result) {
         this._automaticTargetState = state;
-        if (this.isAutoStateBattler()) {
-            result = true;
-        } else {
-            return false;
+        if (!this.isAutoStateBattler()) {
+            return null;
         }
         var switchId = this.getStateMetaNumber(0, 1);
         if (switchId !== null) {
@@ -352,7 +348,7 @@
     Game_Actor.prototype.isAutomaticValid = function(state) {
         this._automaticTargetState = state;
         var result = null;
-        var weaponId = this.getStateMetaNumber(10, 1);
+        var weaponId = this.getStateMetaString(10, 1);
         if (weaponId !== null) {
             if (this.hasWeapon($dataWeapons[weaponId])) {
                 result = true;
@@ -504,7 +500,7 @@
         this._automaticStates = $dataStates.filter(function(state) {
             return this._automaticTagNames.some(function(tagName) {
                 return state && !!state.meta[metaTagPrefix + tagName];
-            })
+            });
         }.bind(this));
     };
 
