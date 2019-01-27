@@ -93,16 +93,16 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(function () {
     'use strict';
-    var pluginName    = 'AccumulateState';
+    var pluginName = 'AccumulateState';
     var metaTagPrefix = 'AS';
 
-    var getCommandName = function(command) {
+    var getCommandName = function (command) {
         return (command || '').toUpperCase();
     };
 
-    var getParamOther = function(paramNames) {
+    var getParamOther = function (paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
             var name = PluginManager.parameters(pluginName)[paramNames[i]];
@@ -111,22 +111,22 @@
         return null;
     };
 
-    var getParamBoolean = function(paramNames) {
+    var getParamBoolean = function (paramNames) {
         var value = getParamOther(paramNames);
         return value.toUpperCase() === 'ON';
     };
 
-    var getParamString = function(paramNames) {
+    var getParamString = function (paramNames) {
         var value = getParamOther(paramNames);
         return value === null ? '' : value;
     };
 
-    var getMetaValue = function(object, name) {
+    var getMetaValue = function (object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
     };
 
-    var getMetaValues = function(object, names) {
+    var getMetaValues = function (object, names) {
         if (!Array.isArray(names)) return getMetaValue(object, names);
         for (var i = 0, n = names.length; i < n; i++) {
             var value = getMetaValue(object, names[i]);
@@ -135,29 +135,29 @@
         return undefined;
     };
 
-    var getArgNumber = function(arg, min, max) {
+    var getArgNumber = function (arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
     };
 
-    var convertEscapeCharactersAndEval = function(text, evalFlg) {
+    var convertEscapeCharactersAndEval = function (text, evalFlg) {
         if (text === null || text === undefined) {
             text = evalFlg ? '0' : '';
         }
         text = text.replace(/\\/g, '\x1b');
         text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function () {
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function () {
             return $gameVariables.value(parseInt(arguments[1]));
         }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function () {
             var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
             return actor ? actor.name() : '';
         }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function () {
             var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
             return actor ? actor.name() : '';
         }.bind(this));
@@ -168,17 +168,17 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramGaugeImage        = getParamString(['GaugeImage', 'ゲージ画像ファイル']);
+    var paramGaugeImage = getParamString(['GaugeImage', 'ゲージ画像ファイル']);
     var paramAccumulateFormula = getParamString(['AccumulateFormula', '蓄積率計算式']);
-    var paramLuckAdjust        = getParamBoolean(['LuckAdjust', '運補正']);
-    var paramCertainHit        = getParamBoolean(['CertainHit', '必中時有効度無視']);
+    var paramLuckAdjust = getParamBoolean(['LuckAdjust', '運補正']);
+    var paramCertainHit = getParamBoolean(['CertainHit', '必中時有効度無視']);
 
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         try {
             this.pluginCommandAccumulateState(command, args);
@@ -199,12 +199,12 @@
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandAccumulateState = function(command, args) {
+    Game_Interpreter.prototype.pluginCommandAccumulateState = function (command, args) {
         switch (getCommandName(command)) {
             case metaTagPrefix + 'ステート蓄積' :
             case metaTagPrefix + 'AccumulateState' :
-                var actorId      = getArgNumber(args[0], 1);
-                var stateId      = getArgNumber(args[1], 1);
+                var actorId = getArgNumber(args[0], 1);
+                var stateId = getArgNumber(args[1], 1);
                 var accumulation = getArgNumber(args[2]) / 100;
                 $gameActors.actor(actorId).accumulateState(stateId, accumulation);
                 break;
@@ -215,42 +215,42 @@
     // Game_BattlerBase
     //  ステート蓄積量を管理します。
     //=============================================================================
-    Game_BattlerBase.prototype.clearStateAccumulationsIfNeed = function() {
+    Game_BattlerBase.prototype.clearStateAccumulationsIfNeed = function () {
         if (!this._stateAccumulations) {
             this._stateAccumulations = {};
         }
     };
 
-    var _Game_BattlerBase_clearStates      = Game_BattlerBase.prototype.clearStates;
-    Game_BattlerBase.prototype.clearStates = function() {
+    var _Game_BattlerBase_clearStates = Game_BattlerBase.prototype.clearStates;
+    Game_BattlerBase.prototype.clearStates = function () {
         _Game_BattlerBase_clearStates.apply(this, arguments);
         this.clearStateAccumulationsIfNeed();
     };
 
-    var _Game_BattlerBase_eraseState      = Game_BattlerBase.prototype.eraseState;
-    Game_BattlerBase.prototype.eraseState = function(stateId) {
+    var _Game_BattlerBase_eraseState = Game_BattlerBase.prototype.eraseState;
+    Game_BattlerBase.prototype.eraseState = function (stateId) {
         _Game_BattlerBase_eraseState.apply(this, arguments);
         this.clearStateAccumulationsIfNeed();
         delete this._stateAccumulations[stateId];
     };
 
-    var _Game_Battler_removeState      = Game_Battler.prototype.removeState;
-    Game_Battler.prototype.removeState = function(stateId) {
+    var _Game_Battler_removeState = Game_Battler.prototype.removeState;
+    Game_Battler.prototype.removeState = function (stateId) {
         _Game_Battler_removeState.apply(this, arguments);
         this.clearStateAccumulationsIfNeed();
         delete this._stateAccumulations[stateId];
     };
 
-    var _Game_BattlerBase_attackStates      = Game_BattlerBase.prototype.attackStates;
-    Game_BattlerBase.prototype.attackStates = function(accumulateFlg) {
+    var _Game_BattlerBase_attackStates = Game_BattlerBase.prototype.attackStates;
+    Game_BattlerBase.prototype.attackStates = function (accumulateFlg) {
         if (arguments.length === 0) accumulateFlg = false;
         var states = _Game_BattlerBase_attackStates.apply(this, arguments);
-        return states.filter(function(stateId) {
+        return states.filter(function (stateId) {
             return BattleManager.isStateAccumulate(stateId) === accumulateFlg;
         }.bind(this));
     };
 
-    Game_BattlerBase.prototype.accumulateState = function(stateId, value) {
+    Game_BattlerBase.prototype.accumulateState = function (stateId, value) {
         this.clearStateAccumulationsIfNeed();
         if (BattleManager.isStateAccumulate(stateId)) {
             this._stateAccumulations[stateId] = (this._stateAccumulations[stateId] || 0) + value;
@@ -262,35 +262,35 @@
         return false;
     };
 
-    Game_BattlerBase.prototype.getStateAccumulation = function(stateId) {
+    Game_BattlerBase.prototype.getStateAccumulation = function (stateId) {
         return this._stateAccumulations[stateId] || 0;
     };
 
-    Game_BattlerBase.prototype.getGaugeStateAccumulation = function() {
+    Game_BattlerBase.prototype.getGaugeStateAccumulation = function () {
         return this.getStateAccumulation(this.getGaugeStateId());
     };
 
-    Game_BattlerBase.prototype.getGaugeX = function() {
+    Game_BattlerBase.prototype.getGaugeX = function () {
         return this.getGaugeInfo(['ゲージX', '_GaugeX']);
     };
 
-    Game_BattlerBase.prototype.getGaugeY = function() {
+    Game_BattlerBase.prototype.getGaugeY = function () {
         return this.getGaugeInfo(['ゲージY', '_GaugeY']);
     };
 
-    Game_BattlerBase.prototype.getGaugeStateId = function() {
+    Game_BattlerBase.prototype.getGaugeStateId = function () {
         return this.getGaugeInfo(['ゲージステート', '_GaugeState']);
     };
 
-    Game_BattlerBase.prototype.getGaugeInfo = function(names) {
+    Game_BattlerBase.prototype.getGaugeInfo = function (names) {
         return getArgNumber(getMetaValues(this.getData(), names)) || 0;
     };
 
-    Game_Actor.prototype.getData = function() {
+    Game_Actor.prototype.getData = function () {
         return this.actor();
     };
 
-    Game_Enemy.prototype.getData = function() {
+    Game_Enemy.prototype.getData = function () {
         return this.enemy();
     };
 
@@ -298,19 +298,19 @@
     // Game_Action
     //  行動によってステート蓄積量を増やします。
     //=============================================================================
-    var _Game_Action_itemEffectAddAttackState      = Game_Action.prototype.itemEffectAddAttackState;
-    Game_Action.prototype.itemEffectAddAttackState = function(target, effect) {
+    var _Game_Action_itemEffectAddAttackState = Game_Action.prototype.itemEffectAddAttackState;
+    Game_Action.prototype.itemEffectAddAttackState = function (target, effect) {
         _Game_Action_itemEffectAddAttackState.apply(this, arguments);
-        this.subject().attackStates(true).forEach(function(stateId) {
+        this.subject().attackStates(true).forEach(function (stateId) {
             var accumulation = effect.value1 * this.subject().attackStatesRate(stateId);
-            accumulation     = this.applyResistanceForAccumulateState(accumulation, target, stateId);
-            var result       = target.accumulateState(stateId, accumulation);
+            accumulation = this.applyResistanceForAccumulateState(accumulation, target, stateId);
+            var result = target.accumulateState(stateId, accumulation);
             if (result) this.makeSuccess(target);
         }.bind(this), target);
     };
 
-    var _Game_Action_itemEffectAddNormalState      = Game_Action.prototype.itemEffectAddNormalState;
-    Game_Action.prototype.itemEffectAddNormalState = function(target, effect) {
+    var _Game_Action_itemEffectAddNormalState = Game_Action.prototype.itemEffectAddNormalState;
+    Game_Action.prototype.itemEffectAddNormalState = function (target, effect) {
         if (BattleManager.isStateAccumulate(effect.dataId)) {
             var accumulation = effect.value1;
             if (!this.isCertainHit() || !paramCertainHit) {
@@ -323,7 +323,7 @@
         }
     };
 
-    Game_Action.prototype.applyResistanceForAccumulateState = function(effectValue, target, stateId) {
+    Game_Action.prototype.applyResistanceForAccumulateState = function (effectValue, target, stateId) {
         if (paramAccumulateFormula) {
             var a = effectValue;
             var b = target.stateRate(stateId);
@@ -347,7 +347,7 @@
     // BattleManager
     //  蓄積型のステートかどうかを判定します。
     //=============================================================================
-    BattleManager.isStateAccumulate = function(stateId) {
+    BattleManager.isStateAccumulate = function (stateId) {
         return stateId > 0 && !!getMetaValues($dataStates[stateId], ['蓄積型', 'Accumulation']);
     };
 
@@ -355,7 +355,7 @@
     // Scene_Base
     //  ステートゲージを作成します。
     //=============================================================================
-    Scene_Battle.prototype.createAccumulateState = function() {
+    Scene_Battle.prototype.createAccumulateState = function () {
         this._characterPictures = {};
         for (var i = 0, n = $gameParty.members().length; i < n; i++) {
             var sprite = new Sprite_AccumulateState(i);
@@ -363,8 +363,8 @@
         }
     };
 
-    var _Scene_Battle_createSpriteset      = Scene_Battle.prototype.createSpriteset;
-    Scene_Battle.prototype.createSpriteset = function() {
+    var _Scene_Battle_createSpriteset = Scene_Battle.prototype.createSpriteset;
+    Scene_Battle.prototype.createSpriteset = function () {
         _Scene_Battle_createSpriteset.apply(this, arguments);
         this.createAccumulateState();
     };
@@ -377,41 +377,41 @@
         this.initialize.apply(this, arguments);
     }
 
-    Sprite_AccumulateState.prototype             = Object.create(Sprite.prototype);
+    Sprite_AccumulateState.prototype = Object.create(Sprite.prototype);
     Sprite_AccumulateState.prototype.constructor = Sprite_AccumulateState;
 
-    Sprite_AccumulateState.prototype.initialize = function(index) {
+    Sprite_AccumulateState.prototype.initialize = function (index) {
         this._index = index;
         this._actor = null;
-        this._rate  = null;
+        this._rate = null;
         Sprite.prototype.initialize.call(this);
         this.create();
     };
 
-    Sprite_AccumulateState.prototype.getActor = function() {
+    Sprite_AccumulateState.prototype.getActor = function () {
         return $gameParty.members()[this._index];
     };
 
-    Sprite_AccumulateState.prototype.create = function() {
+    Sprite_AccumulateState.prototype.create = function () {
         this.bitmap = ImageManager.loadPicture(paramGaugeImage, 0);
         this.createGaugeSprite();
         this.bitmap.addLoadListener(this.onLoadBitmap.bind(this));
         this.visible = false;
     };
 
-    Sprite_AccumulateState.prototype.createGaugeSprite = function() {
-        this._gaugeSprite        = new Sprite();
+    Sprite_AccumulateState.prototype.createGaugeSprite = function () {
+        this._gaugeSprite = new Sprite();
         this._gaugeSprite.bitmap = this.bitmap;
         this.addChild(this._gaugeSprite);
     };
 
-    Sprite_AccumulateState.prototype.onLoadBitmap = function() {
+    Sprite_AccumulateState.prototype.onLoadBitmap = function () {
         var height = this.bitmap.height / 2;
         this.setFrame(0, height, this.bitmap.width, height);
         this._gaugeSprite.setFrame(0, 0, this.bitmap.width, height);
     };
 
-    Sprite_AccumulateState.prototype.update = function() {
+    Sprite_AccumulateState.prototype.update = function () {
         var actor = this.getActor();
         if (!actor) return;
         if (this._actor !== actor) {
@@ -421,21 +421,21 @@
         this.updateRate();
     };
 
-    Sprite_AccumulateState.prototype.updateRate = function() {
+    Sprite_AccumulateState.prototype.updateRate = function () {
         var rate = Math.min(this._actor.getGaugeStateAccumulation(), 1.0);
         if (rate !== this._rate) {
             this._rate = rate;
-            this.bitmap.addLoadListener(function() {
+            this.bitmap.addLoadListener(function () {
                 this._gaugeSprite.setFrame(0, 0, this.bitmap.width * rate, this.bitmap.height / 2);
             }.bind(this));
         }
     };
 
-    Sprite_AccumulateState.prototype.refresh = function() {
+    Sprite_AccumulateState.prototype.refresh = function () {
         var stateId = this._actor.getGaugeStateId();
         if (stateId > 0) {
-            this.x       = this._actor.getGaugeX();
-            this.y       = this._actor.getGaugeY();
+            this.x = this._actor.getGaugeX();
+            this.y = this._actor.getGaugeY();
             this.visible = true;
         } else {
             this.visible = false;
