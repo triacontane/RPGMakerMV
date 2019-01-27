@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2019/01/27 通常のフォロワーを表示せず、NPCフォロワーのみを表示できる機能を追加
 // 1.0.3 2018/08/06 コアスクリプトが1.6.0より古い場合にエラーになる記述を修正
 // 1.0.2 2017/01/17 プラグインコマンドが小文字でも動作するよう修正（byこまちゃん先輩）
 // 1.0.1 2016/07/17 セーブデータをロードした際のエラーになる現象の修正
@@ -23,6 +24,11 @@
  * @param MaxNpcNumber
  * @desc 同時に隊列に存在できるNPCの最大数です。
  * @default 1
+ *
+ * @param HideNormalFollower
+ * @desc 隊列歩行の設定にかかわらず通常のフォロワーを一切表示せず、NPCフォロワーのみを表示します。
+ * @default false
+ * @type boolean
  *
  * @help マップ上の隊列の好きな位置にパーティメンバー以外のNPCを追加します。
  * NPCはデータベース上はアクターで定義してプラグインコマンドから追加、削除します。
@@ -52,6 +58,13 @@
  * @param 最大同時NPC数
  * @desc 同時に隊列に存在できるNPCの最大数です。
  * @default 1
+ * @type number
+ * @min 1
+ *
+ * @param 通常フォロワーを表示しない
+ * @desc 隊列歩行の設定にかかわらず通常のフォロワーを一切表示せず、NPCフォロワーのみを表示します。
+ * @default false
+ * @type boolean
  *
  * @help マップ上の隊列の好きな位置にパーティメンバー以外のNPCを追加します。
  * NPCはデータベース上はアクターで定義してプラグインコマンドから追加、削除します。
@@ -96,6 +109,11 @@
         return null;
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamOther(paramNames);
+        return (value || '').toUpperCase() === 'TRUE';
+    };
+
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
@@ -118,7 +136,8 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramMaxNpcNumber = getParamNumber(['MaxNpcNumber', '最大同時NPC数']);
+    var paramMaxNpcNumber       = getParamNumber(['MaxNpcNumber', '最大同時NPC数']);
+    var paramHideNormalFollower = getParamBoolean(['HideNormalFollower', '通常フォロワーを表示しない']);
 
     //=============================================================================
     // Game_Interpreter
@@ -149,14 +168,14 @@
     // Game_Party
     //  NPCの追加と削除を追加定義します。
     //=============================================================================
-    var _Game_Party_initialize = Game_Party.prototype.initialize;
+    var _Game_Party_initialize      = Game_Party.prototype.initialize;
     Game_Party.prototype.initialize = function() {
         _Game_Party_initialize.apply(this, arguments);
         this.initNpc();
     };
 
     Game_Party.prototype.initNpc = function() {
-        this._npcs = [];
+        this._npcs       = [];
         this._npcIndexes = [];
     };
 
@@ -205,8 +224,8 @@
     };
 
     Game_Party.prototype.makeVisibleMembers = function() {
-        var battleMembers = this.battleMembers();
-        var npcMembers = this.npcMembers();
+        var battleMembers  = this.battleMembers();
+        var npcMembers     = this.npcMembers();
         var visibleMembers = [];
         for (var i = 0, n = this.maxBattleMembers() + 1; i < n; i++) {
             for (var j = 0, m = npcMembers.length; j < m; j++) {
@@ -221,9 +240,12 @@
     // Game_Followers
     //  NPCの最大数ぶんだけ余分にGame_Followerを作成します。
     //=============================================================================
-    var _Game_Followers_initialize = Game_Followers.prototype.initialize;
+    var _Game_Followers_initialize      = Game_Followers.prototype.initialize;
     Game_Followers.prototype.initialize = function() {
         _Game_Followers_initialize.apply(this, arguments);
+        if (paramHideNormalFollower) {
+            this._data = [];
+        }
         this.initNpc();
     };
 
@@ -238,7 +260,7 @@
     // Game_Follower
     //  NPC判定を追加定義します。
     //=============================================================================
-    var _Game_Follower_actor = Game_Follower.prototype.actor;
+    var _Game_Follower_actor      = Game_Follower.prototype.actor;
     Game_Follower.prototype.actor = function() {
         _Game_Follower_actor.apply(this, arguments);
         return $gameParty.visibleMembers()[this._memberIndex];
@@ -248,7 +270,7 @@
     // Game_Player
     //  リフレッシュまえに表示メンバーを更新します。
     //=============================================================================
-    var _Game_Player_refresh = Game_Player.prototype.refresh;
+    var _Game_Player_refresh      = Game_Player.prototype.refresh;
     Game_Player.prototype.refresh = function() {
         $gameParty.makeVisibleMembers();
         _Game_Player_refresh.apply(this, arguments);
@@ -259,7 +281,7 @@
     //  プラグイン未適用のデータをロードした場合に必要なデータを初期化します。
     //=============================================================================
     var _DataManager_loadGame = DataManager.loadGame;
-    DataManager.loadGame = function(saveFileId) {
+    DataManager.loadGame      = function(saveFileId) {
         var result = _DataManager_loadGame.apply(this, arguments);
         $gameParty.initNpcIfNeed();
         return result;
