@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2019/01/27 本来の設定とは逆に、近づくほど透明度を上げられる機能を追加
  1.3.0 2018/11/18 イベントとの距離が一定以内の場合にセルフスイッチをONにする機能を追加
  1.2.1 2018/11/11 一部、無駄な処理を行っていたのを修正
  1.2.0 2018/11/11 全イベントの不可視化を無効にできるスイッチの追加
@@ -73,6 +74,10 @@
  * イベントのメモ欄に以下の通り入力してください。
  * <可視距離:3>        // 3マス以上離れると見えなくなります。
  * <VisibleDistance:3> // 同上
+ * <トリガー距離:2>    // 2マス以上離れるとセルフスイッチがONになります。
+ * <TriggerDistance:3> // 同上
+ * <透明度反転>        // 本来の設定とは逆に近づくほど透明度が上がります。
+ * <OpacityReverse>    // 同上
  *　
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -140,7 +145,11 @@
  * イベントのメモ欄に以下の通り入力してください。
  * <可視距離:3>        // 3マス以上離れると見えなくなります。
  * <VisibleDistance:3> // 同上
- *　
+ * <トリガー距離:2>    // 2マス以上離れるとセルフスイッチがONになります。
+ * <TriggerDistance:3> // 同上
+ * <透明度反転>        // 本来の設定とは逆に近づくほど透明度が上がります。
+ * <OpacityReverse>    // 同上
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -211,7 +220,7 @@
         PluginManager.setParameters(pluginName, parameter);
         return parameter;
     };
-    var param = createPluginParameter('PhantomEvent');
+    var param                 = createPluginParameter('PhantomEvent');
 
     /**
      * Game_Map
@@ -222,7 +231,7 @@
     };
 
     Game_Map.prototype.realDeltaX = function(x1, x2) {
-        var result = (x1 - x2) * this.tileWidth();
+        var result    = (x1 - x2) * this.tileWidth();
         var realWidth = this.width() * this.tileWidth();
         if (this.isLoopHorizontal() && Math.abs(result) > realWidth / 2) {
             if (result < 0) {
@@ -235,7 +244,7 @@
     };
 
     Game_Map.prototype.realDeltaY = function(y1, y2) {
-        var result = (y1 - y2) * this.tileHeight();
+        var result     = (y1 - y2) * this.tileHeight();
         var realHeight = this.height() * this.tileHeight();
         if (this.isLoopVertical() && Math.abs(result) > realHeight / 2) {
             if (result < 0) {
@@ -251,9 +260,9 @@
      * Game_CharacterBase
      * 不透明度に不可視情報を反映させます。
      */
-    var _Game_CharacterBase_opacity = Game_CharacterBase.prototype.opacity;
+    var _Game_CharacterBase_opacity      = Game_CharacterBase.prototype.opacity;
     Game_CharacterBase.prototype.opacity = function() {
-        var opacity = _Game_CharacterBase_opacity.apply(this, arguments);
+        var opacity        = _Game_CharacterBase_opacity.apply(this, arguments);
         var phantomOpacity = this.getPhantomOpacity();
         return phantomOpacity !== 1 ? Math.max(Math.floor(opacity * phantomOpacity), param.minimumOpacity) : opacity;
     };
@@ -266,11 +275,12 @@
      * Game_Event
      * イベントの不可視距離を取得します。
      */
-    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    var _Game_Event_initialize      = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function() {
         _Game_Event_initialize.apply(this, arguments);
         this._visibleDistance = parseInt(getMetaValues(this.event(), ['可視距離', 'VisibleDistance'])) * $gameMap.tileWidth() || 0;
         this._triggerDistance = parseInt(getMetaValues(this.event(), ['トリガー距離', 'TriggerDistance'])) * $gameMap.tileWidth() || 0;
+        this._opacityReverse  = !!getMetaValues(this.event(), ['透明度反転', 'OpacityReverse'])
     };
 
     Game_Event.prototype.getDistanceFromPlayer = function() {
@@ -297,13 +307,16 @@
         var distanceFromPlayer = this.getDistanceFromPlayer();
         this.updateDistanceTrigger(distanceFromPlayer);
         var d = distanceFromPlayer - this._visibleDistance;
+        if (this._opacityReverse) {
+            d *= -1;
+        }
         return Math.min(1 - d / ((param.invisibleDistance || 1) * $gameMap.tileWidth()), 1);
     };
 
     Game_Event.prototype.updateDistanceTrigger = function(distanceFromPlayer) {
         var switchId = param.distanceTriggerSelfSwitch;
         if (switchId && this._triggerDistance > 0) {
-            var key = [$gameMap.mapId(), this.eventId(), switchId];
+            var key      = [$gameMap.mapId(), this.eventId(), switchId];
             var oldValue = $gameSelfSwitches.value(key);
             var newValue = distanceFromPlayer <= this._triggerDistance;
             if (oldValue !== newValue) {
