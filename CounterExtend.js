@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.3 2019/01/29 クロスカウンターによって敵を全滅された後の戦闘で、一部の反撃エフェクトが表示される場合がある問題を修正
 // 1.8.2 2019/01/13 クロスカウンター有効時、反撃可能かどうかの再チェックを行うよう修正
 //                  「コスト不足で失敗」パラメータ有効時、スキル封印についても考慮するよう修正
 // 1.8.1 2018/12/19 クロスカウンター有効時、攻撃によって戦闘不能になったバトラーの反撃が実行される問題を修正
@@ -570,6 +571,12 @@ var Imported = Imported || {};
         } else {
             _Game_Battler_onAllActionsEnd.apply(this, arguments);
         }
+    };
+
+    var _Game_Battler_onBattleEnd = Game_Battler.prototype.onBattleEnd;
+    Game_Battler.prototype.onBattleEnd = function() {
+        _Game_Battler_onBattleEnd.apply(this, arguments);
+        this.clearCounterAction();
     };
 
     //=============================================================================
