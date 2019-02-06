@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.2 2019/02/27 初期状態でスクロールされているウィンドウの行高さを変更した場合に、スクロールの初期表示がずれる現象を修正
 // 2.10.1 2018/11/06 BattleFormation.jsとの競合を解消
 // 2.10.0 2018/08/18 メッセージウィンドウおよびサブウィンドウを本プラグインから触れないようにする設定を追加
 // 2.9.1 2018/07/10 コアスクリプト1.6.1以降で装備スロットウィンドウを動かした状態で装備画面を起動するとエラーになる問題を修正
@@ -1477,8 +1478,15 @@ var $dataContainerProperties = null;
     Window_Base.prototype.refresh = function() {};
 
     Window_Selectable.prototype.loadProperty = function(containerInfo) {
+        var row;
+        if (this._scrollY !== 0) {
+            row = this.topRow();
+        }
         Window_Base.prototype.loadProperty.apply(this, arguments);
         this.updateCursor();
+        if (row) {
+            this.setTopRow(row);
+        }
     };
 
     PIXI.Container.prototype.saveContainerInfo = function() {
@@ -1751,4 +1759,10 @@ var $dataContainerProperties = null;
         }.bind(this));
         return text;
     };
+
+//    var _Scene_File_createListWindow = Scene_File.prototype.createListWindow;
+//    Scene_File.prototype.createListWindow = function() {
+//        _Scene_File_createListWindow.apply(this, arguments);
+//        this._listWindow.setTopRow(this.firstSavefileIndex() - 2);
+//    };
 })();
