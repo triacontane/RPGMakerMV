@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.12.1 2019/02/07 GraphicalDesignMode.jsと併用し、かつフキダシウィンドウ無効時、カスタマイズしたウィンドウの横幅が反映されるよう修正
 // 2.12.0 2019/10/21 フキダシウィンドウの表示位置の上限と下限を設定できる機能を追加
 //                   フキダシウィンドウを画面上の任意の位置に表示できる機能を追加
 // 2.11.2 2018/11/26 ポップアップ用のウィンドウスキン設定後、ポップアップを解除してもスキンがそのままになってしまう場合がある問題を修正
@@ -1279,6 +1280,9 @@
         }
         _Window_Message_updatePlacement.apply(this, arguments);
         if (!this.isPopup()) {
+            if (this._positionLock) {
+                this.loadContainerInfo();
+            }
             return;
         }
         this.updatePlacementPopup();
