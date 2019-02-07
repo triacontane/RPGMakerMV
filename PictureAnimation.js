@@ -1,11 +1,12 @@
 //=============================================================================
 // PictureAnimation.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.3 2019/02/27 セルパターンの直接指定でアニメ再生する際、最初のセルが必ず1番になってしまう現象を修正
 // 1.5.2 2018/03/04 縦及び横でアニメーションピクチャを表示した後、同じ番号でピクチャの表示をすると正常に表示されない場合がある不具合を修正
 // 1.5.1 2017/08/22 アニメーション再生中に、セル数が少ない別のアニメーションに切り替えたときにエラーが発生する場合がある現象を修正
 // 1.5.0 2017/07/03 ループしないアニメーションの終了後に最初のセルに戻るかどうかを選択できる機能を追加
@@ -26,7 +27,7 @@
 //                  アニメーションの強制終了の機能を追加
 // 1.0.0 2015/12/19 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -39,7 +40,7 @@
  * @desc ループしないアニメーションの終了後、最初のセルに戻ります。無効にすると最後のセルで止まります。
  * @default true
  * @type boolean
- * 
+ *
  * @help 指定したフレーム間隔でピクチャをアニメーションします。
  * アニメーションしたいセル画像（※）を用意の上
  * 以下のコマンドを入力してください。
@@ -182,7 +183,7 @@
     };
 
     var getArgArrayNumber = function(args, min, max) {
-        var values = getArgArrayString(args, false);
+        var values = getArgArrayString(args.substring(1, args.length - 1), false);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         for (var i = 0; i < values.length; i++) values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
@@ -209,7 +210,7 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param = {};
+    var param               = {};
     param.returnToFirstCell = getParamBoolean(['ReturnToFirstCell', '最初のセルに戻る']);
 
     //=============================================================================
