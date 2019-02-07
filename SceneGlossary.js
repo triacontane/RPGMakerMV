@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.3 2019/02/07 FacePicture.jsとの競合を解消
 // 2.11.2 2019/01/04 2.11.0の対応でピクチャの拡大率が機能しなくなっていた問題を修正
 // 2.11.1 2018/12/07 収集率を取得できるスクリプトをヘルプに記載
 // 2.11.0 2018/11/24 カテゴリ選択中でも収集率が表示されるよう修正
@@ -2248,6 +2249,9 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.drawPlusPicture = function(pictureName, xText, yText) {
+        if (!pictureName) {
+            pictureName = '';
+        }
         var bitmap = ImageManager.loadPicture(pictureName);
         if (!bitmap) {
             return;
