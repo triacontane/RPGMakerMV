@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.4 2019/02/09 1.5.3の修正によりセルパターンを指定しないでアニメ再生するとエラーになる問題を修正
 // 1.5.3 2019/02/27 セルパターンの直接指定でアニメ再生する際、最初のセルが必ず1番になってしまう現象を修正
 // 1.5.2 2018/03/04 縦及び横でアニメーションピクチャを表示した後、同じ番号でピクチャの表示をすると正常に表示されない場合がある不具合を修正
 // 1.5.1 2017/08/22 アニメーション再生中に、セル数が少ない別のアニメーションに切り替えたときにエラーが発生する場合がある現象を修正
@@ -183,6 +184,9 @@
     };
 
     var getArgArrayNumber = function(args, min, max) {
+        if (!args) {
+            return [];
+        }
         var values = getArgArrayString(args.substring(1, args.length - 1), false);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
