@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2019/02/10 計算式中に不等号を使えるようエスケープ処理を追加
 // 1.2.9 2018/08/04 1.2.8の修正により、レベルアップメッセージなどでアクター名が正常に取得できなくなっていた問題を修正
 // 1.2.8 2018/04/29 アクターの名前、二つ名、プロフィールについて一部の制御文字が正常に動作していなかった問題を修正
 // 1.2.7 2017/10/07 リファクタリング
@@ -49,6 +50,10 @@
  *
  * 設定例２（武器の攻撃力に、元の値と10番の変数の値との乗算値を設定したい場合）
  * 　<DD攻撃力:prev * \V[10]>
+ *
+ * 計算式中で不等号を使いたい場合、以下のように記述してください。
+ * < → &lt;
+ * > → &gt;
  *
  * 対象データベースは以下の全項目になります。
  * 　アクター（特徴のみ）
@@ -342,6 +347,8 @@ DynamicDatabaseManager._makePropertyString = function(parent, key, child) {
 };
 
 DynamicDatabaseManager._convertEscapeCharacters = function(text) {
+    text = text.replace(/&gt;?/gi, '>');
+    text = text.replace(/&lt;?/gi, '<');
     text = text.replace(/\\/g, '\x1b');
     text = text.replace(/\x1b\x1b/g, '\\');
     text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
