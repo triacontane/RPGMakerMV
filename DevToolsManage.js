@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 2.8.0 2018/01/06 MakeScreenMovie.jsを有効にしていると録画用のツールバーが表示される機能を追加
+// 2.8.1 2019/02/10 プラグイン等で画面サイズを変え、かつメニューバーを有効にしているとウィンドウサイズがおかしくなる問題を修正
+// 2.8.0 2019/01/06 MakeScreenMovie.jsを有効にしていると録画用のツールバーが表示される機能を追加
 // 2.7.0 2018/12/09 マップリロード機能で再読込したときに一時消去されたイベントが再表示されないよう仕様変更
 // 2.6.0 2018/10/08 戦闘強制敗北、戦闘強制中断の機能を追加
 // 2.5.1 2018/03/25 BGMが演奏されていないときに高速モードを切り替えるとエラーになる問題を修正
@@ -1083,10 +1084,6 @@ function Controller_NwJs() {
         }
         const gui        = require('nw.gui');
         const gameWindow = gui.Window.get();
-        var height       = this.getMenuBarHeight();
-        gameWindow.moveBy(0, -height);
-        gameWindow.resizeBy(0, height);
-
         setTimeout(function() { // Fix missing menu bar height
             var style_height = parseInt(Graphics._canvas.style.height, 10);
             var height_diff  = SceneManager._screenHeight - style_height;
@@ -1094,7 +1091,7 @@ function Controller_NwJs() {
                 gameWindow.moveBy(0, -height_diff);
                 gameWindow.resizeBy(0, height_diff);
             }
-        }, 500);
+        }, 100);
     };
 
     SceneManager.getMenuBarHeight = function() {
