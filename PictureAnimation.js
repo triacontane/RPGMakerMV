@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.5 2019/02/13 コマンド「PA_SET_CELL」において0番(最初のセル)に対する指定が機能しない問題を修正
 // 1.5.4 2019/02/09 1.5.3の修正によりセルパターンを指定しないでアニメ再生するとエラーになる問題を修正
 // 1.5.3 2019/02/27 セルパターンの直接指定でアニメ再生する際、最初のセルが必ず1番になってしまう現象を修正
 // 1.5.2 2018/03/04 縦及び横でアニメーションピクチャを表示した後、同じ番号でピクチャの表示をすると正常に表示されない場合がある不具合を修正
@@ -274,7 +275,7 @@
             case 'PA_SET_CELL' :
             case 'ピクチャのアニメーションセル設定':
                 pictureNum = getArgNumber(args[0], 1, $gameScreen.maxPictures());
-                cellNumber = getArgNumber(args[1], 1, settings.maxCellAnimation);
+                cellNumber = getArgNumber(args[1], 0, settings.maxCellAnimation);
                 wait       = getArgString(args[2]);
                 picture    = $gameScreen.picture(pictureNum);
                 if (picture) {
