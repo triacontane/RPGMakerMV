@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2019/02/16 行動が無効(ダメージ0)だった場合のみ副作用を適用できる機能を追加
+//                  行動が反射された場合のみ副作用を適用できる機能を追加
 // 1.3.0 2018/11/29 行動が会心だった場合のみ副作用を適用できる機能を追加
 // 1.2.3 2017/10/10 0ターン目に戦闘行動の強制を実行するとエラーになる問題の修正
 // 1.2.2 2017/10/07 ターン終了時の副作用を持つスキルでトドメをさした場合、次の戦闘のターン終了時に副作用が発生する問題を修正
@@ -153,6 +155,10 @@
  * <SES_EffectiveOnly>     # 同上
  * <SES_会心時のみ>        # 行動が会心だった場合のみ副作用を適用
  * <SES_CriticalOnly>      # 同上
+ * <SES_反射時のみ>        # 行動が魔法反射された場合のみ副作用を適用
+ * <SES_ReflectionOnly>    # 同上
+ * <SES_無効時のみ>        # 行動のダメージが0だった場合のみ副作用適用
+ * <SES_InvalidOnly>       # 同上
  *
  * 複数指定する場合、[,]で区切ってください。効果の番号が[1]が先頭です。
  * また入力時副作用は敵キャラ専用です。
@@ -416,6 +422,9 @@
     var _Game_Action_apply      = Game_Action.prototype.apply;
     Game_Action.prototype.apply = function(target) {
         this._applyForSideEffect = true;
+        if (this._reflectionTarget) {
+            this._reflectionForSideEffect = true;
+        }
         _Game_Action_apply.apply(this, arguments);
         this.applyItemSideEffect('sideEffectOnUsing');
     };
@@ -441,6 +450,14 @@
         return rate;
     };
 
+    var _Game_Action_executeDamage = Game_Action.prototype.executeDamage;
+    Game_Action.prototype.executeDamage = function(target, value) {
+        if (value === 0) {
+            this._invalidForSideEffect = true;
+        }
+        _Game_Action_executeDamage.apply(this, arguments);
+    };
+
     Game_Action.prototype.applyItemSideEffect = function(property) {
         if (!this.isValidSideEffect()) return;
         if (this.isNeedDisplaySideEffect(property)) {
@@ -461,7 +478,9 @@
             return this.isValidSideEffectForSuccess() &&
                 this.isValidSideEffectForFailure() &&
                 this.isValidSideEffectForEffective() &&
-                this.isValidSideEffectForCritical();
+                this.isValidSideEffectForCritical() &&
+                this.isValidSideEffectForInvalid() &&
+                this.isValidSideEffectForReflection();
         }
     };
 
@@ -479,6 +498,14 @@
 
     Game_Action.prototype.isValidSideEffectForCritical = function() {
         return this._criticalForSideEffect || !getMetaValues(this.item(), ['CriticalOnly', '会心時のみ']);
+    };
+
+    Game_Action.prototype.isValidSideEffectForInvalid = function() {
+        return this._invalidForSideEffect || !getMetaValues(this.item(), ['InvalidOnly', '無効時のみ']);
+    };
+
+    Game_Action.prototype.isValidSideEffectForReflection = function() {
+        return this._reflectionForSideEffect || !getMetaValues(this.item(), ['ReflectionOnly', '反射時のみ']);
     };
 
     Game_Action.prototype.applyItemSideEffectGlobal = function(property) {
