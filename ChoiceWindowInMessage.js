@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2019/02/18 顔グラフィックを表示した場合、選択肢のカーソル位置がずれる問題を修正
  1.0.0 2019/02/17 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -206,6 +207,15 @@
         this.opacity = 0;
     };
 
+    var _Window_ChoiceList_itemRect = Window_ChoiceList.prototype.itemRect;
+    Window_ChoiceList.prototype.itemRect = function(index) {
+        var rect = _Window_ChoiceList_itemRect.apply(this, arguments);
+        var newLineX = this._messageWindow.newLineX();
+        rect.x += newLineX;
+        rect.width -= newLineX;
+        return rect;
+    };
+
     Window_ChoiceList.prototype.isInnerMessage = function() {
         return true;
     };
@@ -245,5 +255,12 @@
         } else {
             return this._messageWindow.y + this._messageWindow.height - this.y + 8;
         }
+    };
+
+    var _Window_NumberInput_itemRect = Window_NumberInput.prototype.itemRect;
+    Window_NumberInput.prototype.itemRect = function(index) {
+        var rect = _Window_NumberInput_itemRect.apply(this, arguments);
+        rect.x += this._messageWindow.newLineX();
+        return rect;
     };
 })();
