@@ -54,7 +54,13 @@
         this.changeParentChoiceWindow()
     };
 
-    Scene_Map.prototype.changeParentChoiceWindow = function() {
+    var _Scene_Battle_createMessageWindow = Scene_Battle.prototype.createMessageWindow;
+    Scene_Battle.prototype.createMessageWindow = function() {
+        _Scene_Battle_createMessageWindow.apply(this, arguments);
+        this.changeParentChoiceWindow()
+    };
+
+    Scene_Base.prototype.changeParentChoiceWindow = function() {
         this._messageWindow.subWindows().forEach(function(win) {
             if (win.isInnerMessage()) {
                 this.addChild(this._windowLayer.removeChild(win));
