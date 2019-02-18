@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2019/02/19 選択肢のみ表示するとき、ウィンドウ位置をスクリプトで変えられるよう調整
  1.0.1 2019/02/18 顔グラフィックを表示した場合、選択肢のカーソル位置がずれる問題を修正
  1.0.0 2019/02/17 初版
 ----------------------------------------------------------------------------
@@ -164,17 +165,14 @@
             this.contents.clear();
         }
         if ($gameMessage.isChoice()) {
-            var prevHeight = this.height;
             var lines = $gameMessage.choiceLines();
             if (lines > this.numVisibleRows()) {
                 this.height = this.fittingHeight(lines);
             } else {
                 this.height = this.windowHeight();
             }
-            if (prevHeight !== this.height) {
-                this.updatePlacement();
-            }
         }
+        this.updatePlacement();
         this.open();
     };
 
