@@ -1,11 +1,12 @@
 //=============================================================================
 // BattleEffectPopup.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2019/02/26 KMS_SomStyleDamage.jsとの競合を解消。こちらのポップアップもKMS_SomStyleDamage.jsと同じ動きをします。
 // 1.8.0 2018/10/13 パラメータの型指定機能に対応
 //                  コモンイベントが呼び出された場合は無効ポップアップを出さないよう仕様変更
 // 1.7.2 2018/10/07 プラグインコマンド「対象者ポップアップ」にて競合等の理由で対象が見付からない場合にエラーを回避するよう修正
@@ -26,7 +27,7 @@
 //                  フラッシュするフレーム数を指定できるようになりました。
 // 1.0.0 2016/07/06 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -680,6 +681,10 @@
         var flashColor = target.getMessagePopupFlashColor();
         if (flashColor) {
             this.setupFlashEffect(flashColor);
+        }
+        // Resolve conflict for KMS_SomStyleDamage.js
+        if (this.setupSomStyleDamageParameter) {
+            this.setupSomStyleDamageParameter();
         }
     };
 
