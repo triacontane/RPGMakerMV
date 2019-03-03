@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.6 2019/03/03 シーン外のピクチャのアニメーションおよび効果音演奏を無効にするよう修正
 // 1.5.5 2019/02/13 コマンド「PA_SET_CELL」において0番(最初のセル)に対する指定が機能しない問題を修正
 // 1.5.4 2019/02/09 1.5.3の修正によりセルパターンを指定しないでアニメ再生するとエラーになる問題を修正
 // 1.5.3 2019/02/27 セルパターンの直接指定でアニメ再生する際、最初のセルが必ず1番になってしまう現象を修正
@@ -354,6 +355,11 @@
         }
     };
 
+    Game_Screen.prototype.isActivePicture = function(picture) {
+        var realId = this._pictures.indexOf(picture);
+        return realId > this.maxPictures() === $gameParty.inBattle();
+    };
+
     //=============================================================================
     // Game_Picture
     //  アニメーション関連の情報を追加で保持します。
@@ -448,7 +454,7 @@
         _Game_Picture_update.call(this);
         if (this.isFading()) {
             this.updateFading();
-        } else if (this.hasAnimationFrame()) {
+        } else if (this.hasAnimationFrame() && this.isActive()) {
             this.updateAnimationFrame();
         }
     };
@@ -529,6 +535,10 @@
 
     Game_Picture.prototype.isNeedFade = function() {
         return this._fadeDuration !== 0;
+    };
+
+    Game_Picture.prototype.isActive = function() {
+        return $gameScreen.isActivePicture(this);
     };
 
     //=============================================================================
