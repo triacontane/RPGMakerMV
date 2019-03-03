@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2019/03/04 ウィンドウクローズ時のポーズサインの色調を設定できるよう仕様変更
 // 1.7.3 2018/12/14 ロード、クイックロード時に決定ボタンを押し続けているとロード処理が繰り返されてしまう問題を修正
 //                  アイコン画像が自動改行時に考慮されない問題を修正
 // 1.7.2 2018/09/25 MessageSkip.jsと組み合わせたときにオート待機フレームの際に取得するテキスト文字数が正しく取得できていなかった競合を解消
@@ -177,6 +178,10 @@
  * @desc ノベル文章表示を縦書きにします。(ON/OFF)
  * @default false
  * @type boolean
+ *
+ * @param PauseColor
+ * @desc ウィンドウクローズ時のポーズサインの色調(R,G,B,A)です。通常時のポーズサインと差別化する場合に指定してください。
+ * @default 255,0,0,128
  *
  * @help It is a base plug-in for creating sound novel easily with RPG Maker MV
  * When applied, the display of the message window becomes the entire screen,
@@ -385,6 +390,10 @@
  * @default true
  * @type boolean
  *
+ * @param ポーズカラー
+ * @desc ウィンドウクローズ時のポーズサインの色調(R,G,B,A)です。通常時のポーズサインと差別化する場合に指定してください。
+ * @default 255,0,0,128
+ *
  * @param オートセーブ名称
  * @desc セーブ画面に表示されるオートセーブ名称です。
  * @default オートセーブ
@@ -548,6 +557,15 @@
         return value === 'ON' || value === 'TRUE';
     };
 
+    var getParamArrayNumber = function (paramNames, min, max) {
+        var values = (getParamOther(paramNames) || '').split(',');
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return values.map(function(value) {
+            return parseInt(value).clamp(min, max);
+        });
+    };
+
     var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
@@ -593,6 +611,7 @@
     var paramCommandQuickLoad   = getParamString(['CommandQuickSave', 'Qロードコマンド']);
     var paramCommandQuickSave   = getParamString(['CommandQuickLoad', 'Qセーブコマンド']);
     var paramVerticalWriting    = getParamBoolean(['VerticalWriting', '縦書き']);
+    var paramPauseColor         = getParamArrayNumber(['PauseColor', 'ポーズカラー'], 0, 255);
 
     //=============================================================================
     // インタフェースの定義
@@ -1663,7 +1682,9 @@
         var signSprite = this._windowPauseSignSprite;
         signSprite.x   = position.x;
         signSprite.y   = position.y;
-        signSprite.setBlendColor(this._windowClosing || this._signPositionNewLine ? [255, 0, 0, 128] : [0, 0, 0, 0]);
+        if (paramPauseColor) {
+            signSprite.setBlendColor(this._windowClosing || this._signPositionNewLine ? paramPauseColor : [0, 0, 0, 0]);
+        }
     };
 
     Window_NovelMessage.prototype.getPauseSignSpritePosition = function() {
