@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.1 2019/03/19 コミュニティ版コアスクリプト1.3以降でピクチャコモンから移動ルートの設定を実行するとエラーになっていた問題を修正
 // 1.12.0 2018/11/02 すべてのピクチャタッチを無効にできるスイッチを追加
 // 1.11.0 2018/08/10 なでなで機能に透過設定が正しく適用されない問題を修正
 //                   なでなで機能にもプラグインコマンドから透過設定を変更できる機能を追加
@@ -410,8 +411,11 @@
         this._setupFromPicture = false;
     };
 
-    Game_Interpreter.prototype.setupFromPicture = function(eventList) {
+    Game_Interpreter.prototype.setupFromPicture = function(eventList, commonId) {
         this.setup(eventList, null);
+        if (this.setEventInfo) {
+            this.setEventInfo({ eventType: 'common_event', commonEventId: commonId });
+        }
         this._setupFromPicture = true;
     };
 
@@ -503,7 +507,7 @@
         var event    = $dataCommonEvents[commonId];
         var result   = false;
         if (commonId > 0 && !this.isEventRunning() && event) {
-            this._interpreter.setupFromPicture(event.list);
+            this._interpreter.setupFromPicture(event.list, commonId);
             result = true;
         }
         $gameTemp.clearPictureCallInfo();
