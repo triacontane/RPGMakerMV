@@ -1,11 +1,14 @@
 //=============================================================================
 // AnotherNewGame.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2015 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2019/03/19 アナザーロード時に場所移動せず、セーブ位置から開始できる機能を追加
+//                  アナザーニューゲーム時に自動でONになるスイッチを追加
+//                  パラメータの型指定機能に対応
 // 1.4.0 2017/06/18 アナザーニューゲームの追加位置を指定できる機能を追加
 // 1.3.0 2017/05/27 ニューゲームを非表示にできる機能を追加
 // 1.2.4 2017/05/23 プラグインコマンドのヘルプを修正
@@ -18,7 +21,7 @@
 // 1.0.1 2015/11/10 プラグイン適用中にセーブできなくなる不具合を修正
 // 1.0.0 2015/11/07 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -28,44 +31,76 @@
  * @author トリアコンタン
  *
  * @param name
- * @desc タイトル画面に表示されるコマンド名です。（文字列）
+ * @text コマンド名称
+ * @desc タイトル画面に表示されるコマンド名です。
  * @default Another New Game
  *
  * @param map_id
- * @desc 移動先のマップIDです。（自然数）
+ * @text マップID
+ * @desc 移動先のマップIDです。0を指定した場合、場所移動しません。
  * @default 1
+ * @type number
  *
  * @param map_x
+ * @text X座標
  * @desc 移動先のX座標です。（自然数）
  * @default 1
+ * @type number
  *
  * @param map_y
+ * @text Y座標
  * @desc 移動先のY座標です。（自然数）
  * @default 1
+ * @type number
  *
  * @param hidden
- * @desc デフォルトで選択肢を非表示にします。プラグインコマンドで有効化できます。（ON/OFF）
- * @default OFF
+ * @text デフォルト非表示
+ * @desc デフォルトで選択肢を非表示にします。プラグインコマンドで有効化できます。
+ * @default false
+ * @type boolean
  *
  * @param disable
- * @desc デフォルトで選択肢を選択禁止にします。プラグインコマンドで有効化できます。（ON/OFF）
- * @default OFF
+ * @text デフォルト使用禁止
+ * @desc デフォルトで選択肢を選択禁止にします。プラグインコマンドで有効化できます。
+ * @default false
+ * @type boolean
  *
  * @param file_load
- * @desc アナザーニューゲーム選択時に、ロード画面に遷移して既存セーブデータをロードできるようになります。（ON/OFF）
- * @default OFF
+ * @text アナザーロード
+ * @desc アナザーニューゲーム選択時に、ロード画面に遷移して既存セーブデータをロードします。
+ * @default false
+ * @type boolean
  *
  * @param no_fadeout
- * @desc アナザーニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
- * @default OFF
+ * @text フェードアウト無効
+ * @desc アナザーニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。
+ * @default false
+ * @type boolean
  *
  * @param manage_number
+ * @text 管理番号
  * @desc 同一サーバ内に複数のゲームを配布する場合のみ、ゲームごとに異なる値を設定してください。(RPGアツマールは対象外)
  * @default
  *
  * @param add_position
+ * @text 追加位置
  * @desc アナザーニューゲームのコマンド追加位置です。(1:ニューゲームの上、2:コンティニューの上、3:オプションの上)
  * @default 0
+ * @type select
+ * @option オプションの下
+ * @value 0
+ * @option ニューゲームの上
+ * @value 1
+ * @option コンティニューの上
+ * @value 2
+ * @option オプションの上
+ * @value 3
+ *
+ * @param switch_id
+ * @text 連動スイッチ番号
+ * @desc アナザーニューゲーム開始時に自動でONになるスイッチを指定できます。
+ * @default 0
+ * @type switch
  *
  * @help タイトル画面のウィンドウの一番下に、もう一つのニューゲームを追加します。
  * 選択すると、ニューゲームとは別に指定したマップに遷移します。
@@ -102,7 +137,7 @@
     var localExtraStage = false;
 
     var getArgBoolean = function(arg) {
-        return arg.toUpperCase() === 'ON';
+        return arg.toUpperCase() === 'ON' || arg.toUpperCase() === 'TRUE';
     };
 
     //=============================================================================
@@ -177,16 +212,23 @@
             this._noFadeout = true;
         }
         if (!getArgBoolean(parameters['file_load'] || '')) {
-            var preMapId           = $dataSystem.startMapId;
-            var preStartX          = $dataSystem.startX;
-            var preStartY          = $dataSystem.startY;
-            $dataSystem.startMapId = parseInt(parameters['map_id'], 10) || 1;
-            $dataSystem.startX     = parseInt(parameters['map_x'], 10) || 1;
-            $dataSystem.startY     = parseInt(parameters['map_y'], 10) || 1;
+            var preMapId  = $dataSystem.startMapId;
+            var preStartX = $dataSystem.startX;
+            var preStartY = $dataSystem.startY;
+            var newMapId  = parseInt(parameters['map_id']);
+            if (newMapId > 0) {
+                $dataSystem.startMapId = newMapId;
+                $dataSystem.startX     = parseInt(parameters['map_x']) || 1;
+                $dataSystem.startY     = parseInt(parameters['map_y']) || 1;
+            }
             this.commandNewGame();
             $dataSystem.startMapId = preMapId;
             $dataSystem.startX     = preStartX;
             $dataSystem.startY     = preStartY;
+            var switchId = parseInt(parameters['switch_id']);
+            if (switchId > 0) {
+                $gameSwitches.setValue(switchId, true);
+            }
         } else {
             this.commandContinue();
             localExtraStage = true;
@@ -214,12 +256,18 @@
     Scene_Load.prototype.onLoadSuccess = function() {
         _Scene_Load_onLoadSuccess.call(this);
         if (localExtraStage) {
-            var mapId = parseInt(parameters['map_id'], 10) || 1;
-            var x     = parseInt(parameters['map_x'], 10) || 1;
-            var y     = parseInt(parameters['map_y'], 10) || 1;
-            $gamePlayer.reserveTransfer(mapId, x, y);
+            var mapId = parseInt(parameters['map_id']);
+            if (mapId > 0) {
+                var x = parseInt(parameters['map_x']) || 1;
+                var y = parseInt(parameters['map_y']) || 1;
+                $gamePlayer.reserveTransfer(mapId, x, y);
+            }
             $gameMap.abortInterpreter();
             DataManager.selectSavefileForNewGame();
+            var switchId = parseInt(parameters['switch_id']);
+            if (switchId > 0) {
+                $gameSwitches.setValue(switchId, true);
+            }
         }
     };
 
@@ -232,7 +280,7 @@
         _Window_TitleCommand_makeCommandList.call(this);
         if (ANGSettingManager.visible) {
             this.addCommand(parameters['name'], 'nameGame2', ANGSettingManager.enable);
-            var addPosition = parseInt(parameters['add_position'], 10);
+            var addPosition = parseInt(parameters['add_position']);
             if (addPosition > 0) {
                 var anotherCommand = this._list.pop();
                 this._list.splice(addPosition - 1, 0, anotherCommand);
@@ -246,7 +294,7 @@
     Window_TitleCommand.prototype.eraseCommandNewGame = function() {
         this._list = this._list.filter(function(command) {
             return command.symbol !== 'newGame';
-        })
+        });
     };
 
     var _Window_TitleCommand_updatePlacement      = Window_TitleCommand.prototype.updatePlacement;
@@ -262,6 +310,7 @@
     function ANGSettingManager() {
         throw new Error('This is a static class');
     }
+
     ANGSettingManager._fileId = -1001;
 
     ANGSettingManager.visible       = false;
