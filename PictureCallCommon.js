@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.2 2019/03/31 キーバインドで追加でキーを指定した場合に、ボタン名称が小文字でないと反応しない仕様を変更
 // 1.12.1 2019/03/19 コミュニティ版コアスクリプト1.3以降でピクチャコモンから移動ルートの設定を実行するとエラーになっていた問題を修正
 // 1.12.0 2018/11/02 すべてのピクチャタッチを無効にできるスイッチを追加
 // 1.11.0 2018/08/10 なでなで機能に透過設定が正しく適用されない問題を修正
@@ -370,7 +371,7 @@
             case 'P_CALL_KEY_BIND' :
             case 'ピクチャのキーバインド':
                 pictureId   = getArgNumber(args[0], 1, $gameScreen.maxPictures());
-                touchParam  = convertEscapeCharacters(args[1]).toLowerCase();
+                touchParam  = convertEscapeCharacters(args[1]);
                 trigger     = getArgNumber(args[2], 1);
                 transparent = (args.length > 3 ? getArgBoolean(args[3]) : null);
                 $gameScreen.setPictureCallCommon(pictureId, touchParam, trigger, transparent);
