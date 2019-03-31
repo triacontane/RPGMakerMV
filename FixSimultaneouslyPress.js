@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2019/03/31 ゲームパッドでも同時押しできるよう対応
  1.0.0 2018/09/17 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -55,6 +56,19 @@
             }
         }
         _Input_update.apply(this, arguments);
+    };
+
+    var _Input__updateGamepadState = Input._updateGamepadState;
+    Input._updateGamepadState = function(gamepad) {
+        _Input__updateGamepadState.apply(this, arguments);
+        gamepad.buttons.forEach(function(button, index) {
+            if (button.pressed) {
+                var buttonName = this.gamepadMapper[index];
+                if (buttonName) {
+                    this._latestButtons.push(buttonName);
+                }
+            }
+        }, this);
     };
 
     var _Input_isTriggered = Input.isTriggered;
