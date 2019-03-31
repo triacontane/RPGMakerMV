@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.4 2019/03/31 MOG_ChronoEngine.jsとの起動時の競合を解消
 // 1.12.3 2018/12/19 プレイヤーに近づく、遠ざかる処理で特定条件下で正しく移動しない場合がある問題を修正
 // 1.12.2 2018/11/04 1.11.8の修正後、一部環境でゲーム画面のFPS低下が起きていた現象を修正
 // 1.12.1 2018/10/13 すり抜けが設定が無効なイベントのページが切り替わったとき、すり抜け設定が有効になってしまう場合がある不具合を修正
@@ -1501,6 +1502,10 @@
     };
 
     Game_Event.prototype.getExpansionArea = function() {
+        // Resolve conflict for MOG_ChronoEngine.js
+        if (!this.event().meta) {
+            this.event().meta = {};
+        }
         var metaValue = getMetaValues(this.event(), ['ExpansionArea', '拡大領域']);
         if (metaValue) {
             this._customExpansion = true;
@@ -1714,4 +1719,3 @@
         _Game_Map_getHeight.call(this, x, y);
     };
 })();
-
