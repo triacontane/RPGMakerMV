@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2019/04/01 テストプレー時のみ、特定の日付もしくは設定した誕生日になるとタイトル画面に専用メッセージが流れる機能を追加
 // 2.8.1 2019/02/10 プラグイン等で画面サイズを変え、かつメニューバーを有効にしているとウィンドウサイズがおかしくなる問題を修正
 // 2.8.0 2019/01/06 MakeScreenMovie.jsを有効にしていると録画用のツールバーが表示される機能を追加
 // 2.7.0 2018/12/09 マップリロード機能で再読込したときに一時消去されたイベントが再表示されないよう仕様変更
@@ -294,6 +295,25 @@
  * @desc ゲーム画面が最前面に表示されているときにフォーカスを失うと、指定した座標分画面を右寄せします。
  * @default 640
  * @type number
+ *
+ * @param GreetingHide
+ * @desc タイトル画面の挨拶メッセージを非表示にします。
+ * @default false
+ * @type boolean
+ *
+ * @param BirthdayMonth
+ * @desc 誕生日を入力しておくと当日にタイトル画面にメッセージが表示されます。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 12
+ *
+ * @param BirthdayDate
+ * @desc 誕生日を入力しておくと当日にタイトル画面にメッセージが表示されます。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 31
  *
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
@@ -589,6 +609,25 @@
  * @default 640
  * @type number
  *
+ * @param 挨拶非表示
+ * @desc タイトル画面の挨拶メッセージを非表示にします。
+ * @default false
+ * @type boolean
+ *
+ * @param 誕生月
+ * @desc 誕生日を入力しておくと当日にタイトル画面にメッセージが表示されます。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 12
+ *
+ * @param 誕生日
+ * @desc 誕生日を入力しておくと当日にタイトル画面にメッセージが表示されます。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 31
+ *
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
  * また、UserAgentやコアスクリプトのバージョン等役立つ情報をログに出力します。
@@ -723,6 +762,9 @@ function Controller_NwJs() {
     const paramSimultaneousCtrl  = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
     const paramSimultaneousAlt   = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
     const paramShiftRightOnBlur  = getParamNumber(['ShiftRightOnBlur', '右寄せ座標'], -1000, 1000);
+    const paramGreetingHide      = getParamBoolean(['GreetingHide', '挨拶非表示']);
+    const paramBirthdayMonth     = getParamNumber(['BirthdayMonth', '誕生月'], 0, 12);
+    const paramBirthdayDate      = getParamNumber(['BirthdayDate', '誕生日'], 0, 31);
 
     //=============================================================================
     // Graphics
@@ -1432,6 +1474,65 @@ function Controller_NwJs() {
         }
     };
 
+    var _Scene_Title_createForeground      = Scene_Title.prototype.createForeground;
+    Scene_Title.prototype.createForeground = function() {
+        _Scene_Title_createForeground.apply(this, arguments);
+        if (!paramGreetingHide) {
+            this.createGreetingSprite();
+        }
+    };
+
+    var greetingMessage = {
+        '1_1': 'あけましておめでとうございます！　今年も制作がんばってください！',
+        '2_14': '今日はバレンタインデーです！　素敵な贈り物はもらえましたか？？？',
+        '4_1': '今日はエイプリルフールです！',
+        '8_31': '夏休みも今日で終わりですね……　お仕事してる人には関係ないですが。',
+        '12_24': '今日はクリスマスイブです！　こんな日まで制作するなんてえらいですね！！',
+        '12_31': '今日は大晦日です。　来年も制作がんばりましょう！',
+    };
+
+    Scene_Title.prototype.createGreetingSprite = function() {
+        var message = this.getGreetingMessage();
+        if (message) {
+            var fontSize = 48;
+            var bitmap           = new Bitmap(1000, fontSize);
+            bitmap.fontSize      = fontSize;
+            bitmap.fontFace = '"ヒラギノ明朝 ProN W3","Hiragino Mincho ProN","ＭＳ Ｐ明朝","MS PMincho"';
+            this._greetingSprite = new Sprite(bitmap);
+            this._greetingSprite.bitmap.drawText(message, 0, 0, 1000, bitmap.height, 'left');
+            this._greetingSprite.x = Graphics.width + 200;
+            this._greetingSprite.y = Graphics.height / 2;
+            this.addChild(this._greetingSprite);
+        }
+    };
+
+    Scene_Title.prototype.getGreetingMessage = function() {
+        var time  = new Date();
+        var month = time.getMonth() + 1;
+        var date  = time.getDate();
+        var hour  = time.getHours();
+        if (month === paramBirthdayMonth && date === paramBirthdayDate) {
+            return 'お誕生日おめでとうございます！！！';
+        }
+        if (hour > 21 && Math.randomInt(100) < 2) {
+            return '遅くまで制作お疲れさまです……！'
+        }
+        var key   = `${month}_${date}`;
+        return greetingMessage[key];
+    };
+
+    var _Scene_Title_update      = Scene_Title.prototype.update;
+    Scene_Title.prototype.update = function() {
+        _Scene_Title_update.apply(this, arguments);
+        if (this._greetingSprite) {
+            this._greetingSprite.x -= 2;
+            this._greetingSprite.y = Graphics.height / 2 + Math.sin(Graphics.frameCount / 30) * 30;
+            if (this._greetingSprite.x + this._greetingSprite.bitmap.width < 0) {
+                this._greetingSprite.x = this._greetingSprite.bitmap.width;
+            }
+        }
+    };
+
     //=============================================================================
     // Window_Base
     //  ウィンドウの高速開閉を提供します。
@@ -1517,13 +1618,13 @@ function Controller_NwJs() {
         return this._needsMapReload;
     };
 
-    const _Game_Map_eraseEvent = Game_Map.prototype.eraseEvent;
+    const _Game_Map_eraseEvent    = Game_Map.prototype.eraseEvent;
     Game_Map.prototype.eraseEvent = function(eventId) {
         _Game_Map_eraseEvent.apply(this, arguments);
         this._eraseEvents.push(eventId);
     };
 
-    const _Game_Map_setupEvents = Game_Map.prototype.setupEvents;
+    const _Game_Map_setupEvents    = Game_Map.prototype.setupEvents;
     Game_Map.prototype.setupEvents = function() {
         _Game_Map_setupEvents.apply(this, arguments);
         if (this._eraseEvents && $gamePlayer.isNeedMapReload()) {
