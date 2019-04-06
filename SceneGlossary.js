@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.12.0 2019/04/07 用語ページの出現条件をスイッチで制御できる機能を追加
 // 2.11.3 2019/02/07 FacePicture.jsとの競合を解消
 // 2.11.2 2019/01/04 2.11.0の対応でピクチャの拡大率が機能しなくなっていた問題を修正
 // 2.11.1 2018/12/07 収集率を取得できるスクリプトをヘルプに記載
@@ -628,6 +629,8 @@
  * <SG説明2:説明文>          // 2ページ目の用語の説明文
  * <SGピクチャ2:ファイル名>  // 2ページ目の用語のピクチャのファイル名
  * <SGピクチャ位置2:text>    // 2ページ目のピクチャの表示位置
+ * <SG表示スイッチ2:1>       // スイッチ[1]がONのときのみ2ページ目以降表示(※)
+ * ※2ページ目を非表示にすると自動的に3ページ目以降も非表示になります。
  *
  * 3ページ目以降も同様で、最大99ページまで指定できます。
  * 複数ページ表示する場合の1ページ目には「1」をつけないでください。
@@ -2063,10 +2066,7 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.calcMaxPages = function(index) {
-        if (!index) {
-            index = 0;
-        }
-        var exist = !!this.getPictureName(index) || !!this.getDescription(index);
+        var exist = this.isViewablePage(index) && (!!this.getPictureName(index) || !!this.getDescription(index));
         return (exist && index < 100) ? this.calcMaxPages(index + 1) : index;
     };
 
@@ -2115,6 +2115,11 @@ function Window_GlossaryComplete() {
         return description;
     };
 
+    Window_Glossary.prototype.isViewablePage = function(index) {
+        var switchId = parseInt(getMetaValues(this._itemData, ['VisibleSwitch', '表示スイッチ'], index)) || 0;
+        return switchId > 0 ? $gameSwitches.value(switchId) : true;
+    };
+
     Window_Glossary.prototype.getCommonDescription = function() {
         return this.getMetaContents(['共通説明', 'CommonDescription'], 0);
     };
@@ -2130,7 +2135,7 @@ function Window_GlossaryComplete() {
     Window_Glossary.prototype.refresh = function(item) {
         this._itemData = item;
         this._enemy    = null;
-        this._maxPages = item && $gameParty.hasGlossary(item) ? this.calcMaxPages() : 1;
+        this._maxPages = item && $gameParty.hasGlossary(item) ? this.calcMaxPages(0) : 1;
         this.drawItem(0, true);
     };
 
