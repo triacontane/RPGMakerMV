@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2019/04/06 MoviePicture.jsとの競合を修正
 // 2.0.0 2017/06/09 本体ver1.5.0に合わせて再作成
 // 1.1.1 2016/11/20 ロード完了時にframeが更新されない不具合を修正
 //                  ロード中にframeが変更された場合に、ロード完了まで反映を遅らせる仕様を追加
@@ -54,7 +55,9 @@
             if (this._isPicture) {
                 this._speedUpCustomBlendModes(renderer);
                 renderer.setObjectRenderer(renderer.plugins.picture);
-                renderer.plugins.picture.render(this);
+                if (!this.isVideoPicture || !this.isVideoPicture()) {
+                    renderer.plugins.picture.render(this);
+                }
             } else {
                 renderer.setObjectRenderer(renderer.plugins.sprite);
                 renderer.plugins.sprite.render(this);
