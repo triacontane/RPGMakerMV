@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2019/04/07 テンプレートイベントと個別イベントとでメモ欄を統合できる機能を追加
 // 2.0.0 2018/10/21 イベント設定の項目ごとにテンプレートイベントの設定を固有イベントで上書きできるよう修正
 //                  それに伴い、上書きに関する既存設定を見直しました。
 // 1.8.3 2018/10/16 1.8.2の競合対策によって、別のプラグインと競合が発生する可能性がある記述を修正
@@ -55,6 +56,11 @@
  *
  * @param AutoOverride
  * @desc メモ欄で上書き設定をしなくても「上書き対象項目」の設定を上書きします。
+ * @default false
+ * @type boolean
+ *
+ * @param IntegrateNote
+ * @desc テンプレートイベントと固有イベントのメモ欄を統合します。
  * @default false
  * @type boolean
  *
@@ -147,6 +153,12 @@
  * @param AutoOverride
  * @text 自動上書き
  * @desc メモ欄で上書き設定をしなくても「上書き対象項目」の設定を上書きします。
+ * @default false
+ * @type boolean
+ *
+ * @param IntegrateNote
+ * @text メモ欄統合
+ * @desc テンプレートイベントと固有イベントのメモ欄を統合します。
  * @default false
  * @type boolean
  *
@@ -715,11 +727,22 @@ var $dataTemplateEvents = null;
                 if (template) templateId = template.id;
             }
             this._templateId = templateId;
+            this._templateEvent = $dataTemplateEvents[this._templateId];
             this._override   = param.AutoOverride || !!getMetaValues(event, ['OverRide', '上書き']);
+            if (param.IntegrateNote) {
+                this.integrateNote(event);
+            }
         } else {
             this._templateId = 0;
+            this._templateEvent = null;
             this._override   = false;
         }
+    };
+
+    Game_Event.prototype.integrateNote = function(event) {
+        this._templateEvent = JsonEx.makeDeepCopy(this._templateEvent);
+        this._templateEvent.note = this._templateEvent.note + event.note;
+        DataManager.extractMetadata(this._templateEvent);
     };
 
     Game_Event._userScripts = ['getTemplateId', 'getTemplateName'];
@@ -728,7 +751,7 @@ var $dataTemplateEvents = null;
     };
 
     Game_Event.prototype.getTemplateName = function() {
-        return this.hasTemplate() ? $dataTemplateEvents[this._templateId].name : '';
+        return this.hasTemplate() ? this._templateEvent.name : '';
     };
 
     Game_Event.prototype.hasTemplate = function() {
@@ -737,7 +760,7 @@ var $dataTemplateEvents = null;
 
     var _Game_Event_event      = Game_Event.prototype.event;
     Game_Event.prototype.event = function() {
-        return this.hasTemplate() ? $dataTemplateEvents[this._templateId] : _Game_Event_event.apply(this, arguments);
+        return this.hasTemplate() ? this._templateEvent : _Game_Event_event.apply(this, arguments);
     };
 
     Game_Event.prototype.getOriginalPages = function() {
