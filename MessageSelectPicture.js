@@ -1,18 +1,19 @@
 //=============================================================================
 // MessageSelectPicture.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2019/04/07 複数のピクチャを選択肢に関連づけられる機能を追加
 // 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.0 2016/02/20 選択肢拡張プラグイン（MPP_ChoiceEX.js）に対応
 // 1.0.2 2016/01/24 マウス操作でピクチャが更新されない問題を修正
 // 1.0.1 2016/01/24 起動しないバグ修正(笑)
 // 1.0.0 2016/01/23 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -38,6 +39,7 @@
  * MSP_SET [ピクチャ番号] [選択肢#(1-6)]
  * 　選択肢の番号と表示するピクチャ番号とを関連づけます。
  * 　関連づけは、選択肢を決定した時点で解除されます。
+ * 　複数のピクチャを選択肢に関連づけたい場合は、その分コマンドを実行してください。
  *
  * 例：選択肢ピクチャ設定 1 1
  *
@@ -47,10 +49,10 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(function() {
     'use strict';
 
-    var getArgNumber = function (arg, min, max) {
+    var getArgNumber = function(arg, min, max) {
         if (arguments.length <= 2) min = -Infinity;
         if (arguments.length <= 3) max = Infinity;
         return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
@@ -62,14 +64,8 @@
         return win ? win.convertEscapeCharacters(text) : text;
     };
 
-    var getCommandName = function (command) {
+    var getCommandName = function(command) {
         return (command || '').toUpperCase();
-    };
-
-    var iterate = function(that, handler) {
-        Object.keys(that).forEach(function(key, index) {
-            handler.call(that, key, that[key], index);
-        });
     };
 
     //=============================================================================
@@ -77,45 +73,30 @@
     //  プラグインコマンドを追加定義します。
     //=============================================================================
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandMessageSelectPicture(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var win = require('nw.gui').Window.get();
-                if (!win.isDevToolsOpen()) {
-                    var devTool = win.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    win.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandMessageSelectPicture(command, args);
     };
 
-    Game_Interpreter.prototype.pluginCommandMessageSelectPicture = function (command, args) {
+    Game_Interpreter.prototype.pluginCommandMessageSelectPicture = function(command, args) {
         switch (getCommandName(command)) {
             case '選択肢ピクチャ設定' :
             case 'MSP_SET':
-                $gameMessage.setSelectPictureId(getArgNumber(args[1], 1, $gameScreen.maxPictures()),
-                    getArgNumber(args[0]), 1);
+                var index = getArgNumber(args[1], 0);
+                var pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
+                $gameMessage.setSelectPictureId(index, pictureId);
                 break;
         }
     };
 
-    var _Game_Message_initialize = Game_Message.prototype.initialize;
+    var _Game_Message_initialize      = Game_Message.prototype.initialize;
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.apply(this, arguments);
         this.clearSelectPictures();
     };
 
     Game_Message.prototype.setSelectPictureId = function(index, pictureId) {
-        this._selectPictures[index] = pictureId;
+        this._selectPictures.push({index: index, pictureId: pictureId});
     };
 
     Game_Message.prototype.clearSelectPictures = function() {
@@ -126,7 +107,7 @@
         return this._selectPictures;
     };
 
-    var _Game_Message_onChoice = Game_Message.prototype.onChoice;
+    var _Game_Message_onChoice      = Game_Message.prototype.onChoice;
     Game_Message.prototype.onChoice = function(n) {
         _Game_Message_onChoice.apply(this, arguments);
         this.clearSelectPictures();
@@ -136,20 +117,19 @@
         this._opacity = value;
     };
 
-    var _Window_ChoiceList_update = Window_ChoiceList.prototype.update;
+    var _Window_ChoiceList_update      = Window_ChoiceList.prototype.update;
     Window_ChoiceList.prototype.update = function() {
         _Window_ChoiceList_update.apply(this, arguments);
         if (this.openness !== 0) this.updateSelectPicture();
     };
 
     Window_ChoiceList.prototype.updateSelectPicture = function() {
-        var visiblyId = -1;
-        iterate($gameMessage.getSelectPictures(), function(key, id, index) {
-            var picture = $gameScreen.picture(id);
-            if (!picture) return;
-            var compareResult = (index === this.index() || visiblyId === id);
-            if (compareResult) visiblyId = id;
-            picture.setOpacity(compareResult ? 255 : 0);
-        }.bind(this));
+        $gameMessage.getSelectPictures().forEach(function(data) {
+            var picture = $gameScreen.picture(data.pictureId);
+            if (!picture) {
+                return;
+            }
+            picture.setOpacity(data.index === this.index() ? 255 : 0);
+        }, this);
     };
 })();
