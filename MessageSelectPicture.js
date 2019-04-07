@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2019/04/07 1.2.0で選択肢のインデックスが1つずれていた問題を修正
 // 1.2.0 2019/04/07 複数のピクチャを選択肢に関連づけられる機能を追加
 // 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
 // 1.1.0 2016/02/20 選択肢拡張プラグイン（MPP_ChoiceEX.js）に対応
@@ -82,7 +83,7 @@
         switch (getCommandName(command)) {
             case '選択肢ピクチャ設定' :
             case 'MSP_SET':
-                var index = getArgNumber(args[1], 0);
+                var index = getArgNumber(args[1], 1) - 1;
                 var pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
                 $gameMessage.setSelectPictureId(index, pictureId);
                 break;
