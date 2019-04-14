@@ -1,11 +1,12 @@
 //=============================================================================
 // BattleLogToMessage.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2019/04/14 もともとメッセージウィンドウで表示していたものはそのまま表示する設定を追加
 // 1.7.0 2018/05/30 スキル名、アイテム名を簡易表示する機能を追加
 // 1.6.1 2018/05/05 YEP_MessageCore.jsが有効な場合、メッセージウィンドウの行数はYEP_MessageCore.jsを優先するよう修正
 // 1.6.0 2018/03/25 バトルログに表示する内容が空の時、ウィンドウを非表示にできる機能を追加
@@ -66,6 +67,11 @@
  * @default false
  * @type boolean
  *
+ * @param MessageWindowNoApply
+ * @desc もともとメッセージウィンドウに表示していたものはプラグインの影響を受けなくなります。
+ * @default false
+ * @type boolean
+ *
  * @help バトルログを画面下部のメッセージウィンドウ内に表示するよう変更します。
  *
  * このプラグインにはプラグインコマンドはありません。
@@ -113,6 +119,11 @@
  *
  * @param スキル名簡易表示
  * @desc スキルおよびアイテムの表示を名称のみの中央表示に切り替えます。
+ * @default false
+ * @type boolean
+ *
+ * @param メッセージウィンドウ非適用
+ * @desc もともとメッセージウィンドウに表示していたものはプラグインの影響を受けなくなります。
  * @default false
  * @type boolean
  *
@@ -171,14 +182,15 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramStatusPosUpper      = getParamBoolean(['StatusPosUpper', 'ステータス上部配置']);
-    var paramSuppressPopup       = getParamBoolean(['SuppressPopup', 'ポップアップ抑制']);
-    var paramMessagePosUpper     = getParamBoolean(['MessagePosUpper', 'メッセージ上部配置']);
-    var paramMessageSpeed        = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
-    var paramWaitForEndAction    = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
-    var paramMessageLines        = getParamNumber(['MessageLines', 'メッセージ行数'], 0);
-    var paramHiddenIfEmpty       = getParamBoolean(['HiddenIfEmpty', '空の場合に非表示']);
-    var paramSkillViewSimplified = getParamBoolean(['SkillViewSimplified', 'スキル名簡易表示']);
+    var paramStatusPosUpper       = getParamBoolean(['StatusPosUpper', 'ステータス上部配置']);
+    var paramSuppressPopup        = getParamBoolean(['SuppressPopup', 'ポップアップ抑制']);
+    var paramMessagePosUpper      = getParamBoolean(['MessagePosUpper', 'メッセージ上部配置']);
+    var paramMessageSpeed         = getParamNumber(['MessageSpeed', 'メッセージ速度変数'], 0);
+    var paramWaitForEndAction     = getParamNumber(['WaitForEndAction', '行動終了後ウェイト'], 0);
+    var paramMessageLines         = getParamNumber(['MessageLines', 'メッセージ行数'], 0);
+    var paramHiddenIfEmpty        = getParamBoolean(['HiddenIfEmpty', '空の場合に非表示']);
+    var paramSkillViewSimplified  = getParamBoolean(['SkillViewSimplified', 'スキル名簡易表示']);
+    var paramMessageWindowNoApply = getParamBoolean(['MessageWindowNoApply', 'メッセージウィンドウ非適用']);
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
@@ -229,6 +241,10 @@
         return this._scene instanceof Scene_Battle;
     };
 
+    BattleManager.isStarting = function() {
+        return this._phase === 'start';
+    };
+
     //=============================================================================
     // Scene_Battle
     //  ウィンドウのレイアウトを変更します。
@@ -264,7 +280,7 @@
 
     var _Scene_Battle_updateWindowPositions      = Scene_Battle.prototype.updateWindowPositions;
     Scene_Battle.prototype.updateWindowPositions = function() {
-        if (BattleManager.isInputting() || BattleManager.isBattleLogClose()) {
+        if (BattleManager.isInputting() || BattleManager.isBattleLogClose() || BattleManager.isStarting()) {
             this._logWindow.close();
         } else {
             this._logWindow.open();
@@ -341,10 +357,10 @@
             this._displayCenterText = item.name;
         };
 
-        var _Window_BattleLog_drawLineText = Window_BattleLog.prototype.drawLineText;
+        var _Window_BattleLog_drawLineText      = Window_BattleLog.prototype.drawLineText;
         Window_BattleLog.prototype.drawLineText = function(index) {
             if (this._displayCenterText === this._lines[index]) {
-                var rect = this.itemRectForText(index);
+                var rect      = this.itemRectForText(index);
                 var realWidth = this.drawTextEx(this._lines[index], rect.x, -rect.height, rect.width);
                 rect.x += (rect.width / 2 - realWidth / 2);
                 this.contents.clearRect(rect.x, rect.y, rect.width, rect.height);
@@ -354,7 +370,7 @@
             }
         };
 
-        var _Window_BattleLog_endAction2 = Window_BattleLog.prototype.endAction;
+        var _Window_BattleLog_endAction2     = Window_BattleLog.prototype.endAction;
         Window_BattleLog.prototype.endAction = function(subject) {
             this._displayCenterText = null;
             _Window_BattleLog_endAction2.apply(this, arguments);
@@ -365,22 +381,24 @@
     // Window_Message
     //  戦闘中はメッセージウィンドウを上部に固定します。
     //=============================================================================
-    var _Window_Message_updatePlacement      = Window_Message.prototype.updatePlacement;
-    Window_Message.prototype.updatePlacement = function() {
-        _Window_Message_updatePlacement.apply(this, arguments);
-        if ($gameParty.inBattle() && paramMessagePosUpper) {
-            this.y = 0;
-        }
-    };
+    if (!paramMessageWindowNoApply) {
+        var _Window_Message_updatePlacement      = Window_Message.prototype.updatePlacement;
+        Window_Message.prototype.updatePlacement = function() {
+            _Window_Message_updatePlacement.apply(this, arguments);
+            if ($gameParty.inBattle() && paramMessagePosUpper) {
+                this.y = 0;
+            }
+        };
 
-    var _Window_Message_numVisibleRows      = Window_Message.prototype.numVisibleRows;
-    Window_Message.prototype.numVisibleRows = function() {
-        if (SceneManager.isBattleScene() && paramMessageLines > 0 && !$gameSystem.messageRows) {
-            return paramMessageLines;
-        } else {
-            return _Window_Message_numVisibleRows.apply(this, arguments);
-        }
-    };
+        var _Window_Message_numVisibleRows      = Window_Message.prototype.numVisibleRows;
+        Window_Message.prototype.numVisibleRows = function() {
+            if (SceneManager.isBattleScene() && paramMessageLines > 0 && !$gameSystem.messageRows) {
+                return paramMessageLines;
+            } else {
+                return _Window_Message_numVisibleRows.apply(this, arguments);
+            }
+        };
+    }
 
     //=============================================================================
     // Game_Battler
