@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2019/04/14 2.1.0の機能で、統合ではなく上書きできる機能を追加
 // 2.1.0 2019/04/07 テンプレートイベントと個別イベントとでメモ欄を統合できる機能を追加
 // 2.0.0 2018/10/21 イベント設定の項目ごとにテンプレートイベントの設定を固有イベントで上書きできるよう修正
 //                  それに伴い、上書きに関する既存設定を見直しました。
@@ -60,9 +61,15 @@
  * @type boolean
  *
  * @param IntegrateNote
- * @desc テンプレートイベントと固有イベントのメモ欄を統合します。
- * @default false
- * @type boolean
+ * @desc テンプレートイベントと固有イベントのメモ欄を統合もしくは上書きします。
+ * @default 0
+ * @type select
+ * @option None
+ * @value 0
+ * @option Integrate
+ * @value 1
+ * @option Override
+ * @value 2
  *
  * @help TemplateEvent.js[Template Event Plugin]
  *
@@ -158,9 +165,15 @@
  *
  * @param IntegrateNote
  * @text メモ欄統合
- * @desc テンプレートイベントと固有イベントのメモ欄を統合します。
- * @default false
- * @type boolean
+ * @desc テンプレートイベントと固有イベントのメモ欄を統合もしくは上書きします。
+ * @default 0
+ * @type select
+ * @option 何もしない
+ * @value 0
+ * @option 統合
+ * @value 1
+ * @option 上書き
+ * @value 2
  *
  * @help TemplateEvent.js[テンプレートイベントプラグイン]
  *
@@ -729,8 +742,8 @@ var $dataTemplateEvents = null;
             this._templateId = templateId;
             this._templateEvent = $dataTemplateEvents[this._templateId];
             this._override   = param.AutoOverride || !!getMetaValues(event, ['OverRide', '上書き']);
-            if (param.IntegrateNote) {
-                this.integrateNote(event);
+            if (param.IntegrateNote > 0) {
+                this.integrateNote(event, param.IntegrateNote);
             }
         } else {
             this._templateId = 0;
@@ -739,9 +752,9 @@ var $dataTemplateEvents = null;
         }
     };
 
-    Game_Event.prototype.integrateNote = function(event) {
+    Game_Event.prototype.integrateNote = function(event, type) {
         this._templateEvent = JsonEx.makeDeepCopy(this._templateEvent);
-        this._templateEvent.note = this._templateEvent.note + event.note;
+        this._templateEvent.note = (type === 1 ? this._templateEvent.note : '') + event.note;
         DataManager.extractMetadata(this._templateEvent);
     };
 
