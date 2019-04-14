@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.12.2 2019/04/14 フキダシウィンドウをキャラクター下に表示した際、Y座標の位置調整が効かなくなる問題を修正
 // 2.12.1 2019/02/07 GraphicalDesignMode.jsと併用し、かつフキダシウィンドウ無効時、カスタマイズしたウィンドウの横幅が反映されるよう修正
 // 2.12.0 2019/10/21 フキダシウィンドウの表示位置の上限と下限を設定できる機能を追加
 //                   フキダシウィンドウを画面上の任意の位置に表示できる機能を追加
@@ -1070,7 +1071,7 @@
     Window_Base.prototype.setPopupLowerPosition = function() {
         var lowerFlg = this.isPopupLower();
         if (lowerFlg) {
-            this.y = this.getPopupBaseY() + 8;
+            this.y += this.height + this.getHeightForPopup() + 8;
         }
         if (!paramNoUseTail) {
             this.setPauseSignToTail(lowerFlg);
