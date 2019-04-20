@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2019/04/20 ダメージが0だった場合の表記を「MISS」から「0」に変更
 // 1.6.0 2018/11/11 プラグインの型指定機能に対応
 //                  ポップアップ効果音を消音できるスイッチを追加
 // 1.5.1 2017/11/10 コピペミスによる誤記を修正
@@ -650,7 +651,7 @@
     };
 
     Sprite_CharacterDamage.prototype.isMiss = function() {
-        return this._damageInfo.value === null || this._damageInfo.value === 0;
+        return this._damageInfo.value === null;
     };
 
     Sprite_CharacterDamage.prototype.isRecover = function() {
