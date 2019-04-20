@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.0 2019/04/20 カレンダーを初期状態で非表示にできるパラメータを追加
 // 1.12.0 2018/12/27 カレンダー表示に行間を設定できる機能を追加
 // 1.11.1 2018/10/14 実時間表示に切り替えてから内部時間に反映されるまでにラグがある問題の修正
 // 1.11.0 2018/10/14 カレンダーの枠を非表示にできる機能を追加
@@ -202,6 +203,11 @@
  * @param カレンダー枠の非表示
  * @type boolean
  * @desc カレンダーのウィンドウ枠を非表示にします。
+ * @default false
+ *
+ * @param カレンダーの非表示
+ * @type boolean
+ * @desc カレンダーを非表示します。プラグインコマンドから表示できます。
  * @default false
  *
  * @param カレンダー余白
@@ -536,6 +542,7 @@ function Window_Chronus() {
     var paramHourHandFile        = getParamString('短針画像ファイル');
     var paramCalendarFrameHidden = getParamBoolean('カレンダー枠の非表示');
     var paramCalendarLineSpacing = getParamNumber('日時フォーマット行間', 0);
+    var paramCalendarHidden      = getParamBoolean('カレンダーの非表示');
 
     //=============================================================================
     // Game_Interpreter
@@ -959,7 +966,7 @@ function Window_Chronus() {
     Game_Chronus.prototype.initialize = function() {
         this._stop            = false;        // 停止フラグ（全ての加算に対して有効。ただし手動による加算は例外）
         this._disableTint     = false;        // 色調変更禁止フラグ
-        this._calendarVisible = true;         // カレンダー表示フラグ
+        this._calendarVisible = !paramCalendarHidden; // カレンダー表示フラグ
         this._disableWeather  = false;        // 天候制御禁止フラグ
         this._weatherType     = 0;            // 天候タイプ(0:なし 1:雨 2:嵐 :3雪)
         this._weatherPower    = 0;            // 天候の強さ
