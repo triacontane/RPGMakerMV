@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.7 2019/04/20 コマンド「PA_SOUND」にて「1」番目のセルを指定したとき、アニメーション開始直後にも演奏されるよう修正
 // 1.5.6 2019/03/03 シーン外のピクチャのアニメーションおよび効果音演奏を無効にするよう修正
 // 1.5.5 2019/02/13 コマンド「PA_SET_CELL」において0番(最初のセル)に対する指定が機能しない問題を修正
 // 1.5.4 2019/02/09 1.5.3の修正によりセルパターンを指定しないでアニメ再生するとエラーになる問題を修正
@@ -516,6 +517,7 @@
         if (this._cellNumber <= this._cellCount) {
             this._cellCount = this._cellNumber - 1;
         }
+        this.playCellSe();
     };
 
     Game_Picture.prototype.stopAnimationFrame = function(forceFlg) {
