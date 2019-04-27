@@ -1,14 +1,15 @@
 //=============================================================================
 // ScrollForceCenter.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2019/04/28 中心座標を指定したぶんだけずらせる機能を追加
 // 1.0.0 2016/09/15 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -16,6 +17,20 @@
 /*:
  * @plugindesc ScrollForceCenterPlugin
  * @author triacontane
+ *
+ * @param adjustX
+ * @desc 指定した分だけ中心がずれて表示されます。
+ * @default 0
+ * @type number
+ * @min -500
+ * @max 500
+ *
+ * @param adjustY
+ * @desc 指定した分だけ中心がずれて表示されます。
+ * @default 0
+ * @type number
+ * @min -500
+ * @max 500
  *
  * @help マップ画面でマップサイズにかかわらずプレイヤーが常に画面中央に
  * 配置されるようになります。
@@ -44,6 +59,22 @@
 /*:ja
  * @plugindesc 強制中央スクロールプラグイン
  * @author トリアコンタン
+ *
+ * @param adjustX
+ * @text X補正
+ * @desc 指定した分だけ中心がずれて表示されます。
+ * @default 0
+ * @type number
+ * @min -500
+ * @max 500
+ *
+ * @param adjustY
+ * @text Y補正
+ * @desc 指定した分だけ中心がずれて表示されます。
+ * @default 0
+ * @type number
+ * @min -500
+ * @max 500
  *
  * @help マップ画面でマップサイズにかかわらずプレイヤーが常に画面中央に
  * 配置されるようになります。
@@ -95,6 +126,31 @@
         return undefined;
     };
 
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+    var param = createPluginParameter('ScrollForceCenter');
+
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
@@ -103,23 +159,7 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandScrollForceCenter(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandScrollForceCenter(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandScrollForceCenter = function(command) {
@@ -197,11 +237,11 @@
     Game_Map.prototype.setDisplayPos = function(x, y) {
         _Game_Map_setDisplayPos.apply(this, arguments);
         if (this.isForceCenterHorizontal()) {
-            this._displayX = x;
+            this._displayX = x + (param.adjustX || 0);
             this._parallaxX = this._displayX;
         }
         if (this.isForceCenterVertical()) {
-            this._displayY = y;
+            this._displayY = y + (param.adjustY || 0);
             this._parallaxY = this._displayY;
         }
     };
