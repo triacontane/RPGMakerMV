@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2019/04/30 クロスカウンターで、相手の攻撃が当たった場合のみ反撃、もしくは外れた場合のみ反撃できる設定を追加
 // 1.8.3 2019/01/29 クロスカウンターによって敵を全滅された後の戦闘で、一部の反撃エフェクトが表示される場合がある問題を修正
 // 1.8.2 2019/01/13 クロスカウンター有効時、反撃可能かどうかの再チェックを行うよう修正
 //                  「コスト不足で失敗」パラメータ有効時、スキル封印についても考慮するよう修正
@@ -152,6 +153,13 @@
  * <CE_クロスカウンター> # 相手の攻撃を受けてから反撃します。
  * <CE_CrossCounter>     # 同上
  * ※クロスカウンターはスキルによる反撃の場合のみ有効です。
+ *
+ * クロスカウンターの発動条件を設定できます。
+ * <CE_クロスカウンター条件:1> # 相手の行動が当たった場合のみ反撃
+ * <CE_CrossCounterCond:1>     # 同上
+ * 0 : 常に
+ * 1 : 相手の行動が当たった場合のみ
+ * 2 : 相手の行動が外れた場合のみ
  *
  * 8. スキルに対して個別に反撃のされやすさを設定できます。
  * スキルのメモ欄に以下の通り入力してください。
@@ -301,6 +309,13 @@
  * <CE_CrossCounter>     # 同上
  * ※クロスカウンターはスキルによる反撃の場合のみ有効です。
  *
+ * クロスカウンターの発動条件を設定できます。
+ * <CE_クロスカウンター条件:1> # 相手の行動が当たった場合のみ反撃
+ * <CE_CrossCounterCond:1>     # 同上
+ * 0 : 常に
+ * 1 : 相手の行動が当たった場合のみ
+ * 2 : 相手の行動が外れた場合のみ
+ *
  * 8. スキルに対して個別に反撃のされやすさを設定できます。
  * スキルのメモ欄に以下の通り入力してください。
  * <CE_反撃増減:50> # 相手の反撃確率が50%増加する
@@ -441,6 +456,19 @@ var Imported = Imported || {};
             return false;
         }.bind(this));
         return counterAnimationId;
+    };
+
+    Game_BattlerBase.prototype.getCrossCounterCondition = function() {
+        var crossCounterCondition = 0;
+        this.traitObjects().some(function(traitObject) {
+            var metaValue = getMetaValues(traitObject, ['クロスカウンター条件', 'CrossCounterCond']);
+            if (metaValue) {
+                crossCounterCondition = parseInt(getArgString(metaValue)) || 0;
+                return true;
+            }
+            return false;
+        }.bind(this));
+        return crossCounterCondition;
     };
 
     Game_BattlerBase.prototype.reserveCounterSkillId = function(names, originalSkillId) {
@@ -650,6 +678,22 @@ var Imported = Imported || {};
         }
     };
 
+    var _Game_Action_applyItemUserEffect = Game_Action.prototype.applyItemUserEffect;
+    Game_Action.prototype.applyItemUserEffect = function(target) {
+        _Game_Action_applyItemUserEffect.apply(this, arguments);
+        this._applyForCounterExtend = true;
+    };
+
+    Game_Action.prototype.isValidCrossCounter = function(target) {
+        if (target.isDead() || this.itemCnt(target) <= 0) {
+            return false;
+        }
+        var cond = target.getCrossCounterCondition();
+        return (cond === 1 && this._applyForCounterExtend) ||
+            (cond === 2 && !this._applyForCounterExtend) ||
+            cond === 0;
+    };
+
     //=============================================================================
     // BattleManager
     //  スキルによる反撃を実装します。
@@ -676,7 +720,7 @@ var Imported = Imported || {};
         } else if (param.UsingForceAction) {
             if (target.isCrossCounter()) {
                 this.invokeNormalAction(subject, target);
-                if (target.isDead() || this._action.itemCnt(target) <= 0) {
+                if (!this._action.isValidCrossCounter(target)) {
                     return;
                 }
             }
