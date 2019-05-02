@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.1 2019/05/02 クロスカウンターで、相手の攻撃が当たった場合のみ反撃する場合は、身代わりによる肩代わりも除外するよう仕様変更
 // 1.9.0 2019/04/30 クロスカウンターで、相手の攻撃が当たった場合のみ反撃、もしくは外れた場合のみ反撃できる設定を追加
 // 1.8.3 2019/01/29 クロスカウンターによって敵を全滅された後の戦闘で、一部の反撃エフェクトが表示される場合がある問題を修正
 // 1.8.2 2019/01/13 クロスカウンター有効時、反撃可能かどうかの再チェックを行うよう修正
@@ -681,7 +682,7 @@ var Imported = Imported || {};
     var _Game_Action_applyItemUserEffect = Game_Action.prototype.applyItemUserEffect;
     Game_Action.prototype.applyItemUserEffect = function(target) {
         _Game_Action_applyItemUserEffect.apply(this, arguments);
-        this._applyForCounterExtend = true;
+        this._targetForCounterExtend = target;
     };
 
     Game_Action.prototype.isValidCrossCounter = function(target) {
@@ -689,8 +690,8 @@ var Imported = Imported || {};
             return false;
         }
         var cond = target.getCrossCounterCondition();
-        return (cond === 1 && this._applyForCounterExtend) ||
-            (cond === 2 && !this._applyForCounterExtend) ||
+        return (cond === 1 && this._targetForCounterExtend === target) ||
+            (cond === 2 && !this._targetForCounterExtend) ||
             cond === 0;
     };
 
