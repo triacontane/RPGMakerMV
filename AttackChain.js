@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2019/05/02 ダメージ数値と単位表記に任意の画像を使用できる機能を追加
 // 1.5.0 2018/07/20 味方のみコンボ継続する設定を追加
 // 1.4.2 2018/03/12 ダメージの桁数が多い場合に表示が見きれる場合がある問題を修正
 // 1.4.1 2017/09/19 連携表示の単位の表示倍率を調整できる機能を追加
@@ -38,6 +39,20 @@
  * @default Damage!!
  * @type string
  *
+ * @param UnitImage
+ * @desc チェイン数の単位を表示する画像です。指定した場合こちらが優先されます。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
+ * @param DamageUnitImage
+ * @desc チェイン数のダメージ単位を表示する画像です。指定した場合こちらが優先されます。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
  * @param FontSize
  * @desc It is the font size of chain display.
  * @default 48
@@ -47,6 +62,20 @@
  * @desc It is the font size of damage display.
  * @default 36
  * @type number
+ *
+ * @param ChainCountImage
+ * @desc コンボ数を表示する数値画像ファイルです。0-9までの数値を等間隔に横に並べた画像を用意してください。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
+ * @param ChainDamageImage
+ * @desc コンボダメージを表示する数値画像ファイルです。0-9までの数値を等間隔に横に並べた画像を用意してください。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
  *
  * @param ChainX
  * @desc The X coordinate of the chain display.
@@ -138,6 +167,7 @@
  *
  * This plugin is released under the MIT License.
  */
+
 /*:ja
  * @plugindesc 連携攻撃プラグイン
  * @author トリアコンタン
@@ -152,6 +182,20 @@
  * @default Damage!!
  * @type string
  *
+ * @param 単位画像ファイル
+ * @desc チェイン数の単位を表示する画像です。指定した場合こちらが優先されます。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
+ * @param ダメージ単位画像ファイル
+ * @desc チェイン数のダメージ単位を表示する画像です。指定した場合こちらが優先されます。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
  * @param フォントサイズ
  * @desc チェイン表示のフォントサイズです。
  * @default 48
@@ -161,6 +205,20 @@
  * @desc ダメージ表示のフォントサイズです。
  * @default 36
  * @type number
+ *
+ * @param チェイン画像ファイル
+ * @desc チェイン数を表示する数値画像ファイルです。0-9までの数値を等間隔に横に並べた画像を用意してください。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
+ * @param ダメージ画像ファイル
+ * @desc チェインダメージを表示する数値画像ファイルです。0-9までの数値を等間隔に横に並べた画像を用意してください。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
  *
  * @param X座標
  * @desc チェイン表示のX座標です。
@@ -370,6 +428,10 @@ function Sprite_ChainDamage() {
     param.partyOnly          = getParamBoolean(['PartyOnly', '味方のみに適用']);
     param.invalidSwitchId    = getParamNumber(['InvalidSwitchId', '無効スイッチ番号'], 0);
     param.skillChangeMessage = getParamString(['SkillChangeMessage', 'スキル変化メッセージ']);
+    param.chainCountImage    = getParamString(['ChainCountImage', 'チェイン画像ファイル']);
+    param.chainDamageImage   = getParamString(['ChainDamageImage', 'ダメージ画像ファイル']);
+    param.unitImage          = getParamString(['UnitImage', '単位画像ファイル']);
+    param.damageUnitImage    = getParamString(['DamageUnitImage', 'ダメージ単位画像ファイル']);
 
     //=============================================================================
     // Game_Unit
@@ -670,7 +732,7 @@ function Sprite_ChainDamage() {
     Scene_Battle.prototype.createSpriteset = function() {
         _Scene_Battle_createSpriteset.apply(this, arguments);
         this.createChainCountSprite();
-        if (param.damageUnit) {
+        if (param.damageUnit || param.damageUnitImage) {
             this.createChainDamageSprite();
         }
     };
@@ -695,12 +757,14 @@ function Sprite_ChainDamage() {
         Sprite.prototype.initialize.call(this);
         this._chainValue = 0;
         this._duration   = 0;
+        this.createCountBitmap();
+        this.createUnitBitmap();
         this.update();
     };
 
     Sprite_ChainCount.prototype.createBitmap = function() {
         var fontSize             = this.getFontSize();
-        var width                = (fontSize / 2) * this.getCharNumber() + this.getItalicWidth();
+        var width                = Graphics.boxWidth;
         var height               = fontSize + 12;
         this.bitmap              = new Bitmap(width, height);
         this.bitmap.fontSize     = fontSize;
@@ -708,6 +772,24 @@ function Sprite_ChainDamage() {
         this.bitmap.outlineWidth = this.getOutlineWidth();
         this.bitmap.outlineColor = 'white';
         this.updatePlacement();
+    };
+
+    Sprite_ChainCount.prototype.createCountBitmap = function() {
+        var fileName      = this.getCountImageFile();
+        this._countBitmap = fileName ? ImageManager.loadSystem(fileName, 0) : null;
+    };
+
+    Sprite_ChainCount.prototype.createUnitBitmap = function() {
+        var fileName      = this.getUnitFile();
+        this._unitBitmap = fileName ? ImageManager.loadSystem(fileName, 0) : null;
+    };
+
+    Sprite_ChainCount.prototype.getCountImageFile = function() {
+        return param.chainCountImage;
+    };
+
+    Sprite_ChainCount.prototype.getUnitFile = function() {
+        return param.unitImage;
     };
 
     Sprite_ChainCount.prototype.updatePlacement = function() {
@@ -812,15 +894,46 @@ function Sprite_ChainDamage() {
     };
 
     Sprite_ChainCount.prototype.refreshText = function(number, unit) {
+        var x = 0;
+        if (this._countBitmap) {
+            x = this.drawCountImage(number);
+        } else {
+            x = this.drawCount(number);
+        }
+        if (this._unitBitmap) {
+            this.drawUnitImage(x);
+        } else {
+            this.drawUnit(x, unit);
+        }
+    };
+
+    Sprite_ChainCount.prototype.drawCountImage = function(number) {
+        var width  = this._countBitmap.width / 10;
+        var height = this._countBitmap.height;
+        number.toString().split("").forEach(function(digit, index) {
+            this.bitmap.blt(this._countBitmap, width * digit, 0, width, height, index * width, 0, width, height);
+        }, this);
+        return number.toString().length * width;
+    };
+
+    Sprite_ChainCount.prototype.drawCount = function(number) {
         this.bitmap.textColor = this.getTextColor();
-        var numberFont        = this.getFontSize();
-        this.bitmap.fontSize  = numberFont;
+        this.bitmap.fontSize  = this.getFontSize();
         var maxWidth          = this.bitmap.width - this.getItalicWidth();
-        this.bitmap.drawText(number, 0, 0, maxWidth, this.bitmap.height, 'left');
+        this.bitmap.drawText(number, 0, 0, maxWidth, this.bitmap.fontSize, 'left');
+        return number.toString().length * this.getFontSize() / 2 + this.getItalicWidth() + 8;
+    };
+
+    Sprite_ChainCount.prototype.drawUnitImage = function(x) {
+        var w = this._unitBitmap.width;
+        var h = this._unitBitmap.height;
+        this.bitmap.blt(this._unitBitmap, 0, 0, w, h, x, 0, w, h);
+    };
+
+    Sprite_ChainCount.prototype.drawUnit = function(x, unit) {
+        this.bitmap.textColor = this.getTextColor();
         this.bitmap.fontSize *= userSettings.chainUnitScale;
-        var x = number.toString().length * this.getFontSize() / 2 + 4;
-        var y = (numberFont - this.bitmap.fontSize) / 2;
-        this.bitmap.drawText(unit, x, y, maxWidth, this.bitmap.height, 'left');
+        this.bitmap.drawText(unit, x, 0, this.bitmap.width - x, this.getFontSize(), 'left');
     };
 
     Sprite_ChainCount.prototype.refreshScale = function() {
@@ -841,6 +954,14 @@ function Sprite_ChainDamage() {
 
     Sprite_ChainDamage.prototype.getChainValue = function() {
         return this.getChainParty().getChainDamage();
+    };
+
+    Sprite_ChainDamage.prototype.getCountImageFile = function() {
+        return param.chainDamageImage;
+    };
+
+    Sprite_ChainDamage.prototype.getUnitFile = function() {
+        return param.damageUnitImage;
     };
 
     Sprite_ChainDamage.prototype.getFontSize = function() {
