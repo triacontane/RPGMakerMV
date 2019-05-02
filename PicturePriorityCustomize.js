@@ -1,18 +1,19 @@
 //=============================================================================
 // PicturePriorityCustomize.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2019/05/02 戦闘画面における下層ピクチャの表示優先度を微調整する機能を追加
 // 1.1.3 2019/01/20 MenuCommonEvent.jsとの競合によるエラーを解消
 // 1.1.2 2018/06/27 1.1.1の対応により発生したYEP_BattleEngineCore.jsとの競合を解消
 // 1.1.1 2017/12/24 GALV_LayerGraphics.jsと併用したときに画像がちらつく競合を解消
 // 1.1.0 2017/10/01 パラメータの型指定機能に対応
 // 1.0.0 2017/03/20 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -51,6 +52,15 @@
  * @value 7
  * @option マップタッチの行き先
  * @value 9
+ *
+ * @param LowerPictureBattleZ
+ * @desc 戦闘画面の下層ピクチャのZ座標です。変更することでより細かい表示優先度の調整ができます。
+ * @default 0
+ * @type select
+ * @option 敵キャラ
+ * @value 0
+ * @option アニメーション
+ * @value 1
  *
  * @help ピクチャを上層、中層、下層に分けて表示できます。
  * 上層：ウィンドウより上
@@ -110,6 +120,15 @@
  * @option マップタッチの行き先
  * @value 9
  *
+ * @param 戦闘下層ピクチャZ座標
+ * @desc 戦闘画面の下層ピクチャのZ座標です。変更することでより細かい表示優先度の調整ができます。
+ * @default 0
+ * @type select
+ * @option 敵キャラ
+ * @value 0
+ * @option アニメーション
+ * @value 1
+ *
  * @help ピクチャを上層、中層、下層に分けて表示できます。
  * 上層：ウィンドウより上
  * 中層：デフォルトの優先度
@@ -139,7 +158,7 @@
 
 (function() {
     'use strict';
-    const pluginName    = 'PicturePriorityCustomize';
+    const pluginName = 'PicturePriorityCustomize';
 
     //=============================================================================
     // ローカル関数
@@ -164,16 +183,17 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    const param          = {};
-    param.upperPictureId = getParamNumber(['UpperPictureId', '上層ピクチャ番号']);
-    param.lowerPictureId = getParamNumber(['LowerPictureId', '下層ピクチャ番号']);
-    param.lowerPictureZ  = getParamNumber(['LowerPictureZ', '下層ピクチャZ座標']);
+    const param               = {};
+    param.upperPictureId      = getParamNumber(['UpperPictureId', '上層ピクチャ番号']);
+    param.lowerPictureId      = getParamNumber(['LowerPictureId', '下層ピクチャ番号']);
+    param.lowerPictureZ       = getParamNumber(['LowerPictureZ', '下層ピクチャZ座標']);
+    param.lowerPictureBattleZ = getParamNumber(['LowerPictureBattleZ', '戦闘下層ピクチャZ座標'], 0);
 
     //=============================================================================
     // Scene_Base
     //  ウィンドウの上にピクチャを配置します。
     //=============================================================================
-    var _Scene_Base_createWindowLayer = Scene_Base.prototype.createWindowLayer;
+    var _Scene_Base_createWindowLayer      = Scene_Base.prototype.createWindowLayer;
     Scene_Base.prototype.createWindowLayer = function() {
         _Scene_Base_createWindowLayer.apply(this, arguments);
         if (this._spriteset) {
@@ -193,10 +213,10 @@
     };
 
     Spriteset_Base.prototype.createPictureLayer = function() {
-        var width  = Graphics.boxWidth;
-        var height = Graphics.boxHeight;
-        var x      = (Graphics.width - width) / 2;
-        var y      = (Graphics.height - height) / 2;
+        var width                   = Graphics.boxWidth;
+        var height                  = Graphics.boxHeight;
+        var x                       = (Graphics.width - width) / 2;
+        var y                       = (Graphics.height - height) / 2;
         this._pictureContainerLower = new Sprite();
         this._pictureContainerLower.setFrame(x, y, width, height);
         this._pictureContainerMiddle = new Sprite();
@@ -245,7 +265,9 @@
     //  下層ピクチャの位置を設定します。
     //=============================================================================
     Spriteset_Battle.prototype.setLowerPictureContainer = function() {
-        var index = this._battleField.getChildIndex(this._back2Sprite);
+        var compare = param.lowerPictureBattleZ > 0 ? this._enemySprites[this._enemySprites.length - 1] :
+            this._back2Sprite;
+        var index = this._battleField.getChildIndex(compare);
         this._battleField.addChildAt(this._pictureContainerLower, index + 1);
         // resolve conflict for GALV_LayerGraphics.js
         if (typeof Imported !== 'undefined' && Imported.Galv_LayerGraphics) {
