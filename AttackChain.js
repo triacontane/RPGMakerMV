@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2019/05/08 ダメージ数値と単位表記の画像指定で敵専用の画像を指定できる機能を追加
 // 2.0.0 2019/05/02 ダメージ数値と単位表記に任意の画像を使用できる機能を追加
 // 1.5.0 2018/07/20 味方のみコンボ継続する設定を追加
 // 1.4.2 2018/03/12 ダメージの桁数が多い場合に表示が見きれる場合がある問題を修正
@@ -53,6 +54,10 @@
  * @dir img/system/
  * @type file
  *
+ * @param EnemyUnitImageSuffix
+ * @desc 敵用の単位画像、ダメージ単位画像を別途指定したい場合のファイル名の接尾辞です。
+ * @default
+ *
  * @param FontSize
  * @desc It is the font size of chain display.
  * @default 48
@@ -76,6 +81,10 @@
  * @require 1
  * @dir img/system/
  * @type file
+ *
+ * @param EnemyImageSuffix
+ * @desc 敵用のチェイン画像、ダメージ画像を別途指定したい場合のファイル名の接尾辞です。
+ * @default
  *
  * @param ChainX
  * @desc The X coordinate of the chain display.
@@ -196,6 +205,10 @@
  * @dir img/system/
  * @type file
  *
+ * @param 敵用単位画像ファイル接尾辞
+ * @desc 敵用の単位画像、ダメージ単位画像を別途指定したい場合のファイル名の接尾辞です。
+ * @default
+ *
  * @param フォントサイズ
  * @desc チェイン表示のフォントサイズです。
  * @default 48
@@ -219,6 +232,10 @@
  * @require 1
  * @dir img/system/
  * @type file
+ *
+ * @param 敵用画像ファイル接尾辞
+ * @desc 敵用のチェイン画像、ダメージ画像を別途指定したい場合のファイル名の接尾辞です。
+ * @default
  *
  * @param X座標
  * @desc チェイン表示のX座標です。
@@ -411,27 +428,29 @@ function Sprite_ChainDamage() {
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param                = {};
-    param.unit               = getParamString(['Unit', '単位']);
-    param.damageUnit         = getParamString(['DamageUnit', 'ダメージ単位']);
-    param.fontSize           = getParamNumber(['FontSize', 'フォントサイズ']) || 48;
-    param.damageFontSize     = getParamNumber(['DamageFontSize', 'ダメージフォントサイズ']) || 48;
-    param.maxRate            = getParamNumber(['MaxRate', '最大倍率']) || 100;
-    param.damageRate         = getParamNumber(['DamageRate', 'ダメージ倍率']);
-    param.chainX             = getParamNumber(['ChainX', 'X座標']) || 0;
-    param.chainY             = getParamNumber(['ChainY', 'Y座標']) || 0;
-    param.duration           = getParamNumber(['Duration', '表示時間']) || 0;
-    param.cancelChangeTarget = getParamBoolean(['CancelChangeTarget', 'ターゲット変更で解除']);
-    param.cancelMiss         = getParamBoolean(['CancelMiss', 'ミスで解除']);
-    param.cancelNoAttack     = getParamBoolean(['CancelNoAttack', '攻撃以外で解除']);
-    param.cancelOpposite     = getParamBoolean(['CancelOpposite', '相手行動で解除']);
-    param.partyOnly          = getParamBoolean(['PartyOnly', '味方のみに適用']);
-    param.invalidSwitchId    = getParamNumber(['InvalidSwitchId', '無効スイッチ番号'], 0);
-    param.skillChangeMessage = getParamString(['SkillChangeMessage', 'スキル変化メッセージ']);
-    param.chainCountImage    = getParamString(['ChainCountImage', 'チェイン画像ファイル']);
-    param.chainDamageImage   = getParamString(['ChainDamageImage', 'ダメージ画像ファイル']);
-    param.unitImage          = getParamString(['UnitImage', '単位画像ファイル']);
-    param.damageUnitImage    = getParamString(['DamageUnitImage', 'ダメージ単位画像ファイル']);
+    var param                  = {};
+    param.unit                 = getParamString(['Unit', '単位']);
+    param.damageUnit           = getParamString(['DamageUnit', 'ダメージ単位']);
+    param.fontSize             = getParamNumber(['FontSize', 'フォントサイズ']) || 48;
+    param.damageFontSize       = getParamNumber(['DamageFontSize', 'ダメージフォントサイズ']) || 48;
+    param.maxRate              = getParamNumber(['MaxRate', '最大倍率']) || 100;
+    param.damageRate           = getParamNumber(['DamageRate', 'ダメージ倍率']);
+    param.chainX               = getParamNumber(['ChainX', 'X座標']) || 0;
+    param.chainY               = getParamNumber(['ChainY', 'Y座標']) || 0;
+    param.duration             = getParamNumber(['Duration', '表示時間']) || 0;
+    param.cancelChangeTarget   = getParamBoolean(['CancelChangeTarget', 'ターゲット変更で解除']);
+    param.cancelMiss           = getParamBoolean(['CancelMiss', 'ミスで解除']);
+    param.cancelNoAttack       = getParamBoolean(['CancelNoAttack', '攻撃以外で解除']);
+    param.cancelOpposite       = getParamBoolean(['CancelOpposite', '相手行動で解除']);
+    param.partyOnly            = getParamBoolean(['PartyOnly', '味方のみに適用']);
+    param.invalidSwitchId      = getParamNumber(['InvalidSwitchId', '無効スイッチ番号'], 0);
+    param.skillChangeMessage   = getParamString(['SkillChangeMessage', 'スキル変化メッセージ']);
+    param.chainCountImage      = getParamString(['ChainCountImage', 'チェイン画像ファイル']);
+    param.chainDamageImage     = getParamString(['ChainDamageImage', 'ダメージ画像ファイル']);
+    param.unitImage            = getParamString(['UnitImage', '単位画像ファイル']);
+    param.damageUnitImage      = getParamString(['DamageUnitImage', 'ダメージ単位画像ファイル']);
+    param.enemyImageSuffix     = getParamString(['EnemyImageSuffix', '敵用画像ファイル接尾辞']);
+    param.enemyUnitImageSuffix = getParamString(['EnemyUnitImageSuffix', '敵用単位画像ファイル接尾辞']);
 
     //=============================================================================
     // Game_Unit
@@ -775,13 +794,19 @@ function Sprite_ChainDamage() {
     };
 
     Sprite_ChainCount.prototype.createCountBitmap = function() {
-        var fileName      = this.getCountImageFile();
-        this._countBitmap = fileName ? ImageManager.loadSystem(fileName, 0) : null;
+        var fileName = this.getCountImageFile();
+        if (fileName) {
+            this._countBitmap      = ImageManager.loadSystem(fileName, 0);
+            this._countEnemyBitmap = ImageManager.loadSystem(fileName + param.enemyImageSuffix || '', 0);
+        }
     };
 
     Sprite_ChainCount.prototype.createUnitBitmap = function() {
-        var fileName      = this.getUnitFile();
-        this._unitBitmap = fileName ? ImageManager.loadSystem(fileName, 0) : null;
+        var fileName = this.getUnitFile();
+        if (fileName) {
+            this._unitBitmap      = ImageManager.loadSystem(fileName, 0);
+            this._unitEnemyBitmap = ImageManager.loadSystem(fileName + param.enemyUnitImageSuffix || '', 0);
+        }
     };
 
     Sprite_ChainCount.prototype.getCountImageFile = function() {
@@ -908,10 +933,11 @@ function Sprite_ChainDamage() {
     };
 
     Sprite_ChainCount.prototype.drawCountImage = function(number) {
-        var width  = this._countBitmap.width / 10;
-        var height = this._countBitmap.height;
-        number.toString().split("").forEach(function(digit, index) {
-            this.bitmap.blt(this._countBitmap, width * digit, 0, width, height, index * width, 0, width, height);
+        var bitmap = this.isPartyChain() ? this._countBitmap : this._countEnemyBitmap;
+        var width  = bitmap.width / 10;
+        var height = bitmap.height;
+        number.toString().split('').forEach(function(digit, index) {
+            this.bitmap.blt(bitmap, width * digit, 0, width, height, index * width, 0, width, height);
         }, this);
         return number.toString().length * width;
     };
@@ -925,9 +951,10 @@ function Sprite_ChainDamage() {
     };
 
     Sprite_ChainCount.prototype.drawUnitImage = function(x) {
-        var w = this._unitBitmap.width;
-        var h = this._unitBitmap.height;
-        this.bitmap.blt(this._unitBitmap, 0, 0, w, h, x, 0, w, h);
+        var bitmap = this.isPartyChain() ? this._unitBitmap : this._unitEnemyBitmap;
+        var w      = bitmap.width;
+        var h      = bitmap.height;
+        this.bitmap.blt(bitmap, 0, 0, w, h, x, 0, w, h);
     };
 
     Sprite_ChainCount.prototype.drawUnit = function(x, unit) {
