@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2019/05/09 座標の中心移動機能でX軸だけでなくY軸についても中心移動できるよう修正
 // 1.4.0 2018/11/21 残像の表示可否をアクター、敵キャラごとにスイッチで制御できる機能を追加
 // 1.3.0 2018/06/03 攻撃中バトラーを消去する機能を追加
 // 1.2.2 2018/04/07 AnimatedSVEnemies.jsとの競合を解消
@@ -77,8 +78,8 @@
  * 主に競合等の理由でYEPアクションシーケンスを使用しない方向けです。
  * スキルのメモ欄に以下の通り指定してください。
  *
- * <DAE攻撃:12,10,0,0>      # 12フレーム、高度10で対象まで移動
- * <DAEAttack:12,10,0,0>    # 同上
+ * <DAE攻撃:12,10,0,0,0>    # 12フレーム、高度10で対象まで移動
+ * <DAEAttack:12,10,0,0,0>  # 同上
  * <DAE帰投:18,25>          # 18フレーム、高度25で元に位置に戻る
  * <DAEReturn:18,25>        # 同上
  * <DAE姿隠し>              # 移動する際にバトラーの姿を隠します。
@@ -117,7 +118,7 @@
  * ※モーションの種類については後述
  *
  * メモ欄詳細
- * <DAE攻撃:[フレーム数],[高度],[Z座標],[中心移動]>
+ * <DAE攻撃:[フレーム数],[高度],[Z座標],[X中心移動],[Y中心移動]>
  * 指定したフレーム数で対象まで移動してからスキルを実行します。
  * 高度を設定すると放物線移動するようになります。
  * Z座標を指定すると本来の地点より高い場所に移動します。
@@ -241,8 +242,8 @@
  * 主に競合等の理由でYEPアクションシーケンスを使用しない方向けです。
  * スキルのメモ欄に以下の通り指定してください。
  *
- * <DAE攻撃:12,10,0,0>      # 12フレーム、高度10で対象まで移動
- * <DAEAttack:12,10,0,0>    # 同上
+ * <DAE攻撃:12,10,0,0,0>    # 12フレーム、高度10で対象まで移動
+ * <DAEAttack:12,10,0,0,0>  # 同上
  * <DAE帰投:18,25>          # 18フレーム、高度25で元に位置に戻る
  * <DAEReturn:18,25>        # 同上
  * <DAE姿隠し>              # 移動する際にバトラーの姿を隠します。
@@ -281,7 +282,7 @@
  * ※モーションの種類については後述
  *
  * メモ欄詳細
- * <DAE攻撃:[フレーム数],[高度],[Z座標],[中心移動]>
+ * <DAE攻撃:[フレーム数],[高度],[Z座標],[X中心移動],[Y中心移動]>
  * 指定したフレーム数で対象まで移動してからスキルを実行します。
  * 高度を設定すると放物線移動するようになります。
  * Z座標を指定すると本来の地点より高い場所に移動します。
@@ -533,12 +534,13 @@ function Sprite_Dummy() {
     };
 
     Game_Battler.prototype.makeDirectlyInfo = function(target, args) {
-        var directlyAttack        = {};
-        directlyAttack.target     = target;
-        directlyAttack.duration   = args[0] !== undefined ? args[0] : paramDuration;
-        directlyAttack.altitude   = args[1] !== undefined ? args[1] : paramAltitude;
-        directlyAttack.z          = args[2] !== undefined ? args[2] : 0;
-        directlyAttack.moveCenter = !!args[3];
+        var directlyAttack         = {};
+        directlyAttack.target      = target;
+        directlyAttack.duration    = args[0] !== undefined ? args[0] : paramDuration;
+        directlyAttack.altitude    = args[1] !== undefined ? args[1] : paramAltitude;
+        directlyAttack.z           = args[2] !== undefined ? args[2] : 0;
+        directlyAttack.moveCenter  = !!args[3];
+        directlyAttack.moveCenterY = !!args[4];
         return directlyAttack;
     };
 
@@ -835,6 +837,7 @@ function Sprite_Dummy() {
             this._targetSprite     = this.getActionTargetSprite();
             var attackInfo         = this._battler.getDirectoryAttack();
             this._attackMoveCenter = attackInfo.moveCenter;
+            this._attackMoveCenterY = attackInfo.moveCenterY;
             var position           = this.getDirectoryPosition();
             this.startAttackMotion(position.x, position.y, attackInfo, false);
         }
@@ -1116,6 +1119,14 @@ function Sprite_Dummy() {
         }
         var targetSprite = this._targetSprite;
         return this.anchor.x * this.width + (1 - targetSprite.anchor.x) * targetSprite.width + 16;
+    };
+
+    Sprite_Actor.prototype.getDirectoryPositionShiftY = function() {
+        if (!this._attackMoveCenterY) {
+            return Sprite_Battler.prototype.getDirectoryPositionShiftY.apply(this, arguments);
+        }
+        var targetSprite = this._targetSprite;
+        return -targetSprite.height / 2;
     };
 
     var _Sprite_Actor_stepForward      = Sprite_Actor.prototype.stepForward;
