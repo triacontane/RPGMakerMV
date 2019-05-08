@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2019/05/08 1.2.0の機能がYEP_BattleEngineCore.jsと併用すると無効になる競合を解消
 // 1.2.0 2019/05/02 戦闘画面における下層ピクチャの表示優先度を微調整する機能を追加
 // 1.1.3 2019/01/20 MenuCommonEvent.jsとの競合によるエラーを解消
 // 1.1.2 2018/06/27 1.1.1の対応により発生したYEP_BattleEngineCore.jsとの競合を解消
@@ -265,15 +266,27 @@
     //  下層ピクチャの位置を設定します。
     //=============================================================================
     Spriteset_Battle.prototype.setLowerPictureContainer = function() {
-        var compare = param.lowerPictureBattleZ > 0 ? this._enemySprites[this._enemySprites.length - 1] :
-            this._back2Sprite;
-        var index = this._battleField.getChildIndex(compare);
-        this._battleField.addChildAt(this._pictureContainerLower, index + 1);
+        this.updateLowerPictureContainerZ();
         // resolve conflict for GALV_LayerGraphics.js
         if (typeof Imported !== 'undefined' && Imported.Galv_LayerGraphics) {
             this._pictureContainerLower.z = 2;
         }
     };
+
+    Spriteset_Battle.prototype.updateLowerPictureContainerZ = function() {
+        var compare = param.lowerPictureBattleZ > 0 ? this._enemySprites[this._enemySprites.length - 1] :
+            this._back2Sprite;
+        var index = this._battleField.getChildIndex(compare);
+        this._battleField.addChildAt(this._pictureContainerLower, index + 1);
+    };
+
+    if (typeof Yanfly !== 'undefined' && Yanfly.BEC) {
+        var _Spriteset_Battle_update = Spriteset_Battle.prototype.update;
+        Spriteset_Battle.prototype.update = function() {
+            _Spriteset_Battle_update.apply(this, arguments);
+            this.updateLowerPictureContainerZ();
+        };
+    }
 
     //=============================================================================
     // Sprite_Picture
