@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2019/05/19 BattlerGraphicExtend.jsと併用したとき、<DAEVanish>の設定が一部機能しない競合を修正
 // 1.4.1 2019/05/09 座標の中心移動機能でX軸だけでなくY軸についても中心移動できるよう修正
 // 1.4.0 2018/11/21 残像の表示可否をアクター、敵キャラごとにスイッチで制御できる機能を追加
 // 1.3.0 2018/06/03 攻撃中バトラーを消去する機能を追加
@@ -602,6 +603,10 @@ function Sprite_Dummy() {
         return this._vanish;
     };
 
+    Game_Battler.prototype.resetVanish = function() {
+        this._vanish = false;
+    };
+
     //=============================================================================
     // Game_Actor
     //  攻撃モーションをスキルごとに設定します。
@@ -849,6 +854,15 @@ function Sprite_Dummy() {
             }
             this._noReturn = false;
         }
+        this.updateDirectlyOpacity();
+    };
+
+    Sprite_Battler.prototype.updateDirectlyOpacity = function() {
+        if (this._battler.isVanish()) {
+            this.opacity = 0;
+        } else if (this.isAttackMotionHidden()) {
+            this.getMainSprite().opacity = this.getAttackMotionOpacity();
+        }
     };
 
     Sprite_Battler.prototype.getDirectoryPosition = function() {
@@ -948,11 +962,6 @@ function Sprite_Dummy() {
         this._attackY = (this._attackY * (d - 1) + this._targetAttackY) / d;
         this._attackZ = (this._attackZ * (d - 1) + this._targetAttackZ) / d;
         this._attackDuration--;
-        if (this._battler.isVanish()) {
-            this.opacity = 0;
-        } else if (this.isAttackMotionHidden()) {
-            this.getMainSprite().opacity = this.getAttackMotionOpacity();
-        }
         if (this._attackDuration === 0) {
             this.onAttackMotionEnd();
         }
@@ -967,6 +976,7 @@ function Sprite_Dummy() {
         this.setVisibleAfterImage(false);
         if (this._battler.isVanish() && this._returnMotion) {
             this.opacity = 255;
+            this._battler.resetVanish();
         }
     };
 
