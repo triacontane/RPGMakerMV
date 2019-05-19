@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.1 2019/05/19 DynamicDatabase.jsと併用したとき、データベースリロード機能を使うと動的データベースの内容が初期化される競合を解消
 // 2.9.0 2019/04/01 テストプレー時のみ、特定の日付もしくは設定した誕生日になるとタイトル画面に専用メッセージが流れる機能を追加
 // 2.8.1 2019/02/10 プラグイン等で画面サイズを変え、かつメニューバーを有効にしているとウィンドウサイズがおかしくなる問題を修正
 // 2.8.0 2019/01/06 MakeScreenMovie.jsを有効にしていると録画用のツールバーが表示される機能を追加
@@ -1204,6 +1205,10 @@ function Controller_NwJs() {
         if (this._reloadGenerator && DataManager.isDatabaseLoaded()) {
             if (!this._reloadGenerator.next().value) {
                 this._reloadGenerator = null;
+                // Resolve conflict for DynamicDatabase.js
+                if (typeof DynamicDatabaseManager !== 'undefined') {
+                    DynamicDatabaseManager.makeDynamicDatabase();
+                }
             }
         }
     };
