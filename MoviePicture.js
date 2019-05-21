@@ -589,9 +589,7 @@
     //=============================================================================
     ImageManager.loadVideo = function(filename, alpha) {
         if (filename) {
-            var bitmap = Bitmap_Video.load(this.getVideoFilePath(filename), false, this.getVideoClass(alpha));
-            bitmap.smooth = true;
-            return bitmap;
+            return Bitmap_Video.load(this.getVideoFilePath(filename), true, this.getVideoClass(alpha));
         } else {
             return this.loadEmptyBitmap();
         }
