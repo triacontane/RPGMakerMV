@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageSkip.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.0 2019/05/26 オート、スキップアイコンの位置を自由に指定できる機能を追加
 // 1.11.0 2018/06/16 オート及びスキップの機能を一時的に無効化するスイッチを追加
 // 1.10.1 2018/05/07 オートモードで途中に「\!」が含まれる場合の待機フレームが正しく計算されない問題を修正
 // 1.10.0 2018/05/01 スキップモードとオートモードをスイッチで自動制御できる機能を追加
@@ -210,6 +211,20 @@
  * @default 75
  * @type number
  *
+ * @param アイコンX
+ * @desc オート、スキップのアイコン位置を自由に変更したい場合に指定するX座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @param アイコンY
+ * @desc オート、スキップのアイコン位置を自由に変更したい場合に指定するX座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
  * @param 押し続けスキップ
  * @desc スキップの判定が指定のキーを押している間のみになります。
  * @default false
@@ -413,6 +428,8 @@ function Sprite_Frame() {
     var paramSkipSwitchId    = getParamNumber(['SkipSwitchId', 'スキップスイッチ'], 0);
     var paramAutoSwitchIId   = getParamNumber(['AutoSwitchIId', 'オートスイッチ'], 0);
     var paramInvalidSwitchId = getParamNumber(['InvalidSwitchId', '無効化スイッチ'], 0);
+    var paramIconX           = getParamNumber(['IconX', 'アイコンX'], 0);
+    var paramIconY           = getParamNumber(['IconY', 'アイコンY'], 0);
 
     //=============================================================================
     // Game_Message
@@ -501,8 +518,8 @@ function Sprite_Frame() {
 
     Window_Message.prototype.createSpriteFrame = function() {
         this._icon   = new Sprite_Frame(ImageManager.loadSystem('IconSet'), -1);
-        this._icon.x = this.width - this._icon.width;
-        this._icon.y = this.height - this._icon.height;
+        this._icon.x = (paramIconX ? paramIconX - this.x : this.width - this._icon.width);
+        this._icon.y = (paramIconY ? paramIconY - this.y : this.height - this._icon.height);
         this.addChild(this._icon);
     };
 
