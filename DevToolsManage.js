@@ -1,11 +1,12 @@
 //=============================================================================
 // DevToolsManage.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.1 2019/05/26 高速化有効時にメッセージ強制スキップのみを無効化する設定を追加しました。
 // 2.9.1 2019/05/19 DynamicDatabase.jsと併用したとき、データベースリロード機能を使うと動的データベースの内容が初期化される競合を解消
 // 2.9.0 2019/04/01 テストプレー時のみ、特定の日付もしくは設定した誕生日になるとタイトル画面に専用メッセージが流れる機能を追加
 // 2.8.1 2019/02/10 プラグイン等で画面サイズを変え、かつメニューバーを有効にしているとウィンドウサイズがおかしくなる問題を修正
@@ -247,6 +248,11 @@
  * @type number
  * @min -60
  * @max 16
+ *
+ * @param InvalidMessageSkip
+ * @desc 高速化された状態でのメッセージ強制スキップを無効にします。
+ * @default false
+ * @type boolean
  *
  * @param FakeMobile
  * @desc モバイル実行を偽装します。(ON/OFF)
@@ -561,6 +567,11 @@
  * @min -60
  * @max 16
  *
+ * @param メッセージスキップ無効
+ * @desc 高速化された状態でのメッセージ強制スキップを無効にします。
+ * @default false
+ * @type boolean
+ *
  * @param モバイル偽装
  * @desc モバイル実行を偽装します。(ON/OFF)
  * モバイル版で異なるUIを使用する場合の表示確認ができます。
@@ -740,32 +751,33 @@ function Controller_NwJs() {
         return null;
     };
 
-    const paramStartupDevTool    = getParamBoolean(['StartupDevTool', '開始時に起動']);
-    const paramFuncKeyReload     = getParamString(['FuncKeyReload', 'リロードキー']);
-    const paramFuncKeyOnTop      = getParamString(['FuncKeyOnTop', '最前面に表示キー']);
-    const paramFuncKeyRapidGame  = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
-    const paramFuncKeyVictory    = getParamString(['FuncKeyForceVictory', '強制戦闘勝利キー']);
-    const paramFuncKeyDefeat     = getParamString(['FuncKeyForceDefeat', '強制戦闘敗北キー']);
-    const paramFuncKeyAbort      = getParamString(['FuncKeyForceAbort', '強制戦闘中断キー']);
-    const paramFuncKeyScript     = getParamString(['FuncKeyScript', 'スクリプト実行キー']);
-    const paramFuncKeyFreeze     = getParamString(['FuncKeyFreeze', 'フリーズキー']);
-    const paramShowFPS           = getParamString(['ShowFPS', 'FPS表示'], true);
-    const paramCutTitle          = getParamBoolean(['CutTitle', 'タイトルカット']);
-    const paramRapidStart        = getParamBoolean(['RapidStart', '高速開始']);
-    const paramRapidSpeed        = getParamNumber(['RapidSpeed', '高速スピード'], -60, 16);
-    const paramFakeMobile        = getParamBoolean(['FakeMobile', 'モバイル偽装']);
-    const paramMenuBarVisible    = getParamBoolean(['MenuBarVisible', 'メニューバー表示']);
-    const paramClickMenu         = getParamNumber(['ClickMenu', 'クリックメニュー'], -1);
-    const paramJsonSave          = getParamBoolean(['JsonSave', 'JSON形式セーブ']);
-    const paramOutputStartupInfo = getParamBoolean(['OutputStartupInfo', '起動時情報出力']);
-    const paramStartupOnTop      = getParamBoolean(['StartupOnTop', '最前面で起動']);
-    const paramUseReloadData     = getParamBoolean(['UseReloadData', 'リロード機能を使う']);
-    const paramSimultaneousCtrl  = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
-    const paramSimultaneousAlt   = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
-    const paramShiftRightOnBlur  = getParamNumber(['ShiftRightOnBlur', '右寄せ座標'], -1000, 1000);
-    const paramGreetingHide      = getParamBoolean(['GreetingHide', '挨拶非表示']);
-    const paramBirthdayMonth     = getParamNumber(['BirthdayMonth', '誕生月'], 0, 12);
-    const paramBirthdayDate      = getParamNumber(['BirthdayDate', '誕生日'], 0, 31);
+    const paramStartupDevTool     = getParamBoolean(['StartupDevTool', '開始時に起動']);
+    const paramFuncKeyReload      = getParamString(['FuncKeyReload', 'リロードキー']);
+    const paramFuncKeyOnTop       = getParamString(['FuncKeyOnTop', '最前面に表示キー']);
+    const paramFuncKeyRapidGame   = getParamString(['FuncKeyRapidGame', '高速化切替キー']);
+    const paramFuncKeyVictory     = getParamString(['FuncKeyForceVictory', '強制戦闘勝利キー']);
+    const paramFuncKeyDefeat      = getParamString(['FuncKeyForceDefeat', '強制戦闘敗北キー']);
+    const paramFuncKeyAbort       = getParamString(['FuncKeyForceAbort', '強制戦闘中断キー']);
+    const paramFuncKeyScript      = getParamString(['FuncKeyScript', 'スクリプト実行キー']);
+    const paramFuncKeyFreeze      = getParamString(['FuncKeyFreeze', 'フリーズキー']);
+    const paramShowFPS            = getParamString(['ShowFPS', 'FPS表示'], true);
+    const paramCutTitle           = getParamBoolean(['CutTitle', 'タイトルカット']);
+    const paramRapidStart         = getParamBoolean(['RapidStart', '高速開始']);
+    const paramRapidSpeed         = getParamNumber(['RapidSpeed', '高速スピード'], -60, 16);
+    const paramFakeMobile         = getParamBoolean(['FakeMobile', 'モバイル偽装']);
+    const paramMenuBarVisible     = getParamBoolean(['MenuBarVisible', 'メニューバー表示']);
+    const paramClickMenu          = getParamNumber(['ClickMenu', 'クリックメニュー'], -1);
+    const paramJsonSave           = getParamBoolean(['JsonSave', 'JSON形式セーブ']);
+    const paramOutputStartupInfo  = getParamBoolean(['OutputStartupInfo', '起動時情報出力']);
+    const paramStartupOnTop       = getParamBoolean(['StartupOnTop', '最前面で起動']);
+    const paramUseReloadData      = getParamBoolean(['UseReloadData', 'リロード機能を使う']);
+    const paramSimultaneousCtrl   = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
+    const paramSimultaneousAlt    = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
+    const paramShiftRightOnBlur   = getParamNumber(['ShiftRightOnBlur', '右寄せ座標'], -1000, 1000);
+    const paramGreetingHide       = getParamBoolean(['GreetingHide', '挨拶非表示']);
+    const paramBirthdayMonth      = getParamNumber(['BirthdayMonth', '誕生月'], 0, 12);
+    const paramBirthdayDate       = getParamNumber(['BirthdayDate', '誕生日'], 0, 31);
+    const paramInvalidMessageSkip = getParamBoolean(['InvalidMessageSkip', 'メッセージスキップ無効']);
 
     //=============================================================================
     // Graphics
@@ -1488,10 +1500,10 @@ function Controller_NwJs() {
     };
 
     var greetingMessage = {
-        '1_1': 'あけましておめでとうございます！　今年も制作がんばってください！',
-        '2_14': '今日はバレンタインデーです！　素敵な贈り物はもらえましたか？？？',
-        '4_1': '今日はエイプリルフールです！',
-        '8_31': '夏休みも今日で終わりですね……　お仕事してる人には関係ないですが。',
+        '1_1'  : 'あけましておめでとうございます！　今年も制作がんばってください！',
+        '2_14' : '今日はバレンタインデーです！　素敵な贈り物はもらえましたか？？？',
+        '4_1'  : '今日はエイプリルフールです！',
+        '8_31' : '夏休みも今日で終わりですね……　お仕事してる人には関係ないですが。',
         '12_24': '今日はクリスマスイブです！　こんな日まで制作するなんてえらいですね！！',
         '12_31': '今日は大晦日です。　来年も制作がんばりましょう！',
     };
@@ -1499,10 +1511,10 @@ function Controller_NwJs() {
     Scene_Title.prototype.createGreetingSprite = function() {
         var message = this.getGreetingMessage();
         if (message) {
-            var fontSize = 48;
+            var fontSize         = 48;
             var bitmap           = new Bitmap(1000, fontSize);
             bitmap.fontSize      = fontSize;
-            bitmap.fontFace = '"ヒラギノ明朝 ProN W3","Hiragino Mincho ProN","ＭＳ Ｐ明朝","MS PMincho"';
+            bitmap.fontFace      = '"ヒラギノ明朝 ProN W3","Hiragino Mincho ProN","ＭＳ Ｐ明朝","MS PMincho"';
             this._greetingSprite = new Sprite(bitmap);
             this._greetingSprite.bitmap.drawText(message, 0, 0, 1000, bitmap.height, 'left');
             this._greetingSprite.x = Graphics.width + 200;
@@ -1522,7 +1534,7 @@ function Controller_NwJs() {
         if (hour > 21 && Math.randomInt(100) < 2) {
             return '遅くまで制作お疲れさまです……！'
         }
-        var key   = `${month}_${date}`;
+        var key = `${month}_${date}`;
         return greetingMessage[key];
     };
 
@@ -1558,16 +1570,18 @@ function Controller_NwJs() {
     // Window_Message
     //  メッセージの高速化を提供します。
     //=============================================================================
-    const _Window_Message_isTriggered    = Window_Message.prototype.isTriggered;
-    Window_Message.prototype.isTriggered = function() {
-        return _Window_Message_isTriggered.apply(this, arguments) || SceneManager.isRapid();
-    };
+    if (!paramInvalidMessageSkip) {
+        const _Window_Message_isTriggered    = Window_Message.prototype.isTriggered;
+        Window_Message.prototype.isTriggered = function() {
+            return _Window_Message_isTriggered.apply(this, arguments) || SceneManager.isRapid();
+        };
 
-    const _Window_Message_startPause    = Window_Message.prototype.startPause;
-    Window_Message.prototype.startPause = function() {
-        _Window_Message_startPause.apply(this, arguments);
-        if (SceneManager.isRapid()) this.startWait(1);
-    };
+        const _Window_Message_startPause    = Window_Message.prototype.startPause;
+        Window_Message.prototype.startPause = function() {
+            _Window_Message_startPause.apply(this, arguments);
+            if (SceneManager.isRapid()) this.startWait(1);
+        };
+    }
 
     var _Game_Interpreter_command355      = Game_Interpreter.prototype.command355;
     Game_Interpreter.prototype.command355 = function() {
