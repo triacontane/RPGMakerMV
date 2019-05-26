@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.13.0 2019/05/26 PauseSignToTextEnd.jsと完全に組み合わせて使用できるよう修正
 // 2.12.2 2019/04/14 フキダシウィンドウをキャラクター下に表示した際、Y座標の位置調整が効かなくなる問題を修正
 // 2.12.1 2019/02/07 GraphicalDesignMode.jsと併用し、かつフキダシウィンドウ無効時、カスタマイズしたウィンドウの横幅が反映されるよう修正
 // 2.12.0 2019/10/21 フキダシウィンドウの表示位置の上限と下限を設定できる機能を追加
@@ -794,8 +795,8 @@
     };
 
     Game_System.prototype.setMessagePopupFree = function(x, y) {
-        this._messagePopupFreeX = x;
-        this._messagePopupFreeY = y;
+        this._messagePopupFreeX       = x;
+        this._messagePopupFreeY       = y;
         this._messagePopupCharacterId = 1;
     };
 
@@ -1029,7 +1030,7 @@
 
     Window_Base.prototype.setPopupPosition = function(character) {
         this._popupCharacter = character;
-        this._popupFreePos = $gameSystem.getMessagePopupFree();
+        this._popupFreePos   = $gameSystem.getMessagePopupFree();
         this.setPopupBasePosition();
         this.setPopupLowerPosition();
         this.setPopupAdjustInnerScreen();
@@ -1073,7 +1074,7 @@
         if (lowerFlg) {
             this.y += this.height + this.getHeightForPopup() + 8;
         }
-        if (!paramNoUseTail) {
+        if (!paramNoUseTail && !this.isUsePauseSignTextEnd()) {
             this.setPauseSignToTail(lowerFlg);
         }
     };
@@ -1082,8 +1083,10 @@
         if (paramInnerScreen) {
             this.adjustPopupPositionY();
         }
-        var adjustResultX             = this.adjustPopupPositionX();
-        this._windowPauseSignSprite.x = this._width / 2 + adjustResultX;
+        var adjustResultX = this.adjustPopupPositionX();
+        if (!this.isUsePauseSignTextEnd()) {
+            this._windowPauseSignSprite.x = this._width / 2 + adjustResultX;
+        }
     };
 
     Window_Base.prototype.setWindowShake = function(power) {
@@ -1188,6 +1191,10 @@
 
     Window_Base.prototype.isValidFontRangeForPopup = function() {
         return this.isPopup() && paramFontSizeRange > 0;
+    };
+
+    Window_Base.prototype.isUsePauseSignTextEnd = function() {
+        return this.isValidPauseSignTextEnd && this.isValidPauseSignTextEnd()
     };
 
     //=============================================================================
@@ -1354,7 +1361,9 @@
             width += adjust[0];
             height += adjust[1];
         }
-        if (paramNoUseTail) {
+        if (this.isUsePauseSignTextEnd()) {
+            width += this._windowPauseSignSprite.width;
+        } else if (paramNoUseTail) {
             height += 8;
         }
         this.width  = Math.max(width, this.getMinimumWidth());
