@@ -1,17 +1,18 @@
 //=============================================================================
 // PauseSignToTextEnd.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2019/05/26 MessageWindowPopup.jsと完全に組み合わせて使用できるよう修正
 // 1.2.1 2018/06/03 MessageWindowPopup.jsとの併用時、プラグインの定義順次第でポーズサインの表示が正常に行われない場合がある問題を修正
 // 1.2.0 2017/06/24 有効、無効を切り替えるスイッチを追加
 // 1.1.0 2017/04/23 ポーズサインを非表示にできるスイッチを追加
 // 1.0.0 2017/01/16 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -101,7 +102,7 @@
     var _Window_Message_startPause = Window_Message.prototype.startPause;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
-        if ((!this.isPopup || !this.isPopup()) && this.isValidPauseSignTextEnd()) {
+        if (this.isValidPauseSignTextEnd()) {
             this.setPauseSignToTextEnd();
         } else {
             this._refreshPauseSign();
@@ -122,6 +123,8 @@
         var y = this.padding + textState.y + textState.height;
         this._windowPauseSignSprite.anchor.x = 0;
         this._windowPauseSignSprite.anchor.y = 1;
+        // _windowPauseSignSpriteの絶対座標に小数点以下の端数が出ると表示がおかしくなるので調整
+        x -= this.x - Math.floor(this.x);
         this._windowPauseSignSprite.move(x, y);
     };
 
