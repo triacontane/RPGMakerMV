@@ -1,11 +1,12 @@
 //=============================================================================
 // AutoTranslation.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2019/06/02 動的データベースプラグインと併用してブラウザ起動するとエラーになる問題を修正
 // 1.2.0 2017/11/19 RTK1_Option_EnJa.jsと連携できるように仕様を微調整
 // 1.1.2 2017/08/24 ヘルプの誤字を修正＋型指定機能に対応
 // 1.1.1 2017/04/22 制御文字の精度をほんの少し改善
@@ -13,7 +14,7 @@
 //                  サブスクリプションキーを指定できる機能を追加
 // 1.0.0 2017/04/14 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -284,7 +285,7 @@ function TranslationManager() {
     };
 
     var isExistPlugin = function(pluginName) {
-        return Object.keys(PluginManager.parameters(pluginName)).length > 0
+        return Object.keys(PluginManager.parameters(pluginName)).length > 0;
     };
 
     //=============================================================================
@@ -371,7 +372,7 @@ function TranslationManager() {
         this._translateChoice = true;
         var promise;
         var translatedChoices = [];
-        var originalChoice    = "";
+        var originalChoice    = '';
         this._choices.forEach(function(choice) {
             if (!promise) {
                 originalChoice = choice;
@@ -586,7 +587,7 @@ function TranslationManager() {
                     return this[originalProperty];
                 }
             },
-            configurable: false
+            configurable: true
         });
     };
 
@@ -619,7 +620,7 @@ function TranslationManager() {
     };
 
     TranslationManager.isInvalidText = function(targetText) {
-        return targetText.match(/^\\NT/i)
+        return targetText.match(/^\\NT/i);
     };
 
     TranslationManager.getTranslatePromise = function(targetText) {
