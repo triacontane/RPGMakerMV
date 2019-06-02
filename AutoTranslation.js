@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2019/06/02 Translator Text APIのV3に対応しました。パラメータの再設定が必要です。
+//                  複数の翻訳先言語を指定可能にしました。
+//                  リアルタイム翻訳機能を追加しました。
 // 1.2.1 2019/06/02 動的データベースプラグインと併用してブラウザ起動するとエラーになる問題を修正
 // 1.2.0 2017/11/19 RTK1_Option_EnJa.jsと連携できるように仕様を微調整
 // 1.1.2 2017/08/24 ヘルプの誤字を修正＋型指定機能に対応
@@ -23,13 +26,9 @@
  * @plugindesc AutoTranslationPlugin
  * @author triacontane
  *
- * @param FromLanguage
- * @desc It is a language code that the original translation.
- * @default en
- *
  * @param ToLanguage
  * @desc This is the translation target language code.
- * @default ja
+ * @default ['ja']
  *
  * @param TranslateDatabase
  * @desc Translate each element of the database. Translation process involves little by little in the background.
@@ -41,23 +40,25 @@
  * @default true
  * @type boolean
  *
+ * @param RealtimeTranslate
+ * @desc Calls the translation API outside of test play.
+ * @default false
+ * @type boolean
+ *
  * @param TranslationSwitchId
  * @desc Is the switch ID translation is enabled. Specify 0 to unconditionally valid in translation.
  * @default 0
  * @type switch
  *
+ * @param LanguageVariableId
+ * @desc This is a variable number that determines the display language to be specified when multiple target languages are specified
+ * @default 0
+ * @type variable
+ *
  * @param InvertTranslationSwitch
  * @desc The effect of translation switch ID is inverted, translation is enabled when OFF, and disabled when ON.
  * @default false
  * @type boolean
- *
- * @param Category
- * @desc Specifies the category of translation at run time.
- * （Normal：general, NeuralNetwork：generalnn）
- * @default general
- * @type select
- * @option general
- * @option generalnn
  *
  * @param SubscriptionKey
  * @desc It is the subscription key of Microsoft Azure. If unspecified, use the shared environment prepared here.
@@ -81,10 +82,10 @@
  * 4. Databases (including terminology)
  *
  * Translation uses "Translator Text API" (Web API) of "Microsoft Azure".
- * https://azure.microsoft.com/en-us/services/cognitive-services/
+ * https://docs.microsoft.com/ja-jp/azure/cognitive-services/translator/
  *
  * For the language code, please refer to the following.
- * https://msdn.microsoft.com/en-us/library/hh456380.aspx
+ * https://docs.microsoft.com/ja-jp/azure/cognitive-services/translator/language-support
  *
  * The translation result is accumulated in the file
  * "Translations - (translation destination language code). Json"
@@ -132,47 +133,55 @@
  * @plugindesc 自動翻訳プラグイン
  * @author トリアコンタン
  *
- * @param 翻訳元言語
- * @desc 翻訳元になる言語コードです。
- * @default ja
+ * @param ToLanguage
+ * @text 翻訳先言語
+ * @desc 翻訳先になる言語コードです。複数指定可能で、パラメータ「翻訳先変数番号」の値で切り替わります。
+ * @default ["en"]
+ * @type string[]
  *
- * @param 翻訳先言語
- * @desc 翻訳先になる言語コードです。
- * @default en
- *
- * @param データベース翻訳
+ * @param TranslateDatabase
+ * @text データベース翻訳
  * @desc データベースの各要素を翻訳します。翻訳処理はバックグラウンドで少しずつ行われます。
  * @default false
  * @type boolean
  *
- * @param メッセージ翻訳
+ * @param TranslateMessage
+ * @text メッセージ翻訳
  * @desc メッセージ表示と選択肢表示の内容を翻訳します。
  * @default true
  * @type boolean
  *
- * @param 翻訳スイッチID
- * @desc 翻訳が有効になるスイッチIDです。0を指定すると無条件で翻訳が有効になります。
+ * @param RealtimeTranslate
+ * @text リアルタイム翻訳
+ * @desc テストプレー時以外でも翻訳APIを呼び出します。
+ * @default false
+ * @type boolean
+ *
+ * @param TranslationSwitchId
+ * @text 翻訳スイッチ番号
+ * @desc 翻訳が有効になるスイッチ番号です。0を指定すると無条件で翻訳が有効になります。
  * @default 0
  * @type switch
  *
- * @param 翻訳スイッチ反転
+ * @param LanguageVariableId
+ * @text 翻訳先変数番号
+ * @desc 翻訳先言語を複数指定した場合に指定する表示言語を決める変数番号です。翻訳先言語で指定した順(0始まり)になります。
+ * @default 0
+ * @type variable
+ *
+ * @param InvertTranslationSwitch
+ * @text 翻訳スイッチ反転
  * @desc 翻訳スイッチIDの効果を反転させ、OFFのときに翻訳が有効、ONのときに無効になります。
  * @default false
  * @type boolean
  *
- * @param カテゴリ
- * @desc 翻訳実行時のカテゴリを指定します。
- * （通常：general ニューラルネットワーク：generalnn）
- * @default general
- * @type select
- * @option general
- * @option generalnn
- *
- * @param サブスクリプションキー
+ * @param SubscriptionKey
+ * @text サブスクリプションキー
  * @desc Microsoft Azureのサブスクリプションキーです。未指定の場合、こちらで用意した共用環境を使用します。
  * @default
  *
- * @param ログ出力
+ * @param OutLog
+ * @text ログ出力
  * @desc リクエストの経過をログ出力します。(ON/TEST/OFF)
  * TESTはテストプレー時のみ出力
  * @default TEST
@@ -189,11 +198,25 @@
  * 3. 「マップ名」
  * 4. 各種データベースの値（用語も含む）
  *
+ * 翻訳APIはテストプレー時しか呼ばれません。実際にメッセージを表示すると
+ * 言語ごとの辞書ファイル「data/Translations_{言語コード}.json」が作成されます。
+ * リリース後は、この辞書ファイルを元に翻訳します。
+ * 翻訳元言語は元の文章から自動判定されます。
+ *
+ * パラメータ「リアルタイム翻訳」をONにすると、プレイヤーがゲームをプレーしている
+ * 最中にも翻訳APIが呼ばれるようになります。
+ * ただし、RPGアツマールなど外部のAPIを呼び出せない環境下では動作しません。
+ *
+ * 辞書ファイルは、翻訳前の文章をキー、翻訳後の文章を値とするJSON形式のため
+ * 以下のようなJSONエディタ等で簡単に編集できます。
+ * 誤訳を調整したり、特定の単語を翻訳しないようにすることもできます。
+ * http://jsoneditoronline.org/
+ *
  * 翻訳は「Microsoft Azure」の「Translator Text API」(Web API)を使用しています。
- * https://azure.microsoft.com/ja-jp/services/cognitive-services/
+ * https://docs.microsoft.com/ja-jp/azure/cognitive-services/translator/
  *
  * 言語コードについては、以下を参照してください。
- * https://msdn.microsoft.com/en-us/library/hh456380.aspx
+ * https://docs.microsoft.com/ja-jp/azure/cognitive-services/translator/language-support
  *
  * ・制約事項
  * 1. 「Translator Text API」の無料版は、1ヶ月に200万文字までしか翻訳できません。
@@ -208,17 +231,6 @@
  *
  * 4. 「Translator Text API」がサービスを終了した場合、当然このプラグインは
  * 使用できなくなります。（代替案は検討します）
- *
- * 翻訳結果は「Translations_（翻訳先言語コード）.json」というファイルに蓄積され
- * 同一の文章が要求された場合は、ファイルに保存されている内容を返します。
- * JSONファイルは、翻訳前の文章をキー、翻訳後の文章を値とする簡単な構成のため
- * 以下のようなJSONエディタ等で簡単に編集できます。（編集は自己責任です）
- * 誤訳を調整したり、特定の単語を翻訳しないようにすることもできます。
- *
- * http://jsoneditoronline.org/
- *
- * 翻訳データの作成はテストプレー中にのみ行われ、リリース後はJSONファイルのみを
- * 参照するので、オフラインゲームでも使用可能です。
  *
  * メッセージ翻訳は、表示するタイミングで行われるため、通信発生時（初回のみ）は
  * ウィンドウにメッセージ表示までに時間が掛かる場合があります。
@@ -257,50 +269,43 @@ function TranslationManager() {
 
 (function() {
     'use strict';
-    var pluginName = 'AutoTranslation';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
 
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
-    };
+    var param = createPluginParameter('AutoTranslation');
+    if (!param.ToLanguage) {
+        param.ToLanguage = ['en'];
+    }
 
     var isExistPlugin = function(pluginName) {
         return Object.keys(PluginManager.parameters(pluginName)).length > 0;
     };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param                     = {};
-    param.toLanguage              = getParamString(['ToLanguage', '翻訳先言語']);
-    param.fromLanguage            = getParamString(['FromLanguage', '翻訳元言語']);
-    param.outLog                  = getParamString(['OutLog', 'ログ出力']).toUpperCase();
-    param.translationSwitchId     = getParamNumber(['TranslationSwitchId', '翻訳スイッチID'], 0);
-    param.translateDatabase       = getParamBoolean(['TranslateDatabase', 'データベース翻訳']);
-    param.translateMessage        = getParamBoolean(['TranslateMessage', 'メッセージ翻訳']);
-    param.category                = getParamString(['Category', 'カテゴリ']);
-    param.subscriptionKey         = getParamString(['SubscriptionKey', 'サブスクリプションキー']);
-    param.invertTranslationSwitch = getParamBoolean(['InvertTranslationSwitch', '翻訳スイッチ反転']);
 
     //=============================================================================
     // Game_Interpreter
@@ -309,7 +314,7 @@ function TranslationManager() {
     var _Game_Interpreter_command101      = Game_Interpreter.prototype.command101;
     Game_Interpreter.prototype.command101 = function() {
         _Game_Interpreter_command101.apply(this, arguments);
-        if (param.translateMessage) {
+        if (param.TranslateMessage) {
             $gameMessage.translateMessage();
         }
     };
@@ -317,7 +322,7 @@ function TranslationManager() {
     var _Game_Interpreter_setupChoices      = Game_Interpreter.prototype.setupChoices;
     Game_Interpreter.prototype.setupChoices = function(params) {
         _Game_Interpreter_setupChoices.apply(this, arguments);
-        if (param.translateMessage) {
+        if (param.TranslateMessage) {
             $gameMessage.translateChoice();
         }
     };
@@ -353,10 +358,15 @@ function TranslationManager() {
 
     Game_System.prototype.isTranslateLocale = function(originalMethod, ragExp) {
         if (TranslationManager.isValidTranslation()) {
-            return param.toLanguage.match(ragExp);
+            return this.getTranslateTo().match(ragExp);
         } else {
             return originalMethod.apply(this, arguments);
         }
+    };
+
+    Game_System.prototype.getTranslateTo = function() {
+        var index = $gameVariables.value(param.LanguageVariableId);
+        return param.ToLanguage[index] || param.ToLanguage[0];
     };
 
     //=============================================================================
@@ -411,7 +421,7 @@ function TranslationManager() {
     // Game_Actor
     //  翻訳中の待機と自動改行を実装します。
     //=============================================================================
-    if (param.translateDatabase) {
+    if (param.TranslateDatabase) {
         var _Game_Actor_name      = Game_Actor.prototype.name;
         Game_Actor.prototype.name = function() {
             var name = _Game_Actor_name.apply(this, arguments);
@@ -471,8 +481,8 @@ function TranslationManager() {
     //  翻訳の実行を管理します。
     //=============================================================================
     TranslationManager._accessTokenUrl   = 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken';
-    TranslationManager._translateUrl     = 'https://api.microsofttranslator.com/V2/Http.svc/Translate';
-    TranslationManager._subscriptionKey1 = param.subscriptionKey || 'f78dab007fdb4ad4ad5baaaa01b74829';
+    TranslationManager._translateUrlV3   = 'https://api.cognitive.microsofttranslator.com/translate';
+    TranslationManager._subscriptionKey1 = param.SubscriptionKey || 'f78dab007fdb4ad4ad5baaaa01b74829';
 
     TranslationManager._translateProperties = {
         $dataClasses: ['name'],
@@ -580,24 +590,29 @@ function TranslationManager() {
         if (!translatedText || this._currentData.hasOwnProperty(originalProperty)) return;
         this._currentData[originalProperty] = this._currentData[propertyName];
         Object.defineProperty(this._currentData, propertyName, {
-            get         : function() {
+            get: function() {
                 if (TranslationManager.isValidTranslation()) {
-                    return translatedText;
+                    if ($gameSystem) {
+                        return TranslationManager.getDictionaryData(this[originalProperty]);
+                    } else {
+                        return translatedText;
+                    }
                 } else {
                     return this[originalProperty];
                 }
             },
+
             configurable: true
         });
     };
 
     TranslationManager.translateIfNeed = function(targetText, callBack) {
-        var dictionaryText = $dataTransDic[targetText];
+        var dictionaryText = this.getDictionaryData(targetText);
         if (dictionaryText) {
             callBack(this.isValidTranslation() ? dictionaryText : targetText);
             return;
         }
-        if (!targetText || !this.isMakingDictionary()) {
+        if (!targetText || !this.canCallApi()) {
             callBack(targetText || '');
             return;
         }
@@ -606,11 +621,17 @@ function TranslationManager() {
             return;
         }
         this._translating = true;
-        this.requestExecute(targetText).then(function(translatedText) {
-            translatedText = this.parseTranslatedText(translatedText);
-            this.addDictionary(targetText, translatedText);
+        this.requestExecute(targetText).then(function(transResults) {
+            var translatedText;
+            transResults.forEach(function(transData) {
+                var parsedText = this.parseTranslatedText(transData.text);
+                this.addDictionaryData(targetText, parsedText, transData.to);
+                if ($gameSystem.getTranslateTo() === transData.to) {
+                    translatedText = parsedText;
+                }
+            }, this);
             this._translating = false;
-            callBack(this.isValidTranslation() ? translatedText : targetText);
+            callBack(this.isValidTranslation() && translatedText ? translatedText : targetText);
         }.bind(this), function(error) {
             console.error('Failed to Request for ' + error);
             this._translateError = true;
@@ -645,8 +666,14 @@ function TranslationManager() {
         return translatedText;
     };
 
-    TranslationManager.addDictionary = function(targetText, translatedText) {
-        $dataTransDic[targetText] = translatedText;
+    TranslationManager.addDictionaryData = function(targetText, translatedText, language) {
+        // languageのデータがないことは想定していない
+        $dataTransDic[language][targetText] = translatedText;
+    };
+
+    TranslationManager.getDictionaryData = function(targetText) {
+        var language = $gameSystem ? $gameSystem.getTranslateTo() : param.ToLanguage[0];
+        return $dataTransDic[language][targetText];
     };
 
     TranslationManager.requestExecute = function(text) {
@@ -654,26 +681,27 @@ function TranslationManager() {
     };
 
     TranslationManager.requestAccessToken = function() {
-        var client = new Game_PostWebClient(this._accessTokenUrl);
+        var client = new GameWebClient(this._accessTokenUrl, 'POST');
         client.addRequestHeader('Ocp-Apim-Subscription-Key', this._subscriptionKey1);
         return client.request();
     };
 
     TranslationManager.requestTranslate = function(text, accessToken) {
-        var client = new Game_GetWebClient(this._translateUrl);
-        client.setLogPolicy(param.outLog);
-        client.addQuery('appid', `Bearer ${accessToken}`);
-        client.addQuery('text', text);
-        client.addQuery('from', param.fromLanguage);
-        client.addQuery('to', param.toLanguage);
-        client.addQuery('category', param.category || 'general');
+        var client = new GameWebClient(this._translateUrlV3, 'POST');
+        client.setLogPolicy(param.OutLog);
+        client.addQuery('api-version', '3.0');
+        param.ToLanguage.forEach(function(language) {
+            client.addQuery('to', language);
+        });
+        client.addParams({text: text});
+        client.addRequestHeader('Authorization', `Bearer ${accessToken}`);
+        client.addRequestHeader('Content-Type', `application/json`);
         return client.request().then(this.parseResponse.bind(this));
     };
 
     TranslationManager.parseResponse = function(resultXml) {
-        var parser = new DOMParser();
-        var dom    = parser.parseFromString(resultXml, 'text/xml');
-        return dom.getElementsByTagName('string').item(0).textContent;
+        var data = JSON.parse(resultXml);
+        return data[0].translations;
     };
 
     TranslationManager.addCloseListener = function() {
@@ -691,12 +719,16 @@ function TranslationManager() {
         return Utils.isNwjs() && Utils.isOptionValid('test');
     };
 
+    TranslationManager.canCallApi = function() {
+        return this.isMakingDictionary() || param.RealtimeTranslate;
+    };
+
     TranslationManager.isValidTranslation = function() {
-        if (!param.translationSwitchId || !$gameSwitches) {
+        if (!param.TranslationSwitchId || !$gameSwitches) {
             return true;
         }
-        var result = ($gameSwitches ? $gameSwitches.value(param.translationSwitchId) : true);
-        return param.invertTranslationSwitch ? !result : result;
+        var result = ($gameSwitches ? $gameSwitches.value(param.TranslationSwitchId) : true);
+        return param.InvertTranslationSwitch ? !result : result;
     };
 
     //=============================================================================
@@ -712,7 +744,7 @@ function TranslationManager() {
     var _SceneManager_updateManagers = SceneManager.updateManagers;
     SceneManager.updateManagers      = function() {
         _SceneManager_updateManagers.apply(this, arguments);
-        if ($dataTransDic && param.translateDatabase) {
+        if ($dataTransDic && param.TranslateDatabase) {
             TranslationManager.update();
         }
     };
@@ -721,34 +753,43 @@ function TranslationManager() {
     // DataManager
     //  辞書データのロードとセーブを実装します。
     //=============================================================================
-    DataManager._languageFileUrl = `data/Translations_${param.toLanguage}.json`;
+    DataManager._languageFileUrl = 'data/Translations_%1.json';
 
     var _DataManager_loadDatabase = DataManager.loadDatabase;
     DataManager.loadDatabase      = function() {
         _DataManager_loadDatabase.apply(this, arguments);
         if (!$dataTransDic) {
+            if (!$dataTransDic) {
+                $dataTransDic = {};
+            }
             this.loadTranslateData();
         }
         TranslationManager.clearTranslator();
     };
 
     DataManager.loadTranslateData = function() {
-        var client = new Game_GetWebClient(this._languageFileUrl);
-        client.request().then(this.onLoadLanguageData, this.onErrorLanguageData);
+        param.ToLanguage.forEach(function(language) {
+            var client = new GameWebClient(this._languageFileUrl.format(language), 'GET');
+            client.request().then(this.onLoadLanguageData.bind(this, language),
+                this.onErrorLanguageData.bind(this, language));
+        }, this);
     };
 
-    DataManager.onLoadLanguageData = function(data) {
-        $dataTransDic = JSON.parse(data);
+    DataManager.onLoadLanguageData = function(language, data) {
+        $dataTransDic[language] = JSON.parse(data);
     };
 
-    DataManager.onErrorLanguageData = function() {
+    DataManager.onErrorLanguageData = function(language) {
         console.log('Make Dictionary JSON file.');
-        $dataTransDic = {};
+        $dataTransDic[language] = {};
     };
 
     DataManager.saveTranslateData = function() {
         if (!$dataTransDic) return;
-        StorageManager.saveTranslateFile(this._languageFileUrl, JSON.stringify($dataTransDic));
+        param.ToLanguage.forEach(function(language) {
+            StorageManager.saveTranslateFile(this._languageFileUrl.format(language),
+                JSON.stringify($dataTransDic[language]));
+        }, this);
     };
 
     var _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
@@ -804,16 +845,19 @@ function TranslationManager() {
     };
 
     //=============================================================================
-    // Game_BaseWebClient
+    // Game_WebClient
     //  WebAPIに対してリクエストを投げる基底クラスです。
     //=============================================================================
-    class Game_BaseWebClient {
-        constructor(url) {
+    class GameWebClient {
+        constructor(url, method) {
             this._xmlHttpRequest = new XMLHttpRequest();
             this._xmlHttpRequest.addEventListener('readystatechange', this.onReadyStateChange.bind(this));
             this._originalUrl    = url;
             this._requestHeaders = {};
-            this._queryParams    = {};
+            this._queryParams    = [];
+            this._bodyParams     = [];
+            this._bodyParamText  = '';
+            this._method         = method === 'POST' ? 'POST' : 'GET';
             this.setLogPolicy('OFF');
             this.setResponseType('text');
             this.setTimeout(20000);
@@ -832,24 +876,18 @@ function TranslationManager() {
         }
 
         getFullUrl() {
-            return this._originalUrl;
-        }
-
-        getRequestMethodName() {
-            return '';
-        }
-
-        getSendQuery() {
-            return undefined;
+            var queryText = this.createQueryText();
+            return this._originalUrl + (queryText.length > 0 ? '?' + queryText : '');
         }
 
         request() {
             var xhr = this._xmlHttpRequest;
-            xhr.open(this.getRequestMethodName(), this.getFullUrl());
+            xhr.open(this._method, this.getFullUrl());
             this.setRequestHeaders();
-            xhr.responseType = this._responseType;
-            xhr.timeout      = this._timeout;
-            xhr.send(this.getSendQuery());
+            xhr.responseType    = this._responseType;
+            xhr.timeout         = this._timeout;
+            this._bodyParamText = JSON.stringify(this._bodyParams);
+            xhr.send(this._bodyParamText);
             return this.getPromise();
         }
 
@@ -865,17 +903,17 @@ function TranslationManager() {
         }
 
         addQuery(name, value) {
-            this._queryParams[name] = value;
+            this._queryParams.push({name: name, value: value});
         }
 
-        getQueryText() {
-            var paramArray = [];
-            var keys       = Object.keys(this._queryParams);
-            if (keys && keys.length > 0) {
-                keys.forEach(function(paramName) {
-                    paramArray.push(encodeURIComponent(paramName) + '=' + encodeURIComponent(this._queryParams[paramName]));
-                }, this);
-            }
+        addParams(value) {
+            this._bodyParams.push(value);
+        }
+
+        createQueryText() {
+            var paramArray = this._queryParams.map(function(paramHash) {
+                return encodeURIComponent(paramHash.name) + '=' + encodeURIComponent(paramHash.value);
+            });
             return paramArray.join('&');
         }
 
@@ -922,7 +960,7 @@ function TranslationManager() {
                     value = 'Before Send [URL]' + this.getFullUrl();
                     break;
                 case 2:
-                    value = 'After Send [Parameter]' + (this.getSendQuery() || '');
+                    value = 'After Send [Parameter]' + this._bodyParamText;
                     break;
                 case 3:
                     value = 'Processing...';
@@ -952,13 +990,8 @@ function TranslationManager() {
         }
 
         showDevToolsIfNeed() {
-            var nwWin = require('nw.gui').Window.get();
-            if (!nwWin.isDevToolsOpen()) {
-                var devTool = nwWin.showDevTools();
-                devTool.moveTo(0, 0);
-                devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                nwWin.focus();
-            }
+            var nwWin = nw.Window.get();
+            nwWin.showDevTools();
         }
 
         outputDebugLog(value) {
@@ -983,35 +1016,6 @@ function TranslationManager() {
                 default :
                     return false;
             }
-        }
-    }
-
-    //=============================================================================
-    // Game_GetWebClient
-    //  WebAPIに対してGETリクエストを投げるクラスです。
-    //=============================================================================
-    class Game_GetWebClient extends Game_BaseWebClient {
-        getRequestMethodName() {
-            return 'GET';
-        }
-
-        getFullUrl() {
-            var queryText = this.getQueryText();
-            return super.getFullUrl() + (queryText.length > 0 ? '?' + queryText : '');
-        }
-    }
-
-    //=============================================================================
-    // Game_PostWebClient
-    //  WebAPIに対してPOSTリクエストを投げるクラスです。
-    //=============================================================================
-    class Game_PostWebClient extends Game_BaseWebClient {
-        getRequestMethodName() {
-            return 'POST';
-        }
-
-        getSendQuery() {
-            return this.getQueryText();
         }
     }
 })();
