@@ -36,6 +36,11 @@
  * @desc タイトル画面で待機する秒数です。
  * @default 20
  * @type number
+ * 
+ * @param shouldIgnoreKey
+ * @desc キーの入力を無視するかどうか。有効の場合、キー入力があっても待機秒数はリセットされません。
+ * @default true
+ * @type boolean
  *
  * @help TitleWaitingDemo.js
  *
@@ -75,6 +80,12 @@
  * @desc タイトル画面で待機する秒数です。
  * @default 20
  * @type number
+ * 
+ * @param shouldIgnoreKey
+ * @text キー入力を無視する
+ * @desc キーの入力を無視するかどうか。有効の場合、キー入力があっても待機秒数はリセットされません。
+ * @default true
+ * @type boolean
  *
  * @help TitleWaitingDemo.js
  *
@@ -130,9 +141,19 @@
     Scene_Title.prototype.update = function() {
         _Scene_Title_update.apply(this, arguments);
         this._waitingDemoFrame++;
-        if (this._waitingDemoFrame > param.waitSecond * 60 && !this._startWaitingDemo) {
+        this.updateInputKey();
+        if (this.shouldStartWaitingDemo()) {
             this.startWaitingDemo();
             this._startWaitingDemo = true;
+        }
+    };
+
+    Scene_Title.prototype.updateInputKey = function() {
+        if(param.shouldIgnoreKey) {
+            return;
+        }
+        if(this.isAnyKeyInputted()) {
+            this.resetWaitingDemoFrame();
         }
     };
 
@@ -141,4 +162,19 @@
         $gamePlayer.reserveTransfer(param.mapId, param.mapX, param.mapY);
         this._commandWindow.open();
     };
+
+    Scene_Title.prototype.shouldStartWaitingDemo = function() {
+        var isTimeLimit = this._waitingDemoFrame > param.waitSecond * 60;
+        return isTimeLimit && !this._startWaitingDemo;
+    };
+
+    Scene_Title.prototype.resetWaitingDemoFrame = function() {
+        this._waitingDemoFrame = 0;
+    };
+
+    //キーかマウスのボタンがクリックされたかどうか
+    Scene_Title.prototype.isAnyKeyInputted = function() {
+        return Input._latestButton || TouchInput.isTriggered();
+    };
+
 })();
