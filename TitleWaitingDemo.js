@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2019/06/06 何らかのキー入力によって待機秒数をリセットする機能を追加 byツミオさん
  1.0.0 2019/06/05 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -36,7 +37,7 @@
  * @desc タイトル画面で待機する秒数です。
  * @default 20
  * @type number
- * 
+ *
  * @param shouldIgnoreKey
  * @desc キーの入力を無視するかどうか。有効の場合、キー入力があっても待機秒数はリセットされません。
  * @default true
@@ -80,7 +81,7 @@
  * @desc タイトル画面で待機する秒数です。
  * @default 20
  * @type number
- * 
+ *
  * @param shouldIgnoreKey
  * @text キー入力を無視する
  * @desc キーの入力を無視するかどうか。有効の場合、キー入力があっても待機秒数はリセットされません。
@@ -131,13 +132,13 @@
 
     var param = createPluginParameter('TitleWaitingDemo');
 
-    var _Scene_Title_start = Scene_Title.prototype.start;
+    var _Scene_Title_start      = Scene_Title.prototype.start;
     Scene_Title.prototype.start = function() {
         _Scene_Title_start.apply(this, arguments);
         this._waitingDemoFrame = 0;
     };
 
-    var _Scene_Title_update = Scene_Title.prototype.update;
+    var _Scene_Title_update      = Scene_Title.prototype.update;
     Scene_Title.prototype.update = function() {
         _Scene_Title_update.apply(this, arguments);
         this._waitingDemoFrame++;
@@ -149,10 +150,10 @@
     };
 
     Scene_Title.prototype.updateInputKey = function() {
-        if(param.shouldIgnoreKey) {
+        if (param.shouldIgnoreKey) {
             return;
         }
-        if(this.isAnyKeyInputted()) {
+        if (this.isAnyKeyInputted()) {
             this.resetWaitingDemoFrame();
         }
     };
@@ -176,5 +177,4 @@
     Scene_Title.prototype.isAnyKeyInputted = function() {
         return Input._latestButton || TouchInput.isTriggered();
     };
-
 })();
