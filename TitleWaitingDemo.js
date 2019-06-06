@@ -82,6 +82,7 @@
  * @type number
  * 
  * @param shouldIgnoreKey
+ * @text キー入力を無視する
  * @desc キーの入力を無視するかどうか。有効の場合、キー入力があっても待機秒数はリセットされません。
  * @default true
  * @type boolean
