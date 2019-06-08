@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2019/06/03 一部をより競合のおきにくい記述に変更
 // 2.0.0 2019/06/02 Translator Text APIのV3に対応しました。パラメータの再設定が必要です。
 //                  複数の翻訳先言語を指定可能にしました。
 //                  リアルタイム翻訳機能を追加しました。
@@ -263,6 +264,11 @@
 
 var $dataTransDic = null;
 
+/**
+ * TranslationManager
+ * 翻訳を管理するstaticクラス
+ * @constructor
+ */
 function TranslationManager() {
     throw new Error('This is a static class');
 }
@@ -380,7 +386,7 @@ function TranslationManager() {
 
     Game_Message.prototype.translateChoice = function() {
         this._translateChoice = true;
-        var promise;
+        var promise = null;
         var translatedChoices = [];
         var originalChoice    = '';
         this._choices.forEach(function(choice) {
@@ -626,7 +632,7 @@ function TranslationManager() {
             transResults.forEach(function(transData) {
                 var parsedText = this.parseTranslatedText(transData.text);
                 this.addDictionaryData(targetText, parsedText, transData.to);
-                if ($gameSystem.getTranslateTo() === transData.to) {
+                if (this.findActiveLanguage() === transData.to) {
                     translatedText = parsedText;
                 }
             }, this);
@@ -654,10 +660,10 @@ function TranslationManager() {
         translatedText = translatedText.replace(/%\s+(\d+)/gi, function() {
             return '%' + arguments[1] + ' ';
         }.bind(this));
-        translatedText = translatedText.replace(/(\\\w+)\s+(\[.+?\])/gi, function() {
+        translatedText = translatedText.replace(/(\\\w+)\s+(\[.+?])/gi, function() {
             return arguments[1] + arguments[2];
         }.bind(this));
-        translatedText = translatedText.replace(/(\\\w+)\s+(\<.+?\>)/gi, function() {
+        translatedText = translatedText.replace(/(\\\w+)\s+(<.+?>)/gi, function() {
             return arguments[1] + arguments[2];
         }.bind(this));
         translatedText = translatedText.replace(/(\\)\s+(\W)/gi, function() {
@@ -672,8 +678,11 @@ function TranslationManager() {
     };
 
     TranslationManager.getDictionaryData = function(targetText) {
-        var language = $gameSystem ? $gameSystem.getTranslateTo() : param.ToLanguage[0];
-        return $dataTransDic[language][targetText];
+        return $dataTransDic[this.findActiveLanguage()][targetText];
+    };
+
+    TranslationManager.findActiveLanguage = function() {
+        return $gameSystem ? $gameSystem.getTranslateTo() : param.ToLanguage[0];
     };
 
     TranslationManager.requestExecute = function(text) {
@@ -695,12 +704,12 @@ function TranslationManager() {
         });
         client.addParams({text: text});
         client.addRequestHeader('Authorization', `Bearer ${accessToken}`);
-        client.addRequestHeader('Content-Type', `application/json`);
+        client.addRequestHeader('Content-Type', 'application/json');
         return client.request().then(this.parseResponse.bind(this));
     };
 
-    TranslationManager.parseResponse = function(resultXml) {
-        var data = JSON.parse(resultXml);
+    TranslationManager.parseResponse = function(resultJson) {
+        var data = JSON.parse(resultJson);
         return data[0].translations;
     };
 
@@ -821,6 +830,9 @@ function TranslationManager() {
     var _DataManager_isMapLoaded = DataManager.isMapLoaded;
     DataManager.isMapLoaded      = function() {
         var loaded = _DataManager_isMapLoaded.apply(this, arguments);
+        if (!$gameSystem) {
+            return loaded;
+        }
         if (loaded && this._mapNameLoadingStatus === 1) {
             this._mapNameLoadingStatus = 2;
             TranslationManager.getTranslatePromise($dataMap.displayName).then(this.onTranslateDisplayName.bind(this));
