@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.13.0 2019/06/08 全ての用語アイテムを破棄するプラグインコマンドを追加
 // 2.12.0 2019/04/07 用語ページの出現条件をスイッチで制御できる機能を追加
 // 2.11.3 2019/02/07 FacePicture.jsとの競合を解消
 // 2.11.2 2019/01/04 2.11.0の対応でピクチャの拡大率が機能しなくなっていた問題を修正
@@ -271,6 +272,8 @@
  *
  * GLOSSARY_GAIN_ALL
  *  All terms registered in the database will be in acquisition state.
+ *
+ * GLOSSARY_LOSE_ALL
  *
  * GLOSSARY_CALL [Type]
  *  Call the glossary screen.
@@ -684,6 +687,9 @@
  *  対象は「隠しアイテム」扱いの用語のみですが、パラメータ「入手履歴を使用」が
  *  有効な場合は全てのアイテムを解禁します。（アイテム自体は取得しません）
  *
+ * GLOSSARY_LOSE_ALL or 用語集全破棄
+ *  データベースに登録している全ての用語アイテムが失われます。
+ *
  * GLOSSARY_CALL or 用語集画面の呼び出し [種別]
  *  用語集画面を呼び出します。
  *  種別を省略すると、自動で「1」になります。
@@ -1029,6 +1035,10 @@ function Window_GlossaryComplete() {
             case '用語集全取得' :
                 $gameParty.gainGlossaryAll();
                 break;
+            case 'GLOSSARY_LOSE_ALL' :
+            case '用語集全破棄' :
+                $gameParty.loseGlossaryAll();
+                break;
             case 'GLOSSARY_BACK' :
             case '用語集画面に戻る' :
                 if (args[0]) {
@@ -1225,8 +1235,20 @@ function Window_GlossaryComplete() {
         }.bind(this));
     };
 
+    Game_Party.prototype.loseGlossaryAll = function() {
+        this.getAllGlossaryList(false, false, '').forEach(function(item) {
+            if (this.hasItem(item)) {
+                this.loseGlossary(item);
+            }
+        }.bind(this));
+    };
+
     Game_Party.prototype.gainGlossary = function(item) {
         this.gainItem(item, 1, false);
+    };
+
+    Game_Party.prototype.loseGlossary = function(item) {
+        this.loseItem(item, this.maxItems(), false);
     };
 
     var _Game_Party_gainItem      = Game_Party.prototype.gainItem;
