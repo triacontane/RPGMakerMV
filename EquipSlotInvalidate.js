@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2019/06/08 二刀流設定時、対象スロットが無効化されていると戦闘アニメーションも表示されないよう修正
  1.0.0 2019/05/24 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -237,6 +238,22 @@ function GameInvalidEquipSlot() {
         } else {
             return result;
         }
+    };
+
+    var _Game_Actor_attackAnimationId1 = Game_Actor.prototype.attackAnimationId1;
+    Game_Actor.prototype.attackAnimationId1 = function() {
+        this._calcInvalidSlot = true;
+        var result = _Game_Actor_attackAnimationId1.apply(this, arguments);
+        this._calcInvalidSlot = false;
+        return result;
+    };
+
+    var _Game_Actor_attackAnimationId2 = Game_Actor.prototype.attackAnimationId2;
+    Game_Actor.prototype.attackAnimationId2 = function() {
+        this._calcInvalidSlot = true;
+        var result = _Game_Actor_attackAnimationId2.apply(this, arguments);
+        this._calcInvalidSlot = false;
+        return result;
     };
 
     var _Game_Actor_paramPlus = Game_Actor.prototype.paramPlus;
