@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2019/06/09 EventReSpawn.jsで生成したテンプレートイベントがgetTemplateIdを取得できない問題を修正
 // 2.1.1 2019/04/14 2.1.0の機能で、統合ではなく上書きできる機能を追加
 // 2.1.0 2019/04/07 テンプレートイベントと個別イベントとでメモ欄を統合できる機能を追加
 // 2.0.0 2018/10/21 イベント設定の項目ごとにテンプレートイベントの設定を固有イベントで上書きできるよう修正
@@ -732,13 +733,8 @@ var $dataTemplateEvents = null;
     };
 
     Game_Event.prototype.setTemplate = function(event) {
-        var value = getMetaValues(event, '');
-        if (value) {
-            var templateId = getArgNumber(value, 0, $dataTemplateEvents.length - 1);
-            if (!templateId) {
-                var template = DataManager.searchDataItem($dataTemplateEvents, 'name', value);
-                if (template) templateId = template.id;
-            }
+        var templateId = this.generateTemplateId(event);
+        if (templateId) {
             this._templateId = templateId;
             this._templateEvent = $dataTemplateEvents[this._templateId];
             this._override   = param.AutoOverride || !!getMetaValues(event, ['OverRide', '上書き']);
@@ -750,6 +746,21 @@ var $dataTemplateEvents = null;
             this._templateEvent = null;
             this._override   = false;
         }
+    };
+
+    Game_Event.prototype.generateTemplateId = function(event) {
+        var value = getMetaValues(event, '');
+        if (!value) {
+            return 0;
+        }
+        var templateId = getArgNumber(value, 0, $dataTemplateEvents.length - 1);
+        if (!templateId) {
+            var template = DataManager.searchDataItem($dataTemplateEvents, 'name', value);
+            if (template) {
+                templateId = template.id;
+            }
+        }
+        return templateId;
     };
 
     Game_Event.prototype.integrateNote = function(event, type) {
