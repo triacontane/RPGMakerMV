@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2019/06/09 表示メッセージが行数の上限を上回った場合に表示がカットされないよう変更
 // 1.8.0 2019/04/14 もともとメッセージウィンドウで表示していたものはそのまま表示する設定を追加
 // 1.7.0 2018/05/30 スキル名、アイテム名を簡易表示する機能を追加
 // 1.6.1 2018/05/05 YEP_MessageCore.jsが有効な場合、メッセージウィンドウの行数はYEP_MessageCore.jsを優先するよう修正
@@ -344,6 +345,12 @@
     var _Window_BattleLog_addText      = Window_BattleLog.prototype.addText;
     Window_BattleLog.prototype.addText = function(text) {
         if (!text) {
+            return;
+        }
+        if (this._lines.length >= this.maxLines()) {
+            this._waitCount = 0;
+            this.push('clear');
+            this.push('addText', text);
             return;
         }
         _Window_BattleLog_addText.apply(this, arguments);
