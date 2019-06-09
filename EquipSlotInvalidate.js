@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2019/06/09 ステートなどのメモ欄の記述でスロット無効化できる機能を追加
  1.0.1 2019/06/08 二刀流設定時、対象スロットが無効化されていると戦闘アニメーションも表示されないよう修正
  1.0.0 2019/05/24 初版
 ----------------------------------------------------------------------------
@@ -30,6 +31,11 @@
  *
  * 無効化された場合もメニュー画面から装備変更は可能ですが、
  * パラメータは表示上も実際も変更されなくなります。
+ * 無効化はメモ欄もしくはプラグインコマンドから指定します。
+ *
+ * ステートなど特徴を持つメモ欄に以下の通り入力してください。
+ * <装備無効:1>     # スロット[1]を無効化
+ * <EquipInvalid:1> # 同上
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -70,6 +76,11 @@
  *
  * 無効化された場合もメニュー画面から装備変更は可能ですが、
  * パラメータは表示上も実際も変更されなくなります。
+ * 無効化はメモ欄もしくはプラグインコマンドから指定します。
+ *
+ * ステートなど特徴を持つメモ欄に以下の通り入力してください。
+ * <装備無効:1>     # スロット[1]を無効化
+ * <EquipInvalid:1> # 同上
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -107,6 +118,32 @@ function GameInvalidEquipSlot() {
 
 (function() {
     'use strict';
+
+    /**
+     * Get database meta information.
+     * @param object Database item
+     * @param name Meta name
+     * @returns {String} meta value
+     */
+    var getMetaValue = function(object, name) {
+        var tagName = param.commandPrefix + name;
+        return object.meta.hasOwnProperty(tagName) ? convertEscapeCharacters(object.meta[tagName]) : null;
+    };
+
+    /**
+     * Get database meta information.(for multi language)
+     * @param object Database item
+     * @param names Meta name array (for multi language)
+     * @returns {String} meta value
+     */
+    var getMetaValues = function(object, names) {
+        var metaValue;
+        names.some(function(name) {
+            metaValue = getMetaValue(object, name);
+            return metaValue !== null;
+        });
+        return metaValue;
+    };
 
     /**
      * Convert escape characters.(require any window object)
@@ -204,8 +241,8 @@ function GameInvalidEquipSlot() {
         this._invalidSlot.setValue(id, slot, value);
     };
 
-    Game_Party.prototype.isValidEquipSlot = function(id, slot) {
-        return !(this._invalidSlot && this._invalidSlot.getValue(id, slot));
+    Game_Party.prototype.isInvalidEquipSlot = function(id, slot) {
+        return this._invalidSlot && this._invalidSlot.getValue(id, slot);
     };
 
     /**
@@ -232,43 +269,47 @@ function GameInvalidEquipSlot() {
     Game_Actor.prototype.equips = function() {
         var result = _Game_Actor_equips.apply(this, arguments);
         if (this._calcInvalidSlot) {
+            this._calcInvalidSlot = false;
             return result.map(function(item, index) {
-                return $gameParty.isValidEquipSlot(this._actorId, index + 1) ? item : null;
+                return this.isInvalidEquipSlot(index + 1) ? null : item;
             }, this);
         } else {
             return result;
         }
     };
 
+    Game_Actor.prototype.isInvalidEquipSlot = function(index) {
+        if ($gameParty.isInvalidEquipSlot(this._actorId, index)) {
+            return true;
+        }
+        // 再帰呼び出しのエラーを避けるため、上書き前のtraitObjectsを呼ぶ
+        return _Game_Actor_traitObjects.apply(this).some(function(traitObj) {
+            var metaValue = getMetaValues(traitObj, ['装備無効', 'EquipInvalid']);
+            return metaValue && parseInt(metaValue) === index;
+        });
+    };
+
     var _Game_Actor_attackAnimationId1 = Game_Actor.prototype.attackAnimationId1;
     Game_Actor.prototype.attackAnimationId1 = function() {
         this._calcInvalidSlot = true;
-        var result = _Game_Actor_attackAnimationId1.apply(this, arguments);
-        this._calcInvalidSlot = false;
-        return result;
+        return _Game_Actor_attackAnimationId1.apply(this, arguments);
     };
 
     var _Game_Actor_attackAnimationId2 = Game_Actor.prototype.attackAnimationId2;
     Game_Actor.prototype.attackAnimationId2 = function() {
         this._calcInvalidSlot = true;
-        var result = _Game_Actor_attackAnimationId2.apply(this, arguments);
-        this._calcInvalidSlot = false;
-        return result;
+        return _Game_Actor_attackAnimationId2.apply(this, arguments);
     };
 
     var _Game_Actor_paramPlus = Game_Actor.prototype.paramPlus;
     Game_Actor.prototype.paramPlus = function(paramId) {
         this._calcInvalidSlot = true;
-        var result = _Game_Actor_paramPlus.apply(this, arguments);
-        this._calcInvalidSlot = false;
-        return result;
+        return _Game_Actor_paramPlus.apply(this, arguments);
     };
 
     var _Game_Actor_traitObjects = Game_Actor.prototype.traitObjects;
     Game_Actor.prototype.traitObjects = function() {
         this._calcInvalidSlot = true;
-        var result = _Game_Actor_traitObjects.apply(this, arguments);
-        this._calcInvalidSlot = false;
-        return result;
+        return _Game_Actor_traitObjects.apply(this, arguments);
     };
 })();
