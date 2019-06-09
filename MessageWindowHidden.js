@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2019/06/09 メッセージウィンドウと逆に連動して指定したピクチャの表示/非表示が自動で切り替わる機能を追加
 // 2.1.0 2018/10/10 戦闘中にプラグインを無効化できる機能を追加。
 // 2.0.0 2018/03/31 消去するトリガーを複数指定できる機能を追加。パラメータの指定方法を見直し。
 // 1.4.0 2018/03/10 指定したスイッチがONの間はウィンドウ消去を無効化できる機能を追加
@@ -45,7 +46,12 @@
  *
  * @param linkPictureNumbers
  * @desc Picture number of window show/hide
- * @default
+ * @default []
+ * @type number[]
+ *
+ * @param linkShowPictureNumbers
+ * @desc Picture number of window show/hide
+ * @default []
  * @type number[]
  *
  * @param disableSwitchId
@@ -82,7 +88,13 @@
  * @param linkPictureNumbers
  * @text 連動ピクチャ番号
  * @desc ウィンドウ消去時に連動して不透明度を[0]にするピクチャの番号です。
- * @default
+ * @default []
+ * @type number[]
+ *
+ * @param linkShowPictureNumbers
+ * @text 連動表示ピクチャ番号
+ * @desc ウィンドウ消去時に連動して不透明度を[255]にするピクチャの番号です。
+ * @default []
  * @type number[]
  *
  * @param disableSwitchId
@@ -177,7 +189,8 @@
             this.hideSubWindow(subWindow);
         }.bind(this));
         if (this.hasNameWindow() && !this.nameWindowIsSubWindow()) this.hideSubWindow(this._nameWindow);
-        this.linkPictures(0);
+        this.linkPictures(0, param.linkPictureNumbers);
+        this.linkPictures(255, param.linkShowPictureNumbers);
         this._hideByMessageWindowHidden = true;
     };
 
@@ -187,7 +200,8 @@
             this.showSubWindow(subWindow);
         }.bind(this));
         if (this.hasNameWindow() && !this.nameWindowIsSubWindow()) this.showSubWindow(this._nameWindow);
-        this.linkPictures(255);
+        this.linkPictures(0, param.linkShowPictureNumbers);
+        this.linkPictures(255, param.linkPictureNumbers);
         this._hideByMessageWindowHidden = false;
     };
 
@@ -195,11 +209,11 @@
         return this._hideByMessageWindowHidden;
     };
 
-    Window_Message.prototype.linkPictures = function(opacity) {
-        if (!param.linkPictureNumbers) {
+    Window_Message.prototype.linkPictures = function(opacity, pictureNumbers) {
+        if (!pictureNumbers) {
             return;
         }
-        param.linkPictureNumbers.forEach(function(pictureId) {
+        pictureNumbers.forEach(function(pictureId) {
             this.linkPicture(opacity, pictureId);
         }, this);
     };
