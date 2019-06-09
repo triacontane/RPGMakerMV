@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.1 2019/06/09 テンプレートイベントを生成したとき、getTemplateIdを取得できない問題を修正
 // 1.9.0 2019/01/14 地形タグとリージョンを複数指定できる機能を追加
 // 1.8.3 2018/10/25 YEP_EventMiniLabel.jsと併用した際、動的生成イベントを「イベント消去」するとエラーになる競合を修正
 // 1.8.2 2018/05/17 ランダム生成の試行回数をパラメータから設定できるように仕様変更
@@ -535,6 +536,10 @@ function Game_PrefabEvent() {
     Game_PrefabEvent.prototype.locateWithoutStraighten = function(x, y) {
         this.setPosition(x, y);
         this.refreshBushDepth();
+    };
+
+    Game_PrefabEvent.prototype.generateTemplateId = function(event) {
+        return this._originalEventId;
     };
 
     Game_PrefabEvent.prototype.linkEventData = function() {
