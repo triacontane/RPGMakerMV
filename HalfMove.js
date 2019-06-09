@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.5 2019/06/09 半歩移動無効時、下半分移動不可に設定した地形とリージョンが、元の通行設定にかかわらず移動不可となる問題を修正
 // 1.12.4 2019/03/31 MOG_ChronoEngine.jsとの起動時の競合を解消
 // 1.12.3 2018/12/19 プレイヤーに近づく、遠ざかる処理で特定条件下で正しく移動しない場合がある問題を修正
 // 1.12.2 2018/11/04 1.11.8の修正後、一部環境でゲーム画面のFPS低下が起きていた現象を修正
@@ -767,9 +768,7 @@
             if (this.isHalfPosX() || this.isHalfPosY()) {
                 return true;
             }
-            var x5 = $gameMap.roundXWithDirection(x, d);
-            var y5 = $gameMap.roundYWithDirection(y, d);
-            result = alias(x, y, d) && !$gameMap.isLowerNp(x5, y5);
+            result = alias(x, y, d);
         } else if (this.isHalfPosX(x) && this.isHalfPosY(y)) {
             if (d === 8) {
                 var y1      = $gameMap.roundHalfYWithDirection(y, d);
