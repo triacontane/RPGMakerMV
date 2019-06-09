@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.1 2019/06/09 ニューゲーム時もしくはプロジェクト保存後のロード時に場所移動の時間が経過してしまう問題を修正
 // 1.13.0 2019/04/20 カレンダーを初期状態で非表示にできるパラメータを追加
 // 1.12.0 2018/12/27 カレンダー表示に行間を設定できる機能を追加
 // 1.11.1 2018/10/14 実時間表示に切り替えてから内部時間に反映されるまでにラグがある問題の修正
@@ -760,8 +761,9 @@ function Window_Chronus() {
     //=============================================================================
     var _Game_Player_performTransfer      = Game_Player.prototype.performTransfer;
     Game_Player.prototype.performTransfer = function() {
+        var realTransfer = this._newMapId !== $gameMap.mapId() && $gameMap.mapId() > 0;
+        $gameSystem.chronus().transfer(realTransfer);
         _Game_Player_performTransfer.call(this);
-        $gameSystem.chronus().transfer();
     };
 
     //=============================================================================
@@ -959,10 +961,7 @@ function Window_Chronus() {
     //  時の流れを扱うクラスです。このクラスはGame_Systemクラスで生成されます。
     //  セーブデータの保存対象のためグローバル領域に定義します。
     //=============================================================================
-    Game_Chronus.prototype             = Object.create(Game_Chronus.prototype);
-    Game_Chronus.prototype.constructor = Game_Chronus;
     Game_Chronus.weatherTypes          = ['none', 'rain', 'storm', 'snow'];
-
     Game_Chronus.prototype.initialize = function() {
         this._stop            = false;        // 停止フラグ（全ての加算に対して有効。ただし手動による加算は例外）
         this._disableTint     = false;        // 色調変更禁止フラグ
@@ -1255,9 +1254,11 @@ function Window_Chronus() {
         this.addTime(this._timeBattleAdd + this._timeTurnAdd * $gameTroop.turnCount());
     };
 
-    Game_Chronus.prototype.transfer = function() {
+    Game_Chronus.prototype.transfer = function(realTransfer) {
         if (this.isStop()) return;
-        this.addTime(this._timeTransferAdd);
+        if (realTransfer) {
+            this.addTime(this._timeTransferAdd);
+        }
         this.demandRefresh(true);
     };
 
