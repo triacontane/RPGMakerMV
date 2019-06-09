@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.2 2019/06/09 戦闘行動の強制による反撃を行わない設定のとき、反撃後の自動ステート解除で反撃を有効にするステートを解除した場合、
+//                  反撃による敵の行動キャンセルが行われない問題を修正
 // 1.9.1 2019/05/02 クロスカウンターで、相手の攻撃が当たった場合のみ反撃する場合は、身代わりによる肩代わりも除外するよう仕様変更
 // 1.9.0 2019/04/30 クロスカウンターで、相手の攻撃が当たった場合のみ反撃、もしくは外れた場合のみ反撃できる設定を追加
 // 1.8.3 2019/01/29 クロスカウンターによって敵を全滅された後の戦闘で、一部の反撃エフェクトが表示される場合がある問題を修正
@@ -716,6 +718,9 @@ var Imported = Imported || {};
 
     var _BattleManager_invokeCounterAttack = BattleManager.invokeCounterAttack;
     BattleManager.invokeCounterAttack      = function(subject, target) {
+        if (target.isCounterCancel()) {
+            this._actionCancel = true;
+        }
         if (!target.isReserveCounterSkill()) {
             _BattleManager_invokeCounterAttack.apply(this, arguments);
         } else if (param.UsingForceAction) {
@@ -737,9 +742,6 @@ var Imported = Imported || {};
             if (param.EraseStateTiming !== 0) {
                 target.eraseStateCounterFailure();
             }
-        }
-        if (target.isCounterCancel()) {
-            this._actionCancel = true;
         }
     };
 
