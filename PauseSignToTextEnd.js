@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2019/06/11 競合する可能性のある記述を修正
 // 1.3.0 2019/05/26 MessageWindowPopup.jsと完全に組み合わせて使用できるよう修正
 // 1.2.1 2018/06/03 MessageWindowPopup.jsとの併用時、プラグインの定義順次第でポーズサインの表示が正常に行われない場合がある問題を修正
 // 1.2.0 2017/06/24 有効、無効を切り替えるスイッチを追加
@@ -128,7 +129,7 @@
         this._windowPauseSignSprite.move(x, y);
     };
 
-    var _Window_Message__updatePauseSign = Window_Message.prototype.hasOwnProperty() ?
+    var _Window_Message__updatePauseSign = Window_Message.prototype.hasOwnProperty('_updatePauseSign') ?
         Window_Message.prototype._updatePauseSign : null;
     Window_Message.prototype._updatePauseSign = function() {
         if (_Window_Message__updatePauseSign) {
