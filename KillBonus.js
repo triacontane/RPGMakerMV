@@ -1,15 +1,16 @@
 //=============================================================================
 // KillBonus.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2019/06/11 撃破ボーナスとして任意の変数を増減させる機能を追加
 // 1.1.0 2017/06/08 ボーナス取得条件としてノーダメージ、ノーデス、ノースキルおよびスイッチを追加
 // 1.0.0 2016/08/07 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -36,6 +37,8 @@
  * <KB_ステート全体:5> # 同上
  * <KB_StateEnemy:5>   # 敵全体にステートID[5]を付与します。
  * <KB_ステート敵:5>   # 同上
+ * <KB_Variable:1, 20> # 変数[1]が20増加します。
+ * <KB_変数:1, 20>     # 同上
  * <KB_Script:script>  # 任意のJavaScriptを実行します。
  *
  * 撃破ボーナス条件をひとつだけ付けることができます。
@@ -100,7 +103,7 @@
         _BattleManager_setup.apply(this, arguments);
         $gameParty.members().forEach(function(member) {
             member.initKillBonusCondition();
-        })
+        });
     };
 
     //=============================================================================
@@ -203,6 +206,7 @@
             this.executeKillBonusState(data, subject);
             this.executeKillBonusStateAll(data, subject);
             this.executeKillBonusStateEnemy(data, subject);
+            this.executeKillBonusVariable(data, subject);
             this.executeKillBonusScript(data, subject);
         }.bind(this));
         if (this._gainHp !== 0) subject.gainHp(this._gainHp);
@@ -235,6 +239,15 @@
         var value = getMetaValues(data, ['Gold', 'お金']);
         if (value) {
             $gameParty.gainGold(getArgNumberWithEval(value));
+        }
+    };
+
+    Game_Action.prototype.executeKillBonusVariable = function(data, subject) {
+        var value = getMetaValues(data, ['Variable', '変数']);
+        if (value) {
+            var args = getArgString(value).split(',');
+            var id = parseInt(args[0]);
+            $gameVariables.setValue(id, $gameVariables.value(id) + parseInt(args[1]) || 0);
         }
     };
 
