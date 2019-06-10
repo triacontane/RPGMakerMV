@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.0 2019/06/10 テール画像を別途指定できる機能を追加
 // 2.13.0 2019/05/26 PauseSignToTextEnd.jsと完全に組み合わせて使用できるよう修正
 // 2.12.2 2019/04/14 フキダシウィンドウをキャラクター下に表示した際、Y座標の位置調整が効かなくなる問題を修正
 // 2.12.1 2019/02/07 GraphicalDesignMode.jsと併用し、かつフキダシウィンドウ無効時、カスタマイズしたウィンドウの横幅が反映されるよう修正
@@ -192,6 +193,13 @@
  * @default 0
  * @type number
  *
+ * @param tailImage
+ * @desc テールに使う画像をピクチャから指定します。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
  * @help Change the message window from fixed to popup
  *
  * Plugin Command
@@ -358,6 +366,22 @@
  * @desc フキダシウィンドウの上限Y座標です。
  * @default 0
  * @type number
+ *
+ * @param tailImage
+ * @text テール画像
+ * @desc テールに使う画像をシステム画像から指定します。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
+ * @param tailImageAdjustY
+ * @text テール画像Y座標
+ * @desc テールに使う画像のY座標補正値です。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
@@ -598,6 +622,8 @@
     var paramUpperLimitX         = getParamNumber(['upperLimitX']);
     var paramLowerLimitY         = getParamNumber(['lowerLimitY']);
     var paramUpperLimitY         = getParamNumber(['upperLimitY']);
+    var paramTailImage           = getParamString(['tailImage']);
+    var paramTailImageAdjustY    = getParamNumber(['tailImageAdjustY']);
 
     //=============================================================================
     // Game_Interpreter
@@ -1011,6 +1037,19 @@
         this._pauseSignToTail = true;
     };
 
+    Window_Base.prototype.setPauseSignImageToTail = function(lowerFlg) {
+        this._windowPauseSignSprite.visible = false;
+        if (lowerFlg) {
+            this._messageTailImage.rotation = 180 * Math.PI / 180;
+            this._messageTailImage.y        = -paramTailImageAdjustY;
+            this._messageTailImage.anchor.y = 0;
+        } else {
+            this._messageTailImage.rotation = 0;
+            this._messageTailImage.y        = this.height + paramTailImageAdjustY;
+            this._messageTailImage.anchor.y = 0;
+        }
+    };
+
     Window_Base.prototype.setPauseSignToNormal = function() {
         this._windowPauseSignSprite.rotation = 0;
         this._windowPauseSignSprite.anchor.y = 1.0;
@@ -1066,6 +1105,7 @@
         var position = Math.sin(this._shakeCount / 10 * speed) * this._shakePower;
         this.x += position;
         this._windowPauseSignSprite.x -= position;
+        this._messageTailImage.x -= position;
         this._shakeCount++;
     };
 
@@ -1077,6 +1117,9 @@
         if (!paramNoUseTail && !this.isUsePauseSignTextEnd()) {
             this.setPauseSignToTail(lowerFlg);
         }
+        if (paramTailImage) {
+            this.setPauseSignImageToTail(lowerFlg);
+        }
     };
 
     Window_Base.prototype.setPopupAdjustInnerScreen = function() {
@@ -1084,9 +1127,11 @@
             this.adjustPopupPositionY();
         }
         var adjustResultX = this.adjustPopupPositionX();
+        var tailX = this._width / 2 + adjustResultX;
         if (!this.isUsePauseSignTextEnd()) {
-            this._windowPauseSignSprite.x = this._width / 2 + adjustResultX;
+            this._windowPauseSignSprite.x = tailX
         }
+        this._messageTailImage.x = tailX;
     };
 
     Window_Base.prototype.setWindowShake = function(power) {
@@ -1204,6 +1249,18 @@
     Window_Message._faceHeight = Math.floor(Window_Base._faceHeight * paramFaceScale / 100);
     Window_Message._faceWidth  = Math.floor(Window_Base._faceWidth * paramFaceScale / 100);
 
+    var _Window_Message__createAllParts = Window_Message.prototype._createAllParts;
+    Window_Message.prototype._createAllParts = function() {
+        _Window_Message__createAllParts.apply(this, arguments);
+        this._messageTailImage = new Sprite();
+        if (paramTailImage) {
+            this._messageTailImage.bitmap   = ImageManager.loadSystem(paramTailImage);
+            this._messageTailImage.visible  = false;
+            this._messageTailImage.anchor.x = 0.5;
+            this.addChild(this._messageTailImage);
+        }
+    };
+
     var _Window_Message_standardFontSize      = Window_Message.prototype.standardFontSize;
     Window_Message.prototype.standardFontSize = function() {
         return this.isPopup() ? paramFontSize : _Window_Message_standardFontSize.apply(this, arguments);
@@ -1296,6 +1353,17 @@
         this.updatePlacementPopup();
     };
 
+    var _Window_Message__updatePauseSign = Window_Message.prototype.hasOwnProperty('_updatePauseSign') ?
+        Window_Message.prototype._updatePauseSign : null;
+    Window_Message.prototype._updatePauseSign = function() {
+        if (_Window_Message__updatePauseSign) {
+            _Window_Message__updatePauseSign.apply(this, arguments);
+        } else {
+            Window_Base.prototype._updatePauseSign.apply(this, arguments);
+        }
+        this.updateTailImage();
+    };
+
     Window_Message.prototype.isPopupLower = function() {
         var id = this._targetCharacterId;
         return $gameSystem.isPopupFixLower(id) || (!$gameSystem.isPopupFixUpper(id) && this.getWindowTopY() < 0);
@@ -1317,6 +1385,15 @@
             if (isExistPlugin('MPP_MessageEX')) {
                 this._nameWindow.y = this.y - this._nameWindow.height;
                 this._nameWindow.x = this.x;
+            }
+        }
+    };
+
+    Window_Message.prototype.updateTailImage = function() {
+        if (paramTailImage) {
+            this._messageTailImage.visible = this.isOpen();
+            if (!this.isUsePauseSignTextEnd() && !paramNoUseTail) {
+                this._windowPauseSignSprite.visible = false;
             }
         }
     };
