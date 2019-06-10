@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2019/06/11 動画再生終了後、動画ピクチャを自動削除せず最終フレームで静止したままにする機能を追加
 // 1.4.1 2019/05/21 動画を縮小表示したときのジャギを軽減
 //                  ヘルプの記載を本体バージョン1.6を前提に修正
 // 1.4.0 2019/01/06 movieフォルダ以外の場所に配置されている動画ファイルを再生できる機能を追加
@@ -38,6 +39,11 @@
  * @option BGS
  * @option ME
  * @option SE
+ *
+ * @param AutoEraseOnEnd
+ * @desc 動画再生終了時に動画ピクチャを自動で削除します。
+ * @default true
+ * @type boolean
  *
  * @help Play movies using the picture display frame.
  * In addition to being subject to processing by moving and rotating pictures,
@@ -91,6 +97,11 @@
  * @option ME
  * @option SE
  *
+ * @param 終了時自動削除
+ * @desc 動画再生終了時に動画ピクチャを自動で削除します。
+ * @default true
+ * @type boolean
+ *
  * @help ピクチャの表示枠を使って動画を再生します。
  * ピクチャの移動や回転による処理の対象になるほか、複数の動画の並行再生が
  * 可能になります。また、動画がウィンドウの下に表示されるようになります。
@@ -140,6 +151,12 @@
  * ※ スマートデバイス環境(.mp4を使用)では透過を使用できません。
  *    こちらはコーデック(H.264)の仕様なのでプラグイン側では対応できません。
  *
+ * ・スクリプト詳細
+ * 指定した番号の動画ピクチャが再生終了している場合にtrueを返します。
+ * 存在しないピクチャ番号を指定するとエラーになります。
+ * このスクリプトはパラメータ「終了時自動削除」が無効な場合のみ使えます。
+ * $gameScreen.picture(2).isVideoEnd(); # ピクチャ[2]の再生が終了している場合にtrue
+ *
  * 注意：
  * サイズの大きな動画を複数再生すると、パフォーマンスが低下する可能性があります。
  *
@@ -165,6 +182,11 @@
             if (name) return name;
         }
         return '';
+    };
+
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames);
+        return value.toUpperCase() === 'TRUE';
     };
 
     var convertEscapeCharacters = function(text) {
@@ -203,6 +225,7 @@
     //=============================================================================
     var param             = {};
     param.movieVolumeType = getParamString(['MovieVolumeType', '動画音量種別']).toUpperCase();
+    param.autoEraseOnEnd  = getParamBoolean(['AutoEraseOnEnd', '終了時自動削除']);
 
     var pluginCommandMap = new Map();
     setPluginCommand('SET_MOVIE', 'execSetVideoPicture');
@@ -353,6 +376,7 @@
         if (videoName && !name) {
             this._name          = videoName;
             this._video         = true;
+            this._ended         = false;
             this._videoUseAlpha = $gameScreen.isVideoUseAlpha();
             this.setVideoVolume(100);
             this.setVideoVolumeType(param.movieVolumeType);
@@ -422,6 +446,14 @@
         return this._positionVideo || 0;
     };
 
+    Game_Picture.prototype.isVideoEnd = function() {
+        return this._ended
+    };
+
+    Game_Picture.prototype.setVideoEnd = function() {
+        this._ended = true;
+    };
+
     //=============================================================================
     // Sprite_Picture
     //  ムービーピクチャを読み込みます。
@@ -483,7 +515,11 @@
         if (!this.isVideoPicture()) return;
         this.bitmap.update();
         if (this.bitmap.isEnded()) {
-            this.eraseVideo();
+            if (param.autoEraseOnEnd) {
+                this.eraseVideo();
+            } else if (this.picture()) {
+                this.picture().setVideoEnd();
+            }
             return;
         }
         if (this.picture() && this._playStart) {
