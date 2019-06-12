@@ -1,11 +1,12 @@
 ﻿//=============================================================================
 // BattlerGraphicExtend.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2019/06/12 浮遊設定で高度を「0」に設定できるようになりました。
 // 1.2.4 2018/06/17 YEP_X_AnimatedSVEnemies.jsとの併用時、敵キャラに対する本プラグインのエフェクトの一部が反映されない競合を修正
 // 1.2.3 2018/05/27 YEP_X_AnimatedSVEnemies.jsおよびBattleMotion.jsとの併用時、SVエネミーの反転が行われない問題を修正
 // 1.2.2 2018/05/20 YEP_X_ActSeqPack2.jsとの併用時、当該プラグインで透明度が変更された場合は、こちらの透明度変更機能を無効化するよう変更
@@ -259,8 +260,8 @@
 
     Game_BattlerBase.prototype.refreshFloating = function() {
         var result = this.getStateMetaValuesForBge(['高度', 'Altitude']);
-        if (!result) {
-            if (this.isFloatingBattler()) this.landingBattler();
+        if ((!result || result === '0') && this.isFloatingBattler()) {
+            this.landingBattler();
             return;
         }
         var altitude = getArgNumber(result, 0);
