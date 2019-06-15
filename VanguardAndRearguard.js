@@ -1,11 +1,12 @@
 //=============================================================================
 // VanguardAndRearguard.js
 // ----------------------------------------------------------------------------
-// (C) 2015-2017 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2019/06/15 戦闘画面でX座標やY座標が指定値以下の場合、自動で後衛に配置できる機能を追加
 // 1.7.3 2019/01/20 後衛の人数の上限が設定されているとき、控えメンバーは常に前衛に設定されるよう仕様変更
 // 1.7.2 2019/01/19 後衛の人数の上限を設定できる機能で控えメンバーを常に含めた上限にするよう仕様変更
 // 1.7.1 2019/01/14 MPP_ActiveTimeBattle.jsと併用したときにアクターコマンドからチェンジが選択できない競合を修正
@@ -105,6 +106,16 @@
  *
  * @param RearguardLimit
  * @desc 後衛になれるメンバーの上限です。0に設定すると無制限になります。
+ * @default 0
+ * @type number
+ *
+ * @param EnemyRearBorderX
+ * @desc 敵キャラの配置X座標(中心原点)が指定したラインより小さいと自動的に後衛配置されます。
+ * @default 0
+ * @type number
+ *
+ * @param EnemyRearBorderY
+ * @desc 敵キャラの配置Y座標(下原点)が指定したラインより小さいと自動的に後衛配置されます。
  * @default 0
  * @type number
  *
@@ -232,6 +243,16 @@
  *
  * @param 後衛メンバー上限
  * @desc 後衛になれるメンバーの上限です。0に設定すると無制限になります。
+ * @default 0
+ * @type number
+ *
+ * @param 敵キャラ後衛ラインX座標
+ * @desc 敵キャラの配置X座標(中心原点)が指定したラインより小さいと自動的に後衛配置されます。
+ * @default 0
+ * @type number
+ *
+ * @param 敵キャラ後衛ラインY座標
+ * @desc 敵キャラの配置Y座標(下原点)が指定したラインより小さいと自動的に後衛配置されます。
  * @default 0
  * @type number
  *
@@ -375,7 +396,8 @@
     var paramShiftVanguard    = getParamBoolean(['ShiftVanguard', '前衛に詰める']);
     var paramValidEnemy       = getParamBoolean(['ValidEnemy', '敵キャラに適用']);
     var paramValidActor       = getParamBoolean(['ValidActor', 'アクターに適用']);
-    var paramRearguardLimit   = getParamNumber(['RearguardLimit', '後衛メンバー上限']);
+    var paramEnemyRearBorderX = getParamNumber(['EnemyRearBorderX', '敵キャラ後衛ラインX座標']);
+    var paramEnemyRearBorderY = getParamNumber(['EnemyRearBorderY', '敵キャラ後衛ラインY座標']);
 
     //=============================================================================
     // Game_Interpreter
@@ -568,8 +590,14 @@
     //  前衛・後衛ステートの初期値を設定します。
     //=============================================================================
     Game_Enemy.prototype.initFormationState = function() {
-        var formationState = !getMetaValues(this.enemy(), ['Rearguard', '後衛']);
-        this.setFormationState(formationState);
+        this.setFormationState(this.getInitialFormationState());
+    };
+
+    Game_Enemy.prototype.getInitialFormationState = function() {
+        if (getMetaValues(this.enemy(), ['Rearguard', '後衛'])) {
+            return false;
+        }
+        return this._screenX > paramEnemyRearBorderX && this._screenY > paramEnemyRearBorderY;
     };
 
     Game_Enemy.prototype.getFormationOffsetX = function() {
@@ -666,7 +694,7 @@
         });
     };
 
-    var _Game_Party_swapOrder = Game_Party.prototype.swapOrder;
+    var _Game_Party_swapOrder      = Game_Party.prototype.swapOrder;
     Game_Party.prototype.swapOrder = function(index1, index2) {
         _Game_Party_swapOrder.apply(this, arguments);
         if (paramRearguardLimit <= 0) {
