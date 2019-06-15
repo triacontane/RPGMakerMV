@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2019/06/15 ゲームパッド使用時、任意のボタンを押下したまま別のボタンを押下すると、最初のボタンのisTriggeredが有効になってしまう問題を修正
  1.1.0 2019/03/31 ゲームパッドでも同時押しできるよう対応
  1.0.0 2018/09/17 初版
 ----------------------------------------------------------------------------
@@ -64,7 +65,7 @@
         gamepad.buttons.forEach(function(button, index) {
             if (button.pressed) {
                 var buttonName = this.gamepadMapper[index];
-                if (buttonName) {
+                if (buttonName && !this._previousState[buttonName]) {
                     this._latestButtons.push(buttonName);
                 }
             }
