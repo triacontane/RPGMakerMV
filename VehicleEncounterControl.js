@@ -122,10 +122,7 @@
         }
         var result = _Game_Player_canEncounter.apply(this, arguments);
         this._canEncounterInAirShip = false;
-        if (!result) {
-            return result;
-        }
-        return this.canEncounterInBoat() && this.canEncounterInShip();
+        return result && !this.disableEncounterInBoat() && !this.disableEncounterInShip();
     };
 
     var _Game_Player_isInAirship = Game_Player.prototype.isInAirship;
@@ -133,12 +130,12 @@
         return _Game_Player_isInAirship.apply(this, arguments) && !this._canEncounterInAirShip;
     };
 
-    Game_Player.prototype.canEncounterInBoat = function() {
-        return this.isInBoat() && !$gameSwitches.value(param.boatEncounterDisable);
+    Game_Player.prototype.disableEncounterInBoat = function() {
+        return this.isInBoat() && $gameSwitches.value(param.boatEncounterDisable);
     };
 
-    Game_Player.prototype.canEncounterInShip = function() {
-        return this.isInShip() && !$gameSwitches.value(param.shipEncounterDisable);
+    Game_Player.prototype.disableEncounterInShip = function() {
+        return this.isInShip() && $gameSwitches.value(param.shipEncounterDisable);
     };
 
     Game_Player.prototype.canEncounterInAirShip = function() {
