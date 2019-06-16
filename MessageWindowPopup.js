@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.1 2019/06/16 2.14.0で追加したテール画像がフキダシウィンドウ無効のときも表示されていた問題を修正
 // 2.14.0 2019/06/10 テール画像を別途指定できる機能を追加
 // 2.13.0 2019/05/26 PauseSignToTextEnd.jsと完全に組み合わせて使用できるよう修正
 // 2.12.2 2019/04/14 フキダシウィンドウをキャラクター下に表示した際、Y座標の位置調整が効かなくなる問題を修正
@@ -1390,7 +1391,9 @@
     };
 
     Window_Message.prototype.updateTailImage = function() {
-        if (paramTailImage) {
+        if (!this.isPopup()) {
+            this._messageTailImage.visible = false;
+        } else if (paramTailImage) {
             this._messageTailImage.visible = this.isOpen();
             if (!this.isUsePauseSignTextEnd() && !paramNoUseTail) {
                 this._windowPauseSignSprite.visible = false;
