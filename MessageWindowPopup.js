@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.2 2019/06/16 FTKR_ExMessageWindow2.jsおよびPauseSignToTextEnd.jsとの連携で、フキダシウィンドウ表示時にポーズサインがはみ出してしまう競合を修正
 // 2.14.1 2019/06/16 2.14.0で追加したテール画像がフキダシウィンドウ無効のときも表示されていた問題を修正
 // 2.14.0 2019/06/10 テール画像を別途指定できる機能を追加
 // 2.13.0 2019/05/26 PauseSignToTextEnd.jsと完全に組み合わせて使用できるよう修正
@@ -1841,6 +1842,11 @@
             if (adjust) {
                 width += adjust[0];
                 height += adjust[1];
+            }
+            if (this.isUsePauseSignTextEnd()) {
+                width += this._windowPauseSignSprite.width;
+            } else if (paramNoUseTail) {
+                height += 8;
             }
             this.width  = width;
             this.height = height;
