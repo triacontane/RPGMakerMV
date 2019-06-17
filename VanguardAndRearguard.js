@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2019/06/17 1.8.0の修正で「後衛メンバー上限」のパラメータ取得処理が消えていたのを戻した
 // 1.8.0 2019/06/15 戦闘画面でX座標やY座標が指定値以下の場合、自動で後衛に配置できる機能を追加
 // 1.7.3 2019/01/20 後衛の人数の上限が設定されているとき、控えメンバーは常に前衛に設定されるよう仕様変更
 // 1.7.2 2019/01/19 後衛の人数の上限を設定できる機能で控えメンバーを常に含めた上限にするよう仕様変更
@@ -396,6 +397,7 @@
     var paramShiftVanguard    = getParamBoolean(['ShiftVanguard', '前衛に詰める']);
     var paramValidEnemy       = getParamBoolean(['ValidEnemy', '敵キャラに適用']);
     var paramValidActor       = getParamBoolean(['ValidActor', 'アクターに適用']);
+    var paramRearguardLimit   = getParamNumber(['RearguardLimit', '後衛メンバー上限']);
     var paramEnemyRearBorderX = getParamNumber(['EnemyRearBorderX', '敵キャラ後衛ラインX座標']);
     var paramEnemyRearBorderY = getParamNumber(['EnemyRearBorderY', '敵キャラ後衛ラインY座標']);
 
