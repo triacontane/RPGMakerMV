@@ -476,7 +476,7 @@
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         var altitude = getMetaValues(this.event(), ['高度', 'Altitude']);
-        this._noShadow = !hasMetaValues(this.event(), ['影なし', 'NoShadow']);
+        this._noShadow = hasMetaValues(this.event(), ['影なし', 'NoShadow']);
         if (altitude !== undefined) {
             this.setInitAltitude(parseInt(altitude || 24));
         }
@@ -489,7 +489,7 @@
     };
 
     Game_Event.prototype.isNeedShadow = function() {
-        return this._noShadow;
+        return !this._noShadow;
     };
 
     //=============================================================================
