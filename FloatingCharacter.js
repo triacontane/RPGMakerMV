@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2019/06/18 メモ欄の設定を適切に読み込めるように修正(ツミオ）
 // 1.4.0 2018/10/08 浮遊イベントの影を非表示にできる機能を追加
 // 1.3.0 2018/01/24 イベントを初期状態で浮遊させる機能を追加
 // 1.2.0 2018/01/07 プレイヤーの浮遊とフォロワーと連動させるかどうかを選択できる機能を追加
@@ -252,6 +253,17 @@
         return undefined;
     };
 
+    var hasMetaValue = function(object, name) {
+        var metaTagName = metaTagPrefix + name;
+        return object.meta.hasOwnProperty(metaTagName);
+    };
+
+    var hasMetaValues = function(object, names) {
+        return names.some(function(name) {
+            return hasMetaValue(object, name);
+        });
+    };
+
     var convertEscapeCharacters = function(text) {
         if (String(text) !== text) text = '';
         text = text.replace(/\\/g, '\x1b');
@@ -464,7 +476,7 @@
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         var altitude = getMetaValues(this.event(), ['高度', 'Altitude']);
-        this._noShadow = !!getMetaValues(this.event(), ['影なし', 'NoShadow']);
+        this._noShadow = !hasMetaValues(this.event(), ['影なし', 'NoShadow']);
         if (altitude !== undefined) {
             this.setInitAltitude(parseInt(altitude || 24));
         }
