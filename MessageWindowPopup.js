@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.3 2019/06/18 MKR_MessageWindowCustom.jsとの連携で、フキダシウィンドウ有効時はフキダシの横幅と高さを優先するよう変更
 // 2.14.2 2019/06/16 FTKR_ExMessageWindow2.jsおよびPauseSignToTextEnd.jsとの連携で、フキダシウィンドウ表示時にポーズサインがはみ出してしまう競合を修正
 // 2.14.1 2019/06/16 2.14.0で追加したテール画像がフキダシウィンドウ無効のときも表示されていた問題を修正
 // 2.14.0 2019/06/10 テール画像を別途指定できる機能を追加
@@ -1353,6 +1354,10 @@
             return;
         }
         this.updatePlacementPopup();
+        // Resolve conflict for MKR_MessageWindowCustom.js
+        if (isExistPlugin('MKR_MessageWindowCustom')) {
+            this.processVirtual();
+        }
     };
 
     var _Window_Message__updatePauseSign = Window_Message.prototype.hasOwnProperty('_updatePauseSign') ?
