@@ -1,14 +1,15 @@
 //=============================================================================
 // PartyAbilityRate.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2019/06/21 獲得EXPとゴールドに端数が生じた場合切り捨てるよう修正
 // 1.0.0 2016/05/09 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -33,6 +34,7 @@
  *
  * @help パーティ能力にレートを設定できます。
  * パーティ特徴を定義したデータベースのメモ欄に以下の通り設定してください。
+ * タグとは別にパーティ能力の特徴も別途指定してください。
  *
  * <PARエンカウント半減:4>  // エンカウント率が通常の1/4になります。
  * <PAR先制攻撃率アップ:8>  // 先制攻撃の確率が8倍になります。
@@ -57,7 +59,7 @@
     var getArgNumber = function (arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseFloat(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
+        return (parseFloat(convertEscapeCharactersAndEval(arg, true)) || 0).clamp(min, max);
     };
 
     var getMetaValue = function(object, name) {
@@ -158,6 +160,16 @@
             rate *= $gameParty.getDropItemDoubleRate();
         }
         return rate;
+    };
+
+    var _Game_Troop_expTotal = Game_Troop.prototype.expTotal;
+    Game_Troop.prototype.expTotal = function() {
+        return Math.floor(_Game_Troop_expTotal.apply(this, arguments));
+    };
+
+    var _Game_Troop_goldTotal = Game_Troop.prototype.goldTotal;
+    Game_Troop.prototype.goldTotal = function() {
+        return Math.floor(_Game_Troop_goldTotal.apply(this, arguments));
     };
 })();
 
