@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.4 2019/06/23 フキダシウィンドウを無効化したときのX座標の値をデフォルトのコアスクリプトの動作に準拠するよう修正
 // 2.14.3 2019/06/18 MKR_MessageWindowCustom.jsとの連携で、フキダシウィンドウ有効時はフキダシの横幅と高さを優先するよう変更
 // 2.14.2 2019/06/16 FTKR_ExMessageWindow2.jsおよびPauseSignToTextEnd.jsとの連携で、フキダシウィンドウ表示時にポーズサインがはみ出してしまう競合を修正
 // 2.14.1 2019/06/16 2.14.0で追加したテール画像がフキダシウィンドウ無効のときも表示されていた問題を修正
@@ -1344,7 +1345,8 @@
     var _Window_Message_updatePlacement      = Window_Message.prototype.updatePlacement;
     Window_Message.prototype.updatePlacement = function() {
         if (typeof Yanfly === 'undefined' || !Yanfly.Message) {
-            this.x = 0;
+            var width = this.windowWidth();
+            this.x = (Graphics.boxWidth - width) / 2;
         }
         _Window_Message_updatePlacement.apply(this, arguments);
         if (!this.isPopup()) {
