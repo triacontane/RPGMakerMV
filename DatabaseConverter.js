@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2019/06/23 変換実行時、まれにメモ欄や説明欄の改行が増幅してしまう問題を修正
 // 1.0.2 2018/05/30 移動ルートの設定のコマンドをインポートした際、一部の数値がundefinedとなってしまう問題を修正
 // 1.0.1 2018/05/20 オリジナルデータの作成方法をヘルプに追加
 // 1.0.0 2018/05/20 正式版リファクタリング
@@ -852,6 +853,14 @@ function ConverterManager() {
 
         save(name, data) {
             data[0] = null;
+            data.forEach(function(item) {
+                if (!item) {
+                    return;
+                }
+                ConvertTargetDatabase.replaceWrongReturnCode(item, 'note');
+                ConvertTargetDatabase.replaceWrongReturnCode(item, 'description');
+                ConvertTargetDatabase.replaceWrongReturnCode(item, 'profile');
+            });
             this._storage.saveDataBaseFile(name, data, this._sync);
         }
 
@@ -884,6 +893,11 @@ function ConverterManager() {
             return ConvertTargetDatabase._objectProperties;
         }
 
+        static replaceWrongReturnCode(item, propName) {
+            if (item[propName]) {
+                item[propName] = item[propName].replace(/\r\r\n/g, '\n');
+            }
+        }
     }
     ConvertTargetDatabase._commonDescriptions = {
         id                 : 'ID',
