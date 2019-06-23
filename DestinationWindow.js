@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0-SNAPSHOT 2019/06/24 特定マップで非表示にする機能を追加
 // 1.5.0 2018/07/20 行動目標ウィンドウの内容を複数行表示できる機能を追加
 // 1.4.0 2017/11/15 行動目標ウィンドウの文字列揃えを中央揃え、右揃えにできる機能を追加
 // 1.3.0 2017/11/11 マップ画面のウィンドウを一定時間で消去できる機能を追加
@@ -95,6 +96,11 @@
  * @value 1
  * @option Right
  * @value 2
+ *
+ * @param NoDestinationMaps
+ * @desc 非表示にしたいマップIDリスト
+ * @default []
+ * @type number[]
  *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
@@ -192,6 +198,11 @@
  * @option 右揃え
  * @value 2
  *
+ * @param NoDestinationWindowMapIds
+ * @desc 非表示にしたいマップIDリスト
+ * @default []
+ * @type number[]
+ *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
  * 表示する内容はプラグインコマンドで、表示可否はスイッチで制御します。
@@ -210,6 +221,11 @@
  * DW_SET_DESTINATION aaa             # 同上
  * DW_アイコン付き目標設定 1 aaa      # アイコン[1]付きで行動目標設定。
  * DW_SET_DESTINATION_WITH_ICON 1 aaa # 同上
+ *
+ * 以下のいずれかの条件を満たすマップでは、行動目標ウィンドウは非表示になります。
+ * - プラグインパラメータ NoDestinationWindowMapIds で指定したIDをを持つ
+ * - マップのメモ欄に <NoDestinationWindow> と記述されている
+ *
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -247,6 +263,12 @@
         return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
+    var getParamNumberArray = function(paramNames) {
+        var value = PluginManager.parameters(pluginName)[paramNames];
+        return JSON.parse(value)
+            .map(function(e){ return Number(JSON.parse(e)); }, this);
+    };
+
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
@@ -266,26 +288,39 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param               = {};
-    param.showingSwitchId   = getParamNumber(['ShowingSwitchId', '表示スイッチID'], 0);
-    param.windowX           = getParamNumber(['WindowX', 'ウィンドウX座標']);
-    param.windowY           = getParamNumber(['WindowY', 'ウィンドウY座標']);
-    param.windowWidth       = getParamNumber(['WindowWidth', 'ウィンドウ横幅'], 1);
-    param.windowSkin        = getParamString(['WindowSkin', 'ウィンドウスキン名']);
-    param.windowOpacity     = getParamNumber(['WindowOpacity', 'ウィンドウ不透明度']);
-    param.fadeFrame         = getParamNumber(['FadeFrame', 'フェード時間'], 1);
-    param.fontSize          = getParamNumber(['FontSize', 'フォントサイズ'], 12);
-    param.closeEventRunning = getParamBoolean(['CloseEventRunning', 'イベント中は閉じる']);
-    param.showingInMenu     = getParamBoolean(['ShowingInMenu', 'メニュー画面に表示']);
-    param.autoAdjust        = getParamBoolean(['AutoAdjust', '自働調整']);
-    param.showingFrames     = getParamNumber(['ShowingFrames', '表示フレーム数'], 0);
-    param.textAlign         = getParamNumber(['TextAlign', '文字列揃え'], 0);
+    var param                       = {};
+    param.showingSwitchId           = getParamNumber(['ShowingSwitchId', '表示スイッチID'], 0);
+    param.windowX                   = getParamNumber(['WindowX', 'ウィンドウX座標']);
+    param.windowY                   = getParamNumber(['WindowY', 'ウィンドウY座標']);
+    param.windowWidth               = getParamNumber(['WindowWidth', 'ウィンドウ横幅'], 1);
+    param.windowSkin                = getParamString(['WindowSkin', 'ウィンドウスキン名']);
+    param.windowOpacity             = getParamNumber(['WindowOpacity', 'ウィンドウ不透明度']);
+    param.fadeFrame                 = getParamNumber(['FadeFrame', 'フェード時間'], 1);
+    param.fontSize                  = getParamNumber(['FontSize', 'フォントサイズ'], 12);
+    param.closeEventRunning         = getParamBoolean(['CloseEventRunning', 'イベント中は閉じる']);
+    param.showingInMenu             = getParamBoolean(['ShowingInMenu', 'メニュー画面に表示']);
+    param.autoAdjust                = getParamBoolean(['AutoAdjust', '自働調整']);
+    param.showingFrames             = getParamNumber(['ShowingFrames', '表示フレーム数'], 0);
+    param.textAlign                 = getParamNumber(['TextAlign', '文字列揃え'], 0);
+    param.noDestinationWindowMapIds = getParamNumberArray(['NoDestinationWindowMapIds']);
 
     var pluginCommandMap = new Map();
     setPluginCommand('目標設定', 'execSetDestination');
     setPluginCommand('SET_DESTINATION', 'execSetDestination');
     setPluginCommand('アイコン付き目標設定', 'execSetDestinationWithIcon');
     setPluginCommand('SET_DESTINATION_WITH_ICON', 'execSetDestinationWithIcon');
+
+    var _extractMetadata = DataManager.extractMetadata;
+    DataManager.extractMetadata = function(data) {
+        _extractMetadata.call(this, data);
+        if (data === $dataMap) {
+            if (data.meta.noDestinationWindow) {
+                data.noDestinationWindow = true;
+            } else {
+                data.noDestinationWindow = false;
+            }
+        }
+    };
 
     //=============================================================================
     // Game_Interpreter
@@ -339,6 +374,16 @@
     Game_System.prototype.isOverDestinationFrame = function() {
         this._destinationFrame++;
         return param.showingFrames > 0 ? param.showingFrames <= this._destinationFrame : false;
+    };
+
+    //=============================================================================
+    // Game_Map
+    //  行動目標ウィンドウ非表示マップであるかを判定します。
+    //=============================================================================
+    Game_Map.prototype.isNoDestinationWindowMap = function () {
+        return param.noDestinationWindowMapIds.some(function(mapId){
+            return mapId === this.mapId();
+        }, this) || $dataMap.noDestinationWindow;
     };
 
     //=============================================================================
@@ -500,7 +545,7 @@
     };
 
     Window_Destination.prototype.isVisible = function() {
-        return $gameSwitches.value(param.showingSwitchId) && !this.isEventRunning() && this.isExistText() && !this.isOverFrame();
+        return $gameSwitches.value(param.showingSwitchId) && !this.isEventRunning() && this.isExistText() && !this.isOverFrame() && !this.isNoDestinationWindowMap();
     };
 
     Window_Destination.prototype.isOverFrame = function() {
@@ -513,6 +558,10 @@
 
     Window_Destination.prototype.isEventRunning = function() {
         return $gameMap.isEventRunning() && param.closeEventRunning;
+    };
+
+    Window_Destination.prototype.isNoDestinationWindowMap = function() {
+        return $gameMap.isNoDestinationWindowMap();
     };
 
     //=============================================================================
