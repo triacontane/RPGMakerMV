@@ -1,11 +1,12 @@
 //=============================================================================
 // FacePicture.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2019/06/27 最新のコアスクリプトでもbltで正常表示できるよう修正
 // 1.2.0 2017/03/08 ピクチャのファイル名に制御文字を使っていた場合にリフレッシュで再表示できる機能を追加
 // 1.1.3 2017/03/03 引数に制御文字を使ってピクチャを表示してからメニューを開閉するとエラーになる不具合を修正
 // 1.1.2 2017/02/07 端末依存の記述を削除
@@ -13,7 +14,7 @@
 // 1.0.1 2017/02/05 顔グラフィックのインデックスが4以上の場合に正しく表示されない問題を修正
 // 1.0.0 2017/02/02 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -296,10 +297,12 @@
     //=============================================================================
     Bitmap.prototype.setForceLoading = function() {
         this._isLoading = true;
+        this._loadingState = 'requesting';
     };
 
     Bitmap.prototype.forceOnLoad = function() {
         this._isLoading = false;
+        this._loadingState = 'loaded';
         this._callLoadListeners();
     };
 })();
