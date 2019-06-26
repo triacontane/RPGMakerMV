@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2019/06/27 クリック瞬間表示が有効なとき、\!以後の文章が瞬間表示されてしまう問題を修正
 // 1.8.0 2019/03/04 ウィンドウクローズ時のポーズサインの色調を設定できるよう仕様変更
 // 1.7.3 2018/12/14 ロード、クイックロード時に決定ボタンを押し続けているとロード処理が繰り返されてしまう問題を修正
 //                  アイコン画像が自動改行時に考慮されない問題を修正
@@ -1427,7 +1428,7 @@
     //=============================================================================
     var _Window_Message_updateWait      = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
-        if (paramRapidShowClick && this._textState && this.isTriggered()) {
+        if (paramRapidShowClick && this._textState && this.isTriggered() && !this.pause) {
             this._showAll = true;
         }
         return _Window_Message_updateWait.apply(this, arguments);
