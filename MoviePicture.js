@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2019/06/29 画面遷移したとき、動画でないピクチャまで非表示になってしまう問題を修正
 // 1.5.0 2019/06/11 動画再生終了後、動画ピクチャを自動削除せず最終フレームで静止したままにする機能を追加
 // 1.4.1 2019/05/21 動画を縮小表示したときのジャギを軽減
 //                  ヘルプの記載を本体バージョン1.6を前提に修正
@@ -98,7 +99,7 @@
  * @option SE
  *
  * @param 終了時自動削除
- * @desc 動画再生終了時に動画ピクチャを自動で削除します。
+ * @desc 動画再生終了時に動画ピクチャを自動で削除します。削除しない場合、動画は最終フレームで静止します。
  * @default true
  * @type boolean
  *
@@ -600,7 +601,7 @@
     //=============================================================================
     Spriteset_Base.prototype.clearAllVideo = function() {
         this._pictureContainer.children.forEach(function(picture) {
-            if (picture.clearVideo) {
+            if (picture.clearVideo && picture.isVideoPicture()) {
                 picture.clearVideo();
                 picture.bitmap = null;
             }
