@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.2 2019/06/30 イベントが存在しないマップに動的イベントを生成したとき、最初のイベントの一部の動作がおかしくなる問題を修正
 // 1.9.1 2019/06/09 テンプレートイベントを生成したとき、getTemplateIdを取得できない問題を修正
 // 1.9.0 2019/01/14 地形タグとリージョンを複数指定できる機能を追加
 // 1.8.3 2018/10/25 YEP_EventMiniLabel.jsと併用した際、動的生成イベントを「イベント消去」するとエラーになる競合を修正
@@ -350,7 +351,7 @@ function Game_PrefabEvent() {
             this.unlinkPrefabEvents();
         }
         _Game_Map_setupEvents.apply(this, arguments);
-        this._eventIdSequence = this._events.length;
+        this._eventIdSequence = this._events.length || 1;
     };
 
     Game_Map.prototype.spawnEvent = function(originalEventId, x, y, isTemplate) {
@@ -358,7 +359,7 @@ function Game_PrefabEvent() {
             var eventId = this.getEventIdSequence();
             var event   = new Game_PrefabEvent(this._mapId, eventId, originalEventId, x, y, isTemplate);
             this._lastSpawnEventId = eventId;
-            this._events.push(event);
+            this._events[eventId] = event;
         } else {
             throw new Error('無効なイベントIDもしくは座標のためイベントを作成できませんでした。');
         }
