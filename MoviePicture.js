@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2019/06/29 複数の動画を並行してロードしているときは、すべての動画のロードが完了してから再生するよう変更しました
+//                  一定フレームで動画を中断させるコマンドを追加
 // 1.5.1 2019/06/29 画面遷移したとき、動画でないピクチャまで非表示になってしまう問題を修正
 // 1.5.0 2019/06/11 動画再生終了後、動画ピクチャを自動削除せず最終フレームで静止したままにする機能を追加
 // 1.4.1 2019/05/21 動画を縮小表示したときのジャギを軽減
@@ -121,18 +123,20 @@
  *  イベントコマンド「プラグインコマンド」から実行。
  *  （パラメータの間は半角スペースで区切る）
  *
- * MP_SET_MOVIE file  # 動画ファイル[file]を準備します。拡張子不要。
- * MP_動画設定 file   # 同上
- * MP_SET_LOOP 1 on   # ピクチャ番号[1]の動画がループ再生されます。
- * MP_ループ設定 1 on # 同上(offでループ再生を解除します)
- * MP_SET_PAUSE 1 on  # ピクチャ番号[1]の動画が一時停止します。
- * MP_ポーズ設定 1 on # 同上(offで再生を再開します)
- * MP_SET_WAIT 1      # ピクチャ番号[1]の動画が再生するまでイベントを待機します。
- * MP_ウェイト設定 1  # 同上
- * MP_SET_VOLUME 1 50 # ピクチャ番号[1]の動画の音量を50%に設定します。
- * MP_音量設定 1 50   # 同上
- * MP_SET_SPEED 1 150 # ピクチャ番号[1]の動画の再生速度を150%に設定します。
- * MP_速度設定 1 150  # 同上
+ * MP_SET_MOVIE file    # 動画ファイル[file]を準備します。拡張子不要。
+ * MP_動画設定 file     # 同上
+ * MP_SET_LOOP 1 on     # ピクチャ番号[1]の動画がループ再生されます。
+ * MP_ループ設定 1 on   # 同上(offでループ再生を解除します)
+ * MP_SET_PAUSE 1 on    # ピクチャ番号[1]の動画が一時停止します。
+ * MP_ポーズ設定 1 on   # 同上(offで再生を再開します)
+ * MP_SET_WAIT 1        # ピクチャ番号[1]の動画が再生するまでイベントを待機します。
+ * MP_ウェイト設定 1    # 同上
+ * MP_SET_LIMIT 1 50    # ピクチャ番号[1]の動画を50フレームで中断します。
+ * MP_リミット設定 1 50 # 同上
+ * MP_SET_VOLUME 1 50   # ピクチャ番号[1]の動画の音量を50%に設定します。
+ * MP_音量設定 1 50     # 同上
+ * MP_SET_SPEED 1 150   # ピクチャ番号[1]の動画の再生速度を150%に設定します。
+ * MP_速度設定 1 150    # 同上
  *
  * movieフォルダ以外のパスに存在する動画ファイルを準備します。
  * 指定する[path]は、フルパスもしくはsaveフォルダの存在するパスからの相対パスです。
@@ -239,6 +243,8 @@
     setPluginCommand('ポーズ設定', 'execSetVideoPause');
     setPluginCommand('SET_WAIT', 'execSetVideoWait');
     setPluginCommand('ウェイト設定', 'execSetVideoWait');
+    setPluginCommand('SET_LIMIT', 'execSetVideoLimit');
+    setPluginCommand('リミット設定', 'execSetVideoLimit');
     setPluginCommand('SET_VOLUME', 'execSetVideoVolume');
     setPluginCommand('音量設定', 'execSetVideoVolume');
     setPluginCommand('SET_VOLUME_TYPE', 'execSetVideoVolumeType');
@@ -285,6 +291,13 @@
         var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
         if (picture) {
             picture.setVideoVolume(getArgNumber(args[1], 0, 100));
+        }
+    };
+
+    Game_Interpreter.prototype.execSetVideoLimit = function(args) {
+        var picture = $gameScreen.picture(getArgNumber(args[0]), 1);
+        if (picture) {
+            picture.setFrameLimit(getArgNumber(args[1], 0));
         }
     };
 
@@ -339,7 +352,7 @@
     Game_Screen.prototype.setVideoPictureName = function(movieName, useAlpha, useOuter) {
         this._videoUseAlpha = useAlpha;
         if (useOuter && !movieName.match(/^[A-Z]:/)) {
-            const path = require('path');
+            const path             = require('path');
             this._videoPictureName = path.join(path.dirname(StorageManager.localFileDirectoryPath()), movieName);
         } else {
             this._videoPictureName = movieName;
@@ -447,12 +460,21 @@
         return this._positionVideo || 0;
     };
 
+    // used by user script
     Game_Picture.prototype.isVideoEnd = function() {
         return this._ended
     };
 
     Game_Picture.prototype.setVideoEnd = function() {
         this._ended = true;
+    };
+
+    Game_Picture.prototype.setFrameLimit = function(value) {
+        this._frameLimit = value;
+    };
+
+    Game_Picture.prototype.getFrameLimit = function() {
+        return this._frameLimit;
     };
 
     //=============================================================================
@@ -477,11 +499,12 @@
         }
         this.bitmap = ImageManager.loadVideo(this._pictureName, this.picture().isVideoUseAlpha());
         this.bitmap.addLoadListener(function() {
-            this.startVideo();
+            this.prepareVideo();
         }.bind(this));
+        this._loadingState = 'loading';
     };
 
-    Sprite_Picture.prototype.startVideo = function() {
+    Sprite_Picture.prototype.prepareVideo = function() {
         this.refreshForVideo();
         this._playStart = true;
         var picture     = this.picture();
@@ -489,8 +512,8 @@
             this.bitmap.setCurrentTime(picture.getVideoPosition());
             this._volume = null;
             this.updateVideoVolume();
-            this.bitmap.play();
         }
+        this._loadingState = 'prepared';
     };
 
     Sprite_Picture.prototype.refreshForVideo = function() {
@@ -516,11 +539,7 @@
         if (!this.isVideoPicture()) return;
         this.bitmap.update();
         if (this.bitmap.isEnded()) {
-            if (param.autoEraseOnEnd) {
-                this.eraseVideo();
-            } else if (this.picture()) {
-                this.picture().setVideoEnd();
-            }
+            this.finishVideo();
             return;
         }
         if (this.picture() && this._playStart) {
@@ -529,6 +548,7 @@
             this.updateVideoVolume();
             this.updateVideoLoop();
             this.updateVideoWaiting();
+            this.updateVideoFrameLimit();
         }
     };
 
@@ -570,6 +590,30 @@
         }
     };
 
+    Sprite_Picture.prototype.updateVideoFrameLimit = function() {
+        if (!this._pause) {
+            this._frameCount++;
+        }
+        var limit = this.picture().getFrameLimit();
+        if (limit > 0 && limit < this._frameCount) {
+            if (this.picture().isVideoLoop()) {
+                this._bitmap.setCurrentTime(0);
+            } else {
+                this.finishVideo();
+            }
+            this._frameCount = 0;
+        }
+    };
+
+    Sprite_Picture.prototype.finishVideo = function() {
+        this._frameCount = 0;
+        if (param.autoEraseOnEnd) {
+            this.eraseVideo();
+        } else if (this.picture()) {
+            this.picture().setVideoEnd();
+        }
+    };
+
     Sprite_Picture.prototype.eraseVideo = function() {
         this.clearVideo();
         if (this.picture()) {
@@ -589,10 +633,25 @@
         this._speed     = null;
         this._pause     = null;
         this._playStart = false;
+        this.bitmap     = null;
     };
 
     Sprite_Picture.prototype.isVideoPicture = function() {
         return this.bitmap && this.bitmap.isVideo();
+    };
+
+    Sprite_Picture.prototype.isLoading = function() {
+        return this._loadingState === 'loading';
+    };
+
+    Sprite_Picture.prototype.isPrepared = function() {
+        return this._loadingState === 'prepared';
+    };
+
+    Sprite_Picture.prototype.startVideo = function() {
+        this._bitmap.play();
+        this._loadingState = null;
+        this._frameCount   = 0;
     };
 
     //=============================================================================
@@ -606,6 +665,27 @@
                 picture.bitmap = null;
             }
         });
+    };
+
+    var _Spriteset_Base_update      = Spriteset_Base.prototype.update;
+    Spriteset_Base.prototype.update = function() {
+        _Spriteset_Base_update.apply(this, arguments);
+        this.updateVideoPicture();
+    };
+
+    Spriteset_Base.prototype.updateVideoPicture = function() {
+        var preparedPictures = [];
+        var loading          = this._pictureContainer.children.some(function(picture) {
+            if (picture.isPrepared && picture.isPrepared()) {
+                preparedPictures.push(picture);
+            }
+            return picture.isLoading && picture.isLoading();
+        });
+        if (!loading) {
+            preparedPictures.forEach(function(picture) {
+                picture.startVideo();
+            })
+        }
     };
 
     //=============================================================================
