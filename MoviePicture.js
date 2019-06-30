@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2019/06/30 動画の取得元フォルダと拡張子を変更して動画を難読化できるようにしました。
 // 1.6.0 2019/06/29 複数の動画を並行してロードしているときは、すべての動画のロードが完了してから再生するよう変更しました
 //                  一定フレームで動画を中断させるコマンドを追加
 // 1.5.1 2019/06/29 画面遷移したとき、動画でないピクチャまで非表示になってしまう問題を修正
@@ -47,6 +48,18 @@
  * @desc 動画再生終了時に動画ピクチャを自動で削除します。
  * @default true
  * @type boolean
+ *
+ * @param MovieFolder
+ * @desc 動画ファイルの取得元フォルダです。指定しない場合は「movies」フォルダが使用されます。
+ * @default
+ *
+ * @param WebmExt
+ * @desc webm形式を再生するときの偽装拡張子です。難読化したい場合に指定します。対応フォーマットが増えるわけではありません。
+ * @default
+ *
+ * @param Mp4Ext
+ * @desc mp4形式を再生するときの偽装拡張子です。難読化したい場合に指定します。対応フォーマットが増えるわけではありません。
+ * @default
  *
  * @help Play movies using the picture display frame.
  * In addition to being subject to processing by moving and rotating pictures,
@@ -104,6 +117,18 @@
  * @desc 動画再生終了時に動画ピクチャを自動で削除します。削除しない場合、動画は最終フレームで静止します。
  * @default true
  * @type boolean
+ *
+ * @param 動画取得フォルダ
+ * @desc 動画ファイルの取得元フォルダです。指定しない場合は「movies」フォルダが使用されます。末尾のスラッシュは不要です。
+ * @default
+ *
+ * @param webm偽装拡張子
+ * @desc webm形式を再生するときの偽装拡張子です。難読化したい場合に指定します。対応フォーマットが増えるわけではありません。
+ * @default
+ *
+ * @param mp4偽装拡張子
+ * @desc mp4形式を再生するときの偽装拡張子です。難読化したい場合に指定します。対応フォーマットが増えるわけではありません。
+ * @default
  *
  * @help ピクチャの表示枠を使って動画を再生します。
  * ピクチャの移動や回転による処理の対象になるほか、複数の動画の並行再生が
@@ -231,6 +256,9 @@
     var param             = {};
     param.movieVolumeType = getParamString(['MovieVolumeType', '動画音量種別']).toUpperCase();
     param.autoEraseOnEnd  = getParamBoolean(['AutoEraseOnEnd', '終了時自動削除']);
+    param.movieFolder     = getParamString(['MovieFolder', '動画取得フォルダ']);
+    param.webmExt         = getParamString(['WebmExt', 'webm偽装拡張子']);
+    param.mp4Ext          = getParamString(['Mp4Ext', 'mp4偽装拡張子']);
 
     var pluginCommandMap = new Map();
     setPluginCommand('SET_MOVIE', 'execSetVideoPicture');
@@ -714,10 +742,14 @@
 
     ImageManager.getVideoFilePath = function(filename) {
         if (!filename.match(/^[A-Z]:/)) {
-            return 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
+            return this.getVideoFileFolder() + encodeURIComponent(filename) + this.getVideoFileExt();
         } else {
             return filename;
         }
+    };
+
+    ImageManager.getVideoFileFolder = function() {
+        return (param.movieFolder || 'movies') + '/'
     };
 
     ImageManager.getVideoClass = function(alpha) {
@@ -730,9 +762,9 @@
 
     ImageManager.getVideoFileExt = function() {
         if (Graphics.canPlayVideoType('video/webm')) {
-            return '.webm';
+            return '.' + (param.webmExt || 'webm');
         } else {
-            return '.mp4';
+            return '.' + (param.mp4Ext || 'mp4');
         }
     };
 
