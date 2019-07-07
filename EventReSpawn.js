@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.3 2019/07/07 1.9.0以降、ランダム生成で地形とリージョンを指定せず実行するとエラーになっていた問題を修正
 // 1.9.2 2019/06/30 イベントが存在しないマップに動的イベントを生成したとき、最初のイベントの一部の動作がおかしくなる問題を修正
 // 1.9.1 2019/06/09 テンプレートイベントを生成したとき、getTemplateIdを取得できない問題を修正
 // 1.9.0 2019/01/14 地形タグとリージョンを複数指定できる機能を追加
@@ -308,10 +309,10 @@ function Game_PrefabEvent() {
         conditionMap.passable   = getArgNumber(args[1], 0);
         conditionMap.screen     = getArgNumber(args[2], 0);
         conditionMap.collided   = getArgNumber(args[3], 0);
-        conditionMap.terrainTags = args[4].split(',').map(function (value) {
+        conditionMap.terrainTags = (args[4] || '').split(',').map(function (value) {
             return getArgNumber(value, 0);
         });
-        conditionMap.regionIds   = args[5].split(',').map(function (value) {
+        conditionMap.regionIds   = (args[5] || '').split(',').map(function (value) {
             return getArgNumber(value, 0);
         });
         $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0], extend), conditionMap, extend);
