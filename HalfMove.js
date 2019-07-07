@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.0 2019/07/07 移動ルート強制中は半歩移動無効の設定をしているときでも半歩で強制移動できるスクリプトを追加
 // 1.12.5 2019/06/09 半歩移動無効時、下半分移動不可に設定した地形とリージョンが、元の通行設定にかかわらず移動不可となる問題を修正
 // 1.12.4 2019/03/31 MOG_ChronoEngine.jsとの起動時の競合を解消
 // 1.12.3 2018/12/19 プレイヤーに近づく、遠ざかる処理で特定条件下で正しく移動しない場合がある問題を修正
@@ -179,6 +180,14 @@
  * <HMTriggerExpansion:OFF> -> Expansion trigger area OFF
  * <HMExpansionArea:1,1,1,1> -> Expansion trigger area(down,left,right,up)
  *
+ * ・スクリプト（移動ルートの設定の「スクリプト」から実行）
+ *
+ * 「移動ルート強制中は半歩移動無効」の設定が有効なときでも半歩で強制移動します。
+ * this.setHalfMoveDuringRouteForce();
+ *
+ * 上記の設定をもとに戻します。
+ * this.resetHalfMoveDuringRouteForce();
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
@@ -343,6 +352,14 @@
  * 以下のタグを指定するとことでイベントの8方向移動を禁止できます。
  * <HM8MoveDisable>
  * <HM8方向移動禁止>
+ *
+ * ・スクリプト（移動ルートの設定の「スクリプト」から実行）
+ *
+ * 「移動ルート強制中は半歩移動無効」の設定が有効なときでも半歩で強制移動します。
+ * this.setHalfMoveDuringRouteForce();
+ *
+ * 上記の設定をもとに戻します。
+ * this.resetHalfMoveDuringRouteForce();
  *
  * ・他プラグインとの連携に関して
  *
@@ -765,8 +782,11 @@
         var halfPositionCount  = localHalfPositionCount;
         localHalfPositionCount = 0;
         if (!this.isHalfMove()) {
-            if (this.isHalfPosX() || this.isHalfPosY()) {
-                return true;
+            if (this.isHalfPosX()) {
+                x = $gameMap.roundHalfXWithDirection(x, d);
+            }
+            if (this.isHalfPosY()) {
+                y = $gameMap.roundHalfYWithDirection(y, d);
             }
             result = alias(x, y, d);
         } else if (this.isHalfPosX(x) && this.isHalfPosY(y)) {
@@ -1662,10 +1682,22 @@
     //  移動ルート強制中は半歩移動を無効にします。
     //=============================================================================
     Game_Character.prototype.isHalfMove = function() {
-        if (this._moveRouteForcing && paramDisableForcing) {
+        if (this._moveRouteForcing && !this.canHalfMoveDuringRouteForce()) {
             return false;
         }
         return Game_CharacterBase.prototype.isHalfMove.call(this) || this.isHalfPosX() || this.isHalfPosY();
+    };
+
+    Game_Character.prototype.canHalfMoveDuringRouteForce = function() {
+        return this._halfMoveDuringRouteForce || !paramDisableForcing;
+    };
+
+    Game_Character.prototype.setHalfMoveDuringRouteForce = function() {
+        this._halfMoveDuringRouteForce = true;
+    };
+
+    Game_Character.prototype.resetHalfMoveDuringRouteForce = function() {
+        this._halfMoveDuringRouteForce = false;
     };
 
     //=============================================================================
