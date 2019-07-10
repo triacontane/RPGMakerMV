@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.1 2019/07/11 FixCursorSeByMouse.jsとの競合対策のためメソッド名を変更
 // 2.5.0 2018/11/25 サブメニューの絶対座標と揃えを設定できる機能を追加
 //                  MOG_SceneMenu.jsとの競合を解消
 // 2.4.1 2018/11/24 用語辞典プラグインと連携する方法をヘルプに記載
@@ -628,7 +629,7 @@
     // AudioManager
     //  システム効果音を消音します。
     //=============================================================================
-    AudioManager.stopStaticSe = function() {
+    AudioManager.stopAllStaticSe = function() {
         this._staticBuffers.forEach(function(buffer) {
             buffer.stop();
         });
@@ -653,7 +654,7 @@
     Scene_Map.prototype.callMenu = function() {
         _Scene_Map_callMenu.apply(this, arguments);
         if ($gamePlayer.isInSubCommandMap()) {
-            AudioManager.stopStaticSe();
+            AudioManager.stopAllStaticSe();
             SoundManager.playCancel();
         }
     };
