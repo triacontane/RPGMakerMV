@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2019/07/15 他のプラグインとの競合対策でターン数の表示値を補正できる機能を追加
 // 1.6.1 2018/12/07 1.6.0で一部処理に誤りがあったので修正
 // 1.6.0 2018/12/06 BMSP_StateDisplayExtension.jsと共存できる機能を追加
 // 1.5.2 2018/09/10 StateRolling.jsとの連携時、アクターのアイコン表示はStateRolling.jsを優先するよう修正
@@ -74,6 +75,13 @@
  * @type number
  * @min -1000
  * @max 1000
+ *
+ * @param TurnAdjustment
+ * @desc ターン数の表示値を補正します。他のプラグインとの組み合わせで数値がズレる場合にのみ変更してください。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
  *
  * @param ShowActorTurnCount
  * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
@@ -148,6 +156,13 @@
  * @min -1000
  * @max 1000
  *
+ * @param ターン数補正
+ * @desc ターン数の表示値を補正します。他のプラグインとの組み合わせで数値がズレる場合にのみ変更してください。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
  * @param 味方ターン数表示
  * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
  * @default true
@@ -221,6 +236,7 @@ function Sprite_StateIconChild() {
     var paramTurnCountY         = getParamNumber(['TurnCountY', 'ターン数Y座標']);
     var paramShowActorTurnCount = getParamBoolean(['ShowActorTurnCount', '味方ターン数表示']);
     var paramFontSize           = getParamNumber(['FontSize', 'フォントサイズ']) || 32;
+    var paramTurnAdjustment     = getParamNumber(['TurnAdjustment', 'ターン数補正']) || 0;
 
     //=============================================================================
     // Game_BattlerBase
@@ -248,7 +264,9 @@ function Sprite_StateIconChild() {
     };
 
     Game_BattlerBase.prototype.getAllTurns = function() {
-        return this.getStateTurns().concat(this.getBuffTurns());
+        return this.getStateTurns().concat(this.getBuffTurns()).map(function(turn) {
+            return turn + paramTurnAdjustment;
+        });
     };
 
     //=============================================================================
@@ -437,7 +455,7 @@ function Sprite_StateIconChild() {
             var turns              = actor.getAllTurns();
             this.contents.fontSize = paramFontSize;
             for (var i = 0; i < this._drawIconCount; i++) {
-                this.drawText(turns[i], x + Window_Base._iconWidth * i, y + 2, Window_Base._iconWidth, 'right');
+                this.drawText(turns[i],x + Window_Base._iconWidth * i, y + 2, Window_Base._iconWidth, 'right');
             }
             this.resetFontSettings();
             this._drawIconCount = undefined;
