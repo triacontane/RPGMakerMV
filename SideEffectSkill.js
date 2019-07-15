@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2019/07/15 BattleEffectPopup.jsと併用したとき、フロントビューだと戦闘開始時などにInvalidポップが余分に表示される競合を解消
 // 1.4.0 2019/02/16 行動が無効(ダメージ0)だった場合のみ副作用を適用できる機能を追加
 //                  行動が反射された場合のみ副作用を適用できる機能を追加
 // 1.3.0 2018/11/29 行動が会心だった場合のみ副作用を適用できる機能を追加
@@ -573,7 +574,7 @@
         this.displayChangedStates(subject);
         this.displayChangedBuffs(subject);
         subject.startDamagePopup();
-        if (!$gameSystem.isSideView()) {
+        if (!$gameSystem.isSideView() && subject.result().used) {
             this.displayDamage(subject);
         }
     };
