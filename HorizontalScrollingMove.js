@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2019/07/20 画像のみ向き制限する仕様を追加
 // 1.1.0 2017/07/25 上向きを許容するパラメータを追加
 // 1.0.0 2017/03/29 初版
 // ----------------------------------------------------------------------------
@@ -33,6 +34,11 @@
  * @default false
  * @type boolean
  *
+ * @param ImageOnly
+ * @desc グラフィックのみ向きを左右に限定し、キャラクターの実体は通常通り向き変更します。
+ * @default false
+ * @type boolean
+ *
  * @help キャラクターが移動する際の向きを左右に限定します。
  * 主に横スクロールのゲームにおけるキャラ移動を想定しています。
  * ただし、梯子属性のタイルでは例外的に上を向きます。
@@ -57,6 +63,11 @@
  *
  * @param イベント上向き許容
  * @desc イベントが上下に移動するときは上向きを許容します。
+ * @default false
+ * @type boolean
+ *
+ * @param 画像のみ向き制限
+ * @desc グラフィックのみ向きを左右に限定し、キャラクターの実体は通常通り向き変更します。
  * @default false
  * @type boolean
  *
@@ -110,28 +121,31 @@
     param.validSwitchId = getParamNumber(['ValidSwitchId', '有効スイッチ番号']);
     param.validUpPlayer = getParamBoolean(['ValidUpPlayer', 'プレイヤー上向き許容']);
     param.validUpEvent  = getParamBoolean(['ValidUpEvent', 'イベント上向き許容']);
+    param.imageOnly     = getParamBoolean(['ImageOnly', '画像のみ向き制限']);
 
     //=============================================================================
     // Game_CharacterBase
     //  横移動時に別の方向を向こうとした場合、矯正します。
     //=============================================================================
-    var _Game_CharacterBase_setDirection      = Game_CharacterBase.prototype.setDirection;
-    Game_CharacterBase.prototype.setDirection = function(d) {
-        var prevDirection = this.direction();
-        _Game_CharacterBase_setDirection.apply(this, arguments);
-        if (this.isHorizontalMove()) {
-            this.modifyDirectionForHorizontalMove(prevDirection);
-        }
-    };
+    if (!param.imageOnly) {
+        var _Game_CharacterBase_setDirection      = Game_CharacterBase.prototype.setDirection;
+        Game_CharacterBase.prototype.setDirection = function(d) {
+            var prevDirection = this.direction();
+            _Game_CharacterBase_setDirection.apply(this, arguments);
+            if (this.isHorizontalMove()) {
+                this.modifyDirectionForHorizontalMove(prevDirection);
+            }
+        };
+
+        Game_CharacterBase.prototype.modifyDirectionForHorizontalMove = function(prevDirection) {
+            if (this.isNeedModifyDirection() && !this.isOnLadder() && !this.isDirectionFixed()) {
+                this._direction = prevDirection;
+            }
+        };
+    }
 
     Game_CharacterBase.prototype.isHorizontalMove = function() {
         return !param.validSwitchId || $gameSwitches.value(param.validSwitchId);
-    };
-
-    Game_CharacterBase.prototype.modifyDirectionForHorizontalMove = function(prevDirection) {
-        if (this.isNeedModifyDirection() && !this.isOnLadder() && !this.isDirectionFixed()) {
-            this._direction = prevDirection;
-        }
     };
 
     Game_CharacterBase.prototype.isNeedModifyDirection = function() {
@@ -153,5 +167,17 @@
     Game_Event.prototype.isNeedModifyUpper = function() {
         return !param.validUpEvent;
     };
+
+    if (param.imageOnly) {
+        var _Sprite_Character_characterPatternY = Sprite_Character.prototype.characterPatternY;
+        Sprite_Character.prototype.characterPatternY = function() {
+            var result = _Sprite_Character_characterPatternY.apply(this, arguments);
+            if (this._character.isHorizontalMove() && this._character.isNeedModifyDirection() && this._prevPatternY) {
+                return this._prevPatternY;
+            }
+            this._prevPatternY = result;
+            return result;
+        };
+    }
 })();
 
