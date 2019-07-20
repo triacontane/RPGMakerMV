@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.5 2019/07/21 YEP_MessageCore.jsでネームボックスを表示する際、特定の条件下で一瞬だけネームボックスが不正な位置に表示される問題を修正
 // 2.14.4 2019/06/23 フキダシウィンドウを無効化したときのX座標の値をデフォルトのコアスクリプトの動作に準拠するよう修正
 // 2.14.3 2019/06/18 MKR_MessageWindowCustom.jsとの連携で、フキダシウィンドウ有効時はフキダシの横幅と高さを優先するよう変更
 // 2.14.2 2019/06/16 FTKR_ExMessageWindow2.jsおよびPauseSignToTextEnd.jsとの連携で、フキダシウィンドウ表示時にポーズサインがはみ出してしまう競合を修正
@@ -1719,6 +1720,9 @@
         Window_NameBox.prototype.updatePlacementPopup = function() {
             this.x = this._parentWindow.x;
             this.y = this._parentWindow.y - this.height;
+            if (!$gameSystem.getMessagePopupId()) {
+                this.openness = 0;
+            }
         };
     }
 
