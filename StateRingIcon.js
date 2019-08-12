@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2019/08/12 味方に掛けられたステートもリング表示できる機能を追加
 // 1.7.0 2019/07/15 他のプラグインとの競合対策でターン数の表示値を補正できる機能を追加
 // 1.6.1 2018/12/07 1.6.0で一部処理に誤りがあったので修正
 // 1.6.0 2018/12/06 BMSP_StateDisplayExtension.jsと共存できる機能を追加
@@ -87,6 +88,25 @@
  * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
  * @default true
  * @type boolean
+ *
+ * @param ActorRingIcon
+ * @desc 味方のステートアイコンもリング表示にします。
+ * @default false
+ * @type boolean
+ *
+ * @param ActorRingIconX
+ * @desc 味方のステートアイコンのX座標です。
+ * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
+ *
+ * @param ActorRingIconY
+ * @desc 味方のステートアイコンのY座標です。
+ * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
  *
  * @param FontSize
  * @desc 残りターン数表示のフォントサイズです。
@@ -173,6 +193,25 @@
  * @default 32
  * @type number
  *
+ * @param 味方リングアイコン
+ * @desc 味方のステートアイコンもリング表示にします。
+ * @default false
+ * @type boolean
+ *
+ * @param 味方リングアイコンX座標
+ * @desc 味方のステートアイコンのX座標です。
+ * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
+ *
+ * @param 味方リングアイコンY座標
+ * @desc 味方のステートアイコンのY座標です。
+ * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
+ *
  * @help 敵キャラのステートが複数有効になった場合のステートアイコンを時計回りに
  * 回転させてリング表示したり一列に並べて表示したりできます。
  *
@@ -237,6 +276,9 @@ function Sprite_StateIconChild() {
     var paramShowActorTurnCount = getParamBoolean(['ShowActorTurnCount', '味方ターン数表示']);
     var paramFontSize           = getParamNumber(['FontSize', 'フォントサイズ']) || 32;
     var paramTurnAdjustment     = getParamNumber(['TurnAdjustment', 'ターン数補正']) || 0;
+    var paramActorRingIcon      = getParamBoolean(['ActorRingIcon', '味方リングアイコン']);
+    var paramActorRingIconX     = getParamNumber(['ActorRingIconX', '味方リングアイコンX座標']) || 0;
+    var paramActorRingIconY     = getParamNumber(['ActorRingIconY', '味方リングアイコンY座標']) || 0;
 
     //=============================================================================
     // Game_BattlerBase
@@ -269,6 +311,17 @@ function Sprite_StateIconChild() {
         });
     };
 
+    if (paramActorRingIcon) {
+        var _Sprite_Actor_createStateSprite = Sprite_Actor.prototype.createStateSprite;
+        Sprite_Actor.prototype.createStateSprite = function() {
+            _Sprite_Actor_createStateSprite.apply(this, arguments);
+            this._stateSprite = new Sprite_StateIcon();
+            this._stateSprite.x = paramActorRingIconX;
+            this._stateSprite.y = paramActorRingIconY;
+            this._mainSprite.addChild(this._stateSprite);
+        };
+    }
+
     //=============================================================================
     // Sprite_StateIcon
     //  ステートアイコンを回転させます。
@@ -282,7 +335,7 @@ function Sprite_StateIconChild() {
 
     var _Sprite_StateIcon_update      = Sprite_StateIcon.prototype.update;
     Sprite_StateIcon.prototype.update = function() {
-        if (this._battler && !this._battler.isEnemy()) {
+        if (this._battler && !this.hasRingState()) {
             _Sprite_StateIcon_update.apply(this, arguments);
             return;
         }
@@ -379,6 +432,10 @@ function Sprite_StateIconChild() {
         }
     };
 
+    Sprite_StateIcon.prototype.hasRingState = function() {
+        return this._battler.isEnemy() || paramActorRingIcon
+    };
+
     //=============================================================================
     // Sprite_StateIconChild
     //=============================================================================
@@ -439,7 +496,7 @@ function Sprite_StateIconChild() {
     // Window_BattleStatus
     //  味方の残りターン数を表示します。
     //=============================================================================
-    if (paramShowActorTurnCount) {
+    if (paramShowActorTurnCount && !paramActorRingIcon) {
         var _Window_BattleStatus_drawActorIcons      = Window_BattleStatus.prototype.drawActorIcons;
         Window_BattleStatus.prototype.drawActorIcons = function(actor, x, y, width) {
             this._drawIconCount = 0;
