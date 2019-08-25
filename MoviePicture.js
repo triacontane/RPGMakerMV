@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.1 2019/08/26 他のプラグインとの組み合わせによりエラーになる可能性のある記述を修正
 // 1.7.0 2019/06/30 動画の取得元フォルダと拡張子を変更して動画を難読化できるようにしました。
 // 1.6.0 2019/06/29 複数の動画を並行してロードしているときは、すべての動画のロードが完了してから再生するよう変更しました
 //                  一定フレームで動画を中断させるコマンドを追加
@@ -902,7 +903,7 @@
 
     Bitmap_Video.prototype._onEnded = function() {
         this._firstLapEnded = true;
-        if (!this._video.loop) {
+        if (this._video && !this._video.loop) {
             this._ended = true;
         }
     };
