@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2019/08/25 1.3.1の修正方法に誤りがあったため再度修正
 // 1.3.1 2019/06/02 後方互換性を考慮しデータベースの元の値を参照する際「元の値」という変数名を使えるようになりました。
 // 1.3.0 2019/02/10 計算式中に不等号を使えるようエスケープ処理を追加
 // 1.2.9 2018/08/04 1.2.8の修正により、レベルアップメッセージなどでアクター名が正常に取得できなくなっていた問題を修正
@@ -332,7 +333,7 @@ DynamicDatabaseManager._makePropertyFormula = function(parent, key, child, metaT
     var data = this._targetData;
     Object.defineProperty(parent, key, {
         get: function() {
-            var prev, 元の値 = child;
+            var prev = child, 元の値 = child;
             var result = eval(DynamicDatabaseManager._convertEscapeCharacters(this.meta[metaTag]));
             return typeof child === 'number' ? result : !!result;
         }
