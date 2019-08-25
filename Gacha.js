@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.7.0 2019/08/25 ガチャの結果表示画面を追加
 // 1.6.0 2018/02/22 ガチャのロット数に変数を使用できるよう修正
 // 1.5.0 2018/01/14 新規アイテム入手時にアニメーションを設定できる機能を追加
 // 1.4.0 2017/12/05 ガチャの演出を省略できるスイッチを追加。アイテム入手時に効果音を演奏する機能を追加。
@@ -146,6 +147,8 @@
  *   <gachaImage:image>        # Gacha image file name. Please image put in "img/gacha/" folder.
  *   <gachaNumLot:10>          # The number of the lottery.
  *   <gachaRank:5>             # The rank of the item(1-5).
+ *   <gachaResultX: 20>        # ガチャ結果画面で表示する際の中心X座標です。省略すると画像の中央が指定されます。
+ *   <gachaResultY: 20>        # ガチャ結果画面で表示する際の中心Y座標です。省略すると画像の中央が指定されます。
  */
 
 /*:ja
@@ -272,6 +275,7 @@
  * ・変数でガチャを引けるように修正
  * ・可能な限りガチャを引き続ける機能を追加
  * ・10連ガチャの機能を追加
+ * ・ガチャの結果画面を追加
  * ・新規アイテム入手時の通知とエフェクトを追加（新規アイテムのエフェクトは最後のコマで停止します）
  * ・ガチャの演出をカットするスイッチを追加
  * ・ガチャのロット数に変数を使用できるよう修正
@@ -288,6 +292,8 @@
  *   <gachaImage:image>        # ガチャアイテムの画像を指定します。画像はimg/gacha/フォルダ内に入れてください。
  *   <gachaNumLot:10>          # ガチャアイテムのくじ数を指定します。
  *   <gachaRank:5>             # ガチャアイテムのランクを1から5の間で指定します。
+ *   <gachaResultX: 20>        # ガチャ結果画面で表示する際の中心X座標です。省略すると画像の中央が指定されます。
+ *   <gachaResultY: 20>        # ガチャ結果画面で表示する際の中心Y座標です。省略すると画像の中央が指定されます。
  */
 
 (function() {
@@ -415,8 +421,9 @@
         this._windowFadeSprite      = null;
         this._screenFadeOutDuration = 0;
         this._screenFadeInDuration  = 0;
-        this._lot      = [];
-        this._itemList = {};
+        this._lot        = [];
+        this._itemList   = {};
+        this._resultList = [];
 
         var numLot;
         var item, i, j;
@@ -470,6 +477,7 @@
         this.createGetCommandWindow();
         this.createGetWindow();
         this.createMessageWindow();
+        this.createResultWindow();
 
         this._rankSprite = new Sprite_GachaEffect();
         this._rankSprite.keepDisplay(true);
@@ -533,6 +541,14 @@
         this._getWindow.itemDescEnable(itemDescEnable);
         this._getWindow.hide();
         this.addWindow(this._getWindow);
+    };
+
+    Scene_Gacha.prototype.createResultWindow = function() {
+        var wy          = this._helpWindow.height;
+        var wh          = Graphics.boxHeight - wy - this._messageWindow.height;
+        this._resultWindow = new Window_GachaResult(0, wy, Graphics.boxWidth, wh);
+        this._resultWindow.hide();
+        this.addWindow(this._resultWindow);
     };
 
     Scene_Gacha.prototype.createMessageWindow = function() {
@@ -599,11 +615,12 @@
     Scene_Gacha.prototype.getGacha = function() {
         this._newItem = !$gameParty.hasItem(this._item, true);
         $gameParty.gainItem(this._item, 1);
-        var name = this._item.name;
-        if (!this._itemList[name]) {
-            this._itemList[name] = 0;
+        var id = this._item.id;
+        if (!this._itemList[id]) {
+            this._itemList[id] = 0;
         }
-        this._itemList[name]++;
+        this._itemList[id]++;
+        this._resultList.push(this._item);
     };
 
     Scene_Gacha.prototype.getNewItemText = function() {
@@ -620,22 +637,30 @@
         } else {
             var itemListKeys = Object.keys(this._itemList);
             if (this.isEffectStop() || itemListKeys.length >= 2) {
-                itemListKeys.forEach(function(key) {
-                    $gameMessage.add(key + ' × ' + this._itemList[key]);
-                }.bind(this));
-                if (se) {
-                    AudioManager.playSe({name: se, volume: 90, pitch: 100, pan: 0});
-                }
-                $gameMessage.add('を手に入れた！');
-                this._textShowing = true;
+                this.showAllResult(itemListKeys)
             } else {
                 this.backToCommand();
             }
         }
     };
 
+    Scene_Gacha.prototype.showAllResult = function(itemListKeys) {
+        itemListKeys.forEach(function(itemId) {
+            var name = $dataItems[itemId].name;
+            $gameMessage.add(name + ' × ' + this._itemList[itemId]);
+        }.bind(this));
+        if (se) {
+            AudioManager.playSe({name: se, volume: 90, pitch: 100, pan: 0});
+        }
+        this._resultWindow.drawResult(this._resultList);
+        this._resultWindow.open();
+        $gameMessage.add('を手に入れた！');
+        this._textShowing = true;
+    };
+
     Scene_Gacha.prototype.backToCommand = function() {
         this._itemList = {};
+        this._resultList = [];
         this._goldWindow.show();
         this._commandWindow.show();
         this._commandWindow.activate();
@@ -643,6 +668,7 @@
         this._getCommandWindow.hide();
         this._getWindow.hide();
         this._helpWindow.setText(message);
+        this._resultWindow.close();
         this._item = null;
 
         this._commandWindow.clearCommandList();
@@ -847,6 +873,48 @@
 
     Window_GachaGetCommand.prototype.makeCommandList = function() {
         this.addCommand('OK', 'ok');
+    };
+
+    function Window_GachaResult() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_GachaResult.prototype             = Object.create(Window_Base.prototype);
+    Window_GachaResult.prototype.constructor = Window_GachaResult;
+
+    Window_GachaResult.prototype.initialize = function(x, y, width, height) {
+        Window_Base.prototype.initialize.apply(this, arguments);
+    };
+
+    Window_GachaResult.prototype.drawResult = function(resultList) {
+        this.contents.clear();
+        resultList.forEach(function(item, index) {
+            if (item && item.meta.gachaImage) {
+                var bitmap = ImageManager.loadBitmap('img/gacha/', item.meta.gachaImage);
+                bitmap.smooth = true;
+                var imageX = parseInt(item.meta.gachaResultX) || 0;
+                var imageY = parseInt(item.meta.gachaResultY) || 0;
+                this.drawResultImage(bitmap, index, imageX, imageY);
+            }
+        }.bind(this));
+        this.show();
+    };
+
+    Window_GachaResult.prototype.drawResultImage = function(bitmap, index, imageX, imageY) {
+        var size = this.contentsWidth() / 5;
+        var padding = 12;
+        var x = index % 5 * size + padding;
+        var y = Math.floor(index / 5) * size + padding;
+        var imageSize = size - padding * 2;
+        var origin = imageSize / 2;
+        var sx = imageX ? imageX - origin : origin;
+        var sy = imageY ? imageY - origin : origin;
+        if (sy + imageSize > this.contentsHeight()) {
+            return;
+        }
+        bitmap.addLoadListener(function() {
+            this.contents.blt(bitmap, sx , sy, imageSize, imageSize, x, y);
+        }.bind(this));
     };
 
     function Window_GachaGet() {
