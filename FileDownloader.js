@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2019/08/25 本体v1.6.0以降に対応
 // 1.0.1 2016/12/04 少しコードをリファクタリング
 // 1.0.0 2016/11/25 初版
 // ----------------------------------------------------------------------------
@@ -371,7 +372,7 @@
             this.setResultSwitch(this._abnormalSwitchId, true);
             this.outputErrorLog(error);
             this.outputDebugLog('*** Command Abnormal End ***');
-        };
+        }
 
         setResultSwitch(switchId, value) {
             if (switchId > 0) {
@@ -381,11 +382,11 @@
 
         outputDebugLog() {
             this.outputLog(false, arguments);
-        };
+        }
 
         outputErrorLog() {
             this.outputLog(true, arguments);
-        };
+        }
 
         outputLog(errorFlg, args) {
             if (!$gameTemp.isPlaytest() && !errorFlg) return;
@@ -395,12 +396,8 @@
 
         showDevTool() {
             const gameWindow = require('nw.gui').Window.get();
-            if (gameWindow.isDevToolsOpen()) return;
-            const devTool = gameWindow.showDevTools();
-            devTool.moveTo(0, 0);
-            devTool.resizeTo(gameWindow.screenX + gameWindow.outerWidth, gameWindow.screenY + gameWindow.outerHeight);
-            gameWindow.focus();
-        };
+            gameWindow.showDevTools();
+        }
 
         getCommand() {
             return '';
@@ -454,7 +451,7 @@
         execute(url, localDir) {
             const path        = require('path');
             const projectBase = path.dirname(process.mainModule.filename);
-            const localPath   = path.join(projectBase, localDir) + path.basename(url, true);
+            const localPath   = path.join(projectBase, localDir) + path.basename(url);
             super.execute(url, localPath);
         }
 
@@ -521,7 +518,7 @@
     //=============================================================================
     class GameStartUpWebSiteMac extends GameStartUpWebSite {
         getCommand(url) {
-            return `open "${url}"`
+            return `open "${url}"`;
         }
     }
 
