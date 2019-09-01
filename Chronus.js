@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.0 2019/09/01 時間帯名称をカレンダーに表示する機能を追加
 // 1.13.1 2019/06/09 ニューゲーム時もしくはプロジェクト保存後のロード時に場所移動の時間が経過してしまう問題を修正
 // 1.13.0 2019/04/20 カレンダーを初期状態で非表示にできるパラメータを追加
 // 1.12.0 2018/12/27 カレンダー表示に行間を設定できる機能を追加
@@ -163,17 +164,17 @@
  *
  * @param フォーマット時間の計算式
  * @desc 日時フォーマットを使った計算式の内容です。
- * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
+ * YYYY:年 MON:月名 MM:月 DD:日 など(詳細はヘルプ参照)
  * @default HH24 * 60 + MI
  *
  * @param 日時フォーマット1
  * @desc マップ上の日付ウィンドウ1行目に表示される文字列です。
- * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
+ * YYYY:年 MON:月名 MM:月 DD:日 など(詳細はヘルプ参照)
  * @default YYYY年 MM月 DD日 DY
  *
  * @param 日時フォーマット2
  * @desc マップ上の日付ウィンドウ2行目に表示される文字列です。
- * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12) AM:午前 or 午後 MI:分 DY:曜日
+ * YYYY:年 MON:月名 MM:月 DD:日 など(詳細はヘルプ参照)
  * @default AMHH時 MI分
  *
  * @param 日時フォーマット行間
@@ -267,7 +268,7 @@
  *
  * 日付フォーマットには以下を利用できます。
  * YYYY:年 MON:月名 MM:月 DD:日 HH24:時(24) HH:時(12)
- * AM:午前 or 午後 MI:分 DY:曜日
+ * AM:午前 or 午後 MI:分 DY:曜日 TZ 時間帯名称
  *
  * また、規格に沿った画像を用意すればアナログ時計も表示できます。
  * 表示位置は各画像の表示可否は調整できます。
@@ -1475,6 +1476,9 @@ function Window_Chronus() {
         format = format.replace(/DY/gi, function() {
             return this.getWeekName();
         }.bind(this));
+        format = format.replace(/TZ/gi, function() {
+            return this.getTimeZoneName();
+        }.bind(this));
         return format;
     };
 
@@ -1484,6 +1488,13 @@ function Window_Chronus() {
             if (this.isHourInRange(zoneInfo.start, zoneInfo.end)) timeId = zoneInfo.timeId;
         }.bind(this));
         return timeId;
+    };
+
+    Game_Chronus.prototype.getTimeZoneName = function() {
+        var timeId = this.getTimeZone();
+        return settings.timeZone.filter(function(zoneInfo) {
+            return zoneInfo.timeId === timeId;
+        })[0].name;
     };
 
     Game_Chronus.prototype.getWeatherTypeId = function() {
