@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.2 2019/09/08 2.0.1で対策して、2.5.0で何らかの理由で元に戻した競合対策を再度有効化
 // 2.5.1 2019/07/11 FixCursorSeByMouse.jsとの競合対策のためメソッド名を変更
 // 2.5.0 2018/11/25 サブメニューの絶対座標と揃えを設定できる機能を追加
 //                  MOG_SceneMenu.jsとの競合を解消
@@ -734,7 +735,10 @@
         this._subMenuWindow.updatePlacement(this._commandWindow);
         this._subMenuWindow.setHandler('ok', this.onSubCommandOk.bind(this));
         this._subMenuWindow.setHandler('cancel', this.onSubCommandCancel.bind(this));
-        this.addChild(this._subMenuWindow);
+        // for MOG_MenuCursor.js
+        // v2.5.0で一度、この競合対策を何らかの理由で元に戻しているので弊害が起きる可能性あり
+        var index = this.getChildIndex(this._windowLayer) + 1;
+        this.addChildAt(this._subMenuWindow, index);
     };
 
     Scene_Menu.prototype.removeSubMenuCommandWindow = function() {
