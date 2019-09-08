@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.13.1 2018/09/08 YEP_ItemCore.jsとの競合を解消
 // 2.13.0 2019/06/08 全ての用語アイテムを破棄するプラグインコマンドを追加
 // 2.12.0 2019/04/07 用語ページの出現条件をスイッチで制御できる機能を追加
 // 2.11.3 2019/02/07 FacePicture.jsとの競合を解消
@@ -1930,6 +1931,10 @@ function Window_GlossaryComplete() {
     };
 
     Window_GlossaryList.prototype.includes = function(item) {
+        // Resolve conflict for YEP_ItemCore.js
+        if (typeof Yanfly !== 'undefined' && Yanfly.Param && Yanfly.Param.ItemStartingId <= item.id) {
+            return false;
+        }
         return $gameParty.isGlossaryItem(item) && this.isCategoryMatch(item) && $gameParty.isSameGlossaryType(item);
     };
 
@@ -2007,6 +2012,10 @@ function Window_GlossaryComplete() {
 
     Window_GlossaryList.prototype.setGlossaryOnly = function(category) {
         this._category = category;
+    };
+
+    // Resolve conflict for YEP_ItemCore.js
+    Window_GlossaryList.prototype.drawEquippedActor = function() {
     };
 
     //=============================================================================
