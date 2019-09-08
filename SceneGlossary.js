@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.13.2 2019/09/08 2.13.1の修正に加えて収集率の表示を正常化
 // 2.13.1 2018/09/08 YEP_ItemCore.jsとの競合を解消
 // 2.13.0 2019/06/08 全ての用語アイテムを破棄するプラグインコマンドを追加
 // 2.12.0 2019/04/07 用語ページの出現条件をスイッチで制御できる機能を追加
@@ -1152,7 +1153,7 @@ function Window_GlossaryComplete() {
     Game_Party.prototype.getHasGlossaryPercent = function(categoryName) {
         var hasCount = 0, allCount = 0;
         this.getAllGlossaryList(true, false, categoryName).forEach(function(item) {
-            if (getMetaValues(item, ['収集対象外', 'NoCollect'])) {
+            if (this.isNoCollect(item)) {
                 return;
             }
             if (this.hasGlossary(item)) {
@@ -1161,6 +1162,14 @@ function Window_GlossaryComplete() {
             allCount++;
         }.bind(this));
         return allCount > 0 ? Math.floor(hasCount / allCount * 100) : 0;
+    };
+
+    Game_Party.prototype.isNoCollect = function(item) {
+        return getMetaValues(item, ['収集対象外', 'NoCollect']) || this.isIndependentItem(item);
+    };
+
+    Game_Party.prototype.isIndependentItem = function(item) {
+        return typeof Yanfly !== 'undefined' && Yanfly.Param && Yanfly.Param.ItemStartingId <= item.id;
     };
 
     Game_Party.prototype.getCompleteRate = function(categoryName, typeName) {
@@ -1932,7 +1941,7 @@ function Window_GlossaryComplete() {
 
     Window_GlossaryList.prototype.includes = function(item) {
         // Resolve conflict for YEP_ItemCore.js
-        if (typeof Yanfly !== 'undefined' && Yanfly.Param && Yanfly.Param.ItemStartingId <= item.id) {
+        if ($gameParty.isIndependentItem(item)) {
             return false;
         }
         return $gameParty.isGlossaryItem(item) && this.isCategoryMatch(item) && $gameParty.isSameGlossaryType(item);
