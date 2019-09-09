@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2019/09/09 全体攻撃で特定の誰かがノーダメージだった場合、以後のターゲットがダメージを受けても効果抑制されてしまう問題を修正
 // 1.0.0 2016/10/13 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -49,20 +50,22 @@
     var _Game_Action_clear = Game_Action.prototype.clear;
     Game_Action.prototype.clear = function() {
         _Game_Action_clear.apply(this, arguments);
-        this._effectSuppress = false;
+        this._effectSuppress = null;
     };
 
     var _Game_Action_executeDamage = Game_Action.prototype.executeDamage;
     Game_Action.prototype.executeDamage = function(target, value) {
         if ((this.isHpEffect() || this.isMpEffect()) && value === 0) {
-            this._effectSuppress = true;
+            this._effectSuppress = target;
         }
         _Game_Action_executeDamage.apply(this, arguments);
     };
 
     var _Game_Action_applyItemEffect = Game_Action.prototype.applyItemEffect;
     Game_Action.prototype.applyItemEffect = function(target, effect) {
-        if (this._effectSuppress) return;
+        if (this._effectSuppress === target) {
+            return;
+        }
         _Game_Action_applyItemEffect.apply(this, arguments);
     };
 })();
