@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.8.1 2019/09/09 Scene_Gachaクラスを外部から参照できるようグローバル領域に出しました。
 // 1.8.0 2019/09/09 ガチャの詳細結果画面に専用画像を指定できる機能を追加
 // 1.7.0 2019/08/25 ガチャの結果表示画面を追加
 // 1.6.0 2018/02/22 ガチャのロット数に変数を使用できるよう修正
@@ -299,6 +300,10 @@
  *   <gachaResultImage:image2> # ガチャ結果画面で表示する画像を個別に指定する場合に記述します。
  */
 
+function Scene_Gacha() {
+    this.initialize.apply(this, arguments);
+}
+
 (function() {
 
     var parameters     = PluginManager.parameters('Gacha');
@@ -406,10 +411,6 @@
             return false;
         }
     };
-
-    function Scene_Gacha() {
-        this.initialize.apply(this, arguments);
-    }
 
     Scene_Gacha.prototype             = Object.create(Scene_MenuBase.prototype);
     Scene_Gacha.prototype.constructor = Scene_Gacha;
