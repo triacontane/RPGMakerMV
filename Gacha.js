@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.8.0 2019/09/09 ガチャの詳細結果画面に専用画像を指定できる機能を追加
 // 1.7.0 2019/08/25 ガチャの結果表示画面を追加
 // 1.6.0 2018/02/22 ガチャのロット数に変数を使用できるよう修正
 // 1.5.0 2018/01/14 新規アイテム入手時にアニメーションを設定できる機能を追加
@@ -275,7 +276,7 @@
  * ・変数でガチャを引けるように修正
  * ・可能な限りガチャを引き続ける機能を追加
  * ・10連ガチャの機能を追加
- * ・ガチャの結果画面を追加
+ * ・専用の画像やトリミング画像を使ったガチャの結果画面を追加
  * ・新規アイテム入手時の通知とエフェクトを追加（新規アイテムのエフェクトは最後のコマで停止します）
  * ・ガチャの演出をカットするスイッチを追加
  * ・ガチャのロット数に変数を使用できるよう修正
@@ -292,8 +293,10 @@
  *   <gachaImage:image>        # ガチャアイテムの画像を指定します。画像はimg/gacha/フォルダ内に入れてください。
  *   <gachaNumLot:10>          # ガチャアイテムのくじ数を指定します。
  *   <gachaRank:5>             # ガチャアイテムのランクを1から5の間で指定します。
- *   <gachaResultX: 20>        # ガチャ結果画面で表示する際の中心X座標です。省略すると画像の中央が指定されます。
- *   <gachaResultY: 20>        # ガチャ結果画面で表示する際の中心Y座標です。省略すると画像の中央が指定されます。
+ *   <gachaResultX:20>         # ガチャ結果画面で表示する際の中心X座標です。ガチャアイテムの画像が
+ *                               トリミングされて表示されます。省略すると画像の中央が指定されます。
+ *   <gachaResultY:20>         # ガチャ結果画面で表示する際の中心Y座標です。
+ *   <gachaResultImage:image2> # ガチャ結果画面で表示する画像を個別に指定する場合に記述します。
  */
 
 (function() {
@@ -890,30 +893,48 @@
         this.contents.clear();
         resultList.forEach(function(item, index) {
             if (item && item.meta.gachaImage) {
-                var bitmap = ImageManager.loadBitmap('img/gacha/', item.meta.gachaImage);
-                bitmap.smooth = true;
-                var imageX = parseInt(item.meta.gachaResultX) || 0;
-                var imageY = parseInt(item.meta.gachaResultY) || 0;
-                this.drawResultImage(bitmap, index, imageX, imageY);
+                this.drawResultItem(item, index);
             }
         }.bind(this));
         this.show();
     };
 
-    Window_GachaResult.prototype.drawResultImage = function(bitmap, index, imageX, imageY) {
+    Window_GachaResult.prototype.drawResultItem = function(item, index) {
+        var param = {
+            bitmap: null,
+            x: 0,
+            y: 0,
+            original: false
+        };
+        var resultImage = item.meta.gachaResultImage;
+        if (resultImage) {
+            param.bitmap = ImageManager.loadBitmap('img/gacha/', resultImage);
+            param.original = true;
+        } else {
+            param.bitmap = ImageManager.loadBitmap('img/gacha/', item.meta.gachaImage);
+            param.x = parseInt(item.meta.gachaResultX) || 0;
+            param.y = parseInt(item.meta.gachaResultY) || 0;
+        }
+        param.bitmap.smooth = true;
+        this.drawResultImage(param, index);
+    };
+
+    Window_GachaResult.prototype.drawResultImage = function(param, index) {
         var size = this.contentsWidth() / 5;
         var padding = 12;
         var x = index % 5 * size + padding;
         var y = Math.floor(index / 5) * size + padding;
         var imageSize = size - padding * 2;
         var origin = imageSize / 2;
-        var sx = imageX ? imageX - origin : origin;
-        var sy = imageY ? imageY - origin : origin;
+        var sx = param.original ? 0 : param.x ? param.x - origin : origin;
+        var sy = param.original ? 0 : param.y ? param.y - origin : origin;
         if (sy + imageSize > this.contentsHeight()) {
             return;
         }
-        bitmap.addLoadListener(function() {
-            this.contents.blt(bitmap, sx , sy, imageSize, imageSize, x, y);
+        param.bitmap.addLoadListener(function() {
+            var width = param.original ? param.bitmap.width : imageSize;
+            var height = param.original ? param.bitmap.height : imageSize;
+            this.contents.blt(param.bitmap, sx , sy, width, height, x, y);
         }.bind(this));
     };
 
