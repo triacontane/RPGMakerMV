@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2019/09/15 パラメータの型指定機能に対応
 // 1.1.0 2017/03/11 本体v1.3.5(コミュニティ版)で機能しなくなる問題を修正
 // 1.0.0 2016/06/02 初版
 // ----------------------------------------------------------------------------
@@ -44,7 +45,8 @@
  *
  * @param WaitLoadComplete
  * @desc Wait until load complete
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help Loading font file at the start of the game.
  *
@@ -80,7 +82,8 @@
  *
  * @param ロード完了まで待機
  * @desc フォントのロードが完了してからゲームを開始します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 指定したURLのフォントを指定した名前でロードします。
  * ロードするだけなので、基本的には他のプラグインやスクリプトと
@@ -113,8 +116,8 @@
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     //=============================================================================
