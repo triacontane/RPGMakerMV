@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2019/09/16 バトラーグラフィックを反転できる機能を追加
 // 1.3.0 2019/06/12 浮遊設定で高度を「0」に設定できるようになりました。
 // 1.2.4 2018/06/17 YEP_X_AnimatedSVEnemies.jsとの併用時、敵キャラに対する本プラグインのエフェクトの一部が反映されない競合を修正
 // 1.2.3 2018/05/27 YEP_X_AnimatedSVEnemies.jsおよびBattleMotion.jsとの併用時、SVエネミーの反転が行われない問題を修正
@@ -57,7 +58,7 @@
  * バトラーの合成方法を設定します。
  * <BGEBlendMode:n> n:0[通常] n:1[加算] n:2[乗算] n:3[スクリーン]
  *
- * バトラーの拡大率を設定します。
+ * バトラーの拡大率を設定します。-100を指定すると画像が反転します。
  * <BGEScaleX:n> n:Scale(100%)
  * <BGEScaleY:n> n:Scale(100%)
  * 例:<BGEScaleY:150>
@@ -103,7 +104,7 @@
  * <BGE合成方法:n> n:0[通常] n:1[加算] n:2[乗算] n:3[スクリーン]
  * 例:<BGE合成方法:2>
  *
- * バトラーの拡大率を設定します。
+ * バトラーの拡大率を設定します。-100を指定すると画像が反転します。
  * <BGE拡大率X:n> n:拡大率(100%)
  * <BGE拡大率Y:n> n:拡大率(100%)
  * 例:<BGE拡大率Y:150>
@@ -277,12 +278,12 @@
 
     Game_BattlerBase.prototype.refreshScaleX = function() {
         var result   = this.getStateMetaValuesForBge(['拡大率X', 'ScaleX']);
-        this._scaleX = result ? getArgNumber(result, 0) : 100;
+        this._scaleX = result ? getArgNumber(result) : 100;
     };
 
     Game_BattlerBase.prototype.refreshScaleY = function() {
         var result   = this.getStateMetaValuesForBge(['拡大率Y', 'ScaleY']);
-        this._scaleY = result ? getArgNumber(result, 0) : 100;
+        this._scaleY = result ? getArgNumber(result) : 100;
     };
 
     Game_BattlerBase.prototype.refreshBlendMode = function() {
@@ -422,8 +423,9 @@
     };
 
     Sprite_Battler.prototype.updateScale = function() {
-        var mirror   = this.scale.x < 0 ? -1 : 1;
         var battler  = this._battler;
+        // 他のプラグインによってすでに反転制御が掛けられている場合を考慮
+        var mirror   = this.scale.x < 0 && battler.getScaleX() >= 0 ? -1 : 1;
         this.scale.x = battler.getScaleX() * mirror;
         this.scale.y = battler.getScaleY();
     };
