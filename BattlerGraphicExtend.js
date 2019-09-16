@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2019/09/16 1.4.0の機能追加により発生した問題を修正
 // 1.4.0 2019/09/16 バトラーグラフィックを反転できる機能を追加
 // 1.3.0 2019/06/12 浮遊設定で高度を「0」に設定できるようになりました。
 // 1.2.4 2018/06/17 YEP_X_AnimatedSVEnemies.jsとの併用時、敵キャラに対する本プラグインのエフェクトの一部が反映されない競合を修正
@@ -424,10 +425,17 @@
 
     Sprite_Battler.prototype.updateScale = function() {
         var battler  = this._battler;
-        // 他のプラグインによってすでに反転制御が掛けられている場合を考慮
-        var mirror   = this.scale.x < 0 && battler.getScaleX() >= 0 ? -1 : 1;
+        var mirror   = this.getMirrorSignByOtherPlugin(this);
         this.scale.x = battler.getScaleX() * mirror;
         this.scale.y = battler.getScaleY();
+    };
+
+    // 他のプラグインによってすでに反転制御が掛けられている場合を考慮
+    Sprite_Battler.prototype.getMirrorSignByOtherPlugin = function(sprite) {
+        if (this._battler.getScaleX() < 0) {
+            this._originalMirror = true;
+        }
+        return sprite.scale.x < 0 && !this._originalMirror ? -1 : 1;
     };
 
     Sprite_Battler.prototype.updateOpacityForBge = function() {
@@ -518,10 +526,10 @@
         }
         var battler = this._battler;
         this.children.forEach(function(sprite) {
-            var mirror     = sprite.scale.x < 0 ? -1 : 1;
+            var mirror     = this.getMirrorSignByOtherPlugin(sprite);
             sprite.scale.x = 1 / battler.getScaleX() * mirror;
             sprite.scale.y = 1 / battler.getScaleY();
-        });
+        }, this);
     };
 
     Sprite_Enemy.prototype.isNeedDeadEffect = function() {
