@@ -6,6 +6,10 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2019/09/16 サブコマンドのスクリプト実行後、マップに戻る機能を追加
+//                  MOG_MenuBackground.jsとの競合を解消
+//                  サブコマンドをキャンセル後、スキルや装備コマンドを選択して戻ると、再度サブコマンドにフォーカスする問題を修正
+//                  サブコマンドの座標固定値設定で、XかYいずれかひとつの値を設定していると設定が有効になるよう仕様変更
 // 2.5.2 2019/09/08 2.0.1で対策して、2.5.0で何らかの理由で元に戻した競合対策を再度有効化
 // 2.5.1 2019/07/11 FixCursorSeByMouse.jsとの競合対策のためメソッド名を変更
 // 2.5.0 2018/11/25 サブメニューの絶対座標と揃えを設定できる機能を追加
@@ -285,6 +289,11 @@
  * @desc コマンドを決定したときに実行されるスクリプト
  * @default this.commandItem();
  *
+ * @param ReturnMap
+ * @desc スクリプト実行後にマップに戻ります。
+ * @default false
+ * @type boolean
+ *
  * @param MapId
  * @desc コマンドを決定したときに移動するマップID
  * @default 0
@@ -324,10 +333,14 @@
  * @desc コマンドを決定したときに実行されるスクリプト
  * @default this.commandItem();
  *
+ * @param ReturnMap
+ * @desc スクリプト実行後にマップに戻ります。
+ * @default false
+ * @type boolean
+ *
  * @param MapId
  * @desc コマンドを決定したときに移動するマップID
  * @default 0
- * @type map_id
  *
  * @param SelectMember
  * @desc コマンド実行前に対象メンバーを選択するかどうか
@@ -735,6 +748,10 @@
         this._subMenuWindow.updatePlacement(this._commandWindow);
         this._subMenuWindow.setHandler('ok', this.onSubCommandOk.bind(this));
         this._subMenuWindow.setHandler('cancel', this.onSubCommandCancel.bind(this));
+        // for MOG_MenuBackground.js
+        if (typeof this._subMenuWindow.updateBackgroundOpacity === 'function') {
+            this._subMenuWindow.updateBackgroundOpacity();
+        }
         // for MOG_MenuCursor.js
         // v2.5.0で一度、この競合対策を何らかの理由で元に戻しているので弊害が起きる可能性あり
         var index = this.getChildIndex(this._windowLayer) + 1;
@@ -771,6 +788,7 @@
 
     Scene_Menu.prototype.onSubCommandCancel = function() {
         this.removeSubMenuCommandWindow();
+        $gameTemp.resetLastSubCommand();
         this._commandWindow.activate();
     };
 
@@ -824,11 +842,16 @@
             SoundManager.playBuzzer();
             console.error(`実行スクリプトエラー[${script}] メッセージ[${e.message}]`);
         }
+        if (this._subCommand.isReturnMap()) {
+            SceneManager.pop();
+        }
     };
 
     Scene_Menu.prototype.moveSubCommandMap = function() {
         var mapId = this._subCommand.getMoveTargetMap();
-        if (mapId <= 0) return;
+        if (mapId <= 0) {
+            return;
+        }
         $gamePlayer.reserveTransferToSubCommandMap(mapId);
         if (param.selectActorIdVariable && this._subCommand.isNeedSelectMember()) {
             $gameVariables.setValue(param.selectActorIdVariable, this._statusWindow.getSelectedActorId());
@@ -842,7 +865,7 @@
     var _Scene_Menu_terminate      = Scene_Menu.prototype.terminate;
     Scene_Menu.prototype.terminate = function() {
         _Scene_Menu_terminate.apply(this, arguments);
-        if (!this._subCommandSelected) {
+        if (this._subCommand.getMoveTargetMap() <= 0) {
             $gameTemp.resetLastSubCommand();
         }
     };
@@ -1005,8 +1028,13 @@
     };
 
     Window_MenuSubCommand.prototype.updatePlacement = function(commandWindow) {
-        this.x = param.subMenuX || commandWindow.calculateSubCommandX(this.width);
-        this.y = param.subMenuY || commandWindow.calculateSubCommandY(this.height);
+        if (param.subMenuX || param.subMenuY) {
+            this.x = param.subMenuX;
+            this.y = param.subMenuY;
+        } else {
+            this.x = commandWindow.calculateSubCommandX(this.width);
+            this.y = commandWindow.calculateSubCommandY(this.height);
+        }
     };
 
     Window_MenuSubCommand.prototype.standardFontSize = function() {
@@ -1025,7 +1053,7 @@
         }
     };
 
-    var _Window_MenuSubCommand_itemTextAlign = Window_MenuSubCommand.prototype.itemTextAlign;
+    var _Window_MenuSubCommand_itemTextAlign      = Window_MenuSubCommand.prototype.itemTextAlign;
     Window_MenuSubCommand.prototype.itemTextAlign = function() {
         return param.subMenuAlign || _Window_MenuSubCommand_itemTextAlign.apply(this, arguments);
     };
@@ -1042,6 +1070,7 @@
             this._disableSwitchId = subCommandData.DisableSwitchId;
             this._targetScript    = subCommandData.Script;
             this._targetMapId     = subCommandData.MapId;
+            this._returnMap       = subCommandData.ReturnMap === 'true';
             this._memberSelect    = getArgBoolean(subCommandData.SelectMember);
         }
 
@@ -1051,6 +1080,10 @@
 
         getParentName() {
             return this._parentName;
+        }
+
+        isReturnMap() {
+            return (!this.getMoveTargetMap()) && this._returnMap;
         }
 
         isVisible() {
