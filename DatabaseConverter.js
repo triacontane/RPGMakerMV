@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2019/09/23 オリジナルデータベースでIDが重複する行を配列としてエクスポート、インポートできる機能を追加
 // 1.0.3 2019/06/23 変換実行時、まれにメモ欄や説明欄の改行が増幅してしまう問題を修正
 // 1.0.2 2018/05/30 移動ルートの設定のコマンドをインポートした際、一部の数値がundefinedとなってしまう問題を修正
 // 1.0.1 2018/05/20 オリジナルデータの作成方法をヘルプに追加
@@ -77,6 +78,12 @@
  * @text イベントテスト出力
  * @desc イベントテスト実行時に実行内容を出力します。ただし本プラグインのコマンドを実行した場合は出力されません。
  * @default true
+ * @type boolean
+ *
+ * @param originalDatabaseStack
+ * @text データベースの配列化
+ * @desc オリジナルデータベースのエクスポート、インポートでIDが同一の行を配列として格納します。
+ * @default false
  * @type boolean
  *
  * @param commandPrefix
@@ -672,7 +679,7 @@ function ConverterManager() {
                 return;
             }
             this._workBook.SheetNames.push(dataName);
-            this._workBook.Sheets[dataName] = this._serializer.serializeData(data);
+            this._workBook.Sheets[dataName] = this._serializer.serializeData(data, dataName);
         }
 
         /**
@@ -710,7 +717,7 @@ function ConverterManager() {
             } else {
                 console.log('Import ' + dataName);
             }
-            const data = this._serializer.deserializeData(sheetData);
+            const data = this._serializer.deserializeData(sheetData, dataName);
             this._target.save(dataName, data);
         }
 
@@ -864,8 +871,8 @@ function ConverterManager() {
             this._storage.saveDataBaseFile(name, data, this._sync);
         }
 
-        appendData(database, dataItem) {
-            if (database[dataItem.id]) {
+        appendData(database, dataItem, dataName) {
+            if (database[dataItem.id] && !this.isStackDatabase(dataName)) {
                 throw new Error(`データ内のID[${dataItem.id}]が重複しています。`);
             }
             if (!dataItem.hasOwnProperty('name')) {
@@ -874,7 +881,14 @@ function ConverterManager() {
             if (!dataItem.hasOwnProperty('note')) {
                 dataItem.note = '';
             }
-            database[dataItem.id] = dataItem;
+            if (this.isStackDatabase(dataName)) {
+                if (!database[dataItem.id]) {
+                    database[dataItem.id] = [];
+                }
+                database[dataItem.id].push(dataItem);
+            } else {
+                database[dataItem.id] = dataItem;
+            }
         }
 
         getColumnDescriptions() {
@@ -893,12 +907,29 @@ function ConverterManager() {
             return ConvertTargetDatabase._objectProperties;
         }
 
+        isStackDatabase(name) {
+            return !ConvertTargetDatabase._systemDatabaseList.contains(name) && param.originalDatabaseStack;
+        }
+
         static replaceWrongReturnCode(item, propName) {
             if (item[propName]) {
                 item[propName] = item[propName].replace(/\r\r\n/g, '\n');
             }
         }
     }
+    ConvertTargetDatabase._systemDatabaseList = [
+        'Actors',
+        'Classes',
+        'Skills',
+        'Items',
+        'Weapons',
+        'Armors',
+        'Enemies',
+        'Troops',
+        'States',
+        'MapInfos'
+    ];
+
     ConvertTargetDatabase._commonDescriptions = {
         id                 : 'ID',
         name               : '名前',
@@ -1054,6 +1085,9 @@ function ConverterManager() {
         save(name, data) {
             const list = data.map(function(item) {
                 delete item.codeName;
+                if (item.note) {
+                    item.note = item.note.replaceAll(/\r\r\n/, '\n');
+                }
                 return item;
             });
             this.setList(name, list);
@@ -1323,14 +1357,31 @@ function ConverterManager() {
             this._target = target;
         }
 
-        serializeData(dataList) {
+        serializeData(dataList, dataName) {
             dataList = dataList.filter(function(dataItem) {
                 return !!dataItem;
             });
+            if (this._target.isStackDatabase(dataName)) {
+                console.log(dataList);
+                dataList = this.parseStackDatabase(dataList);
+                console.log(dataList);
+            }
             dataList.forEach(this._parseForSerialize, this);
             this._addColumnDescriptions(dataList);
             return this._utils.json_to_sheet(dataList);
         }
+
+        parseStackDatabase(dataList) {
+            const newDataList = [];
+            dataList.forEach(function(dataItem) {
+                if (Array.isArray(dataItem)) {
+                    Array.prototype.push.apply(newDataList, dataItem);
+                } else {
+                    newDataList.push(dataItem);
+                }
+            });
+            return newDataList;
+        };
 
         _parseForSerialize(dataItem) {
             this._target.getArrayProperties().forEach(function(property) {
@@ -1382,13 +1433,13 @@ function ConverterManager() {
             data.unshift(descriptions);
         }
 
-        deserializeData(sheetData) {
+        deserializeData(sheetData, dataName) {
             const convertData = JSON.parse(JSON.stringify(this._utils.sheet_to_json(sheetData)), paramReplacer);
             const database    = [];
             convertData.shift();
             convertData.forEach(function(dataItem) {
                 this._parseForDeserialize(dataItem);
-                this._target.appendData(database, dataItem);
+                this._target.appendData(database, dataItem, dataName);
             }, this);
             return database;
         }
