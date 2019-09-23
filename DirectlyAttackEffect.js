@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.3 2019/09/23 演出対象をアクターもしくは敵キャラのみに限定した場合はアニメ演出も実行されないよう修正
 // 1.4.2 2019/05/19 BattlerGraphicExtend.jsと併用したとき、<DAEVanish>の設定が一部機能しない競合を修正
 // 1.4.1 2019/05/09 座標の中心移動機能でX軸だけでなくY軸についても中心移動できるよう修正
 // 1.4.0 2018/11/21 残像の表示可否をアクター、敵キャラごとにスイッチで制御できる機能を追加
@@ -507,6 +508,10 @@ function Sprite_Dummy() {
     };
 
     Game_Battler.prototype.setDirectlyAttackAdditionalInfo = function(item) {
+        if (!this.isValidDirectlyAttack(item)) {
+            this._directlyAttackInfo = null;
+            return;
+        }
         var info   = {};
         var hidden = getMetaValues(item, ['姿隠し', 'Hidden']);
         if (hidden) info.hidden = true;
@@ -526,12 +531,18 @@ function Sprite_Dummy() {
         if (subjectAnimationId) info.subjectAnimationId = getArgNumber(subjectAnimationId, 1);
         var targetAnimationId = getMetaValues(item, ['対象者アニメ', 'TargetAnimation']);
         if (targetAnimationId) info.targetAnimationId = getArgNumber(targetAnimationId, 1);
-        var actorOnly = getMetaValues(item, ['アクターのみ', 'ActorOnly']);
-        if (actorOnly) info.actorOnly = true;
-        var enemyOnly = getMetaValues(item, ['敵キャラのみ', 'EnemyOnly']);
-        if (enemyOnly) info.enemyOnly = true;
         this._directlyAdditionalInfo = info;
         this._vanish                 = getMetaValues(item, ['消滅', 'Vanish']);
+    };
+
+    Game_Actor.prototype.isValidDirectlyAttack = function(item) {
+        var enemyOnly = getMetaValues(item, ['敵キャラのみ', 'EnemyOnly']);
+        return !enemyOnly && paramValidActor;
+    };
+
+    Game_Enemy.prototype.isValidDirectlyAttack = function(item) {
+        var actorOnly = getMetaValues(item, ['アクターのみ', 'ActorOnly']);
+        return !actorOnly && paramValidEnemy;
     };
 
     Game_Battler.prototype.makeDirectlyInfo = function(target, args) {
@@ -625,12 +636,6 @@ function Sprite_Dummy() {
         this._actionForMotion = null;
     };
 
-    Game_Actor.prototype.hasDirectoryAttack = function() {
-        var info = this._directlyAdditionalInfo;
-        return Game_Battler.prototype.hasDirectoryAttack.apply(this, arguments) &&
-            ((!info.enemyOnly && paramValidActor) || info.actorOnly);
-    };
-
     var _Game_Actor_performAction      = Game_Actor.prototype.performAction;
     Game_Actor.prototype.performAction = function(action) {
         if (paramValidActor) {
@@ -671,12 +676,6 @@ function Sprite_Dummy() {
     // Game_Enemy
     //  直接攻撃演出の可否を判定します。
     //=============================================================================
-    Game_Enemy.prototype.hasDirectoryAttack = function() {
-        var info = this._directlyAdditionalInfo;
-        return Game_Battler.prototype.hasDirectoryAttack.apply(this, arguments) &&
-            ((!info.actorOnly && paramValidEnemy) || info.enemyOnly);
-    };
-
     // for AnimatedSVEnemies.js
     Game_Enemy.prototype.requestCustomMotion = function(tagNames) {
         // do nothing
