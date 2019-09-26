@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.4 2019/09/27 1.9.0以降、TemplateEvent.jsと併用した際「ERS_MAKE」を実行した場合でもテンプレートイベントが生成される問題を修正
 // 1.9.3 2019/07/07 1.9.0以降、ランダム生成で地形とリージョンを指定せず実行するとエラーになっていた問題を修正
 // 1.9.2 2019/06/30 イベントが存在しないマップに動的イベントを生成したとき、最初のイベントの一部の動作がおかしくなる問題を修正
 // 1.9.1 2019/06/09 テンプレートイベントを生成したとき、getTemplateIdを取得できない問題を修正
@@ -540,8 +541,9 @@ function Game_PrefabEvent() {
         this.refreshBushDepth();
     };
 
+    // for TemplateEvent.js
     Game_PrefabEvent.prototype.generateTemplateId = function(event) {
-        return this._originalEventId;
+        return this._isTemplate ? this._originalEventId : null;
     };
 
     Game_PrefabEvent.prototype.linkEventData = function() {
