@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.ex,0 2019/09/29 イベントによるキャラクター探索に経路探索を利用する特別版です。
 // 1.13.0 2019/07/07 移動ルート強制中は半歩移動無効の設定をしているときでも半歩で強制移動できるスクリプトを追加
 // 1.12.5 2019/06/09 半歩移動無効時、下半分移動不可に設定した地形とリージョンが、元の通行設定にかかわらず移動不可となる問題を修正
 // 1.12.4 2019/03/31 MOG_ChronoEngine.jsとの起動時の競合を解消
@@ -1230,20 +1231,12 @@
         }
     };
 
-    var _Game_Character_moveTowardCharacter      = Game_Character.prototype.moveTowardCharacter;
     Game_Character.prototype.moveTowardCharacter = function(character) {
-        if (!this.canDiagonalMove() || Math.randomInt(4) === 0) {
-            _Game_Character_moveTowardCharacter.apply(this, arguments);
-            return;
-        }
-        var direction = this.getDiagonalTowardDirection(character.x, character.y);
-        if (this.isDiagonalDirection(direction)) {
-            this.executeDiagonalMove(direction);
-            if (!this.isMovementSucceeded()) {
-                _Game_Character_moveTowardCharacter.apply(this, arguments);
-            }
-        } else {
-            _Game_Character_moveTowardCharacter.apply(this, arguments);
+        var d = this.findDirectionTo(character.x, character.y);
+        if (d % 2 !== 0 && d !== 5) {
+            this.executeDiagonalMove(d);
+        } else if (d > 0) {
+            this.moveStraight(d);
         }
     };
 
