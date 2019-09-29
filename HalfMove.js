@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.1 2019/09/29 半歩用通行可能判定の地形タグおよびリージョンで複数のリージョンを並べたときに、一部設定が無効になる問題を修正
 // 1.13.0 2019/07/07 移動ルート強制中は半歩移動無効の設定をしているときでも半歩で強制移動できるスクリプトを追加
 // 1.12.5 2019/06/09 半歩移動無効時、下半分移動不可に設定した地形とリージョンが、元の通行設定にかかわらず移動不可となる問題を修正
 // 1.12.4 2019/03/31 MOG_ChronoEngine.jsとの起動時の競合を解消
@@ -674,20 +675,42 @@
             return false;
         }
         return tags.some(function(tag) {
-            return tag === this.terrainTag(x, y);
+            return this.allTerrainTag(x, y).contains(tag);
         }, this);
     };
 
-    Game_Map.prototype.isIncludeRegionId = function(x, y, tags) {
-        if (!Array.isArray(tags)) {
-            tags = [tags];
+    Game_Map.prototype.isIncludeRegionId = function(x, y, ids) {
+        if (!Array.isArray(ids)) {
+            ids = [ids];
         }
-        if (tags[0] <= 0) {
+        if (ids[0] <= 0) {
             return false;
         }
-        return tags.some(function(tag) {
-            return tag === this.regionId(x, y);
+        return ids.some(function(id) {
+            return this.allRegionId(x, y).contains(id);
         }, this);
+    };
+
+    Game_Map.prototype.allTerrainTag = function(x, y) {
+        var tu = Game_Map.tileUnit;
+        if (this.isHalfPos(x)) {
+            return [this.terrainTag(x - tu, y), this.terrainTag(x + tu, y)];
+        }
+        if (this.isHalfPos(y)) {
+            return [this.terrainTag(x, y + tu), this.terrainTag(x, y - tu)];
+        }
+        return [_Game_Map_terrainTag.apply(this, arguments)];
+    };
+
+    Game_Map.prototype.allRegionId = function(x, y) {
+        var tu = Game_Map.tileUnit;
+        if (this.isHalfPos(x)) {
+            return [this.regionId(x - tu, y), this.regionId(x + tu, y)];
+        }
+        if (this.isHalfPos(y)) {
+            return [this.regionId(x, y + tu), this.regionId(x, y - tu)];
+        }
+        return [_Game_Map_regionId.apply(this, arguments)];
     };
 
     var _Game_Map_checkLayeredTilesFlags      = Game_Map.prototype.checkLayeredTilesFlags;
