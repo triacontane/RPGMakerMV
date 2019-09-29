@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2019/09/29 ピクチャ選択と無関係な選択肢を選択後に、ピクチャ選択肢のコマンドを実行すると
+//                  以前に選択した選択肢の番号に対応するピクチャが一瞬表示される問題を修正
 // 1.2.1 2019/04/07 1.2.0で選択肢のインデックスが1つずれていた問題を修正
 // 1.2.0 2019/04/07 複数のピクチャを選択肢に関連づけられる機能を追加
 // 1.1.1 2017/05/27 競合の可能性のある記述（Objectクラスへのプロパティ追加）をリファクタリング
@@ -121,7 +123,9 @@
     var _Window_ChoiceList_update      = Window_ChoiceList.prototype.update;
     Window_ChoiceList.prototype.update = function() {
         _Window_ChoiceList_update.apply(this, arguments);
-        if (this.openness !== 0) this.updateSelectPicture();
+        if (this.isOpen()) {
+            this.updateSelectPicture();
+        }
     };
 
     Window_ChoiceList.prototype.updateSelectPicture = function() {
