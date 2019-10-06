@@ -1,14 +1,15 @@
 //=============================================================================
 // BattleBgmContinue.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2019/10/06 プラグインの機能を無効化するスイッチを追加
 // 1.0.0 2016/03/29 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -16,6 +17,12 @@
 /*:
  * @plugindesc 戦闘BGM継続演奏プラグイン
  * @author トリアコンタン
+ *
+ * @param disableSwitch
+ * @text 無効スイッチ
+ * @desc 指定したスイッチがONになっているとき、プラグインの機能が無効化されます。
+ * @default 0
+ * @type switch
  *
  * @help 戦闘BGMを演奏する際に、前回と同じ戦闘BGMであれば、
  * 前回演奏の終了時から演奏を再開します。
@@ -31,15 +38,52 @@
 (function () {
     'use strict';
 
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+
+    var param = createPluginParameter('BattleBgmContinue');
+
     var _BattleManager_playBattleBgm = BattleManager.playBattleBgm;
     BattleManager.playBattleBgm = function() {
         var pos = 0;
-        var bgm = $gameSystem.battleBgm();
-        if (this._lastBattleBgm && this._lastBattleBgm.name === bgm.name && this._lastBattleBgm.pitch === bgm.pitch) {
+        if (this.isContinueBgm()) {
             pos = this._lastBattleBgm.pos;
         }
         AudioManager.playBgm($gameSystem.battleBgm(), pos);
         _BattleManager_playBattleBgm.apply(this, arguments);
+    };
+
+    BattleManager.isContinueBgm = function() {
+        var bgm = $gameSystem.battleBgm();
+        return this._lastBattleBgm &&
+            !this.isDisableSwitchContinueBgm() &&
+            this._lastBattleBgm.name === bgm.name &&
+            this._lastBattleBgm.pitch === bgm.pitch;
+    };
+
+    BattleManager.isDisableSwitchContinueBgm = function() {
+        return param.disableSwitch && $gameSwitches.value(param.disableSwitch);
     };
 
     var _BattleManager_replayBgmAndBgs = BattleManager.replayBgmAndBgs;
