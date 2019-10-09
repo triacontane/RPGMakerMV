@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.4 2019/10/10 反撃拡張プラグインと併用し、かつ戦闘行動の強制による反撃が無効な設定で自分自身の攻撃に反撃するとエラーになる競合の修正
 // 1.4.3 2019/09/23 演出対象をアクターもしくは敵キャラのみに限定した場合はアニメ演出も実行されないよう修正
 // 1.4.2 2019/05/19 BattlerGraphicExtend.jsと併用したとき、<DAEVanish>の設定が一部機能しない競合を修正
 // 1.4.1 2019/05/09 座標の中心移動機能でX軸だけでなくY軸についても中心移動できるよう修正
@@ -665,6 +666,9 @@ function Sprite_Dummy() {
     };
 
     Game_Actor.prototype.requestCustomMotion = function(tagNames) {
+        if (!this._actionForMotion) {
+            return false;
+        }
         var customMotion = getMetaValues(this._actionForMotion.item(), tagNames);
         if (customMotion) {
             this.requestMotion(getArgString(customMotion).toLowerCase());
