@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2019/10/12 2.6.0の修正で、メニューを開いたあと一度もサブコマンドを開かずにメニューを閉じるとエラーになる問題を修正
+//                  その他軽微な不具合の修正
 // 2.6.0 2019/09/16 サブコマンドのスクリプト実行後、マップに戻る機能を追加
 //                  MOG_MenuBackground.jsとの競合を解消
 //                  サブコマンドをキャンセル後、スキルや装備コマンドを選択して戻ると、再度サブコマンドにフォーカスする問題を修正
@@ -819,6 +821,7 @@
                 }
             }
         }
+        $gameTemp.resetLastSubCommand();
     };
 
     Scene_Menu.prototype.executeSubCommand = function() {
@@ -865,7 +868,7 @@
     var _Scene_Menu_terminate      = Scene_Menu.prototype.terminate;
     Scene_Menu.prototype.terminate = function() {
         _Scene_Menu_terminate.apply(this, arguments);
-        if (this._subCommand.getMoveTargetMap() <= 0) {
+        if (this._subCommand && this._subCommand.getMoveTargetMap() <= 0) {
             $gameTemp.resetLastSubCommand();
         }
     };
