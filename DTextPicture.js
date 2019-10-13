@@ -542,8 +542,8 @@
         }
         var rect = picture.getWindowCursor();
         if (rect) {
-            var width = rect.width || this._frameWindow.width;
-            var height = rect.width || this._frameWindow.height;
+            var width = rect.width || this._frameWindow.contentsWidth();
+            var height = rect.width || this._frameWindow.contentsHeight();
             this._frameWindow.setCursorRect(0, 0, width, height);
         } else {
             this._frameWindow.setCursorRect(0, 0, 0, 0);
