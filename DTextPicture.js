@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.0 2019/01/13 背景ウィンドウにカーソル表示できる機能を追加
 // 1.13.0 2018/11/25 背景色のグラデーションを設定できる機能を追加
 // 1.12.0 2018/11/08 背景ウィンドウの透明度と文字列ピクチャの透明度を連動させるよう仕様変更
 // 1.11.1 2018/10/20 プラグイン等でGame_Variables.prototype.setValueを呼んだとき、変数の添え字に文字列型の数値を渡した場合も変数のリアルタイム表示が効くよう修正
@@ -140,6 +141,15 @@
  * \oc[red]  色名で指定
  * \oc[rgb(0,255,0)] カラーコードで指定
  * \oc[2] 文字色番号\c[n]と同様のもので指定
+ *
+ * 背景にウィンドウを表示しているときにカーソルを表示します。
+ * このコマンドは動的文字列ピクチャを表示後に実行してください。
+ *  D_TEXT_WINDOW_CURSOR 1 ON  # ピクチャ[1]にウィンドウカーソルを表示
+ *  D_TEXT_WINDOW_CURSOR 2 OFF # ピクチャ[2]にウィンドウカーソルを消去
+ *
+ * カーソル矩形の座標を指定する場合は以下の通りです。
+ *  D_TEXT_WINDOW_CURSOR 1 ON 0 0 100 100  # ピクチャ[1]に[0,0,100,100]のサイズの
+ *                                         # ウィンドウカーソルを表示
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -281,6 +291,18 @@
                         break;
                 }
                 break;
+            case 'D_TEXT_WINDOW_CURSOR' :
+                var windowRect = null;
+                if (getArgBoolean(args[1])) {
+                    windowRect = {
+                        x     : getArgNumber(args[3] || '', 0),
+                        y     : getArgNumber(args[4] || '', 0),
+                        width : getArgNumber(args[5] || '', 0),
+                        height: getArgNumber(args[6] || '', 0)
+                    };
+                }
+                $gameScreen.setDTextWindowCursor(getArgNumber(args[0], 0), windowRect);
+                break;
         }
     };
 
@@ -342,6 +364,14 @@
         this.dTextValue      = (this.dTextValue || '') + getArgString(value, false) + '\n';
         this.dTextOriginal   = (this.dTextOriginal || '') + value + '\n';
         this.dTextSize       = size;
+    };
+
+    Game_Screen.prototype.setDTextWindowCursor = function(pictureId, rect) {
+        var picture = this.picture(pictureId);
+        if (!picture) {
+            return;
+        }
+        picture.setWindowCursor(rect);
     };
 
     Game_Screen.prototype.getDTextPictureInfo = function() {
@@ -413,6 +443,14 @@
                 this.dTextInfo.value = getArgString(this.dTextInfo.originalValue, false);
             }
         }, this);
+    };
+
+    Game_Picture.prototype.setWindowCursor = function(rect) {
+        this._windowCursor = rect;
+    };
+
+    Game_Picture.prototype.getWindowCursor = function() {
+        return this._windowCursor;
     };
 
     //=============================================================================
@@ -494,6 +532,22 @@
         if (Graphics.frameCount % 2 === 0) {
             this.adjustScaleFrameWindow();
         }
+        this.updateFrameWindowCursor();
+    };
+
+    Sprite_Picture.prototype.updateFrameWindowCursor = function() {
+        var picture = this.picture();
+        if (!picture) {
+            return;
+        }
+        var rect = picture.getWindowCursor();
+        if (rect) {
+            var width = rect.width || this._frameWindow.width;
+            var height = rect.width || this._frameWindow.height;
+            this._frameWindow.setCursorRect(0, 0, width, height);
+        } else {
+            this._frameWindow.setCursorRect(0, 0, 0, 0);
+        }
     };
 
     Sprite_Picture.prototype.adjustScaleFrameWindow = function() {
@@ -545,9 +599,9 @@
         this.bitmap.fontFace = this.hiddenWindow.contents.fontFace;
         if (this.dTextInfo.color) {
             this.bitmap.fillAll(this.dTextInfo.color);
-            var h              = this.bitmap.height;
-            var w              = this.bitmap.width;
-            var gradationLeft  = this.dTextInfo.gradationLeft;
+            var h             = this.bitmap.height;
+            var w             = this.bitmap.width;
+            var gradationLeft = this.dTextInfo.gradationLeft;
             if (gradationLeft > 0) {
                 this.bitmap.clearRect(0, 0, gradationLeft, h);
                 this.bitmap.gradientFillRect(0, 0, gradationLeft, h, 'rgba(0, 0, 0, 0)', this.dTextInfo.color, false);
