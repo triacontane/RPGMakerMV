@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2019/10/14 MOG_BattleHud.jsと併用したときもアイコンごとにターン数表示の有無が反映されるよう競合解消
 // 2.0.0 2019/09/15 アイコンごとにターン数表示の有無を設定できる機能を追加
 //                  パラメータ構造の変更(パラメータの再設定が必要です)
 // 1.8.0 2019/08/12 味方に掛けられたステートもリング表示できる機能を追加
@@ -592,7 +593,7 @@ function Sprite_StateIconChild() {
                 var turn = this._battler.getAllTurns()[this._states_data[1]];
                 _Battle_Hud_refresh_states.apply(this, arguments);
                 this._state_icon_turn.bitmap.clear();
-                if (turn) {
+                if (turn && !param.IconIndexWithoutShowTurns.contains(this._states_data[0])) {
                     this._state_icon_turn.bitmap.drawText(turn, 0, 0, Window_Base._iconWidth, Window_Base._iconHeight, 'right');
                 }
             };
