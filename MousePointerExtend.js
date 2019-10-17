@@ -1,16 +1,18 @@
 //=============================================================================
 // MousePointerExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2019/10/17 型指定機能に対応
+//                  独自画像ファイルを指定するときにダイアログから指定すると拡張子がつかず正常に表示できない問題を修正
 // 1.1.1 2016/07/20 独自画像をpictures以外のフォルダに格納できる機能を追加
 // 1.1.0 2016/07/18 形状の種類と独自画像の最大数を3から5に拡張
 // 1.0.0 2016/07/17 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -151,46 +153,225 @@
  * @param 形状タイプ1
  * @desc スイッチ1がONになった場合のマウス形状です。
  * @default auto
+ * @type select
+ * @option auto : 自動(初期値)
+ * @value auto
+ * @option none : 非表示
+ * @value none
+ * @option default : デフォルト
+ * @value default
+ * @option pointer : リンク
+ * @value pointer
+ * @option crosshair : 十字
+ * @value crosshair
+ * @option move : 移動
+ * @value move
+ * @option text : テキスト
+ * @value text
+ * @option wait : 処理中
+ * @value wait
+ * @option help : ヘルプ
+ * @value help
+ * @option url1 : 独自画像1(パラメータ参照)
+ * @value url1
+ * @option url2 : 独自画像2(パラメータ参照)
+ * @value url2
+ * @option url3 : 独自画像3(パラメータ参照)
+ * @value url3
+ * @option url4 : 独自画像4(パラメータ参照)
+ * @value url4
+ * @option url5 : 独自画像5(パラメータ参照)
+ * @value url5
  *
  * @param スイッチ1
  * @desc 形状タイプ1が有効になるスイッチ番号です。
  * @default 0
+ * @type switch
  *
  * @param 形状タイプ2
  * @desc スイッチ2がONになった場合のマウス形状です。
  * @default auto
+ * @type select
+ * @option auto : 自動(初期値)
+ * @value auto
+ * @option none : 非表示
+ * @value none
+ * @option default : デフォルト
+ * @value default
+ * @option pointer : リンク
+ * @value pointer
+ * @option crosshair : 十字
+ * @value crosshair
+ * @option move : 移動
+ * @value move
+ * @option text : テキスト
+ * @value text
+ * @option wait : 処理中
+ * @value wait
+ * @option help : ヘルプ
+ * @value help
+ * @option url1 : 独自画像1(パラメータ参照)
+ * @value url1
+ * @option url2 : 独自画像2(パラメータ参照)
+ * @value url2
+ * @option url3 : 独自画像3(パラメータ参照)
+ * @value url3
+ * @option url4 : 独自画像4(パラメータ参照)
+ * @value url4
+ * @option url5 : 独自画像5(パラメータ参照)
+ * @value url5
  *
  * @param スイッチ2
  * @desc 形状タイプ2が有効になるスイッチ番号です。
  * @default 0
+ * @type switch
  *
  * @param 形状タイプ3
  * @desc スイッチ3がONになった場合のマウス形状です。
  * @default auto
+ * @type select
+ * @option auto : 自動(初期値)
+ * @value auto
+ * @option none : 非表示
+ * @value none
+ * @option default : デフォルト
+ * @value default
+ * @option pointer : リンク
+ * @value pointer
+ * @option crosshair : 十字
+ * @value crosshair
+ * @option move : 移動
+ * @value move
+ * @option text : テキスト
+ * @value text
+ * @option wait : 処理中
+ * @value wait
+ * @option help : ヘルプ
+ * @value help
+ * @option url1 : 独自画像1(パラメータ参照)
+ * @value url1
+ * @option url2 : 独自画像2(パラメータ参照)
+ * @value url2
+ * @option url3 : 独自画像3(パラメータ参照)
+ * @value url3
+ * @option url4 : 独自画像4(パラメータ参照)
+ * @value url4
+ * @option url5 : 独自画像5(パラメータ参照)
+ * @value url5
  *
  * @param スイッチ3
  * @desc 形状タイプ3が有効になるスイッチ番号です。
  * @default 0
+ * @type switch
  *
  * @param 形状タイプ4
  * @desc スイッチ4がONになった場合のマウス形状です。
  * @default auto
+ * @type select
+ * @option auto : 自動(初期値)
+ * @value auto
+ * @option none : 非表示
+ * @value none
+ * @option default : デフォルト
+ * @value default
+ * @option pointer : リンク
+ * @value pointer
+ * @option crosshair : 十字
+ * @value crosshair
+ * @option move : 移動
+ * @value move
+ * @option text : テキスト
+ * @value text
+ * @option wait : 処理中
+ * @value wait
+ * @option help : ヘルプ
+ * @value help
+ * @option url1 : 独自画像1(パラメータ参照)
+ * @value url1
+ * @option url2 : 独自画像2(パラメータ参照)
+ * @value url2
+ * @option url3 : 独自画像3(パラメータ参照)
+ * @value url3
+ * @option url4 : 独自画像4(パラメータ参照)
+ * @value url4
+ * @option url5 : 独自画像5(パラメータ参照)
+ * @value url5
  *
  * @param スイッチ4
  * @desc 形状タイプ4が有効になるスイッチ番号です。
  * @default 0
+ * @type switch
  *
  * @param 形状タイプ5
  * @desc スイッチ5がONになった場合のマウス形状です。
  * @default auto
+ * @type select
+ * @option auto : 自動(初期値)
+ * @value auto
+ * @option none : 非表示
+ * @value none
+ * @option default : デフォルト
+ * @value default
+ * @option pointer : リンク
+ * @value pointer
+ * @option crosshair : 十字
+ * @value crosshair
+ * @option move : 移動
+ * @value move
+ * @option text : テキスト
+ * @value text
+ * @option wait : 処理中
+ * @value wait
+ * @option help : ヘルプ
+ * @value help
+ * @option url1 : 独自画像1(パラメータ参照)
+ * @value url1
+ * @option url2 : 独自画像2(パラメータ参照)
+ * @value url2
+ * @option url3 : 独自画像3(パラメータ参照)
+ * @value url3
+ * @option url4 : 独自画像4(パラメータ参照)
+ * @value url4
+ * @option url5 : 独自画像5(パラメータ参照)
+ * @value url5
  *
  * @param スイッチ5
  * @desc 形状タイプ5が有効になるスイッチ番号です。
  * @default 0
+ * @type switch
  *
  * @param デフォルト形状タイプ
  * @desc デフォルトのマウス形状です。
  * @default auto
+ * @type select
+ * @option auto : 自動(初期値)
+ * @value auto
+ * @option none : 非表示
+ * @value none
+ * @option default : デフォルト
+ * @value default
+ * @option pointer : リンク
+ * @value pointer
+ * @option crosshair : 十字
+ * @value crosshair
+ * @option move : 移動
+ * @value move
+ * @option text : テキスト
+ * @value text
+ * @option wait : 処理中
+ * @value wait
+ * @option help : ヘルプ
+ * @value help
+ * @option url1 : 独自画像1(パラメータ参照)
+ * @value url1
+ * @option url2 : 独自画像2(パラメータ参照)
+ * @value url2
+ * @option url3 : 独自画像3(パラメータ参照)
+ * @value url3
+ * @option url4 : 独自画像4(パラメータ参照)
+ * @value url4
+ * @option url5 : 独自画像5(パラメータ参照)
+ * @value url5
  *
  * @param 独自画像1
  * @desc マウスポインタに使用する画像ファイル名(/img/picture/)です。正方形の32*32程度の画像を用意してください。
@@ -229,7 +410,8 @@
  *
  * @param キー入力で消去
  * @desc キーもしくはパッド入力によりポインタを一時的に消去します。マウスを動かすと再び出現します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param ポインタファイルパス
  * @desc カーソル用の独自画像を/pictures/以外に配置したい場合にパス名を指定してください。区切り文字[/]は不要。
@@ -397,7 +579,7 @@
 
     Graphics._setPointerTypeCustom = function(type, index) {
         if (type === 'url' + index && paramCustomImages[index]) {
-            this._PointerType = 'url(img/' + (paramPointerPath || 'pictures') + '/' + paramCustomImages[index] + '), default';
+            this._PointerType = 'url(img/' + (paramPointerPath || 'pictures') + '/' + paramCustomImages[index] + '.png), default';
         }
     };
 
