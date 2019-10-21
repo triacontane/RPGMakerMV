@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.0 2019/10/21 カーソルのアクティブ状態を変更できるコマンドを追加
+//                   アイテム表示の制御文字でアイコン表示可否を変更できる設定を追加
 // 1.14.0 2019/01/13 背景ウィンドウにカーソル表示できる機能を追加
 // 1.13.0 2018/11/25 背景色のグラデーションを設定できる機能を追加
 // 1.12.0 2018/11/08 背景ウィンドウの透明度と文字列ピクチャの透明度を連動させるよう仕様変更
@@ -54,6 +56,12 @@
 /*:
  * @plugindesc 動的文字列ピクチャ生成プラグイン
  * @author トリアコンタン
+ *
+ * @param itemIconSwitchId
+ * @text アイテムアイコンスイッチID
+ * @desc 指定した番号のスイッチがONのとき\ITEM[n]でアイコンが表示されます。指定しない場合、常に表示されます。
+ * @default 0
+ * @type switch
  *
  * @help 指定した文字列でピクチャを動的に生成するコマンドを提供します。
  * 文字列には各種制御文字（\v[n]等）も使用可能で、制御文字で表示した変数の値が
@@ -146,6 +154,10 @@
  * このコマンドは動的文字列ピクチャを表示後に実行してください。
  *  D_TEXT_WINDOW_CURSOR 1 ON  # ピクチャ[1]にウィンドウカーソルを表示
  *  D_TEXT_WINDOW_CURSOR 2 OFF # ピクチャ[2]にウィンドウカーソルを消去
+ *
+ * カーソルのアクティブ状態を変更するコマンドは以下の通りです。
+ *  D_TEXT_WINDOW_CURSOR_ACTIVE 2 ON  # ピクチャ[1]のカーソルをアクティブ
+ *  D_TEXT_WINDOW_CURSOR_ACTIVE 1 OFF # ピクチャ[1]のカーソルをストップ
  *
  * カーソル矩形の座標を指定する場合は以下の通りです。
  *  D_TEXT_WINDOW_CURSOR 1 ON 0 0 100 100  # ピクチャ[1]に[0,0,100,100]のサイズの
@@ -242,6 +254,7 @@
         return parameter;
     };
     var textDecParam          = createPluginParameter('TextDecoration');
+    var param                 = createPluginParameter('DTextPicture');
 
     //=============================================================================
     // Game_Interpreter
@@ -302,6 +315,9 @@
                     };
                 }
                 $gameScreen.setDTextWindowCursor(getArgNumber(args[0], 0), windowRect);
+                break;
+            case 'D_TEXT_WINDOW_CURSOR_ACTIVE' :
+                $gameScreen.setDTextWindowCursorActive(getArgNumber(args[0], 0), getArgBoolean(args[1]));
                 break;
         }
     };
@@ -368,10 +384,17 @@
 
     Game_Screen.prototype.setDTextWindowCursor = function(pictureId, rect) {
         var picture = this.picture(pictureId);
-        if (!picture) {
-            return;
+        if (picture) {
+            picture.setWindowCursor(rect);
+            picture.setWindowCursorActive(true);
         }
-        picture.setWindowCursor(rect);
+    };
+
+    Game_Screen.prototype.setDTextWindowCursorActive = function(pictureId, value) {
+        var picture = this.picture(pictureId);
+        if (picture) {
+            picture.setWindowCursorActive(value);
+        }
     };
 
     Game_Screen.prototype.getDTextPictureInfo = function() {
@@ -453,6 +476,14 @@
         return this._windowCursor;
     };
 
+    Game_Picture.prototype.setWindowCursorActive = function(value) {
+        this._windowCursorActive = value;
+    };
+
+    Game_Picture.prototype.getWindowCursorActive = function() {
+        return this._windowCursorActive;
+    };
+
     //=============================================================================
     // SceneManager
     //  文字描画用の隠しウィンドウを取得します。
@@ -480,25 +511,36 @@
         }.bind(this));
         text = text.replace(/\x1bITEM\[(\d+)]/gi, function() {
             var item = $dataItems[getArgNumber(arguments[1], 1, $dataItems.length)];
-            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+            return this.getItemInfoText(item);
         }.bind(this));
         text = text.replace(/\x1bWEAPON\[(\d+)]/gi, function() {
             var item = $dataWeapons[getArgNumber(arguments[1], 1, $dataWeapons.length)];
-            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+            return this.getItemInfoText(item);
         }.bind(this));
         text = text.replace(/\x1bARMOR\[(\d+)]/gi, function() {
             var item = $dataArmors[getArgNumber(arguments[1], 1, $dataArmors.length)];
-            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+            return this.getItemInfoText(item);
         }.bind(this));
         text = text.replace(/\x1bSKILL\[(\d+)]/gi, function() {
             var item = $dataSkills[getArgNumber(arguments[1], 1, $dataSkills.length)];
-            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+            return this.getItemInfoText(item);
         }.bind(this));
         text = text.replace(/\x1bSTATE\[(\d+)]/gi, function() {
             var item = $dataStates[getArgNumber(arguments[1], 1, $dataStates.length)];
-            return item ? '\x1bi[' + item.iconIndex + ']' + item.name : '';
+            return this.getItemInfoText(item);
         }.bind(this));
         return text;
+    };
+
+    Window_Base.prototype.getItemInfoText = function(item) {
+        if (!item) {
+            return '';
+        }
+        return (this.isValidDTextIconSwitch() ? '\x1bi[' + item.iconIndex + ']' : '') + item.name;
+    };
+
+    Window_Base.prototype.isValidDTextIconSwitch = function() {
+        return !param.itemIconSwitchId || $gameSwitches.value(param.itemIconSwitchId);
     };
 
     Window_Base.prototype.getVariablePadZero = function(value, digit) {
@@ -542,9 +584,10 @@
         }
         var rect = picture.getWindowCursor();
         if (rect) {
-            var width = rect.width || this._frameWindow.contentsWidth();
+            var width  = rect.width || this._frameWindow.contentsWidth();
             var height = rect.width || this._frameWindow.contentsHeight();
             this._frameWindow.setCursorRect(0, 0, width, height);
+            this._frameWindow.active = picture.getWindowCursorActive();
         } else {
             this._frameWindow.setCursorRect(0, 0, 0, 0);
         }
