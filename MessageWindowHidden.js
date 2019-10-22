@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageWindowHidden.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2019/10/22 ウィンドウを表示状態にもどしたとき、連動ピクチャは、もともと表示していた不透明度を復元するよう仕様変更
 // 2.2.0 2019/06/09 メッセージウィンドウと逆に連動して指定したピクチャの表示/非表示が自動で切り替わる機能を追加
 // 2.1.0 2018/10/10 戦闘中にプラグインを無効化できる機能を追加。
 // 2.0.0 2018/03/31 消去するトリガーを複数指定できる機能を追加。パラメータの指定方法を見直し。
@@ -114,7 +115,7 @@
  *
  * ウィンドウ消去時に連動して不透明度を[0]にするピクチャを指定することができます。
  * 背景に特定のピクチャを使用している場合などに指定してください。
- * 再表示すると不透明度は[255]になります。
+ * 再表示すると不透明度は、ウィンドウ非表示まえの不透明度で復元されます。
  *
  * ver2.0.0よりパラメータの指定方法が一部変更になりました。
  * 以前のバージョンを使っていた方は再設定をお願いします。
@@ -189,6 +190,7 @@
             this.hideSubWindow(subWindow);
         }.bind(this));
         if (this.hasNameWindow() && !this.nameWindowIsSubWindow()) this.hideSubWindow(this._nameWindow);
+        this._originalPictureOpacities = {};
         this.linkPictures(0, param.linkPictureNumbers);
         this.linkPictures(255, param.linkShowPictureNumbers);
         this._hideByMessageWindowHidden = true;
@@ -200,8 +202,8 @@
             this.showSubWindow(subWindow);
         }.bind(this));
         if (this.hasNameWindow() && !this.nameWindowIsSubWindow()) this.showSubWindow(this._nameWindow);
-        this.linkPictures(0, param.linkShowPictureNumbers);
-        this.linkPictures(255, param.linkPictureNumbers);
+        this.linkPictures(null, param.linkShowPictureNumbers);
+        this.linkPictures(null, param.linkPictureNumbers);
         this._hideByMessageWindowHidden = false;
     };
 
@@ -220,9 +222,15 @@
 
     Window_Message.prototype.linkPicture = function(opacity, pictureId) {
         var picture = $gameScreen.picture(pictureId);
-        if (picture) {
-            picture.linkWithMessageWindow(opacity);
+        if (!picture) {
+            return;
         }
+        if (opacity === null) {
+            opacity = this._originalPictureOpacities[pictureId] || 255;
+        } else {
+            this._originalPictureOpacities[pictureId] = picture.opacity();
+        }
+        picture.linkWithMessageWindow(opacity);
     };
 
     Window_Message.prototype.hideSubWindow = function(subWindow) {
