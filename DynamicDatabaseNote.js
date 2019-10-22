@@ -17,7 +17,36 @@
  * @plugindesc DynamicDatabaseNotePlugin
  * @author triacontane
  *
+ * @param commandPrefix
+ * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
+ * @default
+ *
  * @help DynamicDatabaseNote.js
+ *
+ * データベースのメモ欄をゲーム中に上書き変更します。
+ * 変更対象のデータと、変更前後のIDを指定してください。
+ * 存在しないIDやデータベースを指定するとエラーになります。
+ *
+ * プラグインコマンド詳細
+ *  イベントコマンド「プラグインコマンド」から実行。
+ *  （パラメータの間は半角スペースで区切る）
+ *
+ * メモ欄変更 $dataActors 1 2   # ID[1]のアクター(※1)のメモ欄をID[2]のメモ欄で上書き。
+ * CHANGE_NOTE $dataActors 1 2 # 同上
+ *
+ * ※1
+ * 変更対象のデータベース以下の通り指定してください。
+ * $dataActors : アクター
+ * $dataItems : アイテム
+ * $dataWeapons : 武器
+ * $dataArmors : 防具
+ * $dataStates : ステート
+ * $dataEnemies : 敵キャラ
+ *
+ * 注意事項：
+ * 使っているプラグインのメモ欄の使い方によっては
+ * 当プラグインの変更が反映されない場合があります。
+ * その場合、本プラグイン側での対処は難しいです。
  *
  * This plugin is released under the MIT License.
  */
