@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.0 2019/10/23 特定のゲーム内時刻になるとスイッチ操作されるアラーム機能を追加
+//                   タイルセット変更した場合に、新しいタイルセットの色調や天候有無の設定が反映されない問題を修正
 // 1.14.1 2019/10/17 ヘルプの記載漏れを修正
 // 1.14.0 2019/09/01 時間帯名称をカレンダーに表示する機能を追加
 // 1.13.1 2019/06/09 ニューゲーム時もしくはプロジェクト保存後のロード時に場所移動の時間が経過してしまう問題を修正
@@ -349,6 +351,17 @@
  * C_STOP_TIMER timer  # タイマー名「timer」を一時停止します。
  * C_START_TIMER timer # タイマー名「timer」を再開します。
  *
+ * 時間ではなく時刻指定でスイッチ操作できるアラーム機能です。
+ * [年月時分]は、「YYYYMMDDHHMM」形式で指定してください。
+ * 解除はタイマー用のコマンドを使います。
+ * C_SET_SWITCH_ALARM [年月時分] [スイッチID]
+ * C_SET_SELF_SWITCH_ALARM [年月時分] [セルフスイッチ種類]
+ * C_SET_SWITCH_NAMED_ALARM [アラーム名] [年月時分] [スイッチID]
+ * C_SET_SELF_SWITCH_NAMED_ALARM [アラーム名] [年月時分] [セルフスイッチ種類]
+ *
+ * 指定例（ゲーム内時間で2019/10/22 15:00を過ぎるとセルフスイッチ[B]をONにする）
+ * C_SET_SELF_SWITCH_ALARM 201910221500 B
+ *
  * メモ欄詳細
  *  タイトルセットおよびマップのメモ欄に以下を入力すると、
  *  一時的に天候と色調変化を自動で無効化できます。
@@ -640,6 +653,18 @@ function Window_Chronus() {
             case 'SET_SELF_SWITCH_NAMED_TIMER':
                 this.setSwitchTimer(args, true, true);
                 break;
+            case 'SET_SWITCH_ALARM':
+                this.setSwitchAlarm(args, false);
+                break;
+            case 'SET_SWITCH_NAMED_ALARM':
+                this.setSwitchAlarm(args, true);
+                break;
+            case 'SET_SELF_SWITCH_ALARM':
+                this.setSwitchAlarm(args, false, true);
+                break;
+            case 'SET_SELF_SWITCH_NAMED_ALARM':
+                this.setSwitchAlarm(args, true, true);
+                break;
             case 'STOP_TIMER':
                 $gameSystem.chronus().stopTimer(convertEscapeCharacters(args[0]));
                 break;
@@ -672,6 +697,13 @@ function Window_Chronus() {
         $gameSystem.chronus().makeTimer(timerName, timeout, switchKey, loop);
     };
 
+    Game_Interpreter.prototype.setSwitchAlarm = function(args, named, selfSwitch) {
+        var timerName = named ? convertEscapeCharacters(args.shift()) : null;
+        var timeout   = getArgNumber(args.shift(), 0);
+        var switchKey = this.getSwitchKey(args.shift(), selfSwitch);
+        $gameSystem.chronus().makeAlarm(timerName, timeout, switchKey);
+    };
+
     Game_Interpreter.prototype.getSwitchKey = function(arg, selfSwitch) {
         return selfSwitch ? [$gameMap.mapId(), this.eventId(), convertEscapeCharacters(arg).toUpperCase()] : getArgNumber(arg);
     };
@@ -685,6 +717,16 @@ function Window_Chronus() {
             chronus.setWeatherPower(this._params[1]);
             chronus.refreshTint(true);
             chronus.forceSetBatWeatherLevel(this._params[0], this._params[1]);
+        }
+        return result;
+    };
+
+    var _Game_Interpreter_command282 = Game_Interpreter.prototype.command282;
+    Game_Interpreter.prototype.command282 = function() {
+        var result =  _Game_Interpreter_command282.apply(this, arguments);
+        if (!$gameParty.inBattle()) {
+            var chronus = $gameSystem.chronus();
+            chronus.refreshTint(true);
         }
         return result;
     };
@@ -733,9 +775,14 @@ function Window_Chronus() {
     Game_Map.prototype.isChronicleMetaInfo = function(tagNames, defaultValue) {
         if (DataManager.isBattleTest() || DataManager.isEventTest()) return false;
         var metaValue1 = getMetaValues($dataMap, tagNames);
-        if (metaValue1 !== undefined) return getArgBoolean(metaValue1);
-        var metaValue2 = getMetaValues($dataTilesets[$dataMap.tilesetId], tagNames);
-        if (metaValue2 !== undefined) return getArgBoolean(metaValue2);
+        if (metaValue1 !== undefined) {
+            return getArgBoolean(metaValue1);
+        }
+        var tileset = this.tileset() || $dataTilesets[$dataMap.tilesetId];
+        var metaValue2 = getMetaValues(tileset, tagNames);
+        if (metaValue2 !== undefined) {
+            return getArgBoolean(metaValue2);
+        }
         return defaultValue;
     };
 
@@ -965,7 +1012,7 @@ function Window_Chronus() {
     //  時の流れを扱うクラスです。このクラスはGame_Systemクラスで生成されます。
     //  セーブデータの保存対象のためグローバル領域に定義します。
     //=============================================================================
-    Game_Chronus.weatherTypes          = ['none', 'rain', 'storm', 'snow'];
+    Game_Chronus.weatherTypes         = ['none', 'rain', 'storm', 'snow'];
     Game_Chronus.prototype.initialize = function() {
         this._stop            = false;        // 停止フラグ（全ての加算に対して有効。ただし手動による加算は例外）
         this._disableTint     = false;        // 色調変更禁止フラグ
@@ -1330,13 +1377,17 @@ function Window_Chronus() {
     };
 
     Game_Chronus.prototype.setDay = function(year, month, day) {
+        this._dayMeter = this.calcNewDay(year, month, day);
+        this.demandRefresh(true);
+    };
+
+    Game_Chronus.prototype.calcNewDay = function(year, month, day) {
         var newDay = (year - 1) * this.getDaysOfYear();
-        for (var i = 0; i < month - 1; i++) {
-            newDay += this._daysOfMonth[i];
+        for (var i = 1; i < month; i++) {
+            newDay += this.getDaysOfMonth(i);
         }
         newDay += day - 1;
-        this._dayMeter = newDay;
-        this.demandRefresh(true);
+        return newDay;
     };
 
     Game_Chronus.prototype.demandRefresh = function(effectRefreshFlg) {
@@ -1552,6 +1603,19 @@ function Window_Chronus() {
 
     Game_Chronus.prototype.getTotalDay = function() {
         return this.getTotalTime() / (24 * 60);
+    };
+
+    Game_Chronus.prototype.makeAlarm = function(timerName, timeNumber, switchKey) {
+        var baseTime   = this.getTotalTime();
+        var min        = timeNumber % 100;
+        var hour       = Math.floor(timeNumber / 100) % 100;
+        var timeMeter  = hour * 60 + min - (this._criterionTime || 0);
+        var day        = Math.floor(timeNumber / 10000) % 100;
+        var month      = Math.floor(timeNumber / 1000000) % 100;
+        var year       = Math.floor(timeNumber / 100000000);
+        var dayMeter   = this.calcNewDay(year, month, day) - (this._criterionDay || 0);
+        var targetTime = dayMeter * 24 * 60 + timeMeter;
+        this.makeTimer(timerName, (targetTime - baseTime) || 0, switchKey, false);
     };
 
     Game_Chronus.prototype.makeTimer = function(timerName, timeout, switchKey, loop) {
