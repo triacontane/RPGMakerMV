@@ -51,7 +51,7 @@
  * This plugin is released under the MIT License.
  */
 /*:ja
- * @plugindesc DynamicDatabaseNoteプラグイン
+ * @plugindesc データベースのメモ欄動的設定プラグイン
  * @author トリアコンタン
  *
  * @param commandPrefix
