@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2019/10/25 メニューマップと通常マップのピクチャの表示状態を別々に管理できる機能を追加
 // 2.6.1 2019/10/12 2.6.0の修正で、メニューを開いたあと一度もサブコマンドを開かずにメニューを閉じるとエラーになる問題を修正
 //                  その他軽微な不具合の修正
 // 2.6.0 2019/09/16 サブコマンドのスクリプト実行後、マップに戻る機能を追加
@@ -106,6 +107,11 @@
  * @value center
  * @option Right
  * @value right
+ *
+ * @param AnotherPicturesInMenuMap
+ * @desc メニューマップと通常マップのピクチャの表示状態を別々に管理します。
+ * @default false
+ * @type boolean
  *
  * @help MenuSubCommand.js
  *
@@ -222,6 +228,11 @@
  * @value center
  * @option 右揃え
  * @value right
+ *
+ * @param メニューピクチャ別管理
+ * @desc メニューマップと通常マップのピクチャの表示状態を別々に管理します。
+ * @default false
+ * @type boolean
  *
  * @help MenuSubCommand.js
  *
@@ -464,6 +475,7 @@
     param.subMenuX              = getParamNumber(['SubMenuX', 'サブメニューX座標']);
     param.subMenuY              = getParamNumber(['SubMenuY', 'サブメニューY座標']);
     param.subMenuAlign          = getParamString(['SubMenuAlign', 'サブメニュー揃え']);
+    param.anotherPicInMenuMap   = getParamBoolean(['AnotherPicturesInMenuMap', 'メニューピクチャ別管理']);
 
     //=============================================================================
     // Game_Temp
@@ -554,6 +566,9 @@
         if (userSetting.autoTransparent) {
             this.setTransparent(true);
         }
+        if (param.anotherPicInMenuMap) {
+            $gameScreen.setupMenuMapPictures();
+        }
     };
 
     Game_Player.prototype.reserveTransferToOriginalMap = function() {
@@ -564,6 +579,9 @@
         }
         this._originalMapId             = 0;
         this._transferringToOriginalMap = true;
+        if (param.anotherPicInMenuMap) {
+            $gameScreen.restoreNormalMapPictures();
+        }
     };
 
     Game_Player.prototype.isInSubCommandMap = function() {
@@ -639,6 +657,18 @@
     Game_Party.prototype.setMenuActor = function(actor) {
         if (!actor) return;
         _Game_Party_setMenuActor.apply(this, arguments);
+    };
+
+    Game_Screen.prototype.setupMenuMapPictures = function() {
+        this._normalMapPictures = this._pictures;
+        this.clearPictures();
+    };
+
+    Game_Screen.prototype.restoreNormalMapPictures = function() {
+        if (this._normalMapPictures) {
+            this._pictures = this._normalMapPictures;
+        }
+        this._normalMapPictures = null;
     };
 
     //=============================================================================
