@@ -283,7 +283,7 @@
 
     Game_Character.prototype.findNearestEvent = function(events) {
         return events.sort(function(eventA, eventB) {
-            return this.getDistance(eventA) - this.getDistance(eventB)
+            return this.getDistance(eventA) - this.getDistance(eventB);
         }.bind(this))[0];
     };
 

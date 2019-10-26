@@ -71,8 +71,8 @@
         if (this._tileId > 0) {
             var note = this.event().note;
             if (note) {
-                note.toUpperCase().replace(/\\W(\d+)/, function() {width  = parseInt(arguments[1], 10)});
-                note.toUpperCase().replace(/\\H(\d+)/, function() {height = parseInt(arguments[1], 10)});
+                note.toUpperCase().replace(/\\W(\d+)/, function() {width  = parseInt(arguments[1], 10);});
+                note.toUpperCase().replace(/\\H(\d+)/, function() {height = parseInt(arguments[1], 10);});
             }
         }
         this._width = width;

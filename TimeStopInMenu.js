@@ -47,7 +47,7 @@
         var frame = Graphics.frameCount;
         _SceneManager_renderScene.apply(this, arguments);
         if (this.disableFrameCountAdd()) {
-            Graphics.frameCount = frame
+            Graphics.frameCount = frame;
         }
     };
 

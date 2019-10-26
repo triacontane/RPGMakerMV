@@ -201,7 +201,7 @@
         if (!metaValue) return true;
         var switches = getArgArrayNumber(metaValue);
         return switches.some(function(switchId) {
-            return $gameSwitches.value(switchId)
+            return $gameSwitches.value(switchId);
         }.bind(this));
     };
 
@@ -216,6 +216,5 @@
         }
     };
 })();
-
 
 

@@ -189,7 +189,7 @@
         this.initSystemSound(false);
         this._systemSounds.forEach(function(sound) {
             if (sound) AudioManager.loadStaticSe(sound);
-        })
+        });
     };
 
     Game_System.prototype.initSystemSound = function() {

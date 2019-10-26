@@ -192,7 +192,7 @@
     };
 
     Game_Picture.prototype.isUsingSpriteSheet = function() {
-        return this._sheetCol && this._sheetRow
+        return this._sheetCol && this._sheetRow;
     };
 
     Game_Picture.prototype.getSheetCol = function() {

@@ -433,8 +433,8 @@
         }
 
         var bitmap;
-        if (!!item.meta.gachaImage) {
-            bitmap = ImageManager.loadBitmap("img/gacha/", item.meta.gachaImage);
+        if (item.meta.gachaImage) {
+            bitmap = ImageManager.loadBitmap('img/gacha/', item.meta.gachaImage);
             bitmap.smooth = true;
         }
         this._itemSprite.bitmap = bitmap;
@@ -447,7 +447,7 @@
         y = lineHeight + this.textPadding();
 
         if (!simpleDisplay) {
-            var rank = "-";
+            var rank = '-';
             if (item.meta.gachaRank) rank = item.meta.gachaRank;
             this.changeTextColor(this.systemColor());
             this.drawText(rankText, x, y, 120);

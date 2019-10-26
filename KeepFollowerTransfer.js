@@ -103,7 +103,7 @@
     };
 
     Game_Player.prototype.isKeepFollowerPosition = function() {
-        return param.validateSwitchId === 0 || $gameSwitches.value(param.validateSwitchId)
+        return param.validateSwitchId === 0 || $gameSwitches.value(param.validateSwitchId);
     };
 
     var _Game_Player_locate = Game_Player.prototype.locate;

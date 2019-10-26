@@ -163,7 +163,7 @@
         if (stateCondition[0] > rate * 100) {
             this.addConditionalState(stateCondition[1]);
         } else {
-            this.removeConditionalState(stateCondition[1])
+            this.removeConditionalState(stateCondition[1]);
         }
     };
 
@@ -173,7 +173,7 @@
         if (rate * 100 < stateCondition[0]) {
             this.addConditionalState(stateCondition[1]);
         } else {
-            this.removeConditionalState(stateCondition[1])
+            this.removeConditionalState(stateCondition[1]);
         }
     };
 

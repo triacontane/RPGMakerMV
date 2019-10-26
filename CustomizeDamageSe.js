@@ -140,7 +140,7 @@
     };
 
     var isExistPlugin = function(pluginName) {
-        return Object.keys(PluginManager.parameters(pluginName)).length > 0
+        return Object.keys(PluginManager.parameters(pluginName)).length > 0;
     };
 
     //=============================================================================

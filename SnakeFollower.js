@@ -86,7 +86,7 @@
 
     var _Game_Player_isCollidedWithCharacters = Game_Player.prototype.isCollidedWithCharacters;
     Game_Player.prototype.isCollidedWithCharacters = function(x, y) {
-        return _Game_Player_isCollidedWithCharacters.apply(this, arguments) || this.isCollidedWithFollowers(x, y)
+        return _Game_Player_isCollidedWithCharacters.apply(this, arguments) || this.isCollidedWithFollowers(x, y);
     };
 
     Game_Player.prototype.isCollidedWithFollowers = function(x, y) {

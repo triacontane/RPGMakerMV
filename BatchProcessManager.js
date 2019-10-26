@@ -179,7 +179,7 @@
     BatchProcessManager.outputSoundTestCsv = function(types) {
         var objects = [];
         types.forEach(function(type) {
-            objects = objects.concat(this.makeSoundTestCsv(type.toLowerCase()))
+            objects = objects.concat(this.makeSoundTestCsv(type.toLowerCase()));
         }, this);
         this.saveCsvData('SoundTest.csv', objects);
     };

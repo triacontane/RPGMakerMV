@@ -57,8 +57,7 @@
 
     Window_Message.prototype.isWaitExist = function() {
         return this.pause || this._waitCount > 0;
-    }
+    };
 })();
-
 
 

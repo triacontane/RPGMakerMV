@@ -66,6 +66,6 @@
             return;
         }
         _Game_Event_refresh.apply(this, arguments);
-    }
+    };
 })();
 

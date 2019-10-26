@@ -78,7 +78,7 @@
             text.replace('ﾀ' + dm + 'ｹ' + dm + 'ﾉ' + dm + 'ｺ' + dm + 'の' + dm + '里',
                 'ｷ' + dm + 'ﾉ' + dm + 'ｺ' + dm + 'の' + dm + '山') : text;
 
-        dm = sarchTakenoko(text.match(/(た)(.)(け)(.)(の)(.)(こ)/i))
+        dm = sarchTakenoko(text.match(/(た)(.)(け)(.)(の)(.)(こ)/i));
         text = (dm !== null) ?
             text.replace('た' + dm + 'け' + dm + 'の' + dm + 'こ',
                 'き' + dm + 'の' + dm + 'こ') : text;
