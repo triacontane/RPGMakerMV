@@ -17,7 +17,7 @@
  * @plugindesc SessionManagerPlugin
  * @author triacontane
  *
- * @help SessionIdManager.js
+ * @help SessionManager.js
  *
  * プレー中のセッションを管理します。
  * セッションとは1回のプレーに対して割り当てられる一意の値で
@@ -42,7 +42,7 @@
  * @plugindesc セッション管理プラグイン
  * @author トリアコンタン
  *
- * @help SessionIdManager.js
+ * @help SessionManager.js
  *
  * プレー中のセッションを管理します。
  * セッションとは1回のプレーに対して割り当てられる一意の値で

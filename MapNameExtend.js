@@ -20,35 +20,43 @@
  *
  * @param PositionX
  * @desc X座標を指定する場合は入力してください。
- * @default
+ * @default 0
+ * @type number
  *
  * @param PositionY
  * @desc Y座標を指定する場合は入力してください。
- * @default
+ * @default 0
+ * @type number
  *
  * @param MoveXInFade
  * @desc フェードイン、アウト中に移動するX方向のピクセル数です。
- * @default
+ * @default 0
+ * @type number
  *
  * @param MoveYInFace
  * @desc フェードイン、アウト中に移動するY方向のピクセル数です。
- * @default
+ * @default 0
+ * @type number
  *
  * @param AllDuration
  * @desc マップ名が表示されて消えるまでの総フレーム数です。（デフォルト300）
- * @default
+ * @default 0
+ * @type number
  *
  * @param FadeInSpeed
  * @desc マップ名がフェードイン速度です。（デフォルト16）
- * @default
+ * @default 0
+ * @type number
  *
  * @param Width
  * @desc 横幅を指定する場合は入力してください。
- * @default
+ * @default 0
+ * @type number
  *
  * @param ShowWindow
  * @desc マップ名表示をウィンドウ化します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param BackgroundImage
  * @desc 専用の背景画像(img/pictures)のファイル名を指定します。拡張子不要。
@@ -59,11 +67,13 @@
  *
  * @param ShowRealName
  * @desc エディタの「表示名」が未指定の場合、ツリー表示される「実名」でマップ名を表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param UseControlCharacter
  * @desc マップ名表示に制御文字を使用可能にします。マップ名の表示幅を自動調整する機能は無効になり、強制左揃えになります。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help マップ名表示機能を拡張します。
  * MapNameWindow.jsの上位互換プラグインです。
@@ -92,35 +102,43 @@
  *
  * @param X座標
  * @desc X座標を指定する場合は入力してください。
- * @default
+ * @default 0
+ * @type number
  *
  * @param Y座標
  * @desc Y座標を指定する場合は入力してください。
- * @default
+ * @default 0
+ * @type number
  *
  * @param フェード中移動X
  * @desc フェードイン、アウト中に移動するX方向のピクセル数です。
- * @default
+ * @default 0
+ * @type number
  *
  * @param フェード中移動Y
  * @desc フェードイン、アウト中に移動するY方向のピクセル数です。
- * @default
+ * @default 0
+ * @type number
  *
  * @param 総フレーム数
  * @desc マップ名が表示されて消えるまでの総フレーム数です。（デフォルト300）
- * @default
+ * @default 0
+ * @type number
  *
  * @param フェードイン速度
  * @desc マップ名がフェードイン速度です。（デフォルト16）
- * @default
+ * @default 0
+ * @type number
  *
  * @param 横幅
  * @desc 横幅を指定する場合は入力してください。
- * @default
+ * @default 0
+ * @type number
  *
  * @param ウィンドウ表示
  * @desc マップ名表示をウィンドウ化します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 背景画像
  * @desc 専用の背景画像(img/pictures)のファイル名を指定します。拡張子不要。
@@ -131,11 +149,18 @@
  *
  * @param 実名表示
  * @desc エディタの「表示名」が未指定の場合、ツリー表示される「実名」でマップ名を表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param 制御文字使用
  * @desc マップ名表示に制御文字を使用可能にします。マップ名の表示幅を自動調整する機能は無効になり、強制左揃えになります。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param 無効タイルセット
+ * @desc マップ名を表示しないタイルセットです。複数指定できます。
+ * @default
+ * @type tileset[]
  *
  * @help マップ名表示機能を拡張します。
  * MapNameWindow.jsの上位互換プラグインです。
@@ -186,8 +211,8 @@
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        var value = getParamString(paramNames).toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     var getMetaValue = function(object, name) {

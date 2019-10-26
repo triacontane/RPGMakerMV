@@ -197,9 +197,9 @@
                     return JSON.parse(valueData);
                 });
             }
-            console.log(value);
         } catch (e) {
             alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nName:[${paramNames}]\nValue:${value}`);
+            value = defaultValue;
         }
         return value;
     };
@@ -281,7 +281,7 @@
 
     WebAudio.prototype._isExistCustomLoopTag = function(tagInfo) {
         var path = this._url.replace(/\.\w+?$/, '');
-        return path === 'audio/bgm/' + tagInfo.BGM_NAME || path === 'audio/bgs/' + tagInfo.BGS_NAME
+        return path === 'audio/bgm/' + tagInfo.BGM_NAME || path === 'audio/bgs/' + tagInfo.BGS_NAME;
     };
 })();
 

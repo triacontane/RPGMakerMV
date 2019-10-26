@@ -1186,7 +1186,7 @@ function Scene_SoundTest() {
         return {
             container: container,
             player   : player
-        }
+        };
     };
 
     Game_SoundTest.prototype.refresh = function() {
@@ -1200,7 +1200,7 @@ function Scene_SoundTest() {
     };
 
     Game_SoundTest.prototype.getAudioContainer = function(type) {
-        return type ? this.getAudioData(type).container : this._audioSelector.getContainer()
+        return type ? this.getAudioData(type).container : this._audioSelector.getContainer();
     };
 
     Game_SoundTest.prototype.addPlayList = function(audio, type) {

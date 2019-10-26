@@ -21,10 +21,12 @@
  * @param FreezeSwitchId
  * @desc キャラクターを全停止されるトリガーになるスイッチIDです。
  * @default
+ * @type switch
  *
  * @param FreezePictureId
  * @desc 停止中にピクチャを表示する場合のピクチャ番号です。
  * @default 0
+ * @type number
  *
  * @param FreezePictureName
  * @desc 停止中に表示するピクチャファイル名です。
@@ -36,6 +38,7 @@
  * @param FreezeBgmVolume
  * @desc 停止中のBGM音量です。もとのBGMの音量も考慮されます。
  * @default 100
+ * @type number
  *
  * @help イベントの自律移動とアニメーションを全停止します。
  * 同時にプレイヤーも動けなくなります。
@@ -57,10 +60,12 @@
  * @param 停止スイッチID
  * @desc キャラクターを全停止されるトリガーになるスイッチIDです。
  * @default
+ * @type switch
  *
  * @param 停止中ピクチャID
  * @desc 停止中にピクチャを表示する場合のピクチャ番号です。
  * @default 0
+ * @type number
  *
  * @param 停止中ピクチャ名
  * @desc 停止中に表示するピクチャファイル名です。
@@ -72,6 +77,7 @@
  * @param 停止中BGM音量
  * @desc 停止中のBGM音量の倍率です。もとの音量に対して乗算されます。
  * @default 100
+ * @type number
  *
  * @help イベントの自律移動とアニメーションを全停止します。
  * 同時にプレイヤーも動けなくなります。

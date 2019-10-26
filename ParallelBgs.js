@@ -129,23 +129,7 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        try {
-            this.pluginCommandParallelBgs(command.replace(metaTagPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandParallelBgs(command.replace(metaTagPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandParallelBgs = function(command, args) {

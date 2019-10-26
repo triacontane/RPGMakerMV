@@ -105,7 +105,7 @@
     /**
      * Create plugin parameter. param[paramName] ex. param.commandPrefix
      * @param pluginName plugin name(MoveSpeedChangeByRegion)
-     * @returns {any} Created parameter
+     * @returns {Object} Created parameter
      */
     var createPluginParameter = function(pluginName) {
         var paramReplacer = function(key, value) {
