@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.8 2019/10/27 アニメーションタイプが1以外の場合に、非ループアニメの終了位置が間違っている問題を修正
 // 1.5.7 2019/04/20 コマンド「PA_SOUND」にて「1」番目のセルを指定したとき、アニメーション開始直後にも演奏されるよう修正
 // 1.5.6 2019/03/03 シーン外のピクチャのアニメーションおよび効果音演奏を無効にするよう修正
 // 1.5.5 2019/02/13 コマンド「PA_SET_CELL」において0番(最初のセル)に対する指定が機能しない問題を修正
@@ -476,7 +477,7 @@
     };
 
     Game_Picture.prototype.isEndFirstLoop = function() {
-        return this._cellCount === (param.returnToFirstCell ? 0 : this._cellNumber - 1);
+        return this._cellCount === (param.returnToFirstCell ? 0 : this.getCellNumber() - 1);
     };
 
     Game_Picture.prototype.updateFading = function() {
