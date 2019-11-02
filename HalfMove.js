@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.0 2019/11/02 トリガー領域拡大で負の値を設定できるよう修正
 // 1.13.1 2019/09/29 半歩用通行可能判定の地形タグおよびリージョンで複数のリージョンを並べたときに、一部設定が無効になる問題を修正
 // 1.13.0 2019/07/07 移動ルート強制中は半歩移動無効の設定をしているときでも半歩で強制移動できるスクリプトを追加
 // 1.12.5 2019/06/09 半歩移動無効時、下半分移動不可に設定した地形とリージョンが、元の通行設定にかかわらず移動不可となる問題を修正
@@ -1551,7 +1552,7 @@
         var metaValue = getMetaValues(this.event(), ['ExpansionArea', '拡大領域']);
         if (metaValue) {
             this._customExpansion = true;
-            return getArgArrayFloat(metaValue, 0);
+            return getArgArrayFloat(metaValue);
         } else if (this.isNormalPriority() && this.isThroughEnable()) {
             return [0, 0.5, 0.5, 0];
         } else {
