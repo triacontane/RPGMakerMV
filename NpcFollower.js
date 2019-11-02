@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2019/11/02 1.1.0の修正でメンバーの入れ替えを実施すると表示が不正になる場合がある問題を修正
 // 1.1.0 2019/01/27 通常のフォロワーを表示せず、NPCフォロワーのみを表示できる機能を追加
 // 1.0.3 2018/08/06 コアスクリプトが1.6.0より古い場合にエラーになる記述を修正
 // 1.0.2 2017/01/17 プラグインコマンドが小文字でも動作するよう修正（byこまちゃん先輩）
@@ -146,7 +147,6 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        if (!command.match(new RegExp('^' + metaTagPrefix, 'i'))) return;
         this.pluginCommandNpcFollower(command.replace(new RegExp(metaTagPrefix, 'i'), ''), args);
     };
 
@@ -229,9 +229,13 @@
         var visibleMembers = [];
         for (var i = 0, n = this.maxBattleMembers() + 1; i < n; i++) {
             for (var j = 0, m = npcMembers.length; j < m; j++) {
-                if (this._npcIndexes[j] === i) visibleMembers.push(npcMembers[j]);
+                if (this._npcIndexes[j] === i) {
+                    visibleMembers.push(npcMembers[j]);
+                }
             }
-            if (battleMembers.length > i) visibleMembers.push(battleMembers[i]);
+            if (battleMembers.length > i && !paramHideNormalFollower) {
+                visibleMembers.push(battleMembers[i]);
+            }
         }
         this._visibleMembers = visibleMembers;
     };
@@ -250,7 +254,7 @@
     };
 
     Game_Followers.prototype.initNpc = function() {
-        var memberLength = $gameParty.maxBattleMembers();
+        var memberLength = this._data.length > 0 ? this._data.length + 1 : 0;
         for (var i = 0; i < paramMaxNpcNumber; i++) {
             this._data.push(new Game_Follower(memberLength + i));
         }
