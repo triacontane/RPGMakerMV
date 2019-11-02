@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2019/11/02 装備品以外にもステートや職業でも追加画像を表示できる機能を追加
 // 1.7.4 2019/01/02 MOG_SceneMenu.jsと併用した場合、アイテムを使用時に2回使用してしまう場合がある問題を修正
 // 1.7.3 2018/11/04 GraphicalDesignMode.jsとの間で競合が発生する場合がある問題を修正
 // 1.7.2 2018/09/17 TMSoloMenu.jsと両立できるよう修正（TMSoloMenu.js側の修正も必須）
@@ -138,8 +139,8 @@
  * <SBI動画:1>      # ID[1]のアニメーションがループ再生されます。
  * <SBIAnimation:1> # ID[1]のアニメーションがループ再生されます。
  *
- * 装備品ごとに画像を上乗せできます。
- * アイテムのメモ欄に以下の通り指定してください。
+ * 装備品、ステート、職業ごとに画像を上乗せできます。
+ * それぞれデータベースのメモ欄に以下の通り指定してください。
  * <SBI画像:item>   # /img/pictures/item.pngが表示されます。
  * <SBIImage:item>  # /img/pictures/item.pngが表示されます。
  * <SBIPosX:30>     # 装備品画像のX座標を[30]に設定します。
@@ -288,8 +289,8 @@
  * <SBI動画:1>      # ID[1]のアニメーションがループ再生されます。
  * <SBIAnimation:1> # ID[1]のアニメーションがループ再生されます。
  *
- * 装備品ごとに画像を上乗せできます。
- * アイテムのメモ欄に以下の通り指定してください。
+ * 装備品、ステート、職業ごとに画像を上乗せできます。
+ * それぞれデータベースのメモ欄に以下の通り指定してください。
  * <SBI画像:item>   # /img/pictures/item.pngが表示されます。
  * <SBIImage:item>  # /img/pictures/item.pngが表示されます。
  * <SBIPosX:30>     # 装備品画像のX座標を[30]に設定します。
@@ -757,9 +758,11 @@
 
     Sprite_Bust.prototype.drawEquips = function() {
         this.clearEquips();
-        this._actor.equips().forEach(function(equip) {
-            if (equip) this.makeEquipSprite(equip);
-        }.bind(this));
+        this._actor.traitObjects().forEach(function(traitObj) {
+            if (traitObj && traitObj !== this._actor.actor()) {
+                this.makeSubSprite(traitObj);
+            }
+        }, this);
         this.sortEquips();
     };
 
@@ -784,20 +787,20 @@
         }
     };
 
-    Sprite_Bust.prototype.makeEquipSprite = function(equip) {
-        var itemFileName = getMetaValues(equip, ['画像', 'Image']);
+    Sprite_Bust.prototype.makeSubSprite = function(traitObj) {
+        var itemFileName = getMetaValues(traitObj, ['画像', 'Image']);
         if (itemFileName) {
             var sprite      = new Sprite();
             sprite.anchor.x = Sprite_Bust._anchorListX[paramAddImageOrigin];
             sprite.anchor.y = Sprite_Bust._anchorListY[paramAddImageOrigin];
             sprite.bitmap   = ImageManager.loadPicture(getArgString(itemFileName), 0);
-            var xStr        = getMetaValues(equip, ['PosX', '座標X']);
+            var xStr        = getMetaValues(traitObj, ['PosX', '座標X']);
             sprite.x        = this.x + (xStr ? getArgNumber(xStr) : 0);
-            var yStr        = getMetaValues(equip, ['PosY', '座標Y']);
+            var yStr        = getMetaValues(traitObj, ['PosY', '座標Y']);
             sprite.y        = this.y + (yStr ? getArgNumber(yStr) : 0);
-            var zStr        = getMetaValues(equip, ['PosZ', '座標Z']);
+            var zStr        = getMetaValues(traitObj, ['PosZ', '座標Z']);
             sprite.z        = zStr !== undefined ? getArgNumber(zStr) : 1;
-            var rectString  = getMetaValues(equip, ['矩形', 'Rect']);
+            var rectString  = getMetaValues(traitObj, ['矩形', 'Rect']);
             if (rectString) {
                 var rect = getArgArrayEval(rectString, 0);
                 sprite.setFrame(rect[0], rect[1], rect[2], rect[3]);
