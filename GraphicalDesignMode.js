@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.3 2019/11/02 デザインモード設定時はクリックでメッセージウィンドウを送れないよう修正
 // 2.10.2 2019/02/27 初期状態でスクロールされているウィンドウの行高さを変更した場合に、スクロールの初期表示がずれる現象を修正
 // 2.10.1 2018/11/06 BattleFormation.jsとの競合を解消
 // 2.10.0 2018/08/18 メッセージウィンドウおよびサブウィンドウを本プラグインから触れないようにする設定を追加
@@ -1173,6 +1174,15 @@ var $dataContainerProperties = null;
         Window_Selectable.prototype.processTouch = function() {};
         Window_BattleActor.prototype.processTouch = function() {};
         Window_BattleEnemy.prototype.processTouch = function() {};
+
+        var _Window_Message_isTriggered = Window_Message.prototype.isTriggered;
+        Window_Message.prototype.isTriggered = function() {
+            if (TouchInput.isRepeated()) {
+                return false;
+            } else {
+                return _Window_Message_isTriggered.apply(this, arguments);
+            }
+        };
     }
 
     //=============================================================================
