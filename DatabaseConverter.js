@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2019/11/03 1.1.0の修正によりマップおよびコモンイベントが出力できなくなっていた問題を修正
 // 1.1.1 2019/10/12 自動インポートがうまく動作していなかった問題を修正
 // 1.1.0 2019/09/23 オリジナルデータベースでIDが重複する行を配列としてエクスポート、インポートできる機能を追加
 // 1.0.3 2019/06/23 変換実行時、まれにメモ欄や説明欄の改行が増幅してしまう問題を修正
@@ -825,7 +826,7 @@ function ConverterManager() {
     class InterfaceConvertTarget {
 
         static METHODS() {
-            return ['execute', 'getFileName', 'load', 'save', 'getColumnDescriptions', 'getArrayProperties', 'appendData'];
+            return ['execute', 'getFileName', 'load', 'save', 'getColumnDescriptions', 'getArrayProperties', 'appendData', 'isStackDatabase'];
         }
 
         constructor() {
@@ -1117,6 +1118,10 @@ function ConverterManager() {
         getObjectProperties() {
             return AbstractConvertTargetEvent._objectProperties;
         }
+
+        isStackDatabase() {
+            return false;
+        }
     }
     AbstractConvertTargetEvent._commonDescriptions = {
         code       : 'イベントコード',
@@ -1368,9 +1373,7 @@ function ConverterManager() {
                 return !!dataItem;
             });
             if (this._target.isStackDatabase(dataName)) {
-                console.log(dataList);
                 dataList = this.parseStackDatabase(dataList);
-                console.log(dataList);
             }
             dataList.forEach(this._parseForSerialize, this);
             this._addColumnDescriptions(dataList);
