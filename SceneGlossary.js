@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.0 2019/11/03 コマンドから用語辞典を開くときに、カテゴリおよびリスト番号を指定して開ける機能を追加
 // 2.13.2 2019/09/08 2.13.1の修正に加えて収集率の表示を正常化
 // 2.13.1 2018/09/08 YEP_ItemCore.jsとの競合を解消
 // 2.13.0 2019/06/08 全ての用語アイテムを破棄するプラグインコマンドを追加
@@ -277,10 +278,10 @@
  *
  * GLOSSARY_LOSE_ALL
  *
- * GLOSSARY_CALL [Type]
+ * GLOSSARY_CALL [Type] [Category] [ListIndex]
  *  Call the glossary screen.
  *  If the type is omitted, it will be automatically set to "1".
- * ex：GLOSSARY_CALL 1
+ * ex：GLOSSARY_CALL 1 Character 0
  *
  * GLOSSARY_BACK
  *  Call up the glossary screen with reselecting the last selected item.
@@ -692,10 +693,13 @@
  * GLOSSARY_LOSE_ALL or 用語集全破棄
  *  データベースに登録している全ての用語アイテムが失われます。
  *
- * GLOSSARY_CALL or 用語集画面の呼び出し [種別]
+ * GLOSSARY_CALL or 用語集画面の呼び出し [種別] [カテゴリ] [リスト番号]
  *  用語集画面を呼び出します。
  *  種別を省略すると、自動で「1」になります。
  * 例：GLOSSARY_CALL 2
+ *  カテゴリを指定すると指定した名称のカテゴリおよびリスト番号が指定された
+ *  状態で用語辞典が開きます。
+ * 例：GLOSSARY_CALL 2 人物 1
  *
  * GLOSSARY_BACK or 用語集画面に戻る
  *  最後に選択していた項目を再選択した状態で用語集画面を呼び出します。
@@ -1031,6 +1035,12 @@ function Window_GlossaryComplete() {
             case '用語集画面の呼び出し' :
                 $gameParty.clearGlossaryIndex();
                 $gameParty.setSelectedGlossaryType(getArgNumber(args[0], 1));
+                if (args[1]) {
+                    var index = $gameParty.setGlossaryCategoryIndexByName(args[1]);
+                    if (index >= 0) {
+                        $gameParty.setGlossaryListIndex(getArgNumber(args[2]) || 0);
+                    }
+                }
                 SceneManager.push(Scene_Glossary);
                 break;
             case 'GLOSSARY_GAIN_ALL' :
@@ -1316,6 +1326,15 @@ function Window_GlossaryComplete() {
     Game_Party.prototype.setGlossaryCategoryIndex = function(index) {
         this.initGlossaryIndex();
         this._glossaryCategoryIndex[this.getSelectedGlossaryType()] = index;
+    };
+
+    Game_Party.prototype.setGlossaryCategoryIndexByName = function(name) {
+        var list = this.getAllGlossaryCategory();
+        var index = list.indexOf(name);
+        if (index > 0) {
+            this.setGlossaryCategoryIndex(index);
+        }
+        return index;
     };
 
     Game_Party.prototype.getGlossaryCategoryIndex = function() {
