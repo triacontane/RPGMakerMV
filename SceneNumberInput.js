@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2019/11/04 マイナスの値を入力できる機能を追加
 // 1.0.1 2017/08/27 指定する桁数が少ないと数値入力画面が正しく表示されない問題を修正
 // 1.0.0 2017/04/05 初版
 // ----------------------------------------------------------------------------
@@ -221,6 +222,7 @@
         setBasicInfo(variableId, length) {
             this._variableId  = variableId;
             this._inputLength = length || param.defaultDigit;
+            this._sign = true;
         }
 
         clear() {
@@ -247,11 +249,11 @@
         }
 
         getDefaultValue() {
-            return String($gameVariables.value(this._variableId) || '');
+            return $gameVariables.value(this._variableId);
         }
 
         getLength() {
-            return this._inputLength;
+            return this._inputLength + 1;
         }
     }
 
@@ -282,10 +284,11 @@
     }
 
     Window_NumberInput.numberTable = [
-        '7', '8', '9',
-        '4', '5', '6',
-        '1', '2', '3',
-        '0', 'C', 'OK'
+        '7' , '8', '9',
+        '4' , '5', '6',
+        '1' , '2', '3',
+        '0' , '-', '+',
+        'AC', 'C', 'OK'
     ];
 
     Window_NumberInput.prototype             = Object.create(Window_NameInput.prototype);
@@ -305,7 +308,7 @@
     };
 
     Window_NumberInput.prototype.windowHeight = function() {
-        return this.fittingHeight(4);
+        return this.fittingHeight(Math.floor(Window_NumberInput.numberTable.length / 3));
     };
 
     Window_NumberInput.prototype.standardFontSize = function() {
@@ -332,21 +335,23 @@
         return this.maxItems() - 1;
     };
 
-    Window_NumberInput.prototype.character = function() {
-        return this._index < this.getLastIndex() - 1 ? this.table()[this._index] : '';
+    Window_NumberInput.prototype.character = function(index) {
+        if (arguments.length === 0) {
+            index = this._index;
+        }
+        return this.isOk(index) ? '' : this.table()[index];
     };
 
-    Window_NumberInput.prototype.isOk = function() {
-        return this._index === this.getLastIndex();
-    };
-
-    Window_NumberInput.prototype.isDel = function() {
-        return this._index === this.getLastIndex() - 1;
+    Window_NumberInput.prototype.isOk = function(index) {
+        if (arguments.length === 0) {
+            index = this._index;
+        }
+        return index === this.getLastIndex();
     };
 
     Window_NumberInput.prototype.isAnyTriggered = function() {
-        return Input.isTriggered('ok') || Input.isTriggered('escape') || Input.dir4 !== 0 ||
-            TouchInput.isTriggered() || TouchInput.isCancelled();
+        return Input.isTriggered('ok') || Input.isTriggered('escape') || Input.isTriggered('backSpace') ||
+            Input.dir4 !== 0 || TouchInput.isTriggered() || TouchInput.isCancelled();
     };
 
     Window_NumberInput.prototype.itemRect = function(index) {
@@ -374,12 +379,19 @@
     };
 
     Window_NumberInput.prototype.isCommandEnabled = function(index) {
-        if (index === this.getLastIndex()) {
-            return this._editWindow.isInputFull();
-        } else if (index === this.getLastIndex() - 1) {
-            return true;
-        } else {
-            return !this._editWindow.isInputFull();
+        var character = this.character(index);
+        switch (character) {
+            case '':
+                return this._editWindow.isInputFull();
+            case 'C':
+            case 'AC':
+                return true;
+            case '+':
+                return !this._editWindow.getSign();
+            case '-':
+                return this._editWindow.getSign();
+            default:
+                return !this._editWindow.isInputFull();
         }
     };
 
@@ -441,11 +453,16 @@
 
     Window_NumberInput.prototype.processOk = function() {
         if (!this.isCommandEnabled(this.index())) {
-            if (this.isAnyTriggered()) this.playBuzzerSound();
+            if (this.isAnyTriggered()) {
+                this.playBuzzerSound();
+            }
             return;
         }
-        if (this.isDel()) {
-            this.processBack();
+        var character = this.character();
+        var process = Window_NumberInput.processMap[character];
+        if (process) {
+            process.call(this);
+            this._editWindow.refresh();
         } else {
             Window_NameInput.prototype.processOk.call(this);
         }
@@ -454,7 +471,9 @@
 
     Window_NumberInput.prototype.processBack = function() {
         if (this._editWindow.isInputEmpty()) {
-            if (this.isAnyTriggered()) Window_Selectable.prototype.processCancel.call(this);
+            if (this.isAnyTriggered()) {
+                Window_Selectable.prototype.processCancel.call(this);
+            }
         } else {
             Window_NameInput.prototype.processBack.call(this);
         }
@@ -466,6 +485,25 @@
             this._index = this.getLastIndex();
             if (!silentFlg) SoundManager.playCursor();
         }
+    };
+
+    Window_NumberInput.prototype.processPlus = function() {
+        this._editWindow.setSign(true);
+    };
+
+    Window_NumberInput.prototype.processMinus = function() {
+        this._editWindow.setSign(false);
+    };
+
+    Window_NumberInput.prototype.processAllBack = function() {
+        this._editWindow.clearNumber();
+    };
+
+    Window_NumberInput.processMap = {
+        '-' : Window_NumberInput.prototype.processMinus,
+        '+' : Window_NumberInput.prototype.processPlus,
+        'C' : Window_NumberInput.prototype.processBack,
+        'AC' : Window_NumberInput.prototype.processAllBack
     };
 
     //=============================================================================
@@ -489,10 +527,9 @@
 
     Window_NumberEdit.prototype.initialize = function() {
         this._numberInput = $gameSystem.getNumberInput();
-        this._name        = this._numberInput.getDefaultValue();
+        this.createDefaultName();
         this._index       = this._name.length;
         this._maxLength   = this._numberInput.getLength();
-        this._defaultName = '';
         var width         = this.windowWidth();
         var height        = this.windowHeight();
         var x             = (Graphics.boxWidth - width) / 2;
@@ -500,6 +537,12 @@
         Window_Base.prototype.initialize.call(this, x, y, width, height);
         this.deactivate();
         this.refresh();
+    };
+
+    Window_NumberEdit.prototype.createDefaultName = function() {
+        var value = this._numberInput.getDefaultValue();
+        this._name = (value >= 0 ? ' ' : '') + value;
+        this.setSign(value > 0);
     };
 
     Window_NumberEdit.prototype.windowWidth = function() {
@@ -535,7 +578,22 @@
     };
 
     Window_NumberEdit.prototype.isInputEmpty = function() {
-        return this._name.length === 0;
+        return this._name.length === 1;
+    };
+
+    Window_NumberEdit.prototype.setSign = function(sign) {
+        this._name = this._name.replace(/^./, sign ? '+' : '-');
+        this._sign = sign;
+    };
+
+    Window_NumberEdit.prototype.getSign = function() {
+        return this._sign;
+    };
+
+    Window_NumberEdit.prototype.clearNumber = function() {
+        this._name = ' ';
+        this._index = 1;
+        this.setSign(true);
     };
 
     //=============================================================================
