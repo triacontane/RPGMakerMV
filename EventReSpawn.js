@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.1 2019/11/04 TemplateEvent.jsと併用した際、ERS_MAKEによる生成対象のイベントがテンプレートイベントの場合はテンプレートイベントを生成するよう仕様変更
 // 1.9.4 2019/09/27 1.9.0以降、TemplateEvent.jsと併用した際「ERS_MAKE」を実行した場合でもテンプレートイベントが生成される問題を修正
 // 1.9.3 2019/07/07 1.9.0以降、ランダム生成で地形とリージョンを指定せず実行するとエラーになっていた問題を修正
 // 1.9.2 2019/06/30 イベントが存在しないマップに動的イベントを生成したとき、最初のイベントの一部の動作がおかしくなる問題を修正
@@ -359,12 +360,21 @@ function Game_PrefabEvent() {
     Game_Map.prototype.spawnEvent = function(originalEventId, x, y, isTemplate) {
         if (this.isExistEventData(originalEventId, isTemplate) && $gameMap.isValid(x, y)) {
             var eventId = this.getEventIdSequence();
-            var event   = new Game_PrefabEvent(this._mapId, eventId, originalEventId, x, y, isTemplate);
+            if (this.isTemplateSpawn(originalEventId)) {
+                isTemplate = true;
+                originalEventId = this.event(originalEventId).getTemplateId();
+            }
+            var event = new Game_PrefabEvent(this._mapId, eventId, originalEventId, x, y, isTemplate);
             this._lastSpawnEventId = eventId;
             this._events[eventId] = event;
         } else {
             throw new Error('無効なイベントIDもしくは座標のためイベントを作成できませんでした。');
         }
+    };
+
+    Game_Map.prototype.isTemplateSpawn = function(originalEventId) {
+        var event = this.event(originalEventId);
+        return event.hasTemplate && event.hasTemplate();
     };
 
     Game_Map.prototype.getLastSpawnEventId = function() {
