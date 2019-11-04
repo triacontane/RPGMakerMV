@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.2 2019/11/04 1.10.2の修正で「現在のマップに存在しないID」を指定して「ERS_テンプレート生成」を実行するとエラーになる問題を修正
 // 1.10.1 2019/11/04 TemplateEvent.jsと併用した際、ERS_MAKEによる生成対象のイベントがテンプレートイベントの場合はテンプレートイベントを生成するよう仕様変更
 // 1.9.4 2019/09/27 1.9.0以降、TemplateEvent.jsと併用した際「ERS_MAKE」を実行した場合でもテンプレートイベントが生成される問題を修正
 // 1.9.3 2019/07/07 1.9.0以降、ランダム生成で地形とリージョンを指定せず実行するとエラーになっていた問題を修正
@@ -360,7 +361,7 @@ function Game_PrefabEvent() {
     Game_Map.prototype.spawnEvent = function(originalEventId, x, y, isTemplate) {
         if (this.isExistEventData(originalEventId, isTemplate) && $gameMap.isValid(x, y)) {
             var eventId = this.getEventIdSequence();
-            if (this.isTemplateSpawn(originalEventId)) {
+            if (!isTemplate && this.isTemplateSpawn(originalEventId)) {
                 isTemplate = true;
                 originalEventId = this.event(originalEventId).getTemplateId();
             }
