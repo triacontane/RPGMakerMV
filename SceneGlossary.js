@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.1 2019/11/04 2.14.0の修正で、リストの一番上のカテゴリを指定して辞書を開くと正常に表示されない問題を修正
 // 2.14.0 2019/11/03 コマンドから用語辞典を開くときに、カテゴリおよびリスト番号を指定して開ける機能を追加
 // 2.13.2 2019/09/08 2.13.1の修正に加えて収集率の表示を正常化
 // 2.13.1 2018/09/08 YEP_ItemCore.jsとの競合を解消
@@ -1331,7 +1332,7 @@ function Window_GlossaryComplete() {
     Game_Party.prototype.setGlossaryCategoryIndexByName = function(name) {
         var list = this.getAllGlossaryCategory();
         var index = list.indexOf(name);
-        if (index > 0) {
+        if (index >= 0) {
             this.setGlossaryCategoryIndex(index);
         }
         return index;
