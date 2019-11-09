@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2019/11/09 条件に指定ターン以内撃破、クリティカル撃破を追加。ボーナスに最初のドロップアイテムの確率変更追加
 // 1.2.0 2019/06/11 撃破ボーナスとして任意の変数を増減させる機能を追加
 // 1.1.0 2017/06/08 ボーナス取得条件としてノーダメージ、ノーデス、ノースキルおよびスイッチを追加
 // 1.0.0 2016/08/07 初版
@@ -40,6 +41,8 @@
  * <KB_Variable:1, 20> # 変数[1]が20増加します。
  * <KB_変数:1, 20>     # 同上
  * <KB_Script:script>  # 任意のJavaScriptを実行します。
+ * <KB_ドロップ率:2>    # 最初のドロップアイテムのドロップ率を2倍にします。
+ * <KB_DropRate:2>     # 同上
  *
  * 撃破ボーナス条件をひとつだけ付けることができます。
  * <KB_条件:ノーダメージ> # ダメージを受けずに撃破で報酬
@@ -50,6 +53,10 @@
  * <KB_Cond:NoDeath>      # 同上
  * <KB_条件:1>            # スイッチ[1]がONのときに撃破で報酬
  * <KB_Cond:1>            # 同上
+ * <KB_条件:turn[1]>     # [1]ターン以内に撃破で報酬
+ * <KB_Cond:turn[1]>     # 同上
+ * <KB_条件:クリティカル> # クリティカル撃破で報酬
+ * <KB_Cond:Critical>    # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -113,6 +120,7 @@
     Game_BattlerBase._condNoDamages = ['NoDamage', 'ノーダメージ'];
     Game_BattlerBase._condNoSkill   = ['NoSkill', 'ノースキル'];
     Game_BattlerBase._condNoDeath   = ['NoDeath', 'ノーデス'];
+    Game_BattlerBase._condCritial   = ['Critical', 'クリティカル'];
 
     Game_BattlerBase.prototype.initKillBonusCondition = function() {
         this._noSkill  = true;
@@ -132,13 +140,13 @@
         this._noDeath  = false;
     };
 
-    Game_BattlerBase.prototype.canAcceptKillBonus = function() {
+    Game_BattlerBase.prototype.canAcceptKillBonus = function(critical) {
         return this.traitObjects().every(function(data) {
-            return this.checkDataForKillBonus(data);
+            return this.checkDataForKillBonus(data, critical);
         }.bind(this));
     };
 
-    Game_BattlerBase.prototype.checkDataForKillBonus = function(data) {
+    Game_BattlerBase.prototype.checkDataForKillBonus = function(data, critical) {
         var condition = getMetaValues(data, ['Cond', '条件']);
         if (!condition) return true;
         if (Game_BattlerBase._condNoDamages.contains(condition) && !this._noDamage) {
@@ -148,6 +156,13 @@
             return false;
         }
         if (Game_BattlerBase._condNoDeath.contains(condition) && !this._noDeath) {
+            return false;
+        }
+        if (Game_BattlerBase._condCritial.contains(condition) && !critical) {
+            return false;
+        }
+        var regResult = /turn\[(\d+)]/gi.exec(condition);
+        if (regResult && $gameTroop.turnCount() > parseInt(regResult[1])) {
             return false;
         }
         var switchId = parseInt(convertEscapeCharacters(condition));
@@ -179,6 +194,7 @@
     //=============================================================================
     var _Game_Action_testApply = Game_Action.prototype.testApply;
     Game_Action.prototype.testApply = function(target) {
+        this._criticalForKillBonus = false;
         var result = _Game_Action_testApply.apply(this, arguments);
         if (result && !this.isAttack() && !this.isGuard()) {
             this.subject().breakNoSkill();
@@ -186,15 +202,23 @@
         return result;
     };
 
+    var _Game_Action_applyCritical = Game_Action.prototype.applyCritical;
+    Game_Action.prototype.applyCritical = function(damage) {
+        this._criticalForKillBonus = true;
+        return _Game_Action_applyCritical.apply(this, arguments);
+    };
+
     var _Game_Action_executeHpDamage      = Game_Action.prototype.executeHpDamage;
     Game_Action.prototype.executeHpDamage = function(target, value) {
         _Game_Action_executeHpDamage.apply(this, arguments);
-        if (target.hp === 0) this.executeKillBonus();
+        if (target.hp === 0) {
+            this.executeKillBonus(target);
+        }
     };
 
-    Game_Action.prototype.executeKillBonus = function() {
+    Game_Action.prototype.executeKillBonus = function(target) {
         var subject = this.subject();
-        if (!subject || !subject.canAcceptKillBonus()) return;
+        if (!subject || !subject.canAcceptKillBonus(this._criticalForKillBonus)) return;
         this._gainHp = 0;
         this._gainMp = 0;
         this._gainTp = 0;
@@ -208,6 +232,7 @@
             this.executeKillBonusStateEnemy(data, subject);
             this.executeKillBonusVariable(data, subject);
             this.executeKillBonusScript(data, subject);
+            this.executeKillBonusDropRate(data, target);
         }.bind(this));
         if (this._gainHp !== 0) subject.gainHp(this._gainHp);
         if (this._gainMp !== 0) subject.gainMp(this._gainMp);
@@ -285,6 +310,38 @@
                 console.log(e.stack);
             }
         }
+    };
+
+    Game_Action.prototype.executeKillBonusDropRate = function(data, target) {
+        var value = getMetaValues(data, ['DropRate', 'ドロップ率']);
+        if (value) {
+            target.setCustomDropRate(getArgNumberWithEval(value));
+        }
+    };
+
+    /**
+     * Game_Enemy
+     * ドロップ率変更を実装します。
+     */
+    Game_Enemy.prototype.setCustomDropRate = function(value) {
+        this._customDropRate = value;
+    };
+
+    var _Game_Enemy_makeDropItems = Game_Enemy.prototype.makeDropItems;
+    Game_Enemy.prototype.makeDropItems = function() {
+        this._firstDrop = true;
+        return _Game_Enemy_makeDropItems.apply(this, arguments);
+    };
+
+    var _Game_Enemy_dropItemRate = Game_Enemy.prototype.dropItemRate;
+    Game_Enemy.prototype.dropItemRate = function() {
+        var result = _Game_Enemy_dropItemRate.apply(this, arguments);
+        if (this._firstDrop && this._customDropRate !== undefined) {
+            result *= this._customDropRate;
+            this._customDropRate = undefined;
+        }
+        this._firstDrop = false;
+        return result;
     };
 })();
 
