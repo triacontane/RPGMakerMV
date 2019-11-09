@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.0 2019/11/09 1.15.0で追加したアラーム機能にインターバル機能を追加
 // 1.15.0 2019/10/23 特定のゲーム内時刻になるとスイッチ操作されるアラーム機能を追加
 //                   タイルセット変更した場合に、新しいタイルセットの色調や天候有無の設定が反映されない問題を修正
 // 1.14.1 2019/10/17 ヘルプの記載漏れを修正
@@ -354,13 +355,20 @@
  * 時間ではなく時刻指定でスイッチ操作できるアラーム機能です。
  * [年月時分]は、「YYYYMMDDHHMM」形式で指定してください。
  * 解除はタイマー用のコマンドを使います。
- * C_SET_SWITCH_ALARM [年月時分] [スイッチID]
- * C_SET_SELF_SWITCH_ALARM [年月時分] [セルフスイッチ種類]
- * C_SET_SWITCH_NAMED_ALARM [アラーム名] [年月時分] [スイッチID]
- * C_SET_SELF_SWITCH_NAMED_ALARM [アラーム名] [年月時分] [セルフスイッチ種類]
+ * C_SET_SWITCH_ALARM [年月時分] [スイッチID] [インターバル]
+ * C_SET_SELF_SWITCH_ALARM [年月時分] [セルフスイッチ種類] [インターバル]
+ * C_SET_SWITCH_NAMED_ALARM [アラーム名] [年月時分] [スイッチID] [インターバル]
+ * C_SET_SELF_SWITCH_NAMED_ALARM [アラーム名] [年月時分] [セルフスイッチ種類] [インターバル]
  *
  * 指定例（ゲーム内時間で2019/10/22 15:00を過ぎるとセルフスイッチ[B]をONにする）
  * C_SET_SELF_SWITCH_ALARM 201910221500 B
+ *
+ * インターバルを指定した場合、スイッチがONになった後も指定した期間が経過すると
+ * 再度、スイッチがONになるようになります。単位は分ですが計算式が使えます。
+ *
+ * 指定例（ゲーム内時間で2019/10/22 15:00を過ぎるとセルフスイッチ[B]をONにする。
+ * 　　　　その後、1日経過ごとに再度セルフスイッチ[B]をONにする）
+ * C_SET_SELF_SWITCH_ALARM 201910221500 B 24*60
  *
  * メモ欄詳細
  *  タイトルセットおよびマップのメモ欄に以下を入力すると、
@@ -701,7 +709,11 @@ function Window_Chronus() {
         var timerName = named ? convertEscapeCharacters(args.shift()) : null;
         var timeout   = getArgNumber(args.shift(), 0);
         var switchKey = this.getSwitchKey(args.shift(), selfSwitch);
-        $gameSystem.chronus().makeAlarm(timerName, timeout, switchKey);
+        var interval = args.shift();
+        if (interval) {
+            interval = eval(convertEscapeCharacters(interval));
+        }
+        $gameSystem.chronus().makeAlarm(timerName, timeout, switchKey, interval);
     };
 
     Game_Interpreter.prototype.getSwitchKey = function(arg, selfSwitch) {
@@ -1605,7 +1617,7 @@ function Window_Chronus() {
         return this.getTotalTime() / (24 * 60);
     };
 
-    Game_Chronus.prototype.makeAlarm = function(timerName, timeNumber, switchKey) {
+    Game_Chronus.prototype.makeAlarm = function(timerName, timeNumber, switchKey, interval) {
         var baseTime   = this.getTotalTime();
         var min        = timeNumber % 100;
         var hour       = Math.floor(timeNumber / 100) % 100;
@@ -1615,11 +1627,11 @@ function Window_Chronus() {
         var year       = Math.floor(timeNumber / 100000000);
         var dayMeter   = this.calcNewDay(year, month, day) - (this._criterionDay || 0);
         var targetTime = dayMeter * 24 * 60 + timeMeter;
-        this.makeTimer(timerName, (targetTime - baseTime) || 0, switchKey, false);
+        this.makeTimer(timerName, (targetTime - baseTime) || 0, switchKey, interval);
     };
 
-    Game_Chronus.prototype.makeTimer = function(timerName, timeout, switchKey, loop) {
-        var timer = new Game_ChronusTimer(timeout, switchKey, loop);
+    Game_Chronus.prototype.makeTimer = function(timerName, timeout, switchKey, interval) {
+        var timer = new Game_ChronusTimer(timeout, switchKey, interval);
         if (timerName) {
             this._namedTimers[timerName] = timer;
         } else {
@@ -1677,9 +1689,10 @@ function Window_Chronus() {
     Game_ChronusTimer.prototype             = Object.create(Game_ChronusTimer.prototype);
     Game_ChronusTimer.prototype.constructor = Game_ChronusTimer;
 
-    Game_ChronusTimer.prototype.initialize = function(timeout, switchKey, loop) {
+    Game_ChronusTimer.prototype.initialize = function(timeout, switchKey, interval) {
         this._timeout = timeout;
-        this._loop    = loop || false;
+        this._interval = interval;
+        this._loop    = !!interval;
         this.setBaseTime();
         if (Array.isArray(switchKey)) {
             this.setCallBackSelfSwitch(switchKey);
@@ -1718,6 +1731,9 @@ function Window_Chronus() {
         this.onTimeout();
         if (this._loop) {
             this.setBaseTime();
+            if (this._interval && this._interval !== true) {
+                this._timeout = this._interval;
+            }
             return true;
         } else {
             return false;
