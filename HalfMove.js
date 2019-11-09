@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.0 2019/11/10 イベントの初期位置を半歩位置にできる機能を追加
 // 1.14.0 2019/11/02 トリガー領域拡大で負の値を設定できるよう修正
 // 1.13.1 2019/09/29 半歩用通行可能判定の地形タグおよびリージョンで複数のリージョンを並べたときに、一部設定が無効になる問題を修正
 // 1.13.0 2019/07/07 移動ルート強制中は半歩移動無効の設定をしているときでも半歩で強制移動できるスクリプトを追加
@@ -181,6 +182,8 @@
  * <HMTriggerExpansion:ON> -> Expansion trigger area ON
  * <HMTriggerExpansion:OFF> -> Expansion trigger area OFF
  * <HMExpansionArea:1,1,1,1> -> Expansion trigger area(down,left,right,up)
+ * <HMInitialHalfX> -> Initial Half Position X
+ * <HMInitialHalfY> -> Initial Half Position Y
  *
  * ・スクリプト（移動ルートの設定の「スクリプト」から実行）
  *
@@ -340,6 +343,13 @@
  * 　左右に半マスずつ起動可能領域が拡張されます。
  *
  * それ以外は上下左右に半マスずつトリガー領域が拡張されます。
+ *
+ * イベントの初期位置を半歩分だけ加算します。
+ * 最初から半歩位置にイベントを配置したいときに使用してください。
+ * <HM初期半歩X>
+ * <HMInitialHalfX>
+ * <HM初期半歩Y>
+ * <HMInitialHalfY>
  *
  * 注意！
  * 対象イベントの領域が拡大する以下のタグは廃止になりました。
@@ -1536,6 +1546,13 @@
         var metaValue          = getMetaValues(this.event(), ['TriggerExpansion', 'トリガー拡大']);
         this._triggerExpansion = metaValue ? getArgBoolean(metaValue) : paramTriggerExpansion;
         this._expansionArea    = this.getExpansionArea();
+        var halfX = getMetaValues(this.event(), ['初期半歩X', 'InitialHalfX']);
+        var halfY = getMetaValues(this.event(), ['初期半歩Y', 'InitialHalfY']);
+        if (halfX || halfY) {
+            var newX = this.x + (halfX ? Game_Map.tileUnit : 0);
+            var newY = this.y + (halfY ? Game_Map.tileUnit : 0);
+            this.locate(newX, newY);
+        }
     };
 
     var _Game_Event_setupPage      = Game_Event.prototype.setupPage;
