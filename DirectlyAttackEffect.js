@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.5 2019/11/10 Torigoya_ReplaceDeadMemberPlus.jsと併用時、入れ替わったアクターが瞬間表示される競合を修正
 // 1.4.4 2019/10/10 反撃拡張プラグインと併用し、かつ戦闘行動の強制による反撃が無効な設定で自分自身の攻撃に反撃するとエラーになる競合の修正
 // 1.4.3 2019/09/23 演出対象をアクターもしくは敵キャラのみに限定した場合はアニメ演出も実行されないよう修正
 // 1.4.2 2019/05/19 BattlerGraphicExtend.jsと併用したとき、<DAEVanish>の設定が一部機能しない競合を修正
@@ -992,6 +993,7 @@ function Sprite_Dummy() {
     var _Sprite_Battler_updatePosition      = Sprite_Battler.prototype.updatePosition;
     Sprite_Battler.prototype.updatePosition = function() {
         _Sprite_Battler_updatePosition.apply(this, arguments);
+
         this.x += this._attackX;
         this.y += this._attackY - this.getAttackAltitude();
         if (this.isVisibleAfterimage()) {
@@ -1202,7 +1204,16 @@ function Sprite_Dummy() {
     Sprite_AfterimageActor.prototype.updatePosition = function() {};
 
     Sprite_AfterimageActor.prototype.setBattler = function(battler) {
-        Sprite_Actor.prototype.setBattler.apply(this, arguments);
+        this._battler = battler;
+        var changed = (battler !== this._actor);
+        if (changed) {
+            this._actor = battler;
+            if (battler) {
+                this.setActorHome(battler.index());
+            }
+            this.startEntryMotion();
+            this._stateSprite.setup(battler);
+        }
     };
 
     Sprite_AfterimageActor.prototype.createShadowSprite = function() {
