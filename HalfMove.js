@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.2 2019/11/10 PD_8DirDash.jsと組み合わせたとき、斜め方向を向いている状態で一歩前進するとキャラクターが移動先に瞬間移動してしまう競合を解消
 // 1.15.1 2019/11/10 1.15.0の機能で半歩加算と半歩減算のどちらもできるよう修正
 // 1.15.0 2019/11/10 イベントの初期位置を半歩位置にできる機能を追加
 // 1.14.0 2019/11/02 トリガー領域拡大で負の値を設定できるよう修正
@@ -602,19 +603,23 @@
 
     var _Game_Map_xWithDirection      = Game_Map.prototype.xWithDirection;
     Game_Map.prototype.xWithDirection = function(x, d) {
+        var newX = _Game_Map_xWithDirection.apply(this, arguments);
         if (localHalfPositionCount > 0) {
-            return x + (d === 6 ? Game_Map.tileUnit : d === 4 ? -Game_Map.tileUnit : 0);
+            var dx = newX - x;
+            return x + (dx * Game_Map.tileUnit);
         } else {
-            return _Game_Map_xWithDirection.apply(this, arguments);
+            return newX;
         }
     };
 
     var _Game_Map_yWithDirection      = Game_Map.prototype.yWithDirection;
     Game_Map.prototype.yWithDirection = function(y, d) {
+        var newY = _Game_Map_yWithDirection.apply(this, arguments);
         if (localHalfPositionCount > 0) {
-            return y + (d === 2 ? Game_Map.tileUnit : d === 8 ? -Game_Map.tileUnit : 0);
+            var dy = newY - y;
+            return y + (dy * Game_Map.tileUnit);
         } else {
-            return _Game_Map_yWithDirection.apply(this, arguments);
+            return newY;
         }
     };
 
