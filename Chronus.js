@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.1 2019/11/10 1.16.1で追加したアラーム機能で、アラームに設定した時間を超過して判定された場合、次回のインターバルが超過した時間からカウントされてしまう問題を修正
 // 1.16.0 2019/11/09 1.15.0で追加したアラーム機能にインターバル機能を追加
 // 1.15.0 2019/10/23 特定のゲーム内時刻になるとスイッチ操作されるアラーム機能を追加
 //                   タイルセット変更した場合に、新しいタイルセットの色調や天候有無の設定が反映されない問題を修正
@@ -1627,11 +1628,11 @@ function Window_Chronus() {
         var year       = Math.floor(timeNumber / 100000000);
         var dayMeter   = this.calcNewDay(year, month, day) - (this._criterionDay || 0);
         var targetTime = dayMeter * 24 * 60 + timeMeter;
-        this.makeTimer(timerName, (targetTime - baseTime) || 0, switchKey, interval);
+        this.makeTimer(timerName, (targetTime - baseTime) || 0, switchKey, true, interval);
     };
 
-    Game_Chronus.prototype.makeTimer = function(timerName, timeout, switchKey, interval) {
-        var timer = new Game_ChronusTimer(timeout, switchKey, interval);
+    Game_Chronus.prototype.makeTimer = function(timerName, timeout, switchKey, loop, interval) {
+        var timer = new Game_ChronusTimer(timeout, switchKey, loop, interval);
         if (timerName) {
             this._namedTimers[timerName] = timer;
         } else {
@@ -1689,11 +1690,11 @@ function Window_Chronus() {
     Game_ChronusTimer.prototype             = Object.create(Game_ChronusTimer.prototype);
     Game_ChronusTimer.prototype.constructor = Game_ChronusTimer;
 
-    Game_ChronusTimer.prototype.initialize = function(timeout, switchKey, interval) {
+    Game_ChronusTimer.prototype.initialize = function(timeout, switchKey, loop, interval) {
         this._timeout = timeout;
-        this._interval = interval;
-        this._loop    = !!interval;
-        this.setBaseTime();
+        this._interval = interval || timeout;
+        this._loop    = loop;
+        this._baseTime = this.getTotalTime();
         if (Array.isArray(switchKey)) {
             this.setCallBackSelfSwitch(switchKey);
         } else {
@@ -1714,10 +1715,6 @@ function Window_Chronus() {
         return $gameSystem.chronus().getTotalTime();
     };
 
-    Game_ChronusTimer.prototype.setBaseTime = function() {
-        this._baseTime = this.getTotalTime();
-    };
-
     Game_ChronusTimer.prototype.setCallBackSwitch = function(switchId) {
         this._callBackSwitchId = switchId;
     };
@@ -1727,16 +1724,22 @@ function Window_Chronus() {
     };
 
     Game_ChronusTimer.prototype.update = function() {
-        if (!this._start || !this.isTimeout()) return true;
+        if (!this._start || !this.isTimeout()) {
+            return true;
+        }
         this.onTimeout();
         if (this._loop) {
-            this.setBaseTime();
-            if (this._interval && this._interval !== true) {
-                this._timeout = this._interval;
-            }
+            this.resetBaseTime();
             return true;
         } else {
             return false;
+        }
+    };
+
+    Game_ChronusTimer.prototype.resetBaseTime = function() {
+        while(this.isTimeout()) {
+            this._baseTime += this._timeout;
+            this._timeout = this._interval;
         }
     };
 
