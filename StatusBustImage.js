@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2019/11/10 1.8.0でZ座標の指定された装備、ステート画像を複数表示すると、アクター追加画像の表示順が入れ替わる場合がある問題を修正
 // 1.8.0 2019/11/02 装備品以外にもステートや職業でも追加画像を表示できる機能を追加
 // 1.7.4 2019/01/02 MOG_SceneMenu.jsと併用した場合、アイテムを使用時に2回使用してしまう場合がある問題を修正
 // 1.7.3 2018/11/04 GraphicalDesignMode.jsとの間で競合が発生する場合がある問題を修正
@@ -820,6 +821,7 @@
         sprite.bitmap   = ImageManager.loadPicture(image.fileName);
         sprite.x        = this.x + image.x;
         sprite.y        = this.y + image.y;
+        sprite.z        = 0;
         this.parent.addChild(sprite);
         this._additonalSprite.push(sprite);
     };
