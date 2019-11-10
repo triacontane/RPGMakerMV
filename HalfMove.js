@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.1 2019/11/10 1.15.0の機能で半歩加算と半歩減算のどちらもできるよう修正
 // 1.15.0 2019/11/10 イベントの初期位置を半歩位置にできる機能を追加
 // 1.14.0 2019/11/02 トリガー領域拡大で負の値を設定できるよう修正
 // 1.13.1 2019/09/29 半歩用通行可能判定の地形タグおよびリージョンで複数のリージョンを並べたときに、一部設定が無効になる問題を修正
@@ -182,8 +183,10 @@
  * <HMTriggerExpansion:ON> -> Expansion trigger area ON
  * <HMTriggerExpansion:OFF> -> Expansion trigger area OFF
  * <HMExpansionArea:1,1,1,1> -> Expansion trigger area(down,left,right,up)
- * <HMInitialHalfX> -> Initial Half Position X
- * <HMInitialHalfY> -> Initial Half Position Y
+ * <HMInitialHalfX:+> -> Initial Half Position X(+0.5)
+ * <HMInitialHalfY:+> -> Initial Half Position Y(+0.5)
+ * <HMInitialHalfX:-> -> Initial Half Position X(-0.5)
+ * <HMInitialHalfY:-> -> Initial Half Position Y(-0.5)
  *
  * ・スクリプト（移動ルートの設定の「スクリプト」から実行）
  *
@@ -346,10 +349,17 @@
  *
  * イベントの初期位置を半歩分だけ加算します。
  * 最初から半歩位置にイベントを配置したいときに使用してください。
- * <HM初期半歩X>
- * <HMInitialHalfX>
- * <HM初期半歩Y>
- * <HMInitialHalfY>
+ * <HM初期半歩X:+>
+ * <HMInitialHalfX:+>
+ * <HM初期半歩Y:+>
+ * <HMInitialHalfY:+>
+ *
+ * 半歩減算したい場合はこちらのメモ欄です。
+ * <HM初期半歩X:->
+ * <HMInitialHalfX:->
+ * <HM初期半歩Y:->
+ * <HMInitialHalfY:->
+ *
  *
  * 注意！
  * 対象イベントの領域が拡大する以下のタグは廃止になりました。
@@ -1549,10 +1559,24 @@
         var halfX = getMetaValues(this.event(), ['初期半歩X', 'InitialHalfX']);
         var halfY = getMetaValues(this.event(), ['初期半歩Y', 'InitialHalfY']);
         if (halfX || halfY) {
-            var newX = this.x + (halfX ? Game_Map.tileUnit : 0);
-            var newY = this.y + (halfY ? Game_Map.tileUnit : 0);
-            this.locate(newX, newY);
+            this.initHalfPos(halfX, halfY);
         }
+    };
+
+    Game_Event.prototype.initHalfPos = function(halfX, halfY) {
+        var newX = this.x;
+        var newY = this.y;
+        if (halfX === '-') {
+            newX -= Game_Map.tileUnit;
+        } else if (halfX) {
+            newX += Game_Map.tileUnit;
+        }
+        if (halfY === '-') {
+            newY -= Game_Map.tileUnit;
+        } else if (halfY) {
+            newY += Game_Map.tileUnit;
+        }
+        this.locate(newX, newY);
     };
 
     var _Game_Event_setupPage      = Game_Event.prototype.setupPage;
