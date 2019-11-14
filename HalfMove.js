@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.3 2019/11/14 通行設定(4方向)の北の方を通行不可にしたタイルに南の中央から侵入すると半歩分は通行可能にもかかわらず通行不可判定されてしまう問題を修正
 // 1.15.2 2019/11/10 PD_8DirDash.jsと組み合わせたとき、斜め方向を向いている状態で一歩前進するとキャラクターが移動先に瞬間移動してしまう競合を解消
 // 1.15.1 2019/11/10 1.15.0の機能で半歩加算と半歩減算のどちらもできるよう修正
 // 1.15.0 2019/11/10 イベントの初期位置を半歩位置にできる機能を追加
@@ -868,7 +869,8 @@
             if (d !== 8) {
                 result = alias(x, y, d);
             } else {
-                result = $gameMap.isPassable(x, y, d);
+                result = $gameMap.isPassable(x, y, 2) || $gameMap.isPassable(x, y, 4) ||
+                    $gameMap.isPassable(x, y, 6) || $gameMap.isPassable(x, y, 8);
             }
         }
         if (this.isHalfMove()) {
