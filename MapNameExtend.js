@@ -1,15 +1,16 @@
 //=============================================================================
 // MapNameExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2019/11/17 マップ名表示を指定したフレーム数だけ遅延させる機能を追加
 // 1.0.1 2017/04/06 イベントテストを実行すると、数秒経過後にエラーが発生する問題の修正
 // 1.0.0 2017/03/20 MapNameWindow.jsから流用作成
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -44,7 +45,12 @@
  * @type number
  *
  * @param FadeInSpeed
- * @desc マップ名がフェードイン速度です。（デフォルト16）
+ * @desc マップ名のフェードイン速度です。（デフォルト16）
+ * @default 0
+ * @type number
+ *
+ * @param ViewDelay
+ * @desc マップ名の表示を指定したフレーム数だけ遅らせます。
  * @default 0
  * @type number
  *
@@ -126,7 +132,12 @@
  * @type number
  *
  * @param フェードイン速度
- * @desc マップ名がフェードイン速度です。（デフォルト16）
+ * @desc マップ名のフェードイン速度です。（デフォルト16）
+ * @default 0
+ * @type number
+ *
+ * @param 表示遅延
+ * @desc マップ名の表示を指定したフレーム数だけ遅らせます。
  * @default 0
  * @type number
  *
@@ -249,6 +260,7 @@
     param.useControlCharacter = getParamBoolean(['UseControlCharacter', '制御文字使用']);
     param.backgroundImage     = getParamString(['BackgroundImage', '背景画像']);
     param.showRealName        = getParamBoolean(['ShowRealName', '実名表示']);
+    param.viewDelay           = getParamNumber(['ViewDelay', '表示遅延']);
 
     //=============================================================================
     // ローカル変数
@@ -301,10 +313,18 @@
 
     var _Window_MapName_updateFadeIn      = Window_MapName.prototype.updateFadeIn;
     Window_MapName.prototype.updateFadeIn = function() {
+        if (param.viewDelay > 0 && this.updateDelay()) {
+            return;
+        }
         var opacity = this.contentsOpacity;
         _Window_MapName_updateFadeIn.apply(this, arguments);
         this.updateOpacity(opacity + param.fadeInSpeed);
-        this.updatePlacementInFace(opacity);
+        this.updatePlacementInFading(opacity);
+    };
+
+    Window_MapName.prototype.updateDelay = function() {
+        this._delayCount = (this._delayCount || 0) + 1;
+        return this._delayCount < param.viewDelay;
     };
 
     var _Window_MapName_updateFadeOut      = Window_MapName.prototype.updateFadeOut;
@@ -312,7 +332,7 @@
         var opacity = this.contentsOpacity;
         _Window_MapName_updateFadeOut.apply(this, arguments);
         this.updateOpacity(opacity - param.fadeInSpeed);
-        this.updatePlacementInFace(opacity);
+        this.updatePlacementInFading(opacity);
         if (opacity > 0 && this.contentsOpacity === 0) {
             this.reOpen();
         }
@@ -335,7 +355,7 @@
         this.y = (param.positionY ? param.positionY : this._originalY);
     };
 
-    Window_MapName.prototype.updatePlacementInFace = function(oldOpacity) {
+    Window_MapName.prototype.updatePlacementInFading = function(oldOpacity) {
         if (oldOpacity !== this.contentsOpacity) {
             this.x += param.moveXInFade || 0;
             this.y += param.moveYInFace || 0;
