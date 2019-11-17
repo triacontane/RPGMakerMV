@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.2 2019/11/17 1.15.0の修正以後、場所移動したときのタイルセット情報の取得が、移動前のものになっていた問題を修正
 // 1.16.1 2019/11/10 1.16.1で追加したアラーム機能で、アラームに設定した時間を超過して判定された場合、次回のインターバルが超過した時間からカウントされてしまう問題を修正
 // 1.16.0 2019/11/09 1.15.0で追加したアラーム機能にインターバル機能を追加
 // 1.15.0 2019/10/23 特定のゲーム内時刻になるとスイッチ操作されるアラーム機能を追加
@@ -740,6 +741,7 @@ function Window_Chronus() {
         if (!$gameParty.inBattle()) {
             var chronus = $gameSystem.chronus();
             chronus.refreshTint(true);
+            chronus.refreshWeather(true);
         }
         return result;
     };
@@ -791,7 +793,7 @@ function Window_Chronus() {
         if (metaValue1 !== undefined) {
             return getArgBoolean(metaValue1);
         }
-        var tileset = this.tileset() || $dataTilesets[$dataMap.tilesetId];
+        var tileset = $gamePlayer.isTransferring() ? $dataTilesets[$dataMap.tilesetId] : this.tileset();
         var metaValue2 = getMetaValues(tileset, tagNames);
         if (metaValue2 !== undefined) {
             return getArgBoolean(metaValue2);
