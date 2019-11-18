@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2019/11/18 総フレーム数にInfinityを設定した場合の挙動を自然なものに変更
+//                  遅延機能をイベントコマンドの「マップ名表示」をONにした場合にも適用されるよう修正
 // 1.1.0 2019/11/17 マップ名表示を指定したフレーム数だけ遅延させる機能を追加
 // 1.0.1 2017/04/06 イベントテストを実行すると、数秒経過後にエラーが発生する問題の修正
 // 1.0.0 2017/03/20 MapNameWindow.jsから流用作成
@@ -40,9 +42,10 @@
  * @type number
  *
  * @param AllDuration
- * @desc マップ名が表示されて消えるまでの総フレーム数です。（デフォルト300）
- * @default 0
+ * @desc マップ名が表示されて消えるまでの総フレーム数です。ずっと表示させたい場合「Infinity」と入力してください。
+ * @default 300
  * @type number
+ * @min 1
  *
  * @param FadeInSpeed
  * @desc マップ名のフェードイン速度です。（デフォルト16）
@@ -127,9 +130,10 @@
  * @type number
  *
  * @param 総フレーム数
- * @desc マップ名が表示されて消えるまでの総フレーム数です。（デフォルト300）
- * @default 0
+ * @desc マップ名が表示されて消えるまでの総フレーム数です。ずっと表示させたい場合「Infinity」と入力してください。
+ * @default 300
  * @type number
+ * @min 1
  *
  * @param フェードイン速度
  * @desc マップ名のフェードイン速度です。（デフォルト16）
@@ -314,12 +318,30 @@
     var _Window_MapName_updateFadeIn      = Window_MapName.prototype.updateFadeIn;
     Window_MapName.prototype.updateFadeIn = function() {
         if (param.viewDelay > 0 && this.updateDelay()) {
+            this._showCount++;
             return;
         }
         var opacity = this.contentsOpacity;
         _Window_MapName_updateFadeIn.apply(this, arguments);
         this.updateOpacity(opacity + param.fadeInSpeed);
         this.updatePlacementInFading(opacity);
+    };
+
+    Window_MapName.prototype.flash = function() {
+        if (!this.isNeverHide()) {
+            return;
+        }
+        if ($gameMap.isNameDisplayEnabled()) {
+            this.open();
+            while(this.contentsOpacity < 255) {
+                this.updateFadeIn();
+            }
+        }
+        this._showCount = Infinity;
+    };
+
+    Window_MapName.prototype.isNeverHide = function() {
+        return !isFinite(param.allDuration)
     };
 
     Window_MapName.prototype.updateDelay = function() {
@@ -330,6 +352,7 @@
     var _Window_MapName_updateFadeOut      = Window_MapName.prototype.updateFadeOut;
     Window_MapName.prototype.updateFadeOut = function() {
         var opacity = this.contentsOpacity;
+        this._delayCount = 0;
         _Window_MapName_updateFadeOut.apply(this, arguments);
         this.updateOpacity(opacity - param.fadeInSpeed);
         this.updatePlacementInFading(opacity);
@@ -388,6 +411,14 @@
         this.updatePlacementInit();
     };
 
+    var _Window_MapName_hide = Window_MapName.prototype.hide;
+    Window_MapName.prototype.hide = function() {
+        if (this.isNeverHide()) {
+            return;
+        }
+        _Window_MapName_hide.apply(this, arguments);
+    };
+
     Window_MapName.prototype.reOpen = function() {
         local.mapNameIndex++;
         if ($gameMap.displayName()) {
@@ -407,6 +438,14 @@
             this.drawTextEx(text, x, y);
         } else {
             _Window_MapName_drawText.apply(this, arguments);
+        }
+    };
+
+    var _Scene_Map_start = Scene_Map.prototype.start;
+    Scene_Map.prototype.start = function() {
+        _Scene_Map_start.apply(this, arguments);
+        if (!this._transfer) {
+            this._mapNameWindow.flash();
         }
     };
 })();
