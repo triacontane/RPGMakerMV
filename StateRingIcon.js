@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2019/11/20 リングアイコンの拡大率を設定できる機能を追加
 // 2.0.1 2019/10/14 MOG_BattleHud.jsと併用したときもアイコンごとにターン数表示の有無が反映されるよう競合解消
 // 2.0.0 2019/09/15 アイコンごとにターン数表示の有無を設定できる機能を追加
 //                  パラメータ構造の変更(パラメータの再設定が必要です)
@@ -45,6 +46,16 @@
  * @param RadiusY
  * @desc 縦方向の半径の値です。
  * @default 16
+ * @type number
+ *
+ * @param ScaleX
+ * @desc アイコンの横方向の拡大率です。
+ * @default 100
+ * @type number
+ *
+ * @param ScaleY
+ * @desc アイコンの縦方向の拡大率です。
+ * @default 100
  * @type number
  *
  * @param CycleDuration
@@ -150,6 +161,18 @@
  * @text Y半径
  * @desc 縦方向の半径の値です。(Default:16)
  * @default 16
+ * @type number
+ *
+ * @param ScaleX
+ * @text X拡大率
+ * @desc アイコンの横方向の拡大率です。
+ * @default 100
+ * @type number
+ *
+ * @param ScaleY
+ * @text Y拡大率
+ * @desc アイコンの縦方向の拡大率です。
+ * @default 100
  * @type number
  *
  * @param CycleDuration
@@ -464,6 +487,16 @@ function Sprite_StateIconChild() {
         this.visible     = false;
         this._turnSprite = null;
         this._turn       = 0;
+        this.scale.x = this.getScaleX();
+        this.scale.y = this.getScaleY();
+    };
+
+    Sprite_StateIconChild.prototype.getScaleX = function() {
+        return (param.ScaleX || 100) / 100;
+    };
+
+    Sprite_StateIconChild.prototype.getScaleY = function() {
+        return (param.ScaleY || 100) / 100;
     };
 
     Sprite_StateIconChild.prototype.update = function() {};
@@ -493,6 +526,7 @@ function Sprite_StateIconChild() {
         if (this._turnSprite) return;
         var sprite             = new Sprite();
         sprite.bitmap          = new Bitmap(Sprite_StateIcon._iconWidth, Sprite_StateIcon._iconHeight);
+        sprite.bitmap.smooth   = true;
         sprite.bitmap.fontSize = param.FontSize;
         sprite.x               = param.TurnCountX;
         sprite.y               = param.TurnCountY;
@@ -507,9 +541,13 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIconChild.prototype.setNormalPosition = function(index, max) {
-        this.x       = ((-max + 1) / 2 + index) * Sprite_StateIcon._iconWidth;
+        this.x       = ((-max + 1) / 2 + index) * this.getIconWidth();
         this.y       = 0;
         this.visible = true;
+    };
+
+    Sprite_StateIconChild.prototype.getIconWidth = function() {
+        return Sprite_StateIcon._iconWidth * this.getScaleX();
     };
 
     //=============================================================================
