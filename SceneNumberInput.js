@@ -1,16 +1,18 @@
 //=============================================================================
 // SceneNumberInput.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2019/11/22 対象変数値が「0」だった場合の符号がマイナスになってしまう問題を修正
+//                  背景マップの表示方法を(ぼかし、通常、なし)から選択できる機能を追加
 // 1.1.0 2019/11/04 マイナスの値を入力できる機能を追加
 // 1.0.1 2017/08/27 指定する桁数が少ないと数値入力画面が正しく表示されない問題を修正
 // 1.0.0 2017/04/05 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -31,6 +33,17 @@
  * @require 1
  * @dir img/pictures/
  * @type file
+ *
+ * @param BackGroundPolicy
+ * @desc 背景ピクチャを表示しない場合に表示する背景マップの表示ポリシーです。
+ * @default 0
+ * @type select
+ * @option ぼかしマップ
+ * @value 0
+ * @option 通常マップ
+ * @value 1
+ * @option なし
+ * @value 2
  *
  * @param FontSize
  * @desc 数値入力ウィンドウのフォントサイズです。
@@ -72,6 +85,17 @@
  * @require 1
  * @dir img/pictures/
  * @type file
+ *
+ * @param 背景マップ表示方法
+ * @desc 背景ピクチャを表示しない場合に表示する背景マップの表示ポリシーです。
+ * @default 0
+ * @type select
+ * @option ぼかしマップ
+ * @value 0
+ * @option 通常マップ
+ * @value 1
+ * @option なし
+ * @value 2
  *
  * @param フォントサイズ
  * @desc 数値入力ウィンドウのフォントサイズです。
@@ -156,11 +180,12 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param          = {};
-    param.backPicture  = getParamString(['BackPicture', '背景ピクチャ']);
-    param.defaultDigit = getParamNumber(['DefaultDigit', 'デフォルト桁数'], 1);
-    param.fontSize     = getParamNumber(['FontSize', 'フォントサイズ'], 12);
-    param.helpMessage  = getParamString(['HelpMessage', 'ヘルプメッセージ']);
+    var param              = {};
+    param.backPicture      = getParamString(['BackPicture', '背景ピクチャ']);
+    param.defaultDigit     = getParamNumber(['DefaultDigit', 'デフォルト桁数'], 1);
+    param.fontSize         = getParamNumber(['FontSize', 'フォントサイズ'], 12);
+    param.helpMessage      = getParamString(['HelpMessage', 'ヘルプメッセージ']);
+    param.backGroundPolicy = getParamNumber(['BackGroundPolicy', '背景マップ表示方法'], 0);
 
     var pluginCommandMap = new Map();
     setPluginCommand('数値入力画面の呼び出し', 'callNumberInput');
@@ -541,8 +566,14 @@
 
     Window_NumberEdit.prototype.createDefaultName = function() {
         var value = this._numberInput.getDefaultValue();
-        this._name = (value >= 0 ? ' ' : '') + value;
-        this.setSign(value > 0);
+        if (value > 0) {
+            this._name = ' ' + value;
+        } else if (value < 0) {
+            this._name = value.toString();
+        } else {
+            this._name = ' ';
+        }
+        this.setSign(value >= 0);
     };
 
     Window_NumberEdit.prototype.windowWidth = function() {
@@ -656,6 +687,17 @@
     Scene_NumberInput.prototype.popScene = function() {
         this._numberInput.clear();
         Scene_Base.prototype.popScene.call(this);
+    };
+
+    var _SceneManager_snapForBackground = SceneManager.snapForBackground;
+    SceneManager.snapForBackground = function() {
+        if (param.backGroundPolicy === 0) {
+            _SceneManager_snapForBackground.apply(this, arguments);
+            return;
+        }
+        if (this.isNextScene(Scene_NumberInput) && param.backGroundPolicy === 1) {
+            this._backgroundBitmap = this.snap();
+        }
     };
 })();
 
