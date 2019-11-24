@@ -368,7 +368,7 @@ function Game_PrefabEvent() {
                 originalEventId = originalEvent.getTemplateId();
             }
             if (originalEvent.isPrefab()) {
-                originalEventId = originalEvent._originalEventId;
+                originalEventId = originalEvent.getOriginalEventId();
             }
             var event = new Game_PrefabEvent(this._mapId, eventId, originalEventId, x, y, isTemplate);
             this._lastSpawnEventId = eventId;
@@ -594,6 +594,14 @@ function Game_PrefabEvent() {
             var key = [this._mapId, this._eventId, swCode];
             $gameSelfSwitches.setValue(key, undefined);
         }.bind(this));
+    };
+
+    Game_PrefabEvent.prototype.getOriginalEventId = function() {
+        return this._originalEventId;
+    };
+
+    Game_Event.prototype.getOriginalEventId = function() {
+        return 0;
     };
 
     //=============================================================================
