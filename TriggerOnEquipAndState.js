@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2019/11/25 装備スロットごとに変数を増減できる機能を追加
 // 1.4.5 2018/05/05 1.4.4で動的データベース構築プラグインとの競合が発生していたので解消
 // 1.4.4 2018/05/04 装備封印で外れた場合に変数の増減が行われない問題を修正
 // 1.4.3 2018/01/27 DynamicVariables.jsとの連携機能を追加
@@ -27,13 +28,18 @@
 //=============================================================================
 
 /*:
- * @plugindesc 装備変更時の変数操作プラグイン
- * @author トリアコンタン
+ * @plugindesc TriggerOnEquipAndStatePlugin
+ * @author Triacontane
  *
- * @param 戦闘メンバーのみ
+ * @param BattleMemberOnly
  * @desc 変数やスイッチが変動する対象となるアクターが戦闘メンバーに限定されます。
  * @default false
  * @type boolean
+ *
+ * @param SlotVariables
+ * @desc 装備品を装備したスロット番号に対応する変数をメモ欄で指定した値だけ増減させます。
+ * @default ["0","0","0","0","0"]
+ * @type variable[]
  *
  * @help 装備またはステートの着脱時に、変数およびスイッチを操作できるようになります。
  * 着脱時に、スイッチの場合はON/OFFが切り替わり、変数の場合は値が増減します。
@@ -69,6 +75,73 @@
  *  <TOESスイッチ対象:3>   // 3番のスイッチが操作対象
  *  <TOESスイッチ対象3:5>  // 動作しない
  *
+ * ・追加機能
+ * 装備品ごとではなく装備スロットごとに変数値を増減できます。
+ * パラメータ「スロット変数リスト」からスロット番号に対応する変数番号を指定して
+ * さらにメモ欄に以下の通り設定します。
+ *  <TOESスロット変数設定値:3> // 装備時に3加算され、解除すると3減算されます。
+ *
+ * 利用規約：
+ *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
+ *  についても制限はありません。
+ *  このプラグインはもうあなたのものです。
+ */
+/*:ja
+ * @plugindesc 装備変更時の変数操作プラグイン
+ * @author トリアコンタン
+ *
+ * @param BattleMemberOnly
+ * @text 戦闘メンバーのみ
+ * @desc 変数やスイッチが変動する対象となるアクターが戦闘メンバーに限定されます。
+ * @default false
+ * @type boolean
+ *
+ * @param SlotVariables
+ * @text スロット変数リスト
+ * @desc 装備品を装備したスロット番号に対応する変数をメモ欄で指定した値だけ増減させます。
+ * @default ["0","0","0","0","0"]
+ * @type variable[]
+ *
+ * @help 装備またはステートの着脱時に、変数およびスイッチを操作できるようになります。
+ * 着脱時に、スイッチの場合はON/OFFが切り替わり、変数の場合は値が増減します。
+ * 操作対象および設定値には制御文字およびJavaScript計算式を利用できます。
+ *
+ * 対象となっているアクターがパーティから外れた場合、スイッチはOFFになります。
+ * (ver1.3.0以降の仕様)
+ *
+ * [アイテム]および[ステート]のメモ欄に以下の通り記述してください。
+ *
+ * ・操作されるスイッチ番号や変数番号です。
+ *  <TOESスイッチ対象:3>        // 3番のスイッチが操作対象
+ *  <TOES変数対象:20 + actorId> // 20番 + アクターIDの変数が操作対象
+ *
+ * 通常の制御文字やJavaScript計算式に加えて「actorId」と記述すると、
+ * 装備やステートが変更された対象のアクターIDに変換されます。
+ *
+ * ・スイッチに設定される値です。（省略時はONになります）
+ *  <TOESスイッチ設定値:ON>  // 装備時にスイッチがONになり、解除するとOFFになります。
+ *  <TOESスイッチ設定値:OFF> // 装備時にスイッチがOFFになり、解除するとONになります。
+ *
+ * ・変数に設定される値です。
+ *  <TOES変数設定値:3> // 装備時に3加算され、解除すると3減算されます。
+ *
+ * 一度に二つ以上のスイッチや変数を操作したい場合は項目名の後ろに
+ * 　数字を追加してください。(3以降も同様)
+ *  <TOESスイッチ対象:3>   // 3番のスイッチが操作対象
+ *  <TOESスイッチ対象2:5>  // 5番のスイッチも操作対象
+ *
+ *  注意！
+ *  指定する際は、番号に歯抜けがないようにしてください。
+ *  以下はダメです。
+ *  <TOESスイッチ対象:3>   // 3番のスイッチが操作対象
+ *  <TOESスイッチ対象3:5>  // 動作しない
+ *
+ * ・追加機能
+ * 装備品ごとではなく装備スロットごとに変数値を増減できます。
+ * パラメータ「スロット変数リスト」からスロット番号に対応する変数番号を指定して
+ * さらにメモ欄に以下の通り設定します。
+ *  <TOESスロット変数設定値:3> // 装備時に3加算され、解除すると3減算されます。
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -77,22 +150,35 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'TriggerOnEquipAndState';
     var metaTagPrefix = 'TOES';
 
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
-    };
+    var param = createPluginParameter('TriggerOnEquipAndState');
+    console.log(param)
+    param.SlotVariables = param.SlotVariables || [];
 
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
@@ -148,20 +234,15 @@
     };
 
     //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramBattleMemberOnly = getParamBoolean(['BattleMemberOnly', '戦闘メンバーのみ']);
-
-    //=============================================================================
     // Game_Party
     //  変数設定が必要かどうかを返します。
     //=============================================================================
     Game_Party.prototype.isNeedControlVariable = function(actor) {
-        return !paramBattleMemberOnly || (this.battleMembers().contains(actor) || this.size() < this.maxBattleMembers());
+        return !param.BattleMemberOnly || (this.battleMembers().contains(actor) || this.size() < this.maxBattleMembers());
     };
 
     Game_Party.prototype.getMembersNeedControl = function() {
-        return paramBattleMemberOnly ? this.battleMembers() : this.members();
+        return param.BattleMemberOnly ? this.battleMembers() : this.members();
     };
 
     Game_Party.prototype.getReserveMembers = function() {
@@ -262,10 +343,10 @@
         _Game_Actor_changeEquip.apply(this, arguments);
         var newItem = this._equips[slotId];
         if (prevItem.itemId() !== 0 && prevItem.itemId() !== newItem.itemId()) {
-            this.onChangeEquipAndState(prevItem.object(), false);
+            this.onChangeEquipAndState(prevItem.object(), false, false, slotId);
         }
         if (newItem.itemId() !== 0 && newItem.itemId() !== prevItem.itemId()) {
-            this.onChangeEquipAndState(newItem.object(), true);
+            this.onChangeEquipAndState(newItem.object(), true, false, slotId);
         }
     };
 
@@ -273,15 +354,15 @@
     Game_Actor.prototype.discardEquip = function(item) {
         var slotId = this.equips().indexOf(item);
         if (slotId >= 0) {
-            this.onChangeEquipAndState(item, false);
+            this.onChangeEquipAndState(item, false, false, slotId);
         }
         _Game_Actor_discardEquip.apply(this, arguments);
     };
 
     Game_Actor.prototype.onChangeMember = function(addedSign) {
-        this.equips().forEach(function(equip) {
+        this.equips().forEach(function(equip, index) {
             if (equip && equip.id !== 0) {
-                this.onChangeEquipAndState(equip, addedSign, true);
+                this.onChangeEquipAndState(equip, addedSign, true, index);
             }
         }.bind(this));
         this._states.forEach(function(stateId) {
@@ -300,12 +381,12 @@
         prevEquips.forEach(function(prevEquip, index) {
             var equip = this._equips[index].object();
             if (prevEquip && !equip) {
-                this.onChangeEquipAndState(prevEquip, false);
+                this.onChangeEquipAndState(prevEquip, false, false, index);
             }
         }, this);
     };
 
-    Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign, force) {
+    Game_Actor.prototype.onChangeEquipAndState = function(item, addedSign, force, slotId) {
         if (!$gameParty.isNeedControlVariable(this) && !force) return;
         var index = 1;
         while (index) {
@@ -314,6 +395,9 @@
             } else {
                 index = 0;
             }
+        }
+        if (slotId !== undefined) {
+            this.controlVariableForSlot(item, addedSign, slotId);
         }
     };
 
@@ -330,12 +414,25 @@
         if (variableTarget) {
             var variableId    = this.getVariableIdForToes(variableTarget, $dataSystem.variables.length - 1);
             var variableValue = getMetaValues(item, ['変数設定値' + indexString, 'VariableValue' + indexString]);
-            var originalValue = $gameVariables.getOriginalValue ? $gameVariables.getOriginalValue(variableId) : $gameVariables.value(variableId);
-            var resultValue   = (variableValue ? getArgNumber(variableValue) : 1) * (addedSign ? 1 : -1);
-            $gameVariables.setValue(variableId, originalValue + resultValue);
+            this.changeVariable(variableId, variableValue, addedSign);
             result = true;
         }
         return result;
+    };
+
+    Game_Actor.prototype.controlVariableForSlot = function(item, addedSign, slotId) {
+        var variableId = param.SlotVariables[slotId];
+        var variableValue = getMetaValues(item, ['スロット変数設定値', 'SlotVariableValue']);
+        if (variableId && variableValue) {
+            this.changeVariable(variableId, variableValue, addedSign);
+        }
+    };
+
+    Game_Actor.prototype.changeVariable = function(variableId, variableValue, addedSign) {
+        // for DynamicVariables.js
+        var originalValue = $gameVariables.getOriginalValue ? $gameVariables.getOriginalValue(variableId) : $gameVariables.value(variableId);
+        var resultValue   = (variableValue ? getArgNumber(variableValue) : 1) * (addedSign ? 1 : -1);
+        $gameVariables.setValue(variableId, originalValue + resultValue);
     };
 
     Game_Actor.prototype.getVariableIdForToes = function(target, max) {
