@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2019/11/25 コミュニティ版コアスクリプト1.6以降のオートセーブ機能との競合を解消
+//                  タイトル画面をスキップせず、コンティニュー選択時にオートロードする機能を追加
+//                  パラメータ仕様変更
 // 1.2.4 2018/09/16 LoadPoint.jsとの競合を解消
 // 1.2.3 2018/08/30 MadeWithMv.jsとの競合を解消
 // 1.2.2 2018/01/10 マップ画面を使った独自のタイトルでセーブ時のピクチャが表示されていた問題を修正
@@ -26,15 +29,24 @@
  *
  * @param PlaySe
  * @desc セーブ成功時にシステム効果音を演奏します。
- * @default ON
+ * @default true
+ * @type boolean
  *
- * @param CompletelySkip
- * @desc ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップします。
- * @default OFF
+ * @param TileSkipPolicy
+ * @desc タイトル画面のスキップ仕様です。
+ * @default 1
+ * @type select
+ * @option None
+ * @value 0
+ * @option Normal Skip
+ * @value 1
+ * @option Completely Skip
+ * @value 2
  *
  * @param TitleMapID
  * @desc 独自にタイトル画面用のマップを作成する場合に指定するマップIDです。
  * @default 0
+ * @type number
  *
  * @help 以下の機能でタイトル画面の仕様を変更します。
  * マップ画面を使ったオリジナルタイトル画面などが作れます。
@@ -75,15 +87,24 @@
  *
  * @param 効果音演奏
  * @desc オートセーブ成功時にシステム効果音を演奏します。
- * @default ON
+ * @default true
+ * @type boolean
  *
- * @param 完全スキップ
- * @desc ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップします。
- * @default OFF
+ * @param タイトルスキップポリシー
+ * @desc タイトル画面のスキップ仕様です。
+ * @default 1
+ * @type select
+ * @option スキップなし(コンティニューを選択するとオートロード)
+ * @value 0
+ * @option 通常スキップ(起動時のみスキップ)
+ * @value 1
+ * @option 完全スキップ(タイトルに戻った場合もスキップ)
+ * @value 2
  *
  * @param タイトルマップID
  * @desc 独自にタイトル画面用のマップを作成する場合に指定するマップIDです。
  * @default 0
+ * @type number
  *
  * @help 以下の機能でタイトル画面の仕様を変更します。
  * マップ画面を使ったオリジナルタイトル画面などが作れます。
@@ -158,8 +179,8 @@
     // パラメータの取得と整形
     //=============================================================================
     var paramPlaySe         = getParamBoolean(['PlaySe', '効果音演奏']);
-    var paramCompletelySkip = getParamBoolean(['CompletelySkip', '完全スキップ']);
     var paramTitleMapId     = getParamNumber(['TitleMapID', 'タイトルマップID'], 0);
+    var paramTileSkipPolicy = getParamNumber(['TileSkipPolicy', 'タイトルスキップポリシー'], 0, 2);
 
     var $gameScreenBack = null;
 
@@ -180,7 +201,7 @@
             case '_オートセーブ' :
             case '_AUTO_SAVE' :
                 this._index++;
-                $gameSystem.autoSave();
+                $gameSystem.saveLastAccess();
                 this._index--;
                 break;
             case '_初期位置へ移動' :
@@ -200,9 +221,9 @@
     // Game_System
     //  自動セーブ処理を追加定義します。
     //=============================================================================
-    Game_System.prototype.autoSave = function() {
+    Game_System.prototype.saveLastAccess = function() {
         this.onBeforeSave();
-        var result = DataManager.autoSaveGame();
+        var result = DataManager.saveLastAccessGame();
         if (result && paramPlaySe) {
             SoundManager.playSave();
         }
@@ -269,7 +290,7 @@
         _DataManager_loadDatabase.apply(this, arguments);
     };
 
-    DataManager.autoSaveGame = function() {
+    DataManager.saveLastAccessGame = function() {
         var saveFileId = this.lastAccessedSavefileId();
         var result     = this.saveGame(saveFileId);
         if (result) StorageManager.cleanBackup(saveFileId);
@@ -292,26 +313,19 @@
     var _Scene_Boot_start      = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
-        if (!DataManager.isBattleTest() && !DataManager.isEventTest() && typeof Scene_Splash === 'undefined') {
+        if (this.isTitleSkip()) {
             this.goToAutoLoad();
         }
     };
 
+    Scene_Boot.prototype.isTitleSkip = function() {
+        return !DataManager.isBattleTest() && !DataManager.isEventTest() &&
+            typeof Scene_Splash === 'undefined' && paramTileSkipPolicy !== 0;
+    };
+
     Scene_Boot.prototype.goToAutoLoad = function() {
-        var result = DataManager.autoLoadGame();
-        if (result) {
-            Scene_Load.prototype.reloadMapIfUpdated.call(this);
-            SceneManager.goto(Scene_Map);
-            if (!paramTitleMapId) {
-                $gameSystem.onAfterLoad();
-            } else{
-                $gameScreenBack = $gameScreen;
-                $gameScreen = new Game_Screen();
-            }
-            if ($gamePlayer.moveLoadPoint) {
-                $gamePlayer.moveLoadPoint();
-            }
-        } else if (paramCompletelySkip || paramTitleMapId > 0) {
+        var result = this.applyAutoLoad();
+        if (!result && (paramTileSkipPolicy === 2 || paramTitleMapId > 0)) {
             this.goToNewGame();
         }
         if (paramTitleMapId > 0) {
@@ -325,13 +339,46 @@
         SceneManager.goto(Scene_Map);
     };
 
+    Scene_Base.prototype.applyAutoLoad = function() {
+        var result = DataManager.autoLoadGame();
+        if (result) {
+            Scene_Load.prototype.reloadMapIfUpdated.call(this);
+            SceneManager.goto(Scene_Map);
+            if (!paramTitleMapId) {
+                $gameSystem.onAfterLoad();
+            } else {
+                $gameScreenBack = $gameScreen;
+                $gameScreen = new Game_Screen();
+            }
+            if ($gamePlayer.moveLoadPoint) {
+                $gamePlayer.moveLoadPoint();
+            }
+        }
+        return result;
+    };
+
     //=============================================================================
     // Scene_Title
     //  完全スキップの場合にScene_Bootで上書きします。
     //=============================================================================
-    if (paramCompletelySkip || paramTitleMapId > 0) {
+    if (paramTileSkipPolicy === 2 || paramTitleMapId > 0) {
         Scene_Title = Scene_Boot;
     }
+
+    var _Scene_Title_commandContinue = Scene_Title.prototype.commandContinue;
+    Scene_Title.prototype.commandContinue = function() {
+        _Scene_Title_commandContinue.apply(this, arguments);
+        this.fadeOutAll();
+        this._requestAutoLoad = true;
+    };
+
+    var _Scene_Title_terminate = Scene_Title.prototype.terminate;
+    Scene_Title.prototype.terminate = function() {
+        _Scene_Title_terminate.apply(this, arguments);
+        if (this._requestAutoLoad) {
+            this.applyAutoLoad();
+        }
+    };
 
     if (typeof Scene_Splash !== 'undefined') {
         Scene_Splash.prototype.goToAutoLoad = Scene_Boot.prototype.goToAutoLoad;
