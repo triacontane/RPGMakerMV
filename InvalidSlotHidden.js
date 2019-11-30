@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2019/11/30 1.0.0の考慮漏れがあったので実装方法を全体的に変更
  1.0.0 2019/11/24 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -42,14 +43,103 @@
 (function() {
     'use strict';
 
-    var _Game_Actor_equipSlots = Game_Actor.prototype.equipSlots;
-    Game_Actor.prototype.equipSlots = function() {
-        return _Game_Actor_equipSlots.apply(this, arguments).filter(function(slot) {
-            return this.isValidSlot(slot);
-        }.bind(this));
+    /**
+     * Game_Actor
+     * 有効なスロットIDのリストを返します。
+     */
+    Game_Actor.prototype.validEquipIndexList = function() {
+        return this.equipSlots().map(function(slotItem, index) {
+            return this.isValidSlot(slotItem) ? index : null;
+        }, this).filter(function(item) {
+            return item !== null;
+        });
     };
 
     Game_Actor.prototype.isValidSlot = function(slot) {
         return !this.isEquipTypeSealed(slot);
+    };
+
+    /**
+     * Window_EquipSlot
+     * 無効なスロットを非表示にします。
+     */
+    var _Window_EquipSlot_index = Window_EquipSlot.prototype.index;
+    Window_EquipSlot.prototype.index = function() {
+        var index = _Window_EquipSlot_index.apply(this, arguments);
+        if (this._needRealIndex) {
+            return this.convertEquipIndex(index);
+        } else {
+            return index;
+        }
+    };
+
+    Window_EquipSlot.prototype.callProcessNeedRealIndex = function(process) {
+        this._needRealIndex = true;
+        process();
+        this._needRealIndex = false;
+    };
+
+    var _Window_EquipSlot_reselect = Window_EquipSlot.prototype.reselect;
+    Window_EquipSlot.prototype.reselect = function() {
+        this._needRealIndex = false;
+        _Window_EquipSlot_reselect.apply(this, arguments);
+    };
+
+    var _Window_EquipSlot_update = Window_EquipSlot.prototype.update;
+    Window_EquipSlot.prototype.update = function() {
+        _Window_EquipSlot_update.apply(this, arguments);
+        if (this._itemWindow) {
+            this._itemWindow.setSlotId(this.convertEquipIndex(this.index()));
+        }
+    };
+
+    var _Window_EquipSlot_item = Window_EquipSlot.prototype.item;
+    Window_EquipSlot.prototype.item = function() {
+        this.callProcessNeedRealIndex(_Window_EquipSlot_item.bind(this));
+    };
+
+    Window_EquipSlot.prototype.maxItems = function() {
+        return this._actor ? this._actor.validEquipIndexList().length : 0;
+    };
+
+    Window_EquipSlot.prototype.drawItem = function(index) {
+        if (this._actor) {
+            var rect = this.itemRectForText(index);
+            this.changeTextColor(this.systemColor());
+            this.changePaintOpacity(this.isEnabled(index));
+            this.drawText(this.slotName(index), rect.x, rect.y, 138, this.lineHeight());
+            this.drawItemName(this._actor.equips()[this.convertEquipIndex(index)], rect.x + 138, rect.y);
+            this.changePaintOpacity(true);
+        }
+    };
+
+    Window_EquipSlot.prototype.convertEquipIndex = function(index) {
+        return this._actor.validEquipIndexList()[index];
+    };
+
+    Window_EquipSlot.prototype.slotName = function(index) {
+        if (!this._actor) {
+            return '';
+        }
+        var realIndex = this.convertEquipIndex(index);
+        var slots = this._actor.equipSlots();
+        return $dataSystem.equipTypes[slots[realIndex]];
+    };
+
+    var _Window_EquipSlot_isEnabled = Window_EquipSlot.prototype.isEnabled;
+    Window_EquipSlot.prototype.isEnabled = function(index) {
+        if (!this._actor) {
+            return false;
+        }
+        var realIndex = this.convertEquipIndex(index);
+        return _Window_EquipSlot_isEnabled.call(this, realIndex);
+    };
+
+    /**
+     * 装備変更時の対象スロットで非表示スロットを考慮します。
+     */
+    var _Scene_Equip_onItemOk = Scene_Equip.prototype.onItemOk;
+    Scene_Equip.prototype.onItemOk = function() {
+        this._slotWindow.callProcessNeedRealIndex(_Scene_Equip_onItemOk.bind(this));
     };
 })();
