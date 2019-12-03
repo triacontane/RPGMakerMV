@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.2 2019/12/04 プラグインコマンド「GLOSSARY_ITEM_CHANGE_CATEGORY」のヘルプの凡例が間違っていたので修正
 // 2.14.1 2019/11/04 2.14.0の修正で、リストの一番上のカテゴリを指定して辞書を開くと正常に表示されない問題を修正
 // 2.14.0 2019/11/03 コマンドから用語辞典を開くときに、カテゴリおよびリスト番号を指定して開ける機能を追加
 // 2.13.2 2019/09/08 2.13.1の修正に加えて収集率の表示を正常化
@@ -290,7 +291,7 @@
  *
  * GLOSSARY_ITEM_CHANGE_CATEGORY [Item id] [new category]
  *  Change the category of the item with the specified ID to another one.
- * ex：GLOSSARY_ITEM_CATEGORY_CHANGE 10 AAA
+ * ex：GLOSSARY_ITEM_CHANGE_CATEGORY 10 AAA
  * Only items can be changed. Weapons and armors can not be changed.
  *
  * GLOSSARY_ITEM_CHANGE_USABLE [Item id] [ON or OFF]
@@ -709,7 +710,7 @@
  * GLOSSARY_ITEM_CHANGE_CATEGORY [アイテムID] [新カテゴリ]
  * 用語アイテムのカテゴリ変更 [アイテムID] [新カテゴリ]
  *  指定したIDのアイテムのカテゴリを別のものに変更します。　
- * 例：GLOSSARY_ITEM_CATEGORY_CHANGE 10 AAA
+ * 例：GLOSSARY_ITEM_CHANGE_CATEGORY 10 AAA
  * ※ 変更可能なのはアイテムのみです。武器と防具は変更できません。
  *
  * GLOSSARY_ITEM_CHANGE_USABLE [アイテムID] [ON or OFF]
