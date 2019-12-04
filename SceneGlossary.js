@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.15.0 2019/12/05 ウィンドウの枠と背景を非表示にできる機能を追加
 // 2.14.3 2019/12/05 2.4.0以降、用語の自動登録時にONになるスイッチおよび変数が機能していなかった問題を修正
 // 2.14.2 2019/12/04 プラグインコマンド「GLOSSARY_ITEM_CHANGE_CATEGORY」のヘルプの凡例が間違っていたので修正
 // 2.14.1 2019/11/04 2.14.0の修正で、リストの一番上のカテゴリを指定して辞書を開くと正常に表示されない問題を修正
@@ -146,6 +147,12 @@
  *
  * @param ThroughBackPicture
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
+ * @default false
+ * @type boolean
+ * @parent Layout
+ *
+ * @param FramelessDesign
+ * @desc 各種ウィンドウの枠と背景を非表示にします。
  * @default false
  * @type boolean
  * @parent Layout
@@ -494,6 +501,13 @@
  * @param ThroughBackPicture
  * @text 背景ピクチャ透過
  * @desc 背景ピクチャの背後に通常の背景（マップ画面）を表示します。
+ * @default false
+ * @type boolean
+ * @parent Layout
+ *
+ * @param FramelessDesign
+ * @text 枠なしデザイン
+ * @desc 各種ウィンドウの枠と背景を非表示にします。
  * @default false
  * @type boolean
  * @parent Layout
@@ -1600,6 +1614,7 @@ function Window_GlossaryComplete() {
         Scene_MenuBase.prototype.createHelpWindow.apply(this, arguments);
         this._helpTexts = $gameParty.getGlossaryHelpMessages();
         this.updateHelp('');
+        this._helpWindow.setFramelessDesign();
     };
 
     Scene_Glossary.prototype.createGlossaryWindow = function() {
@@ -1799,6 +1814,13 @@ function Window_GlossaryComplete() {
         }
     };
 
+    Window_Base.prototype.setFramelessDesign = function() {
+        if (param.FramelessDesign) {
+            this.backOpacity = 0;
+            this.opacity = 0;
+        }
+    };
+
     //=============================================================================
     // Window_Selectable
     //  アクティブウィンドウを切り替えます。
@@ -1826,6 +1848,7 @@ function Window_GlossaryComplete() {
         this._data = null;
         this.refresh();
         this.selectLastIndex();
+        this.setFramelessDesign();
     };
 
     Window_GlossaryCategory.prototype.selectLastIndex = function() {
@@ -1892,6 +1915,7 @@ function Window_GlossaryComplete() {
         Window_ItemList.prototype.initialize.call(this, 0, gWindow.y, width, height);
         this.refresh();
         this.selectLastIndex();
+        this.setFramelessDesign();
     };
 
     Window_GlossaryList.prototype.selectLastIndex = function() {
@@ -2092,6 +2116,7 @@ function Window_GlossaryComplete() {
         var height       = Graphics.boxHeight - y;
         this._listWindow = listWindow;
         Window_Base.prototype.initialize.call(this, x, y, width, height);
+        this.setFramelessDesign();
     };
 
     Window_GlossaryComplete.prototype.clear = function() {
@@ -2119,6 +2144,7 @@ function Window_GlossaryComplete() {
         this._pageIndex = 0;
         this._enemy     = null;
         Window_Base.prototype.initialize.call(this, x, y, width, height);
+        this.setFramelessDesign();
     };
 
     Window_Glossary.prototype.standardFontSize = function() {
