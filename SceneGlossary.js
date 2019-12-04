@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.3 2019/12/05 2.4.0以降、用語の自動登録時にONになるスイッチおよび変数が機能していなかった問題を修正
 // 2.14.2 2019/12/04 プラグインコマンド「GLOSSARY_ITEM_CHANGE_CATEGORY」のヘルプの凡例が間違っていたので修正
 // 2.14.1 2019/11/04 2.14.0の修正で、リストの一番上のカテゴリを指定して辞書を開くと正常に表示されない問題を修正
 // 2.14.0 2019/11/03 コマンドから用語辞典を開くときに、カテゴリおよびリスト番号を指定して開ける機能を追加
@@ -1220,12 +1221,10 @@ function Window_GlossaryComplete() {
         return orderA - orderB;
     };
 
-    Game_Party.prototype.gainGlossaryFromText = function(text, setVariable) {
+    Game_Party.prototype.gainGlossaryFromText = function(text) {
         this.getAllHiddenGlossaryList().forEach(function(item) {
             if (!this.hasItem(item) && this.isAutoGlossaryWord(item) && text.contains(item.name)) {
-                if (setVariable) {
-                    this.setAutoAdditionTrigger(item);
-                }
+                this.setAutoAdditionTrigger(item);
                 this.gainGlossary(item);
             }
         }.bind(this));
