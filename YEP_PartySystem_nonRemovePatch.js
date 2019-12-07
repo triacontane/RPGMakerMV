@@ -75,7 +75,8 @@
     var _Window_PartyList_makeItemList = Window_PartyList.prototype.makeItemList;
     Window_PartyList.prototype.makeItemList = function() {
         _Window_PartyList_makeItemList.apply(this, arguments);
-        this._data.shift();
-        this._data.pop();
+        this._data = this._data.filter(function(index) {
+            return index !== 0;
+        });
     };
 })();
