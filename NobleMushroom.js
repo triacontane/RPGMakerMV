@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2019/12/07 通常のメニュー画面の代わりにポーズメニューを使用できる機能を追加
 // 1.8.1 2019/06/27 クリック瞬間表示が有効なとき、\!以後の文章が瞬間表示されてしまう問題を修正
 // 1.8.0 2019/03/04 ウィンドウクローズ時のポーズサインの色調を設定できるよう仕様変更
 // 1.7.3 2018/12/14 ロード、クイックロード時に決定ボタンを押し続けているとロード処理が繰り返されてしまう問題を修正
@@ -416,6 +417,11 @@
  * @default false
  * @type boolean
  *
+ * @param 常にポーズメニュー使用
+ * @desc イベント実行時以外もポーズメニューを使用できます。その場合、通常のメニュー画面は使用不可となります。
+ * @default false
+ * @type boolean
+ *
  * @help RPGツクールMVでサウンドノベルを手軽に作成するためのベースプラグインです。
  * 適用すると、メッセージウィンドウの表示が画面全体になり
  * 表示したメッセージが消去されず画面に蓄積されるようになります。
@@ -613,6 +619,7 @@
     var paramCommandQuickSave   = getParamString(['CommandQuickLoad', 'Qセーブコマンド']);
     var paramVerticalWriting    = getParamBoolean(['VerticalWriting', '縦書き']);
     var paramPauseColor         = getParamArrayNumber(['PauseColor', 'ポーズカラー'], 0, 255);
+    var paramUsePauseMenuAlways = getParamBoolean(['UsePauseMenuAlways', '常にポーズメニュー使用']);
 
     //=============================================================================
     // インタフェースの定義
@@ -1352,6 +1359,27 @@
         this._pauseWindow.close();
         this._pauseWindow.deactivate();
         this._messageWindow.restoreActivationSubWindow();
+    };
+
+    var _Scene_Map_callMenu = Scene_Map.prototype.callMenu;
+    Scene_Map.prototype.callMenu = function() {
+        if (!paramUsePauseMenuAlways) {
+            _Scene_Map_callMenu.apply(this, arguments);
+            return;
+        }
+        if (!$gameMessage.isPause()) {
+            $gameSystem.executeAutoSave();
+            SoundManager.playOk();
+            this.onPause();
+        } else {
+            this.offPause();
+        }
+        this.menuCalling = false;
+    };
+
+    var _Game_Message_isBusy = Game_Message.prototype.isBusy;
+    Game_Message.prototype.isBusy = function() {
+        return _Game_Message_isBusy.apply(this, arguments) || this.isPause();
     };
 
     //=============================================================================
