@@ -491,9 +491,9 @@ function Game_PrefabEvent() {
     };
 
     Game_Map.prototype.getConditionalValidPosition = function(conditions) {
-        if (!$gameSwitches.value(param.CertainSpawnSwitch)) {
+        var tryCount = param.tryRandomCount || 1000;
+        if (!$gameSwitches.value(param.CertainSpawnSwitch) || tryCount > 0) {
             var x, y, count = 0;
-            var tryCount = param.tryRandomCount || 1000;
             do {
                 x = Math.randomInt($dataMap.width);
                 y = Math.randomInt($dataMap.height);
