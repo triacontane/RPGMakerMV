@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2019/12/07 ランダム生成で条件を満たす場所に確実に出力する「確定出力方式」で出力できる機能を追加しました。（by 澱粉（仮）さま）
+//                   特定条件でテンプレートイベント生成するとエラーになる場合がある問題を修正
+//                   ランダム生成する際の個数を指定できる機能を追加
 // 1.10.3 2019/11/24 動的生成イベントを生成元として生成する場合、実際の生成元を、元々の生成元の動的イベントではなく、さらにその生成元である静的イベントになるよう仕様変更
 // 1.10.2 2019/11/04 1.10.1の修正で「現在のマップに存在しないID」を指定して「ERS_テンプレート生成」を実行するとエラーになる問題を修正
 // 1.10.1 2019/11/04 TemplateEvent.jsと併用した際、ERS_MAKEによる生成対象のイベントがテンプレートイベントの場合はテンプレートイベントを生成するよう仕様変更
@@ -20,7 +23,7 @@
 // 1.8.0 2018/02/07 場所移動時にセルフスイッチがクリアされなくなる機能を追加
 // 1.7.0 2017/09/17 プラグインコマンドにテンプレートイベントのセルフ変数「\sv[n]」が利用できる機能を追加
 // 1.6.0 2017/09/15 座標を指定する際、小数を指定できるよう修正（半歩移動プラグイン等との組み合わせを想定）
-// 1.5.3 2017/06/18 コピー対象のイベントを変数から指定する際、変数に文字列が入っていると正しく取得できない問題を修正（by 奏ねこま氏）
+// 1.5.3 2017/06/18 コピー対象のイベントを変数から指定する際、変数に文字列が入っていると正しく取得できない問題を修正（by 奏ねこまさま）
 // 1.5.2 2017/05/28 イベントを配置したときアニメパターンが一瞬だけ初期化されてしまう問題を修正
 // 1.5.1 2017/04/23 イベントを生成するプラグインコマンドで制御文字が無効になっていた問題を修正
 // 1.5.0 2017/01/19 イベント生成の際にIDだけでなくイベント名の一致するイベントを動的生成できる機能を追加
@@ -30,7 +33,7 @@
 // 1.4.1 2016/12/28 YEP_SaveEventLocations.jsとの競合を解消
 // 1.4.0 2016/12/25 最後に動的生成したイベントのイベントIDを取得できるコマンドを追加
 // 1.3.1 2016/11/08 動的イベント生成中に同一マップに場所移動するとエラーが発生する現象を修正
-// 1.3.0 2016/11/03 ランダム生成機能で各種引数で文字で設定できる機能を追加＋境界値まわりのバグ修正（by くらむぼん氏）
+// 1.3.0 2016/11/03 ランダム生成機能で各種引数で文字で設定できる機能を追加＋境界値まわりのバグ修正（by くらむぼんさま）
 // 1.2.0 2016/09/06 場所移動時、生成イベントを引き継いでしまう不具合を修正
 //                  プラグインコマンド実行時にイベントIDを0にすることで「このイベント」を複製できる機能を追加
 // 1.1.1 2016/08/11 動的イベント生成中にセーブした場合にロードできなくなる不具合を修正
@@ -59,6 +62,12 @@
  * @desc ランダム生成をする際の試行回数です。イベント生成に失敗する場合は数値を大きくしてください。
  * @default 1000
  * @type number
+ *
+ * @param CertainSpawnSwitch
+ * @text 確定出力方式スイッチ
+ * @desc 指定されたスイッチがONのとき、生成時に「確定出力方式」を使用します。詳細はヘルプを確認してください。
+ * @default 0
+ * @type switch
  *
  * @help イベントをコピーして動的に生成します。
  * コピーした一時イベントは、イベントコマンド「イベントの一時消去」によって
@@ -115,6 +124,9 @@
  * イベント event
  * 両方 both
  *
+ * ランダム生成する個数を設定できます。7番目のパラメータから指定します。
+ * ERS_MAKE_RANDOM 1 1 1 1 1 1 2 # [2]個のイベントをランダム生成します。
+ *
  * 最後に動的生成したイベントのイベントIDを取得できます。
  * 指定した番号の変数に格納されます。
  *
@@ -139,6 +151,13 @@
  * https://github.com/triacontane/RPGMakerMV
  *
  * YEP_EventMiniLabel.jsと併用する場合、当プラグインを下に配置してください。
+ *
+ * ・確定出力方式について
+ * イベント生成位置を決定するとき、ランダム試行ではなく条件を満たす位置に確実に生成します。
+ * 生成時にマップ全体を走査し条件を満たす場所を探します。
+ * リージョンのみの指定など、生成場所の候補が少ない場合に有効です。
+ * パラメータ「確定出力方式スイッチ」に対するスイッチがONになっているとこちらのモードで
+ * 出力します。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -197,23 +216,23 @@ function Game_PrefabEvent() {
     };
 
     var makeRandomCompatible = {
-        none: 0,
-        判定なし: 0,
-        条件なし: 0,
-        passonly: 1,
+        none     : 0,
+        判定なし     : 0,
+        条件なし     : 0,
+        passonly : 1,
         通行可能タイルのみ: 1,
-        通行のみ: 1,
-        screen: 1,
-        onscreen: 1,
-        画面内: 1,
+        通行のみ     : 1,
+        screen   : 1,
+        onscreen : 1,
+        画面内      : 1,
         offscreen: 2,
-        画面外: 2,
-        player: 1,
-        プレイヤー: 1,
-        event: 2,
-        イベント: 2,
-        both: 3,
-        両方: 3,
+        画面外      : 2,
+        player   : 1,
+        プレイヤー    : 1,
+        event    : 2,
+        イベント     : 2,
+        both     : 3,
+        両方       : 3,
     };
 
     var convertEscapeCharacters = function(text) {
@@ -266,6 +285,7 @@ function Game_PrefabEvent() {
     setPluginCommand('MAKE_TEMPLATE_RANDOM', 'execMakeTemplateEventRandom');
     setPluginCommand('最終生成イベントID取得', 'execGetLastSpawnEventId');
     setPluginCommand('GET_LAST_SPAWN_EVENT_ID', 'execGetLastSpawnEventId');
+    setPluginCommand('TRY_COUNT', 'changeTryCount');//追加
 
     //=============================================================================
     // DataManager
@@ -309,17 +329,21 @@ function Game_PrefabEvent() {
     };
 
     Game_Interpreter.prototype.execMakeEventRandom = function(args, extend) {
-        var conditionMap        = {};
-        conditionMap.passable   = getArgNumber(args[1], 0);
-        conditionMap.screen     = getArgNumber(args[2], 0);
-        conditionMap.collided   = getArgNumber(args[3], 0);
-        conditionMap.terrainTags = (args[4] || '').split(',').map(function (value) {
+        var conditionMap         = {};
+        conditionMap.passable    = getArgNumber(args[1], 0);
+        conditionMap.screen      = getArgNumber(args[2], 0);
+        conditionMap.collided    = getArgNumber(args[3], 0);
+        conditionMap.terrainTags = (args[4] || '').split(',').map(function(value) {
             return getArgNumber(value, 0);
         });
-        conditionMap.regionIds   = (args[5] || '').split(',').map(function (value) {
+        conditionMap.regionIds   = (args[5] || '').split(',').map(function(value) {
             return getArgNumber(value, 0);
         });
-        $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0], extend), conditionMap, extend);
+
+        var makeCount = parseInt(args[6]) || 1;
+        for (var i = 0; i < makeCount; ++i) {
+            $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args[0], extend), conditionMap, extend);
+        }
     };
 
     Game_Interpreter.prototype.execMakeTemplateEvent = function(args) {
@@ -341,9 +365,13 @@ function Game_PrefabEvent() {
             id = getArgNumber(arg, 0);
         } else {
             var event = DataManager.searchDataItem(isTemplate ? $dataTemplateEvents : $dataMap.events, 'name', convertEscapeCharacters(arg));    // modified by nekoma.
-            id = event ? event.id : 0;
+            id        = event ? event.id : 0;
         }
         return id > 0 ? id : this._eventId;
+    };
+
+    Game_Interpreter.prototype.changeTryCount = function(args) {
+        if (args[0]) param.tryRandomCount = Number(args[0]);
     };
 
     //=============================================================================
@@ -362,17 +390,20 @@ function Game_PrefabEvent() {
     Game_Map.prototype.spawnEvent = function(originalEventId, x, y, isTemplate) {
         if (this.isExistEventData(originalEventId, isTemplate) && $gameMap.isValid(x, y)) {
             var eventId = this.getEventIdSequence();
-            var originalEvent = this.event(originalEventId);
-            if (!isTemplate && this.isTemplateSpawn(originalEventId)) {
-                isTemplate = true;
-                originalEventId = originalEvent.getTemplateId();
-            }
-            if (originalEvent.isPrefab()) {
-                originalEventId = originalEvent.getOriginalEventId();
+            if (!isTemplate) {
+                var originalEvent = this.event(originalEventId);
+                if (this.isTemplateSpawn(originalEventId)) {
+                    isTemplate      = true;
+                    originalEventId = originalEvent.getTemplateId();
+                }
+                if (originalEvent.isPrefab()) {
+                    originalEventId = originalEvent.getOriginalEventId();
+                }
             }
             var event = new Game_PrefabEvent(this._mapId, eventId, originalEventId, x, y, isTemplate);
+
             this._lastSpawnEventId = eventId;
-            this._events[eventId] = event;
+            this._events[eventId]  = event;
         } else {
             throw new Error('無効なイベントIDもしくは座標のためイベントを作成できませんでした。');
         }
@@ -460,13 +491,23 @@ function Game_PrefabEvent() {
     };
 
     Game_Map.prototype.getConditionalValidPosition = function(conditions) {
-        var x, y, count = 0;
-        var tryCount = param.tryRandomCount || 1000;
-        do {
-            x = Math.randomInt($dataMap.width);
-            y = Math.randomInt($dataMap.height);
-        } while (!conditions.every(this.checkValidPosition.bind(this, x, y)) && ++count < tryCount);
-        return count < tryCount ? {x: x, y: y} : null;
+        if (!$gameSwitches.value(param.CertainSpawnSwitch)) {
+            var x, y, count = 0;
+            var tryCount = param.tryRandomCount || 1000;
+            do {
+                x = Math.randomInt($dataMap.width);
+                y = Math.randomInt($dataMap.height);
+            } while (!conditions.every(this.checkValidPosition.bind(this, x, y)) && ++count < tryCount);
+            return count < tryCount ? {x: x, y: y} : null;
+        } else {
+            var positions = [];
+            for (var ix = 0; ix < $dataMap.width; ++ix) for (var iy = 0; iy < $dataMap.height; ++iy) {
+                if (conditions.every(this.checkValidPosition.bind(this, ix, iy))) {
+                    positions.push({x: ix, y: iy});
+                }
+            }
+            return positions.length ? positions[Math.randomInt(positions.length)] : null;
+        }
     };
 
     Game_Map.prototype.checkValidPosition = function(x, y, condition) {
@@ -506,13 +547,13 @@ function Game_PrefabEvent() {
     };
 
     Game_Map.prototype.isErsCheckTerrainTag = function(type, x, y) {
-        return type.some(function (id) {
+        return type.some(function(id) {
             return !id || id === this.terrainTag(x, y);
         }, this);
     };
 
     Game_Map.prototype.isErsCheckRegionId = function(type, x, y) {
-        return type.some(function (id) {
+        return type.some(function(id) {
             return !id || id === this.regionId(x, y);
         }, this);
     };
@@ -635,7 +676,7 @@ function Game_PrefabEvent() {
 
     Sprite_Character.prototype.endAnimation = function() {
         if (this._animationSprites.length > 0) {
-            var sprites = this._animationSprites.clone();
+            var sprites            = this._animationSprites.clone();
             this._animationSprites = [];
             sprites.forEach(function(sprite) {
                 sprite.remove();
@@ -711,7 +752,7 @@ function Game_PrefabEvent() {
     };
 
     if (typeof Window_EventMiniLabel !== 'undefined') {
-        var _Window_EventMiniLabel_gatherDisplayData = Window_EventMiniLabel.prototype.gatherDisplayData
+        var _Window_EventMiniLabel_gatherDisplayData      = Window_EventMiniLabel.prototype.gatherDisplayData
         Window_EventMiniLabel.prototype.gatherDisplayData = function() {
             if (!this._character.event()) {
                 return;
