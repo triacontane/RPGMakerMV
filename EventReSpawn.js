@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.1 2019/12/10 「確定出力方式」の条件式を修正
 // 1.11.0 2019/12/07 ランダム生成で条件を満たす場所に確実に出力する「確定出力方式」で出力できる機能を追加しました。（by 澱粉（仮）さま）
 //                   特定条件でテンプレートイベント生成するとエラーになる場合がある問題を修正
 //                   ランダム生成する際の個数を指定できる機能を追加
@@ -492,7 +493,7 @@ function Game_PrefabEvent() {
 
     Game_Map.prototype.getConditionalValidPosition = function(conditions) {
         var tryCount = param.tryRandomCount || 1000;
-        if (!$gameSwitches.value(param.CertainSpawnSwitch) || tryCount > 0) {
+        if (!$gameSwitches.value(param.CertainSpawnSwitch) && tryCount > 0) {
             var x, y, count = 0;
             do {
                 x = Math.randomInt($dataMap.width);
