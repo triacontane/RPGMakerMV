@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.2 2019/12/14 KMS_Minimap.jsと併用したとき、動的生成イベントがミニマップに表示されるよう修正（KMS_Minimap.js側も専用のコードを適用する必要あり）
 // 1.11.1 2019/12/10 「確定出力方式」の条件式を修正
 // 1.11.0 2019/12/07 ランダム生成で条件を満たす場所に確実に出力する「確定出力方式」で出力できる機能を追加しました。（by 澱粉（仮）さま）
 //                   特定条件でテンプレートイベント生成するとエラーになる場合がある問題を修正
@@ -721,6 +722,9 @@ function Game_PrefabEvent() {
         sprite.spriteId = this._prefabSpriteId;
         this._characterSprites.push(sprite);
         this._tilemap.addChild(sprite);
+        if (this._minimap && this._minimap.addObjectSprites) {
+            this._minimap.addObjectSprites(event);
+        }
     };
 
     Spriteset_Map.prototype.removePrefabEventSprite = function(index) {
