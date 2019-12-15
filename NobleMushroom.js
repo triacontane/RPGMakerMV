@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.1 2019/12/15 1.9.0で通常ウィンドウモードのときにメニューを開くとエラーになる問題を修正
 // 1.9.0 2019/12/07 通常のメニュー画面の代わりにポーズメニューを使用できる機能を追加
 // 1.8.1 2019/06/27 クリック瞬間表示が有効なとき、\!以後の文章が瞬間表示されてしまう問題を修正
 // 1.8.0 2019/03/04 ウィンドウクローズ時のポーズサインの色調を設定できるよう仕様変更
@@ -1190,9 +1191,7 @@
     var _Scene_Map_createDisplayObjects      = Scene_Map.prototype.createDisplayObjects;
     Scene_Map.prototype.createDisplayObjects = function() {
         _Scene_Map_createDisplayObjects.apply(this, arguments);
-        if ($gameSystem.getMessageType() && paramCanPause) {
-            this.createPauseWindow();
-        }
+        this.createPauseWindow();
     };
 
     Scene_Map.prototype.createPauseWindow = function() {
