@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2019/12/15 通常メッセージ表示のときもポーズメニューが表示されるよう仕様変更
+//                   ポーズメニューの表示を禁止できるスイッチを追加
 // 1.9.1 2019/12/15 1.9.0で通常ウィンドウモードのときにメニューを開くとエラーになる問題を修正
 // 1.9.0 2019/12/07 通常のメニュー画面の代わりにポーズメニューを使用できる機能を追加
 // 1.8.1 2019/06/27 クリック瞬間表示が有効なとき、\!以後の文章が瞬間表示されてしまう問題を修正
@@ -160,6 +162,16 @@
  * @desc 表示タイプがノベルならイベント実行中にキャンセルボタンでポーズメニューが表示され、セーブやロードができます。
  * @default true
  * @type boolean
+ *
+ * @param UsePauseMenuAlways
+ * @desc イベント実行時以外もポーズメニューを使用できます。その場合、通常のメニュー画面は使用不可となります。
+ * @default false
+ * @type boolean
+ *
+ * @param DisablePauseSwitch
+ * @desc 指定した番号のスイッチがONのとき、ポーズメニューが使用できなくなります。
+ * @default 0
+ * @type switch
  *
  * @param NameAutoSave
  * @desc セーブ画面に表示されるオートセーブ名称です。
@@ -389,9 +401,19 @@
  * @type boolean
  *
  * @param ポーズ可能
- * @desc 表示タイプがノベルならイベント実行中にキャンセルボタンでポーズメニューが表示され、セーブやロードができます。
+ * @desc イベント実行中にキャンセルボタンでポーズメニューが表示され、セーブやロードができます。
  * @default true
  * @type boolean
+ *
+ * @param 常にポーズメニュー使用
+ * @desc イベント実行時以外もポーズメニューを使用できます。その場合、通常のメニュー画面は使用不可となります。
+ * @default false
+ * @type boolean
+ *
+ * @param ポーズ禁止スイッチ
+ * @desc 指定した番号のスイッチがONのとき、ポーズメニューが使用できなくなります。
+ * @default 0
+ * @type switch
  *
  * @param ポーズカラー
  * @desc ウィンドウクローズ時のポーズサインの色調(R,G,B,A)です。通常時のポーズサインと差別化する場合に指定してください。
@@ -415,11 +437,6 @@
  *
  * @param 縦書き
  * @desc ノベル文章表示を縦書きにします。(ON/OFF)
- * @default false
- * @type boolean
- *
- * @param 常にポーズメニュー使用
- * @desc イベント実行時以外もポーズメニューを使用できます。その場合、通常のメニュー画面は使用不可となります。
  * @default false
  * @type boolean
  *
@@ -621,6 +638,7 @@
     var paramVerticalWriting    = getParamBoolean(['VerticalWriting', '縦書き']);
     var paramPauseColor         = getParamArrayNumber(['PauseColor', 'ポーズカラー'], 0, 255);
     var paramUsePauseMenuAlways = getParamBoolean(['UsePauseMenuAlways', '常にポーズメニュー使用']);
+    var paramDisablePauseSwitch = getParamNumber(['DisablePauseSwitch', 'ポーズ禁止スイッチ'], 0);
 
     //=============================================================================
     // インタフェースの定義
@@ -743,6 +761,24 @@
         _Game_Interpreter_update.apply(this, arguments);
     };
 
+    Game_Interpreter.prototype.rewindIndexUntilShowText = function() {
+        this._originalIndex = this._index;
+        while(this._list[this._index].code !== 101 && this._index > 1) {
+            this._index--;
+        }
+        this._index--;
+    };
+
+    Game_Interpreter.prototype.restoreIndex = function() {
+        if (this._originalIndex !== undefined) {
+            this._index = this._originalIndex;
+        }
+    };
+
+    Game_Interpreter.prototype.isMessageWait = function() {
+        return this._waitMode === 'message';
+    };
+
     //=============================================================================
     // Game_System
     //  全画面ウィンドウの有効フラグを管理します。
@@ -783,6 +819,10 @@
 
     Game_System.prototype.getMessageType = function() {
         return this._messageViewType;
+    };
+
+    Game_System.prototype.isMessageTypeNovel = function() {
+        return this._messageViewType === 1;
     };
 
     Game_System.prototype.changeMessageType = function(value) {
@@ -921,6 +961,46 @@
             Input.clear();
         }
         if (result) actor.setName(result);
+    };
+
+    Game_Message.prototype.canCallPause = function() {
+        if (!paramCanPause) {
+            return false;
+        }
+        if (!$gameMap.isEventRunning() && !paramUsePauseMenuAlways) {
+            return false;
+        }
+        if ($gameMap.isEventRunning() && !$gameMap.isEventMessageWait()) {
+            return false;
+        }
+        if ($gamePlayer.isTransferring()) {
+            return false;
+        }
+        if (this.isPause()) {
+            return false;
+        }
+        if ($gameSwitches.value(paramDisablePauseSwitch)) {
+            return false;
+        }
+        return true;
+    };
+
+    //=============================================================================
+    // Game_Map
+    //  メッセージ表示待機中かどうかを返します。
+    //=============================================================================
+    Game_Map.prototype.isEventMessageWait = function() {
+        return this._interpreter.isMessageWait();
+    };
+
+    Game_Map.prototype.executeAutoSaveForPause = function() {
+        if (!this.isEventRunning()) {
+            $gameSystem.executeAutoSave();
+        } else if (!$gameSystem.isMessageTypeNovel()) {
+            this._interpreter.rewindIndexUntilShowText();
+            $gameSystem.executeAutoSave();
+            this._interpreter.restoreIndex();
+        }
     };
 
     //=============================================================================
@@ -1277,6 +1357,7 @@
     };
 
     Scene_Map.prototype.processSave = function(saveFileId) {
+        $gameMap.executeAutoSaveForPause();
         if (DataManager.shiftAutoSave(saveFileId)) {
             SoundManager.playSave();
             StorageManager.cleanBackup(saveFileId);
@@ -1362,18 +1443,11 @@
 
     var _Scene_Map_callMenu = Scene_Map.prototype.callMenu;
     Scene_Map.prototype.callMenu = function() {
-        if (!paramUsePauseMenuAlways) {
+        if (!$gameMessage.canCallPause()) {
             _Scene_Map_callMenu.apply(this, arguments);
-            return;
-        }
-        if (!$gameMessage.isPause()) {
-            $gameSystem.executeAutoSave();
-            SoundManager.playOk();
-            this.onPause();
         } else {
-            this.offPause();
+            this.menuCalling = false;
         }
-        this.menuCalling = false;
     };
 
     var _Game_Message_isBusy = Game_Message.prototype.isBusy;
@@ -1534,13 +1608,15 @@
 
     var _Window_Message_update      = Window_Message.prototype.update;
     Window_Message.prototype.update = function() {
-        if (paramCanPause && !this.isNormalMessageWindow() && !$gameMessage.isPause()) this.checkInputPause();
-        if ($gameMessage.isPause()) return;
+        this.checkInputPause();
+        if ($gameMessage.isPause()) {
+            return;
+        }
         _Window_Message_update.apply(this, arguments);
     };
 
     Window_Message.prototype.checkInputPause = function() {
-        if (this.isTriggeredPause() && this.canCallPause()) {
+        if ($gameMessage.canCallPause() && this.isTriggeredPause()) {
             SoundManager.playOk();
             this.callPauseHandler();
         }
@@ -1548,10 +1624,6 @@
 
     Window_Message.prototype.isTriggeredPause = function() {
         return Input.isTriggered('escape') || (TouchInput.isCancelled() && this.isTouchedInsideFrame());
-    };
-
-    Window_Message.prototype.canCallPause = function() {
-        return $gameMap.isEventRunning() && !$gamePlayer.isTransferring();
     };
 
     Window_Message.prototype.keepActivationSubWindow = function() {
