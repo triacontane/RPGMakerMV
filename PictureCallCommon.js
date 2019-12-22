@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.0 2019/12/22 ピクチャコモンを並列処理として実行する設定を追加。
 // 1.12.2 2019/03/31 キーバインドで追加でキーを指定した場合に、ボタン名称が小文字でないと反応しない仕様を変更
 // 1.12.1 2019/03/19 コミュニティ版コアスクリプト1.3以降でピクチャコモンから移動ルートの設定を実行するとエラーになっていた問題を修正
 // 1.12.0 2018/11/02 すべてのピクチャタッチを無効にできるスイッチを追加
@@ -89,6 +90,11 @@
  *
  * @param 戦闘中常にコモン実行
  * @desc 戦闘中にピクチャをクリックしたとき、常にコモンイベントを実行します。(ON/OFF)
+ * @default false
+ * @type boolean
+ *
+ * @param 並列処理として実行
+ * @desc ピクチャクリックによるコモンイベント実行を並列処理扱いで実行します。
  * @default false
  * @type boolean
  *
@@ -244,6 +250,11 @@
  * @default false
  * @type boolean
  *
+ * @param AsParallelCommon
+ * @desc ピクチャクリックによるコモンイベント実行を並列処理扱いで実行します。
+ * @default false
+ * @type boolean
+ *
  * @param InvalidSwitchId
  * @desc 指定した番号のスイッチがONになっている場合、すべてのピクチャタッチが無効になります。
  * @default 0
@@ -342,6 +353,7 @@
     var paramSuppressTouch            = getParamBoolean(['SuppressTouch', 'タッチ操作抑制']);
     var paramAlwaysCommonInBattle     = getParamBoolean(['AlwaysCommonInBattle', '戦闘中常にコモン実行']);
     var paramInvalidSwitchId          = getParamNumber(['InvalidSwitchId', '無効スイッチ'], 0);
+    var paramAsParallelCommon         = getParamBoolean(['AsParallelCommon', '並列処理として実行']);
 
     //=============================================================================
     // Game_Interpreter
@@ -456,7 +468,7 @@
             $gameSwitches.setValue(param * -1, true);
         }
         if (this.isTouchPictureCallCommon()) {
-            if ($gameMap.isEventRunning() && !$gameParty.inBattle()) {
+            if (!paramAsParallelCommon && $gameMap.isEventRunning() && !$gameParty.inBattle()) {
                 this._touchPictureParam = null;
                 return;
             }
@@ -503,16 +515,59 @@
         return result || this.setupPictureCommonEvent();
     };
 
+    var _Game_Map_updateInterpreter = Game_Map.prototype.updateInterpreter;
+    Game_Map.prototype.updateInterpreter = function() {
+        _Game_Map_updateInterpreter.apply(this, arguments);
+        this.setupPictureParallelCommonEvent();
+    };
+
+    Game_Map.prototype.setupPictureParallelCommonEvent = function() {
+        if (!paramAsParallelCommon) {
+            return;
+        }
+        var commonId = $gameTemp.pictureCommonId();
+        var event    = $dataCommonEvents[commonId];
+        if (event) {
+            if (!this._pictureCommonEvents) {
+                this._pictureCommonEvents = [];
+            }
+            var interpreter = new Game_Interpreter();
+            interpreter.setupFromPicture(event.list, commonId);
+            this._pictureCommonEvents.push(interpreter);
+            $gameTemp.clearPictureCallInfo();
+        }
+    };
+
     Game_Map.prototype.setupPictureCommonEvent = function() {
+        if (paramAsParallelCommon) {
+            return false;
+        }
         var commonId = $gameTemp.pictureCommonId();
         var event    = $dataCommonEvents[commonId];
         var result   = false;
-        if (commonId > 0 && !this.isEventRunning() && event) {
+        if (!this.isEventRunning() && event) {
             this._interpreter.setupFromPicture(event.list, commonId);
             result = true;
         }
         $gameTemp.clearPictureCallInfo();
         return result;
+    };
+
+    var _Game_Map_updateEvents = Game_Map.prototype.updateEvents;
+    Game_Map.prototype.updateEvents = function() {
+        _Game_Map_updateEvents.apply(this, arguments);
+        if (this._pictureCommonEvents && this._pictureCommonEvents.length > 0) {
+            this.updatePictureCommonEvents();
+        }
+    };
+
+    Game_Map.prototype.updatePictureCommonEvents = function() {
+        this._pictureCommonEvents.forEach(function(event) {
+            event.update();
+        });
+        this._pictureCommonEvents = this._pictureCommonEvents.filter(function(event) {
+            return event.isRunning();
+        })
     };
 
     //=============================================================================
