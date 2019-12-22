@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.7 2019/12/22 不明な制御文字が挿入されたとき、ウィンドウの横幅が拡張されないよう修正
+//                   StandPictureEC.jsでピクチャを表示したとき、初回のみポップアップウィンドウの座標が反映されない競合を修正
 // 2.14.6 2019/12/07 YEP_MessageCore.jsでネームボックスを表示する際、同プラグインの位置調整が反映されない競合を修正
 // 2.14.5 2019/07/21 YEP_MessageCore.jsでネームボックスを表示する際、特定の条件下で一瞬だけネームボックスが不正な位置に表示される問題を修正
 // 2.14.4 2019/06/23 フキダシウィンドウを無効化したときのX座標の値をデフォルトのコアスクリプトの動作に準拠するよう修正
@@ -1291,6 +1293,10 @@
         if (isExistPlugin('MPP_MessageEX')) {
             this.width = this.windowWidth();
         }
+        // Resolve conflict for StandPictureEC
+        if (typeof Imported !== 'undefined' && Imported['StandPictureEC']) {
+            this.resetLayout();
+        }
         _Window_Message_startMessage.apply(this, arguments);
         this.resetLayout();
     };
@@ -1336,9 +1342,15 @@
     var _Window_Message_update      = Window_Message.prototype.update;
     Window_Message.prototype.update = function() {
         _Window_Message_update.apply(this, arguments);
+        this.updatePlacementPopupIfNeed();
+    };
+
+    Window_Message.prototype.updatePlacementPopupIfNeed = function() {
         var prevX = this.x;
         var prevY = this.y;
-        if (this.openness > 0 && this.isPopup()) this.updatePlacementPopup();
+        if (this.openness > 0 && this.isPopup()) {
+            this.updatePlacementPopup();
+        }
         if ((prevX !== this.x || prevY !== this.y) && this.isClosing()) {
             this.openness = 0;
         }
@@ -1428,6 +1440,7 @@
         var virtual      = {};
         virtual.index    = 0;
         virtual.text     = this.convertEscapeCharacters($gameMessage.allText());
+        virtual.text     = virtual.text.replace(/\x1b\w+\[.*]/gi, '');
         virtual.maxWidth = 0;
         this.newPage(virtual);
         while (!this.isEndOfText(virtual)) {
