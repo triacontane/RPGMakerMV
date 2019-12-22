@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2019/12/22 身代わりの判定仕様を変更し、身代わり後の反撃や魔法反射できる機能を追加
 // 1.1.0 2018/09/09 身代わりを無効にするスキルやアイテムを直接指定できる機能を追加
 // 1.0.2 2017/08/22 身代わり条件「必中以外」を無効にした場合でも必中攻撃に対する身代わりが発動しない場合がある問題を修正
 // 1.0.1 2017/02/07 端末依存の記述を削除
@@ -28,6 +29,11 @@
  * @param CondNonCertainHit
  * @desc デフォルトの身代わり条件である「必中以外」を有効にします。OFFにすると無効になります。(ON/OFF)
  * @default true
+ * @type boolean
+ *
+ * @param SubstituteCounter
+ * @desc 身代わりの判定仕様を変更し、身代わり後の反撃や魔法反射が有効になります。
+ * @default false
  * @type boolean
  *
  * @help 以下の内容に沿って身代わりの仕様を拡張します。
@@ -121,6 +127,11 @@
  * @param 身代わり条件_必中以外
  * @desc デフォルトの身代わり条件である「必中以外」を有効にします。OFFにすると無効になります。(ON/OFF)
  * @default true
+ * @type boolean
+ *
+ * @param 身代わり反撃
+ * @desc 身代わりの判定仕様を変更し、身代わり後の反撃や魔法反射が有効になります。
+ * @default false
  * @type boolean
  *
  * @help 以下の内容に沿って身代わりの仕様を拡張します。
@@ -261,6 +272,7 @@
     var param             = {};
     param.condDying         = getParamBoolean(['CondDying', '身代わり条件_瀕死']);
     param.condNonCertainHit = getParamBoolean(['CondNonCertainHit', '身代わり条件_必中以外']);
+    param.substituteCounter = getParamBoolean(['SubstituteCounter', '身代わり反撃']);
 
     //=============================================================================
     // Game_BattlerBase
@@ -347,6 +359,16 @@
     // BattleManager
     //  身代わり対象者の情報を保持して必要に応じて評価します。
     //=============================================================================
+    var _BattleManager_invokeAction = BattleManager.invokeAction;
+    BattleManager.invokeAction = function(subject, target) {
+        if (param.substituteCounter) {
+            var realTarget = this.applySubstitute(target);
+            _BattleManager_invokeAction.call(this, subject, realTarget);
+        } else {
+            _BattleManager_invokeAction.apply(this, arguments);
+        }
+    };
+
     var _BattleManager_applySubstitute = BattleManager.applySubstitute;
     BattleManager.applySubstitute      = function(target) {
         this._substituteTarget = target;
