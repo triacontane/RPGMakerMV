@@ -8,44 +8,44 @@
 /*:
  * @plugindesc Yet Another menu screen layout.
  * @author Sasuke KANNAZUKI, Yoji Ojima
- * 
- * @default 
+ *
+ * @default
  * @param bgBitmapMenu
  * @desc background bitmap file at menu scene. put at img/pictures.
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapItem
  * @desc background bitmap file at item scene. put at img/pictures.
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapSkill
  * @desc background bitmap file at skill scene. put at img/pictures.
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapEquip
  * @desc background bitmap file at equip scene. put at img/pictures.
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapStatus
  * @desc background bitmap file at status scene. put at img/pictures.
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapOptions
  * @desc background bitmap file at option scene. put at img/pictures.
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapFile
  * @desc background bitmap file at save/load scene. put at img/pictures.
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapGameEnd
  * @desc background bitmap file at gameEnd scene. put at img/pictures.
- * @default 
- * 
+ * @default
+ *
  * @param maxColsMenu
  * @desc max column at menu window
  * @default 4
- * 
+ *
  * @param commandRows
  * @desc number of visible rows at command window
  * @default 2
@@ -53,7 +53,7 @@
  * @param isDisplayStatus
  * @desc whether display status or not. (1 = yes, 0 = no)
  * @default 1
- * 
+ *
  * @help This plugin does not provide plugin commands.
  *  The differences with AltMenuscreen are follows:
  *   - windows are transparent at all menu scene.
@@ -72,51 +72,51 @@
 /*:ja
  * @plugindesc レイアウトの異なるメニュー画面
  * @author 神無月サスケ, Yoji Ojima
- * 
+ *
  * @param bgBitmapMenu
  * @desc メニュー背景にするビットマップファイルです。
  * img/pictures に置いてください。
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapItem
  * @desc アイテム画面背景にするビットマップファイルです。
  * img/pictures に置いてください。
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapSkill
  * @desc スキル画面背景にするビットマップファイルです。
  * img/pictures に置いてください。
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapEquip
  * @desc 装備画面背景にするビットマップファイルです。
  * img/pictures に置いてください。
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapStatus
  * @desc ステータス画面背景にするビットマップファイルです。
  * img/pictures に置いてください。
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapOptions
  * @desc オプション画面背景にするビットマップファイルです。
  * img/pictures に置いてください。
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapFile
  * @desc セーブ／ロード画面背景にするビットマップファイルです。
  * img/pictures に置いてください。
- * @default 
- * 
+ * @default
+ *
  * @param bgBitmapGameEnd
  * @desc ゲーム終了画面背景にするビットマップファイルです。
  * img/pictures に置いてください。
- * @default 
- * 
+ * @default
+ *
  * @param maxColsMenu
  * @desc アクターを表示するウィンドウの1画面の登録最大数です。
  * @default 4
- * 
+ *
  * @param commandRows
  * @desc コマンドウィンドウの行数です。
  * @default 2
@@ -124,7 +124,7 @@
  * @param isDisplayStatus
  * @desc ステータスを表示するかしないかを選びます。(1 = yes, 0 = no)
  * @default 1
- * 
+ *
  * @help このプラグインには、プラグインコマンドはありません。
  *
  *  AltMenuscreen との違いは以下です:
@@ -164,8 +164,11 @@
     var _Scene_Menu_create = Scene_Menu.prototype.create;
     Scene_Menu.prototype.create = function() {
         _Scene_Menu_create.call(this);
-        this._statusWindow.x = 0;
-        this._statusWindow.y = this._commandWindow.height;
+//        this._statusWindow.x = 0;
+//        this._statusWindow.y = this._commandWindow.height;
+        this._statusWindow.x = this._commandWindow.width;
+        this._statusWindow.y = 80;
+        this._commandWindow.y = 80;
         this._goldWindow.x = Graphics.boxWidth - this._goldWindow.width;
         // make transparent for all windows at menu scene.
         this._statusWindow.opacity = 0;
@@ -340,21 +343,21 @@
     //
     // alt menu screen processes
     //
-    Window_MenuCommand.prototype.windowWidth = function() {
-        return Graphics.boxWidth;
-    };
-
-    Window_MenuCommand.prototype.maxCols = function() {
-        return 4;
-    };
-
-    Window_MenuCommand.prototype.numVisibleRows = function() {
-        return rowsCommandWnd;
-    };
-
-    Window_MenuStatus.prototype.windowWidth = function() {
-        return Graphics.boxWidth;
-    };
+//    Window_MenuCommand.prototype.windowWidth = function() {
+//        return Graphics.boxWidth;
+//    };
+//
+//    Window_MenuCommand.prototype.maxCols = function() {
+//        return 4;
+//    };
+//
+//    Window_MenuCommand.prototype.numVisibleRows = function() {
+//        return rowsCommandWnd;
+//    };
+//
+//    Window_MenuStatus.prototype.windowWidth = function() {
+//        return Graphics.boxWidth;
+//    };
 
     Window_MenuStatus.prototype.windowHeight = function() {
         var h1 = this.fittingHeight(1);
