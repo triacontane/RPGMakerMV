@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.8 2019/12/27 2.14.7の修正で一部制御文字を使用するとウィンドウ幅の計算が正しく行われない問題を修正
 // 2.14.7 2019/12/22 不明な制御文字が挿入されたとき、ウィンドウの横幅が拡張されないよう修正
 //                   StandPictureEC.jsでピクチャを表示したとき、初回のみポップアップウィンドウの座標が反映されない競合を修正
 // 2.14.6 2019/12/07 YEP_MessageCore.jsでネームボックスを表示する際、同プラグインの位置調整が反映されない競合を修正
@@ -1440,7 +1441,10 @@
         var virtual      = {};
         virtual.index    = 0;
         virtual.text     = this.convertEscapeCharacters($gameMessage.allText());
-        virtual.text     = virtual.text.replace(/\x1b\w+\[.*]/gi, '');
+        var defaultEscapeList = ['C', 'I', '{', '}'];
+        virtual.text     = virtual.text.replace(/\x1b(\w+)\[.*]/gi, function(text) {
+            return defaultEscapeList.contains(arguments[1].toUpperCase()) ? text : '';
+        });
         virtual.maxWidth = 0;
         this.newPage(virtual);
         while (!this.isEndOfText(virtual)) {
