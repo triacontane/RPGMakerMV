@@ -359,6 +359,9 @@
 //    Window_MenuStatus.prototype.windowWidth = function() {
 //        return Graphics.boxWidth;
 //    };
+    Window_MenuCommand.prototype.lineHeight = function() {
+        return 60;
+    };
 
     Window_MenuStatus.prototype.windowHeight = function() {
         var h1 = this.fittingHeight(1);
