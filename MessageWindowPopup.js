@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.9 2019/12/27 StandPictureEC.jsおよびMessageAlignmentEC.jsと組み合わせた場合に発生する競合を修正
 // 2.14.8 2019/12/27 2.14.7の修正で一部制御文字を使用するとウィンドウ幅の計算が正しく行われない問題を修正
 // 2.14.7 2019/12/22 不明な制御文字が挿入されたとき、ウィンドウの横幅が拡張されないよう修正
 //                   StandPictureEC.jsでピクチャを表示したとき、初回のみポップアップウィンドウの座標が反映されない競合を修正
@@ -1296,6 +1297,9 @@
         }
         // Resolve conflict for StandPictureEC
         if (typeof Imported !== 'undefined' && Imported['StandPictureEC']) {
+            this._textState = {};
+            this._textState.index = 0;
+            this._textState.text = '';
             this.resetLayout();
         }
         _Window_Message_startMessage.apply(this, arguments);
