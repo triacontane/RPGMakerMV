@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2019/12/27 瞬間表示の利用可否をゲーム中にスイッチで変更できるようにしました
 // 1.2.3 2018/11/28 BugFixWaitOfTextEnd.jsと組み合わせたとき、末尾の動作がおかしくなる問題を修正
 // 1.2.2 2018/07/22 瞬間表示機能が有効なとき、\!を使用すると以後のメッセージまで瞬間表示されてしまう問題を修正
 // 1.2.1 2017/12/30 パラメータの型指定機能に対応し、ヘルプの記述を修正
@@ -29,10 +30,10 @@
  * @default 1
  * @type variable
  *
- * @param RapidShow
+ * @param RapidShowSwitch
  * @desc Rapid show if triggered(ON/OFF)
- * @default false
- * @type boolean
+ * @default 0
+ * @type switch
  *
  * @help Customize for message speed
  * 0    : Rapid
@@ -50,10 +51,10 @@
  * @default 1
  * @type variable
  *
- * @param 瞬間表示
- * @desc 文章の表示中に決定ボタンや左クリックで文章を瞬間表示します。(ON/OFF)
- * @default false
- * @type boolean
+ * @param 瞬間表示スイッチ
+ * @desc 指定した番号のスイッチがONになっているとき、文章の表示中に決定ボタンや左クリックで文章を瞬間表示します。
+ * @default 0
+ * @type switch
  *
  * @help メッセージ表示速度を調整します。
  * パラメータで指定した番号の変数に対して以下の値を代入してください。
@@ -92,11 +93,6 @@
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
-    };
-
     var getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
@@ -109,8 +105,8 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramVariableSpeed  = getParamNumber(['VariableSpeed', '表示速度変数'], 1, 5000);
-    var paramRapidShow      = getParamBoolean(['RapidShow', '瞬間表示']);
+    var paramVariableSpeed   = getParamNumber(['VariableSpeed', '表示速度変数'], 1, 5000);
+    var paramRapidShowSwitch = getParamNumber(['RapidShowSwitch', '瞬間表示スイッチ'], 1, 5000);
 
     //=============================================================================
     // Window_Message
@@ -125,7 +121,8 @@
 
     var _Window_Message_updateWait = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
-        if (paramRapidShow && this._textState && this.isTriggered() && !this.pause) {
+        if ($gameSwitches.value(paramRapidShowSwitch) && this._textState &&
+            this.isTriggered() && !this.pause) {
             this._showAll = true;
         }
         return _Window_Message_updateWait.apply(this, arguments);
