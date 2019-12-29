@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.3 2019/12/30 スキルの属性を指定してからタイプを「なし」にした場合でも、スクリプト「action.hasElement」が元々指定していた属性を返してしまう問題を修正
 // 1.9.2 2019/06/09 戦闘行動の強制による反撃を行わない設定のとき、反撃後の自動ステート解除で反撃を有効にするステートを解除した場合、
 //                  反撃による敵の行動キャンセルが行われない問題を修正
 // 1.9.1 2019/05/02 クロスカウンターで、相手の攻撃が当たった場合のみ反撃する場合は、身代わりによる肩代わりも除外するよう仕様変更
@@ -672,6 +673,9 @@ var Imported = Imported || {};
     };
 
     Game_Action.prototype.hasElement = function(elementId) {
+        if (this.item().damage.type === 0) {
+            return false;
+        }
         var skillElementId = this.item().damage.elementId;
         // Normal attack elementID[-1]
         if (skillElementId === -1) {
