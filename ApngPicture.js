@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2019/12/29 シーン追加画像の表示優先度を設定できる機能を追加
  1.0.0 2019/12/27 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -191,6 +192,18 @@
  * @option 中央
  * @value 1
  *
+ * @param Priority
+ * @text 優先度
+ * @desc 画像の表示優先度です。最背面は画面上に表示されないことが多いので通常の使用では推奨しません。
+ * @default 0
+ * @type select
+ * @option 最前面
+ * @value 0
+ * @option ウィンドウの下
+ * @value 1
+ * @option 最背面
+ * @value 2
+ *
  * @param Switch
  * @text 出現条件スイッチ
  * @desc 指定したスイッチがONのときのみ表示されます。指定しない場合、常に表示されます。
@@ -318,8 +331,23 @@
     var _Scene_Base_start = Scene_Base.prototype.start;
     Scene_Base.prototype.start = function() {
         _Scene_Base_start.apply(this, arguments);
+        this.setApngPriority();
+    };
+
+    Scene_Base.prototype.setApngPriority = function() {
+        var windowLayerIndex = this._windowLayer ? this.getChildIndex(this._windowLayer) : 0;
         this._apngList.forEach(function(sprite) {
-            this.addChild(sprite);
+            switch (sprite.getPriority()) {
+                case 0:
+                    this.addChild(sprite);
+                    break;
+                case 1:
+                    this.addChildAt(sprite, windowLayerIndex);
+                    windowLayerIndex++;
+                    break;
+                default:
+                    this.addChildAt(sprite, 0);
+            }
         }, this);
     };
 
@@ -368,6 +396,7 @@
             this.addChild(this._apngSprite);
             this.bitmap = ImageManager.loadPicture('');
             this.updateApngAnchor();
+            this.updateApngBlendMode();
         }
     };
 
@@ -379,6 +408,12 @@
         if (this._apngSprite) {
             this._apngSprite.anchor.x = this.anchor.x;
             this._apngSprite.anchor.y = this.anchor.y;
+        }
+    };
+
+    Sprite.prototype.updateApngBlendMode = function() {
+        if (this._apngSprite) {
+            this._apngSprite.blendMode = this.blendMode;
         }
     };
 
@@ -400,6 +435,12 @@
     Sprite_Picture.prototype.updateOrigin = function() {
         _Sprite_Picture_updateOrigin.apply(this, arguments);
         this.updateApngAnchor();
+    };
+
+    var _Sprite_Picture_updateOther = Sprite_Picture.prototype.updateOther;
+    Sprite_Picture.prototype.updateOther = function() {
+        _Sprite_Picture_updateOther.apply(this, arguments);
+        this.updateApngBlendMode();
     };
 
     /**
@@ -435,6 +476,7 @@
                this.anchor.y = 0.5;
            }
            this._switch = item.Switch;
+           this._priority = item.Priority;
        }
 
        loadApngSprite(name) {
@@ -447,6 +489,10 @@
 
        isValid() {
            return !this._switch || $gameSwitches.value(this._switch);
+       }
+
+       getPriority() {
+           return this._priority;
        }
    }
 })();
