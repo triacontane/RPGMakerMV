@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2019/12/29 1.5.0の修正以後、パーティメンバーを外したときにエラーになっていた問題を修正
 // 1.5.0 2019/11/25 装備スロットごとに変数を増減できる機能を追加
 // 1.4.5 2018/05/05 1.4.4で動的データベース構築プラグインとの競合が発生していたので解消
 // 1.4.4 2018/05/04 装備封印で外れた場合に変数の増減が行われない問題を修正
@@ -177,7 +178,6 @@
     };
 
     var param = createPluginParameter('TriggerOnEquipAndState');
-    console.log(param)
     param.SlotVariables = param.SlotVariables || [];
 
     var getMetaValue = function(object, name) {
@@ -277,7 +277,7 @@
         }
         var reserveMembers = this.getReserveMembers();
         _Game_Party_removeActor.apply(this, arguments);
-        if (paramBattleMemberOnly) {
+        if (param.BattleMemberOnly) {
             var members = this.battleMembers();
             reserveMembers.forEach(function(actor) {
                 if (members.contains(actor)) {
