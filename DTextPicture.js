@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.1 2019/12/29 YEP_PluginCmdSwVar.jsと併用したとき、変数のリアルタイム変換が効かなくなる競合を修正
 // 1.15.0 2019/10/21 カーソルのアクティブ状態を変更できるコマンドを追加
 //                   アイテム表示の制御文字でアイコン表示可否を変更できる設定を追加
 // 1.14.0 2019/01/13 背景ウィンドウにカーソル表示できる機能を追加
@@ -264,6 +265,15 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         this.pluginCommandDTextPicture(command, args);
+    };
+
+    // Resolve conflict for YEP_PluginCmdSwVar.js
+    var _Game_Interpreter_processPluginCommandSwitchVariables = Game_Interpreter.prototype.processPluginCommandSwitchVariables;
+    Game_Interpreter.prototype.processPluginCommandSwitchVariables = function() {
+        if (this._params[0].toUpperCase().indexOf('D_TEXT') >= 0) {
+            return;
+        }
+        _Game_Interpreter_processPluginCommandSwitchVariables.apply(this, arguments);
     };
 
     Game_Interpreter.textAlignMapper = {
