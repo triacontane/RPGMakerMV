@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2019/12/31 APNGのみツクール本体の暗号化機能に対応
  1.1.0 2019/12/29 シーン追加画像の表示優先度を設定できる機能を追加
  1.0.0 2019/12/27 初版
 ----------------------------------------------------------------------------
@@ -42,12 +43,11 @@
  * From the parameters, select the file in which the APNG picture file is registered.
  * It will be animated if it is displayed in "Display Picture".
  *
- * The following libraries are required for use. Also check your library license.
- * (As of December 28, 2019, there is a description of the license MIT in package.json)
- *
+ * The following libraries are required for use.
  * https://github.com/sbfkcel/pixi-apngAndGif
  *
  * Download the target file and import it from the plugin management screen.
+ * https://github.com/sbfkcel/pixi-apngAndGif/blob/master/dist/PixiApngAndGif.js
  *
  * In addition, the color tone change of the picture is not reflected.
  * Also, extensions by other plug-ins may not work.
@@ -87,16 +87,15 @@
  * @type struct<SceneApngRecord>[]
  *
  * @help ApngPicture.js
- * APNG、もしくはGIFをピクチャとして扱い画面上にアニメ表示します。
- * パラメータからAPNGのピクチャファイルを登録したファイルを
+ * APNG、もしくはGIFアニメをピクチャとして画面上にアニメ表示します。
+ * パラメータからAPNGのピクチャとして登録したファイルを
  * 「ピクチャの表示」で表示すればアニメーションされます。
  *
- * 使用には以下のライブラリが必要です。ライブラリのライセンスも確認してください。
- * (2019/12/28現在、package.jsonにライセンスMITの記載があります)
- *
+ * 使用には以下のライブラリが必要です。
  * https://github.com/sbfkcel/pixi-apngAndGif
  *
  * 対象ファイルをダウンロードしてプラグイン管理画面から取り込んでください。
+ * https://github.com/sbfkcel/pixi-apngAndGif/blob/master/dist/PixiApngAndGif.js
  *
  * なお、ピクチャの色調変更は反映されません。
  * また、他のプラグインによる拡張が機能しない場合があります。
@@ -106,11 +105,14 @@
  *
  * 敵キャラ画像にAPNGを表示する機能もありますが、この機能は
  * 画像のフラッシュが一切行われないため不完全です。
+ * また、画像サイズの大きいAPNGを読み込むと、表示が遅くなる場合があります。
+ * 表示が遅い場合はGIFアニメもお試しください。
  *
  * GIFを使用したい場合、拡張子がgifのファイルはツクールMVで認識されないので
  * パラメータに拡張子付きのファイル名を直接入力してください。
  * また、ピクチャを表示するときはスクリプトから表示するか
  * 同名のダミーpngファイルを使って指定してください。
+ * また、GIFはツクールMVの暗号化機能の対象外となります。
  *　
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -254,29 +256,32 @@
     class ApngLoader {
         constructor(folder, paramList) {
             this._folder = folder;
-            this._paramList = paramList;
             this._fileHash = {};
-            this.addAllImage();
+            this._paramList = paramList;
+            if (this._paramList) {
+                this.addAllImage();
+            }
         }
 
         addAllImage() {
-            if (!this._paramList || this._paramList.length === 0) {
-                return;
-            }
             var option = this.getLoadOption();
             this._paramList.forEach(function(item) {
-                var name = item.FileName || item;
-                var ext = 'png';
-                name = name.replace(/\.gif$/gi, function() {
-                    ext = 'gif';
-                    return '';
-                });
-                var path = name.match(/http:/) ? name : `img/${this._folder}/${name}.${ext}`;
-                if (!this._fileHash.hasOwnProperty(name)) {
-                    this._fileHash[name] = path;
-                    PIXI.loader.add(path, option);
-                }
-            }.bind(this));
+                this.addImage(item, option);
+            }, this);
+        }
+
+        addImage(item, option) {
+            var name = item.FileName || item;
+            var ext = Decrypter.hasEncryptedImages ? 'rpgmvp' : 'png';
+            name = name.replace(/\.gif$/gi, function() {
+                ext = 'gif';
+                return '';
+            });
+            var path = name.match(/http:/) ? name : `img/${this._folder}/${name}.${ext}`;
+            if (!this._fileHash.hasOwnProperty(name)) {
+                this._fileHash[name] = ApngLoader.convertDecryptExt(path);
+                PIXI.loader.add(path, option);
+            }
         }
 
         getLoadOption() {
@@ -302,18 +307,42 @@
         static loadResource() {
             PIXI.loader.load(function(progress, resource) {
                 this._resource = resource;
+                Object.keys(this._resource).forEach(function(key) {
+                    if (this._resource[key].extension === 'rpgmvp') {
+                        ApngLoader.decryptResource(key);
+                    }
+                }, this);
             }.bind(this));
         }
 
+        static decryptResource(key) {
+            var resource = this._resource[key];
+            resource.data = Decrypter.decryptArrayBuffer(resource.data);
+            var newKey = ApngLoader.convertDecryptExt(key);
+            resource.name = newKey;
+            resource.url = newKey;
+            resource.extension = 'png';
+            this._resource[newKey] = resource;
+            delete this._resource[key];
+        };
+
         static isReady() {
             return !!this._resource;
+        }
+
+        static convertDecryptExt(key) {
+            return key.replace(/\.rpgmvp$/, '.png');
         }
     }
     ApngLoader._resource = null;
 
     var _Scene_Boot_isReady = Scene_Boot.prototype.isReady;
     Scene_Boot.prototype.isReady = function() {
-        return _Scene_Boot_isReady.apply(this, arguments) && ApngLoader.isReady();
+        var result = _Scene_Boot_isReady.apply(this, arguments);
+        if (result) {
+            SceneManager.setupApngLoaderIfNeed();
+        }
+        return result && ApngLoader.isReady();
     };
 
     var _Scene_Base_create = Scene_Base.prototype.create;
@@ -362,9 +391,10 @@
      * SceneManager
      * APNGのローダを管理します。
      */
-    var _SceneManager_initialize = SceneManager.initialize;
-    SceneManager.initialize = function() {
-        _SceneManager_initialize.apply(this, arguments);
+    SceneManager.setupApngLoaderIfNeed = function() {
+        if (this._apngLoaderPicture) {
+            return;
+        }
         this._apngLoaderPicture = new ApngLoader('pictures', param.PictureList);
         this._apngLoaderEnemy = new ApngLoader('enemies', param.EnemyList);
         this._apngLoaderSystem = new ApngLoader('system', param.SceneApngList);
