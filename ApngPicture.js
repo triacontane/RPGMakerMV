@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.1 2019/12/31 画像を登録せずゲーム開始するとローディングが完了しない問題を修正
  1.3.0 2019/12/31 APNGのキャッシュ機能を追加
  1.2.1 2019/12/31 シーン追加画像でgifが表示されない問題を修正
  1.2.0 2019/12/31 APNGのみツクール本体の暗号化機能に対応
@@ -317,7 +318,7 @@
             this._fileHash = {};
             this._cachePolicy = {};
             this._paramList = paramList;
-            if (this._paramList) {
+            if (this._paramList && this._paramList.length > 0) {
                 this.addAllImage();
             }
             this._spriteCache = {};
@@ -329,6 +330,7 @@
                 this.addImage(item, option);
             }, this);
             PIXI.loader.onComplete.add(this.cacheStartup.bind(this));
+            ApngLoader.startLoading();
         }
 
         addImage(item, option) {
@@ -390,6 +392,10 @@
             }, this);
         }
 
+        static startLoading() {
+            this._loading = true;
+        };
+
         static onLoadResource(progress, resource) {
             this._resource = resource;
             Object.keys(this._resource).forEach(function(key) {
@@ -411,7 +417,7 @@
         };
 
         static isReady() {
-            return !!this._resource;
+            return !!this._resource || !this._loading;
         }
 
         static convertDecryptExt(key) {
