@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2019/12/31 APNGのキャッシュ機能を追加
  1.2.1 2019/12/31 シーン追加画像でgifが表示されない問題を修正
  1.2.0 2019/12/31 APNGのみツクール本体の暗号化機能に対応
  1.1.0 2019/12/29 シーン追加画像の表示優先度を設定できる機能を追加
@@ -69,9 +70,7 @@
  * @text APNGのピクチャリスト
  * @desc APNGとして扱うピクチャ画像のリストです。GIFを指定したい場合は拡張子付きで直接入力してください。
  * @default []
- * @require 1
- * @dir img/pictures/
- * @type file[]
+ * @type struct<PictureApngRecord>[]
  *
  * @param EnemyList
  * @text APNGの敵キャラリスト
@@ -79,7 +78,7 @@
  * @default []
  * @require 1
  * @dir img/enemies/
- * @type file[]
+ * @type struct<EnemyApngRecord>[]
  *
  * @param SceneApngList
  * @text シーンAPNGのリスト
@@ -173,6 +172,18 @@
  * @dir img/system/
  * @type file
  *
+ * @param CachePolicy
+ * @text キャッシュ方針
+ * @desc 画像のキャッシュ方針です。大量にキャッシュするとメモリ使用量に影響が出る場合があります。
+ * @default 0
+ * @type select
+ * @option キャッシュしない
+ * @value 0
+ * @option 初回表示時にキャッシュ
+ * @value 1
+ * @option ゲーム起動時にキャッシュ
+ * @value 2
+ *
  * @param X
  * @text X座標
  * @desc 追加するAPNGのX座標です。
@@ -212,6 +223,52 @@
  * @desc 指定したスイッチがONのときのみ表示されます。指定しない場合、常に表示されます。
  * @default 0
  * @type switch
+ */
+
+/*~struct~PictureApngRecord:
+ *
+ * @param FileName
+ * @text ファイル名
+ * @desc 追加するAPNGのファイル名です。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param CachePolicy
+ * @text キャッシュ方針
+ * @desc 画像のキャッシュ方針です。大量にキャッシュするとメモリ使用量に影響が出る場合があります。
+ * @default 0
+ * @type select
+ * @option キャッシュしない
+ * @value 0
+ * @option 初回表示時にキャッシュ
+ * @value 1
+ * @option ゲーム起動時にキャッシュ
+ * @value 2
+ */
+
+/*~struct~EnemyApngRecord:
+ *
+ * @param FileName
+ * @text ファイル名
+ * @desc 追加するAPNGのファイル名です。
+ * @default
+ * @require 1
+ * @dir img/enemies/
+ * @type file
+ *
+ * @param CachePolicy
+ * @text キャッシュ方針
+ * @desc 画像のキャッシュ方針です。大量にキャッシュするとメモリ使用量に影響が出る場合があります。
+ * @default 0
+ * @type select
+ * @option キャッシュしない
+ * @value 0
+ * @option 初回表示時にキャッシュ
+ * @value 1
+ * @option ゲーム起動時にキャッシュ
+ * @value 2
  */
 
 (function() {
@@ -258,10 +315,12 @@
         constructor(folder, paramList) {
             this._folder = folder;
             this._fileHash = {};
+            this._cachePolicy = {};
             this._paramList = paramList;
             if (this._paramList) {
                 this.addAllImage();
             }
+            this._spriteCache = {};
         }
 
         addAllImage() {
@@ -269,10 +328,11 @@
             this._paramList.forEach(function(item) {
                 this.addImage(item, option);
             }, this);
+            PIXI.loader.onComplete.add(this.cacheStartup.bind(this));
         }
 
         addImage(item, option) {
-            var name = item.FileName || item;
+            var name = item.FileName;
             var ext = Decrypter.hasEncryptedImages ? 'rpgmvp' : 'png';
             name = name.replace(/\.gif$/gi, function() {
                 ext = 'gif';
@@ -281,6 +341,7 @@
             var path = name.match(/http:/) ? name : `img/${this._folder}/${name}.${ext}`;
             if (!this._fileHash.hasOwnProperty(name)) {
                 this._fileHash[name] = ApngLoader.convertDecryptExt(path);
+                this._cachePolicy[name] = item.CachePolicy;
                 PIXI.loader.add(path, option);
             }
         }
@@ -297,23 +358,45 @@
             if (!this.isApng(name)) {
                 return null;
             }
-            var apng = new PixiApngAndGif(this._fileHash[name], ApngLoader._resource);
-            return apng.sprite;
+            if (this._isNeedCache(name)) {
+                if (this._spriteCache[name]) {
+                    return this._spriteCache[name];
+                }
+                var sprite = this._createPixiApngAndGif(name);
+                this._spriteCache[name] = sprite;
+                return sprite;
+            } else {
+                return this._createPixiApngAndGif(name);
+            }
+        }
+
+        _createPixiApngAndGif(name) {
+            return new PixiApngAndGif(this._fileHash[name], ApngLoader._resource).sprite;
+        }
+
+        _isNeedCache(name) {
+            return this._cachePolicy[name] > 0;
         }
 
         isApng(name) {
             return !!this._fileHash[name];
         }
 
-        static loadResource() {
-            PIXI.loader.load(function(progress, resource) {
-                this._resource = resource;
-                Object.keys(this._resource).forEach(function(key) {
-                    if (this._resource[key].extension === 'rpgmvp') {
-                        ApngLoader.decryptResource(key);
-                    }
-                }, this);
-            }.bind(this));
+        cacheStartup() {
+            Object.keys(this._cachePolicy).forEach(function(name) {
+                if (this._cachePolicy[name] === 2) {
+                    this.createSprite(name)
+                }
+            }, this);
+        }
+
+        static onLoadResource(progress, resource) {
+            this._resource = resource;
+            Object.keys(this._resource).forEach(function(key) {
+                if (this._resource[key].extension === 'rpgmvp') {
+                    ApngLoader.decryptResource(key);
+                }
+            }, this);
         }
 
         static decryptResource(key) {
@@ -396,10 +479,11 @@
         if (this._apngLoaderPicture) {
             return;
         }
+        PIXI.loader.onComplete.add(ApngLoader.onLoadResource.bind(ApngLoader));
         this._apngLoaderPicture = new ApngLoader('pictures', param.PictureList);
         this._apngLoaderEnemy = new ApngLoader('enemies', param.EnemyList);
         this._apngLoaderSystem = new ApngLoader('system', param.SceneApngList);
-        ApngLoader.loadResource();
+        PIXI.loader.load();
     };
 
     SceneManager.tryLoadApngPicture = function(name) {
