@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2019/12/31 シーン追加画像でgifが表示されない問題を修正
  1.2.0 2019/12/31 APNGのみツクール本体の暗号化機能に対応
  1.1.0 2019/12/29 シーン追加画像の表示優先度を設定できる機能を追加
  1.0.0 2019/12/27 初版
@@ -510,7 +511,7 @@
        }
 
        loadApngSprite(name) {
-           return SceneManager.tryLoadApngSystem(name);
+           return SceneManager.tryLoadApngSystem(name.replace(/\..*/, ''));
        }
 
        update() {
