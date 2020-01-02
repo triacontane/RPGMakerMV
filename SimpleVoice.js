@@ -1,4 +1,4 @@
-//=============================================================================
+﻿//=============================================================================
 // SimpleVoice.js
 // ----------------------------------------------------------------------------
 // Copyright (c) 2015-2017 Triacontane
@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2019/01/22 イベント高速化で再生したとき、SV_STOP_VOICEが効かなくなる場合がある問題を修正
 // 1.1.0 2017/07/16 ボイスのチャンネル指定機能を追加。同一チャンネルのボイスが同時再生されないようになります。
 // 1.0.1 2017/06/26 英語表記のプラグインコマンドの指定方法を変更
 // 1.0.0 2017/06/25 初版
@@ -307,8 +308,12 @@
     };
 
     AudioManager.filterPlayingVoice = function() {
-        this._voiceBuffers = this._voiceBuffers.filter(function(audio) {
-            return audio.isPlaying();
+        this._voiceBuffers = this._voiceBuffers.filter(function(buffer) {
+            var playing = buffer.isPlaying();
+            if (!playing) {
+                buffer.stop();
+            }
+            return playing;
         });
     };
 
@@ -328,4 +333,3 @@
         AudioManager.stopVoice();
     };
 })();
-
