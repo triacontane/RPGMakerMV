@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.3 2020/01/25 フレーム更新時に無駄な処理が実行されることでパフォーマンスが低下していた問題を修正
 // 1.10.2 2018/11/19 UltraMode7との競合を解消(by けんせい様)
 //                   TMNamePop.jsとの併用時、ネームポップがイベント画像の傾き、反転に影響されないよう修正
 // 1.10.1 2018/10/05 敵キャラやピクチャを表示する際、エディタで元画像にインデックス1以外を指定していると画像が表示されない問題を修正
@@ -659,6 +660,12 @@
     // Sprite_Character
     //  拡張したプロパティに基づいてエフェクトを反映させます。
     //=============================================================================
+    var _Sprite_Character_initMembers = Sprite_Character.prototype.initMembers;
+    Sprite_Character.prototype.initMembers = function() {
+        _Sprite_Character_initMembers.apply(this, arguments);
+        this._customTilesetId = 0;
+    };
+
     var _Sprite_Character_tilesetBitmap      = Sprite_Character.prototype.tilesetBitmap;
     Sprite_Character.prototype.tilesetBitmap = function(tileId) {
         var customTilesetId   = this._character.customTilesetId();
