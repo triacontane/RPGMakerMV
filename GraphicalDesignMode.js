@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.4 2020/01/27 プラグインで追加した一部のウィンドウの位置変更が反映されない競合を修正
 // 2.10.3 2019/11/02 デザインモード設定時はクリックでメッセージウィンドウを送れないよう修正
 // 2.10.2 2019/02/27 初期状態でスクロールされているウィンドウの行高さを変更した場合に、スクロールの初期表示がずれる現象を修正
 // 2.10.1 2018/11/06 BattleFormation.jsとの競合を解消
@@ -1438,8 +1439,8 @@ var $dataContainerProperties = null;
             var containerInfo = sceneInfo[parentName];
             var key           = [this.parent.getChildIndex(this), getClassName(this)];
             if (containerInfo && containerInfo[key]) {
-                this.loadProperty(containerInfo[key]);
                 this._positionLock = true;
+                this.loadProperty(containerInfo[key]);
             }
         }
     };
