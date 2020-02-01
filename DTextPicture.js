@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.0 2019/02/01 複数行表示した場合の行間を指定できる機能を追加
 // 1.15.1 2019/12/29 YEP_PluginCmdSwVar.jsと併用したとき、変数のリアルタイム変換が効かなくなる競合を修正
 // 1.15.0 2019/10/21 カーソルのアクティブ状態を変更できるコマンドを追加
 //                   アイテム表示の制御文字でアイコン表示可否を変更できる設定を追加
@@ -63,6 +64,12 @@
  * @desc 指定した番号のスイッチがONのとき\ITEM[n]でアイコンが表示されます。指定しない場合、常に表示されます。
  * @default 0
  * @type switch
+ *
+ * @param lineSpacingVariableId
+ * @text 行間補正変数ID
+ * @desc 複数行表示の際の行間に、指定した変数の値の分だけ補正が掛かります。大きすぎる値を設定すると見切れる場合があります。
+ * @default 0
+ * @type variable
  *
  * @help 指定した文字列でピクチャを動的に生成するコマンドを提供します。
  * 文字列には各種制御文字（\v[n]等）も使用可能で、制御文字で表示した変数の値が
@@ -861,6 +868,15 @@
         } else {
             return '';
         }
+    };
+
+    var _Window_Hidden_calcTextHeight = Window_Hidden.prototype.calcTextHeight;
+    Window_Hidden.prototype.calcTextHeight = function(textState, all) {
+        var result = _Window_Hidden_calcTextHeight.apply(this, arguments);
+        if (param.lineSpacingVariableId) {
+            result += $gameVariables.value(param.lineSpacingVariableId);
+        }
+        return result;
     };
 
     //=============================================================================
