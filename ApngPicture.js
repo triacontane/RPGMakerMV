@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2020/02/01 アニメーションのループ回数を指定できる機能を追加
  1.3.1 2019/12/31 画像を登録せずゲーム開始するとローディングが完了しない問題を修正
  1.3.0 2019/12/31 APNGのキャッシュ機能を追加
  1.2.1 2019/12/31 シーン追加画像でgifが表示されない問題を修正
@@ -86,6 +87,12 @@
  * @desc シーンごとに表示するAPNGのリストです。GIFを指定したい場合は拡張子付きで直接入力してください。
  * @default []
  * @type struct<SceneApngRecord>[]
+ *
+ * @param DefaultLoopTimes
+ * @text デフォルトループ回数
+ * @desc アニメーションのループ回数です。指定した回数分ループ再生すると止まります。0を指定すると無限にアニメーションします。
+ * @default 0
+ * @type number
  *
  * @help ApngPicture.js
  * APNG、もしくはGIFアニメをピクチャとして画面上にアニメ表示します。
@@ -224,6 +231,12 @@
  * @desc 指定したスイッチがONのときのみ表示されます。指定しない場合、常に表示されます。
  * @default 0
  * @type switch
+ *
+ * @param LoopTimes
+ * @text ループ回数
+ * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
+ * @default 0
+ * @type number
  */
 
 /*~struct~PictureApngRecord:
@@ -247,6 +260,12 @@
  * @value 1
  * @option ゲーム起動時にキャッシュ
  * @value 2
+ *
+ * @param LoopTimes
+ * @text ループ回数
+ * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
+ * @default 0
+ * @type number
  */
 
 /*~struct~EnemyApngRecord:
@@ -270,6 +289,12 @@
  * @value 1
  * @option ゲーム起動時にキャッシュ
  * @value 2
+ *
+ * @param LoopTimes
+ * @text ループ回数
+ * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
+ * @default 0
+ * @type number
  */
 
 (function() {
@@ -317,6 +342,7 @@
             this._folder = folder;
             this._fileHash = {};
             this._cachePolicy = {};
+            this._loopCount = {};
             this._paramList = paramList;
             if (this._paramList && this._paramList.length > 0) {
                 this.addAllImage();
@@ -344,6 +370,7 @@
             if (!this._fileHash.hasOwnProperty(name)) {
                 this._fileHash[name] = ApngLoader.convertDecryptExt(path);
                 this._cachePolicy[name] = item.CachePolicy;
+                this._loopCount[name] = item.LoopTimes || param.DefaultLoopTimes;
                 PIXI.loader.add(path, option);
             }
         }
@@ -373,7 +400,11 @@
         }
 
         _createPixiApngAndGif(name) {
-            return new PixiApngAndGif(this._fileHash[name], ApngLoader._resource).sprite;
+            var pixiApng = new PixiApngAndGif(this._fileHash[name], ApngLoader._resource);
+            if (this._loopCount[name] > 0) {
+                pixiApng.play(this._loopCount[name]);
+            }
+            return pixiApng.sprite;
         }
 
         _isNeedCache(name) {
