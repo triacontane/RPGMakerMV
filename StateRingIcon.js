@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2019/02/01 味方リングアイコンかつターン数表示を有効にした場合、リングアイコンとステータスウィンドウの両方にターン数を表示させるよう仕様変更
 // 2.1.0 2019/11/20 リングアイコンの拡大率を設定できる機能を追加
 // 2.0.1 2019/10/14 MOG_BattleHud.jsと併用したときもアイコンごとにターン数表示の有無が反映されるよう競合解消
 // 2.0.0 2019/09/15 アイコンごとにターン数表示の有無を設定できる機能を追加
@@ -554,7 +555,7 @@ function Sprite_StateIconChild() {
     // Window_BattleStatus
     //  味方の残りターン数を表示します。
     //=============================================================================
-    if (param.ShowActorTurnCount && !param.ActorRingIcon) {
+    if (param.ShowActorTurnCount) {
         var _Window_BattleStatus_drawActorIcons      = Window_BattleStatus.prototype.drawActorIcons;
         Window_BattleStatus.prototype.drawActorIcons = function(actor, x, y, width) {
             this._drawIconIndexList = [];
