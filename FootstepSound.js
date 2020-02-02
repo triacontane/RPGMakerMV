@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2019/02/02 イベントごとの足音を固有に設定できる機能を追加
 // 2.0.0 2018/09/05 プレイヤーの足音を無効化するスイッチを指定できる機能を追加
 //                  パラメータの型指定機能に対応
 // 1.1.0 2017/06/23 立ち止まったときに足音演奏間隔をリセットする機能を追加
@@ -67,6 +68,12 @@
  *
  * 足音を演奏する　：this.setStepSoundFlg(true);
  * 足音を演奏しない：this.setStepSoundFlg(false);
+ *
+ * イベントごとに固有に足音を設定したい場合、以下の通り指定してください。
+ * <FootStep:Absorb1> // 足音に「Absorb1」が設定されます。
+ * <足音:Absorb1>     // 同上
+ * このメモ欄を設定するとスクリプト「this.setStepSoundFlg(true);」
+ * を実行しなくてもデフォルトで足音が有効になります。
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -212,6 +219,41 @@
         return (command || '').toUpperCase();
     };
 
+    /**
+     * Get database meta information.
+     * @param object Database item
+     * @param name Meta name
+     * @returns {String} meta value
+     */
+    var getMetaValue = function(object, name) {
+        return object.meta.hasOwnProperty(name) ? convertEscapeCharacters(object.meta[name]) : null;
+    };
+
+    /**
+     * Get database meta information.(for multi language)
+     * @param object Database item
+     * @param names Meta name array (for multi language)
+     * @returns {String} meta value
+     */
+    var getMetaValues = function(object, names) {
+        var metaValue;
+        names.some(function(name) {
+            metaValue = getMetaValue(object, name);
+            return metaValue !== null;
+        });
+        return metaValue;
+    };
+
+    /**
+     * Convert escape characters.(require any window object)
+     * @param text Target text
+     * @returns {String} Converted text
+     */
+    var convertEscapeCharacters = function(text) {
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
+    };
+
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
@@ -277,13 +319,12 @@
         if (condition() && footStepJson.hasOwnProperty(typeKey)) {
             var soundHash = footStepJson[typeKey];
             if (this._stepCountForSound++ % soundHash.interval === 0) {
-                var soundKey = this.isDashing() ? 'dash' : 'walk';
-                soundKey += this._stepToggle ? '2' : '1';
-                if (soundHash.hasOwnProperty(soundKey)) {
+                var se = this.findStepSound(soundHash);
+                if (se) {
                     if (AudioManager.playAdjustSe) {
-                        AudioManager.playAdjustSe(soundHash[soundKey], this);
+                        AudioManager.playAdjustSe(se, this);
                     } else {
-                        AudioManager.playSe(soundHash[soundKey]);
+                        AudioManager.playSe(se);
                     }
                 }
                 this._stepToggle = !this._stepToggle;
@@ -291,6 +332,12 @@
             return true;
         }
         return false;
+    };
+
+    Game_CharacterBase.prototype.findStepSound = function(soundHash) {
+        var soundKey = this.isDashing() ? 'dash' : 'walk';
+        soundKey += this._stepToggle ? '2' : '1';
+        return soundHash[soundKey] || null;
     };
 
     Game_CharacterBase.prototype.noCondition = function() {
@@ -338,6 +385,30 @@
         _Game_Player_updateNonmoving.apply(this, arguments);
         if (!wasMoving && param.ResetIfStop) {
             this.resetStepCountForSound();
+        }
+    };
+
+    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    Game_Event.prototype.initialize = function() {
+        _Game_Event_initialize.apply(this, arguments);
+        this._footStepSeName = getMetaValues(this.event(), ['FootStep', '足音']) || null;
+        if (this._footStepSeName) {
+            this.setStepSoundFlg(true);name
+        }
+    };
+
+    var _Game_Event_findStepSound = Game_Event.prototype.findStepSound;
+    Game_Event.prototype.findStepSound = function(soundHash) {
+        var se = _Game_Event_findStepSound.apply(this, arguments);
+        if (se && this._footStepSeName) {
+            return {
+                name : this._footStepSeName,
+                volume : se.volume,
+                pitch : se.pitch,
+                pan : se.pan
+            };
+        } else {
+            return se;
         }
     };
 
