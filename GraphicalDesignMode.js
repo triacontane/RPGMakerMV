@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.5 2020/02/06 プラグインで追加した一部のウィンドウでデザインモード解除時に位置変更が反映されない問題を修正
 // 2.10.4 2020/01/27 プラグインで追加した一部のウィンドウの位置変更が反映されない競合を修正
 // 2.10.3 2019/11/02 デザインモード設定時はクリックでメッセージウィンドウを送れないよう修正
 // 2.10.2 2019/02/27 初期状態でスクロールされているウィンドウの行高さを変更した場合に、スクロールの初期表示がずれる現象を修正
@@ -736,7 +737,16 @@ var $dataContainerProperties = null;
         var _Scene_Base_update      = Scene_Base.prototype.update;
         Scene_Base.prototype.update = function() {
             _Scene_Base_update.apply(this, arguments);
-            if (this._windowLayer) this.updateDrag();
+            if (this._windowLayer) {
+                this.updateDrag();
+            }
+            this.shiftGridToLast();
+        };
+
+        Scene_Base.prototype.shiftGridToLast = function() {
+            if (this._gridSprite && this.children[this.children.length - 1] !== this._gridSprite) {
+                this.addChild(this._gridSprite);
+            }
         };
 
         Scene_Base.prototype.updateDrag = function() {
