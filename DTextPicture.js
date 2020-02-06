@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.16.0 2019/02/01 複数行表示した場合の行間を指定できる機能を追加
+// 1.17.0 2020/02/07 背景ウィンドウのスキンを変更できる機能を追加し、ウィンドウビルダーに対応
+// 1.16.0 2020/02/01 複数行表示した場合の行間を指定できる機能を追加
 // 1.15.1 2019/12/29 YEP_PluginCmdSwVar.jsと併用したとき、変数のリアルタイム変換が効かなくなる競合を修正
 // 1.15.0 2019/10/21 カーソルのアクティブ状態を変更できるコマンドを追加
 //                   アイテム表示の制御文字でアイコン表示可否を変更できる設定を追加
@@ -70,6 +71,16 @@
  * @desc 複数行表示の際の行間に、指定した変数の値の分だけ補正が掛かります。大きすぎる値を設定すると見切れる場合があります。
  * @default 0
  * @type variable
+ *
+ * @param frameWindowSkin
+ * @text フレームウィンドウスキン
+ * @desc フレームウィンドウのスキンファイル名です。ウィンドウビルダーを使っている場合は、指定する必要があります。
+ * @default
+ * @type combo
+ * @option Window_Talk
+ * @option Window_Battle
+ * @option Window_Status
+ * @option Window_Other
  *
  * @help 指定した文字列でピクチャを動的に生成するコマンドを提供します。
  * 文字列には各種制御文字（\v[n]等）も使用可能で、制御文字で表示した変数の値が
@@ -696,6 +707,9 @@
     Sprite_Picture.prototype.makeFrameWindow = function(width, height) {
         var padding       = this.hiddenWindow.standardPadding();
         this._frameWindow = new Window_Base(0, 0, width + padding * 2, height + padding * 2);
+        if (param.frameWindowSkin) {
+            this._frameWindow.windowskin = ImageManager.loadSystem(param.frameWindowSkin);
+        }
     };
 
     Sprite_Picture.prototype._processText = function(bitmap) {
