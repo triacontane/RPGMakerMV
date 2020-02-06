@@ -76,11 +76,9 @@
  * @text フレームウィンドウスキン
  * @desc フレームウィンドウのスキンファイル名です。ウィンドウビルダーを使っている場合は、指定する必要があります。
  * @default
- * @type combo
- * @option Window_Talk
- * @option Window_Battle
- * @option Window_Status
- * @option Window_Other
+ * @require 1
+ * @dir img/system/
+ * @type file
  *
  * @help 指定した文字列でピクチャを動的に生成するコマンドを提供します。
  * 文字列には各種制御文字（\v[n]等）も使用可能で、制御文字で表示した変数の値が
