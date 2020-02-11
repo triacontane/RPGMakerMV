@@ -1,14 +1,16 @@
 //=============================================================================
 // AutoRaise.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2020/02/11 蘇生が発動したとき発動アイテムをロストする機能を追加
+//                  戦闘中にスキルなどで一時的に自働蘇生を付与できる機能を追加
 // 1.0.0 2017/04/02 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -26,13 +28,20 @@
  * @default 72
  *
  * @help 戦闘時に、決められた回数分だけ自働蘇生できます。
- * 回数の決定は戦闘開始直後に1回だけ行われます。
+ * 回数の決定は戦闘開始直後に1回だけ行われます。戦闘中は再計算されません。
  * 特徴を有するメモ欄のプラグインに以下の通り入力してください。
  *
  * <AR_自働蘇生:3>      # 戦闘不能時に3回まで自働蘇生します。
  * <AR_AutoRaise:3>     # 同上
  * <AR_蘇生HPレート:50> # 自働蘇生時にHPが50%まで回復します。
  * <AR_RaiseHpRate:50>  # 同上
+ * <AR_ロスト>          # 自動蘇生が発動したとき対象の装備品を失います。
+ * <AR_Lost>            # 同上
+ *
+ * スキルなどを使って戦闘中に付与したい場合はステートに
+ * 以下のメモ欄を設定してください。
+ * <AR_一時自動蘇生>    # 戦闘不能時に自働蘇生します。
+ * <AR_TempAutoRaise>  # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -51,13 +60,20 @@
  * @default 72
  *
  * @help 戦闘時に、決められた回数分だけ自働蘇生できます。
- * 回数の決定は戦闘開始直後に1回だけ行われます。
+ * 回数の決定は戦闘開始直後に1回だけ行われます。戦闘中は再計算されません。
  * 特徴を有するメモ欄のプラグインに以下の通り入力してください。
  *
  * <AR_自働蘇生:3>      # 戦闘不能時に3回まで自働蘇生します。
  * <AR_AutoRaise:3>     # 同上
  * <AR_蘇生HPレート:50> # 自働蘇生時にHPが50%まで回復します。
  * <AR_RaiseHpRate:50>  # 同上
+ * <AR_ロスト>          # 自動蘇生が発動したとき対象の装備品を失います。
+ * <AR_Lost>            # 同上
+ *
+ * スキルなどを使って戦闘中に付与したい場合はステートに
+ * 以下のメモ欄を設定してください。
+ * <AR_一時自動蘇生>    # 戦闘不能時に自働蘇生します。
+ * <AR_TempAutoRaise>  # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -181,22 +197,44 @@
     };
 
     Game_BattlerBase.prototype.canRaise = function() {
-        return this._autoRaiseCount > 0 && $gameParty.inBattle();
+        return (this.hasTempRaise() || this._autoRaiseCount > 0) && $gameParty.inBattle()
+    };
+
+    Game_BattlerBase.prototype.hasTempRaise = function() {
+        return this.traitObjects().some(function(obj) {
+            return getMetaValues(obj, ['一時自動蘇生', 'TempAutoRaise']) !== undefined;
+        });
     };
 
     Game_BattlerBase.prototype.executeAutoRaise = function() {
-        this._autoRaiseCount--;
         BattleManager.processAutoRaise(this);
         this.revive();
-        this.setHp(this.mhp * this.getRaiseHpRate() / 100);
+        var hp = Math.floor(this.mhp * this.getRaiseHpRate() / 100);
+        this.setHp(hp);
     };
 
     var _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
+        var raise = this.canRaise();
+        if (raise && !this.hasTempRaise()) {
+            this._autoRaiseCount--;
+            this.lostRaiseEquips();
+        }
         _Game_BattlerBase_die.apply(this, arguments);
-        if (this.canRaise()) {
+        if (raise) {
             this.executeAutoRaise();
         }
+    };
+
+    Game_BattlerBase.prototype.lostRaiseEquips = function() { };
+
+    Game_Actor.prototype.lostRaiseEquips = function() {
+        this.equips().some(function(equip, slotId) {
+            if (equip && getMetaValues(equip, ['ロスト', 'Lost']) !== undefined) {
+                this.changeEquip(slotId, null);
+                $gameParty.loseItem(equip, 1, false);
+            }
+        }, this);
     };
 
     BattleManager.processAutoRaise = function(target) {
