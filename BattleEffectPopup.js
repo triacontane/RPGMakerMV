@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2020/02/11 ポップアップメッセージが重なったときに次のポップアップまでのウェイトが指定できる機能を追加
 // 1.8.1 2019/02/26 KMS_SomStyleDamage.jsとの競合を解消。こちらのポップアップもKMS_SomStyleDamage.jsと同じ動きをします。
 // 1.8.0 2018/10/13 パラメータの型指定機能に対応
 //                  コモンイベントが呼び出された場合は無効ポップアップを出さないよう仕様変更
@@ -35,6 +36,11 @@
 /*:
  * @plugindesc 戦闘行動結果ポップアッププラグイン
  * @author トリアコンタン
+ *
+ * @param メッセージウェイト
+ * @desc ポップアップメッセージが重なったときに次のメッセージが表示されるまでのウェイトフレーム数です。
+ * @default 16
+ * @type number
  *
  * @param クリティカル
  * @desc クリティカル発生時のポップアップメッセージまたはファイル名です。(img/pictures/)拡張子不要
@@ -375,6 +381,7 @@
     var paramUsingPicture     = getParamBoolean(['UsingPicture', '画像使用']);
     var paramUsingItalic      = getParamBoolean(['UsingItalic', 'イタリック表示']);
     var paramUsingOutline     = getParamBoolean(['UsingOutline', '縁取り表示']);
+    var paramMessageWait      = getParamNumber(['MessageWait', 'メッセージウェイト']);
 
     //=============================================================================
     // Game_Interpreter
@@ -462,6 +469,10 @@
         return this._message;
     };
 
+    Game_Battler.prototype.hasAppointMessage = function() {
+        return !!this._appointMessage;
+    };
+
     Game_Battler.prototype.getMessagePopupFlashColor = function() {
         return this._flashColor;
     };
@@ -501,6 +512,10 @@
         target.startMessagePopup(message, flashColor);
     };
 
+    Window_BattleLog.prototype.popupAppointMessage = function(target) {
+        target.startAppointMessagePopup();
+    };
+
     var _Window_BattleLog_displayDamage      = Window_BattleLog.prototype.displayDamage;
     Window_BattleLog.prototype.displayDamage = function(target) {
         _Window_BattleLog_displayDamage.apply(this, arguments);
@@ -509,7 +524,9 @@
         } else if (target.result().isInvalid()) {
             this.pushPopupMessage(target, paramInvalid, paramInvalidColor);
         }
-        target.startAppointMessagePopup();
+        if (target.hasAppointMessage()) {
+            this.pushPopupAppointMessage(target);
+        }
     };
 
     var _Window_BattleLog_displayCritical      = Window_BattleLog.prototype.displayCritical;
@@ -574,7 +591,27 @@
     };
 
     Window_BattleLog.prototype.pushPopupMessage = function(target, message, flashColor) {
+        if (this.hasPopupMessage()) {
+            this.push('waitForPopup');
+        }
         this.push('popupMessage', target, message, flashColor);
+    };
+
+    Window_BattleLog.prototype.pushPopupAppointMessage = function(target) {
+        if (this.hasPopupMessage()) {
+            this.push('waitForPopup');
+        }
+        this.push('popupAppointMessage', target);
+    };
+
+    Window_BattleLog.prototype.hasPopupMessage = function() {
+        return this._methods.some(function(method) {
+            return method.name === 'popupMessage' || method.name === 'popupAppointMessage';
+        });
+    };
+
+    Window_BattleLog.prototype.waitForPopup = function() {
+        this._waitCount = paramMessageWait || 0;
     };
 
     //=============================================================================
