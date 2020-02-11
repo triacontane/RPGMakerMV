@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2020/02/12 蘇生時のHP割合をステートに記述している場合に値が取得できない問題を修正
 // 1.1.0 2020/02/11 蘇生が発動したとき発動アイテムをロストする機能を追加
 //                  戦闘中にスキルなどで一時的に自働蘇生を付与できる機能を追加
 // 1.0.0 2017/04/02 初版
@@ -185,6 +186,9 @@
     };
 
     Game_BattlerBase.prototype.getRaiseHpRate = function() {
+        if (!this.canRaise()) {
+            return 0;
+        }
         var hpRate = 1;
         this.traitObjects().forEach(function(state) {
             var metaValue = getMetaValues(state, ['蘇生HPレート', 'RaiseHpRate']);
@@ -206,23 +210,23 @@
         });
     };
 
-    Game_BattlerBase.prototype.executeAutoRaise = function() {
+    Game_BattlerBase.prototype.executeAutoRaise = function(rate) {
         BattleManager.processAutoRaise(this);
         this.revive();
-        var hp = Math.floor(this.mhp * this.getRaiseHpRate() / 100);
+        var hp = Math.max(Math.floor(this.mhp * rate / 100), 1);
         this.setHp(hp);
     };
 
     var _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
-        var raise = this.canRaise();
-        if (raise && !this.hasTempRaise()) {
+        var rate = this.getRaiseHpRate();
+        if (rate > 0 && !this.hasTempRaise()) {
             this._autoRaiseCount--;
             this.lostRaiseEquips();
         }
         _Game_BattlerBase_die.apply(this, arguments);
-        if (raise) {
-            this.executeAutoRaise();
+        if (rate) {
+            this.executeAutoRaise(rate);
         }
     };
 
