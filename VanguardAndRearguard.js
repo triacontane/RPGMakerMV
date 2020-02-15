@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2020/02/15 先頭メンバーの並び替えを禁止できるスイッチを追加
 // 1.8.1 2019/06/17 1.8.0の修正で「後衛メンバー上限」のパラメータ取得処理が消えていたのを戻した
 // 1.8.0 2019/06/15 戦闘画面でX座標やY座標が指定値以下の場合、自動で後衛に配置できる機能を追加
 // 1.7.3 2019/01/20 後衛の人数の上限が設定されているとき、控えメンバーは常に前衛に設定されるよう仕様変更
@@ -54,6 +55,11 @@
  * @desc Changeable formation in menu screen.
  * @default true
  * @type boolean
+ *
+ * @param TopActorFixedSwitch
+ * @desc When the specified switch is ON, the order of the first actor can be fixed.
+ * @default 0
+ * @type switch
  *
  * @param RearDefense
  * @desc Rearguard member never targeting, if vanguard member alive.
@@ -191,6 +197,11 @@
  * @desc メニュー画面で前衛・後衛の切り替えが可能になります。
  * @default true
  * @type boolean
+ *
+ * @param 先頭アクター固定スイッチ
+ * @desc 指定したスイッチがONのとき先頭アクターの並び順を固定できます。
+ * @default 0
+ * @type switch
  *
  * @param 後衛防御
  * @desc 前衛メンバーが生存している限り、後衛メンバーが狙われなくなります。
@@ -400,6 +411,7 @@
     var paramRearguardLimit   = getParamNumber(['RearguardLimit', '後衛メンバー上限']);
     var paramEnemyRearBorderX = getParamNumber(['EnemyRearBorderX', '敵キャラ後衛ラインX座標']);
     var paramEnemyRearBorderY = getParamNumber(['EnemyRearBorderY', '敵キャラ後衛ラインY座標']);
+    var paramTopFixedSwitch   = getParamNumber(['TopActorFixedSwitch', '先頭アクター固定スイッチ'], 0);
 
     //=============================================================================
     // Game_Interpreter
@@ -797,16 +809,36 @@
     //=============================================================================
     var _Scene_Menu_onFormationOk      = Scene_Menu.prototype.onFormationOk;
     Scene_Menu.prototype.onFormationOk = function() {
+        var pendingIndex = this._statusWindow.pendingIndex();
+        var index        = this._statusWindow.index();
         if (paramChangeInMenu) {
-            var pendingIndex = this._statusWindow.pendingIndex();
-            var index        = this._statusWindow.index();
             var actor        = $gameParty.members()[index];
             if (pendingIndex >= 0 && index === pendingIndex &&
                 (index < $gameParty.battleMembers().length || paramRearguardLimit <= 0)) {
                 actor.changeFormationState();
             }
         }
+        if (!this.canChangeFormation(pendingIndex, index)) {
+            this.onFormationNg(pendingIndex, index);
+            return;
+        }
         _Scene_Menu_onFormationOk.apply(this, arguments);
+    };
+
+    Scene_Menu.prototype.onFormationNg = function(pendingIndex, index) {
+        this._statusWindow.activate();
+        this._statusWindow.select(pendingIndex);
+        this._statusWindow.setPendingIndex(-1);
+        this._statusWindow.redrawItem(index);
+        AudioManager.stopAllStaticSe();
+        SoundManager.playBuzzer();
+    };
+
+    Scene_Menu.prototype.canChangeFormation = function(pendingIndex, index) {
+        if (!$gameSwitches.value(paramTopFixedSwitch) || pendingIndex === -1) {
+            return true;
+        }
+        return pendingIndex === index || (pendingIndex > 0 && index > 0);
     };
 
     //=============================================================================
@@ -929,6 +961,17 @@
         _Sprite_Actor_stepFlinch.apply(this, arguments);
         this._homeX -= this._formationX;
         this._homeY -= this._formationY;
+    };
+
+    //=============================================================================
+    // AudioManager
+    //  全てのシステムSEを停止します。
+    //=============================================================================
+    AudioManager.stopAllStaticSe = function() {
+        this._staticBuffers.forEach(function(buffer) {
+            buffer.stop();
+        });
+        this._staticBuffers = [];
     };
 })();
 
