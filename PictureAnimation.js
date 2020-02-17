@@ -220,8 +220,24 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        var window = SceneManager._scene._windowLayer.children[0];
-        return window ? window.convertEscapeCharacters(text) : text;
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1], 10));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1], 10));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1], 10) >= 1 ? $gameActors.actor(parseInt(arguments[1], 10)) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1], 10) >= 1 ? $gameParty.members()[parseInt(arguments[1], 10) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     //=============================================================================
