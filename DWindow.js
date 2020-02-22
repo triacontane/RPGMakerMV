@@ -1,11 +1,12 @@
 //=============================================================================
 // DWindow.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2020/02/22 パラメータ「ピクチャに含める」を遊行した場合に発生するPicturePriorityCustomize.jsとの競合を解消
 // 1.3.3 2016/12/01 プラグインコマンド集との競合を解消
 // 1.3.2 2016/11/27 createUpperLayerの再定義方法を修正し、競合を解消（by 奏 ねこま様）
 // 1.3.1 2016/09/13 前回の修正で戦闘画面に入るとエラーが発生する問題を修正
@@ -15,7 +16,7 @@
 // 1.1.0 2016/01/16 ウィンドウを最前面に表示できる機能を追加
 // 1.0.0 2015/11/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -305,11 +306,30 @@
         for (var i = 0; i < 10; i++) {
             this._DynamicWindows[i] = new Window_Dynamic(i);
             if (paramIncludePicture > 0) {
-                this._pictureContainer.addChildAt(this._DynamicWindows[i], paramIncludePicture + i);
+                // for PicturePriorityCustomize.js
+                if (this._pictureContainerLower) {
+                    var dWindow = this._DynamicWindows[i];
+                    this.addDynamicWindowForPicturePriority(this._pictureContainerLower, dWindow);
+                    this.addDynamicWindowForPicturePriority(this._pictureContainerMiddle, dWindow);
+                    this.addDynamicWindowForPicturePriority(this._pictureContainerUpper, dWindow);
+                } else {
+                    this._pictureContainer.addChildAt(this._DynamicWindows[i], paramIncludePicture + i);
+                }
             } else {
                 this.addChild(this._DynamicWindows[i]);
             }
         }
+    };
+
+    Spriteset_Map.prototype.addDynamicWindowForPicturePriority = function(pictureLayer, dWindow) {
+        pictureLayer.children.some(function(picture, index) {
+            var id = picture.getPictureId();
+            if (id === paramIncludePicture) {
+                pictureLayer.addChildAt(dWindow, index + 1);
+                return true;
+            }
+            return false;
+        }, this);
     };
 
     //=============================================================================
