@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.1 2020/02/23 英語版のプラグインパラメータの記述が不足していたので修正
  1.4.0 2020/02/01 アニメーションのループ回数を指定できる機能を追加
  1.3.1 2019/12/31 画像を登録せずゲーム開始するとローディングが完了しない問題を修正
  1.3.0 2019/12/31 APNGのキャッシュ機能を追加
@@ -26,21 +27,22 @@
  * @param PictureList
  * @desc List of picture images to be handled as APNG.
  * @default []
- * @require 1
- * @dir img/pictures/
- * @type file[]
+ * @type struct<PictureApngRecord>[]
  *
  * @param EnemyList
  * @desc List of enemy images to be handled as APNG.
  * @default []
- * @require 1
- * @dir img/enemies/
- * @type file[]
+ * @type struct<EnemyApngRecord>[]
  *
  * @param SceneApngList
  * @desc This is a list of APNG to be displayed for each scene.
  * @default []
  * @type struct<SceneApngRecord>[]
+ *
+ * @param DefaultLoopTimes
+ * @desc The number of animation loops. It stops after looping the specified number of times.
+ * @default 0
+ * @type number
  *
  * @help ApngPicture.js
  * APNG or GIF is treated as a picture and animated on the screen.
@@ -78,8 +80,6 @@
  * @text APNGの敵キャラリスト
  * @desc APNGとして扱う敵キャラ画像のリストです。GIFを指定したい場合は拡張子付きで直接入力してください。この機能は不完全です。
  * @default []
- * @require 1
- * @dir img/enemies/
  * @type struct<EnemyApngRecord>[]
  *
  * @param SceneApngList
@@ -130,7 +130,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-/*~struct~SceneApngRecord:
+/*~struct~SceneApngRecord:ja
  *
  * @param SceneName
  * @text 対象シーン
@@ -239,7 +239,7 @@
  * @type number
  */
 
-/*~struct~PictureApngRecord:
+/*~struct~PictureApngRecord:ja
  *
  * @param FileName
  * @text ファイル名
@@ -268,7 +268,7 @@
  * @type number
  */
 
-/*~struct~EnemyApngRecord:
+/*~struct~EnemyApngRecord:ja
  *
  * @param FileName
  * @text ファイル名
@@ -293,6 +293,141 @@
  * @param LoopTimes
  * @text ループ回数
  * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
+ * @default 0
+ * @type number
+ */
+
+/*~struct~SceneApngRecord:
+ *
+ * @param SceneName
+ * @desc Target Scene
+ * @type select
+ * @default Scene_Title
+ * @option Scene_Title
+ * @option Scene_Gameover
+ * @option Scene_Battle
+ * @option Scene_Menu
+ * @option Scene_Item
+ * @option Scene_Skill
+ * @option Scene_Equip
+ * @option Scene_Status
+ * @option Scene_Options
+ * @option Scene_Save
+ * @option Scene_Load
+ * @option Scene_End
+ * @option Scene_Shop
+ * @option Scene_Name
+ * @option Scene_Debug
+ * @option Scene_SoundTest
+ * @option Scene_Glossary
+ *
+ * @param FileName
+ * @desc File name of apng
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
+ * @param CachePolicy
+ * @desc Cache policy
+ * @default 0
+ * @type select
+ * @option None
+ * @value 0
+ * @option Cache on first display
+ * @value 1
+ * @option Cache at game start
+ * @value 2
+ *
+ * @param X
+ * @desc X of apng
+ * @default 0
+ * @type number
+ *
+ * @param Y
+ * @desc Y of apng
+ * @default 0
+ * @type number
+ *
+ * @param Origin
+ * @desc Origin of apng
+ * @default 0
+ * @type select
+ * @option Upper left
+ * @value 0
+ * @option Center
+ * @value 1
+ *
+ * @param Priority
+ * @desc Priority of apng
+ * @default 0
+ * @type select
+ * @option Front
+ * @value 0
+ * @option Under window
+ * @value 1
+ * @option Back
+ * @value 2
+ *
+ * @param Switch
+ * @desc Displayed only when the specified switch is ON
+ * @default 0
+ * @type switch
+ *
+ * @param LoopTimes
+ * @desc The number of animation loops. Specifying 0 follows the default setting.
+ * @default 0
+ * @type number
+ */
+
+/*~struct~PictureApngRecord:
+ *
+ * @param FileName
+ * @desc File name of apng
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param CachePolicy
+ * @desc Cache policy
+ * @default 0
+ * @type select
+ * @option None
+ * @value 0
+ * @option Cache on first display
+ * @value 1
+ * @option Cache at game start
+ * @value 2
+ *
+ * @param LoopTimes
+ * @desc The number of animation loops. Specifying 0 follows the default setting.
+ * @default 0
+ * @type number
+ */
+
+/*~struct~EnemyApngRecord:
+ *
+ * @param FileName
+ * @desc File name of apng
+ * @default
+ * @require 1
+ * @dir img/enemies/
+ * @type file
+ *
+ * @param CachePolicy
+ * @desc Cache policy
+ * @default 0
+ * @type select
+ * @option None
+ * @value 0
+ * @option Cache on first display
+ * @value 1
+ * @option Cache at game start
+ * @value 2
+ *
+ * @param LoopTimes
+ * @desc The number of animation loops. Specifying 0 follows the default setting.
  * @default 0
  * @type number
  */
@@ -360,7 +495,7 @@
         }
 
         addImage(item, option) {
-            var name = item.FileName;
+            var name = item.FileName || '';
             var ext = Decrypter.hasEncryptedImages ? 'rpgmvp' : 'png';
             name = name.replace(/\.gif$/gi, function() {
                 ext = 'gif';
