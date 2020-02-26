@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2020/02/26 戦闘終了時、チェイン表示が残っている場合はフェードアウトするよう仕様変更
 // 2.1.0 2019/05/08 ダメージ数値と単位表記の画像指定で敵専用の画像を指定できる機能を追加
 // 2.0.0 2019/05/02 ダメージ数値と単位表記に任意の画像を使用できる機能を追加
 // 1.5.0 2018/07/20 味方のみコンボ継続する設定を追加
@@ -825,6 +826,9 @@ function Sprite_ChainDamage() {
     };
 
     Sprite_ChainCount.prototype.update = function() {
+        if (BattleManager.isBattleEnd()) {
+            this.startFade();
+        }
         this.updateChainValue();
         if (this._duration > 0) {
             this._duration--;
@@ -833,6 +837,10 @@ function Sprite_ChainDamage() {
             this.updateFade();
         }
         this.updateVisibly();
+    };
+
+    Sprite_ChainCount.prototype.startFade = function() {
+        this._duration = 0;
     };
 
     Sprite_ChainCount.prototype.updateChainValue = function() {
