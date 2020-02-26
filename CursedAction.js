@@ -1,11 +1,12 @@
 //=============================================================================
 // CursedAction.js
 // ----------------------------------------------------------------------------
-// (C)2015-2018 Triacontane
+// (C)2018 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2020/02/26 特定条件化で戦闘行動の強制を実行するとエラーになる問題を修正
 // 1.0.0 2018/06/16 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -241,7 +242,8 @@
     };
 
     Game_Battler.prototype.isCursed = function() {
-        return this._cursedActionList.length > 0;
+        var list = this._cursedActionList;
+        return list && list.length > 0;
     };
 
     Game_Battler.prototype.canCurse = function() {
