@@ -1,11 +1,12 @@
 //=============================================================================
 // TitleImageChange.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.5 2020/03/01 進行度変数の値を戻したときに、リロードするまで元のタイトル画面に戻らない問題を修正
 // 1.4.4 2018/07/11 1.4.3の修正でタイトル画面が変更される条件を満たした状態でセーブ後にタイトルに戻るで再表示しても変更が反映されない問題を修正
 // 1.4.3 2018/06/09 セーブファイル数の上限を大きく増やしている場合にタイトル画面の表示が遅くなる現象を修正
 // 1.4.2 2018/04/26 ニューゲーム開始後、一度もセーブしていないデータで進行状況のみをセーブするスクリプトを実行しても設定が反映されない問題を修正
@@ -19,7 +20,7 @@
 //                  進行状況のみをセーブする機能を追加
 // 1.0.0 2016/04/06 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -295,8 +296,12 @@
 
     Scene_Title.prototype.changeTitleImage = function() {
         var gradeVariable = DataManager.getFirstPriorityGradeVariable();
+        if ($dataSystem.originalTitle1Name !== undefined) {
+            $dataSystem.title1Name = $dataSystem.originalTitle1Name;
+        }
         for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
             if (paramTitleImages[i] && gradeVariable >= paramTitleGrades[i]) {
+                $dataSystem.originalTitle1Name = $dataSystem.title1Name;
                 $dataSystem.title1Name = paramTitleImages[i];
                 break;
             }
@@ -305,8 +310,12 @@
 
     Scene_Title.prototype.changeTitleBgm = function() {
         var gradeVariable = DataManager.getFirstPriorityGradeVariable();
+        if ($dataSystem.titleBgm.originalName !== undefined) {
+            $dataSystem.titleBgm.name = $dataSystem.titleBgm.originalName;
+        }
         for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
             if (paramTitleBgms[i] && gradeVariable >= paramTitleGrades[i]) {
+                $dataSystem.titleBgm.originalName = $dataSystem.titleBgm.name;
                 $dataSystem.titleBgm.name = paramTitleBgms[i];
                 break;
             }
