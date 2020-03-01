@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.3 2020/03/01 MOG_EventText.jsと併用したとき、動的生成イベントにイベントテキストが表示されるよう修正
 // 1.11.2 2019/12/14 KMS_Minimap.jsと併用したとき、動的生成イベントがミニマップに表示されるよう修正（KMS_Minimap.js側も専用のコードを適用する必要あり）
 // 1.11.1 2019/12/10 「確定出力方式」の条件式を修正
 // 1.11.0 2019/12/07 ランダム生成で条件を満たす場所に確実に出力する「確定出力方式」で出力できる機能を追加しました。（by 澱粉（仮）さま）
@@ -725,6 +726,20 @@ function Game_PrefabEvent() {
         if (this._minimap && this._minimap.addObjectSprites) {
             this._minimap.addObjectSprites(event);
         }
+        // Resolve conflict by MOG_EventText.js
+        if (this._etextField) {
+            this.refresh_event_text_field();
+        }
+    };
+
+    // Resolve conflict by MOG_EventText.js
+    Spriteset_Map.prototype.refresh_event_text_field = function() {
+        for (var i = 0; i < this._characterSprites.length; i++) {
+            if (!this._sprite_char_text[i]) {
+                this._sprite_char_text[i] = new Sprite_CharText(this._characterSprites[i]);
+                this._etextField.addChild(this._sprite_char_text[i]);
+            }
+        }
     };
 
     Spriteset_Map.prototype.removePrefabEventSprite = function(index) {
@@ -732,6 +747,11 @@ function Game_PrefabEvent() {
         this._characterSprites.splice(index, 1);
         sprite.endAllEffect();
         this._tilemap.removeChild(sprite);
+        // Resolve conflict by MOG_EventText.js
+        if (this._sprite_char_text && this._sprite_char_text[index]) {
+            this._etextField.removeChild(this._sprite_char_text[index]);
+            this._sprite_char_text.splice(index, 1);
+        }
     };
 
     //=============================================================================
