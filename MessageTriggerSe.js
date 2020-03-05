@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageTriggerSe.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2020/03/06 ページ送りSEを演奏後すぐに通常のSEを演奏すると、SEの停止で当該SEが停止されない問題を修正
 // 1.2.0 2018/06/22 メッセージに続きがある場合のみ効果音を演奏する設定を追加
 // 1.1.0 2017/12/06 効果音の音量、ピッチ、左右バランスを後から変更できる機能を追加
 // 1.0.0 2017/12/05 初版
@@ -204,7 +205,7 @@
 
     Window_Message.prototype.playMessageTriggerSe = function() {
         if (this.isValidMessageTriggerSe()) {
-            AudioManager.playSe($gameSystem.getMessageTriggerSe());
+            AudioManager.playStaticSe($gameSystem.getMessageTriggerSe());
         }
     };
 
