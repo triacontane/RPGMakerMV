@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2020/03/10 撃破ボーナス発生時にボーナス対象にアニメーションを再生できる機能を追加
 // 1.3.0 2019/11/09 条件に指定ターン以内撃破、クリティカル撃破を追加。ボーナスに最初のドロップアイテムの確率変更追加
 // 1.2.0 2019/06/11 撃破ボーナスとして任意の変数を増減させる機能を追加
 // 1.1.0 2017/06/08 ボーナス取得条件としてノーダメージ、ノーデス、ノースキルおよびスイッチを追加
@@ -57,6 +58,13 @@
  * <KB_Cond:turn[1]>     # 同上
  * <KB_条件:クリティカル> # クリティカル撃破で報酬
  * <KB_Cond:Critical>    # 同上
+ *
+ * 撃破ボーナスの発動時にアニメーションを再生できます。
+ * 対象は撃破した側のバトラーですが、ステートの場合は付与された対象になります。
+ * <KB_アニメーション:1>   # ボーナス発生時アニメーション[1]を再生
+ * <KB_Animation:1>       # 同上
+ * <KB_アニメ遅延:64>      # ボーナス発生時アニメーションの遅延を64フレームに設定
+ * <KB_AnimationDelay:64> # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -222,6 +230,7 @@
         this._gainHp = 0;
         this._gainMp = 0;
         this._gainTp = 0;
+        this._bonusTarget = subject;
         subject.traitObjects().forEach(function(data) {
             this.executeKillBonusRecoverHp(data, subject);
             this.executeKillBonusRecoverMp(data, subject);
@@ -234,41 +243,65 @@
             this.executeKillBonusScript(data, subject);
             this.executeKillBonusDropRate(data, target);
         }.bind(this));
+        this._bonusTarget = null;
         if (this._gainHp !== 0) subject.gainHp(this._gainHp);
         if (this._gainMp !== 0) subject.gainMp(this._gainMp);
         if (this._gainTp !== 0) subject.gainTp(this._gainTp);
     };
 
+    Game_Action.prototype.findMetaForKillBonus = function(data, name) {
+        var value = getMetaValues(data, name);
+        if (!!value) {
+            console.log(name);
+            this.executeKillBonusAnimation(data);
+        }
+        return value;
+    };
+
+    Game_Action.prototype.executeKillBonusAnimation = function(data) {
+        var id = parseInt(getMetaValues(data, ['アニメーション', 'Animation']));
+        if (id > 0) {
+            var delay = parseInt(getMetaValues(data, ['アニメ遅延', 'AnimationDelay']));
+            if (this._bonusTarget instanceof Game_Unit) {
+                this._bonusTarget.members().forEach(function(target) {
+                    target.startAnimation(id, false, delay || 0);
+                });
+            } else {
+                this._bonusTarget.startAnimation(id, false, delay || 0);
+            }
+        }
+    };
+
     Game_Action.prototype.executeKillBonusRecoverHp = function(data, subject) {
-        var value = getMetaValue(data, 'HP');
+        var value = this.findMetaForKillBonus(data, 'HP');
         if (value) this._gainHp += getArgNumberWithEval(value);
-        var value2 = getMetaValue(data, 'HPRate');
+        var value2 = this.findMetaForKillBonus(data, 'HPRate');
         if (value2) this._gainHp += Math.floor(subject.mhp * getArgNumberWithEval(value2) / 100);
     };
 
     Game_Action.prototype.executeKillBonusRecoverMp = function(data, subject) {
-        var value = getMetaValue(data, 'MP');
+        var value = this.findMetaForKillBonus(data, 'MP');
         if (value) this._gainMp += getArgNumberWithEval(value);
-        var value2 = getMetaValue(data, 'MPRate');
+        var value2 = this.findMetaForKillBonus(data, 'MPRate');
         if (value2) this._gainMp += Math.floor(subject.mmp * getArgNumberWithEval(value2) / 100);
     };
 
     Game_Action.prototype.executeKillBonusRecoverTp = function(data, subject) {
-        var value = getMetaValue(data, 'TP');
+        var value = this.findMetaForKillBonus(data, 'TP');
         if (value) this._gainTp += getArgNumberWithEval(value);
-        var value2 = getMetaValue(data, 'TPRate');
+        var value2 = this.findMetaForKillBonus(data, 'TPRate');
         if (value2) this._gainTp += Math.floor(subject.maxTp() * getArgNumberWithEval(value2) / 100);
     };
 
     Game_Action.prototype.executeKillBonusGold = function(data, subject) {
-        var value = getMetaValues(data, ['Gold', 'お金']);
+        var value = this.findMetaForKillBonus(data, ['Gold', 'お金']);
         if (value) {
             $gameParty.gainGold(getArgNumberWithEval(value));
         }
     };
 
     Game_Action.prototype.executeKillBonusVariable = function(data, subject) {
-        var value = getMetaValues(data, ['Variable', '変数']);
+        var value = this.findMetaForKillBonus(data, ['Variable', '変数']);
         if (value) {
             var args = getArgString(value).split(',');
             var id = parseInt(args[0]);
@@ -277,32 +310,36 @@
     };
 
     Game_Action.prototype.executeKillBonusState = function(data, subject) {
-        var value = getMetaValues(data, ['State', 'ステート']);
+        var value = this.findMetaForKillBonus(data, ['State', 'ステート']);
         if (value) {
             subject.addState(getArgNumberWithEval(value));
         }
     };
 
     Game_Action.prototype.executeKillBonusStateAll = function(data, subject) {
-        var value = getMetaValues(data, ['StateAll', 'ステート全体']);
+        this._bonusTarget = subject.friendsUnit();
+        var value = this.findMetaForKillBonus(data, ['StateAll', 'ステート全体']);
         if (value) {
             subject.friendsUnit().members().forEach(function(member) {
                 member.addState(getArgNumberWithEval(value));
             });
         }
+        this._bonusTarget = subject;
     };
 
     Game_Action.prototype.executeKillBonusStateEnemy = function(data, subject) {
-        var value = getMetaValues(data, ['StateEnemy', 'ステート敵']);
+        this._bonusTarget = subject.opponentsUnit();
+        var value = this.findMetaForKillBonus(data, ['StateEnemy', 'ステート敵']);
         if (value) {
             subject.opponentsUnit().members().forEach(function(member) {
                 member.addState(getArgNumberWithEval(value));
             });
         }
+        this._bonusTarget = subject;
     };
 
     Game_Action.prototype.executeKillBonusScript = function(data, subject) {
-        var value = getMetaValues(data, ['Script', 'スクリプト']);
+        var value = this.findMetaForKillBonus(data, ['Script', 'スクリプト']);
         if (value) {
             try {
                 eval(getArgString(value));
@@ -313,7 +350,7 @@
     };
 
     Game_Action.prototype.executeKillBonusDropRate = function(data, target) {
-        var value = getMetaValues(data, ['DropRate', 'ドロップ率']);
+        var value = this.findMetaForKillBonus(data, ['DropRate', 'ドロップ率']);
         if (value) {
             target.setCustomDropRate(getArgNumberWithEval(value));
         }
