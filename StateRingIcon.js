@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2020/03/11 MOG_BattleHud.jsでステートアイコンの表示モード(View Mode)を1(ラインモード：アイコン1列に表示)にした場合もターン数表示できるよう修正
 // 2.1.1 2019/02/01 味方リングアイコンかつターン数表示を有効にした場合、リングアイコンとステータスウィンドウの両方にターン数を表示させるよう仕様変更
 // 2.1.0 2019/11/20 リングアイコンの拡大率を設定できる機能を追加
 // 2.0.1 2019/10/14 MOG_BattleHud.jsと併用したときもアイコンごとにターン数表示の有無が反映されるよう競合解消
@@ -634,6 +635,49 @@ function Sprite_StateIconChild() {
                 this._state_icon_turn.bitmap.clear();
                 if (turn && !param.IconIndexWithoutShowTurns.contains(this._states_data[0])) {
                     this._state_icon_turn.bitmap.drawText(turn, 0, 0, Window_Base._iconWidth, Window_Base._iconHeight, 'right');
+                }
+            };
+
+            var _Battle_Hud_refresh_states2 = Battle_Hud.prototype.refresh_states2;
+            Battle_Hud.prototype.refresh_states2 = function() {
+                _Battle_Hud_refresh_states2.apply(this, arguments);
+                if (!this._stateIconTruns) {
+                    this._stateIconTruns = [];
+                }
+                for (var i = 0; i < this._stateIconTruns.length; i++){
+                    this._state_icon.removeChild(this._stateIconTruns[i]);
+                }
+                var maxStateLength = Math.min(Math.max(this ._battler.allIcons().length,0),Moghunter.bhud_statesMax);
+                var turns = this._battler.getAllTurns();
+                for (i = 0; i < maxStateLength; i++){
+                    var sprite = this.createStateTurnSprite(i);
+                    this.setStateTurnSpritePosition(i);
+                    sprite.bitmap.clear();
+                    sprite.bitmap.drawText(turns[i], 0, 0, Window_Base._iconWidth, Window_Base._iconHeight, 'right');
+                }
+            };
+
+            Battle_Hud.prototype.createStateTurnSprite = function(index) {
+                var sprite = new Sprite();
+                var w = Window_Base._iconWidth;
+                sprite.bitmap = new Bitmap(w, w);
+                this._stateIconTruns[index] = sprite;
+                this._state_icon.addChild(sprite);
+                return sprite;
+            };
+
+            Battle_Hud.prototype.setStateTurnSpritePosition = function(index) {
+                var sprite = this._stateIconTruns[index];
+                var w = Window_Base._iconWidth;
+                var align = Moghunter.bhud_statesAlign;
+                if (align === 1) {
+                    sprite.x = -((w + 4) * index);
+                } else if (align === 2) {
+                    sprite.y = (w + 4) * index;
+                } else if (align === 3) {
+                    sprite.y = -((w + 4) * index);
+                } else {
+                    sprite.x = (w + 4) * index;
                 }
             };
         }
