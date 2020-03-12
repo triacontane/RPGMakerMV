@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.1 2020/03/13 Window_MenuCommandの初期化で引数を渡し忘れていたのを修正
 // 2.7.0 2019/10/25 メニューマップと通常マップのピクチャの表示状態を別々に管理できる機能を追加
 // 2.6.1 2019/10/12 2.6.0の修正で、メニューを開いたあと一度もサブコマンドを開かずにメニューを閉じるとエラーになる問題を修正
 //                  その他軽微な不具合の修正
@@ -918,8 +919,9 @@
     var _Window_MenuCommand_initialize          = Window_MenuCommand.prototype.initialize;
     Window_MenuCommand.prototype.initialize     = function() {
         this._maskedName = {};
-        _Window_MenuCommand_initialize.apply(this);
+        _Window_MenuCommand_initialize.apply(this, arguments);
     };
+
     var _Window_MenuCommand_initCommandPosition = Window_MenuCommand.initCommandPosition;
     Window_MenuCommand.initCommandPosition      = function() {
         if ($gamePlayer.isInSubCommandMap()) return;
