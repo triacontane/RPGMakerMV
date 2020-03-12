@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.3 2020/03/13 2.1.2の競合対策にフォントサイズとアイコンごとのターン数表示の有無の設定を反映
 // 2.1.2 2020/03/11 MOG_BattleHud.jsでステートアイコンの表示モード(View Mode)を1(ラインモード：アイコン1列に表示)にした場合もターン数表示できるよう修正
 // 2.1.1 2019/02/01 味方リングアイコンかつターン数表示を有効にした場合、リングアイコンとステータスウィンドウの両方にターン数を表示させるよう仕様変更
 // 2.1.0 2019/11/20 リングアイコンの拡大率を設定できる機能を追加
@@ -634,7 +635,8 @@ function Sprite_StateIconChild() {
                 _Battle_Hud_refresh_states.apply(this, arguments);
                 this._state_icon_turn.bitmap.clear();
                 if (turn && !param.IconIndexWithoutShowTurns.contains(this._states_data[0])) {
-                    this._state_icon_turn.bitmap.drawText(turn, 0, 0, Window_Base._iconWidth, Window_Base._iconHeight, 'right');
+                    this._state_icon_turn.bitmap.drawText(turn, 0, 0,
+                        Window_Base._iconWidth, Window_Base._iconHeight, 'right');
                 }
             };
 
@@ -647,13 +649,17 @@ function Sprite_StateIconChild() {
                 for (var i = 0; i < this._stateIconTruns.length; i++){
                     this._state_icon.removeChild(this._stateIconTruns[i]);
                 }
-                var maxStateLength = Math.min(Math.max(this ._battler.allIcons().length,0),Moghunter.bhud_statesMax);
+                var maxStateLength = Math.min(Math.max(this._battler.allIcons().length, 0), Moghunter.bhud_statesMax);
                 var turns = this._battler.getAllTurns();
                 for (i = 0; i < maxStateLength; i++){
                     var sprite = this.createStateTurnSprite(i);
                     this.setStateTurnSpritePosition(i);
                     sprite.bitmap.clear();
-                    sprite.bitmap.drawText(turns[i], 0, 0, Window_Base._iconWidth, Window_Base._iconHeight, 'right');
+                    var index = this._battler.allIcons()[i];
+                    if (index && !param.IconIndexWithoutShowTurns.contains(index)) {
+                        sprite.bitmap.drawText(turns[i], 0, 0,
+                            Window_Base._iconWidth, Window_Base._iconHeight, 'right');
+                    }
                 }
             };
 
@@ -661,6 +667,7 @@ function Sprite_StateIconChild() {
                 var sprite = new Sprite();
                 var w = Window_Base._iconWidth;
                 sprite.bitmap = new Bitmap(w, w);
+                sprite.bitmap.fontSize = param.FontSize;
                 this._stateIconTruns[index] = sprite;
                 this._state_icon.addChild(sprite);
                 return sprite;
