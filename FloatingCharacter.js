@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2020/03/13 浮遊速度を変更できる機能を追加
 // 1.4.1 2019/06/18 メモ欄の設定を適切に読み込めるように修正(ツミオ）
 // 1.4.0 2018/10/08 浮遊イベントの影を非表示にできる機能を追加
 // 1.3.0 2018/01/24 イベントを初期状態で浮遊させる機能を追加
@@ -82,6 +83,9 @@
  *  着地可能かどうかは、飛行船が着地可能かどうかの条件と同一です。
  *  [ウェイトフラグ]に[true]を設定すると、着地完了まで次の命令に移行しません。
  *  例：this.landingIfOk(true);
+ *
+ * this.setFloatSpeed([スピード]);
+ *  浮遊する速度を設定します。通常は[1]で大きな数字を指定すると速くなります。
  *
  * Script
  * 「条件分岐」の「スクリプト」から以下を実行します。
@@ -161,6 +165,9 @@
  *  着地可能かどうかは、飛行船が着地可能かどうかの条件と同一です。
  *  [ウェイトフラグ]に[true]を設定すると、着地完了まで次の命令に移行しません。
  *  例：this.landingIfOk(true);
+ *
+ * this.setFloatSpeed([スピード]);
+ *  浮遊する速度を設定します。通常は[1]で大きな数字を指定すると速くなります。
  *
  * スクリプト
  * 「条件分岐」の「スクリプト」から以下を実行します。
@@ -327,6 +334,7 @@
         this._altitudeAnimeCount = 0;
         this._maxAltitude        = 0;
         this._needFloat          = false;
+        this._floatSpped         = 1;
     };
 
     var _Game_CharacterBase_isMapPassable = Game_CharacterBase.prototype.isMapPassable;
@@ -401,12 +409,20 @@
         if (!max) max = $gameMap.tileHeight() / 2;
         this._needFloat   = true;
         this._maxAltitude = max;
-        if (waitFlg) this._waitCount = Math.max(this.maxAltitude() - this._altitude, 0);
+        if (waitFlg) {
+            this._waitCount = this.getFloatingWaitCount(this.maxAltitude() - this._altitude);
+        }
     };
 
     Game_CharacterBase.prototype.landing = function(waitFlg) {
         this._needFloat = false;
-        if (waitFlg) this._waitCount = this.maxAltitude();
+        if (waitFlg) {
+            this._waitCount = this.getFloatingWaitCount(this.maxAltitude());
+        }
+    };
+
+    Game_CharacterBase.prototype.getFloatingWaitCount = function(altitudeDiff) {
+        return Math.floor(Math.max(altitudeDiff, 0) / this.getFloatSpeed());
     };
 
     Game_CharacterBase.prototype.landingIfOk = function(waitFlg) {
@@ -423,18 +439,26 @@
         return true;
     };
 
+    Game_CharacterBase.prototype.getFloatSpeed = function() {
+        return this._floatSpped || 1;
+    };
+
+    Game_CharacterBase.prototype.setFloatSpeed = function(value) {
+        return this._floatSpped = value;
+    };
+
     Game_CharacterBase.prototype.updateFloating = function() {
         this._floatingPrev = this.isFloating();
         if (this.isNeedFloat()) {
             if (this.isHighest()) {
                 this._altitudeAnimeCount++;
             }
-            this._altitude = Math.min(this._altitude + 1, this.maxAltitude());
+            this._altitude = Math.min(this._altitude + this.getFloatSpeed(), this.maxAltitude());
         } else {
             if (this.isHighest()) {
                 this._altitudeAnimeCount = 0;
             }
-            this._altitude = Math.max(this._altitude - 1, 0);
+            this._altitude = Math.max(this._altitude - this.getFloatSpeed(), 0);
         }
         if (this._floatingPrev !== this.isFloating()) {
             this.refreshBushDepth();
@@ -464,6 +488,16 @@
         }
         this.followers().forEach(function(follower) {
             follower.landing();
+        }.bind(this));
+    };
+
+    Game_Player.prototype.setFloatSpeed = function(value) {
+        Game_CharacterBase.prototype.setFloatSpeed.apply(this, arguments);
+        if (!paramFloatFollower) {
+            return;
+        }
+        this.followers().forEach(function(follower) {
+            follower.setFloatSpeed(value);
         }.bind(this));
     };
 
