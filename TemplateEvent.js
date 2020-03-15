@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.3 2020/03/16 プラグインパラメータ『上書き対象項目』の初期値を設定
 // 2.1.2 2019/06/09 EventReSpawn.jsで生成したテンプレートイベントがgetTemplateIdを取得できない問題を修正
 // 2.1.1 2019/04/14 2.1.0の機能で、統合ではなく上書きできる機能を追加
 // 2.1.0 2019/04/07 テンプレートイベントと個別イベントとでメモ欄を統合できる機能を追加
@@ -53,7 +54,7 @@
  *
  * @param OverrideTarget
  * @desc メモ欄で上書き(テンプレートイベントより固有イベントの設定を優先)指定したイベントの上書き対象項目を設定します。
- * @default
+ * @default {"Image":"true","Direction":"false","Move":"false","Priority":"false","Trigger":"false","Option":"false"}
  * @type struct<override>
  *
  * @param AutoOverride
@@ -155,7 +156,7 @@
  * @param OverrideTarget
  * @text 上書き対象項目
  * @desc メモ欄で上書き(テンプレートイベントより固有イベントの設定を優先)指定したイベントの上書き対象項目を設定します。
- * @default
+ * @default {"Image":"true","Direction":"false","Move":"false","Priority":"false","Trigger":"false","Option":"false"}
  * @type struct<override>
  *
  * @param AutoOverride
