@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.8.2 2020/03/16 複数種類のアイテム入手時のメッセージに武器防具が含まれる場合、アイテム扱いされる不具合を修正
 // 1.8.1 2019/09/09 Scene_Gachaクラスを外部から参照できるようグローバル領域に出しました。
 // 1.8.0 2019/09/09 ガチャの詳細結果画面に専用画像を指定できる機能を追加
 // 1.7.0 2019/08/25 ガチャの結果表示画面を追加
@@ -426,7 +427,6 @@ function Scene_Gacha() {
         this._screenFadeOutDuration = 0;
         this._screenFadeInDuration  = 0;
         this._lot        = [];
-        this._itemList   = {};
         this._resultList = [];
 
         var numLot;
@@ -619,11 +619,6 @@ function Scene_Gacha() {
     Scene_Gacha.prototype.getGacha = function() {
         this._newItem = !$gameParty.hasItem(this._item, true);
         $gameParty.gainItem(this._item, 1);
-        var id = this._item.id;
-        if (!this._itemList[id]) {
-            this._itemList[id] = 0;
-        }
-        this._itemList[id]++;
         this._resultList.push(this._item);
     };
 
@@ -639,20 +634,44 @@ function Scene_Gacha() {
             this._remainCount--;
             this.commandGacha(null);
         } else {
-            var itemListKeys = Object.keys(this._itemList);
-            if (this.isEffectStop() || itemListKeys.length >= 2) {
-                this.showAllResult(itemListKeys)
+            if (this.isEffectStop() || this.twoOrMoreKindOfResultItem()) {
+                this.showAllResult();
             } else {
                 this.backToCommand();
             }
         }
     };
 
-    Scene_Gacha.prototype.showAllResult = function(itemListKeys) {
-        itemListKeys.forEach(function(itemId) {
-            var name = $dataItems[itemId].name;
-            $gameMessage.add(name + ' × ' + this._itemList[itemId]);
-        }.bind(this));
+    Scene_Gacha.prototype.twoOrMoreKindOfResultItem =function () {
+      return this._resultList.some((data, index, self) => self.filter(d => d !== data).length > 0);
+    };
+
+    Scene_Gacha.prototype.generateResultMessage = function () {
+      let resultsForMessage = {
+        items: [],
+        weapons: [],
+        armors: []
+      };
+      this._resultList.forEach(data => {
+        let array = DataManager.isItem(data) ? resultsForMessage.items : DataManager.isWeapon(data) ? resultsForMessage.weapons : resultsForMessage.armors;
+        if (!array[data.id]) {
+          array[data.id] = 0;
+        }
+        array[data.id]++;
+      });
+      resultsForMessage.items.forEach((itemNum, id) => {
+        $gameMessage.add(`${$dataItems[id].name} x ${itemNum}`);
+      });
+      resultsForMessage.weapons.forEach((weaponNum, id) => {
+        $gameMessage.add(`${$dataWeapons[id].name} x ${weaponNum}`);
+      });
+      resultsForMessage.armors.forEach((armorNum, id) => {
+        $gameMessage.add(`${$dataArmors[id].name} x ${armorNum}`)
+      });
+    };
+
+    Scene_Gacha.prototype.showAllResult = function() {
+        this.generateResultMessage();
         if (se) {
             AudioManager.playSe({name: se, volume: 90, pitch: 100, pan: 0});
         }
@@ -663,7 +682,6 @@ function Scene_Gacha() {
     };
 
     Scene_Gacha.prototype.backToCommand = function() {
-        this._itemList = {};
         this._resultList = [];
         this._goldWindow.show();
         this._commandWindow.show();
