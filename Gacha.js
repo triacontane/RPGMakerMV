@@ -642,30 +642,34 @@ function Scene_Gacha() {
         }
     };
 
-    Scene_Gacha.prototype.twoOrMoreKindOfResultItem =function () {
-      return this._resultList.some((data, index, self) => self.filter(d => d !== data).length > 0);
+    Scene_Gacha.prototype.twoOrMoreKindOfResultItem = function() {
+      return this._resultList.some(function(data, index, self) {
+        return self.filter(function(d) {
+          return d !== data;
+        }).length > 0;
+      });
     };
 
-    Scene_Gacha.prototype.generateResultMessage = function () {
+    Scene_Gacha.prototype.generateResultMessage = function() {
       let resultsForMessage = {
         items: [],
         weapons: [],
         armors: []
       };
-      this._resultList.forEach(data => {
+      this._resultList.forEach(function(data) {
         let array = DataManager.isItem(data) ? resultsForMessage.items : DataManager.isWeapon(data) ? resultsForMessage.weapons : resultsForMessage.armors;
         if (!array[data.id]) {
           array[data.id] = 0;
         }
         array[data.id]++;
       });
-      resultsForMessage.items.forEach((itemNum, id) => {
+      resultsForMessage.items.forEach(function(itemNum, id) {
         $gameMessage.add(`${$dataItems[id].name} x ${itemNum}`);
       });
-      resultsForMessage.weapons.forEach((weaponNum, id) => {
+      resultsForMessage.weapons.forEach(function(weaponNum, id) {
         $gameMessage.add(`${$dataWeapons[id].name} x ${weaponNum}`);
       });
-      resultsForMessage.armors.forEach((armorNum, id) => {
+      resultsForMessage.armors.forEach(function(armorNum, id) {
         $gameMessage.add(`${$dataArmors[id].name} x ${armorNum}`)
       });
     };
