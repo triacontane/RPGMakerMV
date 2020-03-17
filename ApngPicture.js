@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.3 2020/03/17 ライブラリがpixi5.0対応によるバージョンアップで使用できなくなったのでヘルプの取得元を旧版に変更
  1.4.2 2020/03/07 キャッシュしない設定のapngを繰り返し表示、削除し続けるとメモリリークが発生する問題を修正
  1.4.1 2020/02/23 英語版のプラグインパラメータの記述が不足していたので修正
  1.4.0 2020/02/01 アニメーションのループ回数を指定できる機能を追加
@@ -54,7 +55,7 @@
  * https://github.com/sbfkcel/pixi-apngAndGif
  *
  * Download the target file and import it from the plugin management screen.
- * https://github.com/sbfkcel/pixi-apngAndGif/blob/master/dist/PixiApngAndGif.js
+ * https://github.com/sbfkcel/pixi-apngAndGif/blob/fd2e0fb3274bf2c360c608b42e527889d10a6330/dist/PixiApngAndGif.js
  *
  * In addition, the color tone change of the picture is not reflected.
  * Also, extensions by other plug-ins may not work.
@@ -103,8 +104,11 @@
  * 使用には以下のライブラリが必要です。
  * https://github.com/sbfkcel/pixi-apngAndGif
  *
+ * ただし、ライブラリの最新版はpixi5.0に対応した結果、ツクールMV側の最新である4.0では
+ * 再生できなくなりました。よって最新版ではなく、下記の旧版を使用する必要があります。
+ *
  * 対象ファイルをダウンロードしてプラグイン管理画面から取り込んでください。
- * https://github.com/sbfkcel/pixi-apngAndGif/blob/master/dist/PixiApngAndGif.js
+ * https://github.com/sbfkcel/pixi-apngAndGif/blob/fd2e0fb3274bf2c360c608b42e527889d10a6330/dist/PixiApngAndGif.js
  *
  * なお、ピクチャの色調変更は反映されません。
  * また、他のプラグインによる拡張が機能しない場合があります。
