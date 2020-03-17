@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.3 2020/03/17 Canvasモード時、マップの色調変更がウィンドウに反映されていた問題を修正
 // 1.3.2 2019/01/23 1.3.1の修正でGUI画面デザインプラグインと共存できなくなっていた問題を修正
 // 1.3.1 2019/01/18 他のプラグインと連携しやすいように一部の実装を変更
 // 1.3.0 2018/09/23 対象イベントの並列実行を停止するコマンドを追加
@@ -792,6 +793,10 @@
             _Spriteset_Menu_createTimer.apply(this, arguments);
         }
     };
+
+    Spriteset_Menu.prototype.createToneChanger = function() {};
+
+    Spriteset_Menu.prototype.updateToneChanger = function() {};
 
     //=============================================================================
     // SceneManager
