@@ -13,10 +13,10 @@
 //
 
 var Imported = Imported || {};
-Imported['NamedEnemy'] = 1.00;
+Imported['NamedEnemy'] = 1.01;
 
 /*:
- * @plugindesc ver1.00/二つ名ステートの付いたエネミーをランダムで出現させることができます。
+ * @plugindesc ver1.01/二つ名ステートの付いたエネミーをランダムで出現させることができます。
  * @author Yana
  *
  * @param AddNameNum
