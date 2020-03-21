@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.6 2020/03/21 SceneCustomMenu.jsに合わせた微修正
 // 2.10.5 2020/02/06 プラグインで追加した一部のウィンドウでデザインモード解除時に位置変更が反映されない問題を修正
 // 2.10.4 2020/01/27 プラグインで追加した一部のウィンドウの位置変更が反映されない競合を修正
 // 2.10.3 2019/11/02 デザインモード設定時はクリックでメッセージウィンドウを送れないよう修正
@@ -442,7 +443,11 @@ var $dataContainerProperties = null;
     };
 
     var getClassName = function(object) {
-        return object.constructor.toString().replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
+        var define = object.constructor.toString();
+        if (define.match(/^class/)) {
+            return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
+        }
+        return define.replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
     };
 
     var getCommandName = function(command) {
