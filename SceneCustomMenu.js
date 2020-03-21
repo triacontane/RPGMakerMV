@@ -200,7 +200,7 @@
  * @min -2000
  *
  * @param RelativeWindowIdY
- * @text 相対Y座標のィンドウ
+ * @text 相対Y座標ウィンドウ
  * @desc 指定した場合、Y座標が対象ウィンドウからの相対位置になります。
  * @default
  *
