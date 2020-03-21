@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.4 2020/03/21 SceneCustomMenu.jsに合わせた微修正
 // 1.3.3 2020/03/17 Canvasモード時、マップの色調変更がウィンドウに反映されていた問題を修正
 // 1.3.2 2019/01/23 1.3.1の修正でGUI画面デザインプラグインと共存できなくなっていた問題を修正
 // 1.3.1 2019/01/18 他のプラグインと連携しやすいように一部の実装を変更
@@ -439,7 +440,11 @@
     };
 
     var getClassName = function(object) {
-        return object.constructor.toString().replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
+        var define = object.constructor.toString();
+        if (define.match(/^class/)) {
+            return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
+        }
+        return define.replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
     };
 
     //=============================================================================
@@ -643,6 +648,7 @@
     };
 
     Scene_MenuBase.prototype.createCommonEvent = function() {
+        console.log(122222);
         this.setupCommonEvent();
         if (!this.hasCommonEvent()) {
             return;
