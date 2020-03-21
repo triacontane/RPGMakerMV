@@ -769,7 +769,7 @@
         }
 
         refreshActor() {
-            this._customWindowMap.forEach((win, key) => {
+            this._customWindowMap.forEach(win => {
                 win.setActor(this._actor);
             });
         }
@@ -1002,7 +1002,7 @@
                 list = list.filter(item => eval(this._data.FilterScript));
             }
             if (this._data.MappingScript) {
-                list = list.map(item => eval(this._data.MappingScript))
+                list = list.map(item => eval(this._data.MappingScript));
             }
             return list;
         }
