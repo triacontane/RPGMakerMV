@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/03/21 スクリプトの凡例追加とヘルプの微修正
  1.0.0 2020/03/21 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -73,6 +74,8 @@
  *
  * @help SceneCustomMenu.js
  *
+ * このプラグインはRPGツクールMV1.6.0以降でのみ動作します。
+ *
  * プラグインパラメータからウィンドウ情報を定義して独自のメニュー画面を作れます。
  * 初期状態で動作するサンプルや豊富なスクリプトのプリセットが用意されていて
  * すぐに動作を確認できます。
@@ -135,7 +138,7 @@
  * There is no function to add custom menu items to the main menu screen.
  * Please link with existing plugins.
  *
- * Example: Menu screen subcommand plug-in
+ * Example:
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MenuSubCommand.js
  *
  * This plugin is released under the MIT License.
@@ -338,6 +341,7 @@
  * @option this.drawItemName(item, r.x, r.y, r.width); // アイテムやスキルの名称
  * @option this.drawTextEx(`Text:${item.name}`, r.x, r.y, r.width); // 任意のテキスト描画(制御文字変換あり)
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
+ * @option this.changeTextColor(this.textColor(1)); // テキストカラー変更(drawTextでのみ有効)
  *
  * @param IsEnableScript
  * @parent DataScript
@@ -545,8 +549,8 @@
         return sceneClass;
     };
 
-    var getClassName = function(object) {
-        var define = object.constructor.toString();
+    const getClassName = function(object) {
+        const define = object.constructor.toString();
         if (define.match(/^class/)) {
             return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
         }
@@ -914,6 +918,7 @@
             }
             const rect = this.itemRect(index);
             rect.x += this.textPadding();
+            rect.width -= this.textPadding() * 2;
             this.changePaintOpacity(this.isEnabled(index));
             this.drawItemSub(item, rect, index);
             this.changePaintOpacity(1);
