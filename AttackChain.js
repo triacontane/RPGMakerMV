@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2020/03/22 対象者が指定したメモ欄を保持している場合のみコンボ継続する設定を追加
 // 2.2.0 2020/02/26 戦闘終了時、チェイン表示が残っている場合はフェードアウトするよう仕様変更
 // 2.1.0 2019/05/08 ダメージ数値と単位表記の画像指定で敵専用の画像を指定できる機能を追加
 // 2.0.0 2019/05/02 ダメージ数値と単位表記に任意の画像を使用できる機能を追加
@@ -130,6 +131,11 @@
  * @param CancelOpposite
  * @desc It will be canceled if the enemy acts.
  * @default true
+ * @type boolean
+ *
+ * @param CancelTraitLost
+ * @desc The chain continues only while the attacking target has the specified characteristics.
+ * @default false
  * @type boolean
  *
  * @param InvalidSwitchId
@@ -283,6 +289,11 @@
  * @default true
  * @type boolean
  *
+ * @param 特徴喪失で解除
+ * @desc 攻撃した対象者が所定の特徴(メモ欄から指定)を保持している間のみチェインが継続します。
+ * @default false
+ * @type boolean
+ *
  * @param 無効スイッチ番号
  * @desc 指定したスイッチがONのとき最大連携数および最大ダメージのカウントが無効になります。
  * @default 0
@@ -318,6 +329,12 @@
  * <AC_SkillChangeId:10>         # 同上
  * <AC_スキル変化メッセージ:aaa> # スキル変化時にメッセージ[aaa]を表示します。
  * <AC_SkillChangeMessage:aaa>   # 同上
+ *
+ * パラメータ「特徴喪失で解除」を有効にすると、対象者が以下のメモ欄を保持(※)している
+ * 場合のみコンボが継続します。
+ * <AC_Combo>
+ * <AC_コンボ継続>
+ * ※アクター、職業、敵キャラ、ステート、装備のいずれかのメモ欄
  *
  * スキル変化メッセージでは以下の値が変換されます。
  * %1 : 変化前スキル名
@@ -441,6 +458,7 @@ function Sprite_ChainDamage() {
     param.duration             = getParamNumber(['Duration', '表示時間']) || 0;
     param.cancelChangeTarget   = getParamBoolean(['CancelChangeTarget', 'ターゲット変更で解除']);
     param.cancelMiss           = getParamBoolean(['CancelMiss', 'ミスで解除']);
+    param.cancelTraitLost      = getParamBoolean(['CancelTraitLost', '特徴喪失で解除']);
     param.cancelNoAttack       = getParamBoolean(['CancelNoAttack', '攻撃以外で解除']);
     param.cancelOpposite       = getParamBoolean(['CancelOpposite', '相手行動で解除']);
     param.partyOnly            = getParamBoolean(['PartyOnly', '味方のみに適用']);
@@ -607,7 +625,7 @@ function Sprite_ChainDamage() {
     };
 
     Game_Action.prototype.updateChain = function(target) {
-        if (this.isChainCancel()) {
+        if (this.isChainCancel(target)) {
             this.friendsUnit().resetChainCount();
         }
         if (this._damageForChain) {
@@ -619,8 +637,10 @@ function Sprite_ChainDamage() {
         }
     };
 
-    Game_Action.prototype.isChainCancel = function() {
-        if (this.isForceEndChain()) {
+    Game_Action.prototype.isChainCancel = function(target) {
+        if (!target.canContinueChain()) {
+            return false;
+        } else if (this.isForceEndChain()) {
             return true;
         } else if (param.cancelMiss && !this._hitForChain) {
             return true;
@@ -647,6 +667,15 @@ function Sprite_ChainDamage() {
 
     Game_Action.prototype.getSkillChangeMessage = function() {
         return this._item.getChangeMessage();
+    };
+
+    Game_BattlerBase.prototype.canContinueChain = function() {
+        if (!param.cancelTraitLost) {
+            return true;
+        }
+        return this.traitObjects().some(function(trait) {
+            return getMetaValues(trait, ['コンボ継続', 'Combo']) !== undefined;
+        });
     };
 
     //=============================================================================
@@ -719,6 +748,19 @@ function Sprite_ChainDamage() {
 
     BattleManager.isChangeTarget = function(target) {
         return this._chainTarget !== target;
+    };
+
+    BattleManager.updateChainContinue = function() {
+        if (this._chainTarget && !this._chainTarget.canContinueChain()) {
+            this._chainTarget.opponentsUnit().resetChainCount();
+            this._chainTarget = null;
+        }
+    };
+
+    var _BattleManager_update = BattleManager.update;
+    BattleManager.update      = function() {
+        _BattleManager_update.apply(this, arguments);
+        this.updateChainContinue();
     };
 
     //=============================================================================
