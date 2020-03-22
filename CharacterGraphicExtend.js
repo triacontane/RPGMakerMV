@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.4 2020/03/22 MOG_ChronoEngine.jsとの間で発生するエラーを解消(全面的な競合対策ではありません)
+//                   MOG_CharPoses.jsとの競合を解消
 // 1.10.3 2020/01/25 フレーム更新時に無駄な処理が実行されることでパフォーマンスが低下していた問題を修正
 // 1.10.2 2018/11/19 UltraMode7との競合を解消(by けんせい様)
 //                   TMNamePop.jsとの併用時、ネームポップがイベント画像の傾き、反転に影響されないよう修正
@@ -477,6 +479,9 @@
     };
 
     Game_Event.prototype.getMetaCg = function(names) {
+        if (!this.event().metaArray) {
+            return null;
+        }
         if (!Array.isArray(names)) names = [names];
         var metaParams = this.getMetaParameter(names);
         if (!metaParams) return null;
@@ -684,6 +689,15 @@
         if (this.isImageChanged()) this._customResource = this._character.customResource();
         _Sprite_Character_updateBitmap.apply(this, arguments);
         this.updateExtend();
+    };
+
+    // Resolve conflict for MOG_CharPoses.js
+    var _Sprite_Character_setBitmapCache = Sprite_Character.prototype.setBitmapCache;
+    Sprite_Character.prototype.setBitmapCache = function() {
+        if (this._customResource) {
+            return;
+        }
+        _Sprite_Character_setBitmapCache.apply(this, arguments);
     };
 
     var _Sprite_Character_update      = Sprite_Character.prototype.update;
