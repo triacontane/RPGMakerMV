@@ -1,11 +1,12 @@
 //=============================================================================
 // FloatingCharacter.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2020/03/24 競合等の理由でメモ欄が取得できない場合に発生するエラーを回避
 // 1.5.0 2020/03/13 浮遊速度を変更できる機能を追加
 // 1.4.1 2019/06/18 メモ欄の設定を適切に読み込めるように修正(ツミオ）
 // 1.4.0 2018/10/08 浮遊イベントの影を非表示にできる機能を追加
@@ -20,7 +21,7 @@
 // 1.0.1 2016/03/31 浮遊中に強制的に待機アニメが設定される仕様を撤廃
 // 1.0.0 2016/03/29 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -249,6 +250,9 @@
 
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + name;
+        if (!object.meta) {
+            return undefined;
+        }
         return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
     };
 
@@ -262,6 +266,9 @@
 
     var hasMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + name;
+        if (!object.meta) {
+            return false;
+        }
         return object.meta.hasOwnProperty(metaTagName);
     };
 
