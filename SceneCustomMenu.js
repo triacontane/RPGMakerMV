@@ -6,6 +6,9 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/03/24 カーソルが動いたときに発生する「カーソルイベント」を追加
+                  選択不可能項目を専用の文字列でマスキングできる機能を追加
+                  ヘルプテキストに改行「\n」が使えるよう修正
  1.0.1 2020/03/21 スクリプトの凡例追加とヘルプの微修正
  1.0.0 2020/03/21 初版
 ----------------------------------------------------------------------------
@@ -364,7 +367,7 @@
  *
  * @param CommonHelpText
  * @text 共通ヘルプテキスト
- * @desc 選択している項目とは関係なく表示されるヘルプテキストです。
+ * @desc 選択している項目とは関係なく表示されるヘルプテキストです。改行したい場合は「\n」と入力してください。
  * @default
  * @type string
  *
@@ -377,6 +380,12 @@
  * @param CancelEvent
  * @text キャンセルイベント
  * @desc キャンセルされた瞬間に発生するイベントです。
+ * @default {}
+ * @type struct<Event>
+ *
+ * @param CursorEvent
+ * @text カーソルイベント
+ * @desc カーソルが動いた瞬間に発生するイベントです。このイベントではウィンドウのフォーカスは変更されません。
  * @default {}
  * @type struct<Event>
  *
@@ -435,6 +444,12 @@
  * @desc 有効にするとウィンドウにフォーカスが当たっていないときはウィンドウが非表示になります。
  * @default false
  * @type boolean
+ *
+ * @param DisableCommandText
+ * @text 選択不可項目テキスト
+ * @desc コマンドが選択不可能なときに代わりに表示するテキストです。
+ * @default
+ * @type string
  */
 
 /*~struct~Command:
@@ -459,7 +474,7 @@
  *
  * @param HelpText
  * @text ヘルプテキスト
- * @desc ヘルプウィンドウを表示している場合、ヘルプテキストが表示されます。
+ * @desc ヘルプウィンドウを表示している場合、ヘルプテキストが表示されます。改行したい場合は「\n」と入力してください。
  * @default
  * @type string
  *
@@ -644,6 +659,11 @@
                     win.select(-1);
                 });
             }
+            if (data.CursorEvent) {
+                win.setHandler('select', () => {
+                    this.fireEvent(data.CursorEvent, false);
+                });
+            }
             if (data.ActorChangeable) {
                 win.setHandler('pagedown', this.nextActor.bind(this));
                 win.setHandler('pageup', this.previousActor.bind(this));
@@ -697,7 +717,7 @@
             }
         }
 
-        fireEvent(event) {
+        fireEvent(event, moveFocus = true) {
             if (event.SwitchId) {
                 $gameSwitches.setValue(event.SwitchId, true);
             }
@@ -707,12 +727,14 @@
             if (!this._active) {
                 return;
             }
-            if (event.FocusWindowId) {
-                this.changeWindowFocus(event.FocusWindowId, event.FocusWindowIndex);
-            } else if (this._previousActiveWindowId) {
-                this.changeWindowFocus(this._previousActiveWindowId, -1);
-            } else {
-                this.changeWindowFocus(this._activeWindowId || this.findFirstWindowId(), -1);
+            if (moveFocus) {
+                if (event.FocusWindowId) {
+                    this.changeWindowFocus(event.FocusWindowId, event.FocusWindowIndex);
+                } else if (this._previousActiveWindowId) {
+                    this.changeWindowFocus(this._previousActiveWindowId, -1);
+                } else {
+                    this.changeWindowFocus(this._activeWindowId || this.findFirstWindowId(), -1);
+                }
             }
             if (event.CommandId) {
                 this.setupMenuCommonEvent(event.CommandId);
@@ -822,6 +844,14 @@
             this.refreshIfNeed();
         }
 
+        select(index) {
+            const prevIndex = this._index;
+            super.select(index);
+            if (prevIndex >= 0 && index >= 0 && index !== prevIndex) {
+                this.callHandler('select');
+            }
+        }
+
         updateOpenClose() {
             if (this.isValid()) {
                 if (this.isShowOpen()) {
@@ -919,15 +949,25 @@
             const rect = this.itemRect(index);
             rect.x += this.textPadding();
             rect.width -= this.textPadding() * 2;
-            this.changePaintOpacity(this.isEnabled(index));
-            this.drawItemSub(item, rect, index);
+            const enable = this.isEnabled(index);
+            this.changePaintOpacity(enable);
+            if (!enable && this._data.DisableCommandText) {
+                this.drawDisableItem(rect);
+            } else {
+                this.drawItemSub(item, rect, index);
+            }
             this.changePaintOpacity(1);
         }
 
         drawItemSub(item, rect, index) {};
 
+        drawDisableItem(rect) {
+            this.drawTextEx(this._data.DisableCommandText, rect.x, rect.y);
+        }
+
         updateHelp() {
-            this._helpWindow.setText(this.findHelpText());
+            const text = this.findHelpText() || '';
+            this._helpWindow.setText(text.replace('\\n', '\n'));
         }
 
         findHelpText() {
