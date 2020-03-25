@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.1 2020/03/25 アイコン表示位置をメッセージウィンドウの位置やサイズの変更に追従するよう修正
 // 1.12.0 2019/05/26 オート、スキップアイコンの位置を自由に指定できる機能を追加
 // 1.11.0 2018/06/16 オート及びスキップの機能を一時的に無効化するスイッチを追加
 // 1.10.1 2018/05/07 オートモードで途中に「\!」が含まれる場合の待機フレームが正しく計算されない問題を修正
@@ -518,9 +519,13 @@ function Sprite_Frame() {
 
     Window_Message.prototype.createSpriteFrame = function() {
         this._icon   = new Sprite_Frame(ImageManager.loadSystem('IconSet'), -1);
+        this.addChild(this._icon);
+        this.updatePlacementIcon();
+    };
+
+    Window_Message.prototype.updatePlacementIcon = function() {
         this._icon.x = (paramIconX ? paramIconX - this.x : this.width - this._icon.width);
         this._icon.y = (paramIconY ? paramIconY - this.y : this.height - this._icon.height);
-        this.addChild(this._icon);
     };
 
     Window_Message.prototype.createSpriteSkipButton = function() {
@@ -604,10 +609,12 @@ function Sprite_Frame() {
             this._icon.refresh(getParamNumber(['SkipIcon', 'スキップアイコン']));
             this._icon.flashSpeed = 16;
             this._icon.flash      = true;
+            this.updatePlacementIcon();
         } else if (this.messageAuto() && this.openness === 255) {
             this._icon.refresh(getParamNumber(['AutoIcon', 'オートアイコン']));
             this._icon.flashSpeed = 2;
             this._icon.flash      = true;
+            this.updatePlacementIcon();
         } else {
             this._icon.refresh(0);
             this._icon.flash = false;
