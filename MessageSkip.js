@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.0 2020/03/26 オート、スキップピクチャの表示方法をメッセージウィンドウからの相対座標と絶対座標とを選択できる機能を追加
 // 1.12.1 2020/03/25 アイコン表示位置をメッセージウィンドウの位置やサイズの変更に追従するよう修正
 // 1.12.0 2019/05/26 オート、スキップアイコンの位置を自由に指定できる機能を追加
 // 1.11.0 2018/06/16 オート及びスキップの機能を一時的に無効化するスイッチを追加
@@ -77,6 +78,20 @@
  * @default 75
  * @type number
  *
+ * @param IconX
+ * @desc オート、スキップのアイコン位置を自由に変更したい場合に指定するX座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @param IconY
+ * @desc オート、スキップのアイコン位置を自由に変更したい場合に指定するX座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
  * @param PressingSkip
  * @desc スキップの判定が指定のキーを押している間のみになります。
  * @default false
@@ -138,6 +153,13 @@
  * @desc ウィンドウ内に表示するオートピクチャのY座標です。
  * @default 0
  * @type number
+ *
+ * @param PicturePosType
+ * @desc オート、スキップピクチャの配置方法です。相対座標を選択するとウィンドウ表示位置からの相対座標となります。
+ * @default relative
+ * @type select
+ * @option absolute
+ * @option relative
  *
  * @param InvalidSwitchId
  * @desc 指定したスイッチがONのときプラグインの全機能が無効になります。
@@ -288,6 +310,15 @@
  * @default 0
  * @type number
  *
+ * @param ピクチャ座標タイプ
+ * @desc オート、スキップピクチャの配置方法です。相対座標を選択するとウィンドウ表示位置からの相対座標となります。
+ * @default relative
+ * @type select
+ * @option 絶対座標
+ * @value absolute
+ * @option 相対座標
+ * @value relative
+ *
  * @param 無効化スイッチ
  * @desc 指定したスイッチがONのときプラグインの全機能が無効になります。
  * @default 0
@@ -431,6 +462,7 @@ function Sprite_Frame() {
     var paramInvalidSwitchId = getParamNumber(['InvalidSwitchId', '無効化スイッチ'], 0);
     var paramIconX           = getParamNumber(['IconX', 'アイコンX'], 0);
     var paramIconY           = getParamNumber(['IconY', 'アイコンY'], 0);
+    var paramPicturePosType  = getParamString(['PicturePosType', 'ピクチャ座標タイプ']);
 
     //=============================================================================
     // Game_Message
@@ -544,12 +576,18 @@ function Sprite_Frame() {
         if (paramPictureAnchor === 1 || paramPictureAnchor === 3) {
             originalX += this.width;
         }
+        if (paramPicturePosType === 'absolute') {
+            originalX -= this.x;
+        }
         return originalX;
     };
 
     Window_Message.prototype.getRelativeButtonY = function(originalY) {
         if (paramPictureAnchor === 2 || paramPictureAnchor === 3) {
             originalY += this.height;
+        }
+        if (paramPicturePosType === 'absolute') {
+            originalY -= this.y;
         }
         return originalY;
     };
