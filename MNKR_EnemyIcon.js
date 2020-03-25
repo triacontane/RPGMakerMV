@@ -27,25 +27,20 @@
 	var parameters = PluginManager.parameters('MNKR_EnemyIcon');
 	var defaultIcon = parseInt(parameters['Default Icon'] || 16);
 
+	var _Window_BattleEnemy_drawItem = Window_BattleEnemy.prototype.drawItem;
     Window_BattleEnemy.prototype.drawItem = function(index) {
-        this.resetTextColor();
-        const enemy = this._enemies[index];
-        var name = enemy.name();
-        var rect = this.itemRectForText(index);
-        var icon = parseInt(enemy.enemy().meta.EnemyIcon);
+        var enemy = this._enemies[index];
+        var icon = parseInt(enemy.enemy().meta.EnemyIcon) || defaultIcon;
         if (icon) {
+            this.resetTextColor();
+            var name = enemy.name();
+            var rect = this.itemRectForText(index);
             var iconBoxWidth = Window_Base._iconWidth + 4;
             this.drawIcon(icon, rect.x + 2, rect.y + 2);
             this.drawText(name, rect.x + iconBoxWidth, rect.y, rect.width - iconBoxWidth);
-            return index;
+        } else {
+            _Window_BattleEnemy_drawItem.apply(this, arguments);
         }
-        if (defaultIcon === 0) {
-            this.drawText(name, rect.x, rect.y, rect.width);
-            return index;
-        }
-        var iconBoxWidth = Window_Base._iconWidth + 4;
-        this.drawIcon(defaultIcon, rect.x + 2, rect.y + 2);
-        this.drawText(name, rect.x + iconBoxWidth, rect.y, rect.width - iconBoxWidth);
     };
     
 })();
