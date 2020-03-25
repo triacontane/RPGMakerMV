@@ -22,13 +22,13 @@
  *
  */
 
-(function() {
-	'use strict';
-	var parameters = PluginManager.parameters('MNKR_EnemyIcon');
-	var defaultIcon = parseInt(parameters['Default Icon'] || 16);
+(function () {
+    'use strict';
+    var parameters = PluginManager.parameters('MNKR_EnemyIcon');
+    var defaultIcon = parseInt(parameters['Default Icon'] || 16);
 
-	var _Window_BattleEnemy_drawItem = Window_BattleEnemy.prototype.drawItem;
-    Window_BattleEnemy.prototype.drawItem = function(index) {
+    var _Window_BattleEnemy_drawItem = Window_BattleEnemy.prototype.drawItem;
+    Window_BattleEnemy.prototype.drawItem = function (index) {
         var enemy = this._enemies[index];
         var icon = parseInt(enemy.enemy().meta.EnemyIcon) || defaultIcon;
         if (icon) {
@@ -42,5 +42,4 @@
             _Window_BattleEnemy_drawItem.apply(this, arguments);
         }
     };
-    
 })();
