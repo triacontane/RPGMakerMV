@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2020/03/25 マスキング機能をヘルプ欄にも適用
+                  一部のスクリプトのプリセットを修正
  1.1.0 2020/03/24 カーソルが動いたときに発生する「カーソルイベント」を追加
                   選択不可能項目を専用の文字列でマスキングできる機能を追加
                   ヘルプテキストに改行「\n」が使えるよう修正
@@ -325,7 +327,7 @@
  * @default []
  * @type combo[]
  * @option this.drawIcon(item.iconIndex, r.x, r.y, r.width); // アイコン
- * @option this.drawFace(item.faceName(), item.faceIndex() r.x, r.y); // フェイスグラフィック
+ * @option this.drawFace(item.faceName(), item.faceIndex(), r.x, r.y); // フェイスグラフィック
  * @option this.drawCharacter(item.characterName(), item.characterIndex(), r.x, r.y); // キャラクター
  * @option this.drawGauge(r.x, r.y, r.width, 1.0, this.textColor(1), this.textColor(2)); // ゲージ
  * @option this.drawActorCharacter(item, r.x + 24, r.y + 48); // アクターキャラクター
@@ -447,7 +449,7 @@
  *
  * @param DisableCommandText
  * @text 選択不可項目テキスト
- * @desc コマンドが選択不可能なときに代わりに表示するテキストです。
+ * @desc コマンドが選択不可能なときに代わりに表示するテキストです。ヘルプ欄にも表示されます。
  * @default
  * @type string
  */
@@ -949,14 +951,17 @@
             const rect = this.itemRect(index);
             rect.x += this.textPadding();
             rect.width -= this.textPadding() * 2;
-            const enable = this.isEnabled(index);
-            this.changePaintOpacity(enable);
-            if (!enable && this._data.DisableCommandText) {
+            this.changePaintOpacity(this.isEnabled(index));
+            if (this.isNeedDisableText(index)) {
                 this.drawDisableItem(rect);
             } else {
                 this.drawItemSub(item, rect, index);
             }
             this.changePaintOpacity(1);
+        }
+
+        isNeedDisableText(index) {
+            return this._data.DisableCommandText && !this.isEnabled(index);
         }
 
         drawItemSub(item, rect, index) {};
@@ -966,7 +971,10 @@
         }
 
         updateHelp() {
-            const text = this.findHelpText() || '';
+            let text = this.findHelpText() || '';
+            if (this.isNeedDisableText(this.index())) {
+                text = this._data.DisableCommandText;
+            }
             this._helpWindow.setText(text.replace('\\n', '\n'));
         }
 
