@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2020/03/26 スイッチによる再描画実行後、当該スイッチにfalseではなく0が入っていたので修正
  1.2.0 2020/03/26 マスキング機能と使用禁止機能を分離し、代わりにフィルタ機能に統合
                   ヘルプの行数を指定できる機能を追加
                   スクリプトからフォーカスを変更できる機能を追加
@@ -925,7 +926,7 @@
             }
             if ($gameSwitches.value(switchId)) {
                 this.refresh();
-                $gameSwitches.setValue(switchId, 0);
+                $gameSwitches.setValue(switchId, false);
             }
         }
 
