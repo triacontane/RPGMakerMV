@@ -6,6 +6,10 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2020/03/26 マスキング機能と使用禁止機能を分離し、代わりにフィルタ機能に統合
+                  ヘルプの行数を指定できる機能を追加
+                  スクリプトからフォーカスを変更できる機能を追加
+                  未キャッシュのフェイスとキャラクターを表示できるよう修正
  1.1.1 2020/03/25 マスキング機能をヘルプ欄にも適用
                   一部のスクリプトのプリセットを修正
  1.1.0 2020/03/24 カーソルが動いたときに発生する「カーソルイベント」を追加
@@ -111,6 +115,10 @@
  * 例：メニュー画面のサブコマンドプラグイン
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/MenuSubCommand.js
  *
+ * ・スクリプト
+ * 指定したウィンドウにフォーカスを移します。
+ * SceneManager.changeWindowFocus('window1');
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -162,6 +170,12 @@
  * @desc 有効にした場合、画面上部にヘルプウィンドウを表示します。各ウィンドウはヘルプウィンドウの下に配置されます。
  * @default true
  * @type boolean
+ *
+ * @param HelpRows
+ * @text ヘルプ行数
+ * @desc ヘルプウィンドウの行数をデフォルトの2から変更したい場合に指定してください。
+ * @default 0
+ * @type number
  *
  * @param InitialEvent
  * @text 初期イベント
@@ -301,6 +315,7 @@
  * @option item.meta['value']; // メモ欄に<value>の記述がある
  * @option item.name.match('value'); // 名前にvalueを含む
  * @option item.id > v(10); // IDが変数[10]の値より大きい
+ * @option s(parseInt(item.meta['value'])); // <value:n>のスイッチがON
  * @option item !== ''; // 空文字以外
  * @option !!item; // null, undefined, 0, 空文字以外
  * @option item.stypeId === v(10); // スキルタイプが変数[10]の値と等しい
@@ -357,6 +372,7 @@
  * @option item.meta['value']; // メモ欄に<value>の記述がある
  * @option item.name.match('value'); // 名前にvalueを含む
  * @option item.id > v(10); // IDが変数[10]の値より大きい
+ * @option s(parseInt(item.meta['value'])); // <value:n>のスイッチがON
  * @option item !== ''; // 空文字以外
  * @option !!item; // null, undefined, 0, 空文字以外
  * @option item.stypeId === v(10); // スキルタイプが変数[10]の値と等しい
@@ -447,9 +463,9 @@
  * @default false
  * @type boolean
  *
- * @param DisableCommandText
- * @text 選択不可項目テキスト
- * @desc コマンドが選択不可能なときに代わりに表示するテキストです。ヘルプ欄にも表示されます。
+ * @param MaskingText
+ * @text マスキングテキスト
+ * @desc コマンドが非表示にされたとき、消える代わりに指定文字列でマスキングされます。ヘルプ欄もマスキングされます。
  * @default
  * @type string
  */
@@ -515,6 +531,7 @@
  * @type combo
  * @option SceneManager.callCustomMenu('Scene___'); // 別のカスタムメニューに移動
  * @option this.popScene(); // 元のシーンに戻る
+ * @option SceneManager.changeWindowFocus('window1'); // 指定ウィンドウにフォーカス
  *
  * @param SwitchId
  * @text スイッチ
@@ -584,6 +601,18 @@
         this._sceneIndex = 0;
     };
 
+    SceneManager.changeWindowFocus = function(windowId) {
+        this._focusWindowId = windowId;
+    };
+
+    SceneManager.findChangeWindowFocus = function() {
+        const id = this._focusWindowId;
+        if (id) {
+            this._focusWindowId = null;
+        }
+        return id;
+    };
+
     Game_Party.prototype.reserveMembers = function() {
         var battleMembers = this.battleMembers();
         return this.members().filter(function(actor) {
@@ -634,6 +663,15 @@
             this.createMessageWindow();
             this.createScrollTextWindow();
             this.createSpriteset();
+        }
+
+        createHelpWindow() {
+            if (this._customData.HelpRows > 0) {
+                this._helpWindow = new Window_Help(this._customData.HelpRows);
+                this.addWindow(this._helpWindow);
+            } else {
+                super.createHelpWindow();
+            }
         }
 
         createCustomMenuWindowList() {
@@ -716,6 +754,10 @@
             super.update();
             if (this._interpreter.isRunning()) {
                 this.updateInterpreter();
+            }
+            const focusId = SceneManager.findChangeWindowFocus();
+            if (focusId) {
+                this.changeWindowFocus(focusId, -1);
             }
         }
 
@@ -952,30 +994,26 @@
             rect.x += this.textPadding();
             rect.width -= this.textPadding() * 2;
             this.changePaintOpacity(this.isEnabled(index));
-            if (this.isNeedDisableText(index)) {
-                this.drawDisableItem(rect);
+            if (this.isMasking(index)) {
+                this.drawMasking(rect);
             } else {
                 this.drawItemSub(item, rect, index);
             }
             this.changePaintOpacity(1);
         }
 
-        isNeedDisableText(index) {
-            return this._data.DisableCommandText && !this.isEnabled(index);
-        }
-
         drawItemSub(item, rect, index) {};
 
-        drawDisableItem(rect) {
-            this.drawTextEx(this._data.DisableCommandText, rect.x, rect.y);
+        drawMasking(rect) {
+            this.drawTextEx(this._data.MaskingText, rect.x, rect.y);
         }
 
         updateHelp() {
             let text = this.findHelpText() || '';
-            if (this.isNeedDisableText(this.index())) {
-                text = this._data.DisableCommandText;
+            if (this.isMasking(this.index())) {
+                text = this._data.MaskingText;
             }
-            this._helpWindow.setText(text.replace('\\n', '\n'));
+            this._helpWindow.setText(text.replace(/\\n/g, '\n'));
         }
 
         findHelpText() {
@@ -999,8 +1037,19 @@
 
         isEnabled(index) {
             const item = this.getItem(index);
-            return item ? this.isEnabledSub(item) : false;
+            return item ? this.isEnabledSub(item) && !this.isMasking(index) : false;
         }
+
+        isMasking(index) {
+            const item = this.getItem(index);
+            const v  = $gameVariables.value.bind($gameVariables); // used by eval
+            const s  = $gameSwitches.value.bind($gameSwitches); // used by eval
+            return this.isUseMasking() && !this.isVisible(item, v, s);
+        }
+
+        isVisible(item, v, s) {
+            return true;
+        };
 
         isEnabledSub(item) {};
 
@@ -1011,14 +1060,21 @@
             super.activate();
         }
 
+        isUseMasking() {
+            return !!this._data.MaskingText;
+        }
+
         setActor(actor) {}
     }
 
     class Window_CustomMenuCommand extends Window_CustomMenu {
         makeCommandList() {
-            return this._data.CommandList.filter(data => {
-                return !data.VisibleSwitchId || $gameSwitches.value(data.VisibleSwitchId);
-            });
+            const list = this._data.CommandList;
+            return this.isUseMasking() ? list : list.filter(data => this.isVisible(data));
+        }
+
+        isVisible(data, v, s) {
+            return !data.VisibleSwitchId || $gameSwitches.value(data.VisibleSwitchId);
         }
 
         drawItemSub(item, rect, index) {
@@ -1047,17 +1103,22 @@
     class Window_CustomMenuDataList extends Window_CustomMenu {
         makeCommandList() {
             const v  = $gameVariables.value.bind($gameVariables); // used by eval
+            const s  = $gameSwitches.value.bind($gameSwitches); // used by eval
             let list = eval(this._data.ListScript);
             if (!Array.isArray(list)) {
                 list = [list];
             }
-            if (this._data.FilterScript) {
-                list = list.filter(item => eval(this._data.FilterScript));
+            if (this._data.FilterScript && !this.isUseMasking()) {
+                list = list.filter(item => this.isVisible(item, v, s));
             }
             if (this._data.MappingScript) {
                 list = list.map(item => eval(this._data.MappingScript));
             }
             return list;
+        }
+
+        isVisible(item, v, s) {
+            return eval(this._data.FilterScript)
         }
 
         drawItemSub(item, r, index) {
@@ -1084,6 +1145,8 @@
         }
 
         isEnabledSub(item) {
+            const v  = $gameVariables.value.bind($gameVariables); // used by eval
+            const s  = $gameSwitches.value.bind($gameSwitches); // used by eval
             const script = this._data.IsEnableScript;
             return script ? eval(script) : true;
         }
@@ -1093,6 +1156,20 @@
                 this._actor = actor;
                 this.refresh();
             }
+        }
+
+        drawFace(faceName, faceIndex, x, y, width, height) {
+            const bitmap = ImageManager.loadFace(faceName);
+            bitmap.addLoadListener(() => {
+                super.drawFace(faceName, faceIndex, x, y, width, height);
+            });
+        }
+
+        drawCharacter(characterName, characterIndex, x, y) {
+            const bitmap = ImageManager.loadCharacter(characterName);
+            bitmap.addLoadListener(() => {
+                super.drawCharacter(characterName, characterIndex, x, y);
+            });
         }
     }
 
