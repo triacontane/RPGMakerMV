@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.2 2020/03/28 プリセットのスクリプトに1件追加
  1.2.1 2020/03/26 スイッチによる再描画実行後、当該スイッチにfalseではなく0が入っていたので修正
  1.2.0 2020/03/26 マスキング機能と使用禁止機能を分離し、代わりにフィルタ機能に統合
                   ヘルプの行数を指定できる機能を追加
@@ -296,6 +297,7 @@
  * @option $dataEnemies.filter(data => !!data); // データベースの敵キャラ
  * @option $dataTroops.filter(data => !!data); // データベースの敵グループ
  * @option $dataStates.filter(data => !!data); // データベースのステート
+ * @option $dataItems.concat($dataWeapons, $dataArmors).filter(data => !!data); // アイテム、武器防具
  * @option $dataSystem.weaponTypes.filter((d, i) => i > 0); // 武器タイプ
  * @option $dataSystem.armorTypes.filter((d, i) => i > 0); // 防具タイプ
  * @option $dataSystem.skillTypes.filter((d, i) => i > 0); // スキルタイプ
