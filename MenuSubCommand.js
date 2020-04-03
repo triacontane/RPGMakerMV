@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.2 2020/04/03 2.5.0で適用したMOG_SceneMenu.jsとの競合解消と、2.0.1で適用したMOG_MenuCursor.jsとの競合解消を両立できるよう修正
 // 2.7.1 2020/03/13 Window_MenuCommandの初期化で引数を渡し忘れていたのを修正
 // 2.7.0 2019/10/25 メニューマップと通常マップのピクチャの表示状態を別々に管理できる機能を追加
 // 2.6.1 2019/10/12 2.6.0の修正で、メニューを開いたあと一度もサブコマンドを開かずにメニューを閉じるとエラーになる問題を修正
@@ -785,10 +786,13 @@
         if (typeof this._subMenuWindow.updateBackgroundOpacity === 'function') {
             this._subMenuWindow.updateBackgroundOpacity();
         }
-        // for MOG_MenuCursor.js
-        // v2.5.0で一度、この競合対策を何らかの理由で元に戻しているので弊害が起きる可能性あり
-        var index = this.getChildIndex(this._windowLayer) + 1;
-        this.addChildAt(this._subMenuWindow, index);
+        // for MOG_MenuCursor.js and MOG_SceneMenu.js
+        if (typeof Imported !== 'undefined' && Imported.MMOG_SceneMenu) {
+            this.addChild(this._subMenuWindow);
+        } else {
+            var index = this.getChildIndex(this._windowLayer) + 1;
+            this.addChildAt(this._subMenuWindow, index);
+        }
     };
 
     Scene_Menu.prototype.removeSubMenuCommandWindow = function() {
