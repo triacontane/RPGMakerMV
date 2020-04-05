@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.18.0 2020/04/05 制御文字\v[n, m]で埋められる文字をパラメータから指定できる機能を追加
 // 1.17.0 2020/02/07 背景ウィンドウのスキンを変更できる機能を追加し、ウィンドウビルダーに対応
 // 1.16.0 2020/02/01 複数行表示した場合の行間を指定できる機能を追加
 // 1.15.1 2019/12/29 YEP_PluginCmdSwVar.jsと併用したとき、変数のリアルタイム変換が効かなくなる競合を修正
@@ -80,6 +81,11 @@
  * @dir img/system/
  * @type file
  *
+ * @param padCharacter
+ * @text 埋め文字
+ * @desc 数値描画時、指定桁数に満たないときに埋められる文字です。半角で1文字だけ指定してください。
+ * @default 0
+ *
  * @help 指定した文字列でピクチャを動的に生成するコマンドを提供します。
  * 文字列には各種制御文字（\v[n]等）も使用可能で、制御文字で表示した変数の値が
  * 変更されたときにリアルタイムでピクチャの内容を更新できます。
@@ -110,6 +116,9 @@
  *
  *  例：D_TEXT_SETTING ALIGN 0
  *      D_TEXT_SETTING ALIGN CENTER
+ *
+ * ※ 揃えの設定は複数行を指定したときに最も横幅の大きい行に合わせられます。
+ * 　 よって単一行しか描画しないときは、この設定は機能しません。
  *
  *  D_TEXT_SETTING BG_COLOR [背景色] : 背景色の設定(CSSの色指定と同様の書式)
  *
@@ -150,7 +159,7 @@
  * \}
  *
  * 専用制御文字
- * \V[n,m](m桁分のゼロ埋めした変数の値)
+ * \V[n,m](m桁分のパラメータで指定した文字で埋めた変数の値)
  * \item[n]   n 番のアイテム情報（アイコン＋名称）
  * \weapon[n] n 番の武器情報（アイコン＋名称）
  * \armor[n]  n 番の防具情報（アイコン＋名称）
@@ -533,7 +542,7 @@
     Window_Base.prototype.convertEscapeCharacters = function(text) {
         text = _Window_Base_convertEscapeCharacters.call(this, text);
         text = text.replace(/\x1bV\[(\d+),\s*(\d+)]/gi, function() {
-            return this.getVariablePadZero($gameVariables.value(parseInt(arguments[1], 10)), arguments[2]);
+            return this.getVariablePadCharacter($gameVariables.value(parseInt(arguments[1], 10)), arguments[2]);
         }.bind(this));
         text = text.replace(/\x1bITEM\[(\d+)]/gi, function() {
             var item = $dataItems[getArgNumber(arguments[1], 1, $dataItems.length)];
@@ -569,8 +578,13 @@
         return !param.itemIconSwitchId || $gameSwitches.value(param.itemIconSwitchId);
     };
 
-    Window_Base.prototype.getVariablePadZero = function(value, digit) {
-        return (value < 0 ? '-' : '') + Math.abs(value).padZero(digit);
+    Window_Base.prototype.getVariablePadCharacter = function(value, digit) {
+        var numText = String(Math.abs(value));
+        var pad = String(param.padCharacter) || '0';
+        while (numText.length < digit) {
+            numText = pad + numText;
+        }
+        return (value < 0 ? '-' : '') + numText;
     };
 
     //=============================================================================
