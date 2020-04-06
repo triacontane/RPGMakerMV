@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.4 2020/04/07 NRP_CountTimeBattle.jsと併用したとき、戦闘行動の強制による反撃でコマンド入力が回ってきてしまう競合を修正
 // 1.9.3 2019/12/30 スキルの属性を指定してからタイプを「なし」にした場合でも、スクリプト「action.hasElement」が元々指定していた属性を返してしまう問題を修正
 // 1.9.2 2019/06/09 戦闘行動の強制による反撃を行わない設定のとき、反撃後の自動ステート解除で反撃を有効にするステートを解除した場合、
 //                  反撃による敵の行動キャンセルが行われない問題を修正
@@ -815,5 +816,30 @@ var Imported = Imported || {};
     Window_BattleLog.prototype.waitForAnimation = function() {
         this.setWaitMode('animation');
     };
+
+    // Resolve conflict for NRP_CountTimeBattle.js
+    if (BattleManager.startInputActor) {
+        var _BattleManager_startInput = BattleManager.startInput;
+        BattleManager.startInput = function() {
+            if (this._counterBattlers.length > 0) {
+                this._subject = this.getNextSubject();
+                this._phase = 'action';
+            } else {
+                _BattleManager_startInput.apply(this, arguments);
+            }
+        };
+
+        var _BattleManager_endTurn = BattleManager.endTurn;
+        BattleManager.endTurn = function() {
+            if (this._subject.isCounterSubject()) {
+                this._phase      = 'turnEnd';
+                this._preemptive = false;
+                this._surprise   = false;
+            } else {
+                _BattleManager_endTurn.apply(this, arguments);
+            }
+        }
+    }
 })();
+
 
