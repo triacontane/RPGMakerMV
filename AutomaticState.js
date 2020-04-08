@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2020/04/09 同一ステートに<ASアクター>と<AS敵キャラ>のタグを付けられるよう修正
 // 1.4.1 2019/01/27 AS武器装備およびAS防具装備のタグが敵にも適用される問題を修正
 // 1.4.0 2017/09/13 自動ステート対象をアクター、敵キャラIDで限定するときに複数指定できる機能を追加
 // 1.3.1 2017/08/06 メモリ上にロードされていないアクターの自動ステートチェックが実行されるとエラーになる現象を修正
@@ -275,9 +276,6 @@
     };
 
     Game_BattlerBase.prototype.isAutoStateBattler = function() {
-        if (this.isStateMetaInfo(this.getOppositeBattlerCheckTagIndex())) {
-            return false;
-        }
         var battlerIdValue = this.getStateMetaString(this.getBattlerCheckTagIndex());
         if (!battlerIdValue) {
             return true;
