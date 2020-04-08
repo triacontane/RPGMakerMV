@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.19.0 2020/04/09 フレームウィンドウに余白を指定できる機能を追加
 // 1.18.0 2020/04/05 制御文字\v[n, m]で埋められる文字をパラメータから指定できる機能を追加
 // 1.17.0 2020/02/07 背景ウィンドウのスキンを変更できる機能を追加し、ウィンドウビルダーに対応
 // 1.16.0 2020/02/01 複数行表示した場合の行間を指定できる機能を追加
@@ -80,6 +81,12 @@
  * @require 1
  * @dir img/system/
  * @type file
+ *
+ * @param frameWindowPadding
+ * @text フレームウィンドウ余白
+ * @desc フレームウィンドウの余白です。
+ * @default 18
+ * @type number
  *
  * @param padCharacter
  * @text 埋め文字
@@ -718,7 +725,7 @@
 
     Sprite_Picture.prototype.makeFrameWindow = function(width, height) {
         var padding       = this.hiddenWindow.standardPadding();
-        this._frameWindow = new Window_Base(0, 0, width + padding * 2, height + padding * 2);
+        this._frameWindow = new Window_BackFrame(0, 0, width + padding * 2, height + padding * 2);
         if (param.frameWindowSkin) {
             this._frameWindow.windowskin = ImageManager.loadSystem(param.frameWindowSkin);
         }
@@ -842,6 +849,24 @@
     };
 
     //=============================================================================
+    // Window_BackFrame
+    //  バックフレームウィンドウ
+    //=============================================================================
+    function Window_BackFrame() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_BackFrame.prototype.backOpacity = null;
+
+    Window_BackFrame.prototype             = Object.create(Window_Base.prototype);
+    Window_BackFrame.prototype.constructor = Window_BackFrame;
+
+    Window_BackFrame.prototype.standardPadding = function() {
+        return param.frameWindowPadding;
+    };
+
+
+    //=============================================================================
     // Window_Hidden
     //  文字描画用の隠しウィンドウ
     //=============================================================================
@@ -883,7 +908,6 @@
         } else {
             Window_Base.prototype.resetFontSettings.apply(this, arguments);
         }
-
     };
 
     Window_Hidden.prototype.obtainEscapeParamString = function(textState) {
