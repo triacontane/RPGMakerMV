@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2020/04/14 混乱系のステート有効時は身代わりを発動しないように既存仕様を変更する設定を追加
 // 1.2.0 2019/12/22 身代わりの判定仕様を変更し、身代わり後の反撃や魔法反射できる機能を追加
 // 1.1.0 2018/09/09 身代わりを無効にするスキルやアイテムを直接指定できる機能を追加
 // 1.0.2 2017/08/22 身代わり条件「必中以外」を無効にした場合でも必中攻撃に対する身代わりが発動しない場合がある問題を修正
@@ -33,6 +34,11 @@
  *
  * @param SubstituteCounter
  * @desc 身代わりの判定仕様を変更し、身代わり後の反撃や魔法反射が有効になります。
+ * @default false
+ * @type boolean
+ *
+ * @param InvalidConfused
+ * @desc 混乱（行動制約が「〇〇を攻撃」となっているステート）状態の場合、身代わりの発動を無効化します。
  * @default false
  * @type boolean
  *
@@ -131,6 +137,11 @@
  *
  * @param 身代わり反撃
  * @desc 身代わりの判定仕様を変更し、身代わり後の反撃や魔法反射が有効になります。
+ * @default false
+ * @type boolean
+ *
+ * @param 混乱時の身代わり無効
+ * @desc 混乱（行動制約が「〇〇を攻撃」となっているステート）状態の場合、身代わりの発動を無効化します。
  * @default false
  * @type boolean
  *
@@ -273,6 +284,7 @@
     param.condDying         = getParamBoolean(['CondDying', '身代わり条件_瀕死']);
     param.condNonCertainHit = getParamBoolean(['CondNonCertainHit', '身代わり条件_必中以外']);
     param.substituteCounter = getParamBoolean(['SubstituteCounter', '身代わり反撃']);
+    param.invalidConfused   = getParamBoolean(['InvalidConfused', '混乱時の身代わり無効']);
 
     //=============================================================================
     // Game_BattlerBase
@@ -284,6 +296,9 @@
     };
 
     Game_BattlerBase.prototype.isSubstituteExtend = function() {
+        if (param.invalidConfused && this.isConfused()) {
+            return false;
+        }
         return this.isValidSubstituteHpRate() &&
             (param.condDying || this.isValidSubstituteTargetHpRate()) &&
             this.isValidSubstituteSwitch() &&
