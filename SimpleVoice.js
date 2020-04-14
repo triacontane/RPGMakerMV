@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2020/04/15 1.1.2の修正で同時再生したボイスの停止が動作しない問題を修正
 // 1.1.2 2020/04/08 異なるチャンネルで短い間隔で複数のボイスを再生した場合に、先に再生したボイスが演奏されない問題を修正
 // 1.1.1 2019/01/22 イベント高速化で再生したとき、SV_STOP_VOICEが効かなくなる場合がある問題を修正
 // 1.1.0 2017/07/16 ボイスのチャンネル指定機能を追加。同一チャンネルのボイスが同時再生されないようになります。
@@ -310,8 +311,8 @@
 
     AudioManager.filterPlayingVoice = function() {
         this._voiceBuffers = this._voiceBuffers.filter(function(buffer) {
-            var playing = buffer.isPlaying();
-            if (!playing && buffer.isReady()) {
+            var playing = buffer.isPlaying() || !buffer.isReady();
+            if (!playing) {
                 buffer.stop();
             }
             return playing;
