@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.2 2020/04/15 MOG_BattleHud.jsと併用したとき、フロントビューで味方にポップアップメッセージが表示されるよう変更
 // 1.9.1 2020/03/15 YEP_X_ActSeqPack1.jsでステート付与に成功してもステート付与メッセージがでない不具合を代わりに修正
 // 1.9.0 2020/02/11 ポップアップメッセージが重なったときに次のポップアップまでのウェイトが指定できる機能を追加
 // 1.8.1 2019/02/26 KMS_SomStyleDamage.jsとの競合を解消。こちらのポップアップもKMS_SomStyleDamage.jsと同じ動きをします。
@@ -638,7 +639,8 @@
 
     Sprite_Battler.prototype.setupMessagePopup = function() {
         if (this._battler.isMessagePopupRequested()) {
-            if (this._battler.isSpriteVisible()) {
+            // Resolve conflict for MOG_BattleHud.js
+            if (this._battler.isSpriteVisible() || this._sprite_face) {
                 var sprite = new Sprite_PopupMessage();
                 sprite.x   = this.x + this.messageOffsetX();
                 sprite.y   = this.y + this.messageOffsetY();
