@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.4 2020/04/15 英語版の一部のパラメータの型指定と初期値が日本語版と合っていなかった問題を修正
 // 1.15.3 2019/11/14 通行設定(4方向)の北の方を通行不可にしたタイルに南の中央から侵入すると半歩分は通行可能にもかかわらず通行不可判定されてしまう問題を修正
 // 1.15.2 2019/11/10 PD_8DirDash.jsと組み合わせたとき、斜め方向を向いている状態で一歩前進するとキャラクターが移動先に瞬間移動してしまう競合を解消
 // 1.15.1 2019/11/10 1.15.0の機能で半歩加算と半歩減算のどちらもできるよう修正
@@ -122,43 +123,53 @@
  *
  * @param UpperNpTerrainTag
  * @desc 上半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param UpperNpRegionId
  * @desc 上半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param LowerNpTerrainTag
  * @desc 下半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param LowerNpRegionId
  * @desc 下半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param RightNpTerrainTag
  * @desc 右半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param RightNpRegionId
  * @desc 右半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param LeftNpTerrainTag
  * @desc 左半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param LeftNpRegionId
  * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param AllNpTerrainTag
  * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param AllNpRegionId
  * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
- * @default 0
+ * @default ["0"]
+ * @type number[]
  *
  * @param MultiStartDisable
  * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
