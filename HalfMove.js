@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.0 2020/04/18 右上、右下、左上、左下のみ移動可能な地形、リージョンの設定を追加
 // 1.15.4 2020/04/15 英語版の一部のパラメータの型指定と初期値が日本語版と合っていなかった問題を修正
 // 1.15.3 2019/11/14 通行設定(4方向)の北の方を通行不可にしたタイルに南の中央から侵入すると半歩分は通行可能にもかかわらず通行不可判定されてしまう問題を修正
 // 1.15.2 2019/11/10 PD_8DirDash.jsと組み合わせたとき、斜め方向を向いている状態で一歩前進するとキャラクターが移動先に瞬間移動してしまう競合を解消
@@ -161,6 +162,46 @@
  * @default ["0"]
  * @type number[]
  *
+ * @param RightUpNpTerrainTag
+ * @desc タイルの右上のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param RightUpNpRegionId
+ * @desc タイルの右上のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param RightDownNpTerrainTag
+ * @desc タイルの右下のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param RightDownNpRegionId
+ * @desc タイルの右下のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param LeftUpNpTerrainTag
+ * @desc タイルの左上のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param LeftUpNpRegionId
+ * @desc タイルの左上のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param LeftDownNpTerrainTag
+ * @desc タイルの左下のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param LeftDownNpRegionId
+ * @desc タイルの左下のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
  * @param AllNpTerrainTag
  * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default ["0"]
@@ -292,6 +333,46 @@
  *
  * @param 左半分移動不可Region
  * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param 右上移動不可地形
+ * @desc タイルの右上のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param 右上移動不可Region
+ * @desc タイルの右上のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param 右下移動不可地形
+ * @desc タイルの右下のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param 右下移動不可Region
+ * @desc タイルの右下のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param 左上移動不可地形
+ * @desc タイルの左上のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param 左上移動不可Region
+ * @desc タイルの左上のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param 左下移動不可地形
+ * @desc タイルの左下のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @default ["0"]
+ * @type number[]
+ *
+ * @param 左下移動不可Region
+ * @desc タイルの左下のみ通行不可となるリージョンIDです。0を指定すると無効になります。
  * @default ["0"]
  * @type number[]
  *
@@ -530,26 +611,34 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramDirection8Move     = getParamBoolean(['Direction8Move', '8方向移動']);
-    var paramEventThrough       = getParamBoolean(['EventThrough', 'イベントすり抜け']);
-    var paramDisableForcing     = getParamBoolean(['DisableForcing', '強制中無効']);
-    var paramAvoidCorner        = getParamBoolean(['AvoidCorner', '角回避']);
-    var paramDiagonalSlow       = getParamBoolean(['DiagonalSlow', '斜め移動中減速']);
-    var paramTriggerExpansion   = getParamBoolean(['TriggerExpansion', 'トリガー拡大']);
-    var paramAdjustmentRealStep = getParamBoolean(['AdjustmentRealStep', '実歩数調整']);
-    var paramUpperNpTerrainTag  = getParamArrayNumber(['UpperNpTerrainTag', '上半分移動不可地形']);
-    var paramUpperNpRegionId    = getParamArrayNumber(['UpperNpRegionId', '上半分移動不可Region']);
-    var paramLowerNpTerrainTag  = getParamArrayNumber(['LowerNpTerrainTag', '下半分移動不可地形']);
-    var paramLowerNpRegionId    = getParamArrayNumber(['LowerNpRegionId', '下半分移動不可Region']);
-    var paramRightNpTerrainTag  = getParamArrayNumber(['RightNpTerrainTag', '右半分移動不可地形']);
-    var paramRightNpRegionId    = getParamArrayNumber(['RightNpRegionId', '右半分移動不可Region']);
-    var paramLeftNpTerrainTag   = getParamArrayNumber(['LeftNpTerrainTag', '左半分移動不可地形']);
-    var paramLeftNpRegionId     = getParamArrayNumber(['LeftNpRegionId', '左半分移動不可Region']);
-    var paramAllNpTerrainTag    = getParamArrayNumber(['AllNpTerrainTag', '全方向移動不可地形']);
-    var paramAllNpRegionId      = getParamArrayNumber(['AllNpRegionId', '全方向移動不可Region']);
-    var paramMultiStartDisable  = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
-    var paramEventOverlap       = getParamBoolean(['EventOverlap', 'イベント位置重複OK']);
-    var param8MoveSwitch        = getParamNumber(['8MoveSwitch', '8方向移動スイッチ'], 0);
+    var paramDirection8Move        = getParamBoolean(['Direction8Move', '8方向移動']);
+    var paramEventThrough          = getParamBoolean(['EventThrough', 'イベントすり抜け']);
+    var paramDisableForcing        = getParamBoolean(['DisableForcing', '強制中無効']);
+    var paramAvoidCorner           = getParamBoolean(['AvoidCorner', '角回避']);
+    var paramDiagonalSlow          = getParamBoolean(['DiagonalSlow', '斜め移動中減速']);
+    var paramTriggerExpansion      = getParamBoolean(['TriggerExpansion', 'トリガー拡大']);
+    var paramAdjustmentRealStep    = getParamBoolean(['AdjustmentRealStep', '実歩数調整']);
+    var paramUpperNpTerrainTag     = getParamArrayNumber(['UpperNpTerrainTag', '上半分移動不可地形']);
+    var paramUpperNpRegionId       = getParamArrayNumber(['UpperNpRegionId', '上半分移動不可Region']);
+    var paramLowerNpTerrainTag     = getParamArrayNumber(['LowerNpTerrainTag', '下半分移動不可地形']);
+    var paramLowerNpRegionId       = getParamArrayNumber(['LowerNpRegionId', '下半分移動不可Region']);
+    var paramRightNpTerrainTag     = getParamArrayNumber(['RightNpTerrainTag', '右半分移動不可地形']);
+    var paramRightNpRegionId       = getParamArrayNumber(['RightNpRegionId', '右半分移動不可Region']);
+    var paramLeftNpTerrainTag      = getParamArrayNumber(['LeftNpTerrainTag', '左半分移動不可地形']);
+    var paramLeftNpRegionId        = getParamArrayNumber(['LeftNpRegionId', '左半分移動不可Region']);
+    var paramAllNpTerrainTag       = getParamArrayNumber(['AllNpTerrainTag', '全方向移動不可地形']);
+    var paramAllNpRegionId         = getParamArrayNumber(['AllNpRegionId', '全方向移動不可Region']);
+    var paramMultiStartDisable     = getParamBoolean(['MultiStartDisable', 'イベント複数起動防止']);
+    var paramEventOverlap          = getParamBoolean(['EventOverlap', 'イベント位置重複OK']);
+    var param8MoveSwitch           = getParamNumber(['8MoveSwitch', '8方向移動スイッチ'], 0);
+    var paramRightUpNpTerrainTag   = getParamArrayNumber(['RightUpNpTerrainTag', '右上移動不可地形']);
+    var paramRightUpNpRegionId     = getParamArrayNumber(['RightUpNpRegionId', '右上移動不可Region']);
+    var paramRightDownNpTerrainTag = getParamArrayNumber(['RightDownNpTerrainTag', '右下移動不可地形']);
+    var paramRightDownNpRegionId   = getParamArrayNumber(['RightDownNpRegionId', '右下移動不可Region']);
+    var paramLeftUpNpTerrainTag    = getParamArrayNumber(['LeftUpNpTerrainTag', '左上移動不可地形']);
+    var paramLeftUpNpRegionId      = getParamArrayNumber(['LeftUpNpRegionId', '左上移動不可Region']);
+    var paramLeftDownNpTerrainTag  = getParamArrayNumber(['LeftDownNpTerrainTag', '左下移動不可地形']);
+    var paramLeftDownNpRegionId    = getParamArrayNumber(['LeftDownNpRegionId', '左下移動不可Region']);
 
     //=============================================================================
     // ローカル変数
@@ -680,29 +769,90 @@
         });
     };
 
+    Game_Map.prototype.isPassableByHalfRegionAndTag = function(floatX, floatY) {
+        var halfX = this.isHalfPos(floatX);
+        var halfY = this.isHalfPos(floatY);
+        var x = Math.floor(floatX);
+        var y = Math.ceil(floatY);
+        if (this.isAllNp(x, y)) {
+            return false;
+        }
+        if (halfX) {
+            if (this.isRightNp(x, y)) {
+                return false;
+            } else if (!halfY && this.isRightLowerNp(x, y)) {
+                return false;
+            } else if (halfY && this.isRightUpperNp(x, y)) {
+                return false;
+            }
+        } else {
+            if (this.isLeftNp(x, y)) {
+                return false;
+            } else if (!halfY && this.isLeftLowerNp(x, y)) {
+                return false;
+            } else if (halfY && this.isLeftUpperNp(x, y)) {
+                return false;
+            }
+        }
+        if (halfY) {
+            if (this.isUpperNp(x, y)) {
+                return false;
+            } else if (halfX && this.isRightUpperNp(x, y)) {
+                return false;
+            } else if (!halfX && this.isLeftUpperNp(x, y)) {
+                return false;
+            }
+        } else {
+            if (this.isLowerNp(x, y)) {
+                return false;
+            } else if (halfX && this.isRightLowerNp(x, y)) {
+                return false;
+            } else if (!halfX && this.isLeftLowerNp(x, y)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     Game_Map.prototype.isUpperNp = function(x, y) {
-        return this.isIncludeTerrainTag(x, y, paramUpperNpTerrainTag) ||
-            this.isIncludeRegionId(x, y, paramUpperNpRegionId);
+        return this.isNoPathByRegionAndTag(x, y, paramUpperNpTerrainTag, paramUpperNpRegionId);
     };
 
     Game_Map.prototype.isLowerNp = function(x, y) {
-        return this.isIncludeTerrainTag(x, y, paramLowerNpTerrainTag) ||
-            this.isIncludeRegionId(x, y, paramLowerNpRegionId);
+        return this.isNoPathByRegionAndTag(x, y, paramLowerNpTerrainTag, paramLowerNpRegionId);
     };
 
     Game_Map.prototype.isRightNp = function(x, y) {
-        return this.isIncludeTerrainTag(x, y, paramRightNpTerrainTag) ||
-            this.isIncludeRegionId(x, y, paramRightNpRegionId);
+        return this.isNoPathByRegionAndTag(x, y, paramRightNpTerrainTag, paramRightNpRegionId);
     };
 
     Game_Map.prototype.isLeftNp = function(x, y) {
-        return this.isIncludeTerrainTag(x, y, paramLeftNpTerrainTag) ||
-            this.isIncludeRegionId(x, y, paramLeftNpRegionId);
+        return this.isNoPathByRegionAndTag(x, y, paramLeftNpTerrainTag, paramLeftNpRegionId);
+    };
+
+    Game_Map.prototype.isRightUpperNp = function(x, y) {
+        return this.isNoPathByRegionAndTag(x, y, paramRightUpNpTerrainTag, paramRightUpNpRegionId);
+    };
+
+    Game_Map.prototype.isLeftUpperNp = function(x, y) {
+        return this.isNoPathByRegionAndTag(x, y, paramLeftUpNpTerrainTag, paramLeftUpNpRegionId);
+    };
+
+    Game_Map.prototype.isRightLowerNp = function(x, y) {
+        return this.isNoPathByRegionAndTag(x, y, paramRightDownNpTerrainTag, paramRightDownNpRegionId);
+    };
+
+    Game_Map.prototype.isLeftLowerNp = function(x, y) {
+        return this.isNoPathByRegionAndTag(x, y, paramLeftDownNpTerrainTag, paramLeftDownNpRegionId);
+    };
+
+    Game_Map.prototype.isNoPathByRegionAndTag = function(x, y, terrainParam, regionParam) {
+        return this.isIncludeTerrainTag(x, y, terrainParam) ||
+            this.isIncludeRegionId(x, y, regionParam);
     };
 
     Game_Map.prototype.isAllNp = function(x, y) {
-        return this.isIncludeTerrainTag(x, y, paramAllNpTerrainTag) ||
-            this.isIncludeRegionId(x, y, paramAllNpRegionId);
+        return this.isNoPathByRegionAndTag(x, y, paramAllNpTerrainTag, paramAllNpRegionId);
     };
 
     Game_Map.prototype.isIncludeTerrainTag = function(x, y, tags) {
@@ -885,147 +1035,21 @@
             }
         }
         if (this.isHalfMove()) {
-            result = result && !this.isUpperNoPassable(x, y, d) && !this.isLowerNoPassable(x, y, d) &&
-                !this.isRightNoPassable(x, y, d) && !this.isLeftNoPassable(x, y, d) && !this.isAllNoPassable(x, y, d);
+            result = result && this.isMapPassableByHalfRegionAndTag(x, y, d);
         }
         localHalfPositionCount = halfPositionCount;
         return result;
     };
 
-    Game_CharacterBase.prototype.isUpperNoPassable = function(x, y, d) {
-        var result = false;
-        if (d === 8) {
-            if (!this.isHalfPosY(y)) {
-                if (this.isHalfPosX(x)) {
-                    var xLeft1  = $gameMap.roundHalfXWithDirection(x, 4);
-                    var xRight1 = $gameMap.roundHalfXWithDirection(x, 6);
-                    result      = $gameMap.isUpperNp(xLeft1, y) || $gameMap.isUpperNp(xRight1, y);
-                } else {
-                    result = $gameMap.isUpperNp(x, y);
-                }
-            }
-        } else if (d === 4 || d === 6) {
-            if (!this.isHalfPosY(x) && this.isHalfPosX(y)) {
-                var x1 = $gameMap.roundNoHalfXWithDirection(x, d);
-                var y1 = $gameMap.roundHalfYWithDirection(y, 2);
-                return $gameMap.isUpperNp(x1, y1);
-            }
-        } else {
-            var y2 = $gameMap.roundNoHalfYWithDirection(y, d);
-            if (!this.isHalfPosY(y)) {
-                if (this.isHalfPosX(x)) {
-                    var xLeft2  = $gameMap.roundHalfXWithDirection(x, 4);
-                    var xRight2 = $gameMap.roundHalfXWithDirection(x, 6);
-                    result      = $gameMap.isUpperNp(xLeft2, y2) || $gameMap.isUpperNp(xRight2, y2);
-                } else {
-                    result = $gameMap.isUpperNp(x, y2);
-                }
-            }
+    Game_CharacterBase.prototype.isMapPassableByHalfRegionAndTag = function(x, y, d) {
+        var targetX = $gameMap.roundHalfXWithDirection(x, d);
+        var targetY = $gameMap.roundHalfYWithDirection(y, d);
+        if (!$gameMap.isPassableByHalfRegionAndTag(targetX, targetY)) {
+            return false;
+        } else if (!$gameMap.isPassableByHalfRegionAndTag(targetX + Game_Map.tileUnit, targetY)) {
+            return false;
         }
-        return result;
-    };
-
-    Game_CharacterBase.prototype.isLowerNoPassable = function(x, y, d) {
-        var result = false;
-        if (d === 8) {
-            if (!this.isHalfPosY(y)) {
-                if (this.isHalfPosX(x)) {
-                    var xLeft1  = $gameMap.roundHalfXWithDirection(x, 4);
-                    var xRight1 = $gameMap.roundHalfXWithDirection(x, 6);
-                    result      = $gameMap.isLowerNp(xLeft1, y) || $gameMap.isLowerNp(xRight1, y);
-                } else {
-                    result = $gameMap.isLowerNp(x, y);
-                }
-            } else {
-                var y3 = $gameMap.roundHalfYWithDirection(y, d);
-                result = $gameMap.isLowerNp(x, y3);
-            }
-        } else if (d === 4 || d === 6) {
-            if (!this.isHalfPosY(x) && !this.isHalfPosX(y)) {
-                var x1 = $gameMap.roundNoHalfXWithDirection(x, d);
-                return $gameMap.isLowerNp(x1, y);
-            }
-        } else {
-            if (this.isHalfPosY(y)) {
-                var y2 = $gameMap.roundHalfYWithDirection(y, d);
-                if (this.isHalfPosX(x)) {
-                    var xLeft2  = $gameMap.roundHalfXWithDirection(x, 4);
-                    var xRight2 = $gameMap.roundHalfXWithDirection(x, 6);
-                    result      = $gameMap.isLowerNp(xLeft2, y2) || $gameMap.isLowerNp(xRight2, y2);
-                } else {
-                    result = $gameMap.isLowerNp(x, y2);
-                }
-            }
-        }
-        return result;
-    };
-
-    Game_CharacterBase.prototype.isRightNoPassable = function(x, y, d) {
-        var result = false, x1, y1;
-        if ((d === 4 && !this.isHalfPosX(x)) || (d === 6 && this.isHalfPosX(x))) {
-            x1 = $gameMap.roundHalfXWithDirection(x, d);
-            if (this.isHalfPosY(y)) {
-                y1     = $gameMap.roundHalfYWithDirection(y, 2);
-                result = $gameMap.isRightNp(x1, y1);
-            } else {
-                result = $gameMap.isRightNp(x1, y);
-            }
-        } else if ((d === 2 && !this.isHalfPosY(y) || (d === 8 && this.isHalfPosY(y)))) {
-            y1 = $gameMap.roundHalfYWithDirection(y, d);
-            if (this.isHalfPosX(x)) {
-                x1     = $gameMap.roundHalfXWithDirection(x, 4);
-                result = $gameMap.isRightNp(x1, y1);
-            } else {
-                result = $gameMap.isRightNp(x, y1);
-            }
-        }
-        return result;
-    };
-
-    Game_CharacterBase.prototype.isLeftNoPassable = function(x, y, d) {
-        var result = false, x1, y1;
-        if ((d === 4 && this.isHalfPosX(x)) || (d === 6 && !this.isHalfPosX(x))) {
-            x1 = $gameMap.roundHalfXWithDirection(x, d);
-            if (this.isHalfPosY(y)) {
-                y1     = $gameMap.roundHalfYWithDirection(y, 2);
-                result = $gameMap.isLeftNp(x1, y1);
-            } else {
-                result = $gameMap.isLeftNp(x1, y);
-            }
-        } else if ((d === 2 && !this.isHalfPosY(y) || (d === 8 && this.isHalfPosY(y)))) {
-            y1 = $gameMap.roundHalfYWithDirection(y, d);
-            if (this.isHalfPosX(x)) {
-                x1     = $gameMap.roundHalfXWithDirection(x, 6);
-                result = $gameMap.isLeftNp(x1, y1);
-            } else {
-                result = $gameMap.isLeftNp(x, y1);
-            }
-        }
-        return result;
-    };
-
-    Game_CharacterBase.prototype.isAllNoPassable = function(x, y, d) {
-        var result = false, x1, y1;
-        if (!this.isHalfPosX(x) && (d === 4 || d === 6)) {
-            x1 = $gameMap.roundXWithDirection(x, d);
-            if (this.isHalfPosY(y)) {
-                y1     = $gameMap.roundHalfYWithDirection(y, 2);
-                var y2 = $gameMap.roundHalfYWithDirection(y, 8);
-                result = $gameMap.isAllNp(x1, y1) || $gameMap.isAllNp(x1, y2);
-            } else {
-                result = $gameMap.isAllNp(x1, y);
-            }
-        } else if (!this.isHalfPosX(y) && (d === 2 || d === 8)) {
-            y1 = $gameMap.roundYWithDirection(y, d);
-            if (this.isHalfPosX(x)) {
-                x1     = $gameMap.roundHalfXWithDirection(x, 4);
-                var x2 = $gameMap.roundHalfXWithDirection(x, 6);
-                result = $gameMap.isAllNp(x1, y1) || $gameMap.isAllNp(x2, y1);
-            } else {
-                result = $gameMap.isAllNp(x, y1);
-            }
-        }
-        return result;
+        return true;
     };
 
     Game_CharacterBase.prototype.isHalfPosX = function(x) {
@@ -1574,8 +1598,8 @@
         var metaValue          = getMetaValues(this.event(), ['TriggerExpansion', 'トリガー拡大']);
         this._triggerExpansion = metaValue ? getArgBoolean(metaValue) : paramTriggerExpansion;
         this._expansionArea    = this.getExpansionArea();
-        var halfX = getMetaValues(this.event(), ['初期半歩X', 'InitialHalfX']);
-        var halfY = getMetaValues(this.event(), ['初期半歩Y', 'InitialHalfY']);
+        var halfX              = getMetaValues(this.event(), ['初期半歩X', 'InitialHalfX']);
+        var halfY              = getMetaValues(this.event(), ['初期半歩Y', 'InitialHalfY']);
         if (halfX || halfY) {
             this.initHalfPos(halfX, halfY);
         }
