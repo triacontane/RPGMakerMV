@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2020/04/22 各画像に拡大率を設定できる設定を追加
 // 1.8.1 2019/11/10 1.8.0でZ座標の指定された装備、ステート画像を複数表示すると、アクター追加画像の表示順が入れ替わる場合がある問題を修正
 // 1.8.0 2019/11/02 装備品以外にもステートや職業でも追加画像を表示できる機能を追加
 // 1.7.4 2019/01/02 MOG_SceneMenu.jsと併用した場合、アイテムを使用時に2回使用してしまう場合がある問題を修正
@@ -115,6 +116,10 @@
  * <SBIImage:file>  # /img/pictures/file.pngが表示されます。
  * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
  * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
+ * <SBI画像拡大率X:100>  # 画像の横方向の拡大率を設定します。
+ * <SBIImageScaleX:100> # 同上
+ * <SBI画像拡大率Y:100>  # 画像の縦方向の拡大率を設定します。
+ * <SBIImageScaleY:100> # 同上
  *
  * さらに以下のメモ欄で追加差分を複数表示することが可能です。
  * <SBI追加画像1:file2>       # /img/pictures/file2.pngが表示されます。
@@ -125,6 +130,10 @@
  * <SBIAddPosX1:30>           # 同上
  * <SBI追加座標Y1:30>         # 追加画像のY座標を[30]に設定します。
  * <SBIAddPosY1:30>           # 同上
+ * <SBI追加座標拡大率X1:100>   # 追加画像の横方向の拡大率を設定します。
+ * <SBIAddPosScaleX1:100>     # 同上
+ * <SBI追加座標拡大率Y1:100>   # 追加画像の縦方向の拡大率を設定します。
+ * <SBIAddPosScaleY1:100>     # 同上
  * 複数の追加画像を表示したい場合は最後の数字を[2]以降に変更してください。
  *
  * 指定する座標はベース画像の足下からの相対座標です。
@@ -152,6 +161,10 @@
  * <SBI座標Z:3>     # 装備品画像のZ座標を[3]に設定します。
  * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
  * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
+ * <SBIScaleX:100>   # 装備品画像の横方向の拡大率を設定します。
+ * <SBI拡大率X:100>   # 同上
+ * <SBIScaleY:100>   # 装備品画像の縦方向の拡大率を設定します。
+ * <SBI拡大率Y:100>   # 同上
  *
  * 指定する座標はベース画像の足下からの相対座標です。
  *
@@ -262,9 +275,13 @@
  * アクターのメモ欄に以下の通り指定してください。
  *
  * <SBI画像:file>   # /img/pictures/file.pngが表示されます。
- * <SBIImage:file>  # /img/pictures/file.pngが表示されます。
+ * <SBIImage:file>  # 同上
  * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
  * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
+ * <SBI画像拡大率X:100>  # 画像の横方向の拡大率を設定します。
+ * <SBIImageScaleX:100> # 同上
+ * <SBI画像拡大率Y:100>  # 画像の縦方向の拡大率を設定します。
+ * <SBIImageScaleY:100> # 同上
  *
  * さらに以下のメモ欄で追加差分を複数表示することが可能です。
  * <SBI追加画像1:file2>       # /img/pictures/file2.pngが表示されます。
@@ -275,6 +292,11 @@
  * <SBIAddPosX1:30>           # 同上
  * <SBI追加座標Y1:30>         # 追加画像のY座標を[30]に設定します。
  * <SBIAddPosY1:30>           # 同上
+ * <SBI追加座標拡大率X1:100>   # 追加画像の横方向の拡大率を設定します。
+ * <SBIAddPosScaleX1:100>     # 同上
+ * <SBI追加座標拡大率Y1:100>   # 追加画像の縦方向の拡大率を設定します。
+ * <SBIAddPosScaleY1:100>     # 同上
+ *
  * 複数の追加画像を表示したい場合は最後の数字を[2]以降に変更してください。
  *
  * 指定する座標はベース画像の足下からの相対座標です。
@@ -302,6 +324,10 @@
  * <SBI座標Z:3>     # 装備品画像のZ座標を[3]に設定します。
  * <SBI矩形:0,0,100,100> # 画像を指定した矩形(X座標、Y座標、横幅、高さ)で
  * <SBIRect:0,0,100,100> # 切り出して（トリミング）表示します。(カンマ区切り)
+ * <SBIScaleX:100>   # 装備品画像の横方向の拡大率を設定します。
+ * <SBI拡大率X:100>   # 同上
+ * <SBIScaleY:100>   # 装備品画像の縦方向の拡大率を設定します。
+ * <SBI拡大率Y:100>   # 同上
  *
  * 指定する座標はベース画像の足下からの相対座標です。
  *
@@ -473,6 +499,19 @@
         return this._bustImageName || this.getMetaInfoForBustImage(['画像', 'Image']);
     };
 
+    Game_Actor.prototype.getBustImageData = function() {
+        var name = this.getBustImageName();
+        if (!name) {
+            return null;
+        }
+        return {
+            name  : name,
+            scaleX: parseInt(this.getMetaInfoForBustImage(['画像拡大率X', 'ImageScaleX'])),
+            scaleY: parseInt(this.getMetaInfoForBustImage(['画像拡大率Y', 'ImageScaleY'])),
+            rect  : this.getBustImageRect()
+        }
+    };
+
     Game_Actor.prototype.getBustImageRect = function() {
         var rectString = this.getMetaInfoForBustImage(['矩形', 'Rect']);
         var rect       = rectString ? getArgArrayEval(rectString, 0) : null;
@@ -494,12 +533,14 @@
         if (!fileName) {
             return null;
         }
-        var additionalImage      = {};
-        additionalImage.fileName = getArgString(fileName);
-        additionalImage.cond     = getArgString(this.getMetaInfoForBustImage(['追加条件' + index, 'AddCond' + index]));
-        additionalImage.x        = getArgNumber(this.getMetaInfoForBustImage(['追加座標X' + index, 'AddPosX' + index]));
-        additionalImage.y        = getArgNumber(this.getMetaInfoForBustImage(['追加座標Y' + index, 'AddPosY' + index]));
-        return additionalImage;
+        var image      = {};
+        image.fileName = getArgString(fileName);
+        image.cond     = getArgString(this.getMetaInfoForBustImage(['追加条件' + index, 'AddCond' + index]));
+        image.x        = getArgNumber(this.getMetaInfoForBustImage(['追加座標X' + index, 'AddPosX' + index]));
+        image.y        = getArgNumber(this.getMetaInfoForBustImage(['追加座標Y' + index, 'AddPosY' + index]));
+        image.scaleX   = getArgNumber(this.getMetaInfoForBustImage(['追加座標拡大率X' + index, 'AddPosScaleX' + index]));
+        image.scaleY   = getArgNumber(this.getMetaInfoForBustImage(['追加座標拡大率Y' + index, 'AddPosScaleY' + index]));
+        return image;
     };
 
     Game_Actor.prototype.getAdditionalBustImageList = function() {
@@ -722,11 +763,21 @@
     };
 
     Sprite_Bust.prototype.drawMain = function() {
-        var fileName = this._actor.getBustImageName();
-        this.bitmap  = (fileName ? ImageManager.loadPicture(getArgString(fileName), 0) : null);
-        var rect     = this._actor.getBustImageRect();
+        var data = this._actor.getBustImageData();
+        if (!data) {
+            this.bitmap = null;
+            return;
+        }
+        this.bitmap = ImageManager.loadPicture(getArgString(data.name), 0);
+        var rect    = data.rect;
         if (rect) {
             this.setFrame(rect.x, rect.y, rect.width, rect.height);
+        }
+        if (data.scaleX) {
+            this.scale.x = data.scaleX / 100;
+        }
+        if (data.scaleY) {
+            this.scale.y = data.scaleY / 100;
         }
     };
 
@@ -806,6 +857,14 @@
                 var rect = getArgArrayEval(rectString, 0);
                 sprite.setFrame(rect[0], rect[1], rect[2], rect[3]);
             }
+            var scaleX = getMetaValues(traitObj, ['ScaleX', '拡大率X']);
+            if (scaleX) {
+                sprite.scale.x = getArgNumber(scaleX) / 100;
+            }
+            var scaleY = getMetaValues(traitObj, ['ScaleY', '拡大率Y']);
+            if (scaleY) {
+                sprite.scale.y = getArgNumber(scaleY) / 100;
+            }
             this.parent.addChild(sprite);
             this._equipSprites.push(sprite);
         }
@@ -822,6 +881,12 @@
         sprite.x        = this.x + image.x;
         sprite.y        = this.y + image.y;
         sprite.z        = 0;
+        if (image.scaleX) {
+            sprite.scale.x = image.scaleX / 100;
+        }
+        if (image.scaleY) {
+            sprite.scale.y = image.scaleY / 100;
+        }
         this.parent.addChild(sprite);
         this._additonalSprite.push(sprite);
     };
