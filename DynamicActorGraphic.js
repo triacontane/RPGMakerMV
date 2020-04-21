@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2020/04/21 NpcFollower.jsと併用したときに発生する循環参照を解消
 // 1.2.1 2018/11/18 ヘルプの記述を修正
 // 1.2.0 2018/11/18 プレイヤーの残MPに応じてグラフィックを変更する機能を追加
 // 1.1.0 2017/05/24 特定のスイッチがONのときにグラフィックを変更する機能を追加
@@ -178,7 +179,7 @@
         this.refreshCustomGraphicForHpRate();
         this.refreshCustomGraphicForMpRate();
         this.refreshCustomGraphicForSwitch();
-        $gamePlayer.refresh();
+        $gamePlayer.requestRefresh();
     };
 
     Game_Actor.prototype.refreshCustomGraphicForState = function() {
@@ -290,6 +291,24 @@
     Game_Actor.prototype.battlerName = function() {
         return this._battlerNameCustom || _Game_Actor_battlerName.apply(this, arguments);
     };
+
+    //=============================================================================
+    // Game_Player
+    //  リフレッシュ要求に応じてリフレッシュします。
+    //=============================================================================
+    var _Game_Player_update = Game_Player.prototype.update;
+    Game_Player.prototype.update = function() {
+        _Game_Player_update.apply(this, arguments);
+        if (this._needsRefresh) {
+            this._needsRefresh = false;
+            this.refresh();
+        }
+    };
+
+    Game_Player.prototype.requestRefresh = function() {
+        this._needsRefresh = true;
+    };
+
 
     //=============================================================================
     // Game_Party
