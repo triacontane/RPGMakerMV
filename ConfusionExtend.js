@@ -1,11 +1,12 @@
 //=============================================================================
 // ConfusionExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2020/04/22 混乱スキルのターゲットが「敵n体ランダム」のとき全体攻撃になってしまう問題を修正
 // 1.4.0 2017/10/07 混乱スキルのターゲット選択方法にラストターゲット(直前に選択した対象)を追加しました。
 // 1.3.0 2017/06/10 制約「敵を攻撃」の場合に味方対象スキルを実行した場合、対象を味方にするよう修正
 //                  使用可能スキルに除外設定を追加
@@ -394,7 +395,20 @@
         if (this.isForUser()) {
             return this.subject();
         }
-        return this.isConfusionSkillTargetForFriend() ? this.targetsForFriends() : this.targetsForOpponents();
+        return this.isConfusionSkillTargetForFriend() ? this.targetsForConfusionFriends() : this.targetsForOpponents();
+    };
+
+    Game_Action.prototype.targetsForConfusionFriends = function() {
+        if (this.isForRandom()) {
+            var targets = [];
+            var unit = this.friendsUnit();
+            for (var i = 0; i < this.numTargets(); i++) {
+                targets.push(unit.randomTarget());
+            }
+            return targets;
+        } else {
+            return this.targetsForFriends();
+        }
     };
 
     Game_Action.prototype.isConfusionSkillTargetForFriend = function() {
