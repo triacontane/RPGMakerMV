@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/04/23 計算式で使用者[a]と対象者[b]のローカル変数が正常に機能していなかった問題を修正
  1.0.0 2018/07/08 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -174,6 +175,8 @@
 
     var _Game_Action_itemHit = Game_Action.prototype.itemHit;
     Game_Action.prototype.itemHit = function(target) {
+        var a = this.subject();
+        var b = target;
         var d = _Game_Action_itemHit.apply(this, arguments);
         if (this.isPhysical() && param.formulaPhysicalHit !== '') {
             return eval(convertEscapeCharacters(param.formulaPhysicalHit));
@@ -185,6 +188,8 @@
 
     var _Game_Action_itemEva = Game_Action.prototype.itemEva;
     Game_Action.prototype.itemEva = function(target) {
+        var a = this.subject();
+        var b = target;
         var d = _Game_Action_itemEva.apply(this, arguments);
         if (this.isPhysical() && param.formulaPhysicalEvasion !== '') {
             return eval(convertEscapeCharacters(param.formulaPhysicalEvasion));
