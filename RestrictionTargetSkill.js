@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2020/04/24 選択できないバトラーを無効表示する機能を追加
 // 1.1.10 2018/06/04 DeadOrAliveItem.jsとの競合を解消
 // 1.1.9 2018/02/28 選択可能対象が存在しないスキルは、敵キャラの使用スキルから除外するよう修正
 // 1.1.8 2018/02/27 スクリプトに関するヘルプの記述が間違っていたので修正
@@ -180,6 +181,18 @@
         var trialAction = new Game_Action(this, false);
         trialAction.setItemObject(item);
         return trialAction.isExistTarget();
+    };
+
+    Game_Battler.prototype.deactivateSelect = function() {
+        this._deactivateSelect = true;
+    };
+
+    Game_Battler.prototype.activateSelect = function() {
+        this._deactivateSelect = false;
+    };
+
+    Game_Battler.prototype.isActivateSelect = function() {
+        return !this._deactivateSelect;
     };
 
     Game_BattlerBase.prototype.canSelectTarget = function(item, user) {
@@ -386,13 +399,18 @@
         return this.getMember(index).canSelectTarget(item, user);
     };
 
+    Window_Selectable.prototype.deactivateBatter = function(index) {
+        this.changePaintOpacity(false);
+        this.getMember(index).deactivateSelect();
+    };
+
     //=============================================================================
     // Window_BattleActor
     //  無効な対象は選択不可能にします。
     //=============================================================================
     Window_BattleActor.prototype.drawItem = function(index) {
         if (!this.canSelectSkillTarget(index)) {
-            this.changePaintOpacity(false);
+            this.deactivateBatter(index);
         }
         Window_BattleStatus.prototype.drawItem.apply(this, arguments);
         this.changePaintOpacity(true);
@@ -412,6 +430,14 @@
         return $gameParty.members()[index];
     };
 
+    var _Window_BattleActor_hide = Window_BattleActor.prototype.hide;
+    Window_BattleActor.prototype.hide = function() {
+        _Window_BattleActor_hide.apply(this, arguments);
+        $gameParty.members().forEach(function(actor) {
+            actor.activateSelect();
+        });
+    };
+
     //=============================================================================
     // Window_BattleEnemy
     //  無効な対象は選択不可能にします。
@@ -419,7 +445,7 @@
     var _Window_BattleEnemy_drawItem      = Window_BattleEnemy.prototype.drawItem;
     Window_BattleEnemy.prototype.drawItem = function(index) {
         if (!this.canSelectSkillTarget(index)) {
-            this.changePaintOpacity(false);
+            this.deactivateBatter(index);
         }
         _Window_BattleEnemy_drawItem.apply(this, arguments);
         this.changePaintOpacity(true);
@@ -430,6 +456,16 @@
 
     Window_BattleEnemy.prototype.getMember = function(index) {
         return this._enemies[index];
+    };
+
+    var _Window_BattleEnemy_hide = Window_BattleEnemy.prototype.hide;
+    Window_BattleEnemy.prototype.hide = function() {
+        _Window_BattleEnemy_hide.apply(this, arguments);
+        if (this._enemies) {
+            this._enemies.forEach(function(enemy) {
+                enemy.activateSelect();
+            });
+        }
     };
 
     //=============================================================================
@@ -468,5 +504,22 @@
 
     Window_MenuActor.prototype.isCurrentItemEnabled = Window_BattleActor.prototype.isCurrentItemEnabled;
     Window_MenuActor.prototype.getMember            = Window_BattleActor.prototype.getMember;
+
+    //=============================================================================
+    // Sprite_Battler
+    //  選択できないバトラーを無効表示します。
+    //=============================================================================
+    var _Sprite_Battler_updateSelectionEffect = Sprite_Battler.prototype.updateSelectionEffect;
+    Sprite_Battler.prototype.updateSelectionEffect = function() {
+        _Sprite_Battler_updateSelectionEffect.apply(this, arguments);
+        var target = this._effectTarget;
+        if (!this._battler.isActivateSelect()) {
+            target.setBlendColor([0, 0, 0, 128]);
+            this._deactivateSelect = true;
+        } else if (this._deactivateSelect) {
+            target.setBlendColor([0, 0, 0, 0]);
+            this._deactivateSelect = false;
+        }
+    };
 })();
 
