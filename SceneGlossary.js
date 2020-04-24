@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.16.0 2020/04/24 ヘルプテキストに「\n」と記入することで改行できる機能を追加
 // 2.15.0 2019/12/05 ウィンドウの枠と背景を非表示にできる機能を追加
 // 2.14.3 2019/12/05 2.4.0以降、用語の自動登録時にONになるスイッチおよび変数が機能していなかった問題を修正
 // 2.14.2 2019/12/04 プラグインコマンド「GLOSSARY_ITEM_CHANGE_CATEGORY」のヘルプの凡例が間違っていたので修正
@@ -587,9 +588,6 @@
  * 当該パラメータを設定せずにプラグインコマンドから用語辞典を起動すると
  * エラーになるので注意してください。
  *
- * ※バージョン2.0.0よりパラメータの構成が変わりました。
- * 以前のバージョンを使っていた場合はパラメータを再設定する必要があります。
- *
  * 用語は対象アイテムを取得することで閲覧可能になるほか、文章の表示の命令中で
  * 同一単語が出現した場合に自動的に登録する機能もあります。
  * （特定の用語を自動登録の対象外に指定することも可能です）
@@ -829,24 +827,24 @@
  *
  * @param GlossaryHelp
  * @text 用語ヘルプ
- * @desc 用語リスト選択時のヘルプ画面に表示するテキストです。未指定の場合、ヘルプウィンドウは非表示になります。
+ * @desc 用語リスト選択時のヘルプ画面に表示するテキストです。未指定の場合、ヘルプウィンドウは非表示になります。(改行コード:\n)
  * @default ゲーム中に登場する用語を解説しています。
  *
  * @param CategoryHelp
  * @text カテゴリヘルプ
- * @desc 用語カテゴリ選択時のヘルプ画面に表示するテキストです。
+ * @desc 用語カテゴリ選択時のヘルプ画面に表示するテキストです。(改行コード:\n)
  * @default カテゴリを選択してください。
  * @parent GlossaryHelp
  *
  * @param ConfirmHelp
  * @text 確認ヘルプ
- * @desc 用語アイテムの選択確認時に表示するテキストです。指定しなかった場合、何も表示されません。
+ * @desc 用語アイテムの選択確認時に表示するテキストです。指定しなかった場合、何も表示されません。(改行コード:\n)
  * @default
  * @parent GlossaryHelp
  *
  * @param UsingHelp
  * @text 使用後ヘルプ
- * @desc 用語アイテムの使用後に表示するテキストです。指定しなかった場合、何も表示されません。
+ * @desc 用語アイテムの使用後に表示するテキストです。指定しなかった場合、何も表示されません。(改行コード:\n)
  * @default
  * @parent GlossaryHelp
  *
@@ -1678,10 +1676,10 @@ function Window_GlossaryComplete() {
         if (this._helpTexts[0]) {
             if (typeof TranslationManager !== 'undefined') {
                 TranslationManager.getTranslatePromise(helpText).then(function(translatedText) {
-                    this._helpWindow.setText(translatedText);
+                    this._helpWindow.setText(translatedText.replace(/\\n/g, '\n'));
                 }.bind(this));
             } else {
-                this._helpWindow.setText(helpText);
+                this._helpWindow.setText(helpText.replace(/\\n/g, '\n'));
             }
         } else {
             this._helpWindow.visible = false;
