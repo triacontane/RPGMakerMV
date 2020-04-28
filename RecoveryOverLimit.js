@@ -144,7 +144,7 @@
         var rate = 0;
         var traitObjects = this.traitObjects();
         traitObjects.push(skill);
-        traitObjects.some(function(traitObj) {
+        traitObjects.forEach(function(traitObj) {
             var meta = getMetaValues(traitObj,['RecoveryOverLimit', '回復限界突破']);
             if (meta) {
                 rate = Math.max(rate, parseInt(convertEscapeCharacters(meta)));
