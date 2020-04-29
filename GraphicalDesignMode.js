@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.7 2020/04/29 バトルログウィンドウの位置変更ができない問題を修正
 // 2.10.6 2020/03/21 SceneCustomMenu.jsに合わせた微修正
 // 2.10.5 2020/02/06 プラグインで追加した一部のウィンドウでデザインモード解除時に位置変更が反映されない問題を修正
 // 2.10.4 2020/01/27 プラグインで追加した一部のウィンドウの位置変更が反映されない競合を修正
@@ -1130,7 +1131,7 @@ var $dataContainerProperties = null;
         };
 
         Window_BattleLog.prototype.isTouchable = function() {
-            return Window.prototype.isTouchable.call(this) && this._lines.length > 0;
+            return Window_Base.prototype.isTouchable.call(this) && this._lines.length > 0;
         };
 
         Sprite.prototype.isTouchable = function() {
@@ -1785,10 +1786,4 @@ var $dataContainerProperties = null;
         }.bind(this));
         return text;
     };
-
-//    var _Scene_File_createListWindow = Scene_File.prototype.createListWindow;
-//    Scene_File.prototype.createListWindow = function() {
-//        _Scene_File_createListWindow.apply(this, arguments);
-//        this._listWindow.setTopRow(this.firstSavefileIndex() - 2);
-//    };
 })();
