@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2020/04/29 計算式中でローカル変数[a][b]を使えるよう修正
 // 1.1.0 2020/04/29 吸収HPの有効率を設定できる機能を追加
 //                  各種メモ欄にJavaScript計算式を使用できる機能を追加
 // 1.0.2 2017/02/07 端末依存の記述を削除
@@ -74,7 +75,6 @@
  *
  * スキルもしくはアイテムのダメージタイプを「HP吸収」もしくは「MP吸収」
  * にしてからメモ欄に以下の通り記述してください。
- * 制御文字に加えてJavaScript計算式が使用できます。
  * <DE_HP吸収率:150>     # HPの吸収率が[150]%になります。
  * <DE_PercentageHP:150> # 同上
  * <DE_MP吸収率:50>      # MPの吸収率が[50]%になります。
@@ -85,6 +85,11 @@
  * <DE_AttackMessage>    # 同上
  * <DE_上限突破>         # HP吸収が相手の残HPを超えるようになります。
  * <DE_LimitOver>        # 同上
+ *
+ * メモ欄の値は制御文字に加えてJavaScript計算式が使用できます。
+ * さらに計算式中では以下の変数が使えます。
+ * a : 攻撃者
+ * b : 対象者
  *
  * ※1 HP吸収に対してMPのみ回復させたい場合、HPの吸収率を0に指定してください。
  *
@@ -124,13 +129,6 @@
         return value === 'ON' || value === 'TRUE';
     };
 
-    var getArgNumber = function(arg, min, max) {
-        if (arg === true || arg === undefined) return undefined;
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (eval(convertEscapeCharacters(arg)) || 0).clamp(min, max);
-    };
-
     var getMetaValue = function(object, name) {
         var metaTagName = metaTagPrefix + (name ? name : '');
         return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
@@ -161,12 +159,14 @@
     // Game_BattlerBase
     //  吸収の有効率を設定します。
     //=============================================================================
-    Game_BattlerBase.prototype.getDrainEffectiveRate = function() {
+    Game_BattlerBase.prototype.getDrainEffectiveRate = function(subject) {
         var rate = null;
+        var a = subject;
+        var b = this;
         this.traitObjects().forEach(function(traitObj) {
             var meta = getMetaValues(traitObj, ['EffectiveRate', '有効率']);
             if (meta) {
-                rate = Math.max(rate || 0, getArgNumber(meta) / 100);
+                rate = Math.max(rate || 0, eval(convertEscapeCharacters(meta)) / 100);
             }
         });
         return rate !== null ?  rate : 1.0;
@@ -190,18 +190,25 @@
     };
 
     Game_Action.prototype.getHpDrainRate = function(original) {
-        var rate = getArgNumber(this.getDrainExtendMeta(['PercentageHP', 'HP吸収率']), 0);
+        var rate =  this.getDrainRate(['PercentageHP', 'HP吸収率']);
         return rate !== undefined ? rate / 100 : (original ? 1 : undefined);
     };
 
     Game_Action.prototype.getMpDrainRate = function(original) {
-        var rate =  getArgNumber(this.getDrainExtendMeta(['PercentageMP', 'MP吸収率']), 0);
+        var rate =  this.getDrainRate(['PercentageMP', 'MP吸収率']);
         return rate !== undefined ? rate / 100 : (original ? 1 : undefined);
     };
 
     Game_Action.prototype.getTpDrainRate = function() {
-        var rate =  getArgNumber(this.getDrainExtendMeta(['PercentageTP', 'TP吸収率']), 0);
+        var rate =  this.getDrainRate(['PercentageTP', 'TP吸収率']);
         return rate !== undefined ? rate / 100 : undefined;
+    };
+
+    Game_Action.prototype.getDrainRate = function(metaParams) {
+        var rate = convertEscapeCharacters(this.getDrainExtendMeta(metaParams));
+        var a = this.subject();
+        var b = this._drainTarget;
+        return rate ? eval(rate) : undefined;
     };
 
     Game_Action.prototype.isDrainMessageAttack = function() {
@@ -238,7 +245,7 @@
     };
 
     Game_Action.prototype.gainDrainedParam = function(value, originalType) {
-        var effectiveRate = this._drainTarget.getDrainEffectiveRate();
+        var effectiveRate = this._drainTarget.getDrainEffectiveRate(this.subject());
         var hpRate = this.getHpDrainRate(originalType === 'hp');
         if (hpRate !== undefined) {
             var hpValue = Math.floor(value * hpRate * effectiveRate);
