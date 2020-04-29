@@ -1,15 +1,17 @@
 //=============================================================================
 // DrainExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2020/04/29 吸収HPの有効率を設定できる機能を追加
+//                  各種メモ欄にJavaScript計算式を使用できる機能を追加
 // 1.0.2 2017/02/07 端末依存の記述を削除
 // 1.0.0 2017/01/17 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -20,7 +22,8 @@
  *
  * @param RecoverSe
  * @desc 吸収成功時に回復効果音を演奏します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help ダメージタイプの「HP吸収」および「MP吸収」の仕様を拡張します。
  * 1. 吸収率を指定して、回復量を与えたダメージの割合で指定可能
@@ -44,6 +47,11 @@
  *
  * ※1 HP吸収に対してMPのみ回復させたい場合、HPの吸収率を0に指定してください。
  *
+ * 吸収攻撃を受ける側に有効度を設定できます。与えるダメージには影響しません。
+ * 特徴を有するデータベースのメモ欄に以下の通り指定してください。
+ * <DE_有効率:50>        # 吸収率が[50%]になります。
+ * <DE_EffectiveRate:50> # 同上
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -54,7 +62,8 @@
  *
  * @param 回復効果音
  * @desc 吸収成功時に回復効果音を演奏します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help ダメージタイプの「HP吸収」および「MP吸収」の仕様を拡張します。
  * 1. 吸収率を指定して与えたダメージのN%回復をなどが可能
@@ -65,6 +74,7 @@
  *
  * スキルもしくはアイテムのダメージタイプを「HP吸収」もしくは「MP吸収」
  * にしてからメモ欄に以下の通り記述してください。
+ * 制御文字に加えてJavaScript計算式が使用できます。
  * <DE_HP吸収率:150>     # HPの吸収率が[150]%になります。
  * <DE_PercentageHP:150> # 同上
  * <DE_MP吸収率:50>      # MPの吸収率が[50]%になります。
@@ -77,6 +87,11 @@
  * <DE_LimitOver>        # 同上
  *
  * ※1 HP吸収に対してMPのみ回復させたい場合、HPの吸収率を0に指定してください。
+ *
+ * 吸収攻撃を受ける側に有効度を設定できます。与えるダメージには影響しません。
+ * 特徴を有するデータベースのメモ欄に以下の通り指定してください。
+ * <DE_有効率:50>        # 吸収率が[50%]になります。
+ * <DE_EffectiveRate:50> # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -105,15 +120,15 @@
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        var value = getParamString(paramNames).toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     var getArgNumber = function(arg, min, max) {
         if (arg === true || arg === undefined) return undefined;
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
+        return (eval(convertEscapeCharacters(arg)) || 0).clamp(min, max);
     };
 
     var getMetaValue = function(object, name) {
@@ -141,6 +156,21 @@
     //=============================================================================
     var param = {};
     param.recoverSe = getParamBoolean(['RecoverSe', '回復効果音']);
+
+    //=============================================================================
+    // Game_BattlerBase
+    //  吸収の有効率を設定します。
+    //=============================================================================
+    Game_BattlerBase.prototype.getDrainEffectiveRate = function() {
+        var rate = null;
+        this.traitObjects().forEach(function(traitObj) {
+            var meta = getMetaValues(traitObj, ['EffectiveRate', '有効率']);
+            if (meta) {
+                rate = Math.max(rate || 0, getArgNumber(meta) / 100);
+            }
+        });
+        return rate !== null ?  rate : 1.0;
+    };
 
     //=============================================================================
     // Game_Action
@@ -184,7 +214,10 @@
 
     var _Game_Action_apply = Game_Action.prototype.apply;
     Game_Action.prototype.apply = function(target) {
-        if (this.isDrainMessageAttack()) this._temporaryDisableDrain = true;
+        if (this.isDrainMessageAttack()) {
+            this._temporaryDisableDrain = true;
+        }
+        this._drainTarget = target;
         return _Game_Action_apply.apply(this, arguments);
     };
 
@@ -205,20 +238,27 @@
     };
 
     Game_Action.prototype.gainDrainedParam = function(value, originalType) {
+        var effectiveRate = this._drainTarget.getDrainEffectiveRate();
         var hpRate = this.getHpDrainRate(originalType === 'hp');
         if (hpRate !== undefined) {
-            var hpValue = Math.floor(value * hpRate);
-            if (hpValue !== 0) _Game_Action_gainDrainedHp.call(this, hpValue);
+            var hpValue = Math.floor(value * hpRate * effectiveRate);
+            if (hpValue !== 0) {
+                _Game_Action_gainDrainedHp.call(this, hpValue);
+            }
         }
         var mpRate = this.getMpDrainRate(originalType === 'mp');
         if (mpRate !== undefined) {
-            var mpValue = Math.floor(value * mpRate);
-            if (mpValue !== 0) _Game_Action_gainDrainedMp.call(this, mpValue);
+            var mpValue = Math.floor(value * mpRate * effectiveRate);
+            if (mpValue !== 0) {
+                _Game_Action_gainDrainedMp.call(this, mpValue);
+            }
         }
         var tpRate = this.getTpDrainRate();
         if (tpRate !== undefined) {
-            var tpValue = Math.floor(value * tpRate);
-            if (tpValue !== 0) this.gainDrainedTp(tpValue);
+            var tpValue = Math.floor(value * tpRate * effectiveRate);
+            if (tpValue !== 0) {
+                this.gainDrainedTp(tpValue);
+            }
         }
     };
 
