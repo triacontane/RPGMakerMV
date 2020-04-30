@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.2 2020/04/30 1.9.1の修正が不完全だったので再度修正
 // 1.9.1 2020/04/29 GraphicalDesignMode.jsと併用したときバトルログウィンドウの位置変更が反映されない問題を修正
 // 1.9.0 2019/06/09 表示メッセージが行数の上限を上回った場合に表示がカットされないよう変更
 // 1.8.0 2019/04/14 もともとメッセージウィンドウで表示していたものはそのまま表示する設定を追加
@@ -254,12 +255,9 @@
     var _Scene_Battle_createAllWindows      = Scene_Battle.prototype.createAllWindows;
     Scene_Battle.prototype.createAllWindows = function() {
         _Scene_Battle_createAllWindows.apply(this, arguments);
-        this._windowLayer.removeChild(this._logWindow);
-        this._windowLayer.addChildAt(this._logWindow, this._windowLayer.getChildIndex(this._messageWindow) - 1);
-        // Resolve conflict for GraphicalDesignMode.js
-        if (this._logWindow.loadContainerInfo) {
-            this._logWindow.loadContainerInfo();
-        }
+        // GraphicalDesignMode.jsと競合するので無効化
+//        this._windowLayer.removeChild(this._logWindow);
+//        this._windowLayer.addChildAt(this._logWindow, this._windowLayer.getChildIndex(this._messageWindow) - 1);
         if (paramStatusPosUpper) {
             this.adjustWindowPositions();
         }
