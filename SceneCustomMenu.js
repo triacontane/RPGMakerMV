@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2020/05/01 各画面に背景画像を指定できる機能を追加
  1.2.2 2020/03/28 プリセットのスクリプトに1件追加
  1.2.1 2020/03/26 スイッチによる再描画実行後、当該スイッチにfalseではなく0が入っていたので修正
  1.2.0 2020/03/26 マスキング機能と使用禁止機能を分離し、代わりにフィルタ機能に統合
@@ -191,6 +192,35 @@
  * @default []
  * @type struct<Window>[]
  *
+ * @param Panorama
+ * @text パノラマ画像
+ * @desc 背景情報を指定します。
+ * @default
+ * @type struct<Panorama>
+ *
+ */
+
+/*~struct~Panorama:
+ *
+ * @param Image
+ * @text 画像ファイル
+ * @desc 背景として表示される画像ファイルを指定します。指定しなかった場合、マップのぼかし画像が表示されます。
+ * @default
+ * @require 1
+ * @dir img/parallaxes
+ * @type file
+ *
+ * @param ScrollX
+ * @text スクロールX
+ * @desc 背景画像の横方向のスクロール速度です。
+ * @default 0
+ * @type number
+ *
+ * @param ScrollY
+ * @text スクロールY
+ * @desc 背景画像の縦方向のスクロール速度です。
+ * @default 0
+ * @type number
  */
 
 /*~struct~Window:
@@ -658,6 +688,13 @@
             $gameScreen = this._previousGameScreen;
         }
 
+        createBackground() {
+            super.createBackground();
+            this._panorama = new TilingSprite();
+            this._panorama.move(0, 0, Graphics.width, Graphics.height);
+            this.addChild(this._panorama);
+        }
+
         createAllObjects() {
             if (this._customData.UseHelp) {
                 this.createHelpWindow();
@@ -666,6 +703,9 @@
             this.createMessageWindow();
             this.createScrollTextWindow();
             this.createSpriteset();
+            if (this._customData.Panorama) {
+                this.setPanoramaBitmap();
+            }
         }
 
         createHelpWindow() {
@@ -716,6 +756,11 @@
             this._customWindowMap.set(data.Id, win);
         }
 
+        setPanoramaBitmap() {
+            const panorama        = this._customData.Panorama;
+            this._panorama.bitmap = ImageManager.loadParallax(panorama.Image);
+        }
+
         setPlacement(data) {
             const win     = this._customWindowMap.get(data.Id);
             const parentX = this._customWindowMap.get(data.RelativeWindowIdX);
@@ -762,6 +807,15 @@
             if (focusId) {
                 this.changeWindowFocus(focusId, -1);
             }
+            if (this._customData.Panorama) {
+                this.updatePanorama();
+            }
+        }
+
+        updatePanorama() {
+            const panorama = this._customData.Panorama;
+            this._panorama.origin.x += panorama.ScrollX;
+            this._panorama.origin.y += panorama.ScrollY;
         }
 
         fireEvent(event, moveFocus = true) {
@@ -1045,8 +1099,8 @@
 
         isMasking(index) {
             const item = this.getItem(index);
-            const v  = $gameVariables.value.bind($gameVariables); // used by eval
-            const s  = $gameSwitches.value.bind($gameSwitches); // used by eval
+            const v    = $gameVariables.value.bind($gameVariables); // used by eval
+            const s    = $gameSwitches.value.bind($gameSwitches); // used by eval
             return this.isUseMasking() && !this.isVisible(item, v, s);
         }
 
@@ -1148,8 +1202,8 @@
         }
 
         isEnabledSub(item) {
-            const v  = $gameVariables.value.bind($gameVariables); // used by eval
-            const s  = $gameSwitches.value.bind($gameSwitches); // used by eval
+            const v      = $gameVariables.value.bind($gameVariables); // used by eval
+            const s      = $gameSwitches.value.bind($gameSwitches); // used by eval
             const script = this._data.IsEnableScript;
             return script ? eval(script) : true;
         }
