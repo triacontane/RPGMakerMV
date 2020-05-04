@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.17.0 2020/05/04 辞典表示でスクリプトを使用できる制御文字と、使用効果の種別を表示できる制御文字を追加
 // 2.16.0 2020/04/24 ヘルプテキストに「\n」と記入することで改行できる機能を追加
 // 2.15.0 2019/12/05 ウィンドウの枠と背景を非表示にできる機能を追加
 // 2.14.3 2019/12/05 2.4.0以降、用語の自動登録時にONになるスイッチおよび変数が機能していなかった問題を修正
@@ -639,11 +640,21 @@
  * \exp[3]     // 対象敵キャラの獲得経験値(3桁でゼロ埋め)
  * \money[3]   // 対象敵キャラの獲得ゴールド(3桁でゼロ埋め)
  * \drop[1]    // 対象敵キャラの[1]番目のドロップアイテム
+ *
+ * ※2 敵キャラIDを省略すると用語アイテムと同名の敵キャラ自動で設定されます。
+ *
  * \DATA[prop] // 対象データのプロパティ「prop」に置き換えられます。(下記参照)
  * \DATA[description] // 対象データの説明
  * \DATA[price]       // 対象データの価格
+ * \EFFECT_TYPE[0] // 対象データの[0]番目の使用効果の種別
+ * \SCRIPT{aaa}  // スクリプト[aaa]を評価した結果。
+ *               // ローカル変数[data]で対象データを参照できます。
  *
- * ※2 敵キャラIDを省略すると用語アイテムと同名の敵キャラ自動で設定されます。
+ * ・使用例1(0番目の使用効果の効果量(%))
+ * \SCRIPT{data.effects[0].value1 * 100 + '%'}
+ *
+ * ・使用例2(0番目の使用効果の効果量)
+ * \SCRIPT{data.effects[0].value2}
  *
  * さらに、一つの用語で複数のページを使用することができます。
  * ページは方向キーの左右で切り替えます。
@@ -2184,19 +2195,42 @@ function Window_GlossaryComplete() {
         if (!description) {
             return '';
         }
-        description    = description.replace(/\x1bDATA\[(\w+)]/gi, function() {
-            return this._itemData[arguments[1]];
+        var data = this._itemData;
+        description    = description.replace(/\x1bEFFECT_TYPE\[(\d+)]/gi, function() {
+            var code = data.effects[parseInt(arguments[1])].code;
+            return Window_Glossary.effectCodeDesc[code];
         }.bind(this));
-        var prevData   = this._itemData;
+        description    = description.replace(/\x1bDATA\[(\w+)]/gi, function() {
+            return data[arguments[1]];
+        }.bind(this));
+        description    = description.replace(/\x1bSCRIPT{(.+)}/gi, function() {
+            return eval(arguments[1]);
+        }.bind(this));
         description    = description.replace(/\x1bCOMMON\[(\d+)]/gi, function() {
             this._itemData = $dataItems[parseInt(arguments[1])];
             return this.getCommonDescription();
         }.bind(this));
-        this._itemData = prevData;
+        this._itemData = data;
         if (this._enemy) {
             description = this.convertEnemyData(description);
         }
         return description;
+    };
+
+    Window_Glossary.effectCodeDesc = {
+        11:'HP回復',
+        12:'MP回復',
+        13:'TP回復',
+        21:'ステート付与',
+        22:'ステート解除',
+        31:'強化',
+        32:'弱体',
+        33:'強化の解除',
+        34:'弱体の解除',
+        41:'特殊効果',
+        42:'成長',
+        43:'スキル習得',
+        44:'コモンイベント'
     };
 
     Window_Glossary.prototype.isViewablePage = function(index) {
