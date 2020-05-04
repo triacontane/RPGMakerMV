@@ -1,11 +1,13 @@
 //=============================================================================
 // SceneSoundTest.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2020/05/04 データファイルのtype指定が大文字の場合でも正常に動作するよう修正
+//                  プラグインの型指定機能に対応
 // 2.1.0 2017/06/21 BGMが一曲も存在しないデータリストを読み込んで再生しようとするとエラーになる問題を修正
 //                  リストウィンドウでの操作タイプを2パターン用意しました。
 // 2.0.0 2017/06/18 BGS、ME、SEの演奏機能を追加
@@ -18,7 +20,7 @@
 //                  英語対応
 // 1.0.0 2016/01/29 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -33,11 +35,13 @@
  *
  * @param AddCommandTitle
  * @desc Add command at title scene(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param AddCommandMenu
  * @desc Add command at menu scene(ON/OFF)
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param NameVolume
  * @desc Name volume for Bgm setting window
@@ -57,7 +61,9 @@
  *
  * @param ReadFormat
  * @desc read data format(CSV or JSON)
- * @default CSV
+ * @type select
+ * @option CSV
+ * @option JSON
  *
  * @param ManageNumber
  * @desc 同一サーバ内に複数のゲームを配布する場合のみ、ゲームごとに異なる値を設定してください。(RPGアツマールは対象外)
@@ -65,7 +71,11 @@
  *
  * @param ListControlType
  * @desc リストウィンドウでの操作タイプです。(1, 2)
- * @default 1
+ * @type select
+ * @option 1[OK:演奏＋音量調整][Shift:演奏停止]
+ * @value 1
+ * @option 2[OK:演奏][Shift:音量調整])
+ * @value 2
  *
  * @help Add sound test screen.
  *
@@ -116,12 +126,14 @@
  * @param タイトルに追加
  * @desc タイトル画面にサウンドテストを追加します。(ON/OFF)
  * OFFにした場合もコマンドで後から有効にできます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param メニューに追加
  * @desc メニュー画面にサウンドテストを追加します。(ON/OFF)
  * OFFにした場合もコマンドで後から有効にできます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param 音量名称
  * @desc BGMの設定項目「音量」のゲーム内での名称です。
@@ -142,19 +154,30 @@
  * @desc 背景として表示するピクチャ（/img/pictures/）を指定できます。
  * サイズは画面サイズに合わせて拡縮されます。拡張子、パス不要。
  * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
  *
  * @param 読込形式
  * @desc データファイルの読み込み形式です。
  * CSV形式およびJSON形式をサポートしています。
- * @default CSV
+ * @default
+ * @type select
+ * @option CSV
+ * @option JSON
  *
  * @param 管理番号
  * @desc 同一サーバ内に複数のゲームを配布する場合のみ、ゲームごとに異なる値を設定してください。(RPGアツマールは対象外)
  * @default
  *
  * @param リスト操作タイプ
- * @desc リストウィンドウでの操作タイプです。(1[OK:演奏＋音量調整][Shift:演奏停止]　2[OK:演奏][Shift:音量調整])
+ * @desc リストウィンドウでの操作タイプです。
  * @default 1
+ * @type select
+ * @option 1[OK:演奏＋音量調整][Shift:演奏停止]
+ * @value 1
+ * @option 2[OK:演奏][Shift:音量調整])
+ * @value 2
  *
  * @help ゲーム中のオーディオを視聴できるサウンドテスト画面を実装します。
  * タイトル画面、メニュー画面およびプラグインコマンドから専用画面に遷移します。
@@ -262,8 +285,8 @@ function Scene_SoundTest() {
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
@@ -427,23 +450,7 @@ function Scene_SoundTest() {
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandSceneSoundTest(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
-                }
-            }
-            console.error('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-        }
+        this.pluginCommandSceneSoundTest(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandSceneSoundTest = function(command) {
@@ -1220,7 +1227,7 @@ function Scene_SoundTest() {
 
     Game_SoundTest.prototype.getAudioDataList = function(type) {
         return $dataSoundTest.filter(function(data) {
-            return data && ((data.type || SoundTestManager.types[0]) === type);
+            return data && ((data.type || SoundTestManager.types[0]).toLowerCase() === type);
         });
     };
 
