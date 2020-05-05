@@ -1,15 +1,16 @@
 //=============================================================================
 // EquipConditionExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2020/05/05 計算式で制御文字が使えるよう修正
 // 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2017/01/25 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -57,12 +58,14 @@
  * <ECE_Switch:1,3>   # 同上
  * <ECE_計算式:f>     # JS計算式[f]がtrueを返す
  * <ECE_Formula:f>    # 同上
+ * 計算式では記号「>」は使用できません。「<」を使った比較式を使ってください。
  *
  * 数値をカンマ区切りで複数記入すると、指定した数値のいずれかが該当すれば
  * 装備可能になります。
  *
  * スキルとステートについては、負の値を設定すると指定したIDのスキル、ステートが
  * 無効な場合のみ装備できるようになります。
+ * <ECE_ステート:-7>   # ID[7]のステートが無効になっている。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -209,7 +212,7 @@
         var metaValue = getMetaValues(item, ['計算式', 'Formula']);
         if (!metaValue) return true;
         try {
-            return eval(metaValue);
+            return eval(convertEscapeCharacters(metaValue));
         } catch (e) {
             console.error(e.stack);
             return false;
