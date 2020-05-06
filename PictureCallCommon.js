@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.1 2020/05/06 マップズームを実行したときの座標の取得計算が間違っていた問題を修正
 // 1.13.0 2019/12/22 ピクチャコモンを並列処理として実行する設定を追加。
 // 1.12.2 2019/03/31 キーバインドで追加でキーを指定した場合に、ボタン名称が小文字でないと反応しない仕様を変更
 // 1.12.1 2019/03/19 コミュニティ版コアスクリプト1.3以降でピクチャコモンから移動ルートの設定を実行するとエラーになっていた問題を修正
@@ -656,15 +657,13 @@
     };
 
     Game_Screen.prototype.disConvertPositionX = function(x) {
-        return Math.round((x + this.zoomX() - this.shake()) / this.zoomScale());
+        var unshiftX = x - this.zoomX() * (1 - this.zoomScale());
+        return Math.round(unshiftX / this.zoomScale());
     };
 
     Game_Screen.prototype.disConvertPositionY = function(y) {
-        return Math.round((y + this.zoomY()) / this.zoomScale());
-    };
-
-    Game_Screen.prototype.disConvertPositionY = function(y) {
-        return Math.round((y + this.zoomY()) / this.zoomScale());
+        var unshiftY = y - this.zoomY() * (1 - this.zoomScale());
+        return Math.round(unshiftY / this.zoomScale());
     };
 
     Game_Screen.prototype.isPointerInnerPicture = function(pictureId) {
