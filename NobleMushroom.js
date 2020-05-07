@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2020/05/08 場所移動時のオートセーブを無効にできる機能を追加
 // 1.10.0 2019/12/15 通常メッセージ表示のときもポーズメニューが表示されるよう仕様変更
 //                   ポーズメニューの表示を禁止できるスイッチを追加
 // 1.9.1 2019/12/15 1.9.0で通常ウィンドウモードのときにメニューを開くとエラーになる問題を修正
@@ -197,6 +198,11 @@
  * @param PauseColor
  * @desc ウィンドウクローズ時のポーズサインの色調(R,G,B,A)です。通常時のポーズサインと差別化する場合に指定してください。
  * @default 255,0,0,128
+ *
+ * @param InvalidAutoSaveOnMove
+ * @desc 場所移動やメニュー遷移の際のオートセーブを無効化します。
+ * @default false
+ * @type boolean
  *
  * @help It is a base plug-in for creating sound novel easily with RPG Maker MV
  * When applied, the display of the message window becomes the entire screen,
@@ -440,6 +446,11 @@
  * @default false
  * @type boolean
  *
+ * @param 移動時のオートセーブ無効
+ * @desc 場所移動やメニュー遷移の際のオートセーブを無効化します。
+ * @default false
+ * @type boolean
+ *
  * @help RPGツクールMVでサウンドノベルを手軽に作成するためのベースプラグインです。
  * 適用すると、メッセージウィンドウの表示が画面全体になり
  * 表示したメッセージが消去されず画面に蓄積されるようになります。
@@ -639,6 +650,7 @@
     var paramPauseColor         = getParamArrayNumber(['PauseColor', 'ポーズカラー'], 0, 255);
     var paramUsePauseMenuAlways = getParamBoolean(['UsePauseMenuAlways', '常にポーズメニュー使用']);
     var paramDisablePauseSwitch = getParamNumber(['DisablePauseSwitch', 'ポーズ禁止スイッチ'], 0);
+    var paramInvalidSaveOnMove  = getParamBoolean(['InvalidAutoSaveOnMove', '移動時のオートセーブ無効']);
 
     //=============================================================================
     // インタフェースの定義
@@ -1421,7 +1433,9 @@
     var _Scene_Map_start      = Scene_Map.prototype.start;
     Scene_Map.prototype.start = function() {
         _Scene_Map_start.apply(this, arguments);
-        $gameSystem.executeAutoSave();
+        if (!paramInvalidSaveOnMove) {
+            $gameSystem.executeAutoSave();
+        }
     };
 
     Scene_Map.prototype.onPause = function() {
