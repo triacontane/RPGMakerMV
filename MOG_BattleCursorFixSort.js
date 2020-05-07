@@ -19,7 +19,10 @@
  *
  * @help MOG_BattleCursorFixSort.js
  *
- * MOG_BattleCursorのパラメータ「Sort X-Axis」が機能しない問題を修正します。
+ * Fixed an issue where the MOG_BattleCursor parameter
+ * "Sort X-Axis" did not work.
+ * Please place it below the MOG_BattleCursor
+ * in the plugin management.
  *
  * This plugin is released under the MIT License.
  */
@@ -30,6 +33,7 @@
  * @help MOG_BattleCursorFixSort.js
  *
  * MOG_BattleCursorのパラメータ「Sort X-Axis」が機能しない問題を修正します。
+ * プラグイン管理画面でMOG_BattleCursorより下に配置してください。
  *　
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -47,7 +51,7 @@
             return;
         }
         this._enemies.sort(function(a, b) {
-            return a._screenX-b._screenX;
+            return a.screenX() - b.screenX();
         });
     };
 
