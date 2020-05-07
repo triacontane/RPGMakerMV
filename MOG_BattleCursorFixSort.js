@@ -46,7 +46,7 @@
 (function() {
     'use strict';
 
-    Game_Troop.prototype.sortMembers = function() {
+    Game_Troop.prototype.sortMembersByScreenX = function() {
         if (!this._enemies) {
             return;
         }
@@ -58,7 +58,7 @@
     var _Window_BattleEnemy_refresh = Window_BattleEnemy.prototype.refresh;
     Window_BattleEnemy.prototype.refresh = function() {
         if (Moghunter.bcursor_sort_x === "true") {
-            $gameTroop.sortMembers();
+            $gameTroop.sortMembersByScreenX();
         }
         var aliveMembers = $gameTroop.aliveMembers();
         _Window_BattleEnemy_refresh.call(this);
