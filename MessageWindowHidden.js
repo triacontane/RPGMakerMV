@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2020/05/08 選択肢表示中でもウィンドウを隠せるよう設定を追加
 // 2.3.0 2019/10/22 ウィンドウを表示状態にもどしたとき、連動ピクチャは、もともと表示していた不透明度を復元するよう仕様変更
 // 2.2.0 2019/06/09 メッセージウィンドウと逆に連動して指定したピクチャの表示/非表示が自動で切り替わる機能を追加
 // 2.1.0 2018/10/10 戦闘中にプラグインを無効化できる機能を追加。
@@ -65,6 +66,11 @@
  * @default false
  * @type boolean
  *
+ * @param disableInChoice
+ * @desc 選択肢の表示中はウィンドウを非表示にできなくなります。
+ * @default true
+ * @type boolean
+ *
  * @help Erase message window (and restore) when triggered
  *
  * This plugin is released under the MIT License.
@@ -108,6 +114,12 @@
  * @text 戦闘中無効化
  * @desc trueのとき、戦闘中にプラグインの機能を無効にします。
  * @default false
+ * @type boolean
+ *
+ * @param disableInChoice
+ * @text 選択肢表示中は無効
+ * @desc 選択肢の表示中はウィンドウを非表示にできなくなります。
+ * @default true
  * @type boolean
  *
  * @help メッセージウィンドウを表示中に指定したボタンを押下することで
@@ -170,7 +182,7 @@
     //=============================================================================
     var _Window_Message_updateWait      = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
-        if (!this.isClosed() && this.isTriggeredHidden() && !$gameMessage.isChoice()) {
+        if (!this.isClosed() && this.isTriggeredHidden() && this.isEnableInChoice()) {
             if (!this.isHidden()) {
                 this.hideAllWindow();
             } else {
@@ -182,6 +194,10 @@
             this.hideAllWindow();
         }
         return wait;
+    };
+
+    Window_Message.prototype.isEnableInChoice = function() {
+        return !(param.disableInChoice && $gameMessage.isChoice());
     };
 
     Window_Message.prototype.hideAllWindow = function() {
