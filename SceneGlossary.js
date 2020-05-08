@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.17.1 2020/05/08 画像のロードに時間が掛かる環境で高速でページを切り替えたとき、前のページの画像が表示されることがある問題を修正
 // 2.17.0 2020/05/04 辞典表示でスクリプトを使用できる制御文字と、使用効果の種別を表示できる制御文字を追加
 // 2.16.0 2020/04/24 ヘルプテキストに「\n」と記入することで改行できる機能を追加
 // 2.15.0 2019/12/05 ウィンドウの枠と背景を非表示にできる機能を追加
@@ -1353,7 +1354,7 @@ function Window_GlossaryComplete() {
     };
 
     Game_Party.prototype.setGlossaryCategoryIndexByName = function(name) {
-        var list = this.getAllGlossaryCategory();
+        var list  = this.getAllGlossaryCategory();
         var index = list.indexOf(name);
         if (index >= 0) {
             this.setGlossaryCategoryIndex(index);
@@ -1826,7 +1827,7 @@ function Window_GlossaryComplete() {
     Window_Base.prototype.setFramelessDesign = function() {
         if (param.FramelessDesign) {
             this.backOpacity = 0;
-            this.opacity = 0;
+            this.opacity     = 0;
         }
     };
 
@@ -2014,7 +2015,7 @@ function Window_GlossaryComplete() {
         }
         Window_ItemList.prototype.select.apply(this, arguments);
         if (this.item() && prevItem !== this.item()) {
-            this._glossaryWindow.refresh(this.item());
+            this._glossaryWindow.refresh(this.item(), this.index());
         } else if (!this.item()) {
             this._glossaryWindow.clearItem();
         }
@@ -2195,7 +2196,7 @@ function Window_GlossaryComplete() {
         if (!description) {
             return '';
         }
-        var data = this._itemData;
+        var data       = this._itemData;
         description    = description.replace(/\x1bEFFECT_TYPE\[(\d+)]/gi, function() {
             var code = data.effects[parseInt(arguments[1])].code;
             return Window_Glossary.effectCodeDesc[code];
@@ -2218,19 +2219,19 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.effectCodeDesc = {
-        11:'HP回復',
-        12:'MP回復',
-        13:'TP回復',
-        21:'ステート付与',
-        22:'ステート解除',
-        31:'強化',
-        32:'弱体',
-        33:'強化の解除',
-        34:'弱体の解除',
-        41:'特殊効果',
-        42:'成長',
-        43:'スキル習得',
-        44:'コモンイベント'
+        11: 'HP回復',
+        12: 'MP回復',
+        13: 'TP回復',
+        21: 'ステート付与',
+        22: 'ステート解除',
+        31: '強化',
+        32: '弱体',
+        33: '強化の解除',
+        34: '弱体の解除',
+        41: '特殊効果',
+        42: '成長',
+        43: 'スキル習得',
+        44: 'コモンイベント'
     };
 
     Window_Glossary.prototype.isViewablePage = function(index) {
@@ -2250,10 +2251,11 @@ function Window_GlossaryComplete() {
         return contents && contents !== '0' ? contents : null;
     };
 
-    Window_Glossary.prototype.refresh = function(item) {
-        this._itemData = item;
-        this._enemy    = null;
-        this._maxPages = item && $gameParty.hasGlossary(item) ? this.calcMaxPages(0) : 1;
+    Window_Glossary.prototype.refresh = function(item, index) {
+        this._listIndex = index;
+        this._itemData  = item;
+        this._enemy     = null;
+        this._maxPages  = item && $gameParty.hasGlossary(item) ? this.calcMaxPages(0) : 1;
         this.drawItem(0, true);
     };
 
@@ -2283,23 +2285,25 @@ function Window_GlossaryComplete() {
         return this._pageIndex < this._maxPages - 1;
     };
 
-    Window_Glossary.prototype.drawItem = function(index, noSound) {
+    Window_Glossary.prototype.drawItem = function(pageIndex, noSound) {
         this.contents.clear();
-        this._pageIndex = index;
+        this._pageIndex = pageIndex;
         this.updateArrows();
         if (!this._itemData || !$gameParty.hasGlossary(this._itemData)) {
             return;
         }
-        var bitmap = this.getGlossaryBitmap(index);
+        var bitmap    = this.getGlossaryBitmap(pageIndex);
+        var listIndex = this._listIndex;
         if (bitmap) {
-            bitmap.addLoadListener(this.drawItemSub.bind(this, bitmap));
+            bitmap.addLoadListener(this.drawItemSub.bind(this, bitmap, listIndex, pageIndex));
         } else {
-            this.drawItemSub(null);
+            this.drawItemSub(null, listIndex, pageIndex);
         }
         if (!noSound) SoundManager.playCursor();
     };
 
     Window_Glossary.prototype.clearItem = function() {
+        this._listIndex = -1;
         this.contents.clear();
     };
 
@@ -2323,7 +2327,11 @@ function Window_GlossaryComplete() {
         this.upArrowVisible   = this.canMoveRight();
     };
 
-    Window_Glossary.prototype.drawItemSub = function(bitmap) {
+    Window_Glossary.prototype.drawItemSub = function(bitmap, listIndex, pageIndex) {
+        // for async draw
+        if (this._listIndex !== listIndex || this._pageIndex !== pageIndex) {
+            return;
+        }
         var text    = this.getDescription(this._pageIndex);
         var textPos = this.getTextPosition();
         var textHandler;
