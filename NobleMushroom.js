@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.1 2020/05/09 表示速度変数のパラメータの初期値を0に変更
 // 1.11.0 2020/05/08 場所移動時のオートセーブを無効にできる機能を追加
 // 1.10.0 2019/12/15 通常メッセージ表示のときもポーズメニューが表示されるよう仕様変更
 //                   ポーズメニューの表示を禁止できるスイッチを追加
@@ -74,7 +75,7 @@
  *
  * @param VariableSpeed
  * @desc メッセージ表示速度を格納する変数の番号です。変数の値が1文字描画ごとに待機するフレーム数です。
- * @default 1
+ * @default 0
  * @type variable
  *
  * @param InitialSpeed
@@ -321,7 +322,7 @@
  *
  * @param 表示速度変数
  * @desc メッセージ表示速度を格納する変数の番号です。変数の値が1文字描画ごとに待機するフレーム数です。
- * @default 1
+ * @default 0
  * @type variable
  *
  * @param 表示速度初期値
@@ -1072,7 +1073,9 @@
     var _DataManager_createGameObjects = DataManager.createGameObjects;
     DataManager.createGameObjects      = function() {
         _DataManager_createGameObjects.apply(this, arguments);
-        $gameVariables.setValue(paramVariableSpeed, paramInitialSpeed);
+        if (paramVariableSpeed) {
+            $gameVariables.setValue(paramVariableSpeed, paramInitialSpeed);
+        }
     };
 
     var _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
@@ -1563,7 +1566,7 @@
     };
 
     Window_Message.prototype.getMessageSpeed = function() {
-        return this._tempMessageSpeed !== null ? this._tempMessageSpeed : $gameVariables.value(paramVariableSpeed);
+        return this._tempMessageSpeed !== null ? this._tempMessageSpeed : $gameVariables.value(paramVariableSpeed) || 1;
     };
 
     Window_Message.prototype.setTempMessageSpeed = function(speed) {
