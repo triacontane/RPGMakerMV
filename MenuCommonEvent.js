@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.5 2020/05/09 MOG_Weather_EX.jsと併用したときに発生するエラーを解消
 // 1.3.4 2020/03/21 SceneCustomMenu.jsに合わせた微修正
 // 1.3.3 2020/03/17 Canvasモード時、マップの色調変更がウィンドウに反映されていた問題を修正
 // 1.3.2 2019/01/23 1.3.1の修正でGUI画面デザインプラグインと共存できなくなっていた問題を修正
@@ -648,7 +649,6 @@
     };
 
     Scene_MenuBase.prototype.createCommonEvent = function() {
-        console.log(122222);
         this.setupCommonEvent();
         if (!this.hasCommonEvent()) {
             return;
@@ -803,6 +803,8 @@
     Spriteset_Menu.prototype.createToneChanger = function() {};
 
     Spriteset_Menu.prototype.updateToneChanger = function() {};
+
+    Spriteset_Menu.prototype.reloadWeatherEX = function() {};
 
     //=============================================================================
     // SceneManager
