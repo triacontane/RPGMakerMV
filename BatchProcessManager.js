@@ -1,16 +1,17 @@
 //=============================================================================
 // BatchProcessManager.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/05/11 現行のコアスクリプトの記述に準拠して修正
 // 1.1.0 2017/06/18 サウンドテストプラグインの修正に合わせてBGS,ME,SEの情報も出力する機能を追加
 // 1.0.1 2017/06/14 サウンドテストプラグインと組み合わせて使わないとエラーになる問題を修正
 // 1.0.0 2016/02/01 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -67,6 +68,11 @@
         });
     };
 
+    var node  = {
+        fs  : require('fs'),
+        path: require('path')
+    };
+
     function BatchProcessManager() {
         throw new Error('This is a static class');
     }
@@ -92,24 +98,16 @@
     };
 
     BatchProcessManager.devToolOpen = function() {
-        var window = require('nw.gui').Window.get();
-        if (!window.isDevToolsOpen()) {
-            var devTool = window.showDevTools();
-            devTool.moveTo(0, 0);
-            devTool.resizeTo(Graphics.width, Graphics.height);
-            window.focus();
-        }
+        var window = nw.Window.get();
+        window.showDevTools();
+        window.focus();
     };
 
     BatchProcessManager.getFileNameList = function(directly, IncludeExtension) {
-        var fs   = require('fs');
-        var path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, directly);
-        if (path.match(/^\/([A-Z]\:)/)) {
-            path = path.slice(1);
-        }
+        var path = StorageManager.getProjectRoot() + directly;
         var fileList    = [];
         var fileNameMap = {};
-        fs.readdirSync(path).forEach(function(fileName) {
+        node.fs.readdirSync(path).forEach(function(fileName) {
             if (!IncludeExtension) {
                 fileName = fileName.replace(/(.*)\..*$/, function() {
                     return arguments[1];
@@ -153,7 +151,7 @@
     };
 
     StorageManager.saveToLocalTextFile = function(fileName, text) {
-        var fs       = require('fs');
+        var fs       = node.fs;
         var dirPath  = this.localDataDirectoryPath();
         var filePath = dirPath + fileName;
         if (!fs.existsSync(dirPath)) {
@@ -164,12 +162,12 @@
         console.log('filePath:' + filePath);
     };
 
+    StorageManager.getProjectRoot = function() {
+        return node.path.dirname(process.mainModule.filename);
+    };
+
     StorageManager.localDataDirectoryPath = function() {
-        var path = window.location.pathname.replace(/(\/www|)\/[^\/]*$/, '/data/');
-        if (path.match(/^\/([A-Z]\:)/)) {
-            path = path.slice(1);
-        }
-        return decodeURIComponent(path);
+        return node.path.join(this.getProjectRoot(), 'data/');
     };
 
     Input.isPressedAny = function() {
@@ -211,23 +209,7 @@
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         var commandPrefix = new RegExp('^' + metaTagPrefix);
         if (!command.match(commandPrefix)) return;
-        try {
-            this.pluginCommandBatchProcessManager(command.replace(commandPrefix, ''), args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandBatchProcessManager(command.replace(commandPrefix, ''), args);
     };
 
     Game_Interpreter.prototype.pluginCommandBatchProcessManager = function(command, args) {
