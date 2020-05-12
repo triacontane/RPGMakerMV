@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.0 2020/05/13 指定したスイッチがONのときのみ「タッチ操作抑制」を有効にできる設定を追加
 // 1.13.1 2020/05/06 マップズームを実行したときの座標の取得計算が間違っていた問題を修正
 // 1.13.0 2019/12/22 ピクチャコモンを並列処理として実行する設定を追加。
 // 1.12.2 2019/03/31 キーバインドで追加でキーを指定した場合に、ボタン名称が小文字でないと反応しない仕様を変更
@@ -88,6 +89,11 @@
  * 他のタッチ操作と動作が重複する場合にONにします。
  * @default false
  * @type boolean
+ *
+ * @param タッチ操作抑制スイッチ
+ * @desc 指定した場合、対象スイッチがONのときのみ「タッチ操作抑制」が有効になります。
+ * @default 0
+ * @type switch
  *
  * @param 戦闘中常にコモン実行
  * @desc 戦闘中にピクチャをクリックしたとき、常にコモンイベントを実行します。(ON/OFF)
@@ -246,6 +252,11 @@
  * @default false
  * @type boolean
  *
+ * @param SuppressTouchSwitch
+ * @desc If this is specified, the "SuppressTouch" is enabled only when the target switch is on.
+ * @default 0
+ * @type switch
+ *
  * @param AlwaysCommonInBattle
  * @desc Always execute common event in battle(ON/OFF)
  * @default false
@@ -352,6 +363,7 @@
     var paramGameVariablePictNum      = getParamNumber(['GameVariablePictureNum', 'ピクチャ番号の変数番号'], 0);
     var paramTransparentConsideration = getParamBoolean(['TransparentConsideration', '透明色を考慮']);
     var paramSuppressTouch            = getParamBoolean(['SuppressTouch', 'タッチ操作抑制']);
+    var paramSuppressTouchSwitch      = getParamNumber(['SuppressTouchSwitch', 'タッチ操作抑制スイッチ']);
     var paramAlwaysCommonInBattle     = getParamBoolean(['AlwaysCommonInBattle', '戦闘中常にコモン実行']);
     var paramInvalidSwitchId          = getParamNumber(['InvalidSwitchId', '無効スイッチ'], 0);
     var paramAsParallelCommon         = getParamBoolean(['AsParallelCommon', '並列処理として実行']);
@@ -877,11 +889,17 @@
     };
 
     Sprite_Picture.prototype.fireTouchEvent = function(commandIds, i) {
-        if (paramSuppressTouch) TouchInput.suppressEvents();
+        if (this.isTouchSuppress()) {
+            TouchInput.suppressEvents();
+        }
         if (this.triggerIsLongPressed(i)) TouchInput._pressedTime = -60;
         if (this.triggerIsOnFocus(i)) this._onMouse = false;
         if (this.triggerIsOutFocus(i)) this._outMouse = false;
         $gameTemp.onTouchPicture(commandIds[i], this._pictureId);
+    };
+
+    Sprite_Picture.prototype.isTouchSuppress = function() {
+        return paramSuppressTouchSwitch > 0 ? $gameSwitches.value(paramSuppressTouchSwitch) : paramSuppressTouch;
     };
 
     Sprite_Picture.prototype.triggerIsLongPressed = function(triggerId) {
