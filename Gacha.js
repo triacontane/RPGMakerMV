@@ -4,6 +4,7 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.8.3 2020/06/13 1.8.2の修正の中に本体バージョン1.5.x以前では動作しない記述があったため1.5.xでも動作するよう修正
 // 1.8.2 2020/03/16 複数種類のアイテム入手時のメッセージに武器防具が含まれる場合、アイテム扱いされる不具合を修正
 // 1.8.1 2019/09/09 Scene_Gachaクラスを外部から参照できるようグローバル領域に出しました。
 // 1.8.0 2019/09/09 ガチャの詳細結果画面に専用画像を指定できる機能を追加
@@ -651,26 +652,27 @@ function Scene_Gacha() {
     };
 
     Scene_Gacha.prototype.generateResultMessage = function() {
-      let resultsForMessage = {
+      var resultsForMessage = {
         items: [],
         weapons: [],
         armors: []
       };
       this._resultList.forEach(function(data) {
-        let array = DataManager.isItem(data) ? resultsForMessage.items : DataManager.isWeapon(data) ? resultsForMessage.weapons : resultsForMessage.armors;
+        var array = DataManager.isItem(data) ? resultsForMessage.items : DataManager.isWeapon(data) ?
+            resultsForMessage.weapons : resultsForMessage.armors;
         if (!array[data.id]) {
           array[data.id] = 0;
         }
         array[data.id]++;
       });
       resultsForMessage.items.forEach(function(itemNum, id) {
-        $gameMessage.add(`${$dataItems[id].name} x ${itemNum}`);
+        $gameMessage.add($dataItems[id].name + ' x ' + itemNum);
       });
       resultsForMessage.weapons.forEach(function(weaponNum, id) {
-        $gameMessage.add(`${$dataWeapons[id].name} x ${weaponNum}`);
+        $gameMessage.add($dataWeapons[id].name + ' x ' + weaponNum);
       });
       resultsForMessage.armors.forEach(function(armorNum, id) {
-        $gameMessage.add(`${$dataArmors[id].name} x ${armorNum}`)
+        $gameMessage.add($dataArmors[id].name + ' x ' + armorNum);
       });
     };
 
