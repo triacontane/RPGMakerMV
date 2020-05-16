@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2020/05/17 指定したスイッチに連動させてウィンドウの表示/非表示を切り替える機能を追加
 // 2.4.0 2020/05/08 選択肢表示中でもウィンドウを隠せるよう設定を追加
 // 2.3.0 2019/10/22 ウィンドウを表示状態にもどしたとき、連動ピクチャは、もともと表示していた不透明度を復元するよう仕様変更
 // 2.2.0 2019/06/09 メッセージウィンドウと逆に連動して指定したピクチャの表示/非表示が自動で切り替わる機能を追加
@@ -45,6 +46,11 @@
  * @option pageup
  * @option pagedown
  * @option debug
+ *
+ * @param triggerSwitch
+ * @desc The window will be erased in conjunction with the specified switch.
+ * @default 0
+ * @type switch
  *
  * @param linkPictureNumbers
  * @desc Picture number of window show/hide
@@ -91,6 +97,12 @@
  * @option pageup
  * @option pagedown
  * @option debug
+ *
+ * @param triggerSwitch
+ * @text トリガースイッチ
+ * @desc 指定したスイッチに連動させてウィンドウを消去します。並列処理などを使ってON/OFFを適切に管理してください。
+ * @default 0
+ * @type switch
  *
  * @param linkPictureNumbers
  * @text 連動ピクチャ番号
@@ -279,6 +291,9 @@
         if (this.disableWindowHidden()) {
             return false;
         }
+        if (param.triggerSwitch > 0 && this.isTriggeredHiddenSwitch()) {
+            return true;
+        }
         return param.triggerButton.some(function(button) {
             switch (button) {
                 case '':
@@ -291,6 +306,17 @@
                     return Input.isTriggered(button);
             }
         });
+    };
+
+    Window_Message.prototype.isTriggeredHiddenSwitch = function() {
+        var triggerSwitch = $gameSwitches.value(param.triggerSwitch);
+        if (triggerSwitch && !this.isHidden()) {
+            return true;
+        }
+        if (!triggerSwitch && this.isHidden()) {
+            return true;
+        }
+        return false;
     };
 
     var _Window_Message_updateInput      = Window_Message.prototype.updateInput;
