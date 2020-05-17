@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2020/05/17 ヘルプウィンドウに曲名を表示するかどうかの設定を追加
 // 2.2.0 2020/05/04 データファイルのtype指定が大文字の場合でも正常に動作するよう修正
 //                  プラグインの型指定機能に対応
 // 2.1.0 2017/06/21 BGMが一曲も存在しないデータリストを読み込んで再生しようとするとエラーになる問題を修正
@@ -76,6 +77,11 @@
  * @value 1
  * @option 2[OK:演奏][Shift:音量調整])
  * @value 2
+ *
+ * @param ShowAudioNameDesc
+ * @desc BGMの説明ウィンドウに曲名を表示します。
+ * @default true
+ * @type boolean
  *
  * @help Add sound test screen.
  *
@@ -179,6 +185,11 @@
  * @option 2[OK:演奏][Shift:音量調整])
  * @value 2
  *
+ * @param 説明文に曲名表示
+ * @desc BGMの説明ウィンドウに曲名を表示します。
+ * @default true
+ * @type boolean
+ *
  * @help ゲーム中のオーディオを視聴できるサウンドテスト画面を実装します。
  * タイトル画面、メニュー画面およびプラグインコマンドから専用画面に遷移します。
  * ゲーム中に一度でも再生したことのあるオーディオを視聴できるようになります。
@@ -193,7 +204,7 @@
  * 項目名      : 説明
  * fileName    : BGMのファイル名です。拡張子不要。
  * displayName : BGMリストに表示される曲名です。
- * description : ヘルプウィンドウに表示される説明です。
+ * description : ヘルプウィンドウに表示される説明です。\nと記述すると改行します。
  * type        : オーディオ種別(bgm or bgs or me or se)
  *
  * なお、別プラグイン「バッチ処理プラグイン」(BatchProcessManager.js)
@@ -277,6 +288,11 @@ function Scene_SoundTest() {
         return value === null ? '' : value;
     };
 
+    var getParamBoolean = function(paramNames) {
+        var value = getParamString(paramNames).toUpperCase();
+        return value === 'TRUE';
+    };
+
     var getParamNumber = function(paramNames, min, max) {
         var value = getParamString(paramNames);
         if (arguments.length < 2) min = -Infinity;
@@ -311,6 +327,7 @@ function Scene_SoundTest() {
     var paramReadFormat      = getParamString(['読込形式', 'ReadFormat']).toUpperCase();
     var paramManageNumber    = getParamString(['管理番号', 'ManageNumber']);
     var paramListControlType = getParamNumber(['リスト操作タイプ', 'ListControlType'], 1, 2);
+    var paramShowAudioName   = getParamBoolean(['説明文に曲名表示', 'ShowAudioNameDesc']);
 
     //=============================================================================
     // DataManager
@@ -890,7 +907,8 @@ function Scene_SoundTest() {
     };
 
     Window_AudioList.prototype.getDescription = function(item) {
-        return this.isEnabled(item) ? '【' + item.displayName + '】\n' + item.description : '？？？';
+        var name = paramShowAudioName ? '【' + item.displayName + '】\n' : '';
+        return this.isEnabled(item) ? name + item.description.replace('\\n', '\n') : '？？？';
     };
 
     Window_AudioList.prototype.setup = function(audioType) {
