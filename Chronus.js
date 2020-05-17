@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.17.1 2020/05/17 まったく同じ時間にSET_TIMEしたとき翌日の同時刻になるよう仕様変更
 // 1.17.0 2020/04/12 累計日数をカレンダーに出力できる機能を追加、累計日数のカウントを1からに変更
 // 1.16.2 2019/11/17 1.15.0の修正以後、場所移動したときのタイルセット情報の取得が、移動前のものになっていた問題を修正
 // 1.16.1 2019/11/10 1.16.1で追加したアラーム機能で、アラームに設定した時間を超過して判定された場合、次回のインターバルが超過した時間からカウントされてしまう問題を修正
@@ -1382,7 +1383,7 @@ function Window_Chronus() {
 
     Game_Chronus.prototype.setTime = function(hour, minute) {
         var time = hour * 60 + minute;
-        if (this._timeMeter > time) this.addDay();
+        if (this._timeMeter >= time) this.addDay();
         this._timeMeter = time;
         this.demandRefresh(true);
     };
