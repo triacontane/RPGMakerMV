@@ -47,8 +47,10 @@
             return command.symbol === 'continue';
         })[0];
         if (newGameCommand && continueCommand) {
-            list[list.indexOf(continueCommand)] = newGameCommand;
-            list[list.indexOf(newGameCommand)] = continueCommand;
+            var newGameIndex = list.indexOf(newGameCommand);
+            var continueIndex = list.indexOf(continueCommand);
+            list[continueIndex] = newGameCommand;
+            list[newGameIndex] = continueCommand;
         }
     };
 })();
