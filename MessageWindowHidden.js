@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2020/05/20 ピクチャの連動を無効にできるスイッチを追加
 // 2.5.1 2020/05/19 2.3.0の仕様変更で連動表示ピクチャの透明度が復元できない問題を修正
 // 2.5.0 2020/05/17 指定したスイッチに連動させてウィンドウの表示/非表示を切り替える機能を追加
 // 2.4.0 2020/05/08 選択肢表示中でもウィンドウを隠せるよう設定を追加
@@ -63,6 +64,11 @@
  * @default []
  * @type number[]
  *
+ * @param disableLinkSwitchId
+ * @desc 指定した番号のスイッチがONのとき、ピクチャの連動が無効になります。
+ * @default 0
+ * @type switch
+ *
  * @param disableSwitchId
  * @desc 指定した番号のスイッチがONのとき、プラグインの機能が無効になります。
  * @default 0
@@ -117,9 +123,15 @@
  * @default []
  * @type number[]
  *
+ * @param disableLinkSwitchId
+ * @text 連動ピクチャ無効スイッチ
+ * @desc 指定した番号のスイッチがONのとき、ピクチャの連動が無効になります。
+ * @default 0
+ * @type switch
+ *
  * @param disableSwitchId
- * @text 無効スイッチ番号
- * @desc 指定した番号のスイッチがONのとき、プラグインの機能が無効になります。
+ * @text 無効スイッチ
+ * @desc 指定した番号のスイッチがONのとき、プラグイン全体の機能が無効になります。
  * @default 0
  * @type switch
  *
@@ -241,7 +253,7 @@
     };
 
     Window_Message.prototype.linkPictures = function(opacity, pictureNumbers) {
-        if (!pictureNumbers) {
+        if (!pictureNumbers || $gameSwitches.value(param.disableLinkSwitchId)) {
             return;
         }
         pictureNumbers.forEach(function(pictureId) {
