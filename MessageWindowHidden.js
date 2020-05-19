@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.1 2020/05/19 2.3.0の仕様変更で連動表示ピクチャの透明度が復元できない問題を修正
 // 2.5.0 2020/05/17 指定したスイッチに連動させてウィンドウの表示/非表示を切り替える機能を追加
 // 2.4.0 2020/05/08 選択肢表示中でもウィンドウを隠せるよう設定を追加
 // 2.3.0 2019/10/22 ウィンドウを表示状態にもどしたとき、連動ピクチャは、もともと表示していた不透明度を復元するよう仕様変更
@@ -254,7 +255,7 @@
             return;
         }
         if (opacity === null) {
-            opacity = this._originalPictureOpacities[pictureId] || 255;
+            opacity = this._originalPictureOpacities[pictureId];
         } else {
             this._originalPictureOpacities[pictureId] = picture.opacity();
         }
