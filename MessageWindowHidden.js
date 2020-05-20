@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2020/05/21 トリガースイッチと連動無効スイッチの状態によってエラーが起きうる記述を修正
 // 2.6.0 2020/05/20 ピクチャの連動を無効にできるスイッチを追加
 // 2.5.1 2020/05/19 2.3.0の仕様変更で連動表示ピクチャの透明度が復元できない問題を修正
 // 2.5.0 2020/05/17 指定したスイッチに連動させてウィンドウの表示/非表示を切り替える機能を追加
@@ -267,6 +268,9 @@
             return;
         }
         if (opacity === null) {
+            if (!this._originalPictureOpacities.hasOwnProperty(pictureId)) {
+                return;
+            }
             opacity = this._originalPictureOpacities[pictureId];
         } else {
             this._originalPictureOpacities[pictureId] = picture.opacity();
