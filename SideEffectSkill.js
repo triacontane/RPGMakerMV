@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2020/05/22 反撃された場合などスキルを使用しなかったケースで「弱点時のみ」などの判定は無条件で有効になってしまう問題を修正
 // 1.4.1 2019/07/15 BattleEffectPopup.jsと併用したとき、フロントビューだと戦闘開始時などにInvalidポップが余分に表示される競合を解消
 // 1.4.0 2019/02/16 行動が無効(ダメージ0)だった場合のみ副作用を適用できる機能を追加
 //                  行動が反射された場合のみ副作用を適用できる機能を追加
@@ -163,6 +164,12 @@
  *
  * 複数指定する場合、[,]で区切ってください。効果の番号が[1]が先頭です。
  * また入力時副作用は敵キャラ専用です。
+ *
+ * 「成功時のみ」「失敗時のみ」といった条件は、以下のタイミングでは
+ * スキルを実行前なので使用できません。
+ * 　スキル入力時
+ * 　スキル使用前
+ * 　ターン開始時
  *
  * 効果「コモンイベント」はタイミングが
  * 「ターン開始時」「スキル使用時」「スキル使用後」「ターン終了時」
@@ -422,7 +429,6 @@
     //=============================================================================
     var _Game_Action_apply      = Game_Action.prototype.apply;
     Game_Action.prototype.apply = function(target) {
-        this._applyForSideEffect = true;
         if (this._reflectionTarget) {
             this._reflectionForSideEffect = true;
         }
@@ -473,8 +479,6 @@
     Game_Action.prototype.isValidSideEffect = function() {
         if (!this.item()) {
             return false;
-        } else if (!this._applyForSideEffect) {
-            return true;
         } else {
             return this.isValidSideEffectForSuccess() &&
                 this.isValidSideEffectForFailure() &&
