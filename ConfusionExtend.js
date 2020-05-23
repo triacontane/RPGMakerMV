@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2020/05/23 混乱スキルの指定で、最後に使用したスキルを選択できる機能を追加
 // 1.4.1 2020/04/22 混乱スキルのターゲットが「敵n体ランダム」のとき全体攻撃になってしまう問題を修正
 // 1.4.0 2017/10/07 混乱スキルのターゲット選択方法にラストターゲット(直前に選択した対象)を追加しました。
 // 1.3.0 2017/06/10 制約「敵を攻撃」の場合に味方対象スキルを実行した場合、対象を味方にするよう修正
@@ -25,7 +26,8 @@
  *
  * @param TargetFriendSkill
  * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 混乱系（行動制約のプルダウンの選択値が「1」～「3」）ステートの
  * 指定内容を以下の通り拡張します。
@@ -57,7 +59,7 @@
  * 2. ステートのメモ欄を以下の通り指定してください。
  * <CEスキル1:3>      # 通常攻撃の代わりにID[3..5]のスキルが使用されます。
  * <CEスキル2:4>      # 4番目以降も同様に指定可能です。
- * <CEスキル3:5>      #
+ * <CEスキル3:5>      # -1を指定すると最後に使用したスキルを使います。
  * <CE使用可能スキル> # 使用可能なスキルが全て候補になります。
  * <CE予備スキル:6>   # 指定されたスキルがMP不足等の理由ですべて
  *                      使用できない場合、ID[6]のスキルが使用されます。
@@ -85,7 +87,8 @@
  *
  * @param 味方対象スキルの対象
  * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help 混乱系（行動制約のプルダウンの選択値が「1」～「3」）ステートの
  * 指定内容を拡張し、通常攻撃ではなくスキル（複数指定可能）を指定したり
@@ -116,7 +119,7 @@
  * 2. ステートのメモ欄を以下の通り指定してください。
  * <CEスキル1:3>      # 通常攻撃の代わりにID[3..5]のスキルが使用されます。
  * <CEスキル2:4>      # 4番目以降も同様に指定可能です。
- * <CEスキル3:5>      #
+ * <CEスキル3:5>      # -1を指定すると最後に使用したスキルを使います。
  * <CE使用可能スキル> # 使用可能なスキルが全て候補になります。
  * <CE予備スキル:6>   # 指定されたスキルがMP不足等の理由ですべて
  *                      使用できない場合、ID[6]のスキルが使用されます。
@@ -159,8 +162,8 @@
     };
 
     var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        var value = (getParamOther(paramNames) || '').toUpperCase();
+        return value === 'ON' || value === 'TRUE';
     };
 
     var getArgNumber = function(arg, min, max) {
@@ -242,14 +245,18 @@
         return [this.attackSkillId(), this.guardSkillId()];
     };
 
+    Game_BattlerBase.prototype.getLastUsedSkillId = function() {
+        return this._lastUsedSkillId;
+    };
+
+    Game_BattlerBase.prototype.setLastUsedSkillId = function(id) {
+        this._lastUsedSkillId = id;
+    };
+
     //=============================================================================
     // Game_Battler
     //  ラストターゲットを取得します。
     //=============================================================================
-    /**
-     * ラストターゲットを取得します。
-     * @returns {number} ラストターゲット
-     */
     Game_Battler.prototype.getLastTargetIndex = function() {
         return this._lastTargetIndex;
     };
@@ -294,6 +301,14 @@
     // Game_Action
     //  混乱時のスキルを別途設定します。
     //=============================================================================
+    var _Game_Action_apply = Game_Action.prototype.apply;
+    Game_Action.prototype.apply = function(target) {
+        if (this.isSkill()) {
+            this.subject().setLastUsedSkillId(this.item().id);
+        }
+        _Game_Action_apply.apply(this, arguments);
+    };
+
     var _Game_Action_setConfusion      = Game_Action.prototype.setConfusion;
     Game_Action.prototype.setConfusion = function() {
         _Game_Action_setConfusion.apply(this, arguments);
@@ -316,13 +331,21 @@
         while (i) {
             var metaValue = getMetaValues(state, ['スキル' + i, 'Skill' + i]);
             if (metaValue) {
-                skillIds.push(getArgNumber(metaValue, 1));
+                var id = getArgNumber(metaValue, -1);
+                if (id <= 0) {
+                    id = this.findSubjectLastBattleSkill();
+                }
+                skillIds.push(id);
                 i++;
             } else {
                 i = (i > 10 ? null : i + 1);
             }
         }
         return skillIds.concat(this.getConfusionUsableSkills(state));
+    };
+
+    Game_Action.prototype.findSubjectLastBattleSkill = function() {
+        return this.subject().getLastUsedSkillId() || 1;
     };
 
     Game_Action.prototype.getConfusionUsableSkills = function(state) {
