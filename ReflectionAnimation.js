@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2020/05/24 魔法攻撃扱いの通常攻撃を反射するとエラーになる問題を修正
  1.1.1 2020/05/24 ヘルプとコードを微修正
  1.1.0 2020/05/24 反射された側にアニメーションを表示する機能を追加
  1.0.0 2020/05/24 初版
@@ -81,9 +82,9 @@
     Window_BattleLog.prototype.displayReflection = function(target) {
         if (param.animationId > 0) {
             var method = param.wait ? 'showAnimationAndWait' : 'showAnimation';
-            this.push(method, null, [target], param.animationId);
+            this.push(method, this._relectionTarget, [target], param.animationId);
         }
-        this.push('showAnimationAndWait', null, [this._relectionTarget], this._relectionItem.animationId);
+        this.push('showAnimationAndWait', target, [this._relectionTarget], this._relectionItem.animationId);
         _Window_BattleLog_displayReflection.apply(this, arguments);
     };
 
