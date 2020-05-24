@@ -82,13 +82,13 @@
     var _BattleManager_invokeMagicReflection = BattleManager.invokeMagicReflection;
     BattleManager.invokeMagicReflection = function(subject, target) {
         _BattleManager_invokeMagicReflection.apply(this, arguments);
-        this._statusRefreshCancel = true;
+        this._refreshStatusCancel = true;
     };
 
     var _BattleManager_refreshStatus = BattleManager.refreshStatus;
     BattleManager.refreshStatus = function() {
-        if (this._statusRefreshCancel) {
-            this._statusRefreshCancel = false;
+        if (this._refreshStatusCancel) {
+            this._refreshStatusCancel = false;
             return;
         }
         _BattleManager_refreshStatus.apply(this, arguments);
@@ -106,10 +106,10 @@
         }
         _Window_BattleLog_displayReflection.apply(this, arguments);
         this.push('showAnimationAndWait', target, [this._relectionTarget], this._relectionItem.animationId);
-        this.push('requestStatusRefresh');
+        this.push('requestRefreshStatus');
     };
 
-    Window_BattleLog.prototype.requestStatusRefresh = function() {
+    Window_BattleLog.prototype.requestRefreshStatus = function() {
         BattleManager.refreshStatus();
     };
 
