@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.3 2020/05/24 反射したときのステータスウィンドウへのダメージ反映を、反射エフェクト後に変更
  1.1.2 2020/05/24 魔法攻撃扱いの通常攻撃を反射するとエラーになる問題を修正
  1.1.1 2020/05/24 ヘルプとコードを微修正
  1.1.0 2020/05/24 反射された側にアニメーションを表示する機能を追加
@@ -75,6 +76,25 @@
     var param = createPluginParameter('ReflectionAnimation');
 
     /**
+     * BattleManager
+     * 魔法反射が有効だった場合のステータス反映を遅らせます。
+     */
+    var _BattleManager_invokeMagicReflection = BattleManager.invokeMagicReflection;
+    BattleManager.invokeMagicReflection = function(subject, target) {
+        _BattleManager_invokeMagicReflection.apply(this, arguments);
+        this._statusRefreshCancel = true;
+    };
+
+    var _BattleManager_refreshStatus = BattleManager.refreshStatus;
+    BattleManager.refreshStatus = function() {
+        if (this._statusRefreshCancel) {
+            this._statusRefreshCancel = false;
+            return;
+        }
+        _BattleManager_refreshStatus.apply(this, arguments);
+    };
+
+    /**
      * Window_BattleLog
      * 反射時のアニメーションを再生します。
      */
@@ -84,8 +104,13 @@
             var method = param.wait ? 'showAnimationAndWait' : 'showAnimation';
             this.push(method, this._relectionTarget, [target], param.animationId);
         }
-        this.push('showAnimationAndWait', target, [this._relectionTarget], this._relectionItem.animationId);
         _Window_BattleLog_displayReflection.apply(this, arguments);
+        this.push('showAnimationAndWait', target, [this._relectionTarget], this._relectionItem.animationId);
+        this.push('requestStatusRefresh');
+    };
+
+    Window_BattleLog.prototype.requestStatusRefresh = function() {
+        BattleManager.refreshStatus();
     };
 
     Window_BattleLog.prototype.showAnimationAndWait = function(subject, targets, animationId) {
