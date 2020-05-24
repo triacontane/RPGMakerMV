@@ -48,15 +48,6 @@
     'use strict';
 
     /**
-     * Set plugin command to method
-     * @param commandName plugin command name
-     * @param methodName execute method(Game_Interpreter)
-     */
-    var setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(param.commandPrefix + commandName, methodName);
-    };
-
-    /**
      * Create plugin parameter. param[paramName] ex. param.commandPrefix
      * @param pluginName plugin name(EncounterSwitchConditions)
      * @returns {Object} Created parameter
