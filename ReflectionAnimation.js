@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2020/05/24 ヘルプとコードを微修正
  1.1.0 2020/05/24 反射された側にアニメーションを表示する機能を追加
  1.0.0 2020/05/24 初版
 ----------------------------------------------------------------------------
@@ -32,7 +33,8 @@
  *
  * @help ReflectionAnimation.js
  *
- * 魔法反射が発生した際にアニメーションを再生します。
+ * 魔法反射が発生した際に魔法反射用のアニメーションを再生します。
+ * また、反射された側に攻撃アニメーションを表示します。
  *　
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -87,10 +89,6 @@
     var _Window_BattleLog_displayReflection = Window_BattleLog.prototype.displayReflection;
     Window_BattleLog.prototype.displayReflection = function(target) {
         if (param.animationId > 0) {
-            this.push('showAnimation', null, [target], param.animationId);
-            if (param.wait) {
-                this.push('showAnimationAndWait', param.animationId)
-            }
             var method = param.wait ? 'showAnimationAndWait' : 'showAnimation';
             this.push(method, null, [target], param.animationId);
         }
@@ -102,6 +100,7 @@
         this.showAnimation(subject, targets, animationId);
         var animation = $dataAnimations[animationId];
         if (animation) {
+            // 再生レートを変更している場合、ここを変更する。(変更後の再生レートを動的かつ安全に取得することは困難)
             this._waitCount = animation.frames.length * 4;
         }
     };
