@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/05/24 反射された側にアニメーションを表示する機能を追加
  1.0.0 2020/05/24 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -88,16 +89,27 @@
         if (param.animationId > 0) {
             this.push('showAnimation', null, [target], param.animationId);
             if (param.wait) {
-                this.push('waitReflectionAnimation', param.animationId)
+                this.push('showAnimationAndWait', param.animationId)
             }
+            var method = param.wait ? 'showAnimationAndWait' : 'showAnimation';
+            this.push(method, null, [target], param.animationId);
         }
+        this.push('showAnimationAndWait', null, [this._relectionTarget], this._relectionItem.animationId);
         _Window_BattleLog_displayReflection.apply(this, arguments);
     };
 
-    Window_BattleLog.prototype.waitReflectionAnimation = function(id) {
-        var data = $dataAnimations[id];
-        if (data) {
-            this._waitCount = data.frames.length * 4;
+    Window_BattleLog.prototype.showAnimationAndWait = function(subject, targets, animationId) {
+        this.showAnimation(subject, targets, animationId);
+        var animation = $dataAnimations[animationId];
+        if (animation) {
+            this._waitCount = animation.frames.length * 4;
         }
+    };
+
+    var _Window_BattleLog_startAction = Window_BattleLog.prototype.startAction;
+    Window_BattleLog.prototype.startAction = function(subject, action, targets) {
+        this._relectionItem = action.item();
+        this._relectionTarget = subject;
+        _Window_BattleLog_startAction.apply(this, arguments);
     };
 })();
