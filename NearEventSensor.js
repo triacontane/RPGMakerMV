@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2020/05/26 センサーエフェクトをイベントではなくプレイヤーに適用できる機能を追加。パラメータの再設定が必要です。
 // 2.2.0 2018/11/05 フキダシの表示完了までウェイトするかどうかの設定を追加
 // 2.1.1 2018/11/05 マップ移動時にすでに検知範囲内に入っていたイベントについて、一度範囲外に出ないと反応しない問題を修正
 // 2.1.0 2017/10/23 特定のスイッチもしくはセルフスイッチが有効なときのみ感知エフェクトを出す機能を追加
@@ -25,12 +26,14 @@
  * @plugindesc 周辺イベント感知プラグイン
  * @author トリアコンタン
  *
- * @param デフォルトフラッシュ
+ * @param DefaultFlash
+ * @text デフォルトフラッシュ
  * @desc 感知時にイベントを指定色でフラッシュさせます。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param デフォルトフキダシ
+ * @param DefaultBalloon
+ * @text デフォルトフキダシ
  * @desc 感知時にイベントに自動でフキダシアイコンを出します。
  * (1:びっくり 2:はてな 3:音符 4:ハート 5:怒り....)
  * @default 0
@@ -68,38 +71,51 @@
  * @option ユーザ定義5
  * @value 15
  *
- * @param 空イベントは無効
+ * @param DisableEmpty
+ * @text 空イベントは無効
  * @desc イベント内容が空の場合、感知しなくなります。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param 感知距離
+ * @param SensorDistance
+ * @text 感知距離
  * @desc イベントを関知する距離です。
  * @default 2
  * @type number
  *
- * @param フラッシュカラー
+ * @param FlashColor
+ * @text フラッシュカラー
  * @desc 感知時のフラッシュ色です。R(赤),G(緑),B(青),A(強さ)の順番で指定してください。
- * @default
+ * @default {"Red":"255","Green":"255","Blue":"255","Alpha":"255"}
  * @type struct<Color>
  *
- * @param フラッシュ時間
+ * @param FlashDuration
+ * @text フラッシュ時間
  * @desc フラッシュさせるフレーム数です。
  * @default 60
  * @type number
  *
- * @param フキダシ間隔
+ * @param BalloonInterval
+ * @text フキダシ間隔
  * @desc フキダシを表示する間隔のフレーム数です。
  * @default 15
  * @type number
  *
- * @param フキダシ完了までウェイト
+ * @param WaitForBalloon
+ * @text フキダシ完了までウェイト
  * @desc 範囲内に居続けた場合の連続フキダシ表示で、フキダシの表示が終わるのを待ってから次のフキダシの表示します。
  * @default true
  * @type boolean
  *
- * @param 向きを考慮
+ * @param ConsiderationDir
+ * @text 向きを考慮
  * @desc プレイヤーがイベントの方を向いている場合のみエフェクトを有効にします。(ON/OFF)
+ * @default false
+ * @type boolean
+ *
+ * @param ApplyPlayer
+ * @text プレイヤーに適用
+ * @desc 感知時のエフェクトを対象イベントではなくプレイヤーに対して適用します。
  * @default false
  * @type boolean
  *
@@ -145,69 +161,33 @@
  * @type number
  * @min 0
  * @max 255
- * @default 0
+ * @default 255
  *
  * @param Green
  * @desc 緑色の情報です。(0-255)
  * @type number
  * @min 0
  * @max 255
- * @default 0
+ * @default 255
  *
  * @param Blue
  * @desc 青色の情報です。(0-255)
  * @type number
  * @min 0
  * @max 255
- * @default 0
+ * @default 255
  *
  * @param Alpha
  * @desc 強さの情報です。(0-255)
  * @type number
  * @min 0
  * @max 255
- * @default 0
+ * @default 255
  */
 
 (function() {
     'use strict';
-    var pluginName    = 'NearEventSensor';
     var metaTagPrefix = 'NES';
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = (getParamOther(paramNames) || '').toUpperCase();
-        return value === 'ON' || value === 'TRUE';
-    };
-
-    var getParamJson = function(paramNames, defaultValue) {
-        var value = getParamOther(paramNames);
-        try {
-            value = JSON.parse(value);
-            if (value === null) {
-                value = defaultValue;
-            }
-        } catch (e) {
-            alert('!!!Plugin param is wrong.!!!\nPlugin:NearEventSensor.js');
-            value = defaultValue;
-        }
-        return value;
-    };
 
     var getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
@@ -242,18 +222,26 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramDefaultFlash     = getParamBoolean(['DefaultFlash', 'デフォルトフラッシュ']);
-    var paramDefaultBalloon   = getParamNumber(['DefaultBalloon', 'デフォルトフキダシ'], 0);
-    var paramDisableEmpty     = getParamBoolean(['DisableEmpty', '空イベントは無効']);
-    var paramSensorDistance   = getParamNumber(['SensorDistance', '感知距離'], 1);
-    var paramFlashColor       = getParamJson(['FlashColor', 'フラッシュカラー'], null);
-    var paramFlashDuration    = getParamNumber(['FlashDuration', 'フラッシュ時間'], 1);
-    var paramBalloonInterval  = getParamNumber(['BalloonInterval', 'フキダシ間隔'], 0);
-    var paramConsiderationDir = getParamBoolean(['ConsiderationDir', '向きを考慮']);
-    var paramWaitForBalloon   = getParamBoolean(['WaitForBalloon', 'フキダシ完了までウェイト']);
-    if (paramFlashColor) {
-        paramFlashColor = [paramFlashColor.Red, paramFlashColor.Green, paramFlashColor.Blue, paramFlashColor.Alpha];
-    }
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+    var param = createPluginParameter('NearEventSensor');
+    param.FlashColorArray = [param.FlashColor.Red, param.FlashColor.Green, param.FlashColor.Blue, param.FlashColor.Alpha];
 
     //=============================================================================
     // Sprite_Character
@@ -304,6 +292,21 @@
         }
     };
 
+    Game_CharacterBase.prototype.applySensorEffect = function(targetEvent) {
+        if (!this.isFlash() && targetEvent.isFlashEvent()) {
+            this.startFlash(param.FlashColorArray.clone(), param.FlashDuration);
+        }
+        var balloonId = targetEvent.getSensorBalloonId();
+        if (balloonId && (!param.WaitForBalloon || !this.isBalloonPlaying())) {
+            if (this._balloonInterval <= 0 || isNaN(this._balloonInterval)) {
+                this.requestBalloon(balloonId);
+                this._balloonInterval = param.BalloonInterval;
+            } else {
+                this._balloonInterval--;
+            }
+        }
+    };
+
     //=============================================================================
     // Game_Event
     //  プレイヤーとの距離を測り、必要な場合にエフェクトさせる機能を追加定義します。
@@ -323,32 +326,31 @@
     };
 
     Game_Event.prototype.updateSensorEffect = function() {
-        if (this.isEmptyValidate() && this.isVeryNearThePlayer() && !$gameMap.isEventRunning() && this.isValidSensor()) {
-            if (!this.isFlash() && this.isFlashEvent() && paramFlashColor) {
-                this.startFlash(paramFlashColor.clone(), paramFlashDuration);
-            }
-            var balloonId = this.getSensorBalloonId();
-            if (balloonId && (!paramWaitForBalloon || !this.isBalloonPlaying())) {
-                if (this._balloonInterval <= 0) {
-                    this.requestBalloon(balloonId);
-                    this._balloonInterval = paramBalloonInterval;
-                } else {
-                    this._balloonInterval--;
-                }
-            }
+        var subject = this.findNearEffectSubject();
+        if (this.isSensorOn()) {
+            subject.applySensorEffect(this);
         } else {
             this._balloonInterval = 0;
         }
     };
 
+    Game_Event.prototype.isSensorOn = function() {
+        return this.isEmptyValidate() && this.isVeryNearThePlayer() &&
+            !$gameMap.isEventRunning() && this.isValidSensor();
+    };
+
+    Game_Event.prototype.findNearEffectSubject = function() {
+        return param.ApplyPlayer ? $gamePlayer : this;
+    };
+
     Game_Event.prototype.isEmptyValidate = function() {
         var list = this.list();
-        return (list && list.length > 1) || !paramDisableEmpty;
+        return (list && list.length > 1) || !param.DisableEmpty;
     };
 
     Game_Event.prototype.isFlashEvent = function() {
         var useFlash = getMetaValues(this.event(), ['フラッシュ対象', 'FlashEvent']);
-        return useFlash ? getArgBoolean(useFlash) : paramDefaultFlash;
+        return useFlash ? getArgBoolean(useFlash) : param.DefaultFlash;
     };
 
     Game_Event.prototype.isValidSensor = function() {
@@ -367,7 +369,7 @@
 
     Game_Event.prototype.getSensorBalloonId = function() {
         var balloonId = getMetaValues(this.event(), ['フキダシ対象', 'BalloonEvent']);
-        return balloonId ? getArgNumber(balloonId, 0) : paramDefaultBalloon;
+        return balloonId ? getArgNumber(balloonId, 0) : param.DefaultBalloon;
     };
 
     Game_Event.prototype.isVeryNearThePlayer = function() {
@@ -375,8 +377,8 @@
         var sy = this.deltaYFrom($gamePlayer.y);
         var ax = Math.abs(sx);
         var ay = Math.abs(sy);
-        var result = (ax + ay <= paramSensorDistance);
-        if (result && paramConsiderationDir) {
+        var result = (ax + ay <= param.SensorDistance);
+        if (result && param.ConsiderationDir) {
             if (ax > ay) {
                 return $gamePlayer.direction() === (sx > 0 ? 6 : 4);
             } else if (sy !== 0) {
