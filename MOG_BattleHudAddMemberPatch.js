@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/05/28 パーティからメンバーを外すとエラーになる問題を修正
  1.0.0 2020/05/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -43,7 +44,7 @@
             this._hp_old_ani[0] = -1;
         }
         _Battle_Hud_update.apply(this, arguments);
-        if (this._mamberSize !== memberSize) {
+        if (this._mamberSize !== memberSize && this._battler) {
             this.update_sprites();
         }
         this._mamberSize = memberSize;
