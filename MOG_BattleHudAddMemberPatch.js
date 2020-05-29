@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2020/05/29 いくつかのスキンでメンバー入替時にゲージの表示位置が一部ずれる問題を修正
  1.0.1 2020/05/28 パーティからメンバーを外すとエラーになる問題を修正
  1.0.0 2020/05/23 初版
 ----------------------------------------------------------------------------
@@ -40,6 +41,9 @@
         var memberSize = $gameParty.members().length;
         if (this._mamberSize !== memberSize) {
             this._hud_size[0] = 0;
+            this._hp_old[0] = -1;
+            this._mp_old[0] = -1;
+            this._tp_old[0] = -1;
             this._mp_old_ani[0] = -1;
             this._hp_old_ani[0] = -1;
         }
