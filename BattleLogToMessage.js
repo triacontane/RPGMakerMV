@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2020/05/30 バトルログウィンドウのフォントサイズを変更できる機能を追加
 // 1.9.2 2020/04/30 1.9.1の修正が不完全だったので再度修正
 // 1.9.1 2020/04/29 GraphicalDesignMode.jsと併用したときバトルログウィンドウの位置変更が反映されない問題を修正
 // 1.9.0 2019/06/09 表示メッセージが行数の上限を上回った場合に表示がカットされないよう変更
@@ -53,6 +54,11 @@
  * @param WaitForEndAction
  * @desc 行動終了後、メッセージをクリアする前に指定したフレーム数だけウェイトを掛けます。
  * @default 0
+ * @type number
+ *
+ * @param FontSize
+ * @desc ログウィンドウのフォントサイズです。
+ * @default 28
  * @type number
  *
  * @param MessageLines
@@ -108,6 +114,11 @@
  * @param 行動終了後ウェイト
  * @desc 行動終了後、メッセージをクリアする前に指定したフレーム数だけウェイトを掛けます。
  * @default 0
+ * @type number
+ *
+ * @param フォントサイズ
+ * @desc ログウィンドウのフォントサイズです。
+ * @default 28
  * @type number
  *
  * @param メッセージ行数
@@ -194,6 +205,7 @@
     var paramHiddenIfEmpty        = getParamBoolean(['HiddenIfEmpty', '空の場合に非表示']);
     var paramSkillViewSimplified  = getParamBoolean(['SkillViewSimplified', 'スキル名簡易表示']);
     var paramMessageWindowNoApply = getParamBoolean(['MessageWindowNoApply', 'メッセージウィンドウ非適用']);
+    var paramFontSize             = getParamNumber(['FontSize', 'フォントサイズ']);
 
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
@@ -343,6 +355,11 @@
             this.push('waitForCustom', paramWaitForEndAction);
         }
         _Window_BattleLog_endAction.apply(this, arguments);
+    };
+
+    var _Window_BattleLog_standardFontSize = Window_BattleLog.prototype.standardFontSize;
+    Window_BattleLog.prototype.standardFontSize = function() {
+        return paramFontSize || _Window_BattleLog_standardFontSize.apply(this, arguments);
     };
 
     var _Window_BattleLog_addText      = Window_BattleLog.prototype.addText;
