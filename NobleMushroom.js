@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.3 2020/06/02 コモンイベントでメッセージを表示しているときにポーズメニューを開けない不具合を修正
 // 1.11.2 2020/05/31 1.11.1の修正で、初期値を0にした場合も強制的に1になっていた不具合を修正
 // 1.11.1 2020/05/09 表示速度変数のパラメータの初期値を0に変更
 // 1.11.0 2020/05/08 場所移動時のオートセーブを無効にできる機能を追加
@@ -790,7 +791,11 @@
     };
 
     Game_Interpreter.prototype.isMessageWait = function() {
-        return this._waitMode === 'message';
+        if (this._childInterpreter) {
+            return this._childInterpreter.isMessageWait();
+        } else {
+            return this._waitMode === 'message';
+        }
     };
 
     //=============================================================================
