@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/06/03 イベントテストを実行するとエラーになる問題を修正
  1.0.0 2018/08/12 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -143,7 +144,7 @@
     var _Game_Map_tileset      = Game_Map.prototype.tileset;
     Game_Map.prototype.tileset = function() {
         var tileset = _Game_Map_tileset.apply(this, arguments);
-        if (!tileset.makerApplied) {
+        if (tileset && !tileset.makerApplied) {
             this.hiddenMakerTiles(tileset);
         }
         return tileset;
