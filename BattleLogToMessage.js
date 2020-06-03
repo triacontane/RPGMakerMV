@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.1 2020/06/04 1.9.0の修正により、ステータスウィンドウを下部に配置するとメッセージの上に表示されてしまう問題を修正
 // 1.10.0 2020/05/30 バトルログウィンドウのフォントサイズを変更できる機能を追加
 // 1.9.2 2020/04/30 1.9.1の修正が不完全だったので再度修正
 // 1.9.1 2020/04/29 GraphicalDesignMode.jsと併用したときバトルログウィンドウの位置変更が反映されない問題を修正
@@ -268,8 +269,10 @@
     Scene_Battle.prototype.createAllWindows = function() {
         _Scene_Battle_createAllWindows.apply(this, arguments);
         // GraphicalDesignMode.jsと競合するので無効化
-//        this._windowLayer.removeChild(this._logWindow);
-//        this._windowLayer.addChildAt(this._logWindow, this._windowLayer.getChildIndex(this._messageWindow) - 1);
+        if (!this._logWindow.loadProperty) {
+            this._windowLayer.removeChild(this._logWindow);
+            this._windowLayer.addChildAt(this._logWindow, this._windowLayer.getChildIndex(this._messageWindow) - 1);
+        }
         if (paramStatusPosUpper) {
             this.adjustWindowPositions();
         }
