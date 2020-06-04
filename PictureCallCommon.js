@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.2 2020/06/05 ヘルプのキーバインドにpagedownとpageupを追加
 // 1.14.1 2020/05/16 ヘルプのコマンド部分の紛らわしい記述を修正
 // 1.14.0 2020/05/13 指定したスイッチがONのときのみ「タッチ操作抑制」を有効にできる設定を追加
 // 1.13.1 2020/05/06 マップズームを実行したときの座標の取得計算が間違っていた問題を修正
@@ -162,14 +163,16 @@
  *  P_CALL_KEY_BIND [ピクチャ番号] [ボタン名称] [トリガー] [透明色を考慮]
  *  　　ピクチャの領域内でトリガー条件を満たした場合に、任意のボタンを押したことにします。
  *  　　ボタン名の設定は以下の通りです。(Windows基準)
- *  ok      : Enter,Z
- *  shift   : Shift
- *  control : Ctrl,Alt
- *  escape  : Esc,X
- *  left    : ←
- *  up      : ↑
- *  right   : →
- *  down    : ↓
+ *  ok       : Enter,Z
+ *  shift    : Shift
+ *  control  : Ctrl,Alt
+ *  escape   : Esc,X
+ *  left     : ←
+ *  up       : ↑
+ *  right    : →
+ *  down     : ↓
+ *  pageup   : PageUp
+ *  pagedown : PageDown
  *
  *  ピクチャのボタン化解除 or
  *  P_CALL_CE_REMOVE [ピクチャ番号]
