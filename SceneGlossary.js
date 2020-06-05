@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.17.2 2020/06/06 未入手のアイテムを？？？で表示するとき、アイコンも非表示にするよう仕様変更
 // 2.17.1 2020/05/08 画像のロードに時間が掛かる環境で高速でページを切り替えたとき、前のページの画像が表示されることがある問題を修正
 // 2.17.0 2020/05/04 辞典表示でスクリプトを使用できる制御文字と、使用効果の種別を表示できる制御文字を追加
 // 2.16.0 2020/04/24 ヘルプテキストに「\n」と記入することで改行できる機能を追加
@@ -1950,7 +1951,9 @@ function Window_GlossaryComplete() {
     Window_GlossaryList.prototype.drawItemName = function(item, x, y, width) {
         if (item) {
             var iconBoxWidth = item.iconIndex > 0 ? Window_Base._iconWidth + 4 : 0;
-            this.drawIcon(item.iconIndex, x + 2, y + 2);
+            if ($gameParty.hasGlossary(item)) {
+                this.drawIcon(item.iconIndex, x + 2, y + 2);
+            }
             this.setGlossaryColor(item);
             var notYetName = $gameParty.getTextItemNotYet();
             var name       = $gameParty.hasGlossary(item) ? item.name : notYetName;
