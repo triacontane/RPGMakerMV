@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.0 2020/06/21 遷移元シーンの情報を破棄するスクリプトを追加
  1.4.0 2020/06/21 別の一覧ウィンドウの詳細情報を表示するウィンドウの作成を支援する機能を追加
  1.3.0 2020/05/01 各画面に背景画像を指定できる機能を追加
  1.2.2 2020/03/28 プリセットのスクリプトに1件追加
@@ -122,6 +123,9 @@
  * ・スクリプト
  * 指定したウィンドウにフォーカスを移します。
  * SceneManager.changeWindowFocus('window1');
+ *
+ * 遷移元シーンの情報をひとつ破棄します。
+ * SceneManager.trashScene();
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -573,6 +577,7 @@
  * @option SceneManager.callCustomMenu('Scene___'); // 別のカスタムメニューに移動
  * @option this.popScene(); // 元のシーンに戻る
  * @option SceneManager.changeWindowFocus('window1'); // 指定ウィンドウにフォーカス
+ * @option SceneManager.trashScene(); // 元のシーン情報を破棄する
  *
  * @param SwitchId
  * @text スイッチ
@@ -622,6 +627,12 @@
         sceneClass.prototype             = Object.create(Scene_CustomMenu.prototype);
         sceneClass.prototype.constructor = sceneClass;
         return sceneClass;
+    };
+
+    SceneManager.trashScene = function() {
+        if (this._stack.length > 1) {
+            this._stack.pop()
+        }
     };
 
     const getClassName = function(object) {
