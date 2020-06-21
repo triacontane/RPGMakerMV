@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.8 2020/06/21 ウィンドウ高さが項目の高さを下回った場合に項目が描画されない場合がある問題を修正
 // 2.10.7 2020/04/29 バトルログウィンドウの位置変更ができない問題を修正
 // 2.10.6 2020/03/21 SceneCustomMenu.jsに合わせた微修正
 // 2.10.5 2020/02/06 プラグインで追加した一部のウィンドウでデザインモード解除時に位置変更が反映されない問題を修正
@@ -1596,6 +1597,11 @@ var $dataContainerProperties = null;
         _Window_Selectable_initialize.apply(this, arguments);
         // Resolve conflict for BattleFormation.js
         this._customLineNumber = this.maxRows ? this.maxRows() : 0;
+    };
+
+    var _Window_Selectable_maxPageRows = Window_Selectable.prototype.maxPageRows;
+    Window_Selectable.prototype.maxPageRows = function() {
+        return _Window_Selectable_maxPageRows.apply(this, arguments) || 1;
     };
 
     var _Window_Base_standardFontFace      = Window_Base.prototype.standardFontFace;
