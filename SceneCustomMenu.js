@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2020/06/21 項目描画で指定したメモ欄のピクチャを表示できる機能を追加
  1.5.0 2020/06/21 遷移元シーンの情報を破棄するスクリプトを追加
  1.4.0 2020/06/21 別の一覧ウィンドウの詳細情報を表示するウィンドウの作成を支援する機能を追加
  1.3.0 2020/05/01 各画面に背景画像を指定できる機能を追加
@@ -407,6 +408,7 @@
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
  * @option this.changeTextColor(this.textColor(1)); // テキストカラー変更(drawTextでのみ有効)
  * @option this.drawText(this.findWindowItem('window1').name, r.x, r.y, r.width); // 別ウィンドウで選択している項目名
+ * @option this.drawNotePicture('noteValue', r.x, r.y); // 指定したメモ欄のピクチャを描画
  *
  * @param IsEnableScript
  * @parent DataScript
@@ -1065,6 +1067,40 @@
             }
         }
 
+        findMetaData(index) {
+            const item = this.getItem(index);
+            if (!item) {
+                return null;
+            }
+            if (item.meta) {
+                return item.meta;
+            } else if (item.actor && item.actor().meta) {
+                return item.actor().meta;
+            }
+            return null;
+        }
+
+        drawNotePicture(metaValue, x, y) {
+            const meta = this.findMetaData(this._drawingIndex);
+            if (!meta) {
+                return;
+            }
+            const fileName = meta[metaValue];
+            if (fileName) {
+                this.drawPicture(fileName, x, y);
+            }
+        };
+
+        drawPicture(file, x, y) {
+            const bitmap = ImageManager.loadPicture(file);
+            const index = this.index();
+            bitmap.addLoadListener(() => {
+                if (index === this.index()) {
+                    this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
+                }
+            });
+        }
+
         setDynamicHeight() {
             this.height = this.fittingHeight(this.numVisibleRows());
             this.createContents();
@@ -1081,6 +1117,7 @@
         }
 
         drawItem(index) {
+            this._drawingIndex = index;
             const item = this.getItem(index);
             if (!item) {
                 return;
