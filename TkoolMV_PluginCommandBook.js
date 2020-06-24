@@ -8,6 +8,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2020/06/24 指定位置にアニメーション表示のコマンドでウェイトが効かない問題を修正
 // 1.1.1 2017/12/03 コマンド「Load_Picture」で実行するとエラーになる問題を修正
 // 1.1.0 2017/10/31 ピクチャ関連の命令を戦闘中に使用すると失敗する問題を修正
 // 1.0.0 2015/12/31 初版
@@ -1337,7 +1338,7 @@
         var x    = parseIntStrict(args[0]);
         var y    = parseIntStrict(args[1]);
         var id   = parseIntStrict(args[2]);
-        var wait = args[3] && (args[3] === 'ウェイトあり' || args[3].toUpperCase() === 'wait');
+        var wait = args[3] && (args[3] === 'ウェイトあり' || args[3].toUpperCase() === 'WAIT');
         $gameScreen.startAnimation(x, y, id, false);
         if (wait) this.wait($dataAnimations[id].frames.length * 4);
     };
