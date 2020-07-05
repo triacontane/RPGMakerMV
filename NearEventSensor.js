@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.0 2020/07/05 イベントから離れたらエフェクトを即時消去できる設定を追加
 // 3.0.0 2020/05/26 センサーエフェクトをイベントではなくプレイヤーに適用できる機能を追加。パラメータの再設定が必要です。
 // 2.2.0 2018/11/05 フキダシの表示完了までウェイトするかどうかの設定を追加
 // 2.1.1 2018/11/05 マップ移動時にすでに検知範囲内に入っていたイベントについて、一度範囲外に出ないと反応しない問題を修正
@@ -116,6 +117,12 @@
  * @param ApplyPlayer
  * @text プレイヤーに適用
  * @desc 感知時のエフェクトを対象イベントではなくプレイヤーに対して適用します。
+ * @default false
+ * @type boolean
+ *
+ * @param EraseWhenAway
+ * @text 離れたら消去
+ * @desc イベントから離れたらエフェクトを消去します。
  * @default false
  * @type boolean
  *
@@ -259,6 +266,14 @@
         }
     };
 
+    var _Sprite_Character_updateBalloon = Sprite_Character.prototype.updateBalloon;
+    Sprite_Character.prototype.updateBalloon = function() {
+        if (this._character.isBalloonCancel()) {
+            this.endBalloon();
+        }
+        _Sprite_Character_updateBalloon.apply(this, arguments);
+    };
+
     //=============================================================================
     // Game_CharacterBase
     //  キャラクターのフラッシュ機能を追加定義します。
@@ -266,7 +281,7 @@
     var _Game_CharacterBaseInitMembers       = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBaseInitMembers.call(this);
-        this._flashColor    = false;
+        this._flashColor    = null;
         this._flashDuration = 0;
     };
 
@@ -279,6 +294,10 @@
     Game_CharacterBase.prototype.startFlash = function(flashColor, flashDuration) {
         this._flashColor    = flashColor;
         this._flashDuration = flashDuration;
+    };
+
+    Game_CharacterBase.prototype.clearFlash = function() {
+        this._flashColor = [0,0,0,0];
     };
 
     Game_CharacterBase.prototype.isFlash = function() {
@@ -305,6 +324,22 @@
                 this._balloonInterval--;
             }
         }
+        this._sensorApply = true;
+    };
+
+    Game_CharacterBase.prototype.eraseSensorEffect = function() {
+        if (!this._sensorApply || !param.EraseWhenAway) {
+            return;
+        }
+        this.clearFlash();
+        this._balloonCancel = true;
+        this._sensorApply = false;
+    };
+
+    Game_CharacterBase.prototype.isBalloonCancel = function() {
+        var cancel = this._balloonCancel;
+        this._balloonCancel = false;
+        return cancel;
     };
 
     //=============================================================================
@@ -330,6 +365,7 @@
         if (this.isSensorOn()) {
             subject.applySensorEffect(this);
         } else {
+            subject.eraseSensorEffect(this);
             this._balloonInterval = 0;
         }
     };
