@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2020/07/05 MOG_ChronoEngine.jsと併用したときマップの一部がちらつく場合がある競合を修正
 // 1.1.3 2020/05/09 競合対策コードを追加
 // 1.1.2 2018/12/22 HalfMove.jsによる減速斜め移動など特定の条件下でマップの描画位置がずれる場合がある現象を修正
 // 1.1.1 2017/11/19 MOG_ChronoEngine.js等との競合を解消
@@ -322,6 +323,10 @@
         this.x = this._character.getLayerX();
         this.y = this._character.getLayerY();
         this.z = this._character.screenZ();
+        // Resolve conflict for MOG_ChronoEngine
+        if (typeof Imported !== 'undefined' && Imported.MOG_ChronoEngine) {
+            this.z += 1;
+        }
     };
 
     Sprite_MapLayer.prototype.updateBitmap = function() {
