@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.1 2020/07/05 3.1.0の修正をイベント開始時にも適用できるよう変更
 // 3.1.0 2020/07/05 イベントから離れたらエフェクトを即時消去できる設定を追加
 // 3.0.0 2020/05/26 センサーエフェクトをイベントではなくプレイヤーに適用できる機能を追加。パラメータの再設定が必要です。
 // 2.2.0 2018/11/05 フキダシの表示完了までウェイトするかどうかの設定を追加
@@ -358,6 +359,12 @@
         if (this.page()) {
             this.updateSensorEffect();
         }
+    };
+
+    var _Game_Event_start = Game_Event.prototype.start;
+    Game_Event.prototype.start = function() {
+        _Game_Event_start.apply(this, arguments);
+        this.eraseSensorEffect();
     };
 
     Game_Event.prototype.updateSensorEffect = function() {
