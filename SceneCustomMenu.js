@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.1 2020/07/06 任意のウィンドウのインデックスをコモンイベントなどから変更できるスクリプトを追加
  1.6.0 2020/06/21 項目描画で指定したメモ欄のピクチャを表示できる機能を追加
  1.5.0 2020/06/21 遷移元シーンの情報を破棄するスクリプトを追加
  1.4.0 2020/06/21 別の一覧ウィンドウの詳細情報を表示するウィンドウの作成を支援する機能を追加
@@ -125,8 +126,14 @@
  * 指定したウィンドウにフォーカスを移します。
  * SceneManager.changeWindowFocus('window1');
  *
+ * 指定したウィンドウのインデックスを変更します。
+ * SceneManager.changeWindowIndex('window1', 1);
+ *
  * 遷移元シーンの情報をひとつ破棄します。
  * SceneManager.trashScene();
+ *
+ * 指定したウィンドウインスタンスを取得します。（上級者向け）
+ * SceneManager.findCustomMenuWindow('window1');
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -579,6 +586,7 @@
  * @option SceneManager.callCustomMenu('Scene___'); // 別のカスタムメニューに移動
  * @option this.popScene(); // 元のシーンに戻る
  * @option SceneManager.changeWindowFocus('window1'); // 指定ウィンドウにフォーカス
+ * @option SceneManager.changeWindowIndex('window1', 1); // 指定ウィンドウのインデックス変更
  * @option SceneManager.trashScene(); // 元のシーン情報を破棄する
  *
  * @param SwitchId
@@ -615,6 +623,14 @@
         index++;
     }
 
+    const getClassName = function(object) {
+        const define = object.constructor.toString();
+        if (define.match(/^class/)) {
+            return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
+        }
+        return define.replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
+    };
+
     SceneManager.callCustomMenu = function(sceneId) {
         if (!this.findSceneData(sceneId)) {
             throw new Error(`Scene data '${sceneId}' is not found`);
@@ -637,14 +653,6 @@
         }
     };
 
-    const getClassName = function(object) {
-        const define = object.constructor.toString();
-        if (define.match(/^class/)) {
-            return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
-        }
-        return define.replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
-    };
-
     SceneManager.findSceneData = function(sceneId) {
         return param.SceneList.filter(data => data.Id === sceneId)[0];
     };
@@ -659,12 +667,23 @@
         this._focusWindowId = windowId;
     };
 
+    SceneManager.changeWindowIndex = function(windowId, index) {
+        const win = this.findCustomMenuWindow(windowId);
+        if (win) {
+            win.select(index);
+        }
+    };
+
     SceneManager.findChangeWindowFocus = function() {
         const id = this._focusWindowId;
         if (id) {
             this._focusWindowId = null;
         }
         return id;
+    };
+
+    SceneManager.findCustomMenuWindow = function(windowId) {
+        return this._scene.findWindow ? this._scene.findWindow(windowId) : null;
     };
 
     Game_Party.prototype.reserveMembers = function() {
@@ -783,22 +802,22 @@
         }
 
         setPlacement(data) {
-            const win     = this._customWindowMap.get(data.Id);
-            const parentX = this._customWindowMap.get(data.RelativeWindowIdX);
+            const win     = this.findWindow(data.Id);
+            const parentX = this.findWindow(data.RelativeWindowIdX);
             if (parentX) {
                 win.x += parentX.x + parentX.width;
                 if (!data.width) {
                     win.width = Graphics._boxWidth - win.x;
                 }
             }
-            const parentY = this._customWindowMap.get(data.RelativeWindowIdY);
+            const parentY = this.findWindow(data.RelativeWindowIdY);
             if (parentY) {
                 win.y += parentY.y + parentY.height;
             }
         }
 
         adjustPlacementByHelpWindow(data) {
-            const win = this._customWindowMap.get(data.Id);
+            const win = this.findWindow(data.Id);
             win.y += this._helpWindow.y + this._helpWindow.height;
         }
 
@@ -820,6 +839,10 @@
                 return windowList[0].Id;
             }
             return null;
+        }
+
+        findWindow(id) {
+            return this._customWindowMap.get(id);
         }
 
         update() {
