@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.2 2020/07/08 マップ画面にピクチャを表示できるスクリプトを追加
  1.6.1 2020/07/06 任意のウィンドウのインデックスをコモンイベントなどから変更できるスクリプトを追加
  1.6.0 2020/06/21 項目描画で指定したメモ欄のピクチャを表示できる機能を追加
  1.5.0 2020/06/21 遷移元シーンの情報を破棄するスクリプトを追加
@@ -134,6 +135,9 @@
  *
  * 指定したウィンドウインスタンスを取得します。（上級者向け）
  * SceneManager.findCustomMenuWindow('window1');
+ *
+ * マップ画面にピクチャを表示します。
+ * SceneManager.showMapPicture(1, 'ファイル名', 0, 0, 0, 100, 100, 255, 1);
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -588,6 +592,7 @@
  * @option SceneManager.changeWindowFocus('window1'); // 指定ウィンドウにフォーカス
  * @option SceneManager.changeWindowIndex('window1', 1); // 指定ウィンドウのインデックス変更
  * @option SceneManager.trashScene(); // 元のシーン情報を破棄する
+ * @option SceneManager.showMapPicture(1, '', 0, 0, 0, 100, 100, 255, 1); // マップ画面にピクチャを表示
  *
  * @param SwitchId
  * @text スイッチ
@@ -636,6 +641,22 @@
             throw new Error(`Scene data '${sceneId}' is not found`);
         }
         this.push(this.createCustomMenuClass(sceneId));
+    };
+
+    const _SceneManager_goto = SceneManager.goto;
+    SceneManager.goto = function(sceneClass) {
+        if (this._scene instanceof Scene_Map) {
+            this._mapGameScreen = $gameScreen;
+        }
+        _SceneManager_goto.apply(this, arguments);
+    };
+
+    SceneManager.showMapPicture = function(pictureId, name, origin, x, y,
+                                           scaleX, scaleY, opacity, blendMode) {
+        if (this._mapGameScreen) {
+            this._mapGameScreen.showPicture(pictureId, name, origin, x, y,
+                scaleX, scaleY, opacity, blendMode);
+        }
     };
 
     SceneManager.createCustomMenuClass = function(sceneId) {
