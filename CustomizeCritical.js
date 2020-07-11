@@ -1,11 +1,12 @@
 //=============================================================================
 // CustomizeCritical.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2020 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2020/07/11 複数ヒットする攻撃の会心判定が、ヒットごとに行われていなかった問題を修正
 // 1.1.3 2017/09/01 様子を見る等の一部の行動を敵キャラが実行するとエラーになる問題を修正（byツミオさま）
 // 1.1.2 2017/07/09 ヘルプのメモ欄「<CC計算式:JavaScript計算式>」の記述例が誤っていたので修正
 // 1.1.1 2017/05/31 1.1.0の修正でメニュー画面でスキルを使用するとエラーになる不具合を修正
@@ -49,6 +50,9 @@
  *
  * ・演出用の専用メッセージを実行前に表示します。
  * <CCメッセージ:メッセージ内容>
+ *
+ * ※ 敵全体あるいは複数回攻撃するスキルの場合、1回でも会心判定になった場合
+ * 会心用の演出となります。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -127,6 +131,15 @@
     };
 
     var _Game_Action_itemCri            = Game_Action.prototype.itemCri;
+    Game_Action.prototype.itemCri = function(target) {
+        var queue = this._criticalQueue;
+        if (queue && queue.length > 0) {
+            return queue.shift() ? 1.0 : 0.0;
+        } else {
+            return _Game_Action_itemCri.apply(this, arguments);
+        }
+    };
+
     Game_Action.prototype.judgeCritical = function(target) {
         var changeValue = getMetaValues(this.item(), ['確率変更', 'ProbChange']);
         var itemCritical;
@@ -136,37 +149,26 @@
             var addValue = getMetaValues(this.item(), ['確率加算', 'ProbAdd']);
             itemCritical = _Game_Action_itemCri.apply(this, arguments) + (addValue ? getArgNumber(addValue) / 100 : 0);
         }
-        if (!this._criticalMap) {
-            this._criticalMap = new Map();
-        }
-        this._criticalMap.set(target, Math.random() < itemCritical);
+        this._criticalQueue.push(Math.random() < itemCritical);
     };
 
-    Game_Action.prototype.itemCri = function(target) {
-        if (!this._criticalMap) {
-            this.judgeCritical(target);
-        }
-        return this._criticalMap.get(target) ? 1.0 : 0.0;
+    Game_Action.prototype.initCriticalQueue = function() {
+        this._criticalQueue = [];
     };
 
     Game_Action.prototype.isCritical = function() {
-        if (!this._criticalMap) {
+        if (!this._criticalQueue) {
             return false;
         }
-        for (var criticalData of this._criticalMap) {
-            if (criticalData[1]) return true;
-        }
-        return false;
+        return this._criticalQueue.some(function(critical) {
+            return critical;
+        })
     };
 
     var _Game_Action_applyCritical      = Game_Action.prototype.applyCritical;
     Game_Action.prototype.applyCritical = function(damage) {
         var formula = getMetaValues(this.item(), ['計算式', 'Formula']);
         return formula ? damage : _Game_Action_applyCritical.apply(this, arguments);
-    };
-
-    Game_Action.prototype.clearCriticalMap = function() {
-        this._criticalMap = null;
     };
 
     //=============================================================================
@@ -190,6 +192,7 @@
     //  会心判定を事前に行います。
     //=============================================================================
     BattleManager.judgeCritical = function(action, targets) {
+        action.initCriticalQueue();
         targets.forEach(function(target) {
             action.judgeCritical(target);
         });
@@ -222,7 +225,6 @@
             this._currentAction.item().animationId = this._noCritialAnimationId;
             this._noCritialAnimationId = 0;
         }
-        this._currentAction.clearCriticalMap();
         this._currentAction = null;
     };
 
