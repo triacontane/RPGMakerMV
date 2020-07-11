@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.20.0 2020/07/11 すべての動的文字列ピクチャに付与される接頭辞テキストを指定できる機能を追加
 // 1.19.0 2020/04/09 フレームウィンドウに余白を指定できる機能を追加
 // 1.18.0 2020/04/05 制御文字\v[n, m]で埋められる文字をパラメータから指定できる機能を追加
 // 1.17.0 2020/02/07 背景ウィンドウのスキンを変更できる機能を追加し、ウィンドウビルダーに対応
@@ -92,6 +93,11 @@
  * @text 埋め文字
  * @desc 数値描画時、指定桁数に満たないときに埋められる文字です。半角で1文字だけ指定してください。
  * @default 0
+ *
+ * @param prefixText
+ * @text 接頭辞文字列
+ * @desc すべての文字列ピクチャの前に挿入されるテキストです。主にデフォルトの制御文字などを指定します。
+ * @default
  *
  * @help 指定した文字列でピクチャを動的に生成するコマンドを提供します。
  * 文字列には各種制御文字（\v[n]等）も使用可能で、制御文字で表示した変数の値が
@@ -440,15 +446,16 @@
     };
 
     Game_Screen.prototype.getDTextPictureInfo = function() {
+        var prefix = getArgString(param.prefixText) || '';
         return {
-            value         : this.dTextValue,
+            value         : prefix + this.dTextValue,
             size          : this.dTextSize || 0,
             align         : this.dTextAlign || 0,
             color         : this.dTextBackColor,
             font          : this.dTextFont,
             usingVariables: this.dUsingVariables,
             realTime      : this.dTextRealTime,
-            originalValue : this.dTextOriginal,
+            originalValue : prefix + this.dTextOriginal,
             windowFrame   : this.dWindowFrame,
             gradationLeft : this.dTextGradationLeft,
             gradationRight: this.dTextGradationRight,
