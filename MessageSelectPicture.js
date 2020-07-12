@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2020/07/12 MPP_ChoiceEX.jsと併用したとき、非表示の選択肢があると選択肢と表示ピクチャとがズレる競合を修正
 // 1.2.2 2019/09/29 ピクチャ選択と無関係な選択肢を選択後に、ピクチャ選択肢のコマンドを実行すると
 //                  以前に選択した選択肢の番号に対応するピクチャが一瞬表示される問題を修正
 // 1.2.1 2019/04/07 1.2.0で選択肢のインデックスが1つずれていた問題を修正
@@ -45,6 +46,8 @@
  * 　複数のピクチャを選択肢に関連づけたい場合は、その分コマンドを実行してください。
  *
  * 例：選択肢ピクチャ設定 1 1
+ *
+ * MPP_ChoiceEX.jsと併用する場合、このプラグインを下に配置してください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -134,7 +137,38 @@
             if (!picture) {
                 return;
             }
-            picture.setOpacity(data.index === this.index() ? 255 : 0);
+            picture.setOpacity(data.index === this.findMessageIndex() ? 255 : 0);
         }, this);
     };
+
+    // for MPP_ChoiceEX.js start
+    Window_ChoiceList.prototype.findMessageIndex = function() {
+        var index = this.index();
+        if ($gameMessage.hiddenIndexList) {
+            $gameMessage.hiddenIndexList.forEach(function(hidden, i) {
+                if (hidden && index >= i) {
+                    index++;
+                }
+            });
+        }
+        return index;
+    };
+
+    var _Game_Interpreter_addChoices = Game_Interpreter.prototype.addChoices;
+    Game_Interpreter.prototype.addChoices = function(params, i, data, d) {
+        var regIf = /\s*if\((.+?)\)/;
+        var hiddenIndexList = [];
+        for (var n = 0; n < params[0].length; n++) {
+            var str = params[0][n];
+            if (regIf.test(str)) {
+                str = str.replace(regIf, '');
+                hiddenIndexList.push(RegExp.$1 && !this.evalChoice(RegExp.$1));
+            } else {
+                hiddenIndexList.push(false);
+            }
+        }
+        $gameMessage.hiddenIndexList = hiddenIndexList;
+        return _Game_Interpreter_addChoices.apply(this, arguments);
+    }
+    // for MPP_ChoiceEX.js end
 })();
