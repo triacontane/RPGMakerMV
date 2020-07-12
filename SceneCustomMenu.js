@@ -6,6 +6,9 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.0 2020/07/12 再描画に同一のスイッチを指定した場合に、すべてのウィンドウが再描画されるよう修正
+                  通常コマンドリストにも非表示、選択不可でスクリプトを使用できる機能を追加
+                  スクリプト実行でエラーになったときにゲームを停止せずエラーログを出力するよう変更
  1.6.2 2020/07/08 マップ画面にピクチャを表示できるスクリプトを追加
  1.6.1 2020/07/06 任意のウィンドウのインデックスをコモンイベントなどから変更できるスクリプトを追加
  1.6.0 2020/06/21 項目描画で指定したメモ欄のピクチャを表示できる機能を追加
@@ -96,6 +99,7 @@
  * プラグインパラメータからウィンドウ情報を定義して独自のメニュー画面を作れます。
  * 初期状態で動作するサンプルや豊富なスクリプトのプリセットが用意されていて
  * すぐに動作を確認できます。
+ * スクリプトでエラーが発生するとブザー音がなり、開発者ツールにログが表示されます。
  * また、コモンイベントが使えるので細かい要件にも対応できます。
  *
  * カスタムメニュー画面を作成するには、大まかに以下の手順を踏みます。
@@ -542,11 +546,50 @@
  * @default 0
  * @type switch
  *
+ * @param VisibleScript
+ * @text 表示スクリプト
+ * @desc 指定したスクリプトがtrueの場合のみ画面に表示されます。変数『item』で『一覧ウィンドウID』の選択項目が参照できます。
+ * @default
+ * @type combo
+ * @option item.meta['value']; // メモ欄に<value>の記述がある
+ * @option item.name.match('value'); // 名前にvalueを含む
+ * @option item.id > v(10); // IDが変数[10]の値より大きい
+ * @option s(parseInt(item.meta['value'])); // <value:n>のスイッチがON
+ * @option item !== ''; // 空文字以外
+ * @option !!item; // null, undefined, 0, 空文字以外
+ * @option item.stypeId === v(10); // スキルタイプが変数[10]の値と等しい
+ * @option item.etypeId === v(10); // 装備タイプが変数[10]の値と等しい
+ * @option item.wtypeId === v(10); // 武器タイプが変数[10]の値と等しい
+ * @option item.atypeId === v(10); // 防具タイプが変数[10]の値と等しい
+ * @option item.itypeId === 1; // アイテムタイプが[通常アイテム]
+ * @option this._actor.canEquip(item); // メインメニューで選択したアクターが装備可能
+ * @option this._actor.canUse(item); // メインメニューで選択したアクターが使用可能
+ *
  * @param EnableSwitchId
  * @text 選択可能スイッチID
  * @desc 指定したスイッチがONの場合のみ選択できます。OFFだと選択禁止になります。
  * @default 0
  * @type switch
+ *
+ * @param IsEnableScript
+ * @parent DataScript
+ * @text 選択可能スクリプト
+ * @desc 項目を選択可能かどうかを判定するスクリプトです。変数『item』で『一覧ウィンドウID』の選択項目が参照できます。
+ * @default
+ * @type combo
+ * @option item.meta['value']; // メモ欄に<value>の記述がある
+ * @option item.name.match('value'); // 名前にvalueを含む
+ * @option item.id > v(10); // IDが変数[10]の値より大きい
+ * @option s(parseInt(item.meta['value'])); // <value:n>のスイッチがON
+ * @option item !== ''; // 空文字以外
+ * @option !!item; // null, undefined, 0, 空文字以外
+ * @option item.stypeId === v(10); // スキルタイプが変数[10]の値と等しい
+ * @option item.etypeId === v(10); // 装備タイプが変数[10]の値と等しい
+ * @option item.wtypeId === v(10); // 武器タイプが変数[10]の値と等しい
+ * @option item.atypeId === v(10); // 防具タイプが変数[10]の値と等しい
+ * @option item.itypeId === 1; // アイテムタイプが[通常アイテム]
+ * @option this._actor.canEquip(item); // メインメニューで選択したアクターが装備可能
+ * @option this._actor.canUse(item); // メインメニューで選択したアクターが使用可能
  *
  * @param HelpText
  * @text ヘルプテキスト
@@ -634,6 +677,14 @@
             return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
         }
         return define.replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
+    };
+
+    const outputError = function(e) {
+        SoundManager.playBuzzer();
+        console.error(e);
+        if (Utils.isNwjs()) {
+            nw.Window.get().showDevTools();
+        }
     };
 
     SceneManager.callCustomMenu = function(sceneId) {
@@ -878,6 +929,7 @@
             if (this._customData.Panorama) {
                 this.updatePanorama();
             }
+            this.refreshWindowIfNeed();
         }
 
         updatePanorama() {
@@ -886,12 +938,25 @@
             this._panorama.origin.y += panorama.ScrollY;
         }
 
+        refreshWindowIfNeed() {
+            this._customWindowMap.forEach(win => {
+                win.refreshIfNeed();
+            });
+            this._customWindowMap.forEach(win => {
+                win.resetRefreshSwitch();
+            });
+        };
+
         fireEvent(event, moveFocus = true) {
             if (event.SwitchId) {
                 $gameSwitches.setValue(event.SwitchId, true);
             }
             if (event.Script) {
-                eval(event.Script);
+                try {
+                    eval(event.Script);
+                } catch (e) {
+                    outputError(e);
+                }
             }
             if (!this._active) {
                 return;
@@ -1011,7 +1076,6 @@
             this.updateOpenClose();
             super.update();
             this.updateIndexVariable();
-            this.refreshIfNeed();
         }
 
         select(index) {
@@ -1062,6 +1126,12 @@
             }
             if ($gameSwitches.value(switchId)) {
                 this.refresh();
+            }
+        }
+
+        resetRefreshSwitch() {
+            const switchId = this._data.RefreshSwitchId;
+            if (switchId) {
                 $gameSwitches.setValue(switchId, false);
             }
         }
@@ -1212,6 +1282,11 @@
             return win.findCurrentItem();
         }
 
+        findListWindowItem() {
+            const listWindowId = this._data.ListWindowId;
+            return listWindowId ? this.findWindowItem(listWindowId) : null;
+        }
+
         getItem(index) {
             if (index === undefined) {
                 index = this.index();
@@ -1261,8 +1336,8 @@
             return this.isUseMasking() ? list : list.filter(data => this.isVisible(data));
         }
 
-        isVisible(data, v, s) {
-            return !data.VisibleSwitchId || $gameSwitches.value(data.VisibleSwitchId);
+        isVisible(item) {
+            return this.isScriptValid(item.VisibleScript) && this.isSwitchValid(item.VisibleSwitchId);
         }
 
         drawItemSub(item, rect, index) {
@@ -1275,7 +1350,29 @@
         }
 
         isEnabledSub(item) {
-            return !item.EnableSwitchId || $gameSwitches.value(item.EnableSwitchId);
+            return this.isScriptValid(item.IsEnableScript) && this.isSwitchValid(item.EnableSwitchId);
+        }
+
+        isSwitchValid(id) {
+            return !id || $gameSwitches.value(id);
+        }
+
+        isScriptValid(script) {
+            if (script === '') {
+                return true;
+            }
+            const v  = $gameVariables.value.bind($gameVariables); // used by eval
+            const s  = $gameSwitches.value.bind($gameSwitches); // used by eval
+            const item = this.findListWindowItem(); // used by eval
+            if (item === undefined) {
+                return false;
+            }
+            try {
+                return eval(script);
+            } catch (e) {
+                outputError(e);
+                return true;
+            }
         }
 
         findDecisionEvent() {
@@ -1290,13 +1387,19 @@
 
     class Window_CustomMenuDataList extends Window_CustomMenu {
         makeCommandList() {
-            const listWindowId = this._data.ListWindowId;
-            if (listWindowId) {
-                return [this.findWindowItem(listWindowId)];
+            const listWindowItem = this.findListWindowItem();
+            if (listWindowItem) {
+                return [listWindowItem];
             }
             const v  = $gameVariables.value.bind($gameVariables); // used by eval
             const s  = $gameSwitches.value.bind($gameSwitches); // used by eval
-            let list = eval(this._data.ListScript);
+            let list;
+            try {
+                list = eval(this._data.ListScript);
+            } catch (e) {
+                outputError(e);
+                list = [];
+            }
             if (!Array.isArray(list)) {
                 list = [list];
             }
@@ -1304,19 +1407,38 @@
                 list = list.filter(item => this.isVisible(item, v, s));
             }
             if (this._data.MappingScript) {
-                list = list.map(item => eval(this._data.MappingScript));
+                list = list.map(item => {
+                    try {
+                        return eval(this._data.MappingScript)
+                    } catch (e) {
+                        outputError(e);
+                        return null;
+                    }
+                });
             }
             return list;
         }
 
         isVisible(item, v, s) {
-            return eval(this._data.FilterScript)
+            try{
+                return eval(this._data.FilterScript)
+            } catch (e) {
+                outputError(e);
+                return false;
+            }
+
         }
 
         drawItemSub(item, r, index) {
             const scriptList = this._data.ItemDrawScript;
             if (scriptList && scriptList.length > 0) {
-                scriptList.forEach(script => eval(script));
+                scriptList.forEach(script => {
+                    try {
+                        eval(script)
+                    } catch (e) {
+                        outputError(e);
+                    }
+                });
             } else if (item === String(item)) {
                 this.drawTextEx(item, r.x, r.y);
             } else if (item.hasOwnProperty('iconIndex')) {
@@ -1340,7 +1462,13 @@
             const v      = $gameVariables.value.bind($gameVariables); // used by eval
             const s      = $gameSwitches.value.bind($gameSwitches); // used by eval
             const script = this._data.IsEnableScript;
-            return script ? eval(script) : true;
+            try {
+                return script ? eval(script) : true;
+            } catch (e) {
+                outputError(e);
+                return false;
+            }
+
         }
 
         setActor(actor) {
