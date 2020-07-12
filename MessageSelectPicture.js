@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.4 2020/07/12 1.2.3の対応で選択肢をイベントコマンドの上限を超えて指定すると正常に機能しない問題を修正
 // 1.2.3 2020/07/12 MPP_ChoiceEX.jsと併用したとき、非表示の選択肢があると選択肢と表示ピクチャとがズレる競合を修正
 // 1.2.2 2019/09/29 ピクチャ選択と無関係な選択肢を選択後に、ピクチャ選択肢のコマンドを実行すると
 //                  以前に選択した選択肢の番号に対応するピクチャが一瞬表示される問題を修正
@@ -154,10 +155,18 @@
         return index;
     };
 
+    var _Game_Interpreter_setupChoices = Game_Interpreter.prototype.setupChoices;
+    Game_Interpreter.prototype.setupChoices = function(params) {
+        if (this.addChoices) {
+            $gameMessage.hiddenIndexList = [];
+        }
+        _Game_Interpreter_setupChoices.apply(this, arguments);
+    };
+
     var _Game_Interpreter_addChoices = Game_Interpreter.prototype.addChoices;
     Game_Interpreter.prototype.addChoices = function(params, i, data, d) {
         var regIf = /\s*if\((.+?)\)/;
-        var hiddenIndexList = [];
+        var hiddenIndexList = $gameMessage.hiddenIndexList;
         for (var n = 0; n < params[0].length; n++) {
             var str = params[0][n];
             if (regIf.test(str)) {
@@ -167,7 +176,6 @@
                 hiddenIndexList.push(false);
             }
         }
-        $gameMessage.hiddenIndexList = hiddenIndexList;
         return _Game_Interpreter_addChoices.apply(this, arguments);
     }
     // for MPP_ChoiceEX.js end
