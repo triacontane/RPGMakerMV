@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.1 2020/07/12 1.7.0の修正でパラメータの再設定をしないとコマンドウィンドウの項目が表示されなくなる問題を修正
  1.7.0 2020/07/12 再描画に同一のスイッチを指定した場合に、すべてのウィンドウが再描画されるよう修正
                   通常コマンドリストにも非表示、選択不可でスクリプトを使用できる機能を追加
                   スクリプト実行でエラーになったときにゲームを停止せずエラーログを出力するよう変更
@@ -1358,7 +1359,7 @@
         }
 
         isScriptValid(script) {
-            if (script === '') {
+            if (script === '' || script === undefined) {
                 return true;
             }
             const v  = $gameVariables.value.bind($gameVariables); // used by eval
