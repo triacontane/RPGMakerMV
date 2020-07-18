@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2020/07/19 攻撃する瞬間に発動者にアニメーション表示できる機能を追加
 // 1.4.5 2019/11/10 Torigoya_ReplaceDeadMemberPlus.jsと併用時、入れ替わったアクターが瞬間表示される競合を修正
 // 1.4.4 2019/10/10 反撃拡張プラグインと併用し、かつ戦闘行動の強制による反撃が無効な設定で自分自身の攻撃に反撃するとエラーになる競合の修正
 // 1.4.3 2019/09/23 演出対象をアクターもしくは敵キャラのみに限定した場合はアニメ演出も実行されないよう修正
@@ -258,6 +259,8 @@
  * <DAENoReturn>            # 同上
  * <DAEアニメ:1>            # 発動者にID[1]のアニメーションを再生します。
  * <DAEAnimation:1>         # 同上
+ * <DAE攻撃アニメ:1>        # 攻撃する瞬間、発動者にID[1]のアニメーションを再生します。
+ * <DAEAttackAnimation:1>   # 同上
  * <DAE対象者アニメ:1>      # 対象者にID[1]のアニメーションを再生します。
  * <DAETargetAnimation:1>   # 同上
  * <DAE絶対位置:320,240>    # 座標[320, 240]に移動します。
@@ -531,6 +534,8 @@ function Sprite_Dummy() {
         if (noReturn) info.noReturn = true;
         var subjectAnimationId = getMetaValues(item, ['アニメ', 'Animation']);
         if (subjectAnimationId) info.subjectAnimationId = getArgNumber(subjectAnimationId, 1);
+        var attackAnimationId = getMetaValues(item, ['攻撃アニメ', 'AttackAnimation']);
+        if (attackAnimationId) info.attackAnimationId = getArgNumber(attackAnimationId, 1);
         var targetAnimationId = getMetaValues(item, ['対象者アニメ', 'TargetAnimation']);
         if (targetAnimationId) info.targetAnimationId = getArgNumber(targetAnimationId, 1);
         this._directlyAdditionalInfo = info;
@@ -751,6 +756,16 @@ function Sprite_Dummy() {
     Window_BattleLog.prototype.performActionEnd = function(subject) {
         _Window_BattleLog_performActionEnd.apply(this, arguments);
         this.push('waitForMovement');
+    };
+
+    var _Window_BattleLog_performAction = Window_BattleLog.prototype.performAction;
+    Window_BattleLog.prototype.performAction = function(subject, action) {
+        _Window_BattleLog_performAction.apply(this, arguments);
+        var attackInfo = subject.getDirectoryAddition();
+        if (attackInfo && attackInfo.attackAnimationId > 0) {
+            this.showAnimation(subject, [subject], attackInfo.attackAnimationId);
+            this.waitForAnimation();
+        }
     };
 
     //=============================================================================
