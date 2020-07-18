@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.2 2020/07/19 初期ウィンドウでキャンセルしたとき、別のウィンドウ識別子が指定されていたら前の画面に戻らないよう仕様変更
  1.7.1 2020/07/12 1.7.0の修正でパラメータの再設定をしないとコマンドウィンドウの項目が表示されなくなる問題を修正
  1.7.0 2020/07/12 再描画に同一のスイッチを指定した場合に、すべてのウィンドウが再描画されるよう修正
                   通常コマンドリストにも非表示、選択不可でスクリプトを使用できる機能を追加
@@ -848,8 +849,9 @@
             }
             if (data.Cancelable) {
                 win.setHandler('cancel', () => {
+                    const prevActive = this._activeWindowId;
                     this.fireEvent(data.CancelEvent);
-                    if (data.Id === this.findFirstWindowId()) {
+                    if (data.Id === this.findFirstWindowId() && prevActive === this._activeWindowId) {
                         this.popScene();
                     }
                     win.select(-1);
