@@ -1,15 +1,16 @@
 //=============================================================================
 // CharacterFreeze.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2015-2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2020/07/19 停止スイッチをONにした直後に戦闘を開始しかつ逃走した場合、もともと演奏していたBGMが再生されない問題を修正
 // 1.1.0 2017/03/03 停止中にピクチャを表示する機能、BGMの音量を変化する機能を追加
 // 1.0.0 2017/03/01 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -19,7 +20,7 @@
  * @author triacontane
  *
  * @param FreezeSwitchId
- * @desc キャラクターを全停止されるトリガーになるスイッチIDです。
+ * @desc キャラクターを全停止させるトリガーになるスイッチIDです。
  * @default
  * @type switch
  *
@@ -58,7 +59,7 @@
  * @author トリアコンタン
  *
  * @param 停止スイッチID
- * @desc キャラクターを全停止されるトリガーになるスイッチIDです。
+ * @desc キャラクターを全停止させるトリガーになるスイッチIDです。
  * @default
  * @type switch
  *
@@ -167,9 +168,16 @@
         }
         if (param.freezeBgmVolume) {
             var oldBgm = AudioManager.saveBgm();
+            if (SceneManager.isNextScene(Scene_Battle)) {
+                oldBgm = BattleManager._mapBgm;
+            }
             var freezeVolume = oldBgm.volume * param.freezeBgmVolume / 100;
             var freezeBgm = {name:oldBgm.name, volume:freezeVolume, pitch:oldBgm.pitch, pan:oldBgm.pan};
-            AudioManager.playBgm(freezeBgm);
+            if (SceneManager.isNextScene(Scene_Battle)) {
+                BattleManager._mapBgm = freezeBgm;
+            } else {
+                AudioManager.playBgm(freezeBgm);
+            }
             this._preFreezeVolume = oldBgm.volume;
         }
     };
