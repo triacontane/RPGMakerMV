@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.3 2020/07/19 1.7.2の修正でパラメータの設定次第で初期ウィンドウから前の画面に戻れなくなる場合がある問題を修正
  1.7.2 2020/07/19 初期ウィンドウでキャンセルしたとき、別のウィンドウ識別子が指定されていたら前の画面に戻らないよう仕様変更
  1.7.1 2020/07/12 1.7.0の修正でパラメータの再設定をしないとコマンドウィンドウの項目が表示されなくなる問題を修正
  1.7.0 2020/07/12 再描画に同一のスイッチを指定した場合に、すべてのウィンドウが再描画されるよう修正
@@ -779,6 +780,9 @@
         start() {
             super.start();
             this.fireEvent(this._customData.InitialEvent);
+            if (!this._activeWindowId) {
+                this.changeWindowFocus(this.findFirstWindowId());
+            }
         }
 
         terminate() {
@@ -927,7 +931,7 @@
             }
             const focusId = SceneManager.findChangeWindowFocus();
             if (focusId) {
-                this.changeWindowFocus(focusId, -1);
+                this.changeWindowFocus(focusId);
             }
             if (this._customData.Panorama) {
                 this.updatePanorama();
@@ -965,20 +969,22 @@
                 return;
             }
             if (moveFocus) {
-                if (event.FocusWindowId) {
-                    this.changeWindowFocus(event.FocusWindowId, event.FocusWindowIndex);
-                } else if (this._previousActiveWindowId) {
-                    this.changeWindowFocus(this._previousActiveWindowId, -1);
-                } else {
-                    this.changeWindowFocus(this._activeWindowId || this.findFirstWindowId(), -1);
-                }
+                this.changeWindowFocusOnEvent(event);
             }
             if (event.CommandId) {
                 this.setupMenuCommonEvent(event.CommandId);
             }
         }
 
-        changeWindowFocus(windowId, index) {
+        changeWindowFocusOnEvent(event) {
+            if (event.FocusWindowId) {
+                this.changeWindowFocus(event.FocusWindowId, event.FocusWindowIndex);
+            } else if (this._previousActiveWindowId && this.findFirstWindowId() !== this._activeWindowId) {
+                this.changeWindowFocus(this._previousActiveWindowId);
+            }
+        }
+
+        changeWindowFocus(windowId, index = -1) {
             if (this._activeWindowId !== windowId) {
                 this._previousActiveWindowId = this._activeWindowId;
             }
@@ -1007,7 +1013,7 @@
         updateInterpreter() {
             this._interpreter.update();
             if (!this._interpreter.isRunning()) {
-                this.changeWindowFocus(this._activeWindowId, -1);
+                this.changeWindowFocus(this._activeWindowId);
                 this._interpreter.terminate();
             }
         }
@@ -1039,7 +1045,7 @@
 
         onActorChange() {
             this.refreshActor();
-            this.changeWindowFocus(this._activeWindowId, -1);
+            this.changeWindowFocus(this._activeWindowId);
         }
 
         launchBattle() {
