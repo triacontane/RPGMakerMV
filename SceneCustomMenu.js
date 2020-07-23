@@ -781,9 +781,6 @@
         start() {
             super.start();
             this.fireEvent(this._customData.InitialEvent);
-            if (!this._activeWindowId) {
-                this.changeWindowFocus(this.findFirstWindowId());
-            }
         }
 
         terminate() {
@@ -932,7 +929,7 @@
             }
             const focusId = SceneManager.findChangeWindowFocus();
             if (focusId) {
-                this.changeWindowFocus(focusId);
+                this.changeWindowFocus(focusId, -1);
             }
             if (this._customData.Panorama) {
                 this.updatePanorama();
@@ -970,22 +967,20 @@
                 return;
             }
             if (moveFocus) {
-                this.changeWindowFocusOnEvent(event);
+                if (event.FocusWindowId) {
+                    this.changeWindowFocus(event.FocusWindowId, event.FocusWindowIndex);
+                } else if (this._previousActiveWindowId && this._activeWindowId !== this.findFirstWindowId()) {
+                    this.changeWindowFocus(this._previousActiveWindowId, -1);
+                } else {
+                    this.changeWindowFocus(this._activeWindowId || this.findFirstWindowId(), -1);
+                }
             }
             if (event.CommandId) {
                 this.setupMenuCommonEvent(event.CommandId);
             }
         }
 
-        changeWindowFocusOnEvent(event) {
-            if (event.FocusWindowId) {
-                this.changeWindowFocus(event.FocusWindowId, event.FocusWindowIndex);
-            } else if (this._previousActiveWindowId && this.findFirstWindowId() !== this._activeWindowId) {
-                this.changeWindowFocus(this._previousActiveWindowId);
-            }
-        }
-
-        changeWindowFocus(windowId, index = -1) {
+        changeWindowFocus(windowId, index) {
             if (this._activeWindowId !== windowId) {
                 this._previousActiveWindowId = this._activeWindowId;
             }
@@ -1014,7 +1009,7 @@
         updateInterpreter() {
             this._interpreter.update();
             if (!this._interpreter.isRunning()) {
-                this.changeWindowFocus(this._activeWindowId);
+                this.changeWindowFocus(this._activeWindowId, -1);
                 this._interpreter.terminate();
             }
         }
@@ -1046,7 +1041,7 @@
 
         onActorChange() {
             this.refreshActor();
-            this.changeWindowFocus(this._activeWindowId);
+            this.changeWindowFocus(this._activeWindowId, -1);
         }
 
         launchBattle() {
