@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/07/25 プラグインの型指定機能に対応
+//                  シーン遷移中はウィンドウの状態を更新しないよう修正
 // 1.4.0 2020/02/22 パラメータ「ピクチャに含める」を遊行した場合に発生するPicturePriorityCustomize.jsとの競合を解消
 // 1.3.3 2016/12/01 プラグインコマンド集との競合を解消
 // 1.3.2 2016/11/27 createUpperLayerの再定義方法を修正し、競合を解消（by 奏 ねこま様）
@@ -28,26 +30,32 @@
  * @param GameVariablesXPos
  * @desc Game variable number that stores the window X position
  * @default 1
+ * @type variable
  *
  * @param GameVariablesYPos
  * @desc Game variable number that stores the window Y position
  * @default 2
+ * @type variable
  *
  * @param GameVariablesWidth
  * @desc Game variable number that stores the window width
  * @default 3
+ * @type variable
  *
  * @param GameVariablesHeight
  * @desc Game variable number that stores the window height
  * @default 4
+ * @type variable
  *
  * @param AlwaysOnTop
  * @desc Always on top
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param IncludePicture
  * @desc Include picture dynamic window
  * @default 0
+ * @type number
  *
  * @help Make dynamic empty window in any position.
  * This plugin is released under the MIT License.
@@ -65,26 +73,32 @@
  * @param X座標の変数番号
  * @desc X座標を格納するゲーム変数の番号
  * @default 1
+ * @type variable
  *
  * @param Y座標の変数番号
  * @desc Y座標を格納するゲーム変数の番号
  * @default 2
+ * @type variable
  *
  * @param 横幅の変数番号
  * @desc 横幅を格納するゲーム変数の番号
  * @default 3
+ * @type variable
  *
  * @param 高さの変数番号
  * @desc 高さを格納するゲーム変数の番号
  * @default 4
+ * @type variable
  *
  * @param 最前面に表示
  * @desc ウィンドウを画面の最前面に表示します。
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param ピクチャに含める
  * @desc ウィンドウをピクチャの間に挟みたい場合、閾値となるピクチャ番号を指定してください。
  * @default 0
+ * @type number
  *
  * @help 空のウィンドウを画面上の指定位置に表示します。
  * 最大10個までのウィンドウを表示可能。
@@ -131,7 +145,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
@@ -172,22 +186,7 @@
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
-        try {
-            this.pluginCommandDWindow(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window  = require('nw.gui').Window.get();
-                var devTool = window.showDevTools();
-                devTool.moveTo(0, 0);
-                devTool.resizeTo(Graphics.width, Graphics.height);
-                window.focus();
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
-            throw e;
-        }
+        this.pluginCommandDWindow(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandDWindow = function(command, args) {
@@ -364,6 +363,9 @@
 
     Window_Dynamic.prototype.update = function() {
         Window_Base.prototype.update.call(this);
+        if (SceneManager.isSceneChanging()) {
+            return;
+        }
         var info = this.windowInfo();
         if (info != null) {
             if (info.x !== this.x || info.y !== this.y || info.width !== this.width || info.height !== this.height)
