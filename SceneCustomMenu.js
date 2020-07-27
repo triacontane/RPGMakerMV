@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.5 2020/07/28 NobleMushroom.jsとの競合を解消
  1.7.4 2020/07/23 1.7.3で修正した一部のリファクタリングを元に戻す
  1.7.3 2020/07/19 1.7.2の修正でパラメータの設定次第で初期ウィンドウから前の画面に戻れなくなる場合がある問題を修正
  1.7.2 2020/07/19 初期ウィンドウでキャンセルしたとき、別のウィンドウ識別子が指定されていたら前の画面に戻らないよう仕様変更
@@ -1021,11 +1022,14 @@
         }
 
         createMessageWindow() {
-            Scene_Map.prototype.createMessageWindow.call(this);
+            this._messageWindow = new Window_Message();
+            this.addWindow(this._messageWindow);
+            this._messageWindow.subWindows().forEach(win => this.addWindow(win));
         }
 
         createScrollTextWindow() {
-            Scene_Map.prototype.createScrollTextWindow.call(this);
+            this._scrollTextWindow = new Window_ScrollText();
+            this.addWindow(this._scrollTextWindow);
         }
 
         createSpriteset() {
