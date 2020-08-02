@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.0 2020/08/02 クリックすることで任意のスイッチをONにできるピクチャをメッセージウィンドウに表示する機能を追加
 // 1.13.0 2020/03/26 オート、スキップピクチャの表示方法をメッセージウィンドウからの相対座標と絶対座標とを選択できる機能を追加
 // 1.12.1 2020/03/25 アイコン表示位置をメッセージウィンドウの位置やサイズの変更に追従するよう修正
 // 1.12.0 2019/05/26 オート、スキップアイコンの位置を自由に指定できる機能を追加
@@ -113,20 +114,6 @@
  * @dir img/pictures/
  * @type file
  *
- * @param PictureAnchor
- * @desc スキップ、オートの各ピクチャボタン座標の原点です。（0:左上、1:右上、2:左下、3:右下）
- * @default 0
- * @type select
- * @option 0
- * @option 1
- * @option 2
- * @option 3
- *
- * @param PictureSwitchId
- * @desc 指定した番号のスイッチがONのときのみスキップ、オートの各ピクチャボタンを表示します。0の場合は無条件で表示します。
- * @default 0
- * @type switch
- *
  * @param SkipPictureX
  * @desc ウィンドウ内に表示するスキップピクチャのX座標です。
  * @default 500
@@ -153,6 +140,42 @@
  * @desc ウィンドウ内に表示するオートピクチャのY座標です。
  * @default 0
  * @type number
+ *
+ * @param SwitchPicture
+ * @desc ウィンドウ内に表示するスイッチピクチャのファイル名です。クリックすると指定したスイッチがONになります。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param SwitchPictureTrigger
+ * @desc スイッチピクチャをクリックしたときにONにするスイッチ番号です。
+ * @default 0
+ * @type switch
+ *
+ * @param SwitchPictureX
+ * @desc ウィンドウ内に表示するスイッチピクチャのX座標です。
+ * @default 750
+ * @type number
+ *
+ * @param SwitchPictureY
+ * @desc ウィンドウ内に表示するスイッチピクチャのY座標です。
+ * @default 0
+ * @type number
+ *
+ * @param PictureSwitchId
+ * @desc 指定した番号のスイッチがONのときのみスキップ、オートの各ピクチャボタンを表示します。0の場合は無条件で表示します。
+ * @default 0
+ * @type switch
+ *
+ * @param PictureAnchor
+ * @desc スキップ、オートの各ピクチャボタン座標の原点です。（0:左上、1:右上、2:左下、3:右下）
+ * @default 0
+ * @type select
+ * @option 0
+ * @option 1
+ * @option 2
+ * @option 3
  *
  * @param PicturePosType
  * @desc オート、スキップピクチャの配置方法です。相対座標を選択するとウィンドウ表示位置からの相対座標となります。
@@ -269,20 +292,6 @@
  * @dir img/pictures/
  * @type file
  *
- * @param ボタン原点
- * @desc スキップ、オートの各ピクチャボタン座標の原点です。（0:左上、1:右上、2:左下、3:右下）
- * @default 0
- * @type select
- * @option 0
- * @option 1
- * @option 2
- * @option 3
- *
- * @param ボタン表示スイッチID
- * @desc 指定した番号のスイッチがONのときのみスキップ、オートの各ピクチャボタンを表示します。0の場合は無条件で表示します。
- * @default 0
- * @type switch
- *
  * @param スキップピクチャX
  * @desc ウィンドウ内に表示するスキップピクチャのX座標です。
  * @default 500
@@ -309,6 +318,42 @@
  * @desc ウィンドウ内に表示するオートピクチャのY座標です。
  * @default 0
  * @type number
+ *
+ * @param スイッチピクチャ
+ * @desc ウィンドウ内に表示するスイッチピクチャのファイル名です。クリックすると指定したスイッチがONになります。
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param スイッチピクチャトリガー
+ * @desc スイッチピクチャをクリックしたときにONにするスイッチ番号です。
+ * @default 0
+ * @type switch
+ *
+ * @param スイッチピクチャX
+ * @desc ウィンドウ内に表示するスイッチピクチャのX座標です。
+ * @default 750
+ * @type number
+ *
+ * @param スイッチピクチャY
+ * @desc ウィンドウ内に表示するスイッチピクチャのY座標です。
+ * @default 0
+ * @type number
+ *
+ * @param ボタン原点
+ * @desc スキップ、オートの各ピクチャボタン座標の原点です。（0:左上、1:右上、2:左下、3:右下）
+ * @default 0
+ * @type select
+ * @option 0
+ * @option 1
+ * @option 2
+ * @option 3
+ *
+ * @param ボタン表示スイッチID
+ * @desc 指定した番号のスイッチがONのときのみスキップ、オートの各ピクチャボタンを表示します。0の場合は無条件で表示します。
+ * @default 0
+ * @type switch
  *
  * @param ピクチャ座標タイプ
  * @desc オート、スキップピクチャの配置方法です。相対座標を選択するとウィンドウ表示位置からの相対座標となります。
@@ -448,21 +493,25 @@ function Sprite_Frame() {
             autoKeyName = Input.keyMapper[autoKeyCode];
         }
     }
-    var paramSkipPicture     = getParamString(['SkipPicture', 'スキップピクチャ']);
-    var paramSkipPictureX    = getParamNumber(['SkipPictureX', 'スキップピクチャX']);
-    var paramSkipPictureY    = getParamNumber(['SkipPictureY', 'スキップピクチャY']);
-    var paramAutoPicture     = getParamString(['AutoPicture', 'オートピクチャ']);
-    var paramAutoPictureX    = getParamNumber(['AutoPictureX', 'オートピクチャX']);
-    var paramAutoPictureY    = getParamNumber(['AutoPictureY', 'オートピクチャY']);
-    var paramPictureAnchor   = getParamNumber(['PictureAnchor', 'ボタン原点']);
-    var paramPictureSwitchId = getParamNumber(['PictureSwitchId', 'ボタン表示スイッチID'], 0);
-    var paramPressingSkip    = getParamBoolean(['PressingSkip', '押し続けスキップ']);
-    var paramSkipSwitchId    = getParamNumber(['SkipSwitchId', 'スキップスイッチ'], 0);
-    var paramAutoSwitchIId   = getParamNumber(['AutoSwitchIId', 'オートスイッチ'], 0);
-    var paramInvalidSwitchId = getParamNumber(['InvalidSwitchId', '無効化スイッチ'], 0);
-    var paramIconX           = getParamNumber(['IconX', 'アイコンX'], 0);
-    var paramIconY           = getParamNumber(['IconY', 'アイコンY'], 0);
-    var paramPicturePosType  = getParamString(['PicturePosType', 'ピクチャ座標タイプ']);
+    var paramSkipPicture          = getParamString(['SkipPicture', 'スキップピクチャ']);
+    var paramSkipPictureX         = getParamNumber(['SkipPictureX', 'スキップピクチャX']);
+    var paramSkipPictureY         = getParamNumber(['SkipPictureY', 'スキップピクチャY']);
+    var paramAutoPicture          = getParamString(['AutoPicture', 'オートピクチャ']);
+    var paramAutoPictureX         = getParamNumber(['AutoPictureX', 'オートピクチャX']);
+    var paramAutoPictureY         = getParamNumber(['AutoPictureY', 'オートピクチャY']);
+    var paramSwitchPicture        = getParamString(['SwitchPicture', 'スイッチピクチャ']);
+    var paramSwitchPictureX       = getParamNumber(['SwitchPictureX', 'スイッチピクチャX']);
+    var paramSwitchPictureY       = getParamNumber(['SwitchPictureY', 'スイッチピクチャY']);
+    var paramSwitchPictureTrigger = getParamNumber(['SwitchPictureTrigger', 'スイッチピクチャトリガー'], 0);
+    var paramPictureAnchor        = getParamNumber(['PictureAnchor', 'ボタン原点']);
+    var paramPictureSwitchId      = getParamNumber(['PictureSwitchId', 'ボタン表示スイッチID'], 0);
+    var paramPressingSkip         = getParamBoolean(['PressingSkip', '押し続けスキップ']);
+    var paramSkipSwitchId         = getParamNumber(['SkipSwitchId', 'スキップスイッチ'], 0);
+    var paramAutoSwitchIId        = getParamNumber(['AutoSwitchIId', 'オートスイッチ'], 0);
+    var paramInvalidSwitchId      = getParamNumber(['InvalidSwitchId', '無効化スイッチ'], 0);
+    var paramIconX                = getParamNumber(['IconX', 'アイコンX'], 0);
+    var paramIconY                = getParamNumber(['IconY', 'アイコンY'], 0);
+    var paramPicturePosType       = getParamString(['PicturePosType', 'ピクチャ座標タイプ']);
 
     //=============================================================================
     // Game_Message
@@ -547,10 +596,11 @@ function Sprite_Frame() {
         this.createSpriteFrame();
         this.createSpriteSkipButton();
         this.createSpriteAutoButton();
+        this.createSpriteSwitchButton();
     };
 
     Window_Message.prototype.createSpriteFrame = function() {
-        this._icon   = new Sprite_Frame(ImageManager.loadSystem('IconSet'), -1);
+        this._icon = new Sprite_Frame(ImageManager.loadSystem('IconSet'), -1);
         this.addChild(this._icon);
         this.updatePlacementIcon();
     };
@@ -570,6 +620,12 @@ function Sprite_Frame() {
         if (!paramAutoPicture) return;
         this._autoButton = new Sprite_MessageButton(paramAutoPicture);
         this.addChild(this._autoButton);
+    };
+
+    Window_Message.prototype.createSpriteSwitchButton = function() {
+        if (!paramSwitchPicture) return;
+        this._switchButton = new Sprite_MessageButton(paramSwitchPicture);
+        this.addChild(this._switchButton);
     };
 
     Window_Message.prototype.getRelativeButtonX = function(originalX) {
@@ -628,6 +684,9 @@ function Sprite_Frame() {
         if (this._autoButton) {
             this.updateAutoButtonPlacement();
         }
+        if (this._switchButton) {
+            this.updateSwitchButtonPlacement();
+        }
     };
 
     Window_Message.prototype.updateSkipButtonPlacement = function() {
@@ -640,6 +699,12 @@ function Sprite_Frame() {
         var x = this.getRelativeButtonX(paramAutoPictureX);
         var y = this.getRelativeButtonY(paramAutoPictureY);
         this._autoButton.move(x, y);
+    };
+
+    Window_Message.prototype.updateSwitchButtonPlacement = function() {
+        var x = this.getRelativeButtonX(paramSwitchPictureX);
+        var y = this.getRelativeButtonY(paramSwitchPictureY);
+        this._switchButton.move(x, y);
     };
 
     Window_Message.prototype.updateAutoIcon = function() {
@@ -662,6 +727,7 @@ function Sprite_Frame() {
     var _Window_Message_updateWait      = Window_Message.prototype.updateWait;
     Window_Message.prototype.updateWait = function() {
         this.updateSkipAuto();
+        this.updateSwitchPicture();
         if (this.messageSkip()) {
             this._waitCount = 0;
         }
@@ -677,6 +743,12 @@ function Sprite_Frame() {
             this.setSkipAutoFlagBySwitch();
         }
         this.updateSkipForSkipAlreadyReadMessage();
+    };
+
+    Window_Message.prototype.updateSwitchPicture = function() {
+        if (this.isTriggeredMessageSwitchButton()) {
+            $gameSwitches.setValue(paramSwitchPictureTrigger, true);
+        }
     };
 
     Window_Message.prototype.setSkipAutoFlagByTrigger = function() {
@@ -726,30 +798,47 @@ function Sprite_Frame() {
     };
 
     Window_Message.prototype.isTriggeredMessageSkip = function() {
-        return Input.isTriggered('messageSkip') || Input.isTriggered(skipKeyName) || this.isTriggeredMessageSkipButton(false);
+        return Input.isTriggered('messageSkip') ||
+            Input.isTriggered(skipKeyName) ||
+            this.isTriggeredMessageSkipButton(false);
     };
 
     Window_Message.prototype.isPressedMessageSkip = function() {
-        return Input.isPressed('messageSkip') || Input.isPressed(skipKeyName) || this.isTriggeredMessageSkipButton(true);
+        return Input.isPressed('messageSkip') ||
+            Input.isPressed(skipKeyName) ||
+            this.isTriggeredMessageSkipButton(true);
     };
 
     Window_Message.prototype.isTriggeredMessageSkipButton = function(pressed) {
-        return this._skipButton &&
-            this._skipButton.isTriggered(this.canvasToLocalX(TouchInput.x), this.canvasToLocalY(TouchInput.y), pressed);
+        return this.isTriggeredButton(this._skipButton, pressed);
     };
 
     Window_Message.prototype.isTriggeredMessageAuto = function() {
-        return Input.isTriggered('messageAuto') || Input.isTriggered(autoKeyName) || this.isTriggeredMessageAutoButton();
+        return Input.isTriggered('messageAuto') ||
+            Input.isTriggered(autoKeyName) ||
+            this.isTriggeredMessageAutoButton();
     };
 
     Window_Message.prototype.isTriggeredMessageAutoButton = function() {
-        return this._autoButton &&
-            this._autoButton.isTriggered(this.canvasToLocalX(TouchInput.x), this.canvasToLocalY(TouchInput.y));
+        return this.isTriggeredButton(this._autoButton, false);
+    };
+
+    Window_Message.prototype.isTriggeredMessageSwitchButton = function() {
+        return this.isTriggeredButton(this._switchButton, false);
+    };
+
+    Window_Message.prototype.isTriggeredButton = function(button, pressed) {
+        if (!button) {
+            return false;
+        }
+        var x = this.canvasToLocalX(TouchInput.x);
+        var y = this.canvasToLocalY(TouchInput.y);
+        return button.isTriggered(x, y, pressed);
     };
 
     var _Window_Message_isTriggered      = Window_Message.prototype.isTriggered;
     Window_Message.prototype.isTriggered = function() {
-        if (this.isTriggeredMessageSkipButton() || this.isTriggeredMessageAutoButton()) {
+        if (this.isTriggeredAnyButton()) {
             return false;
         }
         if (this.messageAuto() && this._messageAutoCount <= 0) {
@@ -757,6 +846,12 @@ function Sprite_Frame() {
             return true;
         }
         return _Window_Message_isTriggered.apply(this, arguments) || this.messageSkip();
+    };
+
+    Window_Message.prototype.isTriggeredAnyButton = function() {
+        return this.isTriggeredMessageSkipButton() ||
+            this.isTriggeredMessageAutoButton() ||
+            this.isTriggeredMessageSwitchButton();
     };
 
     var _Window_Message_startPause      = Window_Message.prototype.startPause;
