@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.8.0 2020/08/02 利用可能なシーン数を20に増やした
  1.7.5 2020/07/28 NobleMushroom.jsとの競合を解消
  1.7.4 2020/07/23 1.7.3で修正した一部のリファクタリングを元に戻す
  1.7.3 2020/07/19 1.7.2の修正でパラメータの設定次第で初期ウィンドウから前の画面に戻れなくなる場合がある問題を修正
@@ -93,6 +94,72 @@
  *
  * @param Scene9
  * @text シーン9
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene10
+ * @text シーン10
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene11
+ * @text シーン11
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene12
+ * @text シーン12
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene13
+ * @text シーン13
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene14
+ * @text シーン14
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene15
+ * @text シーン15
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene16
+ * @text シーン16
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene17
+ * @text シーン17
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene18
+ * @text シーン18
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene19
+ * @text シーン19
+ * @desc 生成するカスタムメニュー用のシーン情報です。
+ * @default {}
+ * @type struct<Scene>
+ *
+ * @param Scene20
+ * @text シーン20
  * @desc 生成するカスタムメニュー用のシーン情報です。
  * @default {}
  * @type struct<Scene>
