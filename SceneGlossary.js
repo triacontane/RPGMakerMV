@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.17.3 2020/08/05 複数ページ表示した状態でカテゴリ表示に戻ったとき、ページ切り替え矢印が表示されたままになる問題を修正
+//                   クリックによるページ切り替えの場合でもページ折り返しができるよう仕様変更
 // 2.17.2 2020/06/06 未入手のアイテムを？？？で表示するとき、アイコンも非表示にするよう仕様変更
 // 2.17.1 2020/05/08 画像のロードに時間が掛かる環境で高速でページを切り替えたとき、前のページの画像が表示されることがある問題を修正
 // 2.17.0 2020/05/04 辞典表示でスクリプトを使用できる制御文字と、使用効果の種別を表示できる制御文字を追加
@@ -2308,6 +2310,7 @@ function Window_GlossaryComplete() {
     Window_Glossary.prototype.clearItem = function() {
         this._listIndex = -1;
         this.contents.clear();
+        this.hiddenArrows();
     };
 
     Window_Glossary.prototype.getGlossaryBitmap = function(index) {
@@ -2328,6 +2331,11 @@ function Window_GlossaryComplete() {
     Window_Glossary.prototype.updateArrows = function() {
         this.downArrowVisible = this.canMoveLeft();
         this.upArrowVisible   = this.canMoveRight();
+    };
+
+    Window_Glossary.prototype.hiddenArrows = function() {
+        this.downArrowVisible = false;
+        this.upArrowVisible   = false;
     };
 
     Window_Glossary.prototype.drawItemSub = function(bitmap, listIndex, pageIndex) {
@@ -2519,12 +2527,14 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.processTouch = function() {
-        if (!TouchInput.isTriggered()) return;
+        if (this._listIndex < 0 || !TouchInput.isTriggered()) {
+            return;
+        }
         var x = this.canvasToLocalX(TouchInput.x);
         var y = this.canvasToLocalY(TouchInput.y);
         if (y >= 0 && y <= this.height) {
-            if (x >= 0 && x < this.width / 2) this.cursorLeft(false);
-            if (x >= this.width / 2 && x < this.width) this.cursorRight(false);
+            if (x >= 0 && x < this.width / 2) this.cursorLeft(true);
+            if (x >= this.width / 2 && x < this.width) this.cursorRight(true);
         }
     };
 
