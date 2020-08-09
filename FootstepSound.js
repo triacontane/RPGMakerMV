@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2020/08/09 足音データをプラグインパラメータで設定する仕様に変更しリファクタリング
+//                  足音の間隔を歩行、ダッシュで別々に設定できる機能を追加
 // 2.1.0 2019/02/02 イベントごとの足音を固有に設定できる機能を追加
 // 2.0.0 2018/09/05 プレイヤーの足音を無効化するスイッチを指定できる機能を追加
 //                  パラメータの型指定機能に対応
@@ -39,9 +41,67 @@
  * @default 0
  * @type switch
  *
- * @help version 2.0.0以降に差し替えた場合はパラメータの再設定が必要です。
+ * @param airship
+ * @text 飛行船の足音セット
+ * @desc 飛行船乗船時の足音セットです。
+ * @type struct<SoundSet>
+ * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
  *
- * 以下の状況下で指定した足音効果音を演奏します。
+ * @param ship
+ * @text 大型船の足音セット
+ * @desc 大型船乗船時の足音セットです。
+ * @type struct<SoundSet>
+ * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
+ *
+ * @param boat
+ * @text 小型船の足音セット
+ * @desc 小型船乗船時の足音セットです。
+ * @type struct<SoundSet>
+ * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
+ *
+ * @param regionList
+ * @text リージョン属性の足音セット
+ * @desc 指定リージョンのタイルを通過したときの足音セットです。
+ * @type struct<SoundSet>[]
+ * @default []
+ *
+ * @param damageFloor
+ * @text ダメージ床属性の足音セット
+ * @desc ダメージ床属性のタイルを通過したときの足音セットです。
+ * @type struct<SoundSet>
+ * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
+ *
+ * @param bush
+ * @text 茂み属性の足音セット
+ * @desc 茂み属性のタイルを通過したときの足音セットです。
+ * @type struct<SoundSet>
+ * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
+ *
+ * @param counter
+ * @text カウンター属性の足音セット
+ * @desc カウンター属性のタイルを通過したときの足音セットです。
+ * @type struct<SoundSet>
+ * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
+ *
+ * @param ladder
+ * @text 梯子属性の足音セット
+ * @desc 梯子属性のタイルを通過したときの足音セットです。
+ * @type struct<SoundSet>
+ * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
+ *
+ * @param terrainTagList
+ * @text 地形タグの足音セット
+ * @desc 指定地形タグのタイルを通過したときの足音セットです。
+ * @type struct<SoundSet>[]
+ * @default []
+ *
+ * @param always
+ * @text 通常時の足音セット
+ * @desc 他の条件を満たしていないときの足音セットです。
+ * @type struct<SoundSet>
+ * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
+ *
+ * @help 以下の状況下で指定した足音効果音を演奏します。
  * 数字の小さい方が優先度が高いです。
  * 1.  飛行船乗船時
  * 2.  大型船乗船時
@@ -53,14 +113,6 @@
  * 8.  梯子属性通過時
  * 9.  指定地形タグ通過時
  * 10. 常に
- *
- * 効果音を指定する場合、当ファイル「FootstepSound.js」を
- * テキストエディタで開き「ユーザ書き換え領域」と書かれている
- * 部分を注釈に従って修正してください。
- *
- * 要注意！　指定した効果音は、デプロイメント時に
- * 未使用ファイルとして除外される可能性があります。
- * その場合、削除されたファイルを入れ直す等の対応が必要です。
  *
  * 足音が演奏されるのはプレイヤーのみですが、
  * 「移動ルートの指定」の「スクリプト」から以下を実行すると
@@ -93,102 +145,87 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
-    //=============================================================================
-    // ユーザ書き換え領域 - 開始 -
-    //  name   : 効果音名称(拡張子不要)
-    //  volume : 音量(0...100)
-    //  pitch  : ピッチ(50...150)
-    //  pan    : 位相(-100...100)
-    // ※コピー＆ペーストしやすくするために最後の項目にもカンマを付与しています。
-    //=============================================================================
-    var footStepJson = {
-        // walk1:歩行時の効果音1
-        // walk2:歩行時の効果音2
-        // dash1:ダッシュ時の効果音1
-        // dash2:ダッシュ時の効果音2
-        // interval:効果音を演奏する間隔（1の場合は1歩ごと）
+/*~struct~SoundSet:
+ * @param interval
+ * @text 間隔
+ * @desc 足音SEの演奏間隔(秒数)です。0を指定した場合、間隔による判定をしなくなります。
+ * @type number
+ * @default 1
+ * @min 0
+ *
+ * @param id
+ * @text リージョン、地形タグ
+ * @desc リージョンもしくは地形タグの番号です。リージョンや地形タグ以外の設定では無視されます。
+ * @type number
+ * @default 0
+ *
+ * @param walk1
+ * @text 歩行時の足音1
+ * @desc 歩行時の足音1です。足音2と交互に演奏されます。
+ * @type struct<Sound>
+ * @default
+ *
+ * @param walk2
+ * @text 歩行時の足音2
+ * @desc 歩行時の足音2です。指定がない場合は足音1だけが演奏されます。
+ * @type struct<Sound>
+ * @default
+ *
+ * @param dash1
+ * @text ダッシュ時の足音1
+ * @desc ダッシュ時の足音1です。足音2と交互に演奏されます。ダッシュがない乗り物等ではこの設定は無視されます。
+ * @type struct<Sound>
+ * @default
+ *
+ * @param dash2
+ * @text ダッシュ時の足音2
+ * @desc ダッシュ時の足音2です。指定がない場合は足音1だけが演奏されます。
+ * @type struct<Sound>
+ * @default
+ */
 
-        // 常に演奏される足音
-        always     : {
-            interval: 1,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // 梯子属性通過時の足音
-        ladder     : {
-            interval: 1,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // カウンター属性通過時の足音
-        counter    : {
-            interval: 1,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // 茂み属性通過時の足音
-        bush       : {
-            interval: 1,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // ダメージ床属性通過時の足音
-        damageFloor: {
-            interval: 1,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // 小型船乗船時の足音
-        boat       : {
-            interval: 4,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // 大型船乗船時の足音
-        ship       : {
-            interval: 4,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // 飛行船船乗船時の足音
-        airship    : {
-            interval: 4,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // 地形タグ 1 通過時の足音（2以降はコピーするか以下の通り値を変更してください）
-        // terrainTag1 → terrainTag2
-        terrainTag1: {
-            interval: 1,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-        // リージョン 1 通過時の足音（2以降はコピーするか以下の通り値を変更してください）
-        // region1 → region2
-        region1    : {
-            interval: 1,
-            walk1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            walk2   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash1   : {name: '', volume: 90, pitch: 100, pan: 0},
-            dash2   : {name: '', volume: 90, pitch: 100, pan: 0},
-        },
-    };
-    //=============================================================================
-    // ユーザ書き換え領域 - 終了 -
-    //=============================================================================
+/*~struct~Sound:
+ * @param name
+ * @text ファイル名
+ * @desc 足音SEのファイル名です。
+ * @default
+ * @require 1
+ * @dir audio/se/
+ * @type file
+ *
+ * @param volume
+ * @text 音量
+ * @desc 足音SEの音量です。
+ * @type number
+ * @default 90
+ * @max 100
+ *
+ * @param pitch
+ * @text ピッチ
+ * @desc 足音SEのピッチです。
+ * @type number
+ * @default 100
+ * @min 50
+ * @max 150
+ *
+ * @param pan
+ * @text 位相
+ * @desc 足音SEの位相です。
+ * @type number
+ * @default 100
+ * @min -100
+ * @max 100
+ *
+ * @param interval
+ * @text 間隔
+ * @desc 足音SEの演奏間隔(秒数)です。足音の種別ごとに間隔を指定したい場合に使用します。
+ * @type number
+ * @default 0
+ * @min 0
+ */
+
+(function() {
+    'use strict'
 
     /**
      * Create plugin parameter. param[paramName] ex. param.commandPrefix
@@ -254,6 +291,13 @@
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
     };
 
+    var findListItem = function(id, targetList) {
+        if (!Array.isArray(targetList)) {
+            return null;
+        }
+        return targetList.filter(listItem => listItem.id === id)[0];
+    }
+
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
@@ -296,48 +340,76 @@
     var _Game_CharacterBase_increaseSteps      = Game_CharacterBase.prototype.increaseSteps;
     Game_CharacterBase.prototype.increaseSteps = function() {
         _Game_CharacterBase_increaseSteps.apply(this, arguments);
-        if (!this.isPlayStepSound() || $gameSystem.footstepDisable ||
-            ($gameMap.isEventRunning() && param.EventRunningInvalid)) return;
+        if (this.isInvalidFootStepSound()) {
+            return;
+        }
         var soundsHash = [
             {key: 'airship', condition: this.isInAirship.bind(this)},
             {key: 'ship', condition: this.isInShip.bind(this)},
             {key: 'boat', condition: this.isInBoat.bind(this)},
-            {key: 'region' + this.regionId(), condition: this.noCondition.bind(this)},
+            {key: 'regionList', condition: findListItem.bind(this, this.regionId())},
             {key: 'damageFloor', condition: this.isOnDamageFloor.bind(this)},
             {key: 'bush', condition: this.isOnBush.bind(this)},
             {key: 'counter', condition: this.isOnCounter.bind(this)},
             {key: 'ladder', condition: this.isOnLadder.bind(this)},
-            {key: 'terrainTag' + this.terrainTag(), condition: this.noCondition.bind(this)},
+            {key: 'terrainTagList', condition: findListItem.bind(this, this.terrainTag())},
             {key: 'always', condition: this.noCondition.bind(this)}
         ];
         soundsHash.some(function(data) {
-            return this.playStepSound(data.key, data.condition);
+            return this.updateStepSound(data.key, data.condition);
         }.bind(this));
     };
 
-    Game_CharacterBase.prototype.playStepSound = function(typeKey, condition) {
-        if (condition() && footStepJson.hasOwnProperty(typeKey)) {
-            var soundHash = footStepJson[typeKey];
-            if (this._stepCountForSound++ % soundHash.interval === 0) {
-                var se = this.findStepSound(soundHash);
-                if (se) {
-                    if (AudioManager.playAdjustSe) {
-                        AudioManager.playAdjustSe(se, this);
-                    } else {
-                        AudioManager.playSe(se);
-                    }
-                }
-                this._stepToggle = !this._stepToggle;
+    Game_CharacterBase.prototype.isInvalidFootStepSound = function() {
+        return (!this.isPlayStepSound() || $gameSystem.footstepDisable ||
+            ($gameMap.isEventRunning() && param.EventRunningInvalid));
+    };
+
+    Game_CharacterBase.prototype.updateStepSound = function(typeKey, condition) {
+        var soundParam = this.findSoundParam(typeKey,condition);
+        if (!soundParam) {
+            return false;
+        }
+        this._stepCountForSound++
+        if (this.checkInterval(soundParam)) {
+            var se = this.findStepSound(soundParam);
+            if (se && se.hasOwnProperty('name') && this.checkInterval(se)) {
+                this.playStepSound(se);
+                return true;
             }
-            return true;
         }
         return false;
     };
 
+    Game_CharacterBase.prototype.playStepSound = function(se) {
+        AudioManager.playSe(se);
+        this._stepToggle = !this._stepToggle;
+    };
+
+    Game_CharacterBase.prototype.checkInterval = function(targetObject) {
+        var interval = targetObject.interval
+        if (!interval) {
+            return true;
+        }
+        return this._stepCountForSound % interval === 0
+    };
+
+    Game_CharacterBase.prototype.findSoundParam = function(typeKey, condition) {
+        var data = param[typeKey];
+        if (!data) {
+            return null;
+        }
+        var result = condition(data);
+        if (!result) {
+            return null;
+        }
+        return Array.isArray(data) ? result : data;
+    };
+
     Game_CharacterBase.prototype.findStepSound = function(soundHash) {
-        var soundKey = this.isDashing() ? 'dash' : 'walk';
-        soundKey += this._stepToggle ? '2' : '1';
-        return soundHash[soundKey] || null;
+        var soundBaseKey = this.isDashing() ? 'dash' : 'walk';
+        var soundKey = soundBaseKey + (this._stepToggle ? '2' : '1');
+        return soundHash[soundKey] || soundHash[soundBaseKey + '1'] || null;
     };
 
     Game_CharacterBase.prototype.noCondition = function() {
