@@ -224,7 +224,7 @@
  * @min 0
  */
 
-(function() {
+(function () {
     'use strict'
 
     /**
@@ -232,8 +232,8 @@
      * @param pluginName plugin name(EncounterSwitchConditions)
      * @returns {Object} Created parameter
      */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
+    var createPluginParameter = function (pluginName) {
+        var paramReplacer = function (key, value) {
             if (value === 'null') {
                 return value;
             }
@@ -246,13 +246,13 @@
                 return value;
             }
         };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        var parameter = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
         PluginManager.setParameters(pluginName, parameter);
         return parameter;
     };
     var param = createPluginParameter('FootstepSound');
 
-    var getCommandName = function(command) {
+    var getCommandName = function (command) {
         return (command || '').toUpperCase();
     };
 
@@ -262,7 +262,7 @@
      * @param name Meta name
      * @returns {String} meta value
      */
-    var getMetaValue = function(object, name) {
+    var getMetaValue = function (object, name) {
         return object.meta.hasOwnProperty(name) ? convertEscapeCharacters(object.meta[name]) : null;
     };
 
@@ -272,9 +272,9 @@
      * @param names Meta name array (for multi language)
      * @returns {String} meta value
      */
-    var getMetaValues = function(object, names) {
+    var getMetaValues = function (object, names) {
         var metaValue;
-        names.some(function(name) {
+        names.some(function (name) {
             metaValue = getMetaValue(object, name);
             return metaValue !== null;
         });
@@ -286,12 +286,12 @@
      * @param text Target text
      * @returns {String} Converted text
      */
-    var convertEscapeCharacters = function(text) {
+    var convertEscapeCharacters = function (text) {
         var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
     };
 
-    var findListItem = function(id, targetList) {
+    var findListItem = function (id, targetList) {
         if (!Array.isArray(targetList)) {
             return null;
         }
@@ -302,13 +302,13 @@
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
         this.pluginCommandFootstep(command, args);
     };
 
-    Game_Interpreter.prototype.pluginCommandFootstep = function(command, args) {
+    Game_Interpreter.prototype.pluginCommandFootstep = function (command, args) {
         switch (getCommandName(command)) {
             case 'FS_INVALID_SOUND' :
             case '足音無効化':
@@ -325,20 +325,20 @@
     // Game_CharacterBase
     //  足音効果音の演奏処理を追加します。
     //=============================================================================
-    var _Game_CharacterBase_initMembers      = Game_CharacterBase.prototype.initMembers;
-    Game_CharacterBase.prototype.initMembers = function() {
+    var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
+    Game_CharacterBase.prototype.initMembers = function () {
         _Game_CharacterBase_initMembers.apply(this, arguments);
         this.setStepSoundFlg(false);
         this._stepToggle = null;
         this.resetStepCountForSound();
     };
 
-    Game_CharacterBase.prototype.resetStepCountForSound = function() {
+    Game_CharacterBase.prototype.resetStepCountForSound = function () {
         this._stepCountForSound = null;
     };
 
-    var _Game_CharacterBase_increaseSteps      = Game_CharacterBase.prototype.increaseSteps;
-    Game_CharacterBase.prototype.increaseSteps = function() {
+    var _Game_CharacterBase_increaseSteps = Game_CharacterBase.prototype.increaseSteps;
+    Game_CharacterBase.prototype.increaseSteps = function () {
         _Game_CharacterBase_increaseSteps.apply(this, arguments);
         if (this.isInvalidFootStepSound()) {
             return;
@@ -355,18 +355,18 @@
             {key: 'terrainTagList', condition: findListItem.bind(this, this.terrainTag())},
             {key: 'always', condition: this.noCondition.bind(this)}
         ];
-        soundsHash.some(function(data) {
+        soundsHash.some(function (data) {
             return this.updateStepSound(data.key, data.condition);
         }.bind(this));
     };
 
-    Game_CharacterBase.prototype.isInvalidFootStepSound = function() {
+    Game_CharacterBase.prototype.isInvalidFootStepSound = function () {
         return (!this.isPlayStepSound() || $gameSystem.footstepDisable ||
             ($gameMap.isEventRunning() && param.EventRunningInvalid));
     };
 
-    Game_CharacterBase.prototype.updateStepSound = function(typeKey, condition) {
-        var soundParam = this.findSoundParam(typeKey,condition);
+    Game_CharacterBase.prototype.updateStepSound = function (typeKey, condition) {
+        var soundParam = this.findSoundParam(typeKey, condition);
         if (!soundParam) {
             return false;
         }
@@ -381,12 +381,12 @@
         return false;
     };
 
-    Game_CharacterBase.prototype.playStepSound = function(se) {
+    Game_CharacterBase.prototype.playStepSound = function (se) {
         AudioManager.playSe(se);
         this._stepToggle = !this._stepToggle;
     };
 
-    Game_CharacterBase.prototype.checkInterval = function(targetObject) {
+    Game_CharacterBase.prototype.checkInterval = function (targetObject) {
         var interval = targetObject.interval
         if (!interval) {
             return true;
@@ -394,7 +394,7 @@
         return this._stepCountForSound % interval === 0
     };
 
-    Game_CharacterBase.prototype.findSoundParam = function(typeKey, condition) {
+    Game_CharacterBase.prototype.findSoundParam = function (typeKey, condition) {
         var data = param[typeKey];
         if (!data) {
             return null;
@@ -406,41 +406,41 @@
         return Array.isArray(data) ? result : data;
     };
 
-    Game_CharacterBase.prototype.findStepSound = function(soundHash) {
+    Game_CharacterBase.prototype.findStepSound = function (soundHash) {
         var soundBaseKey = this.isDashing() ? 'dash' : 'walk';
         var soundKey = soundBaseKey + (this._stepToggle ? '2' : '1');
         return soundHash[soundKey] || soundHash[soundBaseKey + '1'] || null;
     };
 
-    Game_CharacterBase.prototype.noCondition = function() {
+    Game_CharacterBase.prototype.noCondition = function () {
         return true;
     };
 
-    Game_CharacterBase.prototype.isOnDamageFloor = function() {
+    Game_CharacterBase.prototype.isOnDamageFloor = function () {
         return $gameMap.isDamageFloor(this.x, this.y);
     };
 
-    Game_CharacterBase.prototype.isOnCounter = function() {
+    Game_CharacterBase.prototype.isOnCounter = function () {
         return $gameMap.isCounter(this.x, this.y);
     };
 
-    Game_CharacterBase.prototype.isInBoat = function() {
+    Game_CharacterBase.prototype.isInBoat = function () {
         return false;
     };
 
-    Game_CharacterBase.prototype.isInShip = function() {
+    Game_CharacterBase.prototype.isInShip = function () {
         return false;
     };
 
-    Game_CharacterBase.prototype.isInAirship = function() {
+    Game_CharacterBase.prototype.isInAirship = function () {
         return false;
     };
 
-    Game_CharacterBase.prototype.isPlayStepSound = function() {
+    Game_CharacterBase.prototype.isPlayStepSound = function () {
         return this._stepSoundFlg;
     };
 
-    Game_CharacterBase.prototype.setStepSoundFlg = function(value) {
+    Game_CharacterBase.prototype.setStepSoundFlg = function (value) {
         this._stepSoundFlg = !!value;
     };
 
@@ -448,12 +448,12 @@
     // Game_Player
     //  キャラクターごとの足音演奏取得
     //=============================================================================
-    Game_Player.prototype.isPlayStepSound = function() {
+    Game_Player.prototype.isPlayStepSound = function () {
         return !$gameSwitches.value(param.InvalidSwitchId);
     };
 
-    var _Game_Player_updateNonmoving      = Game_Player.prototype.updateNonmoving;
-    Game_Player.prototype.updateNonmoving = function(wasMoving) {
+    var _Game_Player_updateNonmoving = Game_Player.prototype.updateNonmoving;
+    Game_Player.prototype.updateNonmoving = function (wasMoving) {
         _Game_Player_updateNonmoving.apply(this, arguments);
         if (!wasMoving && param.ResetIfStop) {
             this.resetStepCountForSound();
@@ -461,23 +461,24 @@
     };
 
     var _Game_Event_initialize = Game_Event.prototype.initialize;
-    Game_Event.prototype.initialize = function() {
+    Game_Event.prototype.initialize = function () {
         _Game_Event_initialize.apply(this, arguments);
         this._footStepSeName = getMetaValues(this.event(), ['FootStep', '足音']) || null;
         if (this._footStepSeName) {
-            this.setStepSoundFlg(true);name
+            this.setStepSoundFlg(true);
+            name
         }
     };
 
     var _Game_Event_findStepSound = Game_Event.prototype.findStepSound;
-    Game_Event.prototype.findStepSound = function(soundHash) {
+    Game_Event.prototype.findStepSound = function (soundHash) {
         var se = _Game_Event_findStepSound.apply(this, arguments);
         if (se && this._footStepSeName) {
             return {
-                name : this._footStepSeName,
-                volume : se.volume,
-                pitch : se.pitch,
-                pan : se.pan
+                name: this._footStepSeName,
+                volume: se.volume,
+                pitch: se.pitch,
+                pan: se.pan
             };
         } else {
             return se;
@@ -488,8 +489,8 @@
     // Game_System
     //  足音効果音の有効無効設定を追加定義します。
     //=============================================================================
-    var _Game_System_initialize      = Game_System.prototype.initialize;
-    Game_System.prototype.initialize = function() {
+    var _Game_System_initialize = Game_System.prototype.initialize;
+    Game_System.prototype.initialize = function () {
         _Game_System_initialize.apply(this, arguments);
         this.footstepDisable = null;
     };
