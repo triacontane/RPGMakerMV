@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/08/13 MZ対応版作成
 // 1.3.0 2019/01/13 ウィンドウ背景の画像を複数表示できる機能を追加
 //                  ウィンドウ背景を指定した場合も元のウィンドウフレームを表示したままにできる機能を追加
 // 1.2.0 2018/11/29 ウィンドウ背景を有効にするかどうかを動的に制御するスイッチを追加
@@ -288,10 +289,10 @@
     };
 
     Window.prototype._setBackImageProperty = function(backImageData) {
-        this._backImageDx                   = parseInt(backImageData['OffsetX']) || 0;
-        this._backImageDy                   = parseInt(backImageData['OffsetY']) || 0;
-        this._windowBackImageSprite.scale.x = (parseInt(backImageData['ScaleX']) || 100) / 100;
-        this._windowBackImageSprite.scale.y = (parseInt(backImageData['ScaleY']) || 100) / 100;
+        this._backImageDx        = parseInt(backImageData['OffsetX']) || 0;
+        this._backImageDy        = parseInt(backImageData['OffsetY']) || 0;
+        this._backSprite.scale.x = (parseInt(backImageData['ScaleX']) || 100) / 100;
+        this._backSprite.scale.y = (parseInt(backImageData['ScaleY']) || 100) / 100;
     };
 
     /**
@@ -299,8 +300,9 @@
      * @private
      */
     Window.prototype._createBackImage = function() {
-        this._windowBackSprite.visible  = false;
-        this._windowFrameSprite.visible = false;
+        this._backSprite.visible  = false;
+        this._frameSprite.visible = false;
+        this.frameVisible = false;
         this._windowBackImageSprites    = [];
         this._backImageDataList.forEach(function(backImageData) {
             var bitmap     = ImageManager.loadPicture(backImageData['ImageFile']);
@@ -308,7 +310,7 @@
             sprite.scale.x = (backImageData['ScaleX'] || 100) / 100;
             sprite.scale.y = (backImageData['ScaleY'] || 100) / 100;
             this._windowBackImageSprites.push(sprite);
-            this._windowSpriteContainer.addChild(sprite);
+            this._container.addChild(sprite);
         }, this);
     };
 
@@ -356,8 +358,9 @@
                 defaultVisible = false;
             }
         }, this);
-        this._windowBackSprite.visible  = defaultVisible;
-        this._windowFrameSprite.visible = defaultVisible;
+        this._backSprite.visible  = defaultVisible;
+        this._frameSprite.visible = defaultVisible;
+        this.frameVisible = defaultVisible;
     };
 
     //=============================================================================
