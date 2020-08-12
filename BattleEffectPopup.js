@@ -37,7 +37,7 @@
 
 /*:
  * @plugindesc 戦闘行動結果ポップアッププラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param メッセージウェイト
  * @desc ポップアップメッセージが重なったときに次のメッセージが表示されるまでのウェイトフレーム数です。

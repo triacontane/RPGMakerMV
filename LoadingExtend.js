@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc LoadingExtendPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ImageColumn
  * @desc system/Loading.pngをスプライトシート化する場合の横方向のセル数です。
@@ -68,7 +68,7 @@
  */
 /*:ja
  * @plugindesc ロード中画像拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param イメージ列数
  * @desc system/Loading.pngをスプライトシート化する場合の横方向のセル数です。

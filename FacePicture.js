@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc FacePicturePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 顔グラフィックをピクチャとして表示できます。
  * ピクチャの表示だけでなく、プラグイン等でピクチャから
@@ -67,7 +67,7 @@
  */
 /*:ja
  * @plugindesc 顔グラのピクチャ表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 顔グラフィックをピクチャとして表示できます。
  * ピクチャの表示だけでなく、プラグイン等でピクチャから

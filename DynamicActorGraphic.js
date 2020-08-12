@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc DynamicActorGraphicPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help アクターの歩行、顔、バトルグラフィックを動的に変化させます。
  * HPの残量、特定のステート有効時、スイッチON時に変化します。
@@ -64,7 +64,7 @@
  */
 /*:ja
  * @plugindesc アクターグラフィックの動的設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help アクターの歩行、顔、バトルグラフィックを動的に変化させます。
  * HPの残量、特定のステート有効時、スイッチON時に変化します。

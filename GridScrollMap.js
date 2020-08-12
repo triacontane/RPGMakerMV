@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc マップの画面単位スクロールプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  * 
  * @param スクロール速度
  * @desc 画面をスクロールする速度です。設定値は1～8ですが低い値を設定すると異常に遅くなります。

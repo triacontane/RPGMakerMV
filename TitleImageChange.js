@@ -27,7 +27,7 @@
 
 /*:
  * @plugindesc タイトル画面変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 進行度変数
  * @desc ゲームの進行度に対応する変数番号(1...)

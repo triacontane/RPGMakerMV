@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc DynamicEquipParamPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 装備品のパラメータを現在のアクターの状態に応じて動的に変更します。
  * 武器と防具のメモ欄に以下の通り指定してください。
@@ -64,7 +64,7 @@
  */
 /*:ja
  * @plugindesc 装備品パラメータの動的設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 装備品のパラメータを現在のアクターの状態に応じて動的に変更します。
  * 武器と防具のメモ欄に以下の通り指定してください。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Plugin That ...
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param param
  * @desc parameter description
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc マップ処理負荷軽減プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 色調変更無効化
  * @desc マップ、戦闘における色調変更(Tint)を無効化します。

@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc BackUpDatabasePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param backUpPath
  * @desc ファイルの出力パスです。相対パス、絶対パスが利用できます。
@@ -47,7 +47,7 @@
  */
 /*:ja
  * @plugindesc データバックアッププラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param backUpPath
  * @text バックアップパス

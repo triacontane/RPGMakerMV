@@ -39,7 +39,7 @@
 
 /*:
  * @plugindesc Ring State Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param RadiusX
  * @desc 横方向の半径の値です。
@@ -152,7 +152,7 @@
 
 /*:ja
  * @plugindesc リングステートプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param RadiusX
  * @text X半径

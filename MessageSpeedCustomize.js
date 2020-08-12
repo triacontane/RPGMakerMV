@@ -23,7 +23,7 @@
 
 /*:
  * @plugindesc Message speed customize
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param VariableSpeed
  * @desc Variable number of Message speed
@@ -44,7 +44,7 @@
  */
 /*:ja
  * @plugindesc メッセージ速度調整プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 表示速度変数
  * @desc メッセージ表示速度を格納する変数の番号

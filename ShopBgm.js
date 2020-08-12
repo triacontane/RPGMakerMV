@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ShopBgmPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param list
  * @desc List of shop BGM.
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc お店BGMプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param list
  * @text BGMリスト

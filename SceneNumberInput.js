@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc SceneNumberInputPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param DefaultDigit
  * @desc 入力する数値のデフォルト桁数です。
@@ -71,7 +71,7 @@
  */
 /*:ja
  * @plugindesc 数値入力画面プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param デフォルト桁数
  * @desc 入力する数値のデフォルト桁数です。

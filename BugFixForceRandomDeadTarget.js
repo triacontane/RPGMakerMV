@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixForceRandomDeadTargetPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help イベントコマンド「戦闘行動の強制」をランダムターゲットかつ、
  * 戦闘不能の味方を対象するスキルで指定すると発動時にエラーが発生する
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 戦闘不能ランダムターゲットの行動強制エラー修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help イベントコマンド「戦闘行動の強制」をランダムターゲットかつ、
  * 戦闘不能の味方を対象するスキルで指定すると発動時にエラーが発生する

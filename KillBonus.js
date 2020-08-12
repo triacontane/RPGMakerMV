@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc 撃破ボーナスプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 敵を撃破した際に何らかの報酬を得ることができます。
  * 撃破するとHPやMPを回復するステートや装備品等が作成できます。

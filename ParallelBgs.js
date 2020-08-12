@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc ParallelBgsPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 複数のBGSを並行して演奏できます。プラグインコマンドからBGSの演奏ラインを
  * 変更すると元のBGSを演奏したまま、新しくBGSを演奏することができます。
@@ -59,7 +59,7 @@
  */
 /*:ja
  * @plugindesc BGS並行演奏プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 複数のBGSを並行して演奏できます。プラグインコマンドからBGSの演奏ラインを
  * 変更すると元のBGSを演奏したまま、新しくBGSを演奏することができます。

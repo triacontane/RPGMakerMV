@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BattleToneTemporaryPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help BattleToneTemporary.js
  *
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 戦闘時の色調の一時化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help BattleToneTemporary.js
  *

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc PlayerGraphicChangePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help プレイヤー画像をアクターとは無関係に設定できるようになります。
  *
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc プレイヤーの画像変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help プレイヤー画像をアクターとは無関係に設定できるようになります。
  *

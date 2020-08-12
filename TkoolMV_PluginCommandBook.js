@@ -17,7 +17,7 @@
 //=============================================================================
 /*:
  * @plugindesc プラグインコマンド集
- * @target MZ @author 有志の皆さん
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author 有志の皆さん
  *
  * @param 制御文字の拡張
  * @desc このプラグインで使えるパラメータの制御文字を

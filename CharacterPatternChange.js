@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc CharacterPatternChangePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param player
  * @desc プレイヤーのアニメーションパターンを「1 - 2 - 3」に変更します。
@@ -61,7 +61,7 @@
  */
 /*:ja
  * @plugindesc キャラクターパターン変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param player
  * @text プレイヤー

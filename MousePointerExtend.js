@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc Mouse Pointer Extend Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param PointerType1
  * @desc スイッチ1がONになった場合のマウス形状です。
@@ -163,7 +163,7 @@
  */
 /*:ja
  * @plugindesc マウスポインタ拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 形状タイプ1
  * @desc スイッチ1がONになった場合のマウス形状です。

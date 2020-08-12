@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 変数名およびコモンイベント名のID自動付与プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param バックアップ
  * @desc データベースファイルを上書きする前にバックアップします。

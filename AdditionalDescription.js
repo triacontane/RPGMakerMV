@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc Additional Description Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ButtonName
  * @desc ヘルプを切り替えるボタン名です。(shift/control/tab)
@@ -62,7 +62,7 @@
  */
 /*:ja
  * @plugindesc ヘルプ説明追加プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param ボタン名
  * @desc ヘルプを切り替えるボタン名です。(shift/control/tab)

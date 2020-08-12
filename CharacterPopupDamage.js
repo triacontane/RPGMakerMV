@@ -32,7 +32,7 @@
 
 /*:
  * @plugindesc キャラクターのダメージポッププラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 効果音演奏
  * @desc 状況に応じたシステム効果音を自動演奏します。(ON/OFF)

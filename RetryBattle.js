@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc RetryBattlePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param RetryNormalEnemy
  * @desc 雑魚敵でゲームオーバーになったあとにリトライできます。
@@ -97,7 +97,7 @@
  */
 /*:ja
  * @plugindesc 戦闘リトライプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 雑魚敵でリトライ可能
  * @desc 雑魚敵でゲームオーバーになったあとにリトライできます。

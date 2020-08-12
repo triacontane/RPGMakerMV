@@ -25,7 +25,7 @@
 
 /*:
  * @plugindesc AutoTranslationPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ToLanguage
  * @desc This is the translation target language code.
@@ -132,7 +132,7 @@
  */
 /*:ja
  * @plugindesc 自動翻訳プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param ToLanguage
  * @text 翻訳先言語

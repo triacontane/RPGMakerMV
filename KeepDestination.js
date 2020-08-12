@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc KeepDestinationPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help KeepDestination.js
  *
@@ -27,7 +27,7 @@
  */
 /*:ja
  * @plugindesc タッチ移動先の保持プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help KeepDestination.js
  *

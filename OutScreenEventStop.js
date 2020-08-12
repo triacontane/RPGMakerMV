@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 画面外イベントの更新停止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 画面外イベントの更新およびリフレッシュを停止します。
  * ページの出現条件を満たしてもページを切り替えないことで

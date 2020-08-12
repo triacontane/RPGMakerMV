@@ -25,7 +25,7 @@
 
 /*:
  * @plugindesc 選択肢のピクチャ表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help イベントコマンド「選択肢の表示」で選択肢にカーソルを合わせた際に
  * 選択肢に対応するピクチャを表示するようにします。

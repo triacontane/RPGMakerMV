@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc フキダシアイコンのSE演奏プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param SwitchId
  * @text 有効スイッチ番号

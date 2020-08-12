@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc JumpSpeedCustomizePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help JumpSpeedCustomize.js
  *
@@ -41,7 +41,7 @@
  */
 /*:ja
  * @plugindesc ジャンプ速度調整プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help JumpSpeedCustomize.js
  *

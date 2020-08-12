@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MenuItemEnableAlwaysPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help MenuItemEnableAlways.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc アイテムメニューの常時使用可能プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help MenuItemEnableAlways.js
  *

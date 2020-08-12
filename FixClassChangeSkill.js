@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc FixClassChangeSkillPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param invalidSwitchId
  * @desc When the switch is ON, the plug-in function is disabled and skill acquisition is disabled.
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 職業の変更によるスキル習得プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param invalidSwitchId
  * @text 無効スイッチ

@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc プロフィール拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 拡張行数
  * @desc プロフィール入力欄を拡張する行数です。

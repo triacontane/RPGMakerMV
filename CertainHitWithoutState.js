@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc CertainHitWithoutStatePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help CertainHitWithoutState.js
  *
@@ -27,7 +27,7 @@
  */
 /*:ja
  * @plugindesc 必中のステート付与への影響防止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help CertainHitWithoutState.js
  *

@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc Setting default value for Options
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param AlwaysDash
  * @desc Always dash(ON/OFF)
@@ -75,7 +75,7 @@
  */
 /*:ja
  * @plugindesc オプションデフォルト値設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 常時ダッシュ
  * @desc 常にダッシュする。（Shiftキーを押している場合のみ歩行）(ON/OFF)

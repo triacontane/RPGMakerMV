@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc CharacterFreezePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param FreezeSwitchId
  * @desc キャラクターを全停止させるトリガーになるスイッチIDです。
@@ -56,7 +56,7 @@
  */
 /*:ja
  * @plugindesc キャラクター停止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 停止スイッチID
  * @desc キャラクターを全停止させるトリガーになるスイッチIDです。

@@ -40,7 +40,7 @@
 
 /*:
  * @plugindesc Template Event Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param TemplateMapId
  * @desc The map ID where the template event resides.
@@ -139,7 +139,7 @@
  */
 /*:ja
  * @plugindesc テンプレートイベントプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param TemplateMapId
  * @text テンプレートマップID

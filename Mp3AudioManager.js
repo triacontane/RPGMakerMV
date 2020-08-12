@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Mp3AudioManagerPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param UseOnExe
  * @desc Game.exe(NW.js)でmp3ファイルを使用します。
@@ -65,7 +65,7 @@
  */
 /*:ja
  * @plugindesc MP3オーディオ管理プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param EXE実行で使用
  * @desc Game.exe(NW.js)でmp3ファイルを使用します。

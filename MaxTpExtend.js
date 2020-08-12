@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MaxTpExtendPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help MaxTpExtend.js
  *
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 最大TP拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help MaxTpExtend.js
  *

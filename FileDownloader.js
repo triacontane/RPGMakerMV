@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc FileDownloaderPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param NormalEndSwitch
  * @desc コマンドが正常終了した際にONになるスイッチIDです。
@@ -102,7 +102,7 @@
  */
 /*:ja
  * @plugindesc ファイルダウンロードプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 正常終了スイッチID
  * @desc コマンドが正常終了した際にONになるスイッチIDです。

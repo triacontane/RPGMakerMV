@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc InitialStatePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 敵キャラに初期状態でステートを付与します。
  *
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc 初期ステートプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 敵キャラに初期状態でステートを付与します。
  *

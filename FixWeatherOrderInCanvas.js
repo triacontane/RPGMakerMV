@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixWeatherOrderInCanvasPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help FixWeatherPriorityCanvas.js
  *
@@ -32,7 +32,7 @@
  */
 /*:ja
  * @plugindesc Canvasモード時の天候優先度修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help FixWeatherPriorityCanvas.js
  *

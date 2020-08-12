@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 割り込みコモンイベントプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param ニューゲームコモン
  * @desc ニューゲーム時に呼ばれるコモンイベントID

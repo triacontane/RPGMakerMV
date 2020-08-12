@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc プラグインまとめ読み込みプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param プラグイン1
  * @desc 読み込むプラグインのファイル名(.jsは不要)を指定します。

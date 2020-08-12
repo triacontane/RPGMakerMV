@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc HitAndEvasionExtendPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param formulaPhysicalHit
  * @text 物理命中計算式
@@ -74,7 +74,7 @@
  */
 /*:ja
  * @plugindesc 命中回避拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param formulaPhysicalHit
  * @text 物理命中計算式

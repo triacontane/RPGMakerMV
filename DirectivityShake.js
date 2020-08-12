@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc DirectivityShakePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help イベントコマンド「画面のシェイク」に指向性を持たせることができます。
  * 角度を指定して縦や斜めに振動させることが可能です。
@@ -38,7 +38,7 @@
  */
 /*:ja
  * @plugindesc 指向性シェイクプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help イベントコマンド「画面のシェイク」に指向性を持たせることができます。
  * 角度を指定して縦や斜めに振動させることが可能です。

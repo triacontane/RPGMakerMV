@@ -26,7 +26,7 @@
 
 /*:
  * @plugindesc Plugin that Make Dynamic Window
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param GameVariablesXPos
  * @desc Game variable number that stores the window X position
@@ -69,7 +69,7 @@
 
 /*:ja
  * @plugindesc 動的ウィンドウ生成プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param X座標の変数番号
  * @desc X座標を格納するゲーム変数の番号

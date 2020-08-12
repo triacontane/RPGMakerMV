@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc アイコン付きコマンドプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help メニューやタイトルのコマンドにアイコンが付けられるようになります。
  * 正確にはコマンドに制御文字が使えるようになりますので

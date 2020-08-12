@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 複数タイルマップイベント作成プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  * @version 1.00 2015/11/03 初版
  * 
  * @help 複数のタイルマップを一つのイベントで表現できるようになります。

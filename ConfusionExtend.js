@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc Confusion Extend Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param TargetFriendSkill
  * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。
@@ -83,7 +83,7 @@
  */
 /*:ja
  * @plugindesc 混乱ステート拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 味方対象スキルの対象
  * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。

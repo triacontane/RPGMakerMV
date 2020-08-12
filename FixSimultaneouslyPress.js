@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc FixSimultaneouslyPressPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help FixSimultaneouslyPress.js
  *
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 同時押し仕様変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help FixSimultaneouslyPress.js
  *

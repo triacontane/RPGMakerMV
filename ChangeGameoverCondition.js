@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc ゲームオーバー条件変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help ゲームオーバー条件をいずれかの味方が戦闘不能になった場合
  * に変更します。

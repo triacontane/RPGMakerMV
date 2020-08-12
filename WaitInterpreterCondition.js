@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc WaitEventInterpreterPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help WaitInterpreterCondition.js
  *
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc 条件付きウェイトプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help WaitInterpreterCondition.js
  *

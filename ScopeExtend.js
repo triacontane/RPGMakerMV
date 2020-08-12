@@ -23,7 +23,7 @@
 
 /*:
  * @plugindesc ScopeExtendPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help データベースのスキルの効果範囲を拡張します。
  * スキルのメモ欄に以下の通り入力してください。
@@ -83,7 +83,7 @@
  */
 /*:ja
  * @plugindesc 効果範囲拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help データベースのスキルの効果範囲を拡張します。
  * スキルのメモ欄に以下の通り入力してください。

@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc UseOnlyOneSavePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param SaveMessage
  * @desc メニュー画面でのセーブ実行時に表示するメッセージです。指定しない場合は表示されません。
@@ -37,7 +37,7 @@
  */
 /*:ja
  * @plugindesc 単一セーブデータプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param セーブメッセージ
  * @desc メニュー画面でのセーブ実行時に表示するメッセージです。指定しない場合は表示されません。

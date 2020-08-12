@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc ポインタ追跡プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 移動可能な場合にプレイヤーが
  * マウスポインタの方を向きます。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc TargetByFormationPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ChangeRate
  * @desc 隊列一人分の狙われ率変動倍率です。4人パーティで50にすると先頭の狙われ率は最後尾の2.5倍になります。
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 並び順による狙われ率変動プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 変動倍率
  * @desc 隊列一人分の狙われ率変動倍率です。4人パーティで50にすると先頭の狙われ率は最後尾の2.5倍になります。

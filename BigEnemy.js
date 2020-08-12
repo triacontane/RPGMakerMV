@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc BigEnemyPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help フロントビューで巨大モンスターを表示可能にするプラグインです。
  * 具体的にはY座標を強制的に画面の下端に設定します。
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 巨大モンスタープラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help フロントビューで巨大モンスターを表示可能にするプラグインです。
  * 具体的には画像の下端が画面の下端に強制的に合わせられます。

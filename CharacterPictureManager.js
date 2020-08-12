@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 立ち絵表示管理プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help アクターの立ち絵画像の表示を管理します。
  * 画像はステートやHPの残量に応じて自在に変化できます。

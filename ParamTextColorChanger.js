@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ParamTextColorChangerPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param HP閾値配列
  * @desc テキストカラーを変更するHP割合の閾値をカンマ区切りで指定します。
@@ -52,7 +52,7 @@
  */
 /*:ja
  * @plugindesc パラメータテキストカラー変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param HpThresholds
  * @desc テキストカラーを変更するHP割合の閾値をカンマ区切りで指定します。

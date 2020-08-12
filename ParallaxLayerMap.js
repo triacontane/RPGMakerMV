@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc ParallaxLayerMapPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help ParallaxLayerMap.js
  *
@@ -73,7 +73,7 @@
  */
 /*:ja
  * @plugindesc 多層レイヤー一枚絵マッププラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help ParallaxLayerMap.js
  *

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 行動失敗メッセージ設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 行動失敗時のメッセージがスキルごとに
  * 設定可能になります。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc RecoveryOverLimitPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param OverLimitHpColor
  * @desc This is the color of the text when the HP has over limit.
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc 回復限界突破プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param OverLimitHpColor
  * @text 限界突破HP文字色

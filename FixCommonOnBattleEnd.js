@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixCommonOnBattleEndPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help FixCommonOnBattleEnd.js
  *
@@ -27,7 +27,7 @@
  */
 /*:ja
  * @plugindesc 戦闘終了時のコモンイベント実行修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help FixCommonOnBattleEnd.js
  *

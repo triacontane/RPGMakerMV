@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc SimpleVoicePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param FolderName
  * @type string
@@ -73,7 +73,7 @@
  */
 /*:ja
  * @plugindesc 簡易ボイスプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param フォルダ名
  * @type string

@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc CustomizeDamageSePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param WeaknessLine
  * @desc この値以上なら弱点と見なします。百分率で指定します。
@@ -64,7 +64,7 @@
  */
 /*:ja
  * @plugindesc ダメージSEカスタマイズプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 弱点閾値
  * @desc この値以上なら弱点と見なします。百分率で指定します。

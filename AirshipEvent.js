@@ -12,7 +12,7 @@
 
 /*:
  * @plugindesc 飛行船のイベント起動
- * @target MZ @author s.f.
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author s.f.
  *
  * @help 飛行船からイベントに接触して起動します。
  *

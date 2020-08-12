@@ -35,7 +35,7 @@
 
 /*:
  * @plugindesc Erase message window
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param triggerButton
  * @desc Trigger buttons
@@ -91,7 +91,7 @@
  */
 /*:ja
  * @plugindesc メッセージウィンドウ一時消去プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param triggerButton
  * @text ボタン名称

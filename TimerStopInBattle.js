@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc TimerStopInBattlePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param StopSwitchId
  * @desc 指定した番号のスイッチがONのときのみ戦闘中にタイマー停止します。0の場合は戦闘中は常に停止します。
@@ -38,7 +38,7 @@
  */
 /*:ja
  * @plugindesc 戦闘中タイマー停止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 停止スイッチID
  * @desc 指定した番号のスイッチがONのときのみ戦闘中にタイマー停止します。0の場合は戦闘中は常に停止します。

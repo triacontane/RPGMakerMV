@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc DrainExtend
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param RecoverSe
  * @desc 吸収成功時に回復効果音を演奏します。
@@ -59,7 +59,7 @@
  */
 /*:ja
  * @plugindesc 吸収拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 回復効果音
  * @desc 吸収成功時に回復効果音を演奏します。

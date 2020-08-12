@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BattleFormationCustomizePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help BattleFormationCustomize.js
  * 
@@ -33,7 +33,7 @@
  */
 /*:ja
  * @plugindesc 戦闘隊列調整プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help BattleFormationCustomize.js
  * 

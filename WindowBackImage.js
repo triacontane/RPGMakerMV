@@ -20,7 +20,9 @@
 
 /*:
  * @plugindesc ウィンドウ背景画像指定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/WindowBackImage.js
+ * @author トリアコンタン
  *
  * @param windowImageInfo
  * @text ウィンドウ画像情報

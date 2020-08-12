@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc Party ability rate
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help enable customize party ability rate
  *
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc パーティ能力レート設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help パーティ能力にレートを設定できます。
  * パーティ特徴を定義したデータベースのメモ欄に以下の通り設定してください。

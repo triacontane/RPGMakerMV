@@ -7,7 +7,7 @@
 
 /*:
  * @plugindesc Alternative menu screen layout.
- * @target MZ @author Yoji Ojima, Sasuke KANNAZUKI
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Yoji Ojima, Sasuke KANNAZUKI
  * 
  * @param backGroundBitmap
  * @desc background bitmap file at img/pictures.
@@ -42,7 +42,7 @@
 
 /*:ja
  * @plugindesc レイアウトの異なるメニュー画面
- * @target MZ @author Yoji Ojima, 神無月サスケ
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Yoji Ojima, 神無月サスケ
  * 
  * @param backGroundBitmap
  * @desc 背景にするビットマップファイルです。

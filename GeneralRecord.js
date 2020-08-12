@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc なんでも記録プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param パラメータ
  * @desc パラメータ説明

@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc PicturePriorityCustomizePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param UpperPictureId
  * @desc 指定した番号以上のピクチャはウィンドウより上に表示されるようになります。
@@ -88,7 +88,7 @@
  */
 /*:ja
  * @plugindesc ピクチャの表示優先度調整プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 上層ピクチャ番号
  * @desc 指定した番号以上のピクチャはウィンドウより上に表示されるようになります。

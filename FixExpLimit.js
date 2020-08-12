@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 経験値上限のレベル上限に合わせた修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param adjustLevelOnLoad
  * @text ロード時にレベルを補正

@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc DebtRepaymentPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param UnderLimitCanBuying
  * @desc お店で購入可能な下限の金額です。指定する場合はマイナス値を指定してください。制御文字\v[n]が指定可能です。
@@ -52,7 +52,7 @@
  */
 /*:ja
  * @plugindesc 所持金マイナスプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 購入可能下限金額
  * @desc お店で購入可能な下限の金額です。指定する場合はマイナス値を指定してください。制御文字\v[n]が指定可能です。

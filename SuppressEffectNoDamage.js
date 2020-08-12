@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc SuppressEffectNoDamagePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help HPおよびMPのダメージもしくは回復が設定されている
  * スキルにおいて結果が[0]だった場合に、使用効果が適用されなくなります。
@@ -29,7 +29,7 @@
  */
 /*:ja
  * @plugindesc ノーダメージ時の効果抑制プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help HPおよびMPのダメージもしくは回復が設定されている
  * スキルにおいて結果が[0]だった場合に、使用効果が適用されなくなります。

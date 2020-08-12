@@ -11,7 +11,7 @@
 
 /*:
  * @plugindesc ピクチャの回転バグ修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help イベントコマンド「ピクチャの回転」において、
  * 仕様では正の値を入力すると反時計回り、負の値を入力すると時計回りとあるが

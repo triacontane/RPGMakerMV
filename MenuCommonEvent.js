@@ -26,7 +26,7 @@
 
 /*:
  * @plugindesc MenuCommonEventPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param CommonEventInfo
  * @desc 各画面で実行するコモンイベントの情報です。
@@ -198,7 +198,7 @@
  */
 /*:ja
  * @plugindesc メニュー内コモンイベントプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param コモンイベント情報
  * @desc 各画面で実行するコモンイベントの情報です。

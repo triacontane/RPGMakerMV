@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc MOG_BattleHudの戦闘メンバー追加時の不整合修正パッチ
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help MOG_BattleHudAddMemberPatch.js
  *

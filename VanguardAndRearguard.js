@@ -39,7 +39,7 @@
 
 /*:
  * @plugindesc Vanguard and rearguard
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param VanguardStateId
  * @desc State ID of vanguard.
@@ -181,7 +181,7 @@
  */
 /*:ja
  * @plugindesc 前衛後衛プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 前衛ステートID
  * @desc 前衛のステートIDです。

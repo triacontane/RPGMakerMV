@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Invalid query parameter
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param Exception
  * @desc Exception parameter
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 起動オプション無効化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 例外
  * @desc 無効化しないパラメータ（カンマ区切り）を指定。

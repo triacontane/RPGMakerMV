@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc KeepFollowerTransferPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ValidateSwitchId
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効になります。
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc 場所移動時のフォロワー位置保存プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 有効スイッチ番号
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効になります。

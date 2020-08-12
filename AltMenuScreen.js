@@ -5,14 +5,14 @@
 
 /*:
  * @plugindesc Alternative menu screen layout.
- * @target MZ @author Yoji Ojima
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Yoji Ojima
  *
  * @help This plugin does not provide plugin commands.
  */
 
 /*:ja
  * @plugindesc メニュー画面のレイアウトを変更します。
- * @target MZ @author Yoji Ojima
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Yoji Ojima
  *
  * @help このプラグインには、プラグインコマンドはありません。
  */

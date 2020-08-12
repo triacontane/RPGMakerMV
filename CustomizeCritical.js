@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc 会心カスタマイズプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 会心（クリティカルヒット）の確率とダメージ、演出をカスタマイズします。
  *

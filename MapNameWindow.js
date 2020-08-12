@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc MapNameWindowPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param PositionX
  * @desc X座標を指定する場合は入力してください。
@@ -39,7 +39,7 @@
  */
 /*:ja
  * @plugindesc マップ名のウィンドウ化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param X座標
  * @desc X座標を指定する場合は入力してください。

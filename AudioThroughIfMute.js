@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc AudioThroughIfMutePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param AudioThroughSwitchId
  * @desc 指定した番号のスイッチがONになっている場合、音声ファイルを取得しません。
@@ -39,7 +39,7 @@
  */
 /*:ja
  * @plugindesc ミュート時の演奏省略プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 音声無効スイッチ番号
  * @desc 指定した番号のスイッチがONになっている場合、音声ファイルを取得しません。

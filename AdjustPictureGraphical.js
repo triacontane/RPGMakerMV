@@ -25,7 +25,7 @@
 
 /*:
  * @plugindesc Plugin that adjust picture to graphical
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param GridSize
  * @desc View grid line
@@ -52,7 +52,7 @@
 /*:ja
  * @plugindesc ピクチャのグラフィカルな位置調整プラグイン。
  * パラメータを変更したら「プロジェクトの保存」（Ctrl+S）
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param グリッドサイズ
  * @desc ピクチャ調整中に指定サイズでグリッドを表示します。0を指定すると非表示になります。

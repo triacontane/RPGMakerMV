@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc AutoBattlePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param PartyCommandName
  * @desc Auto battle command name for Window party command.
@@ -40,7 +40,7 @@
  */
 /*:ja
  * @plugindesc 自動戦闘プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param パーティコマンド名称
  * @desc パーティコマンドに追加される一括オートコマンドの名称です。未入力にすると追加されません。

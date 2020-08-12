@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc HiddenParameterPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help HiddenParameter.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc パラメータ隠蔽プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help HiddenParameter.js
  *

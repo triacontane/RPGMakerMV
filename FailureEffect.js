@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc FailureEffectPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param FailureDamageRate
  * @desc 失敗時のダメージ倍率(%)です。各スキルのメモ欄に個別の設定があればそちらが優先されます。
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc 失敗効果プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 失敗時のダメージ倍率
  * @desc 失敗時のダメージ倍率(%)です。各スキルのメモ欄に個別の設定があればそちらが優先されます。

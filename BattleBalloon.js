@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BattleBalloonPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param BalloonSpeedRate
  * @desc フキダシを表示する速度倍率（レート）です。マップ画面のフキダシには影響しません。
@@ -80,7 +80,7 @@
  */
 /*:ja
  * @plugindesc 戦闘中フキダシ表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param フキダシ速度倍率
  * @desc フキダシを表示する速度倍率（レート）です。マップ画面のフキダシには影響しません。

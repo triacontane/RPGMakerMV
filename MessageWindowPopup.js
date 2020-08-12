@@ -101,7 +101,7 @@
 
 /*:
  * @plugindesc Popup window plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param FontSize
  * @desc Font size of popup window
@@ -266,7 +266,7 @@
  */
 /*:ja
  * @plugindesc フキダシウィンドウプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param フォントサイズ
  * @desc フキダシウィンドウのデフォルトフォントサイズ

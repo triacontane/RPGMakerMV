@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc イベント処理中のタイマー停止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help イベント処理中にタイマーの動作を停止します。
  * 時間制限イベントでメッセージ表示中などにタイマーが停止するので

@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc BugFixChromeForEachPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help In Chrome version 60 or later, we will tentatively deal with
  * the problem where battle may be forcibly terminated.
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc Chrome60の戦闘クラッシュ防止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help  BugFixChromeForEach.js
  *

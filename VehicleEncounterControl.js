@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc VehicleEncounterControlPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param boatEncounterDisable
  * @desc 指定した番号のスイッチがONのとき小型船でのエンカウントを無効にします。
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc 乗り物のエンカウント制御プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param boatEncounterDisable
  * @text 小型船のエンカウント無効

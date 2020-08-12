@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc IEのBGM有効化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help Html5Audioを利用してIEでBGM等のオーディオを演奏します。
  * 不完全な実装で、BGMしか演奏されません（笑）

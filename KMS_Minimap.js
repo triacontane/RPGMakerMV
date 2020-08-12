@@ -7,7 +7,7 @@
  * @plugindesc
  * [v0.2.0a] Display minimap.
  *
- * @target MZ @author TOMY (Kamesoft)
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author TOMY (Kamesoft)
  *
  * @param Map rect
  * @default 524, 32, 260, 200
@@ -65,7 +65,7 @@
  * @plugindesc
  * [v0.2.0a] 画面上にミニマップを表示します。
  *
- * @target MZ @author TOMY (Kamesoft)
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author TOMY (Kamesoft)
  *
  * @param Map rect
  * @default 524, 32, 260, 200

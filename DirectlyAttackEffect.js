@@ -32,7 +32,7 @@
 
 /*:
  * @plugindesc DirectlyAttackEffectPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param Duration
  * @desc 相手の元に移動するまでに掛けるフレーム数のデフォルト値です。メモ欄で指定がないとこの値が参照されます。
@@ -196,7 +196,7 @@
 
 /*:ja
  * @plugindesc 直接攻撃演出プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param フレーム数
  * @desc 相手の元に移動するまでに掛けるフレーム数のデフォルト値です。メモ欄で指定がないとこの値が参照されます。

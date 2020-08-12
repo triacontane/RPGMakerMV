@@ -50,7 +50,7 @@
 /*:
  * @plugindesc GUI画面デザインプラグイン
  * パラメータを変更したら「プロジェクトの保存」（Ctrl+S）
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param デザインモード
  * @desc デザインモードでゲームを起動します。(ON/OFF)

@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc バッチ処理プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help プラグインコマンドから実行可能なバッチ処理を提供します。
  * 様々なファイルやデータ出力の一括処理を実現可能にする予定です。

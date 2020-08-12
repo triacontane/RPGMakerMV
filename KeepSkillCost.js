@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc KeepSkillCostPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param BattleOnly
  * @desc ターン終了時の消費が戦闘画面でのみ有効になります。
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc スキル維持コストプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 戦闘画面のみ有効
  * @desc ターン終了時の消費が戦闘画面でのみ有効になります。

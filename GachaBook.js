@@ -6,7 +6,7 @@
 
 /*:
  * @plugindesc Displays detailed statuses of "gacha" items.
- * @target MZ @author Takeya Kimura
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Takeya Kimura
  *
  * @param Unknown Data
  * @desc The index name for an unknown item.
@@ -45,7 +45,7 @@
 
 /*:ja
  * @plugindesc ガチャアイテム一覧を表示します。
- * @target MZ @author Takeya Kimura
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Takeya Kimura
  *
  * @param Unknown Data
  * @desc 未確認のガチャアイテムの名前です。

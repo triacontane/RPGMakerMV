@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixCursorSeByMousePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help FixSelectSeByMouse.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc マウス操作時のカーソルSE修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help FixSelectSeByMouse.js
  *

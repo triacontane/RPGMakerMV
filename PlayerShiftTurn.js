@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc プレイヤーのその場方向転換
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param ボタン名称
  * @desc その場方向転換に使用するボタンです。

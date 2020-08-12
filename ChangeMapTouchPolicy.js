@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Plugin that change policy of 'map touch'
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param initPolicyLevel
  * @desc Initial value of policy level
@@ -51,7 +51,7 @@
  */
 /*:ja
  * @plugindesc マップタッチ仕様変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param initPolicyLevel
  * @text 仕様レベル初期値

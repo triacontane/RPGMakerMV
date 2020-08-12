@@ -81,7 +81,7 @@
 
 /*:
  * @plugindesc Half Move Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param Direction8Move
  * @desc 斜め移動を含めた8方向移動を許可します。
@@ -255,7 +255,7 @@
  */
 /*:ja
  * @plugindesc 半歩移動プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 8方向移動
  * @desc 斜め移動を含めた8方向移動を許可します。

@@ -19,7 +19,7 @@
 
 /*:ja
  * @plugindesc MenuBattleMemberOnlyPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ActivateSwitchId
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効になります。
@@ -37,7 +37,7 @@
  */
 /*:ja
  * @plugindesc 戦闘メンバーのみメニュープラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 有効スイッチ番号
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効になります。

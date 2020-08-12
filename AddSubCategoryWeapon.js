@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc サブ武器カテゴリー追加プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 装備タイプID
  * @desc サブ武器に該当する装備タイプIDです。

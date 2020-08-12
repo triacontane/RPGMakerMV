@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MessageActorFacePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ActorIdVariable
  * @desc アクターIDを取得するための変数番号です。
@@ -33,7 +33,7 @@
  */
 /*:ja
  * @plugindesc メッセージのアクターフェイス表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param アクターID変数番号
  * @desc アクターIDを取得するための変数番号です。

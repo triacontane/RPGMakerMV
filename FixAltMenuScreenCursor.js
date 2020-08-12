@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixAltMenuScreenCursorPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help FixAltMenuScreenCursor.js
  *
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc AltMenuScreenのカーソル修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help FixAltMenuScreenCursor.js
  *

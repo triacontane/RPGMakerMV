@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc CustomizeMessageWindowPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 顔グラフィックがメッセージウィンドウの
  * 右側に表示されるようになります。
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 顔グラフィック表示位置変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 顔グラフィックがメッセージウィンドウの
  * 右側に表示されるようになります。

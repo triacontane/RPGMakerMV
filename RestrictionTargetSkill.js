@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc RestrictionTargetSkillPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help RestrictionTargetSkill.js
  *
@@ -77,7 +77,7 @@
  */
 /*:ja
  * @plugindesc 対象限定スキルプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help RestrictionTargetSkill.js
  *

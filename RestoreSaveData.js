@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc セーブファイル復元プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 新たに任意のプラグインを導入した際に
  * 元のセーブデータがロードできなくなったとき、

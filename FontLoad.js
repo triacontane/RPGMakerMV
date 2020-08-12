@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Font Load
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param FontName1
  * @desc Font name
@@ -54,7 +54,7 @@
  */
 /*:ja
  * @plugindesc フォントロードプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param フォント名1
  * @desc 任意のフォント名

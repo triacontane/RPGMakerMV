@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc イベントの重複許可プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help イベント同士がマップ上の同位置に移動することを許可します。
  *

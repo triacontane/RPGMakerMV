@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc NPC Follower plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param MaxNpcNumber
  * @desc 同時に隊列に存在できるNPCの最大数です。
@@ -54,7 +54,7 @@
  */
 /*:ja
  * @plugindesc NPCフォロワープラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 最大同時NPC数
  * @desc 同時に隊列に存在できるNPCの最大数です。

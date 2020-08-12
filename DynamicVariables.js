@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc DynamicVariablesPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param DynamicSwitchStart
  * @desc 動的スイッチの開始位置番号です。
@@ -127,7 +127,7 @@
  */
 /*:ja
  * @plugindesc 動的変数プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 動的スイッチ開始位置
  * @desc 動的スイッチの開始位置番号です。

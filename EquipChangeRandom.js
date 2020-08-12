@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc EquipChangeRandomPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help アクターの装備品を所持品の中からランダムで強制変更します。
  * アクターIDもしくは隊列番号とスロットIDを指定して変更します。
@@ -32,7 +32,7 @@
  */
 /*:ja
  * @plugindesc 装備品ランダム変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help アクターの装備品を所持品の中からランダムで強制変更します。
  * アクターIDもしくは隊列番号とスロットIDを指定して変更します。

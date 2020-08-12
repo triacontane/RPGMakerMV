@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc AltMenuScreenForPartySystemPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param bgBitmapPartySystem
  * @desc パーティ編成画面背景にするビットマップファイルです。
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc パーティ編成の透明化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param bgBitmapPartySystem
  * @desc パーティ編成画面背景にするビットマップファイルです。

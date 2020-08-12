@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc EquipConditionExtendPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 装備条件を拡張します。
  * 武器または防具のメモ欄に以下の通り記述してください。
@@ -43,7 +43,7 @@
  */
 /*:ja
  * @plugindesc 装備条件拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 装備条件を拡張します。
  * 武器または防具のメモ欄に以下の通り記述してください。

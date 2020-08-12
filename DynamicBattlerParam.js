@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc DynamicBattlerParameterPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param FormulaMhp
  * @desc Calculation formula to determine Mhp The memo field takes precedence.
@@ -215,7 +215,7 @@
  */
 /*:ja
  * @plugindesc バトラーパラメータの動的設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 最大HP計算式
  * @desc 最大HPを決定する計算式です。メモ欄に指定があればそちらを優先します。

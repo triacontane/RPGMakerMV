@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ForegroundToParallaxPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 準公式プラグイン「Foreground.js」で表示する近景を遠景に切り替えます。
  * もともとの遠景の後ろ側に表示されるようになります。
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc Foregroundの遠景化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 準公式プラグイン「Foreground.js」で表示する近景を遠景に切り替えます。
  * もともとの遠景の後ろ側に表示されるようになります。

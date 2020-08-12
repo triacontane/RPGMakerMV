@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc StateAfterDeathPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param states
  * @desc 戦闘不能後も継続するステートの配列の一覧です。
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 戦闘不能後継続ステートプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param states
  * @text 対象ステート

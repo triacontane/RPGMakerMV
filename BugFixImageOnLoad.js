@@ -11,7 +11,7 @@
 
 /*:
  * @plugindesc 画像ロード遅延時のエラー修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help スプライトで画像を指定後、画像のロードが完了する前に
  * 画像の指定を解除するとエラーで強制終了する現象の修正。

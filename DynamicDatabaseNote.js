@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc DynamicDatabaseNotePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param commandPrefix
  * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
@@ -52,7 +52,7 @@
  */
 /*:ja
  * @plugindesc データベースのメモ欄動的設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param commandPrefix
  * @text メモ欄接頭辞

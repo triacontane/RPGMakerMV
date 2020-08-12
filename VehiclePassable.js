@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc 乗り物通行判定拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 小型船通行リージョン
  * @desc 小型船で通行可能になるリージョンです。カンマ(,)区切りで指定してください。例「1,2,3」

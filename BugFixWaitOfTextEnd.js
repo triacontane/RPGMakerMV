@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixWaitOfTextEndPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help メッセージウィンドウにおいてテキストの末尾にある
  * ウェイト(\! \. \|)が無視されてしまう現象を修正します。
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc メッセージ末尾のウェイト無視修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help メッセージウィンドウにおいてテキストの末尾にある
  * ウェイト(\! \. \|)が無視されてしまう現象を修正します。

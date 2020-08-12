@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 戦闘放棄プラグイン　～武器よさらば～
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  * 
  * @param farewellCommand
  * @desc ウィンドウに表示されるコマンド名です。

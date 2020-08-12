@@ -32,7 +32,7 @@
 
 /*:
  * @plugindesc 動的データベース構築プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help データベースの各項目を動的な値に変更するプラグインです。
  * 変数やJavaScriptの関数を使ってより高度なデータベースを構築できます。

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc MarkerTilesetPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param commandPrefix
  * @text メモ欄接頭辞
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc マーカータイルセットプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param commandPrefix
  * @text メモ欄接頭辞

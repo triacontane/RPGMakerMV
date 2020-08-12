@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MakeScreenMoviePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param FunkKeyRecord
  * @desc ゲーム画面の録画と停止を行うキーです。この機能による録画はテストプレー時のみ有効です。
@@ -116,7 +116,7 @@
  */
 /*:ja
  * @plugindesc ゲーム動画作成プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param FunkKeyRecord
  * @text 録画ファンクションキー

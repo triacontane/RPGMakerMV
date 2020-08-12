@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc SystemSoundCustomizePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help システム効果音をゲーム中に動的に変更します。
  * 変更したシステム効果音はセーブデータごとに有効になります。
@@ -63,7 +63,7 @@
  */
 /*:ja
  * @plugindesc システム効果音変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help システム効果音をゲーム中に動的に変更します。
  * 変更したシステム効果音はセーブデータごとに有効になります。

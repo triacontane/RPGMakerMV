@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 起動オプション調整プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 描画モード
  * @desc 描画モード（WebGL or Canvas）を指定できます。

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 敵グループごとの戦闘BGM設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 敵グループごとに戦闘BGM設定できるようになるプラグインです。
  * この設定はシステムの戦闘BGMよりも優先され、設定されていない場合のみ

@@ -61,7 +61,7 @@
 
 /*:
  * @plugindesc 動的文字列ピクチャ生成プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param itemIconSwitchId
  * @text アイテムアイコンスイッチID

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc HiddenLevelPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help HiddenLevel.js
  *
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc レベル隠蔽プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help HiddenLevel.js
  *

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc AdditionalSkillMessagePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 通常2行までのスキル使用時のメッセージに3行目以降を追加できます。
  * スキルのメモ欄に以下の通り指定してください。
@@ -33,7 +33,7 @@
  */
 /*:ja
  * @plugindesc スキルメッセージ追加プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 通常2行までのスキル使用時のメッセージに3行目以降を追加できます。
  * スキルのメモ欄に以下の通り指定してください。

@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc パフォーマンス計測プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 更新ログ出力間隔
  * @desc 更新ログの出力間隔です。この回数内の平均値をログとして出力します。0を指定すると出力されません。

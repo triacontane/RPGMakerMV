@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc CostConditionIgnorePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help CostConditionIgnore.js
  *
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc 戦闘時のコスト条件無視プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help CostConditionIgnore.js
  *

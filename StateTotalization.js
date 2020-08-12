@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc StateTotalizationPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param battleMemberOnly
  * @desc 全体化ステートを有するアクターの対象を戦闘メンバーに限定します。OFFにすると非戦闘メンバーのステートも全体化します。
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc ステート全体化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param battleMemberOnly
  * @text 戦闘メンバーのみ

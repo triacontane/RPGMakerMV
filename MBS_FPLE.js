@@ -1,6 +1,6 @@
 /**
  *  @file    MBS - FPLE MV
- *  @target MZ @author  Masked
+ *  @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author  Masked
  *  @version 1.3.0 2016-07-30
  *
  *  modification by triacontane
@@ -13,7 +13,7 @@
 /*:
  *  @plugindesc This plugin makes your game a first person labyrinth explorer.
  *
- *  @target MZ @author Masked
+ *  @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Masked
  *
  *  @param View Distance
  *  @desc The amount of tiles ahead the player can see by default.
@@ -137,7 +137,7 @@
 /*:pt
 *  @plugindesc Esse plugin transforma seu jogo em um explorador de labirinto em primeira pessoa.
 *
-*  @target MZ @author Masked
+*  @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Masked
 *
 *  @param View Distance
 *  @desc Número de tiles à frente que o jogador vê por padrão.

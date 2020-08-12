@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc DestinationImageCustomizePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param Opacity
  * @desc 目的地画像の不透明度です。0にすると見えなくなります。
@@ -45,7 +45,7 @@
  */
 /*:ja
  * @plugindesc 目的地画像カスタマイズプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 不透明度
  * @desc 目的地画像の不透明度です。0にすると見えなくなります。

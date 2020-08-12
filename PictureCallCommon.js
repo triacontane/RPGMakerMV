@@ -64,7 +64,7 @@
 
 /*:ja
  * @plugindesc ピクチャのボタン化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 透明色を考慮
  * @desc クリックされた箇所が透明色だった場合は、クリックを無効にする。
@@ -229,7 +229,7 @@
  */
 /*:
  * @plugindesc Clickable picture plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param TransparentConsideration
  * @desc if click position is transparent, click is disabled.

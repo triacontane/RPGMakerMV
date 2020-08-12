@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc CursedActionPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param priority
  * @desc 自動戦闘および混乱の設定との優先度を選択します。
@@ -62,7 +62,7 @@
  */
 /*:ja
  * @plugindesc 呪いのプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param priority
  * @text 優先度

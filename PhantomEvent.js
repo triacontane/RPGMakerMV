@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc PhantomEventPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param invisibleDistance
  * @desc 指定範囲を超えてから完全に見えなくなるまでのマス数です。
@@ -85,7 +85,7 @@
  */
 /*:ja
  * @plugindesc ファントムイベントプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param invisibleDistance
  * @text 不可視距離

@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc メッセージ送りSEプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param validateSwitchId
  * @text 有効スイッチID

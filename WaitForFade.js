@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc WaitForFadePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 場所移動の際のフェードイン・フェードアウト中は
  * イベント実行中でなくても移動を禁止します。
@@ -25,7 +25,7 @@
  */
 /*:ja
  * @plugindesc フェード中移動禁止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 場所移動の際のフェードイン・フェードアウト中は
  * イベント実行中でなくても移動を禁止します。

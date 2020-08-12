@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc EffectConditionsPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 効果のひとつひとつに適用条件を設定します。
  * 条件を満たさない効果は無効になります。
@@ -50,7 +50,7 @@
  */
 /*:ja
  * @plugindesc 効果の条件適用プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 効果のひとつひとつに適用条件を設定します。
  * 条件を満たさない効果は無効になります。

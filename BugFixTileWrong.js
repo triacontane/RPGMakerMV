@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixTileWrongPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 配置してないはずのタイルが突然表示されることがある問題を解消します。
  * 具体的には場所移動前のマップのタイルセットの情報の一部が不正に
@@ -25,7 +25,7 @@
  */
 /*:ja
  * @plugindesc タイルの不正表示解消プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 配置してないはずのタイルが突然表示されることがある問題を解消します。
  * 具体的には場所移動前のマップのタイルセットの情報の一部が不正に

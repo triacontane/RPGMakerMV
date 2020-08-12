@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ManualMemoryManagerPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 画像ファイル名を明示的に指定して手動でキャッシュから削除します。
  * アツマール版コアスクリプト(community-1.2b)以降で動作します。
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc メモリ手動管理プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 画像ファイル名を明示的に指定して手動でキャッシュから削除します。
  * アツマール版コアスクリプト(community-1.2b)以降で動作します。

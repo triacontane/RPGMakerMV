@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc TestForPrevVersionPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help TestForPrevVersion.js
  *
@@ -29,7 +29,7 @@
  */
 /*:ja
  * @plugindesc 前バージョン用テストプレープラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help TestForPrevVersion.js
  *

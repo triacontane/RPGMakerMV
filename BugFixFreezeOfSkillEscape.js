@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixFreezeOfSkillEscapePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help アクター全員が逃走スキルによって逃走した場合に
  * フリーズしてしまう現象を修正します。
@@ -29,7 +29,7 @@
  */
 /*:ja
  * @plugindesc 逃走スキルによるフリーズ修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help アクター全員が逃走スキルによって逃走した場合に
  * フリーズしてしまう現象を修正します。

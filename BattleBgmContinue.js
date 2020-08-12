@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 戦闘BGM継続演奏プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param disableSwitch
  * @text 無効スイッチ

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 独自バトル画面設計支援プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 位置調整を行う
  * @desc 戦闘テストからウィンドウの位置調整を行います。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MessageFontChangePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param Font1
  * @desc 1番のフォントセットです。
@@ -60,7 +60,7 @@
  */
 /*:ja
  * @plugindesc メッセージフォント変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param フォント1
  * @desc 1番のフォントセットです。

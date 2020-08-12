@@ -46,7 +46,7 @@
 
 /*:
  * @plugindesc CounterExtendPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param PayCounterCost
  * @desc 固有スキルによる反撃がコスト消費するかどうかを設定します。(ON/OFF)
@@ -197,7 +197,7 @@
  */
 /*:ja
  * @plugindesc 反撃拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param PayCounterCost
  * @text 反撃コスト消費

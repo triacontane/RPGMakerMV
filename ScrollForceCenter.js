@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc ScrollForceCenterPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param adjustX
  * @desc 指定した分だけ中心がずれて表示されます。
@@ -58,7 +58,7 @@
  */
 /*:ja
  * @plugindesc 強制中央スクロールプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param adjustX
  * @text X補正

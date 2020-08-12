@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc EventNoLockPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help イベントを起動したときに一時的に
  * プレイヤーの方向を向く処理（イベントロック）を無効化します。
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc イベントロック無効化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help イベントを起動したときに一時的に
  * プレイヤーの方向を向く処理（イベントロック）を無効化します。

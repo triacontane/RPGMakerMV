@@ -11,7 +11,7 @@
 //=============================================================================
 /*:ja
  * @plugindesc 各種画面の解像度変更／フォントサイズ変更を行います。
- * @target MZ @author rainxxrain
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author rainxxrain
  * 
  * @param PC Width
  * @desc PCの解像度（横）

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MessageCommonPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help メッセージの表示中にコモンイベントを呼び出します。
  * コモンイベントは並列扱いで実行されます。
@@ -29,7 +29,7 @@
  */
 /*:ja
  * @plugindesc メッセージコモンプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help メッセージの表示中にコモンイベントを呼び出します。
  * コモンイベントは並列扱いで実行されます。

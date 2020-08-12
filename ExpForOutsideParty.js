@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc ExpForOutsidePartyPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param expPercent
  * @desc パーティ外の仲間が受け取ることのできる経験値の割合(%)です。
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc パーティ外メンバーの経験値取得プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param expPercent
  * @text 経験値取得割合

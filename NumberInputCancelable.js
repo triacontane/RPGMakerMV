@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc NumberInputCancelablePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param validSwitchId
  * @text ValidSwitchId
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc 数値入力のキャンセル可能化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param validSwitchId
  * @text 有効スイッチ番号

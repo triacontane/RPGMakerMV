@@ -99,7 +99,7 @@
 
 /*:
  * @plugindesc SceneGlossaryPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param GlossaryInfo
  * @desc 用語辞典情報です。任意の用語辞典を追加できます。必ず1件以上の用語を登録してください。
@@ -443,7 +443,7 @@
 
 /*:ja
  * @plugindesc ゲーム内用語辞典プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param GlossaryInfo
  * @text 用語情報(設定必須)

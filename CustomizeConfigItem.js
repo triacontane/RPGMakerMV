@@ -25,7 +25,7 @@
 
 /*:
  * @plugindesc オプション任意項目作成プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 数値項目
  * @desc 追加する数値項目のオプション項目情報です。

@@ -23,7 +23,7 @@
 
 /*:
  * @plugindesc 相対タッチパッドプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param タッチ有効領域
  * @desc タッチ移動可能な有効領域をピクセル単位で指定します。

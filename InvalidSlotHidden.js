@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc InvalidSlotHiddenPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help InvalidSlotHidden.js
  *
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc 封印装備スロットの非表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help InvalidSlotHidden.js
  *

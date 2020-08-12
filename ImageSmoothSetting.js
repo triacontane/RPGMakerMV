@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc ImageSmoothSettingPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param Animation
  * @desc アニメーション画像にぼかしをかけます。
@@ -77,7 +77,7 @@
  */
 /*:ja
  * @plugindesc 画像ぼかし個別設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param アニメーション
  * @desc アニメーション画像にぼかしをかけます。

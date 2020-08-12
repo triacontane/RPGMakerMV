@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 歩行グラフィック表示管理プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help アクターの歩行グラフィックを動的に変更します。
  * 立ち絵表示管理プラグインと組み合わせて使用してください。

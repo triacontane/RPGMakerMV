@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc TitleWaitingDemoPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param mapId
  * @desc 移動先のマップIDです。
@@ -56,7 +56,7 @@
  */
 /*:ja
  * @plugindesc タイトル待機デモ表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param mapId
  * @text マップID

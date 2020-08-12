@@ -67,7 +67,7 @@
 
 /*:
  * @plugindesc Developer tools management plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param StartupDevTool
  * @desc It will start the developer tools at the start of the game.
@@ -378,7 +378,7 @@
 
 /*:ja
  * @plugindesc 総合開発支援プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 開始時に起動
  * @desc ゲーム開始時に同時にデベロッパツールを起動します。

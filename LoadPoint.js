@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc LoadPointPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param MapIDVariable
  * @desc ロード地点のマップIDを記憶する変数番号です。
@@ -62,7 +62,7 @@
  */
 /*:ja
  * @plugindesc ロード地点設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param マップID変数
  * @desc ロード地点のマップIDを記憶する変数番号です。

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc フォロワー画像調整プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 本来はプレイヤーの設定に準ずるフォロワー画像の表示方法を調整します。
  * 以下のスクリプトを実行してください。

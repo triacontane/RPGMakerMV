@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Attack And Guard Customize Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help Change skill ID for attack and guard
  *
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc 攻撃防御カスタマイズプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 通常攻撃と防御を任意のスキルに差し替えることができます。
  * 特定の武器を装備すると通常攻撃が別のスキルに変化したり、

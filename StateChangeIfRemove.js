@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc ステート解除時の変化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help ステート解除条件を満たしたときに自動的に別のステートに差し替えます。
  * ステートのメモ欄に以下の書式で入力してください。

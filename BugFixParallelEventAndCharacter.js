@@ -12,7 +12,7 @@
 
 /*:
  * @plugindesc 並列処理イベントのセーブ失敗バグ修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 並列処理イベントで対象を「このイベント」にして
  * 「移動ルートの指定」「アニメーションの表示」「フキダシアイコンの表示」を実行中にセーブすると、

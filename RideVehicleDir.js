@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 方向キーの乗り物昇降プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 方向キーの入力で乗り物の昇降を行います。
  * 対象は「小型船」と「大型船」です。

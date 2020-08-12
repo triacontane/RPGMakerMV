@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc PictureSpriteSheetPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help ピクチャを戦闘アニメーション画像のように横N * 縦Nのスプライトシートにします。
  * セル画像を切り替えてアニメーションを行う場合に、パフォーマンスを改善して
@@ -51,7 +51,7 @@
  */
 /*:ja
  * @plugindesc ピクチャのスプライトシート化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help ピクチャを戦闘アニメーション画像のように横N * 縦Nのスプライトシートにします。
  * セル画像を切り替えてアニメーションを行う場合に、パフォーマンスを改善して

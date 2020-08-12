@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc 並列プリロードプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 素材一覧データ
  * @desc 「/data」以下に配置するJSONファイル名

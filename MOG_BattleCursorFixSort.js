@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MOG_BattleCursorFixSortPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help MOG_BattleCursorFixSort.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc MOG_BattleCursorのソート修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help MOG_BattleCursorFixSort.js
  *

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc イベント高速化禁止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 決定ボタンやマウスをクリックし続けた場合のイベントの
  * 高速スキップを無効化できます。

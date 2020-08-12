@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc メッセージのロック解除プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help メッセージ中に制御文字「\UL」を挿入すると、
  * メッセージウィンドウを表示したまま次のイベント命令に移行するようになります。

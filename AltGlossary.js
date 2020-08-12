@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc AltGlossaryPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param categoryColumns
  * @desc カテゴリウィンドウの横方向の項目数です。
@@ -50,7 +50,7 @@
  */
 /*:ja
  * @plugindesc 用語辞典レイアウト変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param categoryColumns
  * @text カテゴリ横項目数

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc オートタイルのラグ修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 処理落ちした際に稀に発生するオートタイルの描画ズレを解消します。
  *

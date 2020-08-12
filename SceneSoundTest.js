@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc Sound test plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param CommandName
  * @desc Command name
@@ -123,7 +123,7 @@
  */
 /*:ja
  * @plugindesc サウンドテストプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param コマンド名称
  * @desc タイトルやメニュー画面に表示されるコマンド名です。

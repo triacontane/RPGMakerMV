@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Change Window Touch Policy
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ActionOutsideFrame
  * @desc ウィンドウの枠外をタッチした場合の動作を選択します。(ok or cancel or off)
@@ -37,7 +37,7 @@
  */
 /*:ja
  * @plugindesc ウィンドウタッチ仕様変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 枠外タッチ動作
  * @desc ウィンドウの枠外をタッチした場合の動作を選択します。(決定 or キャンセル or なし)

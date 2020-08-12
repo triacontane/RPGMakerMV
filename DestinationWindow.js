@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc DestinationWindowPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ShowingSwitchId
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。
@@ -123,7 +123,7 @@
  */
 /*:ja
  * @plugindesc 行動目標ウィンドウプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 表示スイッチID
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixHighSpeedTouchPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help FixHighSpeedTouch.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc 高速移動時のタッチ移動修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help FixHighSpeedTouch.js
  *

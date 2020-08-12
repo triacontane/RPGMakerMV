@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc SaveFileLoadOnlyPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help SaveFileLoadOnly.js
  *
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc セーブファイルのロード専用化プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param ロード専用条件
  * @desc ロード専用対象の判定式です。制御文字\v[n]が使用できます。

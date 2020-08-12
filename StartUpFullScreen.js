@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc Start up full screen
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param Shutdown
  * @desc Command name for shutdown.
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc フルスクリーンで起動プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param シャットダウン
  * @desc タイトル画面に追加するシャットダウンの項目名です。

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 独自バトル画面設計支援プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 従来のステータスウィンドウを排除して
  * アクター情報の表示内容や位置を自由に設計できるようになります。

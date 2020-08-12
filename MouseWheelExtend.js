@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Mouse Wheel Extend
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param MessageScroll
  * @desc マウスホイールを手前に回転させてメッセージ送りをします。戻すことはできません。
@@ -94,7 +94,7 @@
  */
 /*:ja
  * @plugindesc マウスホイール拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param メッセージ送り
  * @desc マウスホイールを手前に回転させてメッセージ送りをします。戻すことはできません。

@@ -68,7 +68,7 @@
 
 /*:
  * @plugindesc ゲーム内時間の導入プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 月ごとの日数配列
  * @desc 各月の日数の配列です。カンマ区切りで指定してください。個数は自由です。

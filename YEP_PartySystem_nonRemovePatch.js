@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc YEP_PartySystem_nonRemovePatchPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help YEP_PartySystem_nonRemovePatch.js.js
  *
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc YEP_PartySystem離脱除去プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help YEP_PartySystem_nonRemovePatch.js
  *

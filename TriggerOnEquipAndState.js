@@ -30,7 +30,7 @@
 
 /*:
  * @plugindesc TriggerOnEquipAndStatePlugin
- * @target MZ @author Triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Triacontane
  *
  * @param BattleMemberOnly
  * @desc 変数やスイッチが変動する対象となるアクターが戦闘メンバーに限定されます。
@@ -89,7 +89,7 @@
  */
 /*:ja
  * @plugindesc 装備変更時の変数操作プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param BattleMemberOnly
  * @text 戦闘メンバーのみ

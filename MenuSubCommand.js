@@ -44,7 +44,7 @@
 
 /*:
  * @plugindesc MenuSubCommandPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param SubCommand
  * @desc サブコマンド情報です。
@@ -153,7 +153,7 @@
  */
 /*:ja
  * @plugindesc メニュー画面のサブコマンドプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param サブコマンド
  * @desc サブコマンド情報です。

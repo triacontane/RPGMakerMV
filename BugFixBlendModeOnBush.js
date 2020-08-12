@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Bug fix of [Blend Mode] on bush
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help Bug fix of [Blend Mode] on bush.
  *
@@ -23,7 +23,7 @@
  */
 /*:ja
  * @plugindesc 茂み属性時の合成方法バグ修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 茂み属性のタイルに侵入したキャラクターの
  * 合成方法が反映されないバグを修正します。

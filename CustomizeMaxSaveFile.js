@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Customize max save file number
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param SaveFileNumber
  * @desc max save file number(1...100)
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc 最大セーブファイル数変更プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param セーブファイル数
  * @desc 最大セーブファイル数です。

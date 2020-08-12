@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 視差ゼロ遠景のぼかし除去プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  * 
  * @help 遠景が視差ゼロ（ファイル名の戦闘に「!」）の場合、ぼかし処理を除去します。
  * その代わり、遠景がループ及びスクロールしなくなります。

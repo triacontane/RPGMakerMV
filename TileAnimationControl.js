@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc Tile animation control
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param MobileDeviceOnly
  * @desc モバイル端末で動作した場合のみ本プラグインの仕様を適用します。
@@ -38,7 +38,7 @@
  */
 /*:ja
  * @plugindesc タイルアニメーション制御プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param モバイル端末専用
  * @desc モバイル端末で動作した場合のみ本プラグインの仕様を適用します。

@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc EventItemConditionPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param DefaultVisible
  * @desc メモ欄が指定されていないアイテムの表示可否です。OFFにするとメモ欄に指定がないアイテムは表示されません。
@@ -58,7 +58,7 @@
  */
 /*:ja
  * @plugindesc アイテム選択の表示条件プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param DefaultVisible
  * @text デフォルト表示可否

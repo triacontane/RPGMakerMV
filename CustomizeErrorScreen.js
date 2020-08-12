@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc Customize Error Screen
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param MainMessage
  * @desc
@@ -39,7 +39,7 @@
  */
 /*:ja
  * @plugindesc エラー画面表示改善プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param メインメッセージ
  * @desc エラー画面に共通で表示されるメッセージ

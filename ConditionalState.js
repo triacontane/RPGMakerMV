@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ConditionalStatePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help Grant state when certain conditions are satisfied.
  * Please enter the following in the memo field with features.
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc 条件付きステート付与プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help HPやMPの残量の条件を満たしたときにステートを付与します。
  * 特徴を有するメモ欄に以下の通り入力してください。

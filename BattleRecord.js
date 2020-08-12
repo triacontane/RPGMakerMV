@@ -23,7 +23,7 @@
 
 /*:
  * @plugindesc Battle Record Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help Recording resource in battle.
  *
@@ -160,7 +160,7 @@
  */
 /*:ja
  * @plugindesc 戦績プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 戦闘中の様々な情報を記録していつでも取得可能にします。
  * 戦績として記録に残せるほか、特殊なスキルのダメージ計算式に

@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc PanoramaTitlePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ParallaxSettingMapId
  * @desc 指定したIDのマップの「マップ設定」の「遠景」設定をタイトル画面に適用します。
@@ -53,7 +53,7 @@
  */
 /*:ja
  * @plugindesc 遠景タイトルプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 遠景設定マップID
  * @desc 指定したIDのマップの「マップ設定」の「遠景」設定をタイトル画面に適用します。

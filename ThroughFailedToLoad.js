@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc Through Failed to load
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param InvalidIfTest
  * @desc Not through if test play.
@@ -51,7 +51,7 @@
  */
 /*:ja
  * @plugindesc ロード失敗エラーのすり抜けプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param テストプレー時無効
  * @desc テストプレー時は本プラグインの機能が無効になります。

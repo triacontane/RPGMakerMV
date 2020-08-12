@@ -20,7 +20,7 @@
 
 /*:ja
  * @plugindesc 画像ロード時のチラつき防止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help キャッシュしていない画像を表示したときに
  * 一瞬発生するチラつきを防止します。

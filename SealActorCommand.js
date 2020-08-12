@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc SealActorCommandPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param commandDisable
  * @desc 封印したコマンドを非表示ではなく使用禁止にします。
@@ -70,7 +70,7 @@
  */
 /*:ja
  * @plugindesc アクターコマンド封印プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param commandDisable
  * @text コマンド使用禁止

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc AnimationRotationPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param RotationVariableId
  * @desc 回転角(0-360)を取得するための変数番号
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc アニメーション角度設定プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 回転角変数番号
  * @desc 回転角(0-360)を取得するための変数番号

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ScreenRotationPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ThroughWindow
  * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
@@ -52,7 +52,7 @@
  */
 /*:ja
  * @plugindesc 画面回転プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param ウィンドウ透過
  * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)

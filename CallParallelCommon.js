@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc CallParallelCommonPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help イベントやアイテムからコモンイベントを呼び出したときに
  * 対象のトリガーが「並列処理」の場合は、条件スイッチを自動でONにして
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc 並列コモンイベント呼び出しプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help イベントやアイテムからコモンイベントを呼び出したときに
  * 対象のトリガーが「並列処理」の場合は、条件スイッチを自動でONにして

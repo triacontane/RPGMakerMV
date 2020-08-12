@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc EventStartupTouchPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param StartupSwitchId
  * @desc タッチでイベントを起動したときにONになるスイッチ番号
@@ -48,7 +48,7 @@
  */
 /*:ja
  * @plugindesc タッチでイベント起動プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 起動スイッチ番号
  * @desc タッチでイベントを起動したときにONになるスイッチ番号

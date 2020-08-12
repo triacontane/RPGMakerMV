@@ -12,7 +12,7 @@
 
 /*:
  * @plugindesc 飛行船の浮上の高さの変更
- * @target MZ @author s.f.
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author s.f.
  *
  * @param 変数番号
  * @desc 飛行船の高さを取得するための変数番号

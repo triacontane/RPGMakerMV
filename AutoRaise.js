@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc AutoRaisePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param RaiseAnimationId
  * @desc 自働蘇生時に表示されるアニメーションのID
@@ -50,7 +50,7 @@
  */
 /*:ja
  * @plugindesc 自働蘇生プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 蘇生アニメID
  * @desc 自働蘇生時に表示されるアニメーションのID

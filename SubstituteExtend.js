@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc SubstituteExtendPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param CondDying
  * @desc デフォルトの身代わり条件である「瀕死」を有効にします。OFFにすると無効になります。(ON/OFF)
@@ -150,7 +150,7 @@
  */
 /*:ja
  * @plugindesc 身代わり拡張プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 身代わり条件_瀕死
  * @desc デフォルトの身代わりされる条件である「瀕死」を有効にします。OFFにすると無効になります。(ON/OFF)

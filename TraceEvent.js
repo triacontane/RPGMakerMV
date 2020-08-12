@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc TraceEventPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param EventPriorityType
  * @desc 対象イベントが複数存在した場合の優先基準です。
@@ -72,7 +72,7 @@
  */
 /*:ja
  * @plugindesc 指定イベント追跡プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param イベント優先基準
  * @desc 対象イベントが複数存在した場合の優先基準です。

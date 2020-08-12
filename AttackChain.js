@@ -30,7 +30,7 @@
 
 /*:
  * @plugindesc AttackChainPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param Unit
  * @desc It is a unit of chain number.
@@ -186,7 +186,7 @@
 
 /*:ja
  * @plugindesc 連携攻撃プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 単位
  * @desc チェイン数の単位です。

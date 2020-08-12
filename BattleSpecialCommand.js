@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Battle special command plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param AdditionalPosition
  * @desc 特殊コマンドの挿入位置です。指定対象の下に挿入されます。
@@ -72,7 +72,7 @@
  */
 /*:ja
  * @plugindesc 特殊戦闘コマンド追加プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 追加位置
  * @desc 特殊コマンドの挿入位置です。指定対象の下に挿入されます。

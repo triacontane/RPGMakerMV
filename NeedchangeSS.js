@@ -4,7 +4,7 @@
 
 /*:ja
  * @plugindesc ver1.00 戦闘とそれ以外での解像度の変更
- * @target MZ @author まっつＵＰ
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author まっつＵＰ
  * 
  * @param width
  * @desc デフォルトの幅

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixLoadErrorChoiceSetup
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help BugFixLoadErrorChoiceSetup
  *
@@ -23,7 +23,7 @@
  */
 /*:ja
  * @plugindesc 選択肢表示中のロードエラー修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 選択肢が表示されている最中にセーブしたデータが
  * ロードできない不具合を修正

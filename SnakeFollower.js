@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc SnakeFollowerPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ValidateSwitchId
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効となります。
@@ -33,7 +33,7 @@
  */
 /*:ja
  * @plugindesc スネークフォロワープラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 有効スイッチID
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効となります。

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc Plugin That ...
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param param
  * @desc parameter description
@@ -32,7 +32,7 @@
  */
 /*:ja
  * @plugindesc センサー情報取得プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param Y軸傾き変数
  * @desc Y軸方向のデバイスの傾き度合いを格納する変数番号

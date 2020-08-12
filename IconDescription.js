@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc アイコン説明プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 効果音
  * @desc ヘルプが表示される際に演奏される効果音のファイル名です。

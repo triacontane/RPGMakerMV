@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixZoomRangePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help FixZoomRange.js
  *
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc ズーム範囲修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help FixZoomRange.js
  *

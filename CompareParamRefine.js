@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 装備購入時の性能比較改善プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 装備購入時の武器と防具の性能比較を
  * 攻撃力や防御力ではなくパラメータの総和で行います。

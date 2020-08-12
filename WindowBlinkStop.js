@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc WindowBlinkStopPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help WindowBlinkStop.js
  *
@@ -27,7 +27,7 @@
  */
 /*:ja
  * @plugindesc ウィンドウ点滅停止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help WindowBlinkStop.js
  *

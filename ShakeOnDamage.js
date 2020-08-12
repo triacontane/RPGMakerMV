@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc ShakeOnDamagePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ShakePower
  * @desc 通常ダメージを受けたときのシェイク強さです。
@@ -82,7 +82,7 @@
  */
 /*:ja
  * @plugindesc ダメージ時の振動プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param シェイク強さ
  * @desc 通常ダメージを受けたときのシェイク強さです。

@@ -30,7 +30,7 @@
 
 /*:
  * @plugindesc BattleLogToMessagePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param StatusPosUpper
  * @desc コマンドやステータスのウィンドウを画面上部に配置して、メッセージによって隠れないようにします。
@@ -90,7 +90,7 @@
  */
 /*:ja
  * @plugindesc バトルログのメッセージ表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param ステータス上部配置
  * @desc コマンドやステータスのウィンドウを画面上部に配置して、メッセージによって隠れないようにします。

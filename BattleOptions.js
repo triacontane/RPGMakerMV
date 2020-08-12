@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc バトル画面オプション追加プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param コマンド名称
  * @desc 追加するコマンドの名称です。

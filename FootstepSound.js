@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc 足音プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param EventRunningInvalid
  * @text イベント実行中無効

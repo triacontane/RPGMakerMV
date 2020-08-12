@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc 反射アニメーションプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param animationId
  * @text アニメーション番号

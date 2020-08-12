@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc FavouriteEquipsPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help FavouriteEquips.js
  *
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc お気に入り装備プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help FavouriteEquips.js
  *

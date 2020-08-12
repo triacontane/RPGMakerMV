@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc メニューバー追加プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 伸縮モード切り替え
  * @desc 伸縮モード切り替え(F3)を追加します。(ON/OFF)

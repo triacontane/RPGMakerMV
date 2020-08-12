@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc Get the item at random
- * @target MZ @author Takeya Kimura
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Takeya Kimura
  *
  * @param Help Message Text
  * @desc The help message for gacha window. "Required Amount" is replaced with the Required Amount.
@@ -157,7 +157,7 @@
 
 /*:ja
  * @plugindesc ランダムにアイテムを取得します。
- * @target MZ @author Takeya Kimura
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Takeya Kimura
  *
  * @param Help Message Text
  * @desc ガチャ画面のヘルプメッセージです。「Required Amount」は消費Gと置換されます。

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc SelfSwitchTemporaryPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 場所移動時に自働で初期化される一時セルフスイッチを定義できます。
  * イベントのメモ欄に以下の通り記入してください。
@@ -32,7 +32,7 @@
  */
 /*:ja
  * @plugindesc 一時セルフスイッチプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 場所移動時に自働で初期化される一時セルフスイッチを定義できます。
  * イベントのメモ欄に以下の通り記入してください。

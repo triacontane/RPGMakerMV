@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 使用不可スキルの非表示
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 戦闘画面のスキル選択ウィンドウにおいて
  * 使用できないスキルを非表示にします。

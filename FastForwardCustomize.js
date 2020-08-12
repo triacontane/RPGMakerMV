@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FastForwardCustomizePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param EventSpeedVariableId
  * @desc イベント高速化時の速度を取得する変数番号です。変数値が0なら高速化禁止、数値が大きくなると速度も速くなります。
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc イベント高速化調整プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param イベント速度変数
  * @desc イベント高速化時の速度を取得する変数番号です。変数値が0なら高速化禁止、数値が大きくなると速度も速くなります。

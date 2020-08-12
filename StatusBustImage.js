@@ -32,7 +32,7 @@
 
 /*:
  * @plugindesc StatusBustImagePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param BustImageX
  * @desc バストアップ画像を表示するX座標(足下原点)です。
@@ -194,7 +194,7 @@
  */
 /*:ja
  * @plugindesc バストアップ表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 画像X座標
  * @desc バストアップ画像を表示するX座標(足下原点)です。

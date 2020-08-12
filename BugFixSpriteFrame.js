@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixSpriteFramePlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 本体バージョン1.3.1で文章のスクロールが表示されない
  * 問題を根本的に修正します。
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc 文章のスクロール修正プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 本体バージョン1.3.1で文章のスクロールが表示されない
  * 問題を根本的に修正します。

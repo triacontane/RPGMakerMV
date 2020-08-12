@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc TimeStopInMenuPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help マップ画面もしくはバトル画面以外では
  * プレー時間の加算を停止します。
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc メニュー中時間停止プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help マップ画面もしくはバトル画面以外では
  * プレー時間の加算を停止します。

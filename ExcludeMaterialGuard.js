@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MaterialSelectorPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param ImageFiles
  * @desc 未使用ファイル削除機能の対象外にする画像素材のリストです。
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc 未使用素材削除ガードプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param 画像素材
  * @desc 未使用ファイル削除機能の対象外にする画像素材のリストです。

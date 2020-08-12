@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc 特徴の条件適用プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 特徴のひとつひとつに適用条件を設定します。
  * 条件を満たさない特徴は無効になります。

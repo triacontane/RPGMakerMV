@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 開始時スクリプト実行プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param スクリプト1
  * @desc ゲーム開始時に実行するスクリプト

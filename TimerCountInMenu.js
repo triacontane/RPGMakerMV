@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc TimerCountInMenuPlugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param BehaviorInMenu
  * @desc メニュー画面およびその先の画面でタイマーを動作させます。
@@ -48,7 +48,7 @@
  */
 /*:ja
  * @plugindesc メニュー画面でのタイマーカウントプラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param メニュー画面で動作
  * @desc メニュー画面およびその先の画面でタイマーを動作させます。

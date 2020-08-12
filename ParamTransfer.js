@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc Param Transfer Plugin
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @help 以下の主要8パラメータを変換します。
  * ・最大HP(0)
@@ -63,7 +63,7 @@
  */
 /*:ja
  * @plugindesc パラメータ変換プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @help 以下の主要8パラメータを変換します。
  * ・最大HP(0)

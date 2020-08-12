@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc Plugin that to visualize face graphic in battle
- * @target MZ @author triacontane
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
  *
  * @param WindowVisible
  * @desc Window visible flg(ON/OFF)
@@ -65,7 +65,7 @@
  */
 /*:ja
  * @plugindesc 戦闘中顔グラフィック表示プラグイン
- * @target MZ @author トリアコンタン
+ * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
  * @param ウィンドウ表示
  * @desc 背景ウィンドウの表示フラグです。(ON/OFF)
