@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Battle special command plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param AdditionalPosition
  * @desc 特殊コマンドの挿入位置です。指定対象の下に挿入されます。
@@ -72,7 +72,7 @@
  */
 /*:ja
  * @plugindesc 特殊戦闘コマンド追加プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 追加位置
  * @desc 特殊コマンドの挿入位置です。指定対象の下に挿入されます。

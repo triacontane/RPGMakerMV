@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MessageCommonPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help メッセージの表示中にコモンイベントを呼び出します。
  * コモンイベントは並列扱いで実行されます。
@@ -29,7 +29,7 @@
  */
 /*:ja
  * @plugindesc メッセージコモンプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help メッセージの表示中にコモンイベントを呼び出します。
  * コモンイベントは並列扱いで実行されます。

@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc SideEffectSkillPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help スキル使用時に、使用者に対する副作用を設定できます。
  * 副作用が適用されるタイミングは以下の中から選択できます。
@@ -102,7 +102,7 @@
  */
 /*:ja
  * @plugindesc スキルの副作用プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help スキル使用時に、使用者に対する副作用を設定できます。
  * 副作用が適用されるタイミングは以下の中から選択できます。

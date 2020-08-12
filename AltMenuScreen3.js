@@ -7,7 +7,7 @@
 
 /*:
  * @plugindesc Yet Another menu screen layout.
- * @author Sasuke KANNAZUKI, Yoji Ojima
+ * @target MZ @author Sasuke KANNAZUKI, Yoji Ojima
  * 
  * @default 
  * @param bgBitmapMenu
@@ -71,7 +71,7 @@
 
 /*:ja
  * @plugindesc レイアウトの異なるメニュー画面
- * @author 神無月サスケ, Yoji Ojima
+ * @target MZ @author 神無月サスケ, Yoji Ojima
  * 
  * @param bgBitmapMenu
  * @desc メニュー背景にするビットマップファイルです。

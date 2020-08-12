@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc ParallelBgsPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 複数のBGSを並行して演奏できます。プラグインコマンドからBGSの演奏ラインを
  * 変更すると元のBGSを演奏したまま、新しくBGSを演奏することができます。
@@ -59,7 +59,7 @@
  */
 /*:ja
  * @plugindesc BGS並行演奏プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 複数のBGSを並行して演奏できます。プラグインコマンドからBGSの演奏ラインを
  * 変更すると元のBGSを演奏したまま、新しくBGSを演奏することができます。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc バトル画面オプション追加プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param コマンド名称
  * @desc 追加するコマンドの名称です。

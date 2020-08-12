@@ -29,7 +29,7 @@
 
 /*:
  * @plugindesc アナザーニューゲーム追加プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param anotherDataList
  * @text アナザーニューゲームリスト

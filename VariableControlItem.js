@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc VariableControlItemPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help アイテムもしくはスキルを使用し、かつ
  * 行動が成功した場合に、変数を操作できます。
@@ -41,7 +41,7 @@
  */
 /*:ja
  * @plugindesc 変数操作アイテムプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help アイテムもしくはスキルを使用し、かつ
  * 行動が成功した場合に、変数を操作できます。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc なんでも記録プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param パラメータ
  * @desc パラメータ説明

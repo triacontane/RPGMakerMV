@@ -4,7 +4,7 @@
 
 /*:ja
  * @plugindesc ver1.00 戦闘とそれ以外での解像度の変更
- * @author まっつＵＰ
+ * @target MZ @author まっつＵＰ
  * 
  * @param width
  * @desc デフォルトの幅

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc サブ武器カテゴリー追加プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 装備タイプID
  * @desc サブ武器に該当する装備タイプIDです。

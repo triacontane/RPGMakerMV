@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc AutoRaisePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param RaiseAnimationId
  * @desc 自働蘇生時に表示されるアニメーションのID
@@ -50,7 +50,7 @@
  */
 /*:ja
  * @plugindesc 自働蘇生プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 蘇生アニメID
  * @desc 自働蘇生時に表示されるアニメーションのID

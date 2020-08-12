@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc DirectivityShakePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help イベントコマンド「画面のシェイク」に指向性を持たせることができます。
  * 角度を指定して縦や斜めに振動させることが可能です。
@@ -38,7 +38,7 @@
  */
 /*:ja
  * @plugindesc 指向性シェイクプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help イベントコマンド「画面のシェイク」に指向性を持たせることができます。
  * 角度を指定して縦や斜めに振動させることが可能です。

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc MarkerTilesetPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param commandPrefix
  * @text メモ欄接頭辞
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc マーカータイルセットプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param commandPrefix
  * @text メモ欄接頭辞

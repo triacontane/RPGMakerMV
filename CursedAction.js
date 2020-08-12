@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc CursedActionPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param priority
  * @desc 自動戦闘および混乱の設定との優先度を選択します。
@@ -62,7 +62,7 @@
  */
 /*:ja
  * @plugindesc 呪いのプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param priority
  * @text 優先度

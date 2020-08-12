@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc PanoramaTitlePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ParallaxSettingMapId
  * @desc 指定したIDのマップの「マップ設定」の「遠景」設定をタイトル画面に適用します。
@@ -53,7 +53,7 @@
  */
 /*:ja
  * @plugindesc 遠景タイトルプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 遠景設定マップID
  * @desc 指定したIDのマップの「マップ設定」の「遠景」設定をタイトル画面に適用します。

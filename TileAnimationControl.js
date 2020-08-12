@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc Tile animation control
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param MobileDeviceOnly
  * @desc モバイル端末で動作した場合のみ本プラグインの仕様を適用します。
@@ -38,7 +38,7 @@
  */
 /*:ja
  * @plugindesc タイルアニメーション制御プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param モバイル端末専用
  * @desc モバイル端末で動作した場合のみ本プラグインの仕様を適用します。

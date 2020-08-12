@@ -36,7 +36,7 @@
 
 /*:
  * @plugindesc Screen Capture Plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param FuncKeyPngCapture
  * @desc キャプチャとファイル保存を行うファンクションキーです。
@@ -218,7 +218,7 @@
  */
 /*:ja
  * @plugindesc 画面キャプチャ管理プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param PNGキャプチャキー
  * @desc キャプチャとファイル保存を行うファンクションキーです。

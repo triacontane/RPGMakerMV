@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ManualMemoryManagerPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 画像ファイル名を明示的に指定して手動でキャッシュから削除します。
  * アツマール版コアスクリプト(community-1.2b)以降で動作します。
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc メモリ手動管理プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 画像ファイル名を明示的に指定して手動でキャッシュから削除します。
  * アツマール版コアスクリプト(community-1.2b)以降で動作します。

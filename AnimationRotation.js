@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc AnimationRotationPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param RotationVariableId
  * @desc 回転角(0-360)を取得するための変数番号
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc アニメーション角度設定プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 回転角変数番号
  * @desc 回転角(0-360)を取得するための変数番号

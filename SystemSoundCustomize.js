@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc SystemSoundCustomizePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help システム効果音をゲーム中に動的に変更します。
  * 変更したシステム効果音はセーブデータごとに有効になります。
@@ -63,7 +63,7 @@
  */
 /*:ja
  * @plugindesc システム効果音変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help システム効果音をゲーム中に動的に変更します。
  * 変更したシステム効果音はセーブデータごとに有効になります。

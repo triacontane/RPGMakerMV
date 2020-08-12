@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc HiddenParameterPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help HiddenParameter.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc パラメータ隠蔽プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help HiddenParameter.js
  *

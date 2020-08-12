@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc CharacterFreezePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param FreezeSwitchId
  * @desc キャラクターを全停止させるトリガーになるスイッチIDです。
@@ -56,7 +56,7 @@
  */
 /*:ja
  * @plugindesc キャラクター停止プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 停止スイッチID
  * @desc キャラクターを全停止させるトリガーになるスイッチIDです。

@@ -30,7 +30,7 @@
 
 /*:
  * @plugindesc BattleLogToMessagePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param StatusPosUpper
  * @desc コマンドやステータスのウィンドウを画面上部に配置して、メッセージによって隠れないようにします。
@@ -90,7 +90,7 @@
  */
 /*:ja
  * @plugindesc バトルログのメッセージ表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ステータス上部配置
  * @desc コマンドやステータスのウィンドウを画面上部に配置して、メッセージによって隠れないようにします。

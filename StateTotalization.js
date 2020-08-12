@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc StateTotalizationPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param battleMemberOnly
  * @desc 全体化ステートを有するアクターの対象を戦闘メンバーに限定します。OFFにすると非戦闘メンバーのステートも全体化します。
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc ステート全体化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param battleMemberOnly
  * @text 戦闘メンバーのみ

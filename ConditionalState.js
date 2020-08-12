@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ConditionalStatePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help Grant state when certain conditions are satisfied.
  * Please enter the following in the memo field with features.
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc 条件付きステート付与プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help HPやMPの残量の条件を満たしたときにステートを付与します。
  * 特徴を有するメモ欄に以下の通り入力してください。

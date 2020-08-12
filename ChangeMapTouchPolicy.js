@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Plugin that change policy of 'map touch'
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param initPolicyLevel
  * @desc Initial value of policy level
@@ -51,7 +51,7 @@
  */
 /*:ja
  * @plugindesc マップタッチ仕様変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param initPolicyLevel
  * @text 仕様レベル初期値

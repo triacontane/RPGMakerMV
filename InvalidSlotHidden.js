@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc InvalidSlotHiddenPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help InvalidSlotHidden.js
  *
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc 封印装備スロットの非表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help InvalidSlotHidden.js
  *

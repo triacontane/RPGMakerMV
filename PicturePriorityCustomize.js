@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc PicturePriorityCustomizePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param UpperPictureId
  * @desc 指定した番号以上のピクチャはウィンドウより上に表示されるようになります。
@@ -88,7 +88,7 @@
  */
 /*:ja
  * @plugindesc ピクチャの表示優先度調整プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 上層ピクチャ番号
  * @desc 指定した番号以上のピクチャはウィンドウより上に表示されるようになります。

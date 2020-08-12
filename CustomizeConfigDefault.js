@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc Setting default value for Options
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param AlwaysDash
  * @desc Always dash(ON/OFF)
@@ -75,7 +75,7 @@
  */
 /*:ja
  * @plugindesc オプションデフォルト値設定プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 常時ダッシュ
  * @desc 常にダッシュする。（Shiftキーを押している場合のみ歩行）(ON/OFF)

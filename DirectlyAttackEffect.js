@@ -32,7 +32,7 @@
 
 /*:
  * @plugindesc DirectlyAttackEffectPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param Duration
  * @desc 相手の元に移動するまでに掛けるフレーム数のデフォルト値です。メモ欄で指定がないとこの値が参照されます。
@@ -196,7 +196,7 @@
 
 /*:ja
  * @plugindesc 直接攻撃演出プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param フレーム数
  * @desc 相手の元に移動するまでに掛けるフレーム数のデフォルト値です。メモ欄で指定がないとこの値が参照されます。

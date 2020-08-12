@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixWaitOfTextEndPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help メッセージウィンドウにおいてテキストの末尾にある
  * ウェイト(\! \. \|)が無視されてしまう現象を修正します。
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc メッセージ末尾のウェイト無視修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help メッセージウィンドウにおいてテキストの末尾にある
  * ウェイト(\! \. \|)が無視されてしまう現象を修正します。

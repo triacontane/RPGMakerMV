@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc FileDownloaderPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param NormalEndSwitch
  * @desc コマンドが正常終了した際にONになるスイッチIDです。
@@ -102,7 +102,7 @@
  */
 /*:ja
  * @plugindesc ファイルダウンロードプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 正常終了スイッチID
  * @desc コマンドが正常終了した際にONになるスイッチIDです。

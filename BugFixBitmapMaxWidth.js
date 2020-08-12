@@ -11,7 +11,7 @@
 
 /*:
  * @plugindesc FilefoxのdrawTextエラー修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FilefoxでBitmap.prototype.drawTextの引数「maxWidth」に
  * 負の値が設定された場合に発生するUnknownErrorを回避します。

@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc BackUpDatabasePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param backUpPath
  * @desc ファイルの出力パスです。相対パス、絶対パスが利用できます。
@@ -47,7 +47,7 @@
  */
 /*:ja
  * @plugindesc データバックアッププラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param backUpPath
  * @text バックアップパス

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc CharacterPatternChangePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param player
  * @desc プレイヤーのアニメーションパターンを「1 - 2 - 3」に変更します。
@@ -61,7 +61,7 @@
  */
 /*:ja
  * @plugindesc キャラクターパターン変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param player
  * @text プレイヤー

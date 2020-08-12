@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc WaitEventInterpreterPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help WaitInterpreterCondition.js
  *
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc 条件付きウェイトプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help WaitInterpreterCondition.js
  *

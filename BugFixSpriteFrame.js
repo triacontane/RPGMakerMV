@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixSpriteFramePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 本体バージョン1.3.1で文章のスクロールが表示されない
  * 問題を根本的に修正します。
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc 文章のスクロール修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 本体バージョン1.3.1で文章のスクロールが表示されない
  * 問題を根本的に修正します。

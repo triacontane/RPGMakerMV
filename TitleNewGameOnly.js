@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc ニューゲームオンリープラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param startString
  * @text スタート文字列

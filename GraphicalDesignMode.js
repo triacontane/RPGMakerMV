@@ -50,7 +50,7 @@
 /*:
  * @plugindesc GUI画面デザインプラグイン
  * パラメータを変更したら「プロジェクトの保存」（Ctrl+S）
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param デザインモード
  * @desc デザインモードでゲームを起動します。(ON/OFF)

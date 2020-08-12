@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc StateMessageRemoveTargetPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help StateMessageRemoveBattler.js
  * ステートメッセージの先頭に自動付与される「対象者の名前」を消去します。
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc ステートメッセージから対象者の名前を消去するプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help StateMessageRemoveBattler.js
  * ステートメッセージの先頭に自動付与される「対象者の名前」を消去します。

@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc RetryBattlePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param RetryNormalEnemy
  * @desc 雑魚敵でゲームオーバーになったあとにリトライできます。
@@ -97,7 +97,7 @@
  */
 /*:ja
  * @plugindesc 戦闘リトライプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 雑魚敵でリトライ可能
  * @desc 雑魚敵でゲームオーバーになったあとにリトライできます。

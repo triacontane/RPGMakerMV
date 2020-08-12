@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc CertainHitWithoutStatePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help CertainHitWithoutState.js
  *
@@ -27,7 +27,7 @@
  */
 /*:ja
  * @plugindesc 必中のステート付与への影響防止プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help CertainHitWithoutState.js
  *

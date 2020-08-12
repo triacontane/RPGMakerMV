@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc EncounterSwitchConditionsPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param validSwitchId
  * @desc このプラグインの機能が有効になるスイッチIDです。0を指定すると常に有効になります。
@@ -39,7 +39,7 @@
  */
 /*:ja
  * @plugindesc スイッチ条件エンカウントプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param validSwitchId
  * @text 有効スイッチID

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc RecoveryOverLimitPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param OverLimitHpColor
  * @desc This is the color of the text when the HP has over limit.
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc 回復限界突破プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param OverLimitHpColor
  * @text 限界突破HP文字色

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc プレイヤーのその場方向転換
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ボタン名称
  * @desc その場方向転換に使用するボタンです。

@@ -32,7 +32,7 @@
 
 /*:
  * @plugindesc キャラクターのダメージポッププラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 効果音演奏
  * @desc 状況に応じたシステム効果音を自動演奏します。(ON/OFF)

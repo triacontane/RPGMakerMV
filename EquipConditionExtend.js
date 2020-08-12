@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc EquipConditionExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 装備条件を拡張します。
  * 武器または防具のメモ欄に以下の通り記述してください。
@@ -43,7 +43,7 @@
  */
 /*:ja
  * @plugindesc 装備条件拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 装備条件を拡張します。
  * 武器または防具のメモ欄に以下の通り記述してください。

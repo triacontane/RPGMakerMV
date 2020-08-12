@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 戦闘放棄プラグイン　～武器よさらば～
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  * 
  * @param farewellCommand
  * @desc ウィンドウに表示されるコマンド名です。

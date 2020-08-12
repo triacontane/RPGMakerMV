@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc DrainExtend
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param RecoverSe
  * @desc 吸収成功時に回復効果音を演奏します。
@@ -59,7 +59,7 @@
  */
 /*:ja
  * @plugindesc 吸収拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 回復効果音
  * @desc 吸収成功時に回復効果音を演奏します。

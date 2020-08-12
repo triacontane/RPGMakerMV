@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc アイコン説明プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 効果音
  * @desc ヘルプが表示される際に演奏される効果音のファイル名です。

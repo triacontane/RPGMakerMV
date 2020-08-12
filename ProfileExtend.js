@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc プロフィール拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 拡張行数
  * @desc プロフィール入力欄を拡張する行数です。

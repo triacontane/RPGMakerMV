@@ -64,7 +64,7 @@
 
 /*:ja
  * @plugindesc ピクチャのボタン化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 透明色を考慮
  * @desc クリックされた箇所が透明色だった場合は、クリックを無効にする。
@@ -229,7 +229,7 @@
  */
 /*:
  * @plugindesc Clickable picture plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param TransparentConsideration
  * @desc if click position is transparent, click is disabled.

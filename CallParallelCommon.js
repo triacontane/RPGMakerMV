@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc CallParallelCommonPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help イベントやアイテムからコモンイベントを呼び出したときに
  * 対象のトリガーが「並列処理」の場合は、条件スイッチを自動でONにして
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc 並列コモンイベント呼び出しプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help イベントやアイテムからコモンイベントを呼び出したときに
  * 対象のトリガーが「並列処理」の場合は、条件スイッチを自動でONにして

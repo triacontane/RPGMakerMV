@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 戦闘BGM継続演奏プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param disableSwitch
  * @text 無効スイッチ

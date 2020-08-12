@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc NPC Follower plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param MaxNpcNumber
  * @desc 同時に隊列に存在できるNPCの最大数です。
@@ -54,7 +54,7 @@
  */
 /*:ja
  * @plugindesc NPCフォロワープラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 最大同時NPC数
  * @desc 同時に隊列に存在できるNPCの最大数です。

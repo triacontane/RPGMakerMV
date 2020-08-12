@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc UseOnlyOneSavePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param SaveMessage
  * @desc メニュー画面でのセーブ実行時に表示するメッセージです。指定しない場合は表示されません。
@@ -37,7 +37,7 @@
  */
 /*:ja
  * @plugindesc 単一セーブデータプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param セーブメッセージ
  * @desc メニュー画面でのセーブ実行時に表示するメッセージです。指定しない場合は表示されません。

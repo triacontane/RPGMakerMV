@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Customize max save file number
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param SaveFileNumber
  * @desc max save file number(1...100)
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc 最大セーブファイル数変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param セーブファイル数
  * @desc 最大セーブファイル数です。

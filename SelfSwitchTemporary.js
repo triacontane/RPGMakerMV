@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc SelfSwitchTemporaryPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 場所移動時に自働で初期化される一時セルフスイッチを定義できます。
  * イベントのメモ欄に以下の通り記入してください。
@@ -32,7 +32,7 @@
  */
 /*:ja
  * @plugindesc 一時セルフスイッチプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 場所移動時に自働で初期化される一時セルフスイッチを定義できます。
  * イベントのメモ欄に以下の通り記入してください。

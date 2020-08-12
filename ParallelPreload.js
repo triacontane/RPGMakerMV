@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc 並列プリロードプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 素材一覧データ
  * @desc 「/data」以下に配置するJSONファイル名

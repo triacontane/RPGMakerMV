@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 経験値上限のレベル上限に合わせた修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param adjustLevelOnLoad
  * @text ロード時にレベルを補正

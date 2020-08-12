@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc ParallelPartyPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ShareResource
  * @desc 異なるパーティでもリソース(アイテム、武器、防具、お金、歩数)を共有します。(ON/OFF)
@@ -60,7 +60,7 @@
 
 /*:ja
  * @plugindesc 並列パーティプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param リソース共有
  * @desc 異なるパーティでもリソース(アイテム、武器、防具、お金、歩数)を共有します。(ON/OFF)

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc HitAndEvasionExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param formulaPhysicalHit
  * @text 物理命中計算式
@@ -74,7 +74,7 @@
  */
 /*:ja
  * @plugindesc 命中回避拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param formulaPhysicalHit
  * @text 物理命中計算式

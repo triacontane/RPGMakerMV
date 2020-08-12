@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixLoadErrorChoiceSetup
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help BugFixLoadErrorChoiceSetup
  *
@@ -23,7 +23,7 @@
  */
 /*:ja
  * @plugindesc 選択肢表示中のロードエラー修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 選択肢が表示されている最中にセーブしたデータが
  * ロードできない不具合を修正

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ParamTextColorChangerPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param HP閾値配列
  * @desc テキストカラーを変更するHP割合の閾値をカンマ区切りで指定します。
@@ -52,7 +52,7 @@
  */
 /*:ja
  * @plugindesc パラメータテキストカラー変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param HpThresholds
  * @desc テキストカラーを変更するHP割合の閾値をカンマ区切りで指定します。

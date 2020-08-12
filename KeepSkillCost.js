@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc KeepSkillCostPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param BattleOnly
  * @desc ターン終了時の消費が戦闘画面でのみ有効になります。
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc スキル維持コストプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 戦闘画面のみ有効
  * @desc ターン終了時の消費が戦闘画面でのみ有効になります。

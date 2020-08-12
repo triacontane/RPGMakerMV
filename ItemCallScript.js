@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ItemCallScriptPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param commandPrefix
  * @text メモ欄接頭辞
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc スクリプト呼び出しアイテムプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param commandPrefix
  * @text メモ欄接頭辞

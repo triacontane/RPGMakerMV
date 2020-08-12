@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc EquipChangeRandomPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help アクターの装備品を所持品の中からランダムで強制変更します。
  * アクターIDもしくは隊列番号とスロットIDを指定して変更します。
@@ -32,7 +32,7 @@
  */
 /*:ja
  * @plugindesc 装備品ランダム変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help アクターの装備品を所持品の中からランダムで強制変更します。
  * アクターIDもしくは隊列番号とスロットIDを指定して変更します。

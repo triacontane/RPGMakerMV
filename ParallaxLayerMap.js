@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc ParallaxLayerMapPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help ParallaxLayerMap.js
  *
@@ -73,7 +73,7 @@
  */
 /*:ja
  * @plugindesc 多層レイヤー一枚絵マッププラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help ParallaxLayerMap.js
  *

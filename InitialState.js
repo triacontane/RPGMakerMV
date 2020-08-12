@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc InitialStatePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 敵キャラに初期状態でステートを付与します。
  *
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc 初期ステートプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 敵キャラに初期状態でステートを付与します。
  *

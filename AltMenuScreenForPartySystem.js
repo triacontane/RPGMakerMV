@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc AltMenuScreenForPartySystemPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param bgBitmapPartySystem
  * @desc パーティ編成画面背景にするビットマップファイルです。
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc パーティ編成の透明化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param bgBitmapPartySystem
  * @desc パーティ編成画面背景にするビットマップファイルです。

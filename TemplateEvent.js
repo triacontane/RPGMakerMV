@@ -40,7 +40,7 @@
 
 /*:
  * @plugindesc Template Event Plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param TemplateMapId
  * @desc The map ID where the template event resides.
@@ -139,7 +139,7 @@
  */
 /*:ja
  * @plugindesc テンプレートイベントプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param TemplateMapId
  * @text テンプレートマップID

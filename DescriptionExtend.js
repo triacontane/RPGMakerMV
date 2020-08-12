@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc DescriptionExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param swapDescription
  * @desc 元の説明文を無視してメモ欄の値で置き換えます。OFFの場合は元の説明文の次行に表示されます。
@@ -48,7 +48,7 @@
  */
 /*:ja
  * @plugindesc 説明拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param swapDescription
  * @text 説明置き換え

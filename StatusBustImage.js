@@ -32,7 +32,7 @@
 
 /*:
  * @plugindesc StatusBustImagePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param BustImageX
  * @desc バストアップ画像を表示するX座標(足下原点)です。
@@ -194,7 +194,7 @@
  */
 /*:ja
  * @plugindesc バストアップ表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 画像X座標
  * @desc バストアップ画像を表示するX座標(足下原点)です。

@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc メッセージ送りSEプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param validateSwitchId
  * @text 有効スイッチID

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ShopBgmPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param list
  * @desc List of shop BGM.
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc お店BGMプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param list
  * @text BGMリスト

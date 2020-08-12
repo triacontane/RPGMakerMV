@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc SnakeFollowerPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ValidateSwitchId
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効となります。
@@ -33,7 +33,7 @@
  */
 /*:ja
  * @plugindesc スネークフォロワープラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 有効スイッチID
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効となります。

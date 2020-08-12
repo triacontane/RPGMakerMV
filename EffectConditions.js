@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc EffectConditionsPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 効果のひとつひとつに適用条件を設定します。
  * 条件を満たさない効果は無効になります。
@@ -50,7 +50,7 @@
  */
 /*:ja
  * @plugindesc 効果の条件適用プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 効果のひとつひとつに適用条件を設定します。
  * 条件を満たさない効果は無効になります。

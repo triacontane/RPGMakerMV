@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc 反射アニメーションプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param animationId
  * @text アニメーション番号

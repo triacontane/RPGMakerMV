@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc LightSaveDataPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param SaveOnlyInParty
  * @desc 一度抜けたアクターの情報も含めて破棄して、セーブ時点でパーティに加わっているアクター情報のみを残します。(ON/OFF)
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc セーブデータ軽量化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 現パーティのみ保持
  * @desc 一度抜けたアクターの情報も含めて破棄して、セーブ時点でパーティに加わっているアクター情報のみを残します。(ON/OFF)

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc Plugin of item name escape
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help Plugin of item name escape
  * Usable escape code : \V, \N, \P, \G
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc 項目名の制御文字適用プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help データベースの項目に制御文字が使えるようになります。
  * 利用可能な制御文字は以下の通りです。

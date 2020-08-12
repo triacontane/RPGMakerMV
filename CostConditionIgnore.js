@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc CostConditionIgnorePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help CostConditionIgnore.js
  *
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc 戦闘時のコスト条件無視プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help CostConditionIgnore.js
  *

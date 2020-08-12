@@ -26,7 +26,7 @@
 
 /*:
  * @plugindesc Plugin that Make Dynamic Window
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param GameVariablesXPos
  * @desc Game variable number that stores the window X position
@@ -69,7 +69,7 @@
 
 /*:ja
  * @plugindesc 動的ウィンドウ生成プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param X座標の変数番号
  * @desc X座標を格納するゲーム変数の番号

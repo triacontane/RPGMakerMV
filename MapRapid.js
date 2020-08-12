@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc マップ高速化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param testPlayOnly
  * @desc テストプレー時のみ本プラグインを適用します。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc TimerStopInBattlePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param StopSwitchId
  * @desc 指定した番号のスイッチがONのときのみ戦闘中にタイマー停止します。0の場合は戦闘中は常に停止します。
@@ -38,7 +38,7 @@
  */
 /*:ja
  * @plugindesc 戦闘中タイマー停止プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 停止スイッチID
  * @desc 指定した番号のスイッチがONのときのみ戦闘中にタイマー停止します。0の場合は戦闘中は常に停止します。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc VehicleEncounterControlPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param boatEncounterDisable
  * @desc 指定した番号のスイッチがONのとき小型船でのエンカウントを無効にします。
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc 乗り物のエンカウント制御プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param boatEncounterDisable
  * @text 小型船のエンカウント無効

@@ -46,7 +46,7 @@
 
 /*:
  * @plugindesc CounterExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param PayCounterCost
  * @desc 固有スキルによる反撃がコスト消費するかどうかを設定します。(ON/OFF)
@@ -197,7 +197,7 @@
  */
 /*:ja
  * @plugindesc 反撃拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param PayCounterCost
  * @text 反撃コスト消費

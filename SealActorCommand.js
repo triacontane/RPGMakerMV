@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc SealActorCommandPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param commandDisable
  * @desc 封印したコマンドを非表示ではなく使用禁止にします。
@@ -70,7 +70,7 @@
  */
 /*:ja
  * @plugindesc アクターコマンド封印プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param commandDisable
  * @text コマンド使用禁止

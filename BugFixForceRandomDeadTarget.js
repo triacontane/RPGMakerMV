@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixForceRandomDeadTargetPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help イベントコマンド「戦闘行動の強制」をランダムターゲットかつ、
  * 戦闘不能の味方を対象するスキルで指定すると発動時にエラーが発生する
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 戦闘不能ランダムターゲットの行動強制エラー修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help イベントコマンド「戦闘行動の強制」をランダムターゲットかつ、
  * 戦闘不能の味方を対象するスキルで指定すると発動時にエラーが発生する

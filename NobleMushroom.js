@@ -50,7 +50,7 @@
 
 /*:
  * @plugindesc ノベルゲーム総合プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param InitialViewType
  * @desc メッセージ表示タイプの初期値です。(0:通常 1:ノベル)
@@ -297,7 +297,7 @@
  */
 /*:ja
  * @plugindesc ノベルゲーム総合プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 表示タイプ初期値
  * @desc メッセージ表示タイプの初期値です。(0:通常 1:ノベル)

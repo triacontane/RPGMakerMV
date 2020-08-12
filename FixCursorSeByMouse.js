@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixCursorSeByMousePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help FixSelectSeByMouse.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc マウス操作時のカーソルSE修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FixSelectSeByMouse.js
  *

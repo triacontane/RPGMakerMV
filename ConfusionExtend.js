@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc Confusion Extend Plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param TargetFriendSkill
  * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。
@@ -83,7 +83,7 @@
  */
 /*:ja
  * @plugindesc 混乱ステート拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 味方対象スキルの対象
  * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。

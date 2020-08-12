@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc DynamicEquipParamPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 装備品のパラメータを現在のアクターの状態に応じて動的に変更します。
  * 武器と防具のメモ欄に以下の通り指定してください。
@@ -64,7 +64,7 @@
  */
 /*:ja
  * @plugindesc 装備品パラメータの動的設定プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 装備品のパラメータを現在のアクターの状態に応じて動的に変更します。
  * 武器と防具のメモ欄に以下の通り指定してください。

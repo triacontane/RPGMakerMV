@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Bug fix Screen Flash for Web GL
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help Bug fix Screen Flash for Web GL
  *
@@ -23,7 +23,7 @@
  */
 /*:ja
  * @plugindesc 画面のフラッシュバグ修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help WebGLモードにて同じマップで連続して異なる色を指定して「画面のフラッシュ」を
  * 実行した際に後に指定したフラッシュ色が反映されない問題を修正します。

@@ -23,7 +23,7 @@
 
 /*:
  * @plugindesc ScopeExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help データベースのスキルの効果範囲を拡張します。
  * スキルのメモ欄に以下の通り入力してください。
@@ -83,7 +83,7 @@
  */
 /*:ja
  * @plugindesc 効果範囲拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help データベースのスキルの効果範囲を拡張します。
  * スキルのメモ欄に以下の通り入力してください。

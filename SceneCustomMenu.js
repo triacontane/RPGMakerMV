@@ -42,7 +42,7 @@
 
 /*:
  * @plugindesc カスタムメニュー作成プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param Scene1
  * @text シーン1

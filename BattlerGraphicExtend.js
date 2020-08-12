@@ -30,7 +30,7 @@
 
 /*:
  * @plugindesc Battler graphic extend
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 戦闘中のバトラー画像の表現方法を拡張します。
  * 宙に浮かせたり、色調やサイズを変えたり、多彩な表現が可能です。
@@ -73,7 +73,7 @@
  */
 /*:ja
  * @plugindesc バトラーグラフィック表示拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 戦闘中のバトラー画像の表現方法を拡張します。
  * 宙に浮かせたり、色調やサイズを変えたり、多彩な表現が可能です。

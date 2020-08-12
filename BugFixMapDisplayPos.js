@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc BugFixMapDisplayPosPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help BugFixMapDisplayPos.js
  *
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 画面サイズ変更時のイベント座標ずれ修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help BugFixMapDisplayPos.js
  *

@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc Sound test plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param CommandName
  * @desc Command name
@@ -123,7 +123,7 @@
  */
 /*:ja
  * @plugindesc サウンドテストプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param コマンド名称
  * @desc タイトルやメニュー画面に表示されるコマンド名です。

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc FixClassChangeSkillPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param invalidSwitchId
  * @desc When the switch is ON, the plug-in function is disabled and skill acquisition is disabled.
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 職業の変更によるスキル習得プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param invalidSwitchId
  * @text 無効スイッチ

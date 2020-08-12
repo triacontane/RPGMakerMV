@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc WindowBlinkStopPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help WindowBlinkStop.js
  *
@@ -27,7 +27,7 @@
  */
 /*:ja
  * @plugindesc ウィンドウ点滅停止プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help WindowBlinkStop.js
  *

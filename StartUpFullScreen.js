@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc Start up full screen
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param Shutdown
  * @desc Command name for shutdown.
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc フルスクリーンで起動プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param シャットダウン
  * @desc タイトル画面に追加するシャットダウンの項目名です。

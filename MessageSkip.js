@@ -37,7 +37,7 @@
 
 /*:
  * @plugindesc MessageSkipPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param SkipKey
  * @desc メッセージスキップに該当するキー
@@ -215,7 +215,7 @@
 
 /*:ja
  * @plugindesc メッセージスキッププラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param スキップキー
  * @desc メッセージスキップに該当するキー

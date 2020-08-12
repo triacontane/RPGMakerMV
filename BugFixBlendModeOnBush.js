@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Bug fix of [Blend Mode] on bush
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help Bug fix of [Blend Mode] on bush.
  *
@@ -23,7 +23,7 @@
  */
 /*:ja
  * @plugindesc 茂み属性時の合成方法バグ修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 茂み属性のタイルに侵入したキャラクターの
  * 合成方法が反映されないバグを修正します。

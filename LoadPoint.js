@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc LoadPointPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param MapIDVariable
  * @desc ロード地点のマップIDを記憶する変数番号です。
@@ -62,7 +62,7 @@
  */
 /*:ja
  * @plugindesc ロード地点設定プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param マップID変数
  * @desc ロード地点のマップIDを記憶する変数番号です。

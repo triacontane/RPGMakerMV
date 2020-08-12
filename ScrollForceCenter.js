@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc ScrollForceCenterPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param adjustX
  * @desc 指定した分だけ中心がずれて表示されます。
@@ -58,7 +58,7 @@
  */
 /*:ja
  * @plugindesc 強制中央スクロールプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param adjustX
  * @text X補正

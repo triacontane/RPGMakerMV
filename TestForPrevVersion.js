@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc TestForPrevVersionPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help TestForPrevVersion.js
  *
@@ -29,7 +29,7 @@
  */
 /*:ja
  * @plugindesc 前バージョン用テストプレープラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help TestForPrevVersion.js
  *

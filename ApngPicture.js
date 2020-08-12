@@ -24,7 +24,7 @@
 
 /*:
  * @plugindesc ApngSupportPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param PictureList
  * @desc List of picture images to be handled as APNG.
@@ -70,7 +70,7 @@
  */
 /*:ja
  * @plugindesc APNGピクチャプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param PictureList
  * @text APNGのピクチャリスト

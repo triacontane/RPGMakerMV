@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc ChoiceWindowInMessagePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help ChoiceWindowInMessage.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc 選択肢のメッセージ内部表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help ChoiceWindowInMessage.js
  *

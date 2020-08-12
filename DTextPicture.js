@@ -61,7 +61,7 @@
 
 /*:
  * @plugindesc 動的文字列ピクチャ生成プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param itemIconSwitchId
  * @text アイテムアイコンスイッチID

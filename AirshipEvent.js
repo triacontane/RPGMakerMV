@@ -12,7 +12,7 @@
 
 /*:
  * @plugindesc 飛行船のイベント起動
- * @author s.f.
+ * @target MZ @author s.f.
  *
  * @help 飛行船からイベントに接触して起動します。
  *

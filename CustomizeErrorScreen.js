@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc Customize Error Screen
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param MainMessage
  * @desc
@@ -39,7 +39,7 @@
  */
 /*:ja
  * @plugindesc エラー画面表示改善プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param メインメッセージ
  * @desc エラー画面に共通で表示されるメッセージ

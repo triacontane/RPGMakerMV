@@ -39,7 +39,7 @@
 
 /*:
  * @plugindesc Ring State Plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param RadiusX
  * @desc 横方向の半径の値です。
@@ -152,7 +152,7 @@
 
 /*:ja
  * @plugindesc リングステートプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param RadiusX
  * @text X半径

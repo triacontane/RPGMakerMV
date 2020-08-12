@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixHighSpeedTouchPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help FixHighSpeedTouch.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc 高速移動時のタッチ移動修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FixHighSpeedTouch.js
  *

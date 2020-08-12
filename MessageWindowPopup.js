@@ -101,7 +101,7 @@
 
 /*:
  * @plugindesc Popup window plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param FontSize
  * @desc Font size of popup window
@@ -266,7 +266,7 @@
  */
 /*:ja
  * @plugindesc フキダシウィンドウプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param フォントサイズ
  * @desc フキダシウィンドウのデフォルトフォントサイズ

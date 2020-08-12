@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FastForwardCustomizePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param EventSpeedVariableId
  * @desc イベント高速化時の速度を取得する変数番号です。変数値が0なら高速化禁止、数値が大きくなると速度も速くなります。
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc イベント高速化調整プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param イベント速度変数
  * @desc イベント高速化時の速度を取得する変数番号です。変数値が0なら高速化禁止、数値が大きくなると速度も速くなります。

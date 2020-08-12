@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc EventItemConditionPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param DefaultVisible
  * @desc メモ欄が指定されていないアイテムの表示可否です。OFFにするとメモ欄に指定がないアイテムは表示されません。
@@ -58,7 +58,7 @@
  */
 /*:ja
  * @plugindesc アイテム選択の表示条件プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param DefaultVisible
  * @text デフォルト表示可否

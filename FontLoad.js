@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Font Load
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param FontName1
  * @desc Font name
@@ -54,7 +54,7 @@
  */
 /*:ja
  * @plugindesc フォントロードプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param フォント名1
  * @desc 任意のフォント名

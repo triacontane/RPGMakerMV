@@ -26,7 +26,7 @@
 
 /*:
  * @plugindesc データベース変換プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param excelDataPath
  * @text シートデータファイルパス

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MaterialSelectorPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ImageFiles
  * @desc 未使用ファイル削除機能の対象外にする画像素材のリストです。
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc 未使用素材削除ガードプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 画像素材
  * @desc 未使用ファイル削除機能の対象外にする画像素材のリストです。

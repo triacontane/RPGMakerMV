@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc FavouriteEquipsPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help FavouriteEquips.js
  *
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc お気に入り装備プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FavouriteEquips.js
  *

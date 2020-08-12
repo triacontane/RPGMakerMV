@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc TimeStopInMenuPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help マップ画面もしくはバトル画面以外では
  * プレー時間の加算を停止します。
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc メニュー中時間停止プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help マップ画面もしくはバトル画面以外では
  * プレー時間の加算を停止します。

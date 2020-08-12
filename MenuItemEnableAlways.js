@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MenuItemEnableAlwaysPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help MenuItemEnableAlways.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc アイテムメニューの常時使用可能プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help MenuItemEnableAlways.js
  *

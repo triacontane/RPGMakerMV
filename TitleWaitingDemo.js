@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc TitleWaitingDemoPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param mapId
  * @desc 移動先のマップIDです。
@@ -56,7 +56,7 @@
  */
 /*:ja
  * @plugindesc タイトル待機デモ表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param mapId
  * @text マップID

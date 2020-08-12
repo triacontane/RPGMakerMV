@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc StateAfterDeathPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param states
  * @desc 戦闘不能後も継続するステートの配列の一覧です。
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 戦闘不能後継続ステートプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param states
  * @text 対象ステート

@@ -7,7 +7,7 @@
  * @plugindesc
  * [v0.2.0a] Display minimap.
  *
- * @author TOMY (Kamesoft)
+ * @target MZ @author TOMY (Kamesoft)
  *
  * @param Map rect
  * @default 524, 32, 260, 200
@@ -65,7 +65,7 @@
  * @plugindesc
  * [v0.2.0a] 画面上にミニマップを表示します。
  *
- * @author TOMY (Kamesoft)
+ * @target MZ @author TOMY (Kamesoft)
  *
  * @param Map rect
  * @default 524, 32, 260, 200

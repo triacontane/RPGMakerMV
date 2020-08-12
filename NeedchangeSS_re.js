@@ -11,7 +11,7 @@
 //=============================================================================
 /*:ja
  * @plugindesc 各種画面の解像度変更／フォントサイズ変更を行います。
- * @author rainxxrain
+ * @target MZ @author rainxxrain
  * 
  * @param PC Width
  * @desc PCの解像度（横）

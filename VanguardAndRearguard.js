@@ -39,7 +39,7 @@
 
 /*:
  * @plugindesc Vanguard and rearguard
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param VanguardStateId
  * @desc State ID of vanguard.
@@ -181,7 +181,7 @@
  */
 /*:ja
  * @plugindesc 前衛後衛プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 前衛ステートID
  * @desc 前衛のステートIDです。

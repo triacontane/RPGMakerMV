@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc PhantomEventPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param invisibleDistance
  * @desc 指定範囲を超えてから完全に見えなくなるまでのマス数です。
@@ -85,7 +85,7 @@
  */
 /*:ja
  * @plugindesc ファントムイベントプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param invisibleDistance
  * @text 不可視距離

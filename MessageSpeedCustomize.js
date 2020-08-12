@@ -23,7 +23,7 @@
 
 /*:
  * @plugindesc Message speed customize
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param VariableSpeed
  * @desc Variable number of Message speed
@@ -44,7 +44,7 @@
  */
 /*:ja
  * @plugindesc メッセージ速度調整プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 表示速度変数
  * @desc メッセージ表示速度を格納する変数の番号

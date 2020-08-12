@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixWeatherOrderInCanvasPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help FixWeatherPriorityCanvas.js
  *
@@ -32,7 +32,7 @@
  */
 /*:ja
  * @plugindesc Canvasモード時の天候優先度修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FixWeatherPriorityCanvas.js
  *

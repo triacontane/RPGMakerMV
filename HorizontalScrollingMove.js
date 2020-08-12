@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc HorizontalScrollingMovePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ValidSwitchId
  * @desc 横スクロール移動が有効になるスイッチ番号です。0を指定すると常に有効になります。
@@ -49,7 +49,7 @@
  */
 /*:ja
  * @plugindesc 横スクロール移動プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 有効スイッチ番号
  * @desc 横スクロール移動が有効になるスイッチ番号です。0を指定すると常に有効になります。

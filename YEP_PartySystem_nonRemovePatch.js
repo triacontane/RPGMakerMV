@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc YEP_PartySystem_nonRemovePatchPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help YEP_PartySystem_nonRemovePatch.js.js
  *
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc YEP_PartySystem離脱除去プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help YEP_PartySystem_nonRemovePatch.js
  *

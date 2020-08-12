@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc EventStartupTouchPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param StartupSwitchId
  * @desc タッチでイベントを起動したときにONになるスイッチ番号
@@ -48,7 +48,7 @@
  */
 /*:ja
  * @plugindesc タッチでイベント起動プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 起動スイッチ番号
  * @desc タッチでイベントを起動したときにONになるスイッチ番号

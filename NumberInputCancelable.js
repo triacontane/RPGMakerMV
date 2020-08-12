@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc NumberInputCancelablePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param validSwitchId
  * @text ValidSwitchId
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc 数値入力のキャンセル可能化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param validSwitchId
  * @text 有効スイッチ番号

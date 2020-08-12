@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Invalid query parameter
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param Exception
  * @desc Exception parameter
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 起動オプション無効化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 例外
  * @desc 無効化しないパラメータ（カンマ区切り）を指定。

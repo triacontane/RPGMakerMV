@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc 足音プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param EventRunningInvalid
  * @text イベント実行中無効

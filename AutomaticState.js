@@ -33,7 +33,7 @@
 
 /*:
  * @plugindesc ステート自動付与プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help AutomaticState.js
  *

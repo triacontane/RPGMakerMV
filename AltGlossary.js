@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc AltGlossaryPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param categoryColumns
  * @desc カテゴリウィンドウの横方向の項目数です。
@@ -50,7 +50,7 @@
  */
 /*:ja
  * @plugindesc 用語辞典レイアウト変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param categoryColumns
  * @text カテゴリ横項目数

@@ -26,7 +26,7 @@
 
 /*:
  * @plugindesc 周辺イベント感知プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param DefaultFlash
  * @text デフォルトフラッシュ

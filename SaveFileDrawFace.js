@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc SaveFileDrawFacePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param VisibleItems
  * @desc セーブファイルウィンドウに表示可能な行数です。デフォルト解像度の場合、3のままで問題ありません。
@@ -40,7 +40,7 @@
  */
 /*:ja
  * @plugindesc セーブファイルのフェイス表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 表示行数
  * @desc セーブファイルウィンドウに表示可能な行数です。デフォルト解像度の場合、3のままで問題ありません。

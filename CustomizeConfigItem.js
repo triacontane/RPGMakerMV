@@ -25,7 +25,7 @@
 
 /*:
  * @plugindesc オプション任意項目作成プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 数値項目
  * @desc 追加する数値項目のオプション項目情報です。

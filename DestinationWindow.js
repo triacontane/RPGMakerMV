@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc DestinationWindowPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ShowingSwitchId
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。
@@ -123,7 +123,7 @@
  */
 /*:ja
  * @plugindesc 行動目標ウィンドウプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 表示スイッチID
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。

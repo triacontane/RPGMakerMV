@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc Through Failed to load
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param InvalidIfTest
  * @desc Not through if test play.
@@ -51,7 +51,7 @@
  */
 /*:ja
  * @plugindesc ロード失敗エラーのすり抜けプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param テストプレー時無効
  * @desc テストプレー時は本プラグインの機能が無効になります。

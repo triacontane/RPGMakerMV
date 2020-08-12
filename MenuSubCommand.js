@@ -44,7 +44,7 @@
 
 /*:
  * @plugindesc MenuSubCommandPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param SubCommand
  * @desc サブコマンド情報です。
@@ -153,7 +153,7 @@
  */
 /*:ja
  * @plugindesc メニュー画面のサブコマンドプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param サブコマンド
  * @desc サブコマンド情報です。

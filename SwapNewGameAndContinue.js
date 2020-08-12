@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ニューゲーム、コンティニュー順序入れ替えプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help SwapNewGameAndContinue.js
  *

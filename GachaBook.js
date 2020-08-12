@@ -6,7 +6,7 @@
 
 /*:
  * @plugindesc Displays detailed statuses of "gacha" items.
- * @author Takeya Kimura
+ * @target MZ @author Takeya Kimura
  *
  * @param Unknown Data
  * @desc The index name for an unknown item.
@@ -45,7 +45,7 @@
 
 /*:ja
  * @plugindesc ガチャアイテム一覧を表示します。
- * @author Takeya Kimura
+ * @target MZ @author Takeya Kimura
  *
  * @param Unknown Data
  * @desc 未確認のガチャアイテムの名前です。

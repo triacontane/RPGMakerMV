@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc BetweenCharactersPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param BetweenVariableId
  * @desc 字間を値(ピクセル単位)を取得する変数番号です。
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 字間設定プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 字間変数番号
  * @desc 字間を値(ピクセル単位)を取得する変数番号です。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MessageFontChangePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param Font1
  * @desc 1番のフォントセットです。
@@ -60,7 +60,7 @@
  */
 /*:ja
  * @plugindesc メッセージフォント変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param フォント1
  * @desc 1番のフォントセットです。

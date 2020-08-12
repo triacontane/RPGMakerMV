@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc DynamicVariablesPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param DynamicSwitchStart
  * @desc 動的スイッチの開始位置番号です。
@@ -127,7 +127,7 @@
  */
 /*:ja
  * @plugindesc 動的変数プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 動的スイッチ開始位置
  * @desc 動的スイッチの開始位置番号です。

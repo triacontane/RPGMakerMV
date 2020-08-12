@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc CustomizeDamageSePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param WeaknessLine
  * @desc この値以上なら弱点と見なします。百分率で指定します。
@@ -64,7 +64,7 @@
  */
 /*:ja
  * @plugindesc ダメージSEカスタマイズプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 弱点閾値
  * @desc この値以上なら弱点と見なします。百分率で指定します。

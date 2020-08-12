@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MaxTpExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help MaxTpExtend.js
  *
@@ -34,7 +34,7 @@
  */
 /*:ja
  * @plugindesc 最大TP拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help MaxTpExtend.js
  *

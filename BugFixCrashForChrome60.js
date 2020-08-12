@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc BugFixChromeForEachPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help In Chrome version 60 or later, we will tentatively deal with
  * the problem where battle may be forcibly terminated.
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc Chrome60の戦闘クラッシュ防止プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help  BugFixChromeForEach.js
  *

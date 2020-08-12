@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc PlayerDirectionControlPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param commandPrefix
  * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
@@ -41,7 +41,7 @@
  */
 /*:ja
  * @plugindesc プレイヤーの向き制御プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param commandPrefix
  * @text メモ欄接頭辞

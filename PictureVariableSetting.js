@@ -25,7 +25,7 @@
 
 /*:
  * @plugindesc ピクチャ関連のイベント機能拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 初期値
  * @desc 初期状態での有効/無効の設定値(ON/OFF)

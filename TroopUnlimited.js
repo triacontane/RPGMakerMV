@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc TroopUnlimitedPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help エディタ上の最大値である8体を超える数の敵キャラを
  * 一度に出現させることができるようになります。
@@ -37,7 +37,7 @@
  */
 /*:ja
  * @plugindesc 敵グループ限界突破プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help エディタ上の最大値である8体を超える数の敵キャラを
  * 一度に出現させることができるようになります。

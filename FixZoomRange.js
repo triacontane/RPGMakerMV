@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixZoomRangePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help FixZoomRange.js
  *
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc ズーム範囲修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FixZoomRange.js
  *

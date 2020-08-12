@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc マウス入力のキーバインドプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 左クリックボタン
  * @desc 左クリックに対応するボタンです。

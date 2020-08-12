@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc FixSimultaneouslyPressPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help FixSimultaneouslyPress.js
  *
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 同時押し仕様変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FixSimultaneouslyPress.js
  *

@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc Param Transfer Plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 以下の主要8パラメータを変換します。
  * ・最大HP(0)
@@ -63,7 +63,7 @@
  */
 /*:ja
  * @plugindesc パラメータ変換プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 以下の主要8パラメータを変換します。
  * ・最大HP(0)

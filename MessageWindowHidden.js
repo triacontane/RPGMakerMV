@@ -35,7 +35,7 @@
 
 /*:
  * @plugindesc Erase message window
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param triggerButton
  * @desc Trigger buttons
@@ -91,7 +91,7 @@
  */
 /*:ja
  * @plugindesc メッセージウィンドウ一時消去プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param triggerButton
  * @text ボタン名称

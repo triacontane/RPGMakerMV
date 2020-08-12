@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc Additional Description Plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ButtonName
  * @desc ヘルプを切り替えるボタン名です。(shift/control/tab)
@@ -62,7 +62,7 @@
  */
 /*:ja
  * @plugindesc ヘルプ説明追加プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ボタン名
  * @desc ヘルプを切り替えるボタン名です。(shift/control/tab)

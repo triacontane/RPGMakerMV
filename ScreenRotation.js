@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc ScreenRotationPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ThroughWindow
  * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)
@@ -52,7 +52,7 @@
  */
 /*:ja
  * @plugindesc 画面回転プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ウィンドウ透過
  * @desc ウィンドウが重なったときに透過表示します。(ON/OFF)

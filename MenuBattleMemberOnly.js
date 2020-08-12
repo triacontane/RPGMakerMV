@@ -19,7 +19,7 @@
 
 /*:ja
  * @plugindesc MenuBattleMemberOnlyPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ActivateSwitchId
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効になります。
@@ -37,7 +37,7 @@
  */
 /*:ja
  * @plugindesc 戦闘メンバーのみメニュープラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 有効スイッチ番号
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効になります。

@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc Mouse Pointer Extend Plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param PointerType1
  * @desc スイッチ1がONになった場合のマウス形状です。
@@ -163,7 +163,7 @@
  */
 /*:ja
  * @plugindesc マウスポインタ拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 形状タイプ1
  * @desc スイッチ1がONになった場合のマウス形状です。

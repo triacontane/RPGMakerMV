@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 起動オプション調整プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 描画モード
  * @desc 描画モード（WebGL or Canvas）を指定できます。

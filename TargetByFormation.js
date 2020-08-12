@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc TargetByFormationPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ChangeRate
  * @desc 隊列一人分の狙われ率変動倍率です。4人パーティで50にすると先頭の狙われ率は最後尾の2.5倍になります。
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 並び順による狙われ率変動プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 変動倍率
  * @desc 隊列一人分の狙われ率変動倍率です。4人パーティで50にすると先頭の狙われ率は最後尾の2.5倍になります。

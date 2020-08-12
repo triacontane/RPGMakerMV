@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc WeaponArmorTypeExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param equipConditionType
  * @text 装備条件タイプ
@@ -47,7 +47,7 @@
  */
 /*:ja
  * @plugindesc 武具タイプ拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param equipConditionType
  * @text 装備条件タイプ

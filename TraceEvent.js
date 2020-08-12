@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc TraceEventPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param EventPriorityType
  * @desc 対象イベントが複数存在した場合の優先基準です。
@@ -72,7 +72,7 @@
  */
 /*:ja
  * @plugindesc 指定イベント追跡プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param イベント優先基準
  * @desc 対象イベントが複数存在した場合の優先基準です。

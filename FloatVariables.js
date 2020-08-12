@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc FloatVariablesPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param FloatVariableStart
  * @desc 小数演算を行う変数の開始位置です。
@@ -53,7 +53,7 @@
  */
 /*:
  * @plugindesc 変数の小数演算プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 小数変数開始位置
  * @desc 小数演算を行う変数の開始位置です。

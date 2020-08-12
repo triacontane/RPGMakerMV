@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BattleToneTemporaryPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help BattleToneTemporary.js
  *
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 戦闘時の色調の一時化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help BattleToneTemporary.js
  *

@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc MasterVolumePlugin
- * @author triacontane      (Tsumio altered a portion.)
+ * @target MZ @author triacontane      (Tsumio altered a portion.)
  *
  * @param ItemName
  * @type string
@@ -45,7 +45,7 @@
  */
 /*:ja
  * @plugindesc マスターボリューム設定プラグイン
- * @author トリアコンタン     （ツミオが一部改変）
+ * @target MZ @author トリアコンタン     （ツミオが一部改変）
  *
  * @param 項目名称
  * @type string

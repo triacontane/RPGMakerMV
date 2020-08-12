@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc JumpSpeedCustomizePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help JumpSpeedCustomize.js
  *
@@ -41,7 +41,7 @@
  */
 /*:ja
  * @plugindesc ジャンプ速度調整プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help JumpSpeedCustomize.js
  *

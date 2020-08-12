@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc TimerCountInMenuPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param BehaviorInMenu
  * @desc メニュー画面およびその先の画面でタイマーを動作させます。
@@ -48,7 +48,7 @@
  */
 /*:ja
  * @plugindesc メニュー画面でのタイマーカウントプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param メニュー画面で動作
  * @desc メニュー画面およびその先の画面でタイマーを動作させます。

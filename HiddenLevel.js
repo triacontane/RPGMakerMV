@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc HiddenLevelPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help HiddenLevel.js
  *
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc レベル隠蔽プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help HiddenLevel.js
  *

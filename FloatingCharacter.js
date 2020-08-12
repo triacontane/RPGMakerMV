@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc Floating character plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param TerrainTags
  * @desc 浮遊時に通行可能になる地形タグです。カンマ区切りで指定
@@ -109,7 +109,7 @@
  */
 /*:ja
  * @plugindesc キャラクターの浮遊プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 通行可能地形タグ
  * @desc 浮遊時に通行可能になる地形タグです。カンマ区切りで指定

@@ -25,7 +25,7 @@
 
 /*:
  * @plugindesc Auto load plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param PlaySe
  * @desc セーブ成功時にシステム効果音を演奏します。
@@ -83,7 +83,7 @@
  */
 /*:ja
  * @plugindesc タイトル画面仕様変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 効果音演奏
  * @desc オートセーブ成功時にシステム効果音を演奏します。

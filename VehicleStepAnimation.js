@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc VehicleStepAnimationPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param boatStepAnimation
  * @desc 小型船に搭乗していないときでも足踏みアニメさせます。
@@ -43,7 +43,7 @@
  */
 /*:ja
  * @plugindesc 乗り物の足踏みアニメプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param boatStepAnimation
  * @text 小型船で足踏みアニメ

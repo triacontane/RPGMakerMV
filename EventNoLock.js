@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc EventNoLockPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help イベントを起動したときに一時的に
  * プレイヤーの方向を向く処理（イベントロック）を無効化します。
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc イベントロック無効化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help イベントを起動したときに一時的に
  * プレイヤーの方向を向く処理（イベントロック）を無効化します。

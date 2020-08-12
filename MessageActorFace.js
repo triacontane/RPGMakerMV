@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MessageActorFacePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ActorIdVariable
  * @desc アクターIDを取得するための変数番号です。
@@ -33,7 +33,7 @@
  */
 /*:ja
  * @plugindesc メッセージのアクターフェイス表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param アクターID変数番号
  * @desc アクターIDを取得するための変数番号です。

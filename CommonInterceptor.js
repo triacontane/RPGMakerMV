@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 割り込みコモンイベントプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ニューゲームコモン
  * @desc ニューゲーム時に呼ばれるコモンイベントID

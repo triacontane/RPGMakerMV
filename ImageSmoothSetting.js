@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc ImageSmoothSettingPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param Animation
  * @desc アニメーション画像にぼかしをかけます。
@@ -77,7 +77,7 @@
  */
 /*:ja
  * @plugindesc 画像ぼかし個別設定プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param アニメーション
  * @desc アニメーション画像にぼかしをかけます。

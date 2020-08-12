@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc ShakeOnDamagePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ShakePower
  * @desc 通常ダメージを受けたときのシェイク強さです。
@@ -82,7 +82,7 @@
  */
 /*:ja
  * @plugindesc ダメージ時の振動プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param シェイク強さ
  * @desc 通常ダメージを受けたときのシェイク強さです。

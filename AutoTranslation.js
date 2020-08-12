@@ -25,7 +25,7 @@
 
 /*:
  * @plugindesc AutoTranslationPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ToLanguage
  * @desc This is the translation target language code.
@@ -132,7 +132,7 @@
  */
 /*:ja
  * @plugindesc 自動翻訳プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ToLanguage
  * @text 翻訳先言語

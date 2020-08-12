@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BattleFormationCustomizePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help BattleFormationCustomize.js
  * 
@@ -33,7 +33,7 @@
  */
 /*:ja
  * @plugindesc 戦闘隊列調整プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help BattleFormationCustomize.js
  * 

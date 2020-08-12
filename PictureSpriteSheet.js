@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc PictureSpriteSheetPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help ピクチャを戦闘アニメーション画像のように横N * 縦Nのスプライトシートにします。
  * セル画像を切り替えてアニメーションを行う場合に、パフォーマンスを改善して
@@ -51,7 +51,7 @@
  */
 /*:ja
  * @plugindesc ピクチャのスプライトシート化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help ピクチャを戦闘アニメーション画像のように横N * 縦Nのスプライトシートにします。
  * セル画像を切り替えてアニメーションを行う場合に、パフォーマンスを改善して

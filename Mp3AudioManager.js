@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Mp3AudioManagerPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param UseOnExe
  * @desc Game.exe(NW.js)でmp3ファイルを使用します。
@@ -65,7 +65,7 @@
  */
 /*:ja
  * @plugindesc MP3オーディオ管理プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param EXE実行で使用
  * @desc Game.exe(NW.js)でmp3ファイルを使用します。

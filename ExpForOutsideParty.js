@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc ExpForOutsidePartyPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param expPercent
  * @desc パーティ外の仲間が受け取ることのできる経験値の割合(%)です。
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc パーティ外メンバーの経験値取得プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param expPercent
  * @text 経験値取得割合

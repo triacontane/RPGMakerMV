@@ -52,7 +52,7 @@
 
 /*:
  * @plugindesc イベント動的生成プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param keepSelfSwitch
  * @text セルフスイッチ維持

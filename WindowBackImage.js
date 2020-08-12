@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc ウィンドウ背景画像指定プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param windowImageInfo
  * @text ウィンドウ画像情報

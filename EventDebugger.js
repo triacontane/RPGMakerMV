@@ -27,7 +27,7 @@
 
 /*:
  * @plugindesc EventDebuggerPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param StepStart
  * @desc 次に実行されたイベントコマンドからステップ実行を開始するためのファンクションキーです。
@@ -262,7 +262,7 @@
 
 /*:ja
  * @plugindesc イベントデバッグプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ステップ開始
  * @desc 次に実行されたイベントコマンドからステップ実行を開始するためのファンクションキーです。

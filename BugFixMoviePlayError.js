@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BugFixMoviePlayErrorPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help BugFixMoviePlayError.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc ムービー再生エラー修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help BugFixMoviePlayError.js
  *

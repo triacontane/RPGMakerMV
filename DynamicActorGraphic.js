@@ -22,7 +22,7 @@
 
 /*:
  * @plugindesc DynamicActorGraphicPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help アクターの歩行、顔、バトルグラフィックを動的に変化させます。
  * HPの残量、特定のステート有効時、スイッチON時に変化します。
@@ -64,7 +64,7 @@
  */
 /*:ja
  * @plugindesc アクターグラフィックの動的設定プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help アクターの歩行、顔、バトルグラフィックを動的に変化させます。
  * HPの残量、特定のステート有効時、スイッチON時に変化します。

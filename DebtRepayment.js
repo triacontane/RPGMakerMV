@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc DebtRepaymentPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param UnderLimitCanBuying
  * @desc お店で購入可能な下限の金額です。指定する場合はマイナス値を指定してください。制御文字\v[n]が指定可能です。
@@ -52,7 +52,7 @@
  */
 /*:ja
  * @plugindesc 所持金マイナスプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 購入可能下限金額
  * @desc お店で購入可能な下限の金額です。指定する場合はマイナス値を指定してください。制御文字\v[n]が指定可能です。

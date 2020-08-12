@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc DestinationImageCustomizePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param Opacity
  * @desc 目的地画像の不透明度です。0にすると見えなくなります。
@@ -45,7 +45,7 @@
  */
 /*:ja
  * @plugindesc 目的地画像カスタマイズプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 不透明度
  * @desc 目的地画像の不透明度です。0にすると見えなくなります。

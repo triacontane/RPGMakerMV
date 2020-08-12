@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc BattleLayoutClassicPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param HideGauge
  * @desc 全てのゲージを非表示にします。
@@ -42,7 +42,7 @@
  */
 /*:ja
  * @plugindesc 戦闘レイアウトのクラシック化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ゲージ非表示
  * @desc 全てのゲージを非表示にします。

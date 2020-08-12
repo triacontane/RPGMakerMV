@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 図形描画プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param パラメータ
  * @desc パラメータ説明

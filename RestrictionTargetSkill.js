@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc RestrictionTargetSkillPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help RestrictionTargetSkill.js
  *
@@ -77,7 +77,7 @@
  */
 /*:ja
  * @plugindesc 対象限定スキルプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help RestrictionTargetSkill.js
  *

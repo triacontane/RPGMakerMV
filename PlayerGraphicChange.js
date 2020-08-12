@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc PlayerGraphicChangePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help プレイヤー画像をアクターとは無関係に設定できるようになります。
  *
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc プレイヤーの画像変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help プレイヤー画像をアクターとは無関係に設定できるようになります。
  *

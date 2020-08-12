@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc SceneNumberInputPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param DefaultDigit
  * @desc 入力する数値のデフォルト桁数です。
@@ -71,7 +71,7 @@
  */
 /*:ja
  * @plugindesc 数値入力画面プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param デフォルト桁数
  * @desc 入力する数値のデフォルト桁数です。

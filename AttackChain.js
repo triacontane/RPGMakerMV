@@ -30,7 +30,7 @@
 
 /*:
  * @plugindesc AttackChainPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param Unit
  * @desc It is a unit of chain number.
@@ -186,7 +186,7 @@
 
 /*:ja
  * @plugindesc 連携攻撃プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 単位
  * @desc チェイン数の単位です。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MakeScreenMoviePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param FunkKeyRecord
  * @desc ゲーム画面の録画と停止を行うキーです。この機能による録画はテストプレー時のみ有効です。
@@ -116,7 +116,7 @@
  */
 /*:ja
  * @plugindesc ゲーム動画作成プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param FunkKeyRecord
  * @text 録画ファンクションキー

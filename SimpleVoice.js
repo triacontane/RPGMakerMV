@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc SimpleVoicePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param FolderName
  * @type string
@@ -73,7 +73,7 @@
  */
 /*:ja
  * @plugindesc 簡易ボイスプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param フォルダ名
  * @type string

@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc メニューバー追加プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 伸縮モード切り替え
  * @desc 伸縮モード切り替え(F3)を追加します。(ON/OFF)

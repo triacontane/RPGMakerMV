@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixCommonOnBattleEndPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help FixCommonOnBattleEnd.js
  *
@@ -27,7 +27,7 @@
  */
 /*:ja
  * @plugindesc 戦闘終了時のコモンイベント実行修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FixCommonOnBattleEnd.js
  *

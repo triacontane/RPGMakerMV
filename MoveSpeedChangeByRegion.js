@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc MoveSpeedChangeByRegionPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param slowlyTerrainTags
  * @desc 移動中に速度が低下する地形タグです。複数指定できます。
@@ -54,7 +54,7 @@
  */
 /*:ja
  * @plugindesc 地形による速度変化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param slowlyTerrainTags
  * @text 速度低下地形

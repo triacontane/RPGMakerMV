@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc NewGameSePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param soundEffect
  * @desc ニューゲーム選択時の効果音情報です。
@@ -36,7 +36,7 @@
  */
 /*:ja
  * @plugindesc ニューゲーム専用効果音プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param soundEffect
  * @text 効果音

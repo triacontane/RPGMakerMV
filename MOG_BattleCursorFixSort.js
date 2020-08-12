@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc MOG_BattleCursorFixSortPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help MOG_BattleCursorFixSort.js
  *
@@ -28,7 +28,7 @@
  */
 /*:ja
  * @plugindesc MOG_BattleCursorのソート修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help MOG_BattleCursorFixSort.js
  *

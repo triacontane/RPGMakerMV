@@ -6,7 +6,7 @@
 
 /*:
  * @plugindesc Slot Machine scene
- * @author Takeya Kimura
+ * @target MZ @author Takeya Kimura
  *
  * @param Variable ID
  * @desc Variable ID for store the coin.
@@ -70,7 +70,7 @@
 
 /*:ja
  * @plugindesc Slot Machine scene
- * @author Takeya Kimura
+ * @target MZ @author Takeya Kimura
  *
  * @param Variable ID
  * @desc 所持コインの数を保管する変数ID

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc KeepDestinationPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help KeepDestination.js
  *
@@ -27,7 +27,7 @@
  */
 /*:ja
  * @plugindesc タッチ移動先の保持プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help KeepDestination.js
  *

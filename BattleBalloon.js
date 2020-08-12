@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc BattleBalloonPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param BalloonSpeedRate
  * @desc フキダシを表示する速度倍率（レート）です。マップ画面のフキダシには影響しません。
@@ -80,7 +80,7 @@
  */
 /*:ja
  * @plugindesc 戦闘中フキダシ表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param フキダシ速度倍率
  * @desc フキダシを表示する速度倍率（レート）です。マップ画面のフキダシには影響しません。

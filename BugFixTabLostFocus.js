@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc BugFixTabLostFocusPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 特定条件(※1)でタブキーを押下したときに発生する
  * ロストフォーカスイベントを無効化します。
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc タブのロストフォーカス無効化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 特定条件(※1)でタブキーを押下したときに発生する
  * ロストフォーカスイベントを無効化します。

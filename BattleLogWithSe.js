@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc BattleLogWithSePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param soundEffectList
  * @desc 制御文字「\se[n]」で指定する効果音のリストです。一覧の左に表示されている数字を制御文字で指定してください。
@@ -43,7 +43,7 @@
  */
 /*:ja
  * @plugindesc バトルログのSE演奏プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param soundEffectList
  * @text 効果音リスト

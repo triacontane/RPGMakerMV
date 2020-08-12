@@ -21,7 +21,7 @@
 
 /*:
  * @plugindesc FacePicturePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 顔グラフィックをピクチャとして表示できます。
  * ピクチャの表示だけでなく、プラグイン等でピクチャから
@@ -67,7 +67,7 @@
  */
 /*:ja
  * @plugindesc 顔グラのピクチャ表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 顔グラフィックをピクチャとして表示できます。
  * ピクチャの表示だけでなく、プラグイン等でピクチャから

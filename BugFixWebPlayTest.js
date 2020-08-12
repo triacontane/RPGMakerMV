@@ -11,7 +11,7 @@
 
 /*:
  * @plugindesc Web実行のテストプレー防止プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help Web実行時にURLに?testと入力して実行することで
  * 誰でもテストプレーできてしまう問題を修正

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc AdditionalSkillMessagePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 通常2行までのスキル使用時のメッセージに3行目以降を追加できます。
  * スキルのメモ欄に以下の通り指定してください。
@@ -33,7 +33,7 @@
  */
 /*:ja
  * @plugindesc スキルメッセージ追加プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 通常2行までのスキル使用時のメッセージに3行目以降を追加できます。
  * スキルのメモ欄に以下の通り指定してください。

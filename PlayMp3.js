@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Plugin That ...
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param param
  * @desc parameter description
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc プラグイン名称が未入力です。
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param パラメータ
  * @desc パラメータ説明

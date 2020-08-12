@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc トリガープラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ニューゲーム
  * @desc ニューゲーム時にONになるスイッチ番号

@@ -19,7 +19,7 @@
 
 /*:
  * @plugindesc MapNameWindowExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param PositionX
  * @desc X座標を指定する場合は入力してください。
@@ -107,7 +107,7 @@
  */
 /*:ja
  * @plugindesc マップ名表示拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param X座標
  * @desc X座標を指定する場合は入力してください。

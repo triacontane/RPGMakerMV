@@ -67,7 +67,7 @@
 
 /*:
  * @plugindesc Developer tools management plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param StartupDevTool
  * @desc It will start the developer tools at the start of the game.
@@ -378,7 +378,7 @@
 
 /*:ja
  * @plugindesc 総合開発支援プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 開始時に起動
  * @desc ゲーム開始時に同時にデベロッパツールを起動します。

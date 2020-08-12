@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc フキダシアイコンのSE演奏プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param SwitchId
  * @text 有効スイッチ番号

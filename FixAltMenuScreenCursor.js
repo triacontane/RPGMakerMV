@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc FixAltMenuScreenCursorPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help FixAltMenuScreenCursor.js
  *
@@ -26,7 +26,7 @@
  */
 /*:ja
  * @plugindesc AltMenuScreenのカーソル修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help FixAltMenuScreenCursor.js
  *

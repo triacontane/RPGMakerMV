@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc 開始時スクリプト実行プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param スクリプト1
  * @desc ゲーム開始時に実行するスクリプト

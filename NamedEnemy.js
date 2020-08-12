@@ -17,7 +17,7 @@ Imported['NamedEnemy'] = 1.01;
 
 /*:
  * @plugindesc ver1.01/二つ名ステートの付いたエネミーをランダムで出現させることができます。
- * @author Yana
+ * @target MZ @author Yana
  *
  * @param AddNameNum
  * @desc 一度に二つ名ステートをいくつつけられるかの設定です。evalを使用している為、$gameVariablesや計算式が使用できます。

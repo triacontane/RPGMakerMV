@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc LoadingExtendPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ImageColumn
  * @desc system/Loading.pngをスプライトシート化する場合の横方向のセル数です。
@@ -68,7 +68,7 @@
  */
 /*:ja
  * @plugindesc ロード中画像拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param イメージ列数
  * @desc system/Loading.pngをスプライトシート化する場合の横方向のセル数です。

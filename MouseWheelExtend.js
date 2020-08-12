@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Mouse Wheel Extend
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param MessageScroll
  * @desc マウスホイールを手前に回転させてメッセージ送りをします。戻すことはできません。
@@ -94,7 +94,7 @@
  */
 /*:ja
  * @plugindesc マウスホイール拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param メッセージ送り
  * @desc マウスホイールを手前に回転させてメッセージ送りをします。戻すことはできません。

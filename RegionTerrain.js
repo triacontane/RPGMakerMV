@@ -17,7 +17,7 @@
 
 /*:
  * @plugindesc Region set terrain attribute
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param LadderRegionId
  * @desc 梯子属性を付与するリージョンID。カンマ区切りで数字を指定してください。（以下同様）例：1,2,3
@@ -90,7 +90,7 @@
  */
 /*:ja
  * @plugindesc タイル属性付与プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 梯子ID
  * @desc 梯子属性を付与するリージョンID。カンマ区切りで数字を指定してください。（以下同様）例：1,2,3

@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc Plugin That ...
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param param
  * @desc parameter description
@@ -32,7 +32,7 @@
  */
 /*:ja
  * @plugindesc センサー情報取得プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param Y軸傾き変数
  * @desc Y軸方向のデバイスの傾き度合いを格納する変数番号

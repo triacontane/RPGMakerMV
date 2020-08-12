@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc SkillCostRateCustomizePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help SkillCostRateCustomize.js
  *
@@ -35,7 +35,7 @@
  */
 /*:ja
  * @plugindesc スキルコスト倍率調整プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help SkillCostRateCustomize.js
  *

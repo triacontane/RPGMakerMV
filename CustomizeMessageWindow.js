@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc CustomizeMessageWindowPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 顔グラフィックがメッセージウィンドウの
  * 右側に表示されるようになります。
@@ -30,7 +30,7 @@
  */
 /*:ja
  * @plugindesc 顔グラフィック表示位置変更プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 顔グラフィックがメッセージウィンドウの
  * 右側に表示されるようになります。

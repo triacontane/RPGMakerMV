@@ -81,7 +81,7 @@
 
 /*:
  * @plugindesc Half Move Plugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param Direction8Move
  * @desc 斜め移動を含めた8方向移動を許可します。
@@ -255,7 +255,7 @@
  */
 /*:ja
  * @plugindesc 半歩移動プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 8方向移動
  * @desc 斜め移動を含めた8方向移動を許可します。

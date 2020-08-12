@@ -18,7 +18,7 @@
 
 /*:
  * @plugindesc FailureEffectPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param FailureDamageRate
  * @desc 失敗時のダメージ倍率(%)です。各スキルのメモ欄に個別の設定があればそちらが優先されます。
@@ -46,7 +46,7 @@
  */
 /*:ja
  * @plugindesc 失敗効果プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 失敗時のダメージ倍率
  * @desc 失敗時のダメージ倍率(%)です。各スキルのメモ欄に個別の設定があればそちらが優先されます。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc IEのBGM有効化プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help Html5Audioを利用してIEでBGM等のオーディオを演奏します。
  * 不完全な実装で、BGMしか演奏されません（笑）

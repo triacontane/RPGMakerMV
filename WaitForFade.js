@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc WaitForFadePlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help 場所移動の際のフェードイン・フェードアウト中は
  * イベント実行中でなくても移動を禁止します。
@@ -25,7 +25,7 @@
  */
 /*:ja
  * @plugindesc フェード中移動禁止プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help 場所移動の際のフェードイン・フェードアウト中は
  * イベント実行中でなくても移動を禁止します。

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc YEP_ItemCoreアイテム選択修正プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help YEP_ItemCore.jsを使用してアイテムの所持上限を設定した場合に
  * イベントのアイテム選択が一部正しく機能しなくなる問題を修正します。

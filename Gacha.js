@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc Get the item at random
- * @author Takeya Kimura
+ * @target MZ @author Takeya Kimura
  *
  * @param Help Message Text
  * @desc The help message for gacha window. "Required Amount" is replaced with the Required Amount.
@@ -157,7 +157,7 @@
 
 /*:ja
  * @plugindesc ランダムにアイテムを取得します。
- * @author Takeya Kimura
+ * @target MZ @author Takeya Kimura
  *
  * @param Help Message Text
  * @desc ガチャ画面のヘルプメッセージです。「Required Amount」は消費Gと置換されます。

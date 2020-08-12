@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc Plugin That ...
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param param
  * @desc parameter description
@@ -31,7 +31,7 @@
  */
 /*:ja
  * @plugindesc マップ処理負荷軽減プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 色調変更無効化
  * @desc マップ、戦闘における色調変更(Tint)を無効化します。

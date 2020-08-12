@@ -28,7 +28,7 @@
 
 /*:
  * @plugindesc Plugin that to visualize face graphic in battle
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param WindowVisible
  * @desc Window visible flg(ON/OFF)
@@ -65,7 +65,7 @@
  */
 /*:ja
  * @plugindesc 戦闘中顔グラフィック表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param ウィンドウ表示
  * @desc 背景ウィンドウの表示フラグです。(ON/OFF)

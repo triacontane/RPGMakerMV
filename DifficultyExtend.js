@@ -16,7 +16,7 @@
 
 /*:
  * @plugindesc 難易度選択拡張プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 難易度ID変数
  * @desc 難易度IDの値が格納される変数です。

@@ -26,7 +26,7 @@
 
 /*:
  * @plugindesc MenuCommonEventPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param CommonEventInfo
  * @desc 各画面で実行するコモンイベントの情報です。
@@ -198,7 +198,7 @@
  */
 /*:ja
  * @plugindesc メニュー内コモンイベントプラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param コモンイベント情報
  * @desc 各画面で実行するコモンイベントの情報です。

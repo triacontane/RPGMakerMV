@@ -7,7 +7,7 @@
  * NOTE: Images are stored in the img/system folder.
  *
  * @plugindesc Show a Splash Screen "Made with MV" and/or a Custom Splash Screen before going to main screen.
- * @author Dan "Liquidize" Deptula
+ * @target MZ @author Dan "Liquidize" Deptula
  *
  * @help This plugin does not provide plugin commands.
  *
@@ -66,7 +66,7 @@
 * メモ: イメージはimg／systemフォルダ内に保存されます。
  *
  * @plugindesc メイン画面へ進む前に、"Made with MV"のスプラッシュ画面もしくはカスタマイズされたスプラッシュ画面を表示します。
- * @author Dan "Liquidize" Deptula
+ * @target MZ @author Dan "Liquidize" Deptula
  *
  * @help  このプラグインにはプラグインコマンドはありません。
  *

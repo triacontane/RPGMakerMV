@@ -20,7 +20,7 @@
 
 /*:
  * @plugindesc PauseSignToTextEndPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @param ValidateSwitchId
  * @type number
@@ -39,7 +39,7 @@
  */
 /*:ja
  * @plugindesc ポーズサインの末尾表示プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @param 有効スイッチ番号
  * @type number

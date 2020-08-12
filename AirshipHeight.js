@@ -12,7 +12,7 @@
 
 /*:
  * @plugindesc 飛行船の浮上の高さの変更
- * @author s.f.
+ * @target MZ @author s.f.
  *
  * @param 変数番号
  * @desc 飛行船の高さを取得するための変数番号

@@ -15,7 +15,7 @@
 
 /*:
  * @plugindesc SessionManagerPlugin
- * @author triacontane
+ * @target MZ @author triacontane
  *
  * @help SessionManager.js
  *
@@ -40,7 +40,7 @@
  */
 /*:ja
  * @plugindesc セッション管理プラグイン
- * @author トリアコンタン
+ * @target MZ @author トリアコンタン
  *
  * @help SessionManager.js
  *
