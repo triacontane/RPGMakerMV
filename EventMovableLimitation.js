@@ -1,12 +1,12 @@
 /*=============================================================================
  EventMovableLimitation.js
 ----------------------------------------------------------------------------
- (C)2018 Triacontane
+ (C)2020 Triacontane
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
- 1.0.0 2018/12/09 初版
+ 1.0.0 2020/06/15 MV版から流用作成
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
  [Twitter]: https://twitter.com/triacontane/
@@ -15,11 +15,11 @@
 
 /*:
  * @plugindesc EventMovableLimitationPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param commandPrefix
- * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
- * @default
+ * @author triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventMovableLimitation.js
  *
  * @help EventMovableRange.js
  *
@@ -38,12 +38,11 @@
  */
 /*:ja
  * @plugindesc イベント移動範囲制限プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param commandPrefix
- * @text メモ欄接頭辞
- * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
- * @default
+ * @author トリアコンタン
+ * @target MZ
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventMovableLimitation.js
  *
  * @help EventMovableRange.js
  *
@@ -64,74 +63,13 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(() => {
     'use strict';
 
-    /**
-     * Get database meta information.
-     * @param object Database item
-     * @param name Meta name
-     * @returns {String} meta value
-     */
-    var getMetaValue = function(object, name) {
-        var tagName = param.commandPrefix + name;
-        return object.meta.hasOwnProperty(tagName) ? convertEscapeCharacters(object.meta[tagName]) : null;
-    };
-
-    /**
-     * Get database meta information.(for multi language)
-     * @param object Database item
-     * @param names Meta name array (for multi language)
-     * @returns {String} meta value
-     */
-    var getMetaValues = function(object, names) {
-        var metaValue;
-        names.some(function(name) {
-            metaValue = getMetaValue(object, name);
-            return metaValue !== null;
-        });
-        return metaValue;
-    };
-
-    /**
-     * Convert escape characters.(require any window object)
-     * @param text Target text
-     * @returns {String} Converted text
-     */
-    var convertEscapeCharacters = function(text) {
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
-    };
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-    var param = createPluginParameter('EventMovableLimitation');
-
-    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    const _Game_Event_initialize = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
-        var movables = getMetaValues(this.event(), ['移動制限', 'Movable']);
+        const movables = this.findMeta(['移動制限', 'Movable']);
         if (movables) {
             this._movables = movables.split(',').map(function(value) {
                 return parseInt(value);
@@ -141,11 +79,11 @@
         }
     };
 
-    var _Game_Event_canPass = Game_Event.prototype.canPass;
+    const _Game_Event_canPass = Game_Event.prototype.canPass;
     Game_Event.prototype.canPass = function(x, y, d) {
         if (this._movables) {
-            var x2 = $gameMap.roundXWithDirection(x, d);
-            var y2 = $gameMap.roundYWithDirection(y, d);
+            const x2 = $gameMap.roundXWithDirection(x, d);
+            const y2 = $gameMap.roundYWithDirection(y, d);
             if (this._movables[0] >= 0 && this._initY - y2 > this._movables[0]) {
                 return false;
             }

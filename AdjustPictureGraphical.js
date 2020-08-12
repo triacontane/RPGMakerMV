@@ -1,31 +1,25 @@
 //=============================================================================
 // AdjustPictureGraphical.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2020 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.2.1 2017/09/13 DWindow.jsなどピクチャコンテナにピクチャ以外を入れる一部のプラグインとの競合を解消
-// 1.2.0 2017/08/13 パラメータの型指定機能に対応
-// 1.1.1 2016/01/24 ピクチャが回転しているときも位置を把握できるよう修正
-// 1.1.0 2015/12/26 グリッドの表示機能とグリッドにスナップ機能を追加
-//                  Ctrl+Cで座標をコピーできる機能を追加
-//                  任意のマップを読み込んでテストする機能を追加
-// 1.0.3 2015/12/20 ピクチャのボタン化プラグインとの競合を解消
-// 1.0.2 2015/11/23 競合防止のため、タッチ関連の処理をSprite_Pictureに定義
-// 1.0.1 2015/11/21 ピクチャ番号を出力するよう機能修正
-//                  コンソールにログを出す機能を追加
-// 1.0.0 2015/11/20 初版
+// 1.0.0 2020/03/14 MV版から流用作成
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
  * @plugindesc Plugin that adjust picture to graphical
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @author triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AdjustPictureGraphical.js
  *
  * @param GridSize
  * @desc View grid line
@@ -51,20 +45,25 @@
  */
 /*:ja
  * @plugindesc ピクチャのグラフィカルな位置調整プラグイン。
- * パラメータを変更したら「プロジェクトの保存」（Ctrl+S）
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
+ * @target MZ
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AdjustPictureGraphical.js
  *
- * @param グリッドサイズ
+ * @param GridSize
+ * @text グリッドサイズ
  * @desc ピクチャ調整中に指定サイズでグリッドを表示します。0を指定すると非表示になります。
  * @default 48
  * @type number
  *
- * @param テストマップID
+ * @param TestMapId
+ * @text テストマップID
  * @desc 任意のマップをイベントテストの舞台に設定できます。
  * @default -1
  * @type number
  * @min -1
- * 
+ *
  * @help イベントコマンドのテスト時に、ピクチャの表示位置を
  * ドラッグ＆ドロップで微調整できます。
  * 左上のタイトルバーに選択したピクチャの座標が表示されるので
@@ -84,32 +83,13 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(() => {
     'use strict';
     // イベントテスト時以外は一切の機能を無効
     if (!DataManager.isEventTest())return;
 
-    var pluginName = 'AdjustPictureGraphical';
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Input
@@ -121,11 +101,12 @@
     // DataManager
     //  テスト用マップの読み込みを追加定義します。
     //=============================================================================
-    var _DataManager_setupEventTest = DataManager.setupEventTest;
+    const _DataManager_setupEventTest = DataManager.setupEventTest;
     DataManager.setupEventTest = function() {
         _DataManager_setupEventTest.call(this);
-        var mapId = getParamNumber(['TestMapId', 'テストマップID'], -1, 9999);
-        if (mapId > 0) $gamePlayer.reserveTransfer(mapId, 8, 6);
+        if (param.TestMapId > 0) {
+            $gamePlayer.reserveTransfer(mapId, 8, 6);
+        }
     };
 
     //=============================================================================
@@ -142,7 +123,7 @@
     // Game_Screen
     //  最後に選択したピクチャの座標を保存します。
     //=============================================================================
-    var _Game_Screen_initialize = Game_Screen.prototype.initialize;
+    const _Game_Screen_initialize = Game_Screen.prototype.initialize;
     Game_Screen.prototype.initialize = function() {
         _Game_Screen_initialize.call(this);
         this._lastPictureX = null;
@@ -154,13 +135,13 @@
         this._documentTitle = '';
     };
 
-    var _Game_Screen_updatePictures = Game_Screen.prototype.updatePictures;
+    const _Game_Screen_updatePictures = Game_Screen.prototype.updatePictures;
     Game_Screen.prototype.updatePictures = function() {
         _Game_Screen_updatePictures.call(this);
         if (Utils.isNwjs() && Input.isPressed('control') && Input.isTriggered('copy')) {
             if (this._lastPictureX == null || this._lastPictureY == null) return;
-            var clipboard = require('nw.gui').Clipboard.get();
-            var copyValue = '';
+            const clipboard = nw.Clipboard.get();
+            let copyValue = '';
             if (this._copyCount % 2 === 0) {
                 copyValue = this._lastPictureX.toString();
                 this._infoCopy = ' X座標[' + copyValue + ']をコピーしました。';
@@ -171,7 +152,7 @@
             clipboard.set(copyValue, 'text');
             this._copyCount++;
         }
-        var docTitle = this._infoHelp + this._infoPicture + this._infoCopy;
+        const docTitle = this._infoHelp + this._infoPicture + this._infoCopy;
         if (docTitle !== this._documentTitle) {
             document.title = docTitle;
             this._documentTitle = docTitle;
@@ -182,7 +163,7 @@
     // Scene_Map
     //  テストイベント時の特別な処理
     //=============================================================================
-    var _Scene_Map_update = Scene_Map.prototype.update;
+    const _Scene_Map_update = Scene_Map.prototype.update;
     Scene_Map.prototype.update = function() {
         if (!$gameMap.isEventRunning()) this.updateEventTest();
         _Scene_Map_update.call(this);
@@ -214,22 +195,24 @@
         this._pictureContainer.children.reverse();
     };
 
-    var _Spriteset_Base_createLowerLayer = Spriteset_Base.prototype.createLowerLayer;
+    const _Spriteset_Base_createLowerLayer = Spriteset_Base.prototype.createLowerLayer;
     Spriteset_Base.prototype.createLowerLayer = function() {
         _Spriteset_Base_createLowerLayer.call(this);
         this.createGridSprite();
     };
 
     Spriteset_Base.prototype.createGridSprite = function() {
-        var size = getParamNumber(['GridSize', 'グリッドサイズ'], 0, Math.max(this.width, this.height));
-        if (size === 0) return;
+        const size = param.GridSize;
+        if (size === 0) {
+            return;
+        }
         this._gridSprite = new Sprite();
         this._gridSprite.setFrame(0, 0, this.width, this.height);
-        var bitmap = new Bitmap(this.width, this.height);
-        for (var x = 0; x < this.width; x += size) {
+        const bitmap = new Bitmap(this.width, this.height);
+        for(let x = 0; x < this.width; x += size) {
             bitmap.fillRect(x, 0, 1, this.height, 'rgba(255,255,255,1.0)');
         }
-        for (var y = 0; y < this.height; y += size) {
+        for(let y = 0; y < this.height; y += size) {
             bitmap.fillRect(0, y, this.width, 1, 'rgba(255,255,255,1.0)');
         }
         this._gridSprite.bitmap = bitmap;
@@ -240,7 +223,7 @@
     // Sprite_Picture
     //  テストイベント時にピクチャを掴みます。
     //=============================================================================
-    var _Sprite_Picture_initialize = Sprite_Picture.prototype.initialize;
+    const _Sprite_Picture_initialize = Sprite_Picture.prototype.initialize;
     Sprite_Picture.prototype.initialize = function(pictureId) {
         _Sprite_Picture_initialize.call(this, pictureId);
         this._holding = false;
@@ -249,10 +232,10 @@
     };
 
     Sprite_Picture.prototype.checkDrag = function() {
-        var picture = this.picture();
+        const picture = this.picture();
         if (picture != null) {
             if (this.updateDragMove()) {
-                var result                = 'PictureNum:[' + this._pictureId + '] X:[' + this.x + '] Y:[' + this.y + ']';
+                const result                = 'PictureNum:[' + this._pictureId + '] X:[' + this.x + '] Y:[' + this.y + ']';
                 $gameScreen._lastPictureX = this.x;
                 $gameScreen._lastPictureY = this.y;
                 $gameScreen._infoPicture  = result;
@@ -268,10 +251,10 @@
     Sprite_Picture.prototype.updateDragMove = function() {
         if (this.isTriggered() || (this._holding && TouchInput.isPressed())) {
             if (!this._holding) this.hold();
-            var x = TouchInput.x - this._dx;
-            var y = TouchInput.y - this._dy;
+            let x = TouchInput.x - this._dx;
+            let y = TouchInput.y - this._dy;
             if (Input.isPressed('control')) {
-                var size = getParamNumber(['GridSize', 'グリッドサイズ'], 0, Math.max(this.width, this.height));
+                const size = param.GridSize;
                 if (size !== 0) {
                     x % size > size / 2 ? x += size - x % size : x -= x % size;
                     y % size > size / 2 ? y += size - y % size : y -= y % size;
@@ -319,32 +302,32 @@
     };
 
     Sprite_Picture.prototype.minX = function() {
-        var width = this.screenWidth();
+        const width = this.screenWidth();
         return Math.min(this.screenX(), this.screenX() + width);
     };
 
     Sprite_Picture.prototype.minY = function() {
-        var height = this.screenHeight();
+        const height = this.screenHeight();
         return Math.min(this.screenY(), this.screenY() + height);
     };
 
     Sprite_Picture.prototype.maxX = function() {
-        var width = this.screenWidth();
+        const width = this.screenWidth();
         return Math.max(this.screenX(), this.screenX() + width);
     };
 
     Sprite_Picture.prototype.maxY = function() {
-        var height = this.screenHeight();
+        const height = this.screenHeight();
         return Math.max(this.screenY(), this.screenY() + height);
     };
 
     Sprite_Picture.prototype.isTouchPosInRect = function () {
-        var dx = TouchInput.x - this.x;
-        var dy = TouchInput.y - this.y;
-        var sin = Math.sin(-this.rotation);
-        var cos = Math.cos(-this.rotation);
-        var rx = this.x + Math.floor(dx * cos + dy * -sin);
-        var ry = this.y + Math.floor(dx * sin + dy * cos);
+        const dx = TouchInput.x - this.x;
+        const dy = TouchInput.y - this.y;
+        const sin = Math.sin(-this.rotation);
+        const cos = Math.cos(-this.rotation);
+        const rx = this.x + Math.floor(dx * cos + dy * -sin);
+        const ry = this.y + Math.floor(dx * sin + dy * cos);
         return (rx >= this.minX() && rx <= this.maxX() &&
                 ry >= this.minY() && ry <= this.maxY());
     };

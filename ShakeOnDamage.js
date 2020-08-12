@@ -1,15 +1,12 @@
 //=============================================================================
 // ShakeOnDamage.js
 // ----------------------------------------------------------------------------
-// (C)2017 Triacontane
+// (C)2020 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.2.0 2019/05/02 敵キャラのダメージ時にもシェイクさせる機能、弱点攻撃時にシェイクさせる機能を追加
-// 1.1.1 2018/03/04 YEP_BattleEngineCore.jsとの競合を解消
-// 1.1.0 2017/08/19 パラメータに計算式を使用できる機能を追加
-// 1.0.0 2017/08/13 初版
+// 1.0.0 2020/06/15 MV版から流用作成
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
@@ -18,71 +15,75 @@
 
 /*:
  * @plugindesc ShakeOnDamagePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ShakeOnDamage.js
  *
  * @param ShakePower
- * @desc 通常ダメージを受けたときのシェイク強さです。
+ * @desc This is the shake strength when you take normal damage.
  * @default 5
  * @type number
  * @min 1
  * @max 9
  *
  * @param CriticalShakePower
- * @desc クリティカルダメージを受けたときのシェイク強さです。
+ * @desc This is the shake strength when you take critical damage.
  * @default 9
  * @type number
  * @min 1
  * @max 9
  *
  * @param EffectiveShakePower
- * @desc 弱点ダメージを受けたときのシェイク強さです。
+ * @desc This is the shake strength when you take weakness damage.
  * @default 9
  * @type number
  * @min 1
  * @max 9
  *
  * @param ShakeSpeed
- * @desc シェイク速さです。
+ * @desc Shake speed.
  * @default 9
  * @type number
  * @min 1
  * @max 9
  *
  * @param ShakeDuration
- * @desc シェイク時間(フレーム)です。
+ * @desc Shake time (frames).
  * @default 30
  * @type number
  *
  * @param ApplyActor
- * @desc アクターのダメージ時にシェイクします。
+ * @desc Shake when the actor does damage.
  * @default true
  * @type boolean
  *
  * @param ApplyEnemy
- * @desc 敵キャラのダメージ時にシェイクします。
+ * @desc Shake when the enemy does damage.
  * @default false
  * @type boolean
  *
  * @help ShakeOnDamage.js
  *
- * 戦闘でアクターがダメージを受けたときに画面を振動させます。
- * クリティカル時と通常時とで強さを変えることができます。
+ * Shake the screen when an actor takes damage in combat.
+ * You can change the strength between critical and normal.
  *
- * 各パラメータには計算式を適用できます。さらにローカル変数として
- * 以下が使用可能です。
- * a : ダメージを受けた対象のアクターです。
- * r : ダメージを受けた対象のアクターの残りHP率(0-100)です。
+ * A formula can be applied to each parameter. In addition, you can also set a local variable
+ * The following can be used
+ * a : Target actor that took damage.
+ * r : percentage of remaining HP of the target actor that took damage (0-100).
  *
- * 計算式を入力する場合はパラメータ設定ダイアログで「テキスト」タブを
- * 選択してから入力してください。
+ * To enter a formula, select the "Text" tab in the Parameter Settings dialog.
+ * Please make your selection and then enter it.
  *
- * このプラグインにはプラグインコマンドはありません。
+ * There are no plugin commands in this plugin.
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc ダメージ時の振動プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ShakeOnDamage.js
  *
  * @param シェイク強さ
  * @desc 通常ダメージを受けたときのシェイク強さです。
@@ -148,42 +149,42 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(() => {
     'use strict';
-    var pluginName = 'ShakeOnDamage';
+    const pluginName = 'ShakeOnDamage';
 
     //=============================================================================
     // ローカル関数
     //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
     //=============================================================================
-    var getParamString = function(paramNames) {
+    const getParamString = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for(let i = 0; i < paramNames.length; i++) {
+            const name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return name;
         }
         return '';
     };
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamString(paramNames).toUpperCase();
+    const getParamBoolean = function(paramNames) {
+        const value = getParamString(paramNames).toUpperCase();
         return value === 'TRUE';
     };
 
-    var convertEscapeCharacters = function(text) {
+    const convertEscapeCharacters = function(text) {
         if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
+        const windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
-    var isNotAString = function(args) {
+    const isNotAString = function(args) {
         return String(args) !== args;
     };
 
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param                 = {};
+    const param                 = {};
     param.shakePower          = getParamString(['ShakePower', 'シェイク強さ']);
     param.criticalShakePower  = getParamString(['CriticalShakePower', 'クリティカルシェイク強さ']);
     param.effectiveShakePower = getParamString(['EffectiveShakePower', '弱点シェイク強さ']);
@@ -212,7 +213,7 @@
         return this._effectiveForShake;
     };
 
-    var _Game_Battler_performDamage      = Game_Battler.prototype.performDamage;
+    const _Game_Battler_performDamage      = Game_Battler.prototype.performDamage;
     Game_Battler.prototype.performDamage = function() {
         _Game_Battler_performDamage.apply(this, arguments);
         if (this.isShakeOnDamage()) {
@@ -221,15 +222,15 @@
     };
 
     Game_Battler.prototype.shakeOnDamage = function() {
-        var power    = this.getDamageShakePower();
-        var speed    = this.convertShakeParameter(param.shakeSpeed);
-        var duration = this.convertShakeParameter(param.shakeDuration);
+        const power    = this.getDamageShakePower();
+        const speed    = this.convertShakeParameter(param.shakeSpeed);
+        const duration = this.convertShakeParameter(param.shakeDuration);
         $gameScreen.startShake(power, speed, duration);
         this.setCriticalForShake(false);
     };
 
     Game_Battler.prototype.getDamageShakePower = function() {
-        var power = param.shakePower;
+        let power = param.shakePower;
         if (param.criticalShakePower && this.isCriticalForShake()) {
             power = param.criticalShakePower;
         } else if (param.effectiveShakePower && this.isEffectiveForShake()) {
@@ -239,10 +240,10 @@
     };
 
     Game_Battler.prototype.convertShakeParameter = function(param) {
-        var convertParam = convertEscapeCharacters(param);
+        const convertParam = convertEscapeCharacters(param);
         // use in eval
-        var a            = this;
-        var r            = a.hpRate() * 100;
+        const a            = this;
+        const r            = a.hpRate() * 100;
         return isNaN(Number(convertParam)) ? eval(convertParam) : parseInt(convertParam);
     };
 
@@ -262,15 +263,15 @@
     // Game_Action
     //  クリティカル判定を記憶します。
     //=============================================================================
-    var _Game_Action_makeDamageValue      = Game_Action.prototype.makeDamageValue;
+    const _Game_Action_makeDamageValue      = Game_Action.prototype.makeDamageValue;
     Game_Action.prototype.makeDamageValue = function(target, critical) {
         target.setCriticalForShake(critical);
         return _Game_Action_makeDamageValue.apply(this, arguments);
     };
 
-    var _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
+    const _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
-        var result = _Game_Action_calcElementRate.apply(this, arguments);
+        const result = _Game_Action_calcElementRate.apply(this, arguments);
         target.setEffectiveForShake(result > 1.0);
         return result;
     };
