@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2020/08/12 戦闘中でも動的ウィンドウが表示できる機能を追加
 // 2.0.0 2020/07/25 プラグインの型指定機能に対応
 //                  シーン遷移中はウィンドウの状態を更新しないよう修正
 // 1.4.0 2020/02/22 パラメータ「ピクチャに含める」を遊行した場合に発生するPicturePriorityCustomize.jsとの競合を解消
@@ -119,7 +120,9 @@
  *  例1(座標を変数指定)：D_WINDOW_DRAW 1 255
  *  例2(座標を直接指定)：D_WINDOW_DRAW 1 20 20 320 80 255
  *  ※ ウィンドウ番号には1-10までの値を指定してください。
- *  最後に指定する値を不透明度(0-255)です。
+ *  最後に指定する値は不透明度(0-255)です。
+ *
+ *  ※ 戦闘中とマップ中ではウィンドウは別々に管理されます。
  *
  *  D_WINDOW_ERASE [ウィンドウ番号] : ウィンドウを削除
  *  例：D_WINDOW_ERASE 1
@@ -242,17 +245,26 @@
     };
 
     Game_Map.prototype.setDrawDWindow = function(number, windowInfo) {
-        this.dWindowInfos[number] = windowInfo;
+        this.dWindowInfos[this.findRealWindowNumber(number)] = windowInfo;
     };
 
     Game_Map.prototype.setEraseDWindow = function(number) {
-        this.dWindowInfos[number] = null;
+        this.dWindowInfos[this.findRealWindowNumber(number)] = null;
+    };
+
+    Game_Map.prototype.findDWindow = function(number) {
+        return this.dWindowInfos[this.findRealWindowNumber(number)];
+    };
+
+    Game_Map.prototype.findRealWindowNumber = function(number) {
+        return $gameParty.inBattle() ? number + 10 : number;
     };
 
     Game_Map.prototype.setOpacityDWindow = function(number, windowInfo) {
-        if (this.dWindowInfos[number]) {
-            this.dWindowInfos[number].targetOpacity = windowInfo.targetOpacity;
-            this.dWindowInfos[number].duration      = windowInfo.duration;
+        var win = this.findDWindow(number);
+        if (win) {
+            win.targetOpacity = windowInfo.targetOpacity;
+            win.duration      = windowInfo.duration;
         }
     };
 
@@ -263,7 +275,9 @@
     };
 
     Game_Map.prototype.updateDynamicWindow = function() {
-        if (!this.dWindowInfos) return;
+        if (!this.dWindowInfos) {
+            return;
+        }
         for (var i = 0, n = this.dWindowInfos.length; i < n; i++) {
             var info = this.dWindowInfos[i];
             if (info && info.duration > 0) {
@@ -278,29 +292,18 @@
     // Spriteset_Map
     //  動的ウィンドウの情報を保持し、作成する処理を追加定義します。
     //=============================================================================
-    var _Spriteset_Map_createUpperLayer = null;
-    if (Spriteset_Map.prototype.hasOwnProperty('createUpperLayer')) {
-        _Spriteset_Map_createUpperLayer = Spriteset_Map.prototype.createUpperLayer;
-    }
-    Spriteset_Map.prototype.createUpperLayer = function() {
+    var _Spriteset_Base_createUpperLayer = Spriteset_Base.prototype.createUpperLayer;
+    Spriteset_Base.prototype.createUpperLayer = function() {
         if (!paramAlwaysOnTop && paramIncludePicture === 0) {
             this.createDynamicWindow();
-            if (_Spriteset_Map_createUpperLayer) {
-                _Spriteset_Map_createUpperLayer.apply(this, arguments);
-            } else {
-                Spriteset_Base.prototype.createUpperLayer.apply(this, arguments);
-            }
+            _Spriteset_Base_createUpperLayer.apply(this, arguments);
         } else {
-            if (_Spriteset_Map_createUpperLayer) {
-                _Spriteset_Map_createUpperLayer.apply(this, arguments);
-            } else {
-                Spriteset_Base.prototype.createUpperLayer.apply(this, arguments);
-            }
+            _Spriteset_Base_createUpperLayer.apply(this, arguments);
             this.createDynamicWindow();
         }
     };
 
-    Spriteset_Map.prototype.createDynamicWindow = function() {
+    Spriteset_Base.prototype.createDynamicWindow = function() {
         this._DynamicWindows = [];
         for (var i = 0; i < 10; i++) {
             this._DynamicWindows[i] = new Window_Dynamic(i);
@@ -320,7 +323,7 @@
         }
     };
 
-    Spriteset_Map.prototype.addDynamicWindowForPicturePriority = function(pictureLayer, dWindow) {
+    Spriteset_Base.prototype.addDynamicWindowForPicturePriority = function(pictureLayer, dWindow) {
         pictureLayer.children.some(function(picture, index) {
             var id = picture.getPictureId();
             if (id === paramIncludePicture) {
@@ -354,11 +357,12 @@
     };
 
     Window_Dynamic.prototype.windowInfo = function() {
-        return $gameMap.dWindowInfos[this._windowNumber];
+        return $gameMap.findDWindow(this._windowNumber);
     };
 
     Window_Dynamic.prototype.windowOpacity = function() {
-        return $gameMap.dWindowInfos[this._windowNumber].opacity;
+        var win = this.windowInfo();
+        return win ? win.opacity : 0;
     };
 
     Window_Dynamic.prototype.update = function() {
