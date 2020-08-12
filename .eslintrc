@@ -18,7 +18,8 @@
     "no-console": "off",
     "no-irregular-whitespace":"off",
     "no-unused-vars":"off",
-    "no-control-regex": "off"
+    "no-control-regex": "off",
+    "class-name": false
   },
   "env": {
     "browser": true,
