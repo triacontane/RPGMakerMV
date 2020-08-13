@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2020/08/13 2.1.0の修正で戦闘テストをするとエラーになる問題を修正
 // 2.1.0 2020/08/12 戦闘中でも動的ウィンドウが表示できる機能を追加
 // 2.0.0 2020/07/25 プラグインの型指定機能に対応
 //                  シーン遷移中はウィンドウの状態を更新しないよう修正
@@ -253,6 +254,7 @@
     };
 
     Game_Map.prototype.findDWindow = function(number) {
+        if (!this.dWindowInfos) this.dWindowInfos = [];
         return this.dWindowInfos[this.findRealWindowNumber(number)];
     };
 
