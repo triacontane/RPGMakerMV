@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2020/08/16 戦闘不能から復帰したときに正常にステートが付与されない問題を修正
 // 1.0.0 2017/04/22 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -130,6 +131,12 @@
         this.refreshConditionalState();
     };
 
+    var _Game_BattlerBase_clearStates = Game_BattlerBase.prototype.clearStates;
+    Game_BattlerBase.prototype.clearStates = function() {
+        _Game_BattlerBase_clearStates.apply(this, arguments);
+        this._conditionalStates = [];
+    };
+
     Game_BattlerBase.prototype.getConditionalStates = function() {
         return this._conditionalStates = this._conditionalStates || [];
     };
@@ -149,6 +156,12 @@
     };
 
     Game_BattlerBase.prototype.refreshConditionalState = function() {
+        if (this.isDead()) {
+            return;
+        }
+        if (!this._conditionalStates) {
+            this._conditionalStates = [];
+        }
         this.updateConditionalStateUpper(this.hpRate(), ['UpperHp', '上限HP']);
         this.updateConditionalStateUpper(this.mpRate(), ['UpperMp', '上限MP']);
         this.updateConditionalStateUpper(this.tpRate(), ['UpperTp', '上限TP']);
