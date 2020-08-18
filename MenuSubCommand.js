@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.3 2020/08/18 イベントの一時消去後にサブコマンドマップに移動して戻ってきたときに消去状態が復元されるよう修正
 // 2.7.2 2020/04/03 2.5.0で適用したMOG_SceneMenu.jsとの競合解消と、2.0.1で適用したMOG_MenuCursor.jsとの競合解消を両立できるよう修正
 // 2.7.1 2020/03/13 Window_MenuCommandの初期化で引数を渡し忘れていたのを修正
 // 2.7.0 2019/10/25 メニューマップと通常マップのピクチャの表示状態を別々に管理できる機能を追加
@@ -631,12 +632,14 @@
     //=============================================================================
     Game_Map.prototype.saveAllEventPosition = function() {
         this._eventPositions = [];
+        this._eventErases = [];
         this.events().forEach(function(event) {
             var position                          = {};
             position.x                            = event.x;
             position.y                            = event.y;
             position.direction                    = event.direction();
             this._eventPositions[event.eventId()] = position;
+            this._eventErases[event.eventId()]    = event._erased;
         }, this);
     };
 
@@ -646,6 +649,10 @@
             if (position) {
                 event.locate(position.x, position.y);
                 event.setDirection(position.direction);
+            }
+            var erase = this._eventErases[event.eventId()];
+            if (erase) {
+                event.erase();
             }
         }, this);
         this._eventPositions = [];
