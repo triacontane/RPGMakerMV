@@ -16,6 +16,8 @@
 
 /*:
  * @plugindesc GameoverImageChangePlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/GameoverImageChange.js
  * @author triacontane
  *
  * @param gameoverList
@@ -35,6 +37,8 @@
  */
 /*:ja
  * @plugindesc ゲームオーバー画像変更プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/GameoverImageChange.js
  * @author トリアコンタン
  *
  * @param gameoverList
