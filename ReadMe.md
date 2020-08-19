@@ -5,6 +5,21 @@ RPGツクールMZで動作するプラグイン(JavaScript)を置いています
 また、最新のプラグインを[ツイッター](https://twitter.com/triacontane)で告知する場合があります。  
 These plugins(JavaScript) are for RPG Maker MZ.  
 
+# リポジトリの運用方針
+
+MZプラグインは、従来のMVプラグインから派生させた『mz_master』ブランチで運用します。
+双方のブランチで軽微な修正が入った場合は、cherry-pickでもう片方のブランチに反映させます。
+
+- MZプラグイン
+<https://github.com/triacontane/RPGMakerMV/tree/mz_master>
+
+- MVプラグイン
+<https://github.com/triacontane/RPGMakerMV>
+
+『mz_master』ブランチには、機械的に@targetアノテーションを付与した仮対応プラグインと、正規に動作確認した移植済みプラグインが混在しています。
+移植済みプラグインについては以下のシートをご確認ください。
+<https://docs.google.com/spreadsheets/d/1BnTyJr3Z1WoW4FMKtvKaICl4SQ5ehL5RxTDSV81oVQc/edit#gid=1411848872>
+
 ## 使い方 How to use
 こちらの[ドキュメント](https://docs.google.com/spreadsheets/d/1BnTyJr3Z1WoW4FMKtvKaICl4SQ5ehL5RxTDSV81oVQc/edit#gid=30581402)を通して必要なプラグインを探してください。  
 数は少ないですが、VXAce用のスクリプトも公開しています。  
