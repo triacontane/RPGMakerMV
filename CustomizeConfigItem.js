@@ -1,11 +1,12 @@
 //=============================================================================
 // CustomizeConfigItem.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2020/08/20 MZで動作するよう全面的に修正
 // 2.1.0 2017/12/15 追加項目のデフォルト項目を含めた並び順を自由に設定できる機能を追加
 //                  項目名称を日本語化
 // 2.0.1 2017/10/15 2.0.0の修正によりスイッチ項目を有効にしたときにゲーム開始するとエラーになる問題を修正
@@ -18,34 +19,50 @@
 // 1.1.0 2016/04/29 項目をクリックしたときに項目値が循環するよう修正
 // 1.0.0 2016/01/17 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
  * @plugindesc オプション任意項目作成プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CustomizeConfigItem.js
+ * @author トリアコンタン
+ * @base PluginCommonBase
  *
- * @param 数値項目
+ * @param NumberOptions
+ * @text 数値項目
  * @desc 追加する数値項目のオプション項目情報です。
  * @default
  * @type struct<NumberData>[]
  *
- * @param 文字項目
+ * @param StringOptions
+ * @text 文字列項目
  * @desc 追加する文字項目のオプション項目情報です。
  * @default
  * @type struct<StringData>[]
  *
- * @param スイッチ項目
+ * @param SwitchOptions
+ * @text スイッチ項目
  * @desc 追加するスイッチ項目のオプション項目情報です。
  * @default
  * @type struct<BooleanData>[]
  *
- * @param 音量項目
+ * @param VolumeOptions
+ * @text 音量項目
  * @desc 追加する音量項目のオプション項目情報です。
  * @default
  * @type struct<VolumeData>[]
+ *
+ * @command UNLOCK
+ * @text オプション任意項目の隠し解除
+ * @desc 指定した項目の隠しフラグを解除します。
+ *
+ * @arg name
+ * @text 項目名
+ * @desc 対象の項目名称です。
+ * @default
  *
  * @help オプション画面に任意の項目を追加します。
  * 項目の種類は、以下の四種類があります。
@@ -151,6 +168,8 @@
  * @value alwaysDash
  * @option コマンド記憶
  * @value commandRemember
+ * @option タッチUI
+ * @value touchUI
  * @option BGM 音量
  * @value bgmVolume
  * @option BGS 音量
@@ -200,6 +219,8 @@
  * @value alwaysDash
  * @option コマンド記憶
  * @value commandRemember
+ * @option タッチUI
+ * @value touchUI
  * @option BGM 音量
  * @value bgmVolume
  * @option BGS 音量
@@ -255,6 +276,8 @@
  * @value alwaysDash
  * @option コマンド記憶
  * @value commandRemember
+ * @option タッチUI
+ * @value touchUI
  * @option BGM 音量
  * @value bgmVolume
  * @option BGS 音量
@@ -304,6 +327,8 @@
  * @value alwaysDash
  * @option コマンド記憶
  * @value commandRemember
+ * @option タッチUI
+ * @value touchUI
  * @option BGM 音量
  * @value bgmVolume
  * @option BGS 音量
@@ -316,66 +341,11 @@
 
 (function() {
     'use strict';
-    var pluginName = 'CustomizeConfigItem';
+    var script = document.currentScript;
 
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value == null ? '' : value;
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamArrayJson = function(paramNames, defaultValue) {
-        var value = getParamString(paramNames) || null;
-        try {
-            value = JSON.parse(value);
-            if (value === null) {
-                value = defaultValue;
-            } else {
-                value = value.map(function(valueData) {
-                    return JSON.parse(valueData);
-                });
-            }
-        } catch (e) {
-            alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nName:[${paramNames}]\nValue:${value}`);
-            value = defaultValue;
-        }
-        return value;
-    };
-
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
-    };
-
-    var getArgBoolean = function(arg) {
-        return (arg || '').toUpperCase() === 'TRUE';
-    };
-
-    var getArgJson = function(arg, defaultValue) {
-        try {
-            arg = JSON.parse(arg || null);
-            if (arg === null) {
-                arg = defaultValue;
-            }
-        } catch (e) {
-            alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nValue:${arg}`);
-            arg = defaultValue;
-        }
-        return arg;
-    };
+    PluginManagerEx.registerCommand(script, 'UNLOCK', function(args) {
+        ConfigManager.customParamUnlock(args.name);
+    });
 
     var iterate = function(that, handler) {
         Object.keys(that).forEach(function(key, index) {
@@ -386,32 +356,21 @@
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var param           = {};
-    param.numberOptions = getParamArrayJson(['NumberOptions', '数値項目'], []);
-    param.stringOptions = getParamArrayJson(['StringOptions', '文字項目'], []);
-    param.switchOptions = getParamArrayJson(['SwitchOptions', 'スイッチ項目'], []);
-    param.volumeOptions = getParamArrayJson(['VolumeOptions', '音量項目'], []);
+    var param = PluginManagerEx.createParameter(script);
+    if (!param.NumberOptions) {
+        param.NumberOptions = [];
+    }
+    if (!param.StringOptions) {
+        param.StringOptions = [];
+    }
+    if (!param.SwitchOptions) {
+        param.SwitchOptions = [];
+    }
+    if (!param.VolumeOptions) {
+        param.VolumeOptions = [];
+    }
 
     var localOptionWindowIndex = 0;
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.call(this, command, args);
-        this.pluginCommandCustomizeConfigItem(command, args);
-    };
-
-    Game_Interpreter.prototype.pluginCommandCustomizeConfigItem = function(command, args) {
-        switch (getCommandName(command)) {
-            case 'CC_UNLOCK' :
-            case 'オプション任意項目の隠し解除' :
-                ConfigManager.customParamUnlock(args[0]);
-                break;
-        }
-    };
 
     //=============================================================================
     // ConfigManager
@@ -429,16 +388,16 @@
             return this.customParams;
         }
         this.customParams = {};
-        param.numberOptions.forEach(function(optionItem, index) {
+        param.NumberOptions.forEach(function(optionItem, index) {
             this.makeNumberOption(optionItem, index);
         }, this);
-        param.stringOptions.forEach(function(optionItem, index) {
+        param.StringOptions.forEach(function(optionItem, index) {
             this.makeStringOption(optionItem, index);
         }, this);
-        param.switchOptions.forEach(function(optionItem, index) {
+        param.SwitchOptions.forEach(function(optionItem, index) {
             this.makeSwitchOption(optionItem, index);
         }, this);
-        param.volumeOptions.forEach(function(optionItem, index) {
+        param.VolumeOptions.forEach(function(optionItem, index) {
             this.makeVolumeOption(optionItem, index);
         }, this);
         return this.customParams;
@@ -446,15 +405,15 @@
 
     ConfigManager.makeNumberOption = function(optionItem, index) {
         var data    = this.makeCommonOption(optionItem, index, this._symbolNumber);
-        data.min    = getArgNumber(optionItem.NumberMin);
-        data.max    = getArgNumber(optionItem.NumberMax);
-        data.offset = getArgNumber(optionItem.NumberStep);
+        data.min    = optionItem.NumberMin;
+        data.max    = optionItem.NumberMax;
+        data.offset = optionItem.NumberStep;
         this.pushOptionData(data);
     };
 
     ConfigManager.makeStringOption = function(optionItem, index) {
         var data    = this.makeCommonOption(optionItem, index, this._symbolString);
-        data.values = getArgJson(optionItem.StringItems, ['no item']);
+        data.values = optionItem.StringItems || ['no item'];
         data.min    = 0;
         data.max    = data.values.length - 1;
         this.pushOptionData(data);
@@ -462,8 +421,7 @@
 
     ConfigManager.makeSwitchOption = function(optionItem, index) {
         var data       = this.makeCommonOption(optionItem, index, this._symbolBoolean);
-        data.initValue = getArgBoolean(optionItem.DefaultValue);
-        data.variable  = getArgNumber(optionItem.SwitchID);
+        data.variable  = optionItem.SwitchID;
         this.pushOptionData(data);
     };
 
@@ -476,10 +434,10 @@
         var data       = {};
         data.symbol    = `${type}${index + 1}`;
         data.name      = optionItem.Name;
-        data.hidden    = getArgBoolean(optionItem.HiddenFlag);
+        data.hidden    = optionItem.HiddenFlag;
         data.script    = optionItem.Script;
-        data.initValue = getArgNumber(optionItem.DefaultValue);
-        data.variable  = getArgNumber(optionItem.VariableID, 0);
+        data.initValue = optionItem.DefaultValue;
+        data.variable  = optionItem.VariableID || 0;
         data.addPotion = optionItem.AddPosition;
         return data;
     };
@@ -497,6 +455,12 @@
             config.hiddenInfo[symbol] = this.hiddenInfo[symbol];
         }.bind(this));
         return config;
+    };
+
+    var _ConfigManager_load = ConfigManager.load;
+    ConfigManager.load = function() {
+        this.applyData({});
+        _ConfigManager_load.apply(this, arguments);
     };
 
     var _ConfigManager_applyData = ConfigManager.applyData;
@@ -605,6 +569,13 @@
         var result = _DataManager_loadGameWithoutRescue.apply(this, arguments);
         ConfigManager.exportCustomParams();
         return result;
+    };
+
+    var _Scene_Options_maxCommands = Scene_Options.prototype.maxCommands;
+    Scene_Options.prototype.maxCommands = function() {
+        return _Scene_Options_maxCommands.apply(this, arguments) +
+            param.NumberOptions.length + param.StringOptions.length +
+            param.SwitchOptions.length + param.VolumeOptions.length;
     };
 
     //=============================================================================
