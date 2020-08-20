@@ -36,7 +36,9 @@
 
 /*:
  * @plugindesc Screen Capture Plugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MakeScreenCapture.js
+ * @author triacontane
  *
  * @param FuncKeyPngCapture
  * @desc キャプチャとファイル保存を行うファンクションキーです。
@@ -218,7 +220,9 @@
  */
 /*:ja
  * @plugindesc 画面キャプチャ管理プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MakeScreenCapture.js
+ * @author トリアコンタン
  *
  * @param PNGキャプチャキー
  * @desc キャプチャとファイル保存を行うファンクションキーです。
