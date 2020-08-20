@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/08/20 実装方法変更(仕様変更なし)
  1.0.0 2020/08/20 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -68,12 +69,12 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
-    const _Game_Battler_tpbSpeed = Game_Battler.prototype.tpbSpeed;
-    Game_Battler.prototype.tpbSpeed = function() {
-        return _Game_Battler_tpbSpeed.apply(this, arguments) * this.findProgressSpeedRate();
+    const _Game_Unit_tpbReferenceTime = Game_Unit.prototype.tpbReferenceTime;
+    Game_Unit.prototype.tpbReferenceTime = function() {
+        return _Game_Unit_tpbReferenceTime.apply(this, arguments) / this.findProgressSpeedRate();
     };
 
-    Game_Battler.prototype.findProgressSpeedRate = function() {
+    Game_Unit.prototype.findProgressSpeedRate = function() {
         const rate = $gameVariables.value(param.SpeedVariableId);
         return rate > 0 ? rate / 100 : 1.0;
     };
