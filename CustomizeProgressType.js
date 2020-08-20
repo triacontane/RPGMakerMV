@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2020/08/20 英語版の翻訳漏れ
  1.0.1 2020/08/20 英語版ヘルプ作成
  1.0.0 2020/08/20 初版
 ----------------------------------------------------------------------------
@@ -21,8 +22,7 @@
  * @author triacontane
  *
  * @param progressTypeSwitch
- * @text プログレス種別スイッチ
- * @desc タイムプログレス戦闘の種別(アクティブ・ウェイト)を決めるスイッチです。ONのときアクティブになります。
+ * @desc Activated when ON, this switch determines the type of time progress battle.
  * @default 1
  * @type switch
  *
