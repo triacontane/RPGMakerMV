@@ -1,5 +1,6 @@
 /*
  * Version
+ * 1.0.2 2020/08/21 MZ向けに動作するよう修正
  * 1.0.1 2020/05/10 ロゴ表示時に効果音を演奏する機能を追加
  */
 
@@ -7,7 +8,9 @@
  * NOTE: Images are stored in the img/system folder.
  *
  * @plugindesc Show a Splash Screen "Made with MV" and/or a Custom Splash Screen before going to main screen.
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Dan "Liquidize" Deptula
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MadeWithMv.js
+ * @author Dan "Liquidize" Deptula
  *
  * @help This plugin does not provide plugin commands.
  *
@@ -135,6 +138,15 @@ Liquidize.MadeWithMV.FadeInTime = Number(Liquidize.MadeWithMV.Parameters["Fade I
 Liquidize.MadeWithMV.WaitTime = Number(Liquidize.MadeWithMV.Parameters["Wait Time"]) || 160;
 Liquidize.MadeWithMV.Se = String(Liquidize.MadeWithMV.Parameters["Sound Effect"]);
 
+//-----------------------------------------------------------------------------
+// Scene_Splash
+//
+// This is a constructor, implementation is done in the inner scope.
+
+function Scene_Splash() {
+    this.initialize.apply(this, arguments);
+}
+
 (function() {
 
     //-----------------------------------------------------------------------------
@@ -147,7 +159,7 @@ Liquidize.MadeWithMV.Se = String(Liquidize.MadeWithMV.Parameters["Sound Effect"]
         if (Liquidize.MadeWithMV.ShowMV) {
             ImageManager.loadSystem(Liquidize.MadeWithMV.MVImage);
         }
-       if (Liquidize.MadeWithMV.ShowCustom) {
+        if (Liquidize.MadeWithMV.ShowCustom) {
             ImageManager.loadSystem(Liquidize.MadeWithMV.CustomImage);
         }
     };
@@ -155,6 +167,7 @@ Liquidize.MadeWithMV.Se = String(Liquidize.MadeWithMV.Parameters["Sound Effect"]
     var _Scene_Boot_start = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
        if ((Liquidize.MadeWithMV.ShowMV || Liquidize.MadeWithMV.ShowCustom) && !DataManager.isBattleTest() && !DataManager.isEventTest()) {
+           this.resizeScreen();
            SceneManager.goto(Scene_Splash);
        } else {
            _Scene_Boot_start.call(this);
@@ -165,10 +178,6 @@ Liquidize.MadeWithMV.Se = String(Liquidize.MadeWithMV.Parameters["Sound Effect"]
     // Scene_Splash
     //
     // The scene class for dealing with the splash screens.
-
-    function Scene_Splash() {
-        this.initialize.apply(this, arguments);
-    }
 
     Scene_Splash.prototype = Object.create(Scene_Base.prototype);
     Scene_Splash.prototype.constructor = Scene_Splash;
@@ -187,6 +196,7 @@ Liquidize.MadeWithMV.Se = String(Liquidize.MadeWithMV.Parameters["Sound Effect"]
 
     Scene_Splash.prototype.create = function() {
         Scene_Base.prototype.create.call(this);
+        this.startFadeIn(Liquidize.MadeWithMV.FadeInTime, false);
         this.createSplashes();
     };
 
@@ -209,7 +219,7 @@ Liquidize.MadeWithMV.Se = String(Liquidize.MadeWithMV.Parameters["Sound Effect"]
     Scene_Splash.prototype.update = function() {
         if (Liquidize.MadeWithMV.ShowMV) {
             if (!this._mvFadeIn) {
-                this.startFadeIn(Liquidize.MadeWithMV.FadeInTime,false);
+                this.startFadeIn(Liquidize.MadeWithMV.FadeInTime, false);
                 this._mvFadeIn = true;
             } else {
                 if (this._mvWaitTime > 0 && this._mvFadeOut == false) {
@@ -217,7 +227,7 @@ Liquidize.MadeWithMV.Se = String(Liquidize.MadeWithMV.Parameters["Sound Effect"]
                 } else {
                     if (this._mvFadeOut == false) {
                         this._mvFadeOut = true;
-                        this.startFadeOut(Liquidize.MadeWithMV.FadeOutTime,false);
+                        this.startFadeOut(Liquidize.MadeWithMV.FadeOutTime, false);
                     }
                 }
             }
@@ -283,7 +293,7 @@ Liquidize.MadeWithMV.Se = String(Liquidize.MadeWithMV.Parameters["Sound Effect"]
             this._customSplash.opacity = 0;
             this.addChild(this._customSplash);
         }
-     };
+    };
 
     Scene_Splash.prototype.centerSprite = function(sprite) {
         sprite.x = Graphics.width / 2;
