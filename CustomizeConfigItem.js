@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.0 2020/08/20 スイッチ項目でONとOFFの表示文字列を変更できる機能を追加
 // 3.0.0 2020/08/20 MZで動作するよう全面的に修正
 // 2.1.0 2017/12/15 追加項目のデフォルト項目を含めた並び順を自由に設定できる機能を追加
 //                  項目名称を日本語化
@@ -196,6 +197,16 @@
  * @desc 項目の設定内容が格納されるスイッチ番号です。
  * @default 0
  * @type switch
+ *
+ * @param OnText
+ * @text ONテキスト
+ * @desc スイッチがONのときにオプションウィンドウに表示されるテキストです。省略するとONになります。
+ * @default
+ *
+ * @param OffText
+ * @text OFFテキスト
+ * @desc スイッチがONのときにオプションウィンドウに表示されるテキストです。省略するとOFFになります。
+ * @default
  *
  * @param HiddenFlag
  * @text 隠しフラグ
@@ -422,6 +433,8 @@
     ConfigManager.makeSwitchOption = function(optionItem, index) {
         var data       = this.makeCommonOption(optionItem, index, this._symbolBoolean);
         data.variable  = optionItem.SwitchID;
+        data.onText    = optionItem.OnText;
+        data.offText   = optionItem.OffText;
         this.pushOptionData(data);
     };
 
@@ -628,6 +641,8 @@
             result = this.numberStatusText(value);
         } else if (this.isStringSymbol(symbol)) {
             result = this.stringStatusText(value, symbol);
+        } else if (this.isBooleanSymbol(symbol)) {
+            result = this.booleanCustomStatusText(value, symbol);
         }
         return result;
     };
@@ -640,6 +655,10 @@
         return symbol.contains(ConfigManager._symbolString);
     };
 
+    Window_Options.prototype.isBooleanSymbol = function(symbol) {
+        return symbol.contains(ConfigManager._symbolBoolean);
+    };
+
     Window_Options.prototype.isCustomSymbol = function(symbol) {
         return !!this._customParams[symbol];
     };
@@ -650,6 +669,16 @@
 
     Window_Options.prototype.stringStatusText = function(value, symbol) {
         return this._customParams[symbol].values[value];
+    };
+
+    Window_Options.prototype.booleanCustomStatusText = function(value, symbol) {
+        var data = this._customParams[symbol];
+        var property = value ? 'onText' : 'offText';
+        if (data && data[property]) {
+            return data[property];
+        } else {
+            return this.booleanStatusText(value);
+        }
     };
 
     var _Window_Options_processOk      = Window_Options.prototype.processOk;
