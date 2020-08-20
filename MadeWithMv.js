@@ -1,5 +1,6 @@
 /*
  * Version
+ * 1.0.3 2020/08/21 ヘルプの修正漏れ
  * 1.0.2 2020/08/21 MZ向けに動作するよう修正
  * 1.0.1 2020/05/10 ロゴ表示時に効果音を演奏する機能を追加
  */
@@ -69,7 +70,9 @@
 * メモ: イメージはimg／systemフォルダ内に保存されます。
  *
  * @plugindesc メイン画面へ進む前に、"Made with MV"のスプラッシュ画面もしくはカスタマイズされたスプラッシュ画面を表示します。
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author Dan "Liquidize" Deptula
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MadeWithMv.js
+ * @author Dan "Liquidize" Deptula
  *
  * @help  このプラグインにはプラグインコマンドはありません。
  *
