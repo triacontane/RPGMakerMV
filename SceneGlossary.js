@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2020/08/20 MZで動作するよう全面的に修正
 // 2.17.3 2020/08/05 複数ページ表示した状態でカテゴリ表示に戻ったとき、ページ切り替え矢印が表示されたままになる問題を修正
 //                   クリックによるページ切り替えの場合でもページ折り返しができるよう仕様変更
 // 2.17.2 2020/06/06 未入手のアイテムを？？？で表示するとき、アイコンも非表示にするよう仕様変更
@@ -99,7 +100,10 @@
 
 /*:
  * @plugindesc SceneGlossaryPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SceneGlossary.js
+ * @author triacontane
+ * @base PluginCommonBase
  *
  * @param GlossaryInfo
  * @desc 用語辞典情報です。任意の用語辞典を追加できます。必ず1件以上の用語を登録してください。
@@ -218,6 +222,56 @@
  * @noteDir img/pictures/
  * @noteType file
  * @noteData items
+ *
+ * @command GLOSSARY_CALL
+ * @desc Call up the glossary screen。
+ *
+ * @arg type
+ * @desc Type of glossary
+ * @default 1
+ *
+ * @arg category
+ * @desc If you specify it, the dictionary will open with the category selected.
+ * @default
+ *
+ * @arg listIndex
+ * @desc If you specify it, the dictionary will open with the list number selected.
+ * @default 0
+ * @type number
+ *
+ * @command GLOSSARY_GAIN_ALL
+ * @desc Set all terms in the database to the fetch state.
+ *
+ * @command GLOSSARY_LOSE_ALL
+ * @desc All term items in the database will be lost.
+ *
+ * @command GLOSSARY_BACK
+ * @desc You call up the glossary screen with the last selected item selected again.
+ *
+ * @command GLOSSARY_ITEM_CHANGE_CATEGORY
+ * @desc Changes the category of the item with the specified ID to another one.
+ *
+ * @arg itemId
+ * @desc Item ID for category change.
+ * @default 1
+ * @type item
+ *
+ * @arg category
+ * @desc The name of the new category.
+ * @default
+ *
+ * @command GLOSSARY_ITEM_CHANGE_USABLE
+ * @desc Changes the ban on the use of the item with the specified ID.
+ *
+ * @arg itemId
+ * @desc Item ID for enable change.
+ * @default 1
+ * @type item
+ *
+ * @arg enable
+ * @desc Sets whether the item can be used or not.
+ * @default true
+ * @type boolean
  *
  * @help Add a screen that allows you to view the terms that appear in the game.
  * Images and text descriptions describing the terms are displayed in the window.
@@ -443,7 +497,10 @@
 
 /*:ja
  * @plugindesc ゲーム内用語辞典プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SceneGlossary.js
+ * @author トリアコンタン
+ * @base PluginCommonBase
  *
  * @param GlossaryInfo
  * @text 用語情報(設定必須)
@@ -582,6 +639,69 @@
  * @noteType file
  * @noteData items
  *
+ * @command GLOSSARY_CALL
+ * @text 用語集画面の呼び出し
+ * @desc 用語集画面を呼び出します。
+ *
+ * @arg type
+ * @text 種別
+ * @desc 用語種別です。省略すると、自動で「1」になります。
+ * @default 1
+ *
+ * @arg category
+ * @text カテゴリ
+ * @desc 指定した場合、カテゴリが選択された状態で用語辞典が開きます。
+ * @default
+ *
+ * @arg listIndex
+ * @text リスト番号
+ * @desc 指定した場合、リスト番号が選択された状態で用語辞典が開きます。指定する場合、カテゴリの指定が必須です。
+ * @default 0
+ * @type number
+ *
+ * @command GLOSSARY_GAIN_ALL
+ * @text 用語集全取得
+ * @desc データベースに登録している全ての用語を取得状態にします。
+ *
+ * @command GLOSSARY_LOSE_ALL
+ * @text 用語集全破棄
+ * @desc データベースに登録している全ての用語アイテムが失われます。
+ *
+ * @command GLOSSARY_BACK
+ * @text 用語集画面に戻る
+ * @desc 最後に選択していた項目を再選択した状態で用語集画面を呼び出します。
+ *
+ * @command GLOSSARY_ITEM_CHANGE_CATEGORY
+ * @text 用語アイテムのカテゴリ変更
+ * @desc 指定したIDのアイテムのカテゴリを別のものに変更します。変更可能なのはアイテムのみです。武器と防具は変更できません。
+ *
+ * @arg itemId
+ * @text アイテムID
+ * @desc カテゴリ変更対象のアイテムIDです。
+ * @default 1
+ * @type item
+ *
+ * @arg category
+ * @text カテゴリ
+ * @desc 新しいカテゴリの名称です。
+ * @default
+ *
+ * @command GLOSSARY_ITEM_CHANGE_USABLE
+ * @text 用語アイテムの使用禁止
+ * @desc 指定したIDのアイテムの使用禁止を変更します。
+ *
+ * @arg itemId
+ * @text アイテムID
+ * @desc 使用禁止変更対象のアイテムIDです。
+ * @default 1
+ * @type item
+ *
+ * @arg enable
+ * @text 使用可能かどうか
+ * @desc アイテムの使用可否を設定します。
+ * @default true
+ * @type boolean
+ *
  * @help ゲームに登場する用語を閲覧できる画面を追加します。
  * 用語を解説する画像およびテキスト説明がウィンドウに表示されます。
  *
@@ -710,42 +830,6 @@
  *
  * さらに追加で表示させたい場合は以下のように記述してください。
  * <SG追加2ピクチャ:bbb,2,3>
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * GLOSSARY_GAIN_ALL or 用語集全取得
- *  データベースに登録している全ての用語を取得状態にします。
- *  対象は「隠しアイテム」扱いの用語のみですが、パラメータ「入手履歴を使用」が
- *  有効な場合は全てのアイテムを解禁します。（アイテム自体は取得しません）
- *
- * GLOSSARY_LOSE_ALL or 用語集全破棄
- *  データベースに登録している全ての用語アイテムが失われます。
- *
- * GLOSSARY_CALL or 用語集画面の呼び出し [種別] [カテゴリ] [リスト番号]
- *  用語集画面を呼び出します。
- *  種別を省略すると、自動で「1」になります。
- * 例：GLOSSARY_CALL 2
- *  カテゴリを指定すると指定した名称のカテゴリおよびリスト番号が指定された
- *  状態で用語辞典が開きます。
- * 例：GLOSSARY_CALL 2 人物 1
- *
- * GLOSSARY_BACK or 用語集画面に戻る
- *  最後に選択していた項目を再選択した状態で用語集画面を呼び出します。
- * 例：GLOSSARY_BACK
- *
- * GLOSSARY_ITEM_CHANGE_CATEGORY [アイテムID] [新カテゴリ]
- * 用語アイテムのカテゴリ変更 [アイテムID] [新カテゴリ]
- *  指定したIDのアイテムのカテゴリを別のものに変更します。　
- * 例：GLOSSARY_ITEM_CHANGE_CATEGORY 10 AAA
- * ※ 変更可能なのはアイテムのみです。武器と防具は変更できません。
- *
- * GLOSSARY_ITEM_CHANGE_USABLE [アイテムID] [ON or OFF]
- * 用語アイテムの使用禁止 [アイテムID] [ON or OFF]
- *  指定したIDのアイテムの使用禁止を変更します。(ON:可能 OFF:禁止)
- * 例：GLOSSARY_ITEM_CHANGE_USABLE 10 ON
- * ※ 変更可能なのはアイテムのみです。武器と防具は変更できません。
  *
  * ・スクリプト詳細
  * itemIdが用語アイテムとして使用可能なときにtrueを返します。
@@ -994,110 +1078,47 @@ function Window_GlossaryComplete() {
         if (text === null || text === undefined) {
             text = toNumber ? '0' : '';
         }
-        if (SceneManager._scene._windowLayer) {
-            var winObj = SceneManager._scene._windowLayer.children[0];
-            text       = winObj.convertEscapeCharacters(text);
-        } else {
-            text = convertEscapeCharacters(text);
-        }
+        text = PluginManagerEx.convertEscapeCharacters(text);
         return toNumber ? parseFloat(text) : text;
     };
 
-    var convertEscapeCharacters = function(text) {
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)]/gi, function() {
-            return this.actorName(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)]/gi, function() {
-            return this.partyMemberName(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return text;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('SceneGlossary');
+    var script = document.currentScript;
+    var param = PluginManagerEx.createParameter(script);
     if (!param.GlossaryInfo) {
         param.GlossaryInfo = [];
     }
 
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        this.pluginCommandSceneGlossary(command, args);
-    };
+    PluginManagerEx.registerCommand(script, 'GLOSSARY_GAIN_ALL', function(args) {
+        $gameParty.gainGlossaryAll();
+    });
 
-    Game_Interpreter.prototype.pluginCommandSceneGlossary = function(command, args) {
-        switch (command.toUpperCase()) {
-            case 'GLOSSARY_CALL' :
-            case '用語集画面の呼び出し' :
-                $gameParty.clearGlossaryIndex();
-                $gameParty.setSelectedGlossaryType(getArgNumber(args[0], 1));
-                if (args[1]) {
-                    var index = $gameParty.setGlossaryCategoryIndexByName(args[1]);
-                    if (index >= 0) {
-                        $gameParty.setGlossaryListIndex(getArgNumber(args[2]) || 0);
-                    }
-                }
-                SceneManager.push(Scene_Glossary);
-                break;
-            case 'GLOSSARY_GAIN_ALL' :
-            case '用語集全取得' :
-                $gameParty.gainGlossaryAll();
-                break;
-            case 'GLOSSARY_LOSE_ALL' :
-            case '用語集全破棄' :
-                $gameParty.loseGlossaryAll();
-                break;
-            case 'GLOSSARY_BACK' :
-            case '用語集画面に戻る' :
-                if (args[0]) {
-                    $gameParty.setSelectedGlossaryType(getArgNumber(args[0], 1));
-                }
-                SceneManager.push(Scene_Glossary);
-                break;
-            case 'GLOSSARY_ITEM_CHANGE_CATEGORY' :
-            case '用語アイテムのカテゴリ変更' :
-                $gameParty.changeGlossaryCategory(getArgNumber(args[0], 1), args[1]);
-                break;
-            case 'GLOSSARY_ITEM_CHANGE_USABLE' :
-            case '用語アイテムの使用禁止' :
-                $gameParty.changeGlossaryItemUsable(getArgNumber(args[0], 1), getArgBoolean(args[1]));
-                break;
+    PluginManagerEx.registerCommand(script, 'GLOSSARY_LOSE_ALL', function(args) {
+        $gameParty.loseGlossaryAll();
+    });
+
+    PluginManagerEx.registerCommand(script, 'GLOSSARY_CALL', function(args) {
+        $gameParty.clearGlossaryIndex();
+        $gameParty.setSelectedGlossaryType(args.type);
+        if (args[1]) {
+            var index = $gameParty.setGlossaryCategoryIndexByName(args.category);
+            if (index >= 0) {
+                $gameParty.setGlossaryListIndex(args.listIndex || 0);
+            }
         }
-    };
+        SceneManager.push(Scene_Glossary);
+    });
+
+    PluginManagerEx.registerCommand(script, 'GLOSSARY_BACK', function(args) {
+        SceneManager.push(Scene_Glossary);
+    });
+
+    PluginManagerEx.registerCommand(script, 'GLOSSARY_ITEM_CHANGE_CATEGORY', function(args) {
+        $gameParty.changeGlossaryCategory(args.itemId, args.category);
+    });
+
+    PluginManagerEx.registerCommand(script, 'GLOSSARY_ITEM_CHANGE_USABLE', function(args) {
+        $gameParty.changeGlossaryItemUsable(args.itemId, args.enable);
+    });
 
     //=============================================================================
     // DataManager
@@ -1631,7 +1652,7 @@ function Window_GlossaryComplete() {
     };
 
     Scene_Glossary.prototype.createGlossaryWindow = function() {
-        this._glossaryWindow = new Window_Glossary($gameParty.getGlossaryListWidth(), this._helpWindow.height);
+        this._glossaryWindow = new Window_Glossary($gameParty.getGlossaryListWidth(), this.mainAreaTop(), this._helpWindow);
         this.addWindow(this._glossaryWindow);
     };
 
@@ -1857,7 +1878,7 @@ function Window_GlossaryComplete() {
 
     Window_GlossaryCategory.prototype.initialize = function(glWindow) {
         this._glossaryListWindow = glWindow;
-        Window_Selectable.prototype.initialize.call(this, glWindow.x, glWindow.y, glWindow.width, glWindow.height);
+        Window_Selectable.prototype.initialize.call(this, glWindow);
         this._data = null;
         this.refresh();
         this.selectLastIndex();
@@ -1907,7 +1928,7 @@ function Window_GlossaryComplete() {
         var text = this._data[index];
         if (text) {
             var rect = this.itemRect(index);
-            this.drawTextExIfNeed(text, rect.x + this.textPadding(), rect.y, rect.width - this.textPadding());
+            this.drawTextExIfNeed(text, rect.x + this.itemPadding(), rect.y, rect.width - this.itemPadding());
         }
     };
 
@@ -1925,7 +1946,7 @@ function Window_GlossaryComplete() {
             height -= this.lineHeight() + this.standardPadding() * 2;
         }
         var width = $gameParty.getGlossaryListWidth();
-        Window_ItemList.prototype.initialize.call(this, 0, gWindow.y, width, height);
+        Window_ItemList.prototype.initialize.call(this, new Rectangle(0, gWindow.y, width, height));
         this.refresh();
         this.selectLastIndex();
         this.setFramelessDesign();
@@ -1952,7 +1973,7 @@ function Window_GlossaryComplete() {
 
     Window_GlossaryList.prototype.drawItemName = function(item, x, y, width) {
         if (item) {
-            var iconBoxWidth = item.iconIndex > 0 ? Window_Base._iconWidth + 4 : 0;
+            var iconBoxWidth = item.iconIndex > 0 ? ImageManager.iconWidth + 4 : 0;
             if ($gameParty.hasGlossary(item)) {
                 this.drawIcon(item.iconIndex, x + 2, y + 2);
             }
@@ -1967,7 +1988,7 @@ function Window_GlossaryComplete() {
 
     Window_GlossaryList.prototype.setGlossaryColor = function(item) {
         this.changePaintOpacity(this.isEnabled(item));
-        this.changeTextColor(this.textColor(this.getGlossaryColorIndex(item)));
+        this.changeTextColor(ColorManager.textColor(this.getGlossaryColorIndex(item)));
     };
 
     Window_GlossaryList.prototype.getGlossaryColorIndex = function(item) {
@@ -2095,7 +2116,7 @@ function Window_GlossaryComplete() {
 
     Window_GlossaryConfirm.prototype.initialize = function(listWindow) {
         this._listWindow = listWindow;
-        Window_Command.prototype.initialize.call(this, 0, 0);
+        Window_Command.prototype.initialize.call(this, new Rectangle(0, 0, 120, 32));
     };
 
     Window_GlossaryConfirm.prototype.windowWidth = function() {
@@ -2130,7 +2151,7 @@ function Window_GlossaryComplete() {
         var width        = listWindow.width;
         var height       = Graphics.boxHeight - y;
         this._listWindow = listWindow;
-        Window_Base.prototype.initialize.call(this, x, y, width, height);
+        Window_Base.prototype.initialize.call(this, new Rectangle(x, y, width, height));
         this.setFramelessDesign();
     };
 
@@ -2151,14 +2172,14 @@ function Window_GlossaryComplete() {
     Window_Glossary.prototype             = Object.create(Window_Base.prototype);
     Window_Glossary.prototype.constructor = Window_Glossary;
 
-    Window_Glossary.prototype.initialize = function(x, y) {
-        var height      = Graphics.boxHeight - y;
+    Window_Glossary.prototype.initialize = function(x, y, helpWindow) {
+        var height      = Graphics.boxHeight - y - helpWindow.height;
         var width       = Graphics.boxWidth - x;
         this._maxPages  = 1;
         this._itemData  = null;
         this._pageIndex = 0;
         this._enemy     = null;
-        Window_Base.prototype.initialize.call(this, x, y, width, height);
+        Window_Base.prototype.initialize.call(this, new Rectangle(x, y, width, height));
         this.setFramelessDesign();
     };
 
@@ -2530,8 +2551,10 @@ function Window_GlossaryComplete() {
         if (this._listIndex < 0 || !TouchInput.isTriggered()) {
             return;
         }
-        var x = this.canvasToLocalX(TouchInput.x);
-        var y = this.canvasToLocalY(TouchInput.y);
+        var touchPos = new Point(TouchInput.x, TouchInput.y);
+        var localPos = this.worldTransform.applyInverse(touchPos);
+        var x = localPos.x;
+        var y = localPos.y;
         if (y >= 0 && y <= this.height) {
             if (x >= 0 && x < this.width / 2) this.cursorLeft(true);
             if (x >= this.width / 2 && x < this.width) this.cursorRight(true);
