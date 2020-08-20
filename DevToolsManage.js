@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2020/08/20 正式版のPluginCommonBaseで動作しなくなる問題を修正
 // 1.0.2 2020/06/06 英語版のヘルプを整備
 // 1.0.1 2020/04/20 ブレークポイント対策
 // 1.0.0 2020/04/05 MV版から流用作成
@@ -412,6 +413,9 @@ function Controller_NwJs() {
     'use strict';
     const script = document.currentScript;
     const param  = PluginManagerEx.createParameter(script);
+    if (!param.ShortcutList) {
+        param.ShortcutList = [];
+    }
 
     //=============================================================================
     // Graphics
@@ -979,6 +983,16 @@ function Controller_NwJs() {
         const path     = require('path');
         const filePath = path.join(path.dirname(process.mainModule.filename), 'data/Test_' + fileName);
         return fs.existsSync(filePath);
+    };
+
+    Scene_Base.prototype.isAnyWindowActive = function() {
+        if (this._windowLayer) {
+            return this._windowLayer.children.some(win => {
+                return win instanceof Window_Selectable && win.active;
+            });
+        } else {
+            return false;
+        }
     };
 
     //=============================================================================
