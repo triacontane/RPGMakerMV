@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.4 2020/08/21 マップの自動リロード機能を使おうとするとエラーになる問題を修正
 // 1.0.3 2020/08/20 正式版のPluginCommonBaseで動作しなくなる問題を修正
 // 1.0.2 2020/06/06 英語版のヘルプを整備
 // 1.0.1 2020/04/20 ブレークポイント対策
@@ -1074,6 +1075,10 @@ function Controller_NwJs() {
         this._eraseEvents.forEach(eventId => {
             this._events[eventId].erase();
         });
+    };
+
+    Game_Player.prototype.isNeedMapReload = function() {
+        return this._needsMapReload;
     };
 
     //=============================================================================
