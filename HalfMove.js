@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2020/08/21 不要なヘルプを削除
 // 2.0.1 2020/08/21 ヘルプの英語対応
 // 2.0.0 2020/08/21 MZ用にプラグインコマンドの記述を修正
 // 1.16.1 2020/07/02 スクリプトからキャラクターの座標を0.5以外の端数にするとエラーになる問題を修正
@@ -472,34 +473,6 @@
  * 上記の設定をもとに戻します。
  * this.resetHalfMoveDuringRouteForce();
  *
- * ・他プラグインとの連携に関して
- *
- * 1. PD_8DirDash.jsと組み合わせると半歩移動に
- * グラフィック変更を伴う8方向移動機能が反映されます。
- *
- * 配布元：http://pixeldog.x.fc2.com/material_script.html
- *
- * 2. OverpassTile.jsと組み合わせると半歩移動に
- * 立体交差を適用できます。
- *
- * 配布元：公式サンプルゲーム「ニナと鍵守の勇者」に収録
- *
- * OverpassTile.jsを当プラグインより上に定義してください。
- *
- * 3. FloatVariables.jsと組み合わせると半歩位置に場所移動したり
- * イベント位置を設定したりできます。
- *
- * 配布元：半歩移動プラグインと同じ配布元です。
- *
- * 4. YEP_MoveRouteCore.jsと組み合わせる場合、
- * このプラグインを下に配置してください。
- *
- * 5. MPP_MiniMap_OP1.jsと組み合わせる場合、
- * このプラグインを下に配置してください。
- *
- * 他のプラグインと併用する場合は、それぞれの配布元の規約や注意事項を
- * あらかじめご確認ください。
- *
  * 注意事項
  * 「強制中無効」のパラメータをONにして移動ルート強制した場合、フォロワーの動きや通行判定が
  * 一部おかしくなる問題があり、現在は未解決です。同パラメータを有効にする場合は
@@ -515,10 +488,6 @@
     'use strict';
     var pluginName    = 'HalfMove';
     var metaTagPrefix = 'HM';
-
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
