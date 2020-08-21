@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/08/21 MZ用にプラグインコマンドの記述を修正
 // 1.16.1 2020/07/02 スクリプトからキャラクターの座標を0.5以外の端数にするとエラーになる問題を修正
 // 1.16.0 2020/04/18 右上、右下、左上、左下のみ移動可能な地形、リージョンの設定を追加
 // 1.15.4 2020/04/15 英語版の一部のパラメータの型指定と初期値が日本語版と合っていなかった問題を修正
@@ -81,7 +82,9 @@
 
 /*:
  * @plugindesc Half Move Plugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/HalfMove.js
+ * @author triacontane
  *
  * @param Direction8Move
  * @desc 斜め移動を含めた8方向移動を許可します。
@@ -223,14 +226,15 @@
  * @default false
  * @type boolean
  *
+ * @command HALF_MOVE_DISABLE
+ * @text Disable half move.
+ * @desc Disable half move.
+ *
+ * @command HALF_MOVE_ENABLE
+ * @text Enable half move.
+ * @desc Enable half move.
+ *
  * @help Moving distance in half.
- *
- * Plugin command
- * ・HALF_MOVE_DISABLE
- * Disable half move.
- *
- * ・HALF_MOVE_ENABLE
- * Enable half move.
  *
  * Note(Event Editor)
  * <HMHalfDisable> -> Disable half move.
@@ -243,19 +247,13 @@
  * <HMInitialHalfX:-> -> Initial Half Position X(-0.5)
  * <HMInitialHalfY:-> -> Initial Half Position Y(-0.5)
  *
- * ・スクリプト（移動ルートの設定の「スクリプト」から実行）
- *
- * 「移動ルート強制中は半歩移動無効」の設定が有効なときでも半歩で強制移動します。
- * this.setHalfMoveDuringRouteForce();
- *
- * 上記の設定をもとに戻します。
- * this.resetHalfMoveDuringRouteForce();
- *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 半歩移動プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/HalfMove.js
+ * @author トリアコンタン
  *
  * @param 8方向移動
  * @desc 斜め移動を含めた8方向移動を許可します。
@@ -397,21 +395,16 @@
  * @default false
  * @type boolean
  *
+ * @command HALF_MOVE_DISABLE
+ * @text 半歩移動禁止
+ * @desc 半歩移動を一時的に禁止します。この情報はセーブデータに含まれます。特定のイベント等で禁止したい場合等に使用します。
+ *
+ * @command HALF_MOVE_ENABLE
+ * @text 半歩移動許可
+ * @desc 禁止していた半歩移動をもとに戻します。
+ *
  * @help キャラクターの移動単位が1タイルの半分になります。
  * 半歩移動が有効なら、乗り物以外は全て半歩移動になります。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * ・半歩移動禁止
- * ・HALF_MOVE_DISABLE
- * 半歩移動を一時的に禁止します。この情報はセーブデータに含まれます。
- * 特定のイベント等で禁止したい場合等に使用します。
- *
- * ・半歩移動許可
- * ・HALF_MOVE_ENABLE
- * 禁止していた半歩移動をもとに戻します。
  *
  * イベントごとの拡張機能を利用するには、
  * イベントのメモ欄に以下の通り記述してください。
@@ -646,28 +639,13 @@
     //=============================================================================
     var localHalfPositionCount = 0;
 
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        this.pluginCommandHalfMove(command, args);
-    };
+    PluginManager.registerCommand(pluginName, 'HALF_MOVE_DISABLE', function () {
+        $gameSystem.setEnableHalfMove(false);
+    });
 
-    Game_Interpreter.prototype.pluginCommandHalfMove = function(command) {
-        switch (getCommandName(command)) {
-            case '半歩移動禁止' :
-            case 'HALF_MOVE_DISABLE':
-                $gameSystem.setEnableHalfMove(false);
-                break;
-            case '半歩移動許可' :
-            case 'HALF_MOVE_ENABLE':
-                $gameSystem.setEnableHalfMove(true);
-                break;
-        }
-    };
+    PluginManager.registerCommand(pluginName, 'HALF_MOVE_ENABLE', function () {
+        $gameSystem.setEnableHalfMove(true);
+    });
 
     //=============================================================================
     // Game_System
@@ -1542,7 +1520,7 @@
 
     Game_Player.prototype.resetPrevPos = function() {
         Game_CharacterBase.prototype.resetPrevPos.call(this);
-        this.followers().forEach(function(follower) {
+        this.followers().data().forEach(function(follower) {
             follower.resetPrevPos();
         }.bind(this));
     };
