@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/08/21 MEの代わりにBGMを演奏できる機能を追加
+                  MEのピッチと位相が正常に設定されない問題を修正
  1.0.1 2020/08/18 英語ヘルプ作成
  1.0.0 2020/08/18 初版
 ----------------------------------------------------------------------------
@@ -99,6 +101,14 @@
  * @dir audio/me/
  * @type file
  *
+ * @param AudioBgmFile
+ * @text BGMファイル
+ * @desc MEの代わりにBGMを演奏します。指定するとMEは演奏されなくなります。
+ * @default
+ * @require 1
+ * @dir audio/bgm/
+ * @type file
+ *
  * @param SwitchId
  * @text スイッチ番号
  * @desc 指定した画像、MEを表示するための条件となるスイッチです。
@@ -142,21 +152,25 @@
     Scene_Gameover.prototype.playGameoverMusic = function() {
         _Scene_Gameover_playGameoverMusic.apply(this, arguments);
         var data = this.findGameoverData();
-        if (data && data.AudioFile) {
-            this.playGameoverCustomMusic(data.AudioFile);
+        if (data && (data.AudioFile || data.AudioBgmFile)) {
+            this.playGameoverCustomMusic(data.AudioFile, data.AudioBgmFile);
         }
     };
 
-    Scene_Gameover.prototype.playGameoverCustomMusic = function(name) {
+    Scene_Gameover.prototype.playGameoverCustomMusic = function(name, bgmName) {
         AudioManager.stopMe();
         var defaultMe = $dataSystem.gameoverMe;
-        var me = {
-            name: name,
+        var audio = {
+            name: bgmName || name,
             volume: defaultMe.volume,
-            pitch: defaultMe.volume,
-            pan: defaultMe.volume
+            pitch: defaultMe.pitch,
+            pan: defaultMe.pan
         }
-        AudioManager.playMe(me);
+        if (bgmName) {
+            AudioManager.playBgm(audio);
+        } else {
+            AudioManager.playMe(audio);
+        }
     };
 
     var _Scene_Gameover_createBackground = Scene_Gameover.prototype.createBackground;
