@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2020/08/21 ヘルプの英語対応
 // 2.0.0 2020/08/21 MZ用にプラグインコマンドの記述を修正
 // 1.16.1 2020/07/02 スクリプトからキャラクターの座標を0.5以外の端数にするとエラーになる問題を修正
 // 1.16.0 2020/04/18 右上、右下、左上、左下のみ移動可能な地形、リージョンの設定を追加
@@ -87,142 +88,142 @@
  * @author triacontane
  *
  * @param Direction8Move
- * @desc 斜め移動を含めた8方向移動を許可します。
+ * @desc Allows eight-way movement, including diagonal movement.
  * @default true
  * @type boolean
  *
  * @param 8MoveSwitch
- * @desc 指定したIDのスイッチがONのときのみ8方向移動を許可します。0の場合は常に許可します。
+ * @desc 8 direction movement is allowed only when the switch of the specified ID is ON.
  * @default 0
  * @type switch
  *
  * @param EventThrough
- * @desc イベントに横から接触したときに半歩ぶんならすり抜けます。
+ * @desc If you make side to side contact with an event, a half-step can slip through.
  * @default true
  * @type boolean
  *
  * @param DisableForcing
- * @desc 移動ルートの強制中は半歩移動を無効にします。
+ * @desc Disable half-step movement while forcing a move route.
  * @default false
  * @type boolean
  *
  * @param AvoidCorner
- * @desc 直進中にマップの角に引っ掛かった場合、斜め移動に切り替えて再試行します。
+ * @desc If you get caught in a corner of the map while moving straight, switch to diagonal movement and try again.
  * @default true
  * @type boolean
  *
  * @param DiagonalSlow
- * @desc 斜め移動中の歩行速度が0.8倍になります。
+ * @desc Walking speed is increased by 0.8 times while moving diagonally.
  * @default false
  * @type boolean
  *
  * @param TriggerExpansion
- * @desc プライオリティが「通常キャラと同じ」イベントの起動領域を左右に半マス分だけ拡張します。
+ * @desc Extend the activation area of an event with priority equal to a normal character by half a square.
  * @default false
  * @type boolean
  *
  * @param AdjustmentRealStep
- * @desc 歩数が増加するタイミングが2歩につき1歩分となります。エンカウント歩数とダメージ床のタイミングも調整されます。
+ * @desc The timing of the increase in the number of steps is one step for every two steps.
  * @default false
  * @type boolean
  *
  * @param UpperNpTerrainTag
- * @desc 上半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable only for the top half of the tiles. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param UpperNpRegionId
- * @desc 上半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable only for the top half of the tiles. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param LowerNpTerrainTag
- * @desc 下半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable only for the bottom half of the tiles. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param LowerNpRegionId
- * @desc 下半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable only for the bottom half of the tiles. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param RightNpTerrainTag
- * @desc 右半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable only for the right half of the tiles. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param RightNpRegionId
- * @desc 右半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable only for the right half of the tiles. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param LeftNpTerrainTag
- * @desc 左半分のタイルのみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable only for the left half of the tiles. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param LeftNpRegionId
- * @desc 左半分のタイルのみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable only for the left half of the tiles. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param RightUpNpTerrainTag
- * @desc タイルの右上のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable only in the upper right corner of the tile. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param RightUpNpRegionId
- * @desc タイルの右上のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable only in the upper right corner of the tile. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param RightDownNpTerrainTag
- * @desc タイルの右下のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable only in the lower right corner of the tile. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param RightDownNpRegionId
- * @desc タイルの右下のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable only in the lower right corner of the tile. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param LeftUpNpTerrainTag
- * @desc タイルの左上のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable only in the upper left corner of the tile. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param LeftUpNpRegionId
- * @desc タイルの左上のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable only in the upper left corner of the tile. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param LeftDownNpTerrainTag
- * @desc タイルの左下のみ通行不可となる地形タグです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable only in the lower left corner of the tile. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param LeftDownNpRegionId
- * @desc タイルの左下のみ通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable only in the lower left corner of the tile. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param AllNpTerrainTag
- * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A terrain tag that is impassable in all directions. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param AllNpRegionId
- * @desc 全方向通行不可となるリージョンIDです。0を指定すると無効になります。
+ * @desc A region id that is impassable in all directions. 0 disables it.
  * @default ["0"]
  * @type number[]
  *
  * @param MultiStartDisable
- * @desc トリガー条件を満たすイベントが同時に複数存在する場合にIDがもっとも小さいイベントのみを起動します。
+ * @desc Only the event with the smallest ID is activated when there are multiple events at the same time.
  * @default false
  * @type boolean
  *
  * @param EventOverlap
- * @desc プライオリティが「通常キャラと同じ」以外のイベント同士であれば位置の重複を許可します。
+ * @desc Duplicate positions are allowed between events that have a priority other than "Same as normal character".
  * @default false
  * @type boolean
  *
