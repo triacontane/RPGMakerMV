@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/08/21 MZ用にヘルプ修正
  1.0.0 2020/03/01 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -15,7 +16,9 @@
 
 /*:
  * @plugindesc ShopBgmPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ShopBgm.js
+ * @author triacontane
  *
  * @param list
  * @desc List of shop BGM.
@@ -34,7 +37,9 @@
  */
 /*:ja
  * @plugindesc お店BGMプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ShopBgm.js
+ * @author トリアコンタン
  *
  * @param list
  * @text BGMリスト
