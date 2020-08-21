@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.6 2020/08/21 英語版のヘルプ作成
 // 1.1.5 2020/08/21 MZ向けにヘルプ修正
 // 1.1.4 2020/07/05 MOG_ChronoEngine.jsと併用したときマップの一部がちらつく場合がある競合を修正
 // 1.1.3 2020/05/09 競合対策コードを追加
@@ -29,42 +30,28 @@
  *
  * @help ParallaxLayerMap.js
  *
- * 複数のレイヤーを使った多層一枚絵マップを作成可能にします。
- * イベントでレイヤーを作成するので、レイヤー数は無制限です。
+ * Allows you to create a multi-layered monolithic map with multiple layers.
+ * The number of layers is unlimited, since the layers are created by events.
  *
- * イベントを作成してメモ欄を以下の通り記述すると、指定した画像がマップに表示され、
- * かつイベント位置とは無関係に画像の左上がマップの左上に合わせられます。
+ * If you create an event and fill in the memo field as follows,
+ * the specified image will appear on the map and you can add
+ * Also, the top left corner of the image is set to the top left corner of the map,
+ * regardless of the event position.
  *
- * <PLM:file>        # 「img/parallaxes/file」を一枚絵として表示します。
- * <PLM_Blend:1>     # 合成方法の初期値を「加算」にします。
- * <PLM合成:1>       # 同上
- * <PLM_Opacity:128> # 不透明度の初期値を「128」にします。
- * <PLM不透明度:128> # 同上
+ * <PLM:file>        # Display "img/parallaxes/file" as a single picture.
+ * <PLM_Blend:1>     # Set the initial value of the composition method to "Add".
+ * <PLM_Opacity:128> # Set the initial value of opacity to 128.
  *
- * イベント内の「画像」「オプション」項目は無視されますが、その他の項目は
- * 通常のイベントと同じように機能します。
+ * The "Image" and "Options" items in the event are ignored,
+ * but the other items in the It works the same way as normal events.
  *
- * 合成方法や不透明度などを後から変更したい場合は、自律移動で指定するか
- * 以下の「キャラクターグラフィック表示拡張プラグイン」と併用してください。
+ * If you want to change the composition method or opacity later,
+ * you can use autonomous movement or
+ * Please use with the following "CharacterGraphicExtend.js".
  * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CharacterGraphicExtend.js
  *
- * スクリプト（「移動ルートの設定」から実行）
- * this.shiftPosition(10, 20); # 表示位置をX[10] Y[20]ずらします。
- *
- * 注意！
- * 当プラグインはマップのループには対応していません。
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * 当プラグインで使用できるサンプルマップをどらぴか様よりご提供いただきました。
- * この場を借りて御礼申し上げます。
- *
- * 以下のURLから「Download」ボタンでダウンロードできます。
- * クレジット表記なしでご自由にお使い頂けるご許可を頂いています。
- * https://github.com/triacontane/RPGMakerMV/blob/master/Sample/sample_parallax.zip
- *
- * PIKA's GAME GALLERY
- * https://mashimarohb252d6.wixsite.com/pikasgame
+ * Attention!
+ * This plugin does not support map loops.
  *
  * @noteParam PLM
  * @noteRequire 1
