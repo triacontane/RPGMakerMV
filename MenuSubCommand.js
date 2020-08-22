@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.4 2020/08/22 2.7.3の修正で復元が、動的イベント生成されたプラグインに対しても行われるよう修正
 // 2.7.3 2020/08/18 イベントの一時消去後にサブコマンドマップに移動して戻ってきたときに消去状態が復元されるよう修正
 // 2.7.2 2020/04/03 2.5.0で適用したMOG_SceneMenu.jsとの競合解消と、2.0.1で適用したMOG_MenuCursor.jsとの競合解消を両立できるよう修正
 // 2.7.1 2020/03/13 Window_MenuCommandの初期化で引数を渡し忘れていたのを修正
@@ -615,7 +616,7 @@
         this._followers.forEach(function(follower) {
             follower.savePosition();
         });
-        $gameMap.saveAllEventPosition();
+        $gameMap.saveOriginalMapEvent();
     };
 
     Game_Player.prototype.restorePosition = function() {
@@ -623,39 +624,22 @@
         this._followers.forEach(function(follower) {
             follower.restorePosition();
         });
-        $gameMap.restoreAllEventPosition();
+        $gameMap.restoreOriginalMapEvent();
     };
 
     //=============================================================================
     // Game_Map
-    //  すべてのイベントの位置を保存します。
+    //  すべてのイベントの状態を保存します。
     //=============================================================================
-    Game_Map.prototype.saveAllEventPosition = function() {
-        this._eventPositions = [];
-        this._eventErases = [];
-        this.events().forEach(function(event) {
-            var position                          = {};
-            position.x                            = event.x;
-            position.y                            = event.y;
-            position.direction                    = event.direction();
-            this._eventPositions[event.eventId()] = position;
-            this._eventErases[event.eventId()]    = event._erased;
-        }, this);
+    Game_Map.prototype.saveOriginalMapEvent = function() {
+        this._originalMapEvents = this._events;
     };
 
-    Game_Map.prototype.restoreAllEventPosition = function() {
-        this.events().forEach(function(event) {
-            var position = this._eventPositions[event.eventId()];
-            if (position) {
-                event.locate(position.x, position.y);
-                event.setDirection(position.direction);
-            }
-            var erase = this._eventErases[event.eventId()];
-            if (erase) {
-                event.erase();
-            }
-        }, this);
-        this._eventPositions = [];
+    Game_Map.prototype.restoreOriginalMapEvent = function() {
+        if (this._originalMapEvents) {
+            this._events = this._originalMapEvents;
+        }
+        this._originalMapEvents = null;
     };
 
     //=============================================================================
