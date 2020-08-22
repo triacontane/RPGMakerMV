@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2020/08/22 カスタムメニュープラグインで作成したウィンドウ背景を変えられる機能を追加
 // 2.0.0 2020/08/13 MZ対応版作成
 // 1.3.0 2019/01/13 ウィンドウ背景の画像を複数表示できる機能を追加
 //                  ウィンドウ背景を指定した場合も元のウィンドウフレームを表示したままにできる機能を追加
@@ -43,6 +44,9 @@
  *
  * プラグインによって追加されたウィンドウにも指定可能ですが
  * 正常に動作するとは限りません。
+ *
+ * SceneCustomMenu.jsで追加したウィンドウの背景を変えたい場合は
+ * WindowClassの指定を同プラグインの『ウィンドウ識別子』を指定してください。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -318,6 +322,10 @@
 
     Window.prototype.initBackImageData = function() {
         var className = getClassName(this);
+        // for SceneCustomMenu.js
+        if (this._data && this._data.Id) {
+            className = this._data.Id;
+        }
         return param.windowImageInfo.filter(function(data) {
             return data['WindowClass'] === className;
         }, this);
