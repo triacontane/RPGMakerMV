@@ -1,11 +1,12 @@
 //=============================================================================
 // CertainHitWithoutState.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C) 2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2020/08/23 MZ向けにヘルプ修正
 // 1.0.0 2017/08/19 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -15,7 +16,9 @@
 
 /*:
  * @plugindesc CertainHitWithoutStatePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CertainHitWithoutState.js
+ * @author triacontane
  *
  * @help CertainHitWithoutState.js
  *
@@ -27,7 +30,9 @@
  */
 /*:ja
  * @plugindesc 必中のステート付与への影響防止プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CertainHitWithoutState.js
+ * @author トリアコンタン
  *
  * @help CertainHitWithoutState.js
  *
