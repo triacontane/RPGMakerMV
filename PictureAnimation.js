@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0,2 2020/08/24 ピクチャのアニメーションセル設定でセル進行かどうかの判定処理が誤っていた問題を修正
  1.0.1 2020/08/23 ピクチャのアニメーションセル設定のコマンドが機能していなかった問題を修正
  1.0.0 2020/02/28 MV版から流用作成
 ----------------------------------------------------------------------------
@@ -130,7 +131,7 @@
  *
  * @arg cellNumber
  * @text セル番号
- * @desc 指定対象のセル番号です。0を指定すると、現在のセルからひとつ進めます。
+ * @desc 指定対象のセル番号です。開始番号は1で、0を指定すると、現在のセルからひとつ進めます。
  * @type number
  * @default 0
  *
@@ -240,8 +241,8 @@
     PluginManagerEx.registerCommand(script, "SET_CELL",function(args) {
         const picture = $gameScreen.picture(args.pictureNumber);
         if (picture) {
-            if (picture.cell > 0) {
-                picture.cell = args.cellNumber;
+            if (args.cellNumber > 0) {
+                picture.cell = args.cellNumber - 1;
             } else {
                 picture.addCellCount();
             }
