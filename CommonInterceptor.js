@@ -1,45 +1,77 @@
 //=============================================================================
 // CommonInterceptor.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2020/08/23 MZ用にヘルプを修正
 // 1.0.0 2016/01/20 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
+ * @plugindesc CommonInterceptorPlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CommonInterceptor.js
+ * @author triacontane
+ *
+ * @param ニューゲームコモン
+ * @text NewGameCommonEvent
+ * @desc Common Event ID to be called at the time of the new game
+ * @default 0
+ * @type common_event
+ *
+ * @param ロードコモン
+ * @text LoadCommonEvent
+ * @desc Common Event ID to be called at load completion
+ * @default 0
+ * @type common_event
+ *
+ * @param メニューコモン
+ * @text MenuCommonEvent
+ * @desc Common Event ID to be called when the menu screen is closed
+ * @default 0
+ * @type common_event
+ *
+ * @help Call a common event at the following times
+ *
+ * * New Game
+ * * Continue
+ * * Menu Close
+ *
+ * MIT License
+ */
+/*:ja
  * @plugindesc 割り込みコモンイベントプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CommonInterceptor.js
+ * @author トリアコンタン
  *
  * @param ニューゲームコモン
  * @desc ニューゲーム時に呼ばれるコモンイベントID
- * @default
+ * @default 0
+ * @type common_event
  *
  * @param ロードコモン
  * @desc ロード完了時に呼ばれるコモンイベントID
- * @default
+ * @default 0
+ * @type common_event
  *
  * @param メニューコモン
  * @desc メニュー画面を閉じた時に呼ばれるコモンイベントID
- * @default
+ * @default 0
+ * @type common_event
  *
- * @help 指定したタイミングでコモンイベントを呼び出します。
+ * @help 以下のタイミングでコモンイベントを呼び出します。
  *
  * ・ニューゲーム時
  * ・ロード完了時
  * ・メニュー終了時
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
