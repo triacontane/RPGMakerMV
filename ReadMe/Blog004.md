@@ -1,9 +1,17 @@
 　RPGツクールMZの発売おめでとうございます！　今作の発売にあたり、いくつかの公式プラグインを作成、提供しました。本項では、公式プラグインの機能や使い方を紹介します。  
 
 # 配置場所  
-　公式プラグインは(Windowsの場合)以下のパスに格納されます。RPGツクールMZをインストールしたフォルダによっては場所が変わる場合があります。
+　公式プラグインはRPGツクールMZをインストールしたフォルダの『dlc\BasicResources\plugins\official』配下に置いてあります。必要に応じてプロジェクトフォルダにコピーしてください。
+
+## 配置例  
+Windowsかつストア版の場合
 ```
 C:\Program Files\KADOKAWA\RPGMZ\dlc\BasicResources\plugins\official
+```
+
+WindowsかつSteam版の場合
+```
+C:\Program Files (x86)\Steam\steamapps\common\RPG Maker MZ\dlc\BasicResources\plugins\official
 ```
 
 # PluginCommonBase.js  
@@ -115,6 +123,9 @@ Scene_Boot.prototype.onUniqueDataLoad
 
 　具体的なコードとパラメータの情報は、以下が参考になります。
 <https://docs.google.com/spreadsheets/d/1aqY-xzFqT0vnZE-OkfsMYsP9Ud91vWTrBLU-uDkJ-Ls/edit#gid=2095105278>
+
+ また、コードを『365』、パラメータの一番目にコマンドを指定することで『MV版のプラグインコマンド』を呼び出せます。MZに正式対応していないプラグインを使用する際に役立ちます。   
+![画像](https://1.bp.blogspot.com/-05AmUbqT4zI/Xz-sqqESKzI/AAAAAAAAcwY/5E14AL0RpncaIQ1pcT-PZAOqeiTjMdKRQCLcBGAsYHQ/s527/2020-08-21%2B%25285%2529.png)
 
 # OverpassTile.js
 　マップ上で橋などの立体交差を表現できます。ツクールMV公式プラグイン「OverpassTile.js」のMZ向け機能強化版です。リージョンだけでなく地形タグも指定可能で、さらにイベントの起動や衝突判定に関する考慮がなされています。
