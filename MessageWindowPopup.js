@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/08/26 画面サイズとUIサイズで異なる値を指定したときにフキダシ位置がずれる問題を修正
+                  テール画像が正しく表示されない問題を修正
  1.0.0 2020/07/25 MV版から流用作成
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -638,11 +640,11 @@
         this._pauseSignSprite.visible = false;
         if (lowerFlg) {
             this._messageTailImage.rotation = 180 * Math.PI / 180;
-            this._messageTailImage.y        = -param.TailImageAdjustY;
+            this._messageTailImage.y        = -param.tailImageAdjustY;
             this._messageTailImage.anchor.y = 0;
         } else {
             this._messageTailImage.rotation = 0;
-            this._messageTailImage.y        = this.height + param.TailImageAdjustY;
+            this._messageTailImage.y        = this.height + param.tailImageAdjustY;
             this._messageTailImage.anchor.y = 0;
         }
     };
@@ -672,6 +674,17 @@
         this.setPopupAdjustInnerScreen();
         if (this._shakePower > 0) {
             this.setPopupShakePosition();
+        }
+        this.setPopupAdjustBoxSize();
+    };
+
+    Window_Base.prototype.setPopupAdjustBoxSize = function() {
+        if (Graphics.boxWidth !== Graphics.width) {
+            // なぜ3の補正が必要なのか不明(^^)
+            this.x += (Graphics.boxWidth - Graphics.width) / 2 + 3;
+        }
+        if (Graphics.boxHeight !== Graphics.height) {
+            this.y += (Graphics.boxHeight - Graphics.height) / 2 + 3;
         }
     };
 
@@ -731,7 +744,7 @@
         if (!param.NoUseTail && !this.isUsePauseSignTextEnd()) {
             this.setPauseSignToTail(lowerFlg);
         }
-        if (param.TailImage) {
+        if (param.tailImage) {
             this.setPauseSignImageToTail(lowerFlg);
         }
     };
@@ -903,8 +916,8 @@
     Window_Message.prototype._createAllParts = function() {
         _Window_Message__createAllParts.apply(this, arguments);
         this._messageTailImage = new Sprite();
-        if (param.TailImage) {
-            this._messageTailImage.bitmap   = ImageManager.loadSystem(param.TailImage);
+        if (param.tailImage) {
+            this._messageTailImage.bitmap   = ImageManager.loadSystem(param.tailImage);
             this._messageTailImage.visible  = false;
             this._messageTailImage.anchor.x = 0.5;
             this.addChild(this._messageTailImage);
@@ -1025,7 +1038,7 @@
     Window_Message.prototype.updateTailImage = function() {
         if (!this.isPopup()) {
             this._messageTailImage.visible = false;
-        } else if (param.TailImage) {
+        } else if (param.tailImage) {
             this._messageTailImage.visible = this.isOpen();
             if (!this.isUsePauseSignTextEnd() && !param.NoUseTail) {
                 this._pauseSignSprite.visible = false;
