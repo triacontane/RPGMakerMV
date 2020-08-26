@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.1 2020/08/26 ベースプラグインの説明を追加
 // 3.0.0 2020/08/20 MZで動作するよう全面的に修正
 // 2.17.3 2020/08/05 複数ページ表示した状態でカテゴリ表示に戻ったとき、ページ切り替え矢印が表示されたままになる問題を修正
 //                   クリックによるページ切り替えの場合でもページ折り返しができるよう仕様変更
@@ -341,32 +342,9 @@
  * The following tags are required when displaying terms in different type of dictionary.
  * <SGType:2>   // Type of Glossary
  *
- * Plugin Command
- *
- * GLOSSARY_GAIN_ALL
- *  All terms registered in the database will be in acquisition state.
- *
- * GLOSSARY_LOSE_ALL
- *
- * GLOSSARY_CALL [Type] [Category] [ListIndex]
- *  Call the glossary screen.
- *  If the type is omitted, it will be automatically set to "1".
- * ex：GLOSSARY_CALL 1 Character 0
- *
- * GLOSSARY_BACK
- *  Call up the glossary screen with reselecting the last selected item.
- * ex：GLOSSARY_BACK
- *
- * GLOSSARY_ITEM_CHANGE_CATEGORY [Item id] [new category]
- *  Change the category of the item with the specified ID to another one.
- * ex：GLOSSARY_ITEM_CHANGE_CATEGORY 10 AAA
- * Only items can be changed. Weapons and armors can not be changed.
- *
- * GLOSSARY_ITEM_CHANGE_USABLE [Item id] [ON or OFF]
- *  Change prohibition of items with the specified ID.
- *  (ON: Possible OFF: Prohibited)
- * ex：GLOSSARY_ITEM_CHANGE_USABLE 10 ON
- * Only items can be changed. Weapons and armors can not be changed.
+ * The base plugin "PluginCommonBase.js" is required to use this plugin.
+ * The "PluginCommonBase.js" is here.
+ * (MZ install path)dlc/BasicResources/plugins/official/PluginCommonBase.js
  *
  * This software is released under the MIT License. Check header.
  */
@@ -838,6 +816,11 @@
  * 指定したカテゴリ名および用語種別名に対応する収集率を返します。
  * 用語種別を省略した場合は[1]が設定されます。
  * $gameParty.getCompleteRate(categoryName, typeName);
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
