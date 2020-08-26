@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.1 2020/08/26 MZ向けにプラグインコマンドの記述などを修正
 // 3.0.0 2020/08/09 足音データをプラグインパラメータで設定する仕様に変更しリファクタリング
 //                  足音の間隔を歩行、ダッシュで別々に設定できる機能を追加
 // 2.1.0 2019/02/02 イベントごとの足音を固有に設定できる機能を追加
@@ -21,7 +22,10 @@
 
 /*:
  * @plugindesc 足音プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/FootstepSound.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param EventRunningInvalid
  * @text イベント実行中無効
@@ -101,6 +105,14 @@
  * @type struct<SoundSet>
  * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
  *
+ * @command INVALID_SOUND
+ * @text 足音無効化
+ * @desc 一時的に全ての足音を無効にします。
+ *
+ * @command VALID_SOUND
+ * @text 足音有効化
+ * @desc 足音を再度有効にします。
+ *
  * @help 以下の状況下で指定した足音効果音を演奏します。
  * 数字の小さい方が優先度が高いです。
  * 1.  飛行船乗船時
@@ -127,17 +139,10 @@
  * このメモ欄を設定するとスクリプト「this.setStepSoundFlg(true);」
  * を実行しなくてもデフォルトで足音が有効になります。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （引数の間は半角スペースで区切る）
- *
- * 足音無効化 or FS_INVALID_SOUND
- *   一時的に全ての足音を無効にします。
- * 例：足音無効化
- *
- * 足音有効化 or FS_VALID_SOUND
- *   全ての足音を有効に戻します。
- * 例：足音有効化
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -226,70 +231,16 @@
 
 (function () {
     'use strict'
+    var script = document.currentScript;
+    var param = PluginManagerEx.createParameter(script);
 
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function (pluginName) {
-        var paramReplacer = function (key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-    var param = createPluginParameter('FootstepSound');
+    PluginManagerEx.registerCommand(script, 'INVALID_SOUND', args => {
+        $gameSystem.footstepDisable = true;
+    });
 
-    var getCommandName = function (command) {
-        return (command || '').toUpperCase();
-    };
-
-    /**
-     * Get database meta information.
-     * @param object Database item
-     * @param name Meta name
-     * @returns {String} meta value
-     */
-    var getMetaValue = function (object, name) {
-        return object.meta.hasOwnProperty(name) ? convertEscapeCharacters(object.meta[name]) : null;
-    };
-
-    /**
-     * Get database meta information.(for multi language)
-     * @param object Database item
-     * @param names Meta name array (for multi language)
-     * @returns {String} meta value
-     */
-    var getMetaValues = function (object, names) {
-        var metaValue;
-        names.some(function (name) {
-            metaValue = getMetaValue(object, name);
-            return metaValue !== null;
-        });
-        return metaValue;
-    };
-
-    /**
-     * Convert escape characters.(require any window object)
-     * @param text Target text
-     * @returns {String} Converted text
-     */
-    var convertEscapeCharacters = function (text) {
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
-    };
+    PluginManagerEx.registerCommand(script, 'VALID_SOUND', args => {
+        $gameSystem.footstepDisable = false;
+    });
 
     var findListItem = function (id, targetList) {
         if (!Array.isArray(targetList)) {
@@ -297,29 +248,6 @@
         }
         return targetList.filter(listItem => listItem.id === id)[0];
     }
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        this.pluginCommandFootstep(command, args);
-    };
-
-    Game_Interpreter.prototype.pluginCommandFootstep = function (command, args) {
-        switch (getCommandName(command)) {
-            case 'FS_INVALID_SOUND' :
-            case '足音無効化':
-                $gameSystem.footstepDisable = true;
-                break;
-            case 'FS_VALID_SOUND':
-            case '足音有効化':
-                $gameSystem.footstepDisable = false;
-                break;
-        }
-    };
 
     //=============================================================================
     // Game_CharacterBase
@@ -463,10 +391,9 @@
     var _Game_Event_initialize = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function () {
         _Game_Event_initialize.apply(this, arguments);
-        this._footStepSeName = getMetaValues(this.event(), ['FootStep', '足音']) || null;
+        this._footStepSeName = PluginManagerEx.findMetaValue(this.event(), ['FootStep', '足音']) || null;
         if (this._footStepSeName) {
             this.setStepSoundFlg(true);
-            name
         }
     };
 
