@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/08/26 MZで動作するよう修正
 // 1.17.1 2020/05/17 まったく同じ時間にSET_TIMEしたとき翌日の同時刻になるよう仕様変更
 // 1.17.0 2020/04/12 累計日数をカレンダーに出力できる機能を追加、累計日数のカウントを1からに変更
 // 1.16.2 2019/11/17 1.15.0の修正以後、場所移動したときのタイルセット情報の取得が、移動前のものになっていた問題を修正
@@ -68,7 +69,10 @@
 
 /*:
  * @plugindesc ゲーム内時間の導入プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/Chronus.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param 月ごとの日数配列
  * @desc 各月の日数の配列です。カンマ区切りで指定してください。個数は自由です。
@@ -264,6 +268,377 @@
  * @default false
  * @type boolean
  *
+ * @command ADD_TIME
+ * @text 時間加算
+ * @desc 指定した値（分単位）だけ時間が経過します。
+ *
+ * @arg time
+ * @text 時間
+ * @desc 加算する時間です。制御文字\v[n]を使う場合はテキストタブから入力してください。他の項目も同様
+ * @default 0
+ * @type number
+ *
+ * @command SET_TIME
+ * @text 時間設定
+ * @desc 指定した時間に変更します。
+ *
+ * @arg hour
+ * @text 時間
+ * @desc 設定する時間です。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 23
+ *
+ * @arg minute
+ * @text 分
+ * @desc 設定する分です。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 59
+ *
+ * @command ADD_DAY
+ * @text 日付加算
+ * @desc 指定した値（日単位）だけ日数が経過します。
+ *
+ * @arg day
+ * @text 日数
+ * @desc 加算する時間です。
+ * @default 0
+ * @type number
+ *
+ * @command SET_DAY
+ * @text 日付設定
+ * @desc 指定した日付に変更します。
+ * @default 0
+ * @type number
+ *
+ * @arg year
+ * @text 年
+ * @desc 設定する年です。
+ * @default 1
+ * @type number
+ *
+ * @arg month
+ * @text 月
+ * @desc 設定する月です。
+ * @default 1
+ * @type number
+ *
+ * @arg day
+ * @text 日
+ * @desc 設定する日です。
+ * @default 1
+ * @type number
+ *
+ * @command STOP
+ * @text 時間停止
+ * @desc 時間の進行を停止します。
+ *
+ * @command START
+ * @text 時間開始
+ * @desc 時間の進行を開始します。
+ *
+ * @command SHOW
+ * @text カレンダー表示
+ * @desc カレンダーを表示します。
+ *
+ * @command HIDE
+ * @text カレンダー非表示
+ * @desc カレンダーを非表示にします。
+ *
+ * @command DISABLE_TINT
+ * @text 色調変化禁止
+ * @desc 時間帯による色調の変更を禁止します。
+ *
+ * @command ENABLE_TINT
+ * @text 色調変化許可
+ * @desc 時間帯による色調の変更を許可します。
+ *
+ * @command DISABLE_WEATHER
+ * @text 天候変化禁止
+ * @desc 時間経過による天候の変化を禁止します。
+ *
+ * @command ENABLE_WEATHER
+ * @text 天候変化許可
+ * @desc 時間経過による天候の変化を許可します。
+ *
+ * @command SET_SNOW_LAND
+ * @text 降雪地設定
+ * @desc 悪天候時に雪が降るようになります。
+ *
+ * @command RESET_SNOW_LAND
+ * @text 降雪地解除
+ * @desc 悪天候時に雨もしくは嵐が降るようになります。
+ *
+ * @command RESET_SNOW_LAND
+ * @text 降雪地解除
+ * @desc 悪天候時に雨もしくは嵐が降るようになります。
+ *
+ * @command SET_SPEED
+ * @text 速度設定
+ * @desc 実時間1秒あたりの時間の経過速度を設定します。
+ *
+ * @arg speed
+ * @text 速度
+ * @desc 時間の経過速度です。
+ * @default 1
+ * @type number
+ *
+ * @command SHOW_CLOCK
+ * @text アナログ時計表示
+ * @desc アナログ時計を表示します。
+ *
+ * @command HIDE_CLOCK
+ * @text アナログ時計非表示
+ * @desc アナログ時計を非表示にします。
+ *
+ * @command SET_TIME_REAL
+ * @text 実時間表示
+ * @desc 時間の取得方法を実時間に変更します。
+ *
+ * @command SET_TIME_VIRTUAL
+ * @text 仮想時間表示
+ * @desc 時間の取得方法をゲーム内時間に変更します。
+ *
+ * @command SET_RAINY_PERCENT
+ * @text 降水確率設定
+ * @desc 降水確率(0-100)を設定します。
+ *
+ * @arg percent
+ * @text 確率
+ * @desc 降水確率です。
+ * @default 0
+ * @type number
+ * @max 100
+ *
+ * @command INIT_TOTAL_TIME
+ * @text 累計時間初期化
+ * @desc 累計時間、累計日数を初期化します。
+ *
+ * @command SET_CLOCK_IMAGE
+ * @text 時計画像ファイル変更
+ * @desc アナログ時計のファイルを変更します。実際に画像が変更されるのはマップを移動した後になります。
+ *
+ * @arg baseFileName
+ * @text 文字盤画像のファイル名
+ * @desc 文字盤画像のファイル名です。ピクチャから選択します。指定しなかった場合、変更されません。
+ * @default
+ * @type file
+ * @dir img/pictures
+ *
+ * @arg hourFileName
+ * @text 短針画像のファイル名
+ * @desc 短針画像のファイル名です。ピクチャから選択します。指定しなかった場合、変更されません。
+ * @default
+ * @type file
+ * @dir img/pictures
+ *
+ * @arg minuteFileName
+ * @text 長針画像のファイル名
+ * @desc 長針画像のファイル名です。ピクチャから選択します。指定しなかった場合、変更されません。
+ * @default
+ * @type file
+ * @dir img/pictures
+ *
+ * @command SET_SWITCH_TIMER
+ * @text スイッチタイマー設定
+ * @desc 指定した時間経過後にスイッチをONにできます。
+ *
+ * @arg name
+ * @text タイマー名称
+ * @desc タイマーの識別子です。解除するときに必要になるので、解除したい場合は設定してください。
+ * @default
+ *
+ * @arg timeout
+ * @text 時間
+ * @desc 時間切れまでの時間(分)です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @arg switchId
+ * @text スイッチ番号
+ * @desc ONにするスイッチ番号です。
+ * @default 1
+ * @type switch
+ *
+ * @arg loop
+ * @text ループ有無
+ * @desc タイマーをループさせるかどうかです。
+ * @default false
+ * @type boolean
+ *
+ * @command SET_SELF_SWITCH_TIMER
+ * @text セルフスイッチタイマー設定
+ * @desc 指定した時間経過後にスイッチをONにできます。
+ *
+ * @arg name
+ * @text タイマー名称
+ * @desc タイマーの識別子です。解除するときに必要になるので、解除したい場合は設定してください。
+ * @default
+ *
+ * @arg timeout
+ * @text 時間
+ * @desc 時間切れまでの時間(分)です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @arg selfSwitchId
+ * @text セルフスイッチ番号
+ * @desc ONにするセルフスイッチ番号です。
+ * @default A
+ * @type select
+ * @option A
+ * @option B
+ * @option C
+ * @option D
+ *
+ * @arg loop
+ * @text ループ有無
+ * @desc タイマーをループさせるかどうかです。
+ * @default false
+ * @type boolean
+ *
+ * @command SET_SWITCH_ALARM
+ * @text スイッチアラーム設定
+ * @desc 指定した時刻にスイッチをONにできます。
+ *
+ * @arg name
+ * @text アラーム名称
+ * @desc アラームの識別子です。解除するときに必要になるので、解除したい場合は設定してください。
+ * @default
+ *
+ * @arg year
+ * @text アラーム年
+ * @desc アラームがONになる年です。0を指定すると現在年になります。
+ * @default 0
+ * @type number
+ *
+ * @arg month
+ * @text アラーム月
+ * @desc アラームがONになる月です。0を指定すると現在月になります。
+ * @default 0
+ * @type number
+ *
+ * @arg day
+ * @text アラーム日
+ * @desc アラームがONになる日です。0を指定すると現在日になります。
+ * @default 0
+ * @type number
+ *
+ * @arg hour
+ * @text アラーム時間
+ * @desc アラームがONになる時間です。
+ * @default 0
+ * @type number
+ * @max 23
+ *
+ * @arg minute
+ * @text アラーム分
+ * @desc アラームがONになる分です。
+ * @default 0
+ * @type number
+ * @max 59
+ *
+ * @arg switchId
+ * @text スイッチ番号
+ * @desc ONにするスイッチ番号です。
+ * @default 1
+ * @type switch
+ *
+ * @arg interval
+ * @text インターバル
+ * @desc アラームが有効になった後さらに指定した分だけ経過するとまたアラームが有効になります。
+ * @default 0
+ * @type number
+ *
+ * @command SET_SELF_SWITCH_ALARM
+ * @text セルフスイッチアラーム設定
+ * @desc 指定した時刻にセルフスイッチをONにできます。
+ *
+ * @arg name
+ * @text アラーム名称
+ * @desc アラームの識別子です。解除するときに必要になるので、解除したい場合は設定してください。
+ * @default
+ *
+ * @arg year
+ * @text アラーム年
+ * @desc アラームがONになる年です。0を指定すると現在年になります。
+ * @default 0
+ * @type number
+ *
+ * @arg month
+ * @text アラーム月
+ * @desc アラームがONになる月です。0を指定すると現在月になります。
+ * @default 0
+ * @type number
+ *
+ * @arg day
+ * @text アラーム日
+ * @desc アラームがONになる日です。0を指定すると現在日になります。
+ * @default 0
+ * @type number
+ *
+ * @arg hour
+ * @text アラーム時間
+ * @desc アラームがONになる時間です。
+ * @default 0
+ * @type number
+ * @max 23
+ *
+ * @arg minute
+ * @text アラーム分
+ * @desc アラームがONになる分です。
+ * @default 0
+ * @type number
+ * @max 59
+ *
+ * @arg selfSwitchId
+ * @text セルフスイッチ番号
+ * @desc ONにするセルフスイッチ番号です。
+ * @default A
+ * @type select
+ * @option A
+ * @option B
+ * @option C
+ * @option D
+ *
+ * @arg interval
+ * @text インターバル
+ * @desc アラームが有効になった後さらに指定した分だけ経過するとまたアラームが有効になります。
+ * @default 0
+ * @type number
+ *
+ * @command CLEAR_TIMER
+ * @text タイマー・アラーム解除
+ * @desc タイマーおよびアラームを解除します。解除したタイマーは再開できません。
+ *
+ * @arg name
+ * @text タイマー名称
+ * @desc タイマーの識別子です。
+ * @default
+ *
+ * @command STOP_TIMER
+ * @text タイマー・アラーム停止
+ * @desc タイマーおよびアラームを停止します。停止している間は条件を満たしてもスイッチはONになりません。
+ *
+ * @arg name
+ * @text タイマー名称
+ * @desc タイマーの識別子です。
+ * @default
+ *
+ * @command START_TIMER
+ * @text タイマー・アラーム再開
+ * @desc タイマーおよびアラームを再開します。
+ *
+ * @arg name
+ * @text タイマー名称
+ * @desc タイマーの識別子です。
+ * @default
+ *
  * @help ゲーム内で時刻と天候の概念を表現できるプラグインです。
  * 自動、マップ移動、戦闘で時間が経過し、時間と共に天候と色調が変化します。
  * これらの時間は調節可能で、またイベント中は時間の進行が停止します。
@@ -291,89 +666,11 @@
  * 使用する場合は、以下のURLより利用規約を別途確認の上、ご使用ください。
  * http://tm.lucky-duet.com/viewtopic.php?f=47&t=555&p=1615#p1615
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  指定する値には制御文字\V[n]を使用できます。
- *  （引数の間は半角スペースで区切る）
- *
- * C_ADD_TIME [分] : 指定した値（分単位）だけ時間が経過します。
- * C_ADD_DAY [日] : 指定した値（日単位）だけ日数が経過します。
- * C_SET_TIME [時] [分] : 指定した時間に変更します。
- * C_SET_DAY [年] [月] [日] : 指定した日付に変更します。
- * C_STOP : 時間の進行を停止します。
- * C_START : 時間の進行を開始します。
- * C_SHOW : カレンダーを表示します。
- * C_HIDE : カレンダーを非表示にします。
- * C_DISABLE_TINT : 時間帯による色調の変更を禁止します。
- * C_ENABLE_TINT : 時間帯による色調の変更を許可します。
- * C_DISABLE_WEATHER : 時間経過による天候の変化を禁止します。
- * C_ENABLE_WEATHER : 時間経過による天候の変化を許可します。
- * C_SET_SNOW_LAND : 悪天候時に雪が降るようになります。
- * C_RESET_SNOW_LAND : 悪天候時に雨もしくは嵐が降るようになります。
- * C_SET_SPEED [分] : 実時間1秒あたりの時間の経過速度を設定します。
- * C_SHOW_CLOCK : アナログ時計を表示します。
- * C_HIDE_CLOCK : アナログ時計を非表示にします。
- * C_SET_TIME_REAL : 時間の取得方法を実時間に変更します。
- * C_SET_TIME_VIRTUAL : 時間の取得方法をゲーム内時間に変更します。
- * C_SET_RAINY_PERCENT [確率] : 降水確率(0-100)を設定します。
- * C_INIT_TOTAL_TIME : 累計時間、累計日数を初期化します。
- *
- * ・アナログ時計画像変更コマンド
- * アナログ時計の画像ファイル名(img/pictures)を変更できます。
- * ただし、実際に画像が変更されるのはマップを移動した後になります。
- * C_SET_CLOCK_BASE [ファイル名] : 文字盤画像のファイル名を変更します。
- * C_SET_HOUR_HAND [ファイル名] : 短針画像のファイル名を変更します。
- * C_SET_MINUTE_HAND [ファイル名] : 長針画像のファイル名を変更します。
- *
  * ・タイマー操作系コマンド
  * コマンド実行から指定した時間[分]が経過後にスイッチやセルフスイッチを
- * ONにできるコマンドです。
+ * ONにできるプラグインコマンドです。
  * 実時間連動機能と併せて使用することもできます。
  * スイッチの場合はIDを、セルフスイッチの場合は種類(A,B,C,D)を指定します。
- *
- * C_SET_SWITCH_TIMER [分] [スイッチID] [ループ]
- * 指定例（ゲーム内時間で30分経過後する度にスイッチ[10]をONにする）
- * C_SET_SWITCH_TIMER 30 10 ON
- *
- * C_SET_SELF_SWITCH_TIMER [分] [セルフスイッチ種類] [ループ]
- * 指定例（ゲーム内時間で3時間過後にセルフスイッチ[B](※)をONにする）
- * C_SET_SELF_SWITCH_TIMER 180 B OFF
- * ※対象イベントはプラグインコマンドを実行したイベントです。
- *
- * 途中で解除や一時停止する可能性がある場合は[タイマー名]を指定するコマンドを
- * 実行してください。解除などの際にタイマー名を指定する必要があるためです。
- *
- * C_SET_SWITCH_NAMED_TIMER [タイマー名] [分] [スイッチID] [ループ]
- * 指定例（ゲーム内時間で30分経過後する度にスイッチ[10]をONにする）
- * C_SET_SWITCH_NAMED_TIMER timer 30 10 ON
- *
- * C_SET_SELF_SWITCH_NAMED_TIMER [タイマー名] [分] [セルフスイッチ種類] [ループ]
- * 指定例（ゲーム内時間で3時間過後にセルフスイッチ[B](※)をONにする）
- * C_SET_SELF_SWITCH_NAMED_TIMER timer 180 B OFF
- * ※対象イベントはプラグインコマンドを実行したイベントです。
- *
- * 解除、停止、再開のコマンドは以下の通りです。
- * C_CLEAR_TIMER timer # タイマー名「timer」を解除します。
- * C_STOP_TIMER timer  # タイマー名「timer」を一時停止します。
- * C_START_TIMER timer # タイマー名「timer」を再開します。
- *
- * 時間ではなく時刻指定でスイッチ操作できるアラーム機能です。
- * [年月時分]は、「YYYYMMDDHHMM」形式で指定してください。
- * 解除はタイマー用のコマンドを使います。
- * C_SET_SWITCH_ALARM [年月時分] [スイッチID] [インターバル]
- * C_SET_SELF_SWITCH_ALARM [年月時分] [セルフスイッチ種類] [インターバル]
- * C_SET_SWITCH_NAMED_ALARM [アラーム名] [年月時分] [スイッチID] [インターバル]
- * C_SET_SELF_SWITCH_NAMED_ALARM [アラーム名] [年月時分] [セルフスイッチ種類] [インターバル]
- *
- * 指定例（ゲーム内時間で2019/10/22 15:00を過ぎるとセルフスイッチ[B]をONにする）
- * C_SET_SELF_SWITCH_ALARM 201910221500 B
- *
- * インターバルを指定した場合、スイッチがONになった後も指定した期間が経過すると
- * 再度、スイッチがONになるようになります。単位は分ですが計算式が使えます。
- *
- * 指定例（ゲーム内時間で2019/10/22 15:00を過ぎるとセルフスイッチ[B]をONにする。
- * 　　　　その後、1日経過ごとに再度セルフスイッチ[B]をONにする）
- * C_SET_SELF_SWITCH_ALARM 201910221500 B 24*60
  *
  * メモ欄詳細
  *  タイトルセットおよびマップのメモ欄に以下を入力すると、
@@ -515,28 +812,6 @@ function Window_Chronus() {
         return values;
     };
 
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return parseIntStrict(convertEscapeCharacters(arg)).clamp(min, max);
-    };
-
-    var parseIntStrict = function(value, errorMessage) {
-        var result = parseInt(value, 10);
-        if (isNaN(result)) throw Error('指定した値[' + value + ']が数値ではありません。' + errorMessage);
-        return result;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var window = SceneManager._scene._windowLayer.children[0];
-        return window ? window.convertEscapeCharacters(text) : text;
-    };
-
     var getArgBoolean = function(arg) {
         return (arg || '').toUpperCase() === 'ON' || (arg || '').toUpperCase() === 'TRUE';
     };
@@ -575,165 +850,162 @@ function Window_Chronus() {
     var paramCalendarLineSpacing = getParamNumber('日時フォーマット行間', 0);
     var paramCalendarHidden      = getParamBoolean('カレンダーの非表示');
 
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンド[C_ADD_TIME]などを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var commandPrefix = new RegExp('^' + metaTagPrefix);
-        if (!command.match(commandPrefix)) return;
-        this.pluginCommandChronus(command.replace(commandPrefix, ''), args);
-    };
+    const script = document.currentScript;
+    PluginManagerEx.registerCommand(script, 'ADD_TIME', args => {
+        $gameSystem.chronus().addTime(args.time);
+    });
 
-    Game_Interpreter.prototype.pluginCommandChronus = function(command, args) {
-        switch (getCommandName(command)) {
-            case 'ADD_TIME' :
-                $gameSystem.chronus().addTime(getArgNumber(args[0], 0, 99999));
-                break;
-            case 'ADD_DAY' :
-                $gameSystem.chronus().addDay(getArgNumber(args[0], 0, 99999));
-                break;
-            case 'SET_TIME' :
-                var hour   = getArgNumber(args[0], 0, 23);
-                var minute = getArgNumber(args[1], 0, 59);
-                $gameSystem.chronus().setTime(hour, minute);
-                break;
-            case 'SET_DAY' :
-                var year  = getArgNumber(args[0], 1, 5000);
-                var month = getArgNumber(args[1], 1, $gameSystem.chronus().getMonthOfYear());
-                var day   = getArgNumber(args[2], 1, $gameSystem.chronus().getDaysOfMonth(month));
-                $gameSystem.chronus().setDay(year, month, day);
-                break;
-            case 'STOP' :
-                $gameSystem.chronus().stop();
-                break;
-            case 'START' :
-                $gameSystem.chronus().start();
-                break;
-            case 'SHOW' :
-                $gameSystem.chronus().showCalendar();
-                break;
-            case 'HIDE' :
-                $gameSystem.chronus().hideCalendar();
-                break;
-            case 'DISABLE_TINT':
-                $gameSystem.chronus().disableTint();
-                break;
-            case 'ENABLE_TINT':
-                $gameSystem.chronus().enableTint();
-                break;
-            case 'DISABLE_WEATHER':
-                $gameSystem.chronus().disableWeather();
-                break;
-            case 'ENABLE_WEATHER':
-                $gameSystem.chronus().enableWeather();
-                break;
-            case 'SET_SNOW_LAND':
-                $gameSystem.chronus().setSnowLand();
-                break;
-            case 'RESET_SNOW_LAND':
-                $gameSystem.chronus().resetSnowLand();
-                break;
-            case 'SET_SPEED':
-                $gameSystem.chronus().setTimeAutoAdd(getArgNumber(args[0], 0, 99));
-                break;
-            case 'SHOW_CLOCK':
-                $gameSystem.chronus().showClock();
-                break;
-            case 'HIDE_CLOCK':
-                $gameSystem.chronus().hideClock();
-                break;
-            case 'SET_TIME_REAL':
-                $gameSystem.chronus().setTimeReal();
-                break;
-            case 'SET_TIME_VIRTUAL':
-                $gameSystem.chronus().setTimeVirtual();
-                break;
-            case 'SET_RAINY_PERCENT':
-                $gameSystem.chronus().setRainyPercent(getArgNumber(args[0], 0, 100));
-                break;
-            case 'SET_SWITCH_TIMER':
-                this.setSwitchTimer(args, false);
-                break;
-            case 'SET_SWITCH_NAMED_TIMER':
-                this.setSwitchTimer(args, true);
-                break;
-            case 'SET_SELF_SWITCH_TIMER':
-                this.setSwitchTimer(args, false, true);
-                break;
-            case 'SET_SELF_SWITCH_NAMED_TIMER':
-                this.setSwitchTimer(args, true, true);
-                break;
-            case 'SET_SWITCH_ALARM':
-                this.setSwitchAlarm(args, false);
-                break;
-            case 'SET_SWITCH_NAMED_ALARM':
-                this.setSwitchAlarm(args, true);
-                break;
-            case 'SET_SELF_SWITCH_ALARM':
-                this.setSwitchAlarm(args, false, true);
-                break;
-            case 'SET_SELF_SWITCH_NAMED_ALARM':
-                this.setSwitchAlarm(args, true, true);
-                break;
-            case 'STOP_TIMER':
-                $gameSystem.chronus().stopTimer(convertEscapeCharacters(args[0]));
-                break;
-            case 'START_TIMER':
-                $gameSystem.chronus().startTimer(convertEscapeCharacters(args[0]));
-                break;
-            case 'CLEAR_TIMER':
-                $gameSystem.chronus().clearTimer(convertEscapeCharacters(args[0]));
-                break;
-            case 'INIT_TOTAL_TIME':
-                $gameSystem.chronus().initTotalTime();
-                break;
-            case 'SET_CLOCK_BASE':
-                $gameSystem.chronus().setClockBaseFile(convertEscapeCharacters(args[0]));
-                break;
-            case 'SET_MINUTE_HAND':
-                $gameSystem.chronus().setMinuteHandFile(convertEscapeCharacters(args[0]));
-                break;
-            case 'SET_HOUR_HAND':
-                $gameSystem.chronus().setHourHandFile(convertEscapeCharacters(args[0]));
-                break;
+    PluginManagerEx.registerCommand(script, 'ADD_DAY', args => {
+        $gameSystem.chronus().addDay(args.day);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_TIME', args => {
+        $gameSystem.chronus().setTime(args.hour, args.minute);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_DAY', args => {
+        $gameSystem.chronus().setDay(args.year, args.month, args.day);
+    });
+
+    PluginManagerEx.registerCommand(script, 'STOP', args => {
+        $gameSystem.chronus().stop();
+    });
+
+    PluginManagerEx.registerCommand(script, 'START', args => {
+        $gameSystem.chronus().start();
+    });
+
+    PluginManagerEx.registerCommand(script, 'SHOW', args => {
+        $gameSystem.chronus().showCalendar();
+    });
+
+    PluginManagerEx.registerCommand(script, 'HIDE', args => {
+        $gameSystem.chronus().hideCalendar();
+    });
+
+    PluginManagerEx.registerCommand(script, 'DISABLE_TINT', args => {
+        $gameSystem.chronus().disableTint();
+    });
+
+    PluginManagerEx.registerCommand(script, 'ENABLE_TINT', args => {
+        $gameSystem.chronus().enableTint();
+    });
+
+    PluginManagerEx.registerCommand(script, 'DISABLE_WEATHER', args => {
+        $gameSystem.chronus().disableWeather();
+    });
+
+    PluginManagerEx.registerCommand(script, 'ENABLE_WEATHER', args => {
+        $gameSystem.chronus().enableWeather();
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_SNOW_LAND', args => {
+        $gameSystem.chronus().setSnowLand();
+    });
+
+    PluginManagerEx.registerCommand(script, 'RESET_SNOW_LAND', args => {
+        $gameSystem.chronus().resetSnowLand();
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_SPEED', args => {
+        $gameSystem.chronus().setTimeAutoAdd(args.speed);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SHOW_CLOCK', args => {
+        $gameSystem.chronus().showClock();
+    });
+
+    PluginManagerEx.registerCommand(script, 'HIDE_CLOCK', args => {
+        $gameSystem.chronus().hideClock();
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_TIME_REAL', args => {
+        $gameSystem.chronus().setTimeReal();
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_TIME_VIRTUAL', args => {
+        $gameSystem.chronus().setTimeVirtual();
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_RAINY_PERCENT', args => {
+        $gameSystem.chronus().setRainyPercent(args.percent);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_SWITCH_TIMER', function(args) {
+        this.setSwitchTimer(args);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_SELF_SWITCH_TIMER', function(args) {
+        this.setSwitchTimer(args);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_SWITCH_ALARM', function(args) {
+        this.setSwitchAlarm(args);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_SELF_SWITCH_ALARM', function(args) {
+        this.setSwitchAlarm(args);
+    });
+
+    PluginManagerEx.registerCommand(script, 'STOP_TIMER', args => {
+        $gameSystem.chronus().stopTimer(args.name);
+    });
+
+    PluginManagerEx.registerCommand(script, 'START_TIMER', args => {
+        $gameSystem.chronus().startTimer(args.name);
+    });
+
+    PluginManagerEx.registerCommand(script, 'CLEAR_TIMER', args => {
+        $gameSystem.chronus().clearTimer(args.name);
+    });
+
+    PluginManagerEx.registerCommand(script, 'INIT_TOTAL_TIME', args => {
+        $gameSystem.chronus().initTotalTime();
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_CLOCK_IMAGE', args => {
+        if (args.baseFileName) {
+            $gameSystem.chronus().setClockBaseFile(args.baseFileName);
         }
-    };
-
-    Game_Interpreter.prototype.setSwitchTimer = function(args, named, selfSwitch) {
-        var timerName = named ? convertEscapeCharacters(args.shift()) : null;
-        var timeout   = getArgNumber(args.shift(), 0);
-        var switchKey = this.getSwitchKey(args.shift(), selfSwitch);
-        var loop      = getArgBoolean(args.shift());
-        $gameSystem.chronus().makeTimer(timerName, timeout, switchKey, loop);
-    };
-
-    Game_Interpreter.prototype.setSwitchAlarm = function(args, named, selfSwitch) {
-        var timerName = named ? convertEscapeCharacters(args.shift()) : null;
-        var timeout   = getArgNumber(args.shift(), 0);
-        var switchKey = this.getSwitchKey(args.shift(), selfSwitch);
-        var interval = args.shift();
-        if (interval) {
-            interval = eval(convertEscapeCharacters(interval));
+        if (args.hourFileName) {
+            $gameSystem.chronus().setHourHandFile(args.hourFileName);
         }
-        $gameSystem.chronus().makeAlarm(timerName, timeout, switchKey, interval);
+        if (args.minuteFileName) {
+            $gameSystem.chronus().setMinuteHandFile(args.minuteFileName);
+        }
+    });
+
+    Game_Interpreter.prototype.setSwitchTimer = function(args) {
+        var switchKey = this.getSwitchKey(args.switchId, args.selfSwitchId);
+        $gameSystem.chronus().makeTimer(args.name || null, args.timeout, switchKey, args.loop);
     };
 
-    Game_Interpreter.prototype.getSwitchKey = function(arg, selfSwitch) {
-        return selfSwitch ? [$gameMap.mapId(), this.eventId(), convertEscapeCharacters(arg).toUpperCase()] : getArgNumber(arg);
+    Game_Interpreter.prototype.setSwitchAlarm = function(args) {
+        var switchKey = this.getSwitchKey(args.switchId, args.selfSwitchId);
+        $gameSystem.chronus().makeAlarm(args.name || null, this.createAlarmTime(args), switchKey, args.interval);
+    };
+
+    Game_Interpreter.prototype.createAlarmTime = function(args) {
+        var chronus = $gameSystem.chronus();
+        var year = args.year || chronus.getYear();
+        var month = args.year || chronus.getMonth();
+        var day = args.day || chronus.getDay();
+        return args.minute + args.hour * 100 + day * 10000 + month * 1000000 * year + 100000000;
+    };
+
+    Game_Interpreter.prototype.getSwitchKey = function(switchId, selfSwitchId) {
+        return selfSwitchId ? [$gameMap.mapId(), this.eventId(), selfSwitchId.toUpperCase()] : switchId;
     };
 
     var _Game_Interpreter_command236      = Game_Interpreter.prototype.command236;
-    Game_Interpreter.prototype.command236 = function() {
+    Game_Interpreter.prototype.command236 = function(params) {
         var result = _Game_Interpreter_command236.call(this);
         if (!$gameParty.inBattle()) {
             var chronus = $gameSystem.chronus();
-            chronus.setWeatherType(Game_Chronus.weatherTypes.indexOf(this._params[0]));
-            chronus.setWeatherPower(this._params[1]);
+            chronus.setWeatherType(Game_Chronus.weatherTypes.indexOf(params[0]));
+            chronus.setWeatherPower(params[1]);
             chronus.refreshTint(true);
-            chronus.forceSetBatWeatherLevel(this._params[0], this._params[1]);
+            chronus.forceSetBatWeatherLevel(params[0], params[1]);
         }
         return result;
     };
@@ -853,8 +1125,8 @@ function Window_Chronus() {
 
     var _Scene_Map_createAllWindows      = Scene_Map.prototype.createAllWindows;
     Scene_Map.prototype.createAllWindows = function() {
-        this.createChronusWindow();
         _Scene_Map_createAllWindows.apply(this, arguments);
+        this.createChronusWindow();
     };
 
     Scene_Map.prototype.createChronusWindow = function() {
@@ -881,7 +1153,7 @@ function Window_Chronus() {
 
     var _Window_Chronus_initialize      = Window_Chronus.prototype.initialize;
     Window_Chronus.prototype.initialize = function() {
-        _Window_Chronus_initialize.call(this, 0, 0, this.getDefaultWidth(), this.getDefaultHeight());
+        _Window_Chronus_initialize.call(this, new Rectangle(0, 0, this.getDefaultWidth(), this.getDefaultHeight()));
         this.createContents();
         this.x = getParamNumber('カレンダー表示X座標');
         this.y = getParamNumber('カレンダー表示Y座標');
@@ -904,7 +1176,7 @@ function Window_Chronus() {
     };
 
     Window_Chronus.prototype.standardPadding = function() {
-        return paramCalendarPadding;
+        return paramCalendarPadding || $gameSystem.windowPadding();
     };
 
     Window_Chronus.prototype.standardBackOpacity = function() {
@@ -915,9 +1187,20 @@ function Window_Chronus() {
         return this.standardFontSize();
     };
 
-    var _Window_Chronus_standardFontSize      = Window_Chronus.prototype.standardFontSize;
     Window_Chronus.prototype.standardFontSize = function() {
-        return paramCalendarFontSize || _Window_Chronus_standardFontSize.apply(this, arguments);
+        return paramCalendarFontSize || $gameSystem.mainFontSize();
+    };
+
+    var _Window_Chronus_resetFontSettings = Window_Chronus.prototype.resetFontSettings;
+    Window_Chronus.prototype.resetFontSettings = function() {
+        _Window_Chronus_resetFontSettings.apply(this, arguments);
+        this.contents.fontSize = this.standardFontSize();
+    };
+
+    var _Window_Chronus_updatePadding = Window_Chronus.prototype.updatePadding;
+    Window_Chronus.prototype.updatePadding = function() {
+        _Window_Chronus_updatePadding.apply(this, arguments);
+        this.padding = this.standardPadding();
     };
 
     Window_Chronus.prototype.refresh = function() {
@@ -926,6 +1209,7 @@ function Window_Chronus() {
         var height = this.lineHeight();
         this.contents.drawText(this.getDateFormat(1), 0, 0, width, height, 'left');
         this.contents.drawText(this.getDateFormat(2), 0, height + paramCalendarLineSpacing, width, height, 'left');
+        this.update();
     };
 
     Window_Chronus.prototype.update = function() {
