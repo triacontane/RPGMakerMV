@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2020/08/26 描画文字列に数値のみを指定するとエラーになる問題を修正
 // 2.0.0 2020/08/15 MZ対応用に全面リファクタリング
 // 1.0.0 2015/11/06 初版
 // ----------------------------------------------------------------------------
@@ -271,7 +272,7 @@
     };
 
     Game_Picture.prototype.updateDText = function() {
-        const text = PluginManagerEx.convertVariables(this.dTextInfo.value);
+        const text = String(PluginManagerEx.convertVariables(this.dTextInfo.value));
         if (text !== this._dTextValue) {
             this._name = Date.now().toString();
         }
