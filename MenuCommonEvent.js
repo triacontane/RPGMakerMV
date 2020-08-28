@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.7 2020/08/28 1.3.6の修正方法が間違っていた問題を修正
 // 1.3.6 2020/08/27 DWindow.jsと組み合わせたときにコモンイベントが存在するメニューで動的ウィンドウが作成されてしまう競合を修正
 // 1.3.5 2020/05/09 MOG_Weather_EX.jsと併用したときに発生するエラーを解消
 // 1.3.4 2020/03/21 SceneCustomMenu.jsに合わせた微修正
@@ -664,8 +665,6 @@
         this.changeParentMessageWindow();
     };
 
-    Scene_MenuBase.prototype.createDynamicWindow = function() {};
-
     var _Scene_MenuBase_start = Scene_MenuBase.prototype.start;
     Scene_MenuBase.prototype.start = function() {
         _Scene_MenuBase_start.apply(this, arguments);
@@ -802,6 +801,8 @@
             _Spriteset_Menu_createTimer.apply(this, arguments);
         }
     };
+
+    Spriteset_Menu.prototype.createDynamicWindow = function() {};
 
     Spriteset_Menu.prototype.createToneChanger = function() {};
 
