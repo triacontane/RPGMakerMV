@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2020/06/29 MZ向けにコード修正
 // 1.2.1 2019/05/08 1.2.0の機能がYEP_BattleEngineCore.jsと併用すると無効になる競合を解消
 // 1.2.0 2019/05/02 戦闘画面における下層ピクチャの表示優先度を微調整する機能を追加
 // 1.1.3 2019/01/20 MenuCommonEvent.jsとの競合によるエラーを解消
@@ -21,74 +22,62 @@
 
 /*:
  * @plugindesc PicturePriorityCustomizePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PicturePriorityCustomize.js
+ * @author triacontane
  *
  * @param UpperPictureId
- * @desc 指定した番号以上のピクチャはウィンドウより上に表示されるようになります。
+ * @desc Pictures above the specified number will be displayed above the window.
  * @default 101
  * @type number
  *
  * @param LowerPictureId
- * @desc 指定した番号以下のピクチャはキャラクター、バトラーより下に表示されるようになります。
+ * @desc Pictures below the specified number will be displayed below the character and the butler.
  * @default 0
  * @type number
  *
  * @param LowerPictureZ
- * @desc 下層ピクチャのZ座標です。変更することでより細かい表示優先度の調整ができます。
+ * @desc The Z coordinate of the lower picture. You can adjust the display priority more finely by changing it.
  * @default 1
  * @type select
- * @option 下層タイル
+ * @option Lower Tile
  * @value 0
- * @option 通常キャラの下
+ * @option Lower Character
  * @value 1
- * @option 通常キャラと同じ
+ * @option Same Character
  * @value 3
- * @option 上層タイル
+ * @option Upper Tile
  * @value 4
- * @option 通常キャラの上
+ * @option Upper Character
  * @value 5
- * @option 飛行船の影
+ * @option Shadow
  * @value 6
- * @option フキダシ
+ * @option Balloon
  * @value 7
- * @option マップタッチの行き先
+ * @option Destination
  * @value 9
  *
  * @param LowerPictureBattleZ
- * @desc 戦闘画面の下層ピクチャのZ座標です。変更することでより細かい表示優先度の調整ができます。
+ * @desc Z coordinate of the lower picture of the battle screen.
  * @default 0
  * @type select
- * @option 敵キャラ
+ * @option enemy
  * @value 0
- * @option アニメーション
+ * @option animation
  * @value 1
  *
- * @help ピクチャを上層、中層、下層に分けて表示できます。
- * 上層：ウィンドウより上
- * 中層：デフォルトの優先度
- * 下層：キャラクターより下
- *
- * 下層ピクチャに対しては、Z座標を設定することで
- * より細かい表示優先度の調整ができます。
- *
- * ※それぞれのプライオリティの値
- * 0 : 下層タイル
- * 1 : 通常キャラの下
- * 3 : 通常キャラと同じ
- * 4 : 上層タイル
- * 5 : 通常キャラの上
- * 6 : 飛行船の影
- * 7 : フキダシ
- * 8 : アニメーション
- * 9 : マップタッチの行き先（白く光るヤツ）
- *
- * このプラグインにはプラグインコマンドはありません。
+ * @help You can divide the picture into upper, middle and lower layers.
+ * Upper: above the window
+ * Mid: default priority
+ * Lower: below the character
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc ピクチャの表示優先度調整プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PicturePriorityCustomize.js
+ * @author トリアコンタン
  *
  * @param 上層ピクチャ番号
  * @desc 指定した番号以上のピクチャはウィンドウより上に表示されるようになります。
@@ -148,8 +137,6 @@
  * 7 : フキダシ
  * 8 : アニメーション
  * 9 : マップタッチの行き先（白く光るヤツ）
- *
- * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -214,8 +201,8 @@
     };
 
     Spriteset_Base.prototype.createPictureLayer = function() {
-        var width                   = Graphics.boxWidth;
-        var height                  = Graphics.boxHeight;
+        var width                   = $dataSystem.advanced.uiAreaWidth;
+        var height                  = $dataSystem.advanced.uiAreaHeight;
         var x                       = (Graphics.width - width) / 2;
         var y                       = (Graphics.height - height) / 2;
         this._pictureContainerLower = new Sprite();
