@@ -6,7 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
- 1.1.0 2020/06/16 MVプロジェクトを指定するだけで必要ファイルを自動コピーできる機能を追加
+ 1.1.1 2020/08/29 1.1.0の修正でブラウザ実行でエラーになっていた問題を修正
+ 1.1.0 2020/08/16 MVプロジェクトを指定するだけで必要ファイルを自動コピーできる機能を追加
  1.0.0 2020/06/15 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -68,11 +69,6 @@
     const variableName = '$dataMvAnimations';
     const variableSrc = 'mv/Animations.json';
 
-    const node  = {
-        fs  : require('fs'),
-        path: require('path')
-    };
-
     /**
      * MvFileCopyUtil
      *  MVのプロジェクトからファイルをコピーするユーティリティクラスです。
@@ -83,7 +79,7 @@
             if (!this.isNeedFileCopy() || !mvRoot) {
                 return ;
             }
-            if (!node.fs.existsSync(mvRoot + '/index.html')) {
+            if (!this.getFs().existsSync(mvRoot + '/index.html')) {
                 PluginManagerEx.throwError(`Invalid MV Project Path :${mvRoot}`, script);
             }
             this.copyMvAnimationJson(mvRoot);
@@ -92,28 +88,36 @@
             }
         }
 
+        static getFs() {
+            return require('fs')
+        }
+
+        static getPath() {
+            return require('path')
+        }
+
         static copyMvAnimationJson(mvRoot) {
-            const srcPath = node.path.join(mvRoot, 'data/');
+            const srcPath = this.getPath().join(mvRoot, 'data/');
             const destPath = this.fileDirectoryPath('data/mv/');
             StorageManager.fsMkdir(destPath);
             this.copyFile(srcPath, destPath, 'Animations.json');
         }
 
         static copyMvAnimationImage(mvRoot) {
-            const srcPath = node.path.join(mvRoot, 'img/animations/');
+            const srcPath = this.getPath().join(mvRoot, 'img/animations/');
             const destPath = this.fileDirectoryPath('img/animations/');
             StorageManager.fsMkdir(destPath);
             this.copyAllFiles(srcPath, destPath, 'Animations.json');
         }
 
-        static fileDirectoryPath = function(directory) {
-            const base = node.path.dirname(process.mainModule.filename);
-            return node.path.join(base, `${directory}/`);
+        static fileDirectoryPath(directory) {
+            const base = this.getPath().dirname(process.mainModule.filename);
+            return this.getPath().join(base, `${directory}/`);
         }
 
         static copyAllFiles(originalPath, targetPath) {
             const copyFile = this.copyFile.bind(this, originalPath, targetPath);
-            node.fs.readdir(originalPath, function(error, list) {
+            this.getFs().readdir(originalPath, function(error, list) {
                 if (error || !list) {
                     console.warn(error);
                     return;
@@ -125,7 +129,7 @@
         }
 
         static copyFile(originalPath, targetPath, fileName) {
-            node.fs.copyFileSync(originalPath + fileName, targetPath + fileName);
+            this.getFs().copyFileSync(originalPath + fileName, targetPath + fileName);
         }
 
         static isNeedFileCopy() {
