@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2020/08/29 1.2.0で追加した機能による軽量化対策
 // 1.2.0 2020/04/24 選択できないバトラーを無効表示する機能を追加
 // 1.1.10 2018/06/04 DeadOrAliveItem.jsとの競合を解消
 // 1.1.9 2018/02/28 選択可能対象が存在しないスキルは、敵キャラの使用スキルから除外するよう修正
@@ -511,15 +512,16 @@
     //=============================================================================
     var _Sprite_Battler_updateSelectionEffect = Sprite_Battler.prototype.updateSelectionEffect;
     Sprite_Battler.prototype.updateSelectionEffect = function() {
-        _Sprite_Battler_updateSelectionEffect.apply(this, arguments);
         var target = this._effectTarget;
         if (!this._battler.isActivateSelect()) {
             target.setBlendColor([0, 0, 0, 128]);
             this._deactivateSelect = true;
+            return;
         } else if (this._deactivateSelect) {
             target.setBlendColor([0, 0, 0, 0]);
             this._deactivateSelect = false;
         }
+        _Sprite_Battler_updateSelectionEffect.apply(this, arguments);
     };
 })();
 
