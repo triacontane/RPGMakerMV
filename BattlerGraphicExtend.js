@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2020/08/29 RestrictionTargetSkill.jsと組み合わせたときの軽量化対策
 // 1.4.1 2019/09/16 1.4.0の機能追加により発生した問題を修正
 // 1.4.0 2019/09/16 バトラーグラフィックを反転できる機能を追加
 // 1.3.0 2019/06/12 浮遊設定で高度を「0」に設定できるようになりました。
@@ -458,6 +459,9 @@
     };
 
     Sprite_Battler.prototype.updateBlendColor = function() {
+        if (this._battler._deactivateSelect) {
+            return;
+        }
         var sprite = this.getMainSprite();
         var color  = this._battler.getBlendColor();
         if (!color.equals(this._prevBlendColor)) {
