@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0,1 2020/08/30 非表示のときは画像を更新しないよう修正
  1.0.0 2020/08/29 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -538,6 +539,18 @@
 
         findBattlerTroopIndex(battlerData) {
             return $gameTroop.members()[battlerData.Index];
+        }
+
+        updateBitmap() {
+            const visible = this.parent ? this.parent.visible : false;
+            if (visible) {
+                if (!this._prevVisible) {
+                    this._value = this._targetValue;
+                    this._maxValue = this._targetMaxValue;
+                }
+                super.updateBitmap();
+            }
+            this._prevVisible = visible;
         }
 
         updateFlashing() {
