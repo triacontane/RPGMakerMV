@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.5 2020/08/30 YEP_CoreEngine.jsと併用したとき解像度次第でレイヤーマップのピクセルがずれる場合がある競合を修正
 // 1.1.4 2020/07/05 MOG_ChronoEngine.jsと併用したときマップの一部がちらつく場合がある競合を修正
 // 1.1.3 2020/05/09 競合対策コードを追加
 // 1.1.2 2018/12/22 HalfMove.jsによる減速斜め移動など特定の条件下でマップの描画位置がずれる場合がある現象を修正
@@ -165,11 +166,11 @@
     //  画面上のピクセル座標を返します。
     //=============================================================================
     Game_Map.prototype.displayPixelX = function() {
-        return this.displayX() * this.tileWidth();
+        return this._displayX * this.tileWidth();
     };
 
     Game_Map.prototype.displayPixelY = function() {
-        return this.displayY() * this.tileHeight();
+        return this._displayY * this.tileHeight();
     };
 
     //=============================================================================
