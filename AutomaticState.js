@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.3 2020/09/01 自動ステートでHPおよびMPの上限があがった状態でイベントコマンド『全回復』を実行するとあがった分が反映されない問題を修正
 // 1.4.2 2020/04/09 同一ステートに<ASアクター>と<AS敵キャラ>のタグを付けられるよう修正
 // 1.4.1 2019/01/27 AS武器装備およびAS防具装備のタグが敵にも適用される問題を修正
 // 1.4.0 2017/09/13 自動ステート対象をアクター、敵キャラIDで限定するときに複数指定できる機能を追加
@@ -312,6 +313,8 @@
     Game_BattlerBase.prototype.recoverAll = function() {
         _Game_BattlerBase_recoverAll.apply(this, arguments);
         this.updateAutomaticState();
+        this._hp = this.mhp;
+        this._mp = this.mmp;
     };
 
     Game_BattlerBase.prototype.getBattlerId = function() {
