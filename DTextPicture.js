@@ -20,7 +20,7 @@
 /*:
  * @plugindesc 動的文字列ピクチャ生成プラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DTextPicture.js
  * @author トリアコンタン
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
