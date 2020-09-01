@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2020/09/01 制御文字\oc[c], \ow[n]の移植が漏れていた問題を修正
 // 2.0.2 2020/08/26 ベースプラグインの説明を追加
 // 2.0.1 2020/08/26 描画文字列に数値のみを指定するとエラーになる問題を修正
 // 2.0.0 2020/08/15 MZ対応用に全面リファクタリング
@@ -334,6 +335,31 @@
             return this.getItemInfoText(item);
         }.bind(this));
         return text;
+    };
+
+    const _Window_Base_processEscapeCharacter = Window_Base.prototype.processEscapeCharacter;
+    Window_Base.prototype.processEscapeCharacter = function(code, textState) {
+        _Window_Base_processEscapeCharacter.apply(this, arguments);
+        switch (code) {
+            case 'OC':
+                const colorCode  = this.obtainEscapeParamString(textState);
+                const colorIndex = Number(colorCode);
+                this.changeOutlineColor(!isNaN(colorIndex) ? ColorManager.textColor(colorIndex) : colorCode);
+                break;
+            case 'OW':
+                this.contents.outlineWidth = this.obtainEscapeParam(textState);
+                break;
+        }
+    };
+
+    Window_Base.prototype.obtainEscapeParamString = function(textState) {
+        const arr = /^\[.+?]/.exec(textState.text.slice(textState.index));
+        if (arr) {
+            textState.index += arr[0].length;
+            return arr[0].substring(1, arr[0].length - 1);
+        } else {
+            return '';
+        }
     };
 
     Window_Base.prototype.getItemInfoText = function(item) {
