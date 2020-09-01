@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.2 2020/09/01 インターバルを2以上にしたとき、他の足音条件を満たしていても通常の足音が演奏されてしまう問題を修正
 // 3.0.1 2020/08/26 MZ向けにプラグインコマンドの記述などを修正
 // 3.0.0 2020/08/09 足音データをプラグインパラメータで設定する仕様に変更しリファクタリング
 //                  足音の間隔を歩行、ダッシュで別々に設定できる機能を追加
@@ -303,10 +304,9 @@
             var se = this.findStepSound(soundParam);
             if (se && se.hasOwnProperty('name') && this.checkInterval(se)) {
                 this.playStepSound(se);
-                return true;
             }
         }
-        return false;
+        return true;
     };
 
     Game_CharacterBase.prototype.playStepSound = function (se) {
