@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.2 2020/09/02 MZ向けにコード修正
 // 2.6.1 2020/05/21 トリガースイッチと連動無効スイッチの状態によってエラーが起きうる記述を修正
 // 2.6.0 2020/05/20 ピクチャの連動を無効にできるスイッチを追加
 // 2.5.1 2020/05/19 2.3.0の仕様変更で連動表示ピクチャの透明度が復元できない問題を修正
@@ -35,7 +36,9 @@
 
 /*:
  * @plugindesc Erase message window
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageWindowHidden.js
+ * @author triacontane
  *
  * @param triggerButton
  * @desc Trigger buttons
@@ -91,7 +94,9 @@
  */
 /*:ja
  * @plugindesc メッセージウィンドウ一時消去プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageWindowHidden.js
+ * @author トリアコンタン
  *
  * @param triggerButton
  * @text ボタン名称
@@ -231,11 +236,17 @@
         this.subWindows().forEach(function(subWindow) {
             this.hideSubWindow(subWindow);
         }.bind(this));
-        if (this.hasNameWindow() && !this.nameWindowIsSubWindow()) this.hideSubWindow(this._nameWindow);
         this._originalPictureOpacities = {};
         this.linkPictures(0, param.linkPictureNumbers);
         this.linkPictures(255, param.linkShowPictureNumbers);
         this._hideByMessageWindowHidden = true;
+    };
+
+    Window_Message.prototype.subWindows = function() {
+        return [this._goldWindow, this._nameBoxWindow,
+            this._choiceListWindow, this._numberInputWindow,
+            this._eventItemWindow
+        ];
     };
 
     Window_Message.prototype.showAllWindow = function() {
@@ -243,7 +254,6 @@
         this.subWindows().forEach(function(subWindow) {
             this.showSubWindow(subWindow);
         }.bind(this));
-        if (this.hasNameWindow() && !this.nameWindowIsSubWindow()) this.showSubWindow(this._nameWindow);
         this.linkPictures(null, param.linkShowPictureNumbers);
         this.linkPictures(null, param.linkPictureNumbers);
         this._hideByMessageWindowHidden = false;
