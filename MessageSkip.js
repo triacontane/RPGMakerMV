@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageSkip.js
 // ----------------------------------------------------------------------------
-// (C) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.1 2020/09/02 MZ向けにコードとヘルプ修正
 // 1.14.0 2020/08/02 クリックすることで任意のスイッチをONにできるピクチャをメッセージウィンドウに表示する機能を追加
 // 1.13.0 2020/03/26 オート、スキップピクチャの表示方法をメッセージウィンドウからの相対座標と絶対座標とを選択できる機能を追加
 // 1.12.1 2020/03/25 アイコン表示位置をメッセージウィンドウの位置やサイズの変更に追従するよう修正
@@ -37,7 +38,9 @@
 
 /*:
  * @plugindesc MessageSkipPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageSkip.js
+ * @author triacontane
  *
  * @param SkipKey
  * @desc メッセージスキップに該当するキー
@@ -215,7 +218,9 @@
 
 /*:ja
  * @plugindesc メッセージスキッププラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageSkip.js
+ * @author トリアコンタン
  *
  * @param スキップキー
  * @desc メッセージスキップに該当するキー
@@ -831,9 +836,7 @@ function Sprite_Frame() {
         if (!button) {
             return false;
         }
-        var x = this.canvasToLocalX(TouchInput.x);
-        var y = this.canvasToLocalY(TouchInput.y);
-        return button.isTriggered(x, y, pressed);
+        return button.isTriggered(pressed);
     };
 
     var _Window_Message_isTriggered      = Window_Message.prototype.isTriggered;
@@ -864,11 +867,11 @@ function Sprite_Frame() {
     // Sprite_MessageButton
     //  メッセージボタン描画用スプライトです。
     //=============================================================================
-    Sprite_MessageButton.prototype             = Object.create(Sprite.prototype);
-    Sprite_MessageButton.prototype.constructor = Sprite_MessageButton;
+    Sprite_MessageButton.prototype             = Object.create(Sprite_Clickable.prototype);
+    Sprite_MessageButton.prototype.constructor = Sprite_Clickable;
 
     Sprite_MessageButton.prototype.initialize = function(fileName) {
-        Sprite.prototype.initialize.call(this);
+        Sprite_Clickable.prototype.initialize.call(this);
         this.bitmap   = ImageManager.loadPicture(fileName);
         this.anchor.x = 0.5;
         this.anchor.y = 0.5;
@@ -876,7 +879,7 @@ function Sprite_Frame() {
     };
 
     Sprite_MessageButton.prototype.update = function() {
-        Sprite.prototype.update.call(this);
+        Sprite_Clickable.prototype.update.call(this);
         this.updateOpacity();
         this.updateVisibility();
     };
@@ -893,16 +896,9 @@ function Sprite_Frame() {
         this.visible = (!paramPictureSwitchId || $gameSwitches.value(paramPictureSwitchId));
     };
 
-    Sprite_MessageButton.prototype.isTriggered = function(targetX, targetY, pressed) {
-        var realX       = targetX + this._frame.width * this.anchor.x;
-        var realY       = targetY + this._frame.height * this.anchor.y;
+    Sprite_MessageButton.prototype.isTriggered = function(pressed) {
         var triggeredOk = (pressed ? TouchInput.isPressed() : TouchInput.isTriggered());
-        return triggeredOk && this.isInSprite(realX, realY);
-    };
-
-    Sprite_MessageButton.prototype.isInSprite = function(targetX, targetY) {
-        return this.x <= targetX && this.x + this._frame.width >= targetX &&
-            this.y <= targetY && this.y + this._frame.height >= targetY;
+        return triggeredOk && this._pressed;
     };
 
     //=============================================================================
@@ -915,8 +911,8 @@ function Sprite_Frame() {
     Sprite_Frame.prototype.initialize = function(bitmap, index) {
         Sprite.prototype.initialize.call(this);
         bitmap.addLoadListener(function() {
-            this._column = Math.floor(bitmap.width / Window_Base._iconWidth);
-            this._row    = Math.floor(bitmap.height / Window_Base._iconHeight);
+            this._column = Math.floor(bitmap.width / ImageManager.iconWidth);
+            this._row    = Math.floor(bitmap.height / ImageManager.iconHeight);
         }.bind(this));
         this.bitmap      = bitmap;
         this.anchor.x    = 0.5;
@@ -929,8 +925,8 @@ function Sprite_Frame() {
 
     Sprite_Frame.prototype.refresh = function(index) {
         if (!this.bitmap.isReady()) return;
-        var w = Window_Base._iconWidth;
-        var h = Window_Base._iconHeight;
+        var w = ImageManager.iconWidth;
+        var h = ImageManager.iconHeight;
         this.setFrame((index % this._column) * w, Math.floor(index / this._column) * h, w, h);
     };
 
