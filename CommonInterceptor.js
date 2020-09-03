@@ -1,11 +1,12 @@
 //=============================================================================
 // CommonInterceptor.js
 // ----------------------------------------------------------------------------
-// (C) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2020/09/04 ロードコモンが正常に呼ばれていなかった問題を修正
 // 1.0.1 2020/08/23 MZ用にヘルプを修正
 // 1.0.0 2016/01/20 初版
 // ----------------------------------------------------------------------------
@@ -125,13 +126,11 @@
         $gameTemp.interceptorType = 1;
     };
 
-    var _DataManager_loadGameWithoutRescue = DataManager.loadGameWithoutRescue;
-    DataManager.loadGameWithoutRescue = function(savefileId) {
-        if (_DataManager_loadGameWithoutRescue.apply(this, arguments)) {
+    var _DataManager_loadGame = DataManager.loadGame;
+    DataManager.loadGame = function(savefileId) {
+        return _DataManager_loadGame.apply(this, arguments).then(()=> {
             $gameTemp.interceptorType = 2;
-            return true;
-        }
-        return false;
+        })
     };
 
     var _Scene_Menu_terminate = Scene_Menu.prototype.terminate;
