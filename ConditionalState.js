@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2020/09/06 条件付きステートが付与されている状態で装備変更するとエラーになる問題を修正
 // 1.0.1 2020/08/16 戦闘不能から復帰したときに正常にステートが付与されない問題を修正
 // 1.0.0 2017/04/22 初版
 // ----------------------------------------------------------------------------
@@ -16,7 +17,9 @@
 
 /*:
  * @plugindesc ConditionalStatePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ConditionalState.js
+ * @author triacontane
  *
  * @help Grant state when certain conditions are satisfied.
  * Please enter the following in the memo field with features.
@@ -43,7 +46,9 @@
  */
 /*:ja
  * @plugindesc 条件付きステート付与プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ConditionalState.js
+ * @author トリアコンタン
  *
  * @help HPやMPの残量の条件を満たしたときにステートを付与します。
  * 特徴を有するメモ欄に以下の通り入力してください。
@@ -95,8 +100,22 @@
 
     var convertEscapeCharacters = function(text) {
         if (!isString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+        text = text.replace(/\\/g, "\x1b");
+        text = text.replace(/\x1b\x1b/g, "\\");
+        text = text.replace(/\x1bV\[(\d+)\]/gi, (_, p1) =>
+            $gameVariables.value(parseInt(p1))
+        );
+        text = text.replace(/\x1bV\[(\d+)\]/gi, (_, p1) =>
+            $gameVariables.value(parseInt(p1))
+        );
+        text = text.replace(/\x1bN\[(\d+)\]/gi, (_, p1) =>
+            this.actorName(parseInt(p1))
+        );
+        text = text.replace(/\x1bP\[(\d+)\]/gi, (_, p1) =>
+            this.partyMemberName(parseInt(p1))
+        );
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     var isString = function(args) {
