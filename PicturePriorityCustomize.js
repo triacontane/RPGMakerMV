@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.2.2 2020/06/29 MZ向けにコード修正
+// 1.2.3 2020/09/06 座標の基準をUI幅ではなく画面幅に変更
+// 1.2.2 2020/08/29 MZ向けにコード修正
 // 1.2.1 2019/05/08 1.2.0の機能がYEP_BattleEngineCore.jsと併用すると無効になる競合を解消
 // 1.2.0 2019/05/02 戦闘画面における下層ピクチャの表示優先度を微調整する機能を追加
 // 1.1.3 2019/01/20 MenuCommonEvent.jsとの競合によるエラーを解消
@@ -201,10 +202,10 @@
     };
 
     Spriteset_Base.prototype.createPictureLayer = function() {
-        var width                   = $dataSystem.advanced.uiAreaWidth;
-        var height                  = $dataSystem.advanced.uiAreaHeight;
-        var x                       = (Graphics.width - width) / 2;
-        var y                       = (Graphics.height - height) / 2;
+        var width                   = Graphics.width;
+        var height                  = Graphics.height;
+        var x                       = 0;
+        var y                       = 0;
         this._pictureContainerLower = new Sprite();
         this._pictureContainerLower.setFrame(x, y, width, height);
         this._pictureContainerMiddle = new Sprite();
