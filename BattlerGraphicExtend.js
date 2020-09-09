@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/09/09 MZ向けに実装を修正
 // 1.4.2 2020/08/29 RestrictionTargetSkill.jsと組み合わせたときの軽量化対策
 // 1.4.1 2019/09/16 1.4.0の機能追加により発生した問題を修正
 // 1.4.0 2019/09/16 バトラーグラフィックを反転できる機能を追加
@@ -31,7 +32,10 @@
 
 /*:
  * @plugindesc Battler graphic extend
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattlerGraphicExtend.js
+ * @base PluginCommonBase
+ * @author triacontane
  *
  * @help 戦闘中のバトラー画像の表現方法を拡張します。
  * 宙に浮かせたり、色調やサイズを変えたり、多彩な表現が可能です。
@@ -70,11 +74,19 @@
  * <BGEMotionRate:n> n:Rate(100%)
  * 例:<BGEMotionRate:150>
  *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc バトラーグラフィック表示拡張プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattlerGraphicExtend.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @help 戦闘中のバトラー画像の表現方法を拡張します。
  * 宙に浮かせたり、色調やサイズを変えたり、多彩な表現が可能です。
@@ -116,7 +128,10 @@
  * <BGEモーション倍率:n> n:倍率(100%)
  * 例:<BGEモーション倍率:150>
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -128,57 +143,11 @@
     'use strict';
     var metaTagPrefix = 'BGE';
 
-    var getArgArrayString = function(args, upperFlg) {
-        var values = getArgString(args, upperFlg).split(',');
-        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
-        return values;
-    };
-
-    var getArgArrayNumber = function(args, min, max) {
-        var values = getArgArrayString(args, false);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        for (var i = 0; i < values.length; i++) values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
-        return values;
-    };
-
-    var getArgString = function(arg, upperFlg) {
-        arg = convertEscapeCharactersAndEval(arg, false);
-        return upperFlg ? arg.toUpperCase() : arg;
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharactersAndEval = function(text, evalFlg) {
-        if (text === null || text === undefined) {
-            text = evalFlg ? '0' : '';
-        }
-        var windowLayer = SceneManager._scene._windowLayer;
-        if (windowLayer) {
-            var result = windowLayer.children[0].convertEscapeCharacters(text);
-            return evalFlg ? eval(result) : result;
-        } else {
-            return text;
-        }
-    };
+    function getArgArrayNumber(text) {
+        return text.split(',').map(function (value) {
+            return parseInt(value);
+        })
+    }
 
     //=============================================================================
     // Game_BattlerBase
@@ -229,9 +198,12 @@
     Game_BattlerBase.prototype.getStateMetaValuesForBge = function(names) {
         var priority = -1;
         var result   = null;
+        names = names.map(function (value) {
+            return metaTagPrefix + value;
+        })
         this.traitObjects().forEach(function(traitObject) {
             if (priority <= (traitObject.priority || 0)) {
-                var metaValue = getMetaValues(traitObject, names);
+                var metaValue = PluginManagerEx.findMetaValue(traitObject, names);
                 if (metaValue) {
                     result   = metaValue;
                     priority = traitObject.priority || 0;
@@ -267,7 +239,7 @@
             this.landingBattler();
             return;
         }
-        var altitude = getArgNumber(result, 0);
+        var altitude = result || 0;
         if (altitude > this.maxAltitude()) {
             this.floatBattler(altitude);
         }
@@ -275,27 +247,27 @@
 
     Game_BattlerBase.prototype.refreshOpacity = function() {
         var result    = this.getStateMetaValuesForBge(['不透明度', 'Opacity']);
-        this._opacity = result ? getArgNumber(result, 0) : 255;
+        this._opacity = result || 255;
     };
 
     Game_BattlerBase.prototype.refreshScaleX = function() {
         var result   = this.getStateMetaValuesForBge(['拡大率X', 'ScaleX']);
-        this._scaleX = result ? getArgNumber(result) : 100;
+        this._scaleX = result || 100;
     };
 
     Game_BattlerBase.prototype.refreshScaleY = function() {
         var result   = this.getStateMetaValuesForBge(['拡大率Y', 'ScaleY']);
-        this._scaleY = result ? getArgNumber(result) : 100;
+        this._scaleY = result || 100;
     };
 
     Game_BattlerBase.prototype.refreshBlendMode = function() {
         var result      = this.getStateMetaValuesForBge(['合成方法', 'BlendMode']);
-        this._blendMode = result ? getArgNumber(result, 0) : 0;
+        this._blendMode = result || 0;
     };
 
     Game_BattlerBase.prototype.refreshMotionRate = function() {
         var result       = this.getStateMetaValuesForBge(['モーション倍率', 'MotionRate']);
-        this._motionRate = result ? getArgNumber(result, 0) : 100;
+        this._motionRate = result || 100;
     };
 
     Game_BattlerBase.prototype.refreshTone = function() {
@@ -307,7 +279,7 @@
         var result               = this.getStateMetaValuesForBge(['フラッシュ', 'Flash']);
         this._blendColor         = result ? getArgArrayNumber(result) : [0, 0, 0, 0];
         result                   = this.getStateMetaValuesForBge(['フラッシュ間隔', 'FlashInterval']);
-        this._blendColorInterval = result ? getArgNumber(result) : 15;
+        this._blendColorInterval = result || 15;
     };
 
     Game_BattlerBase.prototype.getAltitude = function() {
