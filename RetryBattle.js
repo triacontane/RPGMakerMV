@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2020/09/10 強制リトライで戦闘開始に戻ったとき、HPなどの状態が復元されない問題を修正
+//                  ReviceBattleItemNumber.jsと併用したとき、リトライ後にアイテム画面を開くとエラーになる競合を修正
 // 1.1.2 2018/12/25 リトライを経て勝った、もしくは逃げた場合、それぞれの分岐を正常に通らない場合がある問題を修正
 // 1.1.1 2017/03/20 本体v1.3.4以降で、リトライ後のメニュー画面でコモンイベントアイテムが実行できていた問題を修正
 // 1.1.0 2016/07/26 リトライ後のメニュー画面でコモンイベントを実行するアイテム・スキルを実行すると正常に動作しない問題を修正
@@ -349,6 +351,10 @@
         $gameTemp.clearCommonEvent();
         $gameTroop.setup($gameTroop.troop().id);
         $gameSystem.addRetryCount();
+        // for ReviceBattleItemNumber.js
+        if (this.reservedItem === null) {
+            this.reservedItem = new Array($dataItems.length);
+        }
     };
 
     BattleManager.setBossBattle = function(value) {
@@ -586,6 +592,7 @@
     };
 
     Scene_BattleReturn.prototype.start = function() {
+        DataManager.loadGameForRetry();
         this.executeRetry(this.fadeSpeed());
     };
 
