@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2020/09/12 マップIDを指定するとエラーになる問題を修正
 // 1.0.0 2020/03/14 MV版から流用作成
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -105,7 +106,7 @@
     DataManager.setupEventTest = function() {
         _DataManager_setupEventTest.call(this);
         if (param.TestMapId > 0) {
-            $gamePlayer.reserveTransfer(mapId, 8, 6);
+            $gamePlayer.reserveTransfer(param.TestMapId, 8, 6);
         }
     };
 
