@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2020/09/12 ヘルプのスクリプトの誤記を修正
  1.0,1 2020/08/30 非表示のときは画像を更新しないよう修正
  1.0.0 2020/08/29 初版
 ----------------------------------------------------------------------------
@@ -226,7 +227,7 @@
  * @option battler.hp; // HP
  * @option battler.mhp; // 最大HP
  * @option battler.mp; // MP
- * @option battler.mhp; // 最大MP
+ * @option battler.mmp; // 最大MP
  * @option battler.tp; // TP
  * @option battler.maxTp(); // 最大MP
  * @option meta.value; // メモ欄[value]の値
