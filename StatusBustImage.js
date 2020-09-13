@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.2 2020/09/13 表示優先度をウィンドウの下に設定した場合もウィンドウの下に表示されない問題を修正
 // 1.9.1 2020/09/06 MZ向けに全体的に修正。一部機能は無効になっています。
 // 1.9.0 2020/04/22 各画像に拡大率を設定できる設定を追加
 // 1.8.1 2019/11/10 1.8.0でZ座標の指定された装備、ステート画像を複数表示すると、アクター追加画像の表示順が入れ替わる場合がある問題を修正
@@ -550,7 +551,7 @@
             return;
         }
         if (this.isUnderWindow()) {
-            this.parent.addChildAt(this._bustContainer, 1);
+            this.parent.parent.addChildAt(this._bustContainer, 1);
         } else {
             this.parent.addChild(this._bustContainer);
         }
