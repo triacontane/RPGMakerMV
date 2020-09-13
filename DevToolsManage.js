@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.5 2020/09/13 戦闘強制勝利のコマンドが機能しない問題を修正
 // 1.0.4 2020/08/21 マップの自動リロード機能を使おうとするとエラーになる問題を修正
 // 1.0.3 2020/08/20 正式版のPluginCommonBaseで動作しなくなる問題を修正
 // 1.0.2 2020/06/06 英語版のヘルプを整備
@@ -756,6 +757,10 @@ function Controller_NwJs() {
 
     SceneManager.isReloading = function() {
         return !!this._reloadGenerator;
+    };
+
+    SceneManager.isCurrentScene = function(sceneClass) {
+        return this._scene && this._scene.constructor === sceneClass;
     };
 
     class ShortCutCommand {
