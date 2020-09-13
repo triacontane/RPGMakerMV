@@ -1,18 +1,19 @@
 //=============================================================================
 // CustomizeConfigDefault.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2020/09/13 Mano_InputConfig.jsと併用したとき、Option項目を消していると表示不整合が発生する競合を修正
 // 1.1.0 2016/08/01 項目自体を非表示にする機能を追加しました。
 // 1.0.3 2016/06/22 多言語対応
 // 1.0.2 2016/01/17 競合対策
 // 1.0.1 2015/11/01 既存コードの再定義方法を修正（内容に変化なし）
 // 1.0.0 2015/11/01 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -215,8 +216,19 @@
         for (var i = 0; i < this._list.length; i++) {
             if (this._list[i].symbol === symbol) {
                 this._list.splice(i, 1);
+                // for Mano_InputConfig.js
+                this.adjustIndexManoInputConfig(i);
                 break;
             }
+        }
+    };
+
+    Window_Options.prototype.adjustIndexManoInputConfig = function(index) {
+        if (this._gamepadOptionIndex > index) {
+            this._gamepadOptionIndex -= 1;
+        }
+        if (this._keyboardConfigIndex > index) {
+            this._keyboardConfigIndex -= 1;
         }
     };
 })();
