@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.3 2020/09/15 イベントの足音を初期状態でプレイヤーと同じにできるメモ欄を追加
 // 3.0.2 2020/09/01 インターバルを2以上にしたとき、他の足音条件を満たしていても通常の足音が演奏されてしまう問題を修正
 // 3.0.1 2020/08/26 MZ向けにプラグインコマンドの記述などを修正
 // 3.0.0 2020/08/09 足音データをプラグインパラメータで設定する仕様に変更しリファクタリング
@@ -137,6 +138,8 @@
  * イベントごとに固有に足音を設定したい場合、以下の通り指定してください。
  * <FootStep:Absorb1> // 足音に「Absorb1」が設定されます。
  * <足音:Absorb1>     // 同上
+ * <FootStep>        // パラメータで設定した足音が演奏されます。
+ * <足音>             // 同上
  * このメモ欄を設定するとスクリプト「this.setStepSoundFlg(true);」
  * を実行しなくてもデフォルトで足音が有効になります。
  *
@@ -400,7 +403,7 @@
     var _Game_Event_findStepSound = Game_Event.prototype.findStepSound;
     Game_Event.prototype.findStepSound = function (soundHash) {
         var se = _Game_Event_findStepSound.apply(this, arguments);
-        if (se && this._footStepSeName) {
+        if (se && this._footStepSeName !== true) {
             return {
                 name: this._footStepSeName,
                 volume: se.volume,
