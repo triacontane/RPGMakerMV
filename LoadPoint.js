@@ -1,17 +1,18 @@
 //=============================================================================
 // LoadPoint.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2020/09/17 ロードポイント移動時にマップIDの値が0だった場合、ロードポイント未設定とみなして移動しないよう修正
 // 1.1.0 2018/09/16 パラメータの型指定機能に対応
 // 1.0.2 2016/12/10 ロードした際に、ロード元でイベントが実行中だった場合に続きが実行されてしまう現象を修正
 // 1.0.1 2016/10/30 少しリファクタリング
 // 1.0.0 2016/10/29 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -215,6 +216,9 @@
     Game_Player.prototype.moveLoadPoint = function() {
         if ($gameSystem.isLoadPointDisable()) return;
         var mapId = $gameVariables.value(paramMapIdVariable);
+        if (mapId <= 0) {
+            return;
+        }
         var x     = $gameVariables.value(paramMapXVariable);
         var y     = $gameVariables.value(paramMapYVariable);
         var d     = $gameVariables.value(paramDirectionVariable);
