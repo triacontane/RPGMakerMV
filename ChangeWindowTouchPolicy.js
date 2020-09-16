@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2020/09/16 マウスオーバーでスクロールの矢印が反応してしまう仕様を変更
 // 1.1.1 2018/11/19 プラグインによって追加されたウィンドウの実装次第で挙動がおかしくなる現象を修正
 // 1.1.0 2016/06/03 モバイルデバイスでウィンドウのカーソルを1回で決定できる機能を追加
 // 1.0.0 2015/12/20 初版
@@ -117,11 +118,18 @@
 
     var _Window_Selectable_onTouch      = Window_Selectable.prototype.onTouch;
     Window_Selectable.prototype.onTouch = function(triggered) {
+        var x        = this.canvasToLocalX(TouchInput.x);
+        var y        = this.canvasToLocalY(TouchInput.y);
         if (Utils.isMobileDevice() && this.isCursorMovable()) {
-            var x        = this.canvasToLocalX(TouchInput.x);
-            var y        = this.canvasToLocalY(TouchInput.y);
             var hitIndex = this.hitTest(x, y);
             this.select(hitIndex);
+        }
+        if (!triggered) {
+            if (y < this.padding) {
+                return;
+            } else if (y >= this.height - this.padding) {
+                return;
+            }
         }
         _Window_Selectable_onTouch.apply(this, arguments);
     };
