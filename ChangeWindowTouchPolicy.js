@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2020/09/17 1.1.2の修正がBattleLayout-SaGa.jsに適用されない競合を修正
 // 1.1.2 2020/09/16 マウスオーバーでスクロールの矢印が反応してしまう仕様を変更
 // 1.1.1 2018/11/19 プラグインによって追加されたウィンドウの実装次第で挙動がおかしくなる現象を修正
 // 1.1.0 2016/06/03 モバイルデバイスでウィンドウのカーソルを1回で決定できる機能を追加
@@ -94,8 +95,12 @@
             return;
         }
         if (this.isOpenAndActive()) {
-            if ((TouchInput.isMoved() || TouchInput.isTriggered()) && this.isTouchedInsideFrame()) {
-                this.onTouch(TouchInput.isTriggered());
+            var triggered = TouchInput.isTriggered();
+            if ((TouchInput.isMoved() || triggered) && this.isTouchedInsideFrame()) {
+                if (!triggered && this.isTouchedBorder()) {
+                    return;
+                }
+                this.onTouch(triggered);
             } else if (TouchInput.isCancelled()) {
                 if (this.isCancelEnabled()) this.processCancel();
             } else if (TouchInput.isTriggered()) {
@@ -116,20 +121,29 @@
         }
     };
 
+    Window_Selectable.prototype.isTouchedBorder = function() {
+        var x = this.canvasToLocalX(TouchInput.x);
+        var y = this.canvasToLocalY(TouchInput.y);
+        if (y < this.padding) {
+            return true;
+        } else if (y >= this.height - this.padding) {
+            return true;
+        } else if (x < this.padding) {
+            return true;
+        } else if (x >= this.width - this.padding) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
     var _Window_Selectable_onTouch      = Window_Selectable.prototype.onTouch;
     Window_Selectable.prototype.onTouch = function(triggered) {
-        var x        = this.canvasToLocalX(TouchInput.x);
-        var y        = this.canvasToLocalY(TouchInput.y);
         if (Utils.isMobileDevice() && this.isCursorMovable()) {
+            var x        = this.canvasToLocalX(TouchInput.x);
+            var y        = this.canvasToLocalY(TouchInput.y);
             var hitIndex = this.hitTest(x, y);
             this.select(hitIndex);
-        }
-        if (!triggered) {
-            if (y < this.padding) {
-                return;
-            } else if (y >= this.height - this.padding) {
-                return;
-            }
         }
         _Window_Selectable_onTouch.apply(this, arguments);
     };
