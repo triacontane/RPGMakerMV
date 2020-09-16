@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.3 2020/09/16 ゲージ表示後に一度シーンを切り替えてからマップ移動するとゲージピクチャが消えてしまう問題を修正
  1.0.2 2020/09/12 ヘルプのスクリプトの誤記を修正
  1.0,1 2020/08/30 非表示のときは画像を更新しないよう修正
  1.0.0 2020/08/29 初版
@@ -394,6 +395,18 @@
     const _Scene_Base_create    = Scene_Base.prototype.create;
     Scene_Base.prototype.create = function() {
         _Scene_Base_create.apply(this, arguments);
+        if (!(this instanceof Scene_Map)) {
+            this.createExtraGauges();
+        }
+    };
+
+    const _Scene_Map_create = Scene_Map.prototype.create;
+    Scene_Map.prototype.create = function() {
+        _Scene_Map_create.apply(this, arguments);
+        this.createExtraGauges();
+    };
+
+    Scene_Base.prototype.createExtraGauges = function() {
         this._extraGauges = this.findExtraGaugeList().map(data => {
             return new Sprite_ExtraGaugeContainer(data, data.Detail || {}, data.Layout || {});
         });
