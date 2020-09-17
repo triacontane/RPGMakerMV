@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.2 2020/09/17 シーンクラスを除くウィンドウクラスの外部からの参照禁止
+//                  収集率ウィンドウを表示する設定にするとエラーになる問題を修正
+//                  使用可否確認ウィンドウが正しく表示されない問題を修正
 // 3.0.1 2020/08/26 ベースプラグインの説明を追加
 // 3.0.0 2020/08/20 MZで動作するよう全面的に修正
 // 2.17.3 2020/08/05 複数ページ表示した状態でカテゴリ表示に戻ったとき、ページ切り替え矢印が表示されたままになる問題を修正
@@ -972,54 +975,6 @@
  * @default
  */
 
-/**
- * 用語集画面です。
- * @constructor
- */
-function Scene_Glossary() {
-    this.initialize.apply(this, arguments);
-}
-
-/**
- * 用語集カテゴリウィンドウです。
- * @constructor
- */
-function Window_GlossaryCategory() {
-    this.initialize.apply(this, arguments);
-}
-
-/**
- * 用語集リストウィンドウです。
- * @constructor
- */
-function Window_GlossaryList() {
-    this.initialize.apply(this, arguments);
-}
-
-/**
- * 用語集確認ウィンドウです。
- * @constructor
- */
-function Window_GlossaryConfirm() {
-    this.initialize.apply(this, arguments);
-}
-
-/**
- * 用語集ウィンドウです。
- * @constructor
- */
-function Window_Glossary() {
-    this.initialize.apply(this, arguments);
-}
-
-/**
- * 用語集収集率ウィンドウです。
- * @constructor
- */
-function Window_GlossaryComplete() {
-    this.initialize.apply(this, arguments);
-}
-
 (function() {
     'use strict';
     var metaTagPrefix = 'SG';
@@ -1045,9 +1000,6 @@ function Window_GlossaryComplete() {
         return convertEscapeCharactersAndParse(arg, true).clamp(min, max);
     };
 
-    var getArgBoolean = function(arg) {
-        return arg.toUpperCase() === 'ON' || arg.toUpperCase() === 'TRUE';
-    };
 
     var getArgString = function(arg, upperFlg) {
         if (arg !== String(arg)) {
@@ -1612,6 +1564,14 @@ function Window_GlossaryComplete() {
     // Scene_Glossary
     //  用語集画面を扱うクラスです。
     //=============================================================================
+    /**
+     * 用語集画面です。
+     * @constructor
+     */
+    function Scene_Glossary() {
+        this.initialize.apply(this, arguments);
+    }
+    window.Scene_Glossary = Scene_Glossary;
     Scene_Glossary.prototype             = Object.create(Scene_ItemBase.prototype);
     Scene_Glossary.prototype.constructor = Scene_Glossary;
 
@@ -1663,7 +1623,7 @@ function Window_GlossaryComplete() {
     };
 
     Scene_Glossary.prototype.createGlossaryCompleteWindow = function() {
-        this._glossaryCompleteWindow = new Window_GlossaryComplete(this._glossaryListWindow);
+        this._glossaryCompleteWindow = new Window_GlossaryComplete(this._glossaryListWindow, this._helpWindow);
         if (!$gameParty.isUseGlossaryComplete()) this._glossaryCompleteWindow.hide();
         this.addWindow(this._glossaryCompleteWindow);
     };
@@ -1852,10 +1812,13 @@ function Window_GlossaryComplete() {
         this.hide();
     };
 
-    //=============================================================================
-    // Window_GlossaryCategory
-    //  用語集カテゴリウィンドウです。
-    //=============================================================================
+    /**
+     * 用語集カテゴリウィンドウです。
+     * @constructor
+     */
+    function Window_GlossaryCategory() {
+        this.initialize.apply(this, arguments);
+    }
     Window_GlossaryCategory.prototype             = Object.create(Window_Selectable.prototype);
     Window_GlossaryCategory.prototype.constructor = Window_GlossaryCategory;
 
@@ -1915,10 +1878,13 @@ function Window_GlossaryComplete() {
         }
     };
 
-    //=============================================================================
-    // Window_GlossaryList
-    //  用語集リストウィンドウです。
-    //=============================================================================
+    /**
+     * 用語集リストウィンドウです。
+     * @constructor
+     */
+    function Window_GlossaryList() {
+        this.initialize.apply(this, arguments);
+    }
     Window_GlossaryList.prototype             = Object.create(Window_ItemList.prototype);
     Window_GlossaryList.prototype.constructor = Window_GlossaryList;
 
@@ -1926,7 +1892,7 @@ function Window_GlossaryComplete() {
         this._glossaryWindow = gWindow;
         var height           = gWindow.height;
         if ($gameParty.isUseGlossaryComplete()) {
-            height -= this.lineHeight() + this.standardPadding() * 2;
+            height -= this.lineHeight() + $gameSystem.windowPadding() * 2;
         }
         var width = $gameParty.getGlossaryListWidth();
         Window_ItemList.prototype.initialize.call(this, new Rectangle(0, gWindow.y, width, height));
@@ -2090,20 +2056,19 @@ function Window_GlossaryComplete() {
     Window_GlossaryList.prototype.drawEquippedActor = function() {
     };
 
-    //=============================================================================
-    // Window_GlossaryConfirm
-    //  用語集確認ウィンドウです。
-    //=============================================================================
+    /**
+     * 用語集確認ウィンドウです。
+     * @constructor
+     */
+    function Window_GlossaryConfirm() {
+        this.initialize.apply(this, arguments);
+    }
     Window_GlossaryConfirm.prototype             = Object.create(Window_Command.prototype);
     Window_GlossaryConfirm.prototype.constructor = Window_GlossaryConfirm;
 
     Window_GlossaryConfirm.prototype.initialize = function(listWindow) {
         this._listWindow = listWindow;
-        Window_Command.prototype.initialize.call(this, new Rectangle(0, 0, 120, 32));
-    };
-
-    Window_GlossaryConfirm.prototype.windowWidth = function() {
-        return 120;
+        Window_Command.prototype.initialize.call(this, this.getWindowRect());
     };
 
     Window_GlossaryConfirm.prototype.updatePlacement = function() {
@@ -2115,24 +2080,37 @@ function Window_GlossaryComplete() {
         this.y = this._listWindow.y + line * this._listWindow.itemHeight() + 32;
     };
 
+    Window_GlossaryConfirm.prototype.itemTextAlign = function() {
+        return "left";
+    };
+
     Window_GlossaryConfirm.prototype.makeCommandList = function() {
         var confirmMessages = $gameParty.getGlossaryConfirmMessages();
         this.addCommand(confirmMessages[0], 'use');
         this.addCommand(confirmMessages[1], 'noUse');
     };
 
-    //=============================================================================
-    // Window_GlossaryComplete
-    //  用語集収集率ウィンドウです。
-    //=============================================================================
+    Window_GlossaryConfirm.prototype.getWindowRect = function() {
+        var width = 120;
+        var height = this.fittingHeight(2);
+        return new Rectangle(0, 0, width, height);
+    };
+
+    /**
+     * 用語集収集率ウィンドウです。
+     * @constructor
+     */
+    function Window_GlossaryComplete() {
+        this.initialize.apply(this, arguments);
+    }
     Window_GlossaryComplete.prototype             = Object.create(Window_Base.prototype);
     Window_GlossaryComplete.prototype.constructor = Window_GlossaryComplete;
 
-    Window_GlossaryComplete.prototype.initialize = function(listWindow) {
+    Window_GlossaryComplete.prototype.initialize = function(listWindow, helpWindow) {
         var x            = listWindow.x;
         var y            = listWindow.y + listWindow.height;
         var width        = listWindow.width;
-        var height       = Graphics.boxHeight - y;
+        var height       = Graphics.boxHeight - y - helpWindow.height;
         this._listWindow = listWindow;
         Window_Base.prototype.initialize.call(this, new Rectangle(x, y, width, height));
         this.setFramelessDesign();
@@ -2148,10 +2126,13 @@ function Window_GlossaryComplete() {
         this.drawTextEx($gameParty.getGlossaryCompleteMessage().format(percent.padZero(3)), 0, 0);
     };
 
-    //=============================================================================
-    // Window_Glossary
-    //  用語集ウィンドウです。
-    //=============================================================================
+    /**
+     * 用語集ウィンドウです。
+     * @constructor
+     */
+    function Window_Glossary() {
+        this.initialize.apply(this, arguments);
+    }
     Window_Glossary.prototype             = Object.create(Window_Base.prototype);
     Window_Glossary.prototype.constructor = Window_Glossary;
 
@@ -2166,8 +2147,12 @@ function Window_GlossaryComplete() {
         this.setFramelessDesign();
     };
 
-    Window_Glossary.prototype.standardFontSize = function() {
-        return param.FontSize ? param.FontSize : Window_Base.prototype.standardFontFace();
+    var _Window_Glossary_resetFontSettings = Window_Glossary.prototype.resetFontSettings;
+    Window_Glossary.prototype.resetFontSettings = function() {
+        _Window_Glossary_resetFontSettings.apply(this, arguments);
+        if (param.FontSize) {
+            this.contents.fontSize = param.FontSize;
+        }
     };
 
     Window_Glossary.prototype.calcMaxPages = function(index) {
