@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/09/17 MZ版向けに修正
 // 1.3.0 2019/01/02 用語辞典プラグイン使用時に用語履歴を常に継承できるよう修正
 // 1.2.1 2017/12/08 SceneGlossary.jsとの間で発生する可能性のある競合を解消
 // 1.2.0 2017/05/15 パーティを切り替えた際にリソースを統合できる機能を追加
@@ -18,57 +19,37 @@
 //=============================================================================
 
 /*:
- * @plugindesc ParallelPartyPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param ShareResource
- * @desc 異なるパーティでもリソース(アイテム、武器、防具、お金、歩数)を共有します。(ON/OFF)
- * @default OFF
- *
- * @param SavePosition
- * @desc パーティを切り替えたときに元の位置を保存し、元のパーティに戻したときに自働で場所移動します。
- * @default OFF
- *
- * @help 複数のパーティを同時に管理できます。
- * 各パーティは「パーティID」で管理され、初期状態のパーティIDは「0」です。
- * それぞれ所持金やアイテムが別々に管理され、プラグインコマンドで
- * 別のパーティに交代できます。
- *
- * 新しいパーティに移った直後はメンバーが0人の状態なので
- * イベント「メンバーの入れ替え」でアクターを追加してください。
- *
- * アクターの情報は共有しているので、他のパーティに加入しているアクターを
- * 別のパーティに入れた場合、状態を引き継ぎます。
- *
- * 戦闘中のパーティの入れ替えはできません。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * PP_パーティ変更 1 OFF # パーティを[1]に変更します。
- * PP_CHANGE_PARTY 1 OFF # 同上
- * PP_パーティ変更 1 ON  # パーティを[1]に変更してリソースを統合します。
- * PP_CHANGE_PARTY 1 ON  # 同上
- *
- * リソース統合をONにすると、所持アイテムやお金を合流先のパーティと統合します。
- * 別々に行動していた複数のパーティがひとつに合流する際などに使用します。
- * リソース共有のパラメータが有効な場合、統合は行われません。
- *
- * This plugin is released under the MIT License.
- */
-
-/*:ja
  * @plugindesc 並列パーティプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ParallelParty.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param リソース共有
  * @desc 異なるパーティでもリソース(アイテム、武器、防具、お金、歩数)を共有します。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param パーティ位置を保持
  * @desc パーティを切り替えたときに元の位置を保存し、元のパーティに戻したときに自働で場所移動します。
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @command CHANGE_PARTY
+ * @text パーティ変更
+ * @desc 現在のパーティを指定したIDのパーティに変更します。
+ *
+ * @arg partyId
+ * @text パーティID
+ * @desc パーティIDです。パーティIDについてはヘルプをご確認ください。
+ * @default 0
+ * @type number
+ *
+ * @arg resourceCombine
+ * @text リソース統合
+ * @desc 所持アイテムやお金を合流先のパーティと統合します。リソース共有のパラメータが有効な場合、統合は行われません。
+ * @default false
+ * @type boolean
  *
  * @help 複数のパーティを同時に管理できます。
  * 各パーティは「パーティID」で管理され、初期状態のパーティIDは「0」です。
@@ -82,19 +63,6 @@
  * 別のパーティに入れた場合、状態を引き継ぎます。
  *
  * 戦闘中のパーティの入れ替えはできません。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * PP_パーティ変更 1 OFF # パーティを[1]に変更します。
- * PP_CHANGE_PARTY 1 OFF # 同上
- * PP_パーティ変更 1 ON  # パーティを[1]に変更してリソースを統合します。
- * PP_CHANGE_PARTY 1 ON  # 同上
- *
- * リソース統合をONにすると、所持アイテムやお金を合流先のパーティと統合します。
- * 別々に行動していた複数のパーティがひとつに合流する際などに使用します。
- * リソース共有のパラメータが有効な場合、統合は行われません。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -108,95 +76,21 @@ function Game_Parties() {
 
 (function() {
     'use strict';
-    var pluginName    = 'ParallelParty';
-    var metaTagPrefix = 'PP_';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
+    PluginManagerEx.registerCommand(script, 'CHANGE_PARTY', args => {
+        if ($gameParty.inBattle()) {
+            return;
         }
-        return '';
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
-    };
-
-    var getArgBoolean = function(arg) {
-        return arg.toUpperCase() === 'ON';
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var isNotAString = function(args) {
-        return String(args) !== args;
-    };
-
-    var convertAllArguments = function(args) {
-        for (var i = 0; i < args.length; i++) {
-            args[i] = convertEscapeCharacters(args[i]);
-        }
-        return args;
-    };
-
-    var setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(metaTagPrefix + commandName, methodName);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var pluginCommandMap = new Map();
-    setPluginCommand('パーティ変更', 'execChangeParty');
-    setPluginCommand('CHANGE_PARTY', 'execChangeParty');
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param           = {};
-    param.shareResource = getParamBoolean(['ShareResource', 'リソース共有']);
-    param.savePosition  = getParamBoolean(['SavePosition', 'パーティ位置を保持']);
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertAllArguments(args));
-        }
-    };
-
-    Game_Interpreter.prototype.execChangeParty = function(args) {
-        if ($gameParty.inBattle()) return;
-        $gameSystem.changeParty(getArgNumber(args[0], 0), getArgBoolean(args[1] || ''));
+        $gameSystem.changeParty(args.partyId, args.resourceCombine);
         if (!$gamePlayer.isTransferring()) {
             $gamePlayer.refresh();
             $gameMap.requestRefresh();
         } else {
             this.setWaitMode('transfer');
         }
-    };
+    });
 
     //=============================================================================
     // Game_System
