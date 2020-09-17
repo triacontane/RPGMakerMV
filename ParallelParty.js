@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2020/09/17 英語版のヘルプ作成とバグ修正
 // 2.0.0 2020/09/17 MZ版向けに修正
 // 1.3.0 2019/01/02 用語辞典プラグイン使用時に用語履歴を常に継承できるよう修正
 // 1.2.1 2017/12/08 SceneGlossary.jsとの間で発生する可能性のある競合を解消
@@ -19,18 +20,66 @@
 //=============================================================================
 
 /*:
+ * @plugindesc ParallelParty
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ParallelParty.js
+ * @base PluginCommonBase
+ * @author triacontane
+ *
+ * @param shareResource
+ * @desc Different parties share resources, even if they are from different parties.
+ * @default false
+ * @type boolean
+ *
+ * @param savePosition
+ * @desc Moves itself to a new location when you switch back to the original party.
+ * @default false
+ * @type boolean
+ *
+ * @command CHANGE_PARTY
+ * @text Change Party
+ * @desc Changes the current party to the party with the specified ID.
+ *
+ * @arg partyId
+ * @text Party ID
+ * @desc This is a party ID. Please see Help for more information.
+ * @default 0
+ * @type number
+ *
+ * @arg resourceCombine
+ * @text Resource Integration
+ * @desc Integrate your items and money with the party you are joining.
+ * @default false
+ * @type boolean
+ *
+ * @help You can manage multiple parties at the same time.
+ * Each party is managed by a "party ID", which is initially set to "0".
+ * Each of them has its own set of money and items, and you can use the plugin commands to add
+ * You can switch to another party.
+ *
+ * Right after you move to a new party, you'll have zero members.
+ * Please add actors in the event "Replace Members".
+ *
+ * Actors' information is shared, so you can get actors who have joined other parties.
+ * If you put them in a different party, they will inherit their status.
+ *
+ * You cannot switch parties during battle.
+ */
+/*:ja
  * @plugindesc 並列パーティプラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ParallelParty.js
  * @base PluginCommonBase
  * @author トリアコンタン
  *
- * @param リソース共有
- * @desc 異なるパーティでもリソース(アイテム、武器、防具、お金、歩数)を共有します。(ON/OFF)
+ * @param shareResource
+ * @text リソース共有
+ * @desc 異なるパーティでもリソース(アイテム、武器、防具、お金、歩数)を共有します。
  * @default false
  * @type boolean
  *
- * @param パーティ位置を保持
+ * @param savePosition
+ * @text パーティ位置を保持
  * @desc パーティを切り替えたときに元の位置を保存し、元のパーティに戻したときに自働で場所移動します。
  * @default false
  * @type boolean
@@ -79,7 +128,7 @@ function Game_Parties() {
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
-    PluginManagerEx.registerCommand(script, 'CHANGE_PARTY', args => {
+    PluginManagerEx.registerCommand(script, 'CHANGE_PARTY', function(args) {
         if ($gameParty.inBattle()) {
             return;
         }
