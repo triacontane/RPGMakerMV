@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/09/18 英語版のヘルプを作成
  1.0.0 2020/09/17 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -19,7 +20,56 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventLabel.js
  * @author triacontane
  *
+ * @param showDefault
+ * @desc You don't need to set anything up to see the label in the event name.
+ * @default false
+ * @type boolean
+ *
+ * @param hideNoImage
+ * @desc If the image of the event is not specified, the label will not be displayed either.
+ * @default true
+ * @type boolean
+ *
+ * @param hideNameEv
+ * @desc When the default display is enabled, events whose event name begins with "EV" are not labeled.
+ * @default true
+ * @type boolean
+ *
+ * @param fontSize
+ * @desc The font size of the label.
+ * @default 16
+ *
+ * @param backColor
+ * @desc The background color of the label.
+ * @default rgba(0,0,0,0.5)
+ *
+ * @param padding
+ * @desc The padding of the label.
+ * @default 2
+ *
+ * @command SHOW_LABEL
+ * @text Show label
+ * @desc Displays the label of the event. If you specify empty, the label is cleared.
+ *
+ * @arg text
+ * @text Label text
+ * @desc Label text
+ * @default
+ * @type multiline_string
+ *
+ * @arg fontSize
+ * @text Font size
+ * @desc The font size of the label.
+ * @default 0
+ *
  * @help EventLabel.js
+ *　
+ * The label appears at the top of the event. Specify the following in the memo field.
+ * <LB:name> // The label [name] will be displayed on top of the event.
+ * <LB> // the label will be displayed with the event name.
+ * <LB_No> // the label will not be displayed. (When "Show by Default" is enabled.)
+ * <LB_X:-4> // Shifts the label's position in the X direction.
+ * <LB_Y:-4> // Shifts the label's position in the Y direction.
  *
  * This plugin is released under the MIT License.
  */
