@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.4 2020/09/19 MOG_EventIndicators.jsと併用したとき、動的生成イベントにインジケータが表示されるよう修正
 // 1.11.3 2020/03/01 MOG_EventText.jsと併用したとき、動的生成イベントにイベントテキストが表示されるよう修正
 // 1.11.2 2019/12/14 KMS_Minimap.jsと併用したとき、動的生成イベントがミニマップに表示されるよう修正（KMS_Minimap.js側も専用のコードを適用する必要あり）
 // 1.11.1 2019/12/10 「確定出力方式」の条件式を修正
@@ -730,6 +731,12 @@ function Game_PrefabEvent() {
         if (this._etextField) {
             this.refresh_event_text_field();
         }
+        // Resolve conflict by MOG_EventIndicators.js
+        if (this._eventIndicators && typeof EventIndicators !== 'undefined') {
+            var indicator = new EventIndicators(sprite);
+            this._eventIndicators.push(indicator);
+            this._indicatorsField.addChild(indicator);
+        }
     };
 
     // Resolve conflict by MOG_EventText.js
@@ -751,6 +758,12 @@ function Game_PrefabEvent() {
         if (this._sprite_char_text && this._sprite_char_text[index]) {
             this._etextField.removeChild(this._sprite_char_text[index]);
             this._sprite_char_text.splice(index, 1);
+        }
+        // Resolve conflict by MOG_EventIndicators.js
+        if (this._eventIndicators && typeof EventIndicators !== 'undefined') {
+            var indicator = this._eventIndicators[index];
+            this._eventIndicators.splice(index, 1);
+            this._indicatorsField.removeChild(indicator);
         }
     };
 
