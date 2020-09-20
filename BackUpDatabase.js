@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2020/09/20 リファクタリング
 // 2.0.0 2020/09/19 MZ版として非同期処理で全面的に再構築
 // 1.1.1 2018/05/13 1.1.0でエラーになる問題を修正
 // 1.1.0 2018/05/13 バックアップフォルダを時間単位で作成できる機能を追加
@@ -123,32 +124,17 @@
     class BackUpUtil {
 
         static async backup() {
-            await this._backupDataBase();
-            await this._backupRpgProject();
+            this._date = new Date();
+            await this._copy('data');
+            await this._copy('', /\w+\.rmmzproject/);
             if (param.includeSave) {
-                await this._backupSaveData();
+                await this._copy('save');
             }
         }
 
-        static async _backupDataBase() {
-            const src = this._getProjectPath('data');
-            const dist = await this._makeBackupPath('data');
-            await this._copy(src, dist);
-        }
-
-        static async _backupRpgProject() {
-            const src = this._getProjectPath('/');
-            const dist = this._getBackupRoot();
-            await this._copy(src, dist, /\w+\.rmmzproject/);
-        };
-
-        static async _backupSaveData() {
-            const src = this._getProjectPath('save');
-            const dist = await this._makeBackupPath('save');
-            await this._copy(src, dist);
-        };
-
-        static async _copy(src, dist, regExp = null) {
+        static async _copy(targetDirectory, regExp = null) {
+            const src = this._getProjectPath(targetDirectory);
+            const dist = this._getBackupPath(targetDirectory);
             const copyModel = new FileCopyModel(src, dist);
             await copyModel.copyAllFiles(regExp);
         }
@@ -159,25 +145,15 @@
             return path.join(base, `${directory}/`);
         }
 
-        static async _makeBackupPath(dirName) {
-            const filePath = this._getBackupPath(dirName);
-            const fs = require("fs").promises;
-            await fs.mkdir(filePath, {recursive: true});
-            return filePath;
-        }
-
         static _getBackupPath(dirName) {
-            const date = new Date();
             const root = this._getBackupRoot();
-            return `${root}${dirName}_${date.getFullYear()}-${(date.getMonth() + 1).padZero(2)}-${date.getDate().padZero(2)}${this._getTimeText()}/`;
-        }
-
-        static _getTimeText() {
-            if (!param.timeUnit) {
-                return '';
+            if (!dirName) {
+                return root;
             }
-            const date = new Date();
-            return `_${date.getHours().padZero(2)}${date.getMinutes().padZero(2)}${date.getSeconds().padZero(2)}`;
+            const year = this._date.getFullYear();
+            const month = (this._date.getMonth() + 1).padZero(2);
+            const day = this._date.getDate().padZero(2);
+            return `${root}${dirName}_${year}-${month}-${day}${this._getTimeText()}/`;
         }
 
         static _getBackupRoot() {
@@ -187,6 +163,16 @@
             }
             return filePath.match(/\/$/) ? filePath : filePath + '/';
         };
+
+        static _getTimeText() {
+            if (!param.timeUnit) {
+                return '';
+            }
+            const hour = this._date.getHours().padZero(2);
+            const minute = this._date.getMinutes().padZero(2);
+            const second = this._date.getSeconds().padZero(2);
+            return `_${hour}${minute}${second}`;
+        }
     }
 
     /**
@@ -201,11 +187,11 @@
         }
 
         async copyAllFiles(fileReqExp = null) {
-            this._fileReqExp = fileReqExp;
+            await this._fs.mkdir(this._dist, {recursive: true});
             const dirents = await this._fs.readdir(this._src, {withFileTypes: true});
             for (const dirent of dirents) {
                 const name = dirent.name;
-                if (this._fileReqExp && !this._fileReqExp.test(name)) {
+                if (fileReqExp && !fileReqExp.test(name)) {
                     continue;
                 }
                 if (dirent.isDirectory()) {
