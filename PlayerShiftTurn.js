@@ -18,6 +18,7 @@
 
 /*:
  * @plugindesc PlayerShiftTurn
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PlayerShiftTurn.js
  * @author triacontane
  *
  * @param buttonName
@@ -40,7 +41,9 @@
  */
 /*:ja
  * @plugindesc プレイヤーのその場方向転換
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PlayerShiftTurn.js
+ * @author トリアコンタン
  *
  * @param buttonName
  * @text ボタン名称
