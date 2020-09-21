@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.9.0 2020/09/21 ウィンドウで選択中の項目オブジェクトを変数に格納できる機能を追加
  1.8.0 2020/08/02 利用可能なシーン数を20に増やした
  1.7.5 2020/07/28 NobleMushroom.jsとの競合を解消
  1.7.4 2020/07/23 1.7.3で修正した一部のリファクタリングを元に戻す
@@ -579,6 +580,12 @@
  * @default 0
  * @type variable
  *
+ * @param ItemVariableId
+ * @text 選択項目格納変数
+ * @desc 選択中の項目オブジェクトが常に格納される変数です。数値以外のオブジェクトが格納されるので取り扱いに注意してください。
+ * @default 0
+ * @type variable
+ *
  * @param Cancelable
  * @text キャンセル可能
  * @desc 有効にするとウィンドウをキャンセルできるようになります。
@@ -704,6 +711,7 @@
  * @type combo
  * @option SceneManager.callCustomMenu('Scene___'); // 別のカスタムメニューに移動
  * @option this.popScene(); // 元のシーンに戻る
+ * @option SceneManager.goto(Scene_Map); // マップ画面に遷移
  * @option SceneManager.changeWindowFocus('window1'); // 指定ウィンドウにフォーカス
  * @option SceneManager.changeWindowIndex('window1', 1); // 指定ウィンドウのインデックス変更
  * @option SceneManager.trashScene(); // 元のシーン情報を破棄する
@@ -1192,6 +1200,9 @@
         updateIndexVariable() {
             if (this._data.IndexVariableId) {
                 $gameVariables.setValue(this._data.IndexVariableId, this._index);
+            }
+            if (this._data.ItemVariableId) {
+                $gameVariables.setValue(this._data.ItemVariableId, this.getItem(this._index));
             }
         }
 
