@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2020/09/21 英語版のヘルプを追加
 // 1.1.0 2020/09/21 指定したスイッチがONのときのみプラグインの機能を有効にする設定を追加
 // 1.0.1 2016/07/09 8方向移動系（かつキャラクターの向きは4方向）のプラグインとの競合を解消
 // 1.0.0 2016/01/06 初版
@@ -16,6 +17,28 @@
 //=============================================================================
 
 /*:
+ * @plugindesc PlayerShiftTurn
+ * @author triacontane
+ *
+ * @param buttonName
+ * @desc This button is used to change direction on the spot.
+ * @default shift
+ * @type combo
+ * @option shift
+ * @option control
+ * @option tab
+ *
+ * @param validSwitchId
+ * @desc The function of the plug-in is enabled only when the specified switch is ON.
+ * @default 0
+ * @type switch
+ *
+ * @help Change direction on the fly without moving the player
+ * while holding down a given key.
+ *
+ * This plugin is released under the MIT License.
+ */
+/*:ja
  * @plugindesc プレイヤーのその場方向転換
  * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
  *
