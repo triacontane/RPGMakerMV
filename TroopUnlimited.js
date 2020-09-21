@@ -1,21 +1,24 @@
 //=============================================================================
 // TroopUnlimited.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2020/09/21 MZ用にヘルプとコメントを微修正
 // 1.0.0 2017/02/16 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
  * @plugindesc TroopUnlimitedPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TroopUnlimited.js
+ * @author triacontane
  *
  * @help エディタ上の最大値である8体を超える数の敵キャラを
  * 一度に出現させることができるようになります。
@@ -37,7 +40,9 @@
  */
 /*:ja
  * @plugindesc 敵グループ限界突破プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TroopUnlimited.js
+ * @author トリアコンタン
  *
  * @help エディタ上の最大値である8体を超える数の敵キャラを
  * 一度に出現させることができるようになります。
