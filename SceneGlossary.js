@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.17.4 2020/09/23 敵キャラ用語の自動取得で撃破しなくてもエンカウントしただけで登録されてしまう仕様を変更
 // 2.17.3 2020/08/05 複数ページ表示した状態でカテゴリ表示に戻ったとき、ページ切り替え矢印が表示されたままになる問題を修正
 //                   クリックによるページ切り替えの場合でもページ折り返しができるよう仕様変更
 // 2.17.2 2020/06/06 未入手のアイテムを？？？で表示するとき、アイコンも非表示にするよう仕様変更
@@ -1500,18 +1501,18 @@ function Window_GlossaryComplete() {
     // Game_Troop
     //  敵キャラの名前を自動登録します。
     //=============================================================================
-    var _Game_Troop_setup      = Game_Troop.prototype.setup;
-    Game_Troop.prototype.setup = function(troopId) {
-        _Game_Troop_setup.apply(this, arguments);
-        if (param.AutoAdditionEnemy) {
-            this.addEnemyGlossary();
-        }
-    };
-
     Game_Troop.prototype.addEnemyGlossary = function() {
-        this.members().forEach(function(enemy) {
+        this.deadMembers().forEach(function(enemy) {
             $gameParty.gainGlossaryFromText(enemy.originalName());
         });
+    };
+
+    var _BattleManager_makeRewards = BattleManager.makeRewards;
+    BattleManager.makeRewards = function() {
+        _BattleManager_makeRewards.apply(this, arguments);
+        if (param.AutoAdditionEnemy) {
+            $gameTroop.addEnemyGlossary();
+        }
     };
 
     //=============================================================================
