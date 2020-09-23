@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.4 2020/09/23 1.0.3の修正方法を変更し、メッセージ表示直後にフキダシを無効化した場合でもネームウィンドウが一瞬上に表示されないよう修正
  1.0.3 2020/09/23 フキダシ位置を下にして表示したとき、条件次第でウィンドウを閉じる瞬間にフキダシが一瞬上に表示される問題を修正
  1.0.2 2020/08/26 ベースプラグインの説明を追加
  1.0.1 2020/08/26 画面サイズとUIサイズで異なる値を指定したときにフキダシ位置がずれる問題を修正
@@ -376,6 +377,14 @@
                 break;
             case 'auto':
                 $gameSystem.setPopupAuto(characterId);
+        }
+    };
+
+    const _Game_Interpreter_terminate    = Game_Interpreter.prototype.terminate;
+    Game_Interpreter.prototype.terminate = function() {
+        _Game_Interpreter_terminate.apply(this, arguments);
+        if (this._depth === 0 && $gameMap.isInterpreterOf(this)) {
+            $gameSystem.clearMessagePopup();
         }
     };
 
@@ -1026,6 +1035,9 @@
     };
 
     Window_Message.prototype.updatePlacementPopup = function() {
+        if (this.isClosing()) {
+            return;
+        }
         this.setPopupPosition(this.getPopupTargetCharacter());
         if (this._choiceListWindow && $gameMessage.isChoice()) {
             this._choiceListWindow.updatePlacementPopup();
