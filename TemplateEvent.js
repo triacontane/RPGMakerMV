@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2020/09/24 固有イベントによる設定上書きのメモ欄が機能しない問題を修正
+                  上書き対象項目『向き』を有効にして上書きすると、テンプレートイベントの向き固定の設定が解除されてしまう問題を修正
  1.0.1 2020/08/26 ベースプラグインの説明を追加
  1.0.0 2020/07/25 MV版から流用作成
 ----------------------------------------------------------------------------
@@ -524,8 +526,10 @@ let $dataTemplateEvents = null;
             if (this._originalDirection !== image.direction) {
                 this._originalDirection = image.direction;
                 this._prelockDirection  = 0;
+                const fix = this._directionFix;
                 this.setDirectionFix(false);
                 this.setDirection(image.direction);
+                this.setDirectionFix(fix);
             }
             if (this._originalPattern !== image.pattern) {
                 this._originalPattern = image.pattern;
@@ -563,7 +567,7 @@ let $dataTemplateEvents = null;
         if (templateEvent) {
             this._templateId    = templateId;
             this._templateEvent = templateEvent;
-            this._override      = param.AutoOverride || !!PluginManagerEx.findMetaValue(event, 'TEOverRide', 'TE上書き');
+            this._override      = param.AutoOverride || !!PluginManagerEx.findMetaValue(event, ['TEOverRide', 'TE上書き']);
             if (param.IntegrateNote > 0) {
                 this.integrateNote(event, param.IntegrateNote);
             }
