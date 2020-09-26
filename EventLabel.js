@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/09/26 ラベルの表示条件にスイッチ、セルフスイッチを追加
+                  コマンドで他のイベントのラベルを表示、非表示できる機能を追加
  1.0.2 2020/09/26 英語版のヘルプにベースプラグインの説明を追記
  1.0.1 2020/09/18 英語版のヘルプを作成
  1.0.0 2020/09/17 初版
@@ -52,6 +54,11 @@
  * @command SHOW_LABEL
  * @text Show label
  * @desc Displays the label of the event. If you specify empty, the label is cleared.
+ *
+ * @arg eventId
+ * @text Event ID
+ * @desc Target event id.
+ * @default 0
  *
  * @arg text
  * @text Label text
@@ -123,6 +130,11 @@
  * @text ラベル表示
  * @desc イベントのラベルを表示します。空を指定するとラベルが消去されます。マップ移動で元に戻ります。
  *
+ * @arg eventId
+ * @text イベントID
+ * @desc ラベルを表示するイベントIDです。0を指定するとコマンドを実行したイベントになります。
+ * @default 0
+ *
  * @arg text
  * @text ラベルテキスト
  * @desc ラベルテキストです。
@@ -155,7 +167,7 @@
     const param  = PluginManagerEx.createParameter(script);
 
     PluginManager.registerCommand(PluginManagerEx.findPluginName(script), 'SHOW_LABEL', function(args) {
-        const event = $gameMap.event(this.eventId());
+        const event = $gameMap.event(args.eventId || this.eventId());
         if (event) {
             event.setEventLabel(args.text, PluginManagerEx.convertVariables(args.fontSize));
         }
@@ -171,6 +183,7 @@
         this._labelSize = param.fontSize || 16;
         this._labelX = PluginManagerEx.findMetaValue(this.event(), 'LB_X') || 0;
         this._labelY = PluginManagerEx.findMetaValue(this.event(), 'LB_Y') || 0;
+        this._labelSwitch = PluginManagerEx.findMetaValue(this.event(), 'LB_S') || null;
     };
 
     Game_Event.prototype.findLabelX = function() {
@@ -223,7 +236,19 @@
 
     Game_Event.prototype.isValidEventLabel = function() {
         return this._labelText && !this._erased &&
-            !this.isHideLabelBecauseOfNoImage() && this.isNearTheScreen();
+            !this.isHideLabelBecauseOfNoImage() && this.isNearTheScreen() &&
+            this.isValidEventLabelSwitch();
+    };
+
+    Game_Event.prototype.isValidEventLabelSwitch = function() {
+        if (!this._labelSwitch) {
+            return true;
+        } else if (isFinite(this._labelSwitch)) {
+            return $gameSwitches.value(this._labelSwitch);
+        } else {
+            const key = [this._mapId, this._eventId, this._labelSwitch];
+            return $gameSelfSwitches.value(key);
+        }
     };
 
     Game_Event.prototype.isHideLabelBecauseOfNoImage = function() {
