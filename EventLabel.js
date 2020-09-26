@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2020/09/26 英語版のヘルプにベースプラグインの説明を追記
  1.0.1 2020/09/18 英語版のヘルプを作成
  1.0.0 2020/09/17 初版
 ----------------------------------------------------------------------------
@@ -19,6 +20,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventLabel.js
  * @author triacontane
+ * @base PluginCommonBase
  *
  * @param showDefault
  * @desc You don't need to set anything up to see the label in the event name.
@@ -70,6 +72,10 @@
  * <LB_No> // the label will not be displayed. (When "Show by Default" is enabled.)
  * <LB_X:-4> // Shifts the label's position in the X direction.
  * <LB_Y:-4> // Shifts the label's position in the Y direction.
+ *
+ * The base plugin "PluginCommonBase.js" is required to use this plugin.
+ * The "PluginCommonBase.js" is here.
+ * (MZ install path)dlc/BasicResources/plugins/official/PluginCommonBase.js
  *
  * This plugin is released under the MIT License.
  */
