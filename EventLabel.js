@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2020/09/26 1.1.0でイベントIDを0で指定していた場合に表示されない問題を修正
  1.1.1 2020/09/26 ラベル表示条件のヘルプを書き忘れていたので追加
  1.1.0 2020/09/26 ラベルの表示条件にスイッチ、セルフスイッチを追加
                   コマンドで他のイベントのラベルを表示、非表示できる機能を追加
@@ -172,7 +173,8 @@
     const param  = PluginManagerEx.createParameter(script);
 
     PluginManager.registerCommand(PluginManagerEx.findPluginName(script), 'SHOW_LABEL', function(args) {
-        const event = $gameMap.event(args.eventId || this.eventId());
+        const id = PluginManagerEx.convertVariables(args.eventId) || this.eventId();
+        const event = $gameMap.event(id);
         if (event) {
             event.setEventLabel(args.text, PluginManagerEx.convertVariables(args.fontSize));
         }
