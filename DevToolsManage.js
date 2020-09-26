@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2020/09/26 プロジェクトフォルダを開くショートカットコマンドを追加
 // 1.0.5 2020/09/13 戦闘強制勝利のコマンドが機能しない問題を修正
 // 1.0.4 2020/08/21 マップの自動リロード機能を使おうとするとエラーになる問題を修正
 // 1.0.3 2020/08/20 正式版のPluginCommonBaseで動作しなくなる問題を修正
@@ -176,6 +177,8 @@
  * @value ToggleRapid
  * @option Slow mode
  * @value ToggleSlow
+ * @option Open project
+ * @value OpenProject
  *
  * @param HotKey
  * @text Hotkey
@@ -368,6 +371,8 @@
  * @value ToggleRapid
  * @option 低速化
  * @value ToggleSlow
+ * @option プロジェクトを開く
+ * @value OpenProject
  *
  * @param HotKey
  * @text ホットキー
@@ -590,6 +595,10 @@ function Controller_NwJs() {
         return this._slow;
     };
 
+    SceneManager.openProject = function() {
+        this._nwWindow.openProject();
+    };
+
     SceneManager.drawDevToolInfo = function() {
         let text = '';
         if (this._nwWindow.isOnTop()) {
@@ -774,6 +783,7 @@ function Controller_NwJs() {
                 Freeze       : {name: '画面フリーズ', type: 'checkbox'},
                 ForceDefeat  : {name: '強制敗北', type: 'normal'},
                 ForceAbort   : {name: '強制中断', type: 'normal'},
+                OpenProject  : {name: 'プロジェクトを開く', type: 'normal'},
                 Capture      : {name: 'キャプチャ', type: 'normal'},
                 Record       : {name: '録画', type: 'normal'}
             };
@@ -861,6 +871,10 @@ function Controller_NwJs() {
 
         executeForceAbort() {
             BattleManager.forceAbort();
+        }
+
+        executeOpenProject() {
+            SceneManager.openProject();
         }
 
         executeCapture() {
@@ -1113,6 +1127,17 @@ function Controller_NwJs() {
 
         isStartUpDevTool() {
             return param.StartupDevTool && !Utils.isOptionValid('devToolOff');
+        }
+
+        openProject() {
+            const exec = require('child_process').exec;
+            const path = require('path');
+            const projectPath = path.dirname(process.mainModule.filename);
+            if (process.platform === 'win32') {
+                exec('rundll32.exe url.dll,FileProtocolHandler  "' + projectPath + '"');
+            } else {
+                exec('open "' + projectPath + '"');
+            }
         }
 
         initClickMenu() {
