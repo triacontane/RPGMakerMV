@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2020/09/26 ラベル表示条件のヘルプを書き忘れていたので追加
  1.1.0 2020/09/26 ラベルの表示条件にスイッチ、セルフスイッチを追加
                   コマンドで他のイベントのラベルを表示、非表示できる機能を追加
  1.0.2 2020/09/26 英語版のヘルプにベースプラグインの説明を追記
@@ -79,6 +80,8 @@
  * <LB_No> // the label will not be displayed. (When "Show by Default" is enabled.)
  * <LB_X:-4> // Shifts the label's position in the X direction.
  * <LB_Y:-4> // Shifts the label's position in the Y direction.
+ * <LB_S:1>  // The label is displayed when the switch [1] is ON.
+ * <LB_S:A>  // The label is displayed when the self-switch [A] is ON.
  *
  * The base plugin "PluginCommonBase.js" is required to use this plugin.
  * The "PluginCommonBase.js" is here.
@@ -154,6 +157,8 @@
  * <LB_No>   // ラベルが表示されなくなります。(『デフォルトで表示』が有効な場合)
  * <LB_X:4>  // ラベルのX方向の位置をずらします。
  * <LB_Y:-4> // ラベルのY方向の位置をずらします。
+ * <LB_S:1>  // スイッチ[1]がONのときラベル表示します。
+ * <LB_S:A>  // セルフスイッチ[A]がONのときラベル表示します。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -246,7 +251,7 @@
         } else if (isFinite(this._labelSwitch)) {
             return $gameSwitches.value(this._labelSwitch);
         } else {
-            const key = [this._mapId, this._eventId, this._labelSwitch];
+            const key = [this._mapId, this._eventId, this._labelSwitch.toUpperCase()];
             return $gameSelfSwitches.value(key);
         }
     };
