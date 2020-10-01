@@ -1,11 +1,12 @@
 //=============================================================================
 // RestrictionTargetSkill.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 Triacontane
+// (C) 2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2020/10/01 範囲を「なし」に設定したスキルを敵が使用しなくなる問題を修正
 // 1.2.1 2020/08/29 1.2.0で追加した機能による軽量化対策
 // 1.2.0 2020/04/24 選択できないバトラーを無効表示する機能を追加
 // 1.1.10 2018/06/04 DeadOrAliveItem.jsとの競合を解消
@@ -254,6 +255,9 @@
     //  スキルやアイテムの対象として選択不可能な対象に選択しないようにします。
     //=============================================================================
     Game_Action.prototype.isExistTarget = function() {
+        if (this.item().scope === 0) {
+            return true;
+        }
         BattleManager.setTargetAction(this);
         var targets = [];
         if (this.isForOpponent()) {
