@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/10/06 MZ向けにリファクタリング
  1.0.0 2020/10/01 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -15,6 +16,9 @@
 
 /*:
  * @plugindesc MaintainingImageChangePagePlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MaintainingImageChangePage.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @param TagReverse
@@ -34,10 +38,17 @@
  * The only thing to maintain is the image. Other settings,
  * such as priority, follow the settings of the new page.
  *
+ * The base plugin "PluginCommonBase.js" is required to use this plugin.
+ * The "PluginCommonBase.js" is here.
+ * (MZ install path)dlc/BasicResources/plugins/official/PluginCommonBase.js
+ *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc ページ切り替え時の画像維持プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MaintainingImageChangePage.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param TagReverse
@@ -55,6 +66,11 @@
  * 維持するのは画像のみです。プライオリティなど他の設定は新しいページの
  * 設定に従います。
  *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -63,35 +79,10 @@
 
 (function() {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('MaintainingImageChangePage');
-
-
-    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    const _Game_Event_initialize = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         this._maintainingImage = this.isMaintainingImage();
@@ -101,14 +92,14 @@
         return this.event().meta.MImage ^ param.TagReverse;
     };
 
-    var _Game_Event_setupPageSettings = Game_Event.prototype.setupPageSettings;
+    const _Game_Event_setupPageSettings = Game_Event.prototype.setupPageSettings;
     Game_Event.prototype.setupPageSettings = function() {
         if (this._maintainingImage) {
             this.saveMaintainingImage();
         }
         _Game_Event_setupPageSettings.apply(this, arguments);
         if (this._maintainingImage) {
-            var image = this.page().image;
+            const image = this.page().image;
             if (!image.tileId && !image.characterName) {
                 this.restoreMaintainingImage();
             }
