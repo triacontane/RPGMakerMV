@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2020/10/10 MZ向けに全面リファクタリング
 // 2.7.3 2020/08/18 イベントの一時消去後にサブコマンドマップに移動して戻ってきたときに消去状態が復元されるよう修正
 // 2.7.2 2020/04/03 2.5.0で適用したMOG_SceneMenu.jsとの競合解消と、2.0.1で適用したMOG_MenuCursor.jsとの競合解消を両立できるよう修正
 // 2.7.1 2020/03/13 Window_MenuCommandの初期化で引数を渡し忘れていたのを修正
@@ -44,124 +45,20 @@
 //=============================================================================
 
 /*:
- * @plugindesc MenuSubCommandPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param SubCommand
- * @desc サブコマンド情報です。
- * @default
- * @type struct<SubCommand>[]
- *
- * @param CommandPosition
- * @desc サブコマンド群を追加する位置です。
- * 0:並び替えの下 1:オプションの下 2:セーブの下 3:ゲーム終了の下
- * @default 0
- *
- * @param SubMenuWidth
- * @desc サブメニューを表示するウィンドウの横幅です。指定しない場合デフォルト値「240」が適用されます。
- * @default 0
- *
- * @param SelectActorIdVariable
- * @desc サブメニュー用マップに移動する際に選択していたアクターのIDを格納する変数番号です。
- * @default 0
- *
- * @param WindowSkin
- * @desc サブコマンド用のウィンドウに専用のスキンを設定します。
- * @default
- * @require 1
- * @dir img/system/
- * @type file
- *
- * @param HideOption
- * @desc メインメニューからオプションを消去します。
- * @default OFF
- *
- * @param HideGameEnd
- * @desc メインメニューからゲーム終了を消去します。
- * @default OFF
- *
- * @param HorizontalSubMenu
- * @desc サブメニューを横並べにします。
- * @default false
- * @type boolean
- *
- * @param ClearSubMenuOneByOne
- * @desc サブメニューを逐次消去します
- * @default true
- * @type boolean
- *
- * @param SubMenuX
- * @desc 指定するとサブコマンドのX座標が固定値になります。
- * @default 0
- * @type number
- *
- * @param SubMenuY
- * @desc 指定するとサブコマンドのY座標が固定値になります。
- * @default 0
- * @type number
- *
- * @param SubMenuAlign
- * @desc サブコマンドの揃えを設定します。
- * @default
- * @type select
- * @option Left(default)
- * @value
- * @option Center
- * @value center
- * @option Right
- * @value right
- *
- * @param AnotherPicturesInMenuMap
- * @desc メニューマップと通常マップのピクチャの表示状態を別々に管理します。
- * @default false
- * @type boolean
- *
- * @help MenuSubCommand.js
- *
- * メインメニュー画面に任意の名前のコマンドおよび
- * ツリー表示されるサブコマンドを好きなだけ追加できます。
- * サブコマンドを実行（決定）すると、任意のスクリプトが実行されるか、
- * もしくは指定したマップに移動します。（両方も可能）
- *
- * スクリプトは、主にスクリプトで組まれた別画面に遷移する場合に使用します。
- * もちろん他のプラグインで追加された画面にも遷移可能です。
- * マップ移動は主にイベントによる自作メニュー画面に遷移する場合に使用します。
- * 自作メニュー画面から戻る際は、再度メニューを開いてください。
- * 元々メニューを開いていた場所は、別途保存しているので意識する必要はありません。
- *
- * また、通常の縦レイアウトとメニュー画面はもちろん、
- * プラグインによる横レイアウトのメニュー画面にも対応しています。
- *
- * メンバー選択してマップ移動する際に選択したアクターIDを変数に保存できます。
- *
- * サブコマンドが全て非表示だった場合、親項目自体も非表示になります。
- * 同じく全て使用禁止だった場合、親項目自体も使用禁止になります。
- *
- * サブコマンドがひとつしかない場合、サブコマンドウィンドウは表示されず
- * 親コマンドを選択した時点でサブコマンドを実行します。
- *
- * サブコマンドウィンドウのフォントサイズ等、一部の高度な設定は
- * 「ユーザ設定領域」に直接記述されています。必要に応じて改変可能です。
- *
- * 〇用語辞典プラグインと組み合わせる場合
- * 「用語辞典プラグイン」を同時に使用する場合は
- * スクリプトで以下の通り実行すると用語辞典画面を呼び出せます。
- * this.commandGlossary(1); // 用語種別[1]の用語辞典を呼ぶ
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc メニュー画面のサブコマンドプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MenuSubCommand.js
+ * @author トリアコンタン
+ * @base PluginCommonBase
  *
- * @param サブコマンド
+ * @param subCommands
+ * @text サブコマンド
  * @desc サブコマンド情報です。
  * @default
  * @type struct<SubCommand>[]
  *
- * @param コマンド追加位置
+ * @param commandPosition
+ * @text コマンド追加位置
  * @desc サブコマンド群を追加する位置です。0:並び替えの下 1:オプションの下 2:セーブの下 3:ゲーム終了の下
  * @default 0
  * @type select
@@ -174,54 +71,78 @@
  * @option ゲーム終了の下
  * @value 3
  *
- * @param サブメニュー横幅
+ * @param subMenuWidth
+ * @text サブメニュー横幅
  * @desc サブメニューを表示するウィンドウの横幅です。指定しない場合デフォルト値「240」が適用されます。
  * @default 0
  * @type number
  *
- * @param 選択アクターID変数
+ * @param selectActorIdVariable
+ * @text 選択アクターID変数
  * @desc サブメニュー用マップに移動する際に選択していたアクターのIDを格納する変数番号です。
  * @default 0
  * @type variable
  *
- * @param ウィンドウスキン
+ * @param windowSkin
+ * @text ウィンドウスキン
  * @desc サブコマンド用のウィンドウに専用のスキンを設定します。
  * @default
  * @require 1
  * @dir img/system/
  * @type file
  *
- * @param オプション消去
+ * @param hideOption
+ * @text オプション消去
  * @desc メインメニューからオプションを消去します。
  * @default false
  * @type boolean
  *
- * @param ゲーム終了消去
+ * @param hideGameEnd
+ * @text ゲーム終了消去
  * @desc メインメニューからゲーム終了を消去します。
  * @default false
  * @type boolean
  *
- * @param 横並びサブメニュー
- * @desc サブメニューを横並べにします。
+ * @param horizontalSubMenu
+ * @text 横並び
+ * @desc サブメニューのコマンドを横に並べます。
  * @default false
  * @type boolean
  *
- * @param サブメニュー逐次消去
- * @desc サブメニューを逐次消去します
+ * @param clearSubMenuOneByObe
+ * @text コマンド選択時に消去
+ * @desc サブコマンドを選択したタイミングでウィンドウを消去します。
  * @default true
  * @type boolean
  *
- * @param サブメニューX座標
+ * @param subMenuX
+ * @text サブメニューX座標
  * @desc 指定するとサブコマンドのX座標が固定値になります。
  * @default 0
  * @type number
  *
- * @param サブメニューY座標
+ * @param subMenuY
+ * @text サブメニューY座標
  * @desc 指定するとサブコマンドのY座標が固定値になります。
  * @default 0
  * @type number
  *
- * @param サブメニュー揃え
+ * @param adjustX
+ * @text サブメニューX座標補正
+ * @desc サブコマンドのX座標を指定した値だけ補正します。
+ * @default 0
+ * @type number
+ * @min -9999
+ *
+ * @param adjustY
+ * @text サブメニューY座標補正
+ * @desc サブコマンドのY座標を指定した値だけ補正します。
+ * @default 0
+ * @type number
+ * @min -9999
+ *
+ * @param subMenuAlign
+ * @text サブメニュー揃え
  * @desc サブコマンドの揃えを設定します。
  * @default
  * @type select
@@ -232,9 +153,16 @@
  * @option 右揃え
  * @value right
  *
- * @param メニューピクチャ別管理
+ * @param anotherPicInMenuMap
+ * @text メニューピクチャ別管理
  * @desc メニューマップと通常マップのピクチャの表示状態を別々に管理します。
  * @default false
+ * @type boolean
+ *
+ * @param autoTransparent
+ * @text 自動で透明化
+ * @desc サブマップ移動時に自働でプレイヤーを透明にします。
+ * @default true
  * @type boolean
  *
  * @help MenuSubCommand.js
@@ -248,26 +176,16 @@
  * もちろん他のプラグインで追加された画面にも遷移可能です。
  * マップ移動は主にイベントによる自作メニュー画面に遷移する場合に使用します。
  * 自作メニュー画面から戻る際は、再度メニューを開いてください。
- * 元々メニューを開いていた場所は、別途保存しているので意識する必要はありません。
+ * 元々メニューを開いていた場所は別途保存しているので意識する必要はありません。
  *
  * また、通常の縦レイアウトとメニュー画面はもちろん、
  * プラグインによる横レイアウトのメニュー画面にも対応しています。
- *
- * メンバー選択してマップ移動する際に選択したアクターIDを変数に保存できます。
  *
  * サブコマンドが全て非表示だった場合、親項目自体も非表示になります。
  * 同じく全て使用禁止だった場合、親項目自体も使用禁止になります。
  *
  * サブコマンドがひとつしかない場合、サブコマンドウィンドウは表示されず
  * 親コマンドを選択した時点でサブコマンドを実行します。
- *
- * サブコマンドウィンドウのフォントサイズ等、一部の高度な設定は
- * 「ユーザ設定領域」に直接記述されています。必要に応じて改変可能です。
- *
- * 〇用語辞典プラグインと組み合わせる場合
- * 「用語辞典プラグイン」を同時に使用する場合は
- * スクリプトで以下の通り実行すると用語辞典画面を呼び出せます。
- * this.commandGlossary(1); // 用語種別[1]の用語辞典を呼ぶ
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -277,88 +195,60 @@
  *  このプラグインはもうあなたのものです。
  */
 
-/*~struct~SubCommand:ja
- *
- * @param CommandId
- * @desc サブコマンドの識別番号。この番号と名称とでコマンドがまとめられます。通常は全て0で問題ありません。
- * @default 0
- *
- * @param Name
- * @desc サブコマンドに表示される任意のコマンド名称
- * @default アイテム
- *
- * @param ParentName
- * @desc メインコマンドに表示されるサブコマンドの親名称。同一の名称の親を持つサブコマンドは一つに纏められます。
- * @default 親コマンド1
- *
- * @param HiddenSwitchId
- * @desc ONのときコマンドが非表示になるスイッチID
- * @default 0
- * @type switch
- *
- * @param DisableSwitchId
- * @desc ONのときコマンドが使用禁止になるスイッチID
- * @default 0
- * @type switch
- *
- * @param Script
- * @desc コマンドを決定したときに実行されるスクリプト
- * @default this.commandItem();
- *
- * @param ReturnMap
- * @desc スクリプト実行後にマップに戻ります。
- * @default false
- * @type boolean
- *
- * @param MapId
- * @desc コマンドを決定したときに移動するマップID
- * @default 0
- * @type map_id
- *
- * @param SelectMember
- * @desc コマンド実行前に対象メンバーを選択するかどうか
- * @default false
- * @type boolean
- */
-
 /*~struct~SubCommand:
  *
  * @param CommandId
+ * @text コマンドID
  * @desc サブコマンドの識別番号。この番号と名称とでコマンドがまとめられます。通常は全て0で問題ありません。
  * @default 0
  *
  * @param Name
- * @desc サブコマンドに表示される任意のコマンド名称
- * @default アイテム
+ * @text コマンド名称
+ * @desc サブコマンドとして表示される名称
+ * @default サブコマンド1
  *
  * @param ParentName
+ * @text 親名称
  * @desc メインコマンドに表示されるサブコマンドの親名称。同一の名称の親を持つサブコマンドは一つに纏められます。
  * @default 親コマンド1
  *
  * @param HiddenSwitchId
+ * @text 非表示スイッチ番号
  * @desc ONのときコマンドが非表示になるスイッチID
  * @default 0
  * @type switch
  *
  * @param DisableSwitchId
+ * @text 使用禁止スイッチ番号
  * @desc ONのときコマンドが使用禁止になるスイッチID
  * @default 0
  * @type switch
  *
  * @param Script
+ * @text スクリプト
  * @desc コマンドを決定したときに実行されるスクリプト
- * @default this.commandItem();
+ * @default
+ * @type combo
+ * @option this.commandItem(); // アイテム画面を開く
+ * @option this.commandSave(); // セーブ画面を開く
+ * @option this.commandOptions(); // オプション画面を開く
+ * @option this.commandGlossary(1); // 用語辞典を呼ぶ(用語辞典プラグイン使用時)
+ * @option $gameSwitches.setValue(1, true); // スイッチ[1]をONにする
+ * @option $gameVariables.setValue(1, 10); // 変数[1]に[10]を代入する
  *
  * @param ReturnMap
+ * @text マップに戻るかどうか
  * @desc スクリプト実行後にマップに戻ります。
  * @default false
  * @type boolean
  *
  * @param MapId
+ * @text 遷移先マップID
  * @desc コマンドを決定したときに移動するマップID
  * @default 0
  *
  * @param SelectMember
+ * @text メンバー選択あり
  * @desc コマンド実行前に対象メンバーを選択するかどうか
  * @default false
  * @type boolean
@@ -366,125 +256,17 @@
 
 (function() {
     'use strict';
-    //=============================================================================
-    // ユーザ設定領域 開始
-    //=============================================================================
-    var userSetting = {
-        /**
-         * サブコマンドウィンドウに関する設定です
-         */
-        subCommandWindow: {
-            adjustX : 0,
-            adjustY : 0,
-            fontSize: null,
-            padding : null,
-        },
-        /**
-         * サブマップ移動時に自働でプレイヤーを透明にします。
-         */
-        autoTransparent : true
-    };
-    //=============================================================================
-    // ユーザ設定領域 終了
-    //=============================================================================
-    var pluginName = 'MenuSubCommand';
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamBoolean = function(paramNames) {
-        var value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
-    };
-
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        const value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) text = '';
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return text;
-    };
-
-    var isNotAString = function(args) {
-        return String(args) !== args;
-    };
-
-    var getArgBoolean = function(arg) {
-        return arg.toUpperCase() === 'ON' || arg.toUpperCase() === 'TRUE';
-    };
-
-    var getParamArrayJson = function(paramNames, defaultValue) {
-        var value = getParamString(paramNames) || null;
-        try {
-            value = JSON.parse(value);
-            if (value === null) {
-                value = defaultValue;
-            } else {
-                value = value.map(function(valueData) {
-                    return JSON.parse(valueData);
-                });
-            }
-        } catch (e) {
-            alert(`!!!Plugin param is wrong.!!!\nPlugin:${pluginName}.js\nName:[${paramNames}]\nValue:${value}`);
-            value = defaultValue;
-        }
-        return value;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param                   = {};
-    param.subCommands           = getParamArrayJson(['サブコマンド', 'SubCommand'], []);
-    param.commandPosition       = getParamNumber(['CommandPosition', 'コマンド追加位置']);
-    param.subMenuWidth          = getParamNumber(['SubMenuWidth', 'サブメニュー横幅']);
-    param.selectActorIdVariable = getParamNumber(['SelectActorIdVariable', '選択アクターID変数']);
-    param.windowSkin            = getParamString(['WindowSkin', 'ウィンドウスキン']);
-    param.hideOption            = getParamBoolean(['HideOption', 'オプション消去']);
-    param.hideGameEnd           = getParamBoolean(['HideGameEnd', 'ゲーム終了消去']);
-    param.horizontalSubMenu     = getParamBoolean(['HorizontalSubMenu', '横並びサブメニュー']);
-    param.clearSubMenuOneByObe  = getParamBoolean(['ClearSubMenuOneByOne', 'サブメニュー逐次消去']);
-    param.subMenuX              = getParamNumber(['SubMenuX', 'サブメニューX座標']);
-    param.subMenuY              = getParamNumber(['SubMenuY', 'サブメニューY座標']);
-    param.subMenuAlign          = getParamString(['SubMenuAlign', 'サブメニュー揃え']);
-    param.anotherPicInMenuMap   = getParamBoolean(['AnotherPicturesInMenuMap', 'メニューピクチャ別管理']);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+    if (!param.subCommands) {
+        param.subCommands = [];
+    }
 
     //=============================================================================
     // Game_Temp
     //  メニューコマンド情報を構築して保持します。
     //=============================================================================
-    var _Game_Temp_initialize      = Game_Temp.prototype.initialize;
+    const _Game_Temp_initialize      = Game_Temp.prototype.initialize;
     Game_Temp.prototype.initialize = function() {
         _Game_Temp_initialize.apply(this, arguments);
         this.createMenuCommands();
@@ -503,11 +285,11 @@
     };
 
     Game_Temp.prototype.createMenuCommand = function(commands) {
-        var parentName = commands.ParentName + commands.CommandId;
+        const parentName = commands.ParentName + commands.CommandId;
         if (!this._menuParentCommands.has(parentName)) {
             this._menuParentCommands.set(parentName, []);
         }
-        var parent = this._menuParentCommands.get(parentName);
+        const parent = this._menuParentCommands.get(parentName);
         parent.push(new Game_MenuSubCommand(commands));
     };
 
@@ -566,19 +348,22 @@
     Game_Player.prototype.reserveTransferToSubCommandMap = function(subCommandMapId) {
         this.saveOriginalMap();
         this.reserveTransfer(subCommandMapId, 0, 0, 0, 2);
-        if (userSetting.autoTransparent) {
+        if (param.autoTransparent) {
             this.setTransparent(true);
+            this._followers.data().forEach(follower => follower.setTransparent(true));
         }
         if (param.anotherPicInMenuMap) {
             $gameScreen.setupMenuMapPictures();
         }
+        this._originalMapData = $dataMap;
     };
 
     Game_Player.prototype.reserveTransferToOriginalMap = function() {
-        DataManager.loadMapData(this._originalMapId);
+        $dataMap = this._originalMapData;
         this.reserveTransfer(this._originalMapId, this._originalX, this._originalY, this._originalDirection, 2);
-        if (userSetting.autoTransparent) {
+        if (param.autoTransparent) {
             this.setTransparent(this._originalTransparent);
+            this._followers.data().forEach(follower => follower.setTransparent(this._originalTransparent));
         }
         this._originalMapId             = 0;
         this._transferringToOriginalMap = true;
@@ -601,7 +386,7 @@
         this.savePosition();
     };
 
-    var _Game_Player_performTransfer      = Game_Player.prototype.performTransfer;
+    const _Game_Player_performTransfer      = Game_Player.prototype.performTransfer;
     Game_Player.prototype.performTransfer = function() {
         _Game_Player_performTransfer.apply(this, arguments);
         if (this.isTransferringToOriginalMap()) {
@@ -612,17 +397,13 @@
 
     Game_Player.prototype.savePosition = function() {
         Game_CharacterBase.prototype.savePosition.call(this, arguments);
-        this._followers.forEach(function(follower) {
-            follower.savePosition();
-        });
+        this._followers.data().forEach(follower => follower.savePosition());
         $gameMap.saveAllEventPosition();
     };
 
     Game_Player.prototype.restorePosition = function() {
         Game_CharacterBase.prototype.restorePosition.call(this, arguments);
-        this._followers.forEach(function(follower) {
-            follower.restorePosition();
-        });
+        this._followers.data().forEach(follower => follower.restorePosition());
         $gameMap.restoreAllEventPosition();
     };
 
@@ -634,7 +415,7 @@
         this._eventPositions = [];
         this._eventErases = [];
         this.events().forEach(function(event) {
-            var position                          = {};
+            const position                          = {};
             position.x                            = event.x;
             position.y                            = event.y;
             position.direction                    = event.direction();
@@ -645,12 +426,12 @@
 
     Game_Map.prototype.restoreAllEventPosition = function() {
         this.events().forEach(function(event) {
-            var position = this._eventPositions[event.eventId()];
+            const position = this._eventPositions[event.eventId()];
             if (position) {
                 event.locate(position.x, position.y);
                 event.setDirection(position.direction);
             }
-            var erase = this._eventErases[event.eventId()];
+            const erase = this._eventErases[event.eventId()];
             if (erase) {
                 event.erase();
             }
@@ -662,7 +443,7 @@
     // Game_Party
     //  無効なアクター設定時のエラーを回避します。
     //=============================================================================
-    var _Game_Party_setMenuActor      = Game_Party.prototype.setMenuActor;
+    const _Game_Party_setMenuActor      = Game_Party.prototype.setMenuActor;
     Game_Party.prototype.setMenuActor = function(actor) {
         if (!actor) return;
         _Game_Party_setMenuActor.apply(this, arguments);
@@ -695,7 +476,7 @@
     // SceneManager
     //  メニュー用マップではキャプチャを無効にします。
     //=============================================================================
-    var _SceneManager_snapForBackground = SceneManager.snapForBackground;
+    const _SceneManager_snapForBackground = SceneManager.snapForBackground;
     SceneManager.snapForBackground      = function() {
         if ($gamePlayer.isInSubCommandMap()) return;
         _SceneManager_snapForBackground.apply(this, arguments);
@@ -705,7 +486,7 @@
     // Scene_Map
     //  自作ゲーム用マップ遷移の場合、一部演出を無効化します。
     //=============================================================================
-    var _Scene_Map_callMenu      = Scene_Map.prototype.callMenu;
+    const _Scene_Map_callMenu      = Scene_Map.prototype.callMenu;
     Scene_Map.prototype.callMenu = function() {
         _Scene_Map_callMenu.apply(this, arguments);
         if ($gamePlayer.isInSubCommandMap()) {
@@ -714,7 +495,7 @@
         }
     };
 
-    var _Scene_Map_onMapLoaded      = Scene_Map.prototype.onMapLoaded;
+    const _Scene_Map_onMapLoaded      = Scene_Map.prototype.onMapLoaded;
     Scene_Map.prototype.onMapLoaded = function() {
         _Scene_Map_onMapLoaded.apply(this, arguments);
         if ($gamePlayer.isInSubCommandMap()) {
@@ -726,7 +507,7 @@
     // Scene_Menu
     //  メインメニューにコマンドを追加します。
     //=============================================================================
-    var _Scene_Menu_create      = Scene_Menu.prototype.create;
+    const _Scene_Menu_create      = Scene_Menu.prototype.create;
     Scene_Menu.prototype.create = function() {
         _Scene_Menu_create.apply(this, arguments);
         this.loadSubCommandWindowSkin();
@@ -744,13 +525,13 @@
         }
     };
 
-    var _Scene_Menu_isReady      = Scene_Menu.prototype.isReady;
+    const _Scene_Menu_isReady      = Scene_Menu.prototype.isReady;
     Scene_Menu.prototype.isReady = function() {
         return _Scene_Menu_isReady.apply(this, arguments) &&
             (!$gamePlayer.isTransferringToOriginalMap() || DataManager.isMapLoaded());
     };
 
-    var _Scene_Menu_start      = Scene_Menu.prototype.start;
+    const _Scene_Menu_start      = Scene_Menu.prototype.start;
     Scene_Menu.prototype.start = function() {
         _Scene_Menu_start.apply(this, arguments);
         if ($gamePlayer.isTransferringToOriginalMap()) {
@@ -758,20 +539,19 @@
         }
     };
 
-    var _Scene_Menu_createCommandWindow      = Scene_Menu.prototype.createCommandWindow;
+    const _Scene_Menu_createCommandWindow      = Scene_Menu.prototype.createCommandWindow;
     Scene_Menu.prototype.createCommandWindow = function() {
         _Scene_Menu_createCommandWindow.apply(this, arguments);
-        $gameTemp.iterateMenuParents(function(subCommands, parentName) {
+        $gameTemp.iterateMenuParents((subCommands, parentName) => {
             this._commandWindow.setHandler('parent' + parentName, this.commandParent.bind(this));
-        }, this);
-
-        /* 最後に選択していたメニューにカーソルを合わせる */
+        });
+        this._commandWindow.rightInputMode = this.isRightInputMode();
         this.selectLastCommand();
     };
 
     Scene_Menu.prototype.commandParent = function() {
-        var parentName  = this._commandWindow.currentExt();
-        var subCommands = $gameTemp.getSubMenuCommands(parentName);
+        const parentName  = this._commandWindow.currentExt();
+        const subCommands = $gameTemp.getSubMenuCommands(parentName);
         $gameTemp.setLastSubCommandParent(parentName);
         if (subCommands.length === 1) {
             this.onSubCommandOk(subCommands[0]);
@@ -785,7 +565,7 @@
     };
 
     Scene_Menu.prototype.createSubMenuCommandWindow = function(parentName) {
-        this._subMenuWindow = new Window_MenuSubCommand(this.x, this.y, parentName);
+        this._subMenuWindow = new Window_MenuSubCommand(this.createSubCommandRect(), parentName);
         this._subMenuWindow.updatePlacement(this._commandWindow);
         this._subMenuWindow.setHandler('ok', this.onSubCommandOk.bind(this));
         this._subMenuWindow.setHandler('cancel', this.onSubCommandCancel.bind(this));
@@ -797,9 +577,13 @@
         if (typeof Imported !== 'undefined' && Imported.MMOG_SceneMenu) {
             this.addChild(this._subMenuWindow);
         } else {
-            var index = this.getChildIndex(this._windowLayer) + 1;
+            const index = this.getChildIndex(this._windowLayer) + 1;
             this.addChildAt(this._subMenuWindow, index);
         }
+    };
+
+    Scene_Menu.prototype.createSubCommandRect = function() {
+        return new Rectangle(this.x, this.y, 1, 1);
     };
 
     Scene_Menu.prototype.removeSubMenuCommandWindow = function() {
@@ -836,28 +620,24 @@
         this._commandWindow.activate();
     };
 
-    var _Scene_Menu_onPersonalCancel      = Scene_Menu.prototype.onPersonalCancel;
+    const _Scene_Menu_onPersonalCancel      = Scene_Menu.prototype.onPersonalCancel;
     Scene_Menu.prototype.onPersonalCancel = function() {
         _Scene_Menu_onPersonalCancel.apply(this);
         this._commandWindow.maskOff();
-        /* 最後に選択していたメニューにカーソルを合わせる */
         this.selectLastCommand();
     };
 
-    /**
-     * 最後に選択していたメニューにカーソルを合わせる
-     */
     Scene_Menu.prototype.selectLastCommand = function() {
-        var lastSubCommand = $gameTemp.getLastSubCommand();
+        const lastSubCommand = $gameTemp.getLastSubCommand();
         if (lastSubCommand.parent) {
             this._commandWindow.selectSymbol('parent' + lastSubCommand.parent);
-            var subCommands = $gameTemp.getSubMenuCommands(lastSubCommand.parent);
+            const subCommands = $gameTemp.getSubMenuCommands(lastSubCommand.parent);
             if (subCommands.length !== 1) {
                 this.commandParent();
                 this._commandWindow.deactivate();
                 this._subMenuWindow.select(lastSubCommand.index);
                 /* 別シーンからキャラ選択に戻った時 */
-                var subCommand = subCommands[lastSubCommand.index];
+                const subCommand = subCommands[lastSubCommand.index];
                 if (subCommand.isNeedSelectMember()) {
                     this._isSubCommandOkAfterCreate = true;
                 }
@@ -879,7 +659,7 @@
     };
 
     Scene_Menu.prototype.executeSubScript = function() {
-        var script = this._subCommand.getSelectionScript();
+        const script = this._subCommand.getSelectionScript();
         if (!script) return;
         try {
             eval(script);
@@ -893,7 +673,7 @@
     };
 
     Scene_Menu.prototype.moveSubCommandMap = function() {
-        var mapId = this._subCommand.getMoveTargetMap();
+        const mapId = this._subCommand.getMoveTargetMap();
         if (mapId <= 0) {
             return;
         }
@@ -904,10 +684,7 @@
         SceneManager.pop();
     };
 
-    /**
-     * メニューから抜ける際に最後に選択したサブコマンドをリセットする
-     */
-    var _Scene_Menu_terminate      = Scene_Menu.prototype.terminate;
+    const _Scene_Menu_terminate      = Scene_Menu.prototype.terminate;
     Scene_Menu.prototype.terminate = function() {
         _Scene_Menu_terminate.apply(this, arguments);
         if (this._subCommand && this._subCommand.getMoveTargetMap() <= 0) {
@@ -915,7 +692,7 @@
         }
     };
 
-    var _Scene_Menu_createField      = Scene_Menu.prototype.createField;
+    const _Scene_Menu_createField      = Scene_Menu.prototype.createField;
     Scene_Menu.prototype.createField = function() {
         _Scene_Menu_createField.apply(this, arguments);
         if (this._subMenuWindow) {
@@ -927,37 +704,38 @@
     // Window_MenuCommand
     //  サブコマンドを追加します。
     //=============================================================================
-    var _Window_MenuCommand_initialize          = Window_MenuCommand.prototype.initialize;
+    const _Window_MenuCommand_initialize          = Window_MenuCommand.prototype.initialize;
     Window_MenuCommand.prototype.initialize     = function() {
         this._maskedName = {};
+        this.rightInputMode = true;
         _Window_MenuCommand_initialize.apply(this, arguments);
     };
 
-    var _Window_MenuCommand_initCommandPosition = Window_MenuCommand.initCommandPosition;
+    const _Window_MenuCommand_initCommandPosition = Window_MenuCommand.initCommandPosition;
     Window_MenuCommand.initCommandPosition      = function() {
         if ($gamePlayer.isInSubCommandMap()) return;
         _Window_MenuCommand_initCommandPosition.apply(this, arguments);
     };
 
-    var _Window_MenuCommand_addOriginalCommands      = Window_MenuCommand.prototype.addOriginalCommands;
+    const _Window_MenuCommand_addOriginalCommands      = Window_MenuCommand.prototype.addOriginalCommands;
     Window_MenuCommand.prototype.addOriginalCommands = function() {
         _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
         if (param.commandPosition === 0) this.makeSubCommandList();
     };
 
-    var _Window_MenuCommand_addOptionsCommand      = Window_MenuCommand.prototype.addOptionsCommand;
+    const _Window_MenuCommand_addOptionsCommand      = Window_MenuCommand.prototype.addOptionsCommand;
     Window_MenuCommand.prototype.addOptionsCommand = function() {
         _Window_MenuCommand_addOptionsCommand.apply(this, arguments);
         if (param.commandPosition === 1) this.makeSubCommandList();
     };
 
-    var _Window_MenuCommand_addSaveCommand      = Window_MenuCommand.prototype.addSaveCommand;
+    const _Window_MenuCommand_addSaveCommand      = Window_MenuCommand.prototype.addSaveCommand;
     Window_MenuCommand.prototype.addSaveCommand = function() {
         _Window_MenuCommand_addSaveCommand.apply(this, arguments);
         if (param.commandPosition === 2) this.makeSubCommandList();
     };
 
-    var _Window_MenuCommand_addGameEndCommand      = Window_MenuCommand.prototype.addGameEndCommand;
+    const _Window_MenuCommand_addGameEndCommand      = Window_MenuCommand.prototype.addGameEndCommand;
     Window_MenuCommand.prototype.addGameEndCommand = function() {
         if (this.needsCommand('gameEnd')) {
             _Window_MenuCommand_addGameEndCommand.apply(this, arguments);
@@ -965,9 +743,9 @@
         if (param.commandPosition === 3) this.makeSubCommandList();
     };
 
-    var _Window_MenuCommand_needsCommand      = Window_MenuCommand.prototype.needsCommand;
+    const _Window_MenuCommand_needsCommand      = Window_MenuCommand.prototype.needsCommand;
     Window_MenuCommand.prototype.needsCommand = function(name) {
-        var need = _Window_MenuCommand_needsCommand.apply(this, arguments);
+        const need = _Window_MenuCommand_needsCommand.apply(this, arguments);
         if (name === 'options' && param.hideOption) {
             return false;
         }
@@ -978,13 +756,13 @@
     };
 
     Window_MenuCommand.prototype.makeSubCommandList = function() {
-        $gameTemp.iterateMenuParents(function(subCommands, parentName) {
+        $gameTemp.iterateMenuParents((subCommands, parentName) => {
             this._subCommands = subCommands;
             if (this.checkSubCommands('isVisible')) {
-                var commandName = this._maskedName[parentName] ? this._maskedName[parentName] : subCommands[0].getParentName();
+                const commandName = this._maskedName[parentName] ? this._maskedName[parentName] : subCommands[0].getParentName();
                 this.addCommand(commandName, 'parent' + parentName, this.checkSubCommands('isEnable'), parentName);
             }
-        }, this);
+        });
     };
 
     Window_MenuCommand.prototype.checkSubCommands = function(methodName) {
@@ -994,15 +772,31 @@
     };
 
     Window_MenuCommand.prototype.calculateSubCommandX = function(width) {
-        var x = (this.isHorizontalMenu() ? this._cursorRect.x : this.x + this.width);
-        x += userSetting.subCommandWindow.adjustX;
-        return x.clamp(0, Graphics.boxWidth - width);
+        if (param.subMenuX) {
+            return param.subMenuX;
+        }
+        let x = this.x;
+        if (this.isHorizontalMenu()) {
+            x += this._cursorRect.x;
+        } else {
+            x += this.rightInputMode ? -width : this.width;
+        }
+        x += param.adjustX || 0;
+        return x.clamp(0, $dataSystem.advanced.uiAreaWidth - width);
     };
 
     Window_MenuCommand.prototype.calculateSubCommandY = function(height) {
-        var y = (this.isHorizontalMenu() ? this.y + this.height : this._cursorRect.y);
-        y += userSetting.subCommandWindow.adjustY;
-        return y.clamp(0, Graphics.boxHeight - height);
+        if (param.subMenuY) {
+            return param.subMenuY;
+        }
+        let y = this.y;
+        if (this.isHorizontalMenu()) {
+            y += this.height;
+        } else {
+            y += this._cursorRect.y;
+        }
+        y += param.adjustY || 0;
+        return y.clamp(0, $dataSystem.advanced.uiAreaHeight - height);
     };
 
     Window_MenuCommand.prototype.isHorizontalMenu = function() {
@@ -1039,22 +833,25 @@
     Window_MenuSubCommand.prototype             = Object.create(Window_Command.prototype);
     Window_MenuSubCommand.prototype.constructor = Window_MenuSubCommand;
 
-    Window_MenuSubCommand.prototype.initialize = function(x, y, parentName) {
+    Window_MenuSubCommand.prototype.initialize = function(rectangle, parentName) {
         this._parentName = parentName;
-        Window_Command.prototype.initialize.call(this, x, y);
+        Window_Command.prototype.initialize.call(this, rectangle);
     };
 
     Window_MenuSubCommand.prototype.makeCommandList = function() {
-        var subMenus = $gameTemp.getSubMenuCommands(this._parentName);
-        subMenus.forEach(function(subMenu) {
+        const subMenus = $gameTemp.getSubMenuCommands(this._parentName);
+        subMenus.forEach(subMenu => {
             if (subMenu.isVisible()) {
                 this.addCommand(subMenu.getName(), 'ok', subMenu.isEnable(), subMenu);
             }
-        }, this);
+        });
+        this.width = this.windowWidth();
+        this.height = this.fittingHeight(this.numVisibleRows());
+        this.createContents();
     };
 
     Window_MenuSubCommand.prototype.numVisibleRows = function() {
-        return param.horizontalSubMenu ? 1 : Window_Command.prototype.numVisibleRows.call(this);
+        return param.horizontalSubMenu ? 1 : this.maxItems();
     };
 
     Window_MenuSubCommand.prototype.maxCols = function() {
@@ -1062,25 +859,12 @@
     };
 
     Window_MenuSubCommand.prototype.windowWidth = function() {
-        return param.subMenuWidth || Window_Command.prototype.windowWidth.call(this);
-    };
-
-    Window_MenuSubCommand.prototype.lineHeight = function() {
-        if (userSetting.subCommandWindow.fontSize) {
-            return userSetting.subCommandWindow.fontSize + 8;
-        } else {
-            return Window_Command.prototype.lineHeight.call(this);
-        }
+        return param.subMenuWidth || 240;
     };
 
     Window_MenuSubCommand.prototype.updatePlacement = function(commandWindow) {
-        if (param.subMenuX || param.subMenuY) {
-            this.x = param.subMenuX;
-            this.y = param.subMenuY;
-        } else {
-            this.x = commandWindow.calculateSubCommandX(this.width);
-            this.y = commandWindow.calculateSubCommandY(this.height);
-        }
+        this.x = commandWindow.calculateSubCommandX(this.width);
+        this.y = commandWindow.calculateSubCommandY(this.height);
     };
 
     Window_MenuSubCommand.prototype.standardFontSize = function() {
@@ -1099,7 +883,7 @@
         }
     };
 
-    var _Window_MenuSubCommand_itemTextAlign      = Window_MenuSubCommand.prototype.itemTextAlign;
+    const _Window_MenuSubCommand_itemTextAlign      = Window_MenuSubCommand.prototype.itemTextAlign;
     Window_MenuSubCommand.prototype.itemTextAlign = function() {
         return param.subMenuAlign || _Window_MenuSubCommand_itemTextAlign.apply(this, arguments);
     };
@@ -1110,52 +894,40 @@
     //=============================================================================
     class Game_MenuSubCommand {
         constructor(subCommandData) {
-            this._parentName      = subCommandData.ParentName;
-            this._name            = subCommandData.Name;
-            this._hiddenSwitchId  = subCommandData.HiddenSwitchId;
-            this._disableSwitchId = subCommandData.DisableSwitchId;
-            this._targetScript    = subCommandData.Script;
-            this._targetMapId     = subCommandData.MapId;
-            this._returnMap       = subCommandData.ReturnMap === 'true';
-            this._memberSelect    = getArgBoolean(subCommandData.SelectMember);
+            this._data = subCommandData;
         }
 
         getName() {
-            return this._name;
+            return this._data.Name;
         }
 
         getParentName() {
-            return this._parentName;
+            return this._data.ParentName;
         }
 
         isReturnMap() {
-            return (!this.getMoveTargetMap()) && this._returnMap;
+            return (!this.getMoveTargetMap()) && this._data.ReturnMap;
         }
 
         isVisible() {
-            return !$gameSwitches.value(this.convert(this._hiddenSwitchId, true));
+            return !$gameSwitches.value(this._data.HiddenSwitchId);
         }
 
         isEnable() {
-            return !$gameSwitches.value(this.convert(this._disableSwitchId, true)) &&
+            return !$gameSwitches.value(this._data.DisableSwitchId) &&
                 !(SceneManager.isSceneRetry && SceneManager.isSceneRetry() && this.getMoveTargetMap() > 0);
         }
 
         isNeedSelectMember() {
-            return !!this._memberSelect;
+            return this._data.SelectMember;
         }
 
         getSelectionScript() {
-            return this.convert(this._targetScript, false);
+            return this._data.Script;
         }
 
         getMoveTargetMap() {
-            return this.convert(this._targetMapId, true);
-        }
-
-        convert(text, isNumber) {
-            var convertText = convertEscapeCharacters(text);
-            return isNumber ? parseInt(convertText) : convertText;
+            return this._data.MapId;
         }
     }
 })();
