@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2020/10/10 簡易的な英語ヘルプを整備
 // 2.0.0 2020/10/10 パラメータ構造を変更
 //                  停止時にアニメーションも停止できる機能を追加
 // 1.1.1 2020/07/19 停止スイッチをONにした直後に戦闘を開始しかつ逃走した場合、もともと演奏していたBGMが再生されない問題を修正
@@ -17,6 +18,71 @@
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
+/*:
+ * @plugindesc CharacterFreeze
+ * @author triacontane
+ *
+ * @param freezeSwitchId
+ * @desc This is the switch ID that triggers a full stop of the character.
+ * @default
+ * @type switch
+ *
+ * @param freezePictureId
+ * @desc This is the picture number for displaying the picture when it is stopped.
+ * @default 0
+ * @type number
+ *
+ * @param freezePictureName
+ * @desc The name of the picture file to be displayed when stopped.
+ * @default
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param freezePictureX
+ * @desc X-coordinate of the picture to be displayed while stopped.
+ * @default 0
+ * @type number
+ * @min -2000
+ *
+ * @param freezePictureY
+ * @desc The Y-coordinate of the picture to be displayed while stopped.
+ * @default 0
+ * @type number
+ * @min -2000
+ *
+ * @param freezePictureOpacity
+ * @desc The opacity of the picture to be displayed while stopped.
+ * @default 255
+ * @max 255
+ * @type number
+ *
+ * @param freezePictureBlendMode
+ * @desc This is a method of composing a picture to be displayed while stopped.
+ * @default 0
+ * @type select
+ * @option 0
+ * @option 1
+ * @option 2
+ * @option 3
+ *
+ * @param freezeBgmVolume
+ * @desc This is the ratio of the BGM volume when the music is stopped. It will be multiplied by the original volume.
+ * @default 100
+ * @type number
+ *
+ * @param freezeAnimation
+ * @desc When stopped, the animation stops playing at the same time.
+ * @default false
+ * @type boolean
+ *
+ * @help All autonomous movement and animation of events will be stopped.
+ * At the same time, the player will not be able to move.
+ * Turning the switch ON will stop the event, and turning it OFF will restart it.
+ *
+ * Also, while the game is stopped, a special picture can be displayed and
+ * the volume of the BGM can be adjusted.
+ */
 /*:ja
  * @plugindesc キャラクター停止プラグイン
  * @author トリアコンタン
