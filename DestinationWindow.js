@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.6.0-SNAPSHOT 2019/06/24 特定マップで非表示にする機能を追加
+// 2.0.0 2020/10/11 MZ向けに実装を修正
+// 1.6.0 2019/06/24 特定マップで非表示にする機能を追加
 // 1.5.0 2018/07/20 行動目標ウィンドウの内容を複数行表示できる機能を追加
 // 1.4.0 2017/11/15 行動目標ウィンドウの文字列揃えを中央揃え、右揃えにできる機能を追加
 // 1.3.0 2017/11/11 マップ画面のウィンドウを一定時間で消去できる機能を追加
@@ -22,7 +23,10 @@
 
 /*:
  * @plugindesc DestinationWindowPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master
+ * @base PluginCommonBase
+ * @author triacontane
  *
  * @param ShowingSwitchId
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。
@@ -102,6 +106,22 @@
  * @default []
  * @type number[]
  *
+ * @command SET_DESTINATION
+ * @text 目標設定
+ * @desc 行動目標を設定します。
+ *
+ * @arg destination
+ * @text 行動目標
+ * @desc 行動目標です。
+ * @type multiline_string
+ * @default
+ *
+ * @arg icon
+ * @text アイコン
+ * @desc 行動目標に表示したアイコン番号です。0を指定すると表示しません。
+ * @type number
+ * @default 0
+ *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
  * 表示する内容はプラグインコマンドで、表示可否はスイッチで制御します。
@@ -110,20 +130,20 @@
  * ただし、以下の制御文字が無効になります。
  * \i[n]、\c[n]、\{、\}
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
+ * 複数行の目標を表示したい場合は、文章中に改行を挿入してください。
  *
- * DW_目標設定 aaa                    # 行動目標を「aaa」に設定します。
- * DW_SET_DESTINATION aaa             # 同上
- * DW_アイコン付き目標設定 1 aaa      # アイコン[1]付きで行動目標設定。
- * DW_SET_DESTINATION_WITH_ICON 1 aaa # 同上
+ * 以下のいずれかの条件を満たすマップでは、行動目標ウィンドウは非表示になります。
+ * - プラグインパラメータ NoDestinationWindowMapIds で指定したIDをを持つ
+ * - マップのメモ欄に <noDestinationWindow> と記述されている
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 行動目標ウィンドウプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param 表示スイッチID
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。
@@ -203,6 +223,22 @@
  * @default []
  * @type number[]
  *
+ * @command SET_DESTINATION
+ * @text 目標設定
+ * @desc 行動目標を設定します。
+ *
+ * @arg destination
+ * @text 行動目標
+ * @desc 行動目標です。
+ * @type multiline_string
+ * @default
+ *
+ * @arg icon
+ * @text アイコン
+ * @desc 行動目標の先頭に表示するアイコン番号です。
+ * @type string
+ * @default
+ *
  * @help マップ中に行動目標ウィンドウを表示します。
  * 制御文字を含めた好きな文字列を表示できるので様々な用途に使えます。
  * 表示する内容はプラグインコマンドで、表示可否はスイッチで制御します。
@@ -211,21 +247,11 @@
  * ただし、以下の制御文字が無効になります。
  * \i[n]、\c[n]、\{、\}
  *
- * 複数行の目標を表示したい場合は、文章中に改行「\n」を挿入してください。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * DW_目標設定 aaa                    # 行動目標を「aaa」に設定します。
- * DW_SET_DESTINATION aaa             # 同上
- * DW_アイコン付き目標設定 1 aaa      # アイコン[1]付きで行動目標設定。
- * DW_SET_DESTINATION_WITH_ICON 1 aaa # 同上
+ * 複数行の目標を表示したい場合は、文章中に改行を挿入してください。
  *
  * 以下のいずれかの条件を満たすマップでは、行動目標ウィンドウは非表示になります。
  * - プラグインパラメータ NoDestinationWindowMapIds で指定したIDをを持つ
- * - マップのメモ欄に <NoDestinationWindow> と記述されている
- *
+ * - マップのメモ欄に <noDestinationWindow> と記述されている
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -236,7 +262,6 @@
 (function() {
     'use strict';
     var pluginName    = 'DestinationWindow';
-    var metaTagPrefix = 'DW_';
 
     //=============================================================================
     // ローカル関数
@@ -275,16 +300,6 @@
         return (parseInt(arg) || 0).clamp(min, max);
     };
 
-    var concatAllArguments = function(args) {
-        return args.reduce(function(prevValue, arg) {
-            return prevValue + ' ' + arg;
-        }, '').replace(/^ /, '');
-    };
-
-    var setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(metaTagPrefix + commandName, methodName);
-    };
-
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
@@ -304,16 +319,10 @@
     param.textAlign                 = getParamNumber(['TextAlign', '文字列揃え'], 0);
     param.noDestinationWindowMapIds = getParamNumberArray(['NoDestinationWindowMapIds']);
 
-    var pluginCommandMap = new Map();
-    setPluginCommand('目標設定', 'execSetDestination');
-    setPluginCommand('SET_DESTINATION', 'execSetDestination');
-    setPluginCommand('アイコン付き目標設定', 'execSetDestinationWithIcon');
-    setPluginCommand('SET_DESTINATION_WITH_ICON', 'execSetDestinationWithIcon');
-
     var _extractMetadata = DataManager.extractMetadata;
     DataManager.extractMetadata = function(data) {
         _extractMetadata.call(this, data);
-        if (data === $dataMap) {
+        if (this.isMapObject(data)) {
             if (data.meta.noDestinationWindow) {
                 data.noDestinationWindow = true;
             } else {
@@ -322,28 +331,27 @@
         }
     };
 
+    const script = document.currentScript;
+    PluginManagerEx.registerCommand(script, 'SET_DESTINATION', function(args) {
+        if (args.icon > 0) {
+            this.execSetDestinationWithIcon(args.destination, String(args.icon));
+        } else {
+            this.execSetDestination(args.destination);
+        }
+    });
+
     //=============================================================================
     // Game_Interpreter
     //  プラグインコマンドを追加定義します。
     //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](args);
-        }
-    };
-
-    Game_Interpreter.prototype.execSetDestination = function(args) {
+    Game_Interpreter.prototype.execSetDestination = function(destination) {
         $gameSystem.setDestinationIcon(null);
-        $gameSystem.setDestination(concatAllArguments(args));
+        $gameSystem.setDestination(destination);
     };
 
-    Game_Interpreter.prototype.execSetDestinationWithIcon = function(args) {
-        var icon = args.shift();
+    Game_Interpreter.prototype.execSetDestinationWithIcon = function(destination, icon) {
         $gameSystem.setDestinationIcon(icon);
-        $gameSystem.setDestination(concatAllArguments(args));
+        $gameSystem.setDestination(destination);
     };
 
     //=============================================================================
@@ -351,7 +359,7 @@
     //  目標テキストを追加定義します。
     //=============================================================================
     Game_System.prototype.setDestination = function(value) {
-        this._destinationTextList = value.split('\\n');
+        this._destinationTextList = value.split('\n');
         this.resetDestinationFrame();
     };
 
@@ -397,8 +405,12 @@
     };
 
     Scene_Map.prototype.createDestinationWindow = function() {
-        this._destinationWindow = new Window_Destination(param.windowX, param.windowY, param.windowWidth);
+        this._destinationWindow = new Window_Destination(this.destinationWindowRect());
         this.addChild(this._destinationWindow);
+    };
+
+    Scene_Map.prototype.destinationWindowRect = function() {
+        return new Rectangle(param.windowX, param.windowY, param.windowWidth, this.calcWindowHeight(1, false));
     };
 
     //=============================================================================
@@ -414,18 +426,36 @@
     };
 
     Scene_Menu.prototype.createDestinationWindow = function() {
-        var y, width, height;
+        this._destinationWindow = new Window_DestinationMenu(this.destinationWindowRect());
+        this.addWindow(this._destinationWindow);
+    };
+
+    const _Scene_Menu_commandWindowRect = Scene_Menu.prototype.commandWindowRect;
+    Scene_Menu.prototype.commandWindowRect = function() {
+        const rect = _Scene_Menu_commandWindowRect.call(this);
+        if (param.showingInMenu && $gameSystem.getDestination().length > 0) {
+            rect.height -= this.calcDestinationWindowHeight();
+        }
+        return rect;
+    };
+
+    Scene_Menu.prototype.calcDestinationWindowHeight = function () {
+        return Window_Destination.prototype.fittingHeight($gameSystem.getDestination().length);
+    };
+
+    Scene_Menu.prototype.destinationWindowRect = function() {
+        var x, y, width, height;
+        x = this._commandWindow.x;
         if (this._commandWindow.maxCols() === 1) {
-            y      = this._commandWindow.y + this._commandWindow.height;
             width  = this._commandWindow.width;
-            height = null;
+            height = this.calcDestinationWindowHeight();
+            y      = this._goldWindow.y - height;
         } else {
             y      = this._goldWindow.y;
             width  = param.windowWidth;
             height = this._goldWindow.height;
         }
-        this._destinationWindow = new Window_DestinationMenu(0, y, width, height);
-        this.addWindow(this._destinationWindow);
+        return new Rectangle(x, y, width, height);
     };
 
     //=============================================================================
@@ -439,8 +469,8 @@
     Window_Destination.prototype             = Object.create(Window_Base.prototype);
     Window_Destination.prototype.constructor = Window_Destination;
 
-    Window_Destination.prototype.initialize = function(x, y, width, height) {
-        Window_Base.prototype.initialize.call(this, x, y, width, height || this.fittingHeight(1));
+    Window_Destination.prototype.initialize = function(rect) {
+        Window_Base.prototype.initialize.call(this, rect);
         this._text      = '';
         this._textList  = [];
         this._iconIndex = 0;
@@ -457,7 +487,7 @@
     };
 
     Window_Destination.prototype.lineHeight = function() {
-        return Math.max(this.standardFontSize() + 8, Window_Base._iconHeight);
+        return Math.max(this.standardFontSize() + 8, ImageManager.iconHeight);
     };
 
     Window_Destination.prototype.standardFontSize = function() {
@@ -513,7 +543,7 @@
         var y = lineNumber * this.lineHeight() + this.lineHeight() / 2 - this.contents.fontSize / 2 - 4;
         if (this._iconIndex > 0 && lineNumber === 0) {
             this.drawIcon(this._iconIndex, x, y);
-            x += Window_Base._iconWidth;
+            x += ImageManager.iconWidth;
         }
         if (param.autoAdjust) {
             this.resetTextColor();
