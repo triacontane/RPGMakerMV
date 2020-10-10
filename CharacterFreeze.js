@@ -1,11 +1,13 @@
 //=============================================================================
 // CharacterFreeze.js
 // ----------------------------------------------------------------------------
-// (C)2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/10/10 パラメータ構造を変更
+//                  停止時にアニメーションも停止できる機能を追加
 // 1.1.1 2020/07/19 停止スイッチをONにした直後に戦闘を開始しかつ逃走した場合、もともと演奏していたBGMが再生されない問題を修正
 // 1.1.0 2017/03/03 停止中にピクチャを表示する機能、BGMの音量を変化する機能を追加
 // 1.0.0 2017/03/01 初版
@@ -15,79 +17,82 @@
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
-/*:
- * @plugindesc CharacterFreezePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param FreezeSwitchId
- * @desc キャラクターを全停止させるトリガーになるスイッチIDです。
- * @default
- * @type switch
- *
- * @param FreezePictureId
- * @desc 停止中にピクチャを表示する場合のピクチャ番号です。
- * @default 0
- * @type number
- *
- * @param FreezePictureName
- * @desc 停止中に表示するピクチャファイル名です。
- * @default
- * @require 1
- * @dir img/pictures/
- * @type file
- *
- * @param FreezeBgmVolume
- * @desc 停止中のBGM音量です。もとのBGMの音量も考慮されます。
- * @default 100
- * @type number
- *
- * @help イベントの自律移動とアニメーションを全停止します。
- * 同時にプレイヤーも動けなくなります。
- * パラメータで指定したスイッチをONにすると停止、OFFにすると再開します。
- *
- * また停止中に専用のピクチャを表示したり、BGMの音量を調整したりできます。
- * 主にイベント実装のメニューや戦闘への移行に使用します。
- * ピクチャの不透明度および合成方法を変更したい場合は、コードの「ユーザ定義領域」を
- * 変更してください。
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
 /*:ja
  * @plugindesc キャラクター停止プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
  *
- * @param 停止スイッチID
+ * @param freezeSwitchId
+ * @text 停止スイッチID
  * @desc キャラクターを全停止させるトリガーになるスイッチIDです。
  * @default
  * @type switch
  *
- * @param 停止中ピクチャID
+ * @param freezePictureId
+ * @text 停止中ピクチャID
  * @desc 停止中にピクチャを表示する場合のピクチャ番号です。
  * @default 0
  * @type number
  *
- * @param 停止中ピクチャ名
+ * @param freezePictureName
+ * @text 停止中ピクチャ名
  * @desc 停止中に表示するピクチャファイル名です。
  * @default
  * @require 1
  * @dir img/pictures/
  * @type file
  *
- * @param 停止中BGM音量
+ * @param freezePictureX
+ * @text 停止中ピクチャX座標
+ * @desc 停止中に表示するピクチャのX座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ *
+ * @param freezePictureY
+ * @text 停止中ピクチャY座標
+ * @desc 停止中に表示するピクチャのY座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ *
+ * @param freezePictureOpacity
+ * @text 停止中ピクチャ不透明度
+ * @desc 停止中に表示するピクチャの不透明度です。
+ * @default 255
+ * @max 255
+ * @type number
+ *
+ * @param freezePictureBlendMode
+ * @text 停止中ピクチャ合成方法
+ * @desc 停止中に表示するピクチャの合成方法です。
+ * @default 0
+ * @type select
+ * @option 通常
+ * @value 0
+ * @option 加算
+ * @value 1
+ * @option 乗算
+ * @value 2
+ * @option スクリーン
+ * @value 3
+ *
+ * @param freezeBgmVolume
+ * @text 停止中BGM音量
  * @desc 停止中のBGM音量の倍率です。もとの音量に対して乗算されます。
  * @default 100
  * @type number
  *
+ * @param freezeAnimation
+ * @text アニメーション停止
+ * @desc 停止時、アニメーションの再生も同時に停止します。
+ * @default false
+ * @type boolean
+ *
  * @help イベントの自律移動とアニメーションを全停止します。
  * 同時にプレイヤーも動けなくなります。
  * パラメータで指定したスイッチをONにすると停止、OFFにすると再開します。
  *
  * また停止中に専用のピクチャを表示したり、BGMの音量を調整したりできます。
- * 主にイベント実装のメニューや戦闘への移行に使用します。
- * ピクチャの不透明度および合成方法を変更したい場合は、コードの「ユーザ定義領域」を
- * 変更してください。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -99,46 +104,26 @@
 
 (function() {
     'use strict';
-    var pluginName = 'CharacterFreeze';
-
-    //=============================================================================
-    // ユーザ定義領域
-    //=============================================================================
-    var userSetting = {
-        pictureInfo: {
-            opacity  : 255,
-            blendMode: 0
-        }
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param               = {};
-    param.freezeSwitchId    = getParamNumber(['FreezeSwitchId', '停止スイッチID']);
-    param.freezePictureId   = getParamNumber(['FreezePictureId', '停止中ピクチャID']);
-    param.freezePictureName = getParamString(['FreezePictureName', '停止中ピクチャ名']);
-    param.freezeBgmVolume    = getParamNumber(['FreezeBgmVolume', '停止中BGM音量']);
+    var param = createPluginParameter('CharacterFreeze');
 
     //=============================================================================
     // Game_Map
@@ -162,9 +147,7 @@
 
     Game_Map.prototype.startFreeze = function() {
         if (param.freezePictureId) {
-            var info = userSetting.pictureInfo;
-            $gameScreen.showPicture(param.freezePictureId, param.freezePictureName,
-                0, 0, 0, 100, 100, info.opacity, info.blendMode);
+            this.showFreezePicture();
         }
         if (param.freezeBgmVolume) {
             var oldBgm = AudioManager.saveBgm();
@@ -180,6 +163,16 @@
             }
             this._preFreezeVolume = oldBgm.volume;
         }
+    };
+
+    Game_Map.prototype.showFreezePicture = function() {
+        var id = param.freezePictureId;
+        var name = param.freezePictureName;
+        var x = param.freezePictureX || 0;
+        var y = param.freezePictureY || 0;
+        var opacity = param.freezePictureOpacity || 255;
+        var blendName = param.freezePictureBlendMode;
+        $gameScreen.showPicture(id, name, 0, x, y, 100, 100, opacity, blendName);
     };
 
     Game_Map.prototype.finishFreeze = function() {
@@ -215,6 +208,14 @@
     var _Game_Player_canMove      = Game_Player.prototype.canMove;
     Game_Player.prototype.canMove = function() {
         return !this.isFreeze() && _Game_Player_canMove.apply(this, arguments);
+    };
+
+    var _Sprite_Animation_update = Sprite_Animation.prototype.update;
+    Sprite_Animation.prototype.update = function() {
+        if ($gameMap.isFreeze() && param.freezeAnimation) {
+            return;
+        }
+        _Sprite_Animation_update.apply(this, arguments);
     };
 })();
 
