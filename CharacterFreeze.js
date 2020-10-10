@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2020/10/10 MZ版としてリファクタリング。一部機能を削減
 // 2.0.1 2020/10/10 簡易的な英語ヘルプを整備
 // 2.0.0 2020/10/10 パラメータ構造を変更
 //                  停止時にアニメーションも停止できる機能を追加
@@ -20,6 +21,9 @@
 
 /*:
  * @plugindesc CharacterFreeze
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CharacterFreeze.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @param freezeSwitchId
@@ -71,11 +75,6 @@
  * @default 100
  * @type number
  *
- * @param freezeAnimation
- * @desc When stopped, the animation stops playing at the same time.
- * @default false
- * @type boolean
- *
  * @help All autonomous movement and animation of events will be stopped.
  * At the same time, the player will not be able to move.
  * Turning the switch ON will stop the event, and turning it OFF will restart it.
@@ -85,6 +84,9 @@
  */
 /*:ja
  * @plugindesc キャラクター停止プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CharacterFreeze.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param freezeSwitchId
@@ -148,12 +150,6 @@
  * @default 100
  * @type number
  *
- * @param freezeAnimation
- * @text アニメーション停止
- * @desc 停止時、アニメーションの再生も同時に停止します。
- * @default false
- * @type boolean
- *
  * @help イベントの自律移動とアニメーションを全停止します。
  * 同時にプレイヤーも動けなくなります。
  * パラメータで指定したスイッチをONにすると停止、OFFにすると再開します。
@@ -170,32 +166,14 @@
 
 (function() {
     'use strict';
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('CharacterFreeze');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Game_Map
     //  フリーズ時に専用のピクチャを表示します。
     //=============================================================================
-    var _Game_Map_update      = Game_Map.prototype.update;
+    const _Game_Map_update      = Game_Map.prototype.update;
     Game_Map.prototype.update = function(sceneActive) {
         _Game_Map_update.apply(this, arguments);
         this.updateFreeze();
@@ -216,12 +194,12 @@
             this.showFreezePicture();
         }
         if (param.freezeBgmVolume) {
-            var oldBgm = AudioManager.saveBgm();
+            const oldBgm = AudioManager.saveBgm();
             if (SceneManager.isNextScene(Scene_Battle)) {
                 oldBgm = BattleManager._mapBgm;
             }
-            var freezeVolume = oldBgm.volume * param.freezeBgmVolume / 100;
-            var freezeBgm = {name:oldBgm.name, volume:freezeVolume, pitch:oldBgm.pitch, pan:oldBgm.pan};
+            const freezeVolume = oldBgm.volume * param.freezeBgmVolume / 100;
+            const freezeBgm = {name:oldBgm.name, volume:freezeVolume, pitch:oldBgm.pitch, pan:oldBgm.pan};
             if (SceneManager.isNextScene(Scene_Battle)) {
                 BattleManager._mapBgm = freezeBgm;
             } else {
@@ -232,12 +210,12 @@
     };
 
     Game_Map.prototype.showFreezePicture = function() {
-        var id = param.freezePictureId;
-        var name = param.freezePictureName;
-        var x = param.freezePictureX || 0;
-        var y = param.freezePictureY || 0;
-        var opacity = param.freezePictureOpacity || 255;
-        var blendName = param.freezePictureBlendMode;
+        const id = param.freezePictureId;
+        const name = param.freezePictureName;
+        const x = param.freezePictureX || 0;
+        const y = param.freezePictureY || 0;
+        const opacity = param.freezePictureOpacity || 255;
+        const blendName = param.freezePictureBlendMode;
         $gameScreen.showPicture(id, name, 0, x, y, 100, 100, opacity, blendName);
     };
 
@@ -246,7 +224,7 @@
             $gameScreen.erasePicture(param.freezePictureId);
         }
         if (param.freezeBgmVolume) {
-            var bgm = AudioManager.saveBgm();
+            const bgm = AudioManager.saveBgm();
             bgm.volume = this._preFreezeVolume;
             AudioManager.playBgm(bgm);
             this._preFreezeVolume = null;
@@ -265,23 +243,15 @@
         return $gameMap.isFreeze();
     };
 
-    var _Game_CharacterBase_update      = Game_CharacterBase.prototype.update;
+    const _Game_CharacterBase_update      = Game_CharacterBase.prototype.update;
     Game_CharacterBase.prototype.update = function() {
         if (this.isFreeze()) return;
         _Game_CharacterBase_update.apply(this, arguments);
     };
 
-    var _Game_Player_canMove      = Game_Player.prototype.canMove;
+    const _Game_Player_canMove      = Game_Player.prototype.canMove;
     Game_Player.prototype.canMove = function() {
         return !this.isFreeze() && _Game_Player_canMove.apply(this, arguments);
-    };
-
-    var _Sprite_Animation_update = Sprite_Animation.prototype.update;
-    Sprite_Animation.prototype.update = function() {
-        if ($gameMap.isFreeze() && param.freezeAnimation) {
-            return;
-        }
-        _Sprite_Animation_update.apply(this, arguments);
     };
 })();
 
