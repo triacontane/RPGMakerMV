@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2020/10/10 共通版(英語版)のヘルプが正しく読み込めていなかった問題を修正
 // 1.1.1 2020/10/08 MZ向けにリファクタリング
 // 1.1.0 2017/09/15 型指定機能に対応
 // 1.0.0 2016/07/30 初版
@@ -46,7 +47,7 @@
  * It may cause unexpected problems when used.
  * (e.g. adding 0.5 to HP)
  */
-/*:
+/*:ja
  * @plugindesc 変数の小数演算プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/FloatVariables.js
