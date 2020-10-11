@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2020/10/11 AnimationMv.jsと組み合わせたとき、戦闘テストの敵グループが正常に選択されない競合を修正
 // 1.1.0 2020/09/26 プロジェクトフォルダを開くショートカットコマンドを追加
 // 1.0.5 2020/09/13 戦闘強制勝利のコマンドが機能しない問題を修正
 // 1.0.4 2020/08/21 マップの自動リロード機能を使おうとするとエラーになる問題を修正
@@ -969,6 +970,7 @@ function Controller_NwJs() {
     const _DataManager_loadDatabase = DataManager.loadDatabase;
     DataManager.loadDatabase        = function() {
         if (this.isNeedSuppressBtest()) {
+            console.log(11111);
             this._suppressBattleTest = true;
         }
         _DataManager_loadDatabase.apply(this, arguments);
@@ -985,7 +987,7 @@ function Controller_NwJs() {
             return false;
         }
         if (Utils.isNwjs()) {
-            return this._databaseFiles.some(function(databaseFile) {
+            return this._databaseFiles.every(function(databaseFile) {
                 return !StorageManager.isExistTestData(databaseFile.src);
             });
         } else {
