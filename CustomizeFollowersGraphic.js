@@ -1,11 +1,12 @@
 //=============================================================================
 // CustomizeFollowersGraphic.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2020/10/11 MZ向けにヘルプ修正
 // 1.0.1 2016/05/09 向きとアニメパターンを直接設定する機能を追加
 // 1.0.0 2016/05/07 初版
 // ----------------------------------------------------------------------------
@@ -16,7 +17,9 @@
 
 /*:
  * @plugindesc フォロワー画像調整プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CustomizeFollowersGraphic.js
+ * @author トリアコンタン
  *
  * @help 本来はプレイヤーの設定に準ずるフォロワー画像の表示方法を調整します。
  * 以下のスクリプトを実行してください。
