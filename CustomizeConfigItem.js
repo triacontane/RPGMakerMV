@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.1 2020/10/13 Mano_InputConfig.jsと併用したとき、項目を末尾以外に追加すると表示不整合が発生する競合を修正
 // 3.1.0 2020/08/20 スイッチ項目でONとOFFの表示文字列を変更できる機能を追加
 // 3.0.0 2020/08/20 MZで動作するよう全面的に修正
 // 2.1.0 2017/12/15 追加項目のデフォルト項目を含めた並び順を自由に設定できる機能を追加
@@ -629,7 +630,17 @@
         }
         var targetIndex = this._list.indexOf(targetCommand);
         var newCommand = this._list.pop();
+        this.addIndexForManoInputConfig(targetIndex);
         this._list.splice(targetIndex, 0, newCommand);
+    };
+
+    Window_Options.prototype.addIndexForManoInputConfig = function(index) {
+        if (this._gamepadOptionIndex > index) {
+            this._gamepadOptionIndex += 1;
+        }
+        if (this._keyboardConfigIndex > index) {
+            this._keyboardConfigIndex += 1;
+        }
     };
 
     var _Window_Options_statusText      = Window_Options.prototype.statusText;
