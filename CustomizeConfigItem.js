@@ -1,11 +1,12 @@
 //=============================================================================
 // CustomizeConfigItem.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C) 2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2020/10/13 Mano_InputConfig.jsと併用したとき、項目を末尾以外に追加すると表示不整合が発生する競合を修正
 // 2.1.0 2017/12/15 追加項目のデフォルト項目を含めた並び順を自由に設定できる機能を追加
 //                  項目名称を日本語化
 // 2.0.1 2017/10/15 2.0.0の修正によりスイッチ項目を有効にしたときにゲーム開始するとエラーになる問題を修正
@@ -645,7 +646,17 @@
         }
         var targetIndex = this._list.indexOf(targetCommand);
         var newCommand = this._list.pop();
+        this.addIndexForManoInputConfig(targetIndex);
         this._list.splice(targetIndex, 0, newCommand);
+    };
+
+    Window_Options.prototype.addIndexForManoInputConfig = function(index) {
+        if (this._gamepadOptionIndex > index) {
+            this._gamepadOptionIndex += 1;
+        }
+        if (this._keyboardConfigIndex > index) {
+            this._keyboardConfigIndex += 1;
+        }
     };
 
     var _Window_Options_statusText      = Window_Options.prototype.statusText;
