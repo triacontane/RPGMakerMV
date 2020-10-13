@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2020/10/12 フォント設定が効かない不具合を修正
 // 2.0.1 2020/10/11 言語設定によってアイコン設定の型が違う問題を修正
 // 2.0.0 2020/10/11 MZ向けに実装を修正
 // 1.6.0 2019/06/24 特定マップで非表示にする機能を追加
@@ -40,12 +41,12 @@
  * @type boolean
  *
  * @param WindowX
- * @desc ウィンドウのX横幅です。
+ * @desc ウィンドウのX座標です。
  * @default 24
  * @type number
  *
  * @param WindowY
- * @desc ウィンドウのY横幅です。
+ * @desc ウィンドウのY座標です。
  * @default 24
  * @type number
  *
@@ -491,12 +492,17 @@
         return Math.max(this.standardFontSize() + 8, ImageManager.iconHeight);
     };
 
+    Window_Destination.prototype.resetFontSettings = function () {
+        Window_Base.prototype.resetFontSettings.call(this);
+        this.contents.fontSize = this.standardFontSize();
+    };
+
     Window_Destination.prototype.standardFontSize = function() {
-        return param.fontSize || Window_Base.prototype.standardFontSize.call(this);
+        return param.fontSize || $gameSystem.mainFontSize();
     };
 
     Window_Destination.prototype.standardBackOpacity = function() {
-        return param.windowOpacity || Window_Base.prototype.standardBackOpacity.call(this);
+        return param.windowOpacity || 192;
     };
 
     Window_Destination.prototype.standardPadding = function() {
@@ -560,7 +566,7 @@
         }
         var width = param.autoAdjust ? this.textWidth(this._text) : this.drawTextEx(this._text, 0, -this.lineHeight());
         if (this._iconIndex > 0) {
-            width += Window_Base._iconWidth;
+            width += ImageManager.iconWidth;
         }
         var division = (param.textAlign === 1 ? 2 : 1);
         return this.contentsWidth() / division - width / division;
