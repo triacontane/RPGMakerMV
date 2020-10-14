@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.1 2020/10/15 スクリプトに凡例追加
 // 3.0.0 2020/10/10 MZ向けに全面リファクタリング
 // 2.7.3 2020/08/18 イベントの一時消去後にサブコマンドマップに移動して戻ってきたときに消去状態が復元されるよう修正
 // 2.7.2 2020/04/03 2.5.0で適用したMOG_SceneMenu.jsとの競合解消と、2.0.1で適用したMOG_MenuCursor.jsとの競合解消を両立できるよう修正
@@ -235,6 +236,7 @@
  * @option this.commandGlossary(1); // 用語辞典を呼ぶ(用語辞典プラグイン使用時)
  * @option $gameSwitches.setValue(1, true); // スイッチ[1]をONにする
  * @option $gameVariables.setValue(1, 10); // 変数[1]に[10]を代入する
+ * @option $gameTemp.reserveCommonEvent(1); // マップに戻った後でコモンイベント[1]を呼ぶ
  *
  * @param ReturnMap
  * @text マップに戻るかどうか
