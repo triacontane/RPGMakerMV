@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2020/10/14 マップイベントからゲームオーバーになったときもリトライコマンドが表示される場合がある不具合を修正
+//                  パラメータの型指定機能に対応
 // 1.1.3 2020/09/10 強制リトライで戦闘開始に戻ったとき、HPなどの状態が復元されない問題を修正
 //                  ReviceBattleItemNumber.jsと併用したとき、リトライ後にアイテム画面を開くとエラーになる競合を修正
 // 1.1.2 2018/12/25 リトライを経て勝った、もしくは逃げた場合、それぞれの分岐を正常に通らない場合がある問題を修正
@@ -21,48 +23,64 @@
 //=============================================================================
 
 /*:
- * @plugindesc RetryBattlePlugin
+ * @plugindesc 戦闘リトライプラグイン
  * @author triacontane
  *
  * @param RetryNormalEnemy
+ * @text 雑魚敵でリトライ可能
  * @desc 雑魚敵でゲームオーバーになったあとにリトライできます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param RetryBossEnemy
+ * @text ボス敵でリトライ可能
  * @desc ボス敵でゲームオーバーになったあとにリトライできます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param CommandRetry
+ * @text コマンドリトライ
  * @desc ゲームオーバー画面で表示する「リトライする」ためのコマンド文字列です。
  * @default リトライ
  *
  * @param CommandLoad
+ * @text コマンドロード
  * @desc ゲームオーバー画面で表示する「ロード画面に移行する」ためのコマンド文字列です。
  * @default ロード
  *
  * @param CommandTitle
+ * @text コマンドタイトル
  * @desc ゲームオーバー画面で表示する「タイトル画面に移行する」ためのコマンド文字列です。
  * @default タイトルへ
  *
  * @param WindowY
+ * @text ウィンドウY座標
  * @desc リトライウィンドウの表示Y座標です。
  * @default 464
+ * @type number
  *
  * @param ShowMenu
+ * @text メニュー画面を表示
  * @desc リトライ選択後、戦闘開始前にメニュー画面を表示します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @param Message
+ * @text メッセージ
  * @desc ウィンドウの上部にメッセージを表示します。
  * @default \c[2]あなたは死にました。\c[0]
  *
  * @param MessageY
+ * @textメッセージY座標
  * @desc メッセージの表示Y座標です。
  * @default 360
+ * @type number
  *
  * @param FontSize
+ * @text フォントサイズ
  * @desc メッセージのフォントサイズです。
  * @default 32
+ * @type number
  *
  * @help 戦闘でゲームオーバーになったあとのゲームオーバー画面でリトライ可能になります。
  * 雑魚敵とボス敵とでリトライ可能かどうかを分けることができます。
@@ -97,135 +115,34 @@
  *
  * This plugin is released under the MIT License.
  */
-/*:ja
- * @plugindesc 戦闘リトライプラグイン
- * @author トリアコンタン
- *
- * @param 雑魚敵でリトライ可能
- * @desc 雑魚敵でゲームオーバーになったあとにリトライできます。
- * @default ON
- *
- * @param ボス敵でリトライ可能
- * @desc ボス敵でゲームオーバーになったあとにリトライできます。
- * @default ON
- *
- * @param コマンドリトライ
- * @desc ゲームオーバー画面で表示する「リトライする」ためのコマンド文字列です。
- * @default リトライ
- *
- * @param コマンドロード
- * @desc ゲームオーバー画面で表示する「ロード画面に移行する」ためのコマンド文字列です。
- * @default ロード
- *
- * @param コマンドタイトル
- * @desc ゲームオーバー画面で表示する「タイトル画面に移行する」ためのコマンド文字列です。
- * @default タイトルへ
- *
- * @param ウィンドウY座標
- * @desc リトライウィンドウの表示Y座標です。
- * @default 448
- *
- * @param メニュー画面を表示
- * @desc リトライ選択後、戦闘開始前にメニュー画面を表示します。
- * @default ON
- *
- * @param メッセージ
- * @desc ウィンドウの上部にメッセージを表示します。
- * @default \i[1]\c[2]あなたは死にました\c[0]\i[1]
- *
- * @param メッセージY座標
- * @desc メッセージの表示Y座標です。
- * @default 360
- *
- * @param フォントサイズ
- * @desc メッセージのフォントサイズです。
- * @default 32
- *
- * @help 戦闘でゲームオーバーになったあとのゲームオーバー画面でリトライ可能になります。
- * 雑魚敵とボス敵とでリトライ可能かどうかを分けることができます。
- * リトライを選択すると一度だけメニュー画面を開いた後で、再戦することができます。
- * メニュー画面ではセーブ及びコモンイベントを実行するアイテム、スキルの使用ができません。
- *
- * 雑魚敵かボス敵かは以下の通り判定されます。
- *
- * ・雑魚敵
- * ランダムエンカウントか「戦闘の処理」で「ランダムエンカウントと同じ」を選択
- *
- * ・ボス敵
- * 上記以外
- *
- * さらにオマケ機能として、戦闘中に実行すると強制的に戦闘を最初からやり直す
- * プラグインコマンドを提供します。有名RPGの某魔法が再現できます。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * RB_リトライ禁止  # 一時的にリトライを禁止します。
- * RB_RETRY_DISABLE # 同上
- * RB_リトライ許可  # リトライを再度許可します。
- * RB_RETRY_ENABLE  # 同上
- * RB_強制リトライ  # 戦闘中に使用すると強制的にリトライします。
- * RB_FORCE_RETRY   # 同上
- *
- * スクリプト詳細
- *  イベントコマンド「変数の操作」から実行
- * $gameSystem.getRetryCount(); # リトライ回数を取得して変数に保持します。
- *
- * 利用規約：
- *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
- *  についても制限はありません。
- *  このプラグインはもうあなたのものです。
- */
 
 (function() {
     'use strict';
-    var pluginName    = 'RetryBattle';
     var metaTagPrefix = 'RB_';
 
     var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value === null ? '' : value;
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramRetryNormalEnemy = getParamBoolean(['RetryNormalEnemy', '雑魚敵でリトライ可能']);
-    var paramRetryBossEnemy   = getParamBoolean(['RetryBossEnemy', 'ボス敵でリトライ可能']);
-    var paramCommandRetry     = getParamString(['CommandRetry', 'コマンドリトライ']);
-    var paramCommandLoad      = getParamString(['CommandLoad', 'コマンドロード']);
-    var paramCommandTitle     = getParamString(['CommandTitle', 'コマンドタイトル']);
-    var paramWindowY          = getParamNumber(['WindowY', 'ウィンドウY座標']);
-    var paramShowMenu         = getParamBoolean(['ShowMenu', 'メニュー画面を表示']);
-    var paramMessage          = getParamString(['Message', 'メッセージ']);
-    var paramMessageY         = getParamNumber(['MessageY', 'メッセージY座標']);
-    var paramFontSize         = getParamNumber(['FontSize', 'フォントサイズ']);
+    var param = createPluginParameter('RetryBattle');
 
     //=============================================================================
     // Game_Interpreter
@@ -381,11 +298,13 @@
     };
 
     BattleManager.canRetry = function() {
-        return !$gameSystem.isRetryDisable() && this.checkBattleType() && paramCommandRetry && DataManager.hasRetryData();
+        return !$gameSystem.isRetryDisable() && this.checkBattleType() &&
+            param.CommandRetry && DataManager.hasRetryData() &&
+            !SceneManager.isPreviousScene(Scene_Map);
     };
 
     BattleManager.checkBattleType = function() {
-        return (paramRetryNormalEnemy && !this._bossBattle) || (paramRetryBossEnemy && this._bossBattle);
+        return (param.RetryNormalEnemy && !this._bossBattle) || (param.RetryBossEnemy && this._bossBattle);
     };
 
     //=============================================================================
@@ -496,32 +415,36 @@
         this._retryWindow.setHandler('retry', this.commandRetry.bind(this));
         this._retryWindow.setHandler('load', this.commandLoad.bind(this));
         this._retryWindow.setHandler('title', this.commandTitle.bind(this));
-        this.addWindow(this._retryWindow);
+        if (BattleManager.canRetry()) {
+            this.addWindow(this._retryWindow);
+        } else {
+            this._noRetry = true;
+        }
     };
 
     Scene_Gameover.prototype.createForeground = function() {
         this._messageWindow                   = new Window_Base(0, 0, 0, 0);
         this._messageWindow.opacity           = 0;
-        this._messageWindow.contents.fontSize = paramFontSize;
+        this._messageWindow.contents.fontSize = param.FontSize;
         this.addWindow(this._messageWindow);
-        if (paramMessage) {
+        if (param.Message) {
             this.drawMessage();
         }
     };
 
     Scene_Gameover.prototype.drawMessage = function() {
         var padding = this._messageWindow.padding;
-        var width   = this._messageWindow.drawTextEx(paramMessage, 0, 0) + padding * 2;
-        var height  = paramFontSize + 8 + padding * 2;
+        var width   = this._messageWindow.drawTextEx(param.Message, 0, 0) + padding * 2;
+        var height  = param.FontSize + 8 + padding * 2;
         var x       = Graphics.boxWidth / 2 - width / 2;
-        this._messageWindow.move(x, paramMessageY, width, height);
+        this._messageWindow.move(x, param.MessageY, width, height);
         this._messageWindow.createContents();
-        this._messageWindow.drawTextEx(paramMessage, 0, 0);
+        this._messageWindow.drawTextEx(param.Message, 0, 0);
     };
 
     Scene_Gameover.prototype.commandRetry = function() {
         DataManager.loadGameForRetry();
-        if (paramShowMenu) {
+        if (param.ShowMenu) {
             SceneManager.push(Scene_Menu);
         } else {
             this._retryWindow.close();
@@ -545,7 +468,12 @@
         this.startFadeOut(fade, true);
     };
 
+    var _Scene_Gameover_update = Scene_Gameover.prototype.update;
     Scene_Gameover.prototype.update = function() {
+        if (this._noRetry) {
+            _Scene_Gameover_update.apply(this, arguments);
+            return;
+        }
         if (!this.isBusy()) {
             this._retryWindow.open();
         }
@@ -623,13 +551,15 @@
 
     Window_RetryCommand.prototype.updatePlacement = function() {
         this.x = (Graphics.boxWidth - this.width) / 2;
-        this.y = paramWindowY;
+        this.y = param.WindowY;
     };
 
     Window_RetryCommand.prototype.makeCommandList = function() {
-        if (BattleManager.canRetry()) this.addCommand(paramCommandRetry, 'retry');
-        if (paramCommandLoad) this.addCommand(paramCommandLoad, 'load');
-        this.addCommand(paramCommandTitle, 'title');
+        this.addCommand(param.CommandRetry, 'retry');
+        if (param.CommandLoad) {
+            this.addCommand(param.CommandLoad, 'load');
+        }
+        this.addCommand(param.CommandTitle, 'title');
     };
 })();
 
