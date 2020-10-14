@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/10/15 MZ対応版作成
  1.0.0 2020/10/15 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -15,6 +16,8 @@
 
 /*:
  * @plugindesc AltKeyPatchPlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AltKeyPatch.js
  * @author triacontane
  *
  * @help AltKeyPatch.js
@@ -31,6 +34,8 @@
  */
 /*:ja
  * @plugindesc Altキー分離パッチ
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AltKeyPatch.js
  * @author トリアコンタン
  *
  * @help AltKeyPatch.js
