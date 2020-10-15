@@ -6,6 +6,9 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/10/16 テストプレー以外でも使えるよう修正
+                  録画したファイル名を変数に格納する機能を追加
+                  録画乱れを防止するパラメータを追加
  1.0.1 2020/10/13 MZで動作するよう修正
  1.0.0 2019/01/05 初版
 ----------------------------------------------------------------------------
@@ -23,7 +26,7 @@
  *
  * @param FunkKeyRecord
  * @text 録画ファンクションキー
- * @desc ゲーム画面の録画と停止を行うキーです。この機能による録画はテストプレー時のみ有効です。
+ * @desc ゲーム画面の録画と停止を行うキーです。
  * @default F10
  * @type select
  * @option none
@@ -55,11 +58,29 @@
  * @text 保存場所
  * @desc ファイルの出力パスです。相対パス、絶対パスが利用できます。
  * 区切り文字は「/」もしくは「\」で指定してください。
- * @default records
+ * @default movies
  *
  * @param IncludeAudio
  * @text 音声を含める
  * @desc 録画した動画に音声データを含めるかどうかを選択できます。
+ * @default true
+ * @type boolean
+ *
+ * @param MovieFileVariableId
+ * @text 動画ファイル名の格納変数
+ * @desc 録画した動画ファイル名称文字列が格納される変数です。
+ * @default 0
+ * @type variable
+ *
+ * @param TestOnly
+ * @text テストプレー時のみ有効
+ * @desc プラグインの機能がテストプレー時のみ有効になります。
+ * @default true
+ * @type boolean
+ *
+ * @param PreventRecordingDisruption
+ * @text 録画乱れ防止
+ * @desc メッセージ表示中に稀に発生する録画乱れを防止できますが、メッセージが一瞬で表示されます。
  * @default true
  * @type boolean
  *
@@ -87,17 +108,20 @@
  * ゲーム画面を録画してwebm形式で保存できます。
  * 指定したファンクションキーを押すか、スイッチがONになると録画開始します。
  * もう一度ファンクションキーを押すか、スイッチがOFFになると録画終了します。
- * 主に進捗や紹介用の動画を作成する際の制作補助プラグインとして使います。
  * ファイル名や保存場所、音声を含めるかどうかを設定できます。
  *
- * テストプレーのみ録画中「●REC」と表示されますが、実際の動画には含まれません。
- *
- * あまりに長時間の録画は動作が不安定になる場合があります。
+ * 注意！
+ * 　録画中「●REC」と表示されますが、実際の動画には含まれません。
+ * 　このプラグインはローカル実行（Game.exe）でのみ動作します。
+ * 　あまりに長時間の録画は動作が不安定になる場合があります。
+ * 　現バージョンでは録画した動画が稀に映像乱れが発生します。(パラメータから抑止可能)
  *
  * ・参考にした記事
  * https://qiita.com/ru_shalm/items/0930aedad12c4e100446
- *　
- * このプラグインにはプラグインコマンドはありません。
+ *
+ * ・スクリプト
+ * 最後に録画した動画ファイルのフルパスを取得します。
+ * StorageManager.getLatestMovieFilePath();
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -115,6 +139,10 @@
 
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+
+    if (param.TestOnly && !Utils.isOptionValid('test')) {
+        return;
+    }
 
     const MIME_TYPES = [
         'video/webm;codecs=vp9',
@@ -236,9 +264,7 @@
     const _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown        = function(event) {
         _SceneManager_onKeyDown.apply(this, arguments);
-        if (Utils.isOptionValid('test')) {
-            this.onKeyDownForScreenMovie(event);
-        }
+        this.onKeyDownForScreenMovie(event);
     };
 
     SceneManager.onKeyDownForScreenMovie = function(event) {
@@ -262,12 +288,20 @@
     StorageManager.saveMovieToLocalFile = function(dataBuffer) {
         const fs       = require('fs');
         const dirPath  = StorageManager.localMovieFileDirectoryPath();
-        const filePath = dirPath + this.getMovieFileName() + '.webm';
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath);
         }
-        this._movieFilePath = filePath;
+        const fileName = this.getMovieFileName();
+        const filePath = dirPath + fileName + '.webm';
+        this.saveMovieFileName(fileName);
         fs.writeFileSync(filePath, dataBuffer);
+    };
+
+    StorageManager.saveMovieFileName = function(fileName) {
+        this._movieFilePath = fileName;
+        if (param.MovieFileVariableId) {
+            $gameVariables.setValue(param.MovieFileVariableId, fileName);
+        }
     };
 
     StorageManager.localMovieFileDirectoryPath = function() {
@@ -312,32 +346,30 @@
         }
     };
 
-    if (Utils.isOptionValid('test')) {
-        const _Graphics__createAllElements = Graphics._createAllElements;
-        Graphics._createAllElements        = function() {
-            _Graphics__createAllElements.apply(this, arguments);
-            this._createRecPrinter();
-        };
+    const _Graphics__createAllElements = Graphics._createAllElements;
+    Graphics._createAllElements        = function() {
+        _Graphics__createAllElements.apply(this, arguments);
+        this._createRecPrinter();
+    };
 
-        Graphics._createRecPrinter = function() {
-            const text            = document.createElement('div');
-            text.id               = 'recSign';
-            text.style.position   = 'absolute';
-            text.style.left       = '8px';
-            text.style.top        = '8px';
-            text.style.width      = '300px';
-            text.style.fontSize   = '40px';
-            text.style.fontFamily = 'monospace';
-            text.style.color      = 'red';
-            text.style.textAlign  = 'left';
-            text.style.textShadow = '1px 1px 0 rgba(0,0,0,0.5)';
-            text.innerHTML        = '●REC';
-            text.style.zIndex     = '9';
-            text.style.opacity    = '0';
-            document.body.appendChild(text);
-            this._recSign = text;
-        };
-    }
+    Graphics._createRecPrinter = function() {
+        const text            = document.createElement('div');
+        text.id               = 'recSign';
+        text.style.position   = 'absolute';
+        text.style.left       = '8px';
+        text.style.top        = '8px';
+        text.style.width      = '300px';
+        text.style.fontSize   = '40px';
+        text.style.fontFamily = 'monospace';
+        text.style.color      = 'red';
+        text.style.textAlign  = 'left';
+        text.style.textShadow = '1px 1px 0 rgba(0,0,0,0.5)';
+        text.innerHTML        = '●REC';
+        text.style.zIndex     = '9';
+        text.style.opacity    = '0';
+        document.body.appendChild(text);
+        this._recSign = text;
+    };
 
     /**
      * WebAudio
@@ -352,4 +384,14 @@
         oscillator.connect(destination);
         return destination.stream;
     };
+
+    if (param.PreventRecordingDisruption) {
+        const _Window_Message_updateShowFast = Window_Message.prototype.updateShowFast;
+        Window_Message.prototype.updateShowFast = function() {
+            _Window_Message_updateShowFast.apply(this, arguments);
+            if (SceneManager.isScreenRecording()) {
+                this._showFast = true;
+            }
+        };
+    }
 })();
