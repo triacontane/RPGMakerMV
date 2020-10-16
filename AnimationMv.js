@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2020/10/16 コピー処理を非同期処理に変更。MVプロジェクトからの自動移行が高速になりました。
+                  VisuMZ_1_BattleCore.js利用時、画面全体に表示するアニメーションが左上に表示されるバグを代わりに修正
  1.1.1 2020/08/29 1.1.0の修正でブラウザ実行でエラーになっていた問題を修正
  1.1.0 2020/08/16 MVプロジェクトを指定するだけで必要ファイルを自動コピーできる機能を追加
  1.0.0 2020/06/15 初版
@@ -74,86 +76,98 @@
      *  MVのプロジェクトからファイルをコピーするユーティリティクラスです。
      */
     class MvFileCopyUtil {
-        static copyMvAnimationData() {
-            const mvRoot = param.MvProjectPathText;
-            if (!this.isNeedFileCopy() || !mvRoot) {
-                return ;
+        static async copyMvAnimationData() {
+            if (!this.isAnyTest() || !param.MvProjectPathText) {
+                return false;
             }
-            if (!this.getFs().existsSync(mvRoot + '/index.html')) {
-                PluginManagerEx.throwError(`Invalid MV Project Path :${mvRoot}`, script);
-            }
-            this.copyMvAnimationJson(mvRoot);
+            await this.copyAllFiles('data/', 'data/mv/', /Animations.json/);
+            DataManager.loadDataFile(variableName, variableSrc);
             if (!param.NoCopyImageFile) {
-                this.copyMvAnimationImage(mvRoot);
+                await this.copyAllFiles('img/animations/', 'img/animations/');
             }
-        }
-
-        static getFs() {
-            return require('fs')
-        }
-
-        static getPath() {
-            return require('path')
-        }
-
-        static copyMvAnimationJson(mvRoot) {
-            const srcPath = this.getPath().join(mvRoot, 'data/');
-            const destPath = this.fileDirectoryPath('data/mv/');
-            StorageManager.fsMkdir(destPath);
-            this.copyFile(srcPath, destPath, 'Animations.json');
-        }
-
-        static copyMvAnimationImage(mvRoot) {
-            const srcPath = this.getPath().join(mvRoot, 'img/animations/');
-            const destPath = this.fileDirectoryPath('img/animations/');
-            StorageManager.fsMkdir(destPath);
-            this.copyAllFiles(srcPath, destPath, 'Animations.json');
+            return true;
         }
 
         static fileDirectoryPath(directory) {
-            const base = this.getPath().dirname(process.mainModule.filename);
-            return this.getPath().join(base, `${directory}/`);
+            const path = require('path');
+            const base = path.dirname(process.mainModule.filename);
+            return path.join(base, `${directory}/`);
         }
 
-        static copyAllFiles(originalPath, targetPath) {
-            const copyFile = this.copyFile.bind(this, originalPath, targetPath);
-            this.getFs().readdir(originalPath, function(error, list) {
-                if (error || !list) {
-                    console.warn(error);
-                    return;
-                }
-                list.forEach(function(fileName) {
-                    copyFile(fileName);
-                });
-            });
+        static async copyAllFiles(src, dist, regExp) {
+            const srcPath = require('path').join(param.MvProjectPathText, src);
+            const destPath = this.fileDirectoryPath(dist);
+            const copyModel = new FileCopyModel(srcPath, destPath);
+            await copyModel.copyAllFiles(regExp);
         }
 
-        static copyFile(originalPath, targetPath, fileName) {
-            this.getFs().copyFileSync(originalPath + fileName, targetPath + fileName);
-        }
-
-        static isNeedFileCopy() {
-            return Utils.isOptionValid('test') || DataManager.isBattleTest() || DataManager.isEventTest();
+        static isAnyTest() {
+            return Utils.isNwjs() &&
+                (Utils.isOptionValid('test') || DataManager.isBattleTest() || DataManager.isEventTest());
         }
     }
 
-    DataManager._databaseFiles.push({ name: variableName, src: variableSrc });
+    /**
+     * FileCopyModel
+     * 再帰的な非同期ファイルコピーを実装します。
+     */
+    class FileCopyModel {
+        constructor(src, dist) {
+            this._fs = require('fs').promises;
+            this._src = src;
+            this._dist = dist;
+        }
+
+        async copyAllFiles(fileReqExp = null) {
+            await this._fs.mkdir(this._dist, {recursive: true});
+            const dirents = await this._fs.readdir(this._src, {withFileTypes: true});
+            for (const dirent of dirents) {
+                const name = dirent.name;
+                if (fileReqExp && !fileReqExp.test(name)) {
+                    continue;
+                }
+                if (dirent.isDirectory()) {
+                    await this._copyDirectory(name + '/');
+                } else {
+                    await this._copyFile(name);
+                }
+            }
+        }
+
+        async _copyDirectory(dirName) {
+            const path = require('path');
+            const src = path.join(this._src, dirName);
+            const dist = path.join(this._dist, dirName);
+            await this._fs.mkdir(dist, {recursive: true});
+            const subCopyModel = new FileCopyModel(src, dist);
+            await subCopyModel.copyAllFiles();
+        }
+
+        async _copyFile(fileName) {
+            const src = this._src + fileName;
+            const dist = this._dist + fileName;
+            await this._fs.copyFile(src, dist);
+        }
+    }
 
     const _DataManager_loadDatabase = DataManager.loadDatabase;
     DataManager.loadDatabase = function() {
-        if (Utils.isNwjs()) {
-            MvFileCopyUtil.copyMvAnimationData();
-        }
+        this.loadAnimationData();
         _DataManager_loadDatabase.apply(this, arguments);
     };
 
-    const _DataManager_loadDataFile = DataManager.loadDataFile;
-    DataManager.loadDataFile = function(name, src) {
-        // for Battle Test
-        if (name === variableName) {
-            arguments[1] = variableSrc;
-        }
-        _DataManager_loadDataFile.apply(this, arguments);
+    DataManager.loadAnimationData = function() {
+        MvFileCopyUtil.copyMvAnimationData().then(result => {
+            if (result) {
+                console.log('Animation file copy complete.');
+            }
+        }).catch(error => {
+            if (error.code === 'ENOENT') {
+                PluginManagerEx.throwError(`Invalid MV Project Path :${param.MvProjectPathText}`, script);
+            } else {
+                throw error;
+            }
+        });
     };
 
     const _Spriteset_Base_createAnimation = Spriteset_Base.prototype.createAnimation;
@@ -171,5 +185,14 @@
             !animation.effectName &&
             animation.flashTimings.length === 0 &&
             animation.soundTimings.length === 0;
+    }
+
+    const _Sprite_AnimationMV_updatePosition = Sprite_AnimationMV.prototype.updatePosition;
+    Sprite_AnimationMV.prototype.updatePosition = function() {
+        _Sprite_AnimationMV_updatePosition.apply(this, arguments);
+        if (this._animation.position === 3) {
+            this.x = Graphics.boxWidth / 2;
+            this.y = Graphics.boxHeight / 2;
+        }
     }
 })();
