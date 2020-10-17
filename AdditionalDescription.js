@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2020/10/17 キーコードの仕様を撤廃
+//                  英語ヘルプを作成
 // 2.0.0 2020/10/17 初期表示時に追加テキストの方が表示される設定を追加
 //                  プラグインの型指定機能に対応
 //                  MZ版としてリファクタリング
@@ -23,6 +25,45 @@
 //=============================================================================
 
 /*:
+ * @plugindesc AdditionalDescription
+ * @author triacontane
+ *
+ * @param ButtonName
+ * @desc The name of the button to switch help.
+ * @default shift
+ * @type combo
+ * @option shift
+ * @option control
+ * @option tab
+ *
+ * @param ChangePage
+ * @desc Page change sign string that appears in the lower right corner of the window.
+ * @default Push Shift
+ *
+ * @param ValidTouch
+ * @desc You can also switch windows by touching or left-clicking the help window.
+ * @default true
+ * @type boolean
+ *
+ * @param InitialReverse
+ * @desc The page is displayed in the initial view with the pages switched.
+ * @default false
+ * @type boolean
+ *
+ * @help You can add a second page to the help window
+ * to display any information you want.
+ * Replace it with the specified key.
+ *
+ * Please write the following in the notes section of the item/skill database.
+ * <ADDescription:sampleText>  # The string "sampleText" is displayed.
+ * <ADScript:sampleScript>     # The evaluation result of "sampleScript" is displayed.
+ *
+ * In both cases, a set of control characters are available.
+ * In addition, the target data can be referenced in the script by a local variable called "item".
+ * Database information such as consumption MP and price can be displayed dynamically.
+ */
+
+/*:ja
  * @plugindesc ヘルプ説明追加プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AdditionalDescription.js
@@ -37,12 +78,6 @@
  * @option shift
  * @option control
  * @option tab
- *
- * @param KeyCode
- * @text キーコード
- * @desc ボタン名に指定された以外のボタンを使いたい場合はここにキーコードを直接記述してください。
- * @default 0
- * @type number
  *
  * @param ChangePage
  * @text ページ切り替え
@@ -213,7 +248,7 @@
     };
 
     Window_Help.prototype.isAnotherTriggered = function() {
-        return Input.isTriggered(this.getToggleDescButtonName()) ||
+        return Input.isTriggered(param.ButtonName) ||
             (this.isTouchedInsideFrame() && TouchInput.isTriggered() && param.ValidTouch);
     };
 
@@ -221,10 +256,6 @@
         return this._parentWindows.some(function(win) {
             return win.active;
         });
-    };
-
-    Window_Help.prototype.getToggleDescButtonName = function() {
-        return param.KeyCode ? pluginName : param.ButtonName;
     };
 
     Window_Help.prototype.isTouchedInsideFrame = Window_Selectable.prototype.isTouchedInsideFrame;
