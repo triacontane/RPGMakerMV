@@ -119,7 +119,6 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'AdditionalDescription';
 
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
@@ -128,7 +127,7 @@
     // Window_Selectable
     //  自分自身への参照をヘルプウィンドウに渡します。
     //=============================================================================
-    var _Window_Selectable_setHelpWindow = Window_Selectable.prototype.setHelpWindow;
+    const _Window_Selectable_setHelpWindow = Window_Selectable.prototype.setHelpWindow;
     Window_Selectable.prototype.setHelpWindow = function(helpWindow) {
         _Window_Selectable_setHelpWindow.apply(this, arguments);
         this._helpWindow.setParentWindow(this);
@@ -138,13 +137,13 @@
     // Window_Help
     //  追加ヘルプ情報の保持と表示
     //=============================================================================
-    var _Window_Help_initialize = Window_Help.prototype.initialize;
+    const _Window_Help_initialize = Window_Help.prototype.initialize;
     Window_Help.prototype.initialize = function(numLines) {
         _Window_Help_initialize.apply(this, arguments);
         this._parentWindows = [];
     };
 
-    var _Window_Help_setItem      = Window_Help.prototype.setItem;
+    const _Window_Help_setItem      = Window_Help.prototype.setItem;
     Window_Help.prototype.setItem = function(item) {
         this._anotherText = null;
         this._item        = item;
@@ -162,7 +161,7 @@
         }
     };
 
-    var _Window_Help_setText = Window_Help.prototype.setText;
+    const _Window_Help_setText = Window_Help.prototype.setText;
     Window_Help.prototype.setText = function(text) {
         if (this._text === text) {
             this.refresh();
@@ -184,8 +183,8 @@
     };
 
     Window_Help.prototype.setAnotherScript = function() {
-        var item  = this._item;
-        var value = PluginManagerEx.findMetaValue(item, ['ADスクリプト', 'ADScript']);
+        const item  = this._item;
+        const value = PluginManagerEx.findMetaValue(item, ['ADスクリプト', 'ADScript']);
         if (value) {
             try {
                 this._anotherText = String(eval(value));
@@ -196,14 +195,14 @@
     };
 
     Window_Help.prototype.setAnotherDescription = function() {
-        var item  = this._item;
-        var value = PluginManagerEx.findMetaValue(item, ['AD説明', 'ADDescription']);
+        const item  = this._item;
+        const value = PluginManagerEx.findMetaValue(item, ['AD説明', 'ADDescription']);
         if (value) {
             this._anotherText = String(value);
         }
     };
 
-    var _Window_Help_refresh      = Window_Help.prototype.refresh;
+    const _Window_Help_refresh      = Window_Help.prototype.refresh;
     Window_Help.prototype.refresh = function() {
         _Window_Help_refresh.apply(this, arguments);
         this.refreshChangePage();
@@ -211,9 +210,9 @@
 
     Window_Help.prototype.refreshChangePage = function() {
         if (param.ChangePage && this._anotherText && this._itemExist) {
-            var width = this.drawTextEx(param.ChangePage, 0, this.contents.height);
-            var x = this.contentsWidth() - width;
-            var y = this.contentsHeight() - this.lineHeight();
+            const width = this.drawTextEx(param.ChangePage, 0, this.contents.height);
+            const x = this.contentsWidth() - width;
+            const y = this.contentsHeight() - this.lineHeight();
             this.drawTextEx(param.ChangePage, x, y);
         } else {
             this._anotherText  = null;
@@ -221,7 +220,7 @@
         }
     };
 
-    var _Window_Help_update      = Window_Help.prototype.update;
+    const _Window_Help_update      = Window_Help.prototype.update;
     Window_Help.prototype.update = function() {
         if (this.hasOwnProperty('update')) {
             _Window_Help_update.apply(this, arguments);
