@@ -1,11 +1,14 @@
 //=============================================================================
 // AdditionalDescription.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/10/17 初期表示時に追加テキストの方が表示される設定を追加
+//                  プラグインの型指定機能に対応
+//                  MZ版としてリファクタリング
 // 1.1.4 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
 // 1.1.3 2016/09/20 説明文の文字に「>」「<」を表示できるようエスケープ処理を追加
 // 1.1.2 2016/09/07 同じ説明文のアイテムが連続していたときに切り替えメッセージが表示されない問題を修正
@@ -14,30 +17,49 @@
 //                  切り替え中にキャンセルしたときに描画内容が一部残ってしまう不具合を修正
 // 1.0.0 2016/09/01 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
- * @plugindesc Additional Description Plugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc ヘルプ説明追加プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AdditionalDescription.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param ButtonName
- * @desc ヘルプを切り替えるボタン名です。(shift/control/tab)
+ * @text ボタン名
+ * @desc ヘルプを切り替えるボタン名です。
  * @default shift
+ * @type combo
+ * @option shift
+ * @option control
+ * @option tab
  *
  * @param KeyCode
+ * @text キーコード
  * @desc ボタン名に指定された以外のボタンを使いたい場合はここにキーコードを直接記述してください。
  * @default 0
+ * @type number
  *
  * @param ChangePage
+ * @text ページ切り替え
  * @desc ウィンドウの右下に表示されるページ切り替えサイン文字列です。制御文字が使用できます。
  * @default Push Shift
  *
  * @param ValidTouch
+ * @text タッチ操作有効
  * @desc ヘルプウィンドウをタッチ or 左クリックすることでもウィンドウを切り替えることができます。
- * @default ON
+ * @default true
+ * @type boolean
+ *
+ * @param InitialReverse
+ * @text 初期状態で反転
+ * @desc 初期表示でページ切り替えされた状態で表示されます。
+ * @default false
+ * @type boolean
  *
  * @help ヘルプウィンドウに2ページ目を追加して好きな情報を表示できます。
  * 指定されたキーで入れ替えます。
@@ -51,51 +73,6 @@
  * いずれも制御文字が一通り使用できます。
  * また、スクリプト中では「item」というローカル変数で対象データを参照できます。
  * 消費MPや価格などのデータベース情報を動的に表示できます。
- *
- * 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
- * < → &lt;
- * > → &gt;
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
- * @plugindesc ヘルプ説明追加プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param ボタン名
- * @desc ヘルプを切り替えるボタン名です。(shift/control/tab)
- * @default shift
- *
- * @param キーコード
- * @desc ボタン名に指定された以外のボタンを使いたい場合はここにキーコードを直接記述してください。
- * @default 0
- *
- * @param ページ切り替え
- * @desc ウィンドウの右下に表示されるページ切り替えサイン文字列です。制御文字が使用できます。
- * @default Push Shift
- *
- * @param タッチ操作有効
- * @desc ヘルプウィンドウをタッチ or 左クリックすることでもウィンドウを切り替えることができます。
- * @default ON
- *
- * @help ヘルプウィンドウに2ページ目を追加して好きな情報を表示できます。
- * 指定されたキーで入れ替えます。
- *
- * アイテム・スキルのデータベースのメモ欄に以下の通り記述してください。
- * <AD説明:sampleText>         # 文字列「sampleText」が表示されます。
- * <ADDescription:sampleText>  # 同上
- * <ADスクリプト:sampleScript> #「sampleScript」の評価結果が表示されます。
- * <ADScript:sampleScript>     # 同上
- *
- * いずれも制御文字が一通り使用できます。
- * また、スクリプト中では「item」というローカル変数で対象データを参照できます。
- * 消費MPや価格などのデータベース情報を動的に表示できます。
- *
- * 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
- * < → &lt;
- * > → &gt;
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -108,69 +85,9 @@
 (function() {
     'use strict';
     var pluginName    = 'AdditionalDescription';
-    var metaTagPrefix = 'AD';
 
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value === null ? '' : value;
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
-    };
-
-    var getArgString = function(arg, upperFlg) {
-        arg = convertEscapeCharacters(arg);
-        return upperFlg ? arg.toUpperCase() : arg;
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null || text === true) text = '';
-        text = text.replace(/&gt;?/gi, '>');
-        text = text.replace(/&lt;?/gi, '<');
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramButtonName = getParamString(['ButtonName', 'ボタン名']);
-    var paramKeyCode    = getParamNumber(['KeyCode', 'キーコード']);
-    if (paramKeyCode) Input.keyMapper[paramKeyCode] = pluginName;
-    var paramChangePage = getParamString(['ChangePage', 'ページ切り替え']);
-    var paramValidTouch = getParamBoolean(['ValidTouch', 'タッチ操作有効']);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Window_Selectable
@@ -197,12 +114,17 @@
         this._anotherText = null;
         this._item        = item;
         this._itemExist   = true;
-        if (item) this.setAnother();
+        if (item) {
+            this.setAnother();
+        }
         _Window_Help_setItem.apply(this, arguments);
         this._originalText       = this._text;
         this._anotherTextVisible = false;
         this._item               = null;
         this._itemExist          = false;
+        if (param.InitialReverse && this._anotherText) {
+            this.toggleDesc();
+        }
     };
 
     var _Window_Help_setText = Window_Help.prototype.setText;
@@ -221,15 +143,17 @@
 
     Window_Help.prototype.setAnother = function() {
         this.setAnotherDescription();
-        if (this._anotherText === null) this.setAnotherScript();
+        if (this._anotherText === null) {
+            this.setAnotherScript();
+        }
     };
 
     Window_Help.prototype.setAnotherScript = function() {
         var item  = this._item;
-        var value = getMetaValues(item, ['スクリプト', 'Script']);
+        var value = PluginManagerEx.findMetaValue(item, ['ADスクリプト', 'ADScript']);
         if (value) {
             try {
-                this._anotherText = String(eval(getArgString(value)));
+                this._anotherText = String(eval(value));
             } catch (e) {
                 console.error(e.stack);
             }
@@ -238,9 +162,9 @@
 
     Window_Help.prototype.setAnotherDescription = function() {
         var item  = this._item;
-        var value = getMetaValues(item, ['説明', 'Description']);
+        var value = PluginManagerEx.findMetaValue(item, ['AD説明', 'ADDescription']);
         if (value) {
-            this._anotherText = getArgString(value);
+            this._anotherText = String(value);
         }
     };
 
@@ -251,9 +175,11 @@
     };
 
     Window_Help.prototype.refreshChangePage = function() {
-        if (paramChangePage && this._anotherText && this._itemExist) {
-            var width = this.drawTextEx(paramChangePage, 0, this.contents.height);
-            this.drawTextEx(paramChangePage, this.contentsWidth() - width, this.contentsHeight() - this.lineHeight());
+        if (param.ChangePage && this._anotherText && this._itemExist) {
+            var width = this.drawTextEx(param.ChangePage, 0, this.contents.height);
+            var x = this.contentsWidth() - width;
+            var y = this.contentsHeight() - this.lineHeight();
+            this.drawTextEx(param.ChangePage, x, y);
         } else {
             this._anotherText  = null;
             this._originalText = null;
@@ -275,16 +201,20 @@
     Window_Help.prototype.updateAnotherDesc = function() {
         if (this._anotherText && this.isAnotherTriggered() && this.isAnyParentActive()) {
             SoundManager.playCursor();
-            this._anotherTextVisible = !this._anotherTextVisible;
-            this._itemExist = true;
-            this.setText(this._anotherTextVisible ? this._anotherText : this._originalText);
-            this._itemExist = false;
+            this.toggleDesc();
         }
+    };
+
+    Window_Help.prototype.toggleDesc = function() {
+        this._anotherTextVisible = !this._anotherTextVisible;
+        this._itemExist = true;
+        this.setText(this._anotherTextVisible ? this._anotherText : this._originalText);
+        this._itemExist = false;
     };
 
     Window_Help.prototype.isAnotherTriggered = function() {
         return Input.isTriggered(this.getToggleDescButtonName()) ||
-            (this.isTouchedInsideFrame() && TouchInput.isTriggered() && paramValidTouch);
+            (this.isTouchedInsideFrame() && TouchInput.isTriggered() && param.ValidTouch);
     };
 
     Window_Help.prototype.isAnyParentActive = function() {
@@ -294,7 +224,7 @@
     };
 
     Window_Help.prototype.getToggleDescButtonName = function() {
-        return paramKeyCode ? pluginName : paramButtonName;
+        return param.KeyCode ? pluginName : param.ButtonName;
     };
 
     Window_Help.prototype.isTouchedInsideFrame = Window_Selectable.prototype.isTouchedInsideFrame;
