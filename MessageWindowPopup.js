@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/10/17 テール画像を変更できるプラグインコマンドを追加
  1.0.4 2020/09/23 1.0.3の修正方法を変更し、メッセージ表示直後にフキダシを無効化した場合でもネームウィンドウが一瞬上に表示されないよう修正
  1.0.3 2020/09/23 フキダシ位置を下にして表示したとき、条件次第でウィンドウを閉じる瞬間にフキダシが一瞬上に表示される問題を修正
  1.0.2 2020/08/26 ベースプラグインの説明を追加
@@ -147,7 +148,6 @@
  * @text テール画像
  * @desc テールに使う画像をシステム画像から指定します。
  * @default
- * @require 1
  * @dir img/system/
  * @type file
  *
@@ -234,7 +234,6 @@
  * @text ウィンドウスキン
  * @desc フキダシウィンドウのスキンを変更する場合、指定してください。
  * @default
- * @require 1
  * @dir img/system/
  * @type file
  *
@@ -293,6 +292,17 @@
  * @type number
  * @min -2000
  * @max 2000
+ *
+ * @command CHANGE_TAIL
+ * @text テール画像変更
+ * @desc テール画像を別の画像に変更します。
+ *
+ * @arg tailImage
+ * @text テール画像
+ * @desc テールに使う画像をシステム画像から指定します。空を指定するとパラメータで指定したテール画像に戻ります。
+ * @default
+ * @dir img/system/
+ * @type file
  *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
@@ -365,6 +375,10 @@
 
     PluginManagerEx.registerCommand(script, 'POPUP_ADJUST_SIZE', function(args) {
         $gameSystem.setPopupAdjustSize(args.width, args.height);
+    });
+
+    PluginManagerEx.registerCommand(script, 'CHANGE_TAIL', function(args) {
+        $gameSystem.setTailImage(args.tailImage);
     });
 
     Game_Interpreter.prototype.setPopupWindowPosition = function(windowPosition, characterId) {
@@ -514,6 +528,14 @@
         } else {
             return this._messagePopupPosition === position;
         }
+    };
+
+    Game_System.prototype.getTailImage = function() {
+        return this._tailImage || param.tailImage;
+    };
+
+    Game_System.prototype.setTailImage = function(value) {
+        this._tailImage = value;
     };
 
     //=============================================================================
@@ -752,7 +774,7 @@
         if (!param.NoUseTail && !this.isUsePauseSignTextEnd()) {
             this.setPauseSignToTail(lowerFlg);
         }
-        if (param.tailImage) {
+        if ($gameSystem.getTailImage()) {
             this.setPauseSignImageToTail(lowerFlg);
         }
     };
@@ -924,12 +946,22 @@
     Window_Message.prototype._createAllParts = function() {
         _Window_Message__createAllParts.apply(this, arguments);
         this._messageTailImage = new Sprite();
-        if (param.tailImage) {
-            this._messageTailImage.bitmap   = ImageManager.loadSystem(param.tailImage);
+        const tailImage = $gameSystem.getTailImage();
+        if (tailImage) {
+            this.refreshTailImage();
             this._messageTailImage.visible  = false;
             this._messageTailImage.anchor.x = 0.5;
             this.addChild(this._messageTailImage);
         }
+    };
+
+    Window_Message.prototype.refreshTailImage = function() {
+        const tailImage = $gameSystem.getTailImage();
+        if (tailImage === this._tailImageName) {
+            return;
+        }
+        this._messageTailImage.bitmap   = ImageManager.loadSystem(tailImage);
+        this._tailImageName = tailImage;
     };
 
     Window_Message.prototype.windowWidth = function() {
@@ -1049,7 +1081,8 @@
     Window_Message.prototype.updateTailImage = function() {
         if (!this.isPopup()) {
             this._messageTailImage.visible = false;
-        } else if (param.tailImage) {
+        } else if (this._messageTailImage.bitmap) {
+            this.refreshTailImage();
             this._messageTailImage.visible = this.isOpen();
             if (!this.isUsePauseSignTextEnd() && !param.NoUseTail) {
                 this._pauseSignSprite.visible = false;
