@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.15.0 2022/08/26 テール画像を変更できるプラグインコマンドを追加
 // 2.14.10 2022/05/14 MWP_SETTING SUB_POS_PLAYER実行後に選択を表示するとエラーになる問題を修正
 // 2.14.9 2019/12/27 StandPictureEC.jsおよびMessageAlignmentEC.jsと組み合わせた場合に発生する競合を修正
 // 2.14.8 2019/12/27 2.14.7の修正で一部制御文字を使用するとウィンドウ幅の計算が正しく行われない問題を修正
@@ -541,6 +542,12 @@
  * ・使用可能な制御文字
  * \sh[5] # 強さ[5]でウィンドウを振動させます。
  *
+ * MWP_SET_TAIL_IMAGE [ファイル名] or
+ * フキダシウィンドウのテール画像変更 [ファイル名]
+ *
+ * テール画像を変更します。img/system配下の画像を
+ * 拡張子無しで指定してください。
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -685,6 +692,10 @@
                 } else {
                     $gameSystem.clearMessagePopup();
                 }
+                break;
+            case 'MWP_SET_TAIL_IMAGE':
+            case 'フキダシウィンドウのテール画像変更':
+                $gameSystem.setTailImage(args[0]);
                 break;
             case 'MWP_SETTING' :
             case 'フキダシウィンドウ設定':
@@ -912,6 +923,14 @@
         }
     };
 
+    Game_System.prototype.getTailImage = function() {
+        return this._tailImage || paramTailImage;
+    };
+
+    Game_System.prototype.setTailImage = function(value) {
+        this._tailImage = value;
+    };
+
     //=============================================================================
     // Game_Map
     //  イベント起動時に自動設定を適用します。
@@ -1133,7 +1152,7 @@
         if (!paramNoUseTail && !this.isUsePauseSignTextEnd()) {
             this.setPauseSignToTail(lowerFlg);
         }
-        if (paramTailImage) {
+        if ($gameSystem.getTailImage()) {
             this.setPauseSignImageToTail(lowerFlg);
         }
     };
@@ -1143,7 +1162,7 @@
             this.adjustPopupPositionY();
         }
         var adjustResultX = this.adjustPopupPositionX();
-        var tailX = this._width / 2 + adjustResultX;
+        var tailX         = this._width / 2 + adjustResultX;
         if (!this.isUsePauseSignTextEnd()) {
             this._windowPauseSignSprite.x = tailX
         }
@@ -1267,16 +1286,26 @@
     Window_Message._faceHeight = Math.floor(Window_Base._faceHeight * paramFaceScale / 100);
     Window_Message._faceWidth  = Math.floor(Window_Base._faceWidth * paramFaceScale / 100);
 
-    var _Window_Message__createAllParts = Window_Message.prototype._createAllParts;
+    var _Window_Message__createAllParts      = Window_Message.prototype._createAllParts;
     Window_Message.prototype._createAllParts = function() {
         _Window_Message__createAllParts.apply(this, arguments);
         this._messageTailImage = new Sprite();
-        if (paramTailImage) {
-            this._messageTailImage.bitmap   = ImageManager.loadSystem(paramTailImage);
+        var tailImage = $gameSystem.getTailImage();
+        if (tailImage) {
+            this.refreshTailImage();
             this._messageTailImage.visible  = false;
             this._messageTailImage.anchor.x = 0.5;
             this.addChild(this._messageTailImage);
         }
+    };
+
+    Window_Message.prototype.refreshTailImage = function() {
+        const tailImage = $gameSystem.getTailImage();
+        if (tailImage === this._tailImageName) {
+            return;
+        }
+        this._messageTailImage.bitmap = ImageManager.loadSystem(tailImage);
+        this._tailImageName           = tailImage;
     };
 
     var _Window_Message_standardFontSize      = Window_Message.prototype.standardFontSize;
@@ -1428,7 +1457,8 @@
     Window_Message.prototype.updateTailImage = function() {
         if (!this.isPopup()) {
             this._messageTailImage.visible = false;
-        } else if (paramTailImage) {
+        } else if (this._messageTailImage.bitmap) {
+            this.refreshTailImage();
             this._messageTailImage.visible = this.isOpen();
             if (!this.isUsePauseSignTextEnd() && !paramNoUseTail) {
                 this._windowPauseSignSprite.visible = false;
