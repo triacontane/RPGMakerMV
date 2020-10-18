@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2020/10/18 本体の暗号化機能を使ったとき再生できなくなる問題を修正(mp3ファイル自体は暗号化の対象ではありません)
 // 1.0.0 2017/08/20 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -258,6 +259,25 @@
         return useMp3 && (!param.checkFileSuffix || this._useMp3);
     };
 
+    var _Decrypter_extToEncryptExt = Decrypter.extToEncryptExt;
+    Decrypter.extToEncryptExt = function(url) {
+        var ext = url.split('.').pop();
+        if (ext.toLowerCase() === 'mp3') {
+            return url;
+        } else {
+            return _Decrypter_extToEncryptExt.apply(this, arguments);
+        }
+    };
+
+    var _Decrypter_decryptArrayBuffer = Decrypter.decryptArrayBuffer;
+    Decrypter.decryptArrayBuffer = function(arrayBuffer) {
+        if (this._disable) {
+            return arrayBuffer;
+        } else {
+            return _Decrypter_decryptArrayBuffer.apply(this, arguments);
+        }
+    };
+
     //=============================================================================
     // WebAudio
     //  カスタムループコメントを設定します。
@@ -282,6 +302,16 @@
     WebAudio.prototype._isExistCustomLoopTag = function(tagInfo) {
         var path = this._url.replace(/\.\w+?$/, '');
         return path === 'audio/bgm/' + tagInfo.BGM_NAME || path === 'audio/bgs/' + tagInfo.BGS_NAME;
+    };
+
+    var _WebAudio__onXhrLoad = WebAudio.prototype._onXhrLoad;
+    WebAudio.prototype._onXhrLoad = function(xhr) {
+        var ext = xhr.responseURL.split('.').pop();
+        if (ext.toLowerCase() === 'mp3') {
+            Decrypter._disable = true;
+        }
+        _WebAudio__onXhrLoad.apply(this, arguments);
+        Decrypter._disable = false;
     };
 })();
 
