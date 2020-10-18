@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2020/10/18 MZ版としてリファクタリング。MV版からメモ欄の仕様を変更
 // 1.2.0 2020/10/18 リファクタリングとヘルプの整理
 // 1.1.1 2018/09/27 テストプレー時はパラメータ「例外処理」の値に関係なくスクリプトエラーで異常終了しないよう修正
 // 1.1.0 2018/08/19 イベントページの出現条件および敵キャラの行動パターンで各オブジェクトおよびデータを参照できる機能を追加
@@ -23,7 +24,10 @@
 
 /*:
  * @plugindesc DynamicVariablesPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DynamicVariables.js
+ * @base PluginCommonBase
+ * @author triacontane
  *
  * @param DynamicSwitchStart
  * @desc The start position number of the dynamic switch.
@@ -69,22 +73,16 @@
  * You can also reference additional dynamic variables and switches in your scripts, but you can also use the
  * If you try to reference the variable (switch) with the same number, a circular reference occurs and an error occurs.
  *
- * If you try to refer to a variable (switch) with the same number, it will be a circular reference and an error will occur.
- * Normally, the process of determining the page of events is done when one of the switches or variables is
- * It only runs when it is changed.
- * The plugin retains that specification for performance reasons.
- * If you enter the following in the event memo field, only that event will be executed when
- * You can change it to always check the page conditions.
- *
- * <DVAlwaysRefresh>
- *
  * There are no plug-in commands in this plugin.
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 動的変数プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DynamicVariables.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param DynamicSwitchStart
  * @text 動的スイッチ開始位置
@@ -123,11 +121,11 @@
  * id    # 処理対象のスイッチ、変数ID
  * value # 処理対象のスイッチ、変数IDにもともと入っていた値
  *
- * イベントページの出現条件でスイッチを参照する場合、追加で以下の変数が使えます。
+ * イベントページの出現条件でスイッチを参照する場合、以下の変数が使えます。
  * e     # イベントオブジェクトへの参照
  * d     # イベントデータへの参照
  *
- * 敵キャラの行動パターンでスイッチを参照する場合、追加で以下の変数が使えます。
+ * 敵キャラの行動パターンでスイッチを参照する場合、以下の変数が使えます。
  * e     # 敵キャラオブジェクトへの参照
  * d     # 敵キャラデータへの参照
  *
@@ -143,15 +141,13 @@
  * スクリプト中でさらに動的変数およびスイッチを参照することもできますが
  * 同じ番号の変数(スイッチ)を参照しようとすると循環参照となりエラーが発生します。
  *
- * ・使用上の注意
- * 通常、イベントのページを決定する処理は、いずれかのスイッチもしくは変数が
+ * 本来、イベントのページを決定する処理は、いずれかのスイッチもしくは変数が
  * 変更されたときにのみ実行されます。
- * 本プラグインでは、パフォーマンス上の理由からその仕様を維持します。
- * イベントのメモ欄に以下の通り入力すると、そのイベントのみ
- * 常にページの条件チェックを行うように変更できます。
- *
- * <DV常時リフレッシュ>
- * <DVAlwaysRefresh>
+ * 本プラグインではページの出現条件に動的スイッチ、動的変数をひとつでも
+ * 設定するとページ決定処理を毎フレーム実行するよう変更します。
+ * この処理は僅かながらパフォーマンスを低下させるため、動的スイッチを指定した
+ * 場合も毎フレーム実行したくない場合は、以下のメモ欄を指定してください。
+ * <NoRefresh>
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -163,86 +159,29 @@
 
 (function() {
     'use strict';
-    var metaTagPrefix = 'DV';
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('DynamicVariables');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     // eval参照用
-    var e = null;
-    var d = null;
-    var max = Math.max, min = Math.min, abs = Math.abs, floor = Math.floor, pow = Math.pow, random = Math.random;
-    var dActors       = $dataActors;
-    var dClasses      = $dataClasses;
-    var dSkills       = $dataSkills;
-    var dItems        = $dataItems;
-    var dWeapons      = $dataWeapons;
-    var dArmors       = $dataArmors;
-    var dEnemies      = $dataEnemies;
-    var dTroops       = $dataTroops;
-    var dStates       = $dataStates;
-    var dAnimations   = $dataAnimations;
-    var dTilesets     = $dataTilesets;
-    var dCommonEvents = $dataCommonEvents;
-    var dSystem       = $dataSystem;
-    var dMapInfos     = $dataMapInfos;
-    var dMap          = $dataMap;
-    var gTemp         = $gameTemp;
-    var gSystem       = $gameSystem;
-    var gScreen       = $gameScreen;
-    var gTimer        = $gameTimer;
-    var gMessage      = $gameMessage;
-    var gSwitches     = $gameSwitches;
-    var gActors       = $gameActors;
-    var gParty        = $gameParty;
-    var gTroop        = $gameTroop;
-    var gMap          = $gameMap;
-    var gPlayer       = $gamePlayer;
+    let e = null;
+    let d = null;
 
     //=============================================================================
     // Game_Variables
     //  動的変数の取得処理を追加定義します。
     //=============================================================================
-    var _Game_Variables_value      = Game_Variables.prototype.value;
+    const _Game_Variables_value      = Game_Variables.prototype.value;
     Game_Variables.prototype.value = function(variableId) {
-        var value = _Game_Variables_value.apply(this, arguments);
-        if (variableId >= param.DynamicVariableStart && variableId <= param.DynamicVariableEnd) {
+        const value = _Game_Variables_value.apply(this, arguments);
+        if (this.isDynamic(variableId)) {
             return this.getDynamicValue($dataSystem.variables[variableId], variableId, value);
         } else {
             return value;
         }
+    };
+
+    Game_Variables.prototype.isDynamic = function(variableId) {
+        return variableId >= param.DynamicVariableStart && variableId <= param.DynamicVariableEnd;
     };
 
     Game_Variables.prototype.getOriginalValue = function(variableId) {
@@ -253,11 +192,9 @@
         if (!dynamicScript) {
             return value;
         }
-        var v = $gameVariables.value.bind($gameVariables);
-        var s = $gameSwitches.value.bind($gameSwitches);
         if (param.ValidException || $gameTemp.isPlaytest()) {
             try {
-                return eval(dynamicScript);
+                return eval(PluginManagerEx.convertEscapeCharacters(dynamicScript));
             } catch (e) {
                 console.error(e.message);
                 return 0;
@@ -271,14 +208,18 @@
     // Game_Switches
     //  動的スイッチの取得処理を追加定義します。
     //=============================================================================
-    var _Game_Switches_value      = Game_Switches.prototype.value;
+    const _Game_Switches_value      = Game_Switches.prototype.value;
     Game_Switches.prototype.value = function(switchId) {
-        var value = _Game_Switches_value.apply(this, arguments);
-        if (switchId >= param.DynamicSwitchStart && switchId <= param.DynamicSwitchEnd) {
+        const value = _Game_Switches_value.apply(this, arguments);
+        if (this.isDynamic(switchId)) {
             return !!this.getDynamicValue($dataSystem.switches[switchId], switchId, value);
         } else {
             return value;
         }
+    };
+
+    Game_Switches.prototype.isDynamic = function(switchId) {
+        return switchId >= param.DynamicSwitchStart && switchId <= param.DynamicSwitchEnd;
     };
 
     Game_Switches.prototype.getOriginalValue = function(switchId) {
@@ -291,17 +232,36 @@
     // Game_Event
     //  必要な場合、イベントページを毎フレームリフレッシュします。
     //=============================================================================
-    var _Game_Event_initialize      = Game_Event.prototype.initialize;
+    const _Game_Event_initialize      = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         this._needsAlwaysRefresh = this.isNeedAlwaysRefresh();
     };
 
     Game_Event.prototype.isNeedAlwaysRefresh = function() {
-        return getMetaValues(this.event(), ['AlwaysRefresh', '常時リフレッシュ']);
+        if (PluginManagerEx.findMetaValue(this.event(), 'NoRefresh')) {
+            return false;
+        }
+        const pages = this.event().pages;
+        if (!pages) {
+            return false;
+        }
+        return pages.some(page => this.isDynamicConditionPage(page));
     };
 
-    var _Game_Event_update      = Game_Event.prototype.update;
+    Game_Event.prototype.isDynamicConditionPage = function(page) {
+        const c = page.conditions;
+        if (c.switch1Valid && $gameSwitches.isDynamic(c.switch1Id)) {
+            return true;
+        } else if (c.switch2Valid && $gameSwitches.isDynamic(c.switch2Id)) {
+            return true;
+        } else if (c.variableValid && $gameVariables.isDynamic(c.variableId)) {
+            return true;
+        }
+        return false;
+    };
+
+    const _Game_Event_update      = Game_Event.prototype.update;
     Game_Event.prototype.update = function() {
         if (this._needsAlwaysRefresh) {
             this.refresh();
@@ -309,11 +269,11 @@
         _Game_Event_update.apply(this, arguments);
     };
 
-    var _Game_Event_meetsConditions      = Game_Event.prototype.meetsConditions;
+    const _Game_Event_meetsConditions      = Game_Event.prototype.meetsConditions;
     Game_Event.prototype.meetsConditions = function(page) {
         e          = this;
         d          = this.event();
-        var result = _Game_Event_meetsConditions.apply(this, arguments);
+        const result = _Game_Event_meetsConditions.apply(this, arguments);
         e          = null;
         d          = null;
         return result;
@@ -323,11 +283,11 @@
      * Game_Enemy
      * 敵キャラ情報をスクリプト実行用に記憶します。
      */
-    var _Game_Enemy_meetsSwitchCondition      = Game_Enemy.prototype.meetsSwitchCondition;
+    const _Game_Enemy_meetsSwitchCondition      = Game_Enemy.prototype.meetsSwitchCondition;
     Game_Enemy.prototype.meetsSwitchCondition = function(param) {
         e          = this;
         d          = this.enemy();
-        var result = _Game_Enemy_meetsSwitchCondition.apply(this, arguments);
+        const result = _Game_Enemy_meetsSwitchCondition.apply(this, arguments);
         e          = null;
         d          = null;
         return result;
