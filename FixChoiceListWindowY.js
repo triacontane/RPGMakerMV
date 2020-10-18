@@ -16,6 +16,8 @@
 
 /*:
  * @plugindesc FixChoiceListWindowYPlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/FixChoiceListWindowY.js
  * @author triacontane
  *
  * @param y
@@ -32,6 +34,8 @@
  */
 /*:ja
  * @plugindesc 選択肢ウィンドウのY座標固定パッチ
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/FixChoiceListWindowY.js
  * @author トリアコンタン
  *
  * @param y
@@ -53,12 +57,12 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
 
-    var paramY = parseInt(PluginManager.parameters('FixChoiceListWindowY').y);
+    const paramY = parseInt(PluginManager.parameters('FixChoiceListWindowY').y);
 
-    var _Window_ChoiceList_updatePlacement = Window_ChoiceList.prototype.updatePlacement;
+    const _Window_ChoiceList_updatePlacement = Window_ChoiceList.prototype.updatePlacement;
     Window_ChoiceList.prototype.updatePlacement = function() {
         _Window_ChoiceList_updatePlacement.apply(this, arguments);
         if (this._messageWindow.isClosed()) {
@@ -66,7 +70,7 @@
         }
     };
 
-    var _Window_NumberInput_updatePlacement = Window_NumberInput.prototype.updatePlacement;
+    const _Window_NumberInput_updatePlacement = Window_NumberInput.prototype.updatePlacement;
     Window_NumberInput.prototype.updatePlacement = function() {
         _Window_NumberInput_updatePlacement.apply(this, arguments);
         if (this._messageWindow.isClosed()) {
