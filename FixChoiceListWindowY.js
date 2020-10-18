@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/10/18 数値入力ウィンドウも同様の仕様に変更
  1.0.0 2020/10/18 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -60,6 +61,14 @@
     var _Window_ChoiceList_updatePlacement = Window_ChoiceList.prototype.updatePlacement;
     Window_ChoiceList.prototype.updatePlacement = function() {
         _Window_ChoiceList_updatePlacement.apply(this, arguments);
+        if (this._messageWindow.isClosed()) {
+            this.y = paramY - this.height / 2;
+        }
+    };
+
+    var _Window_NumberInput_updatePlacement = Window_NumberInput.prototype.updatePlacement;
+    Window_NumberInput.prototype.updatePlacement = function() {
+        _Window_NumberInput_updatePlacement.apply(this, arguments);
         if (this._messageWindow.isClosed()) {
             this.y = paramY - this.height / 2;
         }
