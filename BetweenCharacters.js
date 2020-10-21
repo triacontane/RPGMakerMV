@@ -1,11 +1,12 @@
 //=============================================================================
 // BetweenCharacters.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2020/10/22 MZ対応版を作成
 // 1.1.0 2018/01/30 パラメータの型指定機能に対応。MessageWindowPopup.jsとの競合を解消
 // 1.0.0 2017/04/20 初版
 // ----------------------------------------------------------------------------
@@ -16,37 +17,37 @@
 
 /*:
  * @plugindesc BetweenCharactersPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BetweenCharacters.js
+ * @base PluginCommonBase
+ * @author triacontane
  *
  * @param BetweenVariableId
- * @desc 字間を値(ピクセル単位)を取得する変数番号です。
+ * @desc The variable number to get the value (in pixels) between characters.
  * @default 0
  * @type variable
  *
- * @help 文章に字間を設定できます。
- * 指定した変数の値がそのまま字間（ピクセル数）になります。
- *
- * メッセージを表示する前に指定した変数に値を入れてください。
- *
- * このプラグインにはプラグインコマンドはありません。
+ * @help You can set the character spacing of the text.
+ * The value of the specified variable will be the character spacing (in pixels).
+ * Enter the value in the specified variable before displaying the message.
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 字間設定プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BetweenCharacters.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @param 字間変数番号
- * @desc 字間を値(ピクセル単位)を取得する変数番号です。
+ * @param BetweenVariableId
+ * @text 字間変数番号
+ * @desc 字間を値(ピクセル単位)を取得する変数番号です。メッセージを表示する前に指定した変数に値を入れてください。
  * @default 0
  * @type variable
  *
- * メッセージを表示する前に指定した変数に値を入れてください。
- *
  * @help 文章に字間を設定できます。
  * 指定した変数の値がそのまま字間（ピクセル数）になります。
- *
- * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -56,42 +57,18 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'BetweenCharacters';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param       = {};
-    param.betweenVariableId = getParamNumber(['BetweenVariableId', '字間変数番号']);
-
-    var _Window_Base_processNormalCharacter = Window_Base.prototype.processNormalCharacter;
-    Window_Base.prototype.processNormalCharacter = function(textState) {
-        _Window_Base_processNormalCharacter.apply(this, arguments);
-        textState.x += this.getBetweenCharacters();
+    const _Window_Base_flushTextState = Window_Base.prototype.flushTextState;
+    Window_Base.prototype.flushTextState = function(textState) {
+        _Window_Base_flushTextState.apply(this, arguments);
+        const between = this.getBetweenCharacters();
+        textState.x += textState.rtl ? -between : between;
     };
 
     Window_Base.prototype.getBetweenCharacters = function() {
-        return $gameVariables.value(param.betweenVariableId) || 0;
+        return $gameVariables.value(param.BetweenVariableId) || 0;
     };
 })();
 
