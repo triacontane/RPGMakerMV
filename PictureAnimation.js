@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/10/24 ピクチャのアニメーション完了まで次の命令に移行しない設定を追加
  1.0,2 2020/08/24 ピクチャのアニメーションセル設定でセル進行かどうかの判定処理が誤っていた問題を修正
  1.0.1 2020/08/23 ピクチャのアニメーションセル設定のコマンドが機能していなかった問題を修正
  1.0.0 2020/02/28 MV版から流用作成
@@ -30,7 +31,7 @@
  * @type boolean
  *
  * @command INIT
- * @text ピクチャのアニメーション準備
+ * @text アニメーション準備
  * @desc ピクチャをアニメーション対象にする準備をします。「ピクチャの表示」の直前に実行してください。
  *
  * @arg cellNumber
@@ -67,7 +68,7 @@
  * @default 0
  *
  * @command START
- * @text ピクチャのアニメーション開始
+ * @text アニメーション開始
  * @desc 指定したピクチャ番号のピクチャをアニメーションを開始します。
  *
  * @arg pictureNumber
@@ -80,6 +81,12 @@
  * @arg loop
  * @text ループ有無
  * @desc ループ再生の有無です。
+ * @type boolean
+ * @default false
+ *
+ * @arg wait
+ * @text 完了までウェイト
+ * @desc 有効にするとアニメーションが完了するまでイベントの進行を待機します。
  * @type boolean
  * @default false
  *
@@ -102,7 +109,7 @@
  * @default ["1"]
  *
  * @command STOP
- * @text ピクチャのアニメーション終了
+ * @text アニメーション終了
  * @desc 指定したピクチャ番号のピクチャをアニメーションを終了します。
  *
  * @arg pictureNumber
@@ -119,7 +126,7 @@
  * @default false
  *
  * @command SET_CELL
- * @text ピクチャのアニメーションセル設定
+ * @text アニメーションセル設定
  * @desc アニメーションのセルを直接設定します。任意のタイミングでアニメーションしたい場合に有効です。
  *
  * @arg pictureNumber
@@ -142,7 +149,7 @@
  * @default false
  *
  * @command LINK_VARIABLE
- * @text アニメーションセルの変数のリンク
+ * @text セルの変数のリンク
  * @desc アニメーションのセルを指定した変数と連動させます。変数の値が変化すると表示しているセルも自動的に変化します。
  *
  * @arg pictureNumber
@@ -159,7 +166,7 @@
  * @default 1
  *
  * @command LINK_SOUND
- * @text アニメーション効果音の設定
+ * @text 効果音の設定
  * @desc アニメーションのセルが切り替わったタイミングで効果音を演奏します。
  *
  * @arg cellNumber
@@ -229,6 +236,9 @@
         if (picture) {
             picture.startAnimationFrame(args.animationType, args.loop, args.customPattern);
         }
+        if (args.wait) {
+            this.waitForPictureAnimation(args.pictureNumber);
+        }
     });
 
     PluginManagerEx.registerCommand(script, "STOP",function(args) {
@@ -273,6 +283,27 @@
             return true;
         }
         return _Game_Interpreter_command250.apply(this, arguments);
+    };
+
+    const _Game_Interpreter_updateWaitMode = Game_Interpreter.prototype.updateWaitMode;
+    Game_Interpreter.prototype.updateWaitMode = function() {
+        if (this._waitMode === 'pictureAnimation') {
+            const picture = $gameScreen.picture(this._waitPictureId);
+            if (picture && picture.isAnimationPlaying()) {
+                return true;
+            } else {
+                this._waitPictureId = 0;
+                this._waitMode = '';
+                return false;
+            }
+        } else {
+            return _Game_Interpreter_updateWaitMode.apply(this, arguments);
+        }
+    };
+
+    Game_Interpreter.prototype.waitForPictureAnimation = function(pictureId) {
+        this.setWaitMode('pictureAnimation');
+        this._waitPictureId = pictureId;
     };
 
     //=============================================================================
@@ -487,6 +518,10 @@
 
     Game_Picture.prototype.isFading = function() {
         return this._fadeDurationCount !== 0;
+    };
+
+    Game_Picture.prototype.isAnimationPlaying = function() {
+        return this.hasAnimationFrame() || this.isFading();
     };
 
     Game_Picture.prototype.isNeedFade = function() {
