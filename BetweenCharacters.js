@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2020/10/24 メッセージウィンドウ以外に適用されてしまう問題を修正
+//                  MessageWindowPopup.jsとの競合を解消
 // 1.2.0 2020/10/22 MZ対応版を作成
 // 1.1.0 2018/01/30 パラメータの型指定機能に対応。MessageWindowPopup.jsとの競合を解消
 // 1.0.0 2017/04/20 初版
@@ -60,11 +62,17 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
-    const _Window_Base_flushTextState = Window_Base.prototype.flushTextState;
-    Window_Base.prototype.flushTextState = function(textState) {
-        _Window_Base_flushTextState.apply(this, arguments);
-        const between = this.getBetweenCharacters();
-        textState.x += textState.rtl ? -between : between;
+    const _Window_Message_processCharacter = Window_Message.prototype.processCharacter;
+    Window_Message.prototype.processCharacter = function(textState) {
+        _Window_Message_processCharacter.apply(this, arguments);
+        this.applyBetweenCharacter(textState);
+    };
+
+    Window_Base.prototype.applyBetweenCharacter = function(textState) {
+        if (textState.index > 1) {
+            const between = this.getBetweenCharacters();
+            textState.x += textState.rtl ? -between : between;
+        }
     };
 
     Window_Base.prototype.getBetweenCharacters = function() {
