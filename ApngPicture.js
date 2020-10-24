@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2020/10/24 再生回数を指定したときに最初ではなく最後のフレームでアニメーションが止まる設定を追加
  1.5.0 2020/10/17 サイドビューの敵キャラをapng化できるよう修正。機能が不完全であることに変わりはありません。
  1.4.3 2020/03/17 ライブラリがpixi5.0対応によるバージョンアップで使用できなくなったのでヘルプの取得元を旧版に変更
  1.4.2 2020/03/07 キャッシュしない設定のapngを繰り返し表示、削除し続けるとメモリリークが発生する問題を修正
@@ -107,6 +108,12 @@
  * @desc アニメーションのループ回数です。指定した回数分ループ再生すると止まります。0を指定すると無限にアニメーションします。
  * @default 0
  * @type number
+ *
+ * @param StopLastFrame
+ * @text 最終フレームで止める
+ * @desc ループ回数が決まっているアニメーションを再生したとき最初のフレームではなく最後のフレームでアニメーションが止まります。
+ * @default false
+ * @type boolean
  *
  * @help ApngPicture.js
  * APNG、もしくはGIFアニメをピクチャとして画面上にアニメ表示します。
@@ -598,23 +605,23 @@
                 if (this._spriteCache[name]) {
                     return this._spriteCache[name];
                 }
-                var sprite = this._createPixiApngAndGif(name, true);
+                var sprite = this._createPixiApngAndGif(name);
                 this._spriteCache[name] = sprite;
                 return sprite;
             } else {
-                return this._createPixiApngAndGif(name, false);
+                return this._createPixiApngAndGif(name);
             }
         }
 
-        _createPixiApngAndGif(name, cache) {
+        _createPixiApngAndGif(name) {
             var pixiApng = new PixiApngAndGif(this._fileHash[name], ApngLoader._resource);
-            if (this._loopCount[name] > 0) {
-                pixiApng.play(this._loopCount[name]);
+            var loopCount = this._loopCount[name];
+            if (loopCount > 0) {
+                pixiApng.play(loopCount);
             }
             var sprite = pixiApng.sprite;
-            if (!cache) {
-                sprite.pixiApng = pixiApng;
-            }
+            sprite.pixiApng = pixiApng;
+            sprite.pixiApngLoopCount = loopCount;
             return sprite;
         }
 
@@ -807,6 +814,8 @@
             this.updateApngAnchor();
             this.updateApngBlendMode();
         }
+        this._apngLoopCount = 1;
+        this._apngLoopFrame = 0;
     };
 
     Sprite.prototype.destroyApngIfNeed = function() {
@@ -842,6 +851,30 @@
     Sprite.prototype.updateApngBlendMode = function() {
         if (this._apngSprite) {
             this._apngSprite.blendMode = this.blendMode;
+        }
+    };
+
+    var _Sprite_update = Sprite.prototype.update;
+    Sprite.prototype.update = function() {
+        _Sprite_update.apply(this, arguments);
+        if (this._apngSprite && param.StopLastFrame) {
+            this.updateApngFrameStop();
+        }
+    };
+
+    Sprite.prototype.updateApngFrameStop = function() {
+        var frame = this._apngSprite.pixiApng.__status.frame;
+        if (frame < this._apngLoopFrame) {
+            this._apngLoopCount++;
+        }
+        this._apngLoopFrame = frame;
+        var loopLimit = this._apngSprite.pixiApngLoopCount;
+        if (loopLimit <= 0) {
+            return;
+        }
+        var frameLength = this._apngSprite.pixiApng.getFramesLength();
+        if (loopLimit <= this._apngLoopCount && frameLength <= frame + 1) {
+            this._apngSprite.pixiApng.stop();
         }
     };
 
@@ -925,6 +958,7 @@
        }
 
        update() {
+           super.update();
            this.visible = this.isValid();
        }
 
