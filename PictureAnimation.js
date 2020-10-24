@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2020/10/24 ピクチャのアニメーション完了まで次の命令に移行しない設定を追加
 // 1.5.10 2020/01/30 現在のセル番号を取得できるスクリプトのヘルプを追加
 // 1.5.9 2020/01/26 アニメーション中のピクチャを別のピクチャに差し替えて表示したとき、クロスフェード用の半透明ピクチャが残ってしまう場合がある不具合を修正
 // 1.5.8 2019/10/27 アニメーションタイプが1以外の場合に、非ループアニメの終了位置が間違っている問題を修正
@@ -147,6 +148,10 @@
  *  　その場でSEは演奏されず、ピクチャのアニメーション開始後に指定のタイミングで
  *  　演奏されるようになります。
  *  　必ずピクチャのアニメーション開始前に実行してください。
+ *
+ *  PA_WAIT or
+ *  ピクチャのアニメーションウェイト [ピクチャ番号]
+ * 　　指定したピクチャ番号のアニメーション再生が終了するまでウェイトします。
  *
  * スクリプト詳細
  *
@@ -311,6 +316,14 @@
                 picture    = $gameScreen.picture(pictureNum);
                 if (picture) picture.linkToVariable(getArgNumber(args[1]));
                 break;
+            case 'PA_WAIT':
+            case 'ピクチャのアニメーションウェイト':
+                pictureNum = getArgNumber(args[0], 1, $gameScreen.maxPictures());
+                picture    = $gameScreen.picture(pictureNum);
+                if (picture) {
+                    this.waitForPictureAnimation(pictureNum);
+                }
+                break;
         }
     };
 
@@ -328,6 +341,27 @@
             return true;
         }
         return _Game_Interpreter_command250.apply(this, arguments);
+    };
+
+    const _Game_Interpreter_updateWaitMode = Game_Interpreter.prototype.updateWaitMode;
+    Game_Interpreter.prototype.updateWaitMode = function() {
+        if (this._waitMode === 'pictureAnimation') {
+            const picture = $gameScreen.picture(this._waitPictureId);
+            if (picture && picture.isAnimationPlaying()) {
+                return true;
+            } else {
+                this._waitPictureId = 0;
+                this._waitMode = '';
+                return false;
+            }
+        } else {
+            return _Game_Interpreter_updateWaitMode.apply(this, arguments);
+        }
+    };
+
+    Game_Interpreter.prototype.waitForPictureAnimation = function(pictureId) {
+        this.setWaitMode('pictureAnimation');
+        this._waitPictureId = pictureId;
     };
 
     //=============================================================================
@@ -543,6 +577,10 @@
 
     Game_Picture.prototype.isFading = function() {
         return this._fadeDurationCount !== 0;
+    };
+
+    Game_Picture.prototype.isAnimationPlaying = function() {
+        return this.hasAnimationFrame() || this.isFading();
     };
 
     Game_Picture.prototype.isNeedFade = function() {
