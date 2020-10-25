@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2020/10/26 2.0.0の修正以後、「キー入力で消去」のパラメータが正常に機能していなかった問題を修正
 // 2.0.1 2020/03/24 ポインタに独自画像を使用する場合に発生しうる現象と対策についてヘルプに追記
 // 2.0.0 2019/10/17 型指定機能に対応
 //                  独自画像ファイルを指定するときにダイアログから指定すると拡張子がつかず正常に表示できない問題を修正
@@ -500,7 +501,7 @@
 
     var getParamBoolean = function(paramNames) {
         var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
+        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
     var getParamOther = function(paramNames) {
