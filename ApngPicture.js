@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2020/10/24 再生回数を指定したときに最初ではなく最後のフレームでアニメーションが止まる設定を追加
+ 1.5.0 2020/10/17 サイドビューの敵キャラをapng化できるよう修正。機能が不完全であることに変わりはありません。
  1.4.3 2020/03/17 ライブラリがpixi5.0対応によるバージョンアップで使用できなくなったのでヘルプの取得元を旧版に変更
  1.4.2 2020/03/07 キャッシュしない設定のapngを繰り返し表示、削除し続けるとメモリリークが発生する問題を修正
  1.4.1 2020/02/23 英語版のプラグインパラメータの記述が不足していたので修正
@@ -24,7 +26,7 @@
 
 /*:
  * @plugindesc ApngSupportPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @author triacontane
  *
  * @param PictureList
  * @desc List of picture images to be handled as APNG.
@@ -35,6 +37,11 @@
  * @desc List of enemy images to be handled as APNG.
  * @default []
  * @type struct<EnemyApngRecord>[]
+ *
+ * @param SideEnemyList
+ * @desc List of enemy images to be handled as APNG.
+ * @default []
+ * @type struct<SideEnemyApngRecord>[]
  *
  * @param SceneApngList
  * @desc This is a list of APNG to be displayed for each scene.
@@ -70,7 +77,7 @@
  */
 /*:ja
  * @plugindesc APNGピクチャプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
  *
  * @param PictureList
  * @text APNGのピクチャリスト
@@ -84,6 +91,12 @@
  * @default []
  * @type struct<EnemyApngRecord>[]
  *
+ * @param SideEnemyList
+ * @text APNGのSV敵キャラリスト
+ * @desc APNGとして扱うSV敵キャラ画像のリストです。サイドビューの画像を使用したい場合はこちらから登録してください。
+ * @default []
+ * @type struct<SideEnemyApngRecord>[]
+ *
  * @param SceneApngList
  * @text シーンAPNGのリスト
  * @desc シーンごとに表示するAPNGのリストです。GIFを指定したい場合は拡張子付きで直接入力してください。
@@ -95,6 +108,12 @@
  * @desc アニメーションのループ回数です。指定した回数分ループ再生すると止まります。0を指定すると無限にアニメーションします。
  * @default 0
  * @type number
+ *
+ * @param StopLastFrame
+ * @text 最終フレームで止める
+ * @desc ループ回数が決まっているアニメーションを再生したとき最初のフレームではなく最後のフレームでアニメーションが止まります。
+ * @default false
+ * @type boolean
  *
  * @help ApngPicture.js
  * APNG、もしくはGIFアニメをピクチャとして画面上にアニメ表示します。
@@ -302,6 +321,35 @@
  * @type number
  */
 
+/*~struct~SideEnemyApngRecord:ja
+ *
+ * @param FileName
+ * @text ファイル名
+ * @desc 追加するAPNGのファイル名です。
+ * @default
+ * @require 1
+ * @dir img/sv_enemies/
+ * @type file
+ *
+ * @param CachePolicy
+ * @text キャッシュ方針
+ * @desc 画像のキャッシュ方針です。大量にキャッシュするとメモリ使用量に影響が出る場合があります。
+ * @default 0
+ * @type select
+ * @option キャッシュしない
+ * @value 0
+ * @option 初回表示時にキャッシュ
+ * @value 1
+ * @option ゲーム起動時にキャッシュ
+ * @value 2
+ *
+ * @param LoopTimes
+ * @text ループ回数
+ * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
+ * @default 0
+ * @type number
+ */
+
 /*~struct~SceneApngRecord:
  *
  * @param SceneName
@@ -437,6 +485,32 @@
  * @type number
  */
 
+/*~struct~SideEnemyApngRecord:
+ *
+ * @param FileName
+ * @desc File name of apng
+ * @default
+ * @require 1
+ * @dir img/sv_enemies/
+ * @type file
+ *
+ * @param CachePolicy
+ * @desc Cache policy
+ * @default 0
+ * @type select
+ * @option None
+ * @value 0
+ * @option Cache on first display
+ * @value 1
+ * @option Cache at game start
+ * @value 2
+ *
+ * @param LoopTimes
+ * @desc The number of animation loops. Specifying 0 follows the default setting.
+ * @default 0
+ * @type number
+ */
+
 (function() {
     'use strict';
 
@@ -531,23 +605,23 @@
                 if (this._spriteCache[name]) {
                     return this._spriteCache[name];
                 }
-                var sprite = this._createPixiApngAndGif(name, true);
+                var sprite = this._createPixiApngAndGif(name);
                 this._spriteCache[name] = sprite;
                 return sprite;
             } else {
-                return this._createPixiApngAndGif(name, false);
+                return this._createPixiApngAndGif(name);
             }
         }
 
-        _createPixiApngAndGif(name, cache) {
+        _createPixiApngAndGif(name) {
             var pixiApng = new PixiApngAndGif(this._fileHash[name], ApngLoader._resource);
-            if (this._loopCount[name] > 0) {
-                pixiApng.play(this._loopCount[name]);
+            var loopCount = this._loopCount[name];
+            if (loopCount > 0) {
+                pixiApng.play(loopCount);
             }
             var sprite = pixiApng.sprite;
-            if (!cache) {
-                sprite.pixiApng = pixiApng;
-            }
+            sprite.pixiApng = pixiApng;
+            sprite.pixiApngLoopCount = loopCount;
             return sprite;
         }
 
@@ -704,6 +778,7 @@
         PIXI.loader.onComplete.add(ApngLoader.onLoadResource.bind(ApngLoader));
         this._apngLoaderPicture = new ApngLoader('pictures', param.PictureList);
         this._apngLoaderEnemy = new ApngLoader('enemies', param.EnemyList);
+        this._apngLoaderSideEnemy = new ApngLoader('sv_enemies', param.SideEnemyList);
         this._apngLoaderSystem = new ApngLoader('system', param.SceneApngList);
         PIXI.loader.load();
     };
@@ -714,6 +789,10 @@
 
     SceneManager.tryLoadApngEnemy = function(name) {
         return this._apngLoaderEnemy.createSprite(name);
+    };
+
+    SceneManager.tryLoadApngSideEnemy = function(name) {
+        return this._apngLoaderSideEnemy.createSprite(name);
     };
 
     SceneManager.tryLoadApngSystem = function(name) {
@@ -735,6 +814,8 @@
             this.updateApngAnchor();
             this.updateApngBlendMode();
         }
+        this._apngLoopCount = 1;
+        this._apngLoopFrame = 0;
     };
 
     Sprite.prototype.destroyApngIfNeed = function() {
@@ -770,6 +851,30 @@
     Sprite.prototype.updateApngBlendMode = function() {
         if (this._apngSprite) {
             this._apngSprite.blendMode = this.blendMode;
+        }
+    };
+
+    var _Sprite_update = Sprite.prototype.update;
+    Sprite.prototype.update = function() {
+        _Sprite_update.apply(this, arguments);
+        if (this._apngSprite && param.StopLastFrame) {
+            this.updateApngFrameStop();
+        }
+    };
+
+    Sprite.prototype.updateApngFrameStop = function() {
+        var frame = this._apngSprite.pixiApng.__status.frame;
+        if (frame < this._apngLoopFrame) {
+            this._apngLoopCount++;
+        }
+        this._apngLoopFrame = frame;
+        var loopLimit = this._apngSprite.pixiApngLoopCount;
+        if (loopLimit <= 0) {
+            return;
+        }
+        var frameLength = this._apngSprite.pixiApng.getFramesLength();
+        if (loopLimit <= this._apngLoopCount && frameLength <= frame + 1) {
+            this._apngSprite.pixiApng.stop();
         }
     };
 
@@ -819,7 +924,11 @@
     };
 
     Sprite_Enemy.prototype.loadApngSprite = function(name) {
-        return SceneManager.tryLoadApngEnemy(name);
+        if ($gameSystem.isSideView()) {
+            return SceneManager.tryLoadApngSideEnemy(name);
+        } else {
+            return SceneManager.tryLoadApngEnemy(name);
+        }
     };
 
     /**
@@ -827,37 +936,38 @@
      * シーンに追加表示するAPNGスプライトです。
      */
     class SpriteSceneApng extends Sprite {
-       constructor(item) {
-           super();
-           this.setup(item)
-       }
+        constructor(item) {
+            super();
+            this.setup(item)
+        }
 
-       setup(item) {
-           this.addApngChild(item.FileName);
-           this.x = item.X;
-           this.y = item.Y;
-           if (item.Origin === 1) {
-               this.anchor.x = 0.5;
-               this.anchor.y = 0.5;
-           }
-           this._switch = item.Switch;
-           this._priority = item.Priority;
-       }
+        setup(item) {
+            this.addApngChild(item.FileName);
+            this.x = item.X;
+            this.y = item.Y;
+            if (item.Origin === 1) {
+                this.anchor.x = 0.5;
+                this.anchor.y = 0.5;
+            }
+            this._switch = item.Switch;
+            this._priority = item.Priority;
+        }
 
-       loadApngSprite(name) {
-           return SceneManager.tryLoadApngSystem(name.replace(/\..*/, ''));
-       }
+        loadApngSprite(name) {
+            return SceneManager.tryLoadApngSystem(name.replace(/\..*/, ''));
+        }
 
-       update() {
-           this.visible = this.isValid();
-       }
+        update() {
+            super.update();
+            this.visible = this.isValid();
+        }
 
-       isValid() {
-           return !this._switch || $gameSwitches.value(this._switch);
-       }
+        isValid() {
+            return !this._switch || $gameSwitches.value(this._switch);
+        }
 
-       getPriority() {
-           return this._priority;
-       }
-   }
+        getPriority() {
+            return this._priority;
+        }
+    }
 })();
