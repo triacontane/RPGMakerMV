@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.0.0 2020/10/29 MZで動作するよう全面的に修正
  1.6.0 2020/10/24 再生回数を指定したときに最初ではなく最後のフレームでアニメーションが止まる設定を追加
  1.5.0 2020/10/17 サイドビューの敵キャラをapng化できるよう修正。機能が不完全であることに変わりはありません。
  1.4.3 2020/03/17 ライブラリがpixi5.0対応によるバージョンアップで使用できなくなったのでヘルプの取得元を旧版に変更
@@ -26,6 +27,9 @@
 
 /*:
  * @plugindesc ApngSupportPlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ApngPicture.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @param PictureList
@@ -53,30 +57,46 @@
  * @default 0
  * @type number
  *
+ * @param StopLastFrame
+ * @desc The animation stops at the last frame, not at the beginning.
+ * @default false
+ * @type boolean
+ *
  * @help ApngPicture.js
- * APNG or GIF is treated as a picture and animated on the screen.
- * From the parameters, select the file in which the APNG picture file is registered.
- * It will be animated if it is displayed in "Display Picture".
+ *
+ * Enables handling of APNGs and GIF animations.
+ * You can add APNGs to pictures, enemy characters, and any scene.
+ *
+ * After registering the file as an APNG from the parameters,
+ * you can add You just need to designate them as pictures and enemy characters,
+ * just like normal images.
  *
  * The following libraries are required for use.
  * https://github.com/sbfkcel/pixi-apngAndGif
  *
- * Download the target file and import it from the plugin management screen.
- * https://github.com/sbfkcel/pixi-apngAndGif/blob/fd2e0fb3274bf2c360c608b42e527889d10a6330/dist/PixiApngAndGif.js
+ * Download
+ * https://github.com/sbfkcel/pixi-apngAndGif/blob/master/dist/PixiApngAndGif.js
  *
- * In addition, the color tone change of the picture is not reflected.
- * Also, extensions by other plug-ins may not work.
+ * Attention!
+ * It is not recommended to register a large number of images to
+ * load the registered images at the start of the game.
+ * In addition, loading large APNG images may slow down the display.
+ * If the display is slow, please try GIF animation.
  *
- * In addition, APNG registered from parameters can be additionally displayed for each scene.
- * Display can be controlled by switch.
- *
- * There is also a function to display APNG on the enemy character image, but this function
- * The image is incomplete because no flash is performed.
+ * If you want to use GIFs, please note that the editor will not recognize
+ * files with a GIF extension.
+ * Please enter the file name with the extension directly in the parameter.
+ * You can also display the picture from a script or by using
+ * Please use a dummy png file of the same name to specify it.
+ * Also, GIFs are not subject to the editor's encryption feature.
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc APNGピクチャプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ApngPicture.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param PictureList
@@ -111,42 +131,34 @@
  *
  * @param StopLastFrame
  * @text 最終フレームで止める
- * @desc ループ回数が決まっているアニメーションを再生したとき最初のフレームではなく最後のフレームでアニメーションが止まります。
+ * @desc ループ回数が決まっているアニメーションを再生したとき最初ではなく最後のフレームでアニメーションが止まります。
  * @default false
  * @type boolean
  *
  * @help ApngPicture.js
- * APNG、もしくはGIFアニメをピクチャとして画面上にアニメ表示します。
- * パラメータからAPNGのピクチャとして登録したファイルを
- * 「ピクチャの表示」で表示すればアニメーションされます。
+ *
+ * APNG、もしくはGIFアニメの取り扱いを可能にします。
+ * ピクチャ、敵キャラのほか任意のシーンにAPNGを追加表示できます。
+ *
+ * パラメータからAPNGとしてファイルを登録したら後は
+ * 通常の画像と同じようにピクチャや敵キャラとして指定するだけです。
  *
  * 使用には以下のライブラリが必要です。
  * https://github.com/sbfkcel/pixi-apngAndGif
  *
- * ただし、ライブラリの最新版はpixi5.0に対応した結果、ツクールMV側の最新である4.0では
- * 再生できなくなりました。よって最新版ではなく、下記の旧版を使用する必要があります。
+ * ライセンスを確認のうえ以下からダウンロードしてください。
+ * https://github.com/sbfkcel/pixi-apngAndGif/blob/master/dist/PixiApngAndGif.js
  *
- * 対象ファイルをダウンロードしてプラグイン管理画面から取り込んでください。
- * https://github.com/sbfkcel/pixi-apngAndGif/blob/fd2e0fb3274bf2c360c608b42e527889d10a6330/dist/PixiApngAndGif.js
- *
- * なお、ピクチャの色調変更は反映されません。
- * また、他のプラグインによる拡張が機能しない場合があります。
- *
- * さらに、各シーンでパラメータから登録したAPNGを追加表示できます。
- * スイッチによる表示制御が可能です。
- *
- * 敵キャラ画像にAPNGを表示する機能もありますが、この機能は
- * 画像のフラッシュが一切行われないため不完全です。
+ * 注意！
+ * ゲーム開始時に登録した画像を読み込むため大量の画像を登録することは推奨しません。
  * また、画像サイズの大きいAPNGを読み込むと、表示が遅くなる場合があります。
  * 表示が遅い場合はGIFアニメもお試しください。
  *
- * GIFを使用したい場合、拡張子がgifのファイルはツクールMVで認識されないので
+ * GIFを使用したい場合、拡張子がgifのファイルはエディタで認識されないので
  * パラメータに拡張子付きのファイル名を直接入力してください。
  * また、ピクチャを表示するときはスクリプトから表示するか
  * 同名のダミーpngファイルを使って指定してください。
- * また、GIFはツクールMVの暗号化機能の対象外となります。
- *　
- * このプラグインにはプラグインコマンドはありません。
+ * また、GIFはエディタの暗号化機能の対象外となります。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -514,38 +526,8 @@
 (function() {
     'use strict';
 
-    var getClassName = function(object) {
-        return object.constructor.toString().replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
-    };
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param script currentScript
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(script) {
-        var pluginName = script.src.replace(/^.*\/(.*).js$/, function() {
-            return arguments[1];
-        });
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter(document.currentScript);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     /**
      * ApngLoader
@@ -565,34 +547,34 @@
         }
 
         addAllImage() {
-            var option = this.getLoadOption();
+            const option = this.getLoadOption();
             this._paramList.forEach(function(item) {
                 this.addImage(item, option);
             }, this);
-            PIXI.loader.onComplete.add(this.cacheStartup.bind(this));
+            PIXI.Loader.shared.onComplete.add(this.cacheStartup.bind(this));
             ApngLoader.startLoading();
         }
 
         addImage(item, option) {
-            var name = item.FileName || '';
-            var ext = Decrypter.hasEncryptedImages ? 'rpgmvp' : 'png';
+            let name = item.FileName || '';
+            let ext = Utils.hasEncryptedImages() ? 'png_' : 'png';
             name = name.replace(/\.gif$/gi, function() {
                 ext = 'gif';
                 return '';
             });
-            var path = name.match(/http:/) ? name : `img/${this._folder}/${name}.${ext}`;
+            const path = name.match(/http:/) ? name : `img/${this._folder}/${name}.${ext}`;
             if (!this._fileHash.hasOwnProperty(name)) {
                 this._fileHash[name] = ApngLoader.convertDecryptExt(path);
                 this._cachePolicy[name] = item.CachePolicy;
                 this._loopCount[name] = item.LoopTimes || param.DefaultLoopTimes;
-                PIXI.loader.add(path, option);
+                PIXI.Loader.shared.add(path, option);
             }
         }
 
         getLoadOption() {
             return {
-                loadType   : PIXI.loaders.Resource.LOAD_TYPE.XHR,
-                xhrType    : PIXI.loaders.Resource.XHR_RESPONSE_TYPE.BUFFER,
+                loadType   : PIXI.LoaderResource.LOAD_TYPE.XHR,
+                xhrType    : PIXI.LoaderResource.XHR_RESPONSE_TYPE.BUFFER,
                 crossOrigin: ''
             }
         }
@@ -605,7 +587,7 @@
                 if (this._spriteCache[name]) {
                     return this._spriteCache[name];
                 }
-                var sprite = this._createPixiApngAndGif(name);
+                const sprite = this._createPixiApngAndGif(name);
                 this._spriteCache[name] = sprite;
                 return sprite;
             } else {
@@ -614,12 +596,12 @@
         }
 
         _createPixiApngAndGif(name) {
-            var pixiApng = new PixiApngAndGif(this._fileHash[name], ApngLoader._resource);
-            var loopCount = this._loopCount[name];
+            const pixiApng = new PixiApngAndGif(this._fileHash[name], ApngLoader._resource);
+            const loopCount = this._loopCount[name];
             if (loopCount > 0) {
                 pixiApng.play(loopCount);
             }
-            var sprite = pixiApng.sprite;
+            const sprite = pixiApng.sprite;
             sprite.pixiApng = pixiApng;
             sprite.pixiApngLoopCount = loopCount;
             return sprite;
@@ -648,16 +630,16 @@
         static onLoadResource(progress, resource) {
             this._resource = resource;
             Object.keys(this._resource).forEach(function(key) {
-                if (this._resource[key].extension === 'rpgmvp') {
+                if (this._resource[key].extension === 'png_') {
                     ApngLoader.decryptResource(key);
                 }
             }, this);
         }
 
         static decryptResource(key) {
-            var resource = this._resource[key];
-            resource.data = Decrypter.decryptArrayBuffer(resource.data);
-            var newKey = ApngLoader.convertDecryptExt(key);
+            const resource = this._resource[key];
+            resource.data = Utils.decryptArrayBuffer(resource.data);
+            const newKey = ApngLoader.convertDecryptExt(key);
             resource.name = newKey;
             resource.url = newKey;
             resource.extension = 'png';
@@ -670,21 +652,21 @@
         }
 
         static convertDecryptExt(key) {
-            return key.replace(/\.rpgmvp$/, '.png');
+            return key.replace(/\.png_$/, '.png');
         }
     }
     ApngLoader._resource = null;
 
-    var _Scene_Boot_isReady = Scene_Boot.prototype.isReady;
+    const _Scene_Boot_isReady = Scene_Boot.prototype.isReady;
     Scene_Boot.prototype.isReady = function() {
-        var result = _Scene_Boot_isReady.apply(this, arguments);
+        const result = _Scene_Boot_isReady.apply(this, arguments);
         if (result) {
             SceneManager.setupApngLoaderIfNeed();
         }
         return result && ApngLoader.isReady();
     };
 
-    var _Scene_Base_create = Scene_Base.prototype.create;
+    const _Scene_Base_create = Scene_Base.prototype.create;
     Scene_Base.prototype.create = function() {
         _Scene_Base_create.apply(this, arguments);
         this.createSceneApng();
@@ -696,7 +678,7 @@
         }, this);
     };
 
-    var _Scene_Base_terminate = Scene_Base.prototype.terminate;
+    const _Scene_Base_terminate = Scene_Base.prototype.terminate;
     Scene_Base.prototype.terminate = function() {
         _Scene_Base_terminate.apply(this, arguments);
         this.destroySceneApng();
@@ -711,14 +693,14 @@
         })
     };
 
-    var _Scene_Base_start = Scene_Base.prototype.start;
+    const _Scene_Base_start = Scene_Base.prototype.start;
     Scene_Base.prototype.start = function() {
         _Scene_Base_start.apply(this, arguments);
         this.setApngPriority();
     };
 
     Scene_Base.prototype.setApngPriority = function() {
-        var windowLayerIndex = this._windowLayer ? this.getChildIndex(this._windowLayer) : 0;
+        let windowLayerIndex = this._windowLayer ? this.getChildIndex(this._windowLayer) : 0;
         this._apngList.forEach(function(sprite) {
             switch (sprite.getPriority()) {
                 case 0:
@@ -735,7 +717,7 @@
     };
 
     Scene_Base.prototype.findSceneApngList = function() {
-        var currentSceneName = getClassName(this);
+        const currentSceneName = PluginManagerEx.findClassName(this);
         return (param.SceneApngList || []).filter(function(data) {
             return data.SceneName === currentSceneName;
         }, this);
@@ -775,12 +757,12 @@
         if (this._apngLoaderPicture) {
             return;
         }
-        PIXI.loader.onComplete.add(ApngLoader.onLoadResource.bind(ApngLoader));
+        PIXI.Loader.shared.onComplete.add(ApngLoader.onLoadResource.bind(ApngLoader));
         this._apngLoaderPicture = new ApngLoader('pictures', param.PictureList);
         this._apngLoaderEnemy = new ApngLoader('enemies', param.EnemyList);
         this._apngLoaderSideEnemy = new ApngLoader('sv_enemies', param.SideEnemyList);
         this._apngLoaderSystem = new ApngLoader('system', param.SceneApngList);
-        PIXI.loader.load();
+        PIXI.Loader.shared.load();
     };
 
     SceneManager.tryLoadApngPicture = function(name) {
@@ -825,7 +807,7 @@
     };
 
     Sprite.prototype.destroyApng = function() {
-        var pixiApng = this._apngSprite.pixiApng;
+        const pixiApng = this._apngSprite.pixiApng;
         if (pixiApng) {
             pixiApng.textures.forEach(function(texture) {
                 texture.baseTexture.destroy();
@@ -854,7 +836,7 @@
         }
     };
 
-    var _Sprite_update = Sprite.prototype.update;
+    const _Sprite_update = Sprite.prototype.update;
     Sprite.prototype.update = function() {
         _Sprite_update.apply(this, arguments);
         if (this._apngSprite && param.StopLastFrame) {
@@ -863,16 +845,16 @@
     };
 
     Sprite.prototype.updateApngFrameStop = function() {
-        var frame = this._apngSprite.pixiApng.__status.frame;
+        const frame = this._apngSprite.pixiApng.__status.frame;
         if (frame < this._apngLoopFrame) {
             this._apngLoopCount++;
         }
         this._apngLoopFrame = frame;
-        var loopLimit = this._apngSprite.pixiApngLoopCount;
+        const loopLimit = this._apngSprite.pixiApngLoopCount;
         if (loopLimit <= 0) {
             return;
         }
-        var frameLength = this._apngSprite.pixiApng.getFramesLength();
+        const frameLength = this._apngSprite.pixiApng.getFramesLength();
         if (loopLimit <= this._apngLoopCount && frameLength <= frame + 1) {
             this._apngSprite.pixiApng.stop();
         }
@@ -882,7 +864,7 @@
      * Sprite_Picture
      * APNGとして登録されているピクチャの読み込みを追加します。
      */
-    var _Sprite_Picture_loadBitmap = Sprite_Picture.prototype.loadBitmap;
+    const _Sprite_Picture_loadBitmap = Sprite_Picture.prototype.loadBitmap;
     Sprite_Picture.prototype.loadBitmap = function() {
         _Sprite_Picture_loadBitmap.apply(this, arguments);
         this.addApngChild(this._pictureName);
@@ -892,22 +874,22 @@
         return SceneManager.tryLoadApngPicture(name);
     };
 
-    var _Sprite_Picture_updateOrigin = Sprite_Picture.prototype.updateOrigin;
+    const _Sprite_Picture_updateOrigin = Sprite_Picture.prototype.updateOrigin;
     Sprite_Picture.prototype.updateOrigin = function() {
         _Sprite_Picture_updateOrigin.apply(this, arguments);
         this.updateApngAnchor();
     };
 
-    var _Sprite_Picture_updateOther = Sprite_Picture.prototype.updateOther;
+    const _Sprite_Picture_updateOther = Sprite_Picture.prototype.updateOther;
     Sprite_Picture.prototype.updateOther = function() {
         _Sprite_Picture_updateOther.apply(this, arguments);
         this.updateApngBlendMode();
     };
 
-    var _Sprite_Picture_updateBitmap =Sprite_Picture.prototype.updateBitmap;
+    const _Sprite_Picture_updateBitmap =Sprite_Picture.prototype.updateBitmap;
     Sprite_Picture.prototype.updateBitmap = function() {
         _Sprite_Picture_updateBitmap.apply(this, arguments);
-        var picture = this.picture();
+        const picture = this.picture();
         if (!picture && this._apngSprite) {
             this.destroyApng();
         }
@@ -917,7 +899,7 @@
      * Sprite_Enemy
      * APNGとして登録されている敵キャラの読み込みを追加します。
      */
-    var _Sprite_Enemy_loadBitmap = Sprite_Enemy.prototype.loadBitmap;
+    const _Sprite_Enemy_loadBitmap = Sprite_Enemy.prototype.loadBitmap;
     Sprite_Enemy.prototype.loadBitmap = function(name, hue) {
         _Sprite_Enemy_loadBitmap.apply(this, arguments);
         this.addApngChild(name);
