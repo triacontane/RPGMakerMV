@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.10.0 2020/11/01 AdditionalDescription.jsと併用できるよう修正
  1.9.0 2020/09/21 ウィンドウで選択中の項目オブジェクトを変数に格納できる機能を追加
  1.8.0 2020/08/02 利用可能なシーン数を20に増やした
  1.7.5 2020/07/28 NobleMushroom.jsとの競合を解消
@@ -1342,11 +1343,18 @@
         }
 
         updateHelp() {
-            let text = this.findHelpText() || '';
             if (this.isMasking(this.index())) {
-                text = this._data.MaskingText;
+                this._helpWindow.setText(this._data.MaskingText);
+            } else if (this.findHelpItem()) {
+                this._helpWindow.setItem(this.findHelpItem());
+            } else {
+                const text = this.findHelpText() || '';
+                this._helpWindow.setText(text.replace(/\\n/g, '\n'));
             }
-            this._helpWindow.setText(text.replace(/\\n/g, '\n'));
+        }
+
+        findHelpItem() {
+            return null;
         }
 
         findHelpText() {
@@ -1540,9 +1548,8 @@
             }
         }
 
-        findHelpText() {
-            const item = this.getItem();
-            return item && item.description ? item.description : super.findHelpText();
+        findHelpItem() {
+            return this.getItem();
         }
 
         isEnabledSub(item) {
