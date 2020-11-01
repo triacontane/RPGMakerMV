@@ -6,13 +6,14 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2020/11/01 中心、足下に指定したアニメーションの表示位置を調整
 // 2.0.2 2018/10/05 連続回数が2以上のダメージを表示する際、一瞬だけおかしな位置に表示される問題を修正
 // 2.0.1 2017/03/16 2.0.0で巨大サイズ以外の敵に対するポップアップが表示されなくなっていた問題を修正
 // 2.0.0 2017/01/05 アニメーションの表示位置を補正
 // 1.0.1 2016/11/17 YEP_CoreEngine.jsで画面サイズを変更すると、位置の不整合が起きる現象に対応
 // 1.0.0 2016/10/27 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -104,6 +105,22 @@
     Sprite_Enemy.prototype.adjustDamagePopup = function() {
         if (this._damages.length > 0) {
             this._damages[this._damages.length - 1].y -= (this.y - this._originalY);
+        }
+    };
+
+    var _Sprite_Animation_updatePosition = Sprite_Animation.prototype.updatePosition;
+    Sprite_Animation.prototype.updatePosition = function() {
+        _Sprite_Animation_updatePosition.apply(this, arguments);
+        var position = this._animation.position;
+        if (position === 1 || position === 2) {
+            var originalY = this._target._originalY;
+            if (originalY) {
+                var shiftY = this._target.y - originalY;
+                if (position === 1) {
+                    shiftY /= 2;
+                }
+                this.y -= shiftY;
+            }
         }
     };
 })();
