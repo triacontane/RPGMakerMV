@@ -1,11 +1,12 @@
 //=============================================================================
 // CharacterGraphicExtend.js
 // ----------------------------------------------------------------------------
-// (C) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2020/11/01 一部リファクタリング
 // 2.0.0 2020/10/30 MZで動作するよう全面的に修正
 // 1.10.4 2020/03/22 MOG_ChronoEngine.jsとの間で発生するエラーを解消(全面的な競合対策ではありません)
 //                   MOG_CharPoses.jsとの競合を解消
@@ -642,12 +643,11 @@
 
     const _Sprite_Character_tilesetBitmap      = Sprite_Character.prototype.tilesetBitmap;
     Sprite_Character.prototype.tilesetBitmap = function(tileId) {
-        const customTilesetId   = this._character.customTilesetId();
-        this._customTilesetId = customTilesetId;
-        if (customTilesetId) {
-            const tileset   = $dataTilesets[customTilesetId];
+        this._customTilesetId = this._character.customTilesetId();
+        const tileSet = $dataTilesets[this._customTilesetId];
+        if (this._customTilesetId && tileSet) {
             const setNumber = 5 + Math.floor(tileId / 256);
-            return ImageManager.loadTileset(tileset.tilesetNames[setNumber]);
+            return ImageManager.loadTileset(tileSet.tilesetNames[setNumber]);
         } else {
             return _Sprite_Character_tilesetBitmap.apply(this, arguments);
         }
