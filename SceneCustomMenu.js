@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.10.2 2020/11/03 1.10.1の修正でキャンセルボタンを押してメニューから戻ろうとするとエラーになる問題を修正
  1.10.1 2020/11/03 1.10.0の修正で一覧にデータベース以外のオブジェクトを指定するとエラーになる問題を修正
  1.10.0 2020/11/01 AdditionalDescription.jsと併用できるよう修正
  1.9.0 2020/09/21 ウィンドウで選択中の項目オブジェクトを変数に格納できる機能を追加
@@ -1551,7 +1552,7 @@
 
         findHelpItem() {
             const item = this.getItem();
-            return item.hasOwnProperty('meta') ? item : null;
+            return item && item.hasOwnProperty('meta') ? item : null;
         }
 
         isEnabledSub(item) {
