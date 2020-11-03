@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.0.1 2020/11/03 プラグイン上でapng画像の高さを正しく取得できるよう修正
  2.0.0 2020/10/29 MZで動作するよう全面的に修正
  1.6.0 2020/10/24 再生回数を指定したときに最初ではなく最後のフレームでアニメーションが止まる設定を追加
  1.5.0 2020/10/17 サイドビューの敵キャラをapng化できるよう修正。機能が不完全であることに変わりはありません。
@@ -792,7 +793,10 @@
         this._apngSprite = this.loadApngSprite(name);
         if (this._apngSprite) {
             this.addChild(this._apngSprite);
-            this.bitmap = ImageManager.loadPicture('');
+            const original = ImageManager.loadPicture(name);
+            original.addLoadListener(() => {
+                this.bitmap = new Bitmap(original.width, original.height);
+            });
             this.updateApngAnchor();
             this.updateApngBlendMode();
         }
