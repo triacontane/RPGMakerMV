@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2020/11/05 MZ向けにリファクタリング
 // 1.1.1 2020/11/05 全体化ステートが敵グループに対しても指定可能であることがヘルプの記述だと分かりにくいので記述を修正
 // 1.1.0 2018/09/25 全体化ステートを有するアクターの対象を戦闘メンバーのみにするかどうかの設定を追加
 // 1.0.2 2017/04/02 英語ヘルプ作成
@@ -19,7 +20,10 @@
 
 /*:
  * @plugindesc StateTotalizationPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateTotalization.js
+ * @base PluginCommonBase
+ * @author triacontane
  *
  * @param battleMemberOnly
  * @desc 全体化ステートを有するアクターの対象を戦闘メンバーに限定します。OFFにすると非戦闘メンバーのステートも全体化します。
@@ -43,7 +47,10 @@
  */
 /*:ja
  * @plugindesc ステート全体化プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateTotalization.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param battleMemberOnly
  * @text 戦闘メンバーのみ
@@ -70,47 +77,8 @@
 
 (function() {
     'use strict';
-    var metaTagPrefix = 'ST_';
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-    var param = createPluginParameter('StateTotalization');
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var isMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + name;
-        return object.meta.hasOwnProperty(metaTagName);
-    };
-
-    var isMetaValues = function(object, names) {
-        return names.some(function(name) {
-            return isMetaValue(object, name);
-        });
-    };
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Game_Unit
@@ -128,9 +96,9 @@
     // Game_BattlerBase
     //  全体化ステートを追加定義します。
     //=============================================================================
-    var _Game_BattlerBase_traitObjects = Game_BattlerBase.prototype.traitObjects;
+    const _Game_BattlerBase_traitObjects = Game_BattlerBase.prototype.traitObjects;
     Game_BattlerBase.prototype.traitObjects = function() {
-        var objects = _Game_BattlerBase_traitObjects.apply(this, arguments);
+        const objects = _Game_BattlerBase_traitObjects.apply(this, arguments);
         return objects.concat(this.getPartyTotalizationStates());
     };
 
@@ -142,16 +110,16 @@
 
     Game_BattlerBase.prototype.getTotalizationStates = function() {
         return this.states().reduce(function(totalizationStates, state) {
-            if (isMetaValues(state, ['全体化', 'Totalization'])) {
+            if (PluginManagerEx.findMetaValue(state, ['ST_全体化', 'ST_Totalization'])) {
                 totalizationStates.push(state);
             }
             return totalizationStates;
         }, []);
     };
 
-    var _Game_BattlerBase_restriction = Game_BattlerBase.prototype.restriction;
+    const _Game_BattlerBase_restriction = Game_BattlerBase.prototype.restriction;
     Game_BattlerBase.prototype.restriction = function() {
-        var restriction = _Game_BattlerBase_restriction.apply(this, arguments);
+        const restriction = _Game_BattlerBase_restriction.apply(this, arguments);
         return Math.max.apply(null, this.getPartyTotalizationStates().map(function(state) {
             return state.restriction;
         }).concat(restriction));
