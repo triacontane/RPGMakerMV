@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.4 2020/11/05 戦闘画面で使用するとエラーになる問題を修正
 // 1.2.3 2020/09/06 座標の基準をUI幅ではなく画面幅に変更
 // 1.2.2 2020/08/29 MZ向けにコード修正
 // 1.2.1 2019/05/08 1.2.0の機能がYEP_BattleEngineCore.jsと併用すると無効になる競合を解消
@@ -262,10 +263,11 @@
     };
 
     Spriteset_Battle.prototype.updateLowerPictureContainerZ = function() {
-        var compare = param.lowerPictureBattleZ > 0 ? this._enemySprites[this._enemySprites.length - 1] :
-            this._back2Sprite;
-        var index = this._battleField.getChildIndex(compare);
-        this._battleField.addChildAt(this._pictureContainerLower, index + 1);
+        if (param.lowerPictureBattleZ > 0) {
+            this._battleField.addChild(this._pictureContainerLower);
+        } else {
+            this._battleField.addChildAt(this._pictureContainerLower,  0);
+        }
     };
 
     if (typeof Yanfly !== 'undefined' && Yanfly.BEC) {
