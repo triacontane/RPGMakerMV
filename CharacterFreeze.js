@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2020/11/05 並列処理のマップイベント実行も停止できる機能を追加
 // 2.0.1 2020/10/10 簡易的な英語ヘルプを整備
 // 2.0.0 2020/10/10 パラメータ構造を変更
 //                  停止時にアニメーションも停止できる機能を追加
@@ -73,6 +74,11 @@
  *
  * @param freezeAnimation
  * @desc When stopped, the animation stops playing at the same time.
+ * @default false
+ * @type boolean
+ *
+ * @param freezeParallelMapEvent
+ * @desc When stopped, parallel map events processing are stopped at the same time.
  * @default false
  * @type boolean
  *
@@ -151,6 +157,12 @@
  * @param freezeAnimation
  * @text アニメーション停止
  * @desc 停止時、アニメーションの再生も同時に停止します。
+ * @default false
+ * @type boolean
+ *
+ * @param freezeParallelMapEvent
+ * @text 並列マップイベント停止
+ * @desc 停止中、並列処理のマップイベントも実行も同時に停止します。
  * @default false
  * @type boolean
  *
@@ -255,6 +267,14 @@
 
     Game_Map.prototype.isFreeze = function() {
         return $gameSwitches.value(param.freezeSwitchId);
+    };
+
+    var _Game_Event_updateParallel = Game_Event.prototype.updateParallel;
+    Game_Event.prototype.updateParallel = function() {
+        if (param.freezeParallelMapEvent && this.isFreeze()) {
+            return;
+        }
+        _Game_Event_updateParallel.apply(this, arguments);
     };
 
     //=============================================================================
