@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2020/11/05 並列処理のマップイベント実行も停止できる機能を追加
 // 2.0.2 2020/10/10 MZ版としてリファクタリング。一部機能を削減
 // 2.0.1 2020/10/10 簡易的な英語ヘルプを整備
 // 2.0.0 2020/10/10 パラメータ構造を変更
@@ -74,6 +75,11 @@
  * @desc This is the ratio of the BGM volume when the music is stopped. It will be multiplied by the original volume.
  * @default 100
  * @type number
+ *
+ * @param freezeParallelMapEvent
+ * @desc When stopped, parallel map events processing are stopped at the same time.
+ * @default false
+ * @type boolean
  *
  * @help All autonomous movement and animation of events will be stopped.
  * At the same time, the player will not be able to move.
@@ -149,6 +155,12 @@
  * @desc 停止中のBGM音量の倍率です。もとの音量に対して乗算されます。
  * @default 100
  * @type number
+ *
+ * @param freezeParallelMapEvent
+ * @text 並列マップイベント停止
+ * @desc 停止中、並列処理のマップイベントも実行も同時に停止します。
+ * @default false
+ * @type boolean
  *
  * @help イベントの自律移動とアニメーションを全停止します。
  * 同時にプレイヤーも動けなくなります。
@@ -233,6 +245,14 @@
 
     Game_Map.prototype.isFreeze = function() {
         return $gameSwitches.value(param.freezeSwitchId);
+    };
+
+    var _Game_Event_updateParallel = Game_Event.prototype.updateParallel;
+    Game_Event.prototype.updateParallel = function() {
+        if (param.freezeParallelMapEvent && this.isFreeze()) {
+            return;
+        }
+        _Game_Event_updateParallel.apply(this, arguments);
     };
 
     //=============================================================================
