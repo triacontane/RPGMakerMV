@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2020/11/05 変数の宣言誤りを修正
 // 2.1.0 2020/11/05 並列処理のマップイベント実行も停止できる機能を追加
 // 2.0.2 2020/10/10 MZ版としてリファクタリング。一部機能を削減
 // 2.0.1 2020/10/10 簡易的な英語ヘルプを整備
@@ -206,7 +207,7 @@
             this.showFreezePicture();
         }
         if (param.freezeBgmVolume) {
-            const oldBgm = AudioManager.saveBgm();
+            let oldBgm = AudioManager.saveBgm();
             if (SceneManager.isNextScene(Scene_Battle)) {
                 oldBgm = BattleManager._mapBgm;
             }
