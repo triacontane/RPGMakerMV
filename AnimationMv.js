@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2020/11/07 1.2.0の修正によりコピー用のプロジェクトを指定しないとエラーになる問題を修正
  1.2.0 2020/10/16 コピー処理を非同期処理に変更。MVプロジェクトからの自動移行が高速になりました。
                   VisuMZ_1_BattleCore.js利用時、画面全体に表示するアニメーションが左上に表示されるバグを代わりに修正
  1.1.1 2020/08/29 1.1.0の修正でブラウザ実行でエラーになっていた問題を修正
@@ -78,6 +79,7 @@
     class MvFileCopyUtil {
         static async copyMvAnimationData() {
             if (!this.isAnyTest() || !param.MvProjectPathText) {
+                DataManager.loadDataFile(variableName, variableSrc);
                 return false;
             }
             await this.copyAllFiles('data/', 'data/mv/', /Animations.json/);
