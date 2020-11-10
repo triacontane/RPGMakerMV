@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.0 2020/11/11 APNGのアニメーションを停止、全停止できるスイッチを追加
  1.6.1 2020/11/03 プラグイン上でapng画像の高さを正しく取得できるよう修正
  1.6.0 2020/10/24 再生回数を指定したときに最初ではなく最後のフレームでアニメーションが止まる設定を追加
  1.5.0 2020/10/17 サイドビューの敵キャラをapng化できるよう修正。機能が不完全であることに変わりはありません。
@@ -53,6 +54,11 @@
  * @desc The number of animation loops. It stops after looping the specified number of times.
  * @default 0
  * @type number
+ *
+ * @param AllStopSwitch
+ * @desc All animations stop when the specified number switch is ON.
+ * @default 0
+ * @type switch
  *
  * @help ApngPicture.js
  * APNG or GIF is treated as a picture and animated on the screen.
@@ -115,6 +121,12 @@
  * @desc ループ回数が決まっているアニメーションを再生したとき最初のフレームではなく最後のフレームでアニメーションが止まります。
  * @default false
  * @type boolean
+ *
+ * @param AllStopSwitch
+ * @text 全停止スイッチ
+ * @desc 指定した番号スイッチがONのとき全てのアニメーションが停止します。
+ * @default 0
+ * @type switch
  *
  * @help ApngPicture.js
  * APNG、もしくはGIFアニメをピクチャとして画面上にアニメ表示します。
@@ -262,6 +274,12 @@
  * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
  * @default 0
  * @type number
+ *
+ * @param StopSwitch
+ * @text 停止スイッチ
+ * @desc 指定した番号スイッチがONのときアニメーションが停止します。
+ * @default 0
+ * @type switch
  */
 
 /*~struct~PictureApngRecord:ja
@@ -291,6 +309,12 @@
  * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
  * @default 0
  * @type number
+ *
+ * @param StopSwitch
+ * @text 停止スイッチ
+ * @desc 指定した番号スイッチがONのときアニメーションが停止します。
+ * @default 0
+ * @type switch
  */
 
 /*~struct~EnemyApngRecord:ja
@@ -320,6 +344,12 @@
  * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
  * @default 0
  * @type number
+ *
+ * @param StopSwitch
+ * @text 停止スイッチ
+ * @desc 指定した番号スイッチがONのときアニメーションが停止します。
+ * @default 0
+ * @type switch
  */
 
 /*~struct~SideEnemyApngRecord:ja
@@ -349,6 +379,12 @@
  * @desc アニメーションのループ回数です。0を指定するとデフォルト設定に従います。
  * @default 0
  * @type number
+ *
+ * @param StopSwitch
+ * @text 停止スイッチ
+ * @desc 指定した番号スイッチがONのときアニメーションが停止します。
+ * @default 0
+ * @type switch
  */
 
 /*~struct~SceneApngRecord:
@@ -432,6 +468,11 @@
  * @desc The number of animation loops. Specifying 0 follows the default setting.
  * @default 0
  * @type number
+ *
+ * @param StopSwitch
+ * @desc The animation stops when the specified number switch is turned on.
+ * @default 0
+ * @type switch
  */
 
 /*~struct~PictureApngRecord:
@@ -458,6 +499,11 @@
  * @desc The number of animation loops. Specifying 0 follows the default setting.
  * @default 0
  * @type number
+ *
+ * @param StopSwitch
+ * @desc The animation stops when the specified number switch is turned on.
+ * @default 0
+ * @type switch
  */
 
 /*~struct~EnemyApngRecord:
@@ -484,6 +530,11 @@
  * @desc The number of animation loops. Specifying 0 follows the default setting.
  * @default 0
  * @type number
+ *
+ * @param StopSwitch
+ * @desc The animation stops when the specified number switch is turned on.
+ * @default 0
+ * @type switch
  */
 
 /*~struct~SideEnemyApngRecord:
@@ -510,6 +561,11 @@
  * @desc The number of animation loops. Specifying 0 follows the default setting.
  * @default 0
  * @type number
+ *
+ * @param StopSwitch
+ * @desc The animation stops when the specified number switch is turned on.
+ * @default 0
+ * @type switch
  */
 
 (function() {
@@ -557,7 +613,7 @@
             this._folder = folder;
             this._fileHash = {};
             this._cachePolicy = {};
-            this._loopCount = {};
+            this._options = {};
             this._paramList = paramList;
             if (this._paramList && this._paramList.length > 0) {
                 this.addAllImage();
@@ -585,7 +641,7 @@
             if (!this._fileHash.hasOwnProperty(name)) {
                 this._fileHash[name] = ApngLoader.convertDecryptExt(path);
                 this._cachePolicy[name] = item.CachePolicy;
-                this._loopCount[name] = item.LoopTimes || param.DefaultLoopTimes;
+                this._options[name] = item;
                 PIXI.loader.add(path, option);
             }
         }
@@ -616,13 +672,13 @@
 
         _createPixiApngAndGif(name) {
             var pixiApng = new PixiApngAndGif(this._fileHash[name], ApngLoader._resource);
-            var loopCount = this._loopCount[name];
+            var loopCount = this._options[name].LoopTimes || param.DefaultLoopTimes;
             if (loopCount > 0) {
                 pixiApng.play(loopCount);
             }
             var sprite = pixiApng.sprite;
             sprite.pixiApng = pixiApng;
-            sprite.pixiApngLoopCount = loopCount;
+            sprite.pixiApngOption = this._options[name]
             return sprite;
         }
 
@@ -861,18 +917,22 @@
     var _Sprite_update = Sprite.prototype.update;
     Sprite.prototype.update = function() {
         _Sprite_update.apply(this, arguments);
-        if (this._apngSprite && param.StopLastFrame) {
+        if (this._apngSprite) {
+            this.updateApngSwitchStop();
             this.updateApngFrameStop();
         }
     };
 
     Sprite.prototype.updateApngFrameStop = function() {
+        if (!param.StopLastFrame) {
+            return;
+        }
         var frame = this._apngSprite.pixiApng.__status.frame;
         if (frame < this._apngLoopFrame) {
             this._apngLoopCount++;
         }
         this._apngLoopFrame = frame;
-        var loopLimit = this._apngSprite.pixiApngLoopCount;
+        var loopLimit = this.getLoopTimes();
         if (loopLimit <= 0) {
             return;
         }
@@ -880,6 +940,24 @@
         if (loopLimit <= this._apngLoopCount && frameLength <= frame + 1) {
             this._apngSprite.pixiApng.stop();
         }
+    };
+
+    Sprite.prototype.updateApngSwitchStop = function() {
+        if ($gameSwitches.value(this.getStopSwitch()) || $gameSwitches.value(param.AllStopSwitch)) {
+            this._apngSprite.pixiApng.stop();
+            this._apngSpritePause = true;
+        } else if (this._apngSpritePause) {
+            this._apngSprite.pixiApng.play();
+            this._apngSpritePause = false;
+        }
+    };
+
+    Sprite.prototype.getLoopTimes = function() {
+        return this._apngSprite.pixiApngOption.LoopTimes || param.DefaultLoopTimes;
+    };
+
+    Sprite.prototype.getStopSwitch = function() {
+        return this._apngSprite.pixiApngOption.StopSwitch;
     };
 
     /**
