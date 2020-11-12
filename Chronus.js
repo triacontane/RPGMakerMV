@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2020/11/12 イベントコマンド『天候の設定』を実行するとエラーになる問題を修正
 // 2.0.1 2020/08/26 ベースプラグインの説明を追加
 // 2.0.0 2020/08/26 MZで動作するよう修正
 // 1.17.1 2020/05/17 まったく同じ時間にSET_TIMEしたとき翌日の同時刻になるよう仕様変更
@@ -1005,7 +1006,7 @@ function Window_Chronus() {
 
     var _Game_Interpreter_command236      = Game_Interpreter.prototype.command236;
     Game_Interpreter.prototype.command236 = function(params) {
-        var result = _Game_Interpreter_command236.call(this);
+        var result = _Game_Interpreter_command236.apply(this, arguments);
         if (!$gameParty.inBattle()) {
             var chronus = $gameSystem.chronus();
             chronus.setWeatherType(Game_Chronus.weatherTypes.indexOf(params[0]));
@@ -1033,7 +1034,7 @@ function Window_Chronus() {
     //=============================================================================
     var _Game_System_initialize      = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
-        _Game_System_initialize.call(this);
+        _Game_System_initialize.apply(this, arguments);
         this._chronus = new Game_Chronus();
     };
 
