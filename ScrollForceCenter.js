@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/11/18 MZ向けに全面的にリファクタリング
 // 1.1.0 2019/04/28 中心座標を指定したぶんだけずらせる機能を追加
 // 1.0.0 2016/09/15 初版
 // ----------------------------------------------------------------------------
@@ -16,53 +17,54 @@
 
 /*:
  * @plugindesc ScrollForceCenterPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ScrollForceCenter.js
+ * @author triacontane
  *
  * @param adjustX
- * @desc 指定した分だけ中心がずれて表示されます。
+ * @desc The specified number of tiles are displayed with the center shifted in the X direction.
  * @default 0
  * @type number
  * @min -500
  * @max 500
  *
  * @param adjustY
- * @desc 指定した分だけ中心がずれて表示されます。
+ * @desc The specified number of tiles are displayed with the center shifted in the Y direction.
  * @default 0
  * @type number
  * @min -500
  * @max 500
  *
- * @help マップ画面でマップサイズにかかわらずプレイヤーが常に画面中央に
- * 配置されるようになります。
- * マップの外側が画面内に入る場合、真っ黒の状態で表示されます。
+ * @command DISABLE_RESERVE
+ * @text DISABLE RESERVE
+ * @desc Forced center-scrolling is prohibited and normal scrolling is used.
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
+ * @command ENABLE_RESERVE
+ * @text ENABLE RESERVE
+ * @desc Again, forced center scrolling will be allowed.
  *
- * SFC禁止予約         # 強制中央スクロールが禁止され通常スクロールになります。
- * SFC_DISABLE_RESERVE # 同上
- * SFC許可予約         # 再度、強制中央スクロールが許可されます。
- * SFC_ENABLE_RESERVE  # 同上
+ * @help In the map screen the player will always be centered on the screen,
+ * regardless of the map size.
+ * If the outside of the map goes into the screen,
+ * it will be displayed in pitch black.
  *
- * 上記の設定はすぐには反映されず、次回場所移動後から有効になります。
- *
- * またマップ設定のメモ欄に以下の通り記述すると、マップ単位で強制中央スクロールの
- * 禁止/許可を制御できます。この設定はプラグインコマンドより優先されます。
- * <SFC禁止>     # 対象マップで強制中央スクロールが禁止されます。
- * <SFC_Disable> # 同上
- * <SFC許可>     # 対象マップで強制中央スクロールが許可されます。
- * <SFC_Enable>  # 同上
+ * The base plugin "PluginCommonBase.js" is required to use this plugin.
+ * The "PluginCommonBase.js" is here.
+ * (MZ install path)dlc/BasicResources/plugins/official/PluginCommonBase.js
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 強制中央スクロールプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @base PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ScrollForceCenter.js
+ * @author トリアコンタン
  *
  * @param adjustX
  * @text X補正
- * @desc 指定した分だけ中心がずれて表示されます。
+ * @desc 指定したタイル数だけ中心がX方向にずれて表示されます。
  * @default 0
  * @type number
  * @min -500
@@ -70,33 +72,35 @@
  *
  * @param adjustY
  * @text Y補正
- * @desc 指定した分だけ中心がずれて表示されます。
+ * @desc 指定したタイル数だけ中心がY方向にずれて表示されます。
  * @default 0
  * @type number
  * @min -500
  * @max 500
  *
+ * @command DISABLE_RESERVE
+ * @text 強制中央スクロール禁止予約
+ * @desc 強制中央スクロールが禁止され通常スクロールになります。次回場所移動後から有効になります。
+ *
+ * @command ENABLE_RESERVE
+ * @text 強制中央スクロール許可予約
+ * @desc 再度、強制中央スクロールが許可されます。次回場所移動後から有効になります。
+ *
  * @help マップ画面でマップサイズにかかわらずプレイヤーが常に画面中央に
  * 配置されるようになります。
  * マップの外側が画面内に入る場合、真っ黒の状態で表示されます。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * SFC禁止予約         # 強制中央スクロールが禁止され通常スクロールになります。
- * SFC_DISABLE_RESERVE # 同上
- * SFC許可予約         # 再度、強制中央スクロールが許可されます。
- * SFC_ENABLE_RESERVE  # 同上
- *
- * 上記の設定はすぐには反映されず、次回場所移動後から有効になります。
- *
- * またマップ設定のメモ欄に以下の通り記述すると、マップ単位で強制中央スクロールの
+ * マップ設定のメモ欄に以下の通り記述すると、マップ単位で強制中央スクロールの
  * 禁止/許可を制御できます。この設定はプラグインコマンドより優先されます。
  * <SFC禁止>     # 対象マップで強制中央スクロールが禁止されます。
  * <SFC_Disable> # 同上
  * <SFC許可>     # 対象マップで強制中央スクロールが許可されます。
  * <SFC_Enable>  # 同上
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -106,84 +110,25 @@
 
 (function() {
     'use strict';
-    var metaTagPrefix = 'SFC';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
+    PluginManagerEx.registerCommand(script, 'DISABLE_RESERVE', args => {
+        $gameMap.setDisableForceCenterReserve(true);
+    });
 
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
+    PluginManagerEx.registerCommand(script, 'ENABLE_RESERVE', args => {
+        $gameMap.setDisableForceCenterReserve(false);
+    });
 
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-    var param = createPluginParameter('ScrollForceCenter');
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        if (!command.match(new RegExp('^' + metaTagPrefix))) return;
-        this.pluginCommandScrollForceCenter(command.replace(metaTagPrefix, ''), args);
-    };
-
-    Game_Interpreter.prototype.pluginCommandScrollForceCenter = function(command) {
-        switch (getCommandName(command)) {
-            case '禁止予約' :
-            case '_DISABLE_RESERVE':
-                $gameMap.setDisableForceCenterReserve(true);
-                break;
-            case '許可予約' :
-            case '_ENABLE_RESERVE':
-                $gameMap.setDisableForceCenterReserve(false);
-                break;
-
-        }
-    };
-
-    var _Game_Player_updateScroll      = Game_Player.prototype.updateScroll;
+    const _Game_Player_updateScroll      = Game_Player.prototype.updateScroll;
     Game_Player.prototype.updateScroll = function(lastScrolledX, lastScrolledY) {
         _Game_Player_updateScroll.apply(this, arguments);
         if ($gameMap.isForceCenter()) {
-            var x1 = lastScrolledX;
-            var y1 = lastScrolledY;
-            var x2 = this.scrolledX();
-            var y2 = this.scrolledY();
+            const x1 = lastScrolledX;
+            const y1 = lastScrolledY;
+            const x2 = this.scrolledX();
+            const y2 = this.scrolledY();
             if (y2 > y1 && y2 <= this.centerY()) {
                 $gameMap.scrollDown(y2 - y1);
             }
@@ -199,14 +144,14 @@
         }
     };
 
-    var _Game_Map_initialize = Game_Map.prototype.initialize;
+    const _Game_Map_initialize = Game_Map.prototype.initialize;
     Game_Map.prototype.initialize = function() {
         _Game_Map_initialize.apply(this, arguments);
         this._disableForceCenter        = false;
         this._disableForceCenterReserve = false;
     };
 
-    var _Game_Map_setup = Game_Map.prototype.setup;
+    const _Game_Map_setup = Game_Map.prototype.setup;
     Game_Map.prototype.setup = function(mapId) {
         this.refreshDisableForceCenter();
         _Game_Map_setup.apply(this, arguments);
@@ -221,10 +166,10 @@
     };
 
     Game_Map.prototype.refreshDisableForceCenter = function() {
-        var disableForceCenter;
-        if (getMetaValues($dataMap, ['禁止', '_Disable'])) {
+        let disableForceCenter;
+        if (PluginManagerEx.findMetaValue($dataMap, ['SFC禁止', 'SFC_Disable'])) {
             disableForceCenter = true;
-        } else if (getMetaValues($dataMap, ['許可', '_Enable'])) {
+        } else if (PluginManagerEx.findMetaValue($dataMap, ['SFC許可', 'SFC_Enable'])) {
             disableForceCenter = false;
         } else {
             disableForceCenter = this._disableForceCenterReserve;
@@ -233,7 +178,7 @@
     };
 
 
-    var _Game_Map_setDisplayPos = Game_Map.prototype.setDisplayPos;
+    const _Game_Map_setDisplayPos = Game_Map.prototype.setDisplayPos;
     Game_Map.prototype.setDisplayPos = function(x, y) {
         _Game_Map_setDisplayPos.apply(this, arguments);
         if (this.isForceCenterHorizontal()) {
@@ -254,36 +199,36 @@
         return !this.isLoopHorizontal() && this.isForceCenter();
     };
 
-    var _Game_Map_scrollDown = Game_Map.prototype.scrollDown;
+    const _Game_Map_scrollDown = Game_Map.prototype.scrollDown;
     Game_Map.prototype.scrollDown = function(distance) {
-        var forceCenterDisplayY = this._displayY + distance;
+        const forceCenterDisplayY = this._displayY + distance;
         _Game_Map_scrollDown.apply(this, arguments);
         if (this.isForceCenterVertical()) {
             this._displayY = forceCenterDisplayY;
         }
     };
 
-    var _Game_Map_scrollLeft      = Game_Map.prototype.scrollLeft;
+    const _Game_Map_scrollLeft      = Game_Map.prototype.scrollLeft;
     Game_Map.prototype.scrollLeft = function(distance) {
-        var forceCenterDisplayX = this._displayX - distance;
+        const forceCenterDisplayX = this._displayX - distance;
         _Game_Map_scrollLeft.apply(this, arguments);
         if (this.isForceCenterHorizontal()) {
             this._displayX = forceCenterDisplayX;
         }
     };
 
-    var _Game_Map_scrollRight      = Game_Map.prototype.scrollRight;
+    const _Game_Map_scrollRight      = Game_Map.prototype.scrollRight;
     Game_Map.prototype.scrollRight = function(distance) {
-        var forceCenterDisplayX = this._displayX + distance;
+        const forceCenterDisplayX = this._displayX + distance;
         _Game_Map_scrollRight.apply(this, arguments);
         if (this.isForceCenterHorizontal()) {
             this._displayX = forceCenterDisplayX;
         }
     };
 
-    var _Game_Map_scrollUp = Game_Map.prototype.scrollUp;
+    const _Game_Map_scrollUp = Game_Map.prototype.scrollUp;
     Game_Map.prototype.scrollUp = function(distance) {
-        var forceCenterDisplayY = this._displayY - distance;
+        const forceCenterDisplayY = this._displayY - distance;
         _Game_Map_scrollUp.apply(this, arguments);
         if (this.isForceCenterVertical()) {
             this._displayY = forceCenterDisplayY;
