@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2020/11/19 イベント、プレイヤーと重ならない生成条件が正常に機能していなかった問題を修正
  1.0.1 2020/08/26 ベースプラグインの説明を追加
  1.0.0 2020/07/25 MV版から流用作成
 ----------------------------------------------------------------------------
@@ -265,7 +266,7 @@ function Game_PrefabEvent() {
         if (conditionMap.screen) {
             conditions.push(this.isErsCheckScreenInOut.bind(this, conditionMap.screen));
         }
-        if (conditionMap.collided) {
+        if (conditionMap.overlap) {
             conditions.push(this.isErsCheckCollidedSomeone.bind(this, conditionMap.overlap));
         }
         if (conditionMap.terrainTags && conditionMap.terrainTags.length > 0) {
