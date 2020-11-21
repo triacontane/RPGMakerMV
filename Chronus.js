@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2020/11/21 自然時間加算間隔を変更するプラグインコマンドを追加
 // 2.0.2 2020/11/12 イベントコマンド『天候の設定』を実行するとエラーになる問題を修正
 // 2.0.1 2020/08/26 ベースプラグインの説明を追加
 // 2.0.0 2020/08/26 MZで動作するよう修正
@@ -388,6 +389,16 @@
  * @default 1
  * @type number
  *
+ * @command SET_AUTO_ADD_INTERVAL
+ * @text 自然時間加算間隔設定
+ * @desc 自然時間の加算間隔を変更します。
+ *
+ * @arg interval
+ * @text 間隔フレーム数
+ * @desc 自然時間の加算間隔フレーム数です。
+ * @default 60
+ * @type number
+ *
  * @command SHOW_CLOCK
  * @text アナログ時計表示
  * @desc アナログ時計を表示します。
@@ -698,6 +709,10 @@
  *  時間帯の情報(朝が何時から何時まで等)
  *  時間帯ごとの色調(ただし、悪天候の場合は補正が掛かります)
  *
+ * スクリプト
+ *  frameで指定したフレーム数を自然時間加算間隔に設定します。
+ *  $gameSystem.setAutoAddInterval(frame);
+ *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
  * 以下のフォルダに格納されています。
@@ -980,6 +995,10 @@ function Window_Chronus() {
         if (args.minuteFileName) {
             $gameSystem.chronus().setMinuteHandFile(args.minuteFileName);
         }
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_AUTO_ADD_INTERVAL', args => {
+        $gameSystem.chronus().setAutoAddInterval(args.interval);
     });
 
     Game_Interpreter.prototype.setSwitchTimer = function(args) {
@@ -1379,12 +1398,20 @@ function Window_Chronus() {
         this.updateEffect();
         if (this.isTimeStop()) return;
         this._frameCount++;
-        if (this._frameCount >= paramAutoAddInterval) {
+        if (this._frameCount >= this.getAutoAddInterval()) {
             if (this.isRealTime()) {
                 this.updateRealTime();
             }
             this.addTime();
         }
+    };
+
+    Game_Chronus.prototype.getAutoAddInterval = function() {
+        return this._autoAddInterval ? this._autoAddInterval : paramAutoAddInterval;
+    };
+
+    Game_Chronus.prototype.setAutoAddInterval = function(value) {
+        this._autoAddInterval = value;
     };
 
     Game_Chronus.prototype.updateRealTime = function() {
