@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.0 2020/11/21 ページ番号を表示する機能を追加
 // 3.0.2 2020/09/17 シーンクラスを除くウィンドウクラスの外部からの参照禁止
 //                  収集率ウィンドウを表示する設定にするとエラーになる問題を修正
 //                  使用可否確認ウィンドウが正しく表示されない問題を修正
@@ -214,6 +215,11 @@
  * @desc ここで指定したカテゴリは「アイテム使用」が有効でも使用できなくなります。
  * @default
  * @type string[]
+ *
+ * @param ShowPageNumber
+ * @desc 複数ページの用語の場合、用語辞典の下部にページ番号を表示します。
+ * @default true
+ * @type boolean
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -607,6 +613,12 @@
  * @desc ここで指定したカテゴリは「アイテム使用」が有効でも使用できなくなります。
  * @default
  * @type string[]
+ *
+ * @param ShowPageNumber
+ * @text ページ番号表示
+ * @desc 複数ページの用語の場合、用語辞典の下部にページ番号を表示します。
+ * @default true
+ * @type boolean
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -2365,6 +2377,19 @@
             pictureHandler();
         }
         this.drawPlusPictures();
+        this.drawPageNumber();
+    };
+
+    Window_Glossary.prototype.drawPageNumber= function() {
+        if (!param.ShowPageNumber || this._maxPages <= 1) {
+            return;
+        }
+        var frame = this.padding * 2;
+        this.drawText(this.getPageNumberText(), 0, this.height - frame - 30, this.width - frame, 'center');
+    };
+
+    Window_Glossary.prototype.getPageNumberText= function() {
+        return (this._pageIndex + 1) + '/' + this._maxPages;
     };
 
     Window_Glossary.prototype.drawPlusPictures = function() {
