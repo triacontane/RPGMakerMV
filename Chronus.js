@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.18.0 2020/11/12 自然時間加算間隔を変更するスクリプトを追加
 // 1.17.1 2020/05/17 まったく同じ時間にSET_TIMEしたとき翌日の同時刻になるよう仕様変更
 // 1.17.0 2020/04/12 累計日数をカレンダーに出力できる機能を追加、累計日数のカウントを1からに変更
 // 1.16.2 2019/11/17 1.15.0の修正以後、場所移動したときのタイルセット情報の取得が、移動前のものになっていた問題を修正
@@ -398,6 +399,10 @@
  * ソースコード中の「ユーザ書き換え領域」を参照すると以下を変更できます。
  *  時間帯の情報(朝が何時から何時まで等)
  *  時間帯ごとの色調(ただし、悪天候の場合は補正が掛かります)
+ *
+ * スクリプト
+ *  frameで指定したフレーム数を自然時間加算間隔に設定します。
+ *  $gameSystem.setAutoAddInterval(frame);
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -1088,12 +1093,20 @@ function Window_Chronus() {
         this.updateEffect();
         if (this.isTimeStop()) return;
         this._frameCount++;
-        if (this._frameCount >= paramAutoAddInterval) {
+        if (this._frameCount >= this.getAutoAddInterval()) {
             if (this.isRealTime()) {
                 this.updateRealTime();
             }
             this.addTime();
         }
+    };
+
+    Game_Chronus.prototype.getAutoAddInterval = function() {
+        return this._autoAddInterval ? this._autoAddInterval : paramAutoAddInterval;
+    };
+
+    Game_Chronus.prototype.setAutoAddInterval = function(value) {
+        this._autoAddInterval = value;
     };
 
     Game_Chronus.prototype.updateRealTime = function() {
