@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.18.0 2020/11/21 ページ番号を表示する機能を追加
 // 2.17.4 2020/09/23 敵キャラ用語の自動取得で撃破しなくてもエンカウントしただけで登録されてしまう仕様を変更
 // 2.17.3 2020/08/05 複数ページ表示した状態でカテゴリ表示に戻ったとき、ページ切り替え矢印が表示されたままになる問題を修正
 //                   クリックによるページ切り替えの場合でもページ折り返しができるよう仕様変更
@@ -207,6 +208,11 @@
  * @desc ここで指定したカテゴリは「アイテム使用」が有効でも使用できなくなります。
  * @default
  * @type string[]
+ *
+ * @param ShowPageNumber
+ * @desc 複数ページの用語の場合、用語辞典の下部にページ番号を表示します。
+ * @default true
+ * @type boolean
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -570,6 +576,12 @@
  * @desc ここで指定したカテゴリは「アイテム使用」が有効でも使用できなくなります。
  * @default
  * @type string[]
+ *
+ * @param ShowPageNumber
+ * @text ページ番号表示
+ * @desc 複数ページの用語の場合、用語辞典の下部にページ番号を表示します。
+ * @default true
+ * @type boolean
  *
  * @noteParam SGピクチャ
  * @noteRequire 1
@@ -2377,6 +2389,19 @@ function Window_GlossaryComplete() {
             pictureHandler();
         }
         this.drawPlusPictures();
+        this.drawPageNumber();
+    };
+
+    Window_Glossary.prototype.drawPageNumber= function() {
+        if (!param.ShowPageNumber || this._maxPages <= 1) {
+            return;
+        }
+        var frame = this.padding * 2;
+        this.drawText(this.getPageNumberText(), 0, this.height - frame - 30, this.width - frame, 'center');
+    };
+
+    Window_Glossary.prototype.getPageNumberText= function() {
+        return (this._pageIndex + 1) + '/' + this._maxPages;
     };
 
     Window_Glossary.prototype.drawPlusPictures = function() {
