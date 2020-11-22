@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.5 2020/11/02 NRP_DynamicMotionMZ.jsと併用したとき戦闘画面のピクチャを敵キャラの下に表示できなくなる競合を修正
 // 1.2.4 2020/11/05 戦闘画面で使用するとエラーになる問題を修正
 // 1.2.3 2020/09/06 座標の基準をUI幅ではなく画面幅に変更
 // 1.2.2 2020/08/29 MZ向けにコード修正
@@ -259,6 +260,10 @@
         // resolve conflict for GALV_LayerGraphics.js
         if (typeof Imported !== 'undefined' && Imported.Galv_LayerGraphics) {
             this._pictureContainerLower.z = 2;
+        }
+        // resolve conflict for NRP_DynamicMotionMZ.js
+        if (PluginManagerEx.isExistPlugin('NRP_DynamicMotionMZ')) {
+            this._pictureContainerLower.z = param.lowerPictureBattleZ > 0 ? 10 : 0;
         }
     };
 
