@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.2.0 2020/11/22 用語単位でページ番号の表示、非表示を設定できる機能を追加
 // 3.1.0 2020/11/21 ページ番号を表示する機能を追加
 // 3.0.2 2020/09/17 シーンクラスを除くウィンドウクラスの外部からの参照禁止
 //                  収集率ウィンドウを表示する設定にするとエラーになる問題を修正
@@ -823,6 +824,12 @@
  *
  * さらに追加で表示させたい場合は以下のように記述してください。
  * <SG追加2ピクチャ:bbb,2,3>
+ *
+ * ・追加機能5
+ * 用語辞典にページ番号を付与できます。パラメータから設定を有効にしてください。
+ * 用語単位でページ番号を表示させたくない場合は、以下のメモ欄で対応できます。
+ * <SGページ番号不要>
+ * <SGNoPageNum>
  *
  * ・スクリプト詳細
  * itemIdが用語アイテムとして使用可能なときにtrueを返します。
@@ -2381,7 +2388,7 @@
     };
 
     Window_Glossary.prototype.drawPageNumber= function() {
-        if (!param.ShowPageNumber || this._maxPages <= 1) {
+        if (!this.isNeedPageNumber()) {
             return;
         }
         var frame = this.padding * 2;
@@ -2390,6 +2397,10 @@
 
     Window_Glossary.prototype.getPageNumberText= function() {
         return (this._pageIndex + 1) + '/' + this._maxPages;
+    };
+
+    Window_Glossary.prototype.isNeedPageNumber= function() {
+        return param.ShowPageNumber && this._maxPages > 1 && !this.getMetaContents(['NoPageNum', 'ページ番号不要'])
     };
 
     Window_Glossary.prototype.drawPlusPictures = function() {
