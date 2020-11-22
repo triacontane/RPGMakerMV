@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2020/11/22 ApngPicture.jsと組み合わせてキャラクターとして表示したピクチャ、敵キャラ画像がアニメーションする機能を追加
 // 1.10.4 2020/03/22 MOG_ChronoEngine.jsとの間で発生するエラーを解消(全面的な競合対策ではありません)
 //                   MOG_CharPoses.jsとの競合を解消
 // 1.10.3 2020/01/25 フレーム更新時に無駄な処理が実行されることでパフォーマンスが低下していた問題を修正
@@ -848,5 +849,43 @@
         } else {
             return _Sprite_Character_characterPatternY.apply(this, arguments);
         }
+    };
+
+    // for ApngPicture.js
+    var _Sprite_Character_setCharacterBitmap2 = Sprite_Character.prototype.setCharacterBitmap;
+    Sprite_Character.prototype.setCharacterBitmap = function() {
+        _Sprite_Character_setCharacterBitmap2.apply(this, arguments);
+        if (this.addApngChild) {
+            this.addApngChild(this._characterName);
+        }
+    };
+
+    Sprite_Character.prototype.loadApngSprite = function(name) {
+        switch (this._customResource) {
+            case 'Picture':
+                return SceneManager.tryLoadApngPicture(name);
+            case 'SvEnemy':
+                return SceneManager.tryLoadApngSideEnemy(name);
+            case 'Enemy':
+                return SceneManager.tryLoadApngEnemy(name);
+            default:
+                return null;
+        }
+    };
+
+    var _Scene_Base_terminate = Scene_Base.prototype.terminate;
+    Scene_Base.prototype.terminate = function() {
+        _Scene_Base_terminate.apply(this, arguments);
+        if (this._spriteset && this._spriteset.destroyApngCharacter) {
+            this._spriteset.destroyApngCharacter();
+        }
+    };
+
+    Spriteset_Map.prototype.destroyApngCharacter = function() {
+        this._characterSprites.forEach(function(sprite) {
+            if (sprite.destroyApngIfNeed) {
+                sprite.destroyApngIfNeed();
+            }
+        })
     };
 })();
