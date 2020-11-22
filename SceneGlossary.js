@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.19.0 2020/11/22 用語単位でページ番号の表示、非表示を設定できる機能を追加
 // 2.18.0 2020/11/21 ページ番号を表示する機能を追加
 // 2.17.4 2020/09/23 敵キャラ用語の自動取得で撃破しなくてもエンカウントしただけで登録されてしまう仕様を変更
 // 2.17.3 2020/08/05 複数ページ表示した状態でカテゴリ表示に戻ったとき、ページ切り替え矢印が表示されたままになる問題を修正
@@ -723,6 +724,12 @@
  *
  * さらに追加で表示させたい場合は以下のように記述してください。
  * <SG追加2ピクチャ:bbb,2,3>
+ *
+ * ・追加機能5
+ * 用語辞典にページ番号を付与できます。パラメータから設定を有効にしてください。
+ * 用語単位でページ番号を表示させたくない場合は、以下のメモ欄で対応できます。
+ * <SGページ番号不要>
+ * <SGNoPageNum>
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -2393,7 +2400,7 @@ function Window_GlossaryComplete() {
     };
 
     Window_Glossary.prototype.drawPageNumber= function() {
-        if (!param.ShowPageNumber || this._maxPages <= 1) {
+        if (!this.isNeedPageNumber()) {
             return;
         }
         var frame = this.padding * 2;
@@ -2402,6 +2409,10 @@ function Window_GlossaryComplete() {
 
     Window_Glossary.prototype.getPageNumberText= function() {
         return (this._pageIndex + 1) + '/' + this._maxPages;
+    };
+
+    Window_Glossary.prototype.isNeedPageNumber= function() {
+        return param.ShowPageNumber && this._maxPages > 1 && !this.getMetaContents(['NoPageNum', 'ページ番号不要'])
     };
 
     Window_Glossary.prototype.drawPlusPictures = function() {
