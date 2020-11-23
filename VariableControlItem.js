@@ -1,16 +1,17 @@
 //=============================================================================
 // VariableControlItem.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2020/11/23 変数操作の実行条件に実行者を指定できる機能を追加
 // 1.1.1 2017/04/19 範囲が「なし」の場合も操作できるよう修正
 // 1.1.0 2016/10/21 加算と代入を別々のメモ欄で設定できるよう変更
 // 1.0.0 2016/10/21 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -30,6 +31,10 @@
  * <VCISetValue:5>  # 同上
  * <VCI加算値:5>    # 指定した変数に値[5]を加算します。
  * <VCIAddValue:5>  # 同上
+ * <VCI実行者:actor>   # 実行者がアクターの場合のみ変数操作します。
+ * <VCISubject:actor> # 同上
+ * <VCI実行者:enemy>   # 実行者が敵キャラの場合のみ変数操作します。
+ * <VCISubject:enemy> # 同上
  * ※加算値に負の値を指定すると減算になります。
  *
  * 設定値は、制御文字を適用した上でJavaScript計算式として評価されます。
@@ -54,6 +59,10 @@
  * <VCISetValue:5>  # 同上
  * <VCI加算値:5>    # 指定した変数に値[5]を加算します。
  * <VCIAddValue:5>  # 同上
+ * <VCI実行者:actor>   # 実行者がアクターの場合のみ変数操作します。
+ * <VCISubject:actor> # 同上
+ * <VCI実行者:enemy>   # 実行者が敵キャラの場合のみ変数操作します。
+ * <VCISubject:enemy> # 同上
  * ※加算値に負の値を指定すると減算になります。
  *
  * 設定値は、制御文字を適用した上でJavaScript計算式として評価されます。
@@ -130,6 +139,9 @@
     };
 
     Game_Action.prototype.applyVariableControl = function() {
+        if (!this.isVariableControlSubject()) {
+            return;
+        }
         var varNumberStr = getMetaValues(this.item(), ['VarNumber', '変数番号']);
         if (varNumberStr) {
             var varNumber = getArgNumber(varNumberStr, 0);
@@ -144,6 +156,21 @@
                 $gameVariables.setValue(varNumber, originalValue + getArgEval(addValue));
             }
         }
+    };
+
+    Game_Action.prototype.isVariableControlSubject = function() {
+        var subject = getMetaValues(this.item(), ['Subject', '実行者']);
+        if (!subject && subject === true) {
+            return true;
+        }
+        subject = subject.toLowerCase();
+        if (subject === 'actor' && this._subjectEnemyIndex >= 0) {
+            return false;
+        }
+        if (subject === 'enemy' && this._subjectActorId > 0) {
+            return false;
+        }
+        return true;
     };
 })();
 
