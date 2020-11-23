@@ -160,7 +160,7 @@
 
     Game_Action.prototype.isVariableControlSubject = function() {
         var subject = getMetaValues(this.item(), ['Subject', '実行者']);
-        if (!subject && subject === true) {
+        if (!subject || subject === true) {
             return true;
         }
         subject = subject.toLowerCase();
