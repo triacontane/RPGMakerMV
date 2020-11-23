@@ -126,7 +126,7 @@
 
     Game_Action.prototype.isVariableControlSubject = function() {
         let subject = this.findMetaForVariableControl(['Subject', '実行者']);
-        if (!subject && subject === true) {
+        if (!subject || subject === true) {
             return true;
         }
         subject = subject.toLowerCase();
