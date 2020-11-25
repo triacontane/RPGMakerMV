@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2020/11/26 イベントテストでエラーになる問題を修正
 // 1.1.0 2019/04/28 中心座標を指定したぶんだけずらせる機能を追加
 // 1.0.0 2016/09/15 初版
 // ----------------------------------------------------------------------------
@@ -208,7 +209,9 @@
 
     var _Game_Map_setup = Game_Map.prototype.setup;
     Game_Map.prototype.setup = function(mapId) {
-        this.refreshDisableForceCenter();
+        if (mapId > 0) {
+            this.refreshDisableForceCenter();
+        }
         _Game_Map_setup.apply(this, arguments);
     };
 
