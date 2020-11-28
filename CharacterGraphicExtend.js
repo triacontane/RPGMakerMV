@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2020/11/28 Trb_SimpleDashMotion.jsと併用したとき、プレイヤーの拡大率を変更したときも想定通りに表示されるよう修正
 // 2.1.0 2020/11/22 ApngPicture.jsと組み合わせてキャラクターとして表示したピクチャ、敵キャラ画像がアニメーションする機能を追加
 // 2.0.1 2020/11/01 一部リファクタリング
 // 2.0.0 2020/10/30 MZで動作するよう全面的に修正
@@ -698,7 +699,7 @@
     // --------------------
 
     Sprite_Character.prototype.resolveConflictForDashMotion = function() {
-        if (this._character.scaleY() !== 100) {
+        if (this._character.scaleY() / 100 !== this.scale.y) {
             this.scale.y = this._character.scaleY() / 100 * this.scale.y;
         }
         if (this._character.angle() !== 0) {
