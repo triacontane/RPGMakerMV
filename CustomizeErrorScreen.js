@@ -1,18 +1,19 @@
 //=============================================================================
 // CustomizeErrorScreen.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2020/11/29 非同期処理でエラーイベントを捕捉したときスタックトレースの表示が正しく行えない問題を修正
 // 1.2.0 2016/11/10 連絡先のリンクを開く際に、既定のブラウザで開くよう変更
 // 1.1.1 2016/07/13 表記方法を少しだけ変更
 // 1.1.0 2016/07/13 ローカル実行時、エラー情報のパスを出力しないよう修正
 // 1.0.1 2016/06/25 エラー発生時のリンク先を別画面で開くよう修正
 // 1.0.0 2016/05/14 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -104,7 +105,7 @@
     SceneManager.onError      = function(e) {
         _SceneManager_onError.apply(this, arguments);
         try {
-            Graphics.printErrorDetail(e, decodeURIComponent(e.filename));
+            Graphics.printErrorDetail(e.error, decodeURIComponent(e.filename));
         } catch (e2) {
         }
     };
