@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.3.0 2022/02/06 1セルごとのフレーム数をゲーム側で設定できるパラメータを追加
  2.2.1 2021/10/09 AltMenuScreen2MZとの並び順を指定するアノテーションを追加
  2.2.0 2021/04/26 2.1.6の修正でGIFファイルが使えなくなっていた問題を修正
                   GIFファイルの指定方法を変更
@@ -164,6 +165,12 @@
  * @desc 指定した番号スイッチがONのとき全てのアニメーションが停止します。
  * @default 0
  * @type switch
+ *
+ * @param FrameCount
+ * @text 1セルのフレーム数
+ * @desc 設定すると1セルごとのフレーム数をゲーム側で固定にできます。
+ * @default 0
+ * @type number
  *
  * @help ApngPicture.js
  *
@@ -963,9 +970,18 @@
     Sprite.prototype.update = function() {
         _Sprite_update.apply(this, arguments);
         if (this._apngSprite) {
+            if (param.FrameCount > 0) {
+                this.updateApngFrameFrame();
+            }
             this.updateApngSwitchStop();
             this.updateApngFrameStop();
         }
+    };
+
+    Sprite.prototype.updateApngFrameFrame = function() {
+        const frameLength = this._apngSprite.pixiApng.getFramesLength();
+        const frame = Math.floor(Graphics.frameCount / param.FrameCount) % frameLength;
+        this._apngSprite.pixiApng.jumpToFrame(frame);
     };
 
     Sprite.prototype.updateApngFrameStop = function() {
