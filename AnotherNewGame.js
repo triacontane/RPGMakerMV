@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.0.1 2020/11/29 ブラウザからの実行でエラーになる問題を修正
 // 4.0.0 2020/11/11 MZ向けに全面的にリファクタリング
 // 3.0.0 2020/03/08 アナザーニューゲームコマンドを複数登録できるよう修正。以前のバージョンと互換性がありません。
 // 2.0.0 2019/03/19 アナザーロード時に場所移動せず、セーブ位置から開始できる機能を追加
@@ -211,9 +212,9 @@
     // Scene_Boot
     //  アナザーニューゲームデータを読み込みます。
     //=============================================================================
-    const _Scene_Boot_create    = Scene_Boot.prototype.create;
-    Scene_Boot.prototype.create = function() {
-        _Scene_Boot_create.apply(this, arguments);
+    const _Scene_Boot_onDatabaseLoaded = Scene_Boot.prototype.onDatabaseLoaded;
+    Scene_Boot.prototype.onDatabaseLoaded = function() {
+        _Scene_Boot_onDatabaseLoaded.apply(this, arguments);
         ANGSettingManager.loadData();
     };
 
@@ -327,7 +328,6 @@
     };
 
     Window_TitleCommand.prototype.makeAnotherNewGameCommand = function(command, index) {
-        console.log(command.name)
         this.addCommand(command.name, 'nameGame2_' + index, ANGSettingManager.isEnable(index));
         const addPosition = command.addPosition;
         if (addPosition > 0) {
