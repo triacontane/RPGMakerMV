@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2020/11/29 パラメータの型指定機能に対応
 // 1.2.1 2020/11/29 非同期処理でエラーイベントを捕捉したときスタックトレースの表示が正しく行えない問題を修正
 // 1.2.0 2016/11/10 連絡先のリンクを開く際に、既定のブラウザで開くよう変更
 // 1.1.1 2016/07/13 表記方法を少しだけ変更
@@ -42,17 +43,21 @@
  * @plugindesc エラー画面表示改善プラグイン
  * @author トリアコンタン
  *
- * @param メインメッセージ
+ * @param MainMessage
+ * @text メインメッセージ
  * @desc エラー画面に共通で表示されるメッセージ
  * @default 以下のエラーが発生しました。
  *
- * @param ハイパーリンク
+ * @param HyperLink
+ * @text リンク先URL
  * @desc エラー画面に表示するリンク先URL
  * @default
  * 
- * @param 詳細情報出力
+ * @param OutputDetail
+ * @text 詳細情報出力
  * @desc エラー情報の詳細(スタックトレース)を出力します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @help エラー画面の表示を改善します。固定メッセージと連絡先のハイパーリンクを
  * 指定できるほか、エラーの詳細情報（スタックトレース）も表示されるようになります。
@@ -69,33 +74,27 @@
 
 (function() {
     'use strict';
-    var pluginName = 'CustomizeErrorScreen';
 
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value === null ? '' : value;
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramMainMessage  = getParamString(['MainMessage', 'メインメッセージ']);
-    var paramHyperLink    = getParamString(['HyperLink', 'ハイパーリンク']);
-    var paramOutputDetail = getParamBoolean(['OutputDetail', '詳細情報出力']);
+    var param = createPluginParameter('CustomizeErrorScreen');
 
     //=============================================================================
     // SceneManager
@@ -131,8 +130,8 @@
         this._setErrorPrinterStyle();
         if (this._errorPrinter) {
             this._makeMainMessage();
-            if (paramHyperLink)    this._makeHyperLink();
-            if (paramOutputDetail) {
+            if (param.HyperLink)    this._makeHyperLink();
+            if (param.OutputDetail) {
                 var stack = String(e.stack) || '';
                 if (Utils.isNwjs()) {
                     stack = stack.replace(/file:.*js\//g, '');
@@ -149,7 +148,7 @@
         style.color           = 'white';
         style.textAlign       = 'left';
         style.fontSize        = '18px';
-        mainMessage.innerHTML = '<hr>' + paramMainMessage;
+        mainMessage.innerHTML = '<hr>' + param.MainMessage;
         this._errorPrinter.appendChild(mainMessage);
     };
 
@@ -161,8 +160,8 @@
         style.fontSize           = '20px';
         style['text-decoration'] = 'underline';
         style.cursor             = 'pointer';
-        hyperLink.addEventListener('click', this._openUrl.bind(this, paramHyperLink));
-        hyperLink.innerHTML = paramHyperLink;
+        hyperLink.addEventListener('click', this._openUrl.bind(this, param.HyperLink));
+        hyperLink.innerHTML = param.HyperLink;
         this._errorPrinter.appendChild(hyperLink);
     };
 
