@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.8.0 2020/11/29 1セルごとのフレーム数をゲーム側で設定できるパラメータを追加
  1.7.2 2020/11/28 gifを使う場合はダミーのpngファイルが別途必要である旨の追記を追加
  1.7.1 2020/11/22 メニュー画面を開いたときに表示中のapngピクチャが消えないよう修正
  1.7.0 2020/11/11 APNGのアニメーションを停止、全停止できるスイッチを追加
@@ -129,6 +130,12 @@
  * @desc 指定した番号スイッチがONのとき全てのアニメーションが停止します。
  * @default 0
  * @type switch
+ *
+ * @param FrameCount
+ * @text 1セルのフレーム数
+ * @desc 設定すると1セルごとのフレーム数をゲーム側で固定にできます。
+ * @default 0
+ * @type number
  *
  * @help ApngPicture.js
  * APNG、もしくはGIFアニメをピクチャとして画面上にアニメ表示します。
@@ -920,9 +927,18 @@
     Sprite.prototype.update = function() {
         _Sprite_update.apply(this, arguments);
         if (this._apngSprite) {
+            if (param.FrameCount > 0) {
+                this.updateApngFrameFrame();
+            }
             this.updateApngSwitchStop();
             this.updateApngFrameStop();
         }
+    };
+
+    Sprite.prototype.updateApngFrameFrame = function() {
+        var frameLength = this._apngSprite.pixiApng.getFramesLength();
+        var frame = Math.floor(Graphics.frameCount / param.FrameCount) % frameLength;
+        this._apngSprite.pixiApng.jumpToFrame(frame);
     };
 
     Sprite.prototype.updateApngFrameStop = function() {
