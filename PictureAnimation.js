@@ -22,7 +22,7 @@
  * @author Triacontane
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PictureAnimation.js
+ * @url
  * 
  * @param returnToFirstCell
  * @text Return to the first cell
@@ -109,7 +109,7 @@
  * @default ["1"]
  *
  * @command STOP
- * @text End of animation
+ * @text End of Animation
  * @desc Finish animating a picture of the specified picture number.
  *
  * @arg pictureNumber
@@ -149,7 +149,7 @@
  * @default false
  *
  * @command LINK_VARIABLE
- * @text Cell variables links
+ * @text Cell Variables Links
  * @desc Synchronize the animated cells with the specified variables. As the value of the variable changes, the displayed cell will also change automatically.
  *
  * @arg pictureNumber
@@ -219,7 +219,7 @@
  * @author トリアコンタン
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PictureAnimation.js
+ * @url
  * 
  * @param returnToFirstCell
  * @text 最初のセルに戻る
