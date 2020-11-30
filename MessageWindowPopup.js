@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.1.0 2020/10/17 テール画像を変更できるプラグインコマンドを追加
  1.0.4 2020/09/23 1.0.3の修正方法を変更し、メッセージ表示直後にフキダシを無効化した場合でもネームウィンドウが一瞬上に表示されないよう修正
  1.0.3 2020/09/23 フキダシ位置を下にして表示したとき、条件次第でウィンドウを閉じる瞬間にフキダシが一瞬上に表示される問題を修正
@@ -20,6 +21,306 @@
 =============================================================================*/
 
 /*:
+ * @plugindesc Balloon Window Plugin
+ * @author triacontane
+ * @target MZ
+ * @author Triacontane
+ * @base PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageWindowPopup.js
+ *
+ * @param FontSize
+ * @text FontSize
+ * @desc The default font size of the balloon window
+ * Default window font size：28
+ * @default 22
+ * @type number
+ *
+ * @param Padding
+ * @text Margins
+ * @desc Margin size of the balloon window
+ * Default window margin：18
+ * @default 10
+ * @type number
+ *
+ * @param AutoPopup
+ * @text Automatic configuration
+ * @desc When an event is launched, the target of the speech balloon is automatically set to the launched event.
+ * If off, it will be set to the normal message window.
+ * @default true
+ * @type boolean
+ *
+ * @param FaceScale
+ * @text Face Multiplier
+ * @desc Face image display magnification (1-100%) in a speech balloon window
+ * @default 75
+ * @type number
+ *
+ * @param WindowLinkage
+ * @text Window linkage
+ * @desc Interact the choice window and the numeric entry window with the balloon window.
+ * @default true
+ * @type boolean
+ *
+ * @param BetweenLines
+ * @text Between the lines
+ * @desc Set the space between the lines, in pixels.
+ * @default 4
+ * @type number
+ *
+ * @param FontSizeRange
+ * @text Font Size Increase/Decrease Range
+ * @desc This is the range of font size increase or decrease when using the control characters Control characters "\{" or "\}" in the speech balloon window. The default is 12.
+ * @default 12
+ * @type number
+ *
+ * @param FontUpperLimit
+ * @text Font Size Maximum
+ * @desc This is the maximum font size for the control characters Control Character "\{" or "\}" in the speech balloon window. The default is 96.
+ * @default 96
+ * @type number
+ *
+ * @param FontLowerLimit
+ * @text Lower limit of font size
+ * @desc The lower limit of the font size when using the control characters Control characters "\{" or "\}" in a speech balloon window. The default is 24.
+ * @default 24
+ * @type number
+ *
+ * @param InnerScreen
+ * @text Fit it in the screen
+ * @desc Adjust the position so that the speech balloon window fits within the screen not only horizontally, but also vertically.
+ * @default false
+ * @type boolean
+ *
+ * @param ShakeSpeed
+ * @text The speed of vibration
+ * @desc The speed at which the window vibrates.
+ * @default 5
+ * @type number
+ *
+ * @param ShakeDuration
+ * @text Vibration time
+ * @desc The time (in frames) for which the window should vibrate; a value of 0 means it will continue to vibrate.
+ * @default 60
+ * @type number
+ *
+ * @param NoUseTail
+ * @text Do not use the tail
+ * @desc Disable the tailing feature of the posesign. It will be displayed in the default position.
+ * @default false
+ * @type boolean
+ *
+ * @param MinWidthVariableId
+ * @text Minimum Width Get Variable ID
+ * @desc The value of the variable with the specified number will be the minimum width of the speech balloon window (in pixels).
+ * @default 0
+ * @type variable
+ *
+ * @param MinHeightVariableId
+ * @text Minimum Height Acquisition Variable ID
+ * @desc The value of the variable with the specified number will be the minimum value of the height of the balloon window (in pixels).
+ * @default 0
+ * @type variable
+ *
+ * @param lowerLimitX
+ * @text Lower limit X coordinate
+ * @desc The lower X coordinate of the balloon window.
+ * @default 0
+ * @type number
+ *
+ * @param upperLimitX
+ * @text Upper Limit X Coordinate
+ * @desc The upper X coordinate of the speech balloon window.
+ * @default 0
+ * @type number
+ *
+ * @param lowerLimitY
+ * @text Lower Limit Y Coordinate
+ * @desc The lower Y coordinate of the balloon window.
+ * @default 0
+ * @type number
+ *
+ * @param upperLimitY
+ * @text Upper Limit Y Coordinate
+ * @desc The upper Y coordinate of the speech balloon window.
+ * @default 0
+ * @type number
+ *
+ * @param tailImage
+ * @text Tail Image
+ * @desc Specify the image to be used for the tail from the system image.
+ * @default
+ * @dir img/system/
+ * @type file
+ *
+ * @param tailImageAdjustY
+ * @text Tail Image Y Coordinates
+ * @desc The Y-coordinate correction value of the image used for the tail.
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @command POPUP_VALID
+ * @text balloon window Enabling
+ * @desc Activate the speech balloon with the specified ID.
+ *
+ * @arg id
+ * @text Character ID
+ * @desc balloon window Subject ID.[-1]Player [0]this Event [1..]The specified ID event
+ * @default 0
+ * @type number
+ * @min -1
+ *
+ * @arg name
+ * @text Event Name
+ * @desc Event name for the speech balloon target. If you want to specify the target by name, please specify here.
+ * @default
+ * @type string
+ *
+ * @arg windowPosition
+ * @text Window Position
+ * @desc balloon window position.
+ * @default auto
+ * @type select
+ * @option Auto
+ * @value auto
+ * @option Display upper character
+ * @value upper
+ * @option Display under character
+ * @value lower
+ *
+ * @command POPUP_INVALID
+ * @text Disabling balloon window
+ * @desc Disable speech balloon window and return to normal window display.
+ *
+ * @command FREE_POPUP_VALID
+ * @text Free balloon window Enabling
+ * @desc Enable speech balloon window with the display coordinates.
+ *
+ * @arg x
+ * @text X-coordinate
+ * @desc The X-coordinates of balloon window.
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @arg y
+ * @text Y-coordinate
+ * @desc The Y-coordinates of balloon window.
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @command POPUP_WINDOW_SETTING
+ * @text Persimmon window display settings
+ * @desc Change the speech balloon window display settings.
+ *
+ * @arg windowPosition
+ * @text Window Position
+ * @desc balloon window position.
+ * @default none
+ * @type select
+ * @option Do not change
+ * @value none
+ * @option Auto
+ * @value auto
+ * @option Display upper character
+ * @value upper
+ * @option Display under character
+ * @value lower
+ *
+ * @arg skin
+ * @text Window skins
+ * @desc If you want to change the skin of the balloon window, please specify.
+ * @default
+ * @dir img/system/
+ * @type file
+ *
+ * @command SUB_WINDOW_SETTING
+ * @text Sub-window display settings
+ * @desc Set how the sub-window is displayed.
+ *
+ * @arg type
+ * @text Display Type
+ * @desc This is how the sub-window is displayed.
+ * @default 0
+ * @type select
+ * @option Normal
+ * @value 0
+ * @option Above the player's upper
+ * @value 1
+ * @option The right side
+ * @value 3
+ *
+ * @command POPUP_ADJUST_POSITION
+ * @text balloon window position adjustment
+ * @desc Adjusts the display coordinates of the speech balloon window.
+ *
+ * @arg x
+ * @text X-coordinate
+ * @desc The x-coordinate to be adjusted. Set the value relative to the original coordinates.
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @arg y
+ * @text Y-coordinate
+ * @desc The Y coordinate to be adjusted. Set the value relative to the original coordinates.
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @command POPUP_ADJUST_SIZE
+ * @text Speech balloon window size adjustment
+ * @desc Adjust the display size of the speech balloon window.
+ *
+ * @arg width
+ * @text Width
+ * @desc The width to adjust. Set the value relative to the original size.
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @arg height
+ * @text Height
+ * @desc The height to adjust. Set the value relative to the original size.
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @command CHANGE_TAIL
+ * @text Tail image change
+ * @desc Change the tail image to another image.
+ *
+ * @arg tailImage
+ * @text Tail Image
+ * @desc Specifies the image to be used for the tail from the system image. If you specify empty, it returns to the tail image specified by the parameter.
+ * @default
+ * @dir img/system/
+ * @type file
+ *
+ * @help Modify the message window to display as a speech ballon above the head of a specified character.
+ * You can configure various settings for ballon from the plugin command.
+ *
+ * -Available control characters
+ * \sh[5] # Vibrate the window with strength [5].
+ *
+ * You need the base plugin "PluginCommonBase.js" to use this plugin.
+ * The "PluginCommonBase.js" is stored in the following folder under the installation folder of RPG Maker MZ.
+ * dlc/BasicResources/plugins/official
+ *
+ * User Agreement:
+ *  You may alter or redistribute the plugin without permission. There are no restrictions on usage format
+ *  (such as adult- or commercial-use only).
+ *  This plugin is now all yours.
+ */
+/*:ja
  * @plugindesc フキダシウィンドウプラグイン
  * @author triacontane
  * @target MZ
