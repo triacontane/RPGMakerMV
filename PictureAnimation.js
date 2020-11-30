@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.1.0 2020/10/24 ピクチャのアニメーション完了まで次の命令に移行しない設定を追加
  1.0,2 2020/08/24 ピクチャのアニメーションセル設定でセル進行かどうかの判定処理が誤っていた問題を修正
  1.0.1 2020/08/23 ピクチャのアニメーションセル設定のコマンドが機能していなかった問題を修正
@@ -15,14 +16,210 @@
  [Twitter]: https://twitter.com/triacontane/
  [GitHub] : https://github.com/triacontane/
 =============================================================================*/
-
 /*:
+ * @target MZ
+ * @plugindesc Picture Animation
+ * @author Triacontane
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PictureAnimation.js
+ * 
+ * @param returnToFirstCell
+ * @text Return to the first cell
+ * @desc Return to the first cell after the end of the non-looping animation. If disabled, it will stop at the last cell.
+ * @default true
+ * @type boolean
+ *
+ * @command INIT
+ * @text Animation Preparation
+ * @desc Prepare the picture to be animated.Do it just before "Show Picture".
+ *
+ * @arg cellNumber
+ * @text Number of cells
+ * @desc The number of cells to be animated
+ * @type number
+ * @default 1
+ * @max 200
+ * @min 1
+ *
+ * @arg frameNumber
+ * @text Number of frames
+ * @desc Number of frames in the animation interval
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg direction
+ * @text Cell Placement Method
+ * @desc How to place a cell image
+ * @type select
+ * @default vertical
+ * @option Vertical
+ * @value vertical
+ * @option horizon
+ * @value horizon
+ * @option Sequential Numbering
+ * @value number
+ *
+ * @arg fade
+ * @text Fade time
+ * @desc The number of frames to change images (if set to 0, it will not fade)
+ * @type number
+ * @default 0
+ *
+ * @command START
+ * @text Start Animation
+ * @desc Start to animate the picture of the specified picture number.
+ *
+ * @arg pictureNumber
+ * @text Picture ID
+ * @desc Picture ID.
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg loop
+ * @text With or without a loop
+ * @desc The presence of loop playback.
+ * @type boolean
+ * @default false
+ *
+ * @arg wait
+ * @text Wait fot Completion
+ * @desc If set to true, wait for the event to progress until the animation is complete.
+ * @type boolean
+ * @default false
+ *
+ * @arg animationType
+ * @text Animation Type
+ * @desc Animation Type.
+ * @type select
+ * @default 1
+ * @option 1->2->3->4->1->2->3->4... (If the number of cells is 4.)
+ * @value 1
+ * @option 1->2->3->4->3->2->1->2... (If the number of cells is 4.)
+ * @value 2
+ * @option Custom Patterns
+ * @value 3
+ *
+ * @arg customPattern
+ * @text Custom Patterns
+ * @desc The pattern if the animation type is set to "Custom Pattern".
+ * @type number[]
+ * @default ["1"]
+ *
+ * @command STOP
+ * @text End of animation
+ * @desc Finish animating a picture of the specified picture number.
+ *
+ * @arg pictureNumber
+ * @text Picture ID
+ * @desc Picture ID.
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg force
+ * @text Forced Exit
+ * @desc If enabled, the animation will stop the moment it is executed. If disabled, it will stop after a cycle.
+ * @type boolean
+ * @default false
+ *
+ * @command SET_CELL
+ * @text Animation Cell Settings
+ * @desc Set the animation cells directly. This is useful if you want to animate at any time.
+ *
+ * @arg pictureNumber
+ * @text Picture ID
+ * @desc Picture ID.
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg cellNumber
+ * @text Cell Number
+ * @desc The cell number to be specified. The starting number is 1, and a value of 0 will advance the current cell by one.
+ * @type number
+ * @default 0
+ *
+ * @arg wait
+ * @text Wait fot Completion
+ * @desc If set to true, it will wait for the event to run during the crossfade.
+ * @type boolean
+ * @default false
+ *
+ * @command LINK_VARIABLE
+ * @text Cell variables links
+ * @desc Synchronize the animated cells with the specified variables. As the value of the variable changes, the displayed cell will also change automatically.
+ *
+ * @arg pictureNumber
+ * @text Picture ID
+ * @desc Picture ID.
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg variableId
+ * @text Variable Number
+ * @desc The variable number of the link target.
+ * @type variable
+ * @default 1
+ *
+ * @command LINK_SOUND
+ * @text SE Settings
+ * @desc Play SE at the time the animation cell switches.
+ *
+ * @arg cellNumber
+ * @text Cell Number
+ * @desc The cell number to be specified.
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @help Animate the picture at the specified frame interval.
+ * Prepare the cell images you want to animate (*) and enter the following commands.
+ *
+ * 1. Animation Preparation (Plugin Command)
+ * 2. Show Picture (Event Command)
+ * 3. Start Animation (Plugin Command)
+ * 4. End of animation (Plugin Command)
+ *
+ * There are three ways of placement
+ *  vertical: arrange the cells vertically to make the whole into one file.
+ *  horizon: Cells are lined up horizontally to make the whole into a single file.
+ *  number: Prepare multiple cell images with sequential numbers. (The original part is an arbitrary string of characters)
+ *   original00.png(The original file specified in the picture display)
+ *   original01.png
+ *   original02.png...
+ *
+ * attention!　If you use "Exclude unused files" of the deployment method,
+ * it may be excluded as unused files at deployment time.
+ *
+ * In addition to simply animating cells, 
+ * you can also specify cell numbers directly from the plugin command or link the value of a variable to a cell number.
+ * In addition to simply animating cells,
+ *  you can also specify cell numbers directly from the plugin command or link the value of a variable to a cell number.
+ * It is useful for productions such as picture-story shows or to change the display state of standing pictures depending on the conditions.
+ *
+ * Script details
+ *
+ * Get the current cell number for the picture being animated.
+ * It can be used in the event commands "variable manipulation" and "conditional branching".
+ * Running it while not viewing the picture will result in an error.
+ * $gameScreen.picture(1).cell; // Get a cell with picture ID [1].
+ *
+ * User Agreement:
+ *  You may alter or redistribute the plugin without permission. There are no restrictions on usage format
+ *  (such as adult- or commercial-use only).
+ *  This plugin is now all yours.
+ */
+/*:ja
  * @target MZ
  * @plugindesc ピクチャのアニメーションプラグイン
  * @author トリアコンタン
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
- * @url
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PictureAnimation.js
  * 
  * @param returnToFirstCell
  * @text 最初のセルに戻る
