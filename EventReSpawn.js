@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.3 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.0.2 2020/11/19 イベント、プレイヤーと重ならない生成条件が正常に機能していなかった問題を修正
  1.0.1 2020/08/26 ベースプラグインの説明を追加
  1.0.0 2020/07/25 MV版から流用作成
@@ -16,6 +17,145 @@
 =============================================================================*/
 
 /*:
+ * @plugindesc Event Dynamic Generation
+ * @author Triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventReSpawn.js
+ *
+ * @param keepSelfSwitch
+ * @text Self Switch maintenance
+ * @desc If enabled, it will no longer clear the Self Switch when moving locations. If the event clearing is performed, it will be cleared.
+ * @default false
+ * @type boolean
+ *
+ * @param variableSpawnEventId
+ * @text Generated Event ID storage variables
+ * @desc The ID of the last generated event is stored in the specified variable.
+ * @default 0
+ * @type variable
+ *
+ * @command MAKE
+ * @text Event Generation
+ * @desc Generate dynamic events.
+ *
+ * @arg id
+ * @text Event ID
+ * @desc The event ID or name of the source of the copy. A number will be interpreted as an ID.
+ * @default 1
+ * @type string
+ *
+ * @arg x
+ * @text X-coordinate
+ * @desc The X coordinate of the destination.
+ * @default 1
+ * @type number
+ *
+ * @arg y
+ * @text Y-coordinate
+ * @desc The Y coordinate of the copy destination.
+ * @default 1
+ * @type number
+ *
+ * @arg template
+ * @text Template Generation
+ * @desc Generate template events when enabled. A separate template event plugin is required.
+ * @default false
+ * @type boolean
+ *
+ * @command MAKE_RANDOM
+ * @text Conditional Random Generation
+ * @desc Generate events dynamically at random locations according to the conditions you specify. If there is no possible location for generation, no generation will take place.
+ *
+ * @arg id
+ * @text Event ID
+ * @desc The event ID or name of the source of the copy. A number will be interpreted as an ID.
+ * @default 1
+ * @type string
+ *
+ * @arg passable
+ * @text Passable tiles only
+ * @desc Only passable tiles are event-generated.
+ * @default false
+ * @type boolean
+ *
+ * @arg screen
+ * @text Conditions on the screen
+ * @desc Generate only in or off screen.
+ * @default 0
+ * @type select
+ * @option Do not judge
+ * @value 0
+ * @option In Screen
+ * @value 1
+ * @option Off-screen (more than 2 squares away from the screen display border)
+ * @value 2
+ *
+ * @arg overlap
+ * @text Character and positional overlap
+ * @desc Generate avoidance of an already existing event or player position.
+ * @default 0
+ * @type select
+ * @option Do not judge
+ * @value 0
+ * @option Player and non-overlapping
+ * @value 1
+ * @option Events and non-overlapping
+ * @value 2
+ * @option Neither the event nor the player overlap
+ * @value 3
+ *
+ * @arg terrainTags
+ * @text Terrain Tag
+ * @desc Generate only for the specified terrain tag.
+ * @default []
+ * @type number[]
+ *
+ * @arg regions
+ * @text Region
+ * @desc Generate only for the specified region.
+ * @default []
+ * @type number[]
+ *
+ * @arg template
+ * @text Template Generation
+ * @desc Generate template events when enabled. TemplateEvent.js is required.
+ * @default false
+ * @type boolean
+ *
+ * @arg algorithm
+ * @text Generation Algorithm
+ * @desc How to determine the generated coordinates. If there are not many tiles that meet the criteria, the Find from the top left is faster.
+ * @default 0
+ * @type select
+ * @option Find at random locations (fast when there are many candidates for generating positions)
+ * @value 0
+ * @option Find them in order from the top left (fast if there are few candidates for the generated positions)
+ * @value 1
+ *
+ * @help EventReSpawn.js
+ *
+ * Copy and dynamically generate and place events on the map.
+ * Placement locations can be directly specified or randomly placed at locations that meet the criteria.
+ *
+ * The copied temporary events are completely deleted by the event command
+ * "Erase Event", freeing up space for objects and sprites to be used.
+ * Self Switches are managed individually and are initialized each time they are generated.
+ *
+ * Template events can be generated dynamically on the map when combined 
+ * with the separately published template event plugin(TemplateEvent.js).
+ *
+ * You need the base plugin "PluginCommonBase.js" to use this plugin.
+ * The "PluginCommonBase.js" is stored in the following folder under the installation folder of RPG Maker MZ.
+ * dlc/BasicResources/plugins/official
+ *
+ * User Agreement:
+ *  You may alter or redistribute the plugin without permission. There are no restrictions on usage format
+ *  (such as adult- or commercial-use only).
+ *  This plugin is now all yours.
+ */
+
+/*:ja
  * @plugindesc イベント動的生成プラグイン
  * @author トリアコンタン
  * @target MZ
