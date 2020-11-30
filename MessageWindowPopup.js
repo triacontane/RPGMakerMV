@@ -161,7 +161,7 @@
  * @max 2000
  *
  * @command POPUP_VALID
- * @text balloon window Enabling
+ * @text Enable balloon window
  * @desc Activate the speech balloon with the specified ID.
  *
  * @arg id
@@ -190,11 +190,11 @@
  * @value lower
  *
  * @command POPUP_INVALID
- * @text Disabling balloon window
+ * @text Disable balloon window
  * @desc Disable speech balloon window and return to normal window display.
  *
  * @command FREE_POPUP_VALID
- * @text Free balloon window Enabling
+ * @text Enable Free balloon window
  * @desc Enable speech balloon window with the display coordinates.
  *
  * @arg x
@@ -255,7 +255,7 @@
  * @value 3
  *
  * @command POPUP_ADJUST_POSITION
- * @text balloon window position adjustment
+ * @text Balloon window position adjustment
  * @desc Adjusts the display coordinates of the speech balloon window.
  *
  * @arg x
