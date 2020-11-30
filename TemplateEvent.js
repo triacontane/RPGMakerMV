@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.3 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.0.2 2020/09/24 固有イベントによる設定上書きのメモ欄が機能しない問題を修正
                   上書き対象項目『向き』を有効にして上書きすると、テンプレートイベントの向き固定の設定が解除されてしまう問題を修正
  1.0.1 2020/08/26 ベースプラグインの説明を追加
@@ -17,6 +18,273 @@
 =============================================================================*/
 
 /*:
+ * @target MZ
+ * @base PluginCommonBase
+ * @plugindesc Template Events
+ * @author Triacontane
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TemplateEvent.js
+ *
+ * @param TemplateMapId
+ * @text Template Map ID
+ * @desc Template event is a map ID where the template event exists.
+ * @default 1
+ * @type number
+ *
+ * @param KeepEventId
+ * @text Keep Event ID
+ * @desc Maintains the caller's event ID when calling a map event. The behavior changes when the target is "This Event".
+ * @default false
+ * @type boolean
+ *
+ * @param OverrideTarget
+ * @text Override Target
+ * @desc Set the override target for the specified event in the Note field (prioritize the setting of specific events over template events).
+ * @default
+ * @type struct<override>
+ *
+ * @param AutoOverride
+ * @text Auto Override
+ * @desc Override the settings of "OverrideTarget" without the need to set the override in the memo field.
+ * @default false
+ * @type boolean
+ *
+ * @param IntegrateNote
+ * @text Integrate Note
+ * @desc Merge or overwrite the Note fields of template events and unique events.
+ * @default 0
+ * @type select
+ * @option None
+ * @value 0
+ * @option Integrate
+ * @value 1
+ * @option Overwrite
+ * @value 2
+ *
+ * @command CALL_ORIGIN_EVENT
+ * @text Call origin event
+ * @desc Call the original event processing to replace it. After processing is complete, return to the original processing.
+ *
+ * @arg pageIndex
+ * @text Page Index
+ * @desc The page index of the event to be called. A value of 0 calls the same number as the page being run.
+ * @default 0
+ * @type number
+ *
+ * @command CALL_MAP_EVENT
+ * @text Call Map Event
+ * @desc Call the processing of map events.
+ *
+ * @arg pageIndex
+ * @text Page Index
+ * @desc The page index of the event to be called. A value of 0 calls the same number as the page being run.
+ * @default 0
+ * @type number
+ *
+ * @arg eventId
+ * @text Event ID
+ * @desc The ID of the event to be called. A value of 0 will target the event being executed.
+ * @default 0
+ * @type number
+ *
+ * @command SET_SELF_VARIABLE
+ * @text Self Variable Manipulation
+ * @desc Manipulate self variables.
+ *
+ * @arg index
+ * @text Index
+ * @desc The index of the self variable to be manipulated.
+ * @default 1
+ * @type number
+ *
+ * @arg type
+ * @text Type of Operation
+ * @desc Type of Operation.
+ * @default 0
+ * @type select
+ * @option  0 : Set
+ * @value 0
+ * @option  1 : Add
+ * @value 1
+ * @option  2 : Subtract
+ * @value 2
+ * @option  3 : Multiply
+ * @value 3
+ * @option  4 : Division
+ * @value 4
+ * @option  5 : Modulo
+ * @value 5
+ *
+ * @arg operand
+ * @text Setting value
+ * @desc The value to be set in the self variable.
+ * @default 0
+ *
+ * @command SET_RANGE_SELF_VARIABLE
+ * @text Set Range Self Variable
+ * @desc Set range self variable.
+ *
+ * @arg startIndex
+ * @text Start Index
+ * @desc The starting index of the self variable to be operated on.
+ * @default 1
+ * @type number
+ *
+ * @arg endIndex
+ * @text End Index
+ * @desc The end index of the self variable to be operated on.
+ * @default 1
+ * @type number
+ *
+ * @arg type
+ * @text Type of Operation
+ * @desc Type of Operation.
+ * @default 0
+ * @type select
+ *
+ * @arg operand
+ * @text Setting value
+ * @desc The value to be set in the self variable.
+ * @default 0
+ * @type select
+ *
+ * @help TemplateEvent.js[Template Event Plugin]
+ *
+ * Can be templated for general use.
+ * Template events should be defined on a specially prepared map.
+ * It can be replaced dynamically with template events simply 
+ * by making the prescribed description in the notes field of the actual event.
+ *
+ * You can also call the original event replaced from the template event.
+ * It is useful if you want to handle only some unique processing, such as treasure chests and place-moving events.
+ * Describe the event processing of the appearance and common parts of the event in a template event, and describe only the unique parts, 
+ * such as item acquisition and location destination specification, in the original event.
+ *
+ * It also provides the function to call any map event as a common event.
+ * You can specify an event to be called by ID and event name.
+ *
+ * Usage
+ * 1.Create a template map and place the template events.
+ *
+ * 2.Describe the memo field of the event you want to replace in the template event.
+ *   Both the ID and the event name can be specified.
+ * <TE:1>   Replaced by an event in the template map ID[1].
+ * <TE:aaa> Replaced by an event in the template map event name [aaa].
+ * <TE:\v[1]> Replaced by an event in the template map ID [value of variable [1]].
+ *
+ * In principle, all settings except the initial placement will be replaced by template event settings.
+ * If the memo field (*1) is written as an exception, any of the following settings will be overwritten by the unique event settings.
+ * -Image
+ * -Autonomous Movement
+ * -Options
+ * -Priority
+ * -Trigger
+ *
+ * *1 Write the following in the memo section of the unique event.
+ * <TEOverRide>
+ *
+ * -Self Variable Function
+ * You can define self variables (variables specific to that event) for an event.
+ * Operated from the plugin command, 
+ * it can be used as a "Show Text" and event appearance "Conditions".
+ * When used with "Show Text
+ * Control Characters"\sv[n](n:Index)" to view.
+ *
+ * When used with "Conditions"
+ * Make the target page's event command start with "Comment".
+ * And please specify the conditions in the following format.
+ * Multiple conditions can also be specified.
+ *
+ * \TE{Conditions}
+ *
+ * The "Conditions" are written in as JavaScript, control characters are available.
+ * Example
+ * \TE{\sv[1] >= 3}      # If the self variable [1] is greater than or equal to 3
+ * \TE{\sv[2] === \v[1]} # If the self variable [2] is equal to the variable [1]
+ * \TE{\sv[3] === 'AAA'} # If the self variable [3] is equal to 'AAA'
+ *
+ * When used in scripts such as "Conditional Branch"
+ * You can get the index self variable specified in the script below.
+ * this.getSelfVariable(n)
+ * Example
+ * this.getSelfVariable(1) !== 0 # If the self variable [1] is greater than or equal to 3
+ *
+ * You can use the control character \sv[n] in all plugin commands of this plugin.
+ *
+ * Script (call from event command "Script" or "Control Variables")
+ * Get the ID and name of a template event during a unique processing call.
+ *  this.character(0).getTemplateId();
+ *  this.character(0).getTemplateName();
+ *
+ * Get the self variable for the specified index.
+ *  this.getSelfVariable(index);
+ *
+ * Set the value to a self variable.
+ * This script can also be executed in the "Set Movement Route".
+ * If formulaFlg is set to true, evaluate operand as a formula.
+ *  this.controlSelfVariable(index, type, operand, formulaFlg);
+ *
+ * Set the value to a self variable in bulk.
+ * This script can also be executed in the "Set Movement Route".
+ *  this.controlSelfVariableRange(start, end, type, operand, formulaFlg);
+ *
+ * Manipulate external event self variables.
+ *  $gameSelfSwitches.setVariableValue([MapID, EventID, INDEX], Value);
+ *
+ * Get the self variable of an external event.
+ *  $gameSelfSwitches.getVariableValue([MapID, EventID, INDEX]);
+ *
+ * When combined with "SAN_MapGenerator.js"
+ * Define this plugin under "SAN_MapGenerator.js".
+ *
+ * You need the base plugin "PluginCommonBase.js" to use this plugin.
+ * The "PluginCommonBase.js" is stored in the following folder under the installation folder of RPG Maker MZ.
+ * dlc/BasicResources/plugins/official
+ *
+ * User Agreement:
+ *  You may alter or redistribute the plugin without permission. There are no restrictions on usage format
+ *  (such as adult- or commercial-use only).
+ *  This plugin is now all yours.
+ */
+
+/*~struct~override:
+ *
+ * @param Image
+ * @text Image
+ * @desc The event image and image index.
+ * @type boolean
+ * @default false
+ *
+ * @param Direction
+ * @text Direction
+ * @desc The direction of the event and the animation pattern.
+ * @type boolean
+ * @default false
+ *
+ * @param Move
+ * @text Autonomous Movement
+ * @desc Autonomous movement of the event
+ * @type boolean
+ * @default false
+ *
+ * @param Priority
+ * @text Priority
+ * @desc The priority of the event.
+ * @type boolean
+ * @default false
+ *
+ * @param Trigger
+ * @text Trigger
+ * @desc The trigger of the event.
+ * @type boolean
+ * @default false
+ *
+ * @param Option
+ * @text Option
+ * @desc The option of the event.
+ * @type boolean
+ * @default false
+ */
+/*:ja
  * @target MZ
  * @base PluginCommonBase
  * @plugindesc テンプレートイベントプラグイン
@@ -248,6 +516,44 @@
  */
 
 /*~struct~override:
+ *
+ * @param Image
+ * @text Image
+ * @desc The event image and image index.
+ * @type boolean
+ * @default false
+ *
+ * @param Direction
+ * @text Direction
+ * @desc The direction and animation pattern of the event.
+ * @type boolean
+ * @default false
+ *
+ * @param Move
+ * @text Autonomous Movement
+ * @desc Autonomous movement of the event
+ * @type boolean
+ * @default false
+ *
+ * @param Priority
+ * @text Priority
+ * @desc The priority of the event.
+ * @type boolean
+ * @default false
+ *
+ * @param Trigger
+ * @text Trigger
+ * @desc The trigger of the event.
+ * @type boolean
+ * @default false
+ *
+ * @param Option
+ * @text Option
+ * @desc The option of the event.
+ * @type boolean
+ * @default false
+ */
+/*~struct~override:ja
  *
  * @param Image
  * @text 画像
