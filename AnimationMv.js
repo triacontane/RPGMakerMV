@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.2 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.2.1 2020/11/07 1.2.0の修正によりコピー用のプロジェクトを指定しないとエラーになる問題を修正
  1.2.0 2020/10/16 コピー処理を非同期処理に変更。MVプロジェクトからの自動移行が高速になりました。
                   VisuMZ_1_BattleCore.js利用時、画面全体に表示するアニメーションが左上に表示されるバグを代わりに修正
@@ -19,6 +20,52 @@
 =============================================================================*/
 
 /*:
+ * @target MZ
+ * @plugindesc MV Animation Plugin
+ * @author Triacontane
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AnimationMv.js
+ *
+ * @param AnimationList
+ * @text Animation List
+ * @desc The list of the animation material to be used. Registering it will exclude it from the "Exclude unused files" option.
+ * @default []
+ * @dir img/animations/
+ * @type file[]
+ *
+ * @param MvProjectPathText
+ * @text The absolute path of MV project.
+ * @desc The path of the MV project to edit the animation. If you leave it empty, auto-copying will be disabled.
+ * @default
+ *
+ * @param NoCopyImageFile
+ * @text Images do not copy
+ * @desc No longer auto-copy animated image files. Useful if the copying is taking a long time.
+ * @default false
+ * @type boolean
+ *
+ * @help AnimationMv.js
+ * It can be used in conjunction with the new MZ playback method with the MV animation playback method.
+ *
+ * Editing the animation data in the editor of RPGMaker MV
+ * Specify the path to your MV project from the parameter.
+ * During test play, the images under "img/animations" and "data/Animations.json" 
+ * will be stored in it will be copied automatically into your MZ project.
+ * Animations.json" will be copied to "mv/Animations.json".
+ *
+ * Particle Effects, Sound Effects, and Flash in the MZ database.
+ * If it is created with everything empty (i.e., newly created), it will play the animation of the MV.
+ *
+ * This plugin uses the global variable "$dataMvAnimations".
+ *
+ * User Agreement:
+ *  You may alter or redistribute the plugin without permission. There are no restrictions on usage format
+ *  (such as adult- or commercial-use only).
+ *  This plugin is now all yours.
+ */
+
+/*:ja
  * @target MZ
  * @plugindesc MVアニメーションプラグイン
  * @author トリアコンタン
