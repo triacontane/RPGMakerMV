@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.0.0 2020/06/15 MV版から流用作成
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -23,16 +24,15 @@
  *
  * @help EventMovableRange.js
  *
- * イベントの移動可能な範囲を制限します。
- * 初期配置から制限を超えて移動しようとすると移動できなくなります。
- * イベントのメモ欄に以下の通り指定してください。
- * <移動制限:u, d, l, r>
+ * Limit the movable range of events.
+ * If you try to move beyond the limits from the initial placement, you will not be able to move.
+ * Please specify the following in the event Note section
  * <Movable:u, d, l, r>
- *  u : 上方向への移動可能タイル数
- *  d : 下方向への移動可能タイル数
- *  l : 左方向への移動可能タイル数
- *  r : 右方向への移動可能タイル数
- * -1など負の値を指定すると、指定方向への移動は無制限になります。
+ *  u : The number of movable tiles in the upward direction
+ *  d : The number of movable tiles in the downward direction
+ *  l : The number of movable tiles in the left direction
+ *  r : The number of movable tiles in the right direction
+ * If you specify a negative value, such as -1, the movement in the specified direction will be unlimited.
  *
  * This plugin is released under the MIT License.
  */
