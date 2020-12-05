@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2020/12/06 1.6.0の機能追加で最後のセルの最後のフレームまで到達したときに完了扱いにするよう修正
 // 1.6.0 2020/10/24 ピクチャのアニメーション完了まで次の命令に移行しない設定を追加
 // 1.5.10 2020/01/30 現在のセル番号を取得できるスクリプトのヘルプを追加
 // 1.5.9 2020/01/26 アニメーション中のピクチャを別のピクチャに差し替えて表示したとき、クロスフェード用の半透明ピクチャが残ってしまう場合がある不具合を修正
@@ -501,6 +502,8 @@
             this.updateFading();
         } else if (this.hasAnimationFrame() && this.isActive()) {
             this.updateAnimationFrame();
+        } else if (this._lastFrameCount > 0) {
+            this._lastFrameCount--;
         }
     };
 
@@ -515,6 +518,7 @@
             this.playCellSe();
             if (this.isEndFirstLoop() && !this._loopFlg) {
                 this._animationFlg = false;
+                this._lastFrameCount = this._frameNumber;
             }
         }
     };
@@ -580,7 +584,7 @@
     };
 
     Game_Picture.prototype.isAnimationPlaying = function() {
-        return this.hasAnimationFrame() || this.isFading();
+        return this.hasAnimationFrame() || this.isFading() || this._lastFrameCount > 0;
     };
 
     Game_Picture.prototype.isNeedFade = function() {
