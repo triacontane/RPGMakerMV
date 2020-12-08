@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.4 2020/12/08 メモ欄の統合が正常に機能しない不具合を修正
  1.0.3 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.0.2 2020/09/24 固有イベントによる設定上書きのメモ欄が機能しない問題を修正
                   上書き対象項目『向き』を有効にして上書きすると、テンプレートイベントの向き固定の設定が解除されてしまう問題を修正
@@ -874,8 +875,9 @@ let $dataTemplateEvents = null;
             this._templateId    = templateId;
             this._templateEvent = templateEvent;
             this._override      = param.AutoOverride || !!PluginManagerEx.findMetaValue(event, ['TEOverRide', 'TE上書き']);
-            if (param.IntegrateNote > 0) {
-                this.integrateNote(event, param.IntegrateNote);
+            const type = parseInt(param.IntegrateNote);
+            if (type > 0) {
+                this.integrateNote(event, type);
             }
         } else {
             if (templateId) {
