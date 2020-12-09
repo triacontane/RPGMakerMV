@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.3.0 2020/12/09 用語リスト表示でアイコンを非表示にできる設定を追加
 // 3.2.0 2020/11/22 用語単位でページ番号の表示、非表示を設定できる機能を追加
 // 3.1.0 2020/11/21 ページ番号を表示する機能を追加
 // 3.0.2 2020/09/17 シーンクラスを除くウィンドウクラスの外部からの参照禁止
@@ -992,6 +993,12 @@
  * @text 未入手アイテムの表示
  * @desc 未入手アイテムを指定した名前（？？？等）で表示します。指定しない場合この機能は無効になります。
  * @default
+ *
+ * @param HideIcon
+ * @text アイコン非表示
+ * @desc 用語アイテムのデータベース上の設定にかかわらず、アイコンを非表示にします。
+ * @default false
+ * @type boolean
  */
 
 (function() {
@@ -1471,6 +1478,10 @@
         return this._glossarySetting.GlossaryListWidth || 160;
     };
 
+    Game_Party.prototype.isHideGlossaryIcon = function() {
+        return this._glossarySetting.HideIcon;
+    };
+
     //=============================================================================
     // Game_Troop
     //  敵キャラの名前を自動登録します。
@@ -1940,18 +1951,27 @@
     };
 
     Window_GlossaryList.prototype.drawItemName = function(item, x, y, width) {
-        if (item) {
-            var iconBoxWidth = item.iconIndex > 0 ? ImageManager.iconWidth + 4 : 0;
-            if ($gameParty.hasGlossary(item)) {
+        if (!item) {
+            return;
+        }
+        var iconBoxWidth = this.isShowIcon(item) ? Window_Base._iconWidth + 4 : 0;
+        var name;
+        if ($gameParty.hasGlossary(item)) {
+            if (iconBoxWidth > 0) {
                 this.drawIcon(item.iconIndex, x + 2, y + 2);
             }
-            this.setGlossaryColor(item);
-            var notYetName = $gameParty.getTextItemNotYet();
-            var name       = $gameParty.hasGlossary(item) ? item.name : notYetName;
-            this.drawTextExIfNeed(name, x + iconBoxWidth, y, width - iconBoxWidth);
-            this.changePaintOpacity(1);
-            this.resetTextColor();
+            name = item.name;
+        } else {
+            name = $gameParty.getTextItemNotYet();
         }
+        this.setGlossaryColor(item);
+        this.drawTextExIfNeed(name, x + iconBoxWidth, y, width - iconBoxWidth);
+        this.changePaintOpacity(1);
+        this.resetTextColor();
+    };
+
+    Window_GlossaryList.prototype.isShowIcon = function(item) {
+        return item.iconIndex > 0 && !$gameParty.isHideGlossaryIcon();
     };
 
     Window_GlossaryList.prototype.setGlossaryColor = function(item) {
