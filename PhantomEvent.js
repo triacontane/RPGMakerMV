@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.1 2020/12/09 マップ改編系プラグインとの一般的な競合対策を追加
  1.4.0 2019/01/27 本来の設定とは逆に、近づくほど透明度を上げられる機能を追加
  1.3.0 2018/11/18 イベントとの距離が一定以内の場合にセルフスイッチをONにする機能を追加
  1.2.1 2018/11/11 一部、無駄な処理を行っていたのを修正
@@ -179,6 +180,9 @@
      * @returns {String} meta value
      */
     var getMetaValues = function(object, names) {
+        if (!object || !object.meta) {
+            return undefined;
+        }
         var metaValue;
         names.some(function(name) {
             metaValue = getMetaValue(object, name);
