@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/12/09 英語ヘルプを追加
+                  決定ボタンのみを許容する設定を追加
  1.0.0 2020/12/09 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -17,7 +19,38 @@
  * @plugindesc PressAnyButtonPlugin
  * @author triacontane
  *
- * @help PressAnyButton.js
+ * @param startText
+ * @text Start Text
+ * @desc The text to display to prompt you to start.
+ * @default Press Any Button
+ *
+ * @param soundEffect
+ * @text Start SE
+ * @desc The sound effect information at the start. If not specified, the system sound effect decision is played.
+ * @default
+ * @type struct<AudioSe>
+ *
+ * @param font
+ * @text Font
+ * @desc The font of the start string. (Only if specified)
+ * @default
+ * @type struct<Font>
+ *
+ * @param adjustY
+ * @desc Correct the display Y coordinate of the start string.
+ * @default 0
+ * @min -9999
+ * @max 9999
+ * @type number
+ *
+ * @param decisionOnly
+ * @desc Display the window only when the decision button is pressed.
+ * @default false
+ * @type boolean
+ *
+ * Show the text without immediately bringing up a
+ * command window in the title screen.
+ * Press any key, and a normal window will appear.
  *
  * This plugin is released under the MIT License.
  */
@@ -41,6 +74,20 @@
  * @desc スタート文字列のフォント名です。(指定する場合のみ)
  * @default
  * @type struct<Font>
+ *
+ * @param adjustY
+ * @text Y座標調整値
+ * @desc スタート文字列の表示Y座標を補正します。
+ * @default 0
+ * @min -9999
+ * @max 9999
+ * @type number
+ *
+ * @param decisionOnly
+ * @text 決定ボタンのみ許容
+ * @desc 決定ボタンが押されたときのみウィンドウを表示します。
+ * @default false
+ * @type boolean
  *
  * @help PressAnyButton.js
  *
@@ -161,7 +208,7 @@
         if (this._commandWindowClose) {
             this._commandWindow.openness -= 64;
         }
-        if (!this._seledted && this.isTriggered()) {
+        if (!this._seledted && this.isAnyButtonTriggered()) {
             this.onPressStart();
         }
     };
@@ -197,49 +244,55 @@
         this.addChild(this._gameStartSprite);
     };
 
-    Scene_Title.prototype.isTriggered = function() {
-        return Object.keys(Input.keyMapper).some(function(keyCode) {
-                return Input.isTriggered(Input.keyMapper[keyCode]);
-            }.bind(this)) ||
-            Object.keys(Input.gamepadMapper).some(function(keyCode) {
-                return Input.isTriggered(Input.gamepadMapper[keyCode]);
-            }.bind(this)) || TouchInput.isTriggered();
+    Scene_Title.prototype.isAnyButtonTriggered = function() {
+        if (param.decisionOnly) {
+            return Input.isTriggered('ok') || TouchInput.isTriggered();
+        } else {
+            return Input.isAnyTriggered() || Input.isAnyGamePadTriggered() || TouchInput.isTriggered();
+        }
+    };
+
+    Input.isAnyTriggered = function() {
+        return Object.keys(this.keyMapper).some(function(keyCode) {
+            return this.isTriggered(this.keyMapper[keyCode]);
+        }.bind(this));
+    };
+
+    Input.isAnyGamePadTriggered = function() {
+        return Object.keys(this.gamepadMapper).some(function(keyCode) {
+            return this.isTriggered(this.gamepadMapper[keyCode]);
+        }.bind(this));
     };
 
     //=============================================================================
     // Sprite_GameStart
     //  ゲームスタート文字列を描画するスプライトを表示します。
     //=============================================================================
-    function Sprite_GameStart() {
-        this.initialize.apply(this, arguments);
-    }
-
-    Sprite_GameStart.DEFALT_FONT = {size: 52, bold: false, italic: true, color: 'rgba(255,255,255,1.0)'};
-
-    Sprite_GameStart.prototype             = Object.create(Sprite_Base.prototype);
-    Sprite_GameStart.prototype.constructor = Sprite_GameStart;
-
-    Sprite_GameStart.prototype.initialize = function() {
-        Sprite_Base.prototype.initialize.call(this);
-        this.y             = Graphics.height - 160 + (param.adjustY || 0);
-        this.opacity_shift = -2;
-    };
-
-    Sprite_GameStart.prototype.draw = function() {
-        var font    = param.font || Sprite_GameStart.DEFALT_FONT;
-        this.bitmap = new Bitmap(Graphics.width, font.size);
-        if (font.name) {
-            this.bitmap.fontFace = fontFace;
+    class Sprite_GameStart extends Sprite {
+        constructor() {
+            super();
+            this.y = Graphics.height - 160 + (param.adjustY || 0);
+            this._opacityShift = -2;
         }
-        this.bitmap.fontSize   = font.size;
-        this.bitmap.fontItalic = font.italic;
-        this.bitmap.fontBold   = font.bold;
-        this.bitmap.textColor  = font.color;
-        this.bitmap.drawText(param.startText, 0, 0, Graphics.width, font.size, 'center');
-    };
 
-    Sprite_GameStart.prototype.update = function() {
-        this.opacity += this.opacity_shift;
-        if (this.opacity <= 128 || this.opacity >= 255) this.opacity_shift *= -1;
-    };
+        draw() {
+            var font = param.font || {size: 52, bold: false, italic: true, color: 'rgba(255,255,255,1.0)'};
+            this.bitmap = new Bitmap(Graphics.width, font.size);
+            if (font.name) {
+                this.bitmap.fontFace = fontFace;
+            }
+            this.bitmap.fontSize   = font.size;
+            this.bitmap.fontItalic = font.italic;
+            this.bitmap.fontBold   = font.bold;
+            this.bitmap.textColor  = font.color;
+            this.bitmap.drawText(param.startText, 0, 0, Graphics.width, font.size, 'center');
+        }
+
+        update() {
+            this.opacity += this._opacityShift;
+            if (this.opacity <= 128 || this.opacity >= 255) {
+                this._opacityShift *= -1;
+            }
+        }
+    }
 })();
