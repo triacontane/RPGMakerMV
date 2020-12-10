@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/12/11 MZ向けに微調整
  1.1.0 2020/12/09 英語ヘルプを追加
                   決定ボタンのみを許容する設定を追加
  1.0.0 2020/12/09 初版
@@ -17,6 +18,9 @@
 
 /*:
  * @plugindesc PressAnyButtonPlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PressAnyButton.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @param startText
@@ -56,6 +60,9 @@
  */
 /*:ja
  * @plugindesc PressAnyButtonプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PressAnyButton.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param startText
@@ -160,37 +167,14 @@
 (function() {
     'use strict';
 
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('PressAnyButton');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Scene_Title
     //  コマンドウィンドウを無効化し、代わりにゲームスタート文字列を表示させます。
     //=============================================================================
-    var _Scene_TitleCreate       = Scene_Title.prototype.create;
+    const _Scene_TitleCreate       = Scene_Title.prototype.create;
     Scene_Title.prototype.create = function() {
         _Scene_TitleCreate.apply(this, arguments);
         this._commandWindow.setHandler('cancel', this.onCancelCommand.bind(this));
@@ -198,7 +182,7 @@
         this.onCancelCommand();
     };
 
-    var _Scene_TitleUpdate       = Scene_Title.prototype.update;
+    const _Scene_TitleUpdate       = Scene_Title.prototype.update;
     Scene_Title.prototype.update = function() {
         _Scene_TitleUpdate.apply(this, arguments);
         this.updatePressAnyButton();
@@ -276,7 +260,7 @@
         }
 
         draw() {
-            var font = param.font || {size: 52, bold: false, italic: true, color: 'rgba(255,255,255,1.0)'};
+            const font = param.font || {size: 52, bold: false, italic: true, color: 'rgba(255,255,255,1.0)'};
             this.bitmap = new Bitmap(Graphics.width, font.size);
             if (font.name) {
                 this.bitmap.fontFace = fontFace;
