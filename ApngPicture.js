@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.1.1 2020/12/11 キャッシュ方針を「キャッシュしない」以外に設定すると消去にエラーが起きる場合がある問題を修正
  2.1.0 2020/11/11 APNGのアニメーションを停止、全停止できるスイッチを追加
  2.0.1 2020/11/03 プラグイン上でapng画像の高さを正しく取得できるよう修正
  2.0.0 2020/10/29 MZで動作するよう全面的に修正
@@ -862,7 +863,11 @@
 
     Sprite.prototype.destroyApngIfNeed = function() {
         if (this._apngSprite) {
-            this.destroyApng();
+            if (this._apngSprite.pixiApngOption.CachePolicy === 0) {
+                this.destroyApng();
+            } else {
+                this.removeChild(this._apngSprite);
+            }
         }
     };
 
