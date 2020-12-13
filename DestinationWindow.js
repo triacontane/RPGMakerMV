@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2020/12/13 非表示状態でメニューからマップへ戻ると1フレームだけ行動目標が表示される不具合を修正
 // 2.0.2 2020/10/12 フォント設定が効かない不具合を修正
 // 2.0.1 2020/10/11 言語設定によってアイコン設定の型が違う問題を修正
 // 2.0.0 2020/10/11 MZ向けに実装を修正
@@ -476,8 +477,8 @@
         this._text      = '';
         this._textList  = [];
         this._iconIndex = 0;
-        this.update();
         this.opacity = this.isVisible() ? 255 : 0;
+        this.update();
     };
 
     Window_Destination.prototype.loadWindowskin = function() {
