@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2020/12/16 指定対象外のウィンドウで余計な処理が実行されてしまう問題を修正
 // 2.0.2 2020/10/15 指定可能なウィンドウに戦闘画面のステータスウィンドウを追加
 // 2.0.1 2020/08/22 カスタムメニュープラグインで作成したウィンドウ背景を変えられる機能を追加
 // 2.0.0 2020/08/13 MZ対応版作成
@@ -292,7 +293,7 @@
     Window.prototype._createAllParts = function() {
         _Window__createAllParts.apply(this, arguments);
         this._backImageDataList = this.initBackImageData();
-        if (this._backImageDataList.length >= 0) {
+        if (this._backImageDataList.length > 0) {
             this._createBackImage();
         }
     };
