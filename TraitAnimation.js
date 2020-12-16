@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2020/12/16 アニメーション解放処理を微修正
  1.1.0 2020/12/15 MZ版として全面的に修正
  1.0.0 2020/12/06 初版
 ----------------------------------------------------------------------------
@@ -109,7 +110,7 @@
     const _Spriteset_Base_updateAnimations = Spriteset_Base.prototype.updateAnimations;
     Spriteset_Base.prototype.updateAnimations = function() {
         _Spriteset_Base_updateAnimations.apply(this, arguments);
-        for (const sprite of this._traitAnimationSprites) {
+        for (const sprite of this._traitAnimationSprites.clone()) {
             if (!sprite.isPlaying()) {
                 this.removeAnimation(sprite);
                 this._traitAnimationSprites.remove(sprite);
