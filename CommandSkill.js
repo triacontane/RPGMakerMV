@@ -17,7 +17,7 @@
  * @plugindesc コマンドスキルプラグイン
  * @target MZ
  * @base PluginCommonBase
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SkillCommand.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CommandSkill.js
  * @author トリアコンタン
  *
  * @param index
