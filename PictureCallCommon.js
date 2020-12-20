@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2020/12/20 イベントごとに無効スイッチを指定できる機能を追加
 // 1.0.0 2020/12/17 MZ版として新規作成
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -28,7 +29,7 @@
  *
  * @param InvalidSwitchId
  * @text 無効スイッチ
- * @desc 指定した番号のスイッチがONになっている場合、すべてのピクチャタッチが無効になります。
+ * @desc 指定した番号のスイッチがONになっている場合、すべてのピクチャイベントが無効になります。
  * @default 0
  * @type switch
  * 
@@ -69,8 +70,8 @@
  * @arg switchId
  * @text スイッチ番号
  * @desc イベント発生時にONになるスイッチです。
- * @default 1
- * @type common_event
+ * @default 0
+ * @type switch
  *
  * @arg buttonBind
  * @text ボタンバインド
@@ -120,11 +121,11 @@
  * @option 13:フリック(マウス押下状態で指定距離以上動かす)した場合
  * @value 13
  *
- * @arg autoRemove
- * @text 自動解除
- * @desc ピクチャイベントが起動したタイミングで登録を解除します。
- * @default false
- * @type boolean
+ * @arg invalidSwitchId
+ * @text 無効スイッチ
+ * @desc 指定した番号のスイッチがONになっている場合、ピクチャイベントが無効になります。
+ * @default 0
+ * @type switch
  *
  * @command REMOVE_PICTURE_EVENT
  * @text ピクチャイベント解除
@@ -379,7 +380,8 @@
 
         isValidTrigger(handler, trigger) {
             const eventData = $gameScreen.findPictureEvent(this._pictureId, trigger);
-            return handler && eventData && handler.call(this);
+            return  eventData && !$gameSwitches.value(eventData.invalidSwitchId) &&
+                handler && handler.call(this);
         }
 
         fireTouchEvent(eventData, trigger) {
@@ -394,9 +396,6 @@
                 this._outMouse = false;
             }
             this.applyTouchEvent(eventData);
-            if (eventData.autoRemove) {
-                $gameScreen.removePictureEvent(this._pictureId, trigger);
-            }
         }
 
         applyTouchEvent(eventData) {
