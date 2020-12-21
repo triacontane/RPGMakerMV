@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2020/12/21 スクリプト$gameScreen.showPictureを使って未キャッシュのピクチャを表示しようとすると画像が表示されなくなる問題を修正
+//                  セーブデータロード時にエラーになる問題を修正
 // 1.1.0 2020/12/20 イベントごとに無効スイッチを指定できる機能を追加
 // 1.0.0 2020/12/17 MZ版として新規作成
 // ----------------------------------------------------------------------------
@@ -256,26 +258,26 @@
      */
     class Game_PictureEventMap {
         constructor() {
-            this._map = new Map();
+            this._map = {}
         }
 
         append(pictureId, trigger, option) {
-            this._map.set(this.generateKey(pictureId, trigger), option);
+            this._map[this.generateKey(pictureId, trigger)] = option;
         }
 
         find(pictureId, trigger) {
-            return this._map.get(this.generateKey(pictureId, trigger));
+            return this._map[this.generateKey(pictureId, trigger)];
         }
 
         remove(pictureId, trigger) {
-            return this._map.delete(this.generateKey(pictureId, trigger));
+            delete this._map[this.generateKey(pictureId, trigger)];
         }
 
         removeById(pictureId) {
             const regExp = new RegExp(`^${pictureId}`);
-            this._map.forEach((value, key, map) => {
+            Object.keys(this._map).forEach(key => {
                 if (key.match(regExp)) {
-                    map.delete(key);
+                    delete this._map[key];
                 }
             });
         }
@@ -284,6 +286,7 @@
             return `${pictureId}:${trigger}`;
         }
     }
+    window.Game_PictureEventMap = Game_PictureEventMap;
 
     //=============================================================================
     // Sprite_Picture
@@ -419,7 +422,7 @@
 
         isOnPicturePos(x = TouchInput.x, y = TouchInput.y) {
             const pic = this._picture;
-            if (!pic.bitmap || pic.scale.x === 0 || pic.scale.y === 0) {
+            if (!pic.bitmap || !pic.bitmap.isReady() || pic.scale.x === 0 || pic.scale.y === 0) {
                 return false;
             }
             if (this.isTouchPosInFrameWindow()) {
