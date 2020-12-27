@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.0.0 2020/12/28 MZ向けに実装を修正
  1.1.3 2020/05/24 反射したときのステータスウィンドウへのダメージ反映を、反射エフェクト後に変更
  1.1.2 2020/05/24 魔法攻撃扱いの通常攻撃を反射するとエラーになる問題を修正
  1.1.1 2020/05/24 ヘルプとコードを微修正
@@ -19,7 +20,9 @@
 
 /*:
  * @plugindesc 反射アニメーションプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/blob/mz_master/ReflectionAnimation.js
+ * @author トリアコンタン
  *
  * @param animationId
  * @text アニメーション番号
@@ -107,6 +110,9 @@
         _Window_BattleLog_displayReflection.apply(this, arguments);
         this.push('showAnimationAndWait', target, [this._relectionTarget], this._relectionItem.animationId);
         this.push('requestRefreshStatus');
+        if (param.wait) {
+            this.push('waitForEffect');
+        }
     };
 
     Window_BattleLog.prototype.requestRefreshStatus = function() {
@@ -116,7 +122,7 @@
     Window_BattleLog.prototype.showAnimationAndWait = function(subject, targets, animationId) {
         this.showAnimation(subject, targets, animationId);
         var animation = $dataAnimations[animationId];
-        if (animation) {
+        if (animation && animation.frames) {
             // 再生レートを変更している場合、ここを変更する。(変更後の再生レートを動的かつ安全に取得することは困難)
             this._waitCount = animation.frames.length * 4;
         }
