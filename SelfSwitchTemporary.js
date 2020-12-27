@@ -1,11 +1,13 @@
 //=============================================================================
 // SelfSwitchTemporary.js
 // ----------------------------------------------------------------------------
-// (C)2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2020/12/25 解除タイミングをプラグインコマンドで決められる機能を追加
+//                  メモ欄の設定なしで必ず解除されるセルフスイッチを指定できる機能を追加
 // 1.0.1 2018/03/16 セルフスイッチが切り替わった際、イベントページが切り替わらない問題を修正
 // 1.0.0 2017/04/26 初版
 // ----------------------------------------------------------------------------
@@ -15,36 +17,69 @@
 //=============================================================================
 
 /*:
- * @plugindesc SelfSwitchTemporaryPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc SelfSwitchTemporary
+ * @author triacontane
  *
- * @help 場所移動時に自働で初期化される一時セルフスイッチを定義できます。
- * イベントのメモ欄に以下の通り記入してください。
+ * @param clearTransfer
+ * @desc The self-switch is automatically released when the location is moved.
+ * @default true
+ * @type boolean
  *
- * <SST_Switch:A> # 移動時にセルフスイッチ「A」を解除
- * <SST_Switch>   # 移動時にセルフスイッチを全て解除
+ * @param defaultTemporary
+ * @desc  A self-switch that is treated as a temporary self-switch even if it is not specified in the memo field.
+ * @default []
+ * @type select[]
+ * @option A
+ * @option B
+ * @option C
+ * @option D
  *
- * セルフスイッチの解除は、当該マップに入り直した段階で行われます。
+ * @help You can define a temporary self-switch that will be
+ * automatically released.
+ * Please fill in the memo field of the event as follows
  *
- * このプラグインにはプラグインコマンドはありません。
+ * <SST_Switch:A,B>   # Release A,B
+ * <SST_Switch>       # Release All
+ *
+ * It will be automatically deactivated when the
+ * following plug-in command is executed.
+ *
+ * CLEAR_TEMPORARY_SELF_SWITCH
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 一時セルフスイッチプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
  *
- * @help 場所移動時に自働で初期化される一時セルフスイッチを定義できます。
+ * @param clearTransfer
+ * @text 場所移動時に自動解除
+ * @desc 場所移動したときにセルフスイッチを自動で解除します。
+ * @default true
+ * @type boolean
+ *
+ * @param defaultTemporary
+ * @text デフォルト一時スイッチ
+ * @desc メモ欄に指定がなくても一時セルフスイッチとして扱うセルフスイッチです。全イベントに適用されるので注意してください。
+ * @default []
+ * @type select[]
+ * @option A
+ * @option B
+ * @option C
+ * @option D
+ *
+ * @help 自動で解除される一時的なセルフスイッチを定義できます。
  * イベントのメモ欄に以下の通り記入してください。
  *
- * <SST_スイッチ:A,B> # 移動時にセルフスイッチ「A」「B」を解除
+ * <SST_スイッチ:A,B> # セルフスイッチ「A」「B」を自動解除
  * <SST_Switch:A,B>   # 同上
- * <SST_スイッチ>     # 移動時にセルフスイッチを全て解除
+ * <SST_スイッチ>     # セルフスイッチを全て自動解除
  * <SST_Switch>       # 同上
  *
- * セルフスイッチの解除は、当該マップに入り直した段階で行われます。
+ * 以下のプラグインコマンドを実行したタイミングで自動解除されます。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * 一時セルフスイッチ解除
+ * CLEAR_TEMPORARY_SELF_SWITCH
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -82,44 +117,97 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) return text;
+        if (String(text) !== text) return text;
         var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
 
-    var isNotAString = function(args) {
-        return String(args) !== args;
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
 
-    //=============================================================================
-    // Game_Map
-    //  セットアップ時に一時セルフスイッチを解除します。
-    //=============================================================================
+    var param = createPluginParameter('SelfSwitchTemporary');
+
+    /**
+     * Game_Interpreter
+     * プラグインコマンドを追加定義します。
+     */
+    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+        _Game_Interpreter_pluginCommand.apply(this, arguments);
+        if (command === 'CLEAR_TEMPORARY_SELF_SWITCH' || command === '一時セルフスイッチ解除') {
+            $gameSelfSwitches.clearTemporary();
+        }
+    };
+
+    /**
+     * Game_SelfSwitches
+     */
+    Game_SelfSwitches.prototype.appendTemporary = function(mapId, eventId, type) {
+        if (!this._temporaryList) {
+            this._temporaryList = {};
+        }
+        this._temporaryList[[mapId, eventId, type]] = true;
+    };
+
+    Game_SelfSwitches.prototype.clearTemporary = function() {
+        if (!this._temporaryList) {
+            return;
+        }
+        Object.keys(this._temporaryList).forEach(function(key) {
+            this.setValue(key, false);
+        }, this);
+    };
+
+    /**
+     * Game_Map
+     */
     var _Game_Map_setupEvents = Game_Map.prototype.setupEvents;
     Game_Map.prototype.setupEvents = function() {
+        if (param.clearTransfer) {
+            $gameSelfSwitches.clearTemporary();
+        }
         _Game_Map_setupEvents.apply(this, arguments);
         this.events().forEach(function(event) {
-            event.clearTemporarySelfSwitchIfNeed();
+            event.addTemporarySelfSwitch();
         });
     };
 
-    //=============================================================================
-    // Game_Event
-    //  セットアップ時に一時セルフスイッチを解除します。
-    //=============================================================================
-    Game_Event.prototype.clearTemporarySelfSwitchIfNeed = function() {
-        var selfSwitchTypes = getMetaValues(this.event(), ['Switch', 'スイッチ']);
-        if (!selfSwitchTypes) return;
-        this.clearTemporarySelfSwitch(selfSwitchTypes === true ? ['A', 'B', 'C', 'D'] : getArgArrayString(selfSwitchTypes));
+    /**
+     * Game_Event
+     */
+    Game_Event.prototype.addTemporarySelfSwitch = function() {
+        var switchList = this.findTemporarySelfSwitch();
+        if (!switchList) {
+            return;
+        }
+        switchList.forEach(function(type) {
+            $gameSelfSwitches.appendTemporary($gameMap.mapId(), this.eventId(), type.toUpperCase());
+        }, this);
     };
 
-    Game_Event.prototype.clearTemporarySelfSwitch = function(selfSwitchTypes) {
-        var mapId = $gameMap.mapId();
-        var eventId = this.eventId();
-        selfSwitchTypes.forEach(function(selfSwitchType) {
-            $gameSelfSwitches.setValue([mapId, eventId, selfSwitchType.toUpperCase()], false);
-        });
-        this.refresh();
+    Game_Event.prototype.findTemporarySelfSwitch = function() {
+        var metaValue = getMetaValues(this.event(), ['Switch', 'スイッチ']);
+        if (!metaValue) {
+            return null;
+        }
+        var list = metaValue === true ? ['A', 'B', 'C', 'D'] : getArgArrayString(metaValue);
+        return param.defaultTemporary ? list.concat(param.defaultTemporary) : list;
     };
 })();
 
