@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2020/12/27 MZ用に修正
 // 2.0.0 2020/12/25 解除タイミングをプラグインコマンドで決められる機能を追加
 //                  メモ欄の設定なしで必ず解除されるセルフスイッチを指定できる機能を追加
 // 1.0.1 2018/03/16 セルフスイッチが切り替わった際、イベントページが切り替わらない問題を修正
@@ -18,6 +19,9 @@
 
 /*:
  * @plugindesc SelfSwitchTemporary
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SelfSwitchTemporary.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @param clearTransfer
@@ -34,22 +38,26 @@
  * @option C
  * @option D
  *
+ * @command CLEAR_TEMPORARY_SELF_SWITCH
+ * @desc Release all self switch.
+ *
  * @help You can define a temporary self-switch that will be
  * automatically released.
  * Please fill in the memo field of the event as follows
  *
- * <SST_Switch:A,B>   # Release A,B
- * <SST_Switch>       # Release All
+ * <TempS:A,B>   # Release A,B
+ * <TempS>       # Release All
  *
  * It will be automatically deactivated when the
  * following plug-in command is executed.
- *
- * CLEAR_TEMPORARY_SELF_SWITCH
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 一時セルフスイッチプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SelfSwitchTemporary.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param clearTransfer
@@ -68,18 +76,19 @@
  * @option C
  * @option D
  *
+ * @command CLEAR_TEMPORARY_SELF_SWITCH
+ * @text 一時セルフスイッチ解除
+ * @desc 一時セルフスイッチを全てOFFに戻します。
+ *
  * @help 自動で解除される一時的なセルフスイッチを定義できます。
  * イベントのメモ欄に以下の通り記入してください。
  *
- * <SST_スイッチ:A,B> # セルフスイッチ「A」「B」を自動解除
- * <SST_Switch:A,B>   # 同上
- * <SST_スイッチ>     # セルフスイッチを全て自動解除
- * <SST_Switch>       # 同上
+ * <TempS:A,B> # セルフスイッチ「A」「B」を自動解除
+ * <TempS>     # セルフスイッチを全て自動解除
  *
- * 以下のプラグインコマンドを実行したタイミングで自動解除されます。
+ * ※MV版から名称を変更しました。後方互換性のためMVのメモ欄でも機能します。
  *
- * 一時セルフスイッチ解除
- * CLEAR_TEMPORARY_SELF_SWITCH
+ * プラグインコマンドを実行したタイミングで自動解除されます。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -89,71 +98,12 @@
 
 (function() {
     'use strict';
-    var metaTagPrefix = 'SST_';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + name;
-        return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var getArgArrayString = function(args) {
-        var values = args.split(',');
-        for (var i = 0; i < values.length; i++) {
-            values[i] = values[i].trim();
-        }
-        return values;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (String(text) !== text) return text;
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('SelfSwitchTemporary');
-
-    /**
-     * Game_Interpreter
-     * プラグインコマンドを追加定義します。
-     */
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        if (command === 'CLEAR_TEMPORARY_SELF_SWITCH' || command === '一時セルフスイッチ解除') {
-            $gameSelfSwitches.clearTemporary();
-        }
-    };
+    PluginManagerEx.registerCommand(script, 'CLEAR_TEMPORARY_SELF_SWITCH', () => {
+        $gameSelfSwitches.clearTemporary();
+    });
 
     /**
      * Game_SelfSwitches
@@ -177,7 +127,7 @@
     /**
      * Game_Map
      */
-    var _Game_Map_setupEvents = Game_Map.prototype.setupEvents;
+    const _Game_Map_setupEvents = Game_Map.prototype.setupEvents;
     Game_Map.prototype.setupEvents = function() {
         if (param.clearTransfer) {
             $gameSelfSwitches.clearTemporary();
@@ -192,21 +142,21 @@
      * Game_Event
      */
     Game_Event.prototype.addTemporarySelfSwitch = function() {
-        var switchList = this.findTemporarySelfSwitch();
+        const switchList = this.findTemporarySelfSwitch();
         if (!switchList) {
             return;
         }
         switchList.forEach(function(type) {
-            $gameSelfSwitches.appendTemporary($gameMap.mapId(), this.eventId(), type.toUpperCase());
+            $gameSelfSwitches.appendTemporary($gameMap.mapId(), this.eventId(), type.toUpperCase().trim());
         }, this);
     };
 
     Game_Event.prototype.findTemporarySelfSwitch = function() {
-        var metaValue = getMetaValues(this.event(), ['Switch', 'スイッチ']);
+        const metaValue = PluginManagerEx.findMetaValue(this.event(), ['TempS', 'SST_Switch', 'SST_スイッチ']);
         if (!metaValue) {
             return null;
         }
-        var list = metaValue === true ? ['A', 'B', 'C', 'D'] : getArgArrayString(metaValue);
+        const list = metaValue === true ? ['A', 'B', 'C', 'D'] : metaValue.split(',');
         return param.defaultTemporary ? list.concat(param.defaultTemporary) : list;
     };
 })();
