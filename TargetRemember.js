@@ -107,7 +107,7 @@
         this._lastBattleTarget = target;
     };
 
-    var _BattleManager_endBattle = BattleManager.endBattle
+    const _BattleManager_endBattle = BattleManager.endBattle
     BattleManager.endBattle = function(result) {
         _BattleManager_endBattle.apply(this, arguments);
         $gameParty.members().forEach(function(actor) {
