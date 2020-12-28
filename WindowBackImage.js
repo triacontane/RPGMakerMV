@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2020/12/28 JK_MailSystem.jsの各ウィンドウをオプション項目に追加
 // 1.3.1 2020/08/22 カスタムメニュープラグインで作成したウィンドウ背景を変えられる機能を追加
 // 1.3.0 2019/01/13 ウィンドウ背景の画像を複数表示できる機能を追加
 //                  ウィンドウ背景を指定した場合も元のウィンドウフレームを表示したままにできる機能を追加
@@ -191,6 +192,16 @@
  * @value Window_NumberInput
  * @option [数値入力画面プラグイン]数値ウィンドウ
  * @value Window_NumberEdit
+ * @option [JK_MailSystem]メールリストウィンドウ
+ * @value Window_MailList
+ * @option [JK_MailSystem]未読メールウィンドウ
+ * @value Window_Unread
+ * @option [JK_MailSystem]メール本文ウィンドウ
+ * @value Window_Mail
+ * @option [JK_MailSystem]添付ファイルウィンドウ
+ * @value Window_MailAttachment
+ * @option [JK_MailSystem]メールコマンドウィンドウ
+ * @value Window_MailBoxCommand
  *
  * @param ImageFile
  * @desc 差し替える画像のファイル名です。(img/pictureの中から選択します)　空を指定すると枠だけが非表示になります。
