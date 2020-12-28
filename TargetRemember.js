@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2020/12/08 記憶したターゲットが存在しなくなった場合に選択状態がおかしくなる問題を修正
  1.1.0 2020/12/28 MZで動作するよう修正
  1.0.0 2020/12/28 初版
 ----------------------------------------------------------------------------
@@ -82,8 +83,8 @@
             return;
         }
         const target = actor.lastBattleTarget();
-        if (target && target.actor) {
-            this.select(target.index);
+        if ($gameParty.members().contains(target)) {
+            this.select(target.index());
         }
     };
 
@@ -93,8 +94,8 @@
             return;
         }
         const target = actor.lastBattleTarget();
-        if (target && !target.actor) {
-            this.select(target.index);
+        if (this._enemies.contains(target)) {
+            this.select(target.index());
         }
     };
 
@@ -103,9 +104,14 @@
     };
 
     Game_Actor.prototype.setLastBattleTarget = function(target) {
-        this._lastBattleTarget = {
-            index: target.index(),
-            actor : target.isActor()
-        };
+        this._lastBattleTarget = target;
+    };
+
+    var _BattleManager_endBattle = BattleManager.endBattle
+    BattleManager.endBattle = function(result) {
+        _BattleManager_endBattle.apply(this, arguments);
+        $gameParty.members().forEach(function(actor) {
+            actor.setLastBattleTarget(null);
+        });
     };
 })();
