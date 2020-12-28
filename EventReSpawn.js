@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.5 2020/12/28 利用するプラグインによってイベント生成時にちらつく現象が発生しないよう修正
 // 1.11.4 2020/09/19 MOG_EventIndicators.jsと併用したとき、動的生成イベントにインジケータが表示されるよう修正
 // 1.11.3 2020/03/01 MOG_EventText.jsと併用したとき、動的生成イベントにイベントテキストが表示されるよう修正
 // 1.11.2 2019/12/14 KMS_Minimap.jsと併用したとき、動的生成イベントがミニマップに表示されるよう修正（KMS_Minimap.js側も専用のコードを適用する必要あり）
@@ -724,6 +725,7 @@ function Game_PrefabEvent() {
         sprite.spriteId = this._prefabSpriteId;
         this._characterSprites.push(sprite);
         this._tilemap.addChild(sprite);
+        this._tilemap._sortChildren();
         if (this._minimap && this._minimap.addObjectSprites) {
             this._minimap.addObjectSprites(event);
         }
