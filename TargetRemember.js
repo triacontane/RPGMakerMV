@@ -6,7 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
- 1.0.1 2020/12/08 記憶したターゲットが存在しなくなった場合に選択状態がおかしくなる問題を修正
+ 1.0.2 2020/12/28 1.0.1の考慮漏れを追加で修正
+ 1.0.1 2020/12/28 記憶したターゲットが存在しなくなった場合に選択状態がおかしくなる問題を修正
  1.0.0 2020/12/28 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -75,9 +76,9 @@
         if (!ConfigManager.commandRemember || !actor) {
             return;
         }
-        var target = actor.lastBattleTarget();
-        if ($gameParty.members().contains(target)) {
-            this.select(target.index());
+        var index = $gameParty.members().indexOf(actor.lastBattleTarget())
+        if (index >= 0) {
+            this.select(index);
         }
     };
 
@@ -86,9 +87,9 @@
         if (!ConfigManager.commandRemember || !actor) {
             return;
         }
-        var target = actor.lastBattleTarget();
-        if (this._enemies.contains(target)) {
-            this.select(target.index());
+        var index = this._enemies.indexOf(actor.lastBattleTarget());
+        if (index >= 0) {
+            this.select(index);
         }
     };
 
