@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2020/12/28 MZで動作するよう修正
  1.0.0 2020/12/28 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -15,6 +16,9 @@
 
 /*:
  * @plugindesc TargetRememberPlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TargetRemember.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @help TargetRemember.js
@@ -27,6 +31,9 @@
  */
 /*:ja
  * @plugindesc ターゲット記憶プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TargetRemember.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @help TargetRemember.js
@@ -45,47 +52,47 @@
 (function() {
     'use strict';
 
-    var _Scene_Battle_selectEnemySelection = Scene_Battle.prototype.selectEnemySelection;
-    Scene_Battle.prototype.selectEnemySelection = function() {
-        _Scene_Battle_selectEnemySelection.apply(this, arguments);
+    const _Scene_Battle_startEnemySelection = Scene_Battle.prototype.startEnemySelection;
+    Scene_Battle.prototype.startEnemySelection = function() {
+        _Scene_Battle_startEnemySelection.apply(this, arguments);
         this._enemyWindow.selectLast();
     };
 
-    var _Scene_Battle_selectActorSelection = Scene_Battle.prototype.selectActorSelection;
-    Scene_Battle.prototype.selectActorSelection = function() {
-        _Scene_Battle_selectActorSelection.apply(this, arguments);
+    const _Scene_Battle_startActorSelection = Scene_Battle.prototype.startActorSelection;
+    Scene_Battle.prototype.startActorSelection = function() {
+        _Scene_Battle_startActorSelection.apply(this, arguments);
         this._actorWindow.selectLast();
     };
 
-    var _Scene_Battle_onActorOk = Scene_Battle.prototype.onActorOk;
+    const _Scene_Battle_onActorOk = Scene_Battle.prototype.onActorOk;
     Scene_Battle.prototype.onActorOk = function() {
-        BattleManager.actor().setLastBattleTarget(this._actorWindow.actor());
+        BattleManager.actor().setLastBattleTarget(this._actorWindow.actor(this._actorWindow.index()));
         _Scene_Battle_onActorOk.apply(this, arguments);
     };
 
-    var _Scene_Battle_onEnemyOk = Scene_Battle.prototype.onEnemyOk;
+    const _Scene_Battle_onEnemyOk = Scene_Battle.prototype.onEnemyOk;
     Scene_Battle.prototype.onEnemyOk = function() {
-        BattleManager.actor().setLastBattleTarget(this._enemyWindow.enemy());
+        BattleManager.actor().setLastBattleTarget(this._enemyWindow.enemy(this._enemyWindow.index()));
         _Scene_Battle_onEnemyOk.apply(this, arguments);
     };
 
     Window_BattleActor.prototype.selectLast = function() {
-        var actor = BattleManager.actor();
+        const actor = BattleManager.actor();
         if (!ConfigManager.commandRemember || !actor) {
             return;
         }
-        var target = actor.lastBattleTarget();
+        const target = actor.lastBattleTarget();
         if (target && target.actor) {
             this.select(target.index);
         }
     };
 
     Window_BattleEnemy.prototype.selectLast = function() {
-        var actor = BattleManager.actor();
+        const actor = BattleManager.actor();
         if (!ConfigManager.commandRemember || !actor) {
             return;
         }
-        var target = actor.lastBattleTarget();
+        const target = actor.lastBattleTarget();
         if (target && !target.actor) {
             this.select(target.index);
         }
