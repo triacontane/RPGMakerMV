@@ -6,7 +6,6 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.1.6 2020/12/28 イベント動的生成プラグインでイベントを配置すると一瞬既存イベントがちらつく現象を修正
 // 1.1.5 2020/08/30 YEP_CoreEngine.jsと併用したとき解像度次第でレイヤーマップのピクセルがずれる場合がある競合を修正
 // 1.1.4 2020/07/05 MOG_ChronoEngine.jsと併用したときマップの一部がちらつく場合がある競合を修正
 // 1.1.3 2020/05/09 競合対策コードを追加
@@ -324,7 +323,11 @@
     Sprite_MapLayer.prototype.updatePosition = function() {
         this.x = this._character.getLayerX();
         this.y = this._character.getLayerY();
-        this.z = this._character.screenZ() + 1;
+        this.z = this._character.screenZ();
+        // Resolve conflict for MOG_ChronoEngine
+        if (typeof Imported !== 'undefined' && Imported.MOG_ChronoEngine) {
+            this.z += 1;
+        }
     };
 
     Sprite_MapLayer.prototype.updateBitmap = function() {
