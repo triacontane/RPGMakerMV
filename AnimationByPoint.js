@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/01/03 マップ座標にアニメーションを表示できるコマンドを追加
  1.0.0 2020/12/29 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -95,6 +96,34 @@
  * @default false
  * @type boolean
  *
+ * @command SHOW_ANIMATION_BY_MAP_POINT
+ * @text マップ座標にアニメーション表示
+ * @desc マップ上の指定座標(マス指定)にアニメーションを表示します。
+ *
+ * @arg id
+ * @text アニメーションID
+ * @desc 表示するアニメーションIDです。
+ * @default 1
+ * @type animation
+ *
+ * @arg x
+ * @text X座標
+ * @desc アニメーションを表示するマップX座標です。
+ * @default 0
+ * @type number
+ *
+ * @arg y
+ * @text Y座標
+ * @desc アニメーションを表示するマップY座標です。
+ * @default 0
+ * @type number
+ *
+ * @arg wait
+ * @text 完了までウェイト
+ * @desc アニメーション表示が終わるまでイベントの進行を待機します。
+ * @default false
+ * @type boolean
+ *
  * @help AnimationByPoint.js
  *
  * 画面上の指定座標(ピクセル指定)にアニメーションを表示するコマンドを提供します。
@@ -117,12 +146,32 @@
     const script = document.currentScript;
 
     PluginManagerEx.registerCommand(script, 'SHOW_ANIMATION', function(args) {
+        this.requestAnimationByPoint(args);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SHOW_ANIMATION_BY_MAP_POINT', function(args) {
+        args.x = $gameMap.convertToScreenX(args.x);
+        args.y = $gameMap.convertToScreenY(args.y);
+        this.requestAnimationByPoint(args);
+    });
+
+    Game_Map.prototype.convertToScreenX = function(mapX) {
+        const tw = $gameMap.tileWidth();
+        return Math.floor($gameMap.adjustX(mapX) * tw + tw / 2);
+    };
+
+    Game_Map.prototype.convertToScreenY = function(mapY) {
+        const th = $gameMap.tileHeight();
+        return Math.floor($gameMap.adjustY(mapY) * th + th / 2);
+    };
+
+    Game_Interpreter.prototype.requestAnimationByPoint = function(args) {
         const point = new Game_AnimationPoint(args);
         $gameTemp.requestAnimation([point], args.id);
         if (args.wait) {
             this.setWaitMode("pointAnimation");
         }
-    });
+    };
 
     Spriteset_Base.prototype.findPointTargetSprite = function(point) {
         if (point instanceof Point) {
