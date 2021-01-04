@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/01/04 イベント動的生成時の座標指定に変数を指定するプラグインパラメータを追加
  1.0.3 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.0.2 2020/11/19 イベント、プレイヤーと重ならない生成条件が正常に機能していなかった問題を修正
  1.0.1 2020/08/26 ベースプラグインの説明を追加
@@ -55,6 +56,18 @@
  * @text Y-coordinate
  * @desc The Y coordinate of the copy destination.
  * @default 1
+ * @type number
+ *
+ * @arg xByVariableId
+ * @text X-coordinate variable id (When using variable specification)
+ * @desc Specifies the ID of the variable in which the value to set the X coordinate of the copy destination is stored. If 0 is specified, the variable specification is not used.
+ * @default 0
+ * @type number
+ *
+ * @arg yByVariableId
+ * @text Y-coordinate variable id (When using variable specification)
+ * @desc Specifies the ID of the variable in which the value to set the Y coordinate of the copy destination is stored. If 0 is specified, the variable specification is not used.
+ * @default 0
  * @type number
  *
  * @arg template
@@ -196,6 +209,18 @@
  * @default 1
  * @type number
  *
+ * @arg xByVariableId
+ * @text X座標変数ID
+ * @desc コピー先のX座標を設定するための値が格納された変数のIDを指定します。0を指定した場合、変数指定を使用しません。
+ * @default 0
+ * @type variable
+ *
+ * @arg yByVariableId
+ * @text Y座標変数ID
+ * @desc コピー先のY座標を設定するための値が格納された変数のIDを指定します。0を指定した場合、変数指定を使用しません。
+ * @default 0
+ * @type variable
+ *
  * @arg template
  * @text テンプレート生成
  * @desc 有効にするとテンプレートイベントを生成します。別途テンプレートイベントプラグインが必要です。
@@ -322,7 +347,11 @@ function Game_PrefabEvent() {
 
     PluginManagerEx.registerCommand(script, 'MAKE', function(args) {
         const template = args.template;
-        $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args.id, template), args.x, args.y, template);
+        const xByVariableId = args.xByVariableId;
+        const yByVariableId = args.yByVariableId;
+        const x = xByVariableId != null && xByVariableId > 0 ? $gameVariables.value(xByVariableId) : args.x;
+        const y = yByVariableId != null && yByVariableId > 0 ? $gameVariables.value(yByVariableId) : args.y;
+        $gameMap.spawnEvent(this.getEventIdForEventReSpawn(args.id, template), x, y, template);
     });
 
     PluginManagerEx.registerCommand(script, 'MAKE_RANDOM', function(args) {
