@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.4 2021/01/06 制御文字\v[n,m]でもリアルタイム描画されるよう修正
 // 2.0.3 2020/09/01 制御文字\oc[c], \ow[n]の移植が漏れていた問題を修正
 // 2.0.2 2020/08/26 ベースプラグインの説明を追加
 // 2.0.1 2020/08/26 描画文字列に数値のみを指定するとエラーになる問題を修正
@@ -279,7 +280,7 @@
     };
 
     Game_Picture.prototype.updateDText = function() {
-        const text = String(PluginManagerEx.convertVariables(this.dTextInfo.value));
+        const text = PluginManagerEx.convertEscapeCharacters(this.dTextInfo.value);
         if (text !== this._dTextValue) {
             this._name = Date.now().toString();
         }
@@ -308,9 +309,9 @@
     // Window_Base
     //  文字列変換処理に追加制御文字を設定します。
     //=============================================================================
-    const _Window_Base_convertEscapeCharacters      = Window_Base.prototype.convertEscapeCharacters;
-    Window_Base.prototype.convertEscapeCharacters = function(text) {
-        text = _Window_Base_convertEscapeCharacters.call(this, text);
+    const _PluginManagerEx_convertEscapeCharactersEx      = PluginManagerEx.convertEscapeCharactersEx;
+    PluginManagerEx.convertEscapeCharactersEx = function(text, data = null) {
+        text = _PluginManagerEx_convertEscapeCharactersEx.call(this, text, data);
         text = text.replace(/\x1bV\[(\d+),\s*(\d+)]/gi, function() {
             return this.getVariablePadCharacter($gameVariables.value(parseInt(arguments[1], 10)), arguments[2]);
         }.bind(this));
@@ -337,6 +338,19 @@
         return text;
     };
 
+    PluginManagerEx.getItemInfoText = function(item) {
+        return item ?`\x1bi[${item.iconIndex}]${item.name}` : '';
+    };
+
+    PluginManagerEx.getVariablePadCharacter = function(value, digit) {
+        let numText = String(Math.abs(value));
+        const pad = String(param.padCharacter) || '0';
+        while (numText.length < digit) {
+            numText = pad + numText;
+        }
+        return (value < 0 ? '-' : '') + numText;
+    };
+
     const _Window_Base_processEscapeCharacter = Window_Base.prototype.processEscapeCharacter;
     Window_Base.prototype.processEscapeCharacter = function(code, textState) {
         _Window_Base_processEscapeCharacter.apply(this, arguments);
@@ -360,19 +374,6 @@
         } else {
             return '';
         }
-    };
-
-    Window_Base.prototype.getItemInfoText = function(item) {
-        return item ?`\x1bi[${item.iconIndex}]${item.name}` : '';
-    };
-
-    Window_Base.prototype.getVariablePadCharacter = function(value, digit) {
-        let numText = String(Math.abs(value));
-        const pad = String(param.padCharacter) || '0';
-        while (numText.length < digit) {
-            numText = pad + numText;
-        }
-        return (value < 0 ? '-' : '') + numText;
     };
 
     //=============================================================================
