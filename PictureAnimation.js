@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.3 2021/01/11 セルの効果音設定のコマンドが正常に機能していなかった問題を修正
  1.1.2 2020/12/06 1.1.0の機能追加で最後のセルの最後のフレームまで到達したときに完了扱いにするよう修正
  1.1.1 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.1.0 2020/10/24 ピクチャのアニメーション完了まで次の命令に移行しない設定を追加
@@ -176,6 +177,12 @@
  * @type number
  * @default 1
  * @min 1
+ *
+ * @arg se
+ * @text Sound Effect
+ * @desc Sound Effect
+ * @type struct<SE>
+ * @default
  *
  * @help Animate the picture at the specified frame interval.
  * Prepare the cell images you want to animate (*) and enter the following commands.
@@ -374,6 +381,12 @@
  * @default 1
  * @min 1
  *
+ * @arg se
+ * @text 効果音
+ * @desc 演奏する効果音です。
+ * @type struct<SE>
+ * @default
+ *
  * @help 指定したフレーム間隔でピクチャをアニメーションします。
  * アニメーションしたいセル画像（※）を用意の上
  * 以下のコマンドを入力してください。
@@ -412,6 +425,37 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+
+/*~struct~SE:
+ * @param name
+ * @desc SEのファイル名称です。
+ * @default Book1
+ * @require 1
+ * @dir audio/se/
+ * @type file
+ *
+ * @param volume
+ * @desc SEのボリュームです。
+ * @default 90
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param pitch
+ * @desc SEのピッチです。
+ * @default 100
+ * @type number
+ * @min 50
+ * @max 150
+ *
+ * @param pan
+ * @desc SEの左右バランスです。
+ * @default 0
+ * @type number
+ * @min -100
+ * @max 100
+ */
+
 (function() {
     'use strict';
     const script = document.currentScript;
@@ -426,7 +470,9 @@
     });
 
     PluginManagerEx.registerCommand(script, "LINK_SOUND",function(args) {
-        this.reservePaSound(args.cellNumber);
+        if (args.se && args.se.name !== '') {
+            $gameScreen.addPaSound(args.se, args.cellNumber);
+        }
     });
 
     PluginManagerEx.registerCommand(script, "START",function(args) {
@@ -466,22 +512,6 @@
             picture.linkToVariable(args.variableId);
         }
     });
-
-    Game_Interpreter.prototype.reservePaSound = function(cellNumber) {
-        this._paSoundFrame = cellNumber;
-    };
-
-    const _Game_Interpreter_command250      = Game_Interpreter.prototype.command250;
-    Game_Interpreter.prototype.command250 = function() {
-        if (this._paSoundFrame) {
-            const se = this._params[0];
-            AudioManager.loadStaticSe(se);
-            $gameScreen.addPaSound(se, this._paSoundFrame);
-            this._paSoundFrame = null;
-            return true;
-        }
-        return _Game_Interpreter_command250.apply(this, arguments);
-    };
 
     const _Game_Interpreter_updateWaitMode = Game_Interpreter.prototype.updateWaitMode;
     Game_Interpreter.prototype.updateWaitMode = function() {
