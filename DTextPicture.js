@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/01/10 動的文字列のフォントサイズを指定できる機能を追加
 // 2.0.4 2021/01/06 制御文字\v[n,m]でもリアルタイム描画されるよう修正
 // 2.0.3 2020/09/01 制御文字\oc[c], \ow[n]の移植が漏れていた問題を修正
 // 2.0.2 2020/08/26 ベースプラグインの説明を追加
@@ -59,6 +60,12 @@
  * @desc 文字列ピクチャとして表示するテキストです。
  * @default
  * @type multiline_string
+ *
+ * @arg fontSize
+ * @text フォントサイズ
+ * @desc 動的文字列の初期フォントサイズです。0を指定するとシステムで設定したデフォルトサイズになります。
+ * @default 0
+ * @type number
  *
  * @command dTextSetting
  * @text 文字列ピクチャ設定
@@ -176,7 +183,7 @@
     const param = PluginManagerEx.createParameter(script);
 
     PluginManager.registerCommand(PluginManagerEx.findPluginName(script), 'dText', function(args) {
-        $gameScreen.setDTextPicture(args.text);
+        $gameScreen.setDTextPicture(args.text, args.fontSize);
     });
 
     PluginManagerEx.registerCommand(script, 'dTextSetting', function(args) {
@@ -213,11 +220,14 @@
         this.dTextValue = null;
     };
 
-    Game_Screen.prototype.setDTextPicture = function(value) {
+    Game_Screen.prototype.setDTextPicture = function(value, size) {
         if (typeof TranslationManager !== 'undefined') {
             TranslationManager.translateIfNeed(value, function(translatedText) {
                 value = translatedText;
             });
+        }
+        if (size > 0) {
+            value = `\\fs[${size}]${value}`;
         }
         this.dTextValue = value;
     };
