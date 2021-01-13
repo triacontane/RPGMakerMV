@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/01/13 指定したアイコンインデックスをリングアイコンの表示対象外にできる機能を追加
 // 2.1.3 2020/03/13 2.1.2の競合対策にフォントサイズとアイコンごとのターン数表示の有無の設定を反映
 // 2.1.2 2020/03/11 MOG_BattleHud.jsでステートアイコンの表示モード(View Mode)を1(ラインモード：アイコン1列に表示)にした場合もターン数表示できるよう修正
 // 2.1.1 2019/02/01 味方リングアイコンかつターン数表示を有効にした場合、リングアイコンとステータスウィンドウの両方にターン数を表示させるよう仕様変更
@@ -79,6 +80,12 @@
  * @desc ステートの残りターン数を表示します。
  * @default true
  * @type boolean
+ *
+ * @param IconIndexWithoutRing
+ * @text 表示対象外アイコン
+ * @desc リング表示の対象外になる「アイコンインデックス」です。
+ * @default []
+ * @type string[]
  *
  * @param IconIndexWithoutShowTurns
  * @desc ステートターン数の表示対象外になる「アイコンインデックス」です。
@@ -202,6 +209,12 @@
  * @default true
  * @type boolean
  *
+ * @param IconIndexWithoutRing
+ * @text 表示対象外アイコン
+ * @desc リング表示の対象外になる「アイコンインデックス」です。
+ * @default []
+ * @type string[]
+ *
  * @param IconIndexWithoutShowTurns
  * @text ターン数表示対象外アイコン
  * @desc ステートターン数の表示対象外になる「アイコンインデックス」です。
@@ -322,6 +335,9 @@ function Sprite_StateIconChild() {
     param.IconIndexWithoutShowTurns = (param.IconIndexWithoutShowTurns || []).map(function(index) {
         return parseInt(index);
     });
+    param.IconIndexWithoutRing = (param.IconIndexWithoutRing || []).map(function(index) {
+        return parseInt(index);
+    });
 
     //=============================================================================
     // Game_BattlerBase
@@ -393,7 +409,9 @@ function Sprite_StateIconChild() {
     Sprite_StateIcon.prototype.updateRingIcon = function() {
         var icons = [];
         if (this._battler && this._battler.isAlive()) {
-            icons = this._battler.allIcons();
+            icons = this._battler.allIcons().filter(function(index) {
+                return !param.IconIndexWithoutRing.contains(index);
+            });
         }
         if (!this._icons.equals(icons)) {
             this._icons = icons;
