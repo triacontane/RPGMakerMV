@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.1.2 2021/01/13 2.1.1の修正で一度消去したピクチャを再表示しようとするとエラーになる問題を修正
  2.1.1 2020/12/11 キャッシュ方針を「キャッシュしない」以外に設定すると消去にエラーが起きる場合がある問題を修正
  2.1.0 2020/11/11 APNGのアニメーションを停止、全停止できるスイッチを追加
  2.0.1 2020/11/03 プラグイン上でapng画像の高さを正しく取得できるよう修正
@@ -747,7 +748,7 @@
 
     Scene_Base.prototype.destroySceneApng = function() {
         this._apngList.forEach(function(sprite) {
-            sprite.destroyApng();
+            sprite.destroyApngIfNeed();
         })
     };
 
@@ -845,7 +846,7 @@
      */
     Sprite.prototype.addApngChild = function(name) {
         if (this._apngSprite) {
-            this.destroyApng();
+            this.destroyApngIfNeed();
         }
         this._apngSprite = this.loadApngSprite(name);
         if (this._apngSprite) {
@@ -866,7 +867,7 @@
             if (this._apngSprite.pixiApngOption.CachePolicy === 0) {
                 this.destroyApng();
             } else {
-                this.removeChild(this._apngSprite);
+                this.removeApng();
             }
         }
     };
@@ -880,6 +881,10 @@
             });
             pixiApng.stop();
         }
+        this.removeApng();
+    };
+
+    Sprite.prototype.removeApng = function() {
         this.removeChild(this._apngSprite);
         this._apngSprite = null;
     };
@@ -978,7 +983,7 @@
         _Sprite_Picture_updateBitmap.apply(this, arguments);
         const picture = this.picture();
         if (!picture && this._apngSprite) {
-            this.destroyApng();
+            this.destroyApngIfNeed();
         }
     };
 
