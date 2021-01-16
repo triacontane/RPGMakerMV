@@ -1,11 +1,12 @@
 //=============================================================================
 // TitleImageChange.js
 // ----------------------------------------------------------------------------
-// (C) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/01/16 MZで動作するよう全面的に修正
 // 1.4.5 2020/03/01 進行度変数の値を戻したときに、リロードするまで元のタイトル画面に戻らない問題を修正
 // 1.4.4 2018/07/11 1.4.3の修正でタイトル画面が変更される条件を満たした状態でセーブ後にタイトルに戻るで再表示しても変更が反映されない問題を修正
 // 1.4.3 2018/06/09 セーブファイル数の上限を大きく増やしている場合にタイトル画面の表示が遅くなる現象を修正
@@ -26,105 +27,90 @@
 //=============================================================================
 
 /*:
- * @plugindesc タイトル画面変更プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @plugindesc TitleImageChange
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TitleImageChange.js
+ * @base PluginCommonBase
+ * @author triacontane
  *
- * @param 進行度変数
- * @desc ゲームの進行度に対応する変数番号(1...)
+ * @param StoryPhaseVariable
+ * @text StoryPhaseVariable
+ * @desc The variable number where the game progress is stored.
  * @default 1
  * @type variable
  *
- * @param 優先度変数
- * @desc 複数のセーブデータが存在するとき、どのセーブデータの進行度を優先するかを決める変数番号(1...)
+ * @param PriorityVariable
+ * @text PriorityVariable
+ * @desc This is a variable number that determines which saved data has priority over the story phase.
  * @default 0
  * @type variable
  *
- * @param タイトル1の進行度
- * @desc 進行度変数の値がこの値以上ならタイトル1の画像が表示されます。
+ * @param TitleList
+ * @text TitleList
+ * @desc This is a list of the title screen and BGM.
+ * @default []
+ * @type struct<TitleSet>[]
+ *
+ * @command SAVE_STORY_PHASE
+ * @text SAVE_STORY_PHASE
+ * @desc Saves only the progress without saving the game data.
+ *
+ * @help TitleImageChange.js
+ *
+ * Changes the title screen image and BGM according to the game progress (an arbitrary variable).
+ * The game progress will reflect the maximum value among all saved data.
+ * However, if a priority variable is specified separately, the image and BGM will be determined
+ * based on the game progress of the saved data with the highest priority variable.
+ * Multiple title images and BGMs can be specified in a list format, and when multiple
+ * conditions are met at once, the one at the bottom of the list will take priority.
+ *
+ * If you want to save only the progress without saving the game data, you can use a special plug-in command.
+ *
+ * The base plugin "PluginCommonBase.js" is required to use this plugin.
+ */
+
+/*:ja
+ * @plugindesc タイトル画面変更プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TitleImageChange.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
+ *
+ * @param StoryPhaseVariable
+ * @text 進行度変数
+ * @desc ゲーム進行度が格納される変数番号です。
  * @default 1
+ * @type variable
  *
- * @param タイトル1の画像
- * @desc 進行度変数の値がタイトル1の進行度以上のときに表示される画像(img/titles1)のファイル名です。
- * @default
- * @require 1
- * @dir img/titles1/
- * @type file
+ * @param PriorityVariable
+ * @text 優先度変数
+ * @desc 複数のセーブデータが存在するとき、どのセーブデータのゲーム進行度を優先するかを決める変数番号です。
+ * @default 0
+ * @type variable
  *
- * @param タイトル1のBGM
- * @desc 進行度変数の値がタイトル1の進行度以上のときに演奏されるBGM(audio/bgm)のファイル名です。
- * @default
- * @require 1
- * @dir audio/bgm/
- * @type file
+ * @param TitleList
+ * @text タイトルリスト
+ * @desc 進行度変数の値によって変動するタイトル画面とBGMのリストです。
+ * @default []
+ * @type struct<TitleSet>[]
  *
- * @param タイトル2の進行度
- * @desc 進行度変数の値がこの値以上ならタイトル2の画像が表示されます。
- * @default 2
+ * @command SAVE_STORY_PHASE
+ * @text ゲーム進行度のみ保存
+ * @desc ゲームデータをセーブせず進行状況のみをセーブします。
  *
- * @param タイトル2の画像
- * @desc 進行度変数の値がタイトル2の進行度以上のときに表示される画像(img/titles1)のファイル名です。
- * @default
- * @require 1
- * @dir img/titles1/
- * @type file
+ * @help TitleImageChange.js
  *
- * @param タイトル2のBGM
- * @desc 進行度変数の値がタイトル2の進行度以上のときに演奏されるBGM(audio/bgm)のファイル名です。
- * @default
- * @require 1
- * @dir audio/bgm/
- * @type file
- *
- * @param タイトル3の進行度
- * @desc 進行度変数の値がこの値以上ならタイトル3の画像が表示されます。
- * @default 3
- *
- * @param タイトル3の画像
- * @desc 進行度変数の値がタイトル3の進行度以上のときに表示される画像(img/titles1)のファイル名です。
- * @default
- * @require 1
- * @dir img/titles1/
- * @type file
- *
- * @param タイトル3のBGM
- * @desc 進行度変数の値がタイトル3の進行度以上のときに演奏されるBGM(audio/bgm)のファイル名です。
- * @default
- * @require 1
- * @dir audio/bgm/
- * @type file
- *
- * @param 以降の進行度
- * @desc タイトルを4パターン以上使いたい場合はカンマ区切りで進行度を指定します。例(4,5,6)
- * @default
- *
- * @param 以降の画像
- * @desc タイトルを4パターン以上使いたい場合はカンマ区切りで画像(img/titles1)のファイル名を指定します。例(aaa,bbb,ccc)
- * @default
- *
- * @param 以降のBGM
- * @desc タイトルを4パターン以上使いたい場合はカンマ区切りでBGM(audio/bgm)のファイル名を指定します。例(aaa,bbb,ccc)
- * @default
- *
- * @help ゲームの進行度に応じてタイトル画面の画像およびBGMを変更します。
- * 進行度には任意の変数が指定でき、通常は全セーブデータの中の最大値が反映されます。
- *
- * ただし、優先度変数が別途指定されている場合は、その変数値が最も大きい
- * セーブデータの進行度をもとに画像及びBGMが決まります。
- *
- * タイトル画像は最大3つまで指定可能で、複数の条件を満たした場合は
- * 以下のような優先順位になります。
- *
- * 1. 4以降の画像及びBGM
- * 2. タイトル3の画像およびBGM
- * 3. タイトル2の画像およびBGM
- * 4. タイトル1の画像およびBGM
- * 5. デフォルトのタイトル画像およびBGM
+ * ゲーム進行度(任意の変数)に応じてタイトル画面の画像およびBGMを変更します。
+ * ゲーム進行度は全セーブデータの中の最大値が反映されます。
+ * ただし、優先度変数が別途指定されている場合は、優先度変数が最も大きい
+ * セーブデータのゲーム進行度をもとに画像、BGMが決まります。
+ * タイトル画像とBGMはリスト形式で複数指定可能で、
+ * 複数の条件を一度に満たしたときはリストの下の方が優先されます。
  *
  * ゲームデータをセーブせず進行状況のみをセーブしたい場合は、
- * イベントコマンドの「スクリプト」から以下を実行してください。
- * DataManager.saveOnlyGradeVariable();
+ * 専用のプラグインコマンドを実行します。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -132,119 +118,58 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~TitleSet:
+ *
+ * @param StoryPhaseCondition
+ * @text 進行度条件
+ * @desc 進行度変数の値がこの値以上なら指定した画像とBGMになります。
+ * @default 1
+ *
+ * @param TitleImage
+ * @text タイトル画像
+ * @desc 条件を満たしたときに表示されるタイトル画像(img/titles1)のファイル名です。
+ * @default
+ * @dir img/titles1/
+ * @type file
+ *
+ * @param TitleBgm
+ * @text タイトルBGM
+ * @desc 条件を満たしたときに演奏されるBGM(audio/bgm)のファイル名です。
+ * @default
+ * @dir audio/bgm/
+ * @type file
+ */
+
 (function() {
     'use strict';
-    var pluginName = 'TitleImageChange';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+    if (!param.TitleList) {
+        PluginManagerEx.throwError('TitleList not found.', script);
+    }
 
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value == null ? '' : value;
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamArrayString = function(paramNames) {
-        var valuesText = getParamString(paramNames);
-        if (!valuesText) return [];
-        var values = valuesText.split(',');
-        for (var i = 0; i < values.length; i++) {
-            values[i] = values[i].trim();
-        }
-        return values;
-    };
-
-    var getParamArrayNumber = function(paramNames, min, max) {
-        var values = getParamArrayString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        for (var i = 0; i < values.length; i++) {
-            if (!isNaN(parseInt(values[i], 10))) {
-                values[i] = (parseInt(values[i], 10) || 0).clamp(min, max);
-            } else {
-                values.splice(i--, 1);
-            }
-        }
-        return values;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramGradeVariable    = getParamNumber(['GradeVariable', '進行度変数'], 1, 5000);
-    var paramPriorityVariable = getParamNumber(['PriorityVariable', '優先度変数'], 0, 5000);
-    var paramTitleGrades      = [];
-    paramTitleGrades.push(getParamNumber(['TitleGrade1', 'タイトル1の進行度']));
-    paramTitleGrades.push(getParamNumber(['TitleGrade2', 'タイトル2の進行度']));
-    paramTitleGrades.push(getParamNumber(['TitleGrade3', 'タイトル3の進行度']));
-    var paramTitleImages = [];
-    paramTitleImages.push(getParamString(['TitleImage1', 'タイトル1の画像']));
-    paramTitleImages.push(getParamString(['TitleImage2', 'タイトル2の画像']));
-    paramTitleImages.push(getParamString(['TitleImage3', 'タイトル3の画像']));
-    var paramTitleBgms = [];
-    paramTitleBgms.push(getParamString(['TitleBgm1', 'タイトル1のBGM']));
-    paramTitleBgms.push(getParamString(['TitleBgm2', 'タイトル2のBGM']));
-    paramTitleBgms.push(getParamString(['TitleBgm3', 'タイトル3のBGM']));
-    paramTitleGrades = paramTitleGrades.concat(getParamArrayNumber(['TitleGradeAfter', '以降の進行度'])).reverse();
-    paramTitleImages = paramTitleImages.concat(getParamArrayString(['TitleImageAfter', '以降の画像'])).reverse();
-    paramTitleBgms   = paramTitleBgms.concat(getParamArrayString(['TitleBgmAfter', '以降のBGM'])).reverse();
+    PluginManagerEx.registerCommand(script, 'SAVE_STORY_PHASE', () => {
+        DataManager.saveOnlyGradeVariable();
+    });
 
     //=============================================================================
     // DataManager
     //  ゲーム進行状況を保存します。
     //=============================================================================
-    var _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
+    const _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
     DataManager.makeSavefileInfo      = function() {
-        var info = _DataManager_makeSavefileInfo.apply(this, arguments);
+        const info = _DataManager_makeSavefileInfo.apply(this, arguments);
         this.setGradeVariable(info);
         return info;
     };
 
     DataManager.getFirstPriorityGradeVariable = function() {
-        this._loadGrade = true;
-        var globalInfo    = this.loadGlobalInfo().filter(function(data, id) {
-            return this.isThisGameFile(id);
-        }, this);
-        this._loadGrade = false;
-        var gradeVariable = 0;
-        if (globalInfo && globalInfo.length > 0) {
-            var sortedGlobalInfo = globalInfo.clone().sort(this._compareOrderForGradeVariable);
-            if (sortedGlobalInfo[0]) {
-                gradeVariable = sortedGlobalInfo[0].gradeVariable || 0;
-            }
+        const globalInfo = this._globalInfo || [];
+        const sortedGlobalInfo = globalInfo.clone().sort(this._compareOrderForGradeVariable);
+        if (sortedGlobalInfo[0]) {
+            return sortedGlobalInfo[0].storyPhaseVariable || 0;
         }
-        return gradeVariable;
-    };
-
-    var _DataManager_loadGlobalInfo = DataManager.loadGlobalInfo;
-    DataManager.loadGlobalInfo = function() {
-        if (this._loadGrade) {
-            if (!this._globalInfo) {
-                try {
-                    var json = StorageManager.load(0);
-                    this._globalInfo = json ? JSON.parse(json) : [];
-                } catch (e) {
-                    console.error(e);
-                    this._globalInfo = [];
-                }
-            }
-            return this._globalInfo;
-        } else {
-            return _DataManager_loadGlobalInfo.apply(this, arguments);
-        }
+        return 0;
     };
 
     DataManager._compareOrderForGradeVariable = function(a, b) {
@@ -252,16 +177,16 @@
             return 1;
         } else if (!b) {
             return -1;
-        } else if (a.priorityVariable !== b.priorityVariable && paramPriorityVariable > 0) {
+        } else if (a.priorityVariable !== b.priorityVariable && param.PriorityVariable > 0) {
             return (b.priorityVariable || 0) - (a.priorityVariable || 0);
         } else {
-            return (b.gradeVariable || 0) - (a.gradeVariable || 0);
+            return (b.storyPhaseVariable || 0) - (a.storyPhaseVariable || 0);
         }
     };
 
     DataManager.saveOnlyGradeVariable = function() {
-        var saveFileId = this.lastAccessedSavefileId();
-        var globalInfo = this.loadGlobalInfo() || [];
+        const saveFileId = this.latestSavefileId();
+        const globalInfo = this._globalInfo || [];
         if (globalInfo[saveFileId]) {
             this.setGradeVariable(globalInfo[saveFileId]);
         } else {
@@ -271,55 +196,44 @@
     };
 
     DataManager.setGradeVariable = function(info) {
-        info.gradeVariable = $gameVariables.value(paramGradeVariable);
-        if (paramPriorityVariable > 0) {
-            info.priorityVariable = $gameVariables.value(paramPriorityVariable);
-        }
-    };
-
-    var _DataManager_saveGlobalInfo = DataManager.saveGlobalInfo;
-    DataManager.saveGlobalInfo = function(info) {
-        _DataManager_saveGlobalInfo.apply(this, arguments);
-        this._globalInfo = null;
+        info.storyPhaseVariable = $gameVariables.value(param.StoryPhaseVariable);
+        info.priorityVariable = $gameVariables.value(param.PriorityVariable);
     };
 
     //=============================================================================
     // Scene_Title
     //  進行状況が一定以上の場合、タイトル画像を差し替えます。
     //=============================================================================
-    var _Scene_Title_initialize      = Scene_Title.prototype.initialize;
+    const _Scene_Title_initialize      = Scene_Title.prototype.initialize;
     Scene_Title.prototype.initialize = function() {
         _Scene_Title_initialize.apply(this, arguments);
-        this.changeTitleImage();
-        this.changeTitleBgm();
+        const storyPhase = DataManager.getFirstPriorityGradeVariable();
+        this.changeTitleImage(storyPhase);
+        this.changeTitleBgm(storyPhase);
     };
 
-    Scene_Title.prototype.changeTitleImage = function() {
-        var gradeVariable = DataManager.getFirstPriorityGradeVariable();
+    Scene_Title.prototype.changeTitleImage = function(storyPhase) {
         if ($dataSystem.originalTitle1Name !== undefined) {
             $dataSystem.title1Name = $dataSystem.originalTitle1Name;
         }
-        for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
-            if (paramTitleImages[i] && gradeVariable >= paramTitleGrades[i]) {
+        param.TitleList.forEach(set => {
+            if (set.TitleImage && storyPhase >= set.StoryPhaseCondition) {
                 $dataSystem.originalTitle1Name = $dataSystem.title1Name;
-                $dataSystem.title1Name = paramTitleImages[i];
-                break;
+                $dataSystem.title1Name = set.TitleImage;
             }
-        }
+        });
     };
 
-    Scene_Title.prototype.changeTitleBgm = function() {
-        var gradeVariable = DataManager.getFirstPriorityGradeVariable();
+    Scene_Title.prototype.changeTitleBgm = function(storyPhase) {
         if ($dataSystem.titleBgm.originalName !== undefined) {
             $dataSystem.titleBgm.name = $dataSystem.titleBgm.originalName;
         }
-        for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
-            if (paramTitleBgms[i] && gradeVariable >= paramTitleGrades[i]) {
+        param.TitleList.forEach(set => {
+            if (set.TitleBgm && storyPhase >= set.StoryPhaseCondition) {
                 $dataSystem.titleBgm.originalName = $dataSystem.titleBgm.name;
-                $dataSystem.titleBgm.name = paramTitleBgms[i];
-                break;
+                $dataSystem.titleBgm.name = set.TitleBgm;
             }
-        }
+        });
     };
 })();
 
