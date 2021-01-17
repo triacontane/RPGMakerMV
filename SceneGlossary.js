@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.21.0 2021/01/17 指定した用語ページを開くことでスイッチがONになる機能を追加
 // 2.20.0 2020/12/09 用語リスト表示でアイコンを非表示にできる設定を追加
 // 2.19.0 2020/11/22 用語単位でページ番号の表示、非表示を設定できる機能を追加
 // 2.18.0 2020/11/21 ページ番号を表示する機能を追加
@@ -731,6 +732,11 @@
  * 用語単位でページ番号を表示させたくない場合は、以下のメモ欄で対応できます。
  * <SGページ番号不要>
  * <SGNoPageNum>
+ *
+ * ・追加機能6
+ * 用語ページを開いたときに任意のスイッチをONにできます。
+ * <SG用語閲覧スイッチ:1>
+ * <SGViewingSwitch:1>
  *
  * プラグインコマンド詳細
  *  イベントコマンド「プラグインコマンド」から実行。
@@ -2302,6 +2308,14 @@ function Window_GlossaryComplete() {
         this._enemy     = null;
         this._maxPages  = item && $gameParty.hasGlossary(item) ? this.calcMaxPages(0) : 1;
         this.drawItem(0, true);
+        this.applyViewingSwitch();
+    };
+
+    Window_Glossary.prototype.applyViewingSwitch = function() {
+        var metaValue = this.getMetaContents(['用語閲覧スイッチ', 'ViewingSwitch'], 0);
+        if (metaValue) {
+            $gameSwitches.setValue(parseInt(metaValue), true);
+        }
     };
 
     Window_Glossary.prototype.cursorRight = function(wrap) {
