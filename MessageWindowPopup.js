@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2021/01/17 パラメータでテール画像を指定していない状態でプラグインコマンドからテール画像を変更しても正しく反映されない問題を修正
  1.1.1 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.1.0 2020/10/17 テール画像を変更できるプラグインコマンドを追加
  1.0.4 2020/09/23 1.0.3の修正方法を変更し、メッセージ表示直後にフキダシを無効化した場合でもネームウィンドウが一瞬上に表示されないよう修正
@@ -835,6 +836,10 @@
         return this._tailImage || param.tailImage;
     };
 
+    Game_System.prototype.isExistTailImage = function() {
+        return !!this.getTailImage();
+    };
+
     Game_System.prototype.setTailImage = function(value) {
         this._tailImage = value;
     };
@@ -1011,7 +1016,6 @@
 
     Window_Base.prototype.setPopupAdjustBoxSize = function() {
         if (Graphics.boxWidth !== Graphics.width) {
-            // なぜ3の補正が必要なのか不明(^^)
             this.x += (Graphics.boxWidth - Graphics.width) / 2 + 3;
         }
         if (Graphics.boxHeight !== Graphics.height) {
@@ -1033,7 +1037,6 @@
 
     Window_Base.prototype.setPopupBasePosition = function() {
         const pos = $gameSystem.getPopupAdjustPosition();
-        // MV版と比べて4pixel右にずれるので補正(原因不明)
         this.x    = this.getPopupBaseX() - this.width / 2 + (pos ? pos[0] : 0) - 4;
         this.y    = this.getPopupBaseY() - this.height - this.getHeightForPopup() + (pos ? pos[1] : 0);
     };
@@ -1247,12 +1250,11 @@
     Window_Message.prototype._createAllParts = function() {
         _Window_Message__createAllParts.apply(this, arguments);
         this._messageTailImage = new Sprite();
-        const tailImage = $gameSystem.getTailImage();
-        if (tailImage) {
+        this._messageTailImage.visible  = false;
+        this._messageTailImage.anchor.x = 0.5;
+        this.addChild(this._messageTailImage);
+        if ($gameSystem.isExistTailImage()) {
             this.refreshTailImage();
-            this._messageTailImage.visible  = false;
-            this._messageTailImage.anchor.x = 0.5;
-            this.addChild(this._messageTailImage);
         }
     };
 
@@ -1261,8 +1263,14 @@
         if (tailImage === this._tailImageName) {
             return;
         }
-        this._messageTailImage.bitmap   = ImageManager.loadSystem(tailImage);
+        this._messageTailImage.bitmap = ImageManager.loadSystem(tailImage);
         this._tailImageName = tailImage;
+        this.setPauseSignImageToTail(this.isPopupLower());
+    };
+
+    Window_Message.prototype.clearTailImage = function() {
+        this._messageTailImage.bitmap   = null;
+        this._tailImageName = null;
     };
 
     Window_Message.prototype.windowWidth = function() {
@@ -1382,12 +1390,14 @@
     Window_Message.prototype.updateTailImage = function() {
         if (!this.isPopup()) {
             this._messageTailImage.visible = false;
-        } else if (this._messageTailImage.bitmap) {
+        } else if ($gameSystem.isExistTailImage()) {
             this.refreshTailImage();
             this._messageTailImage.visible = this.isOpen();
             if (!this.isUsePauseSignTextEnd() && !param.NoUseTail) {
                 this._pauseSignSprite.visible = false;
             }
+        } else if (this._tailImageName) {
+            this.clearTailImage();
         }
     };
 
