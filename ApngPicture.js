@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.8.1 2021/01/17 キャッシュ方針を「あり」にしているとき、破棄のタイミングでエラーになる問題を修正
  1.8.0 2020/11/29 1セルごとのフレーム数をゲーム側で設定できるパラメータを追加
  1.7.2 2020/11/28 gifを使う場合はダミーのpngファイルが別途必要である旨の追記を追加
  1.7.1 2020/11/22 メニュー画面を開いたときに表示中のapngピクチャが消えないよう修正
@@ -772,7 +773,7 @@
 
     Scene_Base.prototype.destroySceneApng = function() {
         this._apngList.forEach(function(sprite) {
-            sprite.destroyApng();
+            sprite.destroyApngIfNeed();
         })
     };
 
@@ -869,9 +870,7 @@
      * APNGの読み込み処理を追加します。
      */
     Sprite.prototype.addApngChild = function(name) {
-        if (this._apngSprite) {
-            this.destroyApng();
-        }
+        this.destroyApngIfNeed();
         this._apngSprite = this.loadApngSprite(name);
         if (this._apngSprite) {
             this.addChild(this._apngSprite);
@@ -888,8 +887,11 @@
 
     Sprite.prototype.destroyApngIfNeed = function() {
         if (this._apngSprite) {
-            // for menu capture
-            setTimeout(this.destroyApng.bind(this), 100);
+            if (this._apngSprite.pixiApngOption.CachePolicy === 0) {
+                this.destroyApng();
+            } else {
+                this.removeApng();
+            }
         }
     };
 
@@ -902,6 +904,10 @@
             });
             pixiApng.stop();
         }
+        this.removeApng();
+    };
+
+    Sprite.prototype.removeApng = function() {
         this.removeChild(this._apngSprite);
         this._apngSprite = null;
     };
@@ -1009,7 +1015,7 @@
         _Sprite_Picture_updateBitmap.apply(this, arguments);
         var picture = this.picture();
         if (!picture && this._apngSprite) {
-            this.destroyApng();
+            this.destroyApngIfNeed();
         }
     };
 
