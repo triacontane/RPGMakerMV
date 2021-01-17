@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.8.2 2021/01/17 キャッシュ方針を「あり」にした画像を再表示するとき、フレームを初期化するよう修正
  1.8.1 2021/01/17 キャッシュ方針を「あり」にしているとき、破棄のタイミングでエラーになる問題を修正
  1.8.0 2020/11/29 1セルごとのフレーム数をゲーム側で設定できるパラメータを追加
  1.7.2 2020/11/28 gifを使う場合はダミーのpngファイルが別途必要である旨の追記を追加
@@ -154,6 +155,11 @@
  *
  * なお、ピクチャの色調変更は反映されません。
  * また、他のプラグインによる拡張が機能しない場合があります。
+ *
+ * APNGをキャッシュすることで表示時の硬直を抑えることができますが、
+ * キャッシュする量に比例して初回起動時に時間が掛かるようになります。
+ * また、キャッシュした画像は1画面中で同時に2つ以上は表示できません。
+ * 使用する場合はご注意ください。
  *
  * さらに、各シーンでパラメータから登録したAPNGを追加表示できます。
  * スイッチによる表示制御が可能です。
@@ -872,6 +878,10 @@
     Sprite.prototype.addApngChild = function(name) {
         this.destroyApngIfNeed();
         this._apngSprite = this.loadApngSprite(name);
+        if (this.isApngCache()) {
+            this._apngSprite.pixiApng.jumpToFrame(0);
+            this._apngSprite.pixiApng.play();
+        }
         if (this._apngSprite) {
             this.addChild(this._apngSprite);
             const original = ImageManager.loadPicture(name);
@@ -887,7 +897,7 @@
 
     Sprite.prototype.destroyApngIfNeed = function() {
         if (this._apngSprite) {
-            if (this._apngSprite.pixiApngOption.CachePolicy === 0) {
+            if (!this.isApngCache()) {
                 this.destroyApng();
             } else {
                 this.removeApng();
@@ -912,6 +922,10 @@
         this._apngSprite = null;
     };
 
+    Sprite.prototype.isApngCache = function() {
+        return this._apngSprite.pixiApngOption.CachePolicy !== 0;
+    };
+
     Sprite.prototype.loadApngSprite = function() {
         return null;
     };
@@ -934,14 +948,14 @@
         _Sprite_update.apply(this, arguments);
         if (this._apngSprite) {
             if (param.FrameCount > 0) {
-                this.updateApngFrameFrame();
+                this.updateApngFrame();
             }
             this.updateApngSwitchStop();
             this.updateApngFrameStop();
         }
     };
 
-    Sprite.prototype.updateApngFrameFrame = function() {
+    Sprite.prototype.updateApngFrame = function() {
         var frameLength = this._apngSprite.pixiApng.getFramesLength();
         var frame = Math.floor(Graphics.frameCount / param.FrameCount) % frameLength;
         this._apngSprite.pixiApng.jumpToFrame(frame);
