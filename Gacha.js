@@ -4,6 +4,8 @@
 // (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
 //=============================================================================
 // Version(modify triacontane)
+// 1.9.0 2021/01/17 ガチャ画面に背景を指定する機能を追加
+//                  ガチャおよび10連ガチャで、最後のガチャのみ指定ランク以上確定にできる機能を追加しました。
 // 1.8.3 2020/06/13 1.8.2の修正の中に本体バージョン1.5.x以前では動作しない記述があったため1.5.xでも動作するよう修正
 // 1.8.2 2020/03/16 複数種類のアイテム入手時のメッセージに武器防具が含まれる場合、アイテム扱いされる不具合を修正
 // 1.8.1 2019/09/09 Scene_Gachaクラスを外部から参照できるようグローバル領域に出しました。
@@ -38,6 +40,16 @@
  * @desc 全額ガチャボタンに表示するテキストです。
  * 機能を使わない場合は空にしてください。
  * @default 全額でガチャを引く
+ *
+ * @param Min Rank Variable
+ * @desc 指定した場合、ガチャが『変数で指定した値のランク』以上確定となります。
+ * @default 0
+ * @type variable
+ *
+ * @param Min Rank Variable 10 Time
+ * @desc 指定した場合、10連ガチャの最後のガチャが『変数で指定した値のランク』以上確定となります。
+ * @default 0
+ * @type variable
  *
  * @param Get Message Text
  * @desc The message of After receiving. "Item Name" is replaced with the received item name.
@@ -130,6 +142,13 @@
  * @dir audio/se/
  * @type file
  *
+ * @param Back Image
+ * @desc ガチャ画面の背景画像です。
+ * @default
+ * @require 1
+ * @dir img/parallaxes/
+ * @type file
+ *
  * @noteParam gachaImage
  * @noteRequire 1
  * @noteDir img/gacha/
@@ -181,6 +200,16 @@
  * @desc ガチャを引いた後のメッセージです。「Item Name」は取得アイテム名と置換されます。
  * @default GET Item Name
  *
+ * @param Min Rank Variable
+ * @desc 指定した場合、ガチャが『変数で指定した値のランク』以上確定となります。
+ * @default 0
+ * @type variable
+ *
+ * @param Min Rank Variable 10 Time
+ * @desc 指定した場合、10連ガチャの最後のガチャが『変数で指定した値のランク』以上確定となります。
+ * @default 0
+ * @type variable
+ *
  * @param Show Item Description
  * @desc 1でアイテム取得時に説明を表示します。[0: 説明非表示 1: 説明表示]
  * @default 0
@@ -197,37 +226,31 @@
  * @param Effect
  * @desc アイテム取得時のアニメーションIDを指定します。
  * @default 119
- * @require 1
  * @type animation
  *
  * @param Rank1 Effect
- * @desc ランク1の時のアニメーションIDを指定します。-1を指定するとアニメーションを表示しません。
- * @default -1
- * @require 1
+ * @desc ランク1の時のアニメーションIDを指定します。
+ * @default 0
  * @type animation
  *
  * @param Rank2 Effect
- * @desc ランク2の時のアニメーションIDを指定します。-1を指定するとアニメーションを表示しません。
- * @default -1
- * @require 1
+ * @desc ランク2の時のアニメーションIDを指定します。
+ * @default 0
  * @type animation
  *
  * @param Rank3 Effect
- * @desc ランク3の時のアニメーションIDを指定します。-1を指定するとアニメーションを表示しません。
- * @default -1
- * @require 1
+ * @desc ランク3の時のアニメーションIDを指定します。
+ * @default 0
  * @type animation
  *
  * @param Rank4 Effect
- * @desc ランク4の時のアニメーションIDを指定します。-1を指定するとアニメーションを表示しません。
- * @default -1
- * @require 1
+ * @desc ランク4の時のアニメーションIDを指定します。
+ * @default 0
  * @type animation
  *
  * @param Rank5 Effect
- * @desc ランク5の時のアニメーションIDを指定します。-1を指定するとアニメーションを表示しません。
- * @default -1
- * @require 1
+ * @desc ランク5の時のアニメーションIDを指定します。
+ * @default 0
  * @type animation
  *
  * @param New Effect
@@ -266,6 +289,13 @@
  * @default Item3
  * @require 1
  * @dir audio/se/
+ * @type file
+ *
+ * @param Back Image
+ * @desc ガチャ画面の背景画像です。
+ * @default
+ * @require 1
+ * @dir img/parallaxes/
  * @type file
  *
  * @noteParam gachaImage
@@ -316,13 +346,13 @@ function Scene_Gacha() {
     var getText        = String(parameters['Get Message Text'] || 'GET Item Name');
     var itemDescEnable = !!Number(parameters['Show Item Description'] || 0);
     var newItemNotice  = String(parameters['New Item Notice'] || 'New!!');
-    var effect         = Number(parameters['Effect'] || '119');
+    var effect         = Number(parameters['Effect'] || '0');
     var rankEffect     = [];
-    rankEffect.push(Number(parameters['Rank1 Effect'] || '-1'));
-    rankEffect.push(Number(parameters['Rank2 Effect'] || '-1'));
-    rankEffect.push(Number(parameters['Rank3 Effect'] || '-1'));
-    rankEffect.push(Number(parameters['Rank4 Effect'] || '-1'));
-    rankEffect.push(Number(parameters['Rank5 Effect'] || '-1'));
+    rankEffect.push(Number(parameters['Rank1 Effect'] || '0'));
+    rankEffect.push(Number(parameters['Rank2 Effect'] || '0'));
+    rankEffect.push(Number(parameters['Rank3 Effect'] || '0'));
+    rankEffect.push(Number(parameters['Rank4 Effect'] || '0'));
+    rankEffect.push(Number(parameters['Rank5 Effect'] || '0'));
     var newEffect          = Number(parameters['New Effect'] || '-1');
     var me                 = String(parameters['ME'] || 'Organ');
     var amount             = Number(parameters['Required Amount'] || '100');
@@ -330,6 +360,9 @@ function Scene_Gacha() {
     var costUnit           = String(parameters['Cost Unit'] || '回');
     var effectStopSwitchId = Number(parameters['Effect Stop Switch'] || 0);
     var se                 = String(parameters['SE'] || '');
+    var backImage          = String(parameters['Back Image'] || '');
+    var minRankVariable    = Number(parameters['Min Rank Variable'] || 0);
+    var minRank10Variable  = Number(parameters['Min Rank Variable 10 Time'] || 0);
 
     var reg = /Required Amount/gi;
     message = message.replace(reg, String(amount));
@@ -502,6 +535,13 @@ function Scene_Gacha() {
         this._helpWindow.setText(message);
     };
 
+    Scene_Gacha.prototype.createBackground = function() {
+        Scene_MenuBase.prototype.createBackground.apply(this, arguments);
+        if (backImage) {
+            this._backgroundSprite.bitmap = ImageManager.loadParallax(backImage);
+        }
+    };
+
     Scene_Gacha.prototype.createGoldWindow = function() {
         var y              = this._helpWindow.height;
         this._goldWindow   = this.isCostTypeVariable() ? new Window_Cost(0, y) : new Window_Gold(0, y);
@@ -568,15 +608,20 @@ function Scene_Gacha() {
         return variable > 0;
     };
 
-    Scene_Gacha.prototype.commandGacha = function(remainCount) {
-        if (remainCount) {
-            this._remainCount = remainCount;
+    Scene_Gacha.prototype.commandGacha = function(gachaCount) {
+        if (gachaCount) {
+            this._minRank = this.findMinRank(gachaCount);
+            this._remainCount = gachaCount;
         }
         // Draw lots
         if (this._lot.length <= 0) {
             this._item = null;
         } else {
-            this._item = this._lot[(Math.random() * this._lot.length) >> 0];
+            var realLot = this.findRealLot();
+            this._item = realLot[(Math.random() * realLot.length) >> 0];
+            if (!this._item) {
+                throw new Error('最低ランク[' + this._minRank + ']以上のアイテムが見付かりませんでした。');
+            }
             this.consumeCost();
             this.getGacha();
 
@@ -602,6 +647,26 @@ function Scene_Gacha() {
         } else {
             this._commandWindow.activate();
         }
+    };
+
+    Scene_Gacha.prototype.findMinRank = function(gachaCount) {
+        if (gachaCount === 1) {
+            return $gameVariables.value(minRankVariable);
+        } else if (gachaCount === 10) {
+            return $gameVariables.value(minRank10Variable);
+        } else {
+            return 0;
+        }
+    };
+
+    Scene_Gacha.prototype.findRealLot = function() {
+        if (this._remainCount > 1) {
+            return this._lot;
+        }
+        return this._lot.filter(function(item) {
+            var rank = Number(item.meta.gachaRank) || 0;
+            return rank >= this._minRank;
+        }.bind(this));
     };
 
     Scene_Gacha.prototype.isEffectStop = function() {
