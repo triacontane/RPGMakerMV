@@ -1,7 +1,10 @@
 //=============================================================================
 // Gacha.js
 //
-// (c)2016 KADOKAWA CORPORATION./YOJI OJIMA
+// (C)2016 KADOKAWA CORPORATION./YOJI OJIMA
+// (Triacontane追加コードのみMITライセンス)
+// This software is released under the MIT License.
+// http://opensource.org/licenses/mit-license.php
 //=============================================================================
 // Version(modify triacontane)
 // 1.9.0 2021/01/17 ガチャ画面に背景を指定する機能を追加
