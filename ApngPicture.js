@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.1.4 2021/01/18 2.1.3の修正でapngでないピクチャや敵キャラを表示しようとするとエラーになる問題を修正
  2.1.3 2021/01/17 キャッシュ方針を「あり」にした画像を再表示するとき、フレームを初期化するよう修正
  2.1.2 2021/01/13 2.1.1の修正で一度消去したピクチャを再表示しようとするとエラーになる問題を修正
  2.1.1 2020/12/11 キャッシュ方針を「キャッシュしない」以外に設定すると消去にエラーが起きる場合がある問題を修正
@@ -850,11 +851,11 @@
             this.destroyApngIfNeed();
         }
         this._apngSprite = this.loadApngSprite(name);
-        if (this.isApngCache()) {
-            this._apngSprite.pixiApng.jumpToFrame(0);
-            this._apngSprite.pixiApng.play();
-        }
         if (this._apngSprite) {
+            if (this.isApngCache()) {
+                this._apngSprite.pixiApng.jumpToFrame(0);
+                this._apngSprite.pixiApng.play();
+            }
             this.addChild(this._apngSprite);
             const original = ImageManager.loadPicture(name);
             original.addLoadListener(() => {
