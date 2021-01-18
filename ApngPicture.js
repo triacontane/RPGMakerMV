@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.8.3 2021/01/18 1.8.2の修正でapngでないピクチャや敵キャラを表示しようとするとエラーになる問題を修正
  1.8.2 2021/01/17 キャッシュ方針を「あり」にした画像を再表示するとき、フレームを初期化するよう修正
  1.8.1 2021/01/17 キャッシュ方針を「あり」にしているとき、破棄のタイミングでエラーになる問題を修正
  1.8.0 2020/11/29 1セルごとのフレーム数をゲーム側で設定できるパラメータを追加
@@ -878,11 +879,11 @@
     Sprite.prototype.addApngChild = function(name) {
         this.destroyApngIfNeed();
         this._apngSprite = this.loadApngSprite(name);
-        if (this.isApngCache()) {
-            this._apngSprite.pixiApng.jumpToFrame(0);
-            this._apngSprite.pixiApng.play();
-        }
         if (this._apngSprite) {
+            if (this.isApngCache()) {
+                this._apngSprite.pixiApng.jumpToFrame(0);
+                this._apngSprite.pixiApng.play();
+            }
             this.addChild(this._apngSprite);
             const original = ImageManager.loadPicture(name);
             original.addLoadListener(function() {
