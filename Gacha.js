@@ -7,6 +7,7 @@
 // http://opensource.org/licenses/mit-license.php
 //=============================================================================
 // Version(modify triacontane)
+// 1.10.0 2021/01/19 指定したスイッチがONのときだけガチャの対象にできる機能を追加
 // 1.9.0 2021/01/17 ガチャ画面に背景を指定する機能を追加
 //                  ガチャおよび10連ガチャで、最後のガチャのみ指定ランク以上確定にできる機能を追加しました。
 // 1.8.3 2020/06/13 1.8.2の修正の中に本体バージョン1.5.x以前では動作しない記述があったため1.5.xでも動作するよう修正
@@ -316,6 +317,8 @@
  * ・新規アイテム入手時の通知とエフェクトを追加（新規アイテムのエフェクトは最後のコマで停止します）
  * ・ガチャの演出をカットするスイッチを追加
  * ・ガチャのロット数に変数を使用できるよう修正
+ * ・ガチャおよび10連ガチャで、最後のガチャのみ指定ランク以上確定にできる機能
+ * ・指定したスイッチがONのときだけガチャの対象にできる機能
  *
  *
  * Plugin Command:
@@ -333,6 +336,7 @@
  *                               トリミングされて表示されます。省略すると画像の中央が指定されます。
  *   <gachaResultY:20>         # ガチャ結果画面で表示する際の中心Y座標です。
  *   <gachaResultImage:image2> # ガチャ結果画面で表示する画像を個別に指定する場合に記述します。
+ *   <gachaConditionSwitch:2>  # スイッチ[2]がONのときだけガチャに追加されます。
  */
 
 function Scene_Gacha() {
@@ -441,13 +445,18 @@ function Scene_Gacha() {
                 typeIndex = 2;
             }
             if (typeIndex >= 0) {
-                return !!this._GachaFlags[typeIndex][item.id];
+                return !!this._GachaFlags[typeIndex][item.id] && this.isInGachaSwitch(item);
             } else {
                 return false;
             }
         } else {
             return false;
         }
+    };
+
+    Game_System.prototype.isInGachaSwitch = function(item) {
+        var id = parseInt(item.meta.gachaConditionSwitch);
+        return !id || $gameSwitches.value(id);
     };
 
     Scene_Gacha.prototype             = Object.create(Scene_MenuBase.prototype);
@@ -463,9 +472,12 @@ function Scene_Gacha() {
         this._windowFadeSprite      = null;
         this._screenFadeOutDuration = 0;
         this._screenFadeInDuration  = 0;
-        this._lot        = [];
         this._resultList = [];
+        this.createLot();
+    };
 
+    Scene_Gacha.prototype.createLot = function() {
+        this._lot        = [];
         var numLot;
         var item, i, j;
         for (i = 1; i < $dataItems.length; i++) {
