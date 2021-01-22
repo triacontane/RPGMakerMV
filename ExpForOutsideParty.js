@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2021/01/22 プラグインの機能を無効にできるスイッチを追加
  1.1.0 2018/09/16 一度もパーティに加わっていないアクターも対しても経験値が加算される場合がある問題を修正
                   パーティ外アクターのレベルアップ時にメッセージを表示するかどうかを選択できる機能を追加
  1.0.1 2018/09/06 アクターが抜けている状態でセーブしたデータに対して本プラグインを適用して戦闘終了するとエラーになる問題を修正
@@ -29,6 +30,11 @@
  * @desc パーティ外の仲間がレベルアップしたときにメッセージを表示するかどうかを選択します。
  * @default true
  * @type boolean
+ *
+ * @param invalidSwitch
+ * @desc 指定したスイッチがONのとき、パーティ外メンバーに経験値が入らなくなります。
+ * @default 0
+ * @type switch
  *
  * @help ExpForOutsideParty.js
  *
@@ -55,6 +61,12 @@
  * @desc パーティ外の仲間がレベルアップしたときにメッセージを表示するかどうかを選択します。
  * @default true
  * @type boolean
+ *
+ * @param invalidSwitch
+ * @text 無効スイッチ
+ * @desc 指定したスイッチがONのとき、パーティ外メンバーに経験値が入らなくなります。
+ * @default 0
+ * @type switch
  *
  * @help ExpForOutsideParty.js
  *
@@ -109,18 +121,32 @@
         $gameActors.gainExpWithoutParty(this._rewards.exp);
     };
 
+    const _Game_Interpreter_command315 = Game_Interpreter.prototype.command315;
+    Game_Interpreter.prototype.command315 = function() {
+        var value = this.operateValue(this._params[2], this._params[3], this._params[4]);
+        $gameActors.gainExpWithoutParty(value);
+        return _Game_Interpreter_command315.apply(this, arguments);
+    };
+
     /**
      * Game_Actors.prototype.gainExpWithoutParty
      * パーティ外のメンバーにEXPを加算します。
      * @param exp EXP
      */
     Game_Actors.prototype.gainExpWithoutParty = function(exp) {
+        if (this.isInvalidExpWithoutParty()) {
+            return;
+        }
         var partyMember = $gameParty.allMembers();
         this._data.filter(function(actor) {
             return actor && !partyMember.contains(actor) && actor.isInPartyAtLeastOnce();
         }).forEach(function(actor) {
             actor.gainExp(exp);
         });
+    };
+
+    Game_Actors.prototype.isInvalidExpWithoutParty = function() {
+        return $gameSwitches.value(param.invalidSwitch);
     };
 
     var _Game_Actor_shouldDisplayLevelUp = Game_Actor.prototype.shouldDisplayLevelUp;
