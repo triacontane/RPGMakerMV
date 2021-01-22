@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/01/22 複数行の動的文字列を中央揃え、右揃えにできる機能を追加
 // 2.1.0 2021/01/10 動的文字列のフォントサイズを指定できる機能を追加
 // 2.0.4 2021/01/06 制御文字\v[n,m]でもリアルタイム描画されるよう修正
 // 2.0.3 2020/09/01 制御文字\oc[c], \ow[n]の移植が漏れていた問題を修正
@@ -99,6 +100,18 @@
  * @desc 文字列ピクチャの背景にウィンドウを表示します。
  * @type boolean
  * @default
+ *
+ * @arg align
+ * @text 揃え
+ * @desc 複数行の動的文字列を指定したときの揃えです。
+ * @default
+ * @type select
+ * @option 左揃え
+ * @value left
+ * @option 中央揃え
+ * @value center
+ * @option 右揃え
+ * @value right
  *
  * @command windowCursor
  * @text ウィンドウカーソル設定
@@ -214,6 +227,9 @@
         if (setting.window !== '') {
             this.dWindowFrame = setting.window;
         }
+        if (setting.align !== '') {
+            this.dTextAlign = setting.align;
+        }
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
@@ -248,6 +264,7 @@
             windowFrame   : this.dWindowFrame,
             gradationLeft : this.dTextGradationLeft,
             gradationRight: this.dTextGradationRight,
+            align         : this.dTextAlign
         };
     };
 
@@ -386,6 +403,23 @@
         }
     };
 
+    const _Window_Base_flushTextState = Window_Base.prototype.flushTextState;
+    Window_Base.prototype.flushTextState = function(textState) {
+        if (this.textPictureWidth && this.textPictureAlign) {
+            this.setDTextAlign(textState);
+        }
+        _Window_Base_flushTextState.apply(this, arguments);
+    };
+
+    Window_Base.prototype.setDTextAlign = function(textState) {
+        const dx = this.textPictureWidth - this.textWidth(textState.buffer);
+        if (this.textPictureAlign === 'center') {
+            textState.x = Math.floor(dx / 2);
+        } else if (this.textPictureAlign === 'right') {
+            textState.x = dx;
+        }
+    };
+
     //=============================================================================
     // Sprite_Picture
     //  画像の動的生成を追加定義します。
@@ -491,6 +525,9 @@
         }
         this._colorTone = [0, 0, 0, 0];
         tempWindow.contents = this.bitmap;
+        const rect = tempWindow.textSizeEx(text);
+        tempWindow.textPictureWidth = rect.width;
+        tempWindow.textPictureAlign = this.dTextInfo.align;
         tempWindow.drawTextEx(text, 0, 0);
         tempWindow.contents = null;
         tempWindow.destroy();
