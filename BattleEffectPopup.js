@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/01/24 ポップアップカラーの凡例を追加。メッセージの表示タイミングを微調整
 // 2.0.0 2021/01/21 MZ版としてほぼ全面的に再作成
 // 1.9.2 2020/04/15 MOG_BattleHud.jsと併用したとき、フロントビューで味方にポップアップメッセージが表示されるよう変更
 // 1.9.1 2020/03/15 YEP_X_ActSeqPack1.jsでステート付与に成功してもステート付与メッセージがでない不具合を代わりに修正
@@ -201,8 +202,28 @@
  *
  * @param color
  * @text ポップアップカラー
- * @desc ポップアップカラーです。CSS形式の文字列(赤、緑、青、アルファ値)で指定します。
- * @default rgba(255, 255, 255, 1.0)
+ * @desc ポップアップカラーです。CSSの色指定文字列を指定します。
+ * @default
+ * @type combo
+ * @option rgba(255, 255, 255, 1.0);
+ * @option hsla(100%, 100%, 100%, 0.5);
+ * @option #99FF66
+ * @option black
+ * @option silver
+ * @option gray
+ * @option white
+ * @option maroon
+ * @option red
+ * @option purple
+ * @option fuchsia
+ * @option green
+ * @option lime
+ * @option olive
+ * @option yellow
+ * @option navy
+ * @option blue
+ * @option teal
+ * @option aqua
  * 
  * @param flash
  * @text フラッシュ
@@ -287,7 +308,7 @@
 (function() {
     'use strict';
     const script = document.currentScript;
-    const param  = PluginManagerEx.createParameter(script);
+    const param = PluginManagerEx.createParameter(script);
 
     PluginManagerEx.registerCommand(script, 'USER_POPUP', args => {
         BattleManager.getActionTarget().subject.startMessagePopup(args.value);
@@ -320,7 +341,7 @@
     // Game_Action
     //  弱点によってポップアップを設定します。
     //=============================================================================
-    const _Game_Action_calcElementRate    = Game_Action.prototype.calcElementRate;
+    const _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         const result = _Game_Action_calcElementRate.apply(this, arguments);
         if (BattleManager.isInputting()) return result;
@@ -368,7 +389,7 @@
         return this._messagePopup;
     };
 
-    const _Game_Battler_stateRate    = Game_Battler.prototype.stateRate;
+    const _Game_Battler_stateRate = Game_Battler.prototype.stateRate;
     Game_Battler.prototype.stateRate = function(stateId) {
         const rate = _Game_Battler_stateRate.apply(this, arguments);
         if (rate === 0) {
@@ -385,7 +406,7 @@
     // Game_ActionResult
     //  行動が無効だったかどうかを返します。
     //=============================================================================
-    const _Game_ActionResult_clear    = Game_ActionResult.prototype.clear;
+    const _Game_ActionResult_clear = Game_ActionResult.prototype.clear;
     Game_ActionResult.prototype.clear = function() {
         _Game_ActionResult_clear.apply(this, arguments);
         this.guarded = false;
@@ -397,6 +418,22 @@
 
     Game_ActionResult.prototype.isGuarded = function() {
         return this.guarded && this.isInvalid();
+    };
+
+    Game_ActionResult.prototype.findResultPopup = function() {
+        if (this.critical) {
+            return param.Critical;
+        } else if (this.isGuarded()) {
+            return param.Guard;
+        } else if (this.isInvalid()) {
+            return param.Invalid;
+        } else if (this.missed) {
+            return param.Miss;
+        } else if (this.evaded) {
+            return param.Avoid;
+        } else {
+            return null;
+        }
     };
 
     //=============================================================================
@@ -411,68 +448,35 @@
         target.startAppointMessagePopup();
     };
 
-    const _Window_BattleLog_displayDamage    = Window_BattleLog.prototype.displayDamage;
-    Window_BattleLog.prototype.displayDamage = function(target) {
-        _Window_BattleLog_displayDamage.apply(this, arguments);
-        if (target.result().isGuarded()) {
-            this.pushPopupMessage(target, param.Guard);
-        } else if (target.result().isInvalid()) {
-            this.pushPopupMessage(target, param.Invalid);
+    const _Window_BattleLog_displayCritical = Window_BattleLog.prototype.displayCritical;
+    Window_BattleLog.prototype.displayCritical = function(target) {
+        _Window_BattleLog_displayCritical.apply(this, arguments);
+        this.displayResultPopup(target);
+    };
+
+    Window_BattleLog.prototype.displayResultPopup = function(target) {
+        const popup = target.result().findResultPopup();
+        if (popup) {
+            this.pushPopupMessage(target, popup);
         }
         if (target.hasAppointPopup()) {
             this.pushPopupAppointMessage(target);
         }
     };
 
-    const _Window_BattleLog_displayCritical    = Window_BattleLog.prototype.displayCritical;
-    Window_BattleLog.prototype.displayCritical = function(target) {
-        _Window_BattleLog_displayCritical.apply(this, arguments);
-        if (target.result().critical) {
-            this.pushPopupMessage(target, param.Critical);
-        }
-    };
-
-    const _Window_BattleLog_displayMiss    = Window_BattleLog.prototype.displayMiss;
-    Window_BattleLog.prototype.displayMiss = function(target) {
-        _Window_BattleLog_displayMiss.apply(this, arguments);
-        this.popupMiss(target);
-    };
-
-    Window_BattleLog.prototype.popupMiss = function(target) {
-        this.pushPopupMessage(target, param.Miss);
-    };
-
-    const _Window_BattleLog_displayEvasion    = Window_BattleLog.prototype.displayEvasion;
-    Window_BattleLog.prototype.displayEvasion = function(target) {
-        _Window_BattleLog_displayEvasion.apply(this, arguments);
-        this.popupEvasion(target);
-    };
-
-    Window_BattleLog.prototype.popupEvasion = function(target) {
-        this.pushPopupMessage(target, param.Avoid);
-    };
-
-    const _Window_BattleLog_displayCounter    = Window_BattleLog.prototype.displayCounter;
+    const _Window_BattleLog_displayCounter = Window_BattleLog.prototype.displayCounter;
     Window_BattleLog.prototype.displayCounter = function(target) {
         _Window_BattleLog_displayCounter.apply(this, arguments);
-        this.popupCounter(target);
-    };
-
-    Window_BattleLog.prototype.popupCounter = function(target) {
         this.pushPopupMessage(target, param.Counter);
     };
 
-    const _Window_BattleLog_displayReflection    = Window_BattleLog.prototype.displayReflection;
+    const _Window_BattleLog_displayReflection = Window_BattleLog.prototype.displayReflection;
     Window_BattleLog.prototype.displayReflection = function(target) {
         _Window_BattleLog_displayReflection.apply(this, arguments);
-        this.popupReflection(target);
-    };
-
-    Window_BattleLog.prototype.popupReflection = function(target) {
         this.pushPopupMessage(target, param.Reflection);
     };
 
-    const _Window_BattleLog_displayAddedStates    = Window_BattleLog.prototype.displayAddedStates;
+    const _Window_BattleLog_displayAddedStates = Window_BattleLog.prototype.displayAddedStates;
     Window_BattleLog.prototype.displayAddedStates = function(target) {
         _Window_BattleLog_displayAddedStates.apply(this, arguments);
         if (!param.StateList) {
@@ -514,7 +518,7 @@
     // Sprite_Battler
     //  ポップアップメッセージを作成します。
     //=============================================================================
-    const _Sprite_Battler_updateDamagePopup    = Sprite_Battler.prototype.updateDamagePopup;
+    const _Sprite_Battler_updateDamagePopup = Sprite_Battler.prototype.updateDamagePopup;
     Sprite_Battler.prototype.updateDamagePopup = function() {
         this.setupMessagePopup();
         _Sprite_Battler_updateDamagePopup.apply(this, arguments);
@@ -568,16 +572,16 @@
         this.initialize.apply(this, arguments);
     }
 
-    Sprite_PopupMessage.prototype             = Object.create(Sprite_Damage.prototype);
+    Sprite_PopupMessage.prototype = Object.create(Sprite_Damage.prototype);
     Sprite_PopupMessage.prototype.constructor = Sprite_PopupMessage;
 
     Sprite_PopupMessage.prototype.setup = function(target) {
-        this._popup   = target.getMessagePopup();
-        const sprite  = this.createChildSprite(param.MaxWidth || 240, this.fontSize());
-        sprite.dy     = 0;
+        this._popup = target.getMessagePopup();
+        const sprite = this.createChildSprite(param.MaxWidth || 240, this.fontSize());
+        sprite.dy = 0;
         const flash = this._popup.flash
         if (flash && flash.alpha > 0) {
-            this._flashColor    = [flash.red, flash.green, flash.blue, flash.alpha];
+            this._flashColor = [flash.red, flash.green, flash.blue, flash.alpha];
             this._flashDuration = param.FlashDuration || 60;
         }
         const se = this._popup.se;
