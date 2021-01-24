@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2021/01/24 ベースプラグインの記述を追加
 // 2.1.0 2021/01/24 ポップアップカラーの凡例を追加。メッセージの表示タイミングを微調整
 // 2.0.0 2021/01/21 MZ版としてほぼ全面的に再作成
 // 1.9.2 2020/04/15 MOG_BattleHud.jsと併用したとき、フロントビューで味方にポップアップメッセージが表示されるよう変更
@@ -41,6 +42,7 @@
  * @plugindesc 戦闘行動結果ポップアッププラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattleEffectPopup.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  * 
  * @param Critical
