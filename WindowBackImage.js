@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/01/24 ウィンドウごとに個別のウィンドウスキンを指定できる機能を追加
 // 2.0.3 2020/12/16 指定対象外のウィンドウで余計な処理が実行されてしまう問題を修正
 // 2.0.2 2020/10/15 指定可能なウィンドウに戦闘画面のステータスウィンドウを追加
 // 2.0.1 2020/08/22 カスタムメニュープラグインで作成したウィンドウ背景を変えられる機能を追加
@@ -206,6 +207,13 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param WindowSkin
+ * @desc 専用のウィンドウスキン画像です。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
  * @param OffsetX
  * @desc 表示X座標の補正値です。
  * @default 0
@@ -248,7 +256,7 @@
 (function() {
     'use strict';
 
-    var getClassName = function(object) {
+    const getClassName = function(object) {
         return object.constructor.toString().replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
     };
 
@@ -261,8 +269,8 @@
      * @param pluginName plugin name(EncounterSwitchConditions)
      * @returns {Object} Created parameter
      */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
+    const createPluginParameter = function(pluginName) {
+        const paramReplacer = function(key, value) {
             if (value === 'null') {
                 return value;
             }
@@ -275,12 +283,12 @@
                 return value;
             }
         };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        const parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
         PluginManager.setParameters(pluginName, parameter);
         return parameter;
     };
 
-    var param = createPluginParameter('WindowBackImage');
+    const param = createPluginParameter('WindowBackImage');
     if (!param.windowImageInfo) {
         param.windowImageInfo = [];
     }
@@ -289,7 +297,7 @@
     // Window
     //  専用の背景画像を設定します。
     //=============================================================================
-    var _Window__createAllParts      = Window.prototype._createAllParts;
+    const _Window__createAllParts      = Window.prototype._createAllParts;
     Window.prototype._createAllParts = function() {
         _Window__createAllParts.apply(this, arguments);
         this._backImageDataList = this.initBackImageData();
@@ -315,8 +323,8 @@
         this.frameVisible = false;
         this._windowBackImageSprites    = [];
         this._backImageDataList.forEach(function(backImageData) {
-            var bitmap     = ImageManager.loadPicture(backImageData['ImageFile']);
-            var sprite     = new Sprite_WindowBackImage(bitmap);
+            const bitmap     = ImageManager.loadPicture(backImageData['ImageFile']);
+            const sprite     = new Sprite_WindowBackImage(bitmap);
             sprite.scale.x = (backImageData['ScaleX'] || 100) / 100;
             sprite.scale.y = (backImageData['ScaleY'] || 100) / 100;
             this._windowBackImageSprites.push(sprite);
@@ -325,7 +333,7 @@
     };
 
     Window.prototype.initBackImageData = function() {
-        var className = getClassName(this);
+        let className = getClassName(this);
         // for SceneCustomMenu.js
         if (this._data && this._data.Id) {
             className = this._data.Id;
@@ -339,7 +347,7 @@
         return this._backImageDataList[index][propName];
     };
 
-    var _Window__refreshAllParts      = Window.prototype._refreshAllParts;
+    const _Window__refreshAllParts      = Window.prototype._refreshAllParts;
     Window.prototype._refreshAllParts = function() {
         if (this._windowBackImageSprites) {
             this._refreshBackImage();
@@ -358,15 +366,15 @@
         }, this);
     };
 
-    var _Window_update      = Window.prototype.update;
+    const _Window_update      = Window.prototype.update;
     Window.prototype.update = function() {
         _Window_update.apply(this, arguments);
         if (!this._windowBackImageSprites) {
             return;
         }
-        var defaultVisible = true;
+        let defaultVisible = true;
         this._windowBackImageSprites.forEach(function(sprite, index) {
-            var switchId = this.getBackImageDataItem(index, 'SwitchId');
+            const switchId = this.getBackImageDataItem(index, 'SwitchId');
             sprite.visible = !switchId || $gameSwitches.value(switchId);
             if (sprite.visible && !this.getBackImageDataItem(index, 'WindowShow')) {
                 defaultVisible = false;
@@ -375,6 +383,15 @@
         this._backSprite.visible  = defaultVisible;
         this._frameSprite.visible = defaultVisible;
         this.frameVisible = defaultVisible;
+    };
+
+    const _Window_Base_loadWindowskin = Window_Base.prototype.loadWindowskin;
+    Window_Base.prototype.loadWindowskin = function() {
+        _Window_Base_loadWindowskin.apply(this, arguments);
+        const list = this._backImageDataList;
+        if (list && list.length > 0 && list[0].WindowSkin) {
+            this.windowskin = ImageManager.loadSystem(list[0].WindowSkin);
+        }
     };
 
     //=============================================================================
