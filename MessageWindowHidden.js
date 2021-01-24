@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2022/09/12 ウィンドウ消去時、決定動作によってウィンドウを再表示できる設定を追加(by unaunagiさま)
 // 2.6.1 2020/05/21 トリガースイッチと連動無効スイッチの状態によってエラーが起きうる記述を修正
 // 2.6.0 2020/05/20 ピクチャの連動を無効にできるスイッチを追加
 // 2.5.1 2020/05/19 2.3.0の仕様変更で連動表示ピクチャの透明度が復元できない問題を修正
@@ -85,6 +86,11 @@
  * @default true
  * @type boolean
  *
+ * @param restoreByDecision
+ * @desc メッセージ消去時、決定動作により非表示になっていたメッセージウィンドウを再表示できます。
+ * @default false
+ * @type boolean
+ *
  * @help Erase message window (and restore) when triggered
  *
  * This plugin is released under the MIT License.
@@ -146,6 +152,12 @@
  * @text 選択肢表示中は無効
  * @desc 選択肢の表示中はウィンドウを非表示にできなくなります。
  * @default true
+ * @type boolean
+ *
+ * @param restoreByDecision
+ * @text 決定動作で復帰
+ * @desc メッセージ消去時、決定動作により非表示になっていたメッセージウィンドウを再表示できます。
+ * @default false
  * @type boolean
  *
  * @help メッセージウィンドウを表示中に指定したボタンを押下することで
@@ -214,6 +226,9 @@
             } else {
                 this.showAllWindow();
             }
+        } else if (this.isHidden() && this.isTriggered() && param.restoreByDecision) {
+            this.showAllWindow();
+            Input.update();
         }
         var wait = _Window_Message_updateWait.apply(this, arguments);
         if (this.isHidden() && this.visible) {
