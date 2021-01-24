@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2021/01/24 ウィンドウごとに個別のウィンドウスキンを指定できる機能を追加
 // 1.4.0 2020/12/28 JK_MailSystem.jsの各ウィンドウをオプション項目に追加
 // 1.3.1 2020/08/22 カスタムメニュープラグインで作成したウィンドウ背景を変えられる機能を追加
 // 1.3.0 2019/01/13 ウィンドウ背景の画像を複数表示できる機能を追加
@@ -210,6 +211,13 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param WindowSkin
+ * @desc 専用のウィンドウスキン画像です。
+ * @default
+ * @require 1
+ * @dir img/system/
+ * @type file
+ *
  * @param OffsetX
  * @desc 表示X座標の補正値です。
  * @default 0
@@ -377,6 +385,37 @@
         }, this);
         this._windowBackSprite.visible  = defaultVisible;
         this._windowFrameSprite.visible = defaultVisible;
+    };
+
+    var _Window_Base_loadWindowskin = Window_Base.prototype.loadWindowskin;
+    Window_Base.prototype.loadWindowskin = function() {
+        _Window_Base_loadWindowskin.apply(this, arguments);
+        var list = this._backImageDataList;
+        if (list && list.length > 0 && list[0].WindowSkin) {
+            this.windowskin = ImageManager.loadSystem(list[0].WindowSkin);
+        }
+    };
+
+    var _Scene_Boot_isReady = Scene_Boot.prototype.isReady;
+    Scene_Boot.prototype.isReady = function() {
+        var ready = _Scene_Boot_isReady.apply(this, arguments);
+        if (!ready) {
+            return false;
+        }
+        if (!this._skins) {
+            this.loadAllWindowSkin();
+        }
+        return this._skins.every(function(bitmap) {
+            return bitmap.isReady();
+        });
+    };
+
+    Scene_Boot.prototype.loadAllWindowSkin = function() {
+        this._skins = param.windowImageInfo.filter(function(win) {
+            return !!win.WindowSkin;
+        }).map(function(win) {
+            return ImageManager.loadSystem(win.WindowSkin);
+        });
     };
 
     //=============================================================================
