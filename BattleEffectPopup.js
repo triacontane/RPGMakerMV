@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2021/01/24 静止画像を指定してポップアップしたとき、ポップアップ削除時にdestroyしてしまう問題を修正
 // 2.1.1 2021/01/24 ベースプラグインの記述を追加
 // 2.1.0 2021/01/24 ポップアップカラーの凡例を追加。メッセージの表示タイミングを微調整
 // 2.0.0 2021/01/21 MZ版としてほぼ全面的に再作成
@@ -610,5 +611,15 @@
             bitmap.drawText(this._popup.text, 0, 0, width, height, 'center');
             return bitmap;
         }
+    };
+
+    const _Sprite_PopupMessage_destroy = Sprite_PopupMessage.prototype.destroy;
+    Sprite_PopupMessage.prototype.destroy = function(options) {
+        for (const child of this.children) {
+            if (child.bitmap && child.bitmap.url) {
+                child.bitmap = null;
+            }
+        }
+        _Sprite_PopupMessage_destroy.apply(this, arguments);
     };
 })();
