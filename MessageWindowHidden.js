@@ -219,6 +219,10 @@
             } else {
                 this.showAllWindow();
             }
+        } else if (this.isHidden() && this.isTriggered()) {
+            //非表示中に決定キーなどを押すと解除する
+            this.showAllWindow();
+            Input.update();
         }
         var wait = _Window_Message_updateWait.apply(this, arguments);
         if (this.isHidden() && this.visible) {
