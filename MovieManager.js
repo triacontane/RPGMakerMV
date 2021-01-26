@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.5 2021/01/26 autoplayをtrueに設定
 // 1.0.4 2018/03/28 ムービー再生後、ロード完了前にムービーを停止するとムービーが停止されない問題を修正
 // 1.0.3 2018/03/27 Saba_SimpleScenario.jsとの競合を解消（こちらの設定で上書き）
 // 1.0.2 2018/01/30 ヘルプの記述を修正
@@ -182,6 +183,7 @@ function MovieManager() {
         this._updateVideo();
         this._centerElement(this._video);
         this._video.style.margin = 0;
+        this._video.autoplay = true;
         this._videoLoading       = false;
     };
 
