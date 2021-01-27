@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/01/28 英語ヘルプを記述
  1.0.0 2021/01/27 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -17,7 +18,24 @@
  * @plugindesc BalloonPositionPlugin
  * @author triacontane
  *
+ * @param BalloonXNoImage
+ * @desc Uniformly adjusts the x of balloon for events where no image is specified.
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @param BalloonYNoImage
+ * @desc Uniformly adjusts the y of balloon for events where no image is specified.
+ * @default 0
+ * @min -2000
+ * @max 2000
+ *
  * @help BalloonPosition.js
+ *
+ * Adjusts the display coordinates of balloon
+ * <BalloonX:5>
+ * <BalloonY:-5>
  *
  * This plugin is released under the MIT License.
  */
