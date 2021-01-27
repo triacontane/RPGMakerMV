@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.2.0 2021/01/27 MZで動作するよう修正
 // 3.1.1 2020/07/05 3.1.0の修正をイベント開始時にも適用できるよう変更
 // 3.1.0 2020/07/05 イベントから離れたらエフェクトを即時消去できる設定を追加
 // 3.0.0 2020/05/26 センサーエフェクトをイベントではなくプレイヤーに適用できる機能を追加。パラメータの再設定が必要です。
@@ -26,7 +27,10 @@
 
 /*:
  * @plugindesc 周辺イベント感知プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/NearEventSensor.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param DefaultFlash
  * @text デフォルトフラッシュ
@@ -151,11 +155,10 @@
  * <NESセルフスイッチ:A> # セルフスイッチ[A]がONのときのみエフェクトを出します。
  * <NESSelfSwitch:1>     # 同上
  *
- * 注意！
- * モバイル端末では、フラッシュを使用すると動作が
- * 少し重くなるようです。ご利用の際はご注意ください。
- *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -195,67 +198,15 @@
 
 (function() {
     'use strict';
-    var metaTagPrefix = 'NES';
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
-    };
-
-    var getArgBoolean = function(arg) {
-        return arg === true ? true : (arg || '').toUpperCase() === 'ON' || (arg || '').toUpperCase() === 'TRUE';
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-    var param = createPluginParameter('NearEventSensor');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
     param.FlashColorArray = [param.FlashColor.Red, param.FlashColor.Green, param.FlashColor.Blue, param.FlashColor.Alpha];
 
     //=============================================================================
     // Sprite_Character
     //  キャラクターのフラッシュ機能を追加定義します。
     //=============================================================================
-    var _Sprite_CharacterUpdate       = Sprite_Character.prototype.update;
+    const _Sprite_CharacterUpdate       = Sprite_Character.prototype.update;
     Sprite_Character.prototype.update = function() {
         _Sprite_CharacterUpdate.call(this);
         this.updateFlash();
@@ -267,10 +218,10 @@
         }
     };
 
-    var _Sprite_Character_updateBalloon = Sprite_Character.prototype.updateBalloon;
+    const _Sprite_Character_updateBalloon = Sprite_Character.prototype.updateBalloon;
     Sprite_Character.prototype.updateBalloon = function() {
         if (this._character.isBalloonCancel()) {
-            this.endBalloon();
+            this._character.endBalloon();
         }
         _Sprite_Character_updateBalloon.apply(this, arguments);
     };
@@ -279,14 +230,14 @@
     // Game_CharacterBase
     //  キャラクターのフラッシュ機能を追加定義します。
     //=============================================================================
-    var _Game_CharacterBaseInitMembers       = Game_CharacterBase.prototype.initMembers;
+    const _Game_CharacterBaseInitMembers       = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBaseInitMembers.call(this);
         this._flashColor    = null;
         this._flashDuration = 0;
     };
 
-    var _Game_CharacterBaseUpdate       = Game_CharacterBase.prototype.update;
+    const _Game_CharacterBaseUpdate       = Game_CharacterBase.prototype.update;
     Game_CharacterBase.prototype.update = function() {
         _Game_CharacterBaseUpdate.call(this);
         this.updateFlash();
@@ -316,10 +267,10 @@
         if (!this.isFlash() && targetEvent.isFlashEvent()) {
             this.startFlash(param.FlashColorArray.clone(), param.FlashDuration);
         }
-        var balloonId = targetEvent.getSensorBalloonId();
+        const balloonId = targetEvent.getSensorBalloonId();
         if (balloonId && (!param.WaitForBalloon || !this.isBalloonPlaying())) {
             if (this._balloonInterval <= 0 || isNaN(this._balloonInterval)) {
-                this.requestBalloon(balloonId);
+                $gameTemp.requestBalloon(this, balloonId);
                 this._balloonInterval = param.BalloonInterval;
             } else {
                 this._balloonInterval--;
@@ -338,7 +289,7 @@
     };
 
     Game_CharacterBase.prototype.isBalloonCancel = function() {
-        var cancel = this._balloonCancel;
+        const cancel = this._balloonCancel;
         this._balloonCancel = false;
         return cancel;
     };
@@ -347,13 +298,13 @@
     // Game_Event
     //  プレイヤーとの距離を測り、必要な場合にエフェクトさせる機能を追加定義します。
     //=============================================================================
-    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    const _Game_Event_initialize = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         this._balloonInterval = 0;
     };
 
-    var _Game_EventUpdate       = Game_Event.prototype.update;
+    const _Game_EventUpdate       = Game_Event.prototype.update;
     Game_Event.prototype.update = function() {
         _Game_EventUpdate.apply(this, arguments);
         if (this.page()) {
@@ -361,14 +312,14 @@
         }
     };
 
-    var _Game_Event_start = Game_Event.prototype.start;
+    const _Game_Event_start = Game_Event.prototype.start;
     Game_Event.prototype.start = function() {
         _Game_Event_start.apply(this, arguments);
         this.eraseSensorEffect();
     };
 
     Game_Event.prototype.updateSensorEffect = function() {
-        var subject = this.findNearEffectSubject();
+        const subject = this.findNearEffectSubject();
         if (this.isSensorOn()) {
             subject.applySensorEffect(this);
         } else {
@@ -387,13 +338,13 @@
     };
 
     Game_Event.prototype.isEmptyValidate = function() {
-        var list = this.list();
+        const list = this.list();
         return (list && list.length > 1) || !param.DisableEmpty;
     };
 
     Game_Event.prototype.isFlashEvent = function() {
-        var useFlash = getMetaValues(this.event(), ['フラッシュ対象', 'FlashEvent']);
-        return useFlash ? getArgBoolean(useFlash) : param.DefaultFlash;
+        const useFlash = this.findEventSensorNote( ['NESフラッシュ対象', 'NESFlashEvent']);
+        return useFlash || param.DefaultFlash;
     };
 
     Game_Event.prototype.isValidSensor = function() {
@@ -401,26 +352,30 @@
     };
 
     Game_Event.prototype.isValidSensorSwitch = function() {
-        var switchId = getMetaValues(this.event(), ['スイッチ', 'Switch']);
-        return switchId ? $gameSwitches.value(getArgNumber(switchId, 1)) : true;
+        const switchId = this.findEventSensorNote( ['NESスイッチ', 'NESSwitch']);
+        return switchId ? $gameSwitches.value(switchId) : true;
     };
 
     Game_Event.prototype.isValidSensorSelfSwitch = function() {
-        var selfSwitchType = getMetaValues(this.event(), ['セルフスイッチ', 'SelfSwitch']);
+        const selfSwitchType = this.findEventSensorNote( ['NESセルフスイッチ', 'NESSelfSwitch']);
         return selfSwitchType ? $gameSelfSwitches.value([this._mapId, this._eventId, selfSwitchType.toUpperCase()]) : true;
     };
 
     Game_Event.prototype.getSensorBalloonId = function() {
-        var balloonId = getMetaValues(this.event(), ['フキダシ対象', 'BalloonEvent']);
-        return balloonId ? getArgNumber(balloonId, 0) : param.DefaultBalloon;
+        const balloonId = this.findEventSensorNote( ['NESフキダシ対象', 'NESBalloonEvent']);
+        return balloonId ? balloonId : param.DefaultBalloon;
+    };
+
+    Game_Event.prototype.findEventSensorNote = function(tags) {
+        return PluginManagerEx.findMetaValue(this.event(), tags);
     };
 
     Game_Event.prototype.isVeryNearThePlayer = function() {
-        var sx = this.deltaXFrom($gamePlayer.x);
-        var sy = this.deltaYFrom($gamePlayer.y);
-        var ax = Math.abs(sx);
-        var ay = Math.abs(sy);
-        var result = (ax + ay <= param.SensorDistance);
+        const sx = this.deltaXFrom($gamePlayer.x);
+        const sy = this.deltaYFrom($gamePlayer.y);
+        const ax = Math.abs(sx);
+        const ay = Math.abs(sy);
+        const result = (ax + ay <= param.SensorDistance);
         if (result && param.ConsiderationDir) {
             if (ax > ay) {
                 return $gamePlayer.direction() === (sx > 0 ? 6 : 4);
