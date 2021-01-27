@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2021/01/28 MZで動作するよう修正
  1.0.1 2021/01/28 英語ヘルプを記述
  1.0.0 2021/01/27 初版
 ----------------------------------------------------------------------------
@@ -17,6 +18,9 @@
 /*:
  * @plugindesc BalloonPositionPlugin
  * @author triacontane
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BalloonPosition.js
+ * @target MZ
+ * @base PluginCommonBase
  *
  * @param BalloonXNoImage
  * @desc Uniformly adjusts the x of balloon for events where no image is specified.
@@ -42,6 +46,9 @@
 /*:ja
  * @plugindesc フキダシ位置調整プラグイン
  * @author トリアコンタン
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BalloonPosition.js
+ * @target MZ
+ * @base PluginCommonBase
  *
  * @param BalloonXNoImage
  * @text 画像なしX座標
@@ -75,52 +82,8 @@
 
 (function() {
     'use strict';
-
-    /**
-     * Get database meta information.
-     * @param object Database item
-     * @param name Meta name
-     * @returns {String} meta value
-     */
-    var getMetaValue = function(object, name) {
-        return object.meta.hasOwnProperty(name) ? convertEscapeCharacters(object.meta[name]) : null;
-    };
-
-    /**
-     * Convert escape characters.(require any window object)
-     * @param text Target text
-     * @returns {String} Converted text
-     */
-    var convertEscapeCharacters = function(text) {
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
-    };
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('BalloonPosition');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     /**
      * Game_CharacterBase
@@ -143,7 +106,7 @@
      * フキダシの座標をメモ欄から取得します。
      */
     Game_Event.prototype.findBalloonX = function() {
-        const x = parseInt(getMetaValue(this.event(),'BalloonX'));
+        const x = PluginManagerEx.findMetaValue(this.event(),'BalloonX');
         if (x) {
             return x;
         } else if (this.isNoImage()) {
@@ -154,7 +117,7 @@
     };
 
     Game_Event.prototype.findBalloonY = function() {
-        const y = parseInt(getMetaValue(this.event(),'BalloonY'));
+        const y = PluginManagerEx.findMetaValue(this.event(),'BalloonY');
         if (y) {
             return y;
         } else if (this.isNoImage()) {
@@ -165,15 +128,15 @@
     };
 
     /**
-     * Sprite_Character
+     * Sprite_Balloon
      * フキダシの表示位置を調整します。
      */
-    var _Sprite_Character_updateBalloon = Sprite_Character.prototype.updateBalloon;
-    Sprite_Character.prototype.updateBalloon = function() {
-        _Sprite_Character_updateBalloon.apply(this, arguments);
-        if (this._character && this.isBalloonPlaying()) {
-            this._balloonSprite.x += this._character.findBalloonX();
-            this._balloonSprite.y += this._character.findBalloonY();
+    const _Sprite_Balloon_updatePosition = Sprite_Balloon.prototype.updatePosition;
+    Sprite_Balloon.prototype.updatePosition = function() {
+        _Sprite_Balloon_updatePosition.apply(this, arguments);
+        if (this.targetObject && this.targetObject instanceof Game_CharacterBase) {
+            this.x += this.targetObject.findBalloonX();
+            this.y += this.targetObject.findBalloonY();
         }
     };
 })();
