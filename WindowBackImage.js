@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2021/01/30 バトラーステータスウィンドウが選択肢に抜けていたので追加
 // 1.5.0 2021/01/24 ウィンドウごとに個別のウィンドウスキンを指定できる機能を追加
 // 1.4.0 2020/12/28 JK_MailSystem.jsの各ウィンドウをオプション項目に追加
 // 1.3.1 2020/08/22 カスタムメニュープラグインで作成したウィンドウ背景を変えられる機能を追加
@@ -127,6 +128,8 @@
  * @value Window_PartyCommand
  * @option [戦闘画面]アクターコマンドウィンドウ
  * @value Window_ActorCommand
+ * @option [戦闘画面]バトラーステータスウィンドウ
+ * @value Window_BattleStatus
  * @option [戦闘画面]アクター一覧ウィンドウ
  * @value Window_BattleActor
  * @option [戦闘画面]敵キャラ一覧ウィンドウ
