@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2021/02/01 Mano_Gauge.jsとの競合を解消
 // 2.1.1 2020/08/13 2.1.0の修正で戦闘テストをするとエラーになる問題を修正
 // 2.1.0 2020/08/12 戦闘中でも動的ウィンドウが表示できる機能を追加
 // 2.0.0 2020/07/25 プラグインの型指定機能に対応
@@ -323,6 +324,17 @@
                 this.addChild(this._DynamicWindows[i]);
             }
         }
+    };
+
+    var _Spriteset_Base_bindGaugeAt = Spriteset_Base.prototype.bindGaugeAt;
+    Spriteset_Base.prototype.bindGaugeAt =function(picutureid){
+        this._DynamicWindows.forEach(function(win) {
+            this._pictureContainer.removeChild(win);
+        }, this);
+        _Spriteset_Base_bindGaugeAt.apply(this, arguments);
+        this._DynamicWindows.forEach(function(win, index) {
+            this._pictureContainer.addChildAt(win, paramIncludePicture + index);
+        }, this);
     };
 
     Spriteset_Base.prototype.addDynamicWindowForPicturePriority = function(pictureLayer, dWindow) {
