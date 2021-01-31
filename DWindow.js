@@ -326,16 +326,18 @@
         }
     };
 
-    var _Spriteset_Base_bindGaugeAt = Spriteset_Base.prototype.bindGaugeAt;
-    Spriteset_Base.prototype.bindGaugeAt =function(picutureid){
-        this._DynamicWindows.forEach(function(win) {
-            this._pictureContainer.removeChild(win);
-        }, this);
-        _Spriteset_Base_bindGaugeAt.apply(this, arguments);
-        this._DynamicWindows.forEach(function(win, index) {
-            this._pictureContainer.addChildAt(win, paramIncludePicture + index);
-        }, this);
-    };
+    if (paramIncludePicture > 0) {
+        var _Spriteset_Base_bindGaugeAt = Spriteset_Base.prototype.bindGaugeAt;
+        Spriteset_Base.prototype.bindGaugeAt =function(picutureid){
+            this._DynamicWindows.forEach(function(win) {
+                this._pictureContainer.removeChild(win);
+            }, this);
+            _Spriteset_Base_bindGaugeAt.apply(this, arguments);
+            this._DynamicWindows.forEach(function(win, index) {
+                this._pictureContainer.addChildAt(win, paramIncludePicture + index);
+            }, this);
+        };
+    }
 
     Spriteset_Base.prototype.addDynamicWindowForPicturePriority = function(pictureLayer, dWindow) {
         pictureLayer.children.some(function(picture, index) {
