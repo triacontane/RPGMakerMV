@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2021/01/31 1.2.2の修正で、決定ボタン長押しによる瞬間表示が効かなくなる問題を修正
 // 1.2.2 2021/01/31 字間設定中に決定ボタンを連打、長押しすると表示が崩れる問題を修正
 // 1.2.1 2020/10/24 メッセージウィンドウ以外に適用されてしまう問題を修正
 //                  MessageWindowPopup.jsとの競合を解消
@@ -71,14 +72,15 @@
 
     const _Window_Message_shouldBreakHere = Window_Message.prototype.shouldBreakHere;
     Window_Message.prototype.shouldBreakHere = function(textState) {
+        const result = _Window_Message_shouldBreakHere.apply(this, arguments);
         if (this.getBetweenCharacters() > 0) {
-            return true;
+            this.flushTextState(textState);
         }
-        return _Window_Message_shouldBreakHere.apply(this, arguments);
+        return result;
     };
 
     Window_Base.prototype.applyBetweenCharacter = function(textState) {
-        if (textState.index > 1) {
+        if (textState.index > 1 && textState.x > textState.startX) {
             const between = this.getBetweenCharacters();
             textState.x += textState.rtl ? -between : between;
         }
