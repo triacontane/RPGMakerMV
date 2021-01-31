@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2021/01/31 字間設定中に決定ボタンを連打、長押しすると表示が崩れる問題を修正
 // 1.2.1 2020/10/24 メッセージウィンドウ以外に適用されてしまう問題を修正
 //                  MessageWindowPopup.jsとの競合を解消
 // 1.2.0 2020/10/22 MZ対応版を作成
@@ -66,6 +67,14 @@
     Window_Message.prototype.processCharacter = function(textState) {
         _Window_Message_processCharacter.apply(this, arguments);
         this.applyBetweenCharacter(textState);
+    };
+
+    const _Window_Message_shouldBreakHere = Window_Message.prototype.shouldBreakHere;
+    Window_Message.prototype.shouldBreakHere = function(textState) {
+        if (this.getBetweenCharacters() > 0) {
+            return true;
+        }
+        return _Window_Message_shouldBreakHere.apply(this, arguments);
     };
 
     Window_Base.prototype.applyBetweenCharacter = function(textState) {
