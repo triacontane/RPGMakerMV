@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.3 2021/01/31 戦闘開始時にパーティのポップアップが残っていた場合、消去するよう修正
 // 2.1.2 2021/01/24 静止画像を指定してポップアップしたとき、ポップアップ削除時にdestroyしてしまう問題を修正
 // 2.1.1 2021/01/24 ベースプラグインの記述を追加
 // 2.1.0 2021/01/24 ポップアップカラーの凡例を追加。メッセージの表示タイミングを微調整
@@ -321,6 +322,12 @@
         BattleManager.getActionTarget().targets.forEach(target => target.startMessagePopup(args.value));
     });
 
+    const _BattleManager_setup = BattleManager.setup;
+    BattleManager.setup = function(troopId, canEscape, canLose) {
+        _BattleManager_setup.apply(this, arguments);
+        $gameParty.members().forEach(actor => actor.clearMessagePopup());
+    };
+
     const _BattleManager_startAction = BattleManager.startAction;
     BattleManager.startAction = function() {
         _BattleManager_startAction.apply(this, arguments);
@@ -364,6 +371,7 @@
     //=============================================================================
     Game_Battler.prototype.clearMessagePopup = function() {
         this._messagePopup = null;
+        this._appointPopup = null;
     };
 
     Game_Battler.prototype.isMessagePopupRequested = function() {
