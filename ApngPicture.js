@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.1.5 2021/02/01 数字のみのファイルをapng指定して起動するとエラーになる問題を修正
  2.1.4 2021/01/18 2.1.3の修正でapngでないピクチャや敵キャラを表示しようとするとエラーになる問題を修正
  2.1.3 2021/01/17 キャッシュ方針を「あり」にした画像を再表示するとき、フレームを初期化するよう修正
  2.1.2 2021/01/13 2.1.1の修正で一度消去したピクチャを再表示しようとするとエラーになる問題を修正
@@ -617,7 +618,7 @@
         }
 
         addImage(item, option) {
-            let name = item.FileName || '';
+            let name = String(item.FileName) || '';
             let ext = Utils.hasEncryptedImages() ? 'png_' : 'png';
             name = name.replace(/\.gif$/gi, function() {
                 ext = 'gif';
