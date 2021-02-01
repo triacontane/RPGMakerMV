@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.8.4 2021/02/01 数字のみのファイルをapng指定して起動するとエラーになる問題を修正
  1.8.3 2021/01/18 1.8.2の修正でapngでないピクチャや敵キャラを表示しようとするとエラーになる問題を修正
  1.8.2 2021/01/17 キャッシュ方針を「あり」にした画像を再表示するとき、フレームを初期化するよう修正
  1.8.1 2021/01/17 キャッシュ方針を「あり」にしているとき、破棄のタイミングでエラーになる問題を修正
@@ -647,7 +648,7 @@
         }
 
         addImage(item, option) {
-            var name = item.FileName || '';
+            var name = String(item.FileName) || '';
             var ext = Decrypter.hasEncryptedImages ? 'rpgmvp' : 'png';
             name = name.replace(/\.gif$/gi, function() {
                 ext = 'gif';
