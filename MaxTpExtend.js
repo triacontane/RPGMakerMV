@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/02/06 MZ向けにヘルプのアノテーションを微修正
  1.0.0 2020/05/08 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -15,7 +16,9 @@
 
 /*:
  * @plugindesc MaxTpExtendPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MaxTpExtend.js
+ * @author triacontane
  *
  * @help MaxTpExtend.js
  *
@@ -34,7 +37,9 @@
  */
 /*:ja
  * @plugindesc 最大TP拡張プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MaxTpExtend.js
+ * @author トリアコンタン
  *
  * @help MaxTpExtend.js
  *
