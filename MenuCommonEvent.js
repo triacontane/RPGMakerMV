@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2021/02/06 ピクチャなどの画像をウィンドウの背後に表示できる設定を追加
 // 1.3.7 2020/08/28 1.3.6の修正方法が間違っていた問題を修正
 // 1.3.6 2020/08/27 DWindow.jsと組み合わせたときにコモンイベントが存在するメニューで動的ウィンドウが作成されてしまう競合を修正
 // 1.3.5 2020/05/09 MOG_Weather_EX.jsと併用したときに発生するエラーを解消
@@ -49,6 +50,11 @@
  *
  * @param ActivateTimer
  * @desc メニュー画面中でもタイマーを表示し、かつタイマーを進めます。
+ * @default false
+ * @type boolean
+ *
+ * @param PictureUnderWindow
+ * @desc ピクチャなどの画像要素をウィンドウの背後に表示します。
  * @default false
  * @type boolean
  *
@@ -221,6 +227,11 @@
  *
  * @param タイマー有効化
  * @desc メニュー画面中でもタイマーを表示し、かつタイマーを進めます。
+ * @default false
+ * @type boolean
+ *
+ * @param 画像をウィンドウ背後に配置
+ * @desc ピクチャなどの画像要素をウィンドウの背後に表示します。
  * @default false
  * @type boolean
  *
@@ -459,6 +470,7 @@
     param.maxMenuPicture       = getParamNumber(['MaxMenuPicture', 'ピクチャ表示最大数'], 1);
     param.saveInterpreterIndex = getParamBoolean(['SaveInterpreterIndex', '実行位置を記憶']);
     param.activateTimer        = getParamBoolean(['ActivateTimer', 'タイマー有効化']);
+    param.pictureUnderWindow   = getParamBoolean(['PictureUnderWindow', '画像をウィンドウ背後に配置']);
 
     var pluginCommandMap = new Map();
     setPluginCommand('ウィンドウ操作禁止', 'execDisableWindowControl');
@@ -656,6 +668,9 @@
             return;
         }
         this.createSpriteset();
+        if (param.pictureUnderWindow) {
+            this.addChildAt(this._spriteset, this.children.indexOf(this._windowLayer));
+        }
         if (!this._messageWindow) {
             this.createMessageWindow();
         }
