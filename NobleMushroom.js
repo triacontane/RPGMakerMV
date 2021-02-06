@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.4 2021/02/06 マップから開いたロード、クイックロードでセーブファイルのない項目を選択するとフリーズする問題を修正
 // 1.11.3 2020/06/02 コモンイベントでメッセージを表示しているときにポーズメニューを開けない不具合を修正
 // 1.11.2 2020/05/31 1.11.1の修正で、初期値を0にした場合も強制的に1になっていた不具合を修正
 // 1.11.1 2020/05/09 表示速度変数のパラメータの初期値を0に変更
@@ -1333,7 +1334,10 @@
     };
 
     Scene_Map.prototype.callQuickLoad = function() {
-        this.processLoad(DataManager.latestSavefileId());
+        var result = this.processLoad(DataManager.latestSavefileId());
+        if (!result) {
+            this._pauseWindow.activate();
+        }
     };
 
     Scene_Map.prototype.callToTitle = function() {
@@ -1367,7 +1371,11 @@
             this.processSave(this.savefileId());
             this._pauseWindow.activate();
         } else {
-            this.processLoad(this.savefileId());
+            var result = this.processLoad(this.savefileId());
+            if (!result) {
+                this._fileListWindow.activate();
+                return;
+            }
         }
         this.closeListWindow();
     };
@@ -1393,8 +1401,10 @@
             this.fadeOutAll();
             SceneManager.goto(Scene_AutoLoad);
             $gameMessage.setPause(true);
+            return true;
         } else {
             SoundManager.playBuzzer();
+            return false;
         }
     };
 
