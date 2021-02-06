@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/02/06 チャージタイムの増減に計算式を指定できる機能を追加
  1.0.0 2020/08/21 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -59,6 +60,7 @@
  * You can add the following in the item or skill memo field.
  * <ChargeTime:50>  // Increases the charge time by 50 (the maximum is 100).
  * <ChargeTime:-50> // Decreases the charge time by 50.
+ * <ChargeTimeJs:f> // charge time by formula result.
  *
  * It also provides a command to change the charge time of the specified butler.
  *
@@ -118,6 +120,9 @@
  * アイテムもしくはスキルのメモ欄に以下の通り記述してください。
  * <ChargeTime:50>  // チャージタイムを50増加させます(最大値は100)。
  * <ChargeTime:-50> // チャージタイムを50減少させます。
+ * <ChargeTimeJs:f> // チャージタイムを計算式[f]の評価結果だけ増加させます。
+ * スキルのダメージ計算式と同じ要領で指定しますが記号「>」は使用できません。
+ * 公式プラグイン「TextScriptBase」があれば制御文字\tx[aaa]が使えます。
  *
  * また、指定したバトラーのチャージタイムを変更するコマンドを提供します。
  *
@@ -156,6 +161,21 @@
         const chargeTime = PluginManagerEx.findMetaValue(this.item(), 'ChargeTime');
         if (chargeTime) {
             target.changeTpbChargeTime(chargeTime)
+        }
+        this.applyChangeChargeTimeJs(target);
+    };
+
+    Game_Action.prototype.applyChangeChargeTimeJs = function(target) {
+        const chargeTimeJs = PluginManagerEx.findMetaValue(this.item(), 'ChargeTimeJs');
+        if (chargeTimeJs) {
+            try {
+                const a = this.subject();
+                const b = target;
+                const value = eval(chargeTimeJs);
+                target.changeTpbChargeTime(value);
+            } catch (e) {
+                PluginManagerEx.throwError( `<ChargeTimeJs:${chargeTimeJs}> ${e.message}`, script);
+            }
         }
     };
 
