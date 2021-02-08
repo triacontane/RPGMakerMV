@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2021/02/09 戦闘中に戦闘背景を変更したとにリトライすると変更後の背景で再戦してしまう不具合を修正
 // 1.2.0 2020/10/14 マップイベントからゲームオーバーになったときもリトライコマンドが表示される場合がある不具合を修正
 //                  パラメータの型指定機能に対応
 // 1.1.3 2020/09/10 強制リトライで戦闘開始に戻ったとき、HPなどの状態が復元されない問題を修正
@@ -260,6 +261,15 @@
     };
 
     //=============================================================================
+    // Game_Map
+    //  リトライ時に再戦前の状態を復帰します。
+    //=============================================================================
+    Game_Map.prototype.restoreForBattleRetry = function(oldMap) {
+        this._battleback1Name = oldMap.battleback1Name();
+        this._battleback2Name = oldMap.battleback2Name();
+    };
+
+    //=============================================================================
     // BattleManager
     //  リトライ関連処理を追加定義します。
     //=============================================================================
@@ -329,6 +339,7 @@
             // without $gameMap because of 'victory or defeat'
             var prevGameMap = $gameMap;
             this.extractSaveContents(JsonEx.parse(json));
+            prevGameMap.restoreForBattleRetry($gameMap);
             $gameMap = prevGameMap;
         }
     };
