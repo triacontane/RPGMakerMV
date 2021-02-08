@@ -7,6 +7,8 @@
 // ----------------------------------------------------------------------------
 // Version
 // 1.3.0 2021/12/16 リトライにコスト（お金）を設定できる機能を追加
+//                  戦闘中に戦闘背景を変更したとにリトライすると変更後の背景で再戦してしまう不具合を修正
+//                  マップイベントからゲームオーバーになったときもリトライコマンドが表示される場合がある不具合を修正
 // 1.2.0 2021/07/20 MZで動作するよう全面的に修正
 // 1.1.3 2020/09/10 強制リトライで戦闘開始に戻ったとき、HPなどの状態が復元されない問題を修正
 //                  ReviceBattleItemNumber.jsと併用したとき、リトライ後にアイテム画面を開くとエラーになる競合を修正
@@ -228,6 +230,15 @@
     };
 
     //=============================================================================
+    // Game_Map
+    //  リトライ時に再戦前の状態を復帰します。
+    //=============================================================================
+    Game_Map.prototype.restoreForBattleRetry = function(oldMap) {
+        this._battleback1Name = oldMap.battleback1Name();
+        this._battleback2Name = oldMap.battleback2Name();
+    };
+
+    //=============================================================================
     // BattleManager
     //  リトライ関連処理を追加定義します。
     //=============================================================================
@@ -297,6 +308,7 @@
             // without $gameMap because of 'victory or defeat'
             const prevGameMap = $gameMap;
             this.extractSaveContents(JsonEx.parse(this._retryData));
+            prevGameMap.restoreForBattleRetry($gameMap);
             $gameMap = prevGameMap;
         }
     };
@@ -403,7 +415,11 @@
         this._retryWindow.setHandler('retry', this.commandRetry.bind(this));
         this._retryWindow.setHandler('load', this.commandLoad.bind(this));
         this._retryWindow.setHandler('title', this.commandTitle.bind(this));
-        this.addWindow(this._retryWindow);
+        if (BattleManager.canRetry()) {
+            this.addWindow(this._retryWindow);
+        } else {
+            this._noRetry = true;
+        }
     };
 
     Scene_Gameover.prototype.rectRetryWindow = function() {
@@ -460,7 +476,12 @@
         this.startFadeOut(fade, true);
     };
 
+    const _Scene_Gameover_update = Scene_Gameover.prototype.update;
     Scene_Gameover.prototype.update = function() {
+        if (this._noRetry) {
+            _Scene_Gameover_update.apply(this, arguments);
+            return;
+        }
         if (!this.isBusy()) {
             this._retryWindow.open();
         }
