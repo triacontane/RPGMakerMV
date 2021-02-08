@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2021/02/08 色調変更したピクチャを消去し、同一の番号で動的文字列ピクチャを作成したとき文字列ピクチャが表示されない場合がある問題を修正
 // 2.2.0 2021/01/22 複数行の動的文字列を中央揃え、右揃えにできる機能を追加
 // 2.1.0 2021/01/10 動的文字列のフォントサイズを指定できる機能を追加
 // 2.0.4 2021/01/06 制御文字\v[n,m]でもリアルタイム描画されるよう修正
@@ -523,7 +524,7 @@
         if (this.dTextInfo.color) {
             this.makeDynamicBitmapBack();
         }
-        this._colorTone = [0, 0, 0, 0];
+        this.setColorTone([0, 0, 0, 0]);
         tempWindow.contents = this.bitmap;
         const rect = tempWindow.textSizeEx(text);
         tempWindow.textPictureWidth = rect.width;
