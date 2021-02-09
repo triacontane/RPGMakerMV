@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.20.2 2021/02/09 NRP_EvalPluginCommand.jsと併用したとき、D_TEXTの制御文字を変換対象外にするよう修正
 // 1.20.1 2021/02/08 色調変更したピクチャを消去し、同一の番号で動的文字列ピクチャを作成したとき文字列ピクチャが表示されない場合がある問題を修正
 // 1.20.0 2020/07/11 すべての動的文字列ピクチャに付与される接頭辞テキストを指定できる機能を追加
 // 1.19.0 2020/04/09 フレームウィンドウに余白を指定できる機能を追加
@@ -300,9 +301,22 @@
     // Game_Interpreter
     //  プラグインコマンド[D_TEXT]を追加定義します。
     //=============================================================================
+    if (PluginManager.parameters('NRP_EvalPluginCommand')) {
+        var _Game_Interpreter_command356 = Game_Interpreter.prototype.command356;
+        Game_Interpreter.prototype.command356 = function() {
+            this._argClone = this._params[0].split(" ");
+            this._argClone.shift();
+            return _Game_Interpreter_command356.apply(this, arguments);
+        };
+    }
+
     var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
+        if (this._argClone) {
+            args = this._argClone;
+            this._argClone = null;
+        }
         this.pluginCommandDTextPicture(command, args);
     };
 
