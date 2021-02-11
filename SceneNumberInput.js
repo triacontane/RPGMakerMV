@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2021/02/11 プラグインを適用してデータをロードするとエラーになる問題を修正
 // 1.2.0 2019/11/22 対象変数値が「0」だった場合の符号がマイナスになってしまう問題を修正
 //                  背景マップの表示方法を(ぼかし、通常、なし)から選択できる機能を追加
 // 1.1.0 2019/11/04 マイナスの値を入力できる機能を追加
@@ -233,7 +234,7 @@
     };
 
     Game_System.prototype.getNumberInput = function() {
-        if (!this._numberInput) {
+        if (!this._numberInput || !this._numberInput.isCalled) {
             this._numberInput = new Game_NumberInput();
         }
         return this._numberInput;
@@ -281,6 +282,7 @@
             return this._inputLength + 1;
         }
     }
+    window.Game_NumberInput = Game_NumberInput;
 
     //=============================================================================
     // Scene_Map
