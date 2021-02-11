@@ -1,12 +1,13 @@
 //=============================================================================
 // DestinationWindow.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.6.0-SNAPSHOT 2019/06/24 特定マップで非表示にする機能を追加
+// 1.7.0 2021/02/11 制御文字\v[n]を使って描画したとき、変数値が変わると再描画されるよう修正
+// 1.6.0 2019/06/24 特定マップで非表示にする機能を追加
 // 1.5.0 2018/07/20 行動目標ウィンドウの内容を複数行表示できる機能を追加
 // 1.4.0 2017/11/15 行動目標ウィンドウの文字列揃えを中央揃え、右揃えにできる機能を追加
 // 1.3.0 2017/11/11 マップ画面のウィンドウを一定時間で消去できる機能を追加
@@ -15,7 +16,7 @@
 // 1.1.0 2017/05/02 メニュー画面にも表示できる機能を追加
 // 1.0.0 2017/05/02 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -97,7 +98,7 @@
  * @option Right
  * @value 2
  *
- * @param NoDestinationMaps
+ * @param NoDestinationWindowMapIds
  * @desc 非表示にしたいマップIDリスト
  * @default []
  * @type number[]
@@ -199,6 +200,7 @@
  * @value 2
  *
  * @param NoDestinationWindowMapIds
+ * @text 非表示マップリスト
  * @desc 非表示にしたいマップIDリスト
  * @default []
  * @type number[]
@@ -497,6 +499,7 @@
             this._textList = [];
         }
         textList.forEach(function(text, index) {
+            text = this.convertEscapeCharacters(text);
             if (this._textList[index] === text && this._iconIndex === iconIndex) {
                 return;
             }
@@ -545,7 +548,8 @@
     };
 
     Window_Destination.prototype.isVisible = function() {
-        return $gameSwitches.value(param.showingSwitchId) && !this.isEventRunning() && this.isExistText() && !this.isOverFrame() && !this.isNoDestinationWindowMap();
+        return $gameSwitches.value(param.showingSwitchId) && !this.isEventRunning() &&
+            this.isExistText() && !this.isOverFrame() && !this.isNoDestinationWindowMap();
     };
 
     Window_Destination.prototype.isOverFrame = function() {
