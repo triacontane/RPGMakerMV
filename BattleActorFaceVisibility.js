@@ -1,11 +1,12 @@
 //=============================================================================
 // BattleActorFaceVisibility.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2015 Triacontane
 // This plugin is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2021/02/13 apngピクチャプラグインと組み合わせることで、敵キャラおよびピクチャをアニメーションさせる機能を追加
 // 1.5.0 2017/05/21 敵キャラ選択中にウィンドウを非表示にする機能と、味方選択中に表示対象を選択中のアクターに変更する機能を追加
 // 1.4.1 2017/01/21 ステートアイコンの並び順が逆になっていた不具合を修正
 // 1.4.0 2016/12/31 ウィンドウ透過機能を追加
@@ -278,7 +279,7 @@
     };
 
     Window_Face.prototype.createFaceSprite = function() {
-        var sprite       = new Sprite();
+        var sprite       = new Sprite_BattleFace();
         sprite.x         = this.width / 2;
         sprite.y         = this.height / 2;
         sprite.anchor.x  = 0.5;
@@ -340,16 +341,16 @@
     Window_Face.prototype.drawActorFace = function(actor) {
         var meta = actor.actor().meta;
         if (meta != null && meta.face_picture) {
-            this.drawPicture(getArgString(meta.face_picture), ImageManager.loadPicture.bind(ImageManager));
+            this.drawPicture(getArgString(meta.face_picture), ImageManager.loadPicture.bind(ImageManager), 'picture');
         } else if (meta != null && meta.face_enemy_id) {
             var enemyId = getArgNumber(meta.face_enemy_id, 1, $dataEnemies.length - 1);
-            this.drawPicture($dataEnemies[enemyId].battlerName, ImageManager.loadEnemy.bind(ImageManager));
+            this.drawPicture($dataEnemies[enemyId].battlerName, ImageManager.loadEnemy.bind(ImageManager), 'enemy');
         } else {
             this.drawFace(actor);
         }
     };
 
-    Window_Face.prototype.drawPicture = function(fileName, loadHandler) {
+    Window_Face.prototype.drawPicture = function(fileName, loadHandler, type) {
         var bitmap = loadHandler(fileName);
         bitmap.addLoadListener(function() {
             var scale;
@@ -361,6 +362,10 @@
             this._faceSprite.scale.x = scale;
             this._faceSprite.scale.y = scale;
             this._faceSprite.bitmap  = bitmap;
+            if (this._faceSprite.addApngChild) {
+                this._faceSprite.setType(type);
+                this._faceSprite.addApngChild(fileName);
+            }
         }.bind(this));
     };
 
@@ -375,6 +380,26 @@
             this._faceSprite.setFrame(sx, sy, Window_Base._faceWidth, Window_Base._faceHeight);
         }.bind(this));
     };
+
+    class Sprite_BattleFace extends Sprite {
+        constructor() {
+            super();
+        }
+
+        setType(type) {
+            this._type = type;
+        }
+
+        loadApngSprite(name) {
+            if (this._type === 'picture') {
+                return SceneManager.tryLoadApngPicture(name);
+            }
+            if (this._type === 'enemy') {
+                return SceneManager.tryLoadApngEnemy(name);
+            }
+            return null;
+        }
+    }
 
     //=============================================================================
     // ウィンドウを透過して重なり合ったときの表示を自然にします。
