@@ -1,84 +1,102 @@
 //=============================================================================
 // CharacterPictureManager.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/02/12 MZ向けに仕様から再設計
 // 1.0.0 2016/05/01 タクポンさん依頼版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
  * @plugindesc 立ち絵表示管理プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CharacterPictureManager.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @help アクターの立ち絵画像の表示を管理します。
- * 画像はステートやHPの残量に応じて自在に変化できます。
+ * @param PictureList
+ * @text 立ち絵リスト
+ * @desc アクターごとの立ち絵リストです。ひとりのアクターに対して複数の画像を重ねて表示できます。(リストの下が手前に表示)
+ * @default []
+ * @type struct<StandPictureActor>[]
  *
- * ・アクターのメモ欄に以下の通り記述すると、条件に応じて立ち絵が変化します。
- * <CPMノーマル:aaa> // 平常時は「aaa.png」が表示されます。
- * <CPM残HP50:bbb>   // HPが50%(10%単位で指定可)を下回ったら「bbb.png」が表示されます。
- * <CPMダメージ:kkk> // ダメージを受けた瞬間「kkk.png」が表示されます。
- * ※ファイル名には制御文字が利用可能です。
+ * @param SceneList
+ * @text 表示対象シーンリスト
+ * @desc 立ち絵を表示したいシーンのリストです。シーンごとに基準座標を設定します。
+ * @default []
+ * @type struct<Scene>[]
  *
- * 表示座標は以下のとおり定義します。
- * <CPM_X:100> // 立ち絵のX座標を100に設定します。
- * <CPM_Y:100> // 立ち絵のY座標を100に設定します。
+ * @param Origin
+ * @text 原点
+ * @desc 立ち絵画像の原点です。全画像で共通の設定です。
+ * @default 0
+ * @type select
+ * @option 左上
+ * @value 0
+ * @option 中央
+ * @value 1
+ * @option 中央下
+ * @value 2
  *
- * ・ステートのメモ欄に以下の通り記述すると、ステート有効時に立ち絵が変化します。
- * <CPMノーマル:ccc>  // 対象のステートが有効なら「ccc.png」が表示されます。
+ * @help CharacterPictureManager.js
  *
- * ・スキルのメモ欄に以下の通り記述すると、スキルを使用した瞬間、立ち絵が変化します。
- * <CPMノーマル:ddd>  // スキルを使用した瞬間「ddd.png」が表示されます。
+ * 複数の画像から構成される立ち絵を管理、表示できます。
+ * プラグインパラメータから画像と表示条件、表示したいシーンを登録します。
+ * 以下の特徴があります。
+ * ・HP残量やステート、装備、職業、スイッチなど条件に応じた立ち絵の変化
+ * ・戦闘中は行動時、ダメージ時など戦況に応じた画像の切り替え
+ * ・複数の画像を使った衣装差分や表情差分の作成
+ * ・同一の立ち絵を戦闘画面、メニュー画面、マップ画面で使い回しが可能
  *
- * 上層ピクチャ（衣装など）を定義することもできます。元画像の上に被るように表示されます。
- * 衣装は耐久値の割合によって画像を変更することができます。
- * 防具のメモ欄に以下の通り設定してください。
- * <CPM耐久:300>
+ * また、別途公開しているAPNGピクチャプラグインと組み合わせると
+ * 立ち絵をアニメーションできます。ただし、使いすぎに注意してください。
  *
- * ・アクターのメモ欄に以下の通り記述すると、条件に応じて衣装が変化します。
- * <CPM上層ノーマル:eee> // 平常時は「eee.png」が表示されます。
- * <CPM上層耐久50:fff>   // 耐久度が50%(10%単位で指定可)を下回ったら「fff.png」が表示されます。
- * <CPM上層ダメージ:kkk> // ダメージを受けた瞬間「kkk.png」が表示されます。
- * <CPM上層耐久50ダメージ:lll>
- * // 耐久度が50%(10%単位で指定可)を下回った状態でダメージを受けた瞬間「lll.png」が表示されます。
+ * ●立ち絵ファイルの動的設定(上級者向け)
+ * 立ち絵を大量に使いたい場合にファイル名を命名規則に従って動的に決定できます。
+ * ファイルが存在しないとエラーになること、未使用ファイルの自動削除機能で
+ * ファイルが削除される場合があるので上級者向けです。
+ * 以下の規則に従ってファイル名が変換されます。
  *
- * ・ステートのメモ欄に以下の通り記述すると、ステート有効時に立ち絵が変化します。
- * <CPM上層ノーマル:ggg> // 対象のステートが有効なら「ggg.png」が表示されます。
- * <CPM上層耐久50:hhh>   // 耐久度が50%(10%単位で指定可)を下回ったら「hhh.png」が表示されます。
+ * {hp:40,60,80}
+ * HPレートが指定した閾値に従ってインデックスに変換されます。
+ * 上記の例では以下の数値に変換されます。
+ *   0%-39% のとき:0
+ *  40%-59% のとき:1
+ *  60%-80% のとき:2
+ *  80%-100%のとき:3
  *
- * ・スキルのメモ欄に以下の通り記述すると、スキルを使用した瞬間、立ち絵が変化します。
- * <CPM上層ノーマル:iii> // スキルを使用した瞬間「iii.png」が表示されます。
- * <CPM上層耐久50:jjj>   // 耐久度が50%(10%単位で指定可)を下回ったら「jjj.png」が表示されます。
+ * {stateId}
+ *  もっとも優先度の高いステートIDに変換されます。
+ *  ただしステートのメモ欄に<NoStandPicture>と記述すると対象外になります。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
+ * {switch:3}
+ *  スイッチ[3]がONのとき[1]に、OFFのとき[0]に変換されます。
  *
- * CPM_SHOW [アクターID] [X座標] [Y座標]
- * 立ち絵表示 [アクターID] [X座標] [Y座標]
- *  戦闘で表示しているものと同じ立ち絵をマップの指定座標に表示します。
- *  例：CPM_SHOW 1 100 200
+ * {variable:4}
+ *  変数[4]の値に変換されます。
  *
- * CPM_HIDE [アクターID]
- * 立ち絵消去 [アクターID]
- *  表示している立ち絵を消去します。
- *  例：CPM_HIDE 1
+ * {action}
+ *  行動中のとき[1]に、そうでないときに[0]に変換されます。
  *
- * CPM_DAMAGE_ENDURANCE [アクターID] [減算値]
- * 耐久ダメージ [アクターID] [減算値]
- *  装備している全ての防具の耐久値を指定した値だけ減らします。
- *  例：CPM_DAMAGE_ENDURANCE 1 100
+ * {damage}
+ *  被ダメージ時に[1]に、そうでないときに[0]に変換されます。
  *
- * CPM_RESTORE_ENDURANCE [アクターID]
- * 耐久回復 [アクターID]
- *  装備している全ての防具の耐久値を完全に回復します。
- *  例：CPM_RESTORE_ENDURANCE 1
+ * {note}
+ *  データベースのメモ欄の<StandPicture>で指定した値に変換されます。
+ *  <StandPicture:aaa>と記述するとaaaに変換されます。
+ *  アクター、職業、武器、防具、ステートのメモ欄が対象です。
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -86,482 +104,560 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+/*~struct~StandPictureActor:
+ *
+ * @param ActorId
+ * @text アクター
+ * @desc 立ち絵を表示する対象のアクターです。
+ * @default 0
+ * @type actor
+ *
+ * @param Name
+ * @text 名称
+ * @desc 区別するための名称です。プラグイン上は特に意味はありません。
+ * @default
+ *
+ * @param Opacity
+ * @text 不透明度
+ * @desc 立ち絵の不透明度です。
+ * @default 255
+ * @type number
+ * @max 255
+ *
+ * @param X
+ * @text X座標
+ * @desc 立ち絵のX座標です。シーンごとの基準座標を加算した値が実際の表示座標です。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ * @param Y
+ * @text Y座標
+ * @desc 立ち絵のY座標です。シーンごとの基準座標を加算した値が実際の表示座標です。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ * @param FileList
+ * @text 立ち絵リスト
+ * @desc 表示する立ち絵と条件のリストです。条件を満たした立ち絵が1枚だけ(リストの下が優先)表示されます。
+ * @default []
+ * @type struct<StandPicture>[]
+ *
+ * @param DynamicFileName
+ * @text 動的ファイル名
+ * @desc 立ち絵ファイル名を動的に生成します。立ち絵リストに条件を満たしたファイルがあればそちらが優先されます。
+ * @default
+ * @type combo
+ * @option image_{hp:40,60,80}
+ * @option image_{stateId}
+ * @option image_{switch:1}
+ * @option image_{variable:1}
+ * @option image_{damage}
+ * @option image_{action}
+ * @option image_{note}
+ */
+
+/*~struct~StandPicture:
+ *
+ * @param FileName
+ * @text ファイル名
+ * @desc 立ち絵のファイル名です。
+ * @default
+ * @type file
+ * @dir img/pictures
+ *
+ * @param HpUpperLimit
+ * @text HP条件(上限)
+ * @desc HP割合が指定値以下の場合に表示条件を満たします。0を指定すると条件判定を行いません。
+ * @default 0
+ * @type number
+ * @max 100
+ * @min 0
+ *
+ * @param HpLowerLimit
+ * @text HP条件(下限)
+ * @desc HP割合が指定値以上の場合に表示条件を満たします。0を指定すると条件判定を行いません。
+ * @default 0
+ * @type number
+ * @max 100
+ * @min 0
+ *
+ * @param Action
+ * @text 行動中条件
+ * @desc アクターが行動中の場合に表示条件を満たします。
+ * @default false
+ * @type boolean
+ *
+ * @param Damage
+ * @text ダメージ条件
+ * @desc アクターがダメージを受けている場合に表示条件を満たします。
+ * @default false
+ * @type boolean
+ *
+ * @param State
+ * @text ステート条件
+ * @desc 指定したステートが有効な場合に表示条件を満たします。0を指定すると条件判定を行いません。
+ * @default 0
+ * @type state
+ *
+ * @param Weapon
+ * @text 武器条件
+ * @desc 指定した武器を装備している場合に表示条件を満たします。0を指定すると条件判定を行いません。
+ * @default 0
+ * @type weapon
+ *
+ * @param Armor
+ * @text 防具条件
+ * @desc 指定した防具を装備している場合に表示条件を満たします。0を指定すると条件判定を行いません。
+ * @default 0
+ * @type weapon
+ *
+ * @param Note
+ * @text メモ欄条件
+ * @desc データベースのメモ欄<StandPicture:aaa>が指定値と等しい場合に表示条件を満たします。
+ * @default
+ *
+ * @param Switch
+ * @text スイッチ条件
+ * @desc 指定したスイッチがONの場合に表示条件を満たします。0を指定すると条件判定を行いません。
+ * @default 0
+ * @type switch
+ *
+ * @param Script
+ * @text スクリプト条件
+ * @desc 指定したスクリプトがtrueを返した場合に表示条件を満たします。aでアクターオブジェクトを参照できます。
+ * @default
+ * @type combo
+ * @option a.mpRate() < 0.5; // MPが50%以下
+ * @option a.tpRate() < 0.5; // TPが50%以下
+ *
+ */
+
+/*~struct~Scene:
+ *
+ * @param SceneName
+ * @text 対象シーン
+ * @desc 表示対象のシーンです。オリジナルのシーンを対象にする場合はシーンクラス名を直接記入します。
+ * @type select
+ * @default Scene_Battle
+ * @option タイトル
+ * @value Scene_Title
+ * @option マップ
+ * @value Scene_Map
+ * @option ゲームオーバー
+ * @value Scene_Gameover
+ * @option バトル
+ * @value Scene_Battle
+ * @option メインメニュー
+ * @value Scene_Menu
+ * @option アイテム
+ * @value Scene_Item
+ * @option スキル
+ * @value Scene_Skill
+ * @option 装備
+ * @value Scene_Equip
+ * @option ステータス
+ * @value Scene_Status
+ * @option オプション
+ * @value Scene_Options
+ * @option セーブ
+ * @value Scene_Save
+ * @option ロード
+ * @value Scene_Load
+ * @option ゲーム終了
+ * @value Scene_End
+ * @option ショップ
+ * @value Scene_Shop
+ * @option 名前入力
+ * @value Scene_Name
+ * @option デバッグ
+ * @value Scene_Debug
+ *
+ * @param MemberPosition
+ * @text メンバーごとの表示座標
+ * @desc メンバーごとの立ち絵座標です。パーティメンバーのぶんだけ登録します。
+ * @default ["{\"X\":\"0\",\"Y\":\"0\"}","{\"X\":\"150\",\"Y\":\"0\"}","{\"X\":\"300\",\"Y\":\"0\"}","{\"X\":\"450\",\"Y\":\"0\"}"]
+ * @type struct<Position>[]
+ *
+ * @param ShowPictureSwitch
+ * @text 表示スイッチ
+ * @desc 指定した場合、スイッチがONのときのみピクチャが表示されます。
+ * @default 0
+ * @type switch
+ *
+ * @param Mirror
+ * @text 反転表示
+ * @desc 立ち絵を左右反転させます。
+ * @default false
+ * @type boolean
+ *
+ * @param Priority
+ * @text 表示優先度
+ * @desc 立ち絵の表示優先度です。
+ * @default 0
+ * @type select
+ * @option 最前面
+ * @value 0
+ * @option ウィンドウの下
+ * @value 1
+ * @option アニメーションの下(戦闘、マップ画面のみ有効)
+ * @value 2
+ *
+ */
+
+/*~struct~Position:
+ *
+ * @param X
+ * @text X座標
+ * @desc 立ち絵のX座標です。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ * @param Y
+ * @text Y座標
+ * @desc 立ち絵のY座標です。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ */
+
+(function() {
     'use strict';
-    var pluginName = 'CharacterPictureManager';
-    var metaTagPrefix = 'CPM';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+    if (!param.SceneList) {
+        PluginManagerEx.throwError('Parameter[SceneList] is not found. ', script);
+    }
+    if (!param.PictureList) {
+        PluginManagerEx.throwError('Parameter[PictureList] is not found. ', script);
+    }
 
-    var getCommandName = function (command) {
-        return (command || '').toUpperCase();
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getArgString = function (arg, upperFlg) {
-        arg = convertEscapeCharactersAndEval(arg, false);
-        return upperFlg ? arg.toUpperCase() : arg;
-    };
-
-    var getArgNumber = function (arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
-    };
-    
-    var convertEscapeCharactersAndEval = function(text, evalFlg) {
-        if (text === null || text === undefined) {
-            text = evalFlg ? '0' : '';
+    /**
+     * 立ち絵パラメータを解析します
+     */
+    class StandPictureParam {
+        setup(actor, scene, index) {
+            this._actor = actor;
+            this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
+            this._standPictures.forEach(picture => this.setupPosition(picture, scene, index));
+            this.updatePictureFiles();
         }
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1]));
-        }.bind(this));
-        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
-            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
-            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
-            return actor ? actor.name() : '';
-        }.bind(this));
-        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
-        return evalFlg ? eval(text) : text;
-    };
 
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function (command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandCharacterPictureManager(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(Graphics.width, Graphics.height);
-                    window.focus();
+        setupPosition(picture, scene, index) {
+            picture.RealX = picture.X;
+            picture.RealY = picture.Y;
+            picture.ShowPictureSwitch = scene.ShowPictureSwitch;
+            picture.Mirror = scene.Mirror;
+            if (!scene.MemberPosition || !scene.MemberPosition[index]) {
+                return;
+            }
+            picture.RealX = scene.MemberPosition[index].X;
+            picture.RealY = scene.MemberPosition[index].Y;
+        }
+
+        updatePictureFiles() {
+            this._standPictures.forEach(picture => {
+                if (!picture.FileList) {
+                    return;
+                }
+                picture.FileList.clone().reverse().some(file => this.setFileNameIfValid(file, picture));
+                if (!picture.FileName && picture.DynamicFileName) {
+                    picture.FileName = this.createDynamicFileName(picture.DynamicFileName);
+                }
+            });
+            return this._standPictures;
+        }
+
+        setFileNameIfValid(file, picture) {
+            picture.FileName = null;
+            const a = this._actor;
+            const conditions = [];
+            conditions.push(() => !file.HpUpperLimit || file.HpUpperLimit >= a.hpRate() * 100);
+            conditions.push(() => !file.HpLowerLimit || file.HpLowerLimit <= a.hpRate() * 100);
+            conditions.push(() => !file.Damage || a.isDamage());
+            conditions.push(() => !file.Action || a.isAction());
+            conditions.push(() => !file.State || a.isStateAffected(file.State));
+            conditions.push(() => !file.Weapon || a.hasWeapon($dataWeapons[file.Weapon]));
+            conditions.push(() => !file.Armor || a.hasArmor($dataArmors[file.Armor]));
+            conditions.push(() => !file.Note || this.findStandPictureMeta() === file.Note);
+            conditions.push(() => !file.Switch || $gameSwitches.value(file.Switch));
+            conditions.push(() => !file.Script || eval(file.Script));
+            if (conditions.every(condition => condition())) {
+                picture.FileName = file.FileName;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        createDynamicFileName(dynamicFileName) {
+            return dynamicFileName
+                .replace(/{hp:(.*?)}/gi, (_, p1) => this.findHpRateIndex(p1))
+                .replace(/{stateId}/gi, () => this.findActorState())
+                .replace(/{switch:(\d+?)}/gi, (_, p1) => this.findSwitch(p1))
+                .replace(/{variable:(\d+?)}/gi, (_, p1) => this.findVariable(p1))
+                .replace(/{note}/gi, () => this.findStandPictureMeta())
+                .replace(/{action}/gi, () => this._actor.isAction() ? '1' : '0')
+                .replace(/{damage}/gi, () => this._actor.isDamage() ? '1' : '0');
+        }
+
+        findHpRateIndex(rateText) {
+            const rates = rateText.split(',').map(item => parseInt(item));
+            for (let i = 0; i < rates.length + 1; i++) {
+                const min = rates[i - 1] || 0;
+                const max = rates[i] || 100;
+                const rate = this._actor.hpRate() * 100;
+                if (rate >= min && rate <= max) {
+                    return String(i);
                 }
             }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.toString());
+            return '0';
+        }
+
+        findActorState() {
+            const state = this._actor.states().filter(state => !state.meta.NoStandPicture)[0];
+            return String(state ? state.id : 0);
+        }
+
+        findSwitch(switchText) {
+            return $gameSwitches.value(parseInt(switchText)) ? '1' : '0';
+        }
+
+        findVariable(variableText) {
+            return String($gameVariables.value(parseInt(variableText)));
+        }
+
+        findStandPictureMeta() {
+            let meta = '';
+            this._actor.traitObjects().some(obj => {
+                meta = PluginManagerEx.findMetaValue(obj, 'StandPicture');
+                return !!meta;
+            });
+            return meta;
+        }
+    }
+
+    /**
+     * Game_Actor
+     */
+    Game_Actor.prototype.isDamage = function() {
+        if (this._damageFrame && this._damageFrame + 30 > Graphics.frameCount) {
+            return true;
+        }
+        this._damageFrame = null;
+        return false;
+    };
+
+    Game_Actor.prototype.isAction = function() {
+        return this._performAction;
+    };
+
+    const _Game_Actor_performDamage = Game_Actor.prototype.performDamage;
+    Game_Actor.prototype.performDamage = function() {
+        _Game_Actor_performDamage.apply(this, arguments);
+        this._damageFrame = Graphics.frameCount;
+    };
+
+    const _Game_Actor_performAction = Game_Actor.prototype.performAction;
+    Game_Actor.prototype.performAction = function(action) {
+        _Game_Actor_performAction.apply(this, arguments);
+        this._performAction = true;
+    };
+
+    const _Game_Actor_performActionEnd = Game_Actor.prototype.performActionEnd;
+    Game_Actor.prototype.performActionEnd = function() {
+        _Game_Actor_performActionEnd.apply(this, arguments);
+        this._performAction = false;
+    };
+
+    /**
+     * Spriteset_Base
+     */
+    Spriteset_Base.prototype.appendToEffect = function(displayObject) {
+        this._effectsContainer.addChild(displayObject);
+    };
+
+    /**
+     * Scene_Base
+     */
+    const _Scene_Base_createWindowLayer = Scene_Base.prototype.createWindowLayer;
+    Scene_Base.prototype.createWindowLayer = function() {
+        _Scene_Base_createWindowLayer.apply(this, arguments);
+        this.createAllStandPicture();
+    };
+
+    const _Scene_Base_update = Scene_Base.prototype.update;
+    Scene_Base.prototype.update = function() {
+        _Scene_Base_update.apply(this, arguments);
+        if (this._standSpriteScene) {
+            this.updateAllStandPicture();
         }
     };
 
-    Game_Interpreter.prototype.pluginCommandCharacterPictureManager = function (command, args) {
-        switch (getCommandName(command)) {
-            case '立ち絵表示' :
-            case 'CPM_SHOW' :
-                var x = getArgNumber(args[1], 1);
-                var y = getArgNumber(args[2], 1);
-                $gameActors.actor(getArgNumber(args[0], 1)).showCpForMap(x, y);
-                break;
-            case '立ち絵消去' :
-            case 'CPM_HIDE' :
-                $gameActors.actor(getArgNumber(args[0], 1)).hideCpForMap();
-                break;
-            case '耐久ダメージ' :
-            case 'CPM_DAMAGE_ENDURANCE' :
-                $gameActors.actor(getArgNumber(args[0], 1)).damageEndurance(getArgNumber(args[1], 0));
-                break;
-            case '耐久回復' :
-            case 'CPM_RESTORE_ENDURANCE' :
-                $gameActors.actor(getArgNumber(args[0], 1)).restoreEndurance();
-                break;
+    Scene_Base.prototype.createAllStandPicture = function() {
+        this._standSprites = new Map();
+        const sceneName = PluginManagerEx.findClassName(this);
+        this._standSpriteScene = param.SceneList.filter(item => item.SceneName === sceneName)[0];
+        if (this._standSpriteScene) {
+            this.createStandPictureContainer();
+            this.updateAllStandPicture();
         }
     };
 
-    //=============================================================================
-    // Game_Item
-    //  耐久度の管理をします。
-    //=============================================================================
-    var _Game_Item_setEquip = Game_Item.prototype.setEquip;
-    Game_Item.prototype.setEquip = function(isWeapon, itemId) {
-        _Game_Item_setEquip.apply(this, arguments);
-        this._endurance = this.getMaxEndurance();
-    };
-
-    Game_Item.prototype.getMaxEndurance = function() {
-        var value = this.object() ? getMetaValue(this.object(), '耐久') : null;
-        return value ? getArgNumber(value, 1) : 0;
-    };
-
-    Game_Item.prototype.getEndurance = function() {
-        return this._endurance;
-    };
-
-    Game_Item.prototype.damageEndurance = function(value) {
-        this._endurance = Math.max(this._endurance - value, 0);
-    };
-
-    Game_Item.prototype.restoreEndurance = function() {
-        this._endurance = this.getMaxEndurance();
-    };
-
-    //=============================================================================
-    // Game_Battler
-    //  キャラクターピクチャの情報を定義します。
-    //=============================================================================
-    var _Game_Battler_initMembers = Game_Battler.prototype.initMembers;
-    Game_Battler.prototype.initMembers = function() {
-        _Game_Battler_initMembers.apply(this, arguments);
-        this._cpAnimationName = null;
-        this._cpAnimationNameUpper = null;
-        this._cpAnimationCount = 0;
-    };
-
-    Game_Battler.prototype.updateCpAnimation = function() {
-        if (this._cpAnimationCount <= 0) {
-            this._cpAnimationName      = null;
-            this._cpAnimationNameUpper = null;
+    Scene_Base.prototype.createStandPictureContainer = function() {
+        const container = new Sprite();
+        const priority = this._standSpriteScene.Priority;
+        if (priority === 1) {
+            const index = this.children.indexOf(this._windowLayer);
+            this.addChildAt(container, index);
+        } else if (priority === 2 && this._spriteset) {
+            this._spriteset.appendToEffect(container);
         } else {
-            this._cpAnimationCount--;
+            this.addChild(container);
         }
+        this._standSpriteContainer = container;
     };
 
-    Game_Battler.prototype.getCharacterPictureNameLower = function() {
-        this._upperPicture = false;
-        return this.getCpAnimation() || this.getCpState() || this.getCpHp() || this.getPictureName('ノーマル');
-    };
-
-    Game_Battler.prototype.getCharacterPictureNameUpper = function() {
-        this._upperPicture = true;
-        return this.getCpAnimation() || this.getCpState() || this.getCpCloth(null) || this.getPictureName('ノーマル');
-    };
-
-    Game_Battler.prototype.isUseCharacterPicture = function() {
-        this._upperPicture = false;
-        return this.getPictureName('ノーマル');
-    };
-
-    Game_Battler.prototype.setCpAnimation = function(lowerName, upperName, frame) {
-        this._cpAnimationName      = lowerName;
-        this._cpAnimationNameUpper = upperName;
-        this._cpAnimationCount     = frame;
-    };
-
-    Game_Battler.prototype.setCpAnimationSkill = function() {
-        var action = this.currentAction();
-        this._upperPicture = false;
-        var lowerName = this.getCpSkill(action.item());
-        this._upperPicture = true;
-        var upperName = this.getCpSkill(action.item());
-        this.setCpAnimation(lowerName, upperName, 30);
-    };
-
-    Game_Battler.prototype.setCpAnimationDamage = function() {
-        this._upperPicture = false;
-        var lowerName = this.getCpDamage();
-        this._upperPicture = true;
-        var upperName = this.getCpDamage();
-        this.setCpAnimation(lowerName, upperName, 30);
-    };
-
-    Game_Battler.prototype.getCpAnimation = function() {
-        return this._upperPicture ? this._cpAnimationNameUpper : this._cpAnimationName;
-    };
-
-    Game_Battler.prototype.getCpSkill = function(skill) {
-        return (this._upperPicture ? this.getCpCloth(skill) : null) || this.getPictureName('ノーマル', skill);
-    };
-
-    Game_Battler.prototype.getCpDamage = function() {
-        return (this._upperPicture ? this.getCpCloth(null, 'ダメージ') : null) || this.getPictureName('ダメージ');
-    };
-
-    Game_Battler.prototype.getCpState = function() {
-        this.sortStates();
-        var states = this.states(), pictureName = null;
-        for (var i = 0, n = states.length; i < n; i++) {
-            if (this._upperPicture) {
-                pictureName = this.getCpCloth(states[i]);
-                if (pictureName) return pictureName;
+    Scene_Base.prototype.updateAllStandPicture = function() {
+        const members = this.findStandPictureMember();
+        if (!members) {
+            return;
+        }
+        members.forEach((member, index) => {
+            this.updateStandPicture(member, index);
+        });
+        const membersId = members.map(member => member.actorId());
+        this._standSprites.forEach((value, key) => {
+            if (!membersId.includes(key)) {
+                this.removeStandPicture($gameActors.actor(key));
             }
-            pictureName = this.getPictureName('ノーマル', states[i]);
-            if (pictureName) return pictureName;
-        }
-        return null;
-    };
-
-    Game_Battler.prototype.getCpHp = function() {
-        for (var i = 0; i < 10; i++) {
-            var pictureName = this.getPictureName('残HP' + String(i * 10));
-            if (pictureName && this.hpRate() <= i / 10) return pictureName;
-        }
-        return null;
-    };
-
-    Game_Battler.prototype.getCpCloth = function(data, addition) {
-        for (var i = 0; i < 10; i++) {
-            var pictureName = this.getPictureName('耐久' + String(i * 10) + (addition ? addition : ''), data);
-            if (pictureName && this.getClothHp() <= i * 10) return pictureName;
-        }
-        return null;
-    };
-
-    Game_Battler.prototype.getCpX = function() {
-        var x = getMetaValue(this.getData(), '_X');
-        return x ? getArgNumber(x) : 0;
-    };
-
-    Game_Battler.prototype.getCpY = function() {
-        var y = getMetaValue(this.getData(), '_Y');
-        return y ? getArgNumber(y) : 0;
-    };
-
-    Game_Battler.prototype.getClothHp = function() {
-        var max = this.getMaxEndurance();
-        if (max === 0) max = 1;
-        return this.getEndurance() / max * 100;
-    };
-
-    Game_Battler.prototype.getPictureName = function(name, data) {
-        if (!data) data = this.getData();
-        var pictureName = getMetaValue(data, (this._upperPicture ? '上層' : '') + name);
-        return pictureName ? getArgString(pictureName) : null;
-    };
-
-    Game_Battler.prototype.getData = function() {
-        return null;
-    };
-
-    Game_Actor.prototype.getData = function() {
-        return this.actor();
-    };
-
-    Game_Enemy.prototype.getData = function() {
-        return this.enemy();
-    };
-
-    var _Game_Actor_initMembers = Game_Actor.prototype.initMembers;
-    Game_Actor.prototype.initMembers = function() {
-        _Game_Actor_initMembers.apply(this, arguments);
-        this._mapPictureVisible = false;
-        this._mapPictureX       = 0;
-        this._mapPictureY       = 0;
-        this._characterPictureVisible = false;
-        this._characterPictureX = 0;
-        this._characterPictureY = 0;
-    };
-
-    Game_Actor.prototype.showCpForMap = function(x, y) {
-        this._mapPictureVisible = true;
-        this._mapPictureX       = x;
-        this._mapPictureY       = y;
-        this.setPositionForMap();
-    };
-
-    Game_Actor.prototype.hideCpForMap = function() {
-        this._mapPictureVisible = false;
-        this.setPositionForMap();
-    };
-
-    Game_Actor.prototype.setPositionForMap = function() {
-        this._characterPictureX = this._mapPictureX;
-        this._characterPictureY = this._mapPictureY;
-        this._characterPictureVisible = this._mapPictureVisible;
-    };
-
-    Game_Actor.prototype.setPositionForBattle = function() {
-        this._characterPictureX = this.getCpX();
-        this._characterPictureY = this.getCpY();
-        this._characterPictureVisible = true;
-    };
-
-    Game_Actor.prototype.getCharacterPictureX = function() {
-        return this._characterPictureX;
-    };
-
-    Game_Actor.prototype.getCharacterPictureY = function() {
-        return this._characterPictureY;
-    };
-
-    Game_Actor.prototype.getCharacterPictureVisible = function() {
-        return this._characterPictureVisible;
-    };
-
-    Game_Actor.prototype.getHasEnduranceArmors = function() {
-        return this._equips.filter(function(item) {
-            return item && item.isArmor() && item.getMaxEndurance() > 0;
         });
     };
 
-    Game_Actor.prototype.getEndurance = function() {
-        var endurance = 0;
-        this.getHasEnduranceArmors().forEach(function (armor) {
-            endurance += armor.getEndurance();
-        }.bind(this));
-        return endurance;
+    Scene_Base.prototype.findStandPictureMember = function() {
+        return $gameParty ? $gameParty.members() : null;
     };
 
-    Game_Enemy.prototype.getEndurance = function() {
-        return 0;
+    Scene_Base.prototype.updateStandPicture = function(actor, index) {
+        const id = actor.actorId();
+        if (this._standSprites.has(id)) {
+            return;
+        }
+        const pictureParam = new StandPictureParam();
+        pictureParam.setup(actor, this._standSpriteScene, index);
+        const sprite = new Sprite_StandPicture(pictureParam);
+        this._standSpriteContainer.addChild(sprite);
+        this._standSprites.set(id, sprite);
     };
 
-    Game_Actor.prototype.getMaxEndurance = function() {
-        var maxEndurance = 0;
-        this.getHasEnduranceArmors().forEach(function (armor) {
-            maxEndurance += armor.getMaxEndurance();
-        }.bind(this));
-        return maxEndurance;
+    Scene_Base.prototype.removeStandPicture = function(actor) {
+        const id = actor.actorId();
+        if (!this._standSprites.has(id)) {
+            return;
+        }
+        this._standSpriteContainer.removeChild(this._standSprites.get(id));
+        this._standSprites.delete(id);
     };
 
-    Game_Enemy.prototype.getMaxEndurance = function() {
-        return 0;
+    Scene_Skill.prototype.findStandPictureMember = function() {
+        return [this.actor()];
     };
 
-    Game_Actor.prototype.damageEndurance = function(value) {
-        this.getHasEnduranceArmors().forEach(function (armor) {
-            armor.damageEndurance(value);
-        }.bind(this));
+    Scene_Equip.prototype.findStandPictureMember = function() {
+        return [this.actor()];
     };
 
-    Game_Enemy.prototype.damageEndurance = function() {
+    Scene_Status.prototype.findStandPictureMember = function() {
+        return [this.actor()];
     };
 
-    Game_Actor.prototype.restoreEndurance = function() {
-        this.getHasEnduranceArmors().forEach(function (armor) {
-            armor.restoreEndurance();
-        }.bind(this));
+    Scene_Name.prototype.findStandPictureMember = function() {
+        return [this._actor];
     };
 
-    Game_Enemy.prototype.restoreEndurance = function() {
-    };
+    /**
+     * Sprite_StandPicture
+     */
+    class Sprite_StandPicture extends Sprite {
+        constructor(pictureParam) {
+            super();
+            this.setup(pictureParam);
+        }
 
-    //=============================================================================
-    // Game_Action
-    //  キャラクターピクチャにアニメーションを設定します。
-    //=============================================================================
-    var _Game_Action_executeDamage = Game_Action.prototype.executeDamage;
-    Game_Action.prototype.executeDamage = function(target, value) {
-        _Game_Action_executeDamage.apply(this, arguments);
-        if (value > 0) target.setCpAnimationDamage();
-    };
+        setup(pictureParam) {
+            this._pictures = pictureParam;
+            this._pictures.updatePictureFiles().forEach(picture => {
+                this.addChild(new Sprite_StandPictureChild(picture));
+            });
+        }
 
-    //=============================================================================
-    // BattleManager
-    //  キャラクターピクチャにアニメーションを設定します。
-    //=============================================================================
-    var _BattleManager_startAction = BattleManager.startAction;
-    BattleManager.startAction = function() {
-        _BattleManager_startAction.apply(this, arguments);
-        this._subject.setCpAnimationSkill();
-    };
-
-    //=============================================================================
-    // Scene_Base
-    //  キャラクターピクチャを作成します。
-    //=============================================================================
-    Scene_Base.prototype.createCharacterPicture = function() {
-        this._characterPictures = {};
-        $gameParty.members().forEach(function (actor) {
-            var sprite = new Sprite_CharacterPicture();
-            sprite.setActor(actor);
-            this._characterPictures[actor.actorId()] = sprite;
-            this.addChild(sprite);
-        }.bind(this));
-    };
-
-    var _Scene_Battle_createSpriteset = Scene_Battle.prototype.createSpriteset;
-    Scene_Battle.prototype.createSpriteset = function() {
-        _Scene_Battle_createSpriteset.apply(this, arguments);
-        this.createCharacterPicture();
-        $gameParty.members().forEach(function (actor) {
-            actor.setPositionForBattle();
-        }.bind(this));
-    };
-
-    var _Scene_Map_createSpriteset = Scene_Map.prototype.createSpriteset;
-    Scene_Map.prototype.createSpriteset = function() {
-        _Scene_Map_createSpriteset.apply(this, arguments);
-        this.createCharacterPicture();
-        $gameParty.members().forEach(function (actor) {
-            actor.setPositionForMap();
-        }.bind(this));
-    };
-
-    //=============================================================================
-    // Sprite_CharacterPicture
-    //  キャラクターピクチャのスプライトです。下層と上層の二段重ねになっています。
-    //=============================================================================
-    function Sprite_CharacterPicture() {
-        this.initialize.apply(this, arguments);
+        update() {
+            this._pictures.updatePictureFiles();
+            super.update();
+        }
     }
 
-    Sprite_CharacterPicture.prototype = Object.create(Sprite_Base.prototype);
-    Sprite_CharacterPicture.prototype.constructor = Sprite_CharacterPicture;
-
-    Sprite_CharacterPicture.prototype.initialize = function() {
-        Sprite_Base.prototype.initialize.apply(this, arguments);
-        this.visible    = true;
-        this._actor     = null;
-        this._lowerName = null;
-        this._upperName = null;
-        this.createUpperSprite();
-    };
-
-    Sprite_CharacterPicture.prototype.setActor = function(actor) {
-        if (actor.isUseCharacterPicture()) this._actor = actor;
-    };
-
-    Sprite_CharacterPicture.prototype.createUpperSprite = function() {
-        this._upperSprite = new Sprite();
-        this.addChild(this._upperSprite);
-    };
-
-    Sprite_CharacterPicture.prototype.update = function() {
-        if (this._actor) {
-            this.updateProperty();
-            this._actor.updateCpAnimation();
-            this.updateLower();
-            this.updateUpper();
+    /**
+     * Sprite_StandPictureChild
+     */
+    class Sprite_StandPictureChild extends Sprite {
+        constructor(picture) {
+            super();
+            this.setup(picture);
         }
-    };
 
-    Sprite_CharacterPicture.prototype.updateProperty = function() {
-        this.x       = this._actor.getCharacterPictureX();
-        this.y       = this._actor.getCharacterPictureY();
-        this.visible = this._actor.getCharacterPictureVisible();
-    };
-
-    Sprite_CharacterPicture.prototype.updateLower = function() {
-        var name = this._actor.getCharacterPictureNameLower();
-        if (name !== this._lowerName) {
-            this.setBitmap(this, name);
-            this._lowerName = name;
+        setup(picture) {
+            this._picture = picture;
+            if (param.Origin === 1) {
+                this.anchor.x = 0.5;
+                this.anchor.y = 0.5;
+            } else if (param.Origin === 2) {
+                this.anchor.x = 0.5;
+                this.anchor.y = 1.0;
+            }
+            this.update();
         }
-    };
 
-    Sprite_CharacterPicture.prototype.updateUpper = function() {
-        var name = this._actor.getCharacterPictureNameUpper();
-        if (name !== this._upperName) {
-            this.setBitmap(this._upperSprite, name);
-            this._upperName = name;
+        update() {
+            this.updatePosition();
+            this.updateBitmap();
+            this.updateVisibility();
         }
-    };
 
-    Sprite_CharacterPicture.prototype.setBitmap = function(target, name) {
-        if (name) {
-            var newBitmap = ImageManager.loadPicture(name, 0);
-            newBitmap.addLoadListener(function () {
-                target.bitmap = newBitmap;
-            }.bind(this));
-        } else {
-            target.bitmap = null;
+        updatePosition() {
+            this.x = this._picture.RealX;
+            this.y = this._picture.RealY;
         }
-    };
+
+        updateBitmap() {
+            const file = this._picture.FileName;
+            if (this._fileName === file) {
+                return;
+            }
+            const bitmap = ImageManager.loadPicture(file);
+            bitmap.addLoadListener(() => this.bitmap = bitmap);
+            if (this.addApngChild) {
+                this.addApngChild(file);
+            }
+            this._fileName = file;
+        }
+
+        updateVisibility() {
+            this.opacity = this._picture.Opacity;
+            this.scale.x = this._picture.Mirror ? -1 : 1;
+            const showSwitch = this._picture.ShowPictureSwitch;
+            this.visible = !showSwitch || $gameSwitches.value(showSwitch);
+        }
+
+        loadApngSprite(name) {
+            return SceneManager.tryLoadApngPicture(name);
+        }
+    }
 })();
-
