@@ -149,7 +149,11 @@
             var addValue = getMetaValues(this.item(), ['確率加算', 'ProbAdd']);
             itemCritical = _Game_Action_itemCri.apply(this, arguments) + (addValue ? getArgNumber(addValue) / 100 : 0);
         }
-        this._criticalQueue.push(Math.random() < itemCritical);
+        if (this.isMagical() && this._criticalQueue.length > 0) {
+            this._criticalQueue.push(this._criticalQueue[0]);
+        } else {
+            this._criticalQueue.push(Math.random() < itemCritical);
+        }
     };
 
     Game_Action.prototype.initCriticalQueue = function() {
