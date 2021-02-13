@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/02/14 立ち絵をドラッグして座標の確認と調整ができる機能を追加
 // 2.0.0 2021/02/12 MZ向けに仕様から再設計
 // 1.0.0 2016/05/01 タクポンさん依頼版
 // ----------------------------------------------------------------------------
@@ -45,6 +46,12 @@
  * @option 中央下
  * @value 2
  *
+ * @param UsePointAdjust
+ * @text 座標調整機能を使う
+ * @desc 有効にすると、立ち絵をドラッグすることで座標を調整する機能が使えます。
+ * @default true
+ * @type boolean
+ *
  * @help CharacterPictureManager.js
  *
  * 複数の画像から構成される立ち絵を管理、表示できます。
@@ -57,6 +64,12 @@
  *
  * また、別途公開しているAPNGピクチャプラグインと組み合わせると
  * 立ち絵をアニメーションできます。ただし、使いすぎに注意してください。
+ *
+ * ●画像の座標指定支援機能
+ * テストプレー時のみ、立ち絵をドラッグすることで座標の確認、調整ができます。
+ * 画面上に現在の基準座標と固有座標が表示されます。
+ * Ctrlキーを押していると奥の画像が、押していないと手前の画像が選択されます。
+ * Shiftキーを押していると基準座標を、押していないと固有座標を調整します。
  *
  * ●立ち絵ファイルの動的設定(上級者向け)
  * 立ち絵を大量に使いたい場合にファイル名を命名規則に従って動的に決定できます。
@@ -125,7 +138,7 @@
  * @max 255
  *
  * @param X
- * @text X座標
+ * @text 固有X座標
  * @desc 立ち絵のX座標です。シーンごとの基準座標を加算した値が実際の表示座標です。
  * @default 0
  * @type number
@@ -133,7 +146,7 @@
  * @max 9999
  *
  * @param Y
- * @text Y座標
+ * @text 固有Y座標
  * @desc 立ち絵のY座標です。シーンごとの基準座標を加算した値が実際の表示座標です。
  * @default 0
  * @type number
@@ -277,8 +290,8 @@
  * @value Scene_Debug
  *
  * @param MemberPosition
- * @text メンバーごとの表示座標
- * @desc メンバーごとの立ち絵座標です。パーティメンバーのぶんだけ登録します。
+ * @text メンバーごとの基準座標
+ * @desc メンバーごとの立ち絵の基準座標です。パーティメンバーのぶんだけ登録します。
  * @default ["{\"X\":\"0\",\"Y\":\"0\"}","{\"X\":\"150\",\"Y\":\"0\"}","{\"X\":\"300\",\"Y\":\"0\"}","{\"X\":\"450\",\"Y\":\"0\"}"]
  * @type struct<Position>[]
  *
@@ -311,16 +324,16 @@
 /*~struct~Position:
  *
  * @param X
- * @text X座標
- * @desc 立ち絵のX座標です。
+ * @text 基準X座標
+ * @desc 立ち絵の基準X座標です。
  * @default 0
  * @type number
  * @min -9999
  * @max 9999
  *
  * @param Y
- * @text Y座標
- * @desc 立ち絵のY座標です。
+ * @text 基準Y座標
+ * @desc 立ち絵の基準Y座標です。
  * @default 0
  * @type number
  * @min -9999
@@ -338,6 +351,7 @@
     if (!param.PictureList) {
         PluginManagerEx.throwError('Parameter[PictureList] is not found. ', script);
     }
+    const usePointAdjust = param.UsePointAdjust && Utils.isOptionValid('test');
 
     /**
      * 立ち絵パラメータを解析します
@@ -358,8 +372,10 @@
             if (!scene.MemberPosition || !scene.MemberPosition[index]) {
                 return;
             }
-            picture.RealX = scene.MemberPosition[index].X;
-            picture.RealY = scene.MemberPosition[index].Y;
+            picture.BaseX = scene.MemberPosition[index].X;
+            picture.BaseY = scene.MemberPosition[index].Y;
+            picture.RealX += picture.BaseX;
+            picture.RealY += picture.BaseY;
         }
 
         updatePictureFiles() {
@@ -593,21 +609,31 @@
 
         setup(pictureParam) {
             this._pictures = pictureParam;
-            this._pictures.updatePictureFiles().forEach(picture => {
-                this.addChild(new Sprite_StandPictureChild(picture));
-            });
+            this._pictures.updatePictureFiles().forEach(picture => this.addChild(this.createChild(picture)));
+        }
+
+        createChild(picture) {
+            if (usePointAdjust) {
+                return new Sprite_StandPictureChildWithDrag(picture);
+            } else {
+                return new Sprite_StandPictureChild(picture);
+            }
         }
 
         update() {
             this._pictures.updatePictureFiles();
             super.update();
+            if (usePointAdjust) {
+                const children = Input.isPressed('control') ? this.children : this.children.clone().reverse()
+                children.forEach(sprite => sprite.updateDrag());
+            }
         }
     }
 
     /**
      * Sprite_StandPictureChild
      */
-    class Sprite_StandPictureChild extends Sprite {
+    class Sprite_StandPictureChild extends Sprite_Clickable {
         constructor(picture) {
             super();
             this.setup(picture);
@@ -626,6 +652,7 @@
         }
 
         update() {
+            super.update();
             this.updatePosition();
             this.updateBitmap();
             this.updateVisibility();
@@ -660,4 +687,103 @@
             return SceneManager.tryLoadApngPicture(name);
         }
     }
+
+    if (!usePointAdjust) {
+        return;
+    }
+
+    let anySpriteDrag = false;
+
+    /**
+     * Sprite_StandPictureChildWithDrag
+     */
+    class Sprite_StandPictureChildWithDrag extends Sprite_StandPictureChild {
+        constructor(picture) {
+            super(picture);
+            this._drag = false;
+        }
+
+        updateDrag() {
+            this.startDragIfNeed();
+            if (!this._drag) {
+                return;
+            }
+            if (TouchInput.isPressed()) {
+                this.x = TouchInput.x + this._dx;
+                this.y = TouchInput.y + this._dy;
+                const bx = Input.isPressed('shift') ? this.x - this._picture.X : this._picture.BaseX || 0;
+                const by = Input.isPressed('shift') ? this.y - this._picture.Y : this._picture.BaseY || 0;
+                Graphics.drawPositionInfo(`BaseX:${bx} BaseY:${by} PictureX:${this.x - bx} PictureY:${this.y - by} `);
+            } else {
+                this.stopDrag();
+            }
+        }
+
+        startDragIfNeed() {
+            if (!this._requestDrag && !this._drag) {
+                return;
+            }
+            this._requestDrag = false;
+            if (this._drag || anySpriteDrag) {
+                return;
+            }
+            anySpriteDrag = true;
+            this._drag = true;
+            this._dx = this.x - TouchInput.x;
+            this._dy = this.y - TouchInput.y;
+            this.setBlendColor([255, 255, 255, 128]);
+        }
+
+        stopDrag() {
+            anySpriteDrag = false;
+            this._drag = false;
+            this.setBlendColor([0, 0, 0, 0]);
+            Graphics.drawPositionInfo('');
+        }
+
+        onPress() {
+            if (this.canDrag()) {
+                this._requestDrag = true;
+            }
+        }
+
+        canDrag() {
+            if (this._apngSprite) {
+                return true;
+            }
+            const px = TouchInput.x - this.x + (this.width * this.anchor.x);
+            const py = TouchInput.y - this.y + (this.height * this.anchor.y);
+            return this.bitmap.getAlphaPixel(px, py) !== 0;
+        }
+    }
+
+    const _Graphics__createAllElements = Graphics._createAllElements;
+    Graphics._createAllElements        = function() {
+        _Graphics__createAllElements.apply(this, arguments);
+        this._createPositionInfo();
+    };
+
+    Graphics._createPositionInfo = function() {
+        const div            = document.createElement('div');
+        div.id               = 'position';
+        div.style.display    = 'none';
+        div.style.position   = 'absolute';
+        div.style.left       = '100px';
+        div.style.top        = '5px';
+        div.style.background = '#222';
+        div.style.opacity    = '0.8';
+        div.style['z-index'] = '8';
+        div.style.color      = '#fff';
+        this._positionDiv     = div;
+        document.body.appendChild(div);
+    };
+
+    Graphics.drawPositionInfo = function(text) {
+        if (text) {
+            this._positionDiv.style.display = 'block';
+            this._positionDiv.textContent   = text;
+        } else {
+            this._positionDiv.style.display = 'none';
+        }
+    };
 })();
