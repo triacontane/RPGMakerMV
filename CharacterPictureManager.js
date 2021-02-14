@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.2 2021/02/15 アクター登録していないメンバーを表示させようとするとエラーになる問題を修正
 // 2.2.1 2021/02/14 パラメータの防具条件のデータベースタイプが武器になっていた問題を修正
 // 2.2.0 2021/02/14 スプライトシート形式の表示に対応
 //                  ドラッグ機能をベースごと動かせるように修正
@@ -404,6 +405,9 @@
             }
             this._actor = actor;
             this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
+            if (this._standPictures.length <= 0) {
+                return false;
+            }
             this._standPictures.forEach(picture => this.setupPosition(picture, scene, index));
             this.updatePictureFiles();
             return true;
