@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.3 2021/02/14 使用素材リストのパラメータに効果音を追加
  1.2.2 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.2.1 2020/11/07 1.2.0の修正によりコピー用のプロジェクトを指定しないとエラーになる問題を修正
  1.2.0 2020/10/16 コピー処理を非同期処理に変更。MVプロジェクトからの自動移行が高速になりました。
@@ -32,6 +33,13 @@
  * @desc The list of the animation material to be used. Registering it will exclude it from the "Exclude unused files" option.
  * @default []
  * @dir img/animations/
+ * @type file[]
+ *
+ * @param SeList
+ * @text SE List
+ * @desc The list of the SE material to be used. Registering it will exclude it from the "Exclude unused files" option.
+ * @default []
+ * @dir audio/se/
  * @type file[]
  *
  * @param MvProjectPathText
@@ -78,6 +86,13 @@
  * @desc 使用するアニメーション素材のリストです。登録しておけば未使用素材削除の対象から外れます。
  * @default []
  * @dir img/animations/
+ * @type file[]
+ *
+ * @param SeList
+ * @text 効果音リスト
+ * @desc 使用する効果音素材のリストです。登録しておけば未使用素材削除の対象から外れます。
+ * @default []
+ * @dir audio/se/
  * @type file[]
  *
  * @param MvProjectPathText
