@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/02/14 スプライトシート形式の表示に対応
+//                  ドラッグ機能をベースごと動かせるように修正
 // 2.1.0 2021/02/14 立ち絵をドラッグして座標の確認と調整ができる機能を追加
 // 2.0.0 2021/02/12 MZ向けに仕様から再設計
 // 1.0.0 2016/05/01 タクポンさん依頼版
@@ -48,7 +50,7 @@
  *
  * @param UsePointAdjust
  * @text 座標調整機能を使う
- * @desc 有効にすると、立ち絵をドラッグすることで座標を調整する機能が使えます。
+ * @desc 有効にすると、テストプレー時に立ち絵をドラッグすることで座標を調整する機能が使えます。
  * @default true
  * @type boolean
  *
@@ -70,6 +72,7 @@
  * 画面上に現在の基準座標と固有座標が表示されます。
  * Ctrlキーを押していると奥の画像が、押していないと手前の画像が選択されます。
  * Shiftキーを押していると基準座標を、押していないと固有座標を調整します。
+ * Ctrl+Enterで調整した画像がすべて元の位置に戻ります。
  *
  * ●立ち絵ファイルの動的設定(上級者向け)
  * 立ち絵を大量に使いたい場合にファイル名を命名規則に従って動的に決定できます。
@@ -153,6 +156,11 @@
  * @min -9999
  * @max 9999
  *
+ * @param SpriteSheet
+ * @text スプライトシート
+ * @desc 立ち絵の画像をスプライトシートから取得したい場合に指定します。
+ * @type struct<SpriteSheet>
+
  * @param FileList
  * @text 立ち絵リスト
  * @desc 表示する立ち絵と条件のリストです。条件を満たした立ち絵が1枚だけ(リストの下が優先)表示されます。
@@ -341,6 +349,38 @@
  *
  */
 
+/*~struct~SpriteSheet:
+ *
+ * @param MaxColumn
+ * @text 列数
+ * @desc スプライトシートの総列数(縦方向)です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @param MaxRow
+ * @text 行数
+ * @desc スプライトシートの総行数(横方向)です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @param ColumnNumber
+ * @text 列番号
+ * @desc 切り出したい部分の行番号(縦方向)です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @param RowNumber
+ * @text 行番号
+ * @desc 切り出したい部分の行番号(横方向)です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ */
+
 (function() {
     'use strict';
     const script = document.currentScript;
@@ -358,24 +398,26 @@
      */
     class StandPictureParam {
         setup(actor, scene, index) {
+            if (!scene.MemberPosition || !scene.MemberPosition[index]) {
+                return false;
+            }
             this._actor = actor;
             this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
             this._standPictures.forEach(picture => this.setupPosition(picture, scene, index));
             this.updatePictureFiles();
+            return true;
         }
 
         setupPosition(picture, scene, index) {
-            picture.RealX = picture.X;
-            picture.RealY = picture.Y;
             picture.ShowPictureSwitch = scene.ShowPictureSwitch;
             picture.Mirror = scene.Mirror;
-            if (!scene.MemberPosition || !scene.MemberPosition[index]) {
-                return;
-            }
-            picture.BaseX = scene.MemberPosition[index].X;
-            picture.BaseY = scene.MemberPosition[index].Y;
-            picture.RealX += picture.BaseX;
-            picture.RealY += picture.BaseY;
+            this._base = new Point();
+            this._base.x = scene.MemberPosition[index].X;
+            this._base.y = scene.MemberPosition[index].Y;
+        }
+
+        getBasePoint() {
+            return this._base;
         }
 
         updatePictureFiles() {
@@ -567,8 +609,12 @@
             return;
         }
         const pictureParam = new StandPictureParam();
-        pictureParam.setup(actor, this._standSpriteScene, index);
-        const sprite = new Sprite_StandPicture(pictureParam);
+        const result = pictureParam.setup(actor, this._standSpriteScene, index);
+        if (!result) {
+            return;
+        }
+        const sprite = usePointAdjust ? new Sprite_StandPictureWithDrag(pictureParam) :
+            new Sprite_StandPicture(pictureParam);
         this._standSpriteContainer.addChild(sprite);
         this._standSprites.set(id, sprite);
     };
@@ -610,23 +656,22 @@
         setup(pictureParam) {
             this._pictures = pictureParam;
             this._pictures.updatePictureFiles().forEach(picture => this.addChild(this.createChild(picture)));
+            this.setupPosition();
+        }
+
+        setupPosition() {
+            const basePoint = this._pictures.getBasePoint();
+            this.x = basePoint.x;
+            this.y = basePoint.y;
         }
 
         createChild(picture) {
-            if (usePointAdjust) {
-                return new Sprite_StandPictureChildWithDrag(picture);
-            } else {
-                return new Sprite_StandPictureChild(picture);
-            }
+            return new Sprite_StandPictureChild(picture);
         }
 
         update() {
             this._pictures.updatePictureFiles();
             super.update();
-            if (usePointAdjust) {
-                const children = Input.isPressed('control') ? this.children : this.children.clone().reverse()
-                children.forEach(sprite => sprite.updateDrag());
-            }
         }
     }
 
@@ -648,19 +693,19 @@
                 this.anchor.x = 0.5;
                 this.anchor.y = 1.0;
             }
+            this.setupPosition();
             this.update();
+        }
+
+        setupPosition() {
+            this.x = this._picture.X;
+            this.y = this._picture.Y;
         }
 
         update() {
             super.update();
-            this.updatePosition();
             this.updateBitmap();
             this.updateVisibility();
-        }
-
-        updatePosition() {
-            this.x = this._picture.RealX;
-            this.y = this._picture.RealY;
         }
 
         updateBitmap() {
@@ -669,11 +714,23 @@
                 return;
             }
             const bitmap = ImageManager.loadPicture(file);
-            bitmap.addLoadListener(() => this.bitmap = bitmap);
+            bitmap.addLoadListener(() => this.setBitmap(bitmap));
             if (this.addApngChild) {
                 this.addApngChild(file);
             }
             this._fileName = file;
+        }
+
+        setBitmap(bitmap) {
+            this.bitmap = bitmap;
+            const sheet = this._picture.SpriteSheet;
+            if (sheet) {
+                const width = this.bitmap.width / sheet.MaxColumn;
+                const height = this.bitmap.height / sheet.MaxRow;
+                const x = (sheet.ColumnNumber - 1) * width;
+                const y = (sheet.RowNumber - 1) * height;
+                this.setFrame(x, y, width, height);
+            }
         }
 
         updateVisibility() {
@@ -688,11 +745,36 @@
         }
     }
 
+    // for Drag by test play
     if (!usePointAdjust) {
         return;
     }
 
     let anySpriteDrag = false;
+
+    /**
+     * Sprite_StandPictureWithDrag
+     */
+    class Sprite_StandPictureWithDrag extends Sprite_StandPicture {
+        constructor(pictureParam) {
+            super(pictureParam);
+        }
+
+        createChild(picture) {
+            return new Sprite_StandPictureChildWithDrag(picture);
+        }
+
+        setupPosition() {
+            super.setupPosition();
+            this.children.forEach(child => child.setupPosition());
+        }
+
+        update() {
+            super.update();
+            const children = Input.isPressed('control') ? this.children : this.children.clone().reverse()
+            children.forEach(sprite => sprite.updateDrag());
+        }
+    }
 
     /**
      * Sprite_StandPictureChildWithDrag
@@ -705,16 +787,24 @@
 
         updateDrag() {
             this.startDragIfNeed();
+            if (Input.isPressed('control') && Input.isTriggered('ok')) {
+                this.parent.setupPosition();
+                Graphics.drawPositionInfo('');
+            }
             if (!this._drag) {
                 return;
             }
-            if (TouchInput.isPressed()) {
-                this.x = TouchInput.x + this._dx;
-                this.y = TouchInput.y + this._dy;
-                const bx = Input.isPressed('shift') ? this.x - this._picture.X : this._picture.BaseX || 0;
-                const by = Input.isPressed('shift') ? this.y - this._picture.Y : this._picture.BaseY || 0;
-                Graphics.drawPositionInfo(`BaseX:${bx} BaseY:${by} PictureX:${this.x - bx} PictureY:${this.y - by} `);
+            const dx = TouchInput.x - this._dx;
+            const dy = TouchInput.y - this._dy;
+            if (this._baseDrag) {
+                this.parent.x = dx;
+                this.parent.y = dy;
             } else {
+                this.x = dx;
+                this.y = dy;
+            }
+            Graphics.drawPositionInfo(`BaseX:${this.parent.x} BaseY:${this.parent.y} PictureX:${this.x} PictureY:${this.y} `);
+            if (!TouchInput.isPressed()) {
                 this.stopDrag();
             }
         }
@@ -729,8 +819,15 @@
             }
             anySpriteDrag = true;
             this._drag = true;
-            this._dx = this.x - TouchInput.x;
-            this._dy = this.y - TouchInput.y;
+            if (Input.isPressed("shift")) {
+                this._dx = TouchInput.x - this.parent.x;
+                this._dy = TouchInput.y - this.parent.y;
+                this._baseDrag = true;
+            } else {
+                this._dx = TouchInput.x - this.x;
+                this._dy = TouchInput.y - this.y;
+                this._baseDrag = false;
+            }
             this.setBlendColor([255, 255, 255, 128]);
         }
 
@@ -738,7 +835,6 @@
             anySpriteDrag = false;
             this._drag = false;
             this.setBlendColor([0, 0, 0, 0]);
-            Graphics.drawPositionInfo('');
         }
 
         onPress() {
@@ -751,9 +847,16 @@
             if (this._apngSprite) {
                 return true;
             }
-            const px = TouchInput.x - this.x + (this.width * this.anchor.x);
-            const py = TouchInput.y - this.y + (this.height * this.anchor.y);
-            return this.bitmap.getAlphaPixel(px, py) !== 0;
+            const pos = this.findLocalTouchPos();
+            return this.bitmap.getAlphaPixel(pos.x, pos.y) !== 0;
+        }
+
+        findLocalTouchPos() {
+            const touchPos = new Point(TouchInput.x, TouchInput.y);
+            const pos = this.worldTransform.applyInverse(touchPos);
+            pos.x += this.width * this.anchor.x;
+            pos.y += this.height * this.anchor.y;
+            return pos;
         }
     }
 
