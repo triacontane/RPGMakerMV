@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.4 2021/02/16 MessageWindowPopup.jsと併用したとき、ウィンドウ幅が字間を考慮するよう修正
 // 1.2.3 2021/01/31 1.2.2の修正で、決定ボタン長押しによる瞬間表示が効かなくなる問題を修正
 // 1.2.2 2021/01/31 字間設定中に決定ボタンを連打、長押しすると表示が崩れる問題を修正
 // 1.2.1 2020/10/24 メッセージウィンドウ以外に適用されてしまう問題を修正
@@ -80,7 +81,7 @@
     };
 
     Window_Base.prototype.applyBetweenCharacter = function(textState) {
-        if (textState.index > 1 && textState.x > textState.startX) {
+        if (textState.index > 1 && (textState.x > textState.startX || !textState.drawing)) {
             const between = this.getBetweenCharacters();
             textState.x += textState.rtl ? -between : between;
         }
