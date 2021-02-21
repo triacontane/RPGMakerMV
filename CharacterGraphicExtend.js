@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/02/22 色調変更のタグが正常に機能していなかった問題を修正し、グレースケールを指定できるようにしました。
 // 2.1.1 2020/11/28 Trb_SimpleDashMotion.jsと併用したとき、プレイヤーの拡大率を変更したときも想定通りに表示されるよう修正
 // 2.1.0 2020/11/22 ApngPicture.jsと組み合わせてキャラクターとして表示したピクチャ、敵キャラ画像がアニメーションする機能を追加
 // 2.0.1 2020/11/01 一部リファクタリング
@@ -182,10 +183,11 @@
  *
  * 例：<CG絶対座標:1,16,-16> or <CGAbsolute:1,16,-16>
  *
- * <CG色調:（ページ数）,（R値）,（G値）（B値）>
+ * <CG色調:（ページ数）,（R値）,（G値）,（B値）,（グレースケール）>
  * 指定したページが有効になった場合の色調(-255～255)を設定します。
+ * グレースケールは省略可能で、省略すると0になります。
  *
- * 例：<CG色調:1,-255,0,255> or <CGTone:1,-255,0,255>
+ * 例：<CG色調:1,-255,0,255,0> or <CGTone:1,-255,0,255,0>
  *
  * <CG不透明度:（ページ数）,（合成方法）>
  * 指定したページが有効になった場合のグラフィックの不透明度を設定します。
@@ -213,8 +215,8 @@
  * 例：this.shiftPosition(24, 24);
  *
  * ・色調の設定
- * this.setTone(（R値）,（G値）（B値）);
- * 例：this.setTone(255, -255, -255);
+ * this.setTone(（R値）,（G値）,（B値）, （グレースケール）);
+ * 例：this.setTone(255, -255, -255, 0);
  *
  * ・画像の変更
  * this.changeImage(（新しいファイル名）, （インデックス）);
@@ -252,6 +254,9 @@
     const getArgNumber = function(arg, min, max) {
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
+        if (!arg) {
+            return 0;
+        }
         return (parseInt(PluginManagerEx.convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
     };
 
@@ -380,8 +385,8 @@
         return this._tone;
     };
 
-    Game_CharacterBase.prototype.setTone = function(r, g, b) {
-        this._tone = [r, g, b];
+    Game_CharacterBase.prototype.setTone = function(r, g, b, gray) {
+        this._tone = [r, g, b, gray || 0];
     };
 
     Game_CharacterBase.prototype.angle = function() {
@@ -545,7 +550,8 @@
         }
         cgParams = this.getMetaCg(['色調', 'Tone']);
         if (cgParams) {
-            this.setTone(getArgNumber(cgParams[1]), getArgNumber(cgParams[2]), getArgNumber(cgParams[3]));
+            this.setTone(getArgNumber(cgParams[1]), getArgNumber(cgParams[2]),
+                getArgNumber(cgParams[3]), getArgNumber(cgParams[4]));
         }
         cgParams = this.getMetaCg(['不透明度', 'Opacity']);
         if (cgParams) {
