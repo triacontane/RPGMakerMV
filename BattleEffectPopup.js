@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.3 2021/02/24 ポップアップの出力が一部を除き、少し遅れて表示される問題を修正(by 奏ねこまさま)
 // 1.9.2 2020/04/15 MOG_BattleHud.jsと併用したとき、フロントビューで味方にポップアップメッセージが表示されるよう変更
 // 1.9.1 2020/03/15 YEP_X_ActSeqPack1.jsでステート付与に成功してもステート付与メッセージがでない不具合を代わりに修正
 // 1.9.0 2020/02/11 ポップアップメッセージが重なったときに次のポップアップまでのウェイトが指定できる機能を追加
@@ -595,15 +596,19 @@
     Window_BattleLog.prototype.pushPopupMessage = function(target, message, flashColor) {
         if (this.hasPopupMessage()) {
             this.push('waitForPopup');
+            this.push('popupMessage', target, message, flashColor);
+        } else {
+            this.popupMessage(target, message, flashColor);
         }
-        this.push('popupMessage', target, message, flashColor);
     };
 
     Window_BattleLog.prototype.pushPopupAppointMessage = function(target) {
         if (this.hasPopupMessage()) {
             this.push('waitForPopup');
+            this.push('popupAppointMessage', target);
+        } else {
+            this.popupAppointMessage(target);
         }
-        this.push('popupAppointMessage', target);
     };
 
     Window_BattleLog.prototype.hasPopupMessage = function() {
