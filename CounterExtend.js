@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2021/02/23 タイムプログレス戦闘時、反撃を実行するとチャージタイムのゲージが0に戻ってしまう不具合を修正
 // 2.0.0 2021/02/09 MZ向けに全面的に再構築
 // 1.9.4 2020/04/07 NRP_CountTimeBattle.jsと併用したとき、戦闘行動の強制による反撃でコマンド入力が回ってきてしまう競合を修正
 // 1.9.3 2019/12/30 スキルの属性を指定してからタイプを「なし」にした場合でも、スクリプト「action.hasElement」が元々指定していた属性を返してしまう問題を修正
@@ -362,6 +363,14 @@
             return;
         }
         _Game_Battler_performActionStart.apply(this, arguments);
+    };
+
+    const _BattleManager_endBattlerActions = BattleManager.endBattlerActions;
+    BattleManager.endBattlerActions = function(battler) {
+        if (this._action && this._action.isCounter()) {
+            return;
+        }
+        _BattleManager_endBattlerActions.apply(this, arguments);
     };
 
     /**
