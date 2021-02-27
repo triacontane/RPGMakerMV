@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/02/27 ウィンドウごとに個別のフォントを指定できる機能を追加
 // 2.1.0 2021/01/24 ウィンドウごとに個別のウィンドウスキンを指定できる機能を追加
 // 2.0.3 2020/12/16 指定対象外のウィンドウで余計な処理が実行されてしまう問題を修正
 // 2.0.2 2020/10/15 指定可能なウィンドウに戦闘画面のステータスウィンドウを追加
@@ -26,6 +27,7 @@
  * @plugindesc ウィンドウ背景画像指定プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/WindowBackImage.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param windowImageInfo
@@ -210,9 +212,12 @@
  * @param WindowSkin
  * @desc 専用のウィンドウスキン画像です。
  * @default
- * @require 1
  * @dir img/system/
  * @type file
+ *
+ * @param FontFace
+ * @desc ウィンドウの専用フォントです。woffファイルを拡張子付きで指定してください。
+ * @default
  *
  * @param OffsetX
  * @desc 表示X座標の補正値です。
@@ -255,43 +260,21 @@
 
 (function() {
     'use strict';
-
-    const getClassName = function(object) {
-        return object.constructor.toString().replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
-    };
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    const createPluginParameter = function(pluginName) {
-        const paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        const parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    const param = createPluginParameter('WindowBackImage');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
     if (!param.windowImageInfo) {
         param.windowImageInfo = [];
     }
+
+    const _Scene_Boot_loadGameFonts = Scene_Boot.prototype.loadGameFonts;
+    Scene_Boot.prototype.loadGameFonts = function() {
+        _Scene_Boot_loadGameFonts.apply(this, arguments);
+        param.windowImageInfo.forEach(data => {
+            if (data.FontFace) {
+                FontManager.load(data.FontFace.replace(/\..*/, ''), data.FontFace);
+            }
+        })
+    };
 
     //=============================================================================
     // Window
@@ -322,7 +305,7 @@
         this._frameSprite.visible = false;
         this.frameVisible = false;
         this._windowBackImageSprites    = [];
-        this._backImageDataList.forEach(function(backImageData) {
+        this._backImageDataList.forEach(backImageData => {
             const bitmap     = ImageManager.loadPicture(backImageData['ImageFile']);
             const sprite     = new Sprite_WindowBackImage(bitmap);
             sprite.scale.x = (backImageData['ScaleX'] || 100) / 100;
@@ -333,7 +316,7 @@
     };
 
     Window.prototype.initBackImageData = function() {
-        let className = getClassName(this);
+        let className = PluginManagerEx.findClassName(this);
         // for SceneCustomMenu.js
         if (this._data && this._data.Id) {
             className = this._data.Id;
@@ -360,10 +343,10 @@
      * @private
      */
     Window.prototype._refreshBackImage = function() {
-        this._windowBackImageSprites.forEach(function(sprite, index) {
+        this._windowBackImageSprites.forEach((sprite, index) => {
             sprite.x = this.width / 2 + this.getBackImageDataItem(index, 'OffsetX');
             sprite.y = this.height / 2 + this.getBackImageDataItem(index, 'OffsetY');
-        }, this);
+        });
     };
 
     const _Window_update      = Window.prototype.update;
@@ -373,13 +356,13 @@
             return;
         }
         let defaultVisible = true;
-        this._windowBackImageSprites.forEach(function(sprite, index) {
+        this._windowBackImageSprites.forEach((sprite, index) => {
             const switchId = this.getBackImageDataItem(index, 'SwitchId');
             sprite.visible = !switchId || $gameSwitches.value(switchId);
             if (sprite.visible && !this.getBackImageDataItem(index, 'WindowShow')) {
                 defaultVisible = false;
             }
-        }, this);
+        });
         this._backSprite.visible  = defaultVisible;
         this._frameSprite.visible = defaultVisible;
         this.frameVisible = defaultVisible;
@@ -391,6 +374,15 @@
         const list = this._backImageDataList;
         if (list && list.length > 0 && list[0].WindowSkin) {
             this.windowskin = ImageManager.loadSystem(list[0].WindowSkin);
+        }
+    };
+
+    const _Window_Base_resetFontSettings = Window_Base.prototype.resetFontSettings;
+    Window_Base.prototype.resetFontSettings = function() {
+        _Window_Base_resetFontSettings.apply(this, arguments);
+        const list = this._backImageDataList;
+        if (list && list.length > 0 && list[0].FontFace) {
+            this.contents.fontFace = list[0].FontFace.replace(/\..*/, '');
         }
     };
 
