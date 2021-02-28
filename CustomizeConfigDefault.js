@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/03/01 MZで動作するよう修正、リファクタリング
 // 1.1.1 2020/09/13 Mano_InputConfig.jsと併用したとき、Option項目を消していると表示不整合が発生する競合を修正
 // 1.1.0 2016/08/01 項目自体を非表示にする機能を追加しました。
 // 1.0.3 2016/06/22 多言語対応
@@ -20,55 +21,84 @@
 
 /*:
  * @plugindesc Setting default value for Options
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CustomizeConfigDefault.js
+ * @base PluginCommonBase
+ * @author triacontane
  *
  * @param AlwaysDash
  * @desc Always dash(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param CommandRemember
  * @desc Command remember(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param TouchUi
+ * @desc Touch UI(ON/OFF)
+ * @default true
+ * @type boolean
  *
  * @param BgmVolume
  * @desc BGM Volume(0-100)
  * @default 100
+ * @max 100
+ * @type number
  *
  * @param BgsVolume
  * @desc BGS Volume(0-100)
  * @default 100
+ * @max 100
+ * @type number
  *
  * @param MeVolume
  * @desc ME Volume(0-100)
  * @default 100
+ * @max 100
+ * @type number
  *
  * @param SeVolume
  * @desc SE Volume(0-100)
  * @default 100
+ * @max 100
+ * @type number
  *
  * @param EraseAlwaysDash
  * @desc Erase AlwaysDash Option(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param EraseCommandRemember
  * @desc Erase CommandRemember Option(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
+ *
+ * @param EraseTouchUi
+ * @desc Erase TouchUI Option(ON/OFF)
+ * @default false
+ * @type boolean
  *
  * @param EraseBgmVolume
  * @desc Erase BgmVolume Option(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param EraseBgsVolume
  * @desc Erase BgsVolume Option(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param EraseMeVolume
  * @desc Erase MeVolume Option(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @param EraseSeVolume
  * @desc Erase SeVolume Option(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help Setting default value for Options.
  *
@@ -76,55 +106,98 @@
  */
 /*:ja
  * @plugindesc オプションデフォルト値設定プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CustomizeConfigDefault.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @param 常時ダッシュ
+ * @param AlwaysDash
+ * @text 常時ダッシュ
  * @desc 常にダッシュする。（Shiftキーを押している場合のみ歩行）(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @param コマンド記憶
+ * @param CommandRemember
+ * @text コマンド記憶
  * @desc 選択したコマンドを記憶する。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @param BGM音量
+ * @param TouchUi
+ * @text タッチUi
+ * @desc タッチ用のボタン等をメニュー画面に表示する。(ON/OFF)
+ * @default true
+ * @type boolean
+ *
+ * @param BgmVolume
+ * @text BGM音量
  * @desc BGMの音量。0-100
  * @default 100
- *
- * @param BGS音量
+ * @max 100
+ * @type number
+ * 
+ * @param BgsVolume
+ * @text BGS音量
  * @desc BGSの音量。0-100
  * @default 100
- *
- * @param ME音量
+ * @max 100
+ * @type number
+ * 
+ * @param MeVolume
+ * @text ME音量
  * @desc MEの音量。0-100
  * @default 100
- *
- * @param SE音量
+ * @max 100
+ * @type number
+ * 
+ * @param SeVolume
+ * @text SE音量
  * @desc SEの音量。0-100
  * @default 100
+ * @max 100
+ * @type number
  *
- * @param 常時ダッシュ消去
+ * @param EraseAlwaysDash
+ * @text 常時ダッシュ消去
  * @desc 常時ダッシュの項目を非表示にする。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @param コマンド記憶消去
+ * @param EraseCommandRemember
+ * @text コマンド記憶消去
  * @desc コマンド記憶の項目を非表示にする。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @param BGM音量消去
+ * @param EraseTouchUi
+ * @text タッチUI消去
+ * @desc タッチUIの項目を非表示にする。(ON/OFF)
+ * @default false
+ * @type boolean
+ *
+ * @param EraseBgmVolume
+ * @text BGM音量消去
  * @desc BGM音量の項目を非表示にする。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @param BGS音量消去
+ * @param EraseBgsVolume
+ * @text BGS音量消去
  * @desc BGS音量の項目を非表示にする。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @param ME音量消去
+ * @param EraseMeVolume
+ * @text ME音量消去
  * @desc ME音量の項目を非表示にする。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
- * @param SE音量消去
+ * @param EraseSeVolume
+ * @text SE音量消去
  * @desc SE音量の項目を非表示にする。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help オプション画面で設定可能な項目のデフォルト値を指定した値に変更します。
  * 例えば、初回から常時ダッシュをONにしておけば
@@ -141,79 +214,62 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function() {
+(() => {
     'use strict';
-    var pluginName = 'CustomizeConfigDefault';
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramAlwaysDash           = getParamBoolean(['AlwaysDash', '常時ダッシュ']);
-    var paramCommandRemember      = getParamBoolean(['CommandRemember', 'コマンド記憶']);
-    var paramBgmVolume            = getParamNumber(['BgmVolume', 'BGM音量'], 0, 100);
-    var paramBgsVolume            = getParamNumber(['BgsVolume', 'BGS音量'], 0, 100);
-    var paramMeVolume             = getParamNumber(['MeVolume', 'ME音量'], 0, 100);
-    var paramSeVolume             = getParamNumber(['SeVolume', 'SE音量'], 0, 100);
-    var paramEraseAlwaysDash      = getParamBoolean(['EraseAlwaysDash', '常時ダッシュ消去']);
-    var paramEraseCommandRemember = getParamBoolean(['EraseCommandRemember', 'コマンド記憶消去']);
-    var paramEraseBgmVolume       = getParamBoolean(['EraseBgmVolume', 'BGM音量消去']);
-    var paramEraseBgsVolume       = getParamBoolean(['EraseBgsVolume', 'BGS音量消去']);
-    var paramEraseMeVolume        = getParamBoolean(['EraseMeVolume', 'ME音量消去']);
-    var paramEraseSeVolume        = getParamBoolean(['EraseSeVolume', 'SE音量消去']);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // ConfigManager
     //  それぞれの項目に初期値を与えます。
     //=============================================================================
-    var _ConfigManagerApplyData = ConfigManager.applyData;
-    ConfigManager.applyData     = function(config) {
-        _ConfigManagerApplyData.apply(this, arguments);
-        if (config.alwaysDash == null)      this.alwaysDash = paramAlwaysDash;
-        if (config.commandRemember == null) this.commandRemember = paramCommandRemember;
-        if (config.bgmVolume == null)       this.bgmVolume = paramBgmVolume;
-        if (config.bgsVolume == null)       this.bgsVolume = paramBgsVolume;
-        if (config.meVolume == null)        this.meVolume = paramMeVolume;
-        if (config.seVolume == null)        this.seVolume = paramSeVolume;
+    const _ConfigManager_load = ConfigManager.load;
+    ConfigManager.load = function () {
+        this.alwaysDash = param.AlwaysDash;
+        this.commandRemember = param.CommandRemember;
+        this.touchUI = param.TouchUi;
+        this.bgmVolume = param.BgmVolume;
+        this.bgsVolume = param.BgsVolume;
+        this.meVolume = param.MeVolume;
+        this.seVolume = param.SeVolume;
+        _ConfigManager_load.apply(this, arguments);
+    };
+
+    //=============================================================================
+    // Scene_Options
+    //  オプションウィンドウの高さを調整します。
+    //=============================================================================
+    const _Scene_Options_maxCommands = Scene_Options.prototype.maxCommands;
+    Scene_Options.prototype.maxCommands = function() {
+        let count = _Scene_Options_maxCommands.apply(this, arguments);
+        if (param.EraseAlwaysDash) count--;
+        if (param.EraseCommandRemember) count--;
+        if (param.EraseTouchUi) count--;
+        if (param.EraseBgmVolume) count--;
+        if (param.EraseBgsVolume) count--;
+        if (param.EraseMeVolume) count--;
+        if (param.EraseSeVolume) count--;
+        return count;
     };
 
     //=============================================================================
     // Window_Options
     //  パラメータを空白にした項目を除去します。
     //=============================================================================
-    var _Window_Options_makeCommandList = Window_Options.prototype.makeCommandList;
-    Window_Options.prototype.makeCommandList = function() {
+    const _Window_Options_makeCommandList = Window_Options.prototype.makeCommandList;
+    Window_Options.prototype.makeCommandList = function () {
         _Window_Options_makeCommandList.apply(this, arguments);
-        if (paramEraseAlwaysDash) this.eraseOption('alwaysDash');
-        if (paramEraseCommandRemember) this.eraseOption('commandRemember');
-        if (paramEraseBgmVolume) this.eraseOption('bgmVolume');
-        if (paramEraseBgsVolume) this.eraseOption('bgsVolume');
-        if (paramEraseMeVolume) this.eraseOption('meVolume');
-        if (paramEraseSeVolume) this.eraseOption('seVolume');
+        if (param.EraseAlwaysDash) this.eraseOption('alwaysDash');
+        if (param.EraseCommandRemember) this.eraseOption('commandRemember');
+        if (param.EraseTouchUi) this.eraseOption('touchUI')
+        if (param.EraseBgmVolume) this.eraseOption('bgmVolume');
+        if (param.EraseBgsVolume) this.eraseOption('bgsVolume');
+        if (param.EraseMeVolume) this.eraseOption('meVolume');
+        if (param.EraseSeVolume) this.eraseOption('seVolume');
     };
 
-    Window_Options.prototype.eraseOption = function(symbol) {
-        for (var i = 0; i < this._list.length; i++) {
+    Window_Options.prototype.eraseOption = function (symbol) {
+        for (let i = 0; i < this._list.length; i++) {
             if (this._list[i].symbol === symbol) {
                 this._list.splice(i, 1);
                 // for Mano_InputConfig.js
@@ -223,7 +279,7 @@
         }
     };
 
-    Window_Options.prototype.adjustIndexManoInputConfig = function(index) {
+    Window_Options.prototype.adjustIndexManoInputConfig = function (index) {
         if (this._gamepadOptionIndex > index) {
             this._gamepadOptionIndex -= 1;
         }
