@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2021/03/01 先方に対応頂いたためMano_InputConfig.jsとの競合解消コードを削除
 // 1.2.0 2021/03/01 MZで動作するよう修正、リファクタリング
 // 1.1.1 2020/09/13 Mano_InputConfig.jsと併用したとき、Option項目を消していると表示不整合が発生する競合を修正
 // 1.1.0 2016/08/01 項目自体を非表示にする機能を追加しました。
@@ -135,21 +136,21 @@
  * @default 100
  * @max 100
  * @type number
- * 
+ *
  * @param BgsVolume
  * @text BGS音量
  * @desc BGSの音量。0-100
  * @default 100
  * @max 100
  * @type number
- * 
+ *
  * @param MeVolume
  * @text ME音量
  * @desc MEの音量。0-100
  * @default 100
  * @max 100
  * @type number
- * 
+ *
  * @param SeVolume
  * @text SE音量
  * @desc SEの音量。0-100
@@ -272,19 +273,8 @@
         for (let i = 0; i < this._list.length; i++) {
             if (this._list[i].symbol === symbol) {
                 this._list.splice(i, 1);
-                // for Mano_InputConfig.js
-                this.adjustIndexManoInputConfig(i);
                 break;
             }
-        }
-    };
-
-    Window_Options.prototype.adjustIndexManoInputConfig = function (index) {
-        if (this._gamepadOptionIndex > index) {
-            this._gamepadOptionIndex -= 1;
-        }
-        if (this._keyboardConfigIndex > index) {
-            this._keyboardConfigIndex -= 1;
         }
     };
 })();
