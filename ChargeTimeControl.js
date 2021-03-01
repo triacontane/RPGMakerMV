@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2021/03/02 チャージタイムの有効率を増加、減少それぞれで指定できる機能を追加
  1.1.0 2021/02/06 チャージタイムの増減に計算式を指定できる機能を追加
  1.0.0 2020/08/21 初版
 ----------------------------------------------------------------------------
@@ -129,6 +130,13 @@
  * キャストタイムには影響しません。
  * また、アクティブタイムで既にターンが回っている場合は無効です。
  *
+ * チャージタイムの増加および減少の有効率を別途設定できます。
+ * 0に指定することで無効化でき、200を設定すると2倍の効力になります。
+ * 特徴を有するメモ欄(アクター、職業、武器、防具、ステート、敵キャラ)に
+ * 以下の通り指定してください。
+ * <ChargeTimePlusRate:150> // チャージタイムの増加率が1.5倍
+ * <ChargeTimeMinusRate:50> // チャージタイムの減少率が0.5倍
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -183,10 +191,21 @@
         if (this._tpbState !== "charging") {
             return;
         }
-        this._tpbChargeTime += value / 100;
+        this._tpbChargeTime += value / 100 * this.findChargeTimeRate(value);
         this._tpbChargeTime = this._tpbChargeTime.clamp(0, 1);
         if (this._tpbChargeTime >= 1) {
             this.onTpbCharged();
         }
+    };
+
+    Game_Battler.prototype.findChargeTimeRate = function(value) {
+        const name = value > 0 ? 'ChargeTimePlusRate' : 'ChargeTimeMinusRate';
+        for (const obj of this.traitObjects()) {
+            const rate = PluginManagerEx.findMetaValue(obj, name);
+            if (rate !== undefined) {
+                return rate / 100;
+            }
+        }
+        return 1.0;
     };
 })();
