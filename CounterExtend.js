@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2021/03/03 特徴の「反撃率」の代わりになるタグ<CE_反撃:n>を定義
 // 1.9.5 2021/01/25 ヘルプの文言を修正
 // 1.9.4 2020/04/07 NRP_CountTimeBattle.jsと併用したとき、戦闘行動の強制による反撃でコマンド入力が回ってきてしまう競合を修正
 // 1.9.3 2019/12/30 スキルの属性を指定してからタイプを「なし」にした場合でも、スクリプト「action.hasElement」が元々指定していた属性を返してしまう問題を修正
@@ -525,6 +526,19 @@ var Imported = Imported || {};
         }
     };
 
+    Game_BattlerBase.prototype.getCounterRate = function() {
+        var counter = null;
+        this.traitObjects().some(function(traitObject) {
+            var metaValue = getMetaValues(traitObject, ['反撃', 'Counter']);
+            if (metaValue) {
+                counter = getArgEval(metaValue, 1);
+                return true;
+            }
+            return false;
+        }.bind(this));
+        return counter;
+    };
+
     Game_BattlerBase.prototype.executeCounterScript = function(counterCondition, action, target) {
         var skill     = action.item();
         // use in eval
@@ -635,7 +649,7 @@ var Imported = Imported || {};
             return this.itemMagicCnt(target, additionalCnt);
         } else {
             var rate = this.reserveTargetCounterSkillId(target, false, 0);
-            return rate * (cnt + additionalCnt);
+            return rate * ((cnt || target.getCounterRate()) + additionalCnt);
         }
     };
 
