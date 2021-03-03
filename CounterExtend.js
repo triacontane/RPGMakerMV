@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.1 2021/03/03 1.10.0のタグが命中タイプ「必中」の場合にも作動していた問題を修正
 // 1.10.0 2021/03/03 特徴の「反撃率」の代わりになるタグ<CE_反撃:n>を定義
 // 1.9.5 2021/01/25 ヘルプの文言を修正
 // 1.9.4 2020/04/07 NRP_CountTimeBattle.jsと併用したとき、戦闘行動の強制による反撃でコマンド入力が回ってきてしまう競合を修正
@@ -649,7 +650,10 @@ var Imported = Imported || {};
             return this.itemMagicCnt(target, additionalCnt);
         } else {
             var rate = this.reserveTargetCounterSkillId(target, false, 0);
-            return rate * ((cnt || target.getCounterRate()) + additionalCnt);
+            if (!cnt && this.isPhysical() && target.canMove()) {
+                cnt = target.getCounterRate();
+            }
+            return rate * (cnt + additionalCnt);
         }
     };
 
