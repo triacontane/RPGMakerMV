@@ -1,11 +1,12 @@
 ﻿//=============================================================================
 // SimpleVoice.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/03/04 演奏ファイルをサブフォルダから指定できる機能を追加
 // 1.1.3 2020/04/15 1.1.2の修正で同時再生したボイスの停止が動作しない問題を修正
 // 1.1.2 2020/04/08 異なるチャンネルで短い間隔で複数のボイスを再生した場合に、先に再生したボイスが演奏されない問題を修正
 // 1.1.1 2019/01/22 イベント高速化で再生したとき、SV_STOP_VOICEが効かなくなる場合がある問題を修正
@@ -108,6 +109,8 @@
  * 2 : ピッチ(省略した場合は100)
  * 3 : 位相(省略した場合は0)
  * 4 : チャンネル番号
+ * ※ファイル名にパスを指定するとサブフォルダの効果音を演奏できます。
+ * 例：SV_PLAY_VOICE sub/aaa 90 100 0 2
  *
  * チャンネル番号(数値)を指定すると、停止するときに指定したチャンネルと一致する
  * すべてのボイスを一度に停止することができます。
@@ -291,12 +294,34 @@
     AudioManager.playVoice     = function(voice, loop, channel) {
         if (voice.name) {
             this.stopVoice(voice.name, channel);
-            var buffer = this.createBuffer(param.folderName, voice.name);
+            var realPath = this.getRealVoicePath(param.folderName, voice.name);
+            var realName = this.getRealVoiceName(voice.name);
+            var buffer = this.createBuffer(realPath, realName);
             this.updateVoiceParameters(buffer, voice);
             buffer.play(loop);
             buffer.name = voice.name;
             buffer.channel = channel;
             this._voiceBuffers.push(buffer);
+        }
+    };
+
+    AudioManager.getRealVoicePath = function(path1, path2) {
+        if (path2.includes('/')) {
+            return path1 + '/' + path2.replace(/(.*)\/.*/, function() {
+                return arguments[1];
+            });
+        } else {
+            return path1;
+        }
+    };
+
+    AudioManager.getRealVoiceName = function(path) {
+        if (path.includes('/')) {
+            return path.replace(/.*\/(.*)/, function() {
+                return arguments[1];
+            });
+        } else {
+            return path;
         }
     };
 
