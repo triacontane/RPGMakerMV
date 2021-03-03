@@ -1,11 +1,12 @@
 //=============================================================================
 // BattleRecord.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2021/03/03 1行動ごとの最大与ダメージを記録する変数を追加
 // 1.2.2 2018/04/30 ゴールドの増減について所持ゴールドを以上の額を減算したときの消費量が誤っていた問題を修正
 // 1.2.1 2017/05/20 プラグイン未適用のデータをロードしたときに一部のスクリプトが実行エラーになる問題を修正
 // 1.2.0 2016/12/25 アイテムの売買履歴を保持して取得できる機能を追加
@@ -16,7 +17,7 @@
 //                  アクター全員の合計値を容易に取得できるようにしました。
 // 1.0.0 2016/08/25 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -176,6 +177,7 @@
  * ・全敵キャラの撃破回数合計
  * ・与えたダメージの合計
  * ・与えたダメージの最大
+ * ・与えたダメージの最大(1行動ごと)
  * ・受けたダメージの合計
  * ・受けたダメージの最大
  * ・回復したダメージの合計
@@ -194,6 +196,7 @@
  * $gameActors.actor(1).getKillEnemyCounter(4);  # アクター[1]の敵キャラ[4]撃破数
  * $gameActors.actor(1).getAllKillEnemyCounter();# アクター[1]の全敵キャラ撃破数
  * $gameActors.actor(1).attackDamageMax;         # アクター[1]の最大与ダメージ
+ * $gameActors.actor(1).actionDamageMax;         # アクター[1]の行動あたりの最大与ダメージ
  * $gameActors.actor(1).attackDamageSum;         # アクター[1]の合計与ダメージ
  * $gameActors.actor(1).acceptDamageMax;         # アクター[1]の最大被ダメージ
  * $gameActors.actor(1).acceptDamageSum;         # アクター[1]の合計被ダメージ
@@ -330,6 +333,8 @@ function Game_TradeRecord() {
         this._useItemCounter   = [];
         this._killEnemyCounter = [];
         this.attackDamageMax   = 0;
+        this.actionDamageMax   = 0;
+        this.actionDamage      = 0;
         this.attackDamageSum   = 0;
         this.acceptDamageMax   = 0;
         this.acceptDamageSum   = 0;
@@ -350,9 +355,15 @@ function Game_TradeRecord() {
         if (value >= 0) {
             this.attackDamageMax = Math.max((this.attackDamageMax || 0), value);
             this.attackDamageSum = (this.attackDamageSum || 0) + value;
+            this.actionDamage = (this.actionDamage || 0) + value;
         } else {
             this.recordRecoverDamage(-value);
         }
+    };
+
+    Game_BattlerBase.prototype.saveActionDamageMax = function() {
+        this.actionDamageMax = Math.max(this.actionDamageMax, this.actionDamage);
+        this.actionDamage = 0;
     };
 
     Game_BattlerBase.prototype.recordAcceptDamage = function(value) {
@@ -469,16 +480,11 @@ function Game_TradeRecord() {
     // Game_Action
     //  戦績を記録します。
     //=============================================================================
-    var _Game_Action_executeDamage      = Game_Action.prototype.executeDamage;
-    Game_Action.prototype.executeDamage = function(target, value) {
-        _Game_Action_executeDamage.apply(this, arguments);
-        this.subject().recordAttackDamage(value);
-        target.recordAcceptDamage(value);
-    };
-
     var _Game_Action_executeHpDamage      = Game_Action.prototype.executeHpDamage;
     Game_Action.prototype.executeHpDamage = function(target, value) {
         _Game_Action_executeHpDamage.apply(this, arguments);
+        this.subject().recordAttackDamage(value);
+        target.recordAcceptDamage(value);
         if (target.hp === 0) {
             this.subject().recordKillEnemyCounter(target.getBattlerId());
             target.recordDead();
@@ -754,6 +760,12 @@ function Game_TradeRecord() {
         return counterArray.slice(startIndex, endIndex + 1).reduce(function(sumValue, value) {
             return sumValue + value;
         }, 0);
+    };
+
+    var _BattleManager_endAction = BattleManager.endAction;
+    BattleManager.endAction = function() {
+        this._subject.saveActionDamageMax();
+        _BattleManager_endAction.apply(this, arguments);
     };
 
     //=============================================================================
