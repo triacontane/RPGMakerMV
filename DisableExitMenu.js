@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/03/04 MZ用に修正
  1.0.0 2021/03/04 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -15,6 +16,9 @@
 
 /*:
  * @plugindesc DisableExitMenuPlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DisableExitMenu.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @param switch
@@ -32,6 +36,9 @@
  */
 /*:ja
  * @plugindesc メニュー画面を閉じられなくするプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DisableExitMenu.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param switch
@@ -56,34 +63,10 @@
 
 (function() {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('DisableExitMenu');
-
-    var _Scene_Menu_popScene = Scene_Menu.prototype.popScene;
+    const _Scene_Menu_popScene = Scene_Menu.prototype.popScene;
     Scene_Menu.prototype.popScene = function() {
         if ($gameSwitches.value(param.switch)) {
             AudioManager.stopStaticAllSe();
