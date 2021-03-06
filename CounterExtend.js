@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/03/07 反撃設定が複数あった場合の判定処理が一部間違っていた問題を修正
+//                  スキルに反撃回避率を設定できる機能を追加
 // 2.0.1 2021/02/23 タイムプログレス戦闘時、反撃を実行するとチャージタイムのゲージが0に戻ってしまう不具合を修正
 // 2.0.0 2021/02/09 MZ向けに全面的に再構築
 // 1.9.4 2020/04/07 NRP_CountTimeBattle.jsと併用したとき、戦闘行動の強制による反撃でコマンド入力が回ってきてしまう競合を修正
@@ -107,6 +109,11 @@
  *
  * 反撃の詳細設定はプラグインパラメータから入力します。
  * 通常の反撃とは異なり、相手の行動が終わってから発動します。
+ *
+ * メモ欄に以下の通り入力したスキル、アイテムは相手の反撃頻度を
+ * 指定した値だけ減らすことができます。
+ * <CounterEvasion:100>
+ * <反撃回避:100>
  */
 
 /*~struct~COUNTER:
@@ -268,7 +275,13 @@
             if (triggerAction.isCounter() || this.friendsUnit().members().contains(target)) {
                 return;
             }
-            this._counter = this.findParams().filter(counter => this.isValidSkill(counter, triggerAction))[0];
+            for (const counter of this.findParams()) {
+                if (this.isValidSkill(counter, triggerAction)) {
+                    this._counter = counter;
+                    return;
+                }
+            }
+            this._counter = null;
         }
 
         findParams() {
@@ -289,13 +302,14 @@
             const conditions = [];
             const target = triggerAction.subject();
             const subject = this.subject();
+            const evasion = PluginManagerEx.findMetaValue(triggerSkill, ['CounterEvasion', '反撃回避']) || 0;
             const checkParam = (param, value) => param && param !== value;
             conditions.push(() => checkParam(skill.IdCondition, triggerSkill.id));
             conditions.push(() => checkParam(skill.HitTypeCondition, triggerSkill.hitType));
             conditions.push(() => checkParam(skill.ElementCondition, triggerSkill.damage.elementId));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
             conditions.push(() => skill.ScriptCondition && !eval(skill.ScriptCondition));
-            conditions.push(() => skill.Frequency > 0 && Math.randomInt(100) >= skill.Frequency);
+            conditions.push(() => skill.Frequency > 0 && Math.randomInt(100) >= skill.Frequency - evasion);
             conditions.push(() => counter.PayCounterCost && !this.isValid());
             this.setCounterSkill(skill, triggerSkill);
             this.setCounterTarget(target);
