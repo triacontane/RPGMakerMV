@@ -1,17 +1,18 @@
 //=============================================================================
 // ParallelBgs.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.4 2021/03/06 BGMのフェードアウトのイベントコマンドでは現在のラインのBGSのみフェードアウトするよう修正
 // 1.0.3 2020/02/02 ヘルプのプラグインコマンド「PB_BGSライン変更」が間違っていたので「PB_BGS_ライン変更」に修正(コード修正なし)
 // 1.0.2 2017/01/05 BGSの演奏状態によっては、セーブ＆ロードした際に一部のBGSが演奏されなくなる現象の修正(byくらむぼん氏)
 // 1.0.1 2016/11/16 BGSをプレーしていない状態でセーブ＆ロードするとエラーになる現象の修正
 // 1.0.0 2016/11/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -152,6 +153,14 @@
                 $gameSystem.setBgsFadeTime(getArgNumber(args[0], 1));
                 break;
         }
+    };
+
+    var _Game_Interpreter_command246 = Game_Interpreter.prototype.command246;
+    Game_Interpreter.prototype.command246 = function(params) {
+        AudioManager._bgsFadeOutByLine = true;
+        var result = _Game_Interpreter_command246.apply(this, arguments);
+        AudioManager._bgsFadeOutByLine = false;
+        return result;
     };
 
     //=============================================================================
@@ -345,8 +354,19 @@
 
     var _AudioManager_fadeOutBgs = AudioManager.fadeOutBgs;
     AudioManager.fadeOutBgs      = function(time) {
-        this.iterateAllBgs(function() {
+        if (this._bgsFadeOutByLine) {
             _AudioManager_fadeOutBgs.call(this, time);
+        } else {
+            this.iterateAllBgs(function() {
+                _AudioManager_fadeOutBgs.call(this, time);
+            }.bind(this));
+        }
+    };
+
+    const _AudioManager_fadeInBgs = AudioManager.fadeInBgs;
+    AudioManager.fadeInBgs      = function(time) {
+        this.iterateAllBgs(function() {
+            _AudioManager_fadeInBgs.call(this, time);
         }.bind(this));
     };
 
@@ -384,9 +404,9 @@
     };
 
     AudioManager.fadeOutBgsForSe = function() {
-        var prevCurrentBgs = this._currentBgs;
+        var currentAllBgs = this._currentAllBgs.clone();
         this.fadeOutBgs(this._bgsFadeTime);
-        this._currentBgs     = prevCurrentBgs;
+        this._currentAllBgs =  currentAllBgs;
         this._bgsFading      = true;
         this._bgsFadeCounter = this._bgsFadeTime * 60;
     };
