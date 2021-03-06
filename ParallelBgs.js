@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2021/03/06 BGMのフェードアウトのイベントコマンドでは現在のラインのBGSのみフェードアウトするよう修正
 // 1.1.0 2020/12/14 MZ向けに全面的に修正
 // 1.0.3 2020/02/02 ヘルプのプラグインコマンド「PB_BGSライン変更」が間違っていたので「PB_BGS_ライン変更」に修正(コード修正なし)
 // 1.0.2 2017/01/05 BGSの演奏状態によっては、セーブ＆ロードした際に一部のBGSが演奏されなくなる現象の修正(byくらむぼん氏)
@@ -94,6 +95,14 @@
     PluginManagerEx.registerCommand(script, 'FADEOUT_FOR_SE', args => {
         $gameSystem.setBgsFadeForSe(args.type, args.fadeTime);
     });
+
+    const _Game_Interpreter_command246 = Game_Interpreter.prototype.command246;
+    Game_Interpreter.prototype.command246 = function(params) {
+        AudioManager._bgsFadeOutByLine = true;
+        const result = _Game_Interpreter_command246.apply(this, arguments);
+        AudioManager._bgsFadeOutByLine = false;
+        return result;
+    };
 
     //=============================================================================
     // Game_System
@@ -281,8 +290,19 @@
 
     const _AudioManager_fadeOutBgs = AudioManager.fadeOutBgs;
     AudioManager.fadeOutBgs      = function(time) {
-        this.iterateAllBgs(function() {
+        if (this._bgsFadeOutByLine) {
             _AudioManager_fadeOutBgs.call(this, time);
+        } else {
+            this.iterateAllBgs(function() {
+                _AudioManager_fadeOutBgs.call(this, time);
+            }.bind(this));
+        }
+    };
+
+    const _AudioManager_fadeInBgs = AudioManager.fadeInBgs;
+    AudioManager.fadeInBgs      = function(time) {
+        this.iterateAllBgs(function() {
+            _AudioManager_fadeInBgs.call(this, time);
         }.bind(this));
     };
 
@@ -320,9 +340,9 @@
     };
 
     AudioManager.fadeOutBgsForSe = function() {
-        const prevCurrentBgs = this._currentBgs;
+        const currentAllBgs = this._currentAllBgs.clone();
         this.fadeOutBgs(this._bgsFadeTime);
-        this._currentBgs     = prevCurrentBgs;
+        this._currentAllBgs =  currentAllBgs;
         this._bgsFading      = true;
         this._bgsFadeCounter = this._bgsFadeTime * 60;
     };
