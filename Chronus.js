@@ -1338,6 +1338,7 @@ function Window_Chronus() {
 
     Game_Chronus.prototype.transfer = function(realTransfer) {
         if (this.isStop()) return;
+        if (!this._timeTransferAdd) return;
         if (realTransfer) {
             this.addTime(this._timeTransferAdd);
         }
