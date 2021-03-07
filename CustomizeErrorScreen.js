@@ -1,25 +1,31 @@
 //=============================================================================
 // CustomizeErrorScreen.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2021/03/07 MZで動作するよう全面的に修正
+// 1.3.0 2020/11/29 パラメータの型指定機能に対応
+// 1.2.1 2020/11/29 非同期処理でエラーイベントを捕捉したときスタックトレースの表示が正しく行えない問題を修正
 // 1.2.0 2016/11/10 連絡先のリンクを開く際に、既定のブラウザで開くよう変更
 // 1.1.1 2016/07/13 表記方法を少しだけ変更
 // 1.1.0 2016/07/13 ローカル実行時、エラー情報のパスを出力しないよう修正
 // 1.0.1 2016/06/25 エラー発生時のリンク先を別画面で開くよう修正
 // 1.0.0 2016/05/14 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
  * @plugindesc Customize Error Screen
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CustomizeErrorScreen.js
+ * @base PluginCommonBase
+ * @author triacontane
  *
  * @param MainMessage
  * @desc
@@ -39,19 +45,26 @@
  */
 /*:ja
  * @plugindesc エラー画面表示改善プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CustomizeErrorScreen.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @param メインメッセージ
+ * @param MainMessage
+ * @text メインメッセージ
  * @desc エラー画面に共通で表示されるメッセージ
- * @default 以下のエラーが発生しました。
+ * @default エラーが発生しました。エラー内容を添えて以下にお問い合わせください。
  *
- * @param ハイパーリンク
+ * @param HyperLink
+ * @text リンク先URL
  * @desc エラー画面に表示するリンク先URL
  * @default
- * 
- * @param 詳細情報出力
+ *
+ * @param OutputDetail
+ * @text 詳細情報出力
  * @desc エラー情報の詳細(スタックトレース)を出力します。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @help エラー画面の表示を改善します。固定メッセージと連絡先のハイパーリンクを
  * 指定できるほか、エラーの詳細情報（スタックトレース）も表示されるようになります。
@@ -68,48 +81,23 @@
 
 (function() {
     'use strict';
-    var pluginName = 'CustomizeErrorScreen';
-
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value === null ? '' : value;
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramMainMessage  = getParamString(['MainMessage', 'メインメッセージ']);
-    var paramHyperLink    = getParamString(['HyperLink', 'ハイパーリンク']);
-    var paramOutputDetail = getParamBoolean(['OutputDetail', '詳細情報出力']);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // SceneManager
     //  エラー情報の出力処理を追加します。
     //=============================================================================
-    var _SceneManager_onError = SceneManager.onError;
+    const _SceneManager_onError = SceneManager.onError;
     SceneManager.onError      = function(e) {
         _SceneManager_onError.apply(this, arguments);
         try {
-            Graphics.printErrorDetail(e, decodeURIComponent(e.filename));
+            Graphics.printErrorDetail(e.error, decodeURIComponent(e.filename));
         } catch (e2) {
         }
     };
 
-    var _SceneManager_catchException = SceneManager.catchException;
+    const _SceneManager_catchException = SceneManager.catchException;
     SceneManager.catchException      = function(e) {
         _SceneManager_catchException.apply(this, arguments);
         Graphics.printErrorDetail(e);
@@ -119,20 +107,20 @@
     // Graphics
     //  エラー情報を出力します。
     //=============================================================================
-    var _Graphics__makeErrorHtml = Graphics._makeErrorHtml;
+    const _Graphics__makeErrorHtml = Graphics._makeErrorHtml;
     Graphics._makeErrorHtml      = function(name, message) {
         arguments[1] = decodeURIComponent(message);
         return _Graphics__makeErrorHtml.apply(this, arguments);
     };
 
     Graphics.printErrorDetail = function(e) {
-        this.hideFps();
-        this._setErrorPrinterStyle();
         if (this._errorPrinter) {
             this._makeMainMessage();
-            if (paramHyperLink)    this._makeHyperLink();
-            if (paramOutputDetail) {
-                var stack = String(e.stack) || '';
+            if (param.HyperLink) {
+                this._makeHyperLink();
+            }
+            if (param.OutputDetail && e.stack) {
+                let stack = String(e.stack) || '';
                 if (Utils.isNwjs()) {
                     stack = stack.replace(/file:.*js\//g, '');
                     stack = stack.replace(/ at /g, '<br/>');
@@ -143,25 +131,25 @@
     };
 
     Graphics._makeMainMessage = function() {
-        var mainMessage       = document.createElement('div');
-        var style             = mainMessage.style;
+        const mainMessage     = document.createElement('div');
+        const style           = mainMessage.style;
         style.color           = 'white';
-        style.textAlign       = 'left';
+        style.textAlign       = 'center';
         style.fontSize        = '18px';
-        mainMessage.innerHTML = '<hr>' + paramMainMessage;
+        mainMessage.innerHTML = '<hr>' + param.MainMessage;
         this._errorPrinter.appendChild(mainMessage);
     };
 
     Graphics._makeHyperLink = function() {
-        var hyperLink            = document.createElement('a');
-        var style                = hyperLink.style;
+        const hyperLink          = document.createElement('a');
+        const style              = hyperLink.style;
         style.color              = 'blue';
         style.textAlign          = 'left';
         style.fontSize           = '20px';
         style['text-decoration'] = 'underline';
         style.cursor             = 'pointer';
-        hyperLink.addEventListener('click', this._openUrl.bind(this, paramHyperLink));
-        hyperLink.innerHTML = paramHyperLink;
+        hyperLink.addEventListener('click', this._openUrl.bind(this, param.HyperLink));
+        hyperLink.innerHTML = param.HyperLink;
         this._errorPrinter.appendChild(hyperLink);
     };
 
@@ -170,7 +158,7 @@
             window.open(url);
             return;
         }
-        var exec = require('child_process').exec;
+        const exec = require('child_process').exec;
         switch (process.platform) {
             case 'win32':
                 exec('rundll32.exe url.dll,FileProtocolHandler "' + url + '"');
@@ -182,28 +170,24 @@
     };
 
     Graphics._makeStackTrace = function(stack) {
-        var stackTrace         = document.createElement('div');
-        var style              = stackTrace.style;
+        const stackTrace       = document.createElement('div');
+        const style            = stackTrace.style;
         style.color            = 'white';
         style.textAlign        = 'left';
-        style.fontSize         = '18px';
+        style.fontSize         = '12px';
         style.userSelect       = 'text';
-        style.webkitUserSelect = 'text';
         style.msUserSelect     = 'text';
         style.mozUserSelect    = 'text';
+        style['overflow-wrap'] = 'break-word';
         stackTrace.innerHTML   = '<br><hr>' + stack + '<hr>';
         this._errorPrinter.appendChild(stackTrace);
     };
 
-    Graphics._setErrorPrinterStyle = function() {
-        this._errorPrinter.width  = this._width * 0.9;
-        this._errorPrinter.height = this._height * 0.9;
-        var style                 = this._errorPrinter.style;
-        style.textAlign           = 'center';
-        style.textShadow          = '1px 1px 3px #000';
-        style.fontSize            = '22px';
-        style.zIndex              = 99;
-        this._centerElement(this._errorPrinter);
+    const _Graphics__updateErrorPrinter = Graphics._updateErrorPrinter;
+    Graphics._updateErrorPrinter = function() {
+        _Graphics__updateErrorPrinter.apply(this, arguments);
+        this._errorPrinter.style.width  = `${this._width * 0.9}px`;
+        this._errorPrinter.style.height = `${this._height * 0.9}px`;
     };
 })();
 
