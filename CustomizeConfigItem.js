@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/03/09 スクリプトが指定されているときに項目決定すると決定SEを演奏するよう修正
 // 2.1.2 2020/10/13 Mano_InputConfig.jsと併用したとき、項目を末尾以外に追加すると表示不整合が発生する競合を修正
 // 2.1.0 2017/12/15 追加項目のデフォルト項目を含めた並び順を自由に設定できる機能を追加
 //                  項目名称を日本語化
@@ -728,7 +729,10 @@
         var symbol = this.commandSymbol(this.index());
         if (!this.isCustomSymbol(symbol)) return;
         var script = this._customParams[symbol].script;
-        if (script) eval(script);
+        if (script) {
+            eval(script);
+            SoundManager.playOk();
+        }
         localOptionWindowIndex = this.index();
     };
 
