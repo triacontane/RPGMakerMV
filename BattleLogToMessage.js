@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.2 2021/03/09 戦闘から逃走、敗北した際はログウィンドウが消えるよう修正
 // 1.10.1 2020/06/04 1.9.1の修正により、ステータスウィンドウを下部に配置するとメッセージの上に表示されてしまう問題を修正
 // 1.10.0 2020/05/30 バトルログウィンドウのフォントサイズを変更できる機能を追加
 // 1.9.2 2020/04/30 1.9.1の修正が不完全だったので再度修正
@@ -251,6 +252,12 @@
     BattleManager.displayRewards      = function() {
         this._logWindow.hide();
         _BattleManager_displayRewards.apply(this, arguments);
+    };
+
+    var _BattleManager_endBattle = BattleManager.endBattle;
+    BattleManager.endBattle = function(result) {
+        _BattleManager_endBattle.apply(this, arguments);
+        this._logWindow.hide();
     };
 
     SceneManager.isBattleScene = function() {
