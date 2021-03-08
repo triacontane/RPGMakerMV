@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2021/03/09 アクターのステートアイコンの拡大率がアクター自身の拡大率に影響を受けないよう修正
 // 2.3.0 2021/01/24 敵キャラのリングアイコン表示位置を調整できる機能を追加
 // 2.2.0 2021/01/13 指定したアイコンインデックスをリングアイコンの表示対象外にできる機能を追加
 // 2.1.3 2020/03/13 2.1.2の競合対策にフォントサイズとアイコンごとのターン数表示の有無の設定を反映
@@ -418,6 +419,17 @@ function Sprite_StateIconChild() {
             this._stateSprite.y = param.ActorRingIconY;
             this._mainSprite.addChild(this._stateSprite);
         };
+
+        var _Sprite_Actor_update = Sprite_Actor.prototype.update;
+        Sprite_Actor.prototype.update = function() {
+            _Sprite_Actor_update.apply(this, arguments);
+            if (this.scale.x !== 1.0) {
+                this._stateSprite.scale.x = 1.0 / this.scale.x;
+            }
+            if (this.scale.y !== 1.0) {
+                this._stateSprite.scale.y = 1.0 / this.scale.y;
+            }
+        }
     }
 
     var _Sprite_Enemy_updateStateSprite = Sprite_Enemy.prototype.updateStateSprite;
