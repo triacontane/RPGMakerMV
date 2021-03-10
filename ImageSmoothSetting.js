@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/03/10 システム画像に対するぼかし設定を追加
 // 2.0.0 2021/01/23 MZで動作するよう修正
 // 1.1.0 2017/06/24 テキストなど動的画像のぼかし設定を追加
 // 1.0.0 2017/02/24 初版
@@ -64,6 +65,12 @@
  * @default true
  * @type boolean
  *
+ * @param System
+ * @text システム
+ * @desc システム画像にぼかしをかけます。
+ * @default true
+ * @type boolean
+ *
  * @param DynamicImage
  * @text 動的画像
  * @desc ウィンドウの文字など動的に作成した画像にぼかしをかけます。
@@ -73,6 +80,11 @@
  * @help 画像を拡大したときに「ぼかし」(Scale Mode:LINEAR)を入れて
  * 表示するかどうかを画像種別ごとに設定できます。
  * 「ぼかし」処理を行わないとくっきり映りますが、ドットが見えます。
+ *
+ * また「ぼかし」が有効の場合、キャラクター画像やシステム画像のように
+ * スプライトシートや複数のパーツをひとつの画像にまとめていて、
+ * かつパーツの境界付近が透過色でない場合、
+ * ぼかしを入れることで画像の端にゴミのようなものが表示される場合があります。
  *
  * RPGツクールMZのデフォルトでは全ての画像に「ぼかし」が入ります。
  *
@@ -102,7 +114,8 @@
         'img/sv_actors/'   : param.Battler,
         'img/sv_enemies/'  : param.Battler,
         'img/titles1/'     : param.Title,
-        'img/titles2/'     : param.Title
+        'img/titles2/'     : param.Title,
+        'img/system/'      : param.System,
     };
 
     const _ImageManager_loadBitmap = ImageManager.loadBitmap;
