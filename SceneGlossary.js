@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.5.0 2021/03/12 ヘルプウィンドウの位置設定を追加
 // 3.4.0 2021/01/17 指定した用語ページを開くことでスイッチがONになる機能を追加
 //                  3.3.0の修正で用語名称が表示されなくなる場合がある問題を修正
 // 3.3.0 2020/12/09 用語リスト表示でアイコンを非表示にできる設定を追加
@@ -184,6 +185,12 @@
  *
  * @param PageWrap
  * @desc 複数のページが存在する場合、最後のページまで到達していたら最初のページに戻します。
+ * @default true
+ * @type boolean
+ * @parent Layout
+ *
+ * @param BottomHelpMode
+ * @desc 最下部にヘルプウィンドウを表示します。
  * @default true
  * @type boolean
  * @parent Layout
@@ -576,6 +583,13 @@
  * @param PageWrap
  * @text ページ折り返し
  * @desc 複数のページが存在する場合、最後のページまで到達していたら最初のページに戻します。
+ * @default true
+ * @type boolean
+ * @parent Layout
+ *
+ * @param BottomHelpMode
+ * @text ヘルプ位置を最下部に
+ * @desc 最下部にヘルプウィンドウを表示します。
  * @default true
  * @type boolean
  * @parent Layout
@@ -1624,6 +1638,10 @@
         this.setInitActivateWindow();
     };
 
+    Scene_Glossary.prototype.isBottomHelpMode = function () {
+        return param.BottomHelpMode;
+    };
+
     Scene_Glossary.prototype.createHelpWindow = function() {
         Scene_MenuBase.prototype.createHelpWindow.apply(this, arguments);
         this._helpTexts = $gameParty.getGlossaryHelpMessages();
@@ -2156,7 +2174,7 @@
         var x            = listWindow.x;
         var y            = listWindow.y + listWindow.height;
         var width        = listWindow.width;
-        var height       = Graphics.boxHeight - y - helpWindow.height;
+        var height       = Graphics.boxHeight - y - (param.BottomHelpMode ? helpWindow.height : 0);
         this._listWindow = listWindow;
         Window_Base.prototype.initialize.call(this, new Rectangle(x, y, width, height));
         this.setFramelessDesign();
@@ -2183,7 +2201,7 @@
     Window_Glossary.prototype.constructor = Window_Glossary;
 
     Window_Glossary.prototype.initialize = function(x, y, helpWindow) {
-        var height      = Graphics.boxHeight - y - helpWindow.height;
+        var height      = Graphics.boxHeight - y - (param.BottomHelpMode ? helpWindow.height : 0);
         var width       = Graphics.boxWidth - x;
         this._maxPages  = 1;
         this._itemData  = null;
