@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.22.0 2021/03/14 確認ウィンドウの位置を直接指定できる機能を追加
 // 2.21.0 2021/01/17 指定した用語ページを開くことでスイッチがONになる機能を追加
 // 2.20.0 2020/12/09 用語リスト表示でアイコンを非表示にできる設定を追加
 // 2.19.0 2020/11/22 用語単位でページ番号の表示、非表示を設定できる機能を追加
@@ -393,6 +394,18 @@
  * @param ConfirmNoUse
  * @desc 確認メッセージで使わない場合のメッセージです。
  * @default やめる
+ * @parent ConfirmMessage
+ *
+ * @param ConfirmX
+ * @desc 確認メッセージの表示X座標補正値です。
+ * @default 0
+ * @type number
+ * @parent ConfirmMessage
+ *
+ * @param ConfirmY
+ * @desc 確認メッセージの表示Y座標補正値です。
+ * @default 0
+ * @type number
  * @parent ConfirmMessage
  *
  * @param GlossaryHelp
@@ -865,6 +878,20 @@
  * @text 確認_使わない
  * @desc 確認メッセージで使わない場合のメッセージです。
  * @default やめる
+ * @parent ConfirmMessage
+ *
+ * @param ConfirmX
+ * @text 確認ウィンドウX座標
+ * @desc 確認メッセージの表示X座標です。
+ * @default 0
+ * @type number
+ * @parent ConfirmMessage
+ *
+ * @param ConfirmY
+ * @text 確認ウィンドウY座標
+ * @desc 確認メッセージの表示Y座標です。
+ * @default 0
+ * @type number
  * @parent ConfirmMessage
  *
  * @param GlossaryHelp
@@ -1479,6 +1506,13 @@ function Window_GlossaryComplete() {
 
     Game_Party.prototype.getGlossaryConfirmMessages = function() {
         return [this._glossarySetting.ConfirmUse, this._glossarySetting.ConfirmNoUse];
+    };
+
+    Game_Party.prototype.getGlossaryConfirmPosition = function() {
+        return {
+            x: this._glossarySetting.ConfirmX || 0,
+            y: this._glossarySetting.ConfirmY || 0,
+        };
     };
 
     Game_Party.prototype.getGlossaryHelpMessages = function() {
@@ -2155,6 +2189,13 @@ function Window_GlossaryComplete() {
             line -= 3;
         }
         this.y = this._listWindow.y + line * this._listWindow.itemHeight() + 32;
+        var pos = $gameParty.getGlossaryConfirmPosition();
+        if (pos.x !== 0) {
+            this.x = pos.x;
+        }
+        if (pos.y !== 0) {
+            this.y = pos.y;
+        }
     };
 
     Window_GlossaryConfirm.prototype.makeCommandList = function() {
