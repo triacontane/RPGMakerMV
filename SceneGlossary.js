@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.2 2021/03/14 敵キャラの自動登録が部分一致になっていた問題を修正
 // 3.7.1 2021/11/14 画像の自動縮小の機能が正常に動作しない問題を修正
 // 3.7.0 2021/11/10 用語未入手時の説明文を表示できる機能を追加
 //                  用語ピクチャの表示座標をピクセル単位で調整できる機能を追加
@@ -1278,9 +1279,15 @@
         return orderA - orderB;
     };
 
-    Game_Party.prototype.gainGlossaryFromText = function(text) {
+    Game_Party.prototype.gainGlossaryFromText = function(text, likeFlag) {
         this.getAllHiddenGlossaryList().forEach(function(item) {
-            if (!this.hasItem(item) && this.isAutoGlossaryWord(item) && text.contains(item.name)) {
+            if (!this.hasItem(item) && this.isAutoGlossaryWord(item)) {
+                if (likeFlag && !text.contains(item.name)) {
+                    return;
+                }
+                if (!likeFlag && text !== item.name) {
+                    return;
+                }
                 this.setAutoAdditionTrigger(item);
                 this.gainGlossary(item);
             }
@@ -1536,7 +1543,7 @@
     //=============================================================================
     Game_Troop.prototype.addEnemyGlossary = function() {
         this.deadMembers().forEach(function(enemy) {
-            $gameParty.gainGlossaryFromText(enemy.originalName());
+            $gameParty.gainGlossaryFromText(enemy.originalName(), false);
         });
     };
 
@@ -1625,7 +1632,7 @@
     var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
-        if (param.AutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._textState.text));
+        if (param.AutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._textState.text), false);
     };
 
     //=============================================================================
@@ -1635,7 +1642,7 @@
     var _Window_ScrollText_startMessage      = Window_ScrollText.prototype.startMessage;
     Window_ScrollText.prototype.startMessage = function() {
         _Window_ScrollText_startMessage.apply(this, arguments);
-        if (param.AutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._text));
+        if (param.AutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._text), false);
     };
 
     //=============================================================================
