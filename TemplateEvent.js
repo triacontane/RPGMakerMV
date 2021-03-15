@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.5 2021/03/15 「セルフ変数の一括設定」のコマンドが正しく設定できていなかった問題を修正
  1.0.4 2020/12/08 メモ欄の統合が正常に機能しない不具合を修正
  1.0.3 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.0.2 2020/09/24 固有イベントによる設定上書きのメモ欄が機能しない問題を修正
@@ -141,12 +142,23 @@
  * @desc Type of Operation.
  * @default 0
  * @type select
+ * @option  0 : Set
+ * @value 0
+ * @option  1 : Add
+ * @value 1
+ * @option  2 : Subtract
+ * @value 2
+ * @option  3 : Multiply
+ * @value 3
+ * @option  4 : Division
+ * @value 4
+ * @option  5 : Modulo
+ * @value 5
  *
  * @arg operand
  * @text Setting value
  * @desc The value to be set in the self variable.
  * @default 0
- * @type select
  *
  * @help TemplateEvent.js[Template Event Plugin]
  *
@@ -408,12 +420,23 @@
  * @desc 操作種別です。
  * @default 0
  * @type select
+ * @option  0 : 代入
+ * @value 0
+ * @option  1 : 加算
+ * @value 1
+ * @option  2 : 減算
+ * @value 2
+ * @option  3 : 乗算
+ * @value 3
+ * @option  4 : 除算
+ * @value 4
+ * @option  5 : 剰余
+ * @value 5
  *
  * @arg operand
  * @text 設定値
  * @desc セルフ変数に設定する値です。
  * @default 0
- * @type select
  *
  * @help TemplateEvent.js[テンプレートイベントプラグイン]
  *
