@@ -1,11 +1,12 @@
 ﻿//=============================================================================
 // SimpleVoice.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/03/17 MZで動作するよう修正し、仕様を見直し
 // 1.1.3 2020/04/15 1.1.2の修正で同時再生したボイスの停止が動作しない問題を修正
 // 1.1.2 2020/04/08 異なるチャンネルで短い間隔で複数のボイスを再生した場合に、先に再生したボイスが演奏されない問題を修正
 // 1.1.1 2019/01/22 イベント高速化で再生したとき、SV_STOP_VOICEが効かなくなる場合がある問題を修正
@@ -19,108 +20,98 @@
 //=============================================================================
 
 /*:
- * @plugindesc SimpleVoicePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param FolderName
- * @type string
- * @desc ボイスファイルが格納されているフォルダ名です。
- * @default voice
- *
- * @param OptionName
- * @type string
- * @desc オプション画面に表示されるボイス音量の設定項目名称です。
- * @default ボイス 音量
- *
- * @param OptionValue
- * @type number
- * @desc ボイス音量の初期値です。
- * @default 100
- *
- * @help ボイス演奏を簡易サポートします。
- * 通常の効果音とは格納フォルダを分けられるほか、オプション画面で
- * 別途音量指定が可能になります。
- *
- * 演奏及びループ演奏はプラグインコマンドから行います。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * SV_ボイスの演奏 aaa 90 100 0 2 # 指定したボイスを演奏します。
- * SV_PLAY_VOICE aaa 90 100 0 2   # 同上
- * ※具体的な引数は以下の通りです。
- * 0 : ファイル名(拡張子不要)
- * 1 : 音量(省略した場合は90)
- * 2 : ピッチ(省略した場合は100)
- * 3 : 位相(省略した場合は0)
- * 4 : チャンネル番号
- *
- * チャンネル番号(数値)を指定すると、停止するときに指定したチャンネルと一致する
- * すべてのボイスを一度に停止することができます。
- * これにより同一のチャンネルのボイスが重なって演奏されないようになります。
- *
- * SV_ボイスのループ演奏 aaa 90 100 0 # 指定したボイスをループ演奏します。
- * SV_PLAY_LOOP_VOICE aaa 90 100 0    # 同上
- *
- * SV_ボイスの停止 aaa # ボイスaaaの演奏を停止します。
- * SV_STOP_VOICE aaa   # 同上
- * SV_ボイスの停止 1   # チャンネル[1]で再生した全てのボイスの演奏を停止します。
- * SV_STOP_VOICE 1     # 同上
- * ※引数を省略した場合は全てのボイスを停止します。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 簡易ボイスプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SimpleVoice.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @param フォルダ名
- * @type string
- * @desc ボイスファイルが格納されているフォルダ名です。
- * @default voice
- *
- * @param オプション名称
+ * @param optionName
+ * @text オプション名称
  * @type string
  * @desc オプション画面に表示されるボイス音量の設定項目名称です。
  * @default ボイス 音量
  *
- * @param オプション初期値
+ * @param optionValue
+ * @text オプション初期値
  * @type number
  * @desc ボイス音量の初期値です。
  * @default 100
  *
- * @help ボイス演奏を簡易サポートします。
- * 通常の効果音とは格納フォルダを分けられるほか、オプション画面で
- * 別途音量指定が可能になります。
+ * @command PLAY_VOICE
+ * @text ボイスの演奏
+ * @desc ボイスを演奏します。
  *
- * 演奏及びループ演奏はプラグインコマンドから行います。
+ * @arg name
+ * @text ファイル名称
+ * @desc ボイスファイルの名称です。
+ * @default
+ * @type file
+ * @dir audio/se
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
+ * @arg volume
+ * @text 音量
+ * @desc ボイスファイルの音量
+ * @default 90
+ * @min 0
+ * @max 100
+ * @type number
  *
- * SV_ボイスの演奏 aaa 90 100 0 2 # 指定したボイスを演奏します。
- * SV_PLAY_VOICE aaa 90 100 0 2   # 同上
- * ※具体的な引数は以下の通りです。
- * 0 : ファイル名(拡張子不要)
- * 1 : 音量(省略した場合は90)
- * 2 : ピッチ(省略した場合は100)
- * 3 : 位相(省略した場合は0)
- * 4 : チャンネル番号
+ * @arg pitch
+ * @text ピッチ
+ * @desc ボイスファイルのピッチ
+ * @default 100
+ * @type number
  *
- * チャンネル番号(数値)を指定すると、停止するときに指定したチャンネルと一致する
- * すべてのボイスを一度に停止することができます。
- * これにより同一のチャンネルのボイスが重なって演奏されないようになります。
+ * @arg pan
+ * @text 左右バランス
+ * @desc ボイスファイルの左右バランス
+ * @default 0
+ * @min -100
+ * @max 100
+ * @type number
  *
- * SV_ボイスのループ演奏 aaa 90 100 0 # 指定したボイスをループ演奏します。
- * SV_PLAY_LOOP_VOICE aaa 90 100 0    # 同上
+ * @arg channel
+ * @text チャンネル番号
+ * @desc チャンネル番号です。同一のチャンネル番号のボイスは重なって演奏されなくなります。
+ * @default 0
+ * @type number
  *
- * SV_ボイスの停止 aaa # ボイスaaaの演奏を停止します。
- * SV_STOP_VOICE aaa   # 同上
- * SV_ボイスの停止 1   # チャンネル[1]で再生した全てのボイスの演奏を停止します。
- * SV_STOP_VOICE 1     # 同上
- * ※引数を省略した場合は全てのボイスを停止します。
+ * @arg loop
+ * @text ループ有無
+ * @desc ボイスの再生をループするかどうかです。
+ * @default false
+ * @type boolean
+ *
+ * @command STOP_VOICE
+ * @text ボイスの停止
+ * @desc 演奏中のボイスを停止します。ファイルを直接指定するかチャンネル番号を指定して停止します。
+ *
+ * @arg name
+ * @text ファイル名称
+ * @desc 停止するボイスファイルの名称です。
+ * @default
+ * @type file
+ * @dir audio/se
+ *
+ * @arg channel
+ * @text チャンネル番号
+ * @desc 停止するボイスのチャンネル番号です。
+ * @default 0
+ * @type number
+ *
+ * @help SimpleVoice.js
+ *
+ * 簡易的なボイス演奏をサポートします。
+ * プラグインコマンドから演奏、ループ演奏、停止ができます。
+ * 音量は効果音とは区別され、オプション画面から調整できます。
+ * チャンネルの概念があり、同一のチャンネル番号のボイスは
+ * 重なって演奏されなくなります。
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -130,107 +121,22 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'SimpleVoice';
-    var metaTagPrefix = 'SV_';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
+    PluginManagerEx.registerCommand(script, 'PLAY_VOICE', args => {
+        AudioManager.playVoice(args, args.loop, args.channel);
+    });
 
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var isNotAString = function(args) {
-        return String(args) !== args;
-    };
-
-    var convertAllArguments = function(args) {
-        for (var i = 0; i < args.length; i++) {
-            args[i] = convertEscapeCharacters(args[i]);
-        }
-        return args;
-    };
-
-    var setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(metaTagPrefix + commandName, methodName);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param         = {};
-    param.folderName  = getParamString(['FolderName', 'フォルダ名']);
-    param.optionName  = getParamString(['OptionName', 'オプション名称']);
-    param.optionValue = getParamNumber(['OptionValue', 'オプション初期値']);
-
-    var pluginCommandMap = new Map();
-    setPluginCommand('ボイスの演奏', 'execPlayVoice');
-    setPluginCommand('PLAY_VOICE', 'execPlayVoice');
-    setPluginCommand('ボイスのループ演奏', 'execPlayLoopVoice');
-    setPluginCommand('PLAY_LOOP_VOICE', 'execPlayLoopVoice');
-    setPluginCommand('ボイスの停止', 'execStopVoice');
-    setPluginCommand('STOP_VOICE', 'execStopVoice');
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertAllArguments(args));
-        }
-    };
-
-    Game_Interpreter.prototype.execPlayVoice = function(args, loop) {
-        var voice    = {};
-        voice.name   = args.length >= 1 ? args[0] : '';
-        voice.volume = args.length >= 2 ? getArgNumber(args[1], 0, 100) : 90;
-        voice.pitch  = args.length >= 3 ? getArgNumber(args[2], 50, 150) : 100;
-        voice.pan    = args.length >= 4 ? getArgNumber(args[3], -100, 100) : 0;
-        var channel  = args.length >= 5 ? getArgNumber(args[4], 1) : undefined;
-        AudioManager.playVoice(voice, loop || false, channel);
-    };
-
-    Game_Interpreter.prototype.execPlayLoopVoice = function(args) {
-        this.execPlayVoice(args, true);
-    };
-
-    Game_Interpreter.prototype.execStopVoice = function(args) {
-        var channel = Number(args[0]);
-        if (isNaN(channel)) {
-            AudioManager.stopVoice(args[0], null);
+    PluginManagerEx.registerCommand(script, 'STOP_VOICE', args => {
+        if (args.name) {
+            AudioManager.stopVoice(args.name, null);
+        } else if (args.channel) {
+            AudioManager.stopVoice(null, args.channel);
         } else {
-            AudioManager.stopVoice(null, channel);
+            AudioManager.stopVoice(null, null);
         }
-    };
+    });
 
     //=============================================================================
     // ConfigManager
@@ -245,17 +151,17 @@
         }
     });
 
-    var _ConfigManager_makeData = ConfigManager.makeData;
+    const _ConfigManager_makeData = ConfigManager.makeData;
     ConfigManager.makeData      = function() {
-        var config         = _ConfigManager_makeData.apply(this, arguments);
+        const config         = _ConfigManager_makeData.apply(this, arguments);
         config.voiceVolume = this.voiceVolume;
         return config;
     };
 
-    var _ConfigManager_applyData = ConfigManager.applyData;
+    const _ConfigManager_applyData = ConfigManager.applyData;
     ConfigManager.applyData      = function(config) {
         _ConfigManager_applyData.apply(this, arguments);
-        var symbol       = 'voiceVolume';
+        const symbol       = 'voiceVolume';
         this.voiceVolume = config.hasOwnProperty(symbol) ? this.readVolume(config, symbol) : param.optionValue;
     };
 
@@ -263,7 +169,7 @@
     // Window_Options
     //  ボイスボリュームの設定項目を追加します。
     //=============================================================================
-    var _Window_Options_addVolumeOptions      = Window_Options.prototype.addVolumeOptions;
+    const _Window_Options_addVolumeOptions      = Window_Options.prototype.addVolumeOptions;
     Window_Options.prototype.addVolumeOptions = function() {
         _Window_Options_addVolumeOptions.apply(this, arguments);
         this.addCommand(param.optionName, 'voiceVolume');
@@ -291,9 +197,9 @@
     AudioManager.playVoice     = function(voice, loop, channel) {
         if (voice.name) {
             this.stopVoice(voice.name, channel);
-            var buffer = this.createBuffer(param.folderName, voice.name);
+            const buffer = this.createBuffer('se/', voice.name);
             this.updateVoiceParameters(buffer, voice);
-            buffer.play(loop);
+            buffer.play(loop, 0);
             buffer.name = voice.name;
             buffer.channel = channel;
             this._voiceBuffers.push(buffer);
@@ -311,7 +217,7 @@
 
     AudioManager.filterPlayingVoice = function() {
         this._voiceBuffers = this._voiceBuffers.filter(function(buffer) {
-            var playing = buffer.isPlaying() || !buffer.isReady();
+            const playing = buffer.isPlaying() || !buffer.isReady();
             if (!playing) {
                 buffer.stop();
             }
@@ -319,7 +225,7 @@
         });
     };
 
-    var _AudioManager_stopAll = AudioManager.stopAll;
+    const _AudioManager_stopAll = AudioManager.stopAll;
     AudioManager.stopAll = function() {
         _AudioManager_stopAll.apply(this, arguments);
         this.stopVoice();
@@ -329,7 +235,7 @@
     // Scene_Base
     //  フェードアウト時にSEの演奏も停止します。
     //=============================================================================
-    var _Scene_Base_fadeOutAll = Scene_Base.prototype.fadeOutAll;
+    const _Scene_Base_fadeOutAll = Scene_Base.prototype.fadeOutAll;
     Scene_Base.prototype.fadeOutAll = function() {
         _Scene_Base_fadeOutAll.apply(this, arguments);
         AudioManager.stopVoice();
