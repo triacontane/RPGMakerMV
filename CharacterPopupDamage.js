@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/03/19 MZ向けに全面的に修正
 // 1.6.1 2019/04/20 ダメージが0だった場合の表記を「MISS」から「0」に変更
 // 1.6.0 2018/11/11 プラグインの型指定機能に対応
 //                  ポップアップ効果音を消音できるスイッチを追加
@@ -32,86 +33,213 @@
 
 /*:
  * @plugindesc キャラクターのダメージポッププラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CharacterPopupDamage.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @param 効果音演奏
+ * @param PlaySe
+ * @text 効果音演奏
  * @desc 状況に応じたシステム効果音を自動演奏します。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param 消音スイッチID
+ * @param SuppressSwitchId
+ * @text 消音スイッチID
  * @desc 指定したIDのスイッチがONになっているとき、システム効果音が自動演奏されなくなります。
  * @default 0
  * @type switch
  *
- * @param X座標補正
+ * @param OffsetX
+ * @text X座標補正
  * @desc ポップアップ位置のX座標を補正します。
  * @default 0
  *
- * @param Y座標補正
+ * @param OffsetY
+ * @text Y座標補正
  * @desc ポップアップ位置のY座標を補正します。
  * @default 0
  *
- * @param HP自動ポップアップ
+ * @param HpAutoPop
+ * @text HP自動ポップアップ
  * @desc HPの増減を自動ポップアップの対象にします。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param MP自動ポップアップ
+ * @param MpAutoPop
+ * @text MP自動ポップアップ
  * @desc MPの増減を自動ポップアップの対象にします。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param TP自動ポップアップ
+ * @param TpAutoPop
+ * @text TP自動ポップアップ
  * @desc TPの増減を自動ポップアップの対象にします。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param 増加自動ポップアップ
+ * @param IncreaseAutoPop
+ * @text 増加自動ポップアップ
  * @desc パラメータの増加を自動ポップアップの対象にします。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param 減少自動ポップアップ
+ * @param DecreaseAutoPop
+ * @text 減少自動ポップアップ
  * @desc パラメータの減少を自動ポップアップの対象にします。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param MPダメージ音
+ * @param DisableAutoPop
+ * @text 自動ポップ無効スイッチ
+ * @desc 指定したIDのスイッチがONになっているとき、自動ポップアップが無効になります。
+ * @default 0
+ * @type switch
+ *
+ * @param MpDamageSe
+ * @text MPダメージ音
  * @desc MPダメージ時の効果音ファイル名を別途指定(audio/se)します。何も指定しないとHPと同じになります。
  * @default
+ * @type file
+ * @dir audio/se
  *
- * @param 回転
+ * @param Rotation
+ * @text 回転
  * @desc 数字の回転運動を有効にします。
- * @default true
+ * @default false
  * @type boolean
  *
- * @param X方向半径
+ * @param RadiusX
+ * @text X方向半径
  * @desc 数字を回転させる場合のX方向の半径です。
  * @default 40
  *
- * @param Y方向半径
+ * @param RadiusY
+ * @text Y方向半径
  * @desc 数字を回転させる場合のY方向の半径です。
  * @default 40
  *
- * @param 回転速度
+ * @param RotateSpeed
+ * @text 回転速度
  * @desc 数字を回転させる場合の速度です。
  * @default 60
  *
- * @param 拡大率
+ * @param Scale
+ * @text 拡大率
  * @desc 初期状態の拡大率です。
  * @default 100
  *
- * @param 拡大率変化値
+ * @param ScaleDelta
+ * @text 拡大率変化値
  * @desc 1フレームごとの拡大率の変化値です。
- * @default -10
+ * @default 0
  *
- * @param 最前面表示
+ * @param OnTop
+ * @text 最前面表示
  * @desc ポップアップをピクチャより前面に表示します。
  * @default false
  * @type boolean
  *
- * @help マップ画面でイベントやプレイヤーに数字をポップアップさせる機能を提供します。
+ * @command POPUP_DAMAGE
+ * @text ダメージポップアップ
+ * @desc 指定キャラクターにダメージポップアップします。
+ *
+ * @arg character
+ * @text 対象キャラクター
+ * @desc ポップアップ対象キャラクターです。-1:プレイヤー、0:このイベント、1以上:指定したIDのイベント
+ * @default 0
+ * @type number
+ * @min -1
+ *
+ * @arg value
+ * @text ポップアップ値(直接指定)
+ * @desc ポップアップする数値です。
+ * @default 0
+ * @type number
+ * @min -999999999
+ *
+ * @arg valueVariable
+ * @text ポップアップ値(変数指定)
+ * @desc ポップアップする数値を変数から取得したい場合はこちらを指定します。
+ * @default 0
+ * @type variable
+ *
+ * @arg setting
+ * @text ポップアップ設定
+ * @desc ポップアップの詳細設定です。
+ * @default {}
+ * @type struct<Setting>
+ *
+ * @command POPUP_FLASH
+ * @text ポップアップのフラッシュ設定
+ * @desc ポップアップ時に対象キャラクターをフラッシュさせます。回復時、ミス時は無効です。
+ *
+ * @arg red
+ * @text 赤
+ * @desc 赤色の強さです。
+ * @default 0
+ * @max 255
+ * @type number
+ *
+ * @arg green
+ * @text 緑
+ * @desc 緑色の強さです。
+ * @default 0
+ * @max 255
+ * @type number
+ *
+ * @arg blue
+ * @text 青
+ * @desc 青色の強さです。
+ * @default 0
+ * @max 255
+ * @type number
+ *
+ * @arg alpha
+ * @text 強さ
+ * @desc フラッシュの強さです。
+ * @default 0
+ * @max 255
+ * @type number
+ *
+ * @command POPUP_TONE
+ * @text ポップアップの色調設定
+ * @desc ポップアップの色調を設定します。
+ *
+ * @arg red
+ * @text 赤
+ * @desc 赤色の強さです。
+ * @default 0
+ * @min -255
+ * @max 255
+ * @type number
+ *
+ * @arg green
+ * @text 緑
+ * @desc 緑色の強さです。
+ * @default 0
+ * @min -255
+ * @max 255
+ * @type number
+ *
+ * @arg blue
+ * @text 青
+ * @desc 青色の強さです。
+ * @default 0
+ * @min -255
+ * @max 255
+ * @type number
+ *
+ * @arg gray
+ * @text グレー
+ * @desc グレースケールの強さです。
+ * @default 0
+ * @max 255
+ * @type number
+ *
+ * @help CharacterPopupDamage.js
+ *
+ * マップ画面でイベントやプレイヤーに数字をポップアップさせる機能を提供します。
  * マップ上でのダメージや回復の演出に利用できます。演出は戦闘時のものと同一です。
  * 指定する値をマイナスにすると回復扱いとなり色が変わります。
  * また、クリティカルにすると数字の色が一瞬、赤くなります。
@@ -120,287 +248,127 @@
  * ダメージ床を通過した際に自動でポップアップする機能も用意されています。
  * パラメータにより、HPのみや増加のみといった条件指定もできます。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * ・CPD_DAMAGE or ポップアップダメージ [キャラクターID] [ダメージ値] [反転]
- * キャラクターを指定してダメージをポップアップします。
- * キャラクターの指定は以下の通りです。
- * -1   : プレイヤー
- *  0   : 実行中のイベント
- *  1.. : 指定したIDのイベント
- *
- * 反転を有効にすると、ポップアップの回転方向が逆になります。
- * （パラメータの「回転」を有効にしている場合）
- *
- * CPD_DAMAGE 5 -300 ON
- * ポップアップダメージ 0 \v[1] OFF
- *
- * ・CPD_CRITICAL or ポップアップクリティカル
- * キャラクターを指定してダメージをクリティカル扱いでポップアップします。
- *
- * CPD_CRITICAL -1 100 ON
- * ポップアップクリティカル 3 \v[1] OFF
- *
- * ・CPD_MP_DAMAGE or ポップアップMPダメージ
- * キャラクターを指定してMPダメージをポップアップします。
- *
- * CPD_MP_DAMAGE 5 -300 ON
- * ポップアップMPダメージ 0 \v[1] OFF
- *
- * ・CPD_MP_CRITICAL or ポップアップMPクリティカル
- * キャラクターを指定してMPダメージをクリティカル扱いでポップアップします。
- *
- * CPD_MP_CRITICAL -1 100 ON
- * ポップアップMPクリティカル 3 \v[1] OFF
- *
- * ・CPD_MISS or ポップアップミス
- * キャラクターを指定してmissをポップアップします。
- *
- * CPD_MISS -1 ON
- * ポップアップミス 3 OFF
- *
- * ・CPD_INVALID or ポップアップ無効化
- * 自動ポップアップを無効にします。
- * 有効になっているとイベントコマンド「HPの増減」「MPの増減」「TPの増減」
- * およびダメージ床によるダメージが自動でポップアップします。
- * 初期状態では有効です。
- *
- * ・CPD_VALID or ポップアップ有効化
- * 自動ポップアップを再度有効にします。
- *
- * ・CPD_SETTING_TONE or ポップアップ設定_色調 [赤] [緑] [青] [グレー]
- * ポップアップ画像の色調を変更できます。色調の設定値を順番に指定してください。
- *
- * CPD_SETTING_TONE 255 0 0 255
- * ポップアップ設定_色調 -255 -255 -255 0
- *
- * ・CPD_SETTING_FLASH or ポップアップ設定_フラッシュ [赤] [緑] [青] [強さ]
- * ポップアップ時にキャラクターをフラッシュします。
- * フラッシュするのはダメージを受けた場合のみです。
- *
- * CPD_SETTING_FLASH 255 0 0 255
- * ポップアップ設定_フラッシュ 255 0 0 255
- *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~Setting:
+ *
+ * @param reverse
+ * @text 反転
+ * @desc ポップアップの回転方向が逆になります。
+ * @default false
+ * @type boolean
+ *
+ * @param type
+ * @text 種別
+ * @desc ポップアップのタイプです。タイプによって文字色が変わります。MISSを選択すると出力内容もMISSになります。
+ * @default HP
+ * @type select
+ * @option HP
+ * @option MP
+ * @option MISS
+ *
+ * @param critical
+ * @text クリティカル
+ * @desc クリティカルフラグです。有効にするとポップアップが赤色にフラッシュします。
+ * @default false
+ * @type boolean
+ */
+
 (function() {
     'use strict';
-    var pluginName = 'CharacterPopupDamage';
-    var settings   = {
-        /* MPダメージ専用効果音(ファイル名はパラメータで指定) */
-        mpDamageSe: {
-            volume: 90,
-            pitch : 100,
-            pan   : 0
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+
+    PluginManagerEx.registerCommand(script, 'POPUP_DAMAGE', function(args) {
+        const character = this.character(args.character);
+        if (!character) {
+            return;
         }
-    };
-
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value === null ? '' : value;
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
-    };
-
-    var getArgBoolean = function(arg) {
-        return (arg || '').toUpperCase() === 'ON';
-    };
-
-    var convertEscapeCharactersAndEval = function(text, evalFlg) {
-        if (text === null || text === undefined) text = '';
-        var window = SceneManager._scene._windowLayer.children[0];
-        if (window) {
-            var result = window.convertEscapeCharacters(text);
-            return evalFlg ? eval(result) : result;
-        } else {
-            return text;
-        }
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramPlaySe           = getParamBoolean(['PlaySe', '効果音演奏']);
-    var paramSuppressSwitchId = getParamNumber(['SuppressSwitchId', '消音スイッチID'], 0);
-    var paramOffsetX          = getParamNumber(['OffsetX', 'X座標補正']);
-    var paramOffsetY          = getParamNumber(['OffsetY', 'Y座標補正']);
-    var paramTpAutoPop        = getParamBoolean(['TPAutoPop', 'TP自動ポップアップ']);
-    var paramMpAutoPop        = getParamBoolean(['MPAutoPop', 'MP自動ポップアップ']);
-    var paramHpAutoPop        = getParamBoolean(['HPAutoPop', 'HP自動ポップアップ']);
-    var paramIncreaseAutoPop  = getParamBoolean(['IncreaseAutoPop', '増加自動ポップアップ']);
-    var paramDecreaseAutoPop  = getParamBoolean(['DecreaseAutoPop', '減少自動ポップアップ']);
-    var paramMpDamageSe       = getParamString(['MPDamageSe', 'MPダメージ音']);
-    var paramRotation         = getParamBoolean(['Rotation', '回転']);
-    var paramRadiusX          = getParamNumber(['RadiusX', 'X方向半径']);
-    var paramRadiusY          = getParamNumber(['RadiusY', 'Y方向半径']);
-    var paramRotateSpeed      = getParamNumber(['RotateSpeed', '回転速度']);
-    var paramScale            = getParamNumber(['Scale', '拡大率']);
-    var paramScaleDelta       = getParamNumber(['ScaleDelta', '拡大率変化値']);
-    var paramOnTop            = getParamBoolean(['OnTop', '最前面表示']);
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        this.pluginCommandCharacterPopupDamage(command, args);
-    };
-
-    Game_Interpreter.prototype.pluginCommandCharacterPopupDamage = function(command, args) {
-        var popupArgs = [];
-        switch (getCommandName(command)) {
-            case 'CPD_DAMAGE' :
-            case 'ポップアップダメージ':
-                popupArgs = [getArgNumber(args[1]), false, getArgBoolean(args[2])];
-                this.callCharacterPopup(args, 'popupDamage', popupArgs);
+        const setting = args.setting;
+        const value = args.valueVariable ? $gameVariables.value(args.valueVariable) : args.value;
+        switch (setting.type) {
+            case 'HP':
+                character.popupDamage(value, setting.critical, setting.reverse);
                 break;
-            case 'CPD_CRITICAL' :
-            case 'ポップアップクリティカル':
-                popupArgs = [getArgNumber(args[1]), true, getArgBoolean(args[2])];
-                this.callCharacterPopup(args, 'popupDamage', popupArgs);
+            case 'MP':
+                character.popupMpDamage(value, setting.critical, setting.reverse);
                 break;
-            case 'CPD_MP_DAMAGE' :
-            case 'ポップアップMPダメージ':
-                popupArgs = [getArgNumber(args[1]), false, getArgBoolean(args[2])];
-                this.callCharacterPopup(args, 'popupMpDamage', popupArgs);
-                break;
-            case 'CPD_MP_CRITICAL' :
-            case 'ポップアップMPクリティカル':
-                popupArgs = [getArgNumber(args[1]), true, getArgBoolean(args[2])];
-                this.callCharacterPopup(args, 'popupMpDamage', popupArgs);
-                break;
-            case 'CPD_MISS' :
-            case 'ポップアップミス':
-                popupArgs = [getArgBoolean(args[1])];
-                this.callCharacterPopup(args, 'popupMiss', popupArgs);
-                break;
-            case 'CPD_VALID' :
-            case 'ポップアップ有効化':
-                $gameSystem.setSuppressAutoPopup(false);
-                break;
-            case 'CPD_INVALID' :
-            case 'ポップアップ無効化':
-                $gameSystem.setSuppressAutoPopup(true);
-                break;
-            case 'CPD_SETTING_TONE' :
-            case 'ポップアップ設定_色調':
-                var red   = getArgNumber(args[0]);
-                var green = getArgNumber(args[1]);
-                var blue  = getArgNumber(args[2]);
-                var gray  = getArgNumber(args[3]);
-                $gameSystem.setPopupDamageTone([red, green, blue, gray]);
-                break;
-            case 'CPD_SETTING_FLASH' :
-            case 'ポップアップ設定_フラッシュ':
-                var flashRed   = getArgNumber(args[0], 0);
-                var flashGreen = getArgNumber(args[1], 0);
-                var flashBlue  = getArgNumber(args[2], 0);
-                var alpha      = getArgNumber(args[3], 0) || 255;
-                $gameSystem.setPopupDamageFlash([flashRed, flashGreen, flashBlue, alpha]);
+            case 'MISS':
+                character.popupMiss(setting.reverse);
                 break;
         }
-    };
+    });
 
-    var _Game_Interpreter_command311      = Game_Interpreter.prototype.command311;
-    Game_Interpreter.prototype.command311 = function() {
-        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
-        this.iterateActorEx(this._params[0], this._params[1], function(actor) {
+    PluginManagerEx.registerCommand(script, 'POPUP_FLASH', args => {
+        $gameSystem.setPopupDamageFlash(args);
+    });
+
+    PluginManagerEx.registerCommand(script, 'POPUP_TONE', args => {
+        $gameSystem.setPopupDamageTone(args);
+    });
+
+    const _Game_Interpreter_command311      = Game_Interpreter.prototype.command311;
+    Game_Interpreter.prototype.command311 = function(params) {
+        const value = -this.operateValue(params[2], params[3], params[4]);
+        this.iterateActorEx(params[0], params[1], actor => {
             actor.popupDamage(value);
-        }.bind(this));
+        });
         return _Game_Interpreter_command311.apply(this, arguments);
     };
 
-    var _Game_Interpreter_command312      = Game_Interpreter.prototype.command312;
-    Game_Interpreter.prototype.command312 = function() {
-        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
-        this.iterateActorEx(this._params[0], this._params[1], function(actor) {
+    const _Game_Interpreter_command312      = Game_Interpreter.prototype.command312;
+    Game_Interpreter.prototype.command312 = function(params) {
+        const value = -this.operateValue(params[2], params[3], params[4]);
+        this.iterateActorEx(params[0], params[1], actor => {
             actor.popupMpDamage(value);
-        }.bind(this));
+        });
         return _Game_Interpreter_command312.apply(this, arguments);
     };
 
-    var _Game_Interpreter_command326      = Game_Interpreter.prototype.command326;
-    Game_Interpreter.prototype.command326 = function() {
-        var value = -this.operateValue(this._params[2], this._params[3], this._params[4]);
-        this.iterateActorEx(this._params[0], this._params[1], function(actor) {
+    const _Game_Interpreter_command326      = Game_Interpreter.prototype.command326;
+    Game_Interpreter.prototype.command326 = function(params) {
+        const value = -this.operateValue(params[2], params[3], params[4]);
+        this.iterateActorEx(params[0], params[1], actor => {
             actor.popupTpDamage(value);
-        }.bind(this));
+        });
         return _Game_Interpreter_command326.apply(this, arguments);
-    };
-
-    Game_Interpreter.prototype.callCharacterPopup = function(args, methodName, extend) {
-        var character = this.character(getArgNumber(args[0], -1));
-        if (character) character[methodName].apply(character, extend);
     };
 
     //=============================================================================
     // Game_Actor
     //  ダメージ床によるポップアップを処理します。
     //=============================================================================
-    var _Game_Actor_executeFloorDamage      = Game_Actor.prototype.executeFloorDamage;
+    const _Game_Actor_executeFloorDamage      = Game_Actor.prototype.executeFloorDamage;
     Game_Actor.prototype.executeFloorDamage = function() {
         this.popupMapDamage(_Game_Actor_executeFloorDamage);
     };
 
-    var _Game_Actor_turnEndOnMap      = Game_Actor.prototype.turnEndOnMap;
+    const _Game_Actor_turnEndOnMap      = Game_Actor.prototype.turnEndOnMap;
     Game_Actor.prototype.turnEndOnMap = function() {
         this.popupMapDamage(_Game_Actor_turnEndOnMap);
     };
 
     Game_Actor.prototype.popupMapDamage = function(callBackFunc) {
-        var prevHp = this.hp;
-        var prevMp = this.mp;
-        var prevTp = this.tp;
+        const prevHp = this.hp;
+        const prevMp = this.mp;
+        const prevTp = this.tp;
         callBackFunc.apply(this);
-        var character = this.getCharacterObject();
+        const character = this.getCharacterObject();
         if (!character) return;
-        var hpDamage = prevHp - this.hp;
+        const hpDamage = prevHp - this.hp;
         if (hpDamage !== 0 && $gameSystem.isNeedAutoHpPopup(hpDamage)) character.popupDamage(hpDamage, false);
-        var mpDamage = prevMp - this.mp;
+        const mpDamage = prevMp - this.mp;
         if (mpDamage !== 0 && $gameSystem.isNeedAutoMpPopup(mpDamage)) character.popupMpDamage(mpDamage, false);
-        var tpDamage = prevTp - this.tp;
+        const tpDamage = prevTp - this.tp;
         if (tpDamage !== 0 && $gameSystem.isNeedAutoTpPopup(tpDamage)) character.popupDamage(tpDamage, false);
     };
 
     Game_Actor.prototype.popupDamage = function(value) {
-        var character = this.getCharacterObject();
+        const character = this.getCharacterObject();
         if (!character) return;
         if (value !== 0 && $gameSystem.isNeedAutoHpPopup(value)) {
             character.popupDamage(value, false);
@@ -408,7 +376,7 @@
     };
 
     Game_Actor.prototype.popupMpDamage = function(value) {
-        var character = this.getCharacterObject();
+        const character = this.getCharacterObject();
         if (!character) return;
         if (value !== 0 && $gameSystem.isNeedAutoMpPopup(value)) {
             character.popupMpDamage(value, false);
@@ -416,7 +384,7 @@
     };
 
     Game_Actor.prototype.popupTpDamage = function(value) {
-        var character = this.getCharacterObject();
+        const character = this.getCharacterObject();
         if (!character) return;
         if (value !== 0 && $gameSystem.isNeedAutoTpPopup(value)) {
             character.popupDamage(value, false);
@@ -424,57 +392,44 @@
     };
 
     Game_Actor.prototype.getCharacterObject = function() {
-        var index = $gameParty.battleMembers().indexOf(this);
-        var result;
+        const index = $gameParty.battleMembers().indexOf(this);
         switch (index) {
             case -1:
-                result = null;
-                break;
+                return null;
             case 0:
-                result = $gamePlayer;
-                break;
+                return $gamePlayer;
             default:
-                var followers = $gamePlayer.followers();
-                result        = followers.isVisible() ? followers.follower(index - 1) : null;
+                const followers = $gamePlayer.followers();
+                return followers.isVisible() ? followers.follower(index - 1) : null;
         }
-        return result;
     };
 
     //=============================================================================
     // Game_System
     //  オートポップアップの有効フラグを追加定義します。
     //=============================================================================
-    var _Game_System_initialize      = Game_System.prototype.initialize;
+    const _Game_System_initialize      = Game_System.prototype.initialize;
     Game_System.prototype.initialize = function() {
         _Game_System_initialize.apply(this, arguments);
-        this._suppressAutoPopup = false;
         this._popupDamageTone   = null;
         this._popupDamageFlash  = null;
     };
 
-    Game_System.prototype.setSuppressAutoPopup = function(value) {
-        this._suppressAutoPopup = !!value;
-    };
-
-    Game_System.prototype.isSuppressAutoPopup = function() {
-        return this._suppressAutoPopup;
-    };
-
     Game_System.prototype.isNeedAutoHpPopup = function(value) {
-        return paramHpAutoPop && this.isNeedAutoPopup(value);
+        return param.HpAutoPop && this.isNeedAutoPopup(value);
     };
 
     Game_System.prototype.isNeedAutoMpPopup = function(value) {
-        return paramMpAutoPop && this.isNeedAutoPopup(value);
+        return param.MpAutoPop && this.isNeedAutoPopup(value);
     };
 
     Game_System.prototype.isNeedAutoTpPopup = function(value) {
-        return paramTpAutoPop && this.isNeedAutoPopup(value);
+        return param.TpAutoPop && this.isNeedAutoPopup(value);
     };
 
     Game_System.prototype.isNeedAutoPopup = function(value) {
-        return !$gameSystem.isSuppressAutoPopup() &&
-            ((paramIncreaseAutoPop && value < 0) || (paramDecreaseAutoPop && value > 0));
+        return !$gameSwitches.value(param.DisableAutoPop) &&
+            ((param.IncreaseAutoPop && value < 0) || (param.DecreaseAutoPop && value > 0));
     };
 
     Game_System.prototype.getPopupDamageTone = function() {
@@ -482,7 +437,7 @@
     };
 
     Game_System.prototype.setPopupDamageTone = function(value) {
-        this._popupDamageTone = value;
+        this._popupDamageTone = [value.red, value.green, value.blue, value.gray];
     };
 
     Game_System.prototype.getPopupDamageFlash = function() {
@@ -490,7 +445,7 @@
     };
 
     Game_System.prototype.setPopupDamageFlash = function(value) {
-        this._popupDamageFlash = value;
+        this._popupDamageFlash = [value.red, value.green, value.blue, value.alpha];
     };
 
     //=============================================================================
@@ -522,7 +477,7 @@
     Game_CharacterBase.prototype.startDamagePopup = function(value, critical, mpFlg, mirror) {
         this._damagePopup = true;
         if (!this._damageInfo) this._damageInfo = [];
-        var damageInfo = {value: value, critical: critical, mpFlg: mpFlg, mirror: mirror};
+        const damageInfo = {value: value, critical: critical, mpFlg: mpFlg, mirror: mirror};
         if (this.isPlayPopupSe()) {
             this.playPopupSe(damageInfo);
         }
@@ -534,9 +489,14 @@
             SoundManager.playMiss();
         } else if (damageInfo.value < 0) {
             SoundManager.playRecovery();
-        } else if (damageInfo.mpFlg && paramMpDamageSe) {
-            settings.mpDamageSe.name = paramMpDamageSe;
-            AudioManager.playStaticSe(settings.mpDamageSe);
+        } else if (damageInfo.mpFlg && param.MpDamageSe) {
+            const se = {
+                name: param.MpDamageSe,
+                volume: 90,
+                pitch: 100,
+                pan: 0
+            }
+            AudioManager.playStaticSe(se);
         } else if (this === $gamePlayer) {
             SoundManager.playActorDamage();
         } else {
@@ -549,14 +509,14 @@
     };
 
     Game_CharacterBase.prototype.isPlayPopupSe = function() {
-        return paramPlaySe && !$gameSwitches.value(paramSuppressSwitchId)
+        return param.PlaySe && !$gameSwitches.value(param.SuppressSwitchId)
     };
 
     //=============================================================================
     // Sprite_Character
     //  ダメージをポップアップします。
     //=============================================================================
-    var _Sprite_Character_update      = Sprite_Character.prototype.update;
+    const _Sprite_Character_update      = Sprite_Character.prototype.update;
     Sprite_Character.prototype.update = function() {
         _Sprite_Character_update.apply(this, arguments);
         this.updateDamagePopup();
@@ -565,12 +525,12 @@
     Sprite_Character.prototype.updateDamagePopup = function() {
         this.setupDamagePopup();
         if (this._damages && this._damages.length > 0) {
-            for (var i = 0; i < this._damages.length; i++) {
+            for (let i = 0; i < this._damages.length; i++) {
                 this._damages[i].update();
             }
             if (!this._damages[0].isPlaying()) {
                 this.getPopupParent().removeChild(this._damages[0]);
-                this._damages.shift();
+                this._damages.shift().destroy();
             }
         }
         if (this._popupFlash) {
@@ -589,7 +549,7 @@
 
     Sprite_Character.prototype.setupDamagePopup = function() {
         if (!this._character.isDamagePopupRequested()) return;
-        var sprite = new Sprite_CharacterDamage();
+        const sprite = new Sprite_CharacterDamage();
         sprite.x   = this.x + this.damageOffsetX();
         sprite.y   = this.y + this.damageOffsetY();
         if (!sprite.z) sprite.z = 9;
@@ -604,7 +564,7 @@
     };
 
     Sprite_Character.prototype.setupDamagePopupFlash = function() {
-        var flashColor = $gameSystem.getPopupDamageFlash();
+        const flashColor = $gameSystem.getPopupDamageFlash();
         if (!flashColor) return;
         this._popupFlash      = flashColor.clone();
         this._popupFlashSpeed = Math.floor(this._popupFlash[3] / 30);
@@ -612,15 +572,15 @@
     };
 
     Sprite_Character.prototype.damageOffsetX = function() {
-        return paramOffsetX;
+        return param.OffsetX;
     };
 
     Sprite_Character.prototype.damageOffsetY = function() {
-        return paramOffsetY;
+        return param.OffsetY;
     };
 
     Sprite_Character.prototype.getPopupParent = function() {
-        return paramOnTop ? this.parent.parent.parent : this.parent;
+        return param.OnTop ? this.parent.parent.parent : this.parent;
     };
 
     //=============================================================================
@@ -635,18 +595,33 @@
     Sprite_CharacterDamage.prototype.constructor = Sprite_CharacterDamage;
 
     Sprite_CharacterDamage.prototype.setupCharacter = function(character) {
-        var damageInfo   = character.shiftDamageInfo();
+        const damageInfo   = character.shiftDamageInfo();
         this._toneColor  = $gameSystem.getPopupDamageTone();
         this._mirror     = damageInfo.mirror;
         this._damageInfo = damageInfo;
         this._digit      = 0;
+        this.setupColorType();
         if (this.isMiss()) {
-            this.createMissForCharacter();
+            this.createMiss();
+            this._degitWidth = this.fontSize() * 3;
         } else {
-            this.createDigits(damageInfo.mpFlg ? 2 : 0, damageInfo.value);
+            this.createDigits(damageInfo.value);
+            this._degitWidth = this.fontSize() * 0.75;
         }
         if (damageInfo.critical) {
             this.setupCriticalEffect();
+        }
+    };
+
+    Sprite_CharacterDamage.prototype.setupColorType = function() {
+        if (this.isMiss()) {
+            this._colorType = 0;
+        }
+        const recover = this.isRecover();
+        if (this._damageInfo.mpFlg) {
+            this._colorType = recover ? 3 : 2;
+        } else {
+            this._colorType = recover ? 1 : 0;
         }
     };
 
@@ -658,19 +633,8 @@
         return this._damageInfo.value < 0;
     };
 
-    Sprite_CharacterDamage.prototype.createMissForCharacter = function() {
-        var w      = this.digitWidth();
-        var h      = this.digitHeight();
-        var sprite = this.createChildSprite();
-        sprite.setFrame(0, 4 * h, 4 * w, h);
-        sprite.dy = 0;
-        sprite.x  = w / 2;
-        sprite.digit++;
-        this._digit++;
-    };
-
     Sprite_CharacterDamage.prototype.createChildSprite = function() {
-        var sprite   = Sprite_Damage.prototype.createChildSprite.apply(this, arguments);
+        const sprite   = Sprite_Damage.prototype.createChildSprite.apply(this, arguments);
         sprite.frame = 0;
         sprite.digit = this._digit++;
         if (this._toneColor) sprite.setColorTone(this._toneColor);
@@ -678,24 +642,24 @@
     };
 
     Sprite_CharacterDamage.prototype.updateChild = function(sprite) {
-        if (paramRotation) {
+        if (param.Rotation) {
             this.updateChildRotation(sprite);
             sprite.setBlendColor(this._flashColor);
         } else {
             Sprite_Damage.prototype.updateChild.apply(this, arguments);
             sprite.x = 0;
         }
-        if (paramScale) {
+        if (param.Scale) {
             this.updateChildScale(sprite);
         }
         sprite.frame++;
     };
 
     Sprite_CharacterDamage.prototype.updateChildRotation = function(sprite) {
-        var frame = sprite.frame;
-        var speed = frame / 3600 * paramRotateSpeed;
-        sprite.rx = paramRadiusX * (Math.cos(speed) - 1);
-        sprite.ry = -paramRadiusY * Math.sin(speed);
+        const frame = sprite.frame;
+        const speed = frame / 3600 * param.RotateSpeed;
+        sprite.rx = param.RadiusX * (Math.cos(speed) - 1);
+        sprite.ry = -param.RadiusY * Math.sin(speed);
         if (this._mirror) {
             sprite.rx *= -1;
         }
@@ -704,11 +668,11 @@
     };
 
     Sprite_CharacterDamage.prototype.updateChildScale = function(sprite) {
-        var frame      = sprite.frame;
-        var scale      = (paramScale + frame * paramScaleDelta / 10) / 100;
+        const frame      = sprite.frame;
+        const scale      = (param.Scale + frame * param.ScaleDelta / 10) / 100;
         sprite.scale.x = scale;
         sprite.scale.y = scale;
-        sprite.x += (sprite.digit - (this._digit - 1) / 2) * (this.digitWidth() * scale);
+        sprite.x += (sprite.digit - (this._digit - 1) / 2) * (this._degitWidth * scale);
     };
 })();
 
