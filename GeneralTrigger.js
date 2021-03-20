@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/03/20 MZで動作するよう修正
 // 2.0.0 2021/03/20 パラメータの型指定機能に対応
 // 1.1.0 2016/07/06 レベルアップ時、レベルダウン時のトリガーを追加
 // 1.0.2 2016/06/22 最強装備を選択した場合にエラーが発生する問題を修正
@@ -170,38 +171,14 @@
 
 (function() {
     'use strict';
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('GeneralTrigger');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // SceneManager
     //  トリガースイッチを設定処理を追加定義します。
     //=============================================================================
-    var _SceneManager_pop = SceneManager.pop;
+    const _SceneManager_pop = SceneManager.pop;
     SceneManager.pop      = function() {
         if (this._stack.length > 0) {
             this._scene.setPopTrigger();
@@ -229,16 +206,15 @@
     // DataManager
     //  ニューゲーム、コンティニューのトリガースイッチを設定します。
     //=============================================================================
-    var _DataManager_setupNewGame = DataManager.setupNewGame;
+    const _DataManager_setupNewGame = DataManager.setupNewGame;
     DataManager.setupNewGame      = function() {
         _DataManager_setupNewGame.apply(this, arguments);
-        console.log(param.NewGame);
         SceneManager.setTriggerSwitch(param.NewGame);
     };
 
-    var _DataManager_loadGame = DataManager.loadGame;
-    DataManager.loadGame      = function(saveFileId) {
-        var result = _DataManager_loadGame.apply(this, arguments);
+    const _DataManager_extractSaveContents = DataManager.extractSaveContents;
+    DataManager.extractSaveContents = function(contents) {
+        const result = _DataManager_extractSaveContents.apply(this, arguments);
         SceneManager.setTriggerSwitch(param.Continue);
         return result;
     };
@@ -247,15 +223,15 @@
     // Game_Player
     //  場所移動時にトリガースイッチを設定します。
     //=============================================================================
-    var _Game_Player_reserveTransfer      = Game_Player.prototype.reserveTransfer;
+    const _Game_Player_reserveTransfer      = Game_Player.prototype.reserveTransfer;
     Game_Player.prototype.reserveTransfer = function(mapId, x, y, d, fadeType) {
         _Game_Player_reserveTransfer.apply(this, arguments);
         SceneManager.setTriggerSwitch(param.MoveMap);
     };
 
-    var _Game_Party_addActor      = Game_Party.prototype.addActor;
+    const _Game_Party_addActor      = Game_Party.prototype.addActor;
     Game_Party.prototype.addActor = function(actorId) {
-        var length = this._actors.length;
+        const length = this._actors.length;
         _Game_Party_addActor.apply(this, arguments);
         if (length !== this._actors.length && SceneManager.isTriggerValid()) {
             SceneManager.setTriggerSwitch(param.AddMember);
@@ -263,9 +239,9 @@
         }
     };
 
-    var _Game_Party_removeActor      = Game_Party.prototype.removeActor;
+    const _Game_Party_removeActor      = Game_Party.prototype.removeActor;
     Game_Party.prototype.removeActor = function(actorId) {
-        var length = this._actors.length;
+        const length = this._actors.length;
         _Game_Party_removeActor.apply(this, arguments);
         if (length !== this._actors.length && SceneManager.isTriggerValid()) {
             SceneManager.setTriggerSwitch(param.RemoveMember);
@@ -273,7 +249,7 @@
         }
     };
 
-    var _Game_Party_gainItem      = Game_Party.prototype.gainItem;
+    const _Game_Party_gainItem      = Game_Party.prototype.gainItem;
     Game_Party.prototype.gainItem = function(item, amount, includeEquip) {
         _Game_Party_gainItem.apply(this, arguments);
         if (!item || !SceneManager.isTriggerValid()) return;
@@ -292,7 +268,7 @@
         SceneManager.setTriggerVariable(param.ItemAmount, amount);
     };
 
-    var _Game_Actor_levelUp = Game_Actor.prototype.levelUp;
+    const _Game_Actor_levelUp = Game_Actor.prototype.levelUp;
     Game_Actor.prototype.levelUp = function() {
         _Game_Actor_levelUp.apply(this, arguments);
         if (SceneManager.isTriggerValid()) {
@@ -301,7 +277,7 @@
         }
     };
 
-    var _Game_Actor_levelDown = Game_Actor.prototype.levelDown;
+    const _Game_Actor_levelDown = Game_Actor.prototype.levelDown;
     Game_Actor.prototype.levelDown = function() {
         _Game_Actor_levelDown.apply(this, arguments);
         if (SceneManager.isTriggerValid()) {
