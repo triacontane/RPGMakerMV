@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2021/03/20 コマンドの設定が空の状態でもポップアップされるよう修正
 // 2.0.0 2021/03/19 MZ向けに全面的に修正
 // 1.6.1 2019/04/20 ダメージが0だった場合の表記を「MISS」から「0」に変更
 // 1.6.0 2018/11/11 プラグインの型指定機能に対応
@@ -167,7 +168,7 @@
  * @arg setting
  * @text ポップアップ設定
  * @desc ポップアップの詳細設定です。
- * @default {}
+ * @default {"reverse":"false","type":"HP","critical":"false"}
  * @type struct<Setting>
  *
  * @command POPUP_FLASH
@@ -291,15 +292,14 @@
         const setting = args.setting;
         const value = args.valueVariable ? $gameVariables.value(args.valueVariable) : args.value;
         switch (setting.type) {
-            case 'HP':
-                character.popupDamage(value, setting.critical, setting.reverse);
-                break;
             case 'MP':
                 character.popupMpDamage(value, setting.critical, setting.reverse);
                 break;
             case 'MISS':
                 character.popupMiss(setting.reverse);
                 break;
+            default :
+                character.popupDamage(value, setting.critical, setting.reverse);
         }
     });
 
