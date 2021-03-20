@@ -1,100 +1,142 @@
 //=============================================================================
 // GeneralTrigger.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/03/20 パラメータの型指定機能に対応
 // 1.1.0 2016/07/06 レベルアップ時、レベルダウン時のトリガーを追加
 // 1.0.2 2016/06/22 最強装備を選択した場合にエラーが発生する問題を修正
 // 1.0.1 2016/06/17 ロードが失敗するバグを修正
 // 1.0.0 2016/06/14 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
  * @plugindesc トリガープラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/GeneralTrigger.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @param ニューゲーム
+ * @param NewGame
+ * @text ニューゲーム
  * @desc ニューゲーム時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param コンティニュー
+ * @param Continue
+ * @text コンティニュー
  * @desc コンティニュー時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param オプション画面
+ * @param Options
+ * @text オプション画面
  * @desc オプション画面を出た時にONになるスイッチ番号。ただしタイトル画面の場合は無効です。
  * @default 0
+ * @type switch
  *
- * @param メニュー画面
+ * @param Menu
+ * @text メニュー画面
  * @desc メニュー画面を出た時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param セーブ画面
+ * @param Save
+ * @text セーブ画面
  * @desc セーブ画面を出た時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param 戦闘画面
+ * @param Battle
+ * @text 戦闘画面
  * @desc 戦闘画面を出た時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param ショップ画面
+ * @param Shop
+ * @text ショップ画面
  * @desc ショップ画面を出た時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param 別マップ移動
+ * @param MoveMap
+ * @text 別マップ移動
  * @desc 別マップ移動時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param アイテム増減
+ * @param GainItem
+ * @text アイテム増減
  * @desc アイテム増減時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param 武器増減
+ * @param GainWeapon
+ * @text 武器増減
  * @desc 武器増減時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param 防具増減
+ * @param GainArmor
+ * @text 防具増減
  * @desc 防具増減時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param アイテムID
+ * @param ItemId
+ * @text アイテムID
  * @desc アイテム、武器、防具入手時に格納されるアイテムIDを格納する変数番号
  * @default 0
+ * @type variable
  *
- * @param アイテム個数
+ * @param ItemAmount
+ * @text アイテム個数
  * @desc アイテム、武器、防具入手時に格納されるアイテム増減数を格納する変数番号
  * @default 0
+ * @type variable
  *
- * @param メンバー加入
+ * @param AddMember
+ * @text メンバー加入
  * @desc メンバー加入時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param メンバー離脱
+ * @param RemoveMember
+ * @text メンバー離脱
  * @desc メンバー離脱時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param レベルアップ
+ * @param LevelUp
+ * @text レベルアップ
  * @desc レベルアップ時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param レベルダウン
+ * @param LevelDown
+ * @text レベルダウン
  * @desc レベルダウン時にONになるスイッチ番号
  * @default 0
+ * @type switch
  *
- * @param アクターID
+ * @param ActorId
+ * @text アクターID
  * @desc 加入・離脱、レベルアップ、レベルダウンしたアクターIDを格納する変数番号
  * @default 0
- * 
- * @param マップ画面でのみ有効
+ * @type variable
+ *
+ * @param ValidOnlyMap
+ * @text マップ画面でのみ有効
  * @desc アイテムの増減やレベルアップについて、マップ画面でのみスイッチをONにします。(ON/OFF)
- * @default OFF
+ * @default false
+ * @type boolean
  *
  * @help ゲーム中、様々な局面でスイッチをONにします。
  * 主に並列処理、自動実行のコモンイベントと組み合わせて使用します。
@@ -110,10 +152,10 @@
  * ・アイテムを入手したとき
  * ・メンバーが加入、離脱したとき
  * ・レベルが増減したとき
- * 
+ *
  * また、トリガーの種類によっては、スイッチがONになると同時に変数に
  * 所定の値が代入されます。
- * 
+ *
  * 例えば、アイテム入手のトリガーがONになったときに指定された変数に
  * アイテムIDが格納されます。
  * 専用の入手インフォメーション等が作成できます。
@@ -128,51 +170,32 @@
 
 (function() {
     'use strict';
-    var pluginName = 'GeneralTrigger';
 
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
 
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramNewGame      = getParamNumber(['NewGame', 'ニューゲーム']);
-    var paramContinue     = getParamNumber(['Continue', 'コンティニュー']);
-    var paramOptions      = getParamNumber(['Options', 'オプション画面']);
-    var paramSave         = getParamNumber(['Save', 'セーブ画面']);
-    var paramMenu         = getParamNumber(['Menu', 'メニュー画面']);
-    var paramBattle       = getParamNumber(['Battle', '戦闘画面']);
-    var paramShop         = getParamNumber(['Shop', 'ショップ画面']);
-    var paramMoveMap      = getParamNumber(['MoveMap', '別マップ移動']);
-    var paramGainItem     = getParamNumber(['GainItem', 'アイテム増減']);
-    var paramGainWeapon   = getParamNumber(['GainWeapon', '武器増減']);
-    var paramGainArmor    = getParamNumber(['GainArmor', '防具増減']);
-    var paramItemId       = getParamNumber(['ItemId', 'アイテムID']);
-    var paramItemAmount   = getParamNumber(['ItemAmount', 'アイテム個数']);
-    var paramAddMember    = getParamNumber(['AddMember', 'メンバー加入']);
-    var paramRemoveMember = getParamNumber(['RemoveMember', 'メンバー離脱']);
-    var paramLevelUp      = getParamNumber(['LevelUp', 'レベルアップ']);
-    var paramLevelDown    = getParamNumber(['LevelDown', 'レベルダウン']);
-    var paramActorId      = getParamNumber(['ActorId', 'アクターID']);
-    var paramValidOnlyMap = getParamBoolean(['ValidOnlyMap', 'マップ画面でのみ有効']);
+    var param = createPluginParameter('GeneralTrigger');
 
     //=============================================================================
     // SceneManager
@@ -199,7 +222,7 @@
     };
 
     SceneManager.isTriggerValid = function() {
-        return !paramValidOnlyMap || this._scene instanceof Scene_Map;
+        return !param.ValidOnlyMap || this._scene instanceof Scene_Map;
     };
 
     //=============================================================================
@@ -209,13 +232,14 @@
     var _DataManager_setupNewGame = DataManager.setupNewGame;
     DataManager.setupNewGame      = function() {
         _DataManager_setupNewGame.apply(this, arguments);
-        SceneManager.setTriggerSwitch(paramNewGame);
+        console.log(param.NewGame);
+        SceneManager.setTriggerSwitch(param.NewGame);
     };
 
     var _DataManager_loadGame = DataManager.loadGame;
     DataManager.loadGame      = function(saveFileId) {
         var result = _DataManager_loadGame.apply(this, arguments);
-        SceneManager.setTriggerSwitch(paramContinue);
+        SceneManager.setTriggerSwitch(param.Continue);
         return result;
     };
 
@@ -226,7 +250,7 @@
     var _Game_Player_reserveTransfer      = Game_Player.prototype.reserveTransfer;
     Game_Player.prototype.reserveTransfer = function(mapId, x, y, d, fadeType) {
         _Game_Player_reserveTransfer.apply(this, arguments);
-        SceneManager.setTriggerSwitch(paramMoveMap);
+        SceneManager.setTriggerSwitch(param.MoveMap);
     };
 
     var _Game_Party_addActor      = Game_Party.prototype.addActor;
@@ -234,8 +258,8 @@
         var length = this._actors.length;
         _Game_Party_addActor.apply(this, arguments);
         if (length !== this._actors.length && SceneManager.isTriggerValid()) {
-            SceneManager.setTriggerSwitch(paramAddMember);
-            SceneManager.setTriggerVariable(paramActorId, actorId);
+            SceneManager.setTriggerSwitch(param.AddMember);
+            SceneManager.setTriggerVariable(param.ActorId, actorId);
         }
     };
 
@@ -244,8 +268,8 @@
         var length = this._actors.length;
         _Game_Party_removeActor.apply(this, arguments);
         if (length !== this._actors.length && SceneManager.isTriggerValid()) {
-            SceneManager.setTriggerSwitch(paramRemoveMember);
-            SceneManager.setTriggerVariable(paramActorId, actorId);
+            SceneManager.setTriggerSwitch(param.RemoveMember);
+            SceneManager.setTriggerVariable(param.ActorId, actorId);
         }
     };
 
@@ -255,25 +279,25 @@
         if (!item || !SceneManager.isTriggerValid()) return;
         switch (this.itemContainer(item)) {
             case this._items:
-                SceneManager.setTriggerSwitch(paramGainItem);
+                SceneManager.setTriggerSwitch(param.GainItem);
                 break;
             case this._weapons:
-                SceneManager.setTriggerSwitch(paramGainWeapon);
+                SceneManager.setTriggerSwitch(param.GainWeapon);
                 break;
             case this._armors:
-                SceneManager.setTriggerSwitch(paramGainArmor);
+                SceneManager.setTriggerSwitch(param.GainArmor);
                 break;
         }
-        SceneManager.setTriggerVariable(paramItemId, item.id);
-        SceneManager.setTriggerVariable(paramItemAmount, amount);
+        SceneManager.setTriggerVariable(param.ItemId, item.id);
+        SceneManager.setTriggerVariable(param.ItemAmount, amount);
     };
 
     var _Game_Actor_levelUp = Game_Actor.prototype.levelUp;
     Game_Actor.prototype.levelUp = function() {
         _Game_Actor_levelUp.apply(this, arguments);
         if (SceneManager.isTriggerValid()) {
-            SceneManager.setTriggerSwitch(paramLevelUp);
-            SceneManager.setTriggerVariable(paramActorId, this.actorId());
+            SceneManager.setTriggerSwitch(param.LevelUp);
+            SceneManager.setTriggerVariable(param.ActorId, this.actorId());
         }
     };
 
@@ -281,8 +305,8 @@
     Game_Actor.prototype.levelDown = function() {
         _Game_Actor_levelDown.apply(this, arguments);
         if (SceneManager.isTriggerValid()) {
-            SceneManager.setTriggerSwitch(paramLevelDown);
-            SceneManager.setTriggerVariable(paramActorId, this.actorId());
+            SceneManager.setTriggerSwitch(param.LevelDown);
+            SceneManager.setTriggerVariable(param.ActorId, this.actorId());
         }
     };
 
@@ -294,23 +318,23 @@
     };
 
     Scene_Options.prototype.setPopTrigger = function() {
-        SceneManager.setTriggerSwitch(paramOptions);
+        SceneManager.setTriggerSwitch(param.Options);
     };
 
     Scene_Menu.prototype.setPopTrigger = function() {
-        SceneManager.setTriggerSwitch(paramMenu);
+        SceneManager.setTriggerSwitch(param.Menu);
     };
 
     Scene_Save.prototype.setPopTrigger = function() {
-        SceneManager.setTriggerSwitch(paramSave);
+        SceneManager.setTriggerSwitch(param.Save);
     };
 
     Scene_Shop.prototype.setPopTrigger = function() {
-        SceneManager.setTriggerSwitch(paramShop);
+        SceneManager.setTriggerSwitch(param.Shop);
     };
 
     Scene_Battle.prototype.setPopTrigger = function() {
-        SceneManager.setTriggerSwitch(paramBattle);
+        SceneManager.setTriggerSwitch(param.Battle);
     };
 })();
 
