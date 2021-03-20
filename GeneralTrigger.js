@@ -229,7 +229,6 @@
     var _DataManager_setupNewGame = DataManager.setupNewGame;
     DataManager.setupNewGame      = function() {
         _DataManager_setupNewGame.apply(this, arguments);
-        console.log(param.NewGame);
         SceneManager.setTriggerSwitch(param.NewGame);
     };
 
