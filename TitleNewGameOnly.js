@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/03/23 MZで動作するよう修正
 // 2.1.0 2018/12/01 スタート文字列のY座標を調整できるようにしました。
 // 2.0.0 2017/03/01 セーブファイルが存在する場合の動作を3通りから選択できる機能を追加
 // 1.3.0 2017/06/12 型指定機能に対応
@@ -21,7 +22,10 @@
 
 /*:
  * @plugindesc ニューゲームオンリープラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TitleNewGameOnly.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
  * @param startString
  * @text スタート文字列
@@ -104,7 +108,7 @@
 
 /*~struct~Font:
  * @param name
- * @desc 名称です。指定しない場合は空欄です。
+ * @desc 名称です。fontフォルダ以下のフォントファイルを拡張子付きで指定してください。
  * @default
  *
  * @param size
@@ -127,39 +131,24 @@
  * @default rgba(255,255,255,1.0)
  */
 
-(function() {
+(()=> {
+    'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
+    const _Scene_Boot_loadGameFonts = Scene_Boot.prototype.loadGameFonts;
+    Scene_Boot.prototype.loadGameFonts = function() {
+        _Scene_Boot_loadGameFonts.apply(this, arguments);
+        if (param.font && param.font.name) {
+            FontManager.load(param.font.name.replace(/\..*/, ''), param.font.name);
+        }
     };
-
-    var param = createPluginParameter('TitleNewGameOnly');
 
     //=============================================================================
     // Scene_Title
     //  コマンドウィンドウを無効化し、代わりにゲームスタート文字列を表示させます。
     //=============================================================================
-    var _Scene_TitleCreate       = Scene_Title.prototype.create;
+    const _Scene_TitleCreate       = Scene_Title.prototype.create;
     Scene_Title.prototype.create = function() {
         _Scene_TitleCreate.apply(this, arguments);
         this._commandWindow.setHandler('cancel', this.onCancelCommand.bind(this));
@@ -167,13 +156,13 @@
         this.onCancelCommand();
     };
 
-    var _Scene_TitleUpdate       = Scene_Title.prototype.update;
+    const _Scene_TitleUpdate       = Scene_Title.prototype.update;
     Scene_Title.prototype.update = function() {
         _Scene_TitleUpdate.apply(this, arguments);
         this.updateNewGameOnly();
     };
 
-    var _Scene_Title_terminate      = Scene_Title.prototype.terminate;
+    const _Scene_Title_terminate      = Scene_Title.prototype.terminate;
     Scene_Title.prototype.terminate = function() {
         _Scene_Title_terminate.apply(this, arguments);
         if (this._sceneLoad) {
@@ -194,14 +183,7 @@
         this.playStartSe();
         if (this.isContinueEnabled()) {
             if (param.fileExistAction === 2) {
-                var result      = DataManager.loadGame(DataManager.latestSavefileId());
-                this._sceneLoad = new Scene_Load();
-                if (result) {
-                    this._sceneLoad.onLoadSuccess();
-                    this.fadeOutAll();
-                } else {
-                    this._sceneLoad.onLoadFailure();
-                }
+                this.execDirectLoad();
             } else {
                 this._commandWindow.activate();
                 this._gameStartSprite.visible = false;
@@ -213,6 +195,16 @@
             this.commandNewGame();
         }
         this._seledted = true;
+    };
+
+    Scene_Title.prototype.execDirectLoad = function() {
+        this._sceneLoad = new Scene_Load();
+        DataManager.loadGame(DataManager.latestSavefileId()).then(() => {
+            this._sceneLoad.onLoadSuccess();
+            this.fadeOutAll();
+        }).catch(() => {
+            this._sceneLoad.onLoadFailure();
+        });
     };
 
     Scene_Title.prototype.playStartSe = function() {
@@ -260,20 +252,20 @@
 
     Sprite_GameStart.DEFALT_FONT = {size: 52, bold: false, italic: true, color: 'rgba(255,255,255,1.0)'};
 
-    Sprite_GameStart.prototype             = Object.create(Sprite_Base.prototype);
+    Sprite_GameStart.prototype             = Object.create(Sprite.prototype);
     Sprite_GameStart.prototype.constructor = Sprite_GameStart;
 
     Sprite_GameStart.prototype.initialize = function() {
-        Sprite_Base.prototype.initialize.call(this);
+        Sprite.prototype.initialize.call(this);
         this.y             = Graphics.height - 160 + (param.adjustY || 0);
         this.opacity_shift = -2;
     };
 
     Sprite_GameStart.prototype.draw = function() {
-        var font    = param.font || Sprite_GameStart.DEFALT_FONT;
+        const font    = param.font || Sprite_GameStart.DEFALT_FONT;
         this.bitmap = new Bitmap(Graphics.width, font.size);
         if (font.name) {
-            this.bitmap.fontFace = fontFace;
+            this.bitmap.fontFace = font.name.replace(/\..*/, '');
         }
         this.bitmap.fontSize   = font.size;
         this.bitmap.fontItalic = font.italic;
