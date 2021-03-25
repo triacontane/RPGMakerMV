@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2021/03/26 ヘルプの誤記を修正
 // 1.3.0 2021/03/03 1行動ごとの最大与ダメージを記録する変数を追加
 // 1.2.2 2018/04/30 ゴールドの増減について所持ゴールドを以上の額を減算したときの消費量が誤っていた問題を修正
 // 1.2.1 2017/05/20 プラグイン未適用のデータをロードしたときに一部のスクリプトが実行エラーになる問題を修正
@@ -243,10 +244,10 @@
  * # アイテムの累計購入回数(まとめ買いは1回でカウント)
  * $gameParty.getItemBuyingRecord().getTradeCount();
  *
- * # ID[1]のアイテムの累計購入金額
+ * # ID[1]の武器の累計購入金額
  * $gameParty.getWeaponBuyingRecord().getUseGoldSum(1);
  *
- * # ID[2]のアイテムの累計購入個数
+ * # ID[2]の武器の累計購入個数
  * $gameParty.getWeaponBuyingRecord().getAmountSum(2);
  *
  * # 武器の累計購入回数(まとめ買いは1回でカウント)
@@ -271,10 +272,10 @@
  * # アイテムの累計売却回数(まとめ買いは1回でカウント)
  * $gameParty.getItemSellingRecord().getTradeCount();
  *
- * # ID[1]のアイテムの累計売却金額
+ * # ID[1]の武器の累計売却金額
  * $gameParty.getWeaponSellingRecord().getUseGoldSum(1);
  *
- * # ID[2]のアイテムの累計売却個数
+ * # ID[2]の武器の累計売却個数
  * $gameParty.getWeaponSellingRecord().getAmountSum(2);
  *
  * # 武器の累計売却回数(まとめ買いは1回でカウント)
