@@ -6,6 +6,9 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2021/03/09 アクターのステートアイコンの拡大率がアクター自身の拡大率に影響を受けないよう修正
+// 2.3.0 2021/01/24 敵キャラのリングアイコン表示位置を調整できる機能を追加
+// 2.2.0 2021/01/13 指定したアイコンインデックスをリングアイコンの表示対象外にできる機能を追加
 // 2.1.3 2020/03/13 2.1.2の競合対策にフォントサイズとアイコンごとのターン数表示の有無の設定を反映
 // 2.1.2 2020/03/11 MOG_BattleHud.jsでステートアイコンの表示モード(View Mode)を1(ラインモード：アイコン1列に表示)にした場合もターン数表示できるよう修正
 // 2.1.1 2019/02/01 味方リングアイコンかつターン数表示を有効にした場合、リングアイコンとステータスウィンドウの両方にターン数を表示させるよう仕様変更
@@ -39,7 +42,7 @@
 
 /*:
  * @plugindesc Ring State Plugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @author triacontane
  *
  * @param RadiusX
  * @desc 横方向の半径の値です。
@@ -79,6 +82,12 @@
  * @desc ステートの残りターン数を表示します。
  * @default true
  * @type boolean
+ *
+ * @param IconIndexWithoutRing
+ * @text 表示対象外アイコン
+ * @desc リング表示の対象外になる「アイコンインデックス」です。
+ * @default []
+ * @type string[]
  *
  * @param IconIndexWithoutShowTurns
  * @desc ステートターン数の表示対象外になる「アイコンインデックス」です。
@@ -130,6 +139,20 @@
  * @min -1000
  * @max 1000
  *
+ * @param EnemyRingIconX
+ * @desc 敵のステートアイコンのX座標です。
+ * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
+ *
+ * @param EnemyRingIconY
+ * @desc 敵のステートアイコンのY座標です。
+ * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
+ *
  * @param FontSize
  * @desc 残りターン数表示のフォントサイズです。
  * @default 32
@@ -143,7 +166,10 @@
  * ・コアスクリプトで管理しているターン数の都合上、ステート解除のタイミングが
  * 　「行動終了時」の場合、設定したターン数よりも1大きい数から表示されます。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * 敵キャラ単位でリングステートの位置を調整する場合はデータベースのメモ欄に
+ * 以下の通り記述してください。
+ * <RingStateX:0>
+ * <RingStateY:0>
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -152,7 +178,7 @@
 
 /*:ja
  * @plugindesc リングステートプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
  *
  * @param RadiusX
  * @text X半径
@@ -201,6 +227,12 @@
  * @desc ステートの残りターン数を表示します。
  * @default true
  * @type boolean
+ *
+ * @param IconIndexWithoutRing
+ * @text 表示対象外アイコン
+ * @desc リング表示の対象外になる「アイコンインデックス」です。
+ * @default []
+ * @type string[]
  *
  * @param IconIndexWithoutShowTurns
  * @text ターン数表示対象外アイコン
@@ -266,6 +298,22 @@
  * @min -1000
  * @max 1000
  *
+ * @param EnemyRingIconX
+ * @text 敵リングアイコンX座標
+ * @desc 敵のステートアイコンのX座標です。
+ * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
+ *
+ * @param EnemyRingIconY
+ * @text 敵リングアイコンY座標
+ * @desc 敵のステートアイコンのY座標です。
+ * @default 0
+ * @type number
+ * @min -1000
+ * @max 1000
+ *
  * @help 敵キャラのステートが複数有効になった場合のステートアイコンを時計回りに
  * 回転させてリング表示したり一列に並べて表示したりできます。
  *
@@ -273,6 +321,11 @@
  * ・ステート解除のタイミングが「なし」でない場合のみ表示されます。
  * ・コアスクリプトで管理しているターン数の都合上、ステート解除のタイミングが
  * 　「行動終了時」の場合、設定したターン数よりも1大きい数から表示されます。
+ *
+ * 敵キャラ単位でリングステートの位置を調整する場合はデータベースのメモ欄に
+ * 以下の通り記述してください。
+ * <RingStateX:0>
+ * <RingStateY:0>
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -322,6 +375,9 @@ function Sprite_StateIconChild() {
     param.IconIndexWithoutShowTurns = (param.IconIndexWithoutShowTurns || []).map(function(index) {
         return parseInt(index);
     });
+    param.IconIndexWithoutRing = (param.IconIndexWithoutRing || []).map(function(index) {
+        return parseInt(index);
+    });
 
     //=============================================================================
     // Game_BattlerBase
@@ -363,7 +419,41 @@ function Sprite_StateIconChild() {
             this._stateSprite.y = param.ActorRingIconY;
             this._mainSprite.addChild(this._stateSprite);
         };
+
+        var _Sprite_Actor_update = Sprite_Actor.prototype.update;
+        Sprite_Actor.prototype.update = function() {
+            _Sprite_Actor_update.apply(this, arguments);
+            if (this.scale.x !== 1.0) {
+                this._stateSprite.scale.x = 1.0 / this.scale.x;
+            }
+            if (this.scale.y !== 1.0) {
+                this._stateSprite.scale.y = 1.0 / this.scale.y;
+            }
+        }
     }
+
+    var _Sprite_Enemy_updateStateSprite = Sprite_Enemy.prototype.updateStateSprite;
+    Sprite_Enemy.prototype.updateStateSprite = function() {
+        _Sprite_Enemy_updateStateSprite.apply(this, arguments);
+        this._stateIconSprite.y += this.findRingStateY();
+        this._stateIconSprite.x = this.findRingStateX();
+    };
+
+    Sprite_Enemy.prototype.findRingStateX = function() {
+        if (this._enemy && this._enemy.enemy().meta.RingStateX) {
+            return parseInt(this._enemy.enemy().meta.RingStateX);
+        } else {
+            return param.EnemyRingIconX || 0;
+        }
+    };
+
+    Sprite_Enemy.prototype.findRingStateY = function() {
+        if (this._enemy && this._enemy.enemy().meta.RingStateY) {
+            return parseInt(this._enemy.enemy().meta.RingStateY);
+        } else {
+            return param.EnemyRingIconY || 0;
+        }
+    };
 
     //=============================================================================
     // Sprite_StateIcon
@@ -393,7 +483,9 @@ function Sprite_StateIconChild() {
     Sprite_StateIcon.prototype.updateRingIcon = function() {
         var icons = [];
         if (this._battler && this._battler.isAlive()) {
-            icons = this._battler.allIcons();
+            icons = this._battler.allIcons().filter(function(index) {
+                return !param.IconIndexWithoutRing.contains(index);
+            });
         }
         if (!this._icons.equals(icons)) {
             this._icons = icons;
