@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2021/03/26 MZで動作するよう全面的に修正
 // 2.3.1 2021/03/09 アクターのステートアイコンの拡大率がアクター自身の拡大率に影響を受けないよう修正
 // 2.3.0 2021/01/24 敵キャラのリングアイコン表示位置を調整できる機能を追加
 // 2.2.0 2021/01/13 指定したアイコンインデックスをリングアイコンの表示対象外にできる機能を追加
@@ -40,155 +41,152 @@
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
-/*:
- * @plugindesc Ring State Plugin
+/*:ja
+ * @plugindesc StateRingIconPlugin
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateRingIcon.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @param RadiusX
- * @desc 横方向の半径の値です。
+ * @desc The value of the horizontal radius.
  * @default 64
  * @type number
  *
  * @param RadiusY
- * @desc 縦方向の半径の値です。
+ * @desc The value of the vertical radius.
  * @default 16
  * @type number
  *
  * @param ScaleX
- * @desc アイコンの横方向の拡大率です。
+ * @desc The horizontal scale of the icon.
  * @default 100
  * @type number
  *
  * @param ScaleY
- * @desc アイコンの縦方向の拡大率です。
+ * @desc The vertical scale of the icon.
  * @default 100
  * @type number
  *
  * @param CycleDuration
- * @desc アイコンが一周するのに掛かる時間(フレーム数)です。0に指定すると回転しなくなります。
- * @default 60
+ * @desc The time (number of frames) it takes for the icon to rotate around the screen.
+ * @default 120
  * @type number
  *
  * @param LineViewLimit
- * @desc ステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
+ * @desc If the number of states is less than or equal to this value, it will be displayed in a single column.
  * @default 1
+ * @type number
  *
  * @param Reverse
- * @desc 回転方向が反時計回りになります。(Default:OFF)
+ * @desc The direction of rotation will be counterclockwise.
  * @default false
  * @type boolean
  *
  * @param ShowTurnCount
- * @desc ステートの残りターン数を表示します。
+ * @desc Displays the number of turns remaining in the state. It is displayed for both friend and foe.
  * @default true
  * @type boolean
  *
  * @param IconIndexWithoutRing
- * @text 表示対象外アイコン
- * @desc リング表示の対象外になる「アイコンインデックス」です。
+ * @desc This is an "icon index" that is not subject to the ring display.
  * @default []
  * @type string[]
  *
  * @param IconIndexWithoutShowTurns
- * @desc ステートターン数の表示対象外になる「アイコンインデックス」です。
+ * @desc The "icon index" is excluded from the display of the number of state-turns.
  * @default []
  * @type string[]
  *
  * @param TurnCountX
- * @desc ターン数のX座標表示位置を調整します。デフォルトはアイコンの右下になります。
+ * @desc Adjusts the X coordinate display position of the number of turns.
  * @default 0
  * @type number
  * @min -1000
  * @max 1000
  *
  * @param TurnCountY
- * @desc ターン数のY座標表示位置を調整します。デフォルトはアイコンの右下になります。
+ * @desc Adjusts the Y coordinate display position of the number of turns.
  * @default 0
  * @type number
  * @min -1000
  * @max 1000
  *
  * @param TurnAdjustment
- * @desc ターン数の表示値を補正します。他のプラグインとの組み合わせで数値がズレる場合にのみ変更してください。
+ * @desc Corrects the displayed value of the number of turns.
  * @default 0
  * @type number
  * @min -9999
  * @max 9999
  *
- * @param ShowActorTurnCount
- * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
+ * @param FontSize
+ * @desc The font size of the remaining turns display.
+ * @default 24
+ * @type number
+ *
+ * @param ActorRingIcon
+ * @desc The state icons of allies will also be displayed as rings.
  * @default true
  * @type boolean
  *
- * @param ActorRingIcon
- * @desc 味方のステートアイコンもリング表示にします。
- * @default false
- * @type boolean
- *
  * @param ActorRingIconX
- * @desc 味方のステートアイコンのX座標です。
+ * @desc X of the actor state icon.
  * @default 0
  * @type number
  * @min -1000
  * @max 1000
  *
  * @param ActorRingIconY
- * @desc 味方のステートアイコンのY座標です。
+ * @desc Y of the actor state icon.
  * @default 0
  * @type number
  * @min -1000
  * @max 1000
  *
  * @param EnemyRingIconX
- * @desc 敵のステートアイコンのX座標です。
+ * @desc X of the enemy state icon.
  * @default 0
  * @type number
  * @min -1000
  * @max 1000
  *
  * @param EnemyRingIconY
- * @desc 敵のステートアイコンのY座標です。
+ * @desc Y of the enemy state icon.
  * @default 0
  * @type number
  * @min -1000
  * @max 1000
  *
- * @param FontSize
- * @desc 残りターン数表示のフォントサイズです。
- * @default 32
- * @type number
+ * @help StateRingIcon.js
  *
- * @help 敵キャラのステートが複数有効になった場合のステートアイコンを時計回りに
- * 回転させてリング表示したり一列に並べて表示したりできます。
+ * You can rotate the state icons of enemy characters
+ * when multiple states are enabled clockwise to display
+ * them in a ring or in a row.
  *
- * また、各ステートの残りターンを表示することもできます。
- * ・ステート解除のタイミングが「なし」でない場合のみ表示されます。
- * ・コアスクリプトで管理しているターン数の都合上、ステート解除のタイミングが
- * 　「行動終了時」の場合、設定したターン数よりも1大きい数から表示されます。
- *
- * 敵キャラ単位でリングステートの位置を調整する場合はデータベースのメモ欄に
- * 以下の通り記述してください。
+ * If you want to adjust the position of the ring state
+ * for each enemy character, write the following
+ * in the note of the database.
  * <RingStateX:0>
  * <RingStateY:0>
  *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
  */
 
 /*:ja
  * @plugindesc リングステートプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateRingIcon.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param RadiusX
  * @text X半径
- * @desc 横方向の半径の値です。(Default:64)
+ * @desc 横方向の半径の値です。
  * @default 64
  * @type number
  *
  * @param RadiusY
  * @text Y半径
- * @desc 縦方向の半径の値です。(Default:16)
+ * @desc 縦方向の半径の値です。
  * @default 16
  * @type number
  *
@@ -207,7 +205,7 @@
  * @param CycleDuration
  * @text 周期
  * @desc アイコンが一周するのに掛かる時間(フレーム数)です。0に指定すると回転しなくなります。
- * @default 60
+ * @default 120
  * @type number
  *
  * @param LineViewLimit
@@ -218,13 +216,13 @@
  *
  * @param Reverse
  * @text 反時計回り
- * @desc 回転方向が反時計回りになります。(Default:OFF)
+ * @desc 回転方向が反時計回りになります。
  * @default false
  * @type boolean
  *
  * @param ShowTurnCount
  * @text ターン数表示
- * @desc ステートの残りターン数を表示します。
+ * @desc ステートの残りターン数を表示します。敵味方両方に表示されます。
  * @default true
  * @type boolean
  *
@@ -264,22 +262,16 @@
  * @min -9999
  * @max 9999
  *
- * @param ShowActorTurnCount
- * @text 味方ターン数表示
- * @desc 味方のステートの残りターン数を表示します。使用しているプラグイン次第で動作しない場合もあります。
- * @default true
- * @type boolean
- *
  * @param FontSize
  * @text フォントサイズ
  * @desc 残りターン数表示のフォントサイズです。
- * @default 32
+ * @default 24
  * @type number
  *
  * @param ActorRingIcon
  * @text 味方リングアイコン
- * @desc 味方のステートアイコンもリング表示にします。
- * @default false
+ * @desc 味方のステートアイコンもリング表示にします。サイドビューとフロントビューとで表示位置が異なります。
+ * @default true
  * @type boolean
  *
  * @param ActorRingIconX
@@ -314,7 +306,9 @@
  * @min -1000
  * @max 1000
  *
- * @help 敵キャラのステートが複数有効になった場合のステートアイコンを時計回りに
+ * @help StateRingIcon.js
+ *
+ * 敵キャラのステートが複数有効になった場合のステートアイコンを時計回りに
  * 回転させてリング表示したり一列に並べて表示したりできます。
  *
  * また、各ステートの残りターンを表示することもできます。
@@ -327,7 +321,10 @@
  * <RingStateX:0>
  * <RingStateY:0>
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -344,47 +341,17 @@ function Sprite_StateIconChild() {
     this.initialize.apply(this, arguments);
 }
 
-(function() {
+(()=> {
     'use strict';
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('StateRingIcon');
-    param.IconIndexWithoutShowTurns = (param.IconIndexWithoutShowTurns || []).map(function(index) {
-        return parseInt(index);
-    });
-    param.IconIndexWithoutRing = (param.IconIndexWithoutRing || []).map(function(index) {
-        return parseInt(index);
-    });
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Game_BattlerBase
     //  ステートの残りターン数を取得します。
     //=============================================================================
     Game_BattlerBase.prototype.getStateTurns = function() {
-        var stateTurns = this.states().map(function(state) {
+        const stateTurns = this.states().map(function(state) {
             if (state.iconIndex <= 0) {
                 return null;
             } else if (state.autoRemovalTiming <= 0) {
@@ -411,16 +378,17 @@ function Sprite_StateIconChild() {
     };
 
     if (param.ActorRingIcon) {
-        var _Sprite_Actor_createStateSprite = Sprite_Actor.prototype.createStateSprite;
+        const _Sprite_Actor_createStateSprite = Sprite_Actor.prototype.createStateSprite;
         Sprite_Actor.prototype.createStateSprite = function() {
             _Sprite_Actor_createStateSprite.apply(this, arguments);
             this._stateSprite = new Sprite_StateIcon();
+            this._stateSprite.setActorRing();
             this._stateSprite.x = param.ActorRingIconX;
-            this._stateSprite.y = param.ActorRingIconY;
+            this._stateSprite.y = param.ActorRingIconY - 64;
             this._mainSprite.addChild(this._stateSprite);
         };
 
-        var _Sprite_Actor_update = Sprite_Actor.prototype.update;
+        const _Sprite_Actor_update = Sprite_Actor.prototype.update;
         Sprite_Actor.prototype.update = function() {
             _Sprite_Actor_update.apply(this, arguments);
             if (this.scale.x !== 1.0) {
@@ -432,7 +400,7 @@ function Sprite_StateIconChild() {
         }
     }
 
-    var _Sprite_Enemy_updateStateSprite = Sprite_Enemy.prototype.updateStateSprite;
+    const _Sprite_Enemy_updateStateSprite = Sprite_Enemy.prototype.updateStateSprite;
     Sprite_Enemy.prototype.updateStateSprite = function() {
         _Sprite_Enemy_updateStateSprite.apply(this, arguments);
         this._stateIconSprite.y += this.findRingStateY();
@@ -459,14 +427,14 @@ function Sprite_StateIconChild() {
     // Sprite_StateIcon
     //  ステートアイコンを回転させます。
     //=============================================================================
-    var _Sprite_StateIcon_initMembers      = Sprite_StateIcon.prototype.initMembers;
+    const _Sprite_StateIcon_initMembers      = Sprite_StateIcon.prototype.initMembers;
     Sprite_StateIcon.prototype.initMembers = function() {
         _Sprite_StateIcon_initMembers.apply(this, arguments);
         this._icons        = [];
         this._iconsSprites = [];
     };
 
-    var _Sprite_StateIcon_update      = Sprite_StateIcon.prototype.update;
+    const _Sprite_StateIcon_update      = Sprite_StateIcon.prototype.update;
     Sprite_StateIcon.prototype.update = function() {
         if (this._battler && !this.hasRingState()) {
             _Sprite_StateIcon_update.apply(this, arguments);
@@ -481,7 +449,7 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIcon.prototype.updateRingIcon = function() {
-        var icons = [];
+        let icons = [];
         if (this._battler && this._battler.isAlive()) {
             icons = this._battler.allIcons().filter(function(index) {
                 return !param.IconIndexWithoutRing.contains(index);
@@ -515,14 +483,14 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIcon.prototype.updateTurns = function() {
-        var turns = this._battler.getAllTurns();
+        const turns = this._battler.getAllTurns();
         this._icons.forEach(function(icon, index) {
             this._iconsSprites[index].setIconTurn(turns[index]);
         }, this);
     };
 
     Sprite_StateIcon.prototype.getIconRadian = function(index) {
-        var radian = (this._animationCount / this.getCycleDuration() + index / this._iconsSprites.length) * Math.PI * 2;
+        let radian = (this._animationCount / this.getCycleDuration() + index / this._iconsSprites.length) * Math.PI * 2;
         if (param.Reverse) radian *= -1;
         return radian;
     };
@@ -536,20 +504,20 @@ function Sprite_StateIconChild() {
             if (!this._iconsSprites[index]) this.makeNewIcon(index);
             this._iconsSprites[index].setIconIndex(icon);
         }, this);
-        var spriteLength = this._iconsSprites.length;
-        for (var i = this._icons.length; i < spriteLength; i++) {
+        const spriteLength = this._iconsSprites.length;
+        for (let i = this._icons.length; i < spriteLength; i++) {
             this.popIcon();
         }
     };
 
     Sprite_StateIcon.prototype.makeNewIcon = function(index) {
-        var iconSprite            = new Sprite_StateIconChild();
+        const iconSprite            = new Sprite_StateIconChild();
         this._iconsSprites[index] = iconSprite;
         this.addChild(iconSprite);
     };
 
     Sprite_StateIcon.prototype.popIcon = function() {
-        var removedSprite = this._iconsSprites.pop();
+        const removedSprite = this._iconsSprites.pop();
         this.removeChild(removedSprite);
     };
 
@@ -567,8 +535,12 @@ function Sprite_StateIconChild() {
         }
     };
 
+    Sprite_StateIcon.prototype.setActorRing = function() {
+        this._actorRing = true;
+    };
+
     Sprite_StateIcon.prototype.hasRingState = function() {
-        return this._battler.isEnemy() || param.ActorRingIcon
+        return this._battler.isEnemy() || this._actorRing || !$gameSystem.isSideView();
     };
 
     //=============================================================================
@@ -609,7 +581,7 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIconChild.prototype.refreshIconTurn = function() {
-        var bitmap = this._turnSprite.bitmap;
+        const bitmap = this._turnSprite.bitmap;
         bitmap.clear();
         if (param.IconIndexWithoutShowTurns.contains(this._iconIndex)) {
             return;
@@ -619,8 +591,8 @@ function Sprite_StateIconChild() {
 
     Sprite_StateIconChild.prototype.makeTurnSpriteIfNeed = function() {
         if (this._turnSprite) return;
-        var sprite             = new Sprite();
-        sprite.bitmap          = new Bitmap(Sprite_StateIcon._iconWidth, Sprite_StateIcon._iconHeight);
+        const sprite           = new Sprite();
+        sprite.bitmap          = new Bitmap(ImageManager.iconWidth, ImageManager.iconHeight);
         sprite.bitmap.smooth   = true;
         sprite.bitmap.fontSize = param.FontSize;
         sprite.x               = param.TurnCountX;
@@ -642,144 +614,7 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIconChild.prototype.getIconWidth = function() {
-        return Sprite_StateIcon._iconWidth * this.getScaleX();
+        return ImageManager.iconWidth * this.getScaleX();
     };
-
-    //=============================================================================
-    // Window_BattleStatus
-    //  味方の残りターン数を表示します。
-    //=============================================================================
-    if (param.ShowActorTurnCount) {
-        var _Window_BattleStatus_drawActorIcons      = Window_BattleStatus.prototype.drawActorIcons;
-        Window_BattleStatus.prototype.drawActorIcons = function(actor, x, y, width) {
-            this._drawIconIndexList = [];
-            _Window_BattleStatus_drawActorIcons.apply(this, arguments);
-            if (this.areaManager) {
-                this.drawActorIconsTurnForBmsp(actor);
-            } else {
-                this.drawActorIconsTurn(actor, x, y);
-            }
-        };
-
-        Window_BattleStatus.prototype.drawActorIconsTurn = function(actor, x, y) {
-            var turns              = actor.getAllTurns();
-            this.contents.fontSize = param.FontSize;
-            for (var i = 0; i < this._drawIconIndexList.length; i++) {
-                if (!param.IconIndexWithoutShowTurns.contains(this._drawIconIndexList[i])) {
-                    var iconX = x + Window_Base._iconWidth * i;
-                    var iconY = y + 2;
-                    this.drawText(turns[i], iconX, iconY, Window_Base._iconWidth, 'right');
-                }
-            }
-            this.resetFontSettings();
-            this._drawIconIndexList = undefined;
-        };
-
-        Window_BattleStatus.prototype.drawActorIconsTurnForBmsp = function(actor) {
-            var turns       = actor.getAllTurns();
-            var areaName    = 'stateIcons_actor' + actor.actorId();
-            var area        = this.areaManager.getArea(areaName);
-            var pw          = Window_Base._iconWidth;
-            var ph          = Window_Base._iconHeight;
-            var column      = Math.floor(144 / pw);
-            var icons       = actor.allIcons();
-            var panelHeader = 'stateIcons' + icons.join('-') + '_';
-            for (var i = 0; i < turns.length; i++) {
-                var panelName = panelHeader + Math.floor(i / column);
-                var panel      = area.getPanel(panelName);
-                panel.bitmap.fontSize = param.FontSize;
-                panel.bitmap.drawText(String(turns[i]), pw * (i % column), 0, pw, ph, 'right');
-                area.removePanel(panelName, true);
-            }
-            area.lazyCommit();
-            this._drawIconIndexList = undefined;
-        };
-
-        var _Window_BattleStatus_drawIcon      = Window_BattleStatus.prototype.drawIcon;
-        Window_BattleStatus.prototype.drawIcon = function(iconIndex, x, y) {
-            _Window_BattleStatus_drawIcon.apply(this, arguments);
-            if (this._drawIconIndexList !== undefined) {
-                this._drawIconIndexList.push(iconIndex);
-            }
-        };
-
-        if (typeof Battle_Hud !== 'undefined') {
-            var _Battle_Hud_create_states      = Battle_Hud.prototype.create_states;
-            Battle_Hud.prototype.create_states = function() {
-                if (String(Moghunter.bhud_states_visible) !== 'true') {
-                    return;
-                }
-                this.removeChild(this._state_icon_turn);
-                if (!this._battler) {
-                    return;
-                }
-                this._state_icon_turn                 = new Sprite(new Bitmap(Window_Base._iconWidth, Window_Base._iconHeight));
-                this._state_icon_turn.x               = this._pos_x + Moghunter.bhud_states_pos_x;
-                this._state_icon_turn.y               = this._pos_y + Moghunter.bhud_states_pos_y;
-                this._state_icon_turn.bitmap.fontSize = param.FontSize;
-                _Battle_Hud_create_states.apply(this, arguments);
-                this.addChild(this._state_icon_turn);
-            };
-
-            var _Battle_Hud_refresh_states      = Battle_Hud.prototype.refresh_states;
-            Battle_Hud.prototype.refresh_states = function() {
-                var turn = this._battler.getAllTurns()[this._states_data[1]];
-                _Battle_Hud_refresh_states.apply(this, arguments);
-                this._state_icon_turn.bitmap.clear();
-                if (turn && !param.IconIndexWithoutShowTurns.contains(this._states_data[0])) {
-                    this._state_icon_turn.bitmap.drawText(turn, 0, 0,
-                        Window_Base._iconWidth, Window_Base._iconHeight, 'right');
-                }
-            };
-
-            var _Battle_Hud_refresh_states2 = Battle_Hud.prototype.refresh_states2;
-            Battle_Hud.prototype.refresh_states2 = function() {
-                _Battle_Hud_refresh_states2.apply(this, arguments);
-                if (!this._stateIconTruns) {
-                    this._stateIconTruns = [];
-                }
-                for (var i = 0; i < this._stateIconTruns.length; i++){
-                    this._state_icon.removeChild(this._stateIconTruns[i]);
-                }
-                var maxStateLength = Math.min(Math.max(this._battler.allIcons().length, 0), Moghunter.bhud_statesMax);
-                var turns = this._battler.getAllTurns();
-                for (i = 0; i < maxStateLength; i++){
-                    var sprite = this.createStateTurnSprite(i);
-                    this.setStateTurnSpritePosition(i);
-                    sprite.bitmap.clear();
-                    var index = this._battler.allIcons()[i];
-                    if (index && !param.IconIndexWithoutShowTurns.contains(index)) {
-                        sprite.bitmap.drawText(turns[i], 0, 0,
-                            Window_Base._iconWidth, Window_Base._iconHeight, 'right');
-                    }
-                }
-            };
-
-            Battle_Hud.prototype.createStateTurnSprite = function(index) {
-                var sprite = new Sprite();
-                var w = Window_Base._iconWidth;
-                sprite.bitmap = new Bitmap(w, w);
-                sprite.bitmap.fontSize = param.FontSize;
-                this._stateIconTruns[index] = sprite;
-                this._state_icon.addChild(sprite);
-                return sprite;
-            };
-
-            Battle_Hud.prototype.setStateTurnSpritePosition = function(index) {
-                var sprite = this._stateIconTruns[index];
-                var w = Window_Base._iconWidth;
-                var align = Moghunter.bhud_statesAlign;
-                if (align === 1) {
-                    sprite.x = -((w + 4) * index);
-                } else if (align === 2) {
-                    sprite.y = (w + 4) * index;
-                } else if (align === 3) {
-                    sprite.y = -((w + 4) * index);
-                } else {
-                    sprite.x = (w + 4) * index;
-                }
-            };
-        }
-    }
 })();
 
