@@ -104,10 +104,10 @@
  * # アイテムの累計購入回数(まとめ買いは1回でカウント)
  * $gameParty.getItemBuyingRecord().getTradeCount();
  *
- * # ID[1]のアイテムの累計購入金額
+ * # ID[1]の武器の累計購入金額
  * $gameParty.getWeaponBuyingRecord().getUseGoldSum(1);
  *
- * # ID[2]のアイテムの累計購入個数
+ * # ID[2]の武器の累計購入個数
  * $gameParty.getWeaponBuyingRecord().getAmountSum(2);
  *
  * # 武器の累計購入回数(まとめ買いは1回でカウント)
@@ -132,10 +132,10 @@
  * # アイテムの累計売却回数(まとめ買いは1回でカウント)
  * $gameParty.getItemSellingRecord().getTradeCount();
  *
- * # ID[1]のアイテムの累計売却金額
+ * # ID[1]の武器の累計売却金額
  * $gameParty.getWeaponSellingRecord().getUseGoldSum(1);
  *
- * # ID[2]のアイテムの累計売却個数
+ * # ID[2]の武器の累計売却個数
  * $gameParty.getWeaponSellingRecord().getAmountSum(2);
  *
  * # 武器の累計売却回数(まとめ買いは1回でカウント)
