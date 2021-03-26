@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2021/03/27 通常のロード時はイベントの消去状態を復元しないよう修正
 // 1.1.1 2020/10/11 AnimationMv.jsと組み合わせたとき、戦闘テストの敵グループが正常に選択されない競合を修正
 // 1.1.0 2020/09/26 プロジェクトフォルダを開くショートカットコマンドを追加
 // 1.0.5 2020/09/13 戦闘強制勝利のコマンドが機能しない問題を修正
@@ -1057,6 +1058,14 @@ function Controller_NwJs() {
     };
     Scene_Boot.prototype.reloadMapIfUpdated = Scene_Load.prototype.reloadMapIfUpdated;
 
+    const _Scene_Load_reloadMapIfUpdated = Scene_Load.prototype.reloadMapIfUpdated;
+    Scene_Load.prototype.reloadMapIfUpdated = function() {
+        _Scene_Load_reloadMapIfUpdated.apply(this, arguments);
+        if ($gameSystem.versionId() !== $dataSystem.versionId) {
+            $gameMap.clearEventErase();
+        }
+    };
+
     //=============================================================================
     // Window_Message
     //  メッセージの高速化を提供します。
@@ -1088,7 +1097,7 @@ function Controller_NwJs() {
         if (this._eraseEvents && $gamePlayer.isNeedMapReload()) {
             this.restoreEventErase();
         } else {
-            this._eraseEvents = [];
+            this.clearEventErase();
         }
     };
 
@@ -1096,6 +1105,10 @@ function Controller_NwJs() {
         this._eraseEvents.forEach(eventId => {
             this._events[eventId].erase();
         });
+    };
+
+    Game_Map.prototype.clearEventErase = function() {
+        this._eraseEvents = [];
     };
 
     Game_Player.prototype.isNeedMapReload = function() {
