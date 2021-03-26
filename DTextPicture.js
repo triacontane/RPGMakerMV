@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.2 2021/03/27 文字列を太字にする機能とイタリック体にする機能が正常に動作していなかった問題を修正
 // 2.2.1 2021/02/08 色調変更したピクチャを消去し、同一の番号で動的文字列ピクチャを作成したとき文字列ピクチャが表示されない場合がある問題を修正
 // 2.2.0 2021/01/22 複数行の動的文字列を中央揃え、右揃えにできる機能を追加
 // 2.1.0 2021/01/10 動的文字列のフォントサイズを指定できる機能を追加
@@ -391,6 +392,23 @@
             case 'OW':
                 this.contents.outlineWidth = this.obtainEscapeParam(textState);
                 break;
+            case 'F':
+                this.changeFontStyle(this.obtainEscapeParamString(textState));
+                break;
+        }
+    };
+
+    Window_Base.prototype.changeFontStyle = function(value) {
+        switch (value.toUpperCase()) {
+            case 'B':
+                this.contents.fontBold = true;
+                break;
+            case 'I':
+                this.contents.fontItalic = true;
+                break;
+            default:
+                this.contents.fontItalic = false;
+                this.contents.fontBold   = false;
         }
     };
 
