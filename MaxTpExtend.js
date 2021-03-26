@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2021/03/27 タグを付けてメニューを開くとエラーになっていた問題を修正
  1.0.1 2021/02/06 MZ向けにヘルプのアノテーションを微修正
  1.0.0 2020/05/08 初版
 ----------------------------------------------------------------------------
@@ -18,6 +19,7 @@
  * @plugindesc MaxTpExtendPlugin
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MaxTpExtend.js
+ * @base PluginCommonBase
  * @author triacontane
  *
  * @help MaxTpExtend.js
@@ -39,6 +41,7 @@
  * @plugindesc 最大TP拡張プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MaxTpExtend.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @help MaxTpExtend.js
@@ -52,7 +55,10 @@
  * 負の値も設定できます。実際のTPは基本値の100に対して指定した
  * メモ欄全ての値が合算されます。制御文字\v[n]で変数の値を参照できます。
  *　
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -64,52 +70,17 @@
     'use strict';
 
     /**
-     * Get database meta information.
-     * @param object Database item
-     * @param tagName Meta name
-     * @returns {String} meta value
-     */
-    var getMetaValue = function(object, tagName) {
-        return object.meta.hasOwnProperty(tagName) ? convertEscapeCharacters(object.meta[tagName]) : null;
-    };
-
-    /**
-     * Get database meta information.(for multi language)
-     * @param object Database item
-     * @param names Meta name array (for multi language)
-     * @returns {String} meta value
-     */
-    var getMetaValues = function(object, names) {
-        var metaValue;
-        names.some(function(name) {
-            metaValue = getMetaValue(object, name);
-            return metaValue !== null;
-        });
-        return metaValue;
-    };
-
-    /**
-     * Convert escape characters.(require any window object)
-     * @param text Target text
-     * @returns {String} Converted text
-     */
-    var convertEscapeCharacters = function(text) {
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
-    };
-
-    /**
      * Game_BattlerBase
      * TPの最大値をメモ欄から取得します。
      */
-    var _Game_BattlerBase_maxTp = Game_BattlerBase.prototype.maxTp;
+    const _Game_BattlerBase_maxTp = Game_BattlerBase.prototype.maxTp;
     Game_BattlerBase.prototype.maxTp = function() {
         return _Game_BattlerBase_maxTp.apply(this, arguments) + this.findMaxTpExtend();
     };
 
     Game_BattlerBase.prototype.findMaxTpExtend = function() {
         return this.traitObjects().reduce(function(tp, traitObj) {
-            var meta = getMetaValues(traitObj, ['最大TP', 'MaxTp']);
+            const meta = PluginManagerEx.findMetaValue(traitObj, ['最大TP', 'MaxTp']);
             if (meta) {
                 tp = tp + parseInt(meta);
             }
