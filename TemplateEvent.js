@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.4 2021/03/27 テンプレートIDの指定に制御文字\v[n]が使えなくなっていた問題を修正
 // 2.1.3 2020/03/16 プラグインパラメータ『上書き対象項目』の初期値を設定
 // 2.1.2 2019/06/09 EventReSpawn.jsで生成したテンプレートイベントがgetTemplateIdを取得できない問題を修正
 // 2.1.1 2019/04/14 2.1.0の機能で、統合ではなく上書きできる機能を追加
@@ -754,7 +755,7 @@ var $dataTemplateEvents = null;
         if (!value) {
             return 0;
         }
-        var templateId = getArgNumber(value, 0, $dataTemplateEvents.length - 1);
+        var templateId = getArgNumber(convertEscapeCharacters(value), 0, $dataTemplateEvents.length - 1);
         if (!templateId) {
             var template = DataManager.searchDataItem($dataTemplateEvents, 'name', value);
             if (template) {
