@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2021/03/27 フロントビューの場合も位置調整ができるよう修正
 // 2.4.0 2021/03/26 MZで動作するよう全面的に修正
 // 2.3.1 2021/03/09 アクターのステートアイコンの拡大率がアクター自身の拡大率に影響を受けないよう修正
 // 2.3.0 2021/01/24 敵キャラのリングアイコン表示位置を調整できる機能を追加
@@ -377,14 +378,38 @@ function Sprite_StateIconChild() {
         });
     };
 
+    Game_Battler.prototype.findRingStateX = function() {
+        return 0;
+    };
+
+    Game_Battler.prototype.findRingStateY = function() {
+        return 0;
+    };
+
+    Game_Enemy.prototype.findRingStateX = function() {
+        const x = PluginManagerEx.findMetaValue(this.enemy(), 'RingStateX');
+        return x || param.EnemyRingIconX || 0;
+    };
+
+    Game_Enemy.prototype.findRingStateY = function() {
+        const y = PluginManagerEx.findMetaValue(this.enemy(), 'RingStateY');
+        return y || param.EnemyRingIconY || 0;
+    };
+
+    Game_Actor.prototype.findRingStateX = function() {
+        return param.ActorRingIconX || 0;
+    };
+
+    Game_Actor.prototype.findRingStateY = function() {
+        return param.ActorRingIconY || 0;
+    };
+
     if (param.ActorRingIcon) {
         const _Sprite_Actor_createStateSprite = Sprite_Actor.prototype.createStateSprite;
         Sprite_Actor.prototype.createStateSprite = function() {
             _Sprite_Actor_createStateSprite.apply(this, arguments);
             this._stateSprite = new Sprite_StateIcon();
             this._stateSprite.setActorRing();
-            this._stateSprite.x = param.ActorRingIconX;
-            this._stateSprite.y = param.ActorRingIconY - 64;
             this._mainSprite.addChild(this._stateSprite);
         };
 
@@ -398,30 +423,17 @@ function Sprite_StateIconChild() {
                 this._stateSprite.scale.y = 1.0 / this.scale.y;
             }
         }
+
+        const _Window_StatusBase_placeStateIcon = Window_StatusBase.prototype.placeStateIcon;
+        Window_StatusBase.prototype.placeStateIcon = function(actor, x, y) {
+            _Window_StatusBase_placeStateIcon.apply(this, arguments);
+            const key = "actor%1-stateIcon".format(actor.actorId());
+            const sprite = this._additionalSprites[key];
+            if (sprite && sprite.hasRingState()) {
+                this.addChild(sprite);
+            }
+        }
     }
-
-    const _Sprite_Enemy_updateStateSprite = Sprite_Enemy.prototype.updateStateSprite;
-    Sprite_Enemy.prototype.updateStateSprite = function() {
-        _Sprite_Enemy_updateStateSprite.apply(this, arguments);
-        this._stateIconSprite.y += this.findRingStateY();
-        this._stateIconSprite.x = this.findRingStateX();
-    };
-
-    Sprite_Enemy.prototype.findRingStateX = function() {
-        if (this._enemy && this._enemy.enemy().meta.RingStateX) {
-            return parseInt(this._enemy.enemy().meta.RingStateX);
-        } else {
-            return param.EnemyRingIconX || 0;
-        }
-    };
-
-    Sprite_Enemy.prototype.findRingStateY = function() {
-        if (this._enemy && this._enemy.enemy().meta.RingStateY) {
-            return parseInt(this._enemy.enemy().meta.RingStateY);
-        } else {
-            return param.EnemyRingIconY || 0;
-        }
-    };
 
     //=============================================================================
     // Sprite_StateIcon
@@ -436,7 +448,7 @@ function Sprite_StateIconChild() {
 
     const _Sprite_StateIcon_update      = Sprite_StateIcon.prototype.update;
     Sprite_StateIcon.prototype.update = function() {
-        if (this._battler && !this.hasRingState()) {
+        if (!this.hasRingState()) {
             _Sprite_StateIcon_update.apply(this, arguments);
             return;
         }
@@ -459,6 +471,8 @@ function Sprite_StateIconChild() {
             this._icons = icons;
             this.setupRingIcon();
         }
+        this.x = this._battler.findRingStateX();
+        this.y = this._battler.findRingStateY();
         if (this._iconsSprites.length > param.LineViewLimit && param.LineViewLimit > 0) {
             this.updateRingPosition();
         } else {
@@ -540,7 +554,7 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIcon.prototype.hasRingState = function() {
-        return this._battler.isEnemy() || this._actorRing || !$gameSystem.isSideView();
+        return this._battler && (this._battler.isEnemy() || this._actorRing || !$gameSystem.isSideView());
     };
 
     //=============================================================================
