@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.2 2021/03/27 2.4.1の修正で複数メンバーがいる場合に表示位置が重なってしまう問題を修正
 // 2.4.1 2021/03/27 フロントビューの場合も位置調整ができるよう修正
 // 2.4.0 2021/03/26 MZで動作するよう全面的に修正
 // 2.3.1 2021/03/09 アクターのステートアイコンの拡大率がアクター自身の拡大率に影響を受けないよう修正
@@ -430,6 +431,7 @@ function Sprite_StateIconChild() {
             const key = "actor%1-stateIcon".format(actor.actorId());
             const sprite = this._additionalSprites[key];
             if (sprite && sprite.hasRingState()) {
+                sprite.saveOriginalPosition();
                 this.addChild(sprite);
             }
         }
@@ -471,8 +473,8 @@ function Sprite_StateIconChild() {
             this._icons = icons;
             this.setupRingIcon();
         }
-        this.x = this._battler.findRingStateX();
-        this.y = this._battler.findRingStateY();
+        this.x = (this._baseX || 0) + this._battler.findRingStateX();
+        this.y = (this._baseY || 0) + this._battler.findRingStateY();
         if (this._iconsSprites.length > param.LineViewLimit && param.LineViewLimit > 0) {
             this.updateRingPosition();
         } else {
@@ -555,6 +557,11 @@ function Sprite_StateIconChild() {
 
     Sprite_StateIcon.prototype.hasRingState = function() {
         return this._battler && (this._battler.isEnemy() || this._actorRing || !$gameSystem.isSideView());
+    };
+
+    Sprite_StateIcon.prototype.saveOriginalPosition = function() {
+        this._baseX = this.x;
+        this._baseY = this.y;
     };
 
     //=============================================================================
