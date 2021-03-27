@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/03/28 MZで動作するよう全面的に再構築
 // 1.5.0 2020/05/23 混乱スキルの指定で、最後に使用したスキルを選択できる機能を追加
 // 1.4.1 2020/04/22 混乱スキルのターゲットが「敵n体ランダム」のとき全体攻撃になってしまう問題を修正
 // 1.4.0 2017/10/07 混乱スキルのターゲット選択方法にラストターゲット(直前に選択した対象)を追加しました。
@@ -21,125 +22,53 @@
 //=============================================================================
 
 /*:
- * @plugindesc Confusion Extend Plugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc ConfusionExtend
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ConfusionExtend.js
+ * @base PluginCommonBase
+ * @author triacontane
  *
- * @param TargetFriendSkill
- * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。
- * @default false
- * @type boolean
+ * @param List
+ * @desc This is a configuration list of confusion states for which you want to extend the specification.
+ * @default []
+ * @type struct<Record>[]
  *
- * @help 混乱系（行動制約のプルダウンの選択値が「1」～「3」）ステートの
- * 指定内容を以下の通り拡張します。
- * ・通常攻撃ではなく指定したスキル（複数指定可能）を勝手に使用する。
- * ・スキルが全て使用できない場合に使用する予備スキルも指定可能。
- * ・バトラーが元々持っているスキルを勝手に使用する。
+ * @help ConfusionExtend.js
  *
- * 誰をターゲットにするかは、ステートの行動制約の種類と使用スキルの効果範囲
- * およびメモ欄で設定した値によって決まります。
+ * The confusion system (action constraint pull-down selection value of "1" to "3")
+ * state will be expanded to allow you to specify the skill used and target in detail.
+ * The settings are done from the plugin parameters.
  *
- * ・スキルの効果範囲が「使用者」の場合
- * 行動制約の種類とは無関係に、対象は必ず「使用者」になります。
+ * Who to target is determined by the state's action constraint type,
+ * the skill's effect range, and the target setting specified in the parameter.
  *
- * ・行動制約が「敵を攻撃」の場合
- * 対象は「敵単体」(メモ欄指定対象もしくはランダム)か「敵全体」になります。
- *
- * ・行動制約が「誰かを攻撃」の場合
- * 対象は「敵単体」(メモ欄指定対象もしくはランダム)か「敵全体」もしくは
- * 「味方単体」(メモ欄指定対象もしくはランダム)か「味方全体」になります。
- *
- * ・行動制約が「味方を攻撃」の場合
- * 対象は「味方単体」(メモ欄指定対象もしくはランダム)か「味方全体」になります。
- *
- * 1. ステートのデータベースで行動制作のプルダウンを指定してください。
- * ・敵を攻撃
- * ・誰かを攻撃
- * ・味方を攻撃
- *
- * 2. ステートのメモ欄を以下の通り指定してください。
- * <CEスキル1:3>      # 通常攻撃の代わりにID[3..5]のスキルが使用されます。
- * <CEスキル2:4>      # 4番目以降も同様に指定可能です。
- * <CEスキル3:5>      # -1を指定すると最後に使用したスキルを使います。
- * <CE使用可能スキル> # 使用可能なスキルが全て候補になります。
- * <CE予備スキル:6>   # 指定されたスキルがMP不足等の理由ですべて
- *                      使用できない場合、ID[6]のスキルが使用されます。
- * <CEターゲット:0>   # 単体スキルの対象を[0]番目のキャラクターに指定します。
- *                      メモ欄の指定がない場合はランダムで決定されます。
- *                      -1を指定するとラストターゲットになります。
- *
- * 使用可能スキルを指定する際、使わせたくないスキルを別途指定できます。
- * <CE使用可能スキル:1,2,3> # 使用可能スキルのうち[1][2][3]を候補から外します。
- *
- * ・追加機能
- * 裏切り機能を有効にすると対象のステートが有効になっているバトラーが
- * 敵や混乱スキルの攻撃対象から外れ、さらにそのバトラー以外が戦闘不能になると
- * 全滅扱いになります。
- *
- * 特徴を有するデータベースのメモ欄に、以下の通り記述してください。
- * <CE裏切り>    # 対象バトラーが一時的に味方から外れます。
- * <CEBetrayal>  # 同上
- *
- * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc 混乱ステート拡張プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ConfusionExtend.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @param 味方対象スキルの対象
- * @desc ONにすると行動制約が「味方を攻撃」のときに味方対象のスキルを使用すると、敵を対象にします。
- * @default false
- * @type boolean
+ * @param List
+ * @text 混乱ステートリスト
+ * @desc 仕様を拡張したい混乱ステートの設定リストです。同一ステートの行は複数定義できません。
+ * @default []
+ * @type struct<Record>[]
  *
- * @help 混乱系（行動制約のプルダウンの選択値が「1」～「3」）ステートの
- * 指定内容を拡張し、通常攻撃ではなくスキル（複数指定可能）を指定したり
- * さらにそれらのスキルがすべて使用できない場合に使用する予備スキルも
- * 指定できます。
+ * @help ConfusionExtend.js
  *
- * 誰をターゲットにするかは、ステートの行動制約の種類と使用スキルの効果範囲
- * およびメモ欄で設定した値によって決まります。
+ * 混乱系（行動制約のプルダウンの選択値が「1」～「3」）ステートを拡張し、
+ * 使用スキルやターゲットを細かく指定できるようになります。
+ * 設定はプラグインパラメータから行います。
  *
- * ・スキルの効果範囲が「使用者」の場合
- * 行動制約の種類とは無関係に、対象は必ず「使用者」になります。
+ * 誰をターゲットにするかは、ステートの行動制約の種類とスキルの効果範囲
+ * およびパラメータで指定したターゲット設定によって決まります。
  *
- * ・行動制約が「敵を攻撃」の場合
- * 対象は「敵単体」(メモ欄指定対象もしくはランダム)か「敵全体」になります。
- *
- * ・行動制約が「誰かを攻撃」の場合
- * 対象は「敵単体」(メモ欄指定対象もしくはランダム)か「敵全体」もしくは
- * 「味方単体」(メモ欄指定対象もしくはランダム)か「味方全体」になります。
- *
- * ・行動制約が「味方を攻撃」の場合
- * 対象は「味方単体」(メモ欄指定対象もしくはランダム)か「味方全体」になります。
- *
- * 1. ステートのデータベースで行動制作のプルダウンを指定してください。
- * ・敵を攻撃
- * ・誰かを攻撃
- * ・味方を攻撃
- *
- * 2. ステートのメモ欄を以下の通り指定してください。
- * <CEスキル1:3>      # 通常攻撃の代わりにID[3..5]のスキルが使用されます。
- * <CEスキル2:4>      # 4番目以降も同様に指定可能です。
- * <CEスキル3:5>      # -1を指定すると最後に使用したスキルを使います。
- * <CE使用可能スキル> # 使用可能なスキルが全て候補になります。
- * <CE予備スキル:6>   # 指定されたスキルがMP不足等の理由ですべて
- *                      使用できない場合、ID[6]のスキルが使用されます。
- * <CEターゲット:0>   # 単体スキルの対象を[0]番目のキャラクターに指定します。
- *                      メモ欄の指定がない場合はランダムで決定されます。
- *                      -1を指定するとラストターゲットになります。
- *
- * 使用可能スキルを指定する際、使わせたくないスキルを別途指定できます。
- * <CE使用可能スキル:1,2,3> # 使用可能スキルのうち[1][2][3]を候補から外します。
- *
- * ・追加機能
- * 裏切り機能を有効にすると対象のステートが有効になっているバトラーが
- * 敵や混乱スキルの攻撃対象から外れ、さらにそのバトラー以外が戦闘不能になると
- * 全滅扱いになります。
- *
- * 特徴を有するデータベースのメモ欄に、以下の通り記述してください。
- * <CE裏切り>    # 対象バトラーが一時的に味方から外れます。
- * <CEBetrayal>  # 同上
- *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -147,84 +76,84 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+/*~struct~Record:
+ *
+ * @param StateId
+ * @text ステートID
+ * @desc 対象のステートです。行動制約が設定されたステートを指定してください。
+ * @default 0
+ * @type state
+ *
+ * @param SkillList
+ * @text スキルリスト
+ * @desc 混乱時に使用するスキルのリストです。
+ * @default []
+ * @type skill[]
+ *
+ * @param UsableSkill
+ * @text 使用可能スキル
+ * @desc 有効にすると持っているスキルを使用候補に追加します。
+ * @default false
+ * @type boolean
+ *
+ * @param LastSkill
+ * @text 直前スキル
+ * @desc 有効にすると直前に誰かが使用したスキルを使用候補に追加します。
+ * @default false
+ * @type boolean
+ *
+ * @param SkillFilterList
+ * @text 対象外スキルリスト
+ * @desc 指定したスキルを使用候補から除外します。
+ * @default []
+ * @type skill[]
+ *
+ * @param SpareSkill
+ * @text 予備スキル
+ * @desc 使用可能なスキルがなかった場合に代わりに使用されるスキルです。
+ * @default 0
+ * @type skill
+ *
+ * @param TargetActorId
+ * @text 対象アクター
+ * @desc 指定されたIDのアクターをターゲットにします。もともとの対象がアクター側でない場合、無効です。
+ * @default 0
+ * @type actor
+ *
+ * @param TargetEnemyId
+ * @text 対象敵キャラ
+ * @desc 指定されたIDの敵キャラをターゲットにします。もともとの対象が敵キャラ側でない場合、無効です。
+ * @default 0
+ * @type enemy
+ *
+ * @param TargetIndex
+ * @text 対象インデックス
+ * @desc 指定されたインデックスのアクターもしくは敵キャラをターゲットにします。(先頭:1)
+ * @default 0
+ * @type number
+ *
+ * @param LastTarget
+ * @text 直前ターゲット
+ * @desc 有効にすると直前にターゲットされたアクターもしくは敵キャラをターゲットにします。
+ * @default false
+ * @type boolean
+ */
+
+(()=> {
     'use strict';
-    var pluginName    = 'ConfusionExtend';
-    var metaTagPrefix = 'CE';
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = (getParamOther(paramNames) || '').toUpperCase();
-        return value === 'ON' || value === 'TRUE';
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
-    };
-
-    var getArgArrayNumber = function(args, min, max) {
-        var values = getArgArrayString(args, false);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        for (var i = 0; i < values.length; i++) {
-            values[i] = (parseFloat(values[i], 10) || 0).clamp(min, max);
-        }
-        return values;
-    };
-
-    var getArgArrayString = function(args) {
-        var values = args.split(',');
-        for (var i = 0; i < values.length; i++) {
-            values[i] = values[i].trim();
-        }
-        return values;
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramTargetFriendSkill = getParamBoolean(['TargetFriendSkill', '味方対象スキルの対象']);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Game_BattlerBase
     //  行動制約が有効なステートデータを取得します。
     //=============================================================================
     Game_BattlerBase.prototype.getRestrictStates = function() {
-        var restriction = this.restriction();
-        if (restriction === 0 || restriction >= 4) return [];
-        return this.states().filter(function(state) {
-            return state.restriction === restriction;
-        });
+        const restriction = this.restriction();
+        if (restriction === 0 || restriction >= 4) {
+            return [];
+        }
+        return this.states().filter(state => state.restriction === restriction);
     };
 
     Game_BattlerBase.prototype.getRestrictState = function() {
@@ -235,30 +164,8 @@
         return stateA.priority - stateB.priority;
     };
 
-    Game_BattlerBase.prototype.isBetrayer = function() {
-        return this.traitObjects().some(function(traitObject) {
-            return getMetaValues(traitObject, ['裏切り', 'Betrayal']);
-        });
-    };
-
     Game_BattlerBase.prototype.getUsableSkillIdList = function() {
         return [this.attackSkillId(), this.guardSkillId()];
-    };
-
-    Game_BattlerBase.prototype.getLastUsedSkillId = function() {
-        return this._lastUsedSkillId;
-    };
-
-    Game_BattlerBase.prototype.setLastUsedSkillId = function(id) {
-        this._lastUsedSkillId = id;
-    };
-
-    //=============================================================================
-    // Game_Battler
-    //  ラストターゲットを取得します。
-    //=============================================================================
-    Game_Battler.prototype.getLastTargetIndex = function() {
-        return this._lastTargetIndex;
     };
 
     //=============================================================================
@@ -266,9 +173,7 @@
     //  使用可能なスキル一覧を取得します。
     //=============================================================================
     Game_Actor.prototype.getUsableSkillIdList = function() {
-        var skillIds = this.usableSkills().map(function(skill) {
-            return skill.id;
-        });
+        const skillIds = this.usableSkills().map(skill => skill.id);
         return Game_BattlerBase.prototype.getUsableSkillIdList.call(this).concat(skillIds);
     };
 
@@ -277,177 +182,117 @@
     //  使用可能なスキル一覧を取得します。
     //=============================================================================
     Game_Enemy.prototype.getUsableSkillIdList = function() {
-        var actionList = this.enemy().actions.filter(function(a) {
-            return this.isActionValid(a);
-        }, this);
-        return actionList.map(function(action) {
-            return action.skillId;
-        });
-    };
-
-    //=============================================================================
-    // Game_Unit
-    //  裏切り機能を追加します。
-    //=============================================================================
-    var _Game_Unit_aliveMembers      = Game_Unit.prototype.aliveMembers;
-    Game_Unit.prototype.aliveMembers = function() {
-        var members = _Game_Unit_aliveMembers.apply(this, arguments);
-        return members.filter(function(member) {
-            return !member.isBetrayer();
-        });
+        return this.enemy().actions
+            .filter(a => this.isActionValid(a))
+            .map(a => a.skillId);
     };
 
     //=============================================================================
     // Game_Action
     //  混乱時のスキルを別途設定します。
     //=============================================================================
-    var _Game_Action_apply = Game_Action.prototype.apply;
-    Game_Action.prototype.apply = function(target) {
-        if (this.isSkill()) {
-            this.subject().setLastUsedSkillId(this.item().id);
-        }
-        _Game_Action_apply.apply(this, arguments);
-    };
-
-    var _Game_Action_setConfusion      = Game_Action.prototype.setConfusion;
+    const _Game_Action_setConfusion      = Game_Action.prototype.setConfusion;
     Game_Action.prototype.setConfusion = function() {
         _Game_Action_setConfusion.apply(this, arguments);
-        var skillIds = this.getConfusionSkills();
-        if (!skillIds) return;
-        skillIds = skillIds.filter(function(skillId) {
-            return this.subject().canUse($dataSkills[skillId]);
-        }.bind(this));
+        this.setupConfusionExtendSkill();
+    };
+
+    Game_Action.prototype.findConfusionExtend = function() {
+        const state = this.subject().getRestrictState();
+        if (!state) {
+            return null;
+        }
+        return param.List.filter(item => item.StateId === state.id)[0];
+    };
+
+    Game_Action.prototype.setupConfusionExtendSkill = function() {
+        const extend = this.findConfusionExtend();
+        if (!extend) {
+            return;
+        }
+        let skillIds = extend.SkillList.clone() || [];
+        if (extend.UsableSkill) {
+            skillIds = skillIds.concat(this.subject().getUsableSkillIdList());
+        }
+        if (extend.LastSkill) {
+            const lastSkill = $gameTemp.lastActionData(0);
+            if (lastSkill) {
+                skillIds.push(lastSkill);
+            }
+        }
+        if (extend.SkillFilterList) {
+            skillIds = skillIds.filter(id => !extend.SkillFilterList.includes(id));
+        }
+        skillIds = skillIds.filter(skillId => this.subject().canUse($dataSkills[skillId]));
         if (skillIds.length > 0) {
-            this.setConfusionSkill(skillIds);
-        } else {
-            this.setConfusionSpareSkill();
+            const skillId = skillIds[Math.randomInt(skillIds.length)];
+            this.setSkill(skillId);
+        } else if (extend.SpareSkill) {
+            this.setSkill(extend.SpareSkill);
         }
     };
 
-    Game_Action.prototype.getConfusionSkills = function() {
-        var state = this.getRestrictState();
-        if (!state) return null;
-        var skillIds = [], i = 1;
-        while (i) {
-            var metaValue = getMetaValues(state, ['スキル' + i, 'Skill' + i]);
-            if (metaValue) {
-                var id = getArgNumber(metaValue, -1);
-                if (id <= 0) {
-                    id = this.findSubjectLastBattleSkill();
-                }
-                skillIds.push(id);
-                i++;
-            } else {
-                i = (i > 10 ? null : i + 1);
-            }
-        }
-        return skillIds.concat(this.getConfusionUsableSkills(state));
-    };
-
-    Game_Action.prototype.findSubjectLastBattleSkill = function() {
-        return this.subject().getLastUsedSkillId() || 1;
-    };
-
-    Game_Action.prototype.getConfusionUsableSkills = function(state) {
-        var usableSkillInclude = getMetaValues(state, ['使用可能スキル', 'UsableSkill']);
-        var skillList          = [];
-        if (usableSkillInclude) {
-            skillList = this.subject().getUsableSkillIdList();
-            if (usableSkillInclude !== true) {
-                skillList = this.filterConfusionUsableSkills(skillList, usableSkillInclude);
-            }
-        }
-        return skillList;
-    };
-
-    Game_Action.prototype.filterConfusionUsableSkills = function(skillList, usableSkillInclude) {
-        var filterList = getArgArrayNumber(usableSkillInclude);
-        skillList      = skillList.filter(function(skillId) {
-            return !filterList.contains(skillId);
-        });
-        return skillList;
-    };
-
-    Game_Action.prototype.getRestrictState = function() {
-        return this.subject().getRestrictState();
-    };
-
-    Game_Action.prototype.isExistConfusionSkill = function() {
-        var skillIds = this.getConfusionSkills();
-        return skillIds && skillIds.length > 0;
-    };
-
-    Game_Action.prototype.setConfusionSkill = function(skillIds) {
-        var skillId = skillIds[Math.randomInt(skillIds.length)];
-        this.setSkill(skillId);
-    };
-
-    Game_Action.prototype.setConfusionSpareSkill = function() {
-        var state = this.getRestrictState();
-        var value = getMetaValues(state, ['予備スキル', 'SpareSkill']);
-        if (value) {
-            var skillId = getArgNumber(value, 1);
-            if (this.subject().canUse($dataSkills[skillId])) {
-                this.setSkill(skillId);
-            }
-        }
-    };
-
-    var _Game_Action_repeatTargets      = Game_Action.prototype.repeatTargets;
+    const _Game_Action_repeatTargets      = Game_Action.prototype.repeatTargets;
     Game_Action.prototype.repeatTargets = function(targets) {
-        if (Array.isArray(targets[0])) arguments[0] = targets[0];
+        if (Array.isArray(targets[0])) {
+            arguments[0] = targets[0];
+        }
         return _Game_Action_repeatTargets.apply(this, arguments);
     };
 
-    var _Game_Action_confusionTarget      = Game_Action.prototype.confusionTarget;
+    const _Game_Action_confusionTarget      = Game_Action.prototype.confusionTarget;
     Game_Action.prototype.confusionTarget = function() {
-        var target = _Game_Action_confusionTarget.apply(this, arguments);
-        if (this.isExistConfusionSkill()) {
-            target = this.confusionSkillTarget();
+        const target = _Game_Action_confusionTarget.apply(this, arguments);
+        const extend = this.findConfusionExtend();
+        if (extend) {
+            return this.setupConfusionExtendTarget(target, extend);
         }
         return target;
     };
 
-    Game_Action.prototype.confusionSkillTarget = function() {
-        var state = this.getRestrictState();
-        var value = getMetaValues(state, ['ターゲット', 'Target']);
-        if (value) {
-            var index         = getArgNumber(value, -1);
-            this._targetIndex = (index === -1 ? this.subject().getLastTargetIndex() : index);
-        }
-        if (this.isForUser()) {
-            return this.subject();
-        }
-        return this.isConfusionSkillTargetForFriend() ? this.targetsForConfusionFriends() : this.targetsForOpponents();
+    Game_Action.prototype.setupConfusionExtendTarget = function(preTarget, extend) {
+        const targetUnit = this.isForFriend() ? preTarget.opponentsUnit() : preTarget.friendsUnit();
+        this.setConfusionTarget(targetUnit, extend);
+        return this.targetsForConfusion(targetUnit);
     };
 
-    Game_Action.prototype.targetsForConfusionFriends = function() {
+    Game_Action.prototype.targetsForConfusion = function(unit) {
         if (this.isForRandom()) {
-            var targets = [];
-            var unit = this.friendsUnit();
-            for (var i = 0; i < this.numTargets(); i++) {
-                targets.push(unit.randomTarget());
-            }
-            return targets;
+            return this.randomTargets(unit);
+        } else if (this.isForEveryone()) {
+            return this.targetsForEveryone();
+        } else if (this.isForOpponent()) {
+            return this.targetsForAlive(unit);
+        } else if (this.isForUser()) {
+            return [this.subject()];
+        } else if (this.isForDeadFriend()) {
+            return this.targetsForDead(unit);
+        } else if (this.isForAliveFriend()) {
+            return this.targetsForAlive(unit);
         } else {
-            return this.targetsForFriends();
+            return this.targetsForDeadAndAlive(unit);
         }
     };
 
-    Game_Action.prototype.isConfusionSkillTargetForFriend = function() {
-        switch (this.subject().confusionLevel()) {
-            case 1:
-                return this.isForFriend();
-            case 2:
-                return Math.randomInt(2) === 0;
-            case 3:
-                return !this.isConfusionSkillTargetReverse();
+    Game_Action.prototype.setConfusionTarget = function(targetUnit, extend) {
+        let targets = [];
+        if (extend.TargetActorId && targetUnit === $gameParty) {
+            targets = targetUnit.members().filter(member => member.actorId() === extend.TargetActorId);
+        } else if (extend.TargetEnemyId && targetUnit === $gameTroop) {
+            targets = targetUnit.members().filter(member => member.enemyId() === extend.TargetEnemyId);
         }
-        return false;
-    };
-
-    Game_Action.prototype.isConfusionSkillTargetReverse = function() {
-        return paramTargetFriendSkill && this.isForFriend();
+        if (targets.length > 0) {
+            const target = targets[Math.randomInt(targets.length)];
+            this._targetIndex = targetUnit.members().indexOf(target);
+        } else if (extend.TargetIndex) {
+            this._targetIndex = extend.TargetIndex - 1;
+        } else if (extend.LastTarget) {
+            if (targetUnit === $gameParty) {
+                const actorId = $gameTemp.lastActionData(4);
+                this._targetIndex = targetUnit.members().map(actor => actor.actorId()).indexOf(actorId);
+            } else {
+                this._targetIndex = $gameTemp.lastActionData(5) - 1;
+            }
+        }
     };
 })();
-
