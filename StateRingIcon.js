@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.3 2021/03/28 サイドビュー時にアクターにリングステートを表示すると、重ね合わせ画像が表示されなくなる問題を修正
 // 2.4.2 2021/03/27 2.4.1の修正で複数メンバーがいる場合に表示位置が重なってしまう問題を修正
 // 2.4.1 2021/03/27 フロントビューの場合も位置調整ができるよう修正
 // 2.4.0 2021/03/26 MZで動作するよう全面的に修正
@@ -409,19 +410,25 @@ function Sprite_StateIconChild() {
         const _Sprite_Actor_createStateSprite = Sprite_Actor.prototype.createStateSprite;
         Sprite_Actor.prototype.createStateSprite = function() {
             _Sprite_Actor_createStateSprite.apply(this, arguments);
-            this._stateSprite = new Sprite_StateIcon();
-            this._stateSprite.setActorRing();
-            this._mainSprite.addChild(this._stateSprite);
+            this._stateIconSprite = new Sprite_StateIcon();
+            this._stateIconSprite.setActorRing();
+            this._mainSprite.addChild(this._stateIconSprite);
+        };
+
+        const _Sprite_Actor_setBattler = Sprite_Actor.prototype.setBattler;
+        Sprite_Actor.prototype.setBattler = function(battler) {
+            _Sprite_Actor_setBattler.apply(this, arguments);
+            this._stateIconSprite.setup(battler);
         };
 
         const _Sprite_Actor_update = Sprite_Actor.prototype.update;
         Sprite_Actor.prototype.update = function() {
             _Sprite_Actor_update.apply(this, arguments);
             if (this.scale.x !== 1.0) {
-                this._stateSprite.scale.x = 1.0 / this.scale.x;
+                this._stateIconSprite.scale.x = 1.0 / this.scale.x;
             }
             if (this.scale.y !== 1.0) {
-                this._stateSprite.scale.y = 1.0 / this.scale.y;
+                this._stateIconSprite.scale.y = 1.0 / this.scale.y;
             }
         }
 
