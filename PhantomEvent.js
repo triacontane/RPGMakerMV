@@ -24,6 +24,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PhantomEvent.js
  * @base PluginCommonBase
+ * @orderAfter EventLabel
  * @author トリアコンタン
  *
  * @param invisibleDistance
