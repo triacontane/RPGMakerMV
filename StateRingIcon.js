@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.4 2021/03/28 ターン数が0の場合は表示しないよう修正
 // 2.4.3 2021/03/28 サイドビュー時にアクターにリングステートを表示すると、重ね合わせ画像が表示されなくなる問題を修正
 // 2.4.2 2021/03/27 2.4.1の修正で複数メンバーがいる場合に表示位置が重なってしまう問題を修正
 // 2.4.1 2021/03/27 フロントビューの場合も位置調整ができるよう修正
@@ -614,7 +615,9 @@ function Sprite_StateIconChild() {
         if (param.IconIndexWithoutShowTurns.contains(this._iconIndex)) {
             return;
         }
-        bitmap.drawText(this._turn, 0, 0, bitmap.width, bitmap.height, 'center');
+        if (this._turn > 0) {
+            bitmap.drawText(this._turn, 0, 0, bitmap.width, bitmap.height, 'center');
+        }
     };
 
     Sprite_StateIconChild.prototype.makeTurnSpriteIfNeed = function() {
