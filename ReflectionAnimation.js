@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.0.1 2021/03/28 MVで廃止されたメソッド呼び出しが含まれていた問題を修正
  2.0.0 2020/12/28 MZ向けに実装を修正
  1.1.3 2020/05/24 反射したときのステータスウィンドウへのダメージ反映を、反射エフェクト後に変更
  1.1.2 2020/05/24 魔法攻撃扱いの通常攻撃を反射するとエラーになる問題を修正
@@ -22,6 +23,7 @@
  * @plugindesc 反射アニメーションプラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/blob/mz_master/ReflectionAnimation.js
+ * @base PluginCommonBase
  * @author トリアコンタン
  *
  * @param animationId
@@ -41,7 +43,10 @@
  * 魔法反射が発生した際に魔法反射用のアニメーションを再生します。
  * また、反射された側に攻撃アニメーションを表示します。
  *　
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -51,87 +56,80 @@
 
 (function() {
     'use strict';
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('ReflectionAnimation');
-
-    /**
-     * BattleManager
-     * 魔法反射が有効だった場合のステータス反映を遅らせます。
-     */
-    var _BattleManager_invokeMagicReflection = BattleManager.invokeMagicReflection;
-    BattleManager.invokeMagicReflection = function(subject, target) {
-        _BattleManager_invokeMagicReflection.apply(this, arguments);
-        this._refreshStatusCancel = true;
-    };
-
-    var _BattleManager_refreshStatus = BattleManager.refreshStatus;
-    BattleManager.refreshStatus = function() {
-        if (this._refreshStatusCancel) {
-            this._refreshStatusCancel = false;
-            return;
-        }
-        _BattleManager_refreshStatus.apply(this, arguments);
-    };
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     /**
      * Window_BattleLog
      * 反射時のアニメーションを再生します。
      */
-    var _Window_BattleLog_displayReflection = Window_BattleLog.prototype.displayReflection;
+    const _Window_BattleLog_displayReflection = Window_BattleLog.prototype.displayReflection;
     Window_BattleLog.prototype.displayReflection = function(target) {
+        $gameTemp.requestFreezeGauge();
         if (param.animationId > 0) {
-            var method = param.wait ? 'showAnimationAndWait' : 'showAnimation';
-            this.push(method, this._relectionTarget, [target], param.animationId);
+            this.push('showAnimation', this._relectionTarget, [target], param.animationId);
+            if (param.wait) {
+                this.push('waitForAnimation');
+            }
         }
         _Window_BattleLog_displayReflection.apply(this, arguments);
-        this.push('showAnimationAndWait', target, [this._relectionTarget], this._relectionItem.animationId);
-        this.push('requestRefreshStatus');
-        if (param.wait) {
-            this.push('waitForEffect');
-        }
+        this.push('showAnimation', target, [this._relectionTarget], this._relectionItem.animationId);
+        this.push('waitForAnimation');
+        this.push('restoreGaugeStop');
     };
 
-    Window_BattleLog.prototype.requestRefreshStatus = function() {
-        BattleManager.refreshStatus();
-    };
-
-    Window_BattleLog.prototype.showAnimationAndWait = function(subject, targets, animationId) {
-        this.showAnimation(subject, targets, animationId);
-        var animation = $dataAnimations[animationId];
-        if (animation && animation.frames) {
-            // 再生レートを変更している場合、ここを変更する。(変更後の再生レートを動的かつ安全に取得することは困難)
-            this._waitCount = animation.frames.length * 4;
-        }
-    };
-
-    var _Window_BattleLog_startAction = Window_BattleLog.prototype.startAction;
+    const _Window_BattleLog_startAction = Window_BattleLog.prototype.startAction;
     Window_BattleLog.prototype.startAction = function(subject, action, targets) {
         this._relectionItem = action.item();
         this._relectionTarget = subject;
         _Window_BattleLog_startAction.apply(this, arguments);
+    };
+
+    const _Window_BattleLog_updateWaitMode      = Window_BattleLog.prototype.updateWaitMode;
+    Window_BattleLog.prototype.updateWaitMode = function() {
+        let waiting = false;
+        if (this._waitMode === 'animation') {
+            waiting = this._spriteset.isAnimationPlaying();
+        }
+        if (!waiting) {
+            waiting = _Window_BattleLog_updateWaitMode.apply(this, arguments);
+        }
+        return waiting;
+    };
+
+    Window_BattleLog.prototype.waitForAnimation = function() {
+        this.setWaitMode('animation');
+    };
+
+    Window_BattleLog.prototype.restoreGaugeStop = function() {
+        $gameTemp.clearFreezeGauge();
+    };
+
+    /**
+     * Game_Temp
+     * ゲージ更新停止フラグを管理
+     */
+    Game_Temp.prototype.requestFreezeGauge = function() {
+        this._freezeGauge = true;
+    };
+
+    Game_Temp.prototype.clearFreezeGauge = function() {
+        this._freezeGauge = false;
+    };
+
+    Game_Temp.prototype.isFreezeGauge = function() {
+        return this._freezeGauge;
+    };
+
+    /**
+     * Sprite_Gauge
+     * ゲージの更新を止めます。
+     */
+    const _Sprite_Gauge_updateBitmap = Sprite_Gauge.prototype.updateBitmap;
+    Sprite_Gauge.prototype.updateBitmap = function() {
+        if ($gameTemp.isFreezeGauge()) {
+            return;
+        }
+        _Sprite_Gauge_updateBitmap.apply(this, arguments);
     };
 })();
