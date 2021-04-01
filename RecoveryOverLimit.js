@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/04/02 指定する倍率によっては最大HPに端数が出てしまう問題を修正
  1.0.0 2020/04/26 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -155,7 +156,7 @@
 
     Game_BattlerBase.prototype.setOverLimitMaxHp = function(rate) {
         if (rate > 0) {
-            this._overLimitMaxHp = this.mhp * (rate + 100) / 100;
+            this._overLimitMaxHp = Math.floor(this.mhp * (rate + 100) / 100);
         }
     };
 
