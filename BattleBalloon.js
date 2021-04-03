@@ -1,112 +1,148 @@
 //=============================================================================
 // BattleBalloon.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/04/03 MZで動作するよう全面的に修正
 // 1.0.0 2017/02/25 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
- * @plugindesc BattleBalloonPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc BattleBalloon
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattleBalloon.js
+ * @base PluginCommonBase
+ * @author Triacontane
  *
- * @param BalloonSpeedRate
- * @desc フキダシを表示する速度倍率（レート）です。マップ画面のフキダシには影響しません。
+ * @param balloonSpeedRate
  * @default 100
+ * @type number
  *
- * @param BalloonWaitTime
- * @desc フキダシ表示後の待機時間(フレーム)です。マップ画面のフキダシには影響しません。
+ * @param balloonWaitTime
  * @default 12
+ * @type number
  *
- * @param BalloonIdEvasion
- * @desc 回避時に表示するフキダシIDです。
+ * @param balloonIdEvasion
  * @default 0
+ * @type number
  *
- * @param BalloonIdCounter
- * @desc 反撃時に表示するフキダシIDです。
+ * @param balloonIdCounter
  * @default 0
+ * @type number
  *
- * @param BalloonIdSubstitute
- * @desc 身代わり時に表示するフキダシIDです。
+ * @param balloonIdSubstitute
  * @default 0
+ * @type number
  *
- * @param BalloonIdCounter
- * @desc 反射時に表示するフキダシIDです。
+ * @param balloonIdReflection
  * @default 0
+ * @type number
  *
- * @help 戦闘中に様々なタイミングでフキダシ（バルーン）を表示できます。
- * さらにフキダシの速度や待機時間を調整できます。
- * 表示対象はアクターおよび敵キャラです。主に以下のタイミングで表示できます。
+ * @command SHOW_BALLOON
+ * @text SHOW_BALLOON
+ * @desc
  *
- * 1. バトルイベント中にプラグインコマンドを実行
- * 　アクター、敵キャラ、スキル使用者を対象にできます。
- * 　スキル使用者を対象にする場合は、スキル実行後のコモンイベント等で
- * 　表示させてください。
- * 　フキダシ表示が完了するまでウェイトすることもできます。
+ * @arg target
+ * @default {}
+ * @type struct<Target>
  *
- * 2. 反撃や回避を行った際に自動発動
- * 　パラメータで指定しておけば反撃、回避、魔法反射、身代わりの瞬間に
- * 　指定したIDのバルーンを自動表示します。
+ * @arg balloonId
+ * @default 1
+ * @type number
  *
- * 3. スキル実行時に自動発動
- * 　スキルもしくはアイテム使用時に自動発動します。
- * 　メモ欄に以下の通り記述してください。
+ * @arg wait
+ * @default false
+ * @type boolean
  *
- * <BB_決定時フキダシ:5> # スキル決定時にフキダシ[5]を表示(敵キャラのみ)(※1)
- * <BB_BalloonInput:5>   # 同上
- * <BB_使用時フキダシ:6> # スキル使用時にフキダシ[6]を表示
- * <BB_BalloonUsing:6>   # 同上
- * ※1 正確には敵キャラAIがスキルを決定したタイミングになります。
+ * @help BattleBalloon.js
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
+ * The balloon can be displayed at various times during battle.
+ * You can also adjust the speed and waiting time of the balloon.
+ * The balloon is displayed to actors and enemy characters.
  *
- * BB_アクターにバルーン 3 1 ON # アクター[3]にバルーン[1]をウェイトありで表示
- * BB_BALLOON_FOR_ACTOR 3 1 ON  # 同上
- * BB_敵キャラにバルーン 1 2    # インデックス[1]の敵キャラにバルーン[2]を表示
- * BB_BALLOON_FOR_ENEMY 1 2     # 同上
- * BB_使用者にバルーン 3 ON     # スキルの使用者にバルーン[3]を表示
- * BB_BALLOON_FOR_USER 3 ON     # 同上
+ * Displays a balloon [5] when a skill is decided (enemy characters only).
+ * <BalloonInput:5>
  *
- * This plugin is released under the MIT License.
+ * Display a balloon [6] when a skill is used.
+ * <BalloonUsing:6>
+ *
  */
+
 /*:ja
  * @plugindesc 戦闘中フキダシ表示プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattleBalloon.js
+ * @base PluginCommonBase
+ * @author トリアコンタン
  *
- * @param フキダシ速度倍率
+ * @param balloonSpeedRate
+ * @text フキダシ速度倍率
  * @desc フキダシを表示する速度倍率（レート）です。マップ画面のフキダシには影響しません。
  * @default 100
+ * @type number
  *
- * @param フキダシ待機時間
+ * @param balloonWaitTime
+ * @text フキダシ待機時間
  * @desc フキダシ表示後の待機時間(フレーム)です。マップ画面のフキダシには影響しません。
  * @default 12
+ * @type number
  *
- * @param 回避フキダシID
+ * @param balloonIdEvasion
+ * @text 回避フキダシID
  * @desc 回避時に表示するフキダシIDです。
  * @default 0
+ * @type number
  *
- * @param 反撃フキダシID
+ * @param balloonIdCounter
+ * @text 反撃フキダシID
  * @desc 反撃時に表示するフキダシIDです。
  * @default 0
+ * @type number
  *
- * @param 身代わりフキダシID
+ * @param balloonIdSubstitute
+ * @text 身代わりフキダシID
  * @desc 身代わり時に表示するフキダシIDです。
  * @default 0
+ * @type number
  *
- * @param 反射フキダシID
+ * @param balloonIdReflection
+ * @text 反射フキダシID
  * @desc 反射時に表示するフキダシIDです。
  * @default 0
+ * @type number
  *
- * @help 戦闘中に様々なタイミングでフキダシ（バルーン）を表示できます。
+ * @command SHOW_BALLOON
+ * @text フキダシ表示
+ * @desc 指定した対象にフキダシを表示します。
+ *
+ * @arg target
+ * @text 対象
+ * @desc フキダシを表示する対象です。いずれかの項目を入力してください。
+ * @default {}
+ * @type struct<Target>
+ *
+ * @arg balloonId
+ * @text フキダシID
+ * @desc 表示するフキダシID
+ * @default 1
+ * @type number
+ *
+ * @arg wait
+ * @text 表示完了までウェイト
+ * @desc フキダシが表示完了するまでウェイとします。
+ * @default false
+ * @type boolean
+ *
+ * @help BattleBalloon.js
+ *
+ * 戦闘中に様々なタイミングでフキダシ（バルーン）を表示できます。
  * さらにフキダシの速度や待機時間を調整できます。
  * 表示対象はアクターおよび敵キャラです。主に以下のタイミングで表示できます。
  *
@@ -124,22 +160,20 @@
  * 　スキルもしくはアイテム使用時に自動発動します。
  * 　メモ欄に以下の通り記述してください。
  *
- * <BB_決定時フキダシ:5> # スキル決定時にフキダシ[5]を表示(敵キャラのみ)(※1)
- * <BB_BalloonInput:5>   # 同上
- * <BB_使用時フキダシ:6> # スキル使用時にフキダシ[6]を表示
- * <BB_BalloonUsing:6>   # 同上
- * ※1 正確には敵キャラAIがスキルを決定したタイミングになります。
+ * スキル決定時にフキダシ[5]を表示(敵キャラのみ)
+ * <決定時フキダシ:5>
+ * <BalloonInput:5>
+ * ※ 正確には敵キャラAIがスキルを決定したタイミングになります。
+ * 敵が特別なスキルを使用する際の予兆などに使えます。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
+ * スキル使用時にフキダシ[6]を表示
+ * <使用時フキダシ:6>
+ * <BalloonUsing:6>
  *
- * BB_アクターにバルーン 3 1 ON # アクター[3]にバルーン[1]をウェイトありで表示
- * BB_BALLOON_FOR_ACTOR 3 1 ON  # 同上
- * BB_敵キャラにバルーン 1 2    # インデックス[1]の敵キャラにバルーン[2]を表示
- * BB_BALLOON_FOR_ENEMY 1 2     # 同上
- * BB_使用者にバルーン 3 ON     # スキルの使用者にバルーン[3]を表示
- * BB_BALLOON_FOR_USER 3 ON     # 同上
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -147,108 +181,90 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+/*~struct~Target:
+ * @param actorId
+ * @text アクターID
+ * @desc フキダシを表示するアクターID
+ * @default 0
+ * @type actor
+ *
+ * @param enemyIndex
+ * @text 敵キャラインデックス
+ * @desc フキダシを表示する敵キャラのインデックス(開始番号は[1])
+ * @default 0
+ * @type number
+ *
+ * @param user
+ * @text 使用者
+ * @desc スキルやアイテムの使用者
+ * @default false
+ * @type boolean
+ */
+
+(()=> {
     'use strict';
-    var pluginName    = 'BattleBalloon';
-    var metaTagPrefix = 'BB_';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
+    PluginManagerEx.registerCommand(script, 'SHOW_BALLOON', function (args) {
+        const target = args.target;
+        if (!target) {
+            return;
         }
-        return '';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + name;
-        return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
+        const actor = $gameActors.actor(target.actorId);
+        if (actor && $gameParty.battleMembers().contains(actor)) {
+            this.requestBattleBalloon(args, actor);
+            return;
         }
-        return undefined;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var convertAllArguments = function(args) {
-        for (var i = 0; i < args.length; i++) {
-            args[i] = convertEscapeCharacters(args[i]);
+        const enemy = $gameTroop.members()[target.enemyIndex - 1];
+        if (enemy) {
+            this.requestBattleBalloon(args, enemy);
+            return;
         }
-        return args;
+        if (target.user) {
+            const user = $gameTemp.findLastSubject();
+            if (user) {
+                this.requestBattleBalloon(args, user);
+            }
+        }
+    });
+
+    const _Game_Temp_setLastSubjectActorId = Game_Temp.prototype.setLastSubjectActorId;
+    Game_Temp.prototype.setLastSubjectActorId = function(actorID) {
+        _Game_Temp_setLastSubjectActorId.apply(this, arguments);
+        this._lastUnit = 'party';
     };
 
-    var setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(metaTagPrefix + commandName, methodName);
+    const _Game_Temp_setLastSubjectEnemyIndex = Game_Temp.prototype.setLastSubjectEnemyIndex;
+    Game_Temp.prototype.setLastSubjectEnemyIndex = function(enemyIndex) {
+        _Game_Temp_setLastSubjectEnemyIndex.apply(this, arguments);
+        this._lastUnit = 'troop';
     };
 
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param                 = {};
-    param.balloonIdEvasion    = getParamNumber(['BalloonIdEvasion', '回避フキダシID']);
-    param.balloonIdReflection = getParamNumber(['BalloonIdReflection', '反射フキダシID']);
-    param.balloonIdCounter    = getParamNumber(['BalloonIdCounter', '反撃フキダシID']);
-    param.balloonIdSubstitute = getParamNumber(['BalloonIdSubstitute', '身代わりフキダシID']);
-    param.balloonSpeedRate    = getParamNumber(['BalloonSpeedRate', 'フキダシ速度倍率']);
-    param.balloonWaitTime     = getParamNumber(['BalloonWaitTime', 'フキダシ待機時間']);
-
-    var pluginCommandMap = new Map();
-    setPluginCommand('アクターにバルーン', 'requestBalloonActor');
-    setPluginCommand('BALLOON_FOR_ACTOR', 'requestBalloonActor');
-    setPluginCommand('敵キャラにバルーン', 'requestBalloonEnemy');
-    setPluginCommand('BALLOON_FOR_ENEMY', 'requestBalloonEnemy');
-    setPluginCommand('使用者にバルーン', 'requestBalloonUser');
-    setPluginCommand('BALLOON_FOR_USER', 'requestBalloonUser');
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        if (!$gameParty.inBattle()) return;
-        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertAllArguments(args));
+    Game_Temp.prototype.findLastSubject = function() {
+        if (this._lastUnit === 'party') {
+            return $gameParty.members().find(member => member.actorId() === this.lastActionData(2));
+        } else {
+            return $gameTroop.members()[this.lastActionData(3) - 1];
         }
     };
 
-    var _Game_Interpreter_updateWaitMode      = Game_Interpreter.prototype.updateWaitMode;
+    Game_Interpreter.prototype.requestBattleBalloon = function(args, battler) {
+        battler.requestBalloonIfNeed(args.balloonId);
+        if (args.wait) {
+            this.setWaitMode('battleBalloon');
+            this._battler = battler;
+        }
+    };
+
+    const _Game_Interpreter_updateWaitMode      = Game_Interpreter.prototype.updateWaitMode;
     Game_Interpreter.prototype.updateWaitMode = function() {
-        var waiting = this.updateWaitModeForBattleBalloon();
+        const waiting = this.updateWaitModeForBattleBalloon();
         return waiting ? true : _Game_Interpreter_updateWaitMode.apply(this, arguments);
     };
 
     Game_Interpreter.prototype.updateWaitModeForBattleBalloon = function() {
-        var waiting = false;
+        let waiting = false;
         if (this._waitMode === 'battleBalloon') {
             waiting = this._battler.isBalloonPlaying();
         } else {
@@ -257,58 +273,17 @@
         return waiting;
     };
 
-    Game_Interpreter.prototype.requestBalloonActor = function(args) {
-        var actor = $gameActors.actor(getArgNumber(args[0]));
-        if (actor && $gameParty.battleMembers().contains(actor)) {
-            actor.requestBalloonIfNeed(getArgNumber(args[1], 1));
-            this.setWaitForBalloon(args[2], actor);
-        }
-    };
-
-    Game_Interpreter.prototype.requestBalloonEnemy = function(args) {
-        var enemy = $gameTroop.members()[getArgNumber(args[0]) - 1];
-        if (enemy) {
-            enemy.requestBalloonIfNeed(getArgNumber(args[1], 1));
-            this.setWaitForBalloon(args[2], enemy);
-        }
-    };
-
-    Game_Interpreter.prototype.requestBalloonUser = function(args) {
-        var user = BattleManager.getSkillUser();
-        if (user) {
-            user.requestBalloonIfNeed(getArgNumber(args[0], 1));
-            this.setWaitForBalloon(args[1], user);
-        }
-    };
-
-    Game_Interpreter.prototype.setWaitForBalloon = function(waitFlag, battler) {
-        if (waitFlag && waitFlag.toUpperCase() !== 'OFF') {
-            this.setWaitMode('battleBalloon');
-            this._battler = battler;
-        }
-    };
-
-    //=============================================================================
-    // BattleManager
-    //  実行主体に対してバルーンスプライトの表示をリクエストします。
-    //=============================================================================
-    BattleManager.getSkillUser = function() {
-        return this._subject;
-    };
-
     //=============================================================================
     // Game_BattlerBase
     //  バルーンスプライトの表示をリクエストします。
     //=============================================================================
-    Game_BattlerBase.prototype.requestBalloon   = Game_CharacterBase.prototype.requestBalloon;
-    Game_BattlerBase.prototype.balloonId        = Game_CharacterBase.prototype.balloonId;
     Game_BattlerBase.prototype.startBalloon     = Game_CharacterBase.prototype.startBalloon;
     Game_BattlerBase.prototype.isBalloonPlaying = Game_CharacterBase.prototype.isBalloonPlaying;
     Game_BattlerBase.prototype.endBalloon       = Game_CharacterBase.prototype.endBalloon;
 
     Game_BattlerBase.prototype.requestBalloonIfNeed = function(balloonId) {
         if (balloonId > 0) {
-            this.requestBalloon(balloonId);
+            $gameTemp.requestBalloon(this, balloonId);
         }
     };
 
@@ -316,37 +291,37 @@
     // Game_Battler
     //  リアクションバルーンの表示をリクエストします。
     //=============================================================================
-    var _Game_Battler_performSubstitute      = Game_Battler.prototype.performSubstitute;
+    const _Game_Battler_performSubstitute      = Game_Battler.prototype.performSubstitute;
     Game_Battler.prototype.performSubstitute = function(target) {
         _Game_Battler_performSubstitute.apply(this, arguments);
         this.requestBalloonIfNeed(param.balloonIdSubstitute);
     };
 
-    var _Game_Battler_performReflection      = Game_Battler.prototype.performReflection;
+    const _Game_Battler_performReflection      = Game_Battler.prototype.performReflection;
     Game_Battler.prototype.performReflection = function(target) {
         _Game_Battler_performReflection.apply(this, arguments);
         this.requestBalloonIfNeed(param.balloonIdReflection);
     };
 
-    var _Game_Battler_performCounter      = Game_Battler.prototype.performCounter;
+    const _Game_Battler_performCounter      = Game_Battler.prototype.performCounter;
     Game_Battler.prototype.performCounter = function(target) {
         _Game_Battler_performCounter.apply(this, arguments);
         this.requestBalloonIfNeed(param.balloonIdCounter);
     };
 
-    var _Game_Battler_performEvasion      = Game_Battler.prototype.performEvasion;
+    const _Game_Battler_performEvasion      = Game_Battler.prototype.performEvasion;
     Game_Battler.prototype.performEvasion = function(target) {
         _Game_Battler_performEvasion.apply(this, arguments);
         this.requestBalloonIfNeed(param.balloonIdEvasion);
     };
 
-    var _Game_Battler_performMagicEvasion      = Game_Battler.prototype.performMagicEvasion;
+    const _Game_Battler_performMagicEvasion      = Game_Battler.prototype.performMagicEvasion;
     Game_Battler.prototype.performMagicEvasion = function() {
         _Game_Battler_performMagicEvasion.apply(this, arguments);
         this.requestBalloonIfNeed(param.balloonIdEvasion);
     };
 
-    var _Game_Battler_performActionStart      = Game_Battler.prototype.performActionStart;
+    const _Game_Battler_performActionStart      = Game_Battler.prototype.performActionStart;
     Game_Battler.prototype.performActionStart = function(action) {
         _Game_Battler_performActionStart.apply(this, arguments);
         this.requestBalloonIfNeed(action.getBalloonIdForUsing());
@@ -356,15 +331,15 @@
     // Game_Enemy
     //  行動決定時にバルーンを表示します。
     //=============================================================================
-    var _Game_Enemy_makeActions      = Game_Enemy.prototype.makeActions;
+    const _Game_Enemy_makeActions      = Game_Enemy.prototype.makeActions;
     Game_Enemy.prototype.makeActions = function() {
         _Game_Enemy_makeActions.apply(this, arguments);
         this.requestBalloonInput();
     };
 
     Game_Enemy.prototype.requestBalloonInput = function() {
-        var number = this.numActions();
-        for (var i = 0; i < number; i++) {
+        const number = this.numActions();
+        for (let i = 0; i < number; i++) {
             this.requestBalloonIfNeed(this.action(i).getBalloonIdForInput());
         }
     };
@@ -373,100 +348,58 @@
     // Game_Action
     //  バルーン情報のメモ欄を取得します。
     //=============================================================================
-    Game_Action.prototype.getBalloonIdMetaData = function(names) {
-        var metaInfo = getMetaValues(this.item(), names);
-        return metaInfo ? getArgNumber(metaInfo, 1) : null;
-    };
-
     Game_Action.prototype.getBalloonIdForInput = function() {
-        return this.getBalloonIdMetaData(['BalloonInput', '決定時フキダシ']);
+        return PluginManagerEx.findMetaValue(this.item(), ['BalloonInput', '決定時フキダシ']);
     };
 
     Game_Action.prototype.getBalloonIdForUsing = function() {
-        return this.getBalloonIdMetaData(['BalloonUsing', '使用時フキダシ']);
+        return PluginManagerEx.findMetaValue(this.item(),['BalloonUsing', '使用時フキダシ']);
     };
 
-    //=============================================================================
-    // Sprite_Battler
-    //  バルーンスプライトを追加します。
-    //=============================================================================
-    var _Sprite_Battler_update      = Sprite_Battler.prototype.update;
-    Sprite_Battler.prototype.update = function() {
-        _Sprite_Battler_update.apply(this, arguments);
-        if (this._battler) {
-            this.updateBalloon();
+    const _Sprite_Balloon_speed = Sprite_Balloon.prototype.speed;
+    Sprite_Balloon.prototype.speed = function() {
+        const speed = _Sprite_Balloon_speed.apply(this, arguments);
+        if ($gameParty.inBattle()) {
+            return Math.floor(speed * 100 / (param.balloonSpeedRate || 100));
+        } else {
+            return speed;
         }
     };
 
-    Sprite_Battler.prototype.setupBalloon = function() {
-        if (this._battler.balloonId() > 0) {
-            this.startBalloon();
-            this._battler.startBalloon();
+    const _Sprite_Balloon_waitTime = Sprite_Balloon.prototype.waitTime;
+    Sprite_Balloon.prototype.waitTime = function() {
+        if ($gameParty.inBattle()) {
+            return param.balloonWaitTime;
+        } else {
+            return _Sprite_Balloon_waitTime.apply(this, arguments);
         }
-    };
-
-    Sprite_Battler.prototype.startBalloon = function() {
-        if (!this._balloonSprite) {
-            this._balloonSprite = new Sprite_BattlerBalloon();
-        }
-        this._balloonSprite.setup(this._battler.balloonId());
-        this.parent.addChild(this._balloonSprite);
-    };
-
-    Sprite_Battler.prototype.updateBalloon = function() {
-        if (!this.isBalloonPlaying()) {
-            this._battler.endBalloon();
-        }
-        this.setupBalloon();
-        if (this._balloonSprite) {
-            this._balloonSprite.x = this.x;
-            this._balloonSprite.y = this.y - this.getMainHeight();
-            if (!this._balloonSprite.isPlaying()) {
-                this.endBalloon();
-            }
-        }
-    };
-
-    Sprite_Battler.prototype.endBalloon = function() {
-        if (this._balloonSprite) {
-            this.parent.removeChild(this._balloonSprite);
-            this._balloonSprite = null;
-        }
-    };
-
-    Sprite_Battler.prototype.isBalloonPlaying = function() {
-        return !!this._balloonSprite;
-    };
-
-    Sprite_Battler.prototype.getMainHeight = function() {
-        return this.height;
     };
 
     //=============================================================================
-    // Sprite_Actor
-    //  バルーンスプライトを追加します。
+    // Spriteset_Battle
+    //  フキダシ表示機能をSpriteset_Mapからコピー
     //=============================================================================
-    Sprite_Actor.prototype.getMainHeight = function() {
-        return this._mainSprite.height;
+    const _Spriteset_Battle_initialize = Spriteset_Battle.prototype.initialize;
+    Spriteset_Battle.prototype.initialize = function() {
+        _Spriteset_Battle_initialize.apply(this, arguments);
+        this._balloonSprites = [];
+    };
+    Spriteset_Battle.prototype.updateBalloons = Spriteset_Map.prototype.updateBalloons;
+    Spriteset_Battle.prototype.processBalloonRequests = Spriteset_Map.prototype.processBalloonRequests;
+    Spriteset_Battle.prototype.createBalloon = Spriteset_Map.prototype.createBalloon;
+    Spriteset_Battle.prototype.removeBalloon = Spriteset_Map.prototype.removeBalloon;
+    Spriteset_Battle.prototype.removeAllBalloons = Spriteset_Map.prototype.removeAllBalloons;
+
+    const _Spriteset_Battle_update = Spriteset_Battle.prototype.update;
+    Spriteset_Battle.prototype.update = function() {
+        _Spriteset_Battle_update.apply(this, arguments);
+        this.updateBalloons();
     };
 
-    //=============================================================================
-    // Sprite_BattlerBalloon
-    //  バトラー表示用のフキダシスプライトです。
-    //=============================================================================
-    function Sprite_BattlerBalloon() {
-        this.initialize.apply(this, arguments);
-    }
-
-    Sprite_BattlerBalloon.prototype             = Object.create(Sprite_Balloon.prototype);
-    Sprite_BattlerBalloon.prototype.constructor = Sprite_BattlerBalloon;
-
-    Sprite_BattlerBalloon.prototype.speed = function() {
-        return Math.floor(Sprite_Balloon.prototype.speed.call(this) * 100 / (param.balloonSpeedRate || 100));
-    };
-
-    Sprite_BattlerBalloon.prototype.waitTime = function() {
-        return param.balloonWaitTime;
+    const _Spriteset_Battle_destroy = Spriteset_Battle.prototype.destroy;
+    Spriteset_Battle.prototype.destroy = function(options) {
+        this.removeAllBalloons();
+        _Spriteset_Battle_destroy.apply(this, arguments);
     };
 })();
 
