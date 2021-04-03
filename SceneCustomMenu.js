@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.11.1 2021/04/03 スクリプトに凡例を追加
  1.10.0 2021/03/31 MZで動作するよう修正
  1.9.0 2020/09/21 ウィンドウで選択中の項目オブジェクトを変数に格納できる機能を追加
  1.8.0 2020/08/02 利用可能なシーン数を20に増やした
@@ -459,6 +460,7 @@
  * @option this.drawActorTp(item, r.x, r.y, r.width); // アクターのTP
  * @option this.drawActorSimpleStatus(item, r.x, r.y, r.width); // アクターのステータス
  * @option this.drawItemName(item, r.x, r.y, r.width); // アイテムやスキルの名称
+ * @option this.drawText($gameParty.numItems(item), r.x, r.y, r.width, 'right'); // アイテムの所持数
  * @option this.drawTextEx(`Text:${item.name}`, r.x, r.y, r.width); // 任意のテキスト描画(制御文字変換あり)
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
  * @option this.changeTextColor(this.textColor(1)); // テキストカラー変更(drawTextでのみ有効)
