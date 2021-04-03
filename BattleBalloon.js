@@ -132,7 +132,39 @@
  * @text フキダシID
  * @desc 表示するフキダシID
  * @default 1
- * @type number
+ * @type select
+ * @option なし
+ * @value 0
+ * @option びっくり
+ * @value 1
+ * @option はてな
+ * @value 2
+ * @option 音符
+ * @value 3
+ * @option ハート
+ * @value 4
+ * @option 怒り
+ * @value 5
+ * @option 汗
+ * @value 6
+ * @option くしゃくしゃ
+ * @value 7
+ * @option 沈黙
+ * @value 8
+ * @option 電球
+ * @value 9
+ * @option Zzz
+ * @value 10
+ * @option ユーザ定義1
+ * @value 11
+ * @option ユーザ定義2
+ * @value 12
+ * @option ユーザ定義3
+ * @value 13
+ * @option ユーザ定義4
+ * @value 14
+ * @option ユーザ定義5
+ * @value 15
  *
  * @arg wait
  * @text 表示完了までウェイト
