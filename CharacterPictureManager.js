@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2021/04/06 立ち絵に拡大率を設定できる機能を追加
 // 2.2.2 2021/02/15 アクター登録していないメンバーを表示させようとするとエラーになる問題を修正
 // 2.2.1 2021/02/14 パラメータの防具条件のデータベースタイプが武器になっていた問題を修正
 // 2.2.0 2021/02/14 スプライトシート形式の表示に対応
@@ -127,7 +128,7 @@
  * @param ActorId
  * @text アクター
  * @desc 立ち絵を表示する対象のアクターです。
- * @default 0
+ * @default 1
  * @type actor
  *
  * @param Name
@@ -157,6 +158,20 @@
  * @type number
  * @min -9999
  * @max 9999
+ *
+ * @param ScaleX
+ * @text X拡大率
+ * @desc 立ち絵の横方向の拡大率です。
+ * @default 100
+ * @type number
+ * @max 1000
+ *
+ * @param ScaleY
+ * @text Y拡大率
+ * @desc 立ち絵の縦方向の拡大率です。
+ * @default 100
+ * @type number
+ * @max 1000
  *
  * @param SpriteSheet
  * @text スプライトシート
@@ -740,7 +755,11 @@
 
         updateVisibility() {
             this.opacity = this._picture.Opacity;
-            this.scale.x = this._picture.Mirror ? -1 : 1;
+            this.scale.x = (this._picture.ScaleX / 100) || 1;
+            this.scale.y = (this._picture.ScaleY / 100) || 1;
+            if (this._picture.Mirror) {
+                this.scale.x *= -1;
+            }
             const showSwitch = this._picture.ShowPictureSwitch;
             this.visible = !showSwitch || $gameSwitches.value(showSwitch);
         }
