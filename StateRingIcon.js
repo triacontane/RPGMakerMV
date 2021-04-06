@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.6 2021/04/07 2.4.1の修正で敵キャラのリングアイコンY座標が調整できなくなっていた問題を修正
+//                  2.4.1の修正でフロントビューの場合に、アクターのリングアイコンを表示しない設定が機能しない問題を修正
 // 2.4.5 2021/03/30 グローバル向けヘルプが正常に読み込まれていなかった問題を修正
 // 2.4.4 2021/03/28 ターン数が0の場合は表示しないよう修正
 // 2.4.3 2021/03/28 サイドビュー時にアクターにリングステートを表示すると、重ね合わせ画像が表示されなくなる問題を修正
@@ -408,6 +410,13 @@ function Sprite_StateIconChild() {
         return param.ActorRingIconY || 0;
     };
 
+    const _Sprite_Enemy_updateStateSprite = Sprite_Enemy.prototype.updateStateSprite;
+    Sprite_Enemy.prototype.updateStateSprite = function() {
+        const prevY = this._stateIconSprite.y;
+        _Sprite_Enemy_updateStateSprite.apply(this, arguments);
+        this._stateIconSprite.y += prevY;
+    }
+
     if (param.ActorRingIcon) {
         const _Sprite_Actor_createStateSprite = Sprite_Actor.prototype.createStateSprite;
         Sprite_Actor.prototype.createStateSprite = function() {
@@ -426,12 +435,7 @@ function Sprite_StateIconChild() {
         const _Sprite_Actor_update = Sprite_Actor.prototype.update;
         Sprite_Actor.prototype.update = function() {
             _Sprite_Actor_update.apply(this, arguments);
-            if (this.scale.x !== 1.0) {
-                this._stateIconSprite.scale.x = 1.0 / this.scale.x;
-            }
-            if (this.scale.y !== 1.0) {
-                this._stateIconSprite.scale.y = 1.0 / this.scale.y;
-            }
+            this.updateStateSprite();
         }
 
         const _Window_StatusBase_placeStateIcon = Window_StatusBase.prototype.placeStateIcon;
@@ -444,6 +448,19 @@ function Sprite_StateIconChild() {
                 this.addChild(sprite);
             }
         }
+
+        Sprite_Actor.prototype.updateStateSprite = function() {
+            this._stateIconSprite.y -= Math.round((this._mainSprite.height + 40) * 0.9);
+            if (this._stateIconSprite.y < 20 - this.y) {
+                this._stateIconSprite.y = 20 - this.y;
+            }
+            if (this.scale.x !== 1.0) {
+                this._stateIconSprite.scale.x = 1.0 / this.scale.x;
+            }
+            if (this.scale.y !== 1.0) {
+                this._stateIconSprite.scale.y = 1.0 / this.scale.y;
+            }
+        };
     }
 
     //=============================================================================
@@ -484,6 +501,10 @@ function Sprite_StateIconChild() {
         }
         this.x = (this._baseX || 0) + this._battler.findRingStateX();
         this.y = (this._baseY || 0) + this._battler.findRingStateY();
+        this.updateRingIconChild();
+    };
+
+    Sprite_StateIcon.prototype.updateRingIconChild = function() {
         if (this._iconsSprites.length > param.LineViewLimit && param.LineViewLimit > 0) {
             this.updateRingPosition();
         } else {
@@ -565,7 +586,15 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIcon.prototype.hasRingState = function() {
-        return this._battler && (this._battler.isEnemy() || this._actorRing || !$gameSystem.isSideView());
+        if (!this._battler) {
+            return false;
+        } else if (this._battler.isEnemy()) {
+            return true;
+        } else if (param.ActorRingIcon) {
+            return this._actorRing || !$gameSystem.isSideView();
+        } else {
+            return false;
+        }
     };
 
     Sprite_StateIcon.prototype.saveOriginalPosition = function() {
