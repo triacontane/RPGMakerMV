@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2021/04/06 拡大率をシーン単位で設定できる機能を追加
 // 2.3.0 2021/04/06 立ち絵に拡大率を設定できる機能を追加
 // 2.2.2 2021/02/15 アクター登録していないメンバーを表示させようとするとエラーになる問題を修正
 // 2.2.1 2021/02/14 パラメータの防具条件のデータベースタイプが武器になっていた問題を修正
@@ -320,6 +321,20 @@
  * @default ["{\"X\":\"0\",\"Y\":\"0\"}","{\"X\":\"150\",\"Y\":\"0\"}","{\"X\":\"300\",\"Y\":\"0\"}","{\"X\":\"450\",\"Y\":\"0\"}"]
  * @type struct<Position>[]
  *
+ * @param ScaleX
+ * @text X拡大率
+ * @desc 立ち絵の横方向の拡大率です。
+ * @default 100
+ * @type number
+ * @max 1000
+ *
+ * @param ScaleY
+ * @text Y拡大率
+ * @desc 立ち絵の縦方向の拡大率です。
+ * @default 100
+ * @type number
+ * @max 1000
+ *
  * @param ShowPictureSwitch
  * @text 表示スイッチ
  * @desc 指定した場合、スイッチがONのときのみピクチャが表示されます。
@@ -431,6 +446,8 @@
         setupPosition(picture, scene, index) {
             picture.ShowPictureSwitch = scene.ShowPictureSwitch;
             picture.Mirror = scene.Mirror;
+            picture.SceneScaleX = scene.ScaleX;
+            picture.SceneScaleY = scene.ScaleY;
             this._base = new Point();
             this._base.x = scene.MemberPosition[index].X;
             this._base.y = scene.MemberPosition[index].Y;
@@ -725,6 +742,7 @@
         update() {
             super.update();
             this.updateBitmap();
+            this.updateScale();
             this.updateVisibility();
         }
 
@@ -755,13 +773,22 @@
 
         updateVisibility() {
             this.opacity = this._picture.Opacity;
+            const showSwitch = this._picture.ShowPictureSwitch;
+            this.visible = !showSwitch || $gameSwitches.value(showSwitch);
+        }
+
+        updateScale() {
             this.scale.x = (this._picture.ScaleX / 100) || 1;
             this.scale.y = (this._picture.ScaleY / 100) || 1;
+            if (this._picture.SceneScaleX) {
+                this.scale.x *= this._picture.SceneScaleX / 100;
+            }
+            if (this._picture.SceneScaleY) {
+                this.scale.y *= this._picture.SceneScaleY / 100;
+            }
             if (this._picture.Mirror) {
                 this.scale.x *= -1;
             }
-            const showSwitch = this._picture.ShowPictureSwitch;
-            this.visible = !showSwitch || $gameSwitches.value(showSwitch);
         }
 
         loadApngSprite(name) {
