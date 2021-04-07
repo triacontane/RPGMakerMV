@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.11.2 2021/04/07 シーン情報が歯抜けになっていると以後の情報を読み込まない問題を修正
  1.11.1 2021/04/03 スクリプトに凡例を追加
  1.10.0 2021/03/31 MZで動作するよう修正
  1.9.0 2020/09/21 ウィンドウで選択中の項目オブジェクトを変数に格納できる機能を追加
@@ -697,11 +698,11 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
-    let index = 1;
     param.SceneList = [];
-    while (param[`Scene${index}`]) {
-        param.SceneList.push(param[`Scene${index}`]);
-        index++;
+    for (let i = 1; i < 20; i++) {
+        if (param[`Scene${i}`]) {
+            param.SceneList.push(param[`Scene${i}`]);
+        }
     }
 
     const outputError = function (e, script = null) {
