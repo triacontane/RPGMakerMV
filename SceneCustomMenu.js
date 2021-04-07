@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.10.3 2021/04/07 シーン情報が歯抜けになっていると以後の情報を読み込まない問題を修正
  1.10.2 2020/11/03 1.10.1の修正でキャンセルボタンを押してメニューから戻ろうとするとエラーになる問題を修正
  1.10.1 2020/11/03 1.10.0の修正で一覧にデータベース以外のオブジェクトを指定するとエラーになる問題を修正
  1.10.0 2020/11/01 AdditionalDescription.jsと併用できるよう修正
@@ -747,11 +748,11 @@
         return parameter;
     };
     const param                 = createPluginParameter('SceneCustomMenu');
-    let index                   = 1;
     param.SceneList             = [];
-    while (param[`Scene${index}`]) {
-        param.SceneList.push(param[`Scene${index}`]);
-        index++;
+    for (let i = 1; i < 20; i++) {
+        if (param[`Scene${i}`]) {
+            param.SceneList.push(param[`Scene${i}`]);
+        }
     }
 
     const getClassName = function(object) {
