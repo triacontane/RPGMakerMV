@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.0.2 2021/04/08 orderAfterアノテーションを追加
 // 4.0.1 2020/11/29 ブラウザからの実行でエラーになる問題を修正
 // 4.0.0 2020/11/11 MZ向けに全面的にリファクタリング
 // 3.0.0 2020/03/08 アナザーニューゲームコマンドを複数登録できるよう修正。以前のバージョンと互換性がありません。
@@ -34,6 +35,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AnotherNewGame.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param anotherDataList
