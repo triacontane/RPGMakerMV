@@ -6,6 +6,10 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.11.3 2021/04/08 orderAfterアノテーションを追加
+                   コマンドウィンドウの文字列の縦の揃えを中央に変更
+                   ヘルプウィンドウの行数変更が反映されない問題を修正
+                   相対Y座標ウィンドウを指定したウィンドウの表示位置がズレる場合がある問題を修正
  1.11.2 2021/04/07 シーン情報が歯抜けになっていると以後の情報を読み込まない問題を修正
  1.11.1 2021/04/03 スクリプトに凡例を追加
  1.10.0 2021/03/31 MZで動作するよう修正
@@ -49,6 +53,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SceneCustomMenu.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param Scene1
@@ -902,8 +907,9 @@
             const parentY = this.findWindow(data.RelativeWindowIdY);
             if (parentY) {
                 win.y += parentY.y + parentY.height;
+            } else {
+                win.y += this.mainAreaTop();
             }
-            win.y += this.mainAreaTop();
         }
 
         createCustomWindowInstance(data) {
@@ -1080,6 +1086,15 @@
 
         stopAudioOnBattleStart() {
             Scene_Map.prototype.stopAudioOnBattleStart.apply(this, arguments);
+        }
+
+        helpAreaHeight() {
+            const rows = this._customData.HelpRows;
+            if (rows) {
+                return this.calcWindowHeight(rows, false);
+            } else {
+                return super.helpAreaHeight();
+            }
         }
     }
 
@@ -1274,9 +1289,7 @@
             if (!item) {
                 return;
             }
-            const rect = this.itemRect(index);
-            rect.x += this.colSpacing();
-            rect.width -= this.colSpacing() * 2;
+            const rect = this.findItemRect(index);
             this.changePaintOpacity(this.isEnabled(index));
             if (this.isMasking(index)) {
                 this.drawMasking(rect);
@@ -1284,6 +1297,10 @@
                 this.drawItemSub(item, rect, index);
             }
             this.changePaintOpacity(1);
+        }
+
+        findItemRect(index) {
+            return this.itemRectWithPadding(index);
         }
 
         drawItemSub(item, rect, index) {
@@ -1389,6 +1406,10 @@
 
         drawItemSub(item, rect, index) {
             this.drawTextEx(item.Text, rect.x, rect.y, rect.width);
+        }
+
+        findItemRect(index) {
+            return this.itemLineRect(index);
         }
 
         findHelpText() {
