@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.10.4 2021/04/08 キャッシュされていないピクチャを表示しようとしたとき、表示順序がずれる場合がある問題を修正
  1.10.3 2021/04/07 シーン情報が歯抜けになっていると以後の情報を読み込まない問題を修正
  1.10.2 2020/11/03 1.10.1の修正でキャンセルボタンを押してメニューから戻ろうとするとエラーになる問題を修正
  1.10.1 2020/11/03 1.10.0の修正で一覧にデータベース以外のオブジェクトを指定するとエラーになる問題を修正
@@ -1298,12 +1299,16 @@
 
         drawPicture(file, x, y) {
             const bitmap = ImageManager.loadPicture(file);
-            const index = this.index();
-            bitmap.addLoadListener(() => {
-                if (index === this.index()) {
-                    this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
-                }
-            });
+            if (bitmap.isReady()) {
+                this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
+            } else {
+                const index = this.index();
+                bitmap.addLoadListener(() => {
+                    if (index === this.index()) {
+                        this.drawItem(this._drawingIndex);
+                    }
+                });
+            }
         }
 
         setDynamicHeight() {
