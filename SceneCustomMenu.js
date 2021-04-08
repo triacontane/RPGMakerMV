@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.11.4 2021/04/08 キャッシュされていないピクチャを表示しようとしたとき、表示順序がずれる場合がある問題を修正
  1.11.3 2021/04/08 orderAfterアノテーションを追加
                    コマンドウィンドウの文字列の縦の揃えを中央に変更
                    ヘルプウィンドウの行数変更が反映されない問題を修正
@@ -1259,12 +1260,16 @@
 
         drawPicture(file, x, y) {
             const bitmap = ImageManager.loadPicture(file);
-            const index = this.index();
-            bitmap.addLoadListener(() => {
-                if (index === this.index()) {
-                    this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
-                }
-            });
+            if (bitmap.isReady()) {
+                this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
+            } else {
+                const index = this.index();
+                bitmap.addLoadListener(() => {
+                    if (index === this.index()) {
+                        this.drawItem(this._drawingIndex);
+                    }
+                });
+            }
         }
 
         setDynamicHeight() {
