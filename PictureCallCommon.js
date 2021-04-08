@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2021/04/08 トリガー「マウスをピクチャ内で移動した場合」がマウスを押していないと反応しない問題を修正
 // 1.1.1 2020/12/21 スクリプト$gameScreen.showPictureを使って未キャッシュのピクチャを表示しようとすると画像が表示されなくなる問題を修正
 //                  セーブデータロード時にエラーになる問題を修正
 // 1.1.0 2020/12/20 イベントごとに無効スイッチを指定できる機能を追加
@@ -325,8 +326,8 @@
             this._handlers[8]  = () => this.isTouchEvent(TouchInput.isPressed);
             this._handlers[9]  = () => this.isTouchEvent(TouchInput.isWheelTriggered);
             this._handlers[10] = () => this.isTouchEvent(TouchInput.isDoubleTriggered);
-            this._handlers[11] = () => this.isTouchEvent(TouchInput.isMoved);
-            this._handlers[12] = () => this.isTouchEvent(TouchInput.isMoved) && TouchInput.isPressed();
+            this._handlers[11] = () => this.isTouchEvent(TouchInput.isHovered);
+            this._handlers[12] = () => this.isTouchEvent(TouchInput.isMoved);
             this._handlers[13] = () => this._flick;
             this._onMouse      = false;
             this._outMouse     = false;
