@@ -1,6 +1,7 @@
 //=============================================================================
 // AltMenuScreen2.js
 // Version
+// 1.1.0 2021/04/09 立ち絵の読み込みに制御文字を使えるよう修正
 // 1.0.1 2016/07/22 リザーブメンバーの立ち絵が初回表示時に正しく表示されない問題の修正
 //                  スクロール可能であることを示す矢印スプライトの向きがおかしい問題の修正
 //=============================================================================
@@ -147,7 +148,7 @@
     Window_MenuStatus.prototype.drawItem = function(index) {
         var actor = $gameParty.members()[index];
         var bitmapName = $dataActors[actor.actorId()].meta.stand_picture;
-        var bitmap = bitmapName ? ImageManager.loadPicture(bitmapName) : null;
+        var bitmap = bitmapName ? ImageManager.loadPicture(this.convertEscapeCharacters(bitmapName)) : null;
         if (bitmap && !bitmap.isReady()) {
             bitmap.addLoadListener(_Window_MenuStatus_drawItem.bind(this, index));
         } else {
@@ -173,7 +174,7 @@
         var rect = this.itemRectForText(index);
         // load stand_picture
         var bitmapName = $dataActors[actor.actorId()].meta.stand_picture;
-        var bitmap = bitmapName ? ImageManager.loadPicture(bitmapName) : null;
+        var bitmap = bitmapName ? ImageManager.loadPicture(this.convertEscapeCharacters(bitmapName)) : null;
         var w = Math.min(rect.width, (bitmapName ? bitmap.width : 144));
         var h = Math.min(rect.height, (bitmapName ? bitmap.height : 144));
         var lineHeight = this.lineHeight();
