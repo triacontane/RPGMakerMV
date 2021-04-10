@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.2 2021/04/10 タイトルカット設定時にCTRLキーを押し続けているとカットしなくなる機能が不完全だったので無効化
 // 2.10.1 2019/05/26 高速化有効時にメッセージ強制スキップのみを無効化する設定を追加しました。
 // 2.9.1 2019/05/19 DynamicDatabase.jsと併用したとき、データベースリロード機能を使うと動的データベースの内容が初期化される競合を解消
 // 2.9.0 2019/04/01 テストプレー時のみ、特定の日付もしくは設定した誕生日になるとタイトル画面に専用メッセージが流れる機能を追加
@@ -233,7 +234,6 @@
  *
  * @param CutTitle
  * @desc タイトル画面をとばして最新のセーブファイルをロードします。
- * 起動時にCTRLを押し続けるとカットが無効になります。
  * @default false
  * @type boolean
  *
@@ -550,7 +550,6 @@
  *
  * @param タイトルカット
  * @desc タイトル画面をとばして最新のセーブファイルをロードします。
- * 起動時にCTRLを押し続けるとカットが無効になります。
  * @default false
  * @type boolean
  *
@@ -1444,7 +1443,7 @@ function Controller_NwJs() {
     };
 
     Scene_Boot.prototype.cutSceneTitle = function() {
-        if (paramCutTitle && !DataManager.isBattleTest() && !DataManager.isEventTest() && !Input.isPressed('control')) {
+        if (paramCutTitle && !DataManager.isBattleTest() && !DataManager.isEventTest()) {
             if (!this.goToLatestContinue()) {
                 this.goToNewGame();
             }
