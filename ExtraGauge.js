@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/04/10 座標に計算式や変数を指定した場合、表示位置やリアルタイムに変更できる機能を追加
  1.0.3 2020/09/16 ゲージ表示後に一度シーンを切り替えてからマップ移動するとゲージピクチャが消えてしまう問題を修正
  1.0.2 2020/09/12 ヘルプのスクリプトの誤記を修正
  1.0,1 2020/08/30 非表示のときは画像を更新しないよう修正
@@ -160,6 +161,12 @@
  * @text Y座標
  * @desc Y座標です。原点は中央です。数値以外を指定した場合はスクリプトとして評価します。
  * @default 30
+ *
+ * @param realTime
+ * @text リアルタイム座標反映
+ * @desc ゲージを表示後、X座標、Y座標が変更されたときにゲージの位置を再評価します。
+ * @default false
+ * @type boolean
  *
  * @param width
  * @text 横幅
@@ -482,6 +489,9 @@
 
         update() {
             super.update();
+            if (this._layout.realTime) {
+                this.setupPosition();
+            }
             this.updateVisibly();
             this.updateOpacity();
         }
