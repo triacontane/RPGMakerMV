@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.10.5 2021/04/11 1.10.4で解消した問題をキャラクターとフェイスグラフィックにも適用
  1.10.4 2021/04/08 キャッシュされていないピクチャを表示しようとしたとき、表示順序がずれる場合がある問題を修正
  1.10.3 2021/04/07 シーン情報が歯抜けになっていると以後の情報を読み込まない問題を修正
  1.10.2 2020/11/03 1.10.1の修正でキャンセルボタンを押してメニューから戻ろうとするとエラーになる問題を修正
@@ -1302,12 +1303,7 @@
             if (bitmap.isReady()) {
                 this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
             } else {
-                const index = this.index();
-                bitmap.addLoadListener(() => {
-                    if (index === this.index()) {
-                        this.drawItem(this._drawingIndex);
-                    }
-                });
+                this.retryDrawItem(bitmap);
             }
         }
 
@@ -1342,6 +1338,15 @@
                 this.drawItemSub(item, rect, index);
             }
             this.changePaintOpacity(1);
+        }
+
+        retryDrawItem(bitmap) {
+            const index = this.index();
+            bitmap.addLoadListener(() => {
+                if (index === this.index()) {
+                    this.drawItem(this._drawingIndex);
+                }
+            });
         }
 
         drawItemSub(item, rect, index) {};
@@ -1415,7 +1420,7 @@
 
         isVisible(item, v, s) {
             return true;
-        };
+        }
 
         isEnabledSub(item) {};
 
@@ -1529,7 +1534,6 @@
                 outputError(e);
                 return false;
             }
-
         }
 
         drawItemSub(item, r, index) {
@@ -1583,16 +1587,20 @@
 
         drawFace(faceName, faceIndex, x, y, width, height) {
             const bitmap = ImageManager.loadFace(faceName);
-            bitmap.addLoadListener(() => {
+            if (bitmap.isReady()) {
                 super.drawFace(faceName, faceIndex, x, y, width, height);
-            });
+            } else {
+                this.retryDrawItem(bitmap);
+            }
         }
 
         drawCharacter(characterName, characterIndex, x, y) {
             const bitmap = ImageManager.loadCharacter(characterName);
-            bitmap.addLoadListener(() => {
+            if (bitmap.isReady()) {
                 super.drawCharacter(characterName, characterIndex, x, y);
-            });
+            } else {
+                this.retryDrawItem(bitmap);
+            }
         }
     }
 
