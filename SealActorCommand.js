@@ -1,76 +1,30 @@
 //=============================================================================
 // SealActorCommand.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/04/14 MZで動作するよう修正し、メモ欄の記法を変更
 // 1.4.0 2018/12/22 禁止コマンドの上に文字を被せられる機能を追加
 // 1.3.0 2018/12/17 封印したコマンドを非表示ではなく使用禁止にできる機能を追加
 // 1.2.0 2017/03/08 アイテム使用をスキルのひとつとして作成できる機能を追加
 // 1.1.0 2017/02/23 封印対象にスキルを追加
 // 1.0.0 2017/02/22 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
-/*:
- * @plugindesc SealActorCommandPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param commandDisable
- * @desc 封印したコマンドを非表示ではなく使用禁止にします。
- * @default false
- * @type boolean
- *
- * @param disableSign
- * @desc 使用禁止にしたコマンドのうえに被せる文字列です。(コマンド使用禁止が有効な場合のみ機能します)
- * @default \i[1]\i[1]\i[1]
- *
- * @help アクターコマンド「攻撃」「防御」「アイテム」「スキル」を封印できます。
- * 封印されたコマンドはウィンドウから消失します。
- * 特定のコマンドが使用できないアクター、職業、装備品、ステートが作成できます。
- * さらに、スイッチやJavaScript計算式により、細かい条件が指定できます。
- *
- * 特徴を有するデータベースのメモ欄に以下の通り記入してください。
- *
- * <SAC攻撃封印スイッチ:4>   # ID[4]のスイッチがONのとき攻撃を封印
- * <SACAttackSwitch:4>       # 同上
- * <SAC防御封印スイッチ:5>   # ID[5]のスイッチがONのとき防御を封印
- * <SACGuardSwitch:5>        # 同上
- * <SAC道具封印スイッチ:6>   # ID[6]のスイッチがONのときアイテムを封印
- * <SACItemSwitch:6>         # 同上
- * <SACスキル封印スイッチ:7> # ID[7]のスイッチがONのときスキルを封印
- * <SACSkillSwitch:7>        # 同上
- * <SAC攻撃封印計算式:f>     # 計算式[f]の結果がtrueのとき攻撃を封印
- * <SACAttackFormula:f>      # 同上
- * <SAC防御封印計算式:f>     # 計算式[f]の結果がtrueのとき防御を封印
- * <SACGuardFormula:f>       # 同上
- * <SAC道具封印計算式:f>     # 計算式[f]の結果がtrueのときアイテムを封印
- * <SACItemFormula:f>        # 同上
- * <SACスキル封印計算式:f>   # 計算式[f]の結果がtrueのときスキルを封印
- * <SACSkillFormula:f>       # 同上
- *
- * 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
- * < → &lt;
- * > → &gt;
- * 例
- * <SACAttackFormula:\v[1] &gt;= 5> # 変数[1]が5以下の場合攻撃封印
- * <SACGuardFormula:true>           # 常に防御封印
- *
- * 注意！
- * 全てのコマンドを封印するとゲームが続行不可になります。
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
 /*:ja
  * @plugindesc アクターコマンド封印プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SealActorCommand.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @param commandDisable
  * @text コマンド使用禁止
@@ -90,37 +44,41 @@
  *
  * 特徴を有するデータベースのメモ欄に以下の通り記入してください。
  *
- * <SAC攻撃封印スイッチ:4>   # ID[4]のスイッチがONのとき攻撃を封印
- * <SACAttackSwitch:4>       # 同上
- * <SAC防御封印スイッチ:5>   # ID[5]のスイッチがONのとき防御を封印
- * <SACGuardSwitch:5>        # 同上
- * <SAC道具封印スイッチ:6>   # ID[6]のスイッチがONのときアイテムを封印
- * <SACItemSwitch:6>         # 同上
- * <SACスキル封印スイッチ:7> # ID[7]のスイッチがONのときスキルを封印
- * <SACSkillSwitch:7>        # 同上
- * <SAC攻撃封印計算式:f>     # 計算式[f]の結果がtrueのとき攻撃を封印
- * <SACAttackFormula:f>      # 同上
- * <SAC防御封印計算式:f>     # 計算式[f]の結果がtrueのとき防御を封印
- * <SACGuardFormula:f>       # 同上
- * <SAC道具封印計算式:f>     # 計算式[f]の結果がtrueのときアイテムを封印
- * <SACItemFormula:f>        # 同上
- * <SACスキル封印計算式:f>   # 計算式[f]の結果がtrueのときスキルを封印
- * <SACSkillFormula:f>       # 同上
+ * <攻撃封印スイッチ:4>   # ID[4]のスイッチがONのとき攻撃を封印
+ * <AttackSealSwitch:4>   # 同上
+ * <防御封印スイッチ:5>   # ID[5]のスイッチがONのとき防御を封印
+ * <GuardSealSwitch:5>    # 同上
+ * <道具封印スイッチ:6>   # ID[6]のスイッチがONのときアイテムを封印
+ * <ItemSealSwitch:6>     # 同上
+ * <スキル封印スイッチ:7> # ID[7]のスイッチがONのときスキルを封印
+ * <SkillSealSwitch:7>    # 同上
+ * <攻撃封印計算式:f>     # 計算式[f]の結果がtrueのとき攻撃を封印
+ * <AttackSealFormula:f>  # 同上
+ * <防御封印計算式:f>     # 計算式[f]の結果がtrueのとき防御を封印
+ * <GuardSealFormula:f>   # 同上
+ * <道具封印計算式:f>     # 計算式[f]の結果がtrueのときアイテムを封印
+ * <ItemSealFormula:f>    # 同上
+ * <スキル封印計算式:f>   # 計算式[f]の結果がtrueのときスキルを封印
+ * <SkillSealFormula:f>   # 同上
+ *
+ * スイッチを指定しなかった場合、常に封印されます。
+ * <攻撃封印スイッチ>
  *
  * 文章、スクリプト中で不等号を使いたい場合、以下のように記述してください。
  * < → &lt;
  * > → &gt;
+ *
  * 例
- * <SACAttackFormula:\v[1] &gt;= 5> # 変数[1]が5以下の場合攻撃封印
- * <SACGuardFormula:true>           # 常に防御封印
+ * <AttackSealFormula:\v[1] &gt;= 5> # 変数[1]が5以下の場合攻撃封印
+ * <GuardSealSwitch>                 # 常に防御封印
  *
  * 注意！
  * 全てのコマンドを封印するとゲームが続行不可になります。
  *
  * アイテム使用をスキル化したい場合は、スキルのメモ欄に以下の通り
  * 入力してください。対象スキルを選択後、アイテムウィンドウが開きます。
- * <SACアイテムスキル> # アイテム使用スキル化
- * <SACItemSkill>      # 同上
+ * <アイテムスキル> # アイテム使用スキル化
+ * <ItemSkill>      # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -132,80 +90,28 @@
 
 (function() {
     'use strict';
-    var metaTagPrefix = 'SAC';
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + name;
-        return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text === true) return text;
-        if (text == null) text = '';
-        text = text.replace(/&gt;?/gi, '>');
-        text = text.replace(/&lt;?/gi, '<');
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-    var param = createPluginParameter('SealActorCommand');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Game_Actor
     //  コマンド封印が有効かどうかを判定します。
     //=============================================================================
     Game_Actor.prototype.getSealMetaInfo = function(names) {
-        var metaValue = null;
+        let metaValue = null;
         this.traitObjects().some(function(traitObject) {
-            metaValue = getMetaValues(traitObject, names);
+            metaValue = PluginManagerEx.findMetaValue(traitObject, names);
             return metaValue;
         });
         return metaValue;
     };
 
     Game_Actor.prototype.isSealCommand = function(commandNames) {
-        var switchId = this.getSealMetaInfo([commandNames[0] + 'Switch', commandNames[1] + '封印スイッチ']);
-        if (switchId && $gameSwitches.value(getArgNumber(switchId))) {
+        const switchId = this.getSealMetaInfo([commandNames[0] + 'SealSwitch', commandNames[1] + '封印スイッチ']);
+        if (switchId && (switchId === true || $gameSwitches.value(switchId))) {
             return true;
         }
-        var formula = this.getSealMetaInfo([commandNames[0] + 'Formula', commandNames[1] + '封印計算式']);
+        const formula = this.getSealMetaInfo([commandNames[0] + 'SealFormula', commandNames[1] + '封印計算式']);
         return formula && eval(formula);
     };
 
@@ -229,7 +135,7 @@
     // Window_ActorCommand
     //  コマンドが封印されていた場合、処理を終了します。
     //=============================================================================
-    var _Window_ActorCommand_addAttackCommand = Window_ActorCommand.prototype.addAttackCommand;
+    const _Window_ActorCommand_addAttackCommand = Window_ActorCommand.prototype.addAttackCommand;
     Window_ActorCommand.prototype.addAttackCommand = function() {
         if (this._actor.isSealCommandAttack()) {
             if (param.commandDisable) {
@@ -241,7 +147,7 @@
         _Window_ActorCommand_addAttackCommand.apply(this, arguments);
     };
 
-    var _Window_ActorCommand_addGuardCommand = Window_ActorCommand.prototype.addGuardCommand;
+    const _Window_ActorCommand_addGuardCommand = Window_ActorCommand.prototype.addGuardCommand;
     Window_ActorCommand.prototype.addGuardCommand = function() {
         if (this._actor.isSealCommandGuard()) {
             if (param.commandDisable) {
@@ -253,7 +159,7 @@
         _Window_ActorCommand_addGuardCommand.apply(this, arguments);
     };
 
-    var _Window_ActorCommand_addItemCommand = Window_ActorCommand.prototype.addItemCommand;
+    const _Window_ActorCommand_addItemCommand = Window_ActorCommand.prototype.addItemCommand;
     Window_ActorCommand.prototype.addItemCommand = function() {
         if (this._actor.isSealCommandItem()) {
             if (param.commandDisable) {
@@ -265,7 +171,7 @@
         _Window_ActorCommand_addItemCommand.apply(this, arguments);
     };
 
-    var _Window_ActorCommand_addSkillCommands = Window_ActorCommand.prototype.addSkillCommands;
+    const _Window_ActorCommand_addSkillCommands = Window_ActorCommand.prototype.addSkillCommands;
     Window_ActorCommand.prototype.addSkillCommands = function() {
         if (this._actor.isSealCommandSkill()) {
             if (param.commandDisable) {
@@ -285,14 +191,14 @@
         });
     };
 
-    var _Window_ActorCommand_drawItem = Window_ActorCommand.prototype.drawItem;
+    const _Window_ActorCommand_drawItem = Window_ActorCommand.prototype.drawItem;
     Window_ActorCommand.prototype.drawItem = function(index) {
         _Window_ActorCommand_drawItem.apply(this, arguments);
-        var sign = param.disableSign;
+        const sign = param.disableSign;
         if (!this.isCommandEnabled(index) && sign) {
-            var rect = this.itemRectForText(index);
-            var width = this.drawTextEx(sign, this.windowWidth(), 0);
-            var height = this.calcTextHeight({text:sign}, false);
+            const rect = this.itemRectWithPadding(index);
+            const width = this.drawTextEx(sign, this.width, 0);
+            const height = this.calcTextHeight({text:sign}, false);
             this.resetFontSettings();
             this.resetTextColor();
             this.changePaintOpacity(true);
@@ -307,7 +213,7 @@
     // Scene_Battle
     //  アイテムスキルを作成します。
     //=============================================================================
-    var _Scene_Battle_onItemCancel = Scene_Battle.prototype.onItemCancel;
+    const _Scene_Battle_onItemCancel = Scene_Battle.prototype.onItemCancel;
     Scene_Battle.prototype.onItemCancel = function() {
         if (this._selectItemSkill) {
             this._itemWindow.hide();
@@ -319,11 +225,11 @@
         }
     };
 
-    var _Scene_Battle_onSkillOk =Scene_Battle.prototype.onSkillOk;
+    const _Scene_Battle_onSkillOk =Scene_Battle.prototype.onSkillOk;
     Scene_Battle.prototype.onSkillOk = function() {
-        var skill = this._skillWindow.item();
-        if (getMetaValues(skill, ['アイテムスキル', 'ItemSkill'])) {
-            var action = BattleManager.inputtingAction();
+        const skill = this._skillWindow.item();
+        if (PluginManagerEx.findMetaValue(skill, ['アイテムスキル', 'ItemSkill'])) {
+            const action = BattleManager.inputtingAction();
             action.setSkill(skill.id);
             BattleManager.actor().setLastBattleSkill(skill);
             this._skillWindow.hide();
@@ -334,7 +240,7 @@
         }
     };
 
-    var _Scene_Battle_onActorCancel = Scene_Battle.prototype.onActorCancel;
+    const _Scene_Battle_onActorCancel = Scene_Battle.prototype.onActorCancel;
     Scene_Battle.prototype.onActorCancel = function() {
         if (this._selectItemSkill) {
             this._actorWindow.hide();
@@ -345,7 +251,7 @@
         }
     };
 
-    var _Scene_Battle_onEnemyCancel = Scene_Battle.prototype.onEnemyCancel;
+    const _Scene_Battle_onEnemyCancel = Scene_Battle.prototype.onEnemyCancel;
     Scene_Battle.prototype.onEnemyCancel = function() {
         if (this._selectItemSkill) {
             this._enemyWindow.hide();
@@ -356,7 +262,7 @@
         }
     };
 
-    var _Scene_Battle_selectNextCommand = Scene_Battle.prototype.selectNextCommand;
+    const _Scene_Battle_selectNextCommand = Scene_Battle.prototype.selectNextCommand;
     Scene_Battle.prototype.selectNextCommand = function() {
         _Scene_Battle_selectNextCommand.apply(this, arguments);
         this._selectItemSkill = false;
