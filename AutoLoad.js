@@ -1,22 +1,12 @@
 //=============================================================================
 // AutoLoad.js
 // ----------------------------------------------------------------------------
-// (C)2016 Triacontane
+// (C)2021 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 2.0.0 2019/11/25 コミュニティ版コアスクリプト1.6以降のオートセーブ機能との競合を解消
-//                  タイトル画面をスキップせず、コンティニュー選択時にオートロードする機能を追加
-//                  パラメータ仕様変更
-// 1.2.4 2018/09/16 LoadPoint.jsとの競合を解消
-// 1.2.3 2018/08/30 MadeWithMv.jsとの競合を解消
-// 1.2.2 2018/01/10 マップ画面を使った独自のタイトルでセーブ時のピクチャが表示されていた問題を修正
-// 1.2.1 2016/09/18 YEP_EquipCore.jsとの競合を解消
-// 1.2.0 2016/09/17 マップ画面を使った独自のタイトル画面が作成できる機能を追加
-// 1.1.1 2016/09/16 完全スキップがONかつセーブデータが存在しない場合にゲームを開始できない問題を修正
-// 1.1.0 2016/09/16 ゲーム終了やタイトルに戻るの場合もタイトル画面をスキップできる機能を追加
-// 1.0.0 2016/05/22 初版
+// 1.0.0 2021/04/11 MZ版初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
@@ -24,120 +14,50 @@
 //=============================================================================
 
 /*:
- * @plugindesc Auto load plugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc 自動ロートプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AutoLoad.js
+ * @author トリアコンタン
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  *
- * @param PlaySe
- * @desc セーブ成功時にシステム効果音を演奏します。
- * @default true
- * @type boolean
- *
- * @param TileSkipPolicy
- * @desc タイトル画面のスキップ仕様です。
- * @default 1
+ * @param loadTiming
+ * @text ロードタイミング
+ * @desc セーブファイルが存在する場合の自動ロードが行われるタイミングです。
+ * @default continue
  * @type select
- * @option None
- * @value 0
- * @option Normal Skip
- * @value 1
- * @option Completely Skip
- * @value 2
+ * @option デフォルト項目『コンティニュー』を選択したとき
+ * @value continue
+ * @option ゲームを起動したとき(タイトル画面は完全に省略)
+ * @value gameStart
+ * @option 追加した項目を選択したとき
+ * @value additional
  *
- * @param TitleMapID
- * @desc 独自にタイトル画面用のマップを作成する場合に指定するマップIDです。
+ * @param commandName
+ * @text 追加コマンド名
+ * @desc ロードタイミングを『追加した項目を選択したとき』にした場合の追加項目名です。
+ * @default 最新データをロード
+ *
+ * @param commandIndex
+ * @text 追加コマンドインデックス
+ * @desc ロードタイミングを『追加した項目を選択したとき』にした場合の追加項目の表示インデックスです。
  * @default 0
  * @type number
  *
- * @help 以下の機能でタイトル画面の仕様を変更します。
- * マップ画面を使ったオリジナルタイトル画面などが作れます。
+ * @command SAVE_TO_LOAD_DATA
+ * @text ロードしたデータにセーブ
+ * @desc ロードしたデータにセーブします。ニューゲームから開始した場合は新規でデータ作成します。
  *
- * １．セーブファイルが存在する場合、タイトル画面をスキップします。
+ * @help AutoLoad.js
  *
- * ２．セーブ画面を経由せずに最後にアクセスしたセーブファイルに
- * 直接セーブするプラグインコマンドを提供します。
+ * ひとつ以上のセーブファイルが存在するとき、
+ * 最新のセーブデータを自動で選択してロードする機能を提供します。
+ * 自動ロードのタイミングはパラメータから選択可能です。
  *
- * ３．設定次第で通常のタイトル画面を完全にスキップできます。
- * 「タイトルに戻る」場合もニューゲームか最新のセーブファイルを
- * ロードするようになります。
- *
- * ４．特定のマップをオリジナルタイトル画面として定義できます。
- * マップや遠景などを使って独自のタイトル画面を演出できます。
- * 以下の手順を踏んでください。
- *
- * ４－１．「タイトルマップID」にタイトル用マップのマップIDを設定する。
- * ４－２．タイトル用マップのイベントでタイトル処理を実装する。
- * ４－３．プラグインコマンド「AL_MOVE_LAST_SAVEPOINT」で最後セーブ地点に移動する。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * AL_オートセーブ         # 最後にアクセスしたセーブIDにセーブします。
- * AL_AUTO_SAVE            # 同上
- * AL_最終セーブ地点へ移動 # 最後にセーブした場所へ移動します。
- * AL_MOVE_LAST_SAVEPOINT  # 同上
- * AL_初期位置へ移動       # データベース上のパーティの初期位置へ移動します。
- * AL_MOVE_INITIAL_POINT   # 同上
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
- * @plugindesc タイトル画面仕様変更プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param 効果音演奏
- * @desc オートセーブ成功時にシステム効果音を演奏します。
- * @default true
- * @type boolean
- *
- * @param タイトルスキップポリシー
- * @desc タイトル画面のスキップ仕様です。
- * @default 1
- * @type select
- * @option スキップなし(コンティニューを選択するとオートロード)
- * @value 0
- * @option 通常スキップ(起動時のみスキップ)
- * @value 1
- * @option 完全スキップ(タイトルに戻った場合もスキップ)
- * @value 2
- *
- * @param タイトルマップID
- * @desc 独自にタイトル画面用のマップを作成する場合に指定するマップIDです。
- * @default 0
- * @type number
- *
- * @help 以下の機能でタイトル画面の仕様を変更します。
- * マップ画面を使ったオリジナルタイトル画面などが作れます。
- *
- * １．セーブファイルが存在する場合、タイトル画面をスキップします。
- *
- * ２．セーブ画面を経由せずに最後にアクセスしたセーブファイルに
- * 直接セーブするプラグインコマンドを提供します。
- *
- * ３．設定次第で通常のタイトル画面を完全にスキップできます。
- * 「タイトルに戻る」場合もニューゲームか最新のセーブファイルを
- * ロードするようになります。
- *
- * ４．特定のマップをオリジナルタイトル画面として定義できます。
- * マップや遠景などを使って独自のタイトル画面を演出できます。
- * 以下の手順を踏んでください。
- *
- * ４－１．「タイトルマップID」にタイトル用マップのマップIDを設定する。
- * ４－２．タイトル用マップのイベントでタイトル処理を実装する。
- * ４－３．プラグインコマンド「AL_MOVE_LAST_SAVEPOINT」で最後セーブ地点に移動する。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * AL_オートセーブ         # 最後にアクセスしたセーブIDにセーブします。
- * AL_AUTO_SAVE            # 同上
- * AL_最終セーブ地点へ移動 # 最後にセーブした場所へ移動します。
- * AL_MOVE_LAST_SAVEPOINT  # 同上
- * AL_初期位置へ移動       # データベース上のパーティの初期位置へ移動します。
- * AL_MOVE_INITIAL_POINT   # 同上
- *
- * MadeWithMv.jsと併用するときは、このプラグインを下に配置してください。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -145,252 +65,125 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName    = 'AutoLoad';
-    var metaTagPrefix = 'AL';
 
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+
+    PluginManagerEx.registerCommand(script, 'SAVE_TO_LOAD_DATA', function() {
+        this._index++;
+        DataManager.saveGameCurrent();
+        this._index--;
+        SoundManager.playSave();
+    });
+
+    DataManager.saveGameCurrent = function() {
+        $gameSystem.onBeforeSave();
+        this.saveGame($gameSystem.savefileId());
     };
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramPlaySe         = getParamBoolean(['PlaySe', '効果音演奏']);
-    var paramTitleMapId     = getParamNumber(['TitleMapID', 'タイトルマップID'], 0);
-    var paramTileSkipPolicy = getParamNumber(['TileSkipPolicy', 'タイトルスキップポリシー'], 0, 2);
-
-    var $gameScreenBack = null;
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var commandPrefix = new RegExp('^' + metaTagPrefix);
-        if (!command.match(commandPrefix)) return;
-        this.pluginCommandAutoLoad(command.replace(commandPrefix, ''), args);
-    };
-
-    Game_Interpreter.prototype.pluginCommandAutoLoad = function(command) {
-        switch (getCommandName(command)) {
-            case '_オートセーブ' :
-            case '_AUTO_SAVE' :
-                this._index++;
-                $gameSystem.saveLastAccess();
-                this._index--;
-                break;
-            case '_初期位置へ移動' :
-            case '_MOVE_INITIAL_POINT' :
-                $gamePlayer.moveInitialPoint();
-                this.setWaitMode('transfer');
-                break;
-            case '_最終セーブ地点へ移動' :
-            case '_MOVE_LAST_SAVEPOINT' :
-                $gamePlayer.moveLastSavePoint();
-                this.setWaitMode('transfer');
-                break;
-        }
-    };
-
-    //=============================================================================
-    // Game_System
-    //  自動セーブ処理を追加定義します。
-    //=============================================================================
-    Game_System.prototype.saveLastAccess = function() {
-        this.onBeforeSave();
-        var result = DataManager.saveLastAccessGame();
-        if (result && paramPlaySe) {
-            SoundManager.playSave();
-        }
-    };
-
-    var _Game_System_onBeforeSave      = Game_System.prototype.onBeforeSave;
-    Game_System.prototype.onBeforeSave = function() {
-        _Game_System_onBeforeSave.apply(this, arguments);
-        $gamePlayer.setLastSavePoint();
-    };
-
-    //=============================================================================
-    // Game_Player
-    //  セーブ時点での状態を保持します。
-    //=============================================================================
-    Game_Player.prototype.setLastSavePoint = function() {
-        this._lastSaveMapId       = $gameMap.mapId();
-        this._lastSaveX           = this.x;
-        this._lastSaveY           = this.y;
-        this._lastSaveTransparent = this.isTransparent();
-    };
-
-    Game_Player.prototype.moveLastSavePoint = function() {
-        if (this.isExistLastSavePoint()) {
-            this.setTransparent(this._lastSaveTransparent);
-            this.reserveTransfer(this._lastSaveMapId, this._lastSaveX, this._lastSaveY, this.direction(), 0);
-            this._requestLoad = true;
-        }
-        if ($gamePlayer.moveLoadPoint) {
-            $gamePlayer.moveLoadPoint();
-        }
-    };
-
-    var _Game_Player_clearTransferInfo = Game_Player.prototype.clearTransferInfo;
-    Game_Player.prototype.clearTransferInfo = function() {
-        _Game_Player_clearTransferInfo.apply(this, arguments);
-        if (this._requestLoad) {
-            $gameSystem.onAfterLoad();
-            $gameScreen = $gameScreenBack;
-            $gameScreen.startFadeIn(1);
-            this._requestLoad = false;
-        }
-    };
-
-    Game_Player.prototype.moveInitialPoint = function() {
-        $gamePlayer.reserveTransfer($dataSystem.startMapId,
-            $dataSystem.startX, $dataSystem.startY, this.direction(), 0);
-        this.setTransparent($dataSystem.optTransparent);
-    };
-
-    Game_Player.prototype.isExistLastSavePoint = function() {
-        return !!this._lastSaveMapId;
-    };
-
-    //=============================================================================
-    // DataManager
-    //  自動セーブ処理を追加定義します。
-    //=============================================================================
-    var _DataManager_loadDatabase = DataManager.loadDatabase;
-    DataManager.loadDatabase = function() {
-        if (this.processEquipNotetags1 !== undefined) {
-            Yanfly._loaded_YEP_EquipCore = false;
-        }
-        _DataManager_loadDatabase.apply(this, arguments);
-    };
-
-    DataManager.saveLastAccessGame = function() {
-        var saveFileId = this.lastAccessedSavefileId();
-        var result     = this.saveGame(saveFileId);
-        if (result) StorageManager.cleanBackup(saveFileId);
-        return result;
-    };
-
-    DataManager.autoLoadGame = function() {
-        var saveFileId = this.latestSavefileId();
-        var result     = false;
+    DataManager.loadGameLatest = function() {
         if (this.isAnySavefileExists()) {
-            result = this.loadGame(saveFileId);
-        }
-        return result;
-    };
-
-    //=============================================================================
-    // Scene_Boot
-    //  タイトル画面をとばしてマップ画面に遷移します。
-    //=============================================================================
-    var _Scene_Boot_start      = Scene_Boot.prototype.start;
-    Scene_Boot.prototype.start = function() {
-        _Scene_Boot_start.apply(this, arguments);
-        if (this.isTitleSkip()) {
-            this.goToAutoLoad();
+            return this.loadGame(this.latestSavefileId());
+        } else {
+            return null;
         }
     };
 
-    Scene_Boot.prototype.isTitleSkip = function() {
-        return !DataManager.isBattleTest() && !DataManager.isEventTest() &&
-            typeof Scene_Splash === 'undefined' && paramTileSkipPolicy !== 0;
-    };
-
-    Scene_Boot.prototype.goToAutoLoad = function() {
-        var result = this.applyAutoLoad();
-        if (!result && (paramTileSkipPolicy === 2 || paramTitleMapId > 0)) {
-            this.goToNewGame();
-        }
-        if (paramTitleMapId > 0) {
-            $gamePlayer.reserveTransfer(paramTitleMapId, 0, 0);
-            $gamePlayer.setTransparent(true);
+    const _Scene_Title_create = Scene_Title.prototype.start;
+    Scene_Title.prototype.start = function() {
+        _Scene_Title_create.apply(this, arguments);
+        if (isGameStartLoad()) {
+            this.commandAutoLoad();
         }
     };
 
-    Scene_Boot.prototype.goToNewGame = function() {
-        DataManager.setupNewGame();
-        SceneManager.goto(Scene_Map);
-    };
-
-    Scene_Base.prototype.applyAutoLoad = function() {
-        var result = DataManager.autoLoadGame();
-        if (result) {
-            Scene_Load.prototype.reloadMapIfUpdated.call(this);
-            SceneManager.goto(Scene_Map);
-            if (!paramTitleMapId) {
-                $gameSystem.onAfterLoad();
-            } else {
-                $gameScreenBack = $gameScreen;
-                $gameScreen = new Game_Screen();
-            }
-            if ($gamePlayer.moveLoadPoint) {
-                $gamePlayer.moveLoadPoint();
-            }
+    const _Scene_Title_createCommandWindow = Scene_Title.prototype.createCommandWindow;
+    Scene_Title.prototype.createCommandWindow = function() {
+        _Scene_Title_createCommandWindow.apply(this, arguments);
+        if (isAdditionalLoad()) {
+            this._commandWindow.setHandler("additionalContinue", this.commandAutoLoad.bind(this));
         }
-        return result;
     };
 
-    //=============================================================================
-    // Scene_Title
-    //  完全スキップの場合にScene_Bootで上書きします。
-    //=============================================================================
-    if (paramTileSkipPolicy === 2 || paramTitleMapId > 0) {
-        Scene_Title = Scene_Boot;
-    }
+    const _Scene_Title_commandWindowRect = Scene_Title.prototype.commandWindowRect;
+    Scene_Title.prototype.commandWindowRect = function() {
+        const rect = _Scene_Title_commandWindowRect.apply(this, arguments);
+        if (isAdditionalLoad()) {
+            rect.height += this.calcWindowHeight(1, true) - $gameSystem.windowPadding() * 2;
+        }
+        return rect;
+    };
 
-    var _Scene_Title_commandContinue = Scene_Title.prototype.commandContinue;
+    const _Scene_Title_updateColorFilter = Scene_Title.prototype.updateColorFilter;
+    Scene_Title.prototype.updateColorFilter = function() {
+        if (isGameStartLoad()) {
+            this._fadeOpacity = 255;
+        }
+        _Scene_Title_updateColorFilter.apply(this, arguments);
+    };
+
+    const _Scene_Title_playTitleMusic = Scene_Title.prototype.playTitleMusic;
+    Scene_Title.prototype.playTitleMusic = function() {
+        if (isGameStartLoad()) {
+            return;
+        }
+        _Scene_Title_playTitleMusic.apply(this, arguments);
+    };
+
+    const _Scene_Title_commandContinue = Scene_Title.prototype.commandContinue;
     Scene_Title.prototype.commandContinue = function() {
-        _Scene_Title_commandContinue.apply(this, arguments);
-        this.fadeOutAll();
-        this._requestAutoLoad = true;
+        if (isContinueLoad()) {
+            this.commandAutoLoad();
+        } else {
+            _Scene_Title_commandContinue.apply(this, arguments);
+        }
     };
 
-    var _Scene_Title_terminate = Scene_Title.prototype.terminate;
+    Scene_Title.prototype.commandAutoLoad = function() {
+        const promise = DataManager.loadGameLatest();
+        if (!promise) {
+            this.commandNewGame();
+            return;
+        }
+        promise.then(() => {
+            this._commandWindow.close();
+            this.fadeOutAll();
+            this._loadSuccess = true;
+            SceneManager.goto(Scene_Map);
+        });
+    };
+
+    const _Scene_Title_terminate = Scene_Title.prototype.terminate;
     Scene_Title.prototype.terminate = function() {
         _Scene_Title_terminate.apply(this, arguments);
-        if (this._requestAutoLoad) {
-            this.applyAutoLoad();
+        if (this._loadSuccess) {
+            $gameSystem.onAfterLoad();
         }
     };
 
-    if (typeof Scene_Splash !== 'undefined') {
-        Scene_Splash.prototype.goToAutoLoad = Scene_Boot.prototype.goToAutoLoad;
-        Scene_Splash.prototype.goToNewGame = Scene_Boot.prototype.goToNewGame;
-
-        var _Scene_Splash_gotoTitleOrTest = Scene_Splash.prototype.gotoTitleOrTest;
-        Scene_Splash.prototype.gotoTitleOrTest = function() {
-            _Scene_Splash_gotoTitleOrTest.apply(this, arguments);
-            if (SceneManager.isNextScene(Scene_Title)) {
-                this.goToAutoLoad();
+    const _Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
+    Window_TitleCommand.prototype.makeCommandList = function() {
+        _Window_TitleCommand_makeCommandList.apply(this, arguments);
+        if (isAdditionalLoad()) {
+            this.addCommand(param.commandName, 'additionalContinue', this.isContinueEnabled());
+            if (param.commandIndex) {
+                const command = this._list.pop();
+                this._list.splice(param.commandIndex, 0, command);
             }
-        };
+        }
+    };
+
+    function isGameStartLoad() {
+        return param.loadTiming === 'gameStart';
+    }
+
+    function isContinueLoad() {
+        return param.loadTiming === 'continue';
+    }
+
+    function isAdditionalLoad() {
+        return param.loadTiming === 'additional';
     }
 })();
-
