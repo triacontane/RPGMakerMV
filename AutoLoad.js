@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2021/04/17 ロードタイミングを項目追加にしたときは追加した項目が初期選択されるよう修正
 // 1.0.0 2021/04/11 MZ版初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -160,6 +161,15 @@
         _Scene_Title_terminate.apply(this, arguments);
         if (this._loadSuccess) {
             $gameSystem.onAfterLoad();
+        }
+    };
+
+    const _Window_TitleCommand_selectLast = Window_TitleCommand.prototype.selectLast;
+    Window_TitleCommand.prototype.selectLast = function() {
+        if (!Window_TitleCommand._lastCommandSymbol && this.isContinueEnabled() && isAdditionalLoad()) {
+            this.selectSymbol("additionalContinue");
+        } else {
+            _Window_TitleCommand_selectLast.apply(this, arguments);
         }
     };
 
