@@ -14,7 +14,7 @@
 //=============================================================================
 
 /*:
- * @plugindesc 自動ロートプラグイン
+ * @plugindesc 自動ロードプラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AutoLoad.js
  * @author トリアコンタン
