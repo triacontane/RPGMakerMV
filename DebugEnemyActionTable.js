@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/04/17 MZ用に微修正
  1.0.0 2021/04/17 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -16,6 +17,8 @@
 /*:
  * @plugindesc DebugEnemyActionTablePlugin
  * @author triacontane
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DebugEnemyActionTable.js
  *
  * @help DebugEnemyActionTable.js
  *
@@ -30,6 +33,8 @@
 /*:ja
  * @plugindesc 敵キャラ行動テーブルデバッグプラグイン
  * @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DebugEnemyActionTable.js
  *
  * @help DebugEnemyActionTable.js
  *
@@ -44,37 +49,35 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(()=> {
     'use strict';
 
     if (!Utils.isOptionValid('test')) {
         return;
     }
 
-    var _Game_Enemy_selectAction = Game_Enemy.prototype.selectAction;
+    const _Game_Enemy_selectAction = Game_Enemy.prototype.selectAction;
     Game_Enemy.prototype.selectAction = function (actionList, ratingZero) {
-        var resultAction = _Game_Enemy_selectAction.apply(this, arguments);
+        const resultAction = _Game_Enemy_selectAction.apply(this, arguments);
         this.recordActionTable(actionList, ratingZero, resultAction);
         return resultAction;
     }
 
     Game_Enemy.prototype.recordActionTable = function (actionList, ratingZero, resultAction) {
-        var sum = actionList.reduce(function (rating, action) {
-            return rating + action.rating - ratingZero;
-        }, 0);
+        const sum = actionList.reduce((r, a) => r + a.rating - ratingZero, 0);
         if (sum <= 0) {
             return;
         }
-        var data = actionList.map(function (action) {
-            var item = {};
-            var skill = $dataSkills[action.skillId] || {};
+        const data = actionList.map(action => {
+            const item = {};
+            const skill = $dataSkills[action.skillId] || {};
             item['Skill Name'] = skill.name;
             item['Rating'] = action.rating;
             item['Percent'] = (action.rating - ratingZero) / sum * 100;
             item['Use'] = action.skillId === resultAction.skillId ? 'Yes' : 'No';
             return item;
         });
-        console.group('[' + this.name() + '] Action List');
+        console.group(`[${this.name()}] Action List`);
         console.table(data);
         console.groupEnd();
     }
