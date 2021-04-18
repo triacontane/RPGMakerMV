@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.11.6 2021/04/18 プリセットのスクリプトをMZ向けに修正
  1.11.5 2021/04/11 1.10.4で解消した問題をキャラクターとフェイスグラフィックにも適用
  1.11.4 2021/04/08 キャッシュされていないピクチャを表示しようとしたとき、表示順序がずれる場合がある問題を修正
  1.11.3 2021/04/08 orderAfterアノテーションを追加
@@ -453,7 +454,6 @@
  * @option this.drawIcon(item.iconIndex, r.x, r.y, r.width); // アイコン
  * @option this.drawFace(item.faceName(), item.faceIndex(), r.x, r.y); // フェイスグラフィック
  * @option this.drawCharacter(item.characterName(), item.characterIndex(), r.x, r.y); // キャラクター
- * @option this.drawGauge(r.x, r.y, r.width, 1.0, this.textColor(1), this.textColor(2)); // ゲージ
  * @option this.drawActorCharacter(item, r.x + 24, r.y + 48); // アクターキャラクター
  * @option this.drawActorCharacter(this._actor, r.x, r.y); // メインメニューで選択したアクターキャラクター
  * @option this.drawActorFace(item, r.x, r.y); // アクターフェイス
@@ -462,7 +462,6 @@
  * @option this.drawActorNickname(item, r.x, r.y); // アクターの二つ名
  * @option this.drawActorLevel(item, r.x, r.y); // アクターのレベル
  * @option this.drawActorIcons(item, r.x, r.y); // アクターのステートアイコン
- * @option this.drawCurrentAndMax(0, 100, r.x, r.y, r.width, this.textColor(1), this.textColor(2)); // 現在値、最大値
  * @option this.drawActorHp(item, r.x, r.y, r.width); // アクターのHP
  * @option this.drawActorMp(item, r.x, r.y, r.width); // アクターのMP
  * @option this.drawActorTp(item, r.x, r.y, r.width); // アクターのTP
@@ -471,9 +470,13 @@
  * @option this.drawText($gameParty.numItems(item), r.x, r.y, r.width, 'right'); // アイテムの所持数
  * @option this.drawTextEx(`Text:${item.name}`, r.x, r.y, r.width); // 任意のテキスト描画(制御文字変換あり)
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
- * @option this.changeTextColor(this.textColor(1)); // テキストカラー変更(drawTextでのみ有効)
+ * @option this.changeTextColor(ColorManager.textColor(1)); // テキストカラー変更(drawTextでのみ有効)
  * @option this.drawText(this.findWindowItem('window1').name, r.x, r.y, r.width); // 別ウィンドウで選択している項目名
  * @option this.drawNotePicture('noteValue', r.x, r.y); // 指定したメモ欄のピクチャを描画
+ * @option this.placeActorName(item, r.x, r.y); // アクター名称(戦闘用)
+ * @option this.placeStateIcon(item, r.x, r.y); // ステートアイコン(戦闘用)
+ * @option this.placeGauge(item, 'hp', r.x, r.y); // HPゲージ(戦闘用)
+ * @option this.placeBasicGauges(item, r.x, r.y); // ゲージセット(戦闘用)
  *
  * @param IsEnableScript
  * @parent DataScript
