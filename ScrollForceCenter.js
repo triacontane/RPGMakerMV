@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2021/04/19 マップがループしているとき画面シフトが機能しない問題を修正
 // 2.0.1 2020/11/26 イベントテストでエラーになる問題を修正
 // 2.0.0 2020/11/18 MZ向けに全面的にリファクタリング
 // 1.1.0 2019/04/28 中心座標を指定したぶんだけずらせる機能を追加
@@ -187,10 +188,14 @@
         if (this.isForceCenterHorizontal()) {
             this._displayX = x + (param.adjustX || 0);
             this._parallaxX = this._displayX;
+        } else if (this.isLoopHorizontal()) {
+            this._displayX += param.adjustX || 0;
         }
         if (this.isForceCenterVertical()) {
             this._displayY = y + (param.adjustY || 0);
             this._parallaxY = this._displayY;
+        }else if (this.isLoopVertical()) {
+            this._displayY += param.adjustY || 0;
         }
     };
 
