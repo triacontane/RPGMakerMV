@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.22.2 2021/04/19 競合を起こす可能性のあるメソッド名を変更
 // 2.22.1 2021/03/14 敵キャラの自動登録が部分一致になっていた問題を修正
 // 2.22.0 2021/03/14 確認ウィンドウの位置を直接指定できる機能を追加
 // 2.21.0 2021/01/17 指定した用語ページを開くことでスイッチがONになる機能を追加
@@ -2107,7 +2108,7 @@ function Window_GlossaryComplete() {
         }
         Window_ItemList.prototype.select.apply(this, arguments);
         if (this.item() && prevItem !== this.item()) {
-            this._glossaryWindow.refresh(this.item(), this.index());
+            this._glossaryWindow.refreshPage(this.item(), this.index());
         } else if (!this.item()) {
             this._glossaryWindow.clearItem();
         }
@@ -2350,7 +2351,7 @@ function Window_GlossaryComplete() {
         return contents && contents !== '0' ? contents : null;
     };
 
-    Window_Glossary.prototype.refresh = function(item, index) {
+    Window_Glossary.prototype.refreshPage = function(item, index) {
         this._listIndex = index;
         this._itemData  = item;
         this._enemy     = null;
