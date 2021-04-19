@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.5.1 2021/04/19 カテゴリ表示を有効にしたとき、リストをスクロールさせたあとカテゴリ選択に戻って別の項目を選択するとスクロール位置がおかしくなる問題を修正
+//                  MVで実装されていた説明の自動改行機能が無効になっていたので復元
 // 3.5.0 2021/03/12 ヘルプウィンドウの位置設定を追加
 // 3.4.0 2021/01/17 指定した用語ページを開くことでスイッチがONになる機能を追加
 //                  3.3.0の修正で用語名称が表示されなくなる場合がある問題を修正
@@ -1792,6 +1794,7 @@
         }
         this._glossaryListWindow.deactivateAndHide();
         this._glossaryListWindow.deselect();
+        this._glossaryListWindow.setTopRow(0);
         this.refreshCompleteWindow();
         this._confirmWindow.deactivateAndHide();
         this.updateHelp(this._helpTexts[1]);
@@ -1802,7 +1805,7 @@
         this._glossaryListWindow.refresh();
         this._glossaryListWindow.activateAndShow();
         if (indexInit) {
-            this._glossaryListWindow.select(0);
+            this._glossaryListWindow.forceSelect(0);
         }
         this._glossaryCategoryWindow.deactivateAndHide();
         this.refreshCompleteWindow();
@@ -2554,14 +2557,24 @@
         return text;
     };
 
-    Window_Glossary.prototype.processNormalCharacter = function(textState) {
-        var c = textState.text[textState.index];
-        var w = this.textWidth(c);
-        if (textState.x + w > this.contentsWidth()) {
-            this.processNewLine(textState);
-            textState.index--;
+    Window_Glossary.prototype.processAllText = function(textState) {
+        var x = 0;
+        while (textState.index < textState.text.length) {
+            var c = textState.text[textState.index];
+            if (c === "\n") {
+                x = 0;
+            }
+            var w = this.textWidth(c);
+            if (x + w > this.contentsWidth()) {
+                this.flushTextState(textState);
+                this.processNewLine(textState);
+                x = 0;
+            } else {
+                this.processCharacter(textState);
+                x += w;
+            }
         }
-        Window_Base.prototype.processNormalCharacter.apply(this, arguments);
+        this.flushTextState(textState);
     };
 
     Window_Glossary.prototype.drawPicture = function(bitmap, text, y) {
