@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.8 2020/04/20 EventEffects.jsとの競合を解消
 // 1.1.7 2020/08/30 YEP_CoreEngine.jsと併用したとき解像度次第でレイヤーマップのピクセルがずれる場合がある競合を修正
 // 1.1.6 2020/08/21 英語版のヘルプ作成
 // 1.1.5 2020/08/21 MZ向けにヘルプ修正
@@ -321,6 +322,9 @@
             this.z += 1;
         }
     };
+
+    // for EventEffect.js
+    Sprite_MapLayer.prototype.updateAngle = function() {}
 
     Sprite_MapLayer.prototype.updateBitmap = function() {
         this._characterName = '';
