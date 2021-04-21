@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.1 2021/04/22 身代わりポップアップの対象を身代わりした側とされた側で選べるよう修正
 // 1.10.0 2021/04/21 身代わり発生時にポップアップする機能を追加
 // 1.9.3 2021/02/24 ポップアップの出力が一部を除き、少し遅れて表示される問題を修正(by 奏ねこまさま)
 // 1.9.2 2020/04/15 MOG_BattleHud.jsと併用したとき、フロントビューで味方にポップアップメッセージが表示されるよう変更
@@ -129,6 +130,11 @@
  * @require 1
  * @dir img/pictures/
  * @type file
+ *
+ * @param 身代わり対象にポップアップ
+ * @desc 有効にすると身代わりのポップアップ対象が『身代わりしてもらった側』になります。
+ * @type boolean
+ * @default false
  *
  * @param 身代わりカラー
  * @desc 身代わり発生時の文字のフラッシュ色です。
@@ -381,6 +387,7 @@
     var paramCounter          = getParamString(['Counter', '反撃']);
     var paramCounterColor     = getParamArrayNumber(['CounterColor', '反撃カラー'], 0, 256);
     var paramSubstitute       = getParamString(['Substitute', '身代わり']);
+    var paramSubstituteTarget = getParamBoolean(['SubstituteTarget', '身代わり対象にポップアップ']);
     var paramSubstituteColor  = getParamArrayNumber(['SubstituteColor', '身代わりカラー'], 0, 256);
     var paramWeakness         = getParamString(['Weakness', '弱点']);
     var paramWeaknessColor    = getParamArrayNumber(['WeaknessColor', '弱点カラー'], 0, 256);
@@ -583,7 +590,7 @@
     var _Window_BattleLog_displaySubstitute = Window_BattleLog.prototype.displaySubstitute;
     Window_BattleLog.prototype.displaySubstitute = function(substitute, target) {
         _Window_BattleLog_displaySubstitute.apply(this, arguments);
-        this.pushPopupMessage(target, paramSubstitute, paramSubstituteColor);
+        this.pushPopupMessage(paramSubstituteTarget ? target : substitute, paramSubstitute, paramSubstituteColor);
     };
 
     Window_BattleLog.prototype.popupCounter = function(target) {
