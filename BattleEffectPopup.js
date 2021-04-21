@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2021/04/21 身代わり発生時にポップアップする機能を追加
 // 1.9.3 2021/02/24 ポップアップの出力が一部を除き、少し遅れて表示される問題を修正(by 奏ねこまさま)
 // 1.9.2 2020/04/15 MOG_BattleHud.jsと併用したとき、フロントビューで味方にポップアップメッセージが表示されるよう変更
 // 1.9.1 2020/03/15 YEP_X_ActSeqPack1.jsでステート付与に成功してもステート付与メッセージがでない不具合を代わりに修正
@@ -120,6 +121,17 @@
  *
  * @param 反撃カラー
  * @desc 反撃発生時の文字のフラッシュ色です。
+ * @default 0,128,255,255
+ *
+ * @param 身代わり
+ * @desc 身代わり時のポップアップメッセージまたはファイル名です。
+ * @default Substitute!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param 身代わりカラー
+ * @desc 身代わり発生時の文字のフラッシュ色です。
  * @default 0,128,255,255
  *
  * @param 弱点
@@ -368,6 +380,8 @@
     var paramReflectionColor  = getParamArrayNumber(['ReflectionColor', '魔法反射カラー'], 0, 256);
     var paramCounter          = getParamString(['Counter', '反撃']);
     var paramCounterColor     = getParamArrayNumber(['CounterColor', '反撃カラー'], 0, 256);
+    var paramSubstitute       = getParamString(['Substitute', '身代わり']);
+    var paramSubstituteColor  = getParamArrayNumber(['SubstituteColor', '身代わりカラー'], 0, 256);
     var paramWeakness         = getParamString(['Weakness', '弱点']);
     var paramWeaknessColor    = getParamArrayNumber(['WeaknessColor', '弱点カラー'], 0, 256);
     var paramWeaknessLine     = getParamNumber(['WeaknessLine', '弱点閾値']);
@@ -564,6 +578,12 @@
     Window_BattleLog.prototype.displayCounter = function(target) {
         _Window_BattleLog_displayCounter.apply(this, arguments);
         this.popupCounter(target);
+    };
+
+    var _Window_BattleLog_displaySubstitute = Window_BattleLog.prototype.displaySubstitute;
+    Window_BattleLog.prototype.displaySubstitute = function(substitute, target) {
+        _Window_BattleLog_displaySubstitute.apply(this, arguments);
+        this.pushPopupMessage(target, paramSubstitute, paramSubstituteColor);
     };
 
     Window_BattleLog.prototype.popupCounter = function(target) {
