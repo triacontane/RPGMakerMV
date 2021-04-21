@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/04/21 身代わり発生時にポップアップする機能を追加
 // 2.1.4 2021/02/06 2.1.3の修正で特定のポップアップが重なったときにエラーになる問題を修正
 // 2.1.3 2021/01/31 戦闘開始時にパーティのポップアップが残っていた場合、消去するよう修正
 // 2.1.2 2021/01/24 静止画像を指定してポップアップしたとき、ポップアップ削除時にdestroyしてしまう問題を修正
@@ -89,6 +90,18 @@
  * @desc 反撃時のポップアップ情報です。
  * @type struct<Popup>
  * @default {"text":"Counter","fileName":"","stateId":"","color":"","flash":"","se":""}
+ *
+ * @param Substitute
+ * @text 身代わりポップアップ
+ * @desc 身代わり時のポップアップ情報です。
+ * @type struct<Popup>
+ * @default {"text":"Substitute","fileName":"","stateId":"","color":"","flash":"","se":""}
+ *
+ * @param SubstituteTarget
+ * @text 身代わり対象にポップアップ
+ * @desc 有効にすると身代わりのポップアップ対象が『身代わりしてもらった側』になります。
+ * @type boolean
+ * @default false
  * 
  * @param Weakness
  * @text 弱点ポップアップ
@@ -484,6 +497,12 @@
     Window_BattleLog.prototype.displayCounter = function(target) {
         _Window_BattleLog_displayCounter.apply(this, arguments);
         this.pushPopupMessage(target, param.Counter);
+    };
+
+    const _Window_BattleLog_displaySubstitute = Window_BattleLog.prototype.displaySubstitute;
+    Window_BattleLog.prototype.displaySubstitute = function(substitute, target) {
+        _Window_BattleLog_displaySubstitute.apply(this, arguments);
+        this.pushPopupMessage(param.SubstituteTarget ? target : substitute, param.Substitute);
     };
 
     const _Window_BattleLog_displayReflection = Window_BattleLog.prototype.displayReflection;
