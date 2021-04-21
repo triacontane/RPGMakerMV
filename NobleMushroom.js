@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.0 2021/04/21 ポーズメニューを開くときにキーを指定する機能を追加
+//                   クイックセーブ、クイックロードのパラメータを空にした場合は項目を追加しないよう修正
 // 1.11.4 2021/02/06 マップから開いたロード、クイックロードでセーブファイルのない項目を選択するとフリーズする問題を修正
 // 1.11.3 2020/06/02 コモンイベントでメッセージを表示しているときにポーズメニューを開けない不具合を修正
 // 1.11.2 2020/05/31 1.11.1の修正で、初期値を0にした場合も強制的に1になっていた不具合を修正
@@ -207,6 +209,14 @@
  * @desc 場所移動やメニュー遷移の際のオートセーブを無効化します。
  * @default false
  * @type boolean
+ *
+ * @param MenuButtonName
+ * @desc メニューボタンを開くときのボタン名です。
+ * @default menu
+ * @type combo
+ * @option menu
+ * @option shift
+ * @option control
  *
  * @help It is a base plug-in for creating sound novel easily with RPG Maker MV
  * When applied, the display of the message window becomes the entire screen,
@@ -455,6 +465,14 @@
  * @default false
  * @type boolean
  *
+ * @param メニューボタン名称
+ * @desc メニューボタンを開くときのボタン名です。
+ * @default menu
+ * @type combo
+ * @option menu
+ * @option shift
+ * @option control
+ *
  * @help RPGツクールMVでサウンドノベルを手軽に作成するためのベースプラグインです。
  * 適用すると、メッセージウィンドウの表示が画面全体になり
  * 表示したメッセージが消去されず画面に蓄積されるようになります。
@@ -655,6 +673,7 @@
     var paramUsePauseMenuAlways = getParamBoolean(['UsePauseMenuAlways', '常にポーズメニュー使用']);
     var paramDisablePauseSwitch = getParamNumber(['DisablePauseSwitch', 'ポーズ禁止スイッチ'], 0);
     var paramInvalidSaveOnMove  = getParamBoolean(['InvalidAutoSaveOnMove', '移動時のオートセーブ無効']);
+    var paramMenuButtonName     = getParamString(['MenuButtonName', 'メニューボタン名称']);
 
     //=============================================================================
     // インタフェースの定義
@@ -1656,7 +1675,8 @@
     };
 
     Window_Message.prototype.isTriggeredPause = function() {
-        return Input.isTriggered('escape') || (TouchInput.isCancelled() && this.isTouchedInsideFrame());
+        return Input.isTriggered(paramMenuButtonName || 'escape')
+            || (TouchInput.isCancelled() && this.isTouchedInsideFrame());
     };
 
     Window_Message.prototype.keepActivationSubWindow = function() {
@@ -2145,14 +2165,25 @@
     };
 
     Window_PauseMenu.prototype.numVisibleRows = function() {
-        return 6;
+        var rows = 6;
+        if (!paramCommandQuickSave) {
+            rows -= 1;
+        }
+        if (!paramCommandQuickLoad) {
+            rows -= 1;
+        }
+        return rows;
     };
 
     Window_PauseMenu.prototype.makeCommandList = function() {
         this.addCommand(TextManager.save, 'save');
         this.addCommand(paramCommandLoad, 'load');
-        this.addCommand(paramCommandQuickSave, 'quickSave');
-        this.addCommand(paramCommandQuickLoad, 'quickLoad');
+        if (paramCommandQuickSave) {
+            this.addCommand(paramCommandQuickSave, 'quickSave');
+        }
+        if (paramCommandQuickLoad) {
+            this.addCommand(paramCommandQuickLoad, 'quickLoad');
+        }
         this.addCommand(TextManager.toTitle, 'toTitle');
         this.addCommand(TextManager.cancel, 'cancel');
     };
