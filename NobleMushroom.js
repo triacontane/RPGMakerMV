@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.1 2021/04/24 コモンイベントを実行中にポーズからセーブ、ロードするとコマンドがずれてしまう問題を修正
 // 1.12.0 2021/04/21 ポーズメニューを開くときにキーを指定する機能を追加
 //                   クイックセーブ、クイックロードのパラメータを空にした場合は項目を追加しないよう修正
 // 1.11.4 2021/02/06 マップから開いたロード、クイックロードでセーブファイルのない項目を選択するとフリーズする問題を修正
@@ -796,12 +797,25 @@
         _Game_Interpreter_update.apply(this, arguments);
     };
 
+    Game_Interpreter.prototype.shiftIndexForSave = function() {
+        if (this._childInterpreter) {
+            this._childInterpreter.shiftIndexForSave();
+            return;
+        }
+        this.rewindIndexUntilShowText();
+        $gameSystem.executeAutoSave();
+        this.restoreIndex();
+    };
+
     Game_Interpreter.prototype.rewindIndexUntilShowText = function() {
         this._originalIndex = this._index;
-        while(this._list[this._index].code !== 101 && this._index > 1) {
+        if (this.currentCommand().code === 101) {
             this._index--;
         }
         this._index--;
+        while(this.currentCommand().code !== 101 && this._index > 1) {
+            this._index--;
+        }
     };
 
     Game_Interpreter.prototype.restoreIndex = function() {
@@ -1036,9 +1050,7 @@
         if (!this.isEventRunning()) {
             $gameSystem.executeAutoSave();
         } else if (!$gameSystem.isMessageTypeNovel()) {
-            this._interpreter.rewindIndexUntilShowText();
-            $gameSystem.executeAutoSave();
-            this._interpreter.restoreIndex();
+            this._interpreter.shiftIndexForSave();
         }
     };
 
