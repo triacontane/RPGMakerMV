@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.2.0 2021/04/26 2.1.6の修正でGIFファイルが使えなくなっていた問題を修正
+                  GIFファイルの指定方法を変更
  2.1.6 2021/03/10 システム画像や敵キャラ画像としてapngを使用するとき、ピクチャにも同名の画像がないとエラーになる問題を修正
  2.1.5 2021/02/01 数字のみのファイルをapng指定して起動するとエラーになる問題を修正
  2.1.4 2021/01/18 2.1.3の修正でapngでないピクチャや敵キャラを表示しようとするとエラーになる問題を修正
@@ -38,6 +40,9 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ApngPicture.js
  * @base PluginCommonBase
+ * @base PixiApngAndGif
+ * @orderAfter PluginCommonBase
+ * @orderAfter PixiApngAndGif
  * @author triacontane
  *
  * @param PictureList
@@ -97,7 +102,7 @@
  * If the display is slow, please try GIF animation.
  *
  * If you want to use GIFs, please note that the editor will not recognize
- * files with a GIF extension.
+ * files without a GIF extension.
  * Please enter the file name with the extension directly in the parameter.
  * You can also display the picture from a script or by using
  * Please use a dummy png file of the same name to specify it.
@@ -110,17 +115,20 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ApngPicture.js
  * @base PluginCommonBase
+ * @base PixiApngAndGif
+ * @orderAfter PluginCommonBase
+ * @orderAfter PixiApngAndGif
  * @author トリアコンタン
  *
  * @param PictureList
  * @text APNGのピクチャリスト
- * @desc APNGとして扱うピクチャ画像のリストです。GIFを指定したい場合は拡張子付きで直接入力してください。
+ * @desc APNGとして扱うピクチャ画像のリストです。GIFを指定したい場合は直接入力してください。
  * @default []
  * @type struct<PictureApngRecord>[]
  *
  * @param EnemyList
  * @text APNGの敵キャラリスト
- * @desc APNGとして扱う敵キャラ画像のリストです。GIFを指定したい場合は拡張子付きで直接入力してください。
+ * @desc APNGとして扱う敵キャラ画像のリストです。GIFを指定したい場合は直接入力してください。
  * @default []
  * @type struct<EnemyApngRecord>[]
  *
@@ -132,7 +140,7 @@
  *
  * @param SceneApngList
  * @text シーンAPNGのリスト
- * @desc シーンごとに表示するAPNGのリストです。GIFを指定したい場合は拡張子付きで直接入力してください。
+ * @desc シーンごとに表示するAPNGのリストです。GIFを指定したい場合は直接入力してください。
  * @default []
  * @type struct<SceneApngRecord>[]
  *
@@ -174,7 +182,7 @@
  * 表示が遅い場合はGIFアニメもお試しください。
  *
  * GIFを使用したい場合、拡張子がgifのファイルはエディタで認識されないので
- * パラメータに拡張子付きのファイル名を直接入力してください。
+ * パラメータに拡張子無しのファイル名を直接入力してください。
  * また、ピクチャを表示するときはスクリプトから表示するか
  * 同名のダミーpngファイルを使って指定してください。
  * また、GIFはエディタの暗号化機能の対象外となります。
@@ -234,6 +242,12 @@
  * @require 1
  * @dir img/system/
  * @type file
+ *
+ * @param Gif
+ * @text GIFファイル
+ * @desc 対象がGIFファイルの場合はONにしてください。ファイル名は拡張子なしのファイル名を指定してください。
+ * @default false
+ * @type boolean
  *
  * @param CachePolicy
  * @text キャッシュ方針
@@ -310,6 +324,12 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param Gif
+ * @text GIFファイル
+ * @desc 対象がGIFファイルの場合はONにしてください。ファイル名は拡張子なしのファイル名を指定してください。
+ * @default false
+ * @type boolean
+ *
  * @param CachePolicy
  * @text キャッシュ方針
  * @desc 画像のキャッシュ方針です。大量にキャッシュするとメモリ使用量に影響が出る場合があります。
@@ -344,6 +364,12 @@
  * @require 1
  * @dir img/enemies/
  * @type file
+ *
+ * @param Gif
+ * @text GIFファイル
+ * @desc 対象がGIFファイルの場合はONにしてください。ファイル名は拡張子なしのファイル名を指定してください。
+ * @default false
+ * @type boolean
  *
  * @param CachePolicy
  * @text キャッシュ方針
@@ -619,12 +645,8 @@
         }
 
         addImage(item, option) {
-            let name = String(item.FileName) || '';
-            let ext = Utils.hasEncryptedImages() ? 'png_' : 'png';
-            name = name.replace(/\.gif$/gi, function() {
-                ext = 'gif';
-                return '';
-            });
+            const name = String(item.FileName) || '';
+            const ext = this.findExt(item);
             const path = name.match(/http:/) ? name : `img/${this._folder}/${name}.${ext}`;
             if (!this._fileHash.hasOwnProperty(name)) {
                 this._fileHash[name] = ApngLoader.convertDecryptExt(path);
@@ -633,6 +655,14 @@
                 PIXI.Loader.shared.add(path, option);
             }
         }
+
+        findExt(item) {
+            if (item.Gif) {
+                return 'gif'
+            } else {
+                return Utils.hasEncryptedImages() ? 'png_' : 'png';
+            }
+        };
 
         getLoadOption() {
             return {
@@ -859,10 +889,14 @@
                 this._apngSprite.pixiApng.play();
             }
             this.addChild(this._apngSprite);
-            const original = this.loadStaticImage(name);
-            original.addLoadListener(() => {
-                this.bitmap = new Bitmap(original.width, original.height);
-            });
+            if (!this.isGif()) {
+                const original = this.loadStaticImage(name);
+                original.addLoadListener(() => {
+                    this.bitmap = new Bitmap(original.width, original.height);
+                });
+            } else {
+                this.bitmap = ImageManager.loadPicture('');
+            }
             this.updateApngAnchor();
             this.updateApngBlendMode();
         }
@@ -870,8 +904,8 @@
         this._apngLoopFrame = 0;
     };
 
-    Sprite.prototype.loadStaticImage = function() {
-        return null;
+    Sprite.prototype.loadStaticImage = function(name) {
+        return ImageManager.loadPicture(name);
     };
 
     Sprite.prototype.destroyApngIfNeed = function() {
@@ -968,6 +1002,10 @@
         return this._apngSprite.pixiApngOption.StopSwitch;
     };
 
+    Sprite.prototype.isGif = function() {
+        return this._apngSprite && this._apngSprite.pixiApngOption.Gif;
+    };
+
     /**
      * Sprite_Picture
      * APNGとして登録されているピクチャの読み込みを追加します。
@@ -1001,10 +1039,6 @@
         if (!picture && this._apngSprite) {
             this.destroyApngIfNeed();
         }
-    };
-
-    Sprite_Picture.prototype.loadStaticImage = function(name) {
-        return ImageManager.loadPicture(name);
     };
 
     /**
