@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.11.1 2021/03/06 短時間で場所移動を繰り返した際に時間が経過しない問題に対応しました。(by shunさま)
+// 1.18.2 2021/04/29 1.18.1の修正により自然時間加算が0のときに場所移動後の色調無効タグが機能しなくなっていた問題を修正
+// 1.18.1 2021/03/06 短時間で場所移動を繰り返した際に時間が経過しない問題に対応しました。(by shunさま)
 // 1.18.0 2020/11/12 自然時間加算間隔を変更するスクリプトを追加
 // 1.17.1 2020/05/17 まったく同じ時間にSET_TIMEしたとき翌日の同時刻になるよう仕様変更
 // 1.17.0 2020/04/12 累計日数をカレンダーに出力できる機能を追加、累計日数のカウントを1からに変更
@@ -1339,7 +1340,10 @@ function Window_Chronus() {
 
     Game_Chronus.prototype.transfer = function(realTransfer) {
         if (this.isStop()) return;
-        if (!this._timeTransferAdd) return;
+        if (!this._timeTransferAdd) {
+            this.refreshTint(true);
+            return;
+        }
         if (realTransfer) {
             this.addTime(this._timeTransferAdd);
         }
