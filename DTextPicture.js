@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.20.3 2021/04/29 プラグインコマンドでフォントサイズの指定に制御文字が使えなくなっていた問題を修正
 // 1.20.2 2021/02/09 NRP_EvalPluginCommand.jsと併用したとき、D_TEXTの制御文字を変換対象外にするよう修正
 // 1.20.1 2021/02/08 色調変更したピクチャを消去し、同一の番号で動的文字列ピクチャを作成したとき文字列ピクチャが表示されない場合がある問題を修正
 // 1.20.0 2020/07/11 すべての動的文字列ピクチャに付与される接頭辞テキストを指定できる機能を追加
@@ -336,7 +337,9 @@
     Game_Interpreter.prototype.pluginCommandDTextPicture = function(command, args) {
         switch (getCommandName(command)) {
             case 'D_TEXT' :
-                if (isNaN(args[args.length - 1]) || args.length === 1) args.push($gameScreen.dTextSize || 28);
+                if (isNaN(convertEscapeCharacters(args[args.length - 1])) || args.length === 1) {
+                    args.push($gameScreen.dTextSize || 28);
+                }
                 var fontSize = getArgNumber(args.pop());
                 $gameScreen.setDTextPicture(connectArgs(args), fontSize);
                 break;
