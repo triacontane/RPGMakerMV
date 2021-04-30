@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.3 2021/05/01 紐付け解除の際の設定値を変更
 // 1.14.2 2020/06/05 ヘルプのキーバインドにpagedownとpageupを追加
 // 1.14.1 2020/05/16 ヘルプのコマンド部分の紛らわしい記述を修正
 // 1.14.0 2020/05/13 指定したスイッチがONのときのみ「タッチ操作抑制」を有効にできる設定を追加
@@ -635,7 +636,7 @@
     };
 
     Game_Screen.prototype.setPictureRemoveCommon = function(pictureId) {
-        this._pictureCidArray[this.realPictureId(pictureId)] = [];
+        this._pictureCidArray[this.realPictureId(pictureId)] = null;
     };
 
     Game_Screen.prototype.setPictureStroke = function(pictureId, variableNum, transparent) {
