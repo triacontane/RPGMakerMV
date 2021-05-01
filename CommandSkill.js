@@ -6,6 +6,9 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/05/01 アイテムもアクターコマンド化できるよう修正
+                  ヘルプウィンドウを表示できる設定を追加
+                  メニュー画面のスキルやアイテムリストにはコマンド化したスキルやアイテムを表示できる設定を追加
  1.0.0 2020/12/17 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -26,11 +29,23 @@
  * @default 1
  * @type number
  *
+ * @param includeMenu
+ * @text メニュー画面に表示
+ * @desc メニュー画面にはコマンドスキルを含めます。
+ * @default false
+ * @type boolean
+ *
+ * @param showHelp
+ * @text ヘルプ表示
+ * @desc コマンドスキル選択時にヘルプを表示します。
+ * @default false
+ * @type boolean
+ *
  * @help CommandSkill.js
  *
- * 戦闘中、指定したスキルをスキルウィンドウからではなく
+ * 戦闘中、指定したスキル、アイテムをスキルウィンドウからではなく
  * アクターコマンドウィンドウから直接実行できるようになります。
- * スキルのメモ欄に以下の通り指定してください。
+ * スキル、アイテムのメモ欄に以下の通り指定してください。
  * <CommandSkill>
  * <コマンドスキル>
  *
@@ -54,16 +69,21 @@
     const script = document.currentScript;
     const param  = PluginManagerEx.createParameter(script);
 
+    Game_Temp.prototype.isCommandSkill = function(skill) {
+        return !!PluginManagerEx.findMetaValue(skill, ['CommandSkill', 'コマンドスキル'])
+    };
+
     /**
      * Game_Actor
      * コマンドスキルの判定を追加
      */
-    Game_Actor.prototype.isCommandSkill = function(skill) {
-        return !!PluginManagerEx.findMetaValue(skill, ['CommandSkill', 'コマンドスキル'])
-    };
-
     Game_Actor.prototype.findCommandSkills = function() {
-        return this.skills().filter(skill => this.isCommandSkill(skill));
+        const skills = this.skills().filter(skill => $gameTemp.isCommandSkill(skill));
+        return skills.concat($gameParty.findCommandItems());
+    }
+
+    Game_Party.prototype.findCommandItems = function() {
+        return this.items().filter(item => $gameTemp.isCommandSkill(item));
     }
 
     /**
@@ -80,7 +100,7 @@
 
     Window_ActorCommand.prototype.addCommandSpecial = function() {
         this._actor.findCommandSkills().forEach(skill => {
-            this.addCommand(skill.name, `special`, this._actor.canUse(skill), skill.id);
+            this.addCommand(skill.name, `special`, this._actor.canUse(skill), skill);
             this._list.splice(param.index, 0, this._list.pop());
         });
     };
@@ -104,6 +124,16 @@
         }
     };
 
+    Window_ActorCommand.prototype.updateHelp = function() {
+        const skill = this.currentExt();
+        if (skill && skill.id > 0) {
+            this.setHelpWindowItem(skill);
+            this.showHelpWindow();
+        } else {
+            this.hideHelpWindow();
+        }
+    };
+
     /**
      * Scene_Battle
      * コマンドスキル選択時のウィンドウ制御と実行
@@ -114,11 +144,23 @@
         this._actorCommandWindow.setHandler("special", this.commandSpecial.bind(this));
     };
 
+    const _Scene_Battle_createHelpWindow = Scene_Battle.prototype.createHelpWindow;
+    Scene_Battle.prototype.createHelpWindow = function() {
+        _Scene_Battle_createHelpWindow.apply(this, arguments);
+        if (param.showHelp) {
+            this._actorCommandWindow.setHelpWindow(this._helpWindow);
+        }
+    };
+
     Scene_Battle.prototype.commandSpecial = function() {
-        const skill = $dataSkills[this._actorCommandWindow.currentExt()];
+        const skill = this._actorCommandWindow.currentExt();
         const action = BattleManager.inputtingAction();
-        action.setSkill(skill.id);
-        BattleManager.actor().setLastBattleSkill(skill);
+        if (DataManager.isSkill(skill)) {
+            action.setSkill(skill.id);
+            BattleManager.actor().setLastBattleSkill(skill);
+        } else {
+            action.setItem(skill.id);
+        }
         this.onSelectAction();
     };
 
@@ -147,10 +189,20 @@
      */
     const _Window_SkillList_includes = Window_SkillList.prototype.includes;
     Window_SkillList.prototype.includes = function(item) {
-        return _Window_SkillList_includes.apply(this, arguments) && !this.isCommandSkill(item);
+        return _Window_SkillList_includes.apply(this, arguments) && isIncludeSkill(item);
     };
 
-    Window_SkillList.prototype.isCommandSkill = function(item) {
-        return this._actor && this._actor.isCommandSkill(item);
+    const _Window_ItemList_includes = Window_ItemList.prototype.includes;
+    Window_ItemList.prototype.includes = function(item) {
+        return _Window_ItemList_includes.apply(this, arguments) && isIncludeSkill(item);
     };
+
+    const _Window_BattleItem_includes = Window_BattleItem.prototype.includes;
+    Window_BattleItem.prototype.includes = function(item) {
+        return _Window_BattleItem_includes.apply(this, arguments) && isIncludeSkill(item);
+    };
+
+    function isIncludeSkill(skill) {
+        return !$gameTemp.isCommandSkill(skill) || (param.includeMenu && !$gameParty.inBattle());
+    }
 })();
