@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.0 2021/05/04 アクターごとに可視距離のレートを指定できる機能を追加
  1.4.1 2020/12/09 マップ改編系プラグインとの一般的な競合対策を追加
  1.4.0 2019/01/27 本来の設定とは逆に、近づくほど透明度を上げられる機能を追加
  1.3.0 2018/11/18 イベントとの距離が一定以内の場合にセルフスイッチをONにする機能を追加
@@ -63,6 +64,16 @@
  * @option C
  * @option D
  *
+ * @param visibleRate
+ * @text 可視レート対象
+ * @desc アクターごとの可視レートを指定した場合の取得対象です。
+ * @default leader
+ * @type select
+ * @option 先頭のみ
+ * @value leader
+ * @option 全員
+ * @value all
+ *
  * @param commandPrefix
  * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
  * @default
@@ -79,6 +90,12 @@
  * <TriggerDistance:3> // 同上
  * <透明度反転>        // 本来の設定とは逆に近づくほど透明度が上がります。
  * <OpacityReverse>    // 同上
+ *
+ * 先頭のアクターによって可視距離のレートを変えられます。
+ * 特徴を有するデータベース(※)に以下の通り指定してください。
+ * <可視距離倍率:150> // 可視距離が1.5倍になります。
+ + <VisibleDistanceRate:150> // 同上
+ * ※ アクター、職業、武器、防具、ステートが該当します。
  *　
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -133,6 +150,16 @@
  * @option C
  * @option D
  *
+ * @param visibleRate
+ * @text 可視レート対象
+ * @desc アクターごとの可視レートを指定した場合の取得対象です。
+ * @default leader
+ * @type select
+ * @option 先頭のみ
+ * @value leader
+ * @option 全員
+ * @value all
+ *
  * @param commandPrefix
  * @text メモ欄接頭辞
  * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
@@ -150,6 +177,12 @@
  * <TriggerDistance:3> // 同上
  * <透明度反転>        // 本来の設定とは逆に近づくほど透明度が上がります。
  * <OpacityReverse>    // 同上
+ *
+ * 先頭のアクターによって可視距離のレートを変えられます。
+ * 特徴を有するデータベース(※)に以下の通り指定してください。
+ * <可視距離倍率:150> // 可視距離が1.5倍になります。
+ + <VisibleDistanceRate:150> // 同上
+ * ※ アクター、職業、武器、防具、ステートが該当します。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -260,6 +293,26 @@
         return result;
     };
 
+    Game_Actor.prototype.findVisibleDistanceRate = function() {
+        var result = 0;
+        this.traitObjects().forEach(function(obj) {
+            var rate = parseInt(getMetaValues(obj, ['可視距離倍率', 'VisibleDistanceRate']));
+            if (rate) {
+                result = Math.max(result, rate);
+            }
+        });
+        return result / 100;
+    };
+
+    Game_Party.prototype.findVisibleDistanceRate = function() {
+        var actors = param.visibleRate === 'leader' ? [this.members()[0]] : this.members();
+        var result = 0;
+        actors.forEach(function(actor) {
+            result = Math.max(result, actor.findVisibleDistanceRate());
+        });
+        return result || 1;
+    };
+
     /**
      * Game_CharacterBase
      * 不透明度に不可視情報を反映させます。
@@ -310,7 +363,7 @@
         }
         var distanceFromPlayer = this.getDistanceFromPlayer();
         this.updateDistanceTrigger(distanceFromPlayer);
-        var d = distanceFromPlayer - this._visibleDistance;
+        var d = distanceFromPlayer - Math.floor(this._visibleDistance * $gameParty.findVisibleDistanceRate());
         if (this._opacityReverse) {
             d *= -1;
         }
