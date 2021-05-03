@@ -1,11 +1,12 @@
 //=============================================================================
 // ParallaxLayerMap.js
 // ----------------------------------------------------------------------------
-// (C) 2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/05/03 合成方法『オーバーレイ』『ハードライト』を使用可能にしました。
 // 1.1.5 2020/08/30 YEP_CoreEngine.jsと併用したとき解像度次第でレイヤーマップのピクセルがずれる場合がある競合を修正
 // 1.1.4 2020/07/05 MOG_ChronoEngine.jsと併用したときマップの一部がちらつく場合がある競合を修正
 // 1.1.3 2020/05/09 競合対策コードを追加
@@ -22,57 +23,6 @@
 //=============================================================================
 
 /*:
- * @plugindesc ParallaxLayerMapPlugin
- * @author triacontane
- *
- * @help ParallaxLayerMap.js
- *
- * 複数のレイヤーを使った多層一枚絵マップを作成可能にします。
- * イベントでレイヤーを作成するので、レイヤー数は無制限です。
- *
- * イベントを作成してメモ欄を以下の通り記述すると、指定した画像がマップに表示され、
- * かつイベント位置とは無関係に画像の左上がマップの左上に合わせられます。
- *
- * <PLM:file>        # 「img/parallaxes/file」を一枚絵として表示します。
- * <PLM_Blend:1>     # 合成方法の初期値を「加算」にします。
- * <PLM合成:1>       # 同上
- * <PLM_Opacity:128> # 不透明度の初期値を「128」にします。
- * <PLM不透明度:128> # 同上
- *
- * イベント内の「画像」「オプション」項目は無視されますが、その他の項目は
- * 通常のイベントと同じように機能します。
- *
- * 合成方法や不透明度などを後から変更したい場合は、自律移動で指定するか
- * 以下の「キャラクターグラフィック表示拡張プラグイン」と併用してください。
- * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CharacterGraphicExtend.js
- *
- * スクリプト（「移動ルートの設定」から実行）
- * this.shiftPosition(10, 20); # 表示位置をX[10] Y[20]ずらします。
- *
- * 注意！
- * 当プラグインはマップのループには対応していません。
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * 当プラグインで使用できるサンプルマップをどらぴか様よりご提供いただきました。
- * この場を借りて御礼申し上げます。
- *
- * 以下のURLから「Download」ボタンでダウンロードできます。
- * クレジット表記なしでご自由にお使い頂けるご許可を頂いています。
- * https://github.com/triacontane/RPGMakerMV/blob/master/Sample/sample_parallax.zip
- *
- * PIKA's GAME GALLERY
- * https://mashimarohb252d6.wixsite.com/pikasgame
- *
- * @noteParam PLM
- * @noteRequire 1
- * @noteDir img/parallaxes
- * @noteType file
- * @noteData events
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 多層レイヤー一枚絵マッププラグイン
  * @author トリアコンタン
  *
@@ -85,10 +35,24 @@
  * かつイベント位置とは無関係に画像の左上がマップの左上に合わせられます。
  *
  * <PLM:file>        # 「img/parallaxes/file」を一枚絵として表示します。
- * <PLM_Blend:1>     # 合成方法の初期値を「加算」にします。
+ * <PLM_Blend:1>     # 合成方法の初期値を「加算」(※1)にします。
  * <PLM合成:1>       # 同上
  * <PLM_Opacity:128> # 不透明度の初期値を「128」にします。
  * <PLM不透明度:128> # 同上
+ * <PLM_Z:1>        # 表示優先度を「1」にします。(※2)
+ *
+ * ※1 有効な合成方法の指定
+ * 1:加算
+ * 2:乗算
+ * 3:スクリーン
+ * 4:オーバーレイ
+ * 9:ハードライト
+ *
+ * ※2 通常のプライオリティ設定は以下ですが、より細かく指定した場合に
+ * 1～9の範囲内で指定できます。
+ * 1:通常キャラの下
+ * 3:通常キャラと同じ
+ * 5:通常キャラの上
  *
  * イベント内の「画像」「オプション」項目は無視されますが、その他の項目は
  * 通常のイベントと同じように機能します。
@@ -210,6 +174,7 @@
         if (this._mapLayerName) {
             this.initBlendMode();
             this.initOpacity();
+            this.initZ();
         }
     };
 
@@ -224,6 +189,13 @@
         var blendMode = getMetaValues(this.getOriginalEvent(), ['_Opacity', '不透明度']);
         if (blendMode) {
             this._opacity = parseInt(blendMode);
+        }
+    };
+
+    Game_Event.prototype.initZ = function() {
+        var z = getMetaValue(this.getOriginalEvent(), '_Z');
+        if (z) {
+            this._layerZ = parseInt(z);
         }
     };
 
@@ -242,6 +214,10 @@
 
     Game_Event.prototype.getLayerY = function() {
         return (this._additionalY || 0) - Math.round($gameMap.displayPixelY());
+    };
+
+    Game_Event.prototype.getLayerZ = function() {
+        return this._layerZ || this.screenZ();
     };
 
     //=============================================================================
@@ -318,16 +294,13 @@
         if (!this._character.existPage()) {
             this.visible = false;
         }
+        this._isPicture = this._character.blendMode() > 3;
     };
 
     Sprite_MapLayer.prototype.updatePosition = function() {
         this.x = this._character.getLayerX();
         this.y = this._character.getLayerY();
-        this.z = this._character.screenZ();
-        // Resolve conflict for MOG_ChronoEngine
-        if (typeof Imported !== 'undefined' && Imported.MOG_ChronoEngine) {
-            this.z += 1;
-        }
+        this.z = this._character.getLayerZ();
     };
 
     Sprite_MapLayer.prototype.updateBitmap = function() {
