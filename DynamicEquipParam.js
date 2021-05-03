@@ -1,22 +1,23 @@
 //=============================================================================
 // DynamicEquipParam.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2021/05/03 動的パラメータがお店のパラメータ増減に反映されていなかった問題を修正
 // 1.0.1 2017/07/23 ヘルプにアクターのレベルやIDを参照する計算式を追記
 // 1.0.0 2017/07/18 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
 /*:
  * @plugindesc DynamicEquipParamPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @author triacontane
  *
  * @help 装備品のパラメータを現在のアクターの状態に応じて動的に変更します。
  * 武器と防具のメモ欄に以下の通り指定してください。
@@ -64,7 +65,7 @@
  */
 /*:ja
  * @plugindesc 装備品パラメータの動的設定プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
  *
  * @help 装備品のパラメータを現在のアクターの状態に応じて動的に変更します。
  * 武器と防具のメモ欄に以下の通り指定してください。
@@ -197,6 +198,17 @@
             value += getArgNumber(convertEscapeCharacters(traitObject.meta[tagName]));
         });
         return Math.round(value);
+    };
+
+    // override
+    Window_ShopStatus.prototype.drawActorParamChange = function(x, y, actor, item1) {
+        var width = this.contents.width - this.textPadding() - x;
+        var paramId = this.paramId();
+        var targetParam = actor.paramPlusDynamic(paramId, this._item) + this._item.params[paramId];
+        var equipParam = item1 ? actor.paramPlusDynamic(paramId, item1) + item1.params[paramId] : 0;
+        var change = targetParam - equipParam;
+        this.changeTextColor(this.paramchangeTextColor(change));
+        this.drawText((change > 0 ? '+' : '') + change, x, y, width, 'right');
     };
 })();
 
