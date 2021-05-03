@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2021/05/04 アクターごとに可視距離のレートを指定できる機能を追加
  1.5.1 2021/03/28 ヘルプ微修正
  1.5.0 2021/03/28 MZで動作するよう修正
  1.4.0 2019/01/27 本来の設定とは逆に、近づくほど透明度を上げられる機能を追加
@@ -61,6 +62,16 @@
  * @min 0
  * @max 255
  *
+ * @param visibleRate
+ * @text 可視レート対象
+ * @desc アクターごとの可視レートを指定した場合の取得対象です。
+ * @default leader
+ * @type select
+ * @option 先頭のみ
+ * @value leader
+ * @option 全員
+ * @value all
+ *
  * @help PhantomEvent.js
  *
  * 指定範囲より遠くにあるイベントの不透明度を徐々に下げて最終的に不可視にします。
@@ -73,6 +84,12 @@
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
  * 以下のフォルダに格納されています。
  * dlc/BasicResources/plugins/official
+ *
+ * 先頭のアクターによって可視距離のレートを変えられます。
+ * 特徴を有するデータベース(※)に以下の通り指定してください。
+ * <可視距離倍率:150> // 可視距離が1.5倍になります。
+ + <VisibleDistanceRate:150> // 同上
+ * ※ アクター、職業、武器、防具、ステートが該当します。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -117,6 +134,26 @@
             }
         }
         return result;
+    };
+
+    Game_Actor.prototype.findVisibleDistanceRate = function () {
+        let result = 0;
+        this.traitObjects().forEach(obj => {
+            const rate = PluginManagerEx.findMetaValue(obj, ['可視距離倍率', 'VisibleDistanceRate']);
+            if (rate) {
+                result = Math.max(result, rate);
+            }
+        });
+        return result / 100;
+    };
+
+    Game_Party.prototype.findVisibleDistanceRate = function () {
+        const actors = param.visibleRate === 'leader' ? [this.members()[0]] : this.members();
+        let result = 0;
+        actors.forEach(actor => {
+            result = Math.max(result, actor.findVisibleDistanceRate());
+        });
+        return result || 1;
     };
 
     /**
@@ -170,7 +207,8 @@
         if (!this.isPhantom()) {
             return 1;
         }
-        let d = this.getDistanceFromPlayer() - this._visibleDistance;
+        let d = this.getDistanceFromPlayer() -
+            Math.floor(this._visibleDistance * $gameParty.findVisibleDistanceRate());
         if (this._opacityReverse) {
             d *= -1;
         }
