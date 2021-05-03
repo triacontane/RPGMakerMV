@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/05/03 コールSEを複数指定してランダム再生できる機能を追加
  1.0.1 2021/05/03 オプション画面、ロード画面から戻ったときは演奏しないよう修正
  1.0.0 2021/05/03 初版
 ----------------------------------------------------------------------------
@@ -53,6 +54,14 @@
  * @desc SE演奏を指定したミリ秒ぶんだけ遅らせます。
  * @default 0
  * @type number
+ * @max 99999
+ *
+ * @param randomList
+ * @text ランダムSEファイルリスト
+ * @desc 設定しておくとリストの中からランダムで再生されます。
+ * @default []
+ * @type file[]
+ * @dir audio/se
  *
  * @help TitleCall.js
  *
@@ -105,6 +114,10 @@
         if (SceneManager.isPreviousScene(Scene_Options) ||
             SceneManager.isPreviousScene(Scene_Load)) {
             return;
+        }
+        var list = param.randomList;
+        if (list && list.length > 0) {
+            param.name = list[Math.randomInt(list.length)];
         }
         if (param.delay) {
             setTimeout(AudioManager.playSe.bind(AudioManager, param), param.delay);
