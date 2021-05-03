@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2021/05/03 ポップアップの縁取りカラーを指定できる機能を追加
 // 1.10.1 2021/04/22 身代わりポップアップの対象を身代わりした側とされた側で選べるよう修正
 // 1.10.0 2021/04/21 身代わり発生時にポップアップする機能を追加
 // 1.9.3 2021/02/24 ポップアップの出力が一部を除き、少し遅れて表示される問題を修正(by 奏ねこまさま)
@@ -208,6 +209,10 @@
  * @default false
  * @type boolean
  *
+ * @param 縁取りカラー
+ * @desc ポップアップの縁取りカラーです。CSSの文字色指定が使えます。
+ * @default gray
+ *
  * @param 画像使用
  * @desc 各種ポップアップに任意のピクチャ(img/pictures)を使用します。メッセージの代わりにファイル名を入力してください。
  * @default false
@@ -405,6 +410,7 @@
     var paramUsingPicture     = getParamBoolean(['UsingPicture', '画像使用']);
     var paramUsingItalic      = getParamBoolean(['UsingItalic', 'イタリック表示']);
     var paramUsingOutline     = getParamBoolean(['UsingOutline', '縁取り表示']);
+    var paramOutlineColor     = getParamString(['OutlineColor', '縁取りカラー']);
     var paramMessageWait      = getParamNumber(['MessageWait', 'メッセージウェイト']);
 
     //=============================================================================
@@ -768,7 +774,8 @@
         }
         if (paramUsingOutline) {
             bitmap.outlineWidth = Math.floor(bitmap.fontSize / 6);
-            bitmap.outlineColor = 'gray';
+            bitmap.outlineColor = paramOutlineColor || 'gray';
+            console.log(bitmap.outlineColor);
         }
         bitmap.drawText(text, 0, 0, bitmap.width, bitmap.height, 'center');
         return bitmap;
