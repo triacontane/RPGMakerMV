@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/11/23 レイヤーマップのプライオリティを細かく9段階で指定できる機能を追加
 // 1.1.9 2022/03/23 MZ向けにリファクタリング
 // 1.1.8 2020/04/20 EventEffects.jsとの競合を解消
 // 1.1.7 2020/08/30 YEP_CoreEngine.jsと併用したとき解像度次第でレイヤーマップのピクセルがずれる場合がある競合を修正
@@ -47,6 +48,13 @@
  * <PLM合成:1>       # 同上
  * <PLM_Opacity:128> # 不透明度の初期値を「128」にします。
  * <PLM不透明度:128> # 同上
+ * <PLM_Z:1>        # 表示優先度を「1」にします。(※1)
+ *
+ * ※1 通常のプライオリティ設定は以下ですが、より細かく指定した場合に
+ * 1～9の範囲内で指定できます。
+ * 1:通常キャラの下
+ * 3:通常キャラと同じ
+ * 5:通常キャラの上
  *
  * イベント内の「画像」「オプション」項目は無視されますが、その他の項目は
  * 通常のイベントと同じように機能します。
@@ -140,6 +148,7 @@
         if (this._mapLayerName) {
             this.initBlendMode();
             this.initOpacity();
+            this.initZ();
         }
     };
 
@@ -154,6 +163,13 @@
         const blendMode = PluginManagerEx.findMetaValue(this.getOriginalEvent(), ['PLM_Opacity', 'PLM不透明度']);
         if (blendMode) {
             this._opacity = parseInt(blendMode);
+        }
+    };
+
+    Game_Event.prototype.initZ = function() {
+        const z = PluginManagerEx.findMetaValue(this.getOriginalEvent(), 'PLM_Z');
+        if (z) {
+            this._layerZ = parseInt(z);
         }
     };
 
@@ -172,6 +188,10 @@
 
     Game_Event.prototype.getLayerY = function() {
         return (this._additionalY || 0) - Math.round($gameMap.displayPixelY());
+    };
+
+    Game_Event.prototype.getLayerZ = function() {
+        return this._layerZ || this.screenZ();
     };
 
     //=============================================================================
@@ -253,11 +273,7 @@
     Sprite_MapLayer.prototype.updatePosition = function() {
         this.x = this._character.getLayerX();
         this.y = this._character.getLayerY();
-        this.z = this._character.screenZ();
-        // Resolve conflict for MOG_ChronoEngine
-        if (typeof Imported !== 'undefined' && Imported.MOG_ChronoEngine) {
-            this.z += 1;
-        }
+        this.z = this._character.getLayerZ();
     };
 
     // for EventEffect.js
