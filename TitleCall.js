@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/05/03 オプション画面、ロード画面から戻ったときは演奏しないよう修正
  1.0.0 2021/05/03 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -97,6 +98,14 @@
     var _Scene_Title_playTitleMusic = Scene_Title.prototype.playTitleMusic;
     Scene_Title.prototype.playTitleMusic = function() {
         _Scene_Title_playTitleMusic.apply(this, arguments);
+        this.playTitleCall();
+    };
+
+    Scene_Title.prototype.playTitleCall = function() {
+        if (SceneManager.isPreviousScene(Scene_Options) ||
+            SceneManager.isPreviousScene(Scene_Load)) {
+            return;
+        }
         if (param.delay) {
             setTimeout(AudioManager.playSe.bind(AudioManager, param), param.delay);
         } else {
