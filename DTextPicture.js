@@ -1,11 +1,14 @@
 //=============================================================================
 // DTextPicture.js
 // ----------------------------------------------------------------------------
-// (C) 2015 Triacontane
+// (C)2015 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.3 2021/05/04 一部の制御文字を使っていると揃えを中央もしくは右揃えにしたときに正しく表示されない問題を修正
+//                  フォントサイズを小さくして複数行表示したときに1行目の高さが正しく計算されない問題を修正
+//                  競合対策のためのリファクタリング
 // 2.2.2 2021/03/27 文字列を太字にする機能とイタリック体にする機能が正常に動作していなかった問題を修正
 // 2.2.1 2021/02/08 色調変更したピクチャを消去し、同一の番号で動的文字列ピクチャを作成したとき文字列ピクチャが表示されない場合がある問題を修正
 // 2.2.0 2021/01/22 複数行の動的文字列を中央揃え、右揃えにできる機能を追加
@@ -198,7 +201,7 @@
     const param = PluginManagerEx.createParameter(script);
 
     PluginManager.registerCommand(PluginManagerEx.findPluginName(script), 'dText', function(args) {
-        $gameScreen.setDTextPicture(args.text, args.fontSize);
+        $gameScreen.setDTextPicture(args.text, PluginManagerEx.convertVariables(args.fontSize));
     });
 
     PluginManagerEx.registerCommand(script, 'dTextSetting', function(args) {
@@ -248,6 +251,7 @@
             value = `\\fs[${size}]${value}`;
         }
         this.dTextValue = value;
+        this.dTextSize = size;
     };
 
     Game_Screen.prototype.setDTextWindowCursor = function(pictureId, rect, switchId) {
@@ -261,6 +265,7 @@
         const prefix = param.prefixText || '';
         return {
             value         : prefix + this.dTextValue,
+            size          : this.dTextSize,
             color         : this.dTextBackColor,
             realTime      : this.dTextRealTime,
             windowFrame   : this.dWindowFrame,
@@ -380,65 +385,6 @@
         return (value < 0 ? '-' : '') + numText;
     };
 
-    const _Window_Base_processEscapeCharacter = Window_Base.prototype.processEscapeCharacter;
-    Window_Base.prototype.processEscapeCharacter = function(code, textState) {
-        _Window_Base_processEscapeCharacter.apply(this, arguments);
-        switch (code) {
-            case 'OC':
-                const colorCode  = this.obtainEscapeParamString(textState);
-                const colorIndex = Number(colorCode);
-                this.changeOutlineColor(!isNaN(colorIndex) ? ColorManager.textColor(colorIndex) : colorCode);
-                break;
-            case 'OW':
-                this.contents.outlineWidth = this.obtainEscapeParam(textState);
-                break;
-            case 'F':
-                this.changeFontStyle(this.obtainEscapeParamString(textState));
-                break;
-        }
-    };
-
-    Window_Base.prototype.changeFontStyle = function(value) {
-        switch (value.toUpperCase()) {
-            case 'B':
-                this.contents.fontBold = true;
-                break;
-            case 'I':
-                this.contents.fontItalic = true;
-                break;
-            default:
-                this.contents.fontItalic = false;
-                this.contents.fontBold   = false;
-        }
-    };
-
-    Window_Base.prototype.obtainEscapeParamString = function(textState) {
-        const arr = /^\[.+?]/.exec(textState.text.slice(textState.index));
-        if (arr) {
-            textState.index += arr[0].length;
-            return arr[0].substring(1, arr[0].length - 1);
-        } else {
-            return '';
-        }
-    };
-
-    const _Window_Base_flushTextState = Window_Base.prototype.flushTextState;
-    Window_Base.prototype.flushTextState = function(textState) {
-        if (this.textPictureWidth && this.textPictureAlign) {
-            this.setDTextAlign(textState);
-        }
-        _Window_Base_flushTextState.apply(this, arguments);
-    };
-
-    Window_Base.prototype.setDTextAlign = function(textState) {
-        const dx = this.textPictureWidth - this.textWidth(textState.buffer);
-        if (this.textPictureAlign === 'center') {
-            textState.x = Math.floor(dx / 2);
-        } else if (this.textPictureAlign === 'right') {
-            textState.x = dx;
-        }
-    };
-
     //=============================================================================
     // Sprite_Picture
     //  画像の動的生成を追加定義します。
@@ -532,31 +478,20 @@
     };
 
     Sprite_Picture.prototype.makeDynamicBitmap = function() {
-        const text = this.picture().getDText();
-        const tempWindow = new Window_Base(new Rectangle());
-        const size = tempWindow.textSizeEx(text);
-        this.bitmap = new Bitmap(size.width, size.height);
-        if (this.dTextInfo.font) {
-            this.bitmap.fontFace = this.dTextInfo.font;
-        }
+        const tempWindow = new Window_Dummy();
+        this.bitmap = tempWindow.createTextContents(this.picture().getDText(), this.dTextInfo);
         if (this.dTextInfo.color) {
             this.makeDynamicBitmapBack();
         }
         this.setColorTone([0, 0, 0, 0]);
-        tempWindow.contents = this.bitmap;
-        const rect = tempWindow.textSizeEx(text);
-        tempWindow.textPictureWidth = rect.width;
-        tempWindow.textPictureAlign = this.dTextInfo.align;
-        tempWindow.drawTextEx(text, 0, 0);
-        tempWindow.contents = null;
-        tempWindow.destroy();
+        tempWindow.drawTextContents();
         if (this._frameWindow) {
             this.removeFrameWindow();
         }
         if (this.dTextInfo.windowFrame) {
             const scaleX = this.picture().scaleX() / 100;
             const scaleY = this.picture().scaleY() / 100;
-            this.makeFrameWindow(size.width * scaleX, size.height * scaleY);
+            this.makeFrameWindow(this.bitmap.width * scaleX, this.bitmap.height * scaleY);
         }
     };
 
@@ -575,4 +510,112 @@
             this.bitmap.gradientFillRect(w - gradationRight, 0, gradationRight, h, this.dTextInfo.color, 'rgba(0, 0, 0, 0)', false);
         }
     };
+
+    /**
+     * Window_Dummy
+     * 動的文字列ピクチャ描画用のダミーウィンドウ
+     */
+    class Window_Dummy extends Window_Base {
+        constructor() {
+            super(new Rectangle());
+        }
+
+        createTextContents(text, dTextInfo) {
+            this._size = dTextInfo.size;
+            this._text = text;
+            const rect = this.textSizeEx(text);
+            this.textPictureWidth = rect.width;
+            this.textPictureAlign = dTextInfo.align;
+            this.contents = new Bitmap(rect.width, rect.height);
+            if (dTextInfo.font) {
+                this.contents.fontFace = dTextInfo.font;
+            }
+            return this.contents;
+        }
+
+        drawTextContents() {
+            this.drawTextEx(this._text, 0, 0);
+            this.contents = null;
+            this.destroy();
+        }
+
+        processAllText(textState) {
+            if (textState.drawing) {
+                this.setStartXForAlign(textState);
+            }
+            super.processAllText(textState);
+        }
+
+        processNewLine(textState) {
+            super.processNewLine(textState);
+            if (textState.drawing) {
+                this.setStartXForAlign(textState);
+            }
+        }
+
+        setStartXForAlign(textState) {
+            const lines = textState.text.slice(textState.index).split("\n");
+            textState.widthList = lines.map(line => this.textSizeEx(line).width);
+            textState.x = this.findStartXForAlign(textState);
+        }
+
+        resetFontSettings() {
+            super.resetFontSettings();
+            if (this._size) {
+                this.contents.fontSize = this._size;
+            }
+        }
+
+        processEscapeCharacter(code, textState) {
+            super.processEscapeCharacter(code, textState);
+            switch (code) {
+                case 'OC':
+                    const colorCode  = this.obtainEscapeParamString(textState);
+                    const colorIndex = Number(colorCode);
+                    this.changeOutlineColor(!isNaN(colorIndex) ? ColorManager.textColor(colorIndex) : colorCode);
+                    break;
+                case 'OW':
+                    this.contents.outlineWidth = this.obtainEscapeParam(textState);
+                    break;
+                case 'F':
+                    this.changeFontStyle(this.obtainEscapeParamString(textState));
+                    break;
+            }
+        }
+
+        changeFontStyle(value) {
+            switch (value.toUpperCase()) {
+                case 'B':
+                    this.contents.fontBold = true;
+                    break;
+                case 'I':
+                    this.contents.fontItalic = true;
+                    break;
+                default:
+                    this.contents.fontItalic = false;
+                    this.contents.fontBold   = false;
+            }
+        }
+
+        obtainEscapeParamString(textState) {
+            const arr = /^\[.+?]/.exec(textState.text.slice(textState.index));
+            if (arr) {
+                textState.index += arr[0].length;
+                return arr[0].substring(1, arr[0].length - 1);
+            } else {
+                return '';
+            }
+        }
+
+        findStartXForAlign(textState) {
+            const dx = this.textPictureWidth - textState.widthList.shift();
+            if (this.textPictureAlign === 'center') {
+                return Math.floor(dx / 2);
+            } else if (this.textPictureAlign === 'right') {
+                return dx;
+            } else {
+                return 0;
+            }
+        }
+    }
 })();
