@@ -6,6 +6,9 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.12.0 2021/05/06 カスタムメニュー画面の呼び出しをプラグインコマンド化
+                   ウィンドウが重なったときに背後をマスキングしない設定を追加
+                   ヘルプの表示揺れ等修正
  1.11.6 2021/04/18 プリセットのスクリプトをMZ向けに修正
  1.11.5 2021/04/11 1.10.4で解消した問題をキャラクターとフェイスグラフィックにも適用
  1.11.4 2021/04/08 キャッシュされていないピクチャを表示しようとしたとき、表示順序がずれる場合がある問題を修正
@@ -179,6 +182,15 @@
  * @default {}
  * @type struct<Scene>
  *
+ * @command CALL_SCENE
+ * @text シーン呼び出し
+ * @desc 指定した識別子のシーンを呼び出します。
+ *
+ * @arg id
+ * @text シーン識別子
+ * @desc 呼び出すシーン識別子です。
+ * @default Scene_ActorList
+ *
  * @help SceneCustomMenu.js
  *
  * パラメータからウィンドウ情報を定義して独自のメニュー画面を作れます。
@@ -202,6 +214,7 @@
  * 　コモンイベントの情報を定義します。
  *
  * カスタムメニューを呼び出すには以下のスクリプトを実行します。
+ * プラグインコマンドからも呼び出せます。
  * 『Scene_ActorList』の箇所には『シーン識別子』を設定します。
  *
  *  SceneManager.callCustomMenu('Scene_ActorList');
@@ -528,6 +541,12 @@
  * @default 0
  * @type number
  *
+ * @param OverlapOther
+ * @text 他ウィンドウに重ねる
+ * @desc 他のウィンドウと重なって表示させたときに背後のウィンドウをマスキングさせなくなります。
+ * @default false
+ * @type boolean
+ *
  * @param WindowSkin
  * @text ウィンドウスキン
  * @desc ウィンドウスキンです。指定しなかった場合、デフォルトが使用されます。
@@ -607,7 +626,7 @@
  *
  * @param VisibleScript
  * @text 表示スクリプト
- * @desc 指定したスクリプトがtrueの場合のみ画面に表示されます。変数『item』で『一覧ウィンドウID』の選択項目が参照できます。
+ * @desc 指定したスクリプトがtrueの場合のみ画面に表示されます。変数[item]で『一覧ウィンドウID』の選択項目が参照できます。
  * @default
  * @type combo
  * @option item.meta['value']; // メモ欄に<value>の記述がある
@@ -631,9 +650,8 @@
  * @type switch
  *
  * @param IsEnableScript
- * @parent DataScript
  * @text 選択可能スクリプト
- * @desc 項目を選択可能かどうかを判定するスクリプトです。変数『item』で『一覧ウィンドウID』の選択項目が参照できます。
+ * @desc 項目を選択可能かどうかを判定するスクリプトです。変数[item]で『一覧ウィンドウID』の選択項目が参照できます。
  * @default
  * @type combo
  * @option item.meta['value']; // メモ欄に<value>の記述がある
@@ -714,6 +732,10 @@
             param.SceneList.push(param[`Scene${i}`]);
         }
     }
+
+    PluginManagerEx.registerCommand(script, 'CALL_SCENE', args => {
+        SceneManager.callCustomMenu(args.id);
+    });
 
     const outputError = function (e, script = null) {
         SoundManager.playBuzzer();
@@ -1118,6 +1140,9 @@
                 data);
             this._actor = actor;
             this._windowMap = windowMap;
+            if (data.OverlapOther) {
+                this._isWindow = false;
+            }
             if (this.isShowOpen()) {
                 this.openness = 0;
             }
