@@ -14,7 +14,7 @@
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
-/*:ja
+/*:
  * @plugindesc プレイヤーの画像変更プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PlayerGraphicChange.js
