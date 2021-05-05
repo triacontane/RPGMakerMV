@@ -18,8 +18,6 @@
  * @plugindesc プレイヤーの画像変更プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PlayerGraphicChange.js
- * @base PluginCommonBase
- * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @command RESET
@@ -43,9 +41,8 @@
 
 (()=> {
     'use strict';
-    const script = document.currentScript;
 
-    PluginManagerEx.registerCommand(script, 'RESET', args => {
+    PluginManager.registerCommand('PlayerGraphicChange', 'RESET', args => {
         $gamePlayer.resetCustomizeGraphic();
     });
 
