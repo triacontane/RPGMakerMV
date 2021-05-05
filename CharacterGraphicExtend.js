@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2021/05/05 アイコンセットの行を変更したときに正しくトリミングできない問題を修正
 // 2.2.0 2021/02/22 色調変更のタグが正常に機能していなかった問題を修正し、グレースケールを指定できるようにしました。
 // 2.1.1 2020/11/28 Trb_SimpleDashMotion.jsと併用したとき、プレイヤーの拡大率を変更したときも想定通りに表示されるよう修正
 // 2.1.0 2020/11/22 ApngPicture.jsと組み合わせてキャラクターとして表示したピクチャ、敵キャラ画像がアニメーションする機能を追加
@@ -597,9 +598,10 @@
         }
         cgParams = this.getMetaCg(['アイコン', 'Icon']);
         if (cgParams) {
+            const bitmap = ImageManager.loadSystem('IconSet');
             this._customResource = 'System';
             this._graphicColumns = 16;
-            this._graphicRows    = 20;
+            this._graphicRows    = (bitmap.height / ImageManager.iconHeight) || 20;
             arguments[0]         = 'IconSet';
             arguments[1]         = getArgNumber(cgParams[1], 0, this._graphicColumns * this._graphicRows - 1);
         }
