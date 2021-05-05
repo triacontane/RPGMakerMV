@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2021/05/06 名前ウィンドウがプリセットになかったので追加
+//                  ウィンドウが重なったときに背後をマスキングしない設定を追加
 // 2.2.0 2021/02/27 ウィンドウごとに個別のフォントを指定できる機能を追加
 // 2.1.0 2021/01/24 ウィンドウごとに個別のウィンドウスキンを指定できる機能を追加
 // 2.0.3 2020/12/16 指定対象外のウィンドウで余計な処理が実行されてしまう問題を修正
@@ -64,6 +66,7 @@
 /*~struct~WindowImages:
  *
  * @param WindowClass
+ * @text ウィンドウ
  * @desc 専用の画像に差し替える対象のウィンドウです。一覧にない場合は直接入力してください。
  * @type select
  * @default
@@ -121,6 +124,8 @@
  * @value Window_NumberInput
  * @option [マップ画面]アイテム選択ウィンドウ
  * @value Window_EventItem
+ * @option [マップ画面]名前ウィンドウ
+ * @value Window_NameBox
  * @option [マップ画面]メッセージウィンドウ
  * @value Window_Message
  * @option [マップ画面]スクロールメッセージウィンドウ
@@ -203,6 +208,7 @@
  * @value Window_NumberEdit
  *
  * @param ImageFile
+ * @text 差し替えファイル名
  * @desc 差し替える画像のファイル名です。(img/pictureの中から選択します)　空を指定すると枠だけが非表示になります。
  * @default
  * @require 1
@@ -210,16 +216,19 @@
  * @type file
  *
  * @param WindowSkin
+ * @text ウィンドウスキン
  * @desc 専用のウィンドウスキン画像です。
  * @default
  * @dir img/system/
  * @type file
  *
  * @param FontFace
+ * @text フォント
  * @desc ウィンドウの専用フォントです。woffファイルを拡張子付きで指定してください。
  * @default
  *
  * @param OffsetX
+ * @text X座標補正
  * @desc 表示X座標の補正値です。
  * @default 0
  * @type number
@@ -227,6 +236,7 @@
  * @max 2000
  *
  * @param OffsetY
+ * @text Y座標補正
  * @desc 表示Y座標の補正値です。
  * @default 0
  * @type number
@@ -234,6 +244,7 @@
  * @max 2000
  *
  * @param ScaleX
+ * @text 拡大率(横幅)
  * @desc X方向の拡大率(%指定)です。
  * @default 100
  * @type number
@@ -241,6 +252,7 @@
  * @max 2000
  *
  * @param ScaleY
+ * @text 拡大率(高さ)
  * @desc Y方向の拡大率(%指定)です。
  * @default 100
  * @type number
@@ -248,14 +260,23 @@
  * @max 2000
  *
  * @param WindowShow
+ * @text ウィンドウを残す
  * @desc 画像が表示されているときでもウィンドウの元背景を表示したままにします。
  * @default false
  * @type boolean
  *
  * @param SwitchId
+ * @text 差し替えスイッチ番号
  * @desc 指定したスイッチがONのときのみウィンドウを差し替えます。
  * @default 0
  * @type switch
+ *
+ * @param OverlapOther
+ * @text 他ウィンドウに重ねる
+ * @desc 他のウィンドウと重なって表示させたときに背後のウィンドウをマスキングさせなくなります。
+ * @default false
+ * @type boolean
+ *
  */
 
 (function() {
@@ -312,6 +333,9 @@
             sprite.scale.y = (backImageData['ScaleY'] || 100) / 100;
             this._windowBackImageSprites.push(sprite);
             this._container.addChild(sprite);
+            if (backImageData.OverlapOther) {
+                this._isWindow = false;
+            }
         }, this);
     };
 
