@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.10.6 2021/05/06 共通ヘルプテキストが指定されている場合はそちらを優先表示するよう修正
  1.10.5 2021/04/11 1.10.4で解消した問題をキャラクターとフェイスグラフィックにも適用
  1.10.4 2021/04/08 キャッシュされていないピクチャを表示しようとしたとき、表示順序がずれる場合がある問題を修正
  1.10.3 2021/04/07 シーン情報が歯抜けになっていると以後の情報を読み込まない問題を修正
@@ -633,7 +634,7 @@
  *
  * @param VisibleScript
  * @text 表示スクリプト
- * @desc 指定したスクリプトがtrueの場合のみ画面に表示されます。変数『item』で『一覧ウィンドウID』の選択項目が参照できます。
+ * @desc 指定したスクリプトがtrueの場合のみ画面に表示されます。変数[item]で『一覧ウィンドウID』の選択項目が参照できます。
  * @default
  * @type combo
  * @option item.meta['value']; // メモ欄に<value>の記述がある
@@ -657,9 +658,8 @@
  * @type switch
  *
  * @param IsEnableScript
- * @parent DataScript
  * @text 選択可能スクリプト
- * @desc 項目を選択可能かどうかを判定するスクリプトです。変数『item』で『一覧ウィンドウID』の選択項目が参照できます。
+ * @desc 項目を選択可能かどうかを判定するスクリプトです。変数[item]で『一覧ウィンドウID』の選択項目が参照できます。
  * @default
  * @type combo
  * @option item.meta['value']; // メモ欄に<value>の記述がある
@@ -1356,13 +1356,14 @@
         }
 
         updateHelp() {
+            const helpText = this.findHelpText();
+            const helpItem = this.findHelpItem();
             if (this.isMasking(this.index())) {
                 this._helpWindow.setText(this._data.MaskingText);
-            } else if (this.findHelpItem()) {
-                this._helpWindow.setItem(this.findHelpItem());
-            } else {
-                const text = this.findHelpText() || '';
-                this._helpWindow.setText(text.replace(/\\n/g, '\n'));
+            } else if (helpText) {
+                this._helpWindow.setText(helpText.replace(/\\n/g, '\n'));
+            } else if (helpItem) {
+                this._helpWindow.setItem(helpItem);
             }
         }
 
