@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.2 2021/05/05 アイコンセットの行を変更したときに正しくトリミングできない問題を修正
 // 1.11.1 2021/05/01 ヘルプの記述を修正
 // 1.11.0 2020/11/22 ApngPicture.jsと組み合わせてキャラクターとして表示したピクチャ、敵キャラ画像がアニメーションする機能を追加
 // 1.10.4 2020/03/22 MOG_ChronoEngine.jsとの間で発生するエラーを解消(全面的な競合対策ではありません)
@@ -622,9 +623,10 @@
         }
         cgParams = this.getMetaCg(['アイコン', 'Icon']);
         if (cgParams) {
+            const bitmap = ImageManager.loadSystem('IconSet');
             this._customResource = 'System';
             this._graphicColumns = 16;
-            this._graphicRows    = 20;
+            this._graphicRows    = (bitmap.height / Window_Base._iconHeight) || 20;
             arguments[0]         = 'IconSet';
             arguments[1]         = getArgNumber(cgParams[1], 0, this._graphicColumns * this._graphicRows - 1);
         }
