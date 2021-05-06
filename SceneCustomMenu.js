@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.12.1 2021/05/07 パラメータのシーン20が正常に読み込まれていなかった問題を修正
  1.12.0 2021/05/06 カスタムメニュー画面の呼び出しをプラグインコマンド化
                    ウィンドウが重なったときに背後をマスキングしない設定を追加
                    ヘルプの表示揺れ等修正
@@ -739,7 +740,7 @@
     const param = PluginManagerEx.createParameter(script);
 
     param.SceneList = [];
-    for (let i = 1; i < 20; i++) {
+    for (let i = 1; i < 21; i++) {
         if (param[`Scene${i}`]) {
             param.SceneList.push(param[`Scene${i}`]);
         }
