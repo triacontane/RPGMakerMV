@@ -282,6 +282,12 @@
  * @default
  * @type struct<Panorama>
  *
+ * @param UsePageButtons
+ * @text ページボタンの使用
+ * @desc 有効にした場合、ページボタンを表示します。
+ * @default false
+ * @type boolean
+ * 
  */
 
 /*~struct~Panorama:
@@ -591,6 +597,12 @@
  * @default true
  * @type boolean
  *
+ * @param PopCancel
+ * @text シーン戻しキャンセル
+ * @desc 有効にするとこれが最初のウィンドウである場合、ウィンドウキャンセル時に前のシーンに戻ります。
+ * @default true
+ * @type boolean
+ * 
  * @param ActorChangeable
  * @text アクター変更可能
  * @desc 有効にするとPageUp, PageDownでアクターチェンジできるようになります。
@@ -828,10 +840,11 @@
 
     class Scene_CustomMenu extends Scene_MenuBase {
         create() {
+            // super.createのneedsPageButtonsで参照できるように、this._customDataの取得を一番上にする
+            this._customData = SceneManager.findSceneData(PluginManagerEx.findClassName(this));
             super.create();
             this.swapGameScreen();
             this._interpreter = new Game_Interpreter();
-            this._customData = SceneManager.findSceneData(PluginManagerEx.findClassName(this));
             this.createAllObjects();
         }
 
@@ -859,6 +872,12 @@
 
         restoreGameScreen() {
             window.$gameScreen = this._previousGameScreen;
+        }
+
+        needsPageButtons() {
+            // ウィンドウのアクター切り替えを有効にしている場合に、マウスやタッチでも操作可能にするために
+            // プラグインパラメータUsePageButtonsがオンの場合ページボタンを作成する
+            return this._customData.UsePageButtons;
         }
 
         createBackground() {
@@ -898,7 +917,9 @@
                     const prevActive = this._activeWindowId;
                     this.fireEvent(data.CancelEvent);
                     if (data.Id === this.findFirstWindowId() && prevActive === this._activeWindowId) {
-                        this.popScene();
+                        // ウィンドウが一番上にあり、かつキャンセルボタンにpopSceneが設定されている場合二重に戻ってしまう
+                        // プラグインパラメータPopCancelをオフにすることで無効化できるようにする
+                        if (data.PopCancel) this.popScene();
                     }
                     win.select(-1);
                 });
@@ -1103,6 +1124,8 @@
         onActorChange() {
             this.refreshActor();
             this.changeWindowFocus(this._activeWindowId, -1);
+            // アクター切り替え時にカーソルSEを演奏する
+            super.onActorChange();
         }
 
         launchBattle() {
