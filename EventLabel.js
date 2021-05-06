@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.3 2021/05/07 動的生成したイベントを消去したときにラベルが残ってしまう競合を修正
  1.1.2 2020/09/26 1.1.0でイベントIDを0で指定していた場合に表示されない問題を修正
  1.1.1 2020/09/26 ラベル表示条件のヘルプを書き忘れていたので追加
  1.1.0 2020/09/26 ラベルの表示条件にスイッチ、セルフスイッチを追加
@@ -285,6 +286,11 @@
                 this.removeEventLabel(event.eventId());
             }
         }
+        Object.keys(this._eventLabelSprites).forEach(id => {
+            if (!this._eventLabelSprites[id].event()) {
+                this.removeEventLabel(id);
+            }
+        });
     };
 
     Spriteset_Map.prototype.addEventLabel = function(id) {
