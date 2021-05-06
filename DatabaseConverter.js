@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2021/05/07 オリジナルデータを読み込んだときに戦闘テストがエラーになる問題を修正
 // 1.1.2 2019/11/03 1.1.0の修正によりマップおよびコモンイベントが出力できなくなっていた問題を修正
 // 1.1.1 2019/10/12 自動インポートがうまく動作していなかった問題を修正
 // 1.1.0 2019/09/23 オリジナルデータベースでIDが重複する行を配列としてエクスポート、インポートできる機能を追加
@@ -365,6 +366,7 @@ function ConverterManager() {
         };
         param = createPluginParameter('DatabaseConverter');
 
+        const originalDataList = [];
         if (param.originalDataLoad && !DataManager.isEventTest()) {
             param.targetDatabase.forEach(function(databaseInfo) {
                 const srcName = `${databaseInfo.JsonName}.json`;
@@ -372,6 +374,7 @@ function ConverterManager() {
                     return fileInfo.src === srcName;
                 });
                 if (!exist) {
+                    originalDataList.push(srcName);
                     DataManager._databaseFiles.push({name: databaseInfo.VariableName, src: srcName});
                 }
             });
@@ -459,6 +462,17 @@ function ConverterManager() {
             } else {
                 _DataManager_loadDatabase.apply(this, arguments);
             }
+        };
+
+        var _DataManager_loadDataFile = DataManager.loadDataFile;
+        DataManager.loadDataFile = function(name, src) {
+            if (this.isBattleTest()) {
+                const originalSrc = src.substring(5);
+                if (originalDataList.contains(originalSrc)) {
+                    arguments[1] = originalSrc;
+                }
+            }
+            _DataManager_loadDataFile.apply(this, arguments);
         };
 
         //=============================================================================
