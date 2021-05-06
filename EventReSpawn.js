@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2021/05/07 動的生成イベントに対してアニメーションを再生中に『イベントの消去』を実行するとエラーになる問題を修正
  1.1.0 2021/01/04 イベント動的生成時の座標指定に変数を指定するプラグインパラメータを追加
  1.0.3 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.0.2 2020/11/19 イベント、プレイヤーと重ならない生成条件が正常に機能していなかった問題を修正
@@ -690,6 +691,11 @@ function Game_PrefabEvent() {
                 this.makePrefabEventSprite(event);
             }
         }.bind(this));
+        // アニメーション再生中に対象の動的イベントを消去するとエラーになるので暫定対策
+        // 万一、アニメーションが常に再生され続ける環境だとスプライトの消去が永久に行われない可能性がある。
+        if (this.isAnimationPlaying()) {
+            return;
+        }
         for (let i = 0, n = this._characterSprites.length; i < n; i++) {
             if (this._characterSprites[i].isCharacterExtinct()) {
                 this.removePrefabEventSprite(i--);
