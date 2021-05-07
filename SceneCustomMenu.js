@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.11.0 2021/05/07 戦闘画面からカスタムメニューを呼び出して戻ったときに戦闘状況が初期化されないよう修正
  1.10.7 2021/05/07 パラメータのシーン20が正常に読み込まれていなかった問題を修正
  1.10.6 2021/05/06 共通ヘルプテキストが指定されている場合はそちらを優先表示するよう修正
  1.10.5 2021/04/11 1.10.4で解消した問題をキャラクターとフェイスグラフィックにも適用
@@ -774,11 +775,59 @@
         }
     };
 
+    const _Scene_Battle_start = Scene_Battle.prototype.start;
+    Scene_Battle.prototype.start = function() {
+        if (SceneManager.isCalledCustomMenuFromBattle()) {
+            SceneManager.resetCalledCustomMenuFromBattle();
+            Scene_Base.prototype.start.call(this);
+        } else {
+            _Scene_Battle_start.apply(this);
+        }
+    };
+
+    const _Scene_Battle_terminate = Scene_Battle.prototype.terminate;
+    Scene_Battle.prototype.terminate = function() {
+        if (SceneManager.isCalledCustomMenuFromBattle()) {
+            Scene_Base.prototype.terminate.call(this);
+        } else {
+            _Scene_Battle_terminate.apply(this, arguments);
+        }
+    };
+
+    const _Scene_Battle_stop = Scene_Battle.prototype.stop;
+    Scene_Battle.prototype.stop = function() {
+        if (SceneManager.isCalledCustomMenuFromBattle()) {
+            Scene_Base.prototype.stop.call(this);
+        } else {
+            _Scene_Battle_stop.apply(this, arguments);
+        }
+    };
+
+    const _Sprite_Actor_startEntryMotion = Sprite_Actor.prototype.startEntryMotion;
+    Sprite_Actor.prototype.startEntryMotion = function() {
+        if (SceneManager.isCalledCustomMenuFromBattle()) {
+            this.startMove(0, 0, 0);
+        } else {
+            _Sprite_Actor_startEntryMotion.apply(this, arguments);
+        }
+    }
+
     SceneManager.callCustomMenu = function(sceneId) {
         if (!this.findSceneData(sceneId)) {
             throw new Error(`Scene data '${sceneId}' is not found`);
         }
+        if (this._scene instanceof Scene_Battle) {
+            this._callCustomMenuFromBattle = true;
+        }
         this.push(this.createCustomMenuClass(sceneId));
+    };
+
+    SceneManager.isCalledCustomMenuFromBattle = function() {
+        return this._callCustomMenuFromBattle;
+    };
+
+    SceneManager.resetCalledCustomMenuFromBattle = function() {
+        this._callCustomMenuFromBattle = false;
     };
 
     const _SceneManager_goto = SceneManager.goto;
@@ -873,7 +922,8 @@
 
         stop() {
             super.stop();
-            if (SceneManager.isNextScene(Scene_Battle)) {
+            if (SceneManager.isNextScene(Scene_Battle) &&
+                !SceneManager.isPreviousScene(Scene_Battle)) {
                 this.launchBattle();
             }
         }
