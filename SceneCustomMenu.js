@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.12.2 2021/05/07 メインフォントや項目の高さを変更した場合に項目の表示位置が不整合になる場合がある問題を修正
  1.12.1 2021/05/07 パラメータのシーン20が正常に読み込まれていなかった問題を修正
  1.12.0 2021/05/06 カスタムメニュー画面の呼び出しをプラグインコマンド化
                    ウィンドウが重なったときに背後をマスキングしない設定を追加
@@ -920,7 +921,9 @@
                     if (data.Id === this.findFirstWindowId() && prevActive === this._activeWindowId) {
                         // ウィンドウが一番上にあり、かつキャンセルボタンにpopSceneが設定されている場合二重に戻ってしまう
                         // プラグインパラメータPopCancelをオフにすることで無効化できるようにする
-                        if (data.PopCancel) this.popScene();
+                        if (data.PopCancel === undefined || data.PopCancel) {
+                            this.popScene();
+                        }
                     }
                     win.select(-1);
                 });
@@ -1246,6 +1249,11 @@
             return this._data.ShowOpenAnimation;
         }
 
+        lineHeight() {
+            const fontSize = this._data.FontSize;
+            return fontSize ? this._data.FontSize + 8 : super.lineHeight();
+        }
+
         itemHeight() {
             return this._data.ItemHeight || super.itemHeight();
         }
@@ -1353,7 +1361,9 @@
         }
 
         findItemRect(index) {
-            return this.itemRectWithPadding(index);
+            const rect = this.itemRectWithPadding(index);
+            rect.y += this.rowSpacing() / 2;
+            return rect;
         }
 
         drawItemSub(item, rect, index) {
@@ -1580,6 +1590,11 @@
                 this.drawTextEx(item.toString(), r.x, r.y);
                 console.warn(item);
             }
+        }
+
+        calcTextHeight(textState) {
+            const height = super.calcTextHeight(textState);
+            return height + $gameSystem.mainFontSize() - this.contents.fontSize;
         }
 
         findHelpText() {
