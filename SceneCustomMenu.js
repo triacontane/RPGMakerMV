@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.12.0 2021/05/06 ウィンドウが重なったときに背後をマスキングしない設定を追加
  1.11.0 2021/05/07 戦闘画面からカスタムメニューを呼び出して戻ったときに戦闘状況が初期化されないよう修正
  1.10.7 2021/05/07 パラメータのシーン20が正常に読み込まれていなかった問題を修正
  1.10.6 2021/05/06 共通ヘルプテキストが指定されている場合はそちらを優先表示するよう修正
@@ -556,6 +557,12 @@
  * @desc デフォルトのフォントサイズです。0を指定すると他のウィンドウと同じサイズになります。
  * @default 0
  * @type number
+ *
+ * @param OverlapOther
+ * @text 他ウィンドウに重ねる
+ * @desc 他のウィンドウと重なって表示させたときに背後のウィンドウをマスキングさせなくなります。
+ * @default false
+ * @type boolean
  *
  * @param WindowSkin
  * @text ウィンドウスキン
@@ -1205,6 +1212,9 @@
             super(data.x, data.y, data.width || Graphics._boxWidth - data.x, data.height, data);
             this._actor = actor;
             this._windowMap = windowMap;
+            if (data.OverlapOther) {
+                this._isWindow = false;
+            }
             if (this.isShowOpen()) {
                 this.openness = 0;
             }
