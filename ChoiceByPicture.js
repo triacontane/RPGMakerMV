@@ -250,6 +250,9 @@
         }
 
         clearAll() {
+            if (!this.isValid()) {
+                return;
+            }
             this._choices.forEach(sprite => sprite.destroyIfNeed());
             this._choices = [];
             this.children = [];
