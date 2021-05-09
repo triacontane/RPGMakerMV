@@ -972,7 +972,6 @@ function Controller_NwJs() {
     const _DataManager_loadDatabase = DataManager.loadDatabase;
     DataManager.loadDatabase        = function() {
         if (this.isNeedSuppressBtest()) {
-            console.log(11111);
             this._suppressBattleTest = true;
         }
         _DataManager_loadDatabase.apply(this, arguments);
