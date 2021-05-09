@@ -18,6 +18,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/${NAME}.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author triacontane
  *
  * @help ${NAME}.js
@@ -33,6 +34,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/${NAME}.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param param
