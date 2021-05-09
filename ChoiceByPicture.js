@@ -66,6 +66,8 @@
  * @value vertical
  * @option 横に並べる
  * @value horizontal
+ * @option 縦横に並べる
+ * @value grid
  *
  * @param focusImage
  * @text フォーカス時画像
@@ -99,6 +101,25 @@
  * @desc 選択肢テキストを描画する場合のフォントサイズです。0を指定するとメインフォントのサイズになります。
  * @default 0
  * @type number
+ *
+ * @param containerScaleX
+ * @text コンテナ拡大率X
+ * @desc 選択肢全体の表示枠の拡大率(X方向)です。小さくすると選択肢が中央に寄っていきます。
+ * @default 100
+ * @type number
+ *
+ * @param containerScaleY
+ * @text コンテナ拡大率Y
+ * @desc 選択肢全体の表示枠の拡大率(Y方向)です。小さくすると選択肢が中央に寄っていきます。
+ * @default 100
+ * @type number
+ *
+ * @param columnNumber
+ * @text カラム数
+ * @desc 表示方法をグリッドにしたときの横方向の要素数です。
+ * @default 3
+ * @type number
+ *
  */
 
 /*~struct~Picture:
@@ -131,6 +152,10 @@
         this._choicePicture = param;
     };
 
+    Game_Message.prototype.clearChoicePicture = function () {
+        this._choicePicture = null;
+    };
+
     Game_Message.prototype.findChoicePicture = function () {
         return this._choicePicture;
     };
@@ -138,9 +163,13 @@
     const _Scene_Message_createAllWindows = Scene_Message.prototype.createAllWindows;
     Scene_Message.prototype.createAllWindows = function () {
         _Scene_Message_createAllWindows.apply(this, arguments);
+        this.createChoicePicture();
+    };
+
+    Scene_Message.prototype.createChoicePicture = function () {
         this._choiceSprite = new SpriteChoicePicture();
-        this.addChild(this._choiceSprite);
         this._choiceListWindow.setChoiceSprite(this._choiceSprite);
+        this.addChild(this._choiceSprite);
     };
 
     /**
@@ -157,6 +186,14 @@
             this._choiceSprite.setup(choicePicture, this);
         }
         _Window_ChoiceList_start.apply(this, arguments);
+    };
+
+    const _Window_ChoiceList_updatePlacement = Window_ChoiceList.prototype.updatePlacement;
+    Window_ChoiceList.prototype.updatePlacement = function() {
+        _Window_ChoiceList_updatePlacement.apply(this, arguments);
+        if (this._choiceSprite.isValid()) {
+            this.y = NaN;
+        }
     };
 
     const _Window_ChoiceList_callOkHandler = Window_ChoiceList.prototype.callOkHandler;
@@ -188,21 +225,35 @@
         setup(paramItem, choiceWindow) {
             this._param = paramItem;
             this._window = choiceWindow;
+            this._choices = [];
+            if (ConfigManager.touchUI) {
+                this.setupTouchUi();
+            }
             $gameMessage.choices().forEach((choice, index) => {
                 const child = new SpriteChoiceChildPicture();
                 child.setupChild(choice, paramItem, index, this._window);
+                this._choices.push(child);
                 this.addChild(child);
             });
             this.setupPosition();
         }
 
+        setupTouchUi() {
+            this._cancelSprite = new Sprite_Button('cancel');
+            this._cancelSprite.x = 2;
+            this._cancelSprite.y = 2;
+            this.addChild(this._cancelSprite);
+        }
+
         setupPosition() {
-            this._position = ChoicePositionBase.createInstance(this.children);
+            this._position = ChoicePositionBase.createInstance(this._choices);
         }
 
         clearAll() {
-            this.children.forEach(sprite => sprite.destroyIfNeed());
+            this._choices.forEach(sprite => sprite.destroyIfNeed());
+            this._choices = [];
             this.children = [];
+            $gameMessage.clearChoicePicture();
         }
 
         isValid() {
@@ -210,19 +261,20 @@
         }
 
         findCols() {
-            return this._position.findCols(this.children.length);
+            return this._position.findCols(this._choices.length);
         }
 
         update() {
             super.update();
-            if (this._position) {
-                this._position.update(this._window.index());
+            if (!this.isValid()) {
+                return;
             }
+            this._position.update(this._window.index());
             this.updateScale();
         }
 
         updateScale() {
-            this.children.forEach((sprite, index) => {
+            this._choices.forEach((sprite, index) => {
                 if (this._window.index() === index) {
                     sprite.updateActive();
                 } else {
@@ -255,6 +307,7 @@
         }
 
         onMouseEnter() {
+            SoundManager.playCursor();
             this._window.select(this._index);
         }
 
@@ -317,6 +370,9 @@
             const layout = sprites[0].findBasic('layout');
             let instance;
             switch (layout) {
+                case 'grid':
+                    instance = new ChoicePositionGrid();
+                    break;
                 case 'horizontal':
                     instance = new ChoicePositionHorizontal();
                     break;
@@ -328,6 +384,10 @@
             return instance;
         }
 
+        findBasic(propName) {
+            return this._sprites[0].findBasic(propName);
+        }
+
         init(sprites) {
             this._sprites = sprites;
             this._frameCount = 0;
@@ -336,6 +396,14 @@
         }
 
         findCols(){}
+
+        findScaleX() {
+            return this.findBasic('containerScaleX') / 100;
+        }
+
+        findScaleY() {
+            return this.findBasic('containerScaleY') / 100;
+        }
 
         update(index) {
             this._frameCount++;
@@ -366,7 +434,7 @@
         updateChild(sprite, state) {
             const position = sprite.getIndex() * 2 + 1 - state.count;
             sprite.x = state.centerX;
-            sprite.y = state.centerY + position * state.centerY / state.count;
+            sprite.y = state.centerY + position * this.findScaleX() * state.centerY / state.count;
         }
     }
 
@@ -381,8 +449,28 @@
 
         updateChild(sprite, state) {
             const position = sprite.getIndex() * 2 + 1 - state.count;
-            sprite.x = state.centerX + position * state.centerX / state.count;
+            sprite.x = state.centerX + position * this.findScaleY() * state.centerX / state.count;
             sprite.y = state.centerY;
+        }
+    }
+
+    /**
+     * ChoicePositionGrid
+     * 縦横方向のポジショニングを管理するクラス
+     */
+    class ChoicePositionGrid extends ChoicePositionBase {
+        findCols() {
+            return this.findBasic('columnNumber') || 1;
+        }
+
+        updateChild(sprite, state) {
+            const col = this.findCols();
+            const row = Math.floor(state.count / col);
+            const index = sprite.getIndex();
+            const positionX = (index % col) * 2 + 1 - col;
+            const positionY = Math.floor(index / col) * 2 + 1 - row;
+            sprite.x = state.centerX + positionX * this.findScaleX() * state.centerX / col;
+            sprite.y = state.centerY + positionY * this.findScaleY() * state.centerY / row;
         }
     }
 
