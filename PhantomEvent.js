@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.1 2021/05/11 1.5.0の修正により、パーティメンバーが0人になるとエラーになる問題を修正
  1.6.0 2021/05/04 アクターごとに可視距離のレートを指定できる機能を追加
  1.5.1 2021/03/28 ヘルプ微修正
  1.5.0 2021/03/28 MZで動作するよう修正
@@ -148,7 +149,7 @@
     };
 
     Game_Party.prototype.findVisibleDistanceRate = function () {
-        const actors = param.visibleRate === 'leader' ? [this.members()[0]] : this.members();
+        const actors = param.visibleRate === 'leader' ? this.members().filter((a, i) => i === 0) : this.members();
         let result = 0;
         actors.forEach(actor => {
             result = Math.max(result, actor.findVisibleDistanceRate());
