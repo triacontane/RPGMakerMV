@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.13.3 2021/05/12 ウィンドウリストで下にあるウィンドウを『一覧ウィンドウ』に指定するとエラーになる問題を修正
  1.13.2 2021/05/10 ウィンドウ開閉が無効な場合、初期状態で非表示のウィンドウが一瞬表示されてしまう問題を修正
  1.13.1 2021/05/09 ヘルプの誤記、分かりにくい表現の修正
  1.13.0 2021/05/07 戦闘画面からカスタムメニューを呼び出して戻ったときに戦闘状況が初期化されないよう修正
@@ -966,6 +967,7 @@
             this._customWindowMap = new Map();
             const list = this._customData.WindowList;
             list.forEach(windowData => this.createCustomMenuWindow(windowData));
+            this._customWindowMap.forEach(win => win.refresh());
             list.forEach(windowData => this.setPlacement(windowData));
         }
 
@@ -998,7 +1000,6 @@
                 win.setHandler('pagedown', this.nextActor.bind(this));
                 win.setHandler('pageup', this.previousActor.bind(this));
             }
-            win.refresh();
             this.addWindow(win);
             this._customWindowMap.set(data.Id, win);
         }
