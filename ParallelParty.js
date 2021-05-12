@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2021/05/12 初期パーティから変更後、セーブ、ロードを介することで正常に初期パーティに戻らなくなる場合がある問題を修正
 // 2.0.1 2020/09/17 英語版のヘルプ作成とバグ修正
 // 2.0.0 2020/09/17 MZ版向けに修正
 // 1.3.0 2019/01/02 用語辞典プラグイン使用時に用語履歴を常に継承できるよう修正
@@ -240,8 +241,15 @@ function Game_Parties() {
         return this._data[this._partyId];
     };
 
+    Game_Parties.prototype.setCurrentParty = function() {
+        this._data[this._partyId] = $gameParty;
+    };
+
     Game_Parties.prototype.change = function(partyId, resourceCombine) {
-        if (this._partyId === partyId) return;
+        if (this._partyId === partyId) {
+            return;
+        }
+        this.setCurrentParty();
         this._partyId = partyId;
         this.createPartyIfNeed();
         var currentParty = this.getCurrentParty();
