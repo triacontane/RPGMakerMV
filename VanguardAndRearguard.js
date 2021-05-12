@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2021/05/13 並び順固定のパラメータが正しく取得できていなかった問題を修正
 // 2.0.0 2021/05/13 MZで動作するよう全面的に修正
 // 1.9.0 2020/02/15 先頭メンバーの並び替えを禁止できるスイッチを追加
 // 1.8.1 2019/06/17 1.8.0の修正で「後衛メンバー上限」のパラメータ取得処理が消えていたのを戻した
@@ -602,7 +603,7 @@
     };
 
     Scene_Menu.prototype.canChangeFormation = function(pendingIndex, index) {
-        if (!$gameSwitches.value(param.TopFixedSwitch) || pendingIndex === -1) {
+        if (!$gameSwitches.value(param.TopActorFixedSwitch) || pendingIndex === -1) {
             return true;
         }
         return pendingIndex === index || (pendingIndex > 0 && index > 0);
