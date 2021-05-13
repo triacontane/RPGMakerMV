@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.13.0 2021/05/14 決定時のイベントで元ウィンドウの選択状態を解除できる機能を追加
  1.12.3 2021/05/12 ウィンドウリストで下にあるウィンドウを『一覧ウィンドウ』に指定するとエラーになる問題を修正
  1.12.2 2021/05/10 ウィンドウ開閉が無効な場合、初期状態で非表示のウィンドウが一瞬表示されてしまう問題を修正
  1.12.1 2021/05/09 ヘルプの誤記、分かりにくい表現の修正
@@ -739,6 +740,12 @@
  * @text スイッチ
  * @desc 対象のイベントが発生したときにONになるスイッチです。
  * @type switch
+ *
+ * @param Deselect
+ * @text 元ウィンドウの選択を解除
+ * @desc 対象のイベントが発生したときに元々フォーカスされていたウィンドウの選択状態を解除します。
+ * @default false
+ * @type boolean
  */
 
 (() => {
@@ -1095,7 +1102,7 @@
             });
         };
 
-        fireEvent(event, moveFocus = true) {
+        fireEvent(event, moveWindowFocus = true) {
             if (event.SwitchId) {
                 $gameSwitches.setValue(event.SwitchId, true);
             }
@@ -1109,13 +1116,17 @@
             if (!this._active) {
                 return;
             }
-            if (moveFocus) {
+            if (moveWindowFocus) {
                 if (event.FocusWindowId) {
                     this.changeWindowFocus(event.FocusWindowId, event.FocusWindowIndex);
                 } else if (this._previousActiveWindowId && this._activeWindowId !== this.findFirstWindowId()) {
                     this.changeWindowFocus(this._previousActiveWindowId, -1);
                 } else {
                     this.changeWindowFocus(this._activeWindowId || this.findFirstWindowId(), -1);
+                }
+                if (event.Deselect) {
+                    const previousWindow = this._customWindowMap.get(this._previousActiveWindowId);
+                    previousWindow.deselect();
                 }
             }
             if (event.CommandId) {
