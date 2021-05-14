@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.14.2 2021/05/15 廃止された一部のプリセットを削除
  1.14.1 2021/05/15 初期表示時にアクターのフェイスグラフィックを表示しようとしたとき、うまく表示されない場合がある問題を修正
  1.14.0 2021/05/14 決定時のイベントで元ウィンドウの選択状態を解除できる機能を追加
  1.13.3 2021/05/12 ウィンドウリストで下にあるウィンドウを『一覧ウィンドウ』に指定するとエラーになる問題を修正
@@ -489,9 +490,6 @@
  * @option this.drawActorNickname(item, r.x, r.y); // アクターの二つ名
  * @option this.drawActorLevel(item, r.x, r.y); // アクターのレベル
  * @option this.drawActorIcons(item, r.x, r.y); // アクターのステートアイコン
- * @option this.drawActorHp(item, r.x, r.y, r.width); // アクターのHP
- * @option this.drawActorMp(item, r.x, r.y, r.width); // アクターのMP
- * @option this.drawActorTp(item, r.x, r.y, r.width); // アクターのTP
  * @option this.drawActorSimpleStatus(item, r.x, r.y, r.width); // アクターのステータス
  * @option this.drawItemName(item, r.x, r.y, r.width); // アイテムやスキルの名称
  * @option this.drawText($gameParty.numItems(item), r.x, r.y, r.width, 'right'); // アイテムの所持数
