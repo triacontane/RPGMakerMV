@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.14.1 2021/05/15 初期表示時にアクターのフェイスグラフィックを表示しようとしたとき、うまく表示されない場合がある問題を修正
  1.14.0 2021/05/14 決定時のイベントで元ウィンドウの選択状態を解除できる機能を追加
  1.13.3 2021/05/12 ウィンドウリストで下にあるウィンドウを『一覧ウィンドウ』に指定するとエラーになる問題を修正
  1.13.2 2021/05/10 ウィンドウ開閉が無効な場合、初期状態で非表示のウィンドウが一瞬表示されてしまう問題を修正
@@ -920,6 +921,7 @@
 
         start() {
             super.start();
+            this.refresh();
             this.fireEvent(this._customData.InitialEvent);
         }
 
@@ -974,8 +976,12 @@
             this._customWindowMap = new Map();
             const list = this._customData.WindowList;
             list.forEach(windowData => this.createCustomMenuWindow(windowData));
-            this._customWindowMap.forEach(win => win.refresh());
+            this.refresh();
             list.forEach(windowData => this.setPlacement(windowData));
+        }
+
+        refresh() {
+            this._customWindowMap.forEach(win => win.refresh());
         }
 
         createCustomMenuWindow(data) {
