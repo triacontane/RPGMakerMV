@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2021/05/16 サブフォルダを指定できるよう修正
 // 2.0.0 2021/03/17 MZで動作するよう修正し、仕様を見直し
 // 1.1.3 2020/04/15 1.1.2の修正で同時再生したボイスの停止が動作しない問題を修正
 // 1.1.2 2020/04/08 異なるチャンネルで短い間隔で複数のボイスを再生した場合に、先に再生したボイスが演奏されない問題を修正
@@ -196,8 +197,11 @@
     AudioManager._voiceVolume  = 100;
     AudioManager.playVoice     = function(voice, loop, channel) {
         if (voice.name) {
+            const path = ('se/' + voice.name).split('/');
+            voice.name = path.pop();
+            const folder = path.join('/') + '/';
             this.stopVoice(voice.name, channel);
-            const buffer = this.createBuffer('se/', voice.name);
+            const buffer = this.createBuffer(folder, voice.name);
             this.updateVoiceParameters(buffer, voice);
             buffer.play(loop, 0);
             buffer.name = voice.name;
