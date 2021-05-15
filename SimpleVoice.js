@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// x.x.x 2021/05/16 演奏フォルダをvoiceに変更する特別版
 // 2.0.1 2021/05/16 サブフォルダを指定できるよう修正
 // 2.0.0 2021/03/17 MZで動作するよう修正し、仕様を見直し
 // 1.1.3 2020/04/15 1.1.2の修正で同時再生したボイスの停止が動作しない問題を修正
@@ -48,7 +49,7 @@
  * @desc ボイスファイルの名称です。
  * @default
  * @type file
- * @dir audio/se
+ * @dir audio/voice
  *
  * @arg volume
  * @text 音量
@@ -93,7 +94,7 @@
  * @desc 停止するボイスファイルの名称です。
  * @default
  * @type file
- * @dir audio/se
+ * @dir audio/voice
  *
  * @arg channel
  * @text チャンネル番号
@@ -197,7 +198,7 @@
     AudioManager._voiceVolume  = 100;
     AudioManager.playVoice     = function(voice, loop, channel) {
         if (voice.name) {
-            const path = ('se/' + voice.name).split('/');
+            const path = ('voice/' + voice.name).split('/');
             voice.name = path.pop();
             const folder = path.join('/') + '/';
             this.stopVoice(voice.name, channel);
