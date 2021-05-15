@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.14.3 2021/05/15 コマンド直接入力かつフォントサイズを変更した場合に項目の表示位置が不整合になる場合がある問題を修正
  1.14.2 2021/05/15 廃止された一部のプリセットを削除
  1.14.1 2021/05/15 初期表示時にアクターのフェイスグラフィックを表示しようとしたとき、うまく表示されない場合がある問題を修正
  1.14.0 2021/05/14 決定時のイベントで元ウィンドウの選択状態を解除できる機能を追加
@@ -1280,6 +1281,11 @@
             })
         }
 
+        calcTextHeight(textState) {
+            const height = super.calcTextHeight(textState);
+            return height + $gameSystem.mainFontSize() - this.contents.fontSize;
+        }
+
         updateOpenClose() {
             if (this.isValid()) {
                 if (this.isShowOpen()) {
@@ -1667,11 +1673,6 @@
                 this.drawTextEx(item.toString(), r.x, r.y);
                 console.warn(item);
             }
-        }
-
-        calcTextHeight(textState) {
-            const height = super.calcTextHeight(textState);
-            return height + $gameSystem.mainFontSize() - this.contents.fontSize;
         }
 
         findHelpText() {
