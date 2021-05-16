@@ -1,16 +1,17 @@
 //=============================================================================
 // HorizontalScrollingMove.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2021/05/17 プレイヤーの初期の向きを下から右に変更
 // 1.2.0 2019/07/20 画像のみ向き制限する仕様を追加
 // 1.1.0 2017/07/25 上向きを許容するパラメータを追加
 // 1.0.0 2017/03/29 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -154,6 +155,14 @@
 
     Game_CharacterBase.prototype.isNeedModifyUpper = function() {
         return false;
+    };
+
+    var _Game_Player_initMembers = Game_Player.prototype.initMembers;
+    Game_Player.prototype.initMembers = function() {
+        _Game_Player_initMembers.apply(this, arguments);
+        if (this.isHorizontalMove()) {
+            this._direction = 6;
+        }
     };
 
     Game_Player.prototype.isNeedModifyUpper= function() {
