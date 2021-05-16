@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2021/05/16 アノテーション追加
 // 2.0.1 2020/10/17 キーコードの仕様を撤廃
 //                  英語ヘルプを作成
 // 2.0.0 2020/10/17 初期表示時に追加テキストの方が表示される設定を追加
@@ -26,6 +27,10 @@
 
 /*:
  * @plugindesc AdditionalDescription
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AdditionalDescription.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author triacontane
  *
  * @param ButtonName
@@ -68,6 +73,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AdditionalDescription.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param ButtonName
