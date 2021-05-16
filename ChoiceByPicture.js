@@ -217,6 +217,20 @@
         }
     };
 
+    const _Window_ChoiceList_smoothSelect = Window_ChoiceList.prototype.smoothSelect;
+    Window_ChoiceList.prototype.smoothSelect = function(index) {
+        this.setUseKeyboard(true);
+        _Window_ChoiceList_smoothSelect.apply(this, arguments);
+    };
+
+    Window_ChoiceList.prototype.setUseKeyboard = function(value) {
+        this._useKeyboard = value;
+    };
+
+    Window_ChoiceList.prototype.isUseKeyboard = function() {
+        return this._useKeyboard;
+    };
+
     /**
      * SpriteChoicePicture
      * 選択肢スプライト
@@ -242,6 +256,7 @@
             this._cancelSprite = new Sprite_Button('cancel');
             this._cancelSprite.x = 2;
             this._cancelSprite.y = 2;
+            this._cancelSprite.visible = this._window.isCancelEnabled();
             this.addChild(this._cancelSprite);
         }
 
@@ -273,6 +288,9 @@
                 return;
             }
             this._position.update(this._window.index());
+            if (!this._window.isUseKeyboard()) {
+                this.updateSelect();
+            }
             this.updateScale();
         }
 
@@ -284,6 +302,15 @@
                     sprite.updateNonActive();
                 }
             });
+        }
+
+        updateSelect() {
+            const selected = this._choices.filter(sprite => sprite.isSelect())[0];
+            if (selected) {
+                this._window.select(selected.getIndex());
+            } else {
+                this._window.deselect();
+            }
         }
     }
 
@@ -297,6 +324,7 @@
             this._originalImage = paramItem.imageList[index];
             this._index = index;
             this._window = choiceWindow;
+            this._select = false;
             this.anchor.x = 0.5;
             this.anchor.y = 0.5;
             if (this.findBasic('textDrawing')) {
@@ -310,8 +338,30 @@
         }
 
         onMouseEnter() {
+            this._window.setUseKeyboard(false);
             SoundManager.playCursor();
-            this._window.select(this._index);
+            this._select = true;
+        }
+
+        onMouseExit() {
+            this._select = false;
+        }
+
+        isSelect() {
+            return this._select;
+        }
+
+        hitTest(x, y) {
+            if (!this.bitmap) {
+                return false;
+            }
+            const rect = new Rectangle(
+                -this.anchor.x * this.bitmap.width,
+                -this.anchor.y * this.bitmap.height,
+                this.bitmap.width,
+                this.bitmap.height
+            );
+            return rect.contains(x, y);
         }
 
         onClick() {
