@@ -656,7 +656,7 @@
     };
 
     SceneManager.getCapture = function() {
-        return this._captureBitmap || ImageManager.loadEmptyBitmap();
+        return this._captureBitmap || ImageManager.loadBitmap('', '');
     };
 
     SceneManager.saveCapture = function(fileName, format) {
