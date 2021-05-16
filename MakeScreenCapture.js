@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.4 2021/05/16 プラグインコマンドがMZ対応できていなかったので修正
 // 1.7.3 2018/06/28 出力パスの算出方法を変更
 // 1.7.2 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
 // 1.7.1 2017/11/11 総合開発支援プラグインとの連携による修正
@@ -38,6 +39,8 @@
  * @plugindesc Screen Capture Plugin
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MakeScreenCapture.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author triacontane
  *
  * @param FuncKeyPngCapture
@@ -171,6 +174,23 @@
  * @min 1
  * @max 10
  *
+ * @command MAKE
+ * @text キャプチャ作成
+ * @desc 実行時点でのキャプチャを作成してメモリ上に保持します。
+ *
+ * @command OUT_PICTURE
+ * @text ピクチャ出力
+ * @desc 保持していた画面キャプチャをピクチャに表示します。コマンドの直後に「ピクチャの表示」を実行してください。
+ *
+ * @command OUT_FILE
+ * @text ファイル作成
+ * @desc 保持していた画面キャプチャをファイルに保存します。ローカル実行でのみ動作します。
+ *
+ * @arg name
+ * @text ファイル名
+ * @desc 出力するファイルの名称です。
+ * @default capture
+ *
  * @help プレー中のゲーム画面をキャプチャして
  * ファイルに保存したり、ピクチャとして表示したりできます。
  * キャプチャは以下のタイミングで実行されます。
@@ -196,25 +216,10 @@
  * キャプチャを出力する機能はローカル環境でのみ有効です。
  * ブラウザやスマホ上では動作しません。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * MSC_MAKE
- *  実行時点でのキャプチャを作成して保持します。
- *  ex：MSC_MAKE
- *
- * MSC_PICTURE
- *  保持していた画面キャプチャをピクチャに表示します。
- *  このコマンドの直後に「ピクチャの表示」を実行するとキャプチャピクチャが
- *  表示されます。
- *  ex：MSC_PICTURE
- *
- * MSC_SAVE [ファイル名]
- *  保持していた画面キャプチャをファイルに保存します。
- *  ファイル名は自由に指定できます。
- *  拡張子は自動で設定されるので設定不要です。
- *  ex：MSC_SAVE image
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * This plugin is released under the MIT License.
  */
@@ -222,6 +227,8 @@
  * @plugindesc 画面キャプチャ管理プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MakeScreenCapture.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param PNGキャプチャキー
@@ -355,6 +362,23 @@
  * @min 1
  * @max 10
  *
+ * @command MAKE
+ * @text キャプチャ作成
+ * @desc 実行時点でのキャプチャを作成してメモリ上に保持します。
+ *
+ * @command OUT_PICTURE
+ * @text ピクチャ出力
+ * @desc 保持していた画面キャプチャをピクチャに表示します。コマンドの直後に「ピクチャの表示」を実行してください。
+ *
+ * @command OUT_FILE
+ * @text ファイル作成
+ * @desc 保持していた画面キャプチャをファイルに保存します。ローカル実行でのみ動作します。
+ *
+ * @arg name
+ * @text ファイル名
+ * @desc 出力するファイルの名称です。
+ * @default capture
+ *
  * @help プレー中のゲーム画面をキャプチャして
  * ファイルに保存したり、ピクチャとして表示したりできます。
  * キャプチャは以下のタイミングで実行されます。
@@ -380,25 +404,10 @@
  * キャプチャを出力する機能はローカル環境でのみ有効です。
  * ブラウザやスマホ上では動作しません。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * MSC_MAKE or 画面キャプチャ作成
- *  実行時点でのキャプチャを作成して保持します。
- *  例：画面キャプチャ作成
- *
- * MSC_PICTURE or 画面キャプチャピクチャ
- *  保持していた画面キャプチャをピクチャに表示します。
- *  このコマンドの直後に「ピクチャの表示」を実行するとキャプチャピクチャが
- *  表示されます。
- *  例：画面キャプチャピクチャ
- *
- * MSC_SAVE [ファイル名] or 画面キャプチャ保存 [ファイル名]
- *  保持していた画面キャプチャをファイルに保存します。
- *  ファイル名は自由に指定できます。
- *  拡張子は自動で設定されるので設定不要です。
- *  例：画面キャプチャ保存 image
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -406,13 +415,27 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
+    const script = document.currentScript;
+
+    PluginManagerEx.registerCommand(script, 'MAKE', args => {
+        SceneManager.makeCapture();
+    });
+
+    PluginManagerEx.registerCommand(script, 'OUT_PICTURE', args => {
+        $gameScreen.captureFlg = true;
+    });
+
+    PluginManagerEx.registerCommand(script, 'OUT_FILE', args => {
+        SceneManager.saveCapture(String(args.name) || paramFileName, paramFileFormat);
+    });
+
     //=============================================================================
     // ユーザ書き換え領域 - 開始 -
     //  高度な設定を記述しています。必要な場合は書き換えてください。
     //=============================================================================
-    var settings = {
+    const settings = {
         /* 署名のフォント情報です。faceはあらかじめフォントをロードしておかなければ使えません */
         signature: {face: 'GameFont', color: 'rgba(255,255,255,1.0)', align: 'right'},
         /* 効果音情報です。ファイル名はプラグイン管理画面から取得します */
@@ -423,44 +446,44 @@
     //=============================================================================
     // ユーザ書き換え領域 - 終了 -
     //=============================================================================
-    var pluginName = 'MakeScreenCapture';
+    const pluginName = 'MakeScreenCapture';
 
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
+    const getParamString = function(paramNames) {
+        const value = getParamOther(paramNames);
         return value == null ? '' : value;
     };
 
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
+    const getParamNumber = function(paramNames, min, max) {
+        const value = getParamOther(paramNames);
         if (arguments.length < 2) min = -Infinity;
         if (arguments.length < 3) max = Infinity;
         return (parseInt(value, 10) || 0).clamp(min, max);
     };
 
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
+    const getParamBoolean = function(paramNames) {
+        const value = getParamOther(paramNames);
         return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
     };
 
-    var getParamOther = function(paramNames) {
+    const getParamOther = function(paramNames) {
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
+        for (let i = 0; i < paramNames.length; i++) {
+            const name = PluginManager.parameters(pluginName)[paramNames[i]];
             if (name) return Utils.isNwjs() ? convertEnvironmentVariable(name) : name;
         }
         return null;
     };
 
-    var getCommandName = function(command) {
+    const getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
 
-    var getArgString = function(arg, upperFlg) {
+    const getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
     };
 
-    var convertEnvironmentVariable = function(text) {
+    const convertEnvironmentVariable = function(text) {
         if (text == null) text = '';
         text = text.replace(/%(\w+)%/gi, function() {
             return process.env[arguments[1]] || '';
@@ -468,64 +491,37 @@
         return text;
     };
 
-    var convertEscapeCharacters = function(text) {
+    const convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        var window = SceneManager._scene._windowLayer.children[0];
+        const window = SceneManager._scene._windowLayer.children[0];
         return window ? window.convertEscapeCharacters(text) : text;
     };
 
     //=============================================================================
     // パラメータの取得と整形
     //=============================================================================
-    var paramFuncKeyPngCapture  = getParamString(['FuncKeyPngCapture', 'PNGキャプチャキー']);
-    var paramFuncKeyJpegCapture = getParamString(['FuncKeyJpegCapture', 'JPEGキャプチャキー']);
-    var paramFuncKeyWebpCapture = getParamString(['FuncKeyWebpCapture', 'WEBPキャプチャキー']);
-    var paramFileName           = getParamString(['FileName', 'ファイル名']);
-    var paramLocation           = getParamString(['Location', '出力場所']);
-    var paramFileFormat         = getParamString(['FileFormat', '保存形式']).toLowerCase();
-    var paramSignature          = getParamString(['Signature', '署名']);
-    var paramSignatureImage     = getParamString(['SignatureImage', '署名画像']);
-    var paramSignatureSize      = getParamNumber(['SignatureSize', '署名サイズ']);
-    var paramNumberDigit        = getParamNumber(['NumberDigit', '連番桁数']);
-    var paramInterval           = getParamNumber(['Interval', '実行間隔']);
-    var paramSeName             = getParamString(['SeName', '効果音']);
-    var paramTimeStamp          = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
-    var paramJpegQuality        = getParamNumber(['JpegQuality', 'JPEG品質']);
-    var paramSimultaneousCtrl   = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
-    var paramSimultaneousAlt    = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        this.pluginCommandMakeScreenCapture(command, args);
-    };
-
-    Game_Interpreter.prototype.pluginCommandMakeScreenCapture = function(command, args) {
-        switch (getCommandName(command)) {
-            case 'MSC_MAKE' :
-            case '画面キャプチャ作成':
-                SceneManager.makeCapture();
-                break;
-            case 'MSC_PICTURE' :
-            case '画面キャプチャピクチャ':
-                $gameScreen.captureFlg = true;
-                break;
-            case 'MSC_SAVE' :
-            case '画面キャプチャ保存':
-                SceneManager.saveCapture(getArgString(args[0]) || paramFileName, paramFileFormat);
-                break;
-        }
-    };
+    const paramFuncKeyPngCapture  = getParamString(['FuncKeyPngCapture', 'PNGキャプチャキー']);
+    const paramFuncKeyJpegCapture = getParamString(['FuncKeyJpegCapture', 'JPEGキャプチャキー']);
+    const paramFuncKeyWebpCapture = getParamString(['FuncKeyWebpCapture', 'WEBPキャプチャキー']);
+    const paramFileName           = getParamString(['FileName', 'ファイル名']);
+    const paramLocation           = getParamString(['Location', '出力場所']);
+    const paramFileFormat         = getParamString(['FileFormat', '保存形式']).toLowerCase();
+    const paramSignature          = getParamString(['Signature', '署名']);
+    const paramSignatureImage     = getParamString(['SignatureImage', '署名画像']);
+    const paramSignatureSize      = getParamNumber(['SignatureSize', '署名サイズ']);
+    const paramNumberDigit        = getParamNumber(['NumberDigit', '連番桁数']);
+    const paramInterval           = getParamNumber(['Interval', '実行間隔']);
+    const paramSeName             = getParamString(['SeName', '効果音']);
+    const paramTimeStamp          = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
+    const paramJpegQuality        = getParamNumber(['JpegQuality', 'JPEG品質']);
+    const paramSimultaneousCtrl   = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
+    const paramSimultaneousAlt    = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
 
     //=============================================================================
     // Game_Screen
     //  キャプチャピクチャ用のプロパティを追加定義します。
     //=============================================================================
-    var _Game_Screen_clear      = Game_Screen.prototype.clear;
+    const _Game_Screen_clear      = Game_Screen.prototype.clear;
     Game_Screen.prototype.clear = function() {
         _Game_Screen_clear.apply(this, arguments);
         this.clearCapturePicture();
@@ -539,7 +535,7 @@
     // Game_Picture
     //  キャプチャピクチャ用のプロパティを追加定義します。
     //=============================================================================
-    var _Game_Picture_show      = Game_Picture.prototype.show;
+    const _Game_Picture_show      = Game_Picture.prototype.show;
     Game_Picture.prototype.show = function(name, origin, x, y, scaleX,
                                            scaleY, opacity, blendMode) {
         if ($gameScreen.captureFlg) {
@@ -556,10 +552,10 @@
     // Scene_Base
     //  定期実行キャプチャを定義します。
     //=============================================================================
-    var _Scene_Base_update      = Scene_Base.prototype.update;
+    const _Scene_Base_update      = Scene_Base.prototype.update;
     Scene_Base.prototype.update = function() {
         _Scene_Base_update.apply(this, arguments);
-        var count = Graphics.frameCount;
+        const count = Graphics.frameCount;
         if (paramInterval !== 0 && Utils.isTestCapture() && (count + 1) % (paramInterval * 60) === 0) {
             SceneManager.takeCapture();
         }
@@ -569,7 +565,7 @@
     // Sprite_Picture
     //  画像の動的生成を追加定義します。
     //=============================================================================
-    var _Sprite_Picture_loadBitmap      = Sprite_Picture.prototype.loadBitmap;
+    const _Sprite_Picture_loadBitmap      = Sprite_Picture.prototype.loadBitmap;
     Sprite_Picture.prototype.loadBitmap = function() {
         if (this.picture().captureFlg) {
             this.bitmap = SceneManager.getCapture();
@@ -591,7 +587,7 @@
     //  対象のビットマップを保存します。現状、ローカル環境下でのみ動作します。
     //=============================================================================
     Bitmap.prototype.save = function(fileName, format, extend) {
-        var data = this._canvas.toDataURL('image/' + format, extend);
+        let data = this._canvas.toDataURL('image/' + format, extend);
         data     = data.replace(/^.*,/, '');
         if (format === 'jpeg') format = 'jpg';
         if (data) StorageManager.saveImg(fileName, format, data);
@@ -605,7 +601,7 @@
     };
 
     Bitmap.prototype.signAndSave = function(signature, fileName, format, signatureImage) {
-        var fileFullPath = StorageManager.getLocalImgFileName(fileName);
+        const fileFullPath = StorageManager.getLocalImgFileName(fileName);
         if (signatureImage) {
             this.signImage(signatureImage, signature);
         }
@@ -614,7 +610,7 @@
     };
 
     Bitmap.prototype.signImage = function(signBitmap, fontInfo) {
-        var dx = 0, dy = this.height - signBitmap.height;
+        let dx = 0, dy = this.height - signBitmap.height;
         switch (fontInfo.align) {
             case 'center':
                 dx = this.width / 2 - signBitmap.width / 2;
@@ -652,7 +648,7 @@
     SceneManager.captureNumber = 0;
     SceneManager.makeCapture   = function() {
         if (paramSeName) {
-            var se  = settings.se;
+            const se  = settings.se;
             se.name = paramSeName;
             AudioManager.playSe(se);
         }
@@ -665,9 +661,9 @@
 
     SceneManager.saveCapture = function(fileName, format) {
         if (!this._captureBitmap) return;
-        var signature = this.getSignature();
+        const signature = this.getSignature();
         if (paramSignatureImage) {
-            var image = ImageManager.loadPicture(paramSignatureImage, 0);
+            const image = ImageManager.loadPicture(paramSignatureImage, 0);
             image.addLoadListener(function() {
                 this._captureBitmap.signAndSave(signature, fileName, format, image);
             }.bind(this));
@@ -677,7 +673,7 @@
     };
 
     SceneManager.getSignature = function() {
-        var signature  = settings.signature;
+        const signature  = settings.signature;
         signature.size = paramSignatureSize;
         return signature;
     };
@@ -690,7 +686,7 @@
         this.saveCapture(paramFileName, format);
     };
 
-    var _SceneManager_setupErrorHandlers = SceneManager.setupErrorHandlers;
+    const _SceneManager_setupErrorHandlers = SceneManager.setupErrorHandlers;
     SceneManager.setupErrorHandlers      = function() {
         _SceneManager_setupErrorHandlers.apply(this, arguments);
         if (Utils.isTestCapture()) {
@@ -698,7 +694,7 @@
         }
     };
 
-    var _SceneManager_onKeyDown = SceneManager.onKeyDown;
+    const _SceneManager_onKeyDown = SceneManager.onKeyDown;
     SceneManager.onKeyDown      = function(event) {
         _SceneManager_onKeyDown.apply(this, arguments);
         if (paramSimultaneousCtrl === event.ctrlKey && paramSimultaneousAlt === event.altKey && Utils.isTestCapture()) {
@@ -742,9 +738,9 @@
     };
 
     StorageManager.saveImgToLocalFile = function(fileName, data) {
-        var fs       = require('fs');
-        var dirPath  = this.localImgFileDirectoryPath();
-        var filePath = dirPath + fileName;
+        const fs       = require('fs');
+        const dirPath  = this.localImgFileDirectoryPath();
+        const filePath = dirPath + fileName;
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath);
         }
@@ -752,9 +748,9 @@
     };
 
     StorageManager.localImgFileDirectoryPath = function() {
-        var filePath = paramLocation;
+        let filePath = paramLocation;
         if (!filePath.match(/^[A-Z]:/)) {
-            var path = require('path');
+            const path = require('path');
             filePath = path.join(path.dirname(process.mainModule.filename), filePath);
         }
         return decodeURIComponent(filePath.match(/\/$/) ? filePath : filePath + '/');
@@ -762,11 +758,11 @@
 
     StorageManager.getLocalImgFileName = function(fileName) {
         if (paramTimeStamp) {
-            var date = new Date();
+            const date = new Date();
             return fileName + '_' + date.getFullYear() + (date.getMonth() + 1).padZero(2) + date.getDate().padZero(2) +
                 '_' + date.getHours().padZero(2) + date.getMinutes().padZero(2) + date.getSeconds().padZero(2);
         } else {
-            var number = SceneManager.captureNumber;
+            let number = SceneManager.captureNumber;
             if (number >= Math.pow(10, paramNumberDigit)) number = 0;
             SceneManager.captureNumber = number + 1;
             return fileName + (number > 0 ? number.padZero(paramNumberDigit) : '');
