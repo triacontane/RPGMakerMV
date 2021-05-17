@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.13.2 2021/05/18 一覧ウィンドウを指定しなかった場合やnullで返した場合、単項目表示ウィンドウとして機能するよう修正
  1.13.1 2021/05/15 初期表示時にアクターのフェイスグラフィックを表示しようとしたとき、うまく表示されない場合がある問題を修正
  1.13.0 2021/05/14 決定時のイベントで元ウィンドウの選択状態を解除できる機能を追加
  1.12.3 2021/05/12 ウィンドウリストで下にあるウィンドウを『一覧ウィンドウ』に指定するとエラーになる問題を修正
@@ -416,6 +417,7 @@
  * @desc 項目の一覧を返すスクリプトです。プリセットから選ぶこともできます。『一覧ウィンドウ識別子』を指定した場合は無効です。
  * @default
  * @type combo
+ * @option null; // なし(単項目表示ウィンドウ用)
  * @option $gameParty.members(); // パーティメンバー
  * @option $gameParty.battleMembers(); // 戦闘メンバー
  * @option $gameParty.reserveMembers(); // リザーブメンバー
@@ -743,7 +745,7 @@
  * @type switch
  *
  * @param Deselect
- * @text 元ウィンドウの選択を解除
+ * @text 元ウィンドウ選択解除
  * @desc 対象のイベントが発生したときに元々フォーカスされていたウィンドウの選択状態を解除します。
  * @default false
  * @type boolean
@@ -1406,9 +1408,6 @@
         drawItem(index) {
             this._drawingIndex = index;
             const item = this.getItem(index);
-            if (!item) {
-                return;
-            }
             const rect = this.itemRect(index);
             rect.x += this.textPadding();
             rect.width -= this.textPadding() * 2;
@@ -1591,7 +1590,7 @@
                 list = [];
             }
             if (!Array.isArray(list)) {
-                list = [list];
+                list = list ? [list] : [' '];
             }
             if (this._data.FilterScript && !this.isUseMasking()) {
                 list = list.filter(item => this.isVisible(item, v, s));
