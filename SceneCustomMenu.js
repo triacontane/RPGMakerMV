@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.14.4 2021/05/18 一覧ウィンドウを指定しなかった場合やnullで返した場合、単項目表示ウィンドウとして機能するよう修正
  1.14.3 2021/05/15 コマンド直接入力かつフォントサイズを変更した場合に項目の表示位置が不整合になる場合がある問題を修正
  1.14.2 2021/05/15 廃止された一部のプリセットを削除
  1.14.1 2021/05/15 初期表示時にアクターのフェイスグラフィックを表示しようとしたとき、うまく表示されない場合がある問題を修正
@@ -407,6 +408,7 @@
  * @desc 項目の一覧を返すスクリプトです。プリセットから選ぶこともできます。『一覧ウィンドウ識別子』を指定した場合は無効です。
  * @default
  * @type combo
+ * @option null; // なし(単項目表示ウィンドウ用)
  * @option $gameParty.members(); // パーティメンバー
  * @option $gameParty.battleMembers(); // 戦闘メンバー
  * @option $gameParty.reserveMembers(); // リザーブメンバー
@@ -740,7 +742,7 @@
  * @type switch
  *
  * @param Deselect
- * @text 元ウィンドウの選択を解除
+ * @text 元ウィンドウ選択解除
  * @desc 対象のイベントが発生したときに元々フォーカスされていたウィンドウの選択状態を解除します。
  * @default false
  * @type boolean
@@ -1430,9 +1432,6 @@
         drawItem(index) {
             this._drawingIndex = index;
             const item = this.getItem(index);
-            if (!item) {
-                return;
-            }
             const rect = this.findItemRect(index);
             this.changePaintOpacity(this.isEnabled(index));
             if (this.isMasking(index)) {
@@ -1543,7 +1542,7 @@
         }
 
         drawItemBackground(index) {
-            if (this.maxItems() > 1) {
+            if (!this._data.ListWindowId && this._list[0] !== ' ') {
                 super.drawItemBackground(index);
             }
         }
@@ -1610,9 +1609,9 @@
 
     class Window_CustomMenuDataList extends Window_CustomMenu {
         makeCommandList() {
-            const listWindowItem = this.findListWindowItem();
-            if (listWindowItem) {
-                return [listWindowItem];
+            if (this._data.ListWindowId) {
+                const data = this.findListWindowItem();
+                return data ? [data] : [];
             }
             const v = $gameVariables.value.bind($gameVariables); // used by eval
             const s = $gameSwitches.value.bind($gameSwitches); // used by eval
@@ -1624,7 +1623,7 @@
                 list = [];
             }
             if (!Array.isArray(list)) {
-                list = [list];
+                list = list ? [list] : [' '];
             }
             if (this._data.FilterScript && !this.isUseMasking()) {
                 list = list.filter(item => this.isVisible(item, v, s));
