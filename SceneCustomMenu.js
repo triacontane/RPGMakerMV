@@ -1576,9 +1576,9 @@
 
     class Window_CustomMenuDataList extends Window_CustomMenu {
         makeCommandList() {
-            const listWindowItem = this.findListWindowItem();
-            if (listWindowItem) {
-                return [listWindowItem];
+            if (this._data.ListWindowId) {
+                const data = this.findListWindowItem();
+                return data ? [data] : [];
             }
             const v  = $gameVariables.value.bind($gameVariables); // used by eval
             const s  = $gameSwitches.value.bind($gameSwitches); // used by eval
