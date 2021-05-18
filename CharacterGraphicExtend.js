@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.0 2021/05/18 プライオリティ設定に「-1」(下層タイルの背後で遠景の手前)を設定できるようにしました
 // 1.11.2 2021/05/05 アイコンセットの行を変更したときに正しくトリミングできない問題を修正
 // 1.11.1 2021/05/01 ヘルプの記述を修正
 // 1.11.0 2020/11/22 ApngPicture.jsと組み合わせてキャラクターとして表示したピクチャ、敵キャラ画像がアニメーションする機能を追加
@@ -339,7 +340,7 @@
         this._graphicRows     = 1;
         this._additionalX     = 0;
         this._additionalY     = 0;
-        this._customPriority  = -1;
+        this._customPriority  = null;
         this._scaleX          = 100;
         this._scaleY          = 100;
         this._tileBlockWidth  = 1;
@@ -462,7 +463,7 @@
 
     var _Game_CharacterBase_screenZ      = Game_CharacterBase.prototype.screenZ;
     Game_CharacterBase.prototype.screenZ = function() {
-        return this._customPriority >= 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
+        return this._customPriority !== null ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
     };
 
     Game_CharacterBase.prototype.changeImage = function(fileName, fileIndex) {
@@ -551,7 +552,7 @@
         }
         cgParams = this.getMetaCg(['プライオリティ', 'Priority']);
         if (cgParams) {
-            this._customPriority = getArgNumber(cgParams[1], 0, 10);
+            this._customPriority = getArgNumber(cgParams[1]);
         }
         cgParams = this.getMetaCg(['合成方法', 'BlendType']);
         if (cgParams) {
