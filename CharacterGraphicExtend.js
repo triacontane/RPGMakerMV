@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2021/05/18 プライオリティ設定に「-1」(下層タイルの背後で遠景の手前)を設定できるようにしました
 // 2.2.1 2021/05/05 アイコンセットの行を変更したときに正しくトリミングできない問題を修正
 // 2.2.0 2021/02/22 色調変更のタグが正常に機能していなかった問題を修正し、グレースケールを指定できるようにしました。
 // 2.1.1 2020/11/28 Trb_SimpleDashMotion.jsと併用したとき、プレイヤーの拡大率を変更したときも想定通りに表示されるよう修正
@@ -313,7 +314,7 @@
         this._graphicRows     = 1;
         this._additionalX     = 0;
         this._additionalY     = 0;
-        this._customPriority  = -1;
+        this._customPriority  = null;
         this._scaleX          = 100;
         this._scaleY          = 100;
         this._tileBlockWidth  = 1;
@@ -436,7 +437,7 @@
 
     const _Game_CharacterBase_screenZ      = Game_CharacterBase.prototype.screenZ;
     Game_CharacterBase.prototype.screenZ = function() {
-        return this._customPriority >= 0 ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
+        return this._customPriority !== null ? this._customPriority : _Game_CharacterBase_screenZ.apply(this, arguments);
     };
 
     Game_CharacterBase.prototype.changeImage = function(fileName, fileIndex) {
@@ -525,7 +526,7 @@
         }
         cgParams = this.getMetaCg(['プライオリティ', 'Priority']);
         if (cgParams) {
-            this._customPriority = getArgNumber(cgParams[1], 0, 10);
+            this._customPriority = getArgNumber(cgParams[1]);
         }
         cgParams = this.getMetaCg(['合成方法', 'BlendType']);
         if (cgParams) {
