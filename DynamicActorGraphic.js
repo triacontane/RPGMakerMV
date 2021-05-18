@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/05/19 グラフィック変更条件に変数を追加
 // 2.0.0 2021/03/21 MZ向けに全面的に修正
 // 1.2.3 2020/06/06 必要ない場合はプレイヤーをリフレッシュしないよう修正
 // 1.2.2 2020/04/21 NpcFollower.jsと併用したときに発生する循環参照を解消
@@ -150,6 +151,38 @@
  * @default 0
  * @type switch
  *
+ * @param variableId
+ * @text 変数条件
+ * @desc 指定した変数が「比較方法」と「変数値」で指定した条件を満たす場合にグラフィック変更
+ * @default 0
+ * @type switch
+ *
+ * @param compareType
+ * @text 比較方法
+ * @desc 変数条件で指定した変数の比較方法です。
+ * @default 0
+ * @type select
+ * @option 等しい
+ * @value 0
+ * @option 以上
+ * @value 1
+ * @option 以下
+ * @value 2
+ * @option より大きい
+ * @value 3
+ * @option より小さい
+ * @value 4
+ * @option 等しくない
+ * @value 5
+ *
+ * @param operand
+ * @text 変数値
+ * @desc 変数条件で指定した変数の比較値です。変数と比較したい場合は制御文字を記入してください。
+ * @default 0
+ * @type number
+ * @min -9999999
+ * @max 9999999
+ *
  */
 
 (function() {
@@ -184,12 +217,8 @@
         this.initCustomGraphic();
         param.list.filter(item => this.isValidCustomGraphic(item))
             .forEach(item => this.setCustomGraphic(item));
-        if (this.isChangeCharacterImage()) {
-            $gamePlayer.requestRefresh();
-        }
-        if (this.isChangeFaceImage()) {
-            $gameTemp.requestBattleRefresh();
-        }
+        $gamePlayer.requestRefresh();
+        $gameTemp.requestBattleRefresh();
     };
 
     Game_Actor.prototype.isValidCustomGraphic = function(item) {
@@ -198,7 +227,26 @@
         conditions.push(() => !item.hpRate || item.hpRate / 100 >= this.hpRate());
         conditions.push(() => !item.state || this.isStateAffected(item.state));
         conditions.push(() => !item.switchId || $gameSwitches.value(item.switchId));
+        conditions.push(() => !item.variableId || this.isValidVariable(item.variableId, item.compareType, item.operand));
         return conditions.every(condition => condition());
+    };
+
+    Game_Actor.prototype.isValidVariable = function(id, type, operand) {
+        const value = $gameVariables.value(id);
+        switch (type) {
+            case 0: // Equal to
+                return value === operand;
+            case 1: // Greater than or Equal to
+                return value >= operand;
+            case 2: // Less than or Equal to
+                return value <= operand;
+            case 3: // Greater than
+                return value > operand;
+            case 4: // Less than
+                return value < operand;
+            default: // Not Equal to
+                return value !== operand;
+        }
     };
 
     Game_Actor.prototype.setCustomGraphic = function(item) {
@@ -221,14 +269,6 @@
         this._faceNameCustom       = null;
         this._faceIndexCustom      = null;
         this._battlerNameCustom    = null;
-    };
-
-    Game_Actor.prototype.isChangeCharacterImage = function() {
-        return this._characterNameCustom !== null || this._characterIndexCustom !== null;
-    };
-
-    Game_Actor.prototype.isChangeFaceImage = function() {
-        return this._faceNameCustom !== null || this._faceIndexCustom !== null;
     };
 
     const _Game_Actor_characterName    = Game_Actor.prototype.characterName;
