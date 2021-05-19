@@ -21,6 +21,7 @@
  * @text ターン経過歩数
  * @desc 1ターン経過歩数です。
  * @default 20
+ * @type number
  *
  * @help StepsForTurn.js
  *
