@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2021/05/20 立ち絵の座標に制御文字を使ったとき、変数の変更が即座に反映されるよう修正
 // 2.3.2 2021/04/26 ヘルプの記述を修正
 //                  APNGピクチャプラグインとの連携でGIFファイルを使用できなかった問題を修正
 // 2.3.1 2021/04/06 拡大率をシーン単位で設定できる機能を追加
@@ -456,9 +457,7 @@
             picture.Mirror = scene.Mirror;
             picture.SceneScaleX = scene.ScaleX;
             picture.SceneScaleY = scene.ScaleY;
-            this._base = new Point();
-            this._base.x = scene.MemberPosition[index].X;
-            this._base.y = scene.MemberPosition[index].Y;
+            this._base = scene.MemberPosition[index];
         }
 
         getBasePoint() {
@@ -701,13 +700,13 @@
         setup(pictureParam) {
             this._pictures = pictureParam;
             this._pictures.updatePictureFiles().forEach(picture => this.addChild(this.createChild(picture)));
-            this.setupPosition();
+            this.updatePosition();
         }
 
-        setupPosition() {
+        updatePosition() {
             const basePoint = this._pictures.getBasePoint();
-            this.x = basePoint.x;
-            this.y = basePoint.y;
+            this.x = basePoint.X;
+            this.y = basePoint.Y;
         }
 
         createChild(picture) {
@@ -717,6 +716,7 @@
         update() {
             this._pictures.updatePictureFiles();
             super.update();
+            this.updatePosition();
         }
     }
 
@@ -738,17 +738,17 @@
                 this.anchor.x = 0.5;
                 this.anchor.y = 1.0;
             }
-            this.setupPosition();
             this.update();
         }
 
-        setupPosition() {
+        updatePosition() {
             this.x = this._picture.X;
             this.y = this._picture.Y;
         }
 
         update() {
             super.update();
+            this.updatePosition();
             this.updateBitmap();
             this.updateScale();
             this.updateVisibility();
