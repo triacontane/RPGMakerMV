@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/05/19 ダッシュ中であることを条件にグラフィックを変更できる機能を追加
 // 2.1.1 2021/05/19 グラフィック変更条件の変数の型指定がスイッチになっていた問題を修正
 // 2.1.0 2021/05/19 グラフィック変更条件に変数を追加
 // 2.0.0 2021/03/21 MZ向けに全面的に修正
@@ -146,6 +147,12 @@
  * @default 0
  * @type state
  *
+ * @param dashing
+ * @text ダッシュ中条件
+ * @desc ダッシュ中の場合にグラフィック変更
+ * @default false
+ * @type boolean
+ *
  * @param switchId
  * @text スイッチ条件
  * @desc 指定したスイッチがONの場合にグラフィック変更
@@ -229,6 +236,7 @@
         conditions.push(() => !item.state || this.isStateAffected(item.state));
         conditions.push(() => !item.switchId || $gameSwitches.value(item.switchId));
         conditions.push(() => !item.variableId || this.isValidVariable(item.variableId, item.compareType, item.operand));
+        conditions.push(() => !item.dashing || $gamePlayer.isDashing());
         return conditions.every(condition => condition());
     };
 
@@ -312,6 +320,15 @@
 
     Game_Player.prototype.requestRefresh = function() {
         this._needsRefresh = true;
+    };
+
+    const _Game_Player_updateDashing = Game_Player.prototype.updateDashing;
+    Game_Player.prototype.updateDashing = function() {
+        const prev = this._dashing;
+        _Game_Player_updateDashing.apply(this, arguments);
+        if (prev !== this._dashing) {
+            $gameParty.refreshMemberCustomGraphic();
+        }
     };
 
 
