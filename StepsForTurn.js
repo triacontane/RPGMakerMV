@@ -26,6 +26,7 @@
  * @desc 1ターン経過歩数です。
  * @default 20
  * @type number
+ * @min 1
  *
  * @help StepsForTurn.js
  *
@@ -47,7 +48,8 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
+    const _Game_Actor_stepsForTurn = Game_Actor.prototype.stepsForTurn;
     Game_Actor.prototype.stepsForTurn = function() {
-        return param.turn;
+        return param.turn || _Game_Actor_stepsForTurn.apply(this, arguments);
     };
 })();
