@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/05/20 APNGピクチャプラグインと組み合わせたときにAPNGピクチャをボタン化できるよう修正（ただし透過色は考慮されない）
 // 1.1.2 2021/04/08 トリガー「マウスをピクチャ内で移動した場合」がマウスを押していないと反応しない問題を修正
 // 1.1.1 2020/12/21 スクリプト$gameScreen.showPictureを使って未キャッシュのピクチャを表示しようとすると画像が表示されなくなる問題を修正
 //                  セーブデータロード時にエラーになる問題を修正
@@ -435,6 +436,9 @@
             const cos = Math.cos(-pic.rotation);
             const bx = Math.floor(dx * cos + dy * -sin) / pic.scale.x + pic.anchor.x * pic.width;
             const by = Math.floor(dx * sin + dy * cos) / pic.scale.y + pic.anchor.y * pic.height;
+            if (pic._apngSprite) {
+                return bx >= 0 && by >= 0 && bx <= pic.bitmap.width && by <= pic.bitmap.height;
+            }
             return pic.bitmap.getAlphaPixel(bx, by) !== 0;
         }
 
