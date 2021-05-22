@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageSelectPicture.js
 // ----------------------------------------------------------------------------
-// (C) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2021/05/22 MZで動作するようプラグインコマンド周りの処理を修正
 // 1.2.4 2020/07/12 1.2.3の対応で選択肢をイベントコマンドの上限を超えて指定すると正常に機能しない問題を修正
 // 1.2.3 2020/07/12 MPP_ChoiceEX.jsと併用したとき、非表示の選択肢があると選択肢と表示ピクチャとがズレる競合を修正
 // 1.2.2 2019/09/29 ピクチャ選択と無関係な選択肢を選択後に、ピクチャ選択肢のコマンドを実行すると
@@ -25,9 +26,25 @@
 
 /*:
  * @plugindesc 選択肢のピクチャ表示プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageSelectPicture.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @help イベントコマンド「選択肢の表示」で選択肢にカーソルを合わせた際に
+ * @command SET_UP
+ * @text セットアップ
+ * @desc 選択肢ピクチャの情報をセットアップします。設定は選択肢の表示を行うと解除されます。
+ *
+ * @arg pictureIdList
+ * @text ピクチャ番号リスト
+ * @desc 選択肢に対応するピクチャ番号を定義します。
+ * @default []
+ * @type number[]
+ *
+ * @help MessageSelectPicture.js
+ *
+ * イベントコマンド「選択肢の表示」で選択肢にカーソルを合わせた際に
  * 選択肢に対応するピクチャを表示するようにします。
  *
  * あらかじめ不透明度0でピクチャを表示したうえで
@@ -36,67 +53,23 @@
  * 選択肢を決定後、プラグイン側でピクチャを非表示にすることはないので
  * 自由にイベントコマンドで操作してください。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * 選択肢ピクチャ設定 or
- * MSP_SET [ピクチャ番号] [選択肢#(1-6)]
- * 　選択肢の番号と表示するピクチャ番号とを関連づけます。
- * 　関連づけは、選択肢を決定した時点で解除されます。
- * 　複数のピクチャを選択肢に関連づけたい場合は、その分コマンドを実行してください。
- *
- * 例：選択肢ピクチャ設定 1 1
- *
- * MPP_ChoiceEX.jsと併用する場合、このプラグインを下に配置してください。
- *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
+    const script = document.currentScript;
 
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length <= 2) min = -Infinity;
-        if (arguments.length <= 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
-    };
+    PluginManagerEx.registerCommand(script, 'SET_UP', args => {
+        args.pictureIdList.forEach((pictureId, index) => {
+            $gameMessage.setSelectPictureId(index, pictureId);
+        });
+    });
 
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var win = SceneManager._scene._windowLayer.children[0];
-        return win ? win.convertEscapeCharacters(text) : text;
-    };
-
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        this.pluginCommandMessageSelectPicture(command, args);
-    };
-
-    Game_Interpreter.prototype.pluginCommandMessageSelectPicture = function(command, args) {
-        switch (getCommandName(command)) {
-            case '選択肢ピクチャ設定' :
-            case 'MSP_SET':
-                var index = getArgNumber(args[1], 1) - 1;
-                var pictureId = getArgNumber(args[0], 1, $gameScreen.maxPictures());
-                $gameMessage.setSelectPictureId(index, pictureId);
-                break;
-        }
-    };
-
-    var _Game_Message_initialize      = Game_Message.prototype.initialize;
+    const _Game_Message_initialize      = Game_Message.prototype.initialize;
     Game_Message.prototype.initialize = function() {
         _Game_Message_initialize.apply(this, arguments);
         this.clearSelectPictures();
@@ -114,7 +87,7 @@
         return this._selectPictures;
     };
 
-    var _Game_Message_onChoice      = Game_Message.prototype.onChoice;
+    const _Game_Message_onChoice      = Game_Message.prototype.onChoice;
     Game_Message.prototype.onChoice = function(n) {
         _Game_Message_onChoice.apply(this, arguments);
         this.clearSelectPictures();
@@ -124,7 +97,7 @@
         this._opacity = value;
     };
 
-    var _Window_ChoiceList_update      = Window_ChoiceList.prototype.update;
+    const _Window_ChoiceList_update      = Window_ChoiceList.prototype.update;
     Window_ChoiceList.prototype.update = function() {
         _Window_ChoiceList_update.apply(this, arguments);
         if (this.isOpen()) {
@@ -134,7 +107,7 @@
 
     Window_ChoiceList.prototype.updateSelectPicture = function() {
         $gameMessage.getSelectPictures().forEach(function(data) {
-            var picture = $gameScreen.picture(data.pictureId);
+            const picture = $gameScreen.picture(data.pictureId);
             if (!picture) {
                 return;
             }
@@ -144,7 +117,7 @@
 
     // for MPP_ChoiceEX.js start
     Window_ChoiceList.prototype.findMessageIndex = function() {
-        var index = this.index();
+        let index = this.index();
         if ($gameMessage.hiddenIndexList) {
             $gameMessage.hiddenIndexList.forEach(function(hidden, i) {
                 if (hidden && index >= i) {
@@ -155,7 +128,7 @@
         return index;
     };
 
-    var _Game_Interpreter_setupChoices = Game_Interpreter.prototype.setupChoices;
+    const _Game_Interpreter_setupChoices = Game_Interpreter.prototype.setupChoices;
     Game_Interpreter.prototype.setupChoices = function(params) {
         if (this.addChoices) {
             $gameMessage.hiddenIndexList = [];
@@ -163,12 +136,12 @@
         _Game_Interpreter_setupChoices.apply(this, arguments);
     };
 
-    var _Game_Interpreter_addChoices = Game_Interpreter.prototype.addChoices;
+    const _Game_Interpreter_addChoices = Game_Interpreter.prototype.addChoices;
     Game_Interpreter.prototype.addChoices = function(params, i, data, d) {
-        var regIf = /\s*if\((.+?)\)/;
-        var hiddenIndexList = $gameMessage.hiddenIndexList;
-        for (var n = 0; n < params[0].length; n++) {
-            var str = params[0][n];
+        const regIf = /\s*if\((.+?)\)/;
+        const hiddenIndexList = $gameMessage.hiddenIndexList;
+        for (const n = 0; n < params[0].length; n++) {
+            let str = params[0][n];
             if (regIf.test(str)) {
                 str = str.replace(regIf, '');
                 hiddenIndexList.push(RegExp.$1 && !this.evalChoice(RegExp.$1));
