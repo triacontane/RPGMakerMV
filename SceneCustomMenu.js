@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.15.0 2021/05/22 コマンドリストの揃えを指定できる機能を追加
  1.14.4 2021/05/18 一覧ウィンドウを指定しなかった場合やnullで返した場合、単項目表示ウィンドウとして機能するよう修正
  1.14.3 2021/05/15 コマンド直接入力かつフォントサイズを変更した場合に項目の表示位置が不整合になる場合がある問題を修正
  1.14.2 2021/05/15 廃止された一部のプリセットを削除
@@ -638,6 +639,18 @@
  * @desc 項目の描画内容です。アイコン系の制御文字が使用できます。
  * @default value01
  * @type string
+ *
+ * @param Align
+ * @text 項目の揃え
+ * @desc 項目の揃えです。
+ * @default 0
+ * @type select
+ * @option 左揃え
+ * @value 0
+ * @option 中央揃え
+ * @value 1
+ * @option 右揃え
+ * @value 2
  *
  * @param VisibleSwitchId
  * @text 表示スイッチID
@@ -1559,6 +1572,12 @@
         }
 
         drawItemSub(item, rect, index) {
+            const width = this.textSizeEx(item.Text).width;
+            if (item.Align === 1) {
+                rect.x += (rect.width - width) / 2;
+            } else if (item.Align === 2) {
+                rect.x += rect.width - width;
+            }
             this.drawTextEx(item.Text, rect.x, rect.y, rect.width);
         }
 
