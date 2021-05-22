@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.6 2021/05/22 RandomDungeon.jsと共存できるよう修正
  1.0.5 2021/03/15 「セルフ変数の一括設定」のコマンドが正しく設定できていなかった問題を修正
  1.0.4 2020/12/08 メモ欄の統合が正常に機能しない不具合を修正
  1.0.3 2020/11/30 英訳版ヘルプをご提供いただいて追加
@@ -300,6 +301,8 @@
 /*:ja
  * @target MZ
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderAfter RandomDungeon
  * @plugindesc テンプレートイベントプラグイン
  * @author トリアコンタン
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TemplateEvent.js
@@ -815,19 +818,32 @@ let $dataTemplateEvents = null;
         return eventId > 0 ? [$gameMap.mapId(), eventId, index] : null;
     };
 
+    const _Game_Map_setup = Game_Map.prototype.setup;
+    Game_Map.prototype.setup = function(mapId) {
+        this.initDynamicEvents();
+        _Game_Map_setup.apply(this, arguments);
+    };
+
     //=============================================================================
     // Game_Event
     //  テンプレートイベントマップをロードしてグローバル変数に保持します。
     //=============================================================================
     const _Game_Event_initialize    = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
-        const event = $dataMap.events[eventId];
+        if (arguments.length > 2) {
+            this._eventByRandomDungeon = arguments[2];
+        }
+        const event = this.getDataEvent();
         this.setTemplate(event);
         _Game_Event_initialize.apply(this, arguments);
         if (this.hasTemplate()) {
             this.setPosition(event.x, event.y);
             this.refreshBushDepth();
         }
+    };
+
+    Game_Event.prototype.getDataEvent = function(mapId, eventId) {
+        return $dataMap.events[eventId] || this._eventByRandomDungeon;
     };
 
     const _Game_Event_setupPageSettings    = Game_Event.prototype.setupPageSettings;
@@ -950,7 +966,7 @@ let $dataTemplateEvents = null;
 
     Game_Event.prototype.getOriginalPages = function() {
         const eventId = PluginManagerEx.isExistPlugin('SAN_MapGenerator') ? this._dataEventId : this._eventId;
-        return $dataMap.events[eventId].pages;
+        return this.getDataEvent(eventId).pages;
     };
 
     Game_Event.prototype.getOriginalPage = function() {
