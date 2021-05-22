@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2021/05/23 戦闘中であることを条件にグラフィックを変更できる機能を追加
 // 2.2.0 2021/05/19 ダッシュ中であることを条件にグラフィックを変更できる機能を追加
 // 2.1.1 2021/05/19 グラフィック変更条件の変数の型指定がスイッチになっていた問題を修正
 // 2.1.0 2021/05/19 グラフィック変更条件に変数を追加
@@ -153,6 +154,12 @@
  * @default false
  * @type boolean
  *
+ * @param inBattle
+ * @text 戦闘中条件
+ * @desc 戦闘中の場合にグラフィック変更
+ * @default false
+ * @type boolean
+ *
  * @param switchId
  * @text スイッチ条件
  * @desc 指定したスイッチがONの場合にグラフィック変更
@@ -237,6 +244,7 @@
         conditions.push(() => !item.switchId || $gameSwitches.value(item.switchId));
         conditions.push(() => !item.variableId || this.isValidVariable(item.variableId, item.compareType, item.operand));
         conditions.push(() => !item.dashing || $gamePlayer.isDashing());
+        conditions.push(() => !item.inBattle || $gameParty.inBattle());
         return conditions.every(condition => condition());
     };
 
