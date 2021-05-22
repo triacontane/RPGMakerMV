@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.14.0 2021/05/22 コマンドリストの揃えを指定できる機能を追加
  1.13.2 2021/05/18 一覧ウィンドウを指定しなかった場合やnullで返した場合、単項目表示ウィンドウとして機能するよう修正
  1.13.1 2021/05/15 初期表示時にアクターのフェイスグラフィックを表示しようとしたとき、うまく表示されない場合がある問題を修正
  1.13.0 2021/05/14 決定時のイベントで元ウィンドウの選択状態を解除できる機能を追加
@@ -641,6 +642,18 @@
  * @desc 項目の描画内容です。アイコン系の制御文字が使用できます。
  * @default value01
  * @type string
+ *
+ * @param Align
+ * @text 項目の揃え
+ * @desc 項目の揃えです。
+ * @default 0
+ * @type select
+ * @option 左揃え
+ * @value 0
+ * @option 中央揃え
+ * @value 1
+ * @option 右揃え
+ * @value 2
  *
  * @param VisibleSwitchId
  * @text 表示スイッチID
@@ -1530,7 +1543,25 @@
         }
 
         drawItemSub(item, rect, index) {
-            this.drawTextEx(item.Text, rect.x, rect.y, rect.width);
+            this._noDrawing = true;
+            const width = this.drawTextEx(item.Text, rect.x, rect.y);
+            this._noDrawing = false;
+            if (item.Align === 1) {
+                rect.x += (rect.width - width) / 2;
+            } else if (item.Align === 2) {
+                rect.x += rect.width - width;
+            }
+            this.drawTextEx(item.Text, rect.x, rect.y);
+        }
+
+        processNormalCharacter(textState) {
+            if (this._noDrawing) {
+                var c = textState.text[textState.index++];
+                var w = this.textWidth(c);
+                textState.x += w;
+            } else {
+                super.processNormalCharacter(textState);
+            }
         }
 
         findHelpText() {
