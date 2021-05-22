@@ -140,7 +140,7 @@
     Game_Interpreter.prototype.addChoices = function(params, i, data, d) {
         const regIf = /\s*if\((.+?)\)/;
         const hiddenIndexList = $gameMessage.hiddenIndexList;
-        for (const n = 0; n < params[0].length; n++) {
+        for (let n = 0; n < params[0].length; n++) {
             let str = params[0][n];
             if (regIf.test(str)) {
                 str = str.replace(regIf, '');
