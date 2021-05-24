@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/95/24 より競合が起きにくい実装に変更
  1.0.0 2021/05/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -82,7 +83,7 @@
         const timeType =  this.findTimeType();
         if (this._timeType !== timeType) {
             this._timeType = timeType;
-            this._value = NaN;
+            this.redraw();
         }
     };
 
