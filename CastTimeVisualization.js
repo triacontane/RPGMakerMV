@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2021/05/25 ゲージ色の決定条件を変更(通常の動作に影響はありません)
  1.0.1 2021/95/24 より競合が起きにくい実装に変更
  1.0.0 2021/05/23 初版
 ----------------------------------------------------------------------------
@@ -92,7 +93,7 @@
             return null;
         } else if (this._battler.isTpbCasting()) {
             return 'casting';
-        } else if (this._battler.isActing()) {
+        } else if (this._battler.isActing() || this._battler.isTpbReady()) {
             return 'acting';
         } else {
             return null;
