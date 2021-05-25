@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/05/25 キャスト中以外はステート付与しないよう仕様変更
  1.0.0 2021/05/24 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -73,6 +74,17 @@
         }
     }
 
+    const _Game_Battler_isStateAddable = Game_Battler.prototype.isStateAddable;
+    Game_Battler.prototype.isStateAddable = function(stateId) {
+        const result = _Game_Battler_isStateAddable.apply(this, arguments);
+        return result && !this.isCastEffectInvalid(stateId);
+    };
+
+    Game_Battler.prototype.isCastEffectInvalid = function(stateId) {
+        return (stateId === param.interruptionState || stateId === param.assistState) &&
+            this._tpbState !== 'casting';
+    };
+
     Game_Battler.prototype.addCastEffect = function(stateId) {
         if (stateId === param.interruptionState) {
             this.interruptCast();
@@ -85,9 +97,6 @@
     };
 
     Game_Battler.prototype.interruptCast = function() {
-        if (this._tpbState !== 'casting') {
-            return;
-        }
         this.clearTpbChargeTime();
         this.clearActions();
         if (param.fullCharge) {
@@ -97,9 +106,6 @@
     };
 
     Game_Battler.prototype.assistCast = function() {
-        if (this._tpbState !== 'casting') {
-            return;
-        }
         this._tpbCastTime = this.tpbRequiredCastTime();
         this.updateTpbCastTime();
     };
