@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2021/05/28 2.3.2の修正によりAPNGピクチャプラグインと連携するとAPNGピクチャ以外が立ち絵として表示できなくなっていた問題を修正
 // 2.4.0 2021/05/20 立ち絵の座標に制御文字を使ったとき、変数の変更が即座に反映されるよう修正
 // 2.3.2 2021/04/26 ヘルプの記述を修正
 //                  APNGピクチャプラグインとの連携でGIFファイルを使用できなかった問題を修正
@@ -761,7 +762,8 @@
             }
             if (this.addApngChild) {
                 this.addApngChild(file);
-            } else {
+            }
+            if (!this._apngSprite) {
                 const bitmap = ImageManager.loadPicture(file);
                 bitmap.addLoadListener(() => this.setBitmap(bitmap));
             }
