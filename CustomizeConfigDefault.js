@@ -6,7 +6,6 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.1.2 2021/03/01 先方に対応頂いたためMano_InputConfig.jsとの競合解消コードを削除
 // 1.1.1 2020/09/13 Mano_InputConfig.jsと併用したとき、Option項目を消していると表示不整合が発生する競合を修正
 // 1.1.0 2016/08/01 項目自体を非表示にする機能を追加しました。
 // 1.0.3 2016/06/22 多言語対応
@@ -217,8 +216,19 @@
         for (var i = 0; i < this._list.length; i++) {
             if (this._list[i].symbol === symbol) {
                 this._list.splice(i, 1);
+                // for Mano_InputConfig.js
+                this.adjustIndexManoInputConfig(i);
                 break;
             }
+        }
+    };
+
+    Window_Options.prototype.adjustIndexManoInputConfig = function(index) {
+        if (this._gamepadOptionIndex > index) {
+            this._gamepadOptionIndex -= 1;
+        }
+        if (this._keyboardConfigIndex > index) {
+            this._keyboardConfigIndex -= 1;
         }
     };
 })();
