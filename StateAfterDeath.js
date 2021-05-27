@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/05/28 MZ用にリファクタリング
  1.0.1 2018/08/12 継続ステートが戦闘不能後にターン数で解除されなくなっていた問題を修正
  1.0.0 2018/08/12 初版
 ----------------------------------------------------------------------------
@@ -16,7 +17,11 @@
 
 /*:
  * @plugindesc StateAfterDeathPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @target MZ 
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateAfterDeath.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author triacontane
  *
  * @param states
  * @desc 戦闘不能後も継続するステートの配列の一覧です。
@@ -34,7 +39,11 @@
  */
 /*:ja
  * @plugindesc 戦闘不能後継続ステートプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ 
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateAfterDeath.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @param states
  * @text 対象ステート
@@ -55,47 +64,19 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('StateAfterDeath');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
     if (!param.states) {
         param.states = [];
     }
 
-    var _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
+    const _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
-        var stillStates     = this._states.filter(function(stateId) {
-            return param.states.contains(stateId);
-        });
-        var stillStateTurns = {};
-        stillStates.forEach(function(stateId) {
-            stillStateTurns[stateId] = this._stateTurns[stateId];
-        }, this);
+        const stillStates     = this._states.filter(stateId=> param.states.includes(stateId));
+        const stillStateTurns = {};
+        stillStates.forEach(stateId => stillStateTurns[stateId] = this._stateTurns[stateId]);
         _Game_BattlerBase_die.apply(this, arguments);
         this._states     = this._states.concat(stillStates);
         this._stateTurns = stillStateTurns;
