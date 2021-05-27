@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2021/05/28 チャージタイムの増加によってゲージが満タンになったとき行動選択時にエラーになる場合がある問題を修正
  1.2.0 2021/03/02 チャージタイムの有効率を増加、減少それぞれで指定できる機能を追加
  1.1.0 2021/02/06 チャージタイムの増減に計算式を指定できる機能を追加
  1.0.0 2020/08/21 初版
@@ -193,9 +194,6 @@
         }
         this._tpbChargeTime += value / 100 * this.findChargeTimeRate(value);
         this._tpbChargeTime = this._tpbChargeTime.clamp(0, 1);
-        if (this._tpbChargeTime >= 1) {
-            this.onTpbCharged();
-        }
     };
 
     Game_Battler.prototype.findChargeTimeRate = function(value) {
