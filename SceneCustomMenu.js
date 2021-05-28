@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.16.0 2021/05/29 シーンごとにピクチャの表示優先度を変更できる機能を追加
  1.15.0 2021/05/22 コマンドリストの揃えを指定できる機能を追加
  1.14.4 2021/05/18 一覧ウィンドウを指定しなかった場合やnullで返した場合、単項目表示ウィンドウとして機能するよう修正
  1.14.3 2021/05/15 コマンド直接入力かつフォントサイズを変更した場合に項目の表示位置が不整合になる場合がある問題を修正
@@ -287,6 +288,18 @@
  * @desc シーンで使用されるウィンドウの一覧です。
  * @default []
  * @type struct<Window>[]
+ *
+ * @param PicturePriority
+ * @text ピクチャ表示優先度
+ * @desc ピクチャのウィンドウに対する表示優先度を設定します。
+ * @default 0
+ * @type select
+ * @option 最前面
+ * @value 0
+ * @option メッセージウィンドウの下
+ * @value 1
+ * @option すべてのウィンドウの下
+ * @value 2
  *
  * @param Panorama
  * @text パノラマ画像
@@ -1181,6 +1194,8 @@
 
         // 競合したら直す
         createAllMessageWindow() {
+            this._messageWindowAdd = true;
+            this.createMessageWindowLayer();
             Scene_Message.prototype.createMessageWindow.call(this);
             Scene_Message.prototype.createScrollTextWindow.call(this);
             Scene_Message.prototype.createGoldWindow.call(this);
@@ -1189,6 +1204,22 @@
             Scene_Message.prototype.createNumberInputWindow.call(this);
             Scene_Message.prototype.createEventItemWindow.call(this);
             Scene_Message.prototype.associateWindows.call(this);
+            this._messageWindowAdd = false;
+        }
+
+        createMessageWindowLayer() {
+            this._messageWindowLayer = new WindowLayer();
+            this._messageWindowLayer.x = (Graphics.width - Graphics.boxWidth) / 2;
+            this._messageWindowLayer.y = (Graphics.height - Graphics.boxHeight) / 2;
+            this.addChild(this._messageWindowLayer);
+        }
+
+        addWindow(window) {
+            if (this._messageWindowAdd) {
+                this._messageWindowLayer.addChild(window);
+            } else {
+                super.addWindow(window);
+            }
         }
 
         messageWindowRect() {
@@ -1209,7 +1240,23 @@
 
         createSpriteset() {
             this._spriteset = new Spriteset_Menu();
-            this.addChild(this._spriteset);
+            const index = this.findSpritesetIndex();
+            if (index !== null) {
+                this.addChildAt(this._spriteset, index);
+            } else {
+                this.addChild(this._spriteset);
+            }
+        }
+
+        findSpritesetIndex() {
+            switch (this._customData.PicturePriority) {
+                case 2:
+                    return this.getChildIndex(this._windowLayer);
+                case 1:
+                    return this.getChildIndex(this._messageWindowLayer);
+                default:
+                    return null;
+            }
         }
 
         refreshActor() {
