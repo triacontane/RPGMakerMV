@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.15.0 2021/05/29 シーンごとにピクチャの表示優先度を変更できる機能を追加
  1.14.0 2021/05/22 コマンドリストの揃えを指定できる機能を追加
  1.13.2 2021/05/18 一覧ウィンドウを指定しなかった場合やnullで返した場合、単項目表示ウィンドウとして機能するよう修正
  1.13.1 2021/05/15 初期表示時にアクターのフェイスグラフィックを表示しようとしたとき、うまく表示されない場合がある問題を修正
@@ -302,6 +303,18 @@
  * @desc シーンで使用されるウィンドウの一覧です。
  * @default []
  * @type struct<Window>[]
+ *
+ * @param PicturePriority
+ * @text ピクチャ表示優先度
+ * @desc ピクチャのウィンドウに対する表示優先度を設定します。
+ * @default 0
+ * @type select
+ * @option 最前面
+ * @value 0
+ * @option メッセージウィンドウの下
+ * @value 1
+ * @option すべてのウィンドウの下
+ * @value 2
  *
  * @param Panorama
  * @text パノラマ画像
@@ -1197,18 +1210,34 @@
 
         createMessageWindow() {
             this._messageWindow = new Window_Message();
-            this.addWindow(this._messageWindow);
+            this.addChild(this._messageWindow);
             this._messageWindow.subWindows().forEach(win => this.addWindow(win));
         }
 
         createScrollTextWindow() {
             this._scrollTextWindow = new Window_ScrollText();
-            this.addWindow(this._scrollTextWindow);
+            this.addChild(this._scrollTextWindow);
         }
 
         createSpriteset() {
             this._spriteset = new Spriteset_Menu();
-            this.addChild(this._spriteset);
+            const index = this.findSpritesetIndex();
+            if (index !== null) {
+                this.addChildAt(this._spriteset, index);
+            } else {
+                this.addChild(this._spriteset);
+            }
+        }
+
+        findSpritesetIndex() {
+            switch (this._customData.PicturePriority) {
+                case 2:
+                    return this.getChildIndex(this._windowLayer);
+                case 1:
+                    return this.getChildIndex(this._messageWindow);
+                default:
+                    return null;
+            }
         }
 
         refreshActor() {
