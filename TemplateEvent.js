@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.7 2021/05/29 1.0.6の修正で正常に機能しなくなっていた問題を修正
  1.0.6 2021/05/22 RandomDungeon.jsと共存できるよう修正
  1.0.5 2021/03/15 「セルフ変数の一括設定」のコマンドが正しく設定できていなかった問題を修正
  1.0.4 2020/12/08 メモ欄の統合が正常に機能しない不具合を修正
@@ -833,7 +834,7 @@ let $dataTemplateEvents = null;
         if (arguments.length > 2) {
             this._eventByRandomDungeon = arguments[2];
         }
-        const event = this.getDataEvent();
+        const event = this.getDataEvent(eventId);
         this.setTemplate(event);
         _Game_Event_initialize.apply(this, arguments);
         if (this.hasTemplate()) {
@@ -842,7 +843,7 @@ let $dataTemplateEvents = null;
         }
     };
 
-    Game_Event.prototype.getDataEvent = function(mapId, eventId) {
+    Game_Event.prototype.getDataEvent = function(eventId) {
         return $dataMap.events[eventId] || this._eventByRandomDungeon;
     };
 
