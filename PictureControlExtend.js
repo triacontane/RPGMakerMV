@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/05/29 ピクチャの原点を詳細指定できるコマンドを追加
  1.0.0 2021/05/15 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -162,6 +163,33 @@
  * @default false
  * @type boolean
  *
+ * @command PICTURE_ORIGIN
+ * @text ピクチャの原点設定
+ * @desc ピクチャの原点を細かく指定します。
+ *
+ * @arg pictureId
+ * @text ピクチャ番号
+ * @desc 操作対象のピクチャ番号です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @arg ox
+ * @text 原点X
+ * @desc ピクチャのX座標の原点です。百分率で指定します。
+ * @default 0
+ * @type number
+ * @max 100
+ * @min 0
+ *
+ * @arg oy
+ * @text 原点Y
+ * @desc ピクチャのY座標の原点です。百分率で指定します。
+ * @default 0
+ * @type number
+ * @max 100
+ * @min 0
+ *
  * @help PictureControlExtend.js
  *
  * ピクチャ関連のイベントコマンドの機能を拡張します。
@@ -226,6 +254,10 @@
 
     PluginManagerEx.registerCommand(script, 'PICTURE_OUT_OF_SHAKE', function(args) {
         $gameScreen.setOutOfScreenShakePicture(args.pictureId, args);
+    });
+
+    PluginManagerEx.registerCommand(script, 'PICTURE_ORIGIN', function(args) {
+        $gameScreen.setPictureOrigin(args.pictureId, args);
     });
 
     /**
@@ -338,6 +370,15 @@
         }, arguments);
     };
 
+    Game_Screen.prototype.setPictureOrigin = function(pictureId, args) {
+        this.iteratePictures((pictureId, args) => {
+            const picture = this.picture(pictureId);
+            if (picture) {
+                picture.setCustomOrigin(args.ox, args.oy);
+            }
+        }, arguments);
+    };
+
     /**
      * Game_Picture
      */
@@ -350,6 +391,14 @@
     const _Game_Picture_y      = Game_Picture.prototype.y;
     Game_Picture.prototype.y = function() {
         return _Game_Picture_y.apply(this, arguments) + this.getShakeY();
+    };
+
+    Game_Picture.prototype.setCustomOrigin = function(ox, oy) {
+        this._customOrigin = {ox: ox / 100, oy: oy / 100};
+    };
+
+    Game_Picture.prototype.customOrigin = function() {
+        return this._customOrigin;
     };
 
     Game_Picture.prototype.setOutOfScreenShake = function(value) {
@@ -425,5 +474,17 @@
 
     Game_Picture.prototype.getShakeY = function() {
         return this._shake ? this._shake * Math.sin(this._shakeRotation) : 0;
+    };
+
+    const _Sprite_Picture_updateOrigin = Sprite_Picture.prototype.updateOrigin;
+    Sprite_Picture.prototype.updateOrigin = function() {
+        _Sprite_Picture_updateOrigin.apply(this, arguments);
+        if (this.picture()) {
+            const origin = this.picture().customOrigin();
+            if (origin) {
+                this.anchor.x = origin.ox;
+                this.anchor.y = origin.oy;
+            }
+        }
     };
 })();
