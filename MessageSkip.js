@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.0 2021/05/31 SimpleVoice.jsと併用したとき、ボイス演奏中はオートモードによる文章送りを待機するよう変更
 // 1.14.1 2020/10/15 ヘルプに注釈を追加
 // 1.14.0 2020/08/02 クリックすることで任意のスイッチをONにできるピクチャをメッセージウィンドウに表示する機能を追加
 // 1.13.0 2020/03/26 オート、スキップピクチャの表示方法をメッセージウィンドウからの相対座標と絶対座標とを選択できる機能を追加
@@ -843,6 +844,12 @@ function Sprite_Frame() {
             return false;
         }
         if (this.messageAuto() && this._messageAutoCount <= 0) {
+            if (AudioManager._voiceBuffers) {
+                AudioManager.filterPlayingVoice();
+                if (AudioManager._voiceBuffers.length > 0) {
+                    return false;
+                }
+            }
             this.initializeMessageAutoCount();
             return true;
         }
