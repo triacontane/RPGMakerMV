@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.2.1 2021/06/01 フラッシュとフキダシの無効設定のメモタグが正常に機能していなかった問題を修正
 // 3.2.0 2021/01/27 MZで動作するよう修正
 // 3.1.1 2020/07/05 3.1.0の修正をイベント開始時にも適用できるよう変更
 // 3.1.0 2020/07/05 イベントから離れたらエフェクトを即時消去できる設定を追加
@@ -344,7 +345,13 @@
 
     Game_Event.prototype.isFlashEvent = function() {
         const useFlash = this.findEventSensorNote( ['NESフラッシュ対象', 'NESFlashEvent']);
-        return useFlash || param.DefaultFlash;
+        if (useFlash === 'ON') {
+            return true;
+        } else if (useFlash === 'OFF') {
+            return false;
+        } else {
+            return param.DefaultFlash;
+        }
     };
 
     Game_Event.prototype.isValidSensor = function() {
@@ -363,7 +370,7 @@
 
     Game_Event.prototype.getSensorBalloonId = function() {
         const balloonId = this.findEventSensorNote( ['NESフキダシ対象', 'NESBalloonEvent']);
-        return balloonId ? balloonId : param.DefaultBalloon;
+        return balloonId >= 0 ? balloonId : param.DefaultBalloon;
     };
 
     Game_Event.prototype.findEventSensorNote = function(tags) {
