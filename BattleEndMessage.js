@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/06/02 メッセージの表示タイミングを『ゴールド獲得の直後』に表示できる設定を追加
  1.0.0 2021/05/31 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -42,6 +43,8 @@
  * @value 0
  * @option 報酬獲得メッセージの直後
  * @value 1
+ * @option ゴールド獲得メッセージの直後
+ * @value 2
  *
  * @param newPage
  * @text ページ送り
@@ -74,6 +77,14 @@
     BattleManager.displayVictoryMessage = function() {
         _BattleManager_displayVictoryMessage.apply(this, arguments);
         if (param.timing === 0) {
+            this.displayVictoryCustom();
+        }
+    };
+
+    const _BattleManager_displayGold = BattleManager.displayGold;
+    BattleManager.displayGold = function() {
+        _BattleManager_displayGold.apply(this, arguments);
+        if (param.timing === 2) {
             this.displayVictoryCustom();
         }
     };
