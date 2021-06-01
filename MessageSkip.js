@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.18.1 2021/06/01 1.18.0でループボイスを再生するとオートモードで文章が送られなくなる問題を修正
 // 1.18.0 2021/05/31 SimpleVoice.jsと併用したとき、ボイス演奏中はオートモードによる文章送りを待機するよう変更
 // 1.17.0 2021/09/12 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様をパラメータで選択可能にできるよう修正
 // 1.16.0 2021/09/08 スキップモードのときウェイトもスキップできる機能を追加
@@ -891,14 +892,10 @@ function Sprite_Frame() {
             return false;
         }
         if (this.messageAuto() && this._messageAutoCount <= 0) {
-            if (AudioManager._voiceBuffers) {
-                AudioManager.filterPlayingVoice();
-                if (AudioManager._voiceBuffers.length > 0) {
-                    return false;
-                }
+            if (!AudioManager.isExistVoice()) {
+                this.initializeMessageAutoCount();
+                return true;
             }
-            this.initializeMessageAutoCount();
-            return true;
         }
         return _Window_Message_isTriggered.apply(this, arguments) || this.messageSkip();
     };
@@ -913,6 +910,18 @@ function Sprite_Frame() {
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
         if (this.messageSkip()) this.startWait(2);
+    };
+
+    AudioManager.isExistVoice = function() {
+        if (!AudioManager._voiceBuffers) {
+            return false;
+        }
+        this.filterPlayingVoice();
+        return this._voiceBuffers.some(buffer => !buffer.isLoop());
+    }
+
+    WebAudio.prototype.isLoop = function() {
+        return this._loop;
     };
 
     //=============================================================================
