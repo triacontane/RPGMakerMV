@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2021/06/03 ピクチャの変数指定が解除コマンドで正常に解除されない問題を修正
  1.1.0 2021/05/29 ピクチャの原点を詳細指定できるコマンドを追加
  1.0.0 2021/05/15 初版
 ----------------------------------------------------------------------------
@@ -270,6 +271,7 @@
 
     Game_Screen.prototype.clearPictureTarget = function() {
         this._pictureTargets = null;
+        this._pictureTragetVariable = 0;
     };
 
     Game_Screen.prototype.findPictureTarget = function(target) {
