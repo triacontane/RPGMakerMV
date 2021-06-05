@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageActorFace.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2021/06/05 MZで動作するよう修正
 // 1.0.0 2017/07/24 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -14,43 +15,39 @@
 //=============================================================================
 
 /*:
- * @plugindesc MessageActorFacePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param ActorIdVariable
- * @desc アクターIDを取得するための変数番号です。
- * @default 0
- * @type variable
- *
- * @help 文章の表示をする際にアクターのフェイスグラフィックを
- * 簡単に指定できるようになります。
- *
- * パラメータ「ActorIdVariable」で指定した変数に値が入っている場合
- * その値のIDのアクターのフェイスグラフィックがメッセージウィンドウに
- * 指定されます。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc メッセージのアクターフェイス表示プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageActorFace.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @param アクターID変数番号
+ * @param actorIdVariable
+ * @text アクターID変数番号
  * @desc アクターIDを取得するための変数番号です。
  * @default 0
  * @type variable
  *
- * @help 文章の表示をする際にアクターのフェイスグラフィックを
+ * @param speakerNameActor
+ * @text アクター名を名前表示
+ * @desc 名前ウィンドウにもアクター名を表示します。
+ * @default true
+ * @type boolean
+ *
+ * @help MessageActorFace.js
+ *
+ * 文章の表示をする際にアクターのフェイスグラフィックや名前を
  * 簡単に指定できるようになります。
  *
- * パラメータ「アクターID変数番号」で指定した変数に値が入っている場合
- * その値のIDのアクターのフェイスグラフィックがメッセージウィンドウに
- * 指定されます。
+ * パラメータで指定した変数に値が入っている場合、その変数値のIDのアクターの
+ * フェイスグラフィックや名前がメッセージウィンドウに指定されます。
  *
- * 変数の値が0の場合は、通常通り「文章の表示」で指定したフェイスに
- * なります。
+ * 変数の値が0の場合は、通常通り「文章の表示」で指定したフェイスになります。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -60,38 +57,13 @@
 
 (function() {
     'use strict';
-    var pluginName    = 'MessageActorFace';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param       = {};
-    param.actorIdVariable = getParamNumber(['ActorIdVariable', 'アクターID変数番号'], 0);
-
-    var _Game_Interpreter_command101 = Game_Interpreter.prototype.command101;
+    const _Game_Interpreter_command101 = Game_Interpreter.prototype.command101;
     Game_Interpreter.prototype.command101 = function() {
-        var index = this._index;
-        var result = _Game_Interpreter_command101.apply(this, arguments);
+        const index = this._index;
+        const result = _Game_Interpreter_command101.apply(this, arguments);
         if (index !== this._index) {
             this.setActorFaceImage();
         }
@@ -99,12 +71,14 @@
     };
 
     Game_Interpreter.prototype.setActorFaceImage = function() {
-        var actorId = $gameVariables.value(param.actorIdVariable);
-        if (actorId) {
-            var actor = $gameActors.actor(actorId);
-            if (actor) {
-                $gameMessage.setFaceImage(actor.faceName(), actor.faceIndex());
-            }
+        const actorId = $gameVariables.value(param.actorIdVariable);
+        const actor = $gameActors.actor(actorId);
+        if (!actor) {
+            return;
+        }
+        $gameMessage.setFaceImage(actor.faceName(), actor.faceIndex());
+        if (param.speakerNameActor) {
+            $gameMessage.setSpeakerName(actor.name());
         }
     };
 })();
