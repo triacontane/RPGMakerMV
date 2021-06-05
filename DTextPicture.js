@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2021/06/05 フォントロードプラグインと組み合わせて動的文字列ピクチャに好きなフォントを指定できる機能を追加
 // 2.2.3 2021/05/04 一部の制御文字を使っていると揃えを中央もしくは右揃えにしたときに正しく表示されない問題を修正
 //                  フォントサイズを小さくして複数行表示したときに1行目の高さが正しく計算されない問題を修正
 //                  競合対策のためのリファクタリング
@@ -118,6 +119,11 @@
  * @option 右揃え
  * @value right
  *
+ * @arg fontFace
+ * @text フォント
+ * @desc 文字列ピクチャのフォントです。フォントロードプラグインで読み込んだフォントの名称を指定します。
+ * @default
+ *
  * @command windowCursor
  * @text ウィンドウカーソル設定
  * @desc 表示中の文字列ピクチャの背景ウィンドウにカーソルを表示します。
@@ -185,6 +191,10 @@
  * \oc[rgb(0,255,0)] カラーコードで指定
  * \oc[2] 文字色番号\c[n]と同様のもので指定
  *
+ * 動的文字列ピクチャのフォントを変えたい場合は、別途フォントロードプラグインを使って
+ * 読み込んでください。
+ * https://github.com/triacontane/RPGMakerMV/blob/mz_master/FontLoad.js
+ *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
  * 以下のフォルダに格納されています。
@@ -235,6 +245,9 @@
         if (setting.align !== '') {
             this.dTextAlign = setting.align;
         }
+        if (setting.fontFace !== '') {
+            this.dTextFontFace = setting.fontFace;
+        }
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
@@ -271,7 +284,8 @@
             windowFrame   : this.dWindowFrame,
             gradationLeft : this.dTextGradationLeft,
             gradationRight: this.dTextGradationRight,
-            align         : this.dTextAlign
+            align         : this.dTextAlign,
+            font          : this.dTextFontFace
         };
     };
 
@@ -522,14 +536,12 @@
 
         createTextContents(text, dTextInfo) {
             this._size = dTextInfo.size;
+            this._face = dTextInfo.font;
             this._text = text;
             const rect = this.textSizeEx(text);
             this.textPictureWidth = rect.width;
             this.textPictureAlign = dTextInfo.align;
             this.contents = new Bitmap(rect.width, rect.height);
-            if (dTextInfo.font) {
-                this.contents.fontFace = dTextInfo.font;
-            }
             return this.contents;
         }
 
@@ -563,6 +575,9 @@
             super.resetFontSettings();
             if (this._size) {
                 this.contents.fontSize = this._size;
+            }
+            if (this._face) {
+                this.contents.fontFace = this._face;
             }
         }
 
