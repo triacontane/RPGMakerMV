@@ -1,11 +1,12 @@
 //=============================================================================
 // ThroughFailedToLoad.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2021/06/07 MZ版としてリファクタリング
 // 2.3.1 2017/10/30 アニメーション画像に対するエラーが無視が無効になっていた問題を修正
 // 2.3.0 2017/10/29 音声ファイルと画像ファイルのいずれかのみ無視する機能を追加
 // 2.2.0 2017/06/18 本体v1.5.0で機能しなくなる問題を修正
@@ -20,50 +21,27 @@
 //=============================================================================
 
 /*:
- * @plugindesc Through Failed to load
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc ロード失敗エラーのすり抜けプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ThroughFailedToLoad.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @param InvalidIfTest
- * @desc Not through if test play.
- * @default true
- * @type boolean
- *
- * @param InvalidIfWeb
- * @desc Not through if Web mode.
- * @default false
- * @type boolean
- *
- * @param ThroughType
- * @desc 無視する素材の種別です。
- * @default 3
- * @type select
- * @option Audio Only
- * @value 1
- * @option Image Only
- * @value 2
- * @option All
- * @value 3
- *
- * @help Through error of Failed to load.
- * Image not found, Audio not found.
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
- * @plugindesc ロード失敗エラーのすり抜けプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param テストプレー時無効
+ * @text テストプレー時無効
  * @desc テストプレー時は本プラグインの機能が無効になります。
  * @default true
  * @type boolean
  *
- * @param Web版で無効
+ * @param InvalidIfWeb
+ * @text Web版で無効
  * @desc Web版実行時は本プラグインの機能が無効になります。
  * @default false
  * @type boolean
  *
- * @param 無視種別
+ * @param ThroughType
+ * @text 無視種別
  * @desc 無視する素材の種別です。
  * @default 3
  * @type select
@@ -93,53 +71,26 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName = 'ThroughFailedToLoad';
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = (getParamOther(paramNames) || '').toUpperCase();
-        return value === 'ON' || value === 'TRUE';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramInvalidIfTest = getParamBoolean(['InvalidIfTest', 'テストプレー時無効']);
-    var paramInvalidIfWeb  = getParamBoolean(['InvalidIfWeb', 'Web版で無効']);
-    var paramThroughType   = getParamNumber(['ThroughType', '無視種別'], 1, 3);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // プラグイン無効条件の判定
     //=============================================================================
-    if (paramInvalidIfTest && Utils.isOptionValid('test')) {
+    if (param.InvalidIfTest && Utils.isOptionValid('test')) {
         return;
-    } else if (paramInvalidIfWeb && !Utils.isNwjs()) {
+    } else if (param.InvalidIfWeb && !Utils.isNwjs()) {
         return;
     }
 
-    if (paramThroughType !== 1) {
+    if (param.ThroughType !== 1) {
         //=============================================================================
         // Bitmap
         //  エラー発生用のフラグをキャンセルします。
         //=============================================================================
-        var _Bitmap_isReady = Bitmap.prototype.isReady;
+        const _Bitmap_isReady = Bitmap.prototype.isReady;
         Bitmap.prototype.isReady = function() {
             if (this.isError()) {
                 this.eraseError();
@@ -147,7 +98,7 @@
             return _Bitmap_isReady.apply(this, arguments);
         };
 
-        var _Bitmap_decode = Bitmap.prototype.decode;
+        const _Bitmap_decode = Bitmap.prototype.decode;
         Bitmap.prototype.decode = function(){
             _Bitmap_decode.apply(this, arguments);
             if (this._loadingState === 'requesting') {
@@ -160,45 +111,14 @@
             this._isLoading    = false;
             this._loadingState = 'loaded';
         };
-
-        //=============================================================================
-        // Graphics
-        //  エラーイベントを登録します。
-        //=============================================================================
-        var _Graphics__playVideo = Graphics._playVideo;
-        Graphics._playVideo      = function(src) {
-            _Graphics__playVideo.apply(this, arguments);
-            this._video.onerror = this._videoLoader || this._onVideoError.bind(this);
-        };
     }
 
-    if (paramThroughType !== 2) {
+    if (param.ThroughType !== 2) {
         //=============================================================================
         // AudioManager
         //  エラーチェック処理を無視します。
         //=============================================================================
         AudioManager.checkErrors = function() {};
-    }
-
-    if (typeof ResourceHandler !== 'undefined') {
-        //=============================================================================
-        // ResourceHandler
-        //  リトライ機能の仕様を変更します。
-        //=============================================================================
-        var _ResourceHandler_createLoader = ResourceHandler.createLoader;
-        ResourceHandler.createLoader = function(url, retryMethod, resignMethod, retryInterval) {
-            return this.isNeedLoader(url) ? _ResourceHandler_createLoader.apply(this, arguments) : null;
-        };
-
-        ResourceHandler.isNeedLoader = function(url) {
-            if (paramThroughType === 1 && !url.match(/^audio\//)) {
-                return true;
-            } else if (paramThroughType === 2 && (!url.match(/^img\//) && !url.match(/^movie\//))) {
-                return true;
-            } else {
-                return false;
-            }
-        };
     }
 })();
 
