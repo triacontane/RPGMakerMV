@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2021/06/08 自動戦闘を有効にした場合、有効な対象が存在しない行動を候補から除外するよう修正
 // 1.2.2 2020/10/01 範囲を「なし」に設定したスキルを敵が使用しなくなる問題を修正
 // 1.2.1 2020/08/29 1.2.0で追加した機能による軽量化対策
 // 1.2.0 2020/04/24 選択できないバトラーを無効表示する機能を追加
@@ -227,6 +228,14 @@
             }
         }
         return result;
+    };
+
+    var _Game_Actor_makeActionList = Game_Actor.prototype.makeActionList;
+    Game_Actor.prototype.makeActionList = function() {
+        var list = _Game_Actor_makeActionList.apply(this, arguments);
+        return list.filter(function(action) {
+            return this.isExistValidTarget(action.item());
+        }, this);
     };
 
     Game_Enemy.prototype.canSelectTarget = function(item, user) {
