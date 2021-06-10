@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2021/06/11 タイトルBGMの演奏を遅らせる機能を追加
  1.1.0 2021/05/03 コールSEを複数指定してランダム再生できる機能を追加
  1.0.1 2021/05/03 オプション画面、ロード画面から戻ったときは演奏しないよう修正
  1.0.0 2021/05/03 初版
@@ -52,6 +53,13 @@
  * @param delay
  * @text 遅延(ミリ秒)
  * @desc SE演奏を指定したミリ秒ぶんだけ遅らせます。
+ * @default 0
+ * @type number
+ * @max 99999
+ *
+ * @param bgmDelay
+ * @text BGM遅延(ミリ秒)
+ * @desc デフォルトのタイトルBGMの演奏を指定したミリ秒ぶんだけ遅らせます。
  * @default 0
  * @type number
  * @max 99999
@@ -103,16 +111,48 @@
     };
 
     var param = createPluginParameter('TitleCall');
+    var gameStart = false;
 
     var _Scene_Title_playTitleMusic = Scene_Title.prototype.playTitleMusic;
     Scene_Title.prototype.playTitleMusic = function() {
         _Scene_Title_playTitleMusic.apply(this, arguments);
+        if (param.bgmDelay) {
+            this.playDelayTitleMusic();
+        }
         this.playTitleCall();
     };
 
+    Scene_Title.prototype.playDelayTitleMusic = function() {
+        AudioManager.stopBgm();
+        if (this.isReturnToTitle()) {
+            return;
+        }
+        setTimeout(function() {
+            if (!gameStart) {
+                AudioManager.playBgm($dataSystem.titleBgm);
+            }
+        }.bind(this), param.bgmDelay);
+    };
+
+    var _Scene_Title_commandNewGame = Scene_Title.prototype.commandNewGame;
+    Scene_Title.prototype.commandNewGame = function() {
+        gameStart = true;
+        _Scene_Title_commandNewGame.apply(this, arguments);
+    };
+
+    var _Scene_Load_onLoadSuccess = Scene_Load.prototype.onLoadSuccess;
+    Scene_Load.prototype.onLoadSuccess = function() {
+        gameStart = true;
+        _Scene_Load_onLoadSuccess.apply(this, arguments);
+    };
+
+    Scene_Title.prototype.isReturnToTitle = function() {
+        return SceneManager.isPreviousScene(Scene_Options) ||
+            SceneManager.isPreviousScene(Scene_Load);
+    };
+
     Scene_Title.prototype.playTitleCall = function() {
-        if (SceneManager.isPreviousScene(Scene_Options) ||
-            SceneManager.isPreviousScene(Scene_Load)) {
+        if (this.isReturnToTitle()) {
             return;
         }
         var list = param.randomList;
