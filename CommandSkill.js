@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2021/06/11 コマンドスキルの並び順をスキルID、アイテムIDの昇順になるよう変更
  1.1.0 2021/05/01 アイテムもアクターコマンド化できるよう修正
                   ヘルプウィンドウを表示できる設定を追加
                   メニュー画面のスキルやアイテムリストにはコマンド化したスキルやアイテムを表示できる設定を追加
@@ -79,6 +80,7 @@
      */
     Game_Actor.prototype.findCommandSkills = function() {
         const skills = this.skills().filter(skill => $gameTemp.isCommandSkill(skill));
+        skills.sort((skillA, skillB) => skillA.id - skillB.id);
         return skills.concat($gameParty.findCommandItems());
     }
 
@@ -99,7 +101,7 @@
     };
 
     Window_ActorCommand.prototype.addCommandSpecial = function() {
-        this._actor.findCommandSkills().forEach(skill => {
+        this._actor.findCommandSkills().reverse().forEach(skill => {
             this.addCommand(skill.name, `special`, this._actor.canUse(skill), skill);
             this._list.splice(param.index, 0, this._list.pop());
         });
