@@ -1,11 +1,12 @@
 //=============================================================================
 // BattleRecord.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2021/06/12 MZ用のリファクタリング
 // 1.3.1 2021/03/26 ヘルプの誤記を修正
 // 1.3.0 2021/03/03 1行動ごとの最大与ダメージを記録する変数を追加
 // 1.2.2 2018/04/30 ゴールドの増減について所持ゴールドを以上の額を減算したときの消費量が誤っていた問題を修正
@@ -24,147 +25,14 @@
 //=============================================================================
 
 /*:
- * @plugindesc Battle Record Plugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help Recording resource in battle.
- *
- * アクターごとに以下の要素を記録できます。
- *
- * ・スキルごとの使用回数(戦闘中のみカウント。他項目も同様)
- * ・全スキルの使用回数合計
- * ・アイテムごとの使用回数
- * ・全アイテムの使用回数合計
- * ・敵キャラごとの撃破回数
- * ・全敵キャラの撃破回数合計
- * ・与えたダメージの合計
- * ・与えたダメージの最大
- * ・受けたダメージの合計
- * ・受けたダメージの最大
- * ・回復したダメージの合計
- * ・消費したMP合計
- * ・消費したTP合計
- * ・戦闘不能回数
- *
- * 値はイベントコマンド「変数の操作」から「スクリプト」で
- * 対応するスクリプトを呼び出して取得してください。
- *
- * ・データベースのアクターIDから取得する場合
- * $gameActors.actor(1).getSkillUseCounter(2);   # アクター[1]のスキル[2]使用回数
- * $gameActors.actor(1).getAllSkillUseCounter(); # アクター[1]の全スキル使用回数
- * $gameActors.actor(1).getItemUseCounter(3);    # アクター[1]のアイテム[3]使用回数
- * $gameActors.actor(1).getAllItemUseCounter();  # アクター[1]の全アイテム使用回数
- * $gameActors.actor(1).getKillEnemyCounter(4);  # アクター[1]の敵キャラ[4]撃破数
- * $gameActors.actor(1).getAllKillEnemyCounter();# アクター[1]の全敵キャラ撃破数
- * $gameActors.actor(1).attackDamageMax;         # アクター[1]の最大与ダメージ
- * $gameActors.actor(1).attackDamageSum;         # アクター[1]の合計与ダメージ
- * $gameActors.actor(1).acceptDamageMax;         # アクター[1]の最大被ダメージ
- * $gameActors.actor(1).acceptDamageSum;         # アクター[1]の合計被ダメージ
- * $gameActors.actor(1).recoverDamageSum;        # アクター[1]の合計回復ダメージ
- * $gameActors.actor(1).payCostMpSum;            # アクター[1]の消費MP合計
- * $gameActors.actor(1).payCostTpSum;            # アクター[1]の消費TP合計
- * $gameActors.actor(1).deadCounter;             # アクター[1]の戦闘不能回数
- *
- * ・パーティの並び順(先頭は0)から取得する場合
- * $gameActors.actor(n)を$gameParty.members()[n]に置き換えて実行する。
- * (例)
- * $gameParty.members()[0].attackDamageMax;      # 先頭メンバーの最大与ダメージ
- *
- * ・スキルのダメージ計算式で使用する場合
- * $gameActors.actor(n)をa(実行者)もしくはb(対象者)に置き換えて実行する。
- * (例)
- * a.getSkillUseCounter(5);  # 実行者のスキル[5]使用回数
- * b.getKillEnemyCounter(6); # 対象者の敵キャラ[6]撃破数
- *
- * ・すべてのアクターの合計値を取得する場合
- * $gameActors.actor(n)を$gameActorsに置き換えて実行する。
- * (例)
- * $gameActors.getKillEnemyCounter(4); # 全アクターの敵キャラ[4]撃破数合計
- * $gameActors.getAllItemUseCounter(); # 全アクターの全アイテム使用回数
- *
- * ・パーティごとに管理される戦績を取得する場合
- * $gameParty.gainGoldSum;         # 入手ゴールド合計
- * $gameParty.loseGoldSum;         # 消費ゴールド合計
- * $gameParty.getGainItemSum(1);   # アイテム[1]の入手合計
- * $gameParty.getGainWeaponSum(1); # 武器[1]の入手合計(初期装備以外)
- * $gameParty.getGainArmorSum(1);  # 防具[1]の入手合計(初期装備以外)
- *
- * ・売買履歴情報を取得する場合
- * アイテムごとの売買履歴を取得できます。
- * 開始IDと終了IDを指定することで、その範囲内の売買履歴を取得可能です。
- * 開始IDと終了IDを指定しなかった場合、全ての売買履歴の合計を取得します。
- *
- * 1.購入
- * # ID[1]からID[3]までのアイテムの累計購入金額の合計
- * $gameParty.getItemBuyingRecord().getUseGoldSum(1, 3);
- *
- * # ID[2]からID[4]のアイテムの累計購入個数の合計
- * $gameParty.getItemBuyingRecord().getAmountSum(2, 4);
- *
- * # アイテムの累計購入回数(まとめ買いは1回でカウント)
- * $gameParty.getItemBuyingRecord().getTradeCount();
- *
- * # ID[1]のアイテムの累計購入金額
- * $gameParty.getWeaponBuyingRecord().getUseGoldSum(1);
- *
- * # ID[2]のアイテムの累計購入個数
- * $gameParty.getWeaponBuyingRecord().getAmountSum(2);
- *
- * # 武器の累計購入回数(まとめ買いは1回でカウント)
- * $gameParty.getWeaponBuyingRecord().getTradeCount();
- *
- * # 全防具の累計購入金額の合計
- * $gameParty.getArmorBuyingRecord().getUseGoldSum();
- *
- * # 全防具の累計購入個数
- * $gameParty.getArmorBuyingRecord().getAmountSum();
- *
- * # 防具の累計購入回数(まとめ買いは1回でカウント)
- * $gameParty.getArmorBuyingRecord().getTradeCount();
- *
- * 2.売却
- * # ID[1]からID[3]までのアイテムの累計売却金額の合計
- * $gameParty.getItemSellingRecord().getUseGoldSum(1, 3);
- *
- * # ID[2]からID[4]のアイテムの累計売却個数の合計
- * $gameParty.getItemSellingRecord().getAmountSum(2, 4);
- *
- * # アイテムの累計売却回数(まとめ買いは1回でカウント)
- * $gameParty.getItemSellingRecord().getTradeCount();
- *
- * # ID[1]のアイテムの累計売却金額
- * $gameParty.getWeaponSellingRecord().getUseGoldSum(1);
- *
- * # ID[2]のアイテムの累計売却個数
- * $gameParty.getWeaponSellingRecord().getAmountSum(2);
- *
- * # 武器の累計売却回数(まとめ買いは1回でカウント)
- * $gameParty.getWeaponSellingRecord().getTradeCount();
- *
- * # 全防具の累計売却金額の合計
- * $gameParty.getArmorSellingRecord().getUseGoldSum();
- *
- * # 全防具の累計売却個数
- * $gameParty.getArmorSellingRecord().getAmountSum();
- *
- * # 防具の累計売却回数(まとめ買いは1回でカウント)
- * $gameParty.getArmorSellingRecord().getTradeCount();
- *
- * 応用的な使い方として「動的データベース構築プラグイン」と組み合わせれば
- * 戦績をデータベースの値に組み込んでより多彩な装備品やスキルを
- * 作成することができます。
- * 「動的データベース構築プラグイン」は、本プラグインと同一の配布元で
- * 配布しています。
- *
- * No plugin command.
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 戦績プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattleRecord.js
+ * @author トリアコンタン
  *
- * @help 戦闘中の様々な情報を記録していつでも取得可能にします。
+ * @help BattleRecord.js
+ * 
+ * 戦闘中の様々な情報を記録していつでも取得可能にします。
  * 戦績として記録に残せるほか、特殊なスキルのダメージ計算式に
  * 組み込んだりすることもできます。
  *
@@ -314,14 +182,14 @@ function Game_TradeRecord() {
     this.initialize.apply(this, arguments);
 }
 
-(function() {
+(()=> {
     'use strict';
 
     //=============================================================================
     // Game_BattlerBase
     //  戦績を記録します。
     //=============================================================================
-    var _Game_BattlerBase_initMembers      = Game_BattlerBase.prototype.initMembers;
+    const _Game_BattlerBase_initMembers      = Game_BattlerBase.prototype.initMembers;
     Game_BattlerBase.prototype.initMembers = function() {
         _Game_BattlerBase_initMembers.apply(this, arguments);
         this.clearBattleRecord();
@@ -385,17 +253,17 @@ function Game_TradeRecord() {
     };
 
     Game_BattlerBase.prototype.recordSkillUseCounter = function(skillId) {
-        var prevCount                  = this.getSkillUseCounter(skillId);
+        const prevCount                  = this.getSkillUseCounter(skillId);
         this._useSkillCounter[skillId] = prevCount + 1;
     };
 
     Game_BattlerBase.prototype.recordItemUseCounter = function(itemId) {
-        var prevCount                = this.getItemUseCounter(itemId);
+        const prevCount                = this.getItemUseCounter(itemId);
         this._useItemCounter[itemId] = prevCount + 1;
     };
 
     Game_BattlerBase.prototype.recordKillEnemyCounter = function(enemyId) {
-        var prevCount                   = this.getKillEnemyCounter(enemyId);
+        const prevCount                   = this.getKillEnemyCounter(enemyId);
         this._killEnemyCounter[enemyId] = prevCount + 1;
     };
 
@@ -433,7 +301,7 @@ function Game_TradeRecord() {
         }, 0);
     };
 
-    var _Game_BattlerBase_paySkillCost      = Game_BattlerBase.prototype.paySkillCost;
+    const _Game_BattlerBase_paySkillCost      = Game_BattlerBase.prototype.paySkillCost;
     Game_BattlerBase.prototype.paySkillCost = function(skill) {
         _Game_BattlerBase_paySkillCost.apply(this, arguments);
         this.recordPayCostMpSum(this.skillMpCost(skill));
@@ -444,7 +312,7 @@ function Game_TradeRecord() {
     // Game_Battler
     //  アイテムとスキルの使用回数を記録します。
     //=============================================================================
-    var _Game_Battler_useItem      = Game_Battler.prototype.useItem;
+    const _Game_Battler_useItem      = Game_Battler.prototype.useItem;
     Game_Battler.prototype.useItem = function(item) {
         _Game_Battler_useItem.apply(this, arguments);
         if (!$gameParty.inBattle()) return;
@@ -459,10 +327,10 @@ function Game_TradeRecord() {
     // Game_Actor
     //  装備変更時はカウンタを無効にします。
     //=============================================================================
-    var _Game_Actor_tradeItemWithParty      = Game_Actor.prototype.tradeItemWithParty;
+    const _Game_Actor_tradeItemWithParty      = Game_Actor.prototype.tradeItemWithParty;
     Game_Actor.prototype.tradeItemWithParty = function(newItem, oldItem) {
         $gameParty.setTradingItemWithActor(true);
-        var result = _Game_Actor_tradeItemWithParty.apply(this, arguments);
+        const result = _Game_Actor_tradeItemWithParty.apply(this, arguments);
         $gameParty.setTradingItemWithActor(false);
         return result;
     };
@@ -471,14 +339,14 @@ function Game_TradeRecord() {
     // Game_Action
     //  戦績を記録します。
     //=============================================================================
-    var _Game_Action_executeDamage      = Game_Action.prototype.executeDamage;
+    const _Game_Action_executeDamage      = Game_Action.prototype.executeDamage;
     Game_Action.prototype.executeDamage = function(target, value) {
         _Game_Action_executeDamage.apply(this, arguments);
         this.subject().recordAttackDamage(value);
         target.recordAcceptDamage(value);
     };
 
-    var _Game_Action_executeHpDamage      = Game_Action.prototype.executeHpDamage;
+    const _Game_Action_executeHpDamage      = Game_Action.prototype.executeHpDamage;
     Game_Action.prototype.executeHpDamage = function(target, value) {
         _Game_Action_executeHpDamage.apply(this, arguments);
         if (target.hp === 0) {
@@ -583,7 +451,7 @@ function Game_TradeRecord() {
     // Game_Party
     //  アイテムとお金の増減情報を記録します。
     //=============================================================================
-    var _Game_Party_initialize      = Game_Party.prototype.initialize;
+    const _Game_Party_initialize      = Game_Party.prototype.initialize;
     Game_Party.prototype.initialize = function() {
         _Game_Party_initialize.apply(this, arguments);
         this.clearRecord();
@@ -603,7 +471,7 @@ function Game_TradeRecord() {
     };
 
     Game_Party.prototype.getItemTypeName = function(item) {
-        var itemTypeName;
+        let itemTypeName;
         if (DataManager.isItem(item)) {
             itemTypeName = 'item';
         } else if (DataManager.isWeapon(item)) {
@@ -632,7 +500,7 @@ function Game_TradeRecord() {
     };
 
     Game_Party.prototype.recordGainItemSum = function(itemId, amount) {
-        var prevAmount            = this.getGainItemSum(itemId);
+        const prevAmount            = this.getGainItemSum(itemId);
         this._gainItemSum[itemId] = prevAmount + amount;
     };
 
@@ -642,7 +510,7 @@ function Game_TradeRecord() {
     };
 
     Game_Party.prototype.recordGainWeaponSum = function(weaponId, amount) {
-        var prevAmount                = this.getGainWeaponSum(weaponId);
+        const prevAmount                = this.getGainWeaponSum(weaponId);
         this._gainWeaponSum[weaponId] = prevAmount + amount;
     };
 
@@ -652,7 +520,7 @@ function Game_TradeRecord() {
     };
 
     Game_Party.prototype.recordGainArmorSum = function(armorId, amount) {
-        var prevAmount              = this.getGainArmorSum(armorId);
+        const prevAmount              = this.getGainArmorSum(armorId);
         this._gainArmorSum[armorId] = prevAmount + amount;
     };
 
@@ -661,11 +529,11 @@ function Game_TradeRecord() {
         return this._gainArmorSum[armorId] || 0;
     };
 
-    var _Game_Party_gainGold      = Game_Party.prototype.gainGold;
+    const _Game_Party_gainGold      = Game_Party.prototype.gainGold;
     Game_Party.prototype.gainGold = function(amount) {
-        var prevGold = this._gold;
+        const prevGold = this._gold;
         _Game_Party_gainGold.apply(this, arguments);
-        var deltaGold = this._gold - prevGold;
+        const deltaGold = this._gold - prevGold;
         if (deltaGold >= 0) {
             this.recordGainGold(deltaGold);
         } else {
@@ -673,7 +541,7 @@ function Game_TradeRecord() {
         }
     };
 
-    var _Game_Party_gainItem      = Game_Party.prototype.gainItem;
+    const _Game_Party_gainItem      = Game_Party.prototype.gainItem;
     Game_Party.prototype.gainItem = function(item, amount, includeEquip) {
         _Game_Party_gainItem.apply(this, arguments);
         if (amount < 0 || this._tradingItemWithActor) return;
@@ -687,7 +555,7 @@ function Game_TradeRecord() {
     };
 
     Game_Party.prototype.addTradeRecord = function(item, amount, gold, tradeType) {
-        var record = this.getTradeRecord(this.getItemTypeName(item), tradeType);
+        const record = this.getTradeRecord(this.getItemTypeName(item), tradeType);
         record.trade(item.id, amount, gold);
     };
 
@@ -762,13 +630,13 @@ function Game_TradeRecord() {
     // Scene_Shop
     //  ショップでの売買履歴を保持します。
     //=============================================================================
-    var _Scene_Shop_doBuy = Scene_Shop.prototype.doBuy;
+    const _Scene_Shop_doBuy = Scene_Shop.prototype.doBuy;
     Scene_Shop.prototype.doBuy = function(number) {
         _Scene_Shop_doBuy.apply(this, arguments);
         $gameParty.addTradeRecord(this._item, number, number * this.buyingPrice(), 'Buy');
     };
 
-    var _Scene_Shop_doSell = Scene_Shop.prototype.doSell;
+    const _Scene_Shop_doSell = Scene_Shop.prototype.doSell;
     Scene_Shop.prototype.doSell = function(number) {
         _Scene_Shop_doSell.apply(this, arguments);
         $gameParty.addTradeRecord(this._item, number, number * this.sellingPrice(), 'Sell');
