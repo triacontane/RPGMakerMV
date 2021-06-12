@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2021/06/12 1.2.0の機能でいくつかのパターンでタイトルBGMが再生されない問題を修正
  1.2.0 2021/06/11 タイトルBGMの演奏を遅らせる機能を追加
  1.1.0 2021/05/03 コールSEを複数指定してランダム再生できる機能を追加
  1.0.1 2021/05/03 オプション画面、ロード画面から戻ったときは演奏しないよう修正
@@ -123,10 +124,11 @@
     };
 
     Scene_Title.prototype.playDelayTitleMusic = function() {
-        AudioManager.stopBgm();
         if (this.isReturnToTitle()) {
             return;
         }
+        AudioManager.stopBgm();
+        gameStart = false;
         setTimeout(function() {
             if (!gameStart) {
                 AudioManager.playBgm($dataSystem.titleBgm);
