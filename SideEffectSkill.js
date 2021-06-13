@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2021/06/13 行動が耐性だったのときのみ適用する副作用を指定できる機能を追加
 // 1.4.2 2020/05/22 反撃された場合などスキルを使用しなかったケースで「弱点時のみ」などの判定が無条件で有効になってしまう問題を修正
 // 1.4.1 2019/07/15 BattleEffectPopup.jsと併用したとき、フロントビューだと戦闘開始時などにInvalidポップが余分に表示される競合を解消
 // 1.4.0 2019/02/16 行動が無効(ダメージ0)だった場合のみ副作用を適用できる機能を追加
@@ -155,6 +156,8 @@
  * <SES_MissOnly>          # 同上
  * <SES_弱点時のみ>        # 行動が弱点を突いた場合のみ副作用を適用
  * <SES_EffectiveOnly>     # 同上
+ * <SES_耐性時のみ>        # 行動が耐性だった場合のみ副作用を適用
+ * <SES_ResistOnly>        # 同上
  * <SES_会心時のみ>        # 行動が会心だった場合のみ副作用を適用
  * <SES_CriticalOnly>      # 同上
  * <SES_反射時のみ>        # 行動が魔法反射された場合のみ副作用を適用
@@ -451,8 +454,13 @@
     var _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         var rate = _Game_Action_calcElementRate.apply(this, arguments);
-        if (!BattleManager.isInputting() && rate >= 1.1) {
-            this._effectiveForSideEffect = true;
+        if (!BattleManager.isInputting()) {
+            if (rate >= 1.1) {
+                this._effectiveForSideEffect = true;
+            }
+            if (rate <= 0.9) {
+                this._resistForSideEffect = true;
+            }
         }
         return rate;
     };
@@ -483,6 +491,7 @@
             return this.isValidSideEffectForSuccess() &&
                 this.isValidSideEffectForFailure() &&
                 this.isValidSideEffectForEffective() &&
+                this.isValidSideEffectForResist() &&
                 this.isValidSideEffectForCritical() &&
                 this.isValidSideEffectForInvalid() &&
                 this.isValidSideEffectForReflection();
@@ -499,6 +508,10 @@
 
     Game_Action.prototype.isValidSideEffectForEffective = function() {
         return this._effectiveForSideEffect || !getMetaValues(this.item(), ['EffectiveOnly', '弱点時のみ']);
+    };
+
+    Game_Action.prototype.isValidSideEffectForResist = function() {
+        return this._resistForSideEffect || !getMetaValues(this.item(), ['ResistOnly', '耐性時のみ']);
     };
 
     Game_Action.prototype.isValidSideEffectForCritical = function() {
