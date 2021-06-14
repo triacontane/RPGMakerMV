@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.0 2021/06/15 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様変更
 // 1.15.1 2021/06/01 1.15.0でループボイスを再生するとオートモードで文章が送られなくなる問題を修正
 // 1.15.0 2021/05/31 SimpleVoice.jsと併用したとき、ボイス演奏中はオートモードによる文章送りを待機するよう変更
 // 1.14.1 2020/10/15 ヘルプに注釈を追加
@@ -755,11 +756,17 @@ function Sprite_Frame() {
     };
 
     Window_Message.prototype.setSkipAutoFlagByTrigger = function() {
-        if (!paramPressingSkip && this.isTriggeredMessageSkip()) {
+        if (this.isTriggeredMessageSkip()) {
+            if (!paramPressingSkip) {
+                $gameMessage.toggleSkip();
+            }
+            this._pressSkipStop = false;
+        } else if (this.isTriggeredMessageSkipButton()) {
             $gameMessage.toggleSkip();
+            this._pressSkipStop = true;
         } else if (this.isTriggeredMessageAuto()) {
             $gameMessage.toggleAuto();
-        } else if (paramPressingSkip) {
+        } else if (paramPressingSkip && !this._pressSkipStop) {
             $gameMessage.setSkipFlg(this.isPressedMessageSkip());
         }
     };
@@ -802,14 +809,12 @@ function Sprite_Frame() {
 
     Window_Message.prototype.isTriggeredMessageSkip = function() {
         return Input.isTriggered('messageSkip') ||
-            Input.isTriggered(skipKeyName) ||
-            this.isTriggeredMessageSkipButton(false);
+            Input.isTriggered(skipKeyName);
     };
 
     Window_Message.prototype.isPressedMessageSkip = function() {
         return Input.isPressed('messageSkip') ||
-            Input.isPressed(skipKeyName) ||
-            this.isTriggeredMessageSkipButton(true);
+            Input.isPressed(skipKeyName);
     };
 
     Window_Message.prototype.isTriggeredMessageSkipButton = function(pressed) {
