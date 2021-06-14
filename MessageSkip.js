@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.0 2021/06/15 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様変更
 // 1.14.1 2020/09/02 MZ向けにコードとヘルプ修正
 // 1.14.0 2020/08/02 クリックすることで任意のスイッチをONにできるピクチャをメッセージウィンドウに表示する機能を追加
 // 1.13.0 2020/03/26 オート、スキップピクチャの表示方法をメッセージウィンドウからの相対座標と絶対座標とを選択できる機能を追加
@@ -757,11 +758,17 @@ function Sprite_Frame() {
     };
 
     Window_Message.prototype.setSkipAutoFlagByTrigger = function() {
-        if (!paramPressingSkip && this.isTriggeredMessageSkip()) {
+        if (this.isTriggeredMessageSkip()) {
+            if (!paramPressingSkip) {
+                $gameMessage.toggleSkip();
+            }
+            this._pressSkipStop = false;
+        } else if (this.isTriggeredMessageSkipButton()) {
             $gameMessage.toggleSkip();
+            this._pressSkipStop = true;
         } else if (this.isTriggeredMessageAuto()) {
             $gameMessage.toggleAuto();
-        } else if (paramPressingSkip) {
+        } else if (paramPressingSkip && !this._pressSkipStop) {
             $gameMessage.setSkipFlg(this.isPressedMessageSkip());
         }
     };
@@ -804,14 +811,12 @@ function Sprite_Frame() {
 
     Window_Message.prototype.isTriggeredMessageSkip = function() {
         return Input.isTriggered('messageSkip') ||
-            Input.isTriggered(skipKeyName) ||
-            this.isTriggeredMessageSkipButton(false);
+            Input.isTriggered(skipKeyName);
     };
 
     Window_Message.prototype.isPressedMessageSkip = function() {
         return Input.isPressed('messageSkip') ||
-            Input.isPressed(skipKeyName) ||
-            this.isTriggeredMessageSkipButton(true);
+            Input.isPressed(skipKeyName);
     };
 
     Window_Message.prototype.isTriggeredMessageSkipButton = function(pressed) {
