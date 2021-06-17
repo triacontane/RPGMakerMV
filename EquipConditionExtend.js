@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2021/06/18 タグで複数の条件を指定したとき、すべての条件を満たした場合にのみ装備できるよう変更する機能を追加
+//                  ステートの条件が機能していなかった問題を修正
 // 1.2.0 2021/06/17 MZ版を作成
 // 1.1.0 2020/05/05 計算式で制御文字が使えるよう修正
 // 1.0.1 2017/02/07 端末依存の記述を削除
@@ -23,6 +25,12 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
+ *
+ * @param MultiConditionAnd
+ * @text 複数条件を『かつ』に変更
+ * @desc メモ欄のタグで対象を複数指定したとき、すべての条件を満たしたときに装備できるよう変更します。(アクターは除く)
+ * @default false
+ * @type boolean
  *
  * @help 装備条件を拡張します。
  * 武器または防具のメモ欄に以下の通り記述してください。
@@ -49,6 +57,8 @@
 
 (()=> {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     const _Game_BattlerBase_canEquipWeapon = Game_BattlerBase.prototype.canEquipWeapon;
     Game_BattlerBase.prototype.canEquipWeapon = function(item) {
@@ -85,7 +95,7 @@
     Game_BattlerBase.prototype.canEquipExtendSkill = function(item) {
         const metaValue = this.findEquipExtendValue(item, ['装備条件スキル', 'EquipCondSkill']);
         if (!metaValue) return true;
-        return metaValue.some(function(skillId) {
+        return metaValue[this.findEquipExtendConditionMethod()](function(skillId) {
             const hasSkill = this.skills().contains($dataSkills[Math.abs(skillId)]);
             return skillId < 0 ? !hasSkill : hasSkill;
         }.bind(this));
@@ -94,7 +104,7 @@
     Game_BattlerBase.prototype.canEquipExtendState = function(item) {
         const metaValue = this.findEquipExtendValue(item, ['装備条件ステート', 'EquipCondState']);
         if (!metaValue) return true;
-        return metaValue.some(function(stateId) {
+        return metaValue[this.findEquipExtendConditionMethod()](function(stateId) {
             const isState = this.isStateAffected(stateId);
             return stateId < 0 ? !isState : isState;
         }.bind(this));
@@ -109,7 +119,7 @@
     Game_BattlerBase.prototype.canEquipExtendSwitch = function(item) {
         const metaValue = this.findEquipExtendValue(item, ['装備条件スイッチ', 'EquipCondSwitch']);
         if (!metaValue) return true;
-        return metaValue.some(function(switchId) {
+        return metaValue[this.findEquipExtendConditionMethod()](function(switchId) {
             return $gameSwitches.value(switchId);
         }.bind(this));
     };
@@ -119,10 +129,14 @@
         if (metaValue === undefined) {
             return undefined;
         } else if (metaValue === String(metaValue)) {
-            return metaValue.split(',')
+            return metaValue.split(',').map(value => parseInt(value));
         } else {
             return [metaValue];
         }
+    };
+
+    Game_BattlerBase.prototype.findEquipExtendConditionMethod = function() {
+        return param.MultiConditionAnd ? 'every' : 'some';
     };
 
     Game_BattlerBase.prototype.canEquipExtendFormula = function(item) {
