@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.17.0 2021/06/19 ウィンドウに角度を付けられる機能を追加
  1.16.0 2021/05/29 シーンごとにピクチャの表示優先度を変更できる機能を追加
  1.15.0 2021/05/22 コマンドリストの揃えを指定できる機能を追加
  1.14.4 2021/05/18 一覧ウィンドウを指定しなかった場合やnullで返した場合、単項目表示ウィンドウとして機能するよう修正
@@ -392,6 +393,12 @@
  * @param RowNumber
  * @text 行数
  * @desc ウィンドウの行数です。高さを決定するために使われます。0を指定した場合はコマンド数をもとに自動設定されます。
+ * @default 0
+ * @type number
+ *
+ * @param Rotation
+ * @text 回転角度
+ * @desc ウィンドウの角度です。度数法(0-360)で指定します。
  * @default 0
  * @type number
  *
@@ -1322,6 +1329,24 @@
             this.updateOpenClose();
             super.update();
             this.updateIndexVariable();
+            this.updateRotation();
+        }
+
+        updateRotation() {
+            if (this._data.Rotation) {
+                this.rotation = this._data.Rotation * Math.PI / 180;
+            }
+        }
+
+        _updateFilterArea() {
+            super._updateFilterArea();
+            if (this.rotation !== 0) {
+                const filterArea = this._clientArea.filterArea;
+                filterArea.x = 0;
+                filterArea.y = 0;
+                filterArea.width = Graphics.width;
+                filterArea.height = Graphics.height;
+            }
         }
 
         select(index) {
