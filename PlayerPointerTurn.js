@@ -1,11 +1,12 @@
 //=============================================================================
 // PlayerPointerTurn.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/06/20 移動中も常にポインタの方を向く機能を追加
 // 1.1.0 2018/02/10 PD_8DirDash.jsと連携した場合、8方向に対応する機能を追加しました。
 // 1.0.0 2016/02/23 初版
 // ----------------------------------------------------------------------------
@@ -16,7 +17,13 @@
 
 /*:
  * @plugindesc ポインタ追跡プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
+ *
+ * @param validMoving
+ * @text 移動中も有効
+ * @desc 移動中も常にポインタの方を向きます。
+ * @default false
+ * @type boolean
  *
  * @help 移動可能な場合にプレイヤーが
  * マウスポインタの方を向きます。
@@ -29,6 +36,32 @@
  *  このプラグインはもうあなたのものです。
  */
 (function() {
+
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+
+    var param = createPluginParameter('PlayerPointerTurn');
 
     var isExistPlugin = function(pluginName) {
         return PluginManager._parameters.hasOwnProperty([pluginName.toLowerCase()]);
@@ -44,6 +77,14 @@
             this.turnToPointer();
         }
         _Game_Player_moveByInput.apply(this, arguments);
+    };
+
+    var _Game_Player_update = Game_Player.prototype.update;
+    Game_Player.prototype.update = function(sceneActive) {
+        _Game_Player_update.apply(this, arguments);
+        if (param.validMoving) {
+            this.turnToPointer();
+        }
     };
 
     Game_Player._8dirTable = [6, 9, 8, 7, 4, 1, 2, 3, 6];
