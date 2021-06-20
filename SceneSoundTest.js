@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2021/06/20 ヘルプウィンドウの行数を指定できる機能を追加
 // 2.3.0 2020/05/17 ヘルプウィンドウに曲名を表示するかどうかの設定を追加
 // 2.2.0 2020/05/04 データファイルのtype指定が大文字の場合でも正常に動作するよう修正
 //                  プラグインの型指定機能に対応
@@ -190,6 +191,11 @@
  * @default true
  * @type boolean
  *
+ * @param ヘルプ行数
+ * @desc 説明ウィンドウの行数です。0を指定するとデフォルトの2行になります。
+ * @default 0
+ * @type number
+ *
  * @help ゲーム中のオーディオを視聴できるサウンドテスト画面を実装します。
  * タイトル画面、メニュー画面およびプラグインコマンドから専用画面に遷移します。
  * ゲーム中に一度でも再生したことのあるオーディオを視聴できるようになります。
@@ -328,6 +334,7 @@ function Scene_SoundTest() {
     var paramManageNumber    = getParamString(['管理番号', 'ManageNumber']);
     var paramListControlType = getParamNumber(['リスト操作タイプ', 'ListControlType'], 1, 2);
     var paramShowAudioName   = getParamBoolean(['説明文に曲名表示', 'ShowAudioNameDesc']);
+    var paramHelpLine        = getParamNumber(['ヘルプ行数', 'HelpLine'], 0);
 
     //=============================================================================
     // DataManager
@@ -603,6 +610,16 @@ function Scene_SoundTest() {
         this.createAudioSettingWindow();
         this.activateAudioList();
         this.changeAudioCategory();
+    };
+
+    var _Scene_SoundTest_createHelpWindow = Scene_SoundTest.prototype.createHelpWindow;
+    Scene_SoundTest.prototype.createHelpWindow = function() {
+        if (paramHelpLine) {
+            this._helpWindow = new Window_Help(paramHelpLine);
+            this.addWindow(this._helpWindow);
+        } else {
+            _Scene_SoundTest_createHelpWindow.apply(this, arguments);
+        }
     };
 
     var _Scene_SoundTest_createBackground      = Scene_SoundTest.prototype.createBackground;
@@ -908,7 +925,7 @@ function Scene_SoundTest() {
 
     Window_AudioList.prototype.getDescription = function(item) {
         var name = paramShowAudioName ? '【' + item.displayName + '】\n' : '';
-        return this.isEnabled(item) ? name + item.description.replace('\\n', '\n') : '？？？';
+        return this.isEnabled(item) ? name + item.description.replace(/\\n/g, '\n') : '？？？';
     };
 
     Window_AudioList.prototype.setup = function(audioType) {
