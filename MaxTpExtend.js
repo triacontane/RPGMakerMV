@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/06/22 競合が起こりやすい記述を変更
  1.0.0 2020/05/08 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -106,7 +107,7 @@
         return this.traitObjects().reduce(function(tp, traitObj) {
             var meta = getMetaValues(traitObj, ['最大TP', 'MaxTp']);
             if (meta) {
-                tp = tp + parseInt(meta);
+                tp = tp + parseInt(meta) || 0;
             }
             return tp;
         }, 0);
