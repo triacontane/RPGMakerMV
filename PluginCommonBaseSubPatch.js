@@ -23,8 +23,8 @@
  *
  * @help PluginCommonBaseSubPatch.js
  *
- * ベースプラグイン『PluginCommonBase.js』を使ったプラグインをサブフォルダに配置したとき
- * 正しくパラメータを取得できるようにするパッチです。
+ * ベースプラグイン『PluginCommonBase.js』を使ったプラグインをサブフォルダに
+ * 配置したとき正しくパラメータを取得できるようにするパッチです。
  *
  * このプラグインは『PluginCommonBase.js』の直下に配置してください。
  *　
