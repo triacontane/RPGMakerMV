@@ -43,6 +43,6 @@
     'use strict';
 
     PluginManagerEx.findPluginName = function (currentScript) {
-        return decodeURIComponent(currentScript.src).match(/^.*\/js\/plugins\/(.+)\.js$/)[1];
+        return decodeURIComponent(currentScript.src.match(/^.*\/js\/plugins\/(.*)\.js$/)[1]);
     };
 })();
