@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2021/06/24 プラグイン未適用のデータをロードしたときに発生するいくつかの事象を修正
 // 2.3.0 2021/05/18 プライオリティ設定に「-1」(下層タイルの背後で遠景の手前)を設定できるようにしました
 // 2.2.1 2021/05/05 アイコンセットの行を変更したときに正しくトリミングできない問題を修正
 // 2.2.0 2021/02/22 色調変更のタグが正常に機能していなかった問題を修正し、グレースケールを指定できるようにしました。
@@ -295,6 +296,8 @@
         _Game_System_onAfterLoad.apply(this, arguments);
         if (!$gamePlayer.hasOwnProperty('_customResource')) {
             $gamePlayer.clearCgInfo();
+            $gamePlayer.followers().data().forEach(follower => follower.clearCgInfo());
+            $gameMap.vehicles().forEach(vehicle => vehicle.clearCgInfo());
         }
     };
 
