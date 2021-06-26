@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2021/06/26 マップ名ウィンドウの横幅設定が機能していなかった問題を修正
 // 1.3.0 2021/06/25 MZ向けに再作成
 // 1.2.0 2019/11/18 総フレーム数にInfinityを設定した場合の挙動を自然なものに変更
 //                  遅延機能をイベントコマンドの「マップ名表示」をONにした場合にも適用されるよう修正
@@ -163,6 +164,9 @@
     //=============================================================================
     const _Window_MapName_initialize      = Window_MapName.prototype.initialize;
     Window_MapName.prototype.initialize = function(rect) {
+        if (param.width) {
+            rect.width = param.width;
+        }
         _Window_MapName_initialize.apply(this, arguments);
         this._originalX    = this.x;
         this._originalY    = this.y;
@@ -256,11 +260,6 @@
     Window_MapName.prototype.drawBackground = function(x, y, width, height) {
         if (this.isWindow() || this._backSprite) return;
         _Window_MapName_drawBackground.apply(this, arguments);
-    };
-
-    const _Window_MapName_windowWidth      = Window_MapName.prototype.windowWidth;
-    Window_MapName.prototype.windowWidth = function() {
-        return param.width ? param.width : _Window_MapName_windowWidth.apply(this, arguments);
     };
 
     const _Window_MapName_refresh      = Window_MapName.prototype.refresh;
