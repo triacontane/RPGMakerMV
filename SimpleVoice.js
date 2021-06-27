@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2021/06/27 ボイス演奏の予約ができるコマンドを追加
 // 1.2.0 2021/03/04 演奏ファイルをサブフォルダから指定できる機能を追加
 // 1.1.3 2020/04/15 1.1.2の修正で同時再生したボイスの停止が動作しない問題を修正
 // 1.1.2 2020/04/08 異なるチャンネルで短い間隔で複数のボイスを再生した場合に、先に再生したボイスが演奏されない問題を修正
@@ -125,6 +126,11 @@
  * SV_STOP_VOICE 1     # 同上
  * ※引数を省略した場合は全てのボイスを停止します。
  *
+ * SV_ボイスの演奏の予約 aaa 90 100 0 2 # 指定したボイス演奏を予約します。
+ * SV_RESERVE_VOICE aaa 90 100 0 2   # 同上
+ * SV_ボイスのループ演奏の予約 aaa 90 100 0 2 # 指定したループボイス演奏を予約します。
+ * SV_RESERVE_LOOP_VOICE aaa 90 100 0 2   # 同上
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -198,6 +204,10 @@
     setPluginCommand('PLAY_LOOP_VOICE', 'execPlayLoopVoice');
     setPluginCommand('ボイスの停止', 'execStopVoice');
     setPluginCommand('STOP_VOICE', 'execStopVoice');
+    setPluginCommand('ボイスの演奏の予約', 'execReserveVoice');
+    setPluginCommand('RESERVE_VOICE', 'execReserveVoice');
+    setPluginCommand('ボイスのループ演奏の予約', 'execReserveLoopVoice');
+    setPluginCommand('RESERVE_LOOP_VOICE', 'execReserveLoopVoice');
 
     //=============================================================================
     // Game_Interpreter
@@ -224,6 +234,19 @@
 
     Game_Interpreter.prototype.execPlayLoopVoice = function(args) {
         this.execPlayVoice(args, true);
+    };
+
+    Game_Interpreter.prototype.execReserveVoice = function(args, loop) {
+        var channel = args.length >= 5 ? getArgNumber(args[4], 1) : undefined;
+        if (AudioManager.isExistVoiceChannel(channel)) {
+            setTimeout(this.execReserveVoice.bind(this, args, loop), 16);
+            return;
+        }
+        this.execPlayVoice(args, loop);
+    };
+
+    Game_Interpreter.prototype.execReserveLoopVoice = function(args) {
+        this.execReserveVoice(args, true);
     };
 
     Game_Interpreter.prototype.execStopVoice = function(args) {
@@ -341,6 +364,16 @@
                 buffer.stop();
             }
             return playing;
+        });
+    };
+
+    AudioManager.isExistVoiceChannel = function(channel) {
+        this.filterPlayingVoice();
+        return this._voiceBuffers.some(function(buffer) {
+            if (buffer._sourceNode && buffer._sourceNode.loop) {
+                return false;
+            }
+            return buffer.channel === channel || channel === undefined;
         });
     };
 
