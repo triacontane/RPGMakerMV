@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.6.0 2021/06/27 ウィンドウスキンを自由に設定できる機能を追加
 // 3.5.1 2021/04/19 カテゴリ表示を有効にしたとき、リストをスクロールさせたあとカテゴリ選択に戻って別の項目を選択するとスクロール位置がおかしくなる問題を修正
 //                  MVで実装されていた説明の自動改行機能が無効になっていたので復元
 // 3.5.0 2021/03/12 ヘルプウィンドウの位置設定を追加
@@ -128,6 +129,13 @@
  * @desc 用語集のフォントサイズです。
  * @default 22
  * @type number
+ * @parent Layout
+ *
+ * @param WindowSkin
+ * @desc 各ウィンドウのウィンドウスキンです。
+ * @default
+ * @type file
+ * @dir img/system
  * @parent Layout
  *
  * @param AutoResizePicture
@@ -517,6 +525,14 @@
  * @desc 用語集のフォントサイズです。
  * @default 22
  * @type number
+ * @parent Layout
+ *
+ * @param WindowSkin
+ * @text ウィンドウスキン
+ * @desc 各ウィンドウのウィンドウスキンです。
+ * @default
+ * @type file
+ * @dir img/system
  * @parent Layout
  *
  * @param AutoResizePicture
@@ -1649,6 +1665,7 @@
         this._helpTexts = $gameParty.getGlossaryHelpMessages();
         this.updateHelp('');
         this._helpWindow.setFramelessDesign();
+        this._helpWindow.setGlossaryWindowSkin();
     };
 
     Scene_Glossary.prototype.createGlossaryWindow = function() {
@@ -1856,6 +1873,13 @@
         }
     };
 
+    Window_Base.prototype.setGlossaryWindowSkin = function() {
+        if (!param.WindowSkin) {
+            return;
+        }
+        this.windowskin = ImageManager.loadSystem(param.WindowSkin);
+    };
+
     //=============================================================================
     // Window_Selectable
     //  アクティブウィンドウを切り替えます。
@@ -1884,6 +1908,7 @@
         this._glossaryListWindow = glWindow;
         Window_Selectable.prototype.initialize.call(this, glWindow);
         this._data = null;
+        this.setGlossaryWindowSkin();
         this.refresh();
         this.selectLastIndex();
         this.setFramelessDesign();
@@ -1954,6 +1979,7 @@
         }
         var width = $gameParty.getGlossaryListWidth();
         Window_ItemList.prototype.initialize.call(this, new Rectangle(0, gWindow.y, width, height));
+        this.setGlossaryWindowSkin();
         this.refresh();
         this.selectLastIndex();
         this.setFramelessDesign();
@@ -2136,6 +2162,7 @@
     Window_GlossaryConfirm.prototype.initialize = function(listWindow) {
         this._listWindow = listWindow;
         Window_Command.prototype.initialize.call(this, this.getWindowRect());
+        this.setGlossaryWindowSkin();
     };
 
     Window_GlossaryConfirm.prototype.updatePlacement = function() {
@@ -2180,6 +2207,7 @@
         var height       = Graphics.boxHeight - y - (param.BottomHelpMode ? helpWindow.height : 0);
         this._listWindow = listWindow;
         Window_Base.prototype.initialize.call(this, new Rectangle(x, y, width, height));
+        this.setGlossaryWindowSkin();
         this.setFramelessDesign();
     };
 
@@ -2211,6 +2239,7 @@
         this._pageIndex = 0;
         this._enemy     = null;
         Window_Base.prototype.initialize.call(this, new Rectangle(x, y, width, height));
+        this.setGlossaryWindowSkin();
         this.setFramelessDesign();
     };
 
