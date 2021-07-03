@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2021/07/03 パラメータ『デフォルト一時スイッチ』が正常に機能していなかった問題を修正
 // 2.1.0 2020/12/27 MZ用に修正
 // 2.0.0 2020/12/25 解除タイミングをプラグインコマンドで決められる機能を追加
 //                  メモ欄の設定なしで必ず解除されるセルフスイッチを指定できる機能を追加
@@ -62,7 +63,7 @@
  *
  * @param clearTransfer
  * @text 場所移動時に自動解除
- * @desc 場所移動したときにセルフスイッチを自動で解除します。
+ * @desc 場所移動したときにセルフスイッチを自動で解除します。(同マップへの場所移動では解除されません)
  * @default true
  * @type boolean
  *
@@ -154,7 +155,7 @@
     Game_Event.prototype.findTemporarySelfSwitch = function() {
         const metaValue = PluginManagerEx.findMetaValue(this.event(), ['TempS', 'SST_Switch', 'SST_スイッチ']);
         if (!metaValue) {
-            return null;
+            return param.defaultTemporary || null;
         }
         const list = metaValue === true ? ['A', 'B', 'C', 'D'] : metaValue.split(',');
         return param.defaultTemporary ? list.concat(param.defaultTemporary) : list;
