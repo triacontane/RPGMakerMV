@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2021/07/07 MZで動作するよう修正
 // 1.2.0 2018/10/14 TemplateEvent.jsとの競合を解消
 // 1.1.0 2016/11/23 遠景のスクロール速度がマップとずれていた問題を修正
 //                  ニューゲーム時にスクロール位置を引き継ぐ設定を追加
@@ -18,70 +19,47 @@
 //=============================================================================
 
 /*:
- * @plugindesc PanoramaTitlePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc 遠景タイトルプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ParallaxTitle.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @param ParallaxSettingMapId
+ * @text 遠景設定マップID
  * @desc 指定したIDのマップの「マップ設定」の「遠景」設定をタイトル画面に適用します。
  * @default 0
  * @type number
  *
  * @param ViewForeground
+ * @text 近景表示
  * @desc もともとのタイトル画面より上に表示します。霧のような演出に使えます。
  * @default false
  * @type boolean
  *
  * @param InheritScroll
+ * @text スクロール引き継ぎ
  * @desc ニューゲーム時に遠景のスクロール状態を引き継ぎます。
  * @default false
  * @type boolean
  *
  * @param NoFadeout
- * @desc ニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
+ * @text フェードアウト無効
+ * @desc ニューゲーム選択時にオーディオや画面がフェードアウトせず、シームレスにマップ画面に移行します。
  * @default false
  * @type boolean
  *
- * @help タイトル画面に追加で遠景を指定できます。
+ * @help ParallaxTitle.js
+ *
+ * タイトル画面に追加で遠景を指定できます。
  * 遠景はマップ画面と同様に縦横にループし、自動スクロールできます。
+ * 遠景はタイトル画像の背後に表示されるので、タイトル画像を指定していると
+ * 隠れる場合があります。
  * また、近景として表示する機能もあります。
- * 指定する場合は必要に応じて、通常のタイトル画像を指定しないか
- * あるいは透過色を付けてください。
  *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
- * @plugindesc 遠景タイトルプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param 遠景設定マップID
- * @desc 指定したIDのマップの「マップ設定」の「遠景」設定をタイトル画面に適用します。
- * @default 0
- * @type number
- *
- * @param 近景表示
- * @desc もともとのタイトル画面より上に表示します。霧のような演出に使えます。
- * @default false
- * @type boolean
- *
- * @param スクロール引き継ぎ
- * @desc ニューゲーム時に遠景のスクロール状態を引き継ぎます。
- * @default false
- * @type boolean
- *
- * @param フェードアウト無効
- * @desc ニューゲーム選択時に、オーディオや画面がフェードアウトしなくなります。（ON/OFF）
- * @default false
- * @type boolean
- *
- * @help タイトル画面に追加で遠景を指定できます。
- * 遠景はマップ画面と同様に縦横にループし、自動スクロールできます。
- * また、近景として表示する機能もあります。
- * 指定する場合は必要に応じて、通常のタイトル画像を指定しないか
- * あるいは透過色を付けてください。
- *
- * このプラグインにはプラグインコマンドはありません。
+ * 画面やオーディオをフェードアウトせずシームレスにマップに移行する機能も
+ * ありますが、シーン遷移にともなう一瞬の硬直は避けられないのでご注意ください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -89,59 +67,31 @@
  *  このプラグインはもうあなたのものです。
  */
 
-var $dataTitleMap = null;
+let $dataTitleMap = null;
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName = 'ParallaxTitle';
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramParallaxSettingMapId = getParamNumber(['ParallaxSettingMapId', '遠景設定マップID'], 0);
-    var paramViewForeground       = getParamBoolean(['ViewForeground', '近景表示']);
-    var paramInheritScroll        = getParamBoolean(['InheritScroll', 'スクロール引き継ぎ']);
-    var paramNoFadeout            = getParamBoolean(['NoFadeout', 'フェードアウト無効']);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // ローカル変数
     //=============================================================================
-    var localParallaxX = 0;
-    var localParallaxY = 0;
+    let localParallaxX = 0;
+    let localParallaxY = 0;
 
     //=============================================================================
     // Game_Map
     //  タイトル遠景のスクロール状態を引き継ぎます。
     //=============================================================================
-    var _Game_Map_setDisplayPos      = Game_Map.prototype.setDisplayPos;
+    const _Game_Map_setDisplayPos      = Game_Map.prototype.setDisplayPos;
     Game_Map.prototype.setDisplayPos = function(x, y) {
         _Game_Map_setDisplayPos.apply(this, arguments);
         this.inheritParallaxOrigin();
     };
 
     Game_Map.prototype.inheritParallaxOrigin = function() {
-        if (!paramInheritScroll) return;
+        if (!param.InheritScroll) return;
         if (localParallaxX) {
             this._parallaxX += localParallaxX;
             localParallaxX  = 0;
@@ -156,16 +106,16 @@ var $dataTitleMap = null;
     // Scene_Boot
     //  遠景設定マップをロードしてグローバル変数に保持します。
     //=============================================================================
-    var _Scene_Boot_create      = Scene_Boot.prototype.create;
+    const _Scene_Boot_create      = Scene_Boot.prototype.create;
     Scene_Boot.prototype.create = function() {
         _Scene_Boot_create.apply(this, arguments);
         this._parallaxMapGenerator = this.parallaxMapLoadGenerator();
         $dataMap = {};
     };
 
-    var _Scene_Boot_isReady      = Scene_Boot.prototype.isReady;
+    const _Scene_Boot_isReady      = Scene_Boot.prototype.isReady;
     Scene_Boot.prototype.isReady = function() {
-        var isReady = _Scene_Boot_isReady.apply(this, arguments);
+        const isReady = _Scene_Boot_isReady.apply(this, arguments);
         return this._parallaxMapGenerator.next().done && isReady;
     };
 
@@ -173,7 +123,7 @@ var $dataTitleMap = null;
         while (!DataManager.isMapLoaded()) {
             yield false;
         }
-        DataManager.loadMapData(paramParallaxSettingMapId);
+        DataManager.loadMapData(param.ParallaxSettingMapId);
         while (!DataManager.isMapLoaded()) {
             yield false;
         }
@@ -186,17 +136,17 @@ var $dataTitleMap = null;
     // Scene_Title
     //  タイトル画面に遠景表示を追加します。
     //=============================================================================
-    var _Scene_Title_createBackground      = Scene_Title.prototype.createBackground;
+    const _Scene_Title_createBackground      = Scene_Title.prototype.createBackground;
     Scene_Title.prototype.createBackground = function() {
-        if (!paramViewForeground) {
+        if (!param.ViewForeground) {
             this.createParallax();
         }
         _Scene_Title_createBackground.apply(this, arguments);
     };
 
-    var _Scene_Title_createForeground      = Scene_Title.prototype.createForeground;
+    const _Scene_Title_createForeground      = Scene_Title.prototype.createForeground;
     Scene_Title.prototype.createForeground = function() {
-        if (paramViewForeground) {
+        if (param.ViewForeground) {
             this.createParallax();
         }
         _Scene_Title_createForeground.apply(this, arguments);
@@ -211,7 +161,7 @@ var $dataTitleMap = null;
     };
 
     Scene_Title.prototype.setupParallax = function() {
-        var data            = $dataTitleMap;
+        const data            = $dataTitleMap;
         this._parallaxName  = data.parallaxName || '';
         this._parallaxZero  = ImageManager.isZeroParallax(this._parallaxName);
         this._parallaxLoopX = data.parallaxLoopX;
@@ -222,7 +172,7 @@ var $dataTitleMap = null;
         this._parallaxY     = 0;
     };
 
-    var _Scene_Title_update      = Scene_Title.prototype.update;
+    const _Scene_Title_update      = Scene_Title.prototype.update;
     Scene_Title.prototype.update = function() {
         _Scene_Title_update.apply(this, arguments);
         this.updateParallax();
@@ -269,23 +219,31 @@ var $dataTitleMap = null;
         }
     };
 
-    var _Scene_Title_commandNewGame      = Scene_Title.prototype.commandNewGame;
+    const _Scene_Map_start = Scene_Map.prototype.start;
+    Scene_Map.prototype.start = function() {
+        if (SceneManager.isPreviousScene(Scene_Title) && param.NoFadeout) {
+            this._transfer = false;
+        }
+        _Scene_Map_start.apply(this, arguments);
+    };
+
+    const _Scene_Title_commandNewGame      = Scene_Title.prototype.commandNewGame;
     Scene_Title.prototype.commandNewGame = function() {
-        if (paramNoFadeout) {
+        if (param.NoFadeout) {
             this._noFadeout = true;
         }
         _Scene_Title_commandNewGame.apply(this, arguments);
         this.keepParallaxOrigin();
     };
 
-    var _Scene_Title_commandNewGameSecond      = Scene_Title.prototype.commandNewGameSecond;
+    const _Scene_Title_commandNewGameSecond      = Scene_Title.prototype.commandNewGameSecond;
     Scene_Title.prototype.commandNewGameSecond = function() {
         if (_Scene_Title_commandNewGameSecond) _Scene_Title_commandNewGameSecond.apply(this, arguments);
         this.keepParallaxOrigin();
     };
 
     Scene_Title.prototype.keepParallaxOrigin = function() {
-        if (paramInheritScroll) {
+        if (param.InheritScroll) {
             localParallaxX = this._parallaxX;
             localParallaxY = this._parallaxY;
         }
