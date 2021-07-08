@@ -8,6 +8,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2021/07/08 競合の起きにくい記述に変更
 // 1.1.2 2020/06/24 指定位置にアニメーション表示のコマンドでウェイトが効かない問題を修正
 // 1.1.1 2017/12/03 コマンド「Load_Picture」で実行するとエラーになる問題を修正
 // 1.1.0 2017/10/31 ピクチャ関連の命令を戦闘中に使用すると失敗する問題を修正
@@ -1704,15 +1705,9 @@
         }
     };
 
-    var _Spriteset_Map_createUpperLayer      = Spriteset_Map.prototype.createUpperLayer;
-    Spriteset_Map.prototype.createUpperLayer = function() {
-        _Spriteset_Map_createUpperLayer.apply(this, arguments);
-        this.createAnimationContainer();
-    };
-
-    var _Spriteset_Battle_createUpperLayer      = Spriteset_Battle.prototype.createUpperLayer;
-    Spriteset_Battle.prototype.createUpperLayer = function() {
-        _Spriteset_Battle_createUpperLayer.apply(this, arguments);
+    var _Spriteset_Base_createUpperLayer = Spriteset_Base.prototype.createUpperLayer;
+    Spriteset_Base.prototype.createUpperLayer = function() {
+        _Spriteset_Base_createUpperLayer.apply(this, arguments);
         this.createAnimationContainer();
     };
 
