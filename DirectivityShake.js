@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2021/07/10 SINカーブで始点が0でなくなる問題を修正
 // 1.1.0 2021/01/10 MZで動作するよう修正
 // 1.0.0 2016/11/03 初版
 // ----------------------------------------------------------------------------
@@ -64,10 +65,7 @@
     const script = document.currentScript;
 
     PluginManagerEx.registerCommand(script, 'SHAKE_SETTING', args => {
-        $gameScreen.setShakeRotation(args.rotation);
-        if (args.sinWave) {
-            $gameScreen.setShakeSinWave();
-        }
+        $gameScreen.setShakeRotation(args.rotation, args.sinWave);
     });
 
     //=============================================================================
@@ -78,12 +76,9 @@
         return this._shakeRotation;
     };
 
-    Game_Screen.prototype.setShakeRotation = function(value) {
+    Game_Screen.prototype.setShakeRotation = function(value, sin) {
         this._shakeRotation = value * Math.PI / 180;
-    };
-
-    Game_Screen.prototype.setShakeSinWave = function() {
-        this._shakeSinWave = true;
+        this._shakeSinWave = sin;
     };
 
     const _Game_Screen_clearShake = Game_Screen.prototype.clearShake;
@@ -110,9 +105,23 @@
         }
     };
 
+    const _Game_Screen_startShake = Game_Screen.prototype.startShake;
+    Game_Screen.prototype.startShake = function(power, speed, duration) {
+        _Game_Screen_startShake.apply(this, arguments);
+        this._shakeDurationTarget = duration;
+    };
+
     Game_Screen.prototype.updateSinShake = function() {
-        this._shake = Math.sin(3 * this._shakeDuration * this._shakeSpeed * Math.PI / 180) * this._shakePower * 3;
+        const pos = this._shakeDurationTarget - this._shakeDuration;
+        this._shake = Math.sin(3 * pos * this._shakeSpeed * Math.PI / 180) * this._shakePower * 3;
         this._shakeDuration--;
+        if (this._shakeDuration === 0) {
+            this._lastShake = this._shake;
+        }
+        if (this._lastShake * this._shake < 0) {
+            this._shake = 0;
+            this._lastShake = 0;
+        }
     };
 
     Game_Screen.prototype.isNeedShakeUpdate = function() {
