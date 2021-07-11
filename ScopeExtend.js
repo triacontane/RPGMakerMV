@@ -25,17 +25,17 @@
 /*:
  * @plugindesc 効果範囲拡張プラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ScopeExtend.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
- * @help データベースのスキルの効果範囲を拡張します。
+ * @help ScopeExtend.js
+ *
+ * スキルやアイテムの効果範囲を拡張します。
  * スキルのメモ欄に以下の通り入力してください。
  *
  * <SE敵味方> <SEEnemiesAndAllies>
- * 効果範囲が敵味方に拡大されます。詳細は以下の通りです。
- *
  * もともとの効果範囲に合わせて以下の通り拡大されます。
  * ・敵単体：生存している味方単体がランダムで一人追加
  * ・敵全体：生存している味方全体が追加
@@ -67,7 +67,6 @@
  * <SEランダム回数:5> <SERandomNum:5>
  * 「敵N体ランダム」を効果範囲にしたスキルに対して、
  * もともとの設定上限(4回)を超えて、5回以上実行したい場合に指定します。
- * 回数の指定には制御文字\v[n]およびJavaScript計算式が利用できます。
  *
  * さらに「味方全体」を効果範囲にしたスキルに対して設定すると
  * 「味方N体ランダム」を効果範囲にできます。
