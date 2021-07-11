@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2021/07/11 タイトルコールに発動条件を設定する機能を追加
  1.2.1 2021/06/12 1.2.0の機能でいくつかのパターンでタイトルBGMが再生されない問題を修正
  1.2.0 2021/06/11 タイトルBGMの演奏を遅らせる機能を追加
  1.1.0 2021/05/03 コールSEを複数指定してランダム再生できる機能を追加
@@ -71,6 +72,13 @@
  * @default []
  * @type file[]
  * @dir audio/se
+ *
+ * @param condition
+ * @text 発動条件
+ * @desc タイトルコールの発動条件です。スクリプトを記述するので上級者向けです。
+ * @default
+ * @type combo
+ * @option ConfigManager.Boolean1; // CustomizeConfigItem.jsのスイッチ項目
  *
  * @help TitleCall.js
  *
@@ -155,6 +163,9 @@
 
     Scene_Title.prototype.playTitleCall = function() {
         if (this.isReturnToTitle()) {
+            return;
+        }
+        if (param.condition && !eval(param.condition)) {
             return;
         }
         var list = param.randomList;
