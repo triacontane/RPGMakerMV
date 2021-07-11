@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2021/07/11 パラメータ『デフォルト一時スイッチ』が正常に機能していなかった問題を修正
 // 2.0.0 2020/12/25 解除タイミングをプラグインコマンドで決められる機能を追加
 //                  メモ欄の設定なしで必ず解除されるセルフスイッチを指定できる機能を追加
 // 1.0.1 2018/03/16 セルフスイッチが切り替わった際、イベントページが切り替わらない問題を修正
@@ -204,7 +205,7 @@
     Game_Event.prototype.findTemporarySelfSwitch = function() {
         var metaValue = getMetaValues(this.event(), ['Switch', 'スイッチ']);
         if (!metaValue) {
-            return null;
+            return param.defaultTemporary || null;
         }
         var list = metaValue === true ? ['A', 'B', 'C', 'D'] : getArgArrayString(metaValue);
         return param.defaultTemporary ? list.concat(param.defaultTemporary) : list;
