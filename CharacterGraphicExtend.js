@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.0 2021/07/12 敵キャラやピクチャを表示する際、色相を指定できる機能を追加
 // 1.12.0 2021/05/18 プライオリティ設定に「-1」(下層タイルの背後で遠景の手前)を設定できるようにしました
 // 1.11.2 2021/05/05 アイコンセットの行を変更したときに正しくトリミングできない問題を修正
 // 1.11.1 2021/05/01 ヘルプの記述を修正
@@ -74,11 +75,11 @@
  * 他のタグも同様です。
  * 例：<CGピクチャ:1,aaa><CGピクチャ:2,bbb>
  *
- * <CG敵キャラ:（ページ数）,（ファイル名）>
+ * <CG敵キャラ:（ページ数）,（ファイル名）,（色相）>
  * 指定したページが有効になった場合のグラフィックを敵キャラ画像から取得します。
  * 拡張子は不要です。歩行アニメ待機アニメは無効化されます。
  *
- * 例：<CG敵キャラ:1,Bat> or <CGEnemy:1,Bat>
+ * 例：<CG敵キャラ:1,Bat,90> or <CGEnemy:1,Bat,90>
  *
  * <CGアイコン:（ページ数）,（インデックス）>
  * 指定したページが有効になった場合のグラフィックをアイコン画像から取得します。
@@ -86,13 +87,13 @@
  *
  * 例：<CGアイコン:1,128> or <CGIcon:1,128>
  *
- * <CGフェイス:（ページ数）,（ファイル名）（インデックス）>
+ * <CGフェイス:（ページ数）,（ファイル名）,（インデックス）>
  * 指定したページが有効になった場合のグラフィックをフェイス画像から取得します。
  * 拡張子は不要です。歩行アニメ待機アニメは無効化されます。
  *
  * 例：<CGフェイス:1,Actor1,4> or <CGFace:1,Actor1,4>
  *
- * <CGアクター:（ページ数）,（ファイル名）（インデックス）>
+ * <CGアクター:（ページ数）,（ファイル名）,（インデックス）>
  * 指定したページが有効になった場合のグラフィックをバトラー画像から取得します。
  * 拡張子は不要です。歩行アニメ待機アニメは無効化されます。
  *
@@ -351,11 +352,16 @@
         this._absoluteX       = null;
         this._absoluteY       = null;
         this._customTilesetId = 0;
+        this._graphicHue      = 0;
         this.setBlendMode(0);
     };
 
     Game_CharacterBase.prototype.customResource = function() {
         return this._customResource;
+    };
+
+    Game_CharacterBase.prototype.customResourceHue = function() {
+        return this._graphicHue;
     };
 
     Game_CharacterBase.prototype.customTilesetId = function() {
@@ -606,11 +612,13 @@
 
     var _Game_Event_setImage      = Game_Event.prototype.setImage;
     Game_Event.prototype.setImage = function(characterName, characterIndex) {
+        this._graphicHue = 0;
         var cgParams = this.getMetaCg(['ピクチャ', 'Picture']);
         if (cgParams) {
             this._customResource = 'Picture';
             this._graphicColumns = 1;
             this._graphicRows    = 1;
+            this._graphicHue     = getArgNumber(cgParams[2]);
             arguments[0]         = cgParams[1];
             arguments[1]         = 0;
         }
@@ -619,6 +627,7 @@
             this._customResource = $gameSystem.isSideView() ? 'SvEnemy' : 'Enemy';
             this._graphicColumns = 1;
             this._graphicRows    = 1;
+            this._graphicHue     = getArgNumber(cgParams[2]);
             arguments[0]         = cgParams[1];
             arguments[1]         = 0;
         }
@@ -636,6 +645,7 @@
             this._customResource = 'Face';
             this._graphicColumns = 4;
             this._graphicRows    = 2;
+            this._graphicHue     = getArgNumber(cgParams[3]);
             arguments[0]         = cgParams[1];
             arguments[1]         = getArgNumber(cgParams[2], 0, this._graphicColumns * this._graphicRows - 1);
         }
@@ -644,6 +654,7 @@
             this._customResource = 'Parallax';
             this._graphicColumns = 1;
             this._graphicRows    = 1;
+            this._graphicHue     = getArgNumber(cgParams[2]);
             arguments[0]         = cgParams[1];
             arguments[1]         = 0;
         }
@@ -652,6 +663,7 @@
             this._customResource = 'SvActor';
             this._graphicColumns = 9;
             this._graphicRows    = 6;
+            this._graphicHue     = getArgNumber(cgParams[3]);
             arguments[0]         = cgParams[1];
             arguments[1]         = getArgNumber(cgParams[2], 0, this._graphicColumns * this._graphicRows - 1);
         }
@@ -796,7 +808,8 @@
     var _Sprite_Character_setCharacterBitmap      = Sprite_Character.prototype.setCharacterBitmap;
     Sprite_Character.prototype.setCharacterBitmap = function() {
         if (this._customResource) {
-            this.bitmap = ImageManager['load' + this._customResource](this._characterName);
+            const hue = this._character.customResourceHue() || 0;
+            this.bitmap = ImageManager['load' + this._customResource](this._characterName, hue);
         } else {
             _Sprite_Character_setCharacterBitmap.apply(this, arguments);
         }
