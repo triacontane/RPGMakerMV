@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2021/07/15 アナログ時計の短針を24時間で1周するよう変更する機能を追加
 // 2.1.0 2020/11/21 自然時間加算間隔を変更するプラグインコマンドを追加
 // 2.0.2 2020/11/12 イベントコマンド『天候の設定』を実行するとエラーになる問題を修正
 // 2.0.1 2020/08/26 ベースプラグインの説明を追加
@@ -255,6 +256,12 @@
  * @require 1
  * @dir img/pictures/
  * @type file
+ *
+ * @param 24hourClock
+ * @text 24時間時計
+ * @desc 有効にすると短針が24時間で1周する時計になります。
+ * @default false
+ * @type boolean
  *
  * @param 時計X座標
  * @type number
@@ -871,6 +878,7 @@ function Window_Chronus() {
     var paramCalendarFrameHidden = getParamBoolean('カレンダー枠の非表示');
     var paramCalendarLineSpacing = getParamNumber('日時フォーマット行間', 0);
     var paramCalendarHidden      = getParamBoolean('カレンダーの非表示');
+    var param24hourClock         = getParamBoolean('24hourClock');
 
     const script = document.currentScript;
     PluginManagerEx.registerCommand(script, 'ADD_TIME', args => {
@@ -1923,7 +1931,8 @@ function Window_Chronus() {
     };
 
     Game_Chronus.prototype.getRotationHourHand = function() {
-        return (this.getAnalogueHour() % 12) * (360 / 12) * Math.PI / 180;
+        var numberOfHour = param24hourClock ? 24 : 12;
+        return (this.getAnalogueHour() % numberOfHour) * (360 / numberOfHour) * Math.PI / 180;
     };
 
     Game_Chronus.prototype.getRotationMinuteHand = function() {
