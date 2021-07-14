@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.22.3 2021/07/15 ソート順のタグで制御文字が使えなかった問題を修正
 // 2.22.2 2021/04/19 競合を起こす可能性のあるメソッド名を変更
 // 2.22.1 2021/03/14 敵キャラの自動登録が部分一致になっていた問題を修正
 // 2.22.0 2021/03/14 確認ウィンドウの位置を直接指定できる機能を追加
@@ -2133,7 +2134,7 @@ function Window_GlossaryComplete() {
         this._data = this.getItemList().filter(function(item) {
             var isInclude = this.includes(item);
             if (isInclude) {
-                item.sortOrder = getMetaValues(item, ['Order', '表示順']) || item.id;
+                item.sortOrder = getArgNumber(getMetaValues(item, ['Order', '表示順'])) || item.id;
             }
             return isInclude;
         }, this).sort(this.compareOrder);
