@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2021/07/15 アクティブタイムバトルで、行動入力中に自身の反撃が発動した場合、行動入力後にエラーになる場合がある問題を修正
 // 2.1.1 2021/03/08 スクリプトで使用可能な変数の説明とスクリプトの凡例を追加
 // 2.1.0 2021/03/07 反撃設定が複数あった場合の判定処理が一部間違っていた問題を修正
 //                  スキルに反撃回避率を設定できる機能を追加
@@ -435,6 +436,9 @@
         const counter = this._counterQueue.shift();
         if (counter) {
             this.invokeCounterAction(counter.subject, counter.target, counter.action);
+        } else if (this._counter) {
+            this._counter = false;
+            this._subject = null;
         }
     };
 
@@ -443,6 +447,7 @@
             return;
         }
         this._phase = "action";
+        this._counter = true;
         this._subject = subject;
         this._action = counterAction;
         this._targets = counterAction.makeTargets();
