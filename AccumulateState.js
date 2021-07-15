@@ -1,11 +1,12 @@
 //=============================================================================
 // AccumulateState.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/07/15 蓄積ゲージ表示の有無をスイッチで切り替えられる機能を追加
 // 2.0.0 2017/05/29 蓄積率計算式を独自に指定できるよう仕様変更。運補正と必中補正の有無を設定できる機能を追加
 // 1.1.1 2017/05/28 減算の結果が負の値になったときに蓄積率が減算されていた問題を修正
 // 1.1.0 2017/05/28 耐性計算式を除算と減算の二つを用意しました。
@@ -19,26 +20,38 @@
 
 /*:
  * @plugindesc 蓄積型ステートプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
  *
- * @param ゲージ画像ファイル
+ * @param GaugeImage
+ * @text ゲージ画像ファイル
  * @desc ゲージ表示に使用する画像ファイル(img/pictures)です。空のゲージと満タンのゲージを縦に並べて一つの画像にしてください。
  * @default
  * @require 1
  * @dir img/pictures/
  * @type file
  *
- * @param 蓄積率計算式
+ * @param GaugeSwitchId
+ * @text ゲージ表示スイッチ
+ * @desc 有効にすると指定したスイッチがONのときだけゲージ表示されます。
+ * @default 0
+ * @type switch
+ *
+ * @param AccumulateFormula
+ * @text 蓄積率計算式
  * @desc 蓄積率を算出する計算式を効果の「ステート付加」および対象の「ステート有効度」から独自作成します。
  * @default
  *
- * @param 運補正
+ * @param LuckAdjust
+ * @text 運補正
  * @desc ONにすると蓄積率に対して運による補正を掛けます。（デフォルト仕様準拠）
- * @default ON
+ * @default true
+ * @type boolean
  *
- * @param 必中時有効度無視
+ * @param CertainHit
+ * @text 必中時有効度無視
  * @desc ONにすると必中スキルに関しては「ステート付加」の値がそのまま蓄積率に反映されます。
- * @default ON
+ * @default true
+ * @type boolean
  *
  * @help 特定のステートを蓄積型に変更します。
  * 蓄積型のステートにしたい場合、メモ欄に以下の通り設定してください。
@@ -113,7 +126,7 @@
 
     var getParamBoolean = function (paramNames) {
         var value = getParamOther(paramNames);
-        return value.toUpperCase() === 'ON';
+        return value.toUpperCase() === 'TRUE';
     };
 
     var getParamString = function (paramNames) {
@@ -172,6 +185,7 @@
     var paramAccumulateFormula = getParamString(['AccumulateFormula', '蓄積率計算式']);
     var paramLuckAdjust = getParamBoolean(['LuckAdjust', '運補正']);
     var paramCertainHit = getParamBoolean(['CertainHit', '必中時有効度無視']);
+    var paramGaugeSwitchId = parseInt(getParamString(['GaugeSwitchId']));
 
     //=============================================================================
     // Game_Interpreter
@@ -180,23 +194,7 @@
     var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.apply(this, arguments);
-        try {
-            this.pluginCommandAccumulateState(command, args);
-        } catch (e) {
-            if ($gameTemp.isPlaytest() && Utils.isNwjs()) {
-                var window = require('nw.gui').Window.get();
-                if (!window.isDevToolsOpen()) {
-                    var devTool = window.showDevTools();
-                    devTool.moveTo(0, 0);
-                    devTool.resizeTo(window.screenX + window.outerWidth, window.screenY + window.outerHeight);
-                    window.focus();
-                }
-            }
-            console.log('プラグインコマンドの実行中にエラーが発生しました。');
-            console.log('- コマンド名 　: ' + command);
-            console.log('- コマンド引数 : ' + args);
-            console.log('- エラー原因   : ' + e.stack || e.toString());
-        }
+        this.pluginCommandAccumulateState(command, args);
     };
 
     Game_Interpreter.prototype.pluginCommandAccumulateState = function (command, args) {
@@ -419,6 +417,9 @@
             this.refresh();
         }
         this.updateRate();
+        if (paramGaugeSwitchId) {
+            this.visible = $gameSwitches.value(paramGaugeSwitchId);
+        }
     };
 
     Sprite_AccumulateState.prototype.updateRate = function () {
