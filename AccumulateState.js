@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/02/16 蓄積型ステートが有効になるごとに耐性が上昇する機能を追加
 // 2.1.0 2021/07/15 蓄積ゲージ表示の有無をスイッチで切り替えられる機能を追加
 // 2.0.0 2017/05/29 蓄積率計算式を独自に指定できるよう仕様変更。運補正と必中補正の有無を設定できる機能を追加
 // 1.1.1 2017/05/28 減算の結果が負の値になったときに蓄積率が減算されていた問題を修正
@@ -52,6 +53,12 @@
  * @desc ONにすると必中スキルに関しては「ステート付加」の値がそのまま蓄積率に反映されます。
  * @default true
  * @type boolean
+ *
+ * @param ImmunityRate
+ * @text 免疫率
+ * @desc ステートが有効になるごとに加算される耐性値です。100になると一切、上昇しなくなります。
+ * @default 0
+ * @type number
  *
  * @help 特定のステートを蓄積型に変更します。
  * 蓄積型のステートにしたい場合、メモ欄に以下の通り設定してください。
@@ -186,6 +193,7 @@
     var paramLuckAdjust = getParamBoolean(['LuckAdjust', '運補正']);
     var paramCertainHit = getParamBoolean(['CertainHit', '必中時有効度無視']);
     var paramGaugeSwitchId = parseInt(getParamString(['GaugeSwitchId']));
+    var paramImmunityRate = parseInt(getParamString(['ImmunityRate']));
 
     //=============================================================================
     // Game_Interpreter
@@ -216,6 +224,9 @@
     Game_BattlerBase.prototype.clearStateAccumulationsIfNeed = function () {
         if (!this._stateAccumulations) {
             this._stateAccumulations = {};
+        }
+        if (!this._stateImmunity) {
+            this._stateImmunity = {};
         }
     };
 
@@ -254,10 +265,15 @@
             this._stateAccumulations[stateId] = (this._stateAccumulations[stateId] || 0) + value;
             if (!this.isStateAffected(stateId) && this._stateAccumulations[stateId] >= 1.0) {
                 this.addState(stateId);
+                this._stateImmunity[stateId] = (this._stateImmunity[stateId] || 0) + 1;
                 return true;
             }
         }
         return false;
+    };
+
+    Game_BattlerBase.prototype.getStateImmunity = function (stateId) {
+        return (this._stateImmunity[stateId] * paramImmunityRate / 100) || 0;
     };
 
     Game_BattlerBase.prototype.getStateAccumulation = function (stateId) {
@@ -338,6 +354,7 @@
         if (paramLuckAdjust) {
             effectValue *= this.lukEffectRate(target);
         }
+        effectValue *= (1.0 - target.getStateImmunity(stateId));
         return effectValue.clamp(0.0, 1.0);
     };
 
