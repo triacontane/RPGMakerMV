@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2021/07/16 蓄積型ステートが有効になるごとに耐性が上昇する機能を追加
 // 2.2.0 2021/07/15 MZで動作するよう全面的に修正
 // 2.1.0 2021/07/15 蓄積ゲージ表示の有無をスイッチで切り替えられる機能を追加
 // 2.0.0 2017/05/29 蓄積率計算式を独自に指定できるよう仕様変更。運補正と必中補正の有無を設定できる機能を追加
@@ -56,6 +57,12 @@
  * @desc ONにすると必中スキルに関しては「ステート付加」の値がそのまま蓄積率に反映されます。
  * @default true
  * @type boolean
+ *
+ * @param ImmunityRate
+ * @text 免疫率
+ * @desc ステートが有効になるごとに加算される耐性値です。100になると一切、上昇しなくなります。
+ * @default 0
+ * @type number
  *
  * @command ACCUMULATE
  * @text 蓄積
@@ -146,6 +153,9 @@
         if (!this._stateAccumulations) {
             this._stateAccumulations = {};
         }
+        if (!this._stateImmunity) {
+            this._stateImmunity = {};
+        }
     };
 
     const _Game_BattlerBase_clearStates = Game_BattlerBase.prototype.clearStates;
@@ -183,10 +193,15 @@
             this._stateAccumulations[stateId] = (this._stateAccumulations[stateId] || 0) + value;
             if (!this.isStateAffected(stateId) && this._stateAccumulations[stateId] >= 1.0) {
                 this.addState(stateId);
+                this._stateImmunity[stateId] = (this._stateImmunity[stateId] || 0) + 1;
                 return true;
             }
         }
         return false;
+    };
+
+    Game_BattlerBase.prototype.getStateImmunity = function (stateId) {
+        return (this._stateImmunity[stateId] * param.ImmunityRate / 100) || 0;
     };
 
     Game_BattlerBase.prototype.getStateAccumulation = function (stateId) {
@@ -271,6 +286,7 @@
         if (param.LuckAdjust) {
             effectValue *= this.lukEffectRate(target);
         }
+        effectValue *= (1.0 - target.getStateImmunity(stateId));
         return effectValue.clamp(0.0, 1.0);
     };
 
