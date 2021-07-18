@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/07/18 MZで動作するよう修正
  1.0.0 2020/05/10 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -14,34 +15,12 @@
 =============================================================================*/
 
 /*:
- * @plugindesc JumpSpeedCustomizePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help JumpSpeedCustomize.js
- *
- * You can change the speed and altitude of the jump.
- * Please specify the following in the memo field of the event.
- *
- * Set the jump speed to 150% of its original value.
- * <JumpSpeed:150>
- *
- * Set the jump altitude to 50% of its original value.
- * <JumpHeight:50>
- *
- * You can change this with the following script
- * from the move route settings.
- *
- * Set the jump speed to 25% of its original
- * this.setJumpSpeed(25);
- *
- * Set the jump height to 200% of the original
- * this.setJumpHeight(200);
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc ジャンプ速度調整プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/JumpSpeedCustomize.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @help JumpSpeedCustomize.js
  *
@@ -65,48 +44,13 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-
-    /**
-     * Get database meta information.
-     * @param object Database item
-     * @param tagName Meta name
-     * @returns {String} meta value
-     */
-    var getMetaValue = function(object, tagName) {
-        return object.meta.hasOwnProperty(tagName) ? convertEscapeCharacters(object.meta[tagName]) : null;
-    };
-
-    /**
-     * Get database meta information.(for multi language)
-     * @param object Database item
-     * @param names Meta name array (for multi language)
-     * @returns {String} meta value
-     */
-    var getMetaValues = function(object, names) {
-        var metaValue;
-        names.some(function(name) {
-            metaValue = getMetaValue(object, name);
-            return metaValue !== null;
-        });
-        return metaValue;
-    };
-
-    /**
-     * Convert escape characters.(require any window object)
-     * @param text Target text
-     * @returns {String} Converted text
-     */
-    var convertEscapeCharacters = function(text) {
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
-    };
 
     /**
      * Game_CharacterBase
      */
-    var _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
+    const _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
     Game_CharacterBase.prototype.initMembers = function() {
         _Game_CharacterBase_initMembers.apply(this, arguments);
         this._jumpSpeed = 0;
@@ -129,10 +73,10 @@
         this._jumpHeight = value;
     };
 
-    var _Game_CharacterBase_jumpHeight = Game_CharacterBase.prototype.jumpHeight;
+    const _Game_CharacterBase_jumpHeight = Game_CharacterBase.prototype.jumpHeight;
     Game_CharacterBase.prototype.jumpHeight = function() {
-        var height;
-        var rate = this.getJumpSpeedRate();
+        let height;
+        const rate = this.getJumpSpeedRate();
         if (rate > 0) {
             height = (this._jumpPeak * this._jumpPeak -
                 Math.pow(Math.abs(this._jumpCount * rate - this._jumpPeak), 2)) / 2;
@@ -142,10 +86,10 @@
         return this._jumpHeight !== 0 ? Math.floor(height * this.getJumpHeightRate()) : height
     };
 
-    var _Game_CharacterBase_jump = Game_CharacterBase.prototype.jump;
+    const _Game_CharacterBase_jump = Game_CharacterBase.prototype.jump;
     Game_CharacterBase.prototype.jump = function(xPlus, yPlus) {
         _Game_CharacterBase_jump.apply(this, arguments);
-        var rate = this.getJumpSpeedRate();
+        const rate = this.getJumpSpeedRate();
         if (rate > 0) {
             this._jumpCount = Math.floor(this._jumpPeak * 2 / rate);
         }
@@ -154,20 +98,20 @@
     /**
      * Game_Event
      */
-    var _Game_Event_initialize = Game_Event.prototype.initialize;
+    const _Game_Event_initialize = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         this.initJumpCustomize();
     };
 
     Game_Event.prototype.initJumpCustomize = function() {
-        var jumpSpeed = getMetaValues(this.event(), ['JumpSpeed', 'ジャンプ速度']);
+        const jumpSpeed = PluginManagerEx.findMetaValue(this.event(), ['JumpSpeed', 'ジャンプ速度']);
         if (jumpSpeed > 0) {
-            this.setJumpSpeed(parseInt(jumpSpeed));
+            this.setJumpSpeed(jumpSpeed);
         }
-        var jumpHeight = getMetaValues(this.event(), ['JumpHeight', 'ジャンプ高度']);
+        const jumpHeight = PluginManagerEx.findMetaValue(this.event(), ['JumpHeight', 'ジャンプ高度']);
         if (jumpHeight) {
-            this.setJumpHeight(parseInt(jumpHeight));
+            this.setJumpHeight(jumpHeight);
         }
     };
 })();
