@@ -1,11 +1,12 @@
 //=============================================================================
 // TraceEvent.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/07/18 名前もしくはタグで対象イベントを探すとき、自分自身は対象外とするよう仕様変更
 // 1.1.0 2017/10/22 イベントの検索範囲と範囲外だった場合の動作を指定できる機能を追加
 // 1.0.0 2017/10/14 初版
 // ----------------------------------------------------------------------------
@@ -189,12 +190,12 @@
     };
 
     Game_Character.prototype.traceEventByName = function(name, awayFlg) {
-        var character = this.findHighestPriorityEvent($gameMap.filterEventsByName(name));
+        var character = this.findHighestPriorityEvent($gameMap.filterEventsByName(name, this));
         this.traceEvent(character, awayFlg);
     };
 
     Game_Character.prototype.traceEventByTag = function(tagName, awayFlg) {
-        var character = this.findHighestPriorityEvent($gameMap.filterEventsByTag(tagName));
+        var character = this.findHighestPriorityEvent($gameMap.filterEventsByTag(tagName, this));
         this.traceEvent(character, awayFlg);
     };
 
@@ -226,12 +227,12 @@
     };
 
     Game_Character.prototype.findEventByName = function(name) {
-        var character = this.findHighestPriorityEvent($gameMap.filterEventsByName(name));
+        var character = this.findHighestPriorityEvent($gameMap.filterEventsByName(name, this));
         this.findEvent(character);
     };
 
     Game_Character.prototype.findEventByTag = function(tagName) {
-        var character = this.findHighestPriorityEvent($gameMap.filterEventsByTag(tagName));
+        var character = this.findHighestPriorityEvent($gameMap.filterEventsByTag(tagName, this));
         this.findEvent(character);
     };
 
@@ -295,19 +296,19 @@
     // Game_Map
     //  イベントを取得します。
     //=============================================================================
-    Game_Map.prototype.filterEventsByName = function(name) {
+    Game_Map.prototype.filterEventsByName = function(name, selfEvent) {
         name = convertEscapeCharacters(name);
         return this.events().filter(function(event) {
             var eventData = event.event();
-            return eventData && eventData.name === name;
+            return eventData && eventData.name === name && event !== selfEvent;
         });
     };
 
-    Game_Map.prototype.filterEventsByTag = function(tagName) {
+    Game_Map.prototype.filterEventsByTag = function(tagName, selfEvent) {
         tagName = convertEscapeCharacters(tagName);
         return this.events().filter(function(event) {
             var eventData = event.event();
-            return eventData && !!eventData.meta[tagName];
+            return eventData && !!eventData.meta[tagName] && event !== selfEvent;
         });
     };
 })();
