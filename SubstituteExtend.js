@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2021/07/18 MZで動作するよう修正
 // 1.4.1 2020/06/10 1.4.0の修正でパラメータ「身代わり条件_必中以外」が消えていた問題を修正
 // 1.4.0 2020/05/19 行動制約「行動できない」状態でも身代わりが発動するように既存仕様を変更する設定を追加
 // 1.3.0 2020/04/14 混乱系のステート有効時は身代わりを発動しないように既存仕様を変更する設定を追加
@@ -20,40 +21,45 @@
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
-/*:ja
+/*:
  * @plugindesc 身代わり拡張プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SubstituteExtend.js
  * @base PluginCommonBase
  * @author トリアコンタン
  *
- * @param 身代わり条件_瀕死
+ * @param condDying
+ * @text 身代わり条件_瀕死
  * @desc デフォルトの身代わりされる条件である「瀕死」を有効にします。OFFにすると無効になります。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param 身代わり条件_必中以外
+ * @param condNonCertainHit
+ * @text 身代わり条件_必中以外
  * @desc デフォルトの身代わり条件である「必中以外」を有効にします。OFFにすると無効になります。(ON/OFF)
  * @default true
  * @type boolean
  *
- * @param 身代わり反撃
+ * @param substituteCounter
+ * @text 身代わり反撃
  * @desc 身代わりの判定仕様を変更し、身代わり後の反撃や魔法反射が有効になります。
  * @default false
  * @type boolean
  *
- * @param 混乱時の身代わり無効
+ * @param invalidConfused
+ * @text 混乱時の身代わり無効
  * @desc 混乱（行動制約が「〇〇を攻撃」のステート）状態の場合、身代わりの発動を無効化します。
  * @default false
  * @type boolean
  *
- * @param 行動不能時の身代わり有効
+ * @param validRestriction
+ * @text 行動不能時の身代わり有効
  * @desc 行動不能（行動制約が「行動できない」のステート）状態の場合でも、身代わりの発動を有効化します。
  * @default false
  * @type boolean
  *
  * @help 身代わりの仕様を変更します。
- * まずRPGツクールMV本体の身代わり仕様について説明します。
+ * まずRPGツクールMZ本体の身代わり仕様について説明します。
  * ・身代わりする側
  * 　　生存している
  * 　　行動制約『行動できない』のステートに掛かっていない
@@ -110,7 +116,8 @@
  * <SE_身代わり対象者:1>   # <SE_身代わり対象限定:1>の対象になります。
  * <SE_SubstituteTarget:1> # 同上
  *
- * 「身代わり対象限定」で指定したパラメータと一致する場合に身代わり対象になります。
+ * 「身代わり対象限定」で指定したパラメータと一致する場合に
+ * 身代わり対象になります。
  * 例えば、メモ欄に<SE_身代わり対象限定:2>と記入した場合、同じくメモ欄に
  * <SE_身代わり対象者:2>と記入されている特徴を持つアクターに対してのみ
  * 身代わりを実行します。
@@ -120,7 +127,8 @@
  * < → &lt;
  * > → &gt;
  *
- * 例：<SE_身代わり計算式:\v[2] &gt; 3> # 変数[2]が[3]より大きい場合、発動します。
+ * 例：
+ * <SE_身代わり計算式:\v[2] &gt; 3> # 変数[2]が[3]より大きい場合、発動します。
  *
  * 計算式中では「action」で対象スキルのActionオブジェクトを参照できます。
  * うまく利用すれば身代わりが発動するスキルを細かく限定できます。
@@ -159,17 +167,17 @@
     // Game_BattlerBase
     //  身代わりを実行するかどうかの判定を拡張します。
     //=============================================================================
-    var _Game_BattlerBase_isSubstitute      = Game_BattlerBase.prototype.isSubstitute;
+    const _Game_BattlerBase_isSubstitute      = Game_BattlerBase.prototype.isSubstitute;
     Game_BattlerBase.prototype.isSubstitute = function() {
         if (param.validRestriction) {
             this._suppressRestriction = true;
         }
-        var result = _Game_BattlerBase_isSubstitute.apply(this, arguments) && this.isSubstituteExtend();
+        const result = _Game_BattlerBase_isSubstitute.apply(this, arguments) && this.isSubstituteExtend();
         this._suppressRestriction = false;
         return result;
     };
 
-    var _Game_BattlerBase_restriction = Game_BattlerBase.prototype.restriction;
+    const _Game_BattlerBase_restriction = Game_BattlerBase.prototype.restriction;
     Game_BattlerBase.prototype.restriction = function() {
         return this._suppressRestriction ? 0 : _Game_BattlerBase_restriction.apply(this, arguments);
     };
@@ -187,7 +195,7 @@
     };
 
     Game_BattlerBase.prototype.isValidSubstituteHpRate = function() {
-        var subjectHpRate = this.getSubstituteMetaInfo(['SubjectHPRate', '実行者HP率'], true);
+        const subjectHpRate = this.getSubstituteMetaInfo(['SE_SubjectHPRate', 'SE_実行者HP率'], true);
         if (subjectHpRate) {
             return this.hpRate() >= subjectHpRate / 100;
         }
@@ -195,7 +203,7 @@
     };
 
     Game_BattlerBase.prototype.isValidSubstituteTargetHpRate = function() {
-        var targetHpRate = this.getSubstituteMetaInfo(['TargetHPRate', '対象者HP率'], true);
+        const targetHpRate = this.getSubstituteMetaInfo(['SE_TargetHPRate', 'SE_対象者HP率'], true);
         if (targetHpRate) {
             return BattleManager.checkSubstituteTargetHpRate(targetHpRate);
         }
@@ -203,7 +211,7 @@
     };
 
     Game_BattlerBase.prototype.isValidSubstituteRestriction = function() {
-        var restrictionId = this.getSubstituteMetaInfo(['TargetRestriction', '身代わり対象限定'], true);
+        const restrictionId = this.getSubstituteMetaInfo(['SE_TargetRestriction', 'SE_身代わり対象限定'], true);
         if (restrictionId) {
             return BattleManager.checkSubstituteRestriction(restrictionId);
         }
@@ -211,7 +219,7 @@
     };
 
     Game_BattlerBase.prototype.isValidSubstituteSwitch = function() {
-        var switchId = this.getSubstituteMetaInfo(['SubstituteSwitch', '身代わりスイッチ'], true);
+        const switchId = this.getSubstituteMetaInfo(['SE_SubstituteSwitch', 'SE_身代わりスイッチ'], true);
         if (switchId) {
             return $gameSwitches.value(switchId);
         }
@@ -219,31 +227,32 @@
     };
 
     Game_BattlerBase.prototype.isValidSubstituteFormula = function() {
-        var formula = this.getSubstituteMetaInfo(['SubstituteFormula', '身代わり計算式'], false);
+        const formula = this.getSubstituteMetaInfo(['SE_SubstituteFormula', 'SE_身代わり計算式'], false);
         if (formula) {
-            var action = BattleManager.getSubstituteAction();
-            return eval(convertEscapeTags(formula));
+            const action = BattleManager.getSubstituteAction();
+            return eval(formula);
         }
         return true;
     };
 
     Game_BattlerBase.prototype.isValidSubstituteSkill = function() {
-        return !getMetaValues(BattleManager.getSubstituteAction().item(), ['SubstituteInvalid', '身代わり無効']);
+        const item = BattleManager.getSubstituteAction().item();
+        return !PluginManagerEx.findMetaValue(item, ['SE_SubstituteInvalid', 'SE_身代わり無効']);
     };
 
     Game_BattlerBase.prototype.isEqualSubstituteRestrictionId = function(restrictionId) {
-        var restrictionTargetId = this.getSubstituteMetaInfo(['SubstituteTarget', '身代わり対象者'], true);
+        const restrictionTargetId = this.getSubstituteMetaInfo(['SE_SubstituteTarget', 'SE_身代わり対象者'], true);
         return restrictionTargetId === restrictionId;
     };
 
     Game_BattlerBase.prototype.getSubstituteSkillId = function() {
-        return this.getSubstituteMetaInfo(['SubstituteSkillId', '身代わりスキルID'], true);
+        return this.getSubstituteMetaInfo(['SE_SubstituteSkillId', 'SE_身代わりスキルID'], true);
     };
 
     Game_BattlerBase.prototype.getSubstituteMetaInfo = function(tagNames, isNumber) {
-        var metaValue;
+        let metaValue = null;
         this.traitObjects().some(function(traitObject) {
-            metaValue = getMetaValues(traitObject, tagNames);
+            metaValue = PluginManagerEx.findMetaValue(traitObject, tagNames);
             return !!metaValue;
         });
         return (metaValue && isNumber) ? parseInt(metaValue) : metaValue;
@@ -253,20 +262,20 @@
     // BattleManager
     //  身代わり対象者の情報を保持して必要に応じて評価します。
     //=============================================================================
-    var _BattleManager_invokeAction = BattleManager.invokeAction;
+    const _BattleManager_invokeAction = BattleManager.invokeAction;
     BattleManager.invokeAction = function(subject, target) {
         if (param.substituteCounter) {
-            var realTarget = this.applySubstitute(target);
+            const realTarget = this.applySubstitute(target);
             _BattleManager_invokeAction.call(this, subject, realTarget);
         } else {
             _BattleManager_invokeAction.apply(this, arguments);
         }
     };
 
-    var _BattleManager_applySubstitute = BattleManager.applySubstitute;
+    const _BattleManager_applySubstitute = BattleManager.applySubstitute;
     BattleManager.applySubstitute      = function(target) {
         this._substituteTarget = target;
-        var substitute = _BattleManager_applySubstitute.apply(this, arguments);
+        const substitute = _BattleManager_applySubstitute.apply(this, arguments);
         this._substituteTarget = null;
         if (substitute !== target) {
             this.applySubstituteEffect(substitute);
@@ -275,9 +284,9 @@
     };
 
     BattleManager.applySubstituteEffect = function(substitute) {
-        var skillId = substitute.getSubstituteSkillId();
+        const skillId = substitute.getSubstituteSkillId();
         if (!skillId) return;
-        var action = new Game_Action(substitute);
+        const action = new Game_Action(substitute);
         action.setSkill(skillId);
         action.apply(substitute);
     };
@@ -294,9 +303,9 @@
         return this._action;
     };
 
-    var _BattleManager_checkSubstitute = BattleManager.checkSubstitute;
+    const _BattleManager_checkSubstitute = BattleManager.checkSubstitute;
     BattleManager.checkSubstitute      = function(target) {
-        var resultSubstitute = _BattleManager_checkSubstitute.apply(this, arguments);
+        const resultSubstitute = _BattleManager_checkSubstitute.apply(this, arguments);
         if (!resultSubstitute) {
             return this.checkSubstituteDefault(target);
         }
