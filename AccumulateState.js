@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2021/07/23 敵キャラに対しても蓄積ゲージを表示できる機能を追加
 // 2.2.1 2021/07/16 蓄積型ステートが有効になるごとに耐性が上昇する機能を追加
 // 2.2.0 2021/07/15 MZで動作するよう全面的に修正
 // 2.1.0 2021/07/15 蓄積ゲージ表示の有無をスイッチで切り替えられる機能を追加
@@ -70,9 +71,16 @@
  *
  * @arg actorId
  * @text アクターID
- * @desc 対象のアクターIDです。
- * @default 1
+ * @desc 対象のアクターIDです。敵キャラを対象にする場合は0のままでOKです。
+ * @default 0
  * @type actor
+ *
+ * @arg enemyIndex
+ * @text 敵キャラインデックス
+ * @desc 対象の敵キャラインデックスです。アクターを対象にする場合は-1のままでOKです。
+ * @default -1
+ * @type number
+ * @min -1
  *
  * @arg stateId
  * @text ステートID
@@ -142,6 +150,10 @@
         const actor = $gameActors.actor(args.actorId);
         if (actor) {
             actor.accumulateState(args.stateId, args.rate / 100);
+        }
+        const enemy = $gameTroop.members()[args.enemyIndex];
+        if (enemy) {
+            enemy.accumulateState(args.stateId, args.rate / 100);
         }
     });
 
@@ -305,7 +317,11 @@
     Scene_Battle.prototype.createAccumulateState = function () {
         this._characterPictures = {};
         for (let i = 0, n = $gameParty.members().length; i < n; i++) {
-            const sprite = new Sprite_AccumulateState(i);
+            const sprite = new Sprite_AccumulateState(i, $gameParty);
+            this.addChild(sprite);
+        }
+        for (let i = 0, n = $gameTroop.members().length; i < n; i++) {
+            const sprite = new Sprite_AccumulateState(i, $gameTroop);
             this.addChild(sprite);
         }
     };
@@ -327,16 +343,17 @@
     Sprite_AccumulateState.prototype = Object.create(Sprite.prototype);
     Sprite_AccumulateState.prototype.constructor = Sprite_AccumulateState;
 
-    Sprite_AccumulateState.prototype.initialize = function (index) {
+    Sprite_AccumulateState.prototype.initialize = function (index, unit) {
         this._index = index;
-        this._actor = null;
+        this._battler = null;
+        this._unit = unit;
         this._rate = null;
         Sprite.prototype.initialize.call(this);
         this.create();
     };
 
-    Sprite_AccumulateState.prototype.getActor = function () {
-        return $gameParty.members()[this._index];
+    Sprite_AccumulateState.prototype.getBattler = function () {
+        return this._unit.members()[this._index];
     };
 
     Sprite_AccumulateState.prototype.create = function () {
@@ -359,10 +376,10 @@
     };
 
     Sprite_AccumulateState.prototype.update = function () {
-        const actor = this.getActor();
-        if (!actor) return;
-        if (this._actor !== actor) {
-            this._actor = actor;
+        const battler = this.getBattler();
+        if (!battler) return;
+        if (this._battler !== battler) {
+            this._battler = battler;
             this.refresh();
         }
         this.updateRate();
@@ -372,7 +389,7 @@
     };
 
     Sprite_AccumulateState.prototype.updateRate = function () {
-        const rate = Math.min(this._actor.getGaugeStateAccumulation(), 1.0);
+        const rate = Math.min(this._battler.getGaugeStateAccumulation(), 1.0);
         if (rate !== this._rate) {
             this._rate = rate;
             this.bitmap.addLoadListener(function () {
@@ -382,10 +399,10 @@
     };
 
     Sprite_AccumulateState.prototype.refresh = function () {
-        const stateId = this._actor.getGaugeStateId();
+        const stateId = this._battler.getGaugeStateId();
         if (stateId > 0) {
-            this.x = this._actor.getGaugeX();
-            this.y = this._actor.getGaugeY();
+            this.x = this._battler.getGaugeX();
+            this.y = this._battler.getGaugeY();
             this.visible = true;
         } else {
             this.visible = false;
