@@ -1,15 +1,16 @@
 //=============================================================================
 // ConditionalState.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2021/07/23 上回った場合の判定処理が正常に機能していなかった問題を修正
 // 1.0.1 2020/08/16 戦闘不能から復帰したときに正常にステートが付与されない問題を修正
 // 1.0.0 2017/04/22 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
@@ -173,7 +174,7 @@
     Game_BattlerBase.prototype.updateConditionalStateUpper = function(rate, names) {
         var stateCondition = this.getMetaInfoConditionalState(names);
         if (!stateCondition) return;
-        if (stateCondition[0] > rate * 100) {
+        if (stateCondition[0] < rate * 100) {
             this.addConditionalState(stateCondition[1]);
         } else {
             this.removeConditionalState(stateCondition[1]);
