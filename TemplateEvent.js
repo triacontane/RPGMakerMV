@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/07/23 セルフ変数のキーに文字列を指定できるよう修正
  1.0.7 2021/05/29 1.0.6の修正で正常に機能しなくなっていた問題を修正
  1.0.6 2021/05/22 RandomDungeon.jsと共存できるよう修正
  1.0.5 2021/03/15 「セルフ変数の一括設定」のコマンドが正しく設定できていなかった問題を修正
@@ -137,7 +138,6 @@
  * @text End Index
  * @desc The end index of the self variable to be operated on.
  * @default 1
- * @type number
  *
  * @arg type
  * @text Type of Operation
@@ -375,10 +375,9 @@
  * @desc セルフ変数を操作します。
  *
  * @arg index
- * @text インデックス
- * @desc 操作対象のセルフ変数のインデックスです。
+ * @text キー
+ * @desc 操作対象のセルフ変数のキーです。数値や文字列を指定できます。文字列を指定した場合、大文字小文字は区別されます。
  * @default 1
- * @type number
  *
  * @arg type
  * @text 操作種別
@@ -409,13 +408,13 @@
  *
  * @arg startIndex
  * @text 開始インデックス
- * @desc 操作対象のセルフ変数の開始インデックスです。
+ * @desc 操作対象のセルフ変数の開始インデックスです。数値のみ指定できます。
  * @default 1
  * @type number
  *
  * @arg endIndex
  * @text 終了インデックス
- * @desc 操作対象のセルフ変数の終了インデックスです。
+ * @desc 操作対象のセルフ変数の終了インデックスです。数値のみ指定できます。
  * @default 1
  * @type number
  *
@@ -676,7 +675,7 @@ let $dataTemplateEvents = null;
         if (!key) {
             return text;
         }
-        text = text.replace(/\x1bSV\[(\d+)]/gi, (_, p1) => {
+        text = text.replace(/\x1bSV\[(\w+)]/gi, (_, p1) => {
             key[2] = p1;
             return $gameSelfSwitches.getVariableValue(key).toString();
         });
