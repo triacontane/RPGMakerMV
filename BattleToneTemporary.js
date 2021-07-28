@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/07/28 色調を変更している最中で戦闘になったときに変更が続いてしまう問題を修正
  1.0.0 2020/05/11 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -55,12 +56,20 @@
     //=============================================================================
     Game_Screen.prototype.saveTone = function() {
         this._prevTone = this._tone;
-        this._tone = [0, 0, 0, 0];
+        this._prevToneTarget = this._toneTarget;
+        this._prevToneDuration = this._toneDuration;
+        this.clearTone();
     };
 
     Game_Screen.prototype.restoreTone = function() {
         if (this._prevTone) {
             this._tone = this._prevTone;
+        }
+        if (this._prevToneTarget) {
+            this._toneTarget = this._prevToneTarget;
+        }
+        if (this._prevToneDuration) {
+            this._toneDuration = this._prevToneDuration;
         }
     };
 
