@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2021/07/31 指定した属性の場合のみ身代わりするためのスクリプト凡例を追加
 // 1.5.0 2021/07/18 MZで動作するよう修正
 // 1.4.1 2020/06/10 1.4.0の修正でパラメータ「身代わり条件_必中以外」が消えていた問題を修正
 // 1.4.0 2020/05/19 行動制約「行動できない」状態でも身代わりが発動するように既存仕様を変更する設定を追加
@@ -137,6 +138,7 @@
  * <SE_身代わり計算式:action.isAttack()>    # 通常攻撃のみ身代わり発動
  * <SE_身代わり計算式:action.isPhysical()>  # 物理攻撃のみ身代わり発動
  * <SE_身代わり計算式:action.isForOne()>    # 単体対象のみ身代わり発動
+ * <SE_身代わり計算式:action.hasElement(2)> # 属性[2]のスキルのみ身代わり発動
  *
  * 3. 身代わり発動時に、指定したIDのスキル効果を身代わり実行者に
  * 適用させることができます。
@@ -256,6 +258,19 @@
             return !!metaValue;
         });
         return (metaValue && isNumber) ? parseInt(metaValue) : metaValue;
+    };
+
+    Game_Action.prototype.hasElement = function(elementId) {
+        if (this.item().damage.type === 0) {
+            return false;
+        }
+        const skillElementId = this.item().damage.elementId;
+        // Normal attack elementID[-1]
+        if (skillElementId === -1) {
+            return this.subject().attackElements().contains(elementId);
+        } else {
+            return elementId === skillElementId;
+        }
     };
 
     //=============================================================================
