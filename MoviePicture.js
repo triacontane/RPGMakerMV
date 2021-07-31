@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2021/07/31 動画音量種別に指定した項目のボリュームを0にしたとき、音量100で再生されてしまう問題を修正
 // 2.0.2 2020/09/13 ヘルプ微修正
 // 2.0.1 2020/09/13 ヘルプ微修正
 // 2.0.0 2020/09/13 MZで動作するよう全面的に改修
@@ -639,7 +640,7 @@
 
     AudioManager.getVideoPictureVolume = function() {
         const property = this._movieVolumePropertyMap[param.movieVolumeType];
-        return Video._volume * (this[property] || 100) / 100;
+        return Video._volume * this[property] / 100;
     };
 
     const _SceneManager_updateScene = SceneManager.updateScene;
