@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.3 2021/07/31 反撃条件に属性を指定したとき、通常攻撃に付与された属性を考慮していなかった問題を修正
 // 2.1.2 2021/07/15 アクティブタイムバトルで、行動入力中に自身の反撃が発動した場合、行動入力後にエラーになる場合がある問題を修正
 // 2.1.1 2021/03/08 スクリプトで使用可能な変数の説明とスクリプトの凡例を追加
 // 2.1.0 2021/03/07 反撃設定が複数あった場合の判定処理が一部間違っていた問題を修正
@@ -314,7 +315,7 @@
             const checkParam = (param, value) => param && param !== value;
             conditions.push(() => checkParam(skill.IdCondition, triggerSkill.id));
             conditions.push(() => checkParam(skill.HitTypeCondition, triggerSkill.hitType));
-            conditions.push(() => checkParam(skill.ElementCondition, triggerSkill.damage.elementId));
+            conditions.push(() => skill.ElementCondition && !triggerAction.hasElement(skill.ElementCondition));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
             conditions.push(() => skill.ScriptCondition && !eval(skill.ScriptCondition));
             conditions.push(() => skill.Frequency > 0 && Math.randomInt(100) >= skill.Frequency - evasion);
@@ -377,6 +378,19 @@
 
     Game_Action.prototype.isCounter = function() {
         return false;
+    };
+
+    Game_Action.prototype.hasElement = function(elementId) {
+        if (this.item().damage.type === 0) {
+            return false;
+        }
+        const skillElementId = this.item().damage.elementId;
+        // Normal attack elementID[-1]
+        if (skillElementId === -1) {
+            return this.subject().attackElements().contains(elementId);
+        } else {
+            return elementId === skillElementId;
+        }
     };
 
     const _Game_Battler_performActionStart = Game_Battler.prototype.performActionStart;
