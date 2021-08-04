@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.1 2021/08/05 カスタムメニュー作成プラグインと併用したときにエラーが発生する現象を修正
 // 1.15.0 2021/06/15 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様変更
 // 1.14.1 2020/09/02 MZ向けにコードとヘルプ修正
 // 1.14.0 2020/08/02 クリックすることで任意のスイッチをONにできるピクチャをメッセージウィンドウに表示する機能を追加
@@ -41,6 +42,8 @@
  * @plugindesc MessageSkipPlugin
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageSkip.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author triacontane
  *
  * @param SkipKey
@@ -221,6 +224,8 @@
  * @plugindesc メッセージスキッププラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageSkip.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param スキップキー
@@ -394,7 +399,10 @@
  * 指定例：
  * 100 + textSize * 10
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -450,8 +458,7 @@ function Sprite_Frame() {
 
     var convertEscapeCharacters = function(text) {
         if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+        return PluginManagerEx.convertEscapeCharacters(text);
     };
 
     var isNotAString = function(args) {
