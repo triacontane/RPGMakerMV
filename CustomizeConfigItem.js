@@ -512,7 +512,11 @@
             } else {
                 this[symbol] = this.readOther(config, symbol, item);
             }
-            this.hiddenInfo[symbol] = (config.hiddenInfo ? config.hiddenInfo[symbol] : item.hidden);
+            if (config.hiddenInfo) {
+                this.hiddenInfo[symbol] = (typeof config.hiddenInfo[symbol] === 'boolean' ? config.hiddenInfo[symbol] : item.hidden);
+            } else {
+                this.hiddenInfo[symbol] = item.hidden;
+            }
         }.bind(this));
     };
 
