@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.2 2021/08/05 セーブがある状態で隠し項目を追加した時に上手く動作しない問題を修正
 // 3.1.1 2020/10/13 Mano_InputConfig.jsと併用したとき、項目を末尾以外に追加すると表示不整合が発生する競合を修正
 // 3.1.0 2020/08/20 スイッチ項目でONとOFFの表示文字列を変更できる機能を追加
 // 3.0.0 2020/08/20 MZで動作するよう全面的に修正
@@ -488,7 +489,11 @@
             } else {
                 this[symbol] = this.readOther(config, symbol, item);
             }
-            this.hiddenInfo[symbol] = (config.hiddenInfo ? config.hiddenInfo[symbol] : item.hidden);
+            if (config.hiddenInfo && config.hiddenInfo.hasOwnProperty(symbol)) {
+                this.hiddenInfo[symbol] = config.hiddenInfo[symbol];
+            } else {
+                this.hiddenInfo[symbol] = item.hidden;
+            }
         }.bind(this));
     };
 
