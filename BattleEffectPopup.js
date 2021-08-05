@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2021/08/05 ポップアップパラメータが空の場合にエラーが発生する問題を修正
 // 2.2.0 2021/04/21 身代わり発生時にポップアップする機能を追加
 // 2.1.4 2021/02/06 2.1.3の修正で特定のポップアップが重なったときにエラーになる問題を修正
 // 2.1.3 2021/01/31 戦闘開始時にパーティのポップアップが残っていた場合、消去するよう修正
@@ -397,6 +398,9 @@
     };
 
     Game_Battler.prototype.startMessagePopup = function(popUp) {
+        if (!popUp) {
+            return;
+        }
         if (popUp.text || popUp.fileName) {
             this._messagePopup = popUp;
         } else {
