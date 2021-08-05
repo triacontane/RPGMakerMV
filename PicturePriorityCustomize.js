@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.6 2021/08/05 上層ピクチャが画面シェイクに連動しない問題を修正
 // 1.2.5 2020/11/02 NRP_DynamicMotionMZ.jsと併用したとき戦闘画面のピクチャを敵キャラの下に表示できなくなる競合を修正
 // 1.2.4 2020/11/05 戦闘画面で使用するとエラーになる問題を修正
 // 1.2.3 2020/09/06 座標の基準をUI幅ではなく画面幅に変更
@@ -240,6 +241,13 @@
 
     Spriteset_Base.prototype.setLowerPictureContainer = function() {
         this.addChild(this._pictureContainerLower);
+    };
+
+    var _Spriteset_Base_updatePosition = Spriteset_Base.prototype.updatePosition;
+    Spriteset_Base.prototype.updatePosition = function() {
+        _Spriteset_Base_updatePosition.apply(this, arguments);
+        this._pictureContainerUpper.x = this.x;
+        this._pictureContainerUpper.y = this.y;
     };
 
     //=============================================================================
