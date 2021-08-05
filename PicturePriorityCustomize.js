@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2021/08/05 上層ピクチャが画面シェイクに連動しない問題を修正
 // 1.2.1 2019/05/08 1.2.0の機能がYEP_BattleEngineCore.jsと併用すると無効になる競合を解消
 // 1.2.0 2019/05/02 戦闘画面における下層ピクチャの表示優先度を微調整する機能を追加
 // 1.1.3 2019/01/20 MenuCommonEvent.jsとの競合によるエラーを解消
@@ -250,6 +251,13 @@
 
     Spriteset_Base.prototype.setLowerPictureContainer = function() {
         this.addChild(this._pictureContainerLower);
+    };
+
+    var _Spriteset_Base_updatePosition = Spriteset_Base.prototype.updatePosition;
+    Spriteset_Base.prototype.updatePosition = function() {
+        _Spriteset_Base_updatePosition.apply(this, arguments);
+        this._pictureContainerUpper.x = this.x;
+        this._pictureContainerUpper.y = this.y;
     };
 
     //=============================================================================
