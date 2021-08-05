@@ -398,14 +398,8 @@
     };
 
     Game_Battler.prototype.startMessagePopup = function(popUp) {
-        if (!popUp) {
-            return;
-        }
-        if (popUp.text || popUp.fileName) {
+        if (popUp && (popUp.text || popUp.fileName)) {
             this._messagePopup = popUp;
-        } else {
-            console.error(popUp)
-            PluginManagerEx.throwError('Popup text or file not found.', script);
         }
     };
 
