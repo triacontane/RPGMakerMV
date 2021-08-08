@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/08/08 デフォルトの計算式をプラグインパラメータのデフォルト値に設定
  1.0.1 2020/04/23 計算式で使用者[a]と対象者[b]のローカル変数が正常に機能していなかった問題を修正
  1.0.0 2018/07/08 初版
 ----------------------------------------------------------------------------
@@ -15,86 +16,28 @@
 =============================================================================*/
 
 /*:
- * @plugindesc HitAndEvasionExtendPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param formulaPhysicalHit
- * @text 物理命中計算式
- * @desc 物理命中の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
- * @default
- *
- * @param formulaMagicalHit
- * @text 魔法命中計算式
- * @desc 魔法命中の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
- * @default
- *
- * @param formulaPhysicalEvasion
- * @text 物理回避計算式
- * @desc 物理回避の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
- * @default
- *
- * @param formulaMagicalEvasion
- * @text 魔法回避計算式
- * @desc 魔法回避の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
- * @default
- *
- * @help HitAndEvasionExtend.js
- *
- * 命中と回避の計算式を拡張します。
- * パラメータにて物理、魔法ごとに命中計算式、回避計算式を指定できます。
- * 計算式の結果は原則「0」～「1」の範囲に収まるように設定してください。
- * 「0」以下だと0%、「1」以上だと100%として扱われます。
- *
- * 計算式はJavaScript計算式を指定しますので文法エラーにはご注意ください。
- * ダメージ計算式と同様に、使用者を「a」、対象者を「b」で参照します。
- * 詳細はデータベースのダメージ計算式のtooltipを参照してください。
- * (例)
- * a.atk : 使用者の攻撃力
- * b.agi : 対象者の敏捷性
- * またデフォルトの判定結果を「d」で参照できます。
- * ゲーム変数の値は制御文字「\v[n]」で参照できます。
- *
- * 【参考】デフォルトの計算式は以下の通りです。
- * 命中判定もしくは回避判定のいずれかで失敗すると行動は失敗となります。
- * ・物理命中
- * スキルの成功率 * 実行者の命中率
- *
- * ・魔法命中
- * スキルの成功率
- *
- * ・物理回避
- * 対象者の回避率
- *
- * ・魔法回避
- * 対象者の魔法回避率
- *　
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 命中回避拡張プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @author トリアコンタン
  *
  * @param formulaPhysicalHit
  * @text 物理命中計算式
  * @desc 物理命中の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
- * @default
+ * @default r - a.hit
  *
  * @param formulaMagicalHit
  * @text 魔法命中計算式
  * @desc 魔法命中の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
- * @default
+ * @default r
  *
  * @param formulaPhysicalEvasion
  * @text 物理回避計算式
  * @desc 物理回避の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
- * @default
+ * @default b.eva
  *
  * @param formulaMagicalEvasion
  * @text 魔法回避計算式
  * @desc 魔法回避の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
- * @default
+ * @default b.mev
  *
  * @help HitAndEvasionExtend.js
  *
@@ -110,6 +53,7 @@
  * a.atk : 使用者の攻撃力
  * b.agi : 対象者の敏捷性
  * またデフォルトの判定結果を「d」で参照できます。
+ * スキルの成功率を「r」で参照できます。
  * ゲーム変数の値は制御文字「\v[n]」で参照できます。
  *
  * 【参考】デフォルトの計算式は以下の通りです。
@@ -178,6 +122,7 @@
         var a = this.subject();
         var b = target;
         var d = _Game_Action_itemHit.apply(this, arguments);
+        var r = this.item().successRate * 0.01;
         if (this.isPhysical() && param.formulaPhysicalHit !== '') {
             return eval(convertEscapeCharacters(param.formulaPhysicalHit));
         } else if (this.isMagical() && param.formulaMagicalHit !== '') {
@@ -191,6 +136,7 @@
         var a = this.subject();
         var b = target;
         var d = _Game_Action_itemEva.apply(this, arguments);
+        var r = this.item().successRate * 0.01;
         if (this.isPhysical() && param.formulaPhysicalEvasion !== '') {
             return eval(convertEscapeCharacters(param.formulaPhysicalEvasion));
         } else if (this.isMagical() && param.formulaMagicalEvasion !== '') {
