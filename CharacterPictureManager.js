@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.2 2021/08/08 APNGピクチャを立ち絵に使用したとき、シーン遷移するとエラーになる場合がある問題を修正
 // 2.4.1 2021/05/28 2.3.2の修正によりAPNGピクチャプラグインと連携するとAPNGピクチャ以外が立ち絵として表示できなくなっていた問題を修正
 // 2.4.0 2021/05/20 立ち絵の座標に制御文字を使ったとき、変数の変更が即座に反映されるよう修正
 // 2.3.2 2021/04/26 ヘルプの記述を修正
@@ -673,6 +674,14 @@
         this._standSprites.delete(id);
     };
 
+    const _Scene_Base_terminate = Scene_Base.prototype.terminate;
+    Scene_Base.prototype.terminate = function() {
+        _Scene_Base_terminate.apply(this, arguments);
+        if (this._standSprites) {
+            this._standSprites.forEach(picture => picture.destroyStandApng());
+        }
+    };
+
     Scene_Skill.prototype.findStandPictureMember = function() {
         return [this.actor()];
     };
@@ -718,6 +727,14 @@
             this._pictures.updatePictureFiles();
             super.update();
             this.updatePosition();
+        }
+
+        destroyStandApng() {
+            this.children.forEach(child => {
+                if (child.destroyApngIfNeed) {
+                    child.destroyApngIfNeed();
+                }
+            })
         }
     }
 
