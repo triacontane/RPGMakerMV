@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2021/08/08 MZ向けにリファクタリング
  1.1.0 2021/08/08 デフォルトの計算式をプラグインパラメータのデフォルト値に設定
  1.0.1 2020/04/23 計算式で使用者[a]と対象者[b]のローカル変数が正常に機能していなかった問題を修正
  1.0.0 2018/07/08 初版
@@ -17,6 +18,10 @@
 
 /*:
  * @plugindesc 命中回避拡張プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/HitAndEvasionExtend.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param formulaPhysicalHit
@@ -70,7 +75,10 @@
  * ・魔法回避
  * 対象者の魔法回避率
  *　
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -78,69 +86,35 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    /**
-     * Convert escape characters.(require any window object)
-     * @param text Target text
-     * @returns {String} Converted text
-     */
-    var convertEscapeCharacters = function(text) {
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
-    };
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    var param = createPluginParameter('HitAndEvasionExtend');
-
-    var _Game_Action_itemHit = Game_Action.prototype.itemHit;
+    const _Game_Action_itemHit = Game_Action.prototype.itemHit;
     Game_Action.prototype.itemHit = function(target) {
-        var a = this.subject();
-        var b = target;
-        var d = _Game_Action_itemHit.apply(this, arguments);
-        var r = this.item().successRate * 0.01;
+        const a = this.subject();
+        const b = target;
+        const d = _Game_Action_itemHit.apply(this, arguments);
+        const r = this.item().successRate * 0.01;
         if (this.isPhysical() && param.formulaPhysicalHit !== '') {
-            return eval(convertEscapeCharacters(param.formulaPhysicalHit));
+            return eval(param.formulaPhysicalHit);
         } else if (this.isMagical() && param.formulaMagicalHit !== '') {
-            return eval(convertEscapeCharacters(param.formulaMagicalHit));
+            return eval(param.formulaMagicalHit);
         }
         return d;
     };
 
-    var _Game_Action_itemEva = Game_Action.prototype.itemEva;
+    const _Game_Action_itemEva = Game_Action.prototype.itemEva;
     Game_Action.prototype.itemEva = function(target) {
-        var a = this.subject();
-        var b = target;
-        var d = _Game_Action_itemEva.apply(this, arguments);
-        var r = this.item().successRate * 0.01;
+        const a = this.subject();
+        const b = target;
+        const d = _Game_Action_itemEva.apply(this, arguments);
+        const r = this.item().successRate * 0.01;
         if (this.isPhysical() && param.formulaPhysicalEvasion !== '') {
-            return eval(convertEscapeCharacters(param.formulaPhysicalEvasion));
+            return eval(param.formulaPhysicalEvasion);
         } else if (this.isMagical() && param.formulaMagicalEvasion !== '') {
-            return eval(convertEscapeCharacters(param.formulaMagicalEvasion));
+            return eval(param.formulaMagicalEvasion);
         }
         return d;
     };
