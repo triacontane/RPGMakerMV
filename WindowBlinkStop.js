@@ -1,11 +1,12 @@
 //=============================================================================
 // WindowBlinkStop.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2021/08/08 MZ向けにリファクタリング
 // 1.0.0 2017/12/09 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -14,20 +15,10 @@
 //=============================================================================
 
 /*:
- * @plugindesc WindowBlinkStopPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help WindowBlinkStop.js
- *
- * 選択中のウィンドウカーソルの点滅を停止します。
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc ウィンドウ点滅停止プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/WindowBlinkStop.js
+ * @author トリアコンタン
  *
  * @help WindowBlinkStop.js
  *
@@ -41,10 +32,10 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
 
-    var _Window__updateCursor = Window.prototype._updateCursor;
+    const _Window__updateCursor = Window.prototype._updateCursor;
     Window.prototype._updateCursor = function() {
         this._animationCount = 0;
         _Window__updateCursor.apply(this, arguments);
