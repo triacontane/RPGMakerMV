@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.3 2021/08/09 セーブデータをロードした際に、追加オプションの設定値がゲーム変数に反映されない問題を修正
 // 3.1.2 2021/08/05 セーブがある状態で隠し項目を追加した時に上手く動作しない問題を修正
 // 3.1.1 2020/10/13 Mano_InputConfig.jsと併用したとき、項目を末尾以外に追加すると表示不整合が発生する競合を修正
 // 3.1.0 2020/08/20 スイッチ項目でONとOFFの表示文字列を変更できる機能を追加
@@ -583,11 +584,10 @@
         ConfigManager.exportCustomParams();
     };
 
-    var _DataManager_loadGameWithoutRescue = DataManager.loadGameWithoutRescue;
-    DataManager.loadGameWithoutRescue      = function(savefileId) {
-        var result = _DataManager_loadGameWithoutRescue.apply(this, arguments);
+    var _DataManager_extractSaveContents = DataManager.extractSaveContents;
+    DataManager.extractSaveContents = function(contents) {
+        _DataManager_extractSaveContents.apply(this, arguments);
         ConfigManager.exportCustomParams();
-        return result;
     };
 
     var _Scene_Options_maxCommands = Scene_Options.prototype.maxCommands;
