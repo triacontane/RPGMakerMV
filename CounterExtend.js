@@ -64,6 +64,11 @@
  * @default []
  * @type struct<COUNTER>[]
  *
+ * @param UseCounterTrait
+ * @desc The characteristic trait "Counter" is added to the "Frequency" for judgment.
+ * @default false
+ * @type boolean
+ *
  * @help CounterExtend.js
  *
  * You can activate skills and items as a reaction (counterattack) to your opponent's actions.
