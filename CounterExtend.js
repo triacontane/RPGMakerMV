@@ -6,7 +6,6 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 2.2.0 2021/08/09 特徴『反撃率』を反撃頻度に加算して判定できる機能を追加
 // 2.1.3 2021/07/31 反撃条件に属性を指定したとき、通常攻撃に付与された属性を考慮していなかった問題を修正
 // 2.1.2 2021/07/15 アクティブタイムバトルで、行動入力中に自身の反撃が発動した場合、行動入力後にエラーになる場合がある問題を修正
 // 2.1.1 2021/03/08 スクリプトで使用可能な変数の説明とスクリプトの凡例を追加
@@ -99,12 +98,6 @@
  * @desc 反撃設定のリストです。ここで指定した識別子を各メモ欄から指定します。
  * @default []
  * @type struct<COUNTER>[]
- *
- * @param UseCounterTrait
- * @text 特徴の反撃率を考慮
- * @desc 有効にすると特徴『反撃率』を『反撃頻度』に加算して判定します。併せてデフォルト仕様による反撃は無効化されます。
- * @default false
- * @type boolean
  *
  * @help CounterExtend.js
  *
@@ -324,14 +317,13 @@
             const target = triggerAction.subject();
             const subject = this.subject();
             const evasion = PluginManagerEx.findMetaValue(triggerSkill, ['CounterEvasion', '反撃回避']) || 0;
-            const frequency = skill.Frequency + (param.UseCounterTrait ? subject.cnt * 100 : 0) - evasion;
             const checkParam = (param, value) => param && param !== value;
             conditions.push(() => checkParam(skill.IdCondition, triggerSkill.id));
             conditions.push(() => checkParam(skill.HitTypeCondition, triggerSkill.hitType));
             conditions.push(() => skill.ElementCondition && !triggerAction.hasElement(skill.ElementCondition));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
             conditions.push(() => skill.ScriptCondition && !eval(skill.ScriptCondition));
-            conditions.push(() => Math.randomInt(100) >= frequency);
+            conditions.push(() => skill.Frequency > 0 && Math.randomInt(100) >= skill.Frequency - evasion);
             conditions.push(() => counter.PayCounterCost && !this.isValid());
             this.setCounterSkill(skill, triggerSkill);
             this.setCounterTarget(target);
@@ -391,12 +383,6 @@
 
     Game_Action.prototype.isCounter = function() {
         return false;
-    };
-
-    const _Game_Action_itemCnt = Game_Action.prototype.itemCnt;
-    Game_Action.prototype.itemCnt = function(target) {
-        const result = _Game_Action_itemCnt.apply(this, arguments);
-        return param.UseCounterTrait ? 0 : result;
     };
 
     Game_Action.prototype.hasElement = function(elementId) {
