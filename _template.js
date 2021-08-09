@@ -14,22 +14,6 @@
 =============================================================================*/
 
 /*:
- * @plugindesc ${NAME}Plugin
- * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/${NAME}.js
- * @base PluginCommonBase
- * @orderAfter PluginCommonBase
- * @author triacontane
- *
- * @help ${NAME}.js
- *
- * The base plugin "PluginCommonBase.js" is required to use this plugin.
- * The "PluginCommonBase.js" is here.
- * (MZ install path)dlc/BasicResources/plugins/official/PluginCommonBase.js
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc ${NAME}プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/${NAME}.js
