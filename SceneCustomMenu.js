@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.17.0 2021/08/11 敵キャラの画像をウィンドウに表示できる機能を追加
+                   メモ欄から取得したテキストをウィンドウに表示できる機能を追加
  1.16.0 2021/06/19 ウィンドウに角度を付けられる機能を追加
  1.15.0 2021/05/29 シーンごとにピクチャの表示優先度を変更できる機能を追加
  1.14.0 2021/05/22 コマンドリストの揃えを指定できる機能を追加
@@ -529,12 +531,14 @@
  * @option this.drawActorMp(item, r.x, r.y, r.width); // アクターのMP
  * @option this.drawActorTp(item, r.x, r.y, r.width); // アクターのTP
  * @option this.drawActorSimpleStatus(item, r.x, r.y, r.width); // アクターのステータス
+ * @option this.drawEnemy(item, r.x, r.y); // 敵キャラの画像
  * @option this.drawItemName(item, r.x, r.y, r.width); // アイテムやスキルの名称
  * @option this.drawTextEx(`Text:${item.name}`, r.x, r.y, r.width); // 任意のテキスト描画(制御文字変換あり)
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
  * @option this.changeTextColor(this.textColor(1)); // テキストカラー変更(drawTextでのみ有効)
  * @option this.drawText(this.findWindowItem('window1').name, r.x, r.y, r.width); // 別ウィンドウで選択している項目名
  * @option this.drawNotePicture('noteValue', r.x, r.y); // 指定したメモ欄のピクチャを描画
+ * @option this.drawNoteText('noteValue', r.x, r.y); // 指定したメモ欄の内容を描画
  *
  * @param IsEnableScript
  * @parent DataScript
@@ -1441,6 +1445,31 @@
                 this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
             } else {
                 this.retryDrawItem(bitmap);
+            }
+        }
+
+        drawEnemy(item, x, y) {
+            const bitmap = this.loadEnemyImage(item);
+            if (bitmap.isReady()) {
+                this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
+            } else {
+                this.retryDrawItem(bitmap);
+            }
+        }
+
+        loadEnemyImage(item) {
+            if ($gameSystem.isSideView()) {
+                return ImageManager.loadEnemy(item.battlerName, item.battlerHue);
+            } else {
+                return ImageManager.loadSvEnemy(item.battlerName, item.battlerHue);
+            }
+        }
+
+        drawNoteText(metaValue, x, y) {
+            const meta = this.findMetaData(this._drawingIndex);
+            if (meta) {
+                const text = meta[metaValue];
+                this.drawTextEx(text, x, y);
             }
         }
 
