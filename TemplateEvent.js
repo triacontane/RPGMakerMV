@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2021/08/11 「マップイベントの呼び出し」のコマンドでイベント名を指定して呼び出せるよう修正
  1.1.0 2021/07/23 セルフ変数のキーに文字列を指定できるよう修正
  1.0.7 2021/05/29 1.0.6の修正で正常に機能しなくなっていた問題を修正
  1.0.6 2021/05/22 RandomDungeon.jsと共存できるよう修正
@@ -87,9 +88,8 @@
  *
  * @arg eventId
  * @text Event ID
- * @desc The ID of the event to be called. A value of 0 will target the event being executed.
+ * @desc The ID (or Name) of the event to be called. A value of 0 will target the event being executed.
  * @default 0
- * @type number
  *
  * @command SET_SELF_VARIABLE
  * @text Self Variable Manipulation
@@ -366,9 +366,8 @@
  *
  * @arg eventId
  * @text イベントID
- * @desc 呼び出すイベントのIDです。0を指定すると実行中のイベントが対象になります。
+ * @desc 呼び出すイベントのIDもしくはイベント名です。0を指定すると実行中のイベントが対象になります。
  * @default 0
- * @type number
  *
  * @command SET_SELF_VARIABLE
  * @text セルフ変数の操作
