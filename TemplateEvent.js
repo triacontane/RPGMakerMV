@@ -365,7 +365,7 @@
  * @type number
  *
  * @arg eventId
- * @text イベントID
+ * @text イベントID(もしくは名称)
  * @desc 呼び出すイベントのIDもしくはイベント名です。0を指定すると実行中のイベントが対象になります。
  * @default 0
  *
