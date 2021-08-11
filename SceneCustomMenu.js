@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.17.1 2021/08/11 DBのパラメータをウィンドウに表示できる機能を追加
  1.17.0 2021/08/11 敵キャラの画像をウィンドウに表示できる機能を追加
                    メモ欄から取得したテキストをウィンドウに表示できる機能を追加
  1.16.0 2021/06/19 ウィンドウに角度を付けられる機能を追加
@@ -531,7 +532,8 @@
  * @option this.drawActorMp(item, r.x, r.y, r.width); // アクターのMP
  * @option this.drawActorTp(item, r.x, r.y, r.width); // アクターのTP
  * @option this.drawActorSimpleStatus(item, r.x, r.y, r.width); // アクターのステータス
- * @option this.drawEnemy(item, r.x, r.y); // 敵キャラの画像
+ * @option this.drawEnemy(r.x, r.y); // 敵キャラの画像
+ * @option this.drawParam(0, r.x, r.y); // DBパラメータ(0:HP 1:MP...)
  * @option this.drawItemName(item, r.x, r.y, r.width); // アイテムやスキルの名称
  * @option this.drawTextEx(`Text:${item.name}`, r.x, r.y, r.width); // 任意のテキスト描画(制御文字変換あり)
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
@@ -1448,7 +1450,8 @@
             }
         }
 
-        drawEnemy(item, x, y) {
+        drawEnemy(x, y) {
+            const item = this.getItem(this._drawingIndex);
             const bitmap = this.loadEnemyImage(item);
             if (bitmap.isReady()) {
                 this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
@@ -1471,6 +1474,11 @@
                 const text = meta[metaValue];
                 this.drawTextEx(text, x, y);
             }
+        }
+
+        drawParam(paramIndex, x, y) {
+            const item = this.getItem(this._drawingIndex);
+            this.drawText(item.params[paramIndex], x, y, this.contents.width);
         }
 
         setDynamicHeight() {
