@@ -663,18 +663,6 @@
         return result;
     };
 
-    Window_Options.prototype.drawItem = function(index) {
-        const title = this.commandName(index);
-        const status = this.statusText(index);
-        const rect = this.itemLineRect(index);
-        const statusWidth = this.statusWidth();
-        const titleWidth = rect.width - statusWidth;
-        this.resetTextColor();
-        this.changePaintOpacity(this.isCommandEnabled(index));
-        this.drawTextEx(title, rect.x, rect.y);
-        this.drawText(status, rect.x + titleWidth, rect.y, statusWidth, "right");
-    };
-
     Window_Options.prototype.isNumberSymbol = function(symbol) {
         return symbol.contains(ConfigManager._symbolNumber);
     };
