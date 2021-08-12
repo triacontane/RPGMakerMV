@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.18.0 2021/08/12 敵キャラの画像を取得するとき、フロントビュー用とサイドビュー用とで取得元が逆になっていた不具合を修正
+                   敵キャラやピクチャの画像を表示する際、縦と横の揃えを指定できるパラメータを追加
  1.17.1 2021/08/11 DBのパラメータをウィンドウに表示できる機能を追加
  1.17.0 2021/08/11 敵キャラの画像をウィンドウに表示できる機能を追加
                    メモ欄から取得したテキストをウィンドウに表示できる機能を追加
@@ -532,14 +534,14 @@
  * @option this.drawActorMp(item, r.x, r.y, r.width); // アクターのMP
  * @option this.drawActorTp(item, r.x, r.y, r.width); // アクターのTP
  * @option this.drawActorSimpleStatus(item, r.x, r.y, r.width); // アクターのステータス
- * @option this.drawEnemy(r.x, r.y); // 敵キャラの画像
- * @option this.drawParam(0, r.x, r.y); // DBパラメータ(0:HP 1:MP...)
+ * @option this.drawEnemy(r.x, r.y, 'center', 'bottom'); // 敵キャラの画像
+ * @option this.drawParam(0, r.x, r.y, 'right'); // DBパラメータ(0:HP 1:MP...)
  * @option this.drawItemName(item, r.x, r.y, r.width); // アイテムやスキルの名称
  * @option this.drawTextEx(`Text:${item.name}`, r.x, r.y, r.width); // 任意のテキスト描画(制御文字変換あり)
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
  * @option this.changeTextColor(this.textColor(1)); // テキストカラー変更(drawTextでのみ有効)
  * @option this.drawText(this.findWindowItem('window1').name, r.x, r.y, r.width); // 別ウィンドウで選択している項目名
- * @option this.drawNotePicture('noteValue', r.x, r.y); // 指定したメモ欄のピクチャを描画
+ * @option this.drawNotePicture('noteValue', r.x, r.y, 'left', 'center'); // 指定したメモ欄のピクチャを描画
  * @option this.drawNoteText('noteValue', r.x, r.y); // 指定したメモ欄の内容を描画
  *
  * @param IsEnableScript
@@ -1380,6 +1382,14 @@
             return this._data.ItemHeight || super.itemHeight();
         }
 
+        lineHeight() {
+            if (this.maxItems() === 1) {
+                return this.height - this.padding * 2;
+            } else {
+                return super.lineHeight();
+            }
+        }
+
         numVisibleRows() {
             return this._data.RowNumber || Math.ceil(this.maxItems() / this.maxCols());
         }
@@ -1430,41 +1440,71 @@
             return null;
         }
 
-        drawNotePicture(metaValue, x, y) {
+        drawNotePicture(metaValue, x, y, align = 'left', valign = 'top') {
             const meta = this.findMetaData(this._drawingIndex);
             if (!meta) {
                 return;
             }
             const fileName = meta[metaValue];
             if (fileName) {
-                this.drawPicture(fileName, x, y);
+                this.drawPicture(fileName, x, y, align, valign);
             }
         };
 
-        drawPicture(file, x, y) {
+        drawPicture(file, x, y, align = 'left', valign = 'top') {
             const bitmap = ImageManager.loadPicture(file);
             if (bitmap.isReady()) {
+                x += this.findAlignX(align, bitmap);
+                y += this.findAlignY(valign, bitmap);
                 this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
             } else {
                 this.retryDrawItem(bitmap);
             }
         }
 
-        drawEnemy(x, y) {
+        drawEnemy(x, y, align = 'left', valign = 'top') {
             const item = this.getItem(this._drawingIndex);
             const bitmap = this.loadEnemyImage(item);
             if (bitmap.isReady()) {
+                x += this.findAlignX(align, bitmap);
+                y += this.findAlignY(valign, bitmap);
                 this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
             } else {
                 this.retryDrawItem(bitmap);
+            }
+        }
+
+        findAlignX(align, bitmap) {
+            const width = this.itemRect(this._drawingIndex).width;
+            const shiftX = width - bitmap.width;
+            switch (align.toLowerCase()) {
+                case 'right':
+                    return shiftX;
+                case 'center':
+                    return shiftX / 2;
+                default:
+                    return 0;
+            }
+        }
+
+        findAlignY(valign, bitmap) {
+            const height = this.itemRect(this._drawingIndex).height;
+            const shiftY = height - bitmap.height;
+            switch (valign.toLowerCase()) {
+                case 'bottom':
+                    return shiftY;
+                case 'center':
+                    return shiftY / 2;
+                default:
+                    return 0;
             }
         }
 
         loadEnemyImage(item) {
             if ($gameSystem.isSideView()) {
-                return ImageManager.loadEnemy(item.battlerName, item.battlerHue);
-            } else {
                 return ImageManager.loadSvEnemy(item.battlerName, item.battlerHue);
+            } else {
+                return ImageManager.loadEnemy(item.battlerName, item.battlerHue);
             }
         }
 
@@ -1476,9 +1516,10 @@
             }
         }
 
-        drawParam(paramIndex, x, y) {
+        drawParam(paramIndex, x, y, align = 'left') {
             const item = this.getItem(this._drawingIndex);
-            this.drawText(item.params[paramIndex], x, y, this.contents.width);
+            const rect = this.itemRect(this._drawingIndex);
+            this.drawText(item.params[paramIndex], x, y, rect.width - x, align);
         }
 
         setDynamicHeight() {
