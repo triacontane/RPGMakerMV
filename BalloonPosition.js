@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/08/12 プレイヤーやイベントのフキダシ位置を可変にできるパラメータを追加
  1.0.2 2021/01/28 MZで動作するよう修正
  1.0.1 2021/01/28 英語ヘルプを記述
  1.0.0 2021/01/27 初版
@@ -34,6 +35,30 @@
  * @default 0
  * @min -2000
  * @max 2000
+ *
+ * @param BalloonXPlayer
+ * @text プレイヤーX座標変数
+ * @desc プレイヤーのフキダシX座標を取得する変数です。
+ * @default 0
+ * @type variable
+ *
+ * @param BalloonYPlayer
+ * @text プレイヤーY座標変数
+ * @desc プレイヤーのフキダシY座標を取得する変数です。
+ * @default 0
+ * @type variable
+ *
+ * @param BalloonXEvent
+ * @text イベントX座標変数
+ * @desc イベントのフキダシX座標を取得する変数です。値が入っているとき、メモ欄の指定より優先されます。
+ * @default 0
+ * @type variable
+ *
+ * @param BalloonYEvent
+ * @text プレイヤーY座標変数
+ * @desc イベントのフキダシY座標を取得する変数です。値が入っているとき、メモ欄の指定より優先されます。
+ * @default 0
+ * @type variable
  *
  * @help BalloonPosition.js
  *
@@ -64,6 +89,30 @@
  * @default 0
  * @min -2000
  * @max 2000
+ *
+ * @param BalloonXPlayer
+ * @text プレイヤーX座標変数
+ * @desc プレイヤーのフキダシX座標を取得する変数です。
+ * @default 0
+ * @type variable
+ *
+ * @param BalloonYPlayer
+ * @text プレイヤーY座標変数
+ * @desc プレイヤーのフキダシY座標を取得する変数です。
+ * @default 0
+ * @type variable
+ *
+ * @param BalloonXEvent
+ * @text イベントX座標変数
+ * @desc イベントのフキダシX座標を取得する変数です。値が入っているとき、メモ欄の指定より優先されます。
+ * @default 0
+ * @type variable
+ *
+ * @param BalloonYEvent
+ * @text イベントY座標変数
+ * @desc イベントのフキダシY座標を取得する変数です。値が入っているとき、メモ欄の指定より優先されます。
+ * @default 0
+ * @type variable
  *
  * @help BalloonPosition.js
  *
@@ -101,11 +150,24 @@
         return 0;
     };
 
+    Game_Player.prototype.findBalloonX = function() {
+        return $gameVariables.value(param.BalloonXPlayer);
+    };
+
+    Game_Player.prototype.findBalloonY = function() {
+        return $gameVariables.value(param.BalloonYPlayer);
+    };
+
+
     /**
      * Game_Event
      * フキダシの座標をメモ欄から取得します。
      */
     Game_Event.prototype.findBalloonX = function() {
+        const variableX = $gameVariables.value(param.BalloonXEvent);
+        if (variableX) {
+            return variableX;
+        }
         const x = PluginManagerEx.findMetaValue(this.event(),'BalloonX');
         if (x) {
             return x;
@@ -117,6 +179,10 @@
     };
 
     Game_Event.prototype.findBalloonY = function() {
+        const variableY = $gameVariables.value(param.BalloonYEvent);
+        if (variableY) {
+            return variableY;
+        }
         const y = PluginManagerEx.findMetaValue(this.event(),'BalloonY');
         if (y) {
             return y;
