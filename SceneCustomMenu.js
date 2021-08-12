@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.19.1 2021/08/12 1.19.0の修正の一部が反映されていなかった問題を修正
  1.19.0 2021/08/12 敵キャラの画像を取得するとき、フロントビュー用とサイドビュー用とで取得元が逆になっていた不具合を修正
                    敵キャラやピクチャの画像を表示する際、縦と横の揃えを指定できるパラメータを追加
  1.18.1 2021/08/11 DBのパラメータをウィンドウに表示できる機能を追加
@@ -1440,9 +1441,6 @@
         }
 
         itemHeight() {
-            if (this.maxItems() === 1) {
-                return this.innerHeight;
-            }
             return this._data.ItemHeight || super.itemHeight();
         }
 
@@ -1548,7 +1546,7 @@
         }
 
         findAlignY(valign, bitmap) {
-            const height = this.itemRect(this._drawingIndex).height;
+            const height = this.innerHeight;
             const shiftY = height - bitmap.height;
             switch (valign.toLowerCase()) {
                 case 'bottom':
@@ -1570,9 +1568,9 @@
 
         loadEnemyImage(item) {
             if ($gameSystem.isSideView()) {
-                return ImageManager.loadEnemy(item.battlerName);
-            } else {
                 return ImageManager.loadSvEnemy(item.battlerName);
+            } else {
+                return ImageManager.loadEnemy(item.battlerName);
             }
         }
 
