@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/08/15 2.0.3の修正により動画音量種別をnoneにするとエラーになっていた問題を修正
+//                  動画ファイルの再生でファイル名に制御文字を使えるよう修正
 // 2.0.3 2021/07/31 動画音量種別に指定した項目のボリュームを0にしたとき、音量100で再生されてしまう問題を修正
 // 2.0.2 2020/09/13 ヘルプ微修正
 // 2.0.1 2020/09/13 ヘルプ微修正
@@ -300,7 +302,7 @@
 
     Game_Picture.prototype.showVideo = function(video) {
         this._videoReload = video.reload;
-        this._name = video.fileName;
+        this._name = PluginManagerEx.convertEscapeCharacters(video.fileName);
         this._videoLoop = video.loop;
         this._videoSmooth = video.smooth;
         this._videoFinishSwitch = video.finishSwitch;
@@ -640,7 +642,7 @@
 
     AudioManager.getVideoPictureVolume = function() {
         const property = this._movieVolumePropertyMap[param.movieVolumeType];
-        return Video._volume * this[property] / 100;
+        return Video._volume * (this.hasOwnProperty(property) ? this[property] / 100 : 1.0);
     };
 
     const _SceneManager_updateScene = SceneManager.updateScene;
