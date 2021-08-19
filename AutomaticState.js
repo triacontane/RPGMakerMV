@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.4 2021/01/19 1.4.2の修正で<ASアクター>のみ指定したステートが敵キャラにも有効になってしまう問題を修正
 // 1.4.3 2020/09/01 自動ステートでHPおよびMPの上限があがった状態でイベントコマンド『全回復』を実行するとあがった分が反映されない問題を修正
 // 1.4.2 2020/04/09 同一ステートに<ASアクター>と<AS敵キャラ>のタグを付けられるよう修正
 // 1.4.1 2019/01/27 AS武器装備およびAS防具装備のタグが敵にも適用される問題を修正
@@ -279,7 +280,7 @@
     Game_BattlerBase.prototype.isAutoStateBattler = function() {
         var battlerIdValue = this.getStateMetaString(this.getBattlerCheckTagIndex());
         if (!battlerIdValue) {
-            return true;
+            return !this.isStateMetaInfo(this.getOppositeBattlerCheckTagIndex());
         }
         var batterId = this.getBattlerId();
         return battlerIdValue.split(',').some(function(stateTargetIdText) {
