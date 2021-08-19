@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.13.1 2021/08/19 ParallaxLayerMap.jsと併用したとき、先方のプラグインで指定した合成方法が無効になる競合を修正
 // 1.13.0 2021/07/12 敵キャラやピクチャを表示する際、色相を指定できる機能を追加
 // 1.12.0 2021/05/18 プライオリティ設定に「-1」(下層タイルの背後で遠景の手前)を設定できるようにしました
 // 1.11.2 2021/05/05 アイコンセットの行を変更したときに正しくトリミングできない問題を修正
@@ -353,6 +354,10 @@
         this._absoluteY       = null;
         this._customTilesetId = 0;
         this._graphicHue      = 0;
+        // for ParallaxLayerMap.js
+        if (this.initBlendMode) {
+            return;
+        }
         this.setBlendMode(0);
     };
 
