@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/08/20 MZ向けに修正
 // 1.1.4 2020/07/11 複数ヒットする攻撃の会心判定が、ヒットごとに行われていなかった問題を修正
 // 1.1.3 2017/09/01 様子を見る等の一部の行動を敵キャラが実行するとエラーになる問題を修正（byツミオさま）
 // 1.1.2 2017/07/09 ヘルプのメモ欄「<CC計算式:JavaScript計算式>」の記述例が誤っていたので修正
@@ -20,7 +21,11 @@
 
 /*:
  * @plugindesc 会心カスタマイズプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CustomizeCritical.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @help 会心（クリティカルヒット）の確率とダメージ、演出をカスタマイズします。
  *
@@ -42,7 +47,8 @@
  * ・会心発生時の専用の戦闘アニメを適用します。
  * <CCアニメ:戦闘アニメID>
  *
- * アクターもしくは敵キャラのメモ欄に以下の通り記述してください。
+ * 会心発生時の演出を追加します。アクター、職業、敵キャラ、武器、防具、ステート
+ * いずれかのメモ欄に以下の通り記述してください。
  * ただし、フロントビューの場合、敵キャラのアニメーションは表示されません。
  *
  * ・演出用の戦闘アニメを実行前に表示します。
@@ -54,7 +60,10 @@
  * ※ 敵全体あるいは複数回攻撃するスキルの場合、1回でも会心判定になった場合
  * 会心用の演出となります。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -62,66 +71,25 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName    = 'CustomizeCritical';
-    var metaTagPrefix = 'CC';
-
-    var getArgString = function(arg, upperFlg) {
-        arg = convertEscapeCharactersAndEval(arg, false);
-        return upperFlg ? arg.toUpperCase() : arg;
-    };
-
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharactersAndEval(arg, true), 10) || 0).clamp(min, max);
-    };
-
-    var convertEscapeCharactersAndEval = function(text, evalFlg) {
-        if (text === null || text === undefined) {
-            text = evalFlg ? '0' : '';
-        }
-        var window = SceneManager._scene._windowLayer.children[0];
-        if (window) {
-            var result = window.convertEscapeCharacters(text);
-            return evalFlg ? eval(result) : result;
-        } else {
-            return text;
-        }
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
 
     //=============================================================================
     // Game_Action
     //  会心をカスタマイズします。
     //=============================================================================
-    var _Game_Action_evalDamageFormula      = Game_Action.prototype.evalDamageFormula;
+    const _Game_Action_evalDamageFormula      = Game_Action.prototype.evalDamageFormula;
     Game_Action.prototype.evalDamageFormula = function(target) {
-        var item    = this.item();
-        var formula = getMetaValues(item, ['計算式', 'Formula']);
+        const item    = this.item();
+        const formula = PluginManagerEx.findMetaValue(item, ['CC計算式', 'CCFormula']);
         if (formula && target.result().critical) {
             try {
-                var a     = this.subject();
-                var b     = target;
-                var v     = $gameVariables._data;
-                var sign  = ([3, 4].contains(item.damage.type) ? -1 : 1);
-                var value = Math.max(eval(getArgString(formula)), 0) * sign;
-                if (isNaN(value)) value = 0;
-                return value;
+                const a     = this.subject();
+                const b     = target;
+                const v     = $gameVariables._data;
+                const sign  = ([3, 4].contains(item.damage.type) ? -1 : 1);
+                const value = Math.max(eval(formula), 0) * sign;
+                return isNaN(value) ? 0 : value;
             } catch (e) {
                 return 0;
             }
@@ -130,9 +98,9 @@
         }
     };
 
-    var _Game_Action_itemCri            = Game_Action.prototype.itemCri;
+    const _Game_Action_itemCri            = Game_Action.prototype.itemCri;
     Game_Action.prototype.itemCri = function(target) {
-        var queue = this._criticalQueue;
+        const queue = this._criticalQueue;
         if (queue && queue.length > 0) {
             return queue.shift() ? 1.0 : 0.0;
         } else {
@@ -141,13 +109,13 @@
     };
 
     Game_Action.prototype.judgeCritical = function(target) {
-        var changeValue = getMetaValues(this.item(), ['確率変更', 'ProbChange']);
-        var itemCritical;
+        const changeValue = PluginManagerEx.findMetaValue(this.item(), ['CC確率変更', 'CCProbChange']);
+        let itemCritical;
         if (changeValue) {
-            itemCritical = getArgNumber(changeValue, 0, 100) / 100;
+            itemCritical = changeValue / 100;
         } else {
-            var addValue = getMetaValues(this.item(), ['確率加算', 'ProbAdd']);
-            itemCritical = _Game_Action_itemCri.apply(this, arguments) + (addValue ? getArgNumber(addValue) / 100 : 0);
+            const addValue = PluginManagerEx.findMetaValue(this.item(), ['CC確率加算', 'CCProbAdd']);
+            itemCritical = _Game_Action_itemCri.apply(this, arguments) + (addValue ? addValue / 100 : 0);
         }
         this._criticalQueue.push(Math.random() < itemCritical);
     };
@@ -165,9 +133,9 @@
         })
     };
 
-    var _Game_Action_applyCritical      = Game_Action.prototype.applyCritical;
+    const _Game_Action_applyCritical      = Game_Action.prototype.applyCritical;
     Game_Action.prototype.applyCritical = function(damage) {
-        var formula = getMetaValues(this.item(), ['計算式', 'Formula']);
+        const formula = PluginManagerEx.findMetaValue(this.item(), ['CC計算式', 'CCFormula']);
         return formula ? damage : _Game_Action_applyCritical.apply(this, arguments);
     };
 
@@ -175,16 +143,13 @@
     // Game_Battler
     //  データオブジェクトを取得します。
     //=============================================================================
-    Game_Battler.prototype.getData = function() {
-        return null;
-    };
-
-    Game_Actor.prototype.getData = function() {
-        return this.actor();
-    };
-
-    Game_Enemy.prototype.getData = function() {
-        return this.enemy();
+    Game_Battler.prototype.findCriticalEffect = function(tags) {
+        let result = null;
+        this.traitObjects().some(obj => {
+            result = PluginManagerEx.findMetaValue(obj, tags);
+            return result !== null;
+        });
+        return result;
     };
 
     //=============================================================================
@@ -202,23 +167,23 @@
     // Window_BattleLog
     //  会心の演出を追加定義します。
     //=============================================================================
-    var _Window_BattleLog_startAction      = Window_BattleLog.prototype.startAction;
+    const _Window_BattleLog_startAction      = Window_BattleLog.prototype.startAction;
     Window_BattleLog.prototype.startAction = function(subject, action, targets) {
         this._noCritialAnimationId = 0;
         this._currentAction = action;
         BattleManager.judgeCritical(action, targets);
         if (action.isCritical()) {
-            this.showCriticalEffect(subject, action, targets);
-            var animationIdString = getMetaValues(action.item(), ['アニメ', 'Animation']);
-            if (animationIdString) {
+            this.showCriticalEffect(subject);
+            const animationId = PluginManagerEx.findMetaValue(action.item(), ['CCアニメ', 'CCAnimation']);
+            if (animationId) {
                 this._noCritialAnimationId = action.item().animationId;
-                action.item().animationId  = getArgNumber(animationIdString, 1);
+                action.item().animationId  = animationId;
             }
         }
         _Window_BattleLog_startAction.apply(this, arguments);
     };
 
-    var _Window_BattleLog_endAction      = Window_BattleLog.prototype.endAction;
+    const _Window_BattleLog_endAction      = Window_BattleLog.prototype.endAction;
     Window_BattleLog.prototype.endAction = function(subject) {
         _Window_BattleLog_endAction.apply(this, arguments);
         if (this._noCritialAnimationId) {
@@ -228,24 +193,35 @@
         this._currentAction = null;
     };
 
-    Window_BattleLog.prototype.showCriticalEffect = function(subject, action, targets) {
-        var animationIdString = getMetaValues(subject.getData(), ['演出', 'エフェクト']);
-        if (animationIdString) {
-            var animationId = getArgNumber(animationIdString, 1);
-            var animation   = $dataAnimations[animationId];
+    Window_BattleLog.prototype.showCriticalEffect = function(subject) {
+        const animationId = subject.findCriticalEffect(['CC演出', 'CCエフェクト']);
+        if (animationId > 0) {
+            const animation = $dataAnimations[animationId];
             if (animation) {
-                this.push('showAnimation', subject, targets.clone(), animationId);
-                this.push('waitForFrame', animation.frames.length * 4);
+                this.push('showNormalAnimation', [subject], animationId);
+                this.push('waitForAnimation');
             }
         }
-        var message = getMetaValues(subject.getData(), ['メッセージ', 'Message']);
+        const message = subject.findCriticalEffect(['CCメッセージ', 'CCMessage']);
         if (message) {
             this.push('addText', message);
         }
     };
 
-    Window_BattleLog.prototype.waitForFrame = function(frame) {
-        this._waitCount = frame;
+    const _Window_BattleLog_updateWaitMode      = Window_BattleLog.prototype.updateWaitMode;
+    Window_BattleLog.prototype.updateWaitMode = function() {
+        let waiting = false;
+        if (this._waitMode === 'animation') {
+            waiting = this._spriteset.isAnimationPlaying();
+        }
+        if (!waiting) {
+            waiting = _Window_BattleLog_updateWaitMode.apply(this, arguments);
+        }
+        return waiting;
+    };
+
+    Window_BattleLog.prototype.waitForAnimation = function() {
+        this.setWaitMode('animation');
     };
 })();
 
