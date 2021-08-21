@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.3 2021/08/21 ウィンドウサイズが奇数になった場合の調整処理を試験的に追加
  1.1.2 2021/01/17 パラメータでテール画像を指定していない状態でプラグインコマンドからテール画像を変更しても正しく反映されない問題を修正
  1.1.1 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.1.0 2020/10/17 テール画像を変更できるプラグインコマンドを追加
@@ -1428,8 +1429,16 @@
         } else if (param.NoUseTail) {
             height += 8;
         }
-        this.width  = Math.max(width, this.getMinimumWidth());
-        this.height = Math.max(height, this.getMinimumHeight());
+        width = Math.max(width, this.getMinimumWidth());
+        if (width % 2 !== 0) {
+            width++;
+        }
+        height = Math.max(height, this.getMinimumHeight());
+        if (height % 2 !== 0) {
+            height++;
+        }
+        this.width = width;
+        this.height = height;
         this.resetFontSettings();
     };
 
