@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2021/08/21 パラメータから共通の計算式、効果音、演出アニメーション、メッセージを指定できる機能を追加
 // 1.2.0 2021/08/20 MZ向けに修正
 // 1.1.4 2020/07/11 複数ヒットする攻撃の会心判定が、ヒットごとに行われていなかった問題を修正
 // 1.1.3 2017/09/01 様子を見る等の一部の行動を敵キャラが実行するとエラーになる問題を修正（byツミオさま）
@@ -27,12 +28,36 @@
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
+ * @param commonFormula
+ * @text 共通計算式
+ * @desc 会心が発生したときの共通計算式です。メモ欄の指定があればそちらが優先されます。
+ * @default
+ * @type multiline_string
+ *
+ * @param commonMessage
+ * @text 共通メッセージ
+ * @desc 会心が発生したときの共通メッセージです。メモ欄の指定があればそちらが優先されます。
+ * @default
+ *
+ * @param commonAnimation
+ * @text 共通演出
+ * @desc 会心が発生したときの共通演出アニメーションです。メモ欄の指定があればそちらが優先されます。
+ * @default 0
+ * @type animation
+ *
+ * @param commonSe
+ * @text 共通効果音
+ * @desc 会心が発生したときの演奏する効果音です。
+ * @default
+ * @type struct<SE>
+ *
  * @help 会心（クリティカルヒット）の確率とダメージ、演出をカスタマイズします。
  *
  * スキルのメモ欄に以下の通り記述してください。
  *
  * ・会心に専用計算式を適用します。書式はダメージ計算式と同様です。
  * 　計算式を適用した場合、デフォルトのダメージ3倍は無効になります。
+ * 　ローカル変数「normalDamage」から元のダメージ値を参照できます。
  * <CC計算式:JavaScript計算式>
  * 例：<CC計算式:a.atk * 4> //攻撃力の4倍で相手の防御は無視
  *
@@ -71,8 +96,45 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~SE:
+ *
+ * @param name
+ * @text SEファイル名
+ * @desc SEのファイル名です。
+ * @require 1
+ * @dir audio/se/
+ * @type file
+ * @default
+ *
+ * @param volume
+ * @text SEボリューム
+ * @desc SEのボリュームです。
+ * @type number
+ * @default 90
+ * @min 0
+ * @max 100
+ *
+ * @param pitch
+ * @text SEピッチ
+ * @desc SEのピッチです。
+ * @type number
+ * @default 100
+ * @min 50
+ * @max 150
+ *
+ * @param pan
+ * @text SEバランス
+ * @desc SEの左右バランスです。
+ * @type number
+ * @default 0
+ * @min -100
+ * @max 100
+ */
+
 (()=> {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Game_Action
@@ -80,22 +142,26 @@
     //=============================================================================
     const _Game_Action_evalDamageFormula      = Game_Action.prototype.evalDamageFormula;
     Game_Action.prototype.evalDamageFormula = function(target) {
-        const item    = this.item();
-        const formula = PluginManagerEx.findMetaValue(item, ['CC計算式', 'CCFormula']);
+        const formula = this.findCriticalFormula();
+        const normalDamage = _Game_Action_evalDamageFormula.apply(this, arguments);
         if (formula && target.result().critical) {
             try {
                 const a     = this.subject();
                 const b     = target;
                 const v     = $gameVariables._data;
-                const sign  = ([3, 4].contains(item.damage.type) ? -1 : 1);
+                const sign  = ([3, 4].contains(this.item().damage.type) ? -1 : 1);
                 const value = Math.max(eval(formula), 0) * sign;
                 return isNaN(value) ? 0 : value;
             } catch (e) {
                 return 0;
             }
         } else {
-            return _Game_Action_evalDamageFormula.apply(this, arguments);
+            return normalDamage;
         }
+    };
+
+    Game_Action.prototype.findCriticalFormula = function() {
+        return PluginManagerEx.findMetaValue(this.item(), ['CC計算式', 'CCFormula']) || param.commonFormula;
     };
 
     const _Game_Action_itemCri            = Game_Action.prototype.itemCri;
@@ -135,7 +201,7 @@
 
     const _Game_Action_applyCritical      = Game_Action.prototype.applyCritical;
     Game_Action.prototype.applyCritical = function(damage) {
-        const formula = PluginManagerEx.findMetaValue(this.item(), ['CC計算式', 'CCFormula']);
+        const formula = this.findCriticalFormula();
         return formula ? damage : _Game_Action_applyCritical.apply(this, arguments);
     };
 
@@ -193,18 +259,23 @@
         this._currentAction = null;
     };
 
-    Window_BattleLog.prototype.showCriticalEffect = function(subject) {
-        const animationId = subject.findCriticalEffect(['CC演出', 'CCエフェクト']);
-        if (animationId > 0) {
-            const animation = $dataAnimations[animationId];
-            if (animation) {
-                this.push('showNormalAnimation', [subject], animationId);
-                this.push('waitForAnimation');
-            }
+    const _Window_BattleLog_displayCritical = Window_BattleLog.prototype.displayCritical;
+    Window_BattleLog.prototype.displayCritical = function(target) {
+        if (param.commonSe　&& param.commonSe.name) {
+            AudioManager.playSe(param.commonSe);
         }
-        const message = subject.findCriticalEffect(['CCメッセージ', 'CCMessage']);
+        _Window_BattleLog_displayCritical.apply(this, arguments);
+    };
+
+    Window_BattleLog.prototype.showCriticalEffect = function(subject) {
+        const message = subject.findCriticalEffect(['CCメッセージ', 'CCMessage']) || param.commonMessage;
         if (message) {
             this.push('addText', message);
+        }
+        const animationId = subject.findCriticalEffect(['CC演出', 'CCエフェクト']) || param.commonAnimation;
+        if (animationId > 0 && $dataAnimations[animationId]) {
+            this.push('showNormalAnimation', [subject], animationId);
+            this.push('waitForAnimation');
         }
     };
 
