@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.4 2021/08/22 「並列処理として実行」のパラメータが戦闘画面には適用されない問題を修正
 // 1.14.3 2021/05/01 紐付け解除の際の設定値を変更
 // 1.14.2 2020/06/05 ヘルプのキーバインドにpagedownとpageupを追加
 // 1.14.1 2020/05/16 ヘルプのコマンド部分の紛らわしい記述を修正
@@ -593,6 +594,16 @@
     //  ピクチャがタッチされたときのコモンイベント呼び出し処理を追加定義します。
     //=============================================================================
     Game_Troop.prototype.setupPictureCommonEvent = Game_Map.prototype.setupPictureCommonEvent;
+    Game_Troop.prototype.setupPictureParallelCommonEvent = Game_Map.prototype.setupPictureParallelCommonEvent;
+    Game_Troop.prototype.updatePictureCommonEvents = Game_Map.prototype.updatePictureCommonEvents;
+
+    Game_Troop.prototype.updateAllPictureCommonEvent = function() {
+        this.setupPictureCommonEvent();
+        this.setupPictureParallelCommonEvent();
+        if (this._pictureCommonEvents && this._pictureCommonEvents.length > 0) {
+            this.updatePictureCommonEvents();
+        }
+    };
 
     Game_Troop.prototype.isExistPictureCommon = function() {
         return this._interpreter.isSetupFromPicture();
@@ -765,7 +776,7 @@
     var _Scene_Battle_update      = Scene_Battle.prototype.update;
     Scene_Battle.prototype.update = function() {
         this.updateTouchPictures();
-        $gameTroop.setupPictureCommonEvent();
+        $gameTroop.updateAllPictureCommonEvent();
         _Scene_Battle_update.apply(this, arguments);
     };
 
