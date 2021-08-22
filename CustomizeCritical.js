@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2021/08/22 1.3.0の修正により会心でないときにも効果音が演奏されてしまう不具合を修正
 // 1.3.0 2021/08/21 パラメータから共通の計算式、効果音、演出アニメーション、メッセージを指定できる機能を追加
 // 1.2.0 2021/08/20 MZ向けに修正
 // 1.1.4 2020/07/11 複数ヒットする攻撃の会心判定が、ヒットごとに行われていなかった問題を修正
@@ -261,7 +262,7 @@
 
     const _Window_BattleLog_displayCritical = Window_BattleLog.prototype.displayCritical;
     Window_BattleLog.prototype.displayCritical = function(target) {
-        if (param.commonSe　&& param.commonSe.name) {
+        if (target.result().critical && param.commonSe　&& param.commonSe.name) {
             AudioManager.playSe(param.commonSe);
         }
         _Window_BattleLog_displayCritical.apply(this, arguments);
