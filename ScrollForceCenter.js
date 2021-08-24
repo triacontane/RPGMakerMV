@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2021/08/24 遠景を設定してスクロールしたときに画面端に近づくと遠景が高速でスクロールしてしまう問題を修正
 // 1.1.1 2020/11/26 イベントテストでエラーになる問題を修正
 // 1.1.0 2019/04/28 中心座標を指定したぶんだけずらせる機能を追加
 // 1.0.0 2016/09/15 初版
@@ -260,36 +261,52 @@
     var _Game_Map_scrollDown = Game_Map.prototype.scrollDown;
     Game_Map.prototype.scrollDown = function(distance) {
         var forceCenterDisplayY = this._displayY + distance;
+        var lastY = this._displayY;
+        var lastPy = this._parallaxY;
         _Game_Map_scrollDown.apply(this, arguments);
         if (this.isForceCenterVertical()) {
             this._displayY = forceCenterDisplayY;
+            this._parallaxY = lastPy + this._displayY - lastY;
+            this._foregroundY = this._parallaxY;
         }
     };
 
     var _Game_Map_scrollLeft      = Game_Map.prototype.scrollLeft;
     Game_Map.prototype.scrollLeft = function(distance) {
         var forceCenterDisplayX = this._displayX - distance;
+        var lastX = this._displayX;
+        var lastPx = this._parallaxX;
         _Game_Map_scrollLeft.apply(this, arguments);
         if (this.isForceCenterHorizontal()) {
             this._displayX = forceCenterDisplayX;
+            this._parallaxX = lastPx + this._displayX - lastX;
+            this._foregroundX = this._parallaxX;
         }
     };
 
     var _Game_Map_scrollRight      = Game_Map.prototype.scrollRight;
     Game_Map.prototype.scrollRight = function(distance) {
         var forceCenterDisplayX = this._displayX + distance;
+        var lastX = this._displayX;
+        var lastPx = this._parallaxX;
         _Game_Map_scrollRight.apply(this, arguments);
         if (this.isForceCenterHorizontal()) {
             this._displayX = forceCenterDisplayX;
+            this._parallaxX = lastPx + this._displayX - lastX;
+            this._foregroundX = this._parallaxX;
         }
     };
 
     var _Game_Map_scrollUp = Game_Map.prototype.scrollUp;
     Game_Map.prototype.scrollUp = function(distance) {
         var forceCenterDisplayY = this._displayY - distance;
+        var lastY = this._displayY;
+        var lastPy = this._parallaxY;
         _Game_Map_scrollUp.apply(this, arguments);
         if (this.isForceCenterVertical()) {
             this._displayY = forceCenterDisplayY;
+            this._parallaxY = lastPy + this._displayY - lastY;
+            this._foregroundY = this._parallaxY;
         }
     };
 })();
