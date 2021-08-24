@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2021/08/24 画像のみ向き制限する設定のとき、メニュー画面を開いて戻ると向きが戻ってしまう問題を修正
 // 1.2.1 2021/05/17 プレイヤーの初期の向きを下から右に変更
 // 1.2.0 2019/07/20 画像のみ向き制限する仕様を追加
 // 1.1.0 2017/07/25 上向きを許容するパラメータを追加
@@ -157,6 +158,14 @@
         return false;
     };
 
+    Game_CharacterBase.prototype.getPrevPatternY = function(result) {
+        if (this.isHorizontalMove() && this.isNeedModifyDirection() && this._prevPatternY) {
+            return this._prevPatternY;
+        }
+        this._prevPatternY = result;
+        return result;
+    };
+
     var _Game_Player_initMembers = Game_Player.prototype.initMembers;
     Game_Player.prototype.initMembers = function() {
         _Game_Player_initMembers.apply(this, arguments);
@@ -181,11 +190,7 @@
         var _Sprite_Character_characterPatternY = Sprite_Character.prototype.characterPatternY;
         Sprite_Character.prototype.characterPatternY = function() {
             var result = _Sprite_Character_characterPatternY.apply(this, arguments);
-            if (this._character.isHorizontalMove() && this._character.isNeedModifyDirection() && this._prevPatternY) {
-                return this._prevPatternY;
-            }
-            this._prevPatternY = result;
-            return result;
+            return this._character.getPrevPatternY(result);
         };
     }
 })();
