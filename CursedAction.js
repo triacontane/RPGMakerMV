@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2021/08/26 呪い確率を設定する英名のメモ欄「CurseRate」が機能していなかった問題を修正
 // 1.0.1 2020/02/26 特定条件化で戦闘行動の強制を実行するとエラーになる問題を修正
 // 1.0.0 2018/06/16 初版
 // ----------------------------------------------------------------------------
@@ -216,7 +217,7 @@
     Game_Battler.prototype.addCursedAction = function(index) {
         var skillIdText = this.getMetaInfoCursedAction(['呪いスキル', 'CurseSkill'], index);
         if (skillIdText) {
-            var rate = this.getMetaInfoCursedAction(['呪い確率', 'CurseCond'], index);
+            var rate = this.getMetaInfoCursedAction(['呪い確率', 'CurseRate'], index);
             if (rate && parseInt(rate) < Math.randomInt(100)) {
                 return true;
             }
