@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.20.0 2021/08/26 ウィンドウ選択時の効果音を独自に指定できる機能を追加
+                   $gameScreen.update()を呼ぶように変更。画面のフラッシュなど一部画面効果が有効になります。
  1.19.1 2021/08/12 1.19.0の修正の一部が反映されていなかった問題を修正
  1.19.0 2021/08/12 敵キャラの画像を取得するとき、フロントビュー用とサイドビュー用とで取得元が逆になっていた不具合を修正
                    敵キャラやピクチャの画像を表示する際、縦と横の揃えを指定できるパラメータを追加
@@ -659,6 +661,46 @@
  * @desc コマンドが非表示にされたとき、消える代わりに指定文字列でマスキングされます。ヘルプ欄もマスキングされます。
  * @default
  * @type string
+ *
+ * @param okSound
+ * @text 決定SE
+ * @desc 選択すると通常の決定音の代わりに指定したSEが演奏されます。
+ * @default
+ * @type struct<AudioSe>
+ */
+
+/*~struct~AudioSe:
+ * @param name
+ * @text ファイル名
+ * @desc ファイル名称です。
+ * @default
+ * @require 1
+ * @dir audio/se/
+ * @type file
+ *
+ * @param volume
+ * @text 音量
+ * @desc ボリュームです。
+ * @default 90
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param pitch
+ * @text ピッチ
+ * @desc ピッチです。
+ * @default 100
+ * @type number
+ * @min 50
+ * @max 150
+ *
+ * @param pan
+ * @text 左右バランス
+ * @desc 左右バランスです。
+ * @default 0
+ * @type number
+ * @min -100
+ * @max 100
  */
 
 /*~struct~Command:
@@ -1119,6 +1161,7 @@
                 this.updatePanorama();
             }
             this.refreshWindowIfNeed();
+            $gameScreen.update();
         }
 
         updatePanorama() {
@@ -1339,6 +1382,14 @@
                 this._enemySprite.bitmap.clear();
             }
             super.paint();
+        }
+
+        playOkSound() {
+            if (this._data.okSound) {
+                AudioManager.playSe(this._data.okSound);
+            } else {
+                super.playOkSound();
+            }
         }
 
         update() {
