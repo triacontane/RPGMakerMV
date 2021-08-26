@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.19.1 2021/08/26 プラグインを有効にしてパラメータを一切弄らずにサンプル画面を開くとウィンドウが正常に表示されない問題を修正
  1.19.0 2021/08/26 ウィンドウ選択時の効果音を独自に指定できる機能を追加
                    $gameScreen.update()を呼ぶように変更。画面のフラッシュなど一部画面効果が有効になります。
  1.18.0 2021/08/12 敵キャラの画像を取得するとき、フロントビュー用とサイドビュー用とで取得元が逆になっていた不具合を修正
@@ -673,6 +674,7 @@
 
 /*~struct~AudioSe:
  * @param name
+ * @text ファイル名
  * @desc ファイル名称です。
  * @default
  * @require 1
@@ -680,6 +682,7 @@
  * @type file
  *
  * @param volume
+ * @text 音量
  * @desc ボリュームです。
  * @default 90
  * @type number
@@ -687,6 +690,7 @@
  * @max 100
  *
  * @param pitch
+ * @text ピッチ
  * @desc ピッチです。
  * @default 100
  * @type number
@@ -694,6 +698,7 @@
  * @max 150
  *
  * @param pan
+ * @text 左右バランス
  * @desc 左右バランスです。
  * @default 0
  * @type number
@@ -1357,7 +1362,7 @@
         }
 
         updateRotation() {
-            this.rotation = this._data.Rotation * Math.PI / 180;
+            this.rotation = (this._data.Rotation || 0) * Math.PI / 180;
         }
 
         select(index) {
