@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2021/08/28 戦闘不能ステートを直接付与したときに撃破数がカウントされない問題を修正
 // 1.4.0 2021/06/12 MZ用のリファクタリング
 // 1.3.1 2021/03/26 ヘルプの誤記を修正
 // 1.3.0 2021/03/03 1行動ごとの最大与ダメージを記録する変数を追加
@@ -350,9 +351,22 @@ function Game_TradeRecord() {
     Game_Action.prototype.executeHpDamage = function(target, value) {
         _Game_Action_executeHpDamage.apply(this, arguments);
         if (target.hp === 0) {
-            this.subject().recordKillEnemyCounter(target.getBattlerId());
-            target.recordDead();
+            this.addKillCount(target);
         }
+    };
+
+    const _Game_Action_itemEffectAddState = Game_Action.prototype.itemEffectAddState;
+    Game_Action.prototype.itemEffectAddState = function(target, effect) {
+        const alive = target.isAlive();
+        _Game_Action_itemEffectAddState.apply(this, arguments);
+        if (alive && target.isDead()) {
+            this.addKillCount(target);
+        }
+    };
+
+    Game_Action.prototype.addKillCount = function(target) {
+        this.subject().recordKillEnemyCounter(target.getBattlerId());
+        target.recordDead();
     };
 
     //=============================================================================
