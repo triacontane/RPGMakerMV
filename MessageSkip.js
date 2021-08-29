@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.1 2021/08/29 スキップ中はウィンドウ背景が変わってもウィンドウを閉じないよう修正
 // 1.16.0 2021/06/15 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様変更
 // 1.15.1 2021/06/01 1.15.0でループボイスを再生するとオートモードで文章が送られなくなる問題を修正
 // 1.15.0 2021/05/31 SimpleVoice.jsと併用したとき、ボイス演奏中はオートモードによる文章送りを待機するよう変更
@@ -618,6 +619,16 @@ function Sprite_Frame() {
         if (!paramSkipPicture) return;
         this._skipButton = new Sprite_MessageButton(paramSkipPicture);
         this.addChild(this._skipButton);
+    };
+
+    var _Window_Message_areSettingsChanged = Window_Message.prototype.areSettingsChanged;
+    Window_Message.prototype.areSettingsChanged = function() {
+        var result = _Window_Message_areSettingsChanged.apply(this, arguments);
+        if ($gameMessage.skipFlg()) {
+            return this._positionType !== $gameMessage.positionType();
+        } else {
+            return result;
+        }
     };
 
     Window_Message.prototype.createSpriteAutoButton = function() {
