@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.3 2021/08/29 DirectivityShake.jsと併用したとき、角度を付けたシェイクにもP_OUT_OF_SCREEN_SHAKE_ONが対応できるよう修正
 // 1.5.2 2019/06/02 P_OUT_OF_SCREEN_SHAKE_ON設定時、シェイクの強さ次第で僅かに揺れていた問題を修正
 // 1.5.1 2019/05/02 P_OUT_OF_SCREEN_SHAKE_ONのヘルプを追記
 // 1.5.0 2016/08/06 ピクチャを画面のシェイクと連動しないようにするコマンドを追加
@@ -494,13 +495,40 @@
 
     var _Game_Picture_x      = Game_Picture.prototype.x;
     Game_Picture.prototype.x = function() {
-        return _Game_Picture_x.apply(this, arguments) + this.getShakeX() -
-            (this._outOfScreenShake ? Math.round($gameScreen.shake()) : 0);
+        return _Game_Picture_x.apply(this, arguments) + this.getShakeX() +
+            (this._outOfScreenShake ? this.antiShakeX() : 0);
+    };
+
+    Game_Picture.prototype.antiShakeX = function() {
+        if (!this._outOfScreenShake) {
+            return 0;
+        }
+        var shakeDistance = Math.round($gameScreen.shake());
+        if ($gameScreen.getShakeRotation) {
+            var shakeRotation  = $gameScreen.getShakeRotation();
+            return -Math.round(Math.cos(shakeRotation) * shakeDistance);
+        } else {
+            return -shakeDistance;
+        }
     };
 
     var _Game_Picture_y      = Game_Picture.prototype.y;
     Game_Picture.prototype.y = function() {
-        return _Game_Picture_y.apply(this, arguments) + this.getShakeY();
+        return _Game_Picture_y.apply(this, arguments) + this.getShakeY() +
+            (this._outOfScreenShake ? this.antiShakeY() : 0);
+    };
+
+    Game_Picture.prototype.antiShakeY = function() {
+        if (!this._outOfScreenShake) {
+            return 0;
+        }
+        var shakeDistance = Math.round($gameScreen.shake());
+        if ($gameScreen.getShakeRotation) {
+            var shakeRotation  = $gameScreen.getShakeRotation();
+            return -Math.sin(shakeRotation) * shakeDistance;
+        } else {
+            return 0;
+        }
     };
 
     Game_Picture.prototype.setOutOfScreenShake = function(value) {
