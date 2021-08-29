@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.1 2021/08/29 BigEnemy.jsと併用したとき、ポップアップがダメージと同じ場所に出るよう修正
 // 1.11.0 2021/05/03 ポップアップの縁取りカラーを指定できる機能を追加
 // 1.10.1 2021/04/22 身代わりポップアップの対象を身代わりした側とされた側で選べるよう修正
 // 1.10.0 2021/04/21 身代わり発生時にポップアップする機能を追加
@@ -687,6 +688,11 @@
                     this.setZPositionOfPopup(sprite);
                 }
                 this._damages.push(sprite);
+                // for BigEnemy.js
+                if (this.adjustDamagePopup) {
+                    this.adjustDamagePopup();
+                }
+                // for BigEnemy.js
                 this.parent.addChild(sprite);
             }
             this._battler.clearMessagePopup();
