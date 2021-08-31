@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2021/08/31 ヘルプのプラグイン名表記の誤りを修正
  1.0.1 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.0.0 2020/06/15 MV版から流用作成
 ----------------------------------------------------------------------------
@@ -22,7 +23,7 @@
  * @orderAfter PluginCommonBase
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventMovableLimitation.js
  *
- * @help EventMovableRange.js
+ * @help EventMovableLimitation.js
  *
  * Limit the movable range of events.
  * If you try to move beyond the limits from the initial placement, you will not be able to move.
@@ -44,7 +45,7 @@
  * @orderAfter PluginCommonBase
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventMovableLimitation.js
  *
- * @help EventMovableRange.js
+ * @help EventMovableLimitation.js
  *
  * イベントの移動可能な範囲を制限します。
  * 初期配置から制限を超えて移動しようとすると移動できなくなります。
