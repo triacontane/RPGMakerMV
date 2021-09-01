@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.2 2021/09/01 1.11.1の修正で通常モンスターのポップアップ位置がずれてしまう問題を修正
 // 1.11.1 2021/08/29 BigEnemy.jsと併用したとき、ポップアップがダメージと同じ場所に出るよう修正
 // 1.11.0 2021/05/03 ポップアップの縁取りカラーを指定できる機能を追加
 // 1.10.1 2021/04/22 身代わりポップアップの対象を身代わりした側とされた側で選べるよう修正
@@ -689,7 +690,7 @@
                 }
                 this._damages.push(sprite);
                 // for BigEnemy.js
-                if (this.adjustDamagePopup) {
+                if (this._enemy && this._enemy.isBigEnemy && this._enemy.isBigEnemy()) {
                     this.adjustDamagePopup();
                 }
                 // for BigEnemy.js
