@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.21.1 2021/09/01 メニュー画面にメッセージ表示するタイプのプラグインとの競合対策
  1.20.0 2021/08/26 ウィンドウ選択時の効果音を独自に指定できる機能を追加
                    $gameScreen.update()を呼ぶように変更。画面のフラッシュなど一部画面効果が有効になります。
  1.19.1 2021/08/12 1.19.0の修正の一部が反映されていなかった問題を修正
@@ -1050,7 +1051,9 @@
                 this.createHelpWindow();
             }
             this.createCustomMenuWindowList();
-            this.createAllMessageWindow();
+            if (!this._messageWindow) {
+                this.createAllMessageWindow();
+            }
             this.createSpriteset();
             if (this._customData.Panorama) {
                 this.setPanoramaBitmap();
