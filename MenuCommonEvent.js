@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2021/09/01 最新版のSceneCustomMenu.jsと併用できるよう修正
 // 1.4.0 2021/03/24 MZで実行できるよう修正
 // 1.3.7 2020/08/28 1.3.6の修正方法が間違っていた問題を修正
 // 1.3.6 2020/08/27 DWindow.jsと組み合わせたときにコモンイベントが存在するメニューで動的ウィンドウが作成されてしまう競合を修正
@@ -368,7 +369,6 @@
         if (!this._messageWindow) {
             this.createAllMessageWindow();
         }
-        this.changeParentMessageWindow();
     };
 
     Scene_MenuBase.prototype.hasCommonEvent = function() {
@@ -376,6 +376,8 @@
     };
 
     Scene_MenuBase.prototype.createAllMessageWindow = function() {
+        this._messageWindowAdd = true;
+        this.createMessageWindowLayer();
         Scene_Message.prototype.createMessageWindow.call(this);
         Scene_Message.prototype.createScrollTextWindow.call(this);
         Scene_Message.prototype.createGoldWindow.call(this);
@@ -384,6 +386,23 @@
         Scene_Message.prototype.createNumberInputWindow.call(this);
         Scene_Message.prototype.createEventItemWindow.call(this);
         Scene_Message.prototype.associateWindows.call(this);
+        this._messageWindowAdd = false;
+    };
+
+    const _Scene_MenuBase_addWindow = Scene_MenuBase.prototype.addWindow;
+    Scene_MenuBase.prototype.addWindow = function(window) {
+        if (this._messageWindowAdd) {
+            this._messageWindowLayer.addChild(window);
+        } else {
+            _Scene_MenuBase_addWindow.apply(this, arguments);
+        }
+    };
+
+    Scene_MenuBase.prototype.createMessageWindowLayer = function() {
+        this._messageWindowLayer = new WindowLayer();
+        this._messageWindowLayer.x = (Graphics.width - Graphics.boxWidth) / 2;
+        this._messageWindowLayer.y = (Graphics.height - Graphics.boxHeight) / 2;
+        this.addChild(this._messageWindowLayer);
     };
 
     Scene_MenuBase.prototype.messageWindowRect = function() {
