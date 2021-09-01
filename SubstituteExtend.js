@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2021/09/01 身代わりの発動率を設定するタグを追加
 // 1.6.0 2021/07/31 指定した属性の場合のみ身代わりするためのスクリプト凡例を追加
 // 1.5.0 2021/07/18 MZで動作するよう修正
 // 1.4.1 2020/06/10 1.4.0の修正でパラメータ「身代わり条件_必中以外」が消えていた問題を修正
@@ -107,6 +108,8 @@
  * <SE_SubstituteSwitch:4>  # 同上
  * <SE_身代わり計算式:f>    # 計算式[f]の結果がtrueのときのみ発動します。(※3)
  * <SE_SubstituteFormula:f> # 同上
+ * <SE_身代わり率:50>       # 50%の確率で身代わり発動します。
+ * <SE_SubstituteRate:50> # 同上
  *
  * ※1 パラメータからデフォルトの身代わり条件である「瀕死」を
  * 無効にした場合のみ判定します。
@@ -193,7 +196,8 @@
             this.isValidSubstituteSwitch() &&
             this.isValidSubstituteRestriction() &&
             this.isValidSubstituteFormula() &&
-            this.isValidSubstituteSkill();
+            this.isValidSubstituteSkill() &&
+            this.isValidSubstituteRate();
     };
 
     Game_BattlerBase.prototype.isValidSubstituteHpRate = function() {
@@ -233,6 +237,14 @@
         if (formula) {
             const action = BattleManager.getSubstituteAction();
             return eval(formula);
+        }
+        return true;
+    };
+
+    Game_BattlerBase.prototype.isValidSubstituteRate = function() {
+        const rate = this.getSubstituteMetaInfo(['SE_SubstituteRate', 'SE_身代わり率'], false);
+        if (rate) {
+            return Math.randomInt(100) < rate;
         }
         return true;
     };
