@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2021/09/04 ウィンドウの幅か高さが0のときは背景画像を非表示にするよう修正
 // 2.3.0 2021/05/06 名前ウィンドウがプリセットになかったので追加
 //                  ウィンドウが重なったときに背後をマスキングしない設定を追加
 // 2.2.0 2021/02/27 ウィンドウごとに個別のフォントを指定できる機能を追加
@@ -383,6 +384,9 @@
         this._windowBackImageSprites.forEach((sprite, index) => {
             const switchId = this.getBackImageDataItem(index, 'SwitchId');
             sprite.visible = !switchId || $gameSwitches.value(switchId);
+            if (this.width === 0 || this.height === 0) {
+                sprite.visible = false;
+            }
             if (sprite.visible && !this.getBackImageDataItem(index, 'WindowShow')) {
                 defaultVisible = false;
             }
