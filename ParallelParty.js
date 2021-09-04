@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2021/09/04 用語履歴を継承したとき、用語の確認フラグも継承するよう修正
 // 1.3.0 2019/01/02 用語辞典プラグイン使用時に用語履歴を常に継承できるよう修正
 // 1.2.1 2017/12/08 SceneGlossary.jsとの間で発生する可能性のある競合を解消
 // 1.2.0 2017/05/15 パーティを切り替えた際にリソースを統合できる機能を追加
@@ -222,7 +223,8 @@ function Game_Parties() {
             steps        : this._steps,
             itemHistory  : this._itemHistory,
             weaponHistory: this._weaponHistory,
-            armorHistory : this._armorHistory
+            armorHistory : this._armorHistory,
+            confirmedGlossaryItems: this._confirmedGlossaryItems
         };
     };
 
@@ -249,6 +251,7 @@ function Game_Parties() {
         }, this);
         this.gainGold(resources.gold);
         this._steps += resources.steps;
+        this.inheritItemHistory(targetParty);
         $gameParty.initAllItems();
         $gameParty.loseGold($gameParty.maxGold());
         $gameParty._steps = 0;
@@ -260,6 +263,7 @@ function Game_Parties() {
         this._itemHistory   = resources.itemHistory;
         this._weaponHistory = resources.weaponHistory;
         this._armorHistory  = resources.armorHistory;
+        this._confirmedGlossaryItems = resources.confirmedGlossaryItems;
     };
 
     Game_Party.prototype.moveSavedPosition = function() {
