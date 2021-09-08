@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.16.0 2021/09/08 スキップモードのときウェイトもスキップできる機能を追加
 // 1.15.1 2021/08/05 カスタムメニュー作成プラグインと併用したときにエラーが発生する現象を修正
 // 1.15.0 2021/06/15 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様変更
 // 1.14.1 2020/09/02 MZ向けにコードとヘルプ修正
@@ -196,6 +197,11 @@
  * @default 0
  * @type switch
  *
+ * @param skipWait
+ * @desc スキップモードのときウェイトもスキップします。
+ * @default false
+ * @type boolean
+ *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
  * イベントが終了すると自働でスキップやオートモードは解除されます。
  * 並列実行イベントは、通常イベントが実行中でない場合のみ解除されます。
@@ -380,6 +386,12 @@
  * @default 0
  * @type switch
  *
+ * @param skipWait
+ * @text ウェイトをスキップ
+ * @desc スキップモードのときウェイトもスキップします。
+ * @default false
+ * @type boolean
+ *
  * @help メッセージウィンドウでメッセージのスキップやオートモードの切替ができます。
  * イベントが終了すると自働でスキップやオートモードは解除されます。
  * 並列実行イベントは、通常イベントが実行中でない場合のみ解除されます。
@@ -525,6 +537,7 @@ function Sprite_Frame() {
     var paramIconX                = getParamNumber(['IconX', 'アイコンX'], 0);
     var paramIconY                = getParamNumber(['IconY', 'アイコンY'], 0);
     var paramPicturePosType       = getParamString(['PicturePosType', 'ピクチャ座標タイプ']);
+    var paramSkipWait             = getParamBoolean(['skipWait']);
 
     //=============================================================================
     // Game_Message
@@ -597,6 +610,14 @@ function Sprite_Frame() {
     //=============================================================================
     Game_Map.prototype.isMapInterpreterOf = function(interpreter) {
         return this._interpreter === interpreter;
+    };
+
+    var _Game_Interpreter_updateWaitCount = Game_Interpreter.prototype.updateWaitCount;
+    Game_Interpreter.prototype.updateWaitCount = function() {
+        if (paramSkipWait && $gameMessage.skipFlg()) {
+            this._waitCount = 0;
+        }
+        return _Game_Interpreter_updateWaitCount.apply(this, arguments);
     };
 
     //=============================================================================
