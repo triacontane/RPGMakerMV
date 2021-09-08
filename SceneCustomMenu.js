@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.22.3 2021/09/08 メモ欄から値を取得してピクチャを表示するとき、制御文字を変換するよう修正
  1.22.2 2021/09/07 ウィンドウに角度を付けるパラメータについて制約事項をヘルプに記載
  1.21.1 2021/09/01 メニュー画面にメッセージ表示するタイプのプラグインとの競合対策
  1.20.0 2021/08/26 ウィンドウ選択時の効果音を独自に指定できる機能を追加
@@ -1554,7 +1555,7 @@
             if (!meta) {
                 return;
             }
-            const fileName = meta[metaValue];
+            const fileName = PluginManagerEx.convertEscapeCharacters(meta[metaValue]);
             if (fileName) {
                 this.drawPicture(fileName, x, y, align, valign);
             }
