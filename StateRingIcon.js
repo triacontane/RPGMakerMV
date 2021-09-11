@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2021/09/11 敵と味方のステート一列表示の基準を別々に設定できるよう修正
 // 2.4.6 2021/04/07 2.4.1の修正で敵キャラのリングアイコンY座標が調整できなくなっていた問題を修正
 //                  2.4.1の修正でフロントビューの場合に、アクターのリングアイコンを表示しない設定が機能しない問題を修正
 // 2.4.5 2021/03/30 グローバル向けヘルプが正常に読み込まれていなかった問題を修正
@@ -216,8 +217,14 @@
  * @type number
  *
  * @param LineViewLimit
- * @text 一列配置上限
- * @desc ステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
+ * @text 一列配置上限(敵キャラ)
+ * @desc 敵キャラのステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
+ * @default 1
+ * @type number
+ *
+ * @param LineViewLimitActor
+ * @text 一列配置上限(アクター)
+ * @desc アクターのステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
  * @default 1
  * @type number
  *
@@ -505,7 +512,7 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIcon.prototype.updateRingIconChild = function() {
-        if (this._iconsSprites.length > param.LineViewLimit && param.LineViewLimit > 0) {
+        if (this.isRingView()) {
             this.updateRingPosition();
         } else {
             this.updateNormalPosition();
@@ -514,6 +521,18 @@ function Sprite_StateIconChild() {
             this.updateTurns();
         }
         this._sortChildren();
+    };
+
+    Sprite_StateIcon.prototype.isRingView = function() {
+        if (!this._battler) {
+            return false;
+        }
+        const limit = this._battler.isActor() ? param.LineViewLimitActor : param.LineViewLimit;
+        if (limit === 0) {
+            return false;
+        } else {
+            return this._iconsSprites.length > limit;
+        }
     };
 
     Sprite_StateIcon.prototype.updateRingPosition = function() {
