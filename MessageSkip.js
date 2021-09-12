@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.17.0 2021/09/12 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様をパラメータで選択可能にできるよう修正
 // 1.16.0 2021/09/08 スキップモードのときウェイトもスキップできる機能を追加
 // 1.15.1 2021/08/05 カスタムメニュー作成プラグインと併用したときにエラーが発生する現象を修正
 // 1.15.0 2021/06/15 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様変更
@@ -104,6 +105,11 @@
  * @param PressingSkip
  * @desc スキップの判定が指定のキーを押している間のみになります。
  * @default false
+ * @type boolean
+ *
+ * @param PictureOutOfPressing
+ * @desc ピクチャは押し続けスキップの対象外とします。
+ * @default true
  * @type boolean
  *
  * @param AutoWaitFrame
@@ -291,6 +297,11 @@
  * @param 押し続けスキップ
  * @desc スキップの判定が指定のキーを押している間のみになります。
  * @default false
+ * @type boolean
+ *
+ * @param ピクチャは押し続け対象外
+ * @desc ピクチャは押し続けスキップの対象外とします。
+ * @default true
  * @type boolean
  *
  * @param オート待機フレーム
@@ -531,6 +542,7 @@ function Sprite_Frame() {
     var paramPictureAnchor        = getParamNumber(['PictureAnchor', 'ボタン原点']);
     var paramPictureSwitchId      = getParamNumber(['PictureSwitchId', 'ボタン表示スイッチID'], 0);
     var paramPressingSkip         = getParamBoolean(['PressingSkip', '押し続けスキップ']);
+    var paramPictureOutOfPressing = getParamBoolean(['PictureOutOfPressing', 'ピクチャは押し続け対象外']);
     var paramSkipSwitchId         = getParamNumber(['SkipSwitchId', 'スキップスイッチ'], 0);
     var paramAutoSwitchIId        = getParamNumber(['AutoSwitchIId', 'オートスイッチ'], 0);
     var paramInvalidSwitchId      = getParamNumber(['InvalidSwitchId', '無効化スイッチ'], 0);
@@ -796,8 +808,8 @@ function Sprite_Frame() {
             this._pressSkipStop = true;
         } else if (this.isTriggeredMessageAuto()) {
             $gameMessage.toggleAuto();
-        } else if (paramPressingSkip && !this._pressSkipStop) {
-            $gameMessage.setSkipFlg(this.isPressedMessageSkip());
+        } else if (paramPressingSkip && (!this._pressSkipStop || !paramPictureOutOfPressing)) {
+            $gameMessage.setSkipFlg(this.isPressedMessageSkip() || this.isTriggeredMessageSkipButton(true));
         }
     };
 
@@ -847,7 +859,7 @@ function Sprite_Frame() {
             Input.isPressed(skipKeyName);
     };
 
-    Window_Message.prototype.isTriggeredMessageSkipButton = function(pressed) {
+    Window_Message.prototype.isTriggeredMessageSkipButton = function(pressed = false) {
         return this.isTriggeredButton(this._skipButton, pressed);
     };
 
