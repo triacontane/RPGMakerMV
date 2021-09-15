@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.6.1 2021/09/15 敵キャラの自動登録のタイミングを『戦闘勝利時』に変更
 // 3.6.0 2021/06/27 ウィンドウスキンを自由に設定できる機能を追加
 // 3.5.1 2021/04/19 カテゴリ表示を有効にしたとき、リストをスクロールさせたあとカテゴリ選択に戻って別の項目を選択するとスクロール位置がおかしくなる問題を修正
 //                  MVで実装されていた説明の自動改行機能が無効になっていたので復元
@@ -116,6 +117,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SceneGlossary.js
  * @author triacontane
+ * @orderAfter PluginCommonBase
  * @base PluginCommonBase
  *
  * @param GlossaryInfo
@@ -508,6 +510,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SceneGlossary.js
  * @author トリアコンタン
+ * @orderAfter PluginCommonBase
  * @base PluginCommonBase
  *
  * @param GlossaryInfo
@@ -1522,14 +1525,14 @@
     };
 
     //=============================================================================
-    // Game_Troop
+    // BattleManager
     //  敵キャラの名前を自動登録します。
     //=============================================================================
-    var _Game_Troop_setup      = Game_Troop.prototype.setup;
-    Game_Troop.prototype.setup = function(troopId) {
-        _Game_Troop_setup.apply(this, arguments);
+    var _BattleManager_gainRewards = BattleManager.gainRewards;
+    BattleManager.gainRewards = function() {
+        _BattleManager_gainRewards.apply(this, arguments);
         if (param.AutoAdditionEnemy) {
-            this.addEnemyGlossary();
+            $gameTroop.addEnemyGlossary();
         }
     };
 
