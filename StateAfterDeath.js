@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2021/09/16 戦闘不能後継続ステートをすでに戦闘不能のバトラーに付与したときにも付与できるよう修正
  1.0.1 2018/08/12 継続ステートが戦闘不能後にターン数で解除されなくなっていた問題を修正
  1.0.0 2018/08/12 初版
 ----------------------------------------------------------------------------
@@ -99,5 +100,21 @@
         _Game_BattlerBase_die.apply(this, arguments);
         this._states     = this._states.concat(stillStates);
         this._stateTurns = stillStateTurns;
+    };
+
+    const _Game_BattlerBase_isAlive = Game_BattlerBase.prototype.isAlive;
+    Game_BattlerBase.prototype.isAlive = function() {
+        const result = _Game_BattlerBase_isAlive.apply(this, arguments);
+        return this._ignoreDeath ? true : result;
+    };
+
+    const _Game_Battler_isStateAddable = Game_Battler.prototype.isStateAddable;
+    Game_Battler.prototype.isStateAddable = function(stateId) {
+        if (param.states.contains(stateId)) {
+            this._ignoreDeath = true;
+        }
+        const result = _Game_Battler_isStateAddable.apply(this, arguments);
+        this._ignoreDeath = false;
+        return result;
     };
 })();
