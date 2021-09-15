@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2021/09/15 コアスクリプトv1.3.3に伴う修正
  1.1.0 2021/04/10 座標に計算式や変数を指定した場合、表示位置やリアルタイムに変更できる機能を追加
  1.0.3 2020/09/16 ゲージ表示後に一度シーンを切り替えてからマップ移動するとゲージピクチャが消えてしまう問題を修正
  1.0.2 2020/09/12 ヘルプのスクリプトの誤記を修正
@@ -619,6 +620,10 @@
 
         bitmapHeight() {
             return this.findLayoutValue(this._layout.height) || super.bitmapHeight();
+        }
+
+        textHeight() {
+            return this.bitmapHeight();
         }
 
         gaugeHeight() {
