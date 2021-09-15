@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2021/09/16 戦闘不能後継続ステートをすでに戦闘不能のバトラーに付与したときにも付与できるよう修正
  1.2.0 2021/08/25 対象ステートを範囲指定できるパラメータを追加
  1.1.0 2021/05/28 MZ用にリファクタリング
  1.0.1 2018/08/12 継続ステートが戦闘不能後にターン数で解除されなくなっていた問題を修正
@@ -99,15 +100,37 @@
 
     const _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
-        const deathStates = param.states.clone();
-        for (let id = param.stateIdStart; id <= param.stateIdEnd; id++) {
-            deathStates.push(id);
-        }
-        const stillStates     = this._states.filter(stateId=> deathStates.includes(stateId));
+        const deathStates = this.findStateAfterDeath();
+        const stillStates = this._states.filter(stateId => deathStates.includes(stateId));
         const stillStateTurns = {};
         stillStates.forEach(stateId => stillStateTurns[stateId] = this._stateTurns[stateId]);
         _Game_BattlerBase_die.apply(this, arguments);
         this._states     = this._states.concat(stillStates);
         this._stateTurns = stillStateTurns;
+    };
+
+    Game_BattlerBase.prototype.findStateAfterDeath = function() {
+        const deathStates = param.states.clone();
+        for (let id = param.stateIdStart; id <= param.stateIdEnd; id++) {
+            deathStates.push(id);
+        }
+        return deathStates;
+    };
+
+    const _Game_BattlerBase_isAlive = Game_BattlerBase.prototype.isAlive;
+    Game_BattlerBase.prototype.isAlive = function() {
+        const result = _Game_BattlerBase_isAlive.apply(this, arguments);
+        return this._ignoreDeath ? true : result;
+    };
+
+    const _Game_Battler_isStateAddable = Game_Battler.prototype.isStateAddable;
+    Game_Battler.prototype.isStateAddable = function(stateId) {
+        const deathStates = this.findStateAfterDeath();
+        if (deathStates.includes(stateId)) {
+            this._ignoreDeath = true;
+        }
+        const result = _Game_Battler_isStateAddable.apply(this, arguments);
+        this._ignoreDeath = false;
+        return result;
     };
 })();
