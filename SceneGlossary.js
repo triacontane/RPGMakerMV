@@ -5,7 +5,7 @@
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
-// Version
+// Versio
 // 3.6.0 2021/06/27 ウィンドウスキンを自由に設定できる機能を追加
 // 3.5.1 2021/04/19 カテゴリ表示を有効にしたとき、リストをスクロールさせたあとカテゴリ選択に戻って別の項目を選択するとスクロール位置がおかしくなる問題を修正
 //                  MVで実装されていた説明の自動改行機能が無効になっていたので復元
@@ -116,6 +116,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SceneGlossary.js
  * @author triacontane
+ * @orderAfter PluginCommonBase
  * @base PluginCommonBase
  *
  * @param GlossaryInfo
@@ -509,6 +510,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SceneGlossary.js
  * @author トリアコンタン
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  *
  * @param GlossaryInfo
  * @text 用語情報(設定必須)
