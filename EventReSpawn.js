@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2021/09/16 リージョンを配置するだけでマップイベントやテンプレートイベントのコピーを自動配置できる機能を追加
  1.1.1 2021/05/07 動的生成イベントに対してアニメーションを再生中に『イベントの消去』を実行するとエラーになる問題を修正
  1.1.0 2021/01/04 イベント動的生成時の座標指定に変数を指定するプラグインパラメータを追加
  1.0.3 2020/11/30 英訳版ヘルプをご提供いただいて追加
@@ -159,6 +160,13 @@
  * Template events can be generated dynamically on the map when combined 
  * with the separately published template event plugin(TemplateEvent.js).
  *
+ * In addition, you can place events and template events by simply placing regions on the map.
+ * You can place events and template events by simply placing regions on the map.
+ * You can also place events and template events by simply placing regions on the map.
+ * The tags in the note of the source event.
+ * Place a copy of the event in the square where you placed the region [1].
+ * <CP:1>
+ *
  * You need the base plugin "PluginCommonBase.js" to use this plugin.
  * The "PluginCommonBase.js" is stored in the following folder under the installation folder of RPG Maker MZ.
  * dlc/BasicResources/plugins/official
@@ -310,6 +318,11 @@
  * 別途公開しているテンプレートイベントプラグインと組み合わせると
  * テンプレートイベントをマップ上に動的生成できます。
  *
+ * さらに、マップにリージョンを配置するだけでイベントやテンプレートイベントを
+ * 配置できます。コピー元イベントのメモ欄にタグを記述してください。
+ * ・リージョン[1]を配置したマスにイベントのコピーを配置
+ * <CP:1>
+ *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
  * 以下のフォルダに格納されています。
@@ -383,6 +396,49 @@ function Game_PrefabEvent() {
         }
         _Game_Map_setupEvents.apply(this, arguments);
         this._eventIdSequence = this._events.length || 1;
+        this.setupInitialSpawnEvents();
+    };
+
+    Game_Map.prototype.setupInitialSpawnEvents = function() {
+        const spawnMap = this.createSpawnMap();
+        if (spawnMap.size <= 0) {
+            return;
+        }
+        for (let x = 0; x <= this.width(); x++) {
+            for (let y = 0; y <= this.height(); y++) {
+                const regionId = this.regionId(x, y);
+                if (spawnMap.has(regionId)) {
+                    const spawn = spawnMap.get(regionId);
+                    this.spawnEvent(spawn.id, x, y, spawn.template);
+                }
+            }
+        }
+    };
+
+    Game_Map.prototype.createSpawnMap = function() {
+        const spawnMap = new Map();
+        this._events.forEach(event => {
+            if (event.hasTemplate && event.hasTemplate()) {
+                return;
+            }
+            this.appendSpawnMap(event.event(), spawnMap,false);
+        });
+        if (typeof $dataTemplateEvents !== "undefined") {
+            $dataTemplateEvents.forEach(template => {
+                this.appendSpawnMap(template, spawnMap,true);
+            });
+        }
+        return spawnMap;
+    };
+
+    Game_Map.prototype.appendSpawnMap = function(event, spawnMap, isTemplate) {
+        if (!event) {
+            return;
+        }
+        const regionId = PluginManagerEx.findMetaValue(event, 'CP');
+        if (regionId) {
+            spawnMap.set(regionId, {id:event.id, template:isTemplate});
+        }
     };
 
     Game_Map.prototype.spawnEvent = function(originalEventId, x, y, isTemplate) {
