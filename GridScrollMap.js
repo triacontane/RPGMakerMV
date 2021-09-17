@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2021/09/17 ツクールMZで動作するよう修正
 // 1.3.0 2018/02/25 パラメータの型指定機能に対応。スクロール速度の下限を緩和
 // 1.2.0 2016/11/08 スクロール中のみ指定したスイッチをONにできる機能を追加
 // 1.1.0 2016/06/29 タッチ移動でマップの境界線に移動した際に画面をスクロールする機能を追加
@@ -20,22 +21,35 @@
 
 /*:
  * @plugindesc マップの画面単位スクロールプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/GridScrollMap.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  * 
- * @param スクロール速度
+ * @param scrollSpeed
+ * @text スクロール速度
  * @desc 画面をスクロールする速度です。設定値は1～8ですが低い値を設定すると異常に遅くなります。
  * @default 7
  * @type number
  * @min 1
  * @max 8
  *
- * @param タッチ移動スクロール
+ * @param touchMoveScroll
+ * @text タッチ移動スクロール
  * @desc タッチ移動で境界線に移動した際に自動で一歩前進します。
  * @default true
  * @type boolean
  *
- * @param トリガースイッチ番号
+ * @param scrollSwitch
+ * @text スクロールスイッチ
  * @desc スクロール開始と共に指定した番号のスイッチをONにすることができます。スクロールが終了すると自動でOFFに戻ります。
+ * @default 0
+ * @type switch
+ * 
+ * @param invalidSwitch
+ * @text 無効スイッチ
+ * @desc 指定したスイッチがONのときプラグインの機能が無効になります。
  * @default 0
  * @type switch
  * 
@@ -47,87 +61,31 @@
  * 自動で一歩前進して画面をスクロールさせることができます。
  *
  * 注意！
- * イベントコマンドの画面のスクロールで画面を動かしたら元の位置に戻してください。
+ * コマンド『画面のスクロール』で画面を動かしたら元の位置に戻してください。
  * 画面のループには対応していません。
- * 画面単位スクロールを解除したい場合は、プラグインコマンドを実行してください。
- * スクロール方式がその場で変わるので場所移動の直前に変更することを勧めます。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *
- *  GRID_SCROLL_INVALID : マップの画面単位スクロールを無効にする。
- *  GRID_SCROLL_VALID : マップの画面単位スクロールを再度、有効にする。
+ * 
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function() {
+
+(()=> {
     'use strict';
-    var pluginName = 'GridScrollMap';
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'ON' || (value || '').toUpperCase() === 'TRUE';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramScrollSpeed     = getParamNumber(['ScrollSpeed', 'スクロール速度'], 1, 8);
-    var paramTouchMoveScroll = getParamBoolean(['TouchMoveScroll', 'タッチ移動スクロール']);
-    var paramTriggerSwitch   = getParamNumber(['TriggerSwitch', 'トリガースイッチ番号'], 0);
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンド[GRID_SCROLL_INVALID]などを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.call(this, command, args);
-        switch (command.toUpperCase()) {
-            case 'GRID_SCROLL_INVALID' :
-                $gameMap.setGridScroll(false);
-                break;
-            case 'GRID_SCROLL_VALID' :
-                $gameMap.setGridScroll(true);
-                break;
-        }
-    };
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Game_Map
     //  画面単位スクロール機能を提供します。
     //=============================================================================
-    var _Game_Map_initialize      = Game_Map.prototype.initialize;
-    Game_Map.prototype.initialize = function() {
-        _Game_Map_initialize.apply(this, arguments);
-        this._gridFlg = true;
-    };
-
     Game_Map.prototype.isGridScroll = function() {
-        return this._gridFlg;
-    };
-
-    Game_Map.prototype.setGridScroll = function(value) {
-        this._gridFlg = !!value;
+        return !$gameSwitches.value(param.invalidSwitch);
     };
 
     Game_Map.prototype.updateGridScroll = function(scrolledX, scrolledY) {
@@ -141,19 +99,19 @@
     };
 
     Game_Map.prototype.startGridScroll = function(direction) {
-        var distance = (direction === 4 || direction === 6 ? this.screenTileX() : this.screenTileY());
+        const distance = (direction === 4 || direction === 6 ? this.screenTileX() : this.screenTileY());
         this.setSwitchForGridScroll(true);
-        this.startScroll(direction, distance, paramScrollSpeed);
+        this.startScroll(direction, distance, param.scrollSpeed);
     };
 
     Game_Map.prototype.setSwitchForGridScroll = function(value) {
-        if (paramTriggerSwitch) {
-            $gameSwitches.setValue(paramTriggerSwitch, value);
+        if (param.scrollSwitch) {
+            $gameSwitches.setValue(param.scrollSwitch, value);
         }
     };
 
     Game_Map.prototype.isSwitchForGridScroll = function() {
-        return paramTriggerSwitch && $gameSwitches.value(paramTriggerSwitch);
+        return param.scrollSwitch && $gameSwitches.value(param.scrollSwitch);
     };
 
     Game_Map.prototype.isNeedGridScrollDown = function(scrolledY) {
@@ -200,7 +158,7 @@
     //  スクロール時のプレイヤーの移動を禁止します。
     //  場所移動時に画面位置を調整します。
     //=============================================================================
-    var _Game_Player_updateScroll      = Game_Player.prototype.updateScroll;
+    const _Game_Player_updateScroll      = Game_Player.prototype.updateScroll;
     Game_Player.prototype.updateScroll = function(lastScrolledX, lastScrolledY) {
         if (!$gameMap.isGridScroll()) {
             _Game_Player_updateScroll.apply(this, arguments);
@@ -211,7 +169,7 @@
         }
     };
 
-    var _Game_Player_canMove      = Game_Player.prototype.canMove;
+    const _Game_Player_canMove      = Game_Player.prototype.canMove;
     Game_Player.prototype.canMove = function() {
         if ($gameMap.isGridScroll() && $gameMap.isScrolling()) {
             return false;
@@ -219,18 +177,18 @@
         return _Game_Player_canMove.call(this);
     };
 
-    var _Game_Player_locate      = Game_Player.prototype.locate;
+    const _Game_Player_locate      = Game_Player.prototype.locate;
     Game_Player.prototype.locate = function(x, y) {
         _Game_Player_locate.apply(this, arguments);
         if ($gameMap.isGridScroll())
             $gameMap.setDisplayPos(x - x.mod($gameMap.screenTileX()), y - y.mod($gameMap.screenTileY()));
     };
 
-    var _Game_Player_moveByInput      = Game_Player.prototype.moveByInput;
+    const _Game_Player_moveByInput      = Game_Player.prototype.moveByInput;
     Game_Player.prototype.moveByInput = function() {
-        var prevDestinationValid = $gameTemp.isDestinationValid();
+        const prevDestinationValid = $gameTemp.isDestinationValid();
         _Game_Player_moveByInput.apply(this, arguments);
-        if (paramTouchMoveScroll && prevDestinationValid && !this.isMoving()) {
+        if (param.touchMoveScroll && prevDestinationValid && !this.isMoving()) {
             this.moveByTouchEnd();
         }
     };
