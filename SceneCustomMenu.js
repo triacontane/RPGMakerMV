@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.24.0 2021/09/19 カーソル位置を記憶して画面を開き直したときに復元できる機能を追加
  1.23.0 2021/09/19 ウィンドウカーソルを項目の上に表示できる機能を追加
  1.22.3 2021/09/08 メモ欄から値を取得してピクチャを表示するとき、制御文字を変換するよう修正
  1.22.2 2021/09/07 ウィンドウに角度を付けるパラメータについて制約事項をヘルプに記載
@@ -629,6 +630,12 @@
  * @desc カーソルインデックスが常に格納される変数です。
  * @default 0
  * @type variable
+ *
+ * @param RememberIndex
+ * @text インデックスを記憶
+ * @desc インデックス格納変数を指定している場合、画面を開いたときにカーソルの初期値を変数値で復元します。
+ * @default false
+ * @type boolean
  *
  * @param ItemVariableId
  * @text 選択項目格納変数
@@ -1388,6 +1395,9 @@
             if (this.height === 0) {
                 this._dynamicHeight = true;
             }
+            if (this._data.RememberIndex) {
+                this.restoreIndexVariable();
+            }
         }
 
         _createAllParts() {
@@ -1478,11 +1488,23 @@
         }
 
         updateIndexVariable() {
+            if (this._index < 0) {
+                return;
+            }
             if (this._data.IndexVariableId) {
                 $gameVariables.setValue(this._data.IndexVariableId, this._index);
             }
             if (this._data.ItemVariableId) {
                 $gameVariables.setValue(this._data.ItemVariableId, this.getItem(this._index));
+            }
+        }
+
+        restoreIndexVariable() {
+            if (this._data.IndexVariableId) {
+                const index = $gameVariables.value(this._data.IndexVariableId);
+                if (index >= 0) {
+                    this.select(index);
+                }
             }
         }
 
