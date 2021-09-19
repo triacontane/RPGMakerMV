@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.23.0 2021/09/19 ウィンドウカーソルを項目の上に表示できる機能を追加
  1.22.3 2021/09/08 メモ欄から値を取得してピクチャを表示するとき、制御文字を変換するよう修正
  1.22.2 2021/09/07 ウィンドウに角度を付けるパラメータについて制約事項をヘルプに記載
  1.21.1 2021/09/01 メニュー画面にメッセージ表示するタイプのプラグインとの競合対策
@@ -670,6 +671,13 @@
  * @desc 選択すると通常の決定音の代わりに指定したSEが演奏されます。
  * @default
  * @type struct<AudioSe>
+ *
+ * @param cursorOverContents
+ * @text カーソルを手前に表示
+ * @desc 有効にすると、ウィンドウカーソルが項目の上に被せるように表示されます。
+ * @default false
+ * @type boolean
+ *
  */
 
 /*~struct~AudioSe:
@@ -1382,6 +1390,14 @@
             }
         }
 
+        _createAllParts() {
+            super._createAllParts();
+            if (this._data.cursorOverContents) {
+                const index = this._clientArea.getChildIndex(this._contentsSprite);
+                this._clientArea.addChildAt(this._cursorSprite, index);
+            }
+        }
+
         paint() {
             if (this._enemySprite) {
                 this._enemySprite.bitmap.clear();
@@ -1552,7 +1568,7 @@
 
         drawNotePicture(metaValue, x, y, align = 'left', valign = 'top') {
             const meta = this.findMetaData(this._drawingIndex);
-            if (!meta) {
+            if (!meta || !meta[metaValue]) {
                 return;
             }
             const fileName = PluginManagerEx.convertEscapeCharacters(meta[metaValue]);
