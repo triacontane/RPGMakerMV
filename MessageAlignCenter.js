@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2021/09/19 縦方向の揃えを中央揃え、下揃えにする機能を追加
  1.1.0 2021/08/01 他プラグインと制御文字が被ったときに備えて、パラメータから制御文字を変更できる機能を追加
  1.0.1 2021/07/29 リファクタリング
  1.0.0 2021/07/28 初版
@@ -33,15 +34,29 @@
  * @desc メッセージを右揃えにする制御文字です。通常はそのままで使えますが、他プラグインと競合する場合は変更してください。
  * @default ar
  *
+ * @param escapeCharacterVCenter
+ * @text 縦中央揃えの制御文字
+ * @desc メッセージを縦方向中央揃えにする制御文字です。通常はそのままで使えますが、他プラグインと競合する場合は変更してください。
+ * @default vc
+ *
+ * @param escapeCharacterVBottom
+ * @text 縦下揃えの制御文字
+ * @desc メッセージを縦方向下揃えにする制御文字です。通常はそのままで使えますが、他プラグインと競合する場合は変更してください。
+ * @default vb
+ *
  * @help MessageAlignCenter.js
  *
  * 文章の表示などのメッセージやスキルの説明文などを中央揃え、右揃えにできます。
  * 以下の制御文字を行の先頭に記述すると揃えを変更できます。
  * \ac : 中央揃え
  * \ar : 右揃え
+ * \vc : 縦方向の中央揃え
+ * \vb : 縦方向の下揃え
  *
  * メッセージのプレビューには反映されません。
  * 制御文字は必ず行の先頭に記述してください。
+ * 縦方向揃えは、いち文章につきひとつだけ指定できます。
+ * 必ず文章の先頭に記述してください。
  * 右読み言語には現バージョンでは対応していません。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
@@ -70,6 +85,12 @@
                 case this.findEscapeRight():
                     textState.x += this.findInnerSpace(textState);
                     break;
+                case this.findEscapeVCenter():
+                    textState.y += this.findInnerVSpace(textState) / 2;
+                    break;
+                case this.findEscapeVBottom():
+                    textState.y += this.findInnerVSpace(textState);
+                    break;
             }
         }
         _Window_Base_processEscapeCharacter.apply(this, arguments);
@@ -83,8 +104,20 @@
         return (param.escapeCharacterRight || 'AR').toUpperCase();
     };
 
+    Window_Base.prototype.findEscapeVCenter = function() {
+        return (param.escapeCharacterVCenter || 'VC').toUpperCase();
+    };
+
+    Window_Base.prototype.findEscapeVBottom = function() {
+        return (param.escapeCharacterVBottom || 'VB').toUpperCase();
+    };
+
     Window_Base.prototype.findInnerSpace = function(textState) {
         return this.innerWidth - this.textSizeEx(this.findLineText(textState)).width - textState.startX;
+    };
+
+    Window_Base.prototype.findInnerVSpace = function(textState) {
+        return this.innerHeight - this.textSizeEx(textState.text).height - textState.startY;
     };
 
     Window_Base.prototype.findLineText = function(textState) {
