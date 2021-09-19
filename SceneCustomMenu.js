@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.22.0 2021/09/19 カーソル位置を記憶して画面を開き直したときに復元できる機能を追加
  1.21.4 2022/04/25 前バージョンで追加したカレントシーンの判定方法を変更
  1.21.3 2022/04/22 カスタムシーンクラスをSceneManager配下に保持するよう変更
  1.21.2 2022/04/09 描画内容がnullの場合に描画をスキップするよう修正
@@ -651,6 +652,12 @@
  * @desc カーソルインデックスが常に格納される変数です。
  * @default 0
  * @type variable
+ *
+ * @param RememberIndex
+ * @text インデックスを記憶
+ * @desc インデックス格納変数を指定している場合、画面を開いたときにカーソルの初期値を変数値で復元します。
+ * @default false
+ * @type boolean
  *
  * @param ItemVariableId
  * @text 選択項目格納変数
@@ -1413,6 +1420,9 @@
             if (this.height === 0) {
                 this._dynamicHeight = true;
             }
+            if (this._data.RememberIndex) {
+                this.restoreIndexVariable();
+            }
         }
 
         registerButton(buttonList) {
@@ -1486,11 +1496,23 @@
         }
 
         updateIndexVariable() {
+            if (this._index < 0) {
+                return;
+            }
             if (this._data.IndexVariableId) {
                 $gameVariables.setValue(this._data.IndexVariableId, this._index);
             }
             if (this._data.ItemVariableId) {
                 $gameVariables.setValue(this._data.ItemVariableId, this.getItem(this._index));
+            }
+        }
+
+        restoreIndexVariable() {
+            if (this._data.IndexVariableId) {
+                const index = $gameVariables.value(this._data.IndexVariableId);
+                if (index >= 0) {
+                    this.select(index);
+                }
             }
         }
 
