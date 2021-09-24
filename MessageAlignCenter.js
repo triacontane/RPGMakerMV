@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2021/09/24 ウェイト系の制御文字を使ったときに、正常な動作をしなくなる問題を修正
  1.2.0 2021/09/19 縦方向の揃えを中央揃え、下揃えにする機能を追加
  1.1.0 2021/08/01 他プラグインと制御文字が被ったときに備えて、パラメータから制御文字を変更できる機能を追加
  1.0.1 2021/07/29 リファクタリング
@@ -127,5 +128,13 @@
             text += textState.text[index++];
         }
         return text;
+    };
+
+    const _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
+    Window_Message.prototype.processEscapeCharacter = function(code, textState) {
+        if (!textState.drawing) {
+            return;
+        }
+        _Window_Message_processEscapeCharacter.apply(this, arguments);
     };
 })();
