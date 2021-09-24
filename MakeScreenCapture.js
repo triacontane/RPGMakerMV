@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2021/09/24 署名に制御文字\v[n]を使えるよう修正
 // 1.7.4 2021/05/16 プラグインコマンドがMZ対応できていなかったので修正
 // 1.7.3 2018/06/28 出力パスの算出方法を変更
 // 1.7.2 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
@@ -605,7 +606,7 @@
         if (signatureImage) {
             this.signImage(signatureImage, signature);
         }
-        this.sign(paramSignature, signature);
+        this.sign(PluginManagerEx.convertEscapeCharacters(paramSignature), signature);
         this.save(fileFullPath, format, format === 'jpeg' ? paramJpegQuality / 10 : undefined);
     };
 
