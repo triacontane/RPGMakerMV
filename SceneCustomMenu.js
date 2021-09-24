@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.19.2 2021/09/24 データの項目数が1つのとき、行高さがウィンドウに合わせられてしまう問題を修正
  1.19.1 2021/08/26 プラグインを有効にしてパラメータを一切弄らずにサンプル画面を開くとウィンドウが正常に表示されない問題を修正
  1.19.0 2021/08/26 ウィンドウ選択時の効果音を独自に指定できる機能を追加
                    $gameScreen.update()を呼ぶように変更。画面のフラッシュなど一部画面効果が有効になります。
@@ -1432,14 +1433,6 @@
 
         itemHeight() {
             return this._data.ItemHeight || super.itemHeight();
-        }
-
-        lineHeight() {
-            if (this.maxItems() === 1) {
-                return this.height - this.padding * 2;
-            } else {
-                return super.lineHeight();
-            }
         }
 
         numVisibleRows() {
