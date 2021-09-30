@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2021/10/01 指定した武器、防具、職業が有効な場合にグラフィックを変更できる機能を追加
 // 2.3.0 2021/05/23 戦闘中であることを条件にグラフィックを変更できる機能を追加
 // 2.2.0 2021/05/19 ダッシュ中であることを条件にグラフィックを変更できる機能を追加
 // 2.1.1 2021/05/19 グラフィック変更条件の変数の型指定がスイッチになっていた問題を修正
@@ -148,6 +149,24 @@
  * @default 0
  * @type state
  *
+ * @param weapon
+ * @text 武器条件
+ * @desc 指定した武器を装備した場合にグラフィック変更
+ * @default 0
+ * @type weapon
+ *
+ * @param armor
+ * @text 防具条件
+ * @desc 指定した防具を装備した場合にグラフィック変更
+ * @default 0
+ * @type weapon
+ *
+ * @param gameClass
+ * @text 職業条件
+ * @desc 指定した職業に就いた場合にグラフィック変更
+ * @default 0
+ * @type class
+ *
  * @param dashing
  * @text ダッシュ中条件
  * @desc ダッシュ中の場合にグラフィック変更
@@ -241,6 +260,9 @@
         conditions.push(() => item.id === this.actorId());
         conditions.push(() => !item.hpRate || item.hpRate / 100 >= this.hpRate());
         conditions.push(() => !item.state || this.isStateAffected(item.state));
+        conditions.push(() => !item.weapon || this.isEquipped($dataWeapons[item.weapon]));
+        conditions.push(() => !item.armor || this.isEquipped($dataArmors[item.armor]));
+        conditions.push(() => !item.gameClass || this.isClass($dataClasses[item.gameClass]));
         conditions.push(() => !item.switchId || $gameSwitches.value(item.switchId));
         conditions.push(() => !item.variableId || this.isValidVariable(item.variableId, item.compareType, item.operand));
         conditions.push(() => !item.dashing || $gamePlayer.isDashing());
