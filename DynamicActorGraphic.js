@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2021/10/01 指定したタグが職業、武器、防具、ステートに記載されている場合にグラフィックを変更できる機能を追加
 // 2.4.0 2021/10/01 指定した武器、防具、職業が有効な場合にグラフィックを変更できる機能を追加
 // 2.3.0 2021/05/23 戦闘中であることを条件にグラフィックを変更できる機能を追加
 // 2.2.0 2021/05/19 ダッシュ中であることを条件にグラフィックを変更できる機能を追加
@@ -167,6 +168,11 @@
  * @default 0
  * @type class
  *
+ * @param tag
+ * @text メモタグ条件
+ * @desc 職業、武器、防具、ステートのいずれかで指定したタグ<xxx>がメモ欄に存在する場合にグラフィック変更
+ * @default
+ *
  * @param dashing
  * @text ダッシュ中条件
  * @desc ダッシュ中の場合にグラフィック変更
@@ -263,11 +269,16 @@
         conditions.push(() => !item.weapon || this.isEquipped($dataWeapons[item.weapon]));
         conditions.push(() => !item.armor || this.isEquipped($dataArmors[item.armor]));
         conditions.push(() => !item.gameClass || this.isClass($dataClasses[item.gameClass]));
+        conditions.push(() => !item.tag || this.hasMemoTag(item.tag));
         conditions.push(() => !item.switchId || $gameSwitches.value(item.switchId));
         conditions.push(() => !item.variableId || this.isValidVariable(item.variableId, item.compareType, item.operand));
         conditions.push(() => !item.dashing || $gamePlayer.isDashing());
         conditions.push(() => !item.inBattle || $gameParty.inBattle());
         return conditions.every(condition => condition());
+    };
+
+    Game_Actor.prototype.hasMemoTag = function(name) {
+        return this.traitObjects().some(obj => PluginManagerEx.findMetaValue(obj, name));
     };
 
     Game_Actor.prototype.isValidVariable = function(id, type, operand) {
