@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2021/10/03 MZ用にリファクタリング
 // 1.0.1 2018/02/11 失敗メッセージ表示後に別のスキルで失敗した場合、もとの失敗メッセージが表示される不具合を修正
 // 1.0.0 2016/07/31 初版
 // ----------------------------------------------------------------------------
@@ -16,18 +17,26 @@
 
 /*:
  * @plugindesc 行動失敗メッセージ設定プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CustomizeFailureMessage.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @help 行動失敗時のメッセージがスキルごとに
  * 設定可能になります。
  *
  * スキルのメモ欄に以下の通り記述してください。
- * <CFM:%1aaa> # 「[対象バトラー名]aaa」が表示される
+ * <失敗メッセージ:%1aaa> # 「[対象バトラー名]aaa」が表示される
+ * <FailureMessage:%1aaa> # 同上
  *
  * ※カスタマイズできるのは「失敗」時のメッセージです。
  * 相手に回避された場合のメッセージではありません。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -35,20 +44,14 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var metaTagPrefix = 'CFM';
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
+    
     //=============================================================================
     // Game_BattlerBase
     //  失敗時の固有メッセージを保持します。
     //=============================================================================
-    var _Game_BattlerBase_initMembers = Game_BattlerBase.prototype.initMembers;
+    const _Game_BattlerBase_initMembers = Game_BattlerBase.prototype.initMembers;
     Game_BattlerBase.prototype.initMembers = function() {
         _Game_BattlerBase_initMembers.apply(this, arguments);
         this._failureMessage = '';
@@ -66,10 +69,10 @@
     // Game_Action
     //  失敗時の固有メッセージを保持します。
     //=============================================================================
-    var _Game_Action_apply = Game_Action.prototype.apply;
+    const _Game_Action_apply = Game_Action.prototype.apply;
     Game_Action.prototype.apply = function(target) {
         _Game_Action_apply.apply(this, arguments);
-        var message = getMetaValue(this.item(), '');
+        const message = PluginManagerEx.findMetaValue(this.item(), ['FailureMessage', '失敗メッセージ']);
         if (message) {
             target.setFailureMessage(message);
         }
@@ -79,12 +82,12 @@
     // Window_BattleLog
     //  失敗時の固有メッセージを表示します。
     //=============================================================================
-    var _Window_BattleLog_displayMiss = Window_BattleLog.prototype.displayMiss;
+    const _Window_BattleLog_displayMiss = Window_BattleLog.prototype.displayMiss;
     Window_BattleLog.prototype.displayMiss = function(target) {
         _Window_BattleLog_displayMiss.apply(this, arguments);
-        var fmt = target.getFailureMessage();
+        const fmt = target.getFailureMessage();
         if (fmt) {
-            for (var i = this._methods.length - 1; i >= 0; i--) {
+            for (let i = this._methods.length - 1; i >= 0; i--) {
                 if (this._methods[i].name === 'addText') {
                     this._methods.splice(i, 1);
                 }
