@@ -6,8 +6,9 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
- 1.1.2 2021/10/05 「マップイベントの呼び出し」でページ番号を[0]で呼び出したとき、実行中のページではなく1ページが呼ばれてしまう問題を修正
- 1.1.1 2021/08/11 「マップイベントの呼び出し」のコマンドでイベント名を指定して呼び出せるよう修正
+ 1.1.3 2021/10/05 1.1.2の修正で「固有イベント呼び出し」をページ番号[0]で呼び出したときエラーになる問題を修正
+ 1.1.2 2021/10/05 「マップイベント呼び出し」でページ番号を[0]で呼び出したとき、実行中のページではなく1ページが呼ばれてしまう問題を修正
+ 1.1.1 2021/08/11 「マップイベント呼び出し」のコマンドでイベント名を指定して呼び出せるよう修正
  1.1.0 2021/07/23 セルフ変数のキーに文字列を指定できるよう修正
  1.0.7 2021/05/29 1.0.6の修正で正常に機能しなくなっていた問題を修正
  1.0.6 2021/05/22 RandomDungeon.jsと共存できるよう修正
@@ -707,6 +708,9 @@ let $dataTemplateEvents = null;
     Game_Interpreter.prototype.callOriginEvent = function(pageIndex) {
         const event = $gameMap.event(this._eventId);
         if (event && event.hasTemplate()) {
+            if (pageIndex === 0) {
+                pageIndex = event.getPageIndex() + 1;
+            }
             this.setupAnotherList(null, event.getOriginalPages(), pageIndex);
         }
     };
@@ -730,6 +734,9 @@ let $dataTemplateEvents = null;
 
     Game_Interpreter.prototype.setupAnotherList = function(eventId, pages, pageIndex) {
         const page = pages[pageIndex - 1];
+        if (!page) {
+            return;
+        }
         if (!eventId) eventId = this.isOnCurrentMap() ? this._eventId : 0;
         this.setupChild(page.list, eventId);
     };
