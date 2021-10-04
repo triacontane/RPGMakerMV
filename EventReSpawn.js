@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.1 2021/10/05 1.2.0の機能でイベントを配置したとき、イベント画像が2つ重なって表示されてしまう問題を修正
 // 1.12.0 2021/09/16 リージョンを配置するだけでマップイベントやテンプレートイベントのコピーを自動配置できる機能を追加
 // 1.11.5 2020/12/28 利用するプラグインによってイベント生成時にちらつく現象が発生しないよう修正
 // 1.11.4 2020/09/19 MOG_EventIndicators.jsと併用したとき、動的生成イベントにインジケータが表示されるよう修正
@@ -414,6 +415,7 @@ function Game_PrefabEvent() {
                 if (spawnMap.has(regionId)) {
                     const spawn = spawnMap.get(regionId);
                     this.spawnEvent(spawn.id, x, y, spawn.template);
+                    this._events[this._lastSpawnEventId].setSpritePrepared();
                 }
             }
         }
