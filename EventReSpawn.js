@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2021/10/05 1.2.0の機能でイベントを配置したとき、イベント画像が2つ重なって表示されてしまう問題を修正
  1.2.0 2021/09/16 リージョンを配置するだけでマップイベントやテンプレートイベントのコピーを自動配置できる機能を追加
  1.1.1 2021/05/07 動的生成イベントに対してアニメーションを再生中に『イベントの消去』を実行するとエラーになる問題を修正
  1.1.0 2021/01/04 イベント動的生成時の座標指定に変数を指定するプラグインパラメータを追加
@@ -410,6 +411,7 @@ function Game_PrefabEvent() {
                 if (spawnMap.has(regionId)) {
                     const spawn = spawnMap.get(regionId);
                     this.spawnEvent(spawn.id, x, y, spawn.template);
+                    this._events[this._lastSpawnEventId].setSpritePrepared();
                 }
             }
         }
