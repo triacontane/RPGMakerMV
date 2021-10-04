@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2021/10/05 「マップイベントの呼び出し」でページ番号を[0]で呼び出したとき、実行中のページではなく1ページが呼ばれてしまう問題を修正
  1.1.1 2021/08/11 「マップイベントの呼び出し」のコマンドでイベント名を指定して呼び出せるよう修正
  1.1.0 2021/07/23 セルフ変数のキーに文字列を指定できるよう修正
  1.0.7 2021/05/29 1.0.6の修正で正常に機能しなくなっていた問題を修正
@@ -713,6 +714,9 @@ let $dataTemplateEvents = null;
     Game_Interpreter.prototype.callMapEventById = function(pageIndex, eventId) {
         const event = $gameMap.event(eventId);
         if (event) {
+            if (pageIndex === 0) {
+                pageIndex = event.getPageIndex() + 1;
+            }
             this.setupAnotherList(param.KeepEventId ? null : eventId, event.getPages(), pageIndex);
         }
     };
@@ -720,12 +724,12 @@ let $dataTemplateEvents = null;
     Game_Interpreter.prototype.callMapEventByName = function(pageIndex, eventName) {
         const event = searchDataItem($dataMap.events, 'name', eventName);
         if (event) {
-            this.setupAnotherList(param.KeepEventId ? null : event.id, event.pages, pageIndex);
+            this.callMapEventById(pageIndex, event.id);
         }
     };
 
     Game_Interpreter.prototype.setupAnotherList = function(eventId, pages, pageIndex) {
-        const page = pages[pageIndex - 1 || this._pageIndex] || pages[0];
+        const page = pages[pageIndex - 1];
         if (!eventId) eventId = this.isOnCurrentMap() ? this._eventId : 0;
         this.setupChild(page.list, eventId);
     };
@@ -974,6 +978,10 @@ let $dataTemplateEvents = null;
 
     Game_Event.prototype.getPages = function() {
         return this.event().pages;
+    };
+
+    Game_Event.prototype.getPageIndex = function() {
+        return this._pageIndex;
     };
 
     const _Game_Event_meetsConditions    = Game_Event.prototype.meetsConditions;
