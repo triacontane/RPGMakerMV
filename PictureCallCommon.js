@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2021/10/08 トリガー種別がマウスが重なった場合のとき無効スイッチ中に条件を満たしていると、無効スイッチがOFFになった瞬間にイベントが発生してしまう問題を修正
 // 1.2.0 2021/05/20 APNGピクチャプラグインと組み合わせたときにAPNGピクチャをボタン化できるよう修正（ただし透過色は考慮されない）
 // 1.1.2 2021/04/08 トリガー「マウスをピクチャ内で移動した場合」がマウスを押していないと反応しない問題を修正
 // 1.1.1 2020/12/21 スクリプト$gameScreen.showPictureを使って未キャッシュのピクチャを表示しようとすると画像が表示されなくなる問題を修正
@@ -357,12 +358,14 @@
         updateMouseMove() {
             if (this.isOnPicturePos()) {
                 if (!this._wasOnMouse) {
+                    this._outMouse   = false;
                     this._onMouse    = true;
                     this._wasOnMouse = true;
                 }
             } else if (this._wasOnMouse) {
                 this._outMouse   = true;
                 this._wasOnMouse = false;
+                this._onMouse    = false;
             }
         }
 
