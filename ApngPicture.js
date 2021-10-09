@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.2.1 2021/10/09 AltMenuScreen2MZとの並び順を指定するアノテーションを追加
  2.2.0 2021/04/26 2.1.6の修正でGIFファイルが使えなくなっていた問題を修正
                   GIFファイルの指定方法を変更
  2.1.6 2021/03/10 システム画像や敵キャラ画像としてapngを使用するとき、ピクチャにも同名の画像がないとエラーになる問題を修正
@@ -43,6 +44,7 @@
  * @base PixiApngAndGif
  * @orderAfter PluginCommonBase
  * @orderAfter PixiApngAndGif
+ * @orderBefore AltMenuScreen2MZ
  * @author triacontane
  *
  * @param PictureList
@@ -118,6 +120,7 @@
  * @base PixiApngAndGif
  * @orderAfter PluginCommonBase
  * @orderAfter PixiApngAndGif
+ * @orderBefore AltMenuScreen2MZ
  * @author トリアコンタン
  *
  * @param PictureList
