@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.2 2021/10/08 1.2.1の修正により、\c[n]などの制御文字が文字幅としてカウントされ揃え位置がズレてしまう問題を修正
  1.2.1 2021/09/24 ウェイト系の制御文字を使ったときに、正常な動作をしなくなる問題を修正
  1.2.0 2021/09/19 縦方向の揃えを中央揃え、下揃えにする機能を追加
  1.1.0 2021/08/01 他プラグインと制御文字が被ったときに備えて、パラメータから制御文字を変更できる機能を追加
@@ -133,6 +134,8 @@
     const _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
     Window_Message.prototype.processEscapeCharacter = function(code, textState) {
         if (!textState.drawing) {
+            Window_Base.prototype.processEscapeCharacter.apply(this, arguments);
+            this.changeTextColor(ColorManager.textColor(0));
             return;
         }
         _Window_Message_processEscapeCharacter.apply(this, arguments);
