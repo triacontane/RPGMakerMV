@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2021/10/10 アイテムに対して制約を適用できるよう修正
 // 2.0.0 2021/10/08 MZで動作するよう全面的に修正
 // 1.2.1 2020/08/29 1.2.0で追加した機能による軽量化対策
 // 1.2.0 2020/04/24 選択できないバトラーを無効表示する機能を追加
@@ -36,7 +37,7 @@
  *
  * @param list
  * @text 対象限定スキルリスト
- * @desc 対象限定スキルの制約情報一覧を設定します。
+ * @desc 対象限定スキルの制約情報一覧を設定します。スキルIDかアイテムIDのどちらかひとつだけを指定してください。
  * @default []
  * @type struct<RESTRICTION>[]
  *
@@ -72,6 +73,12 @@
  * @desc 制約の対象となるスキルIDです。
  * @default 0
  * @type skill
+ *
+ * @param itemId
+ * @text 対象アイテムID
+ * @desc 制約の対象となるアイテムIDです。
+ * @default 0
+ * @type item
  *
  * @param validActors
  * @text 有効アクター
@@ -147,7 +154,8 @@
     };
 
     Game_BattlerBase.prototype.findRestrictionData = function(item) {
-        return param.list.find(data => data.skillId === item.id);
+        const isSkill = DataManager.isSkill();
+        return param.list.find(data => (isSkill ? data.skillId : data.itemId) === item.id);
     };
 
     Game_BattlerBase.prototype.canSelectTarget = function(item, user) {
