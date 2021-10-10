@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.3 2021/10/10 一度の行動で複数のポップアップが発生したときに最後のポップアップしか表示されない問題を修正
 // 1.11.2 2021/09/01 1.11.1の修正で通常モンスターのポップアップ位置がずれてしまう問題を修正
 // 1.11.1 2021/08/29 BigEnemy.jsと併用したとき、ポップアップがダメージと同じ場所に出るよう修正
 // 1.11.0 2021/05/03 ポップアップの縁取りカラーを指定できる機能を追加
@@ -47,7 +48,7 @@
  *
  * @param メッセージウェイト
  * @desc ポップアップメッセージが重なったときに次のメッセージが表示されるまでのウェイトフレーム数です。
- * @default 16
+ * @default 12
  * @type number
  *
  * @param クリティカル
@@ -629,7 +630,7 @@
     };
 
     Window_BattleLog.prototype.pushPopupMessage = function(target, message, flashColor) {
-        if (this.hasPopupMessage()) {
+        if (this.hasPopupMessage() || target.isMessagePopupRequested()) {
             this.push('waitForPopup');
             this.push('popupMessage', target, message, flashColor);
         } else {
@@ -638,7 +639,7 @@
     };
 
     Window_BattleLog.prototype.pushPopupAppointMessage = function(target) {
-        if (this.hasPopupMessage()) {
+        if (this.hasPopupMessage() || target.isMessagePopupRequested()) {
             this.push('waitForPopup');
             this.push('popupAppointMessage', target);
         } else {
