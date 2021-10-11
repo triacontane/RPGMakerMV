@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2021/10/11 2.1.0の更新でスキルに対する対象限定が効かなくなっていた問題を修正
 // 2.1.0 2021/10/10 アイテムに対して制約を適用できるよう修正
 // 2.0.0 2021/10/08 MZで動作するよう全面的に修正
 // 1.2.1 2020/08/29 1.2.0で追加した機能による軽量化対策
@@ -154,7 +155,7 @@
     };
 
     Game_BattlerBase.prototype.findRestrictionData = function(item) {
-        const isSkill = DataManager.isSkill();
+        const isSkill = DataManager.isSkill(item);
         return param.list.find(data => (isSkill ? data.skillId : data.itemId) === item.id);
     };
 
