@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2021/10/12 循環参照による競合が起こりにくい実装に変更
 // 2.1.1 2021/10/11 2.1.0の更新でスキルに対する対象限定が効かなくなっていた問題を修正
 // 2.1.0 2021/10/10 アイテムに対して制約を適用できるよう修正
 // 2.0.0 2021/10/08 MZで動作するよう全面的に修正
@@ -230,9 +231,9 @@
 
     const _Game_Action_subject = Game_Action.prototype.subject;
     Game_Action.prototype.subject = function() {
-        $gameTroop.setNeedOriginalMember(true);
+        $gameTroop.setNeedOriginalMemberCounter(true);
         const subject = _Game_Action_subject.apply(this, arguments);
-        $gameTroop.setNeedOriginalMember(false);
+        $gameTroop.setNeedOriginalMemberCounter(false);
         return subject;
     };
 
@@ -270,32 +271,36 @@
     Game_Unit.prototype.filterSelectableMembers = function(members) {
         const action  = BattleManager.getTargetAction();
         if (action) {
-            this._needOriginalMember = true;
+            this.setNeedOriginalMemberCounter(true);
             members = members.filter(function(member) {
                 return member.canSelectTarget(action.item(), action.subject());
             });
-            this._needOriginalMember = false;
+            this.setNeedOriginalMemberCounter(false);
         }
         return members;
     };
 
     Game_Unit.prototype.shiftIndexForRestrictionTarget = function(index) {
-        this._needOriginalMember = true;
+        this.setNeedOriginalMemberCounter(true);
         const allMember = this.members();
-        this._needOriginalMember = false;
+        this.setNeedOriginalMemberCounter(false);
         return this.members().indexOf(allMember[index]);
     };
 
-    Game_Unit.prototype.setNeedOriginalMember = function(value) {
-        this._needOriginalMember = value;
+    // 循環参照を防止するためのカウンタ
+    Game_Unit.prototype.setNeedOriginalMemberCounter = function(increaseFlag) {
+        if (!this._needOriginalMember) {
+            this._needOriginalMember = 0;
+        }
+        this._needOriginalMember += (increaseFlag ? 1 : -1);
     };
 
     // for DeadOrAliveItem.js
     const _Game_Unit_smoothTargetDeadOrAlive = Game_Unit.prototype.smoothTargetDeadOrAlive;
     Game_Unit.prototype.smoothTargetDeadOrAlive = function(index) {
-        this._needOriginalMember = true;
+        this.setNeedOriginalMemberCounter(true);
         const member = _Game_Unit_smoothTargetDeadOrAlive.apply(this, arguments);
-        this._needOriginalMember = false;
+        this.setNeedOriginalMemberCounter(false);
         return member;
     };
 
