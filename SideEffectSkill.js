@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2021/10/16 MZで動作するよう全面的に修正
 // 1.5.0 2021/06/13 行動が耐性だったのときのみ適用する副作用を指定できる機能を追加
 // 1.4.2 2020/05/22 反撃された場合などスキルを使用しなかったケースで「弱点時のみ」などの判定が無条件で有効になってしまう問題を修正
 // 1.4.1 2019/07/15 BattleEffectPopup.jsと併用したとき、フロントビューだと戦闘開始時などにInvalidポップが余分に表示される競合を解消
@@ -28,87 +29,19 @@
 //=============================================================================
 
 /*:
- * @plugindesc SideEffectSkillPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help スキル使用時に、使用者に対する副作用を設定できます。
- * 副作用が適用されるタイミングは以下の中から選択できます。
- *
- * ・スキル入力時(敵キャラ専用)
- * 味方の行動入力前に副作用が適用されます。敵キャラ専用です。
- *
- * ・スキル使用前
- * スキルを使用する直前に副作用が適用されます。スキルを使用する時点では
- * すでに適用済みの状態になっています。
- *
- * ・スキル使用時
- * スキルを使用して、相手に効果が適用されるのと同じタイミングで
- * 副作用が適用されます。
- *
- * ・スキル使用後
- * スキルを使用して、相手に効果が適用された後で、副作用が適用されます。
- * 微妙なタイミングの違い以外は、ほぼ「スキル使用時」と同じです。
- *
- * ・ターン開始時
- * 味方の行動入力が終わってターンが開始された瞬間に
- * 副作用が適用されます。
- *
- * ・ターン終了時
- * 全員の行動が完了してターンが終了した瞬間に
- * 副作用が適用されます。
- *
- * さらにスキルが「成功時のみ」「失敗時のみ」「弱点時のみ」の場合だけ
- * 副作用を適用することもできます。
- *
- * スキルのメモ欄に以下の通り指定してください。
- * 使用効果のうち、指定された番号の効果の適用対象がもとの効果範囲の対象者ではなく
- * スキル使用者に変更されます。（対象者には適用されなくなります）
- *
- * <SES_スキル入力時:4,3>  # スキル入力時、効果[4][3]を使用者に適用（敵専用）
- * <SES_OnSkillInput:4,3>  # 同上
- * <SES_スキル使用前:3>    # スキル使用前、効果[3]を使用者に適用
- * <SES_OnSkillBefore:3>   # 同上
- * <SES_スキル使用時:3>    # スキル使用時、効果[3]を使用者に適用
- * <SES_OnSkillUsing:3>    # 同上
- * <SES_スキル使用後:1,5>  # スキル使用後、効果[1][5]を使用者に適用（[,]区切り）
- * <SES_OnSkillAfter:1,5>  # 同上
- * <SES_ターン開始時:2,4>  # ターン開始時、効果[2][4]を使用者に適用
- * <SES_OnTurnStart:2,4>   # 同上
- * <SES_ターン終了時:8>    # ターン終了時、効果[8]を使用者に適用
- * <SES_OnTurnEnd:8>       # 同上
- * <SES_成功時のみ>        # 行動が成功した場合のみ副作用を適用
- * <SES_HitOnly>           # 同上
- * <SES_失敗時のみ>        # 行動が失敗した場合のみ副作用を適用
- * <SES_MissOnly>          # 同上
- * <SES_弱点時のみ>        # 行動が弱点を突いた場合のみ副作用を適用
- * <SES_EffectiveOnly>     # 同上
- * <SES_会心時のみ>        # 行動が会心だった場合のみ副作用を適用
- * <SES_CriticalOnly>      # 同上
- *
- * 複数指定する場合、[,]で区切ってください。効果の番号が[1]が先頭です。
- * また入力時副作用は敵キャラ専用です。
- *
- * 効果「コモンイベント」はタイミングが
- * 「ターン開始時」「スキル使用時」「スキル使用後」「ターン終了時」
- * の場合のみ適切なタイミングで実行されます。
- *
- * ・スクリプト（上級者向け）
- * 副作用でコモンイベントを実行した際、以下のスクリプトで
- * 副作用の対象バトラーを取得できます。
- * $gameTemp.getCommonEventSubjectBattler();
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc スキルの副作用プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SideEffectSkill.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @help スキル使用時に、使用者に対する副作用を設定できます。
+ * @help SideEffectSkill.js
+ *
+ * スキル使用時に、使用者に対して適用されるスキル効果を設定できます。
  * 副作用が適用されるタイミングは以下の中から選択できます。
  *
- * ・スキル入力時(敵キャラ専用)
+ * ・スキル入力時(敵キャラのみ有効)
  * 味方の行動入力前に副作用が適用されます。敵キャラ専用です。
  *
  * ・スキル使用前
@@ -123,11 +56,11 @@
  * スキルを使用して、相手に効果が適用された後で、副作用が適用されます。
  * 微妙なタイミングの違い以外は、ほぼ「スキル使用時」と同じです。
  *
- * ・ターン開始時
+ * ・ターン開始時(ターン制戦闘のみ有効)
  * 味方の行動入力が終わってターンが開始された瞬間に
  * 副作用が適用されます。
  *
- * ・ターン終了時
+ * ・ターン終了時(ターン制戦闘のみ有効)
  * 全員の行動が完了してターンが終了した瞬間に
  * 副作用が適用されます。
  *
@@ -135,35 +68,35 @@
  * 副作用を適用することもできます。
  *
  * スキルのメモ欄に以下の通り指定してください。
- * 使用効果のうち、指定された番号の効果の適用対象がもとの効果範囲の対象者ではなく
+ * 使用効果のうち指定された番号の効果の適用対象がもとの効果範囲の対象者ではなく
  * スキル使用者に変更されます。（対象者には適用されなくなります）
  *
- * <SES_スキル入力時:4,3>  # スキル入力時、効果[4][3]を使用者に適用（敵専用）
- * <SES_OnSkillInput:4,3>  # 同上
- * <SES_スキル使用前:3>    # スキル使用前、効果[3]を使用者に適用
- * <SES_OnSkillBefore:3>   # 同上
- * <SES_スキル使用時:3>    # スキル使用時、効果[3]を使用者に適用
- * <SES_OnSkillUsing:3>    # 同上
- * <SES_スキル使用後:1,5>  # スキル使用後、効果[1][5]を使用者に適用（[,]区切り）
- * <SES_OnSkillAfter:1,5>  # 同上
- * <SES_ターン開始時:2,4>  # ターン開始時、効果[2][4]を使用者に適用
- * <SES_OnTurnStart:2,4>   # 同上
- * <SES_ターン終了時:8>    # ターン終了時、効果[8]を使用者に適用
- * <SES_OnTurnEnd:8>       # 同上
- * <SES_成功時のみ>        # 行動が成功した場合のみ副作用を適用
- * <SES_HitOnly>           # 同上
- * <SES_失敗時のみ>        # 行動が失敗した場合のみ副作用を適用
- * <SES_MissOnly>          # 同上
- * <SES_弱点時のみ>        # 行動が弱点を突いた場合のみ副作用を適用
- * <SES_EffectiveOnly>     # 同上
- * <SES_耐性時のみ>        # 行動が耐性だった場合のみ副作用を適用
- * <SES_ResistOnly>        # 同上
- * <SES_会心時のみ>        # 行動が会心だった場合のみ副作用を適用
- * <SES_CriticalOnly>      # 同上
- * <SES_反射時のみ>        # 行動が魔法反射された場合のみ副作用を適用
- * <SES_ReflectionOnly>    # 同上
- * <SES_無効時のみ>        # 行動のダメージが0だった場合のみ副作用適用
- * <SES_InvalidOnly>       # 同上
+ * <スキル入力時:4,3>  # スキル入力時、効果[4][3]を使用者に適用（敵専用）
+ * <OnSkillInput:4,3>  # 同上
+ * <スキル使用前:3>    # スキル使用前、効果[3]を使用者に適用
+ * <OnSkillBefore:3>   # 同上
+ * <スキル使用時:3>    # スキル使用時、効果[3]を使用者に適用
+ * <OnSkillUsing:3>    # 同上
+ * <スキル使用後:1,5>  # スキル使用後、効果[1][5]を使用者に適用（[,]区切り）
+ * <OnSkillAfter:1,5>  # 同上
+ * <ターン開始時:2,4>  # ターン開始時、効果[2][4]を使用者に適用
+ * <OnTurnStart:2,4>   # 同上
+ * <ターン終了時:8>    # ターン終了時、効果[8]を使用者に適用
+ * <OnTurnEnd:8>       # 同上
+ * <成功時のみ>        # 行動が成功した場合のみ副作用を適用
+ * <HitOnly>           # 同上
+ * <失敗時のみ>        # 行動が失敗した場合のみ副作用を適用
+ * <MissOnly>          # 同上
+ * <弱点時のみ>        # 行動が弱点を突いた場合のみ副作用を適用
+ * <EffectiveOnly>     # 同上
+ * <耐性時のみ>        # 行動が耐性だった場合のみ副作用を適用
+ * <ResistOnly>        # 同上
+ * <会心時のみ>        # 行動が会心だった場合のみ副作用を適用
+ * <CriticalOnly>      # 同上
+ * <反射時のみ>        # 行動が魔法反射された場合のみ副作用を適用
+ * <ReflectionOnly>    # 同上
+ * <無効時のみ>        # 行動のダメージが0だった場合のみ副作用適用
+ * <InvalidOnly>       # 同上
  *
  * 複数指定する場合、[,]で区切ってください。効果の番号が[1]が先頭です。
  * また入力時副作用は敵キャラ専用です。
@@ -183,7 +116,10 @@
  * 副作用の対象バトラーを取得できます。
  * $gameTemp.getCommonEventSubjectBattler();
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -191,49 +127,10 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var metaTagPrefix = 'SES_';
-
-    var getArgArrayString = function(args, upperFlg) {
-        var values = getArgString(args, upperFlg).split(',');
-        if (values[0] === '') values = [];
-        for (var i = 0; i < values.length; i++) values[i] = values[i].trim();
-        return values;
-    };
-
-    var getArgArrayEval = function(args, min, max) {
-        var values = getArgArrayString(args, false);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        for (var i = 0; i < values.length; i++) values[i] = eval(values[i]).clamp(min, max);
-        return values;
-    };
-
-    var getArgString = function(arg, upperFlg) {
-        arg = convertEscapeCharacters(arg);
-        return upperFlg ? arg.toUpperCase() : arg;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null || text === true) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // DataManager
@@ -245,67 +142,62 @@
     //   sideEffectOnStart  : ターン開始時副作用
     //   sideEffectOnEnd    : ターン終了時副作用
     //=============================================================================
-    var _DataManager_loadDatabase = DataManager.loadDatabase;
+    const _DataManager_loadDatabase = DataManager.loadDatabase;
     DataManager.loadDatabase      = function() {
         this._itemEffectsCategorize = false;
         _DataManager_loadDatabase.apply(this, arguments);
     };
 
-    var _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
+    const _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
     DataManager.isDatabaseLoaded      = function() {
-        var result = _DataManager_isDatabaseLoaded.apply(this, arguments);
+        const result = _DataManager_isDatabaseLoaded.apply(this, arguments);
         if (result && !this._itemEffectsCategorize) {
             this._itemEffectsCategorize = true;
-            $dataItems.forEach(function(item) {
-                this.categorizeItemEffects(item);
-            }.bind(this));
-            $dataSkills.forEach(function(skill) {
-                this.categorizeItemEffects(skill);
-            }.bind(this));
+            $dataItems.forEach(item => this.categorizeItemEffects(item));
+            $dataSkills.forEach(item => this.categorizeItemEffects(item));
         }
         return result;
     };
 
     DataManager.categorizeItemEffects = function(data) {
         if (!data) return;
-        var sideEffectOnEnd = [], sideEffectOnUsing = [], sideEffectOnBefore = [], sideEffectOnStart = [], sideEffectOnInput = [], sideEffectOnAfter = [];
-        var numbersOnInput  = this.getSideEffectNumbers(data, ['OnSkillInput', 'スキル入力時']);
-        var numbersOnBefore = this.getSideEffectNumbers(data, ['OnSkillBefore', 'スキル使用前']);
-        var numbersOnUsing  = this.getSideEffectNumbers(data, ['OnSkillUsing', 'スキル使用時']);
-        var numbersOnAfter  = this.getSideEffectNumbers(data, ['OnSkillAfter', 'スキル使用後']);
-        var numbersOnStart  = this.getSideEffectNumbers(data, ['OnTurnStart', 'ターン開始時']);
-        var numbersOnEnd    = this.getSideEffectNumbers(data, ['OnTurnEnd', 'ターン終了時']);
-        var effects         = data.effects;
-        for (var i = 0; i < effects.length; i++) {
-            if (numbersOnInput.contains(i + 1)) {
+        const sideEffectOnEnd = [], sideEffectOnUsing = [], sideEffectOnBefore = [],
+            sideEffectOnStart = [], sideEffectOnInput = [], sideEffectOnAfter = [];
+        const numbersOnInput  = this.getSideEffectNumbers(data, ['OnSkillInput', 'スキル入力時']);
+        const numbersOnBefore = this.getSideEffectNumbers(data, ['OnSkillBefore', 'スキル使用前']);
+        const numbersOnUsing  = this.getSideEffectNumbers(data, ['OnSkillUsing', 'スキル使用時']);
+        const numbersOnAfter  = this.getSideEffectNumbers(data, ['OnSkillAfter', 'スキル使用後']);
+        const numbersOnStart  = this.getSideEffectNumbers(data, ['OnTurnStart', 'ターン開始時']);
+        const numbersOnEnd    = this.getSideEffectNumbers(data, ['OnTurnEnd', 'ターン終了時']);
+        const effects         = data.effects;
+        for (let i = 0; i < effects.length; i++) {
+            const effectIndex = i + 1;
+            if (numbersOnInput.contains(effectIndex)) {
                 sideEffectOnInput.push(effects[i]);
                 effects[i].sideEffect = true;
             }
-            if (numbersOnBefore.contains(i + 1)) {
+            if (numbersOnBefore.contains(effectIndex)) {
                 sideEffectOnBefore.push(effects[i]);
                 effects[i].sideEffect = true;
             }
-            if (numbersOnUsing.contains(i + 1)) {
+            if (numbersOnUsing.contains(effectIndex)) {
                 sideEffectOnUsing.push(effects[i]);
                 effects[i].sideEffect = true;
             }
-            if (numbersOnAfter.contains(i + 1)) {
+            if (numbersOnAfter.contains(effectIndex)) {
                 sideEffectOnAfter.push(effects[i]);
                 effects[i].sideEffect = true;
             }
-            if (numbersOnStart.contains(i + 1)) {
+            if (numbersOnStart.contains(effectIndex)) {
                 sideEffectOnStart.push(effects[i]);
                 effects[i].sideEffect = true;
             }
-            if (numbersOnEnd.contains(i + 1)) {
+            if (numbersOnEnd.contains(effectIndex)) {
                 sideEffectOnEnd.push(effects[i]);
                 effects[i].sideEffect = true;
             }
         }
-        data.effects = effects.filter(function(effect) {
-            return !effect.sideEffect;
-        });
-
+        data.effects = effects.filter(effect => !effect.sideEffect);
         data.sideEffectOnInput  = sideEffectOnInput;
         data.sideEffectOnBefore = sideEffectOnBefore;
         data.sideEffectOnUsing  = sideEffectOnUsing;
@@ -315,9 +207,13 @@
     };
 
     DataManager.getSideEffectNumbers = function(data, names) {
-        var metaValue = getMetaValues(data, names);
+        const metaValue = PluginManagerEx.findMetaValue(data, names);
         if (metaValue) {
-            return getArgArrayEval(metaValue, 1);
+            if (metaValue === String(metaValue)) {
+                return metaValue.split(',').map(item => parseInt(item));
+            } else {
+                return [metaValue];
+            }
         }
         return [];
     };
@@ -326,29 +222,35 @@
     // BattleManager
     //  ターン開始時に開始時副作用を適用します。
     //=============================================================================
-    var _BattleManager_startTurn = BattleManager.startTurn;
+    const _BattleManager_startTurn = BattleManager.startTurn;
     BattleManager.startTurn      = function() {
-        this.makeActionOrders();
-        this._sideEffectBattlers = this._actionBattlers.clone();
-        _BattleManager_startTurn.apply(this, arguments);
-        this.applyItemSideEffectStart();
-    };
-
-    var _BattleManager_endTurn = BattleManager.endTurn;
-    BattleManager.endTurn      = function() {
-        _BattleManager_endTurn.apply(this, arguments);
-        if (this._sideEffectBattlers) {
-            this.applyItemSideEffectEnd();
+        if (BattleManager.isTpb()) {
+            _BattleManager_startTurn.apply(this, arguments);
+        } else {
+            this.makeActionOrders();
+            this._sideEffectBattlers = this._actionBattlers.clone();
+            _BattleManager_startTurn.apply(this, arguments);
+            this.applyItemSideEffectStart();
         }
     };
 
-    var _BattleManager_startAction = BattleManager.startAction;
+    const _BattleManager_endTurn = BattleManager.endTurn;
+    BattleManager.endTurn      = function() {
+        _BattleManager_endTurn.apply(this, arguments);
+        if (!BattleManager.isTpb()) {
+            if (this._sideEffectBattlers) {
+                this.applyItemSideEffectEnd();
+            }
+        }
+    };
+
+    const _BattleManager_startAction = BattleManager.startAction;
     BattleManager.startAction      = function() {
         _BattleManager_startAction.apply(this, arguments);
         this._action.applyItemSideEffect('sideEffectOnBefore');
     };
 
-    var _BattleManager_endAction = BattleManager.endAction;
+    const _BattleManager_endAction = BattleManager.endAction;
     BattleManager.endAction      = function() {
         _BattleManager_endAction.apply(this, arguments);
         if (this._action) {
@@ -358,8 +260,8 @@
 
     BattleManager.applyItemSideEffectStart = function() {
         this._sideEffectBattlers.forEach(function(battler) {
-            var number = battler.numActions();
-            for (var i = 0; i < number; i++) {
+            const number = battler.numActions();
+            for (let i = 0; i < number; i++) {
                 battler.action(i).applyItemSideEffect('sideEffectOnStart');
             }
         }, this);
@@ -367,7 +269,7 @@
 
     BattleManager.applyItemSideEffectEnd = function() {
         this._sideEffectBattlers.forEach(function(battler) {
-            var actions = battler.getEndActions();
+            const actions = battler.getEndActions();
             actions.forEach(function(action) {
                 action.applyItemSideEffect('sideEffectOnEnd');
             }, this);
@@ -388,9 +290,9 @@
     // Game_Battler
     //  終了した行動を別変数に保持します。
     //=============================================================================
-    var _Game_Battler_removeCurrentAction      = Game_Battler.prototype.removeCurrentAction;
+    const _Game_Battler_removeCurrentAction      = Game_Battler.prototype.removeCurrentAction;
     Game_Battler.prototype.removeCurrentAction = function() {
-        var action = this.currentAction();
+        const action = this.currentAction();
         if (action) {
             this._endActions = this.getEndActions();
             this._endActions.push(action);
@@ -406,7 +308,7 @@
         this._endActions = null;
     };
 
-    var _Game_Battler_onBattleEnd = Game_Battler.prototype.onBattleEnd;
+    const _Game_Battler_onBattleEnd = Game_Battler.prototype.onBattleEnd;
     Game_Battler.prototype.onBattleEnd = function() {
         _Game_Battler_onBattleEnd.apply(this, arguments);
         this.resetEndActions();
@@ -416,11 +318,11 @@
     // Game_Enemy
     //  行動入力時に副作用を適用します。
     //=============================================================================
-    var _Game_Enemy_makeActions      = Game_Enemy.prototype.makeActions;
+    const _Game_Enemy_makeActions      = Game_Enemy.prototype.makeActions;
     Game_Enemy.prototype.makeActions = function() {
         _Game_Enemy_makeActions.apply(this, arguments);
-        var number = this.numActions();
-        for (var i = 0; i < number; i++) {
+        const number = this.numActions();
+        for (let i = 0; i < number; i++) {
             this.action(i).applyItemSideEffect('sideEffectOnInput');
         }
         BattleManager.checkBattleEnd();
@@ -430,7 +332,7 @@
     // Game_Action
     //  副作用を適用します。
     //=============================================================================
-    var _Game_Action_apply      = Game_Action.prototype.apply;
+    const _Game_Action_apply      = Game_Action.prototype.apply;
     Game_Action.prototype.apply = function(target) {
         if (this._reflectionTarget) {
             this._reflectionForSideEffect = true;
@@ -439,21 +341,21 @@
         this.applyItemSideEffect('sideEffectOnUsing');
     };
 
-    var _Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
+    const _Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
     Game_Action.prototype.makeDamageValue = function(target, critical) {
         this._criticalForSideEffect = critical;
         return _Game_Action_makeDamageValue.apply(this, arguments);
     };
 
-    var _Game_Action_applyItemUserEffect      = Game_Action.prototype.applyItemUserEffect;
+    const _Game_Action_applyItemUserEffect      = Game_Action.prototype.applyItemUserEffect;
     Game_Action.prototype.applyItemUserEffect = function(target) {
         _Game_Action_applyItemUserEffect.apply(this, arguments);
         this._successForSideEffect = true;
     };
 
-    var _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
+    const _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
-        var rate = _Game_Action_calcElementRate.apply(this, arguments);
+        const rate = _Game_Action_calcElementRate.apply(this, arguments);
         if (!BattleManager.isInputting()) {
             if (rate >= 1.1) {
                 this._effectiveForSideEffect = true;
@@ -465,7 +367,7 @@
         return rate;
     };
 
-    var _Game_Action_executeDamage = Game_Action.prototype.executeDamage;
+    const _Game_Action_executeDamage = Game_Action.prototype.executeDamage;
     Game_Action.prototype.executeDamage = function(target, value) {
         if (value === 0) {
             this._invalidForSideEffect = true;
@@ -475,6 +377,13 @@
 
     Game_Action.prototype.applyItemSideEffect = function(property) {
         if (!this.isValidSideEffect()) return;
+        if (!this._applySideEffect) {
+            this._applySideEffect = {};
+        }
+        if (this._applySideEffect[property]) {
+            return;
+        }
+        this._applySideEffect[property] = true;
         if (this.isNeedDisplaySideEffect(property)) {
             this.subject().result().clear();
         }
@@ -499,31 +408,31 @@
     };
 
     Game_Action.prototype.isValidSideEffectForSuccess = function() {
-        return this._successForSideEffect || !getMetaValues(this.item(), ['HitOnly', '成功時のみ']);
+        return this._successForSideEffect || !PluginManagerEx.findMetaValue(this.item(), ['HitOnly', '成功時のみ']);
     };
 
     Game_Action.prototype.isValidSideEffectForFailure = function() {
-        return !this._successForSideEffect || !getMetaValues(this.item(), ['MissOnly', '失敗時のみ']);
+        return !this._successForSideEffect || !PluginManagerEx.findMetaValue(this.item(), ['MissOnly', '失敗時のみ']);
     };
 
     Game_Action.prototype.isValidSideEffectForEffective = function() {
-        return this._effectiveForSideEffect || !getMetaValues(this.item(), ['EffectiveOnly', '弱点時のみ']);
+        return this._effectiveForSideEffect || !PluginManagerEx.findMetaValue(this.item(), ['EffectiveOnly', '弱点時のみ']);
     };
 
     Game_Action.prototype.isValidSideEffectForResist = function() {
-        return this._resistForSideEffect || !getMetaValues(this.item(), ['ResistOnly', '耐性時のみ']);
+        return this._resistForSideEffect || !PluginManagerEx.findMetaValue(this.item(), ['ResistOnly', '耐性時のみ']);
     };
 
     Game_Action.prototype.isValidSideEffectForCritical = function() {
-        return this._criticalForSideEffect || !getMetaValues(this.item(), ['CriticalOnly', '会心時のみ']);
+        return this._criticalForSideEffect || !PluginManagerEx.findMetaValue(this.item(), ['CriticalOnly', '会心時のみ']);
     };
 
     Game_Action.prototype.isValidSideEffectForInvalid = function() {
-        return this._invalidForSideEffect || !getMetaValues(this.item(), ['InvalidOnly', '無効時のみ']);
+        return this._invalidForSideEffect || !PluginManagerEx.findMetaValue(this.item(), ['InvalidOnly', '無効時のみ']);
     };
 
     Game_Action.prototype.isValidSideEffectForReflection = function() {
-        return this._reflectionForSideEffect || !getMetaValues(this.item(), ['ReflectionOnly', '反射時のみ']);
+        return this._reflectionForSideEffect || !PluginManagerEx.findMetaValue(this.item(), ['ReflectionOnly', '反射時のみ']);
     };
 
     Game_Action.prototype.applyItemSideEffectGlobal = function(property) {
@@ -533,18 +442,20 @@
                 $gameTemp.setCommonEventSubject(this.subject());
             }
         }, this);
-        if (this.isNeedDisplaySideEffect(property)) BattleManager.displaySideEffectResult(this.subject());
+        if (this.isNeedDisplaySideEffect(property)) {
+            BattleManager.displaySideEffectResult(this.subject());
+        }
     };
 
     Game_Action.prototype.isNeedDisplaySideEffect = function(property) {
-        return property !== 'sideEffectOnUsing' && property !== 'sideEffectOnEnd';
+        return !BattleManager.isTpb() || property !== 'sideEffectOnInput';
     };
 
     //=============================================================================
     // Game_Temp
     //  コモンイベントの予約をスタックします。
     //=============================================================================
-    var _Game_Temp_initialize      = Game_Temp.prototype.initialize;
+    const _Game_Temp_initialize      = Game_Temp.prototype.initialize;
     Game_Temp.prototype.initialize = function() {
         _Game_Temp_initialize.apply(this, arguments);
         this._commonEventReserveStack   = [];
@@ -553,7 +464,7 @@
         this.getCommonEventSubjectBattler();
     };
 
-    var _Game_Temp_reserveCommonEvent      = Game_Temp.prototype.reserveCommonEvent;
+    const _Game_Temp_reserveCommonEvent      = Game_Temp.prototype.reserveCommonEvent;
     Game_Temp.prototype.reserveCommonEvent = function(commonEventId) {
         if (this.isCommonEventReserved()) {
             this._commonEventReserveStack.push(commonEventId);
@@ -566,7 +477,7 @@
         this._commonEventSubjects.push(battler);
     };
 
-    var _Game_Temp_clearCommonEvent      = Game_Temp.prototype.clearCommonEvent;
+    const _Game_Temp_clearCommonEvent      = Game_Temp.prototype.clearCommonEvent;
     Game_Temp.prototype.clearCommonEvent = function() {
         _Game_Temp_clearCommonEvent.apply(this, arguments);
         if (this._commonEventReserveStack.length > 0) {
