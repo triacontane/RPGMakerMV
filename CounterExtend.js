@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2021/10/20 行動制約ステートが有効なときに反撃判定が行われてしまう問題を修正
 // 2.2.0 2021/08/09 反撃頻度に値を加算できるタグを追加
 // 2.1.3 2021/07/31 反撃条件に属性を指定したとき、通常攻撃に付与された属性を考慮していなかった問題を修正
 // 2.1.2 2021/07/15 アクティブタイムバトルで、行動入力中に自身の反撃が発動した場合、行動入力後にエラーになる場合がある問題を修正
@@ -292,7 +293,8 @@
         }
 
         setup(triggerAction, target) {
-            if (triggerAction.isCounter() || this.friendsUnit().members().contains(target)) {
+            if (triggerAction.isCounter() ||
+                this.friendsUnit().members().contains(target) || !this.subject().canMove()) {
                 return;
             }
             for (const counter of this.findParams()) {
