@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2021/10/20 メニュー画面でスキルを使用するとエラーになる問題を修正
 // 1.6.0 2021/10/16 MZで動作するよう全面的に修正
 // 1.5.0 2021/06/13 行動が耐性だったのときのみ適用する副作用を指定できる機能を追加
 // 1.4.2 2020/05/22 反撃された場合などスキルを使用しなかったケースで「弱点時のみ」などの判定が無条件で有効になってしまう問題を修正
@@ -448,6 +449,9 @@
     };
 
     Game_Action.prototype.isNeedDisplaySideEffect = function(property) {
+        if (!$gameParty.inBattle()) {
+            return false;
+        }
         return !BattleManager.isTpb() || property !== 'sideEffectOnInput';
     };
 
