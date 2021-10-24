@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2021/10/24 各種パラメータが指定値を超えているかどうかを装備条件に追加
 // 1.3.0 2021/06/18 タグで複数の条件を指定したとき、すべての条件を満たした場合にのみ装備できるよう変更する機能を追加
 //                  ステートの条件が機能していなかった問題を修正
 // 1.2.0 2021/06/17 MZ版を作成
@@ -40,6 +41,14 @@
  * <装備条件アクター:4>   # ID[4]のアクターである。
  * <装備条件スイッチ:1,3> # ID[1]もしくはID[3]のスイッチがONになっている。
  * <装備条件計算式:f>     # JS計算式[f]がtrueを返す
+ * <装備条件HP:100>      # 装備品や特徴を含まない基礎HPが100以上
+ * <装備条件MP:100>      # 装備品や特徴を含まない基礎MPが100以上
+ * <装備条件攻撃:100>    # 装備品や特徴を含まない基礎攻撃力が100以上
+ * <装備条件防御:100>    # 装備品や特徴を含まない基礎防御力が100以上
+ * <装備条件魔法:100>    # 装備品や特徴を含まない基礎魔法力が100以上
+ * <装備条件魔防:100>    # 装備品や特徴を含まない基礎魔法防御が100以上
+ * <装備条件敏捷:100>    # 装備品や特徴を含まない基礎敏捷性が100以上
+ * <装備条件運:100>      # 装備品や特徴を含まない基礎運が100以上
  *
  * 数値をカンマ区切りで複数記入すると、指定した数値のいずれかが該当すれば
  * 装備可能になります。
@@ -89,25 +98,30 @@
         if (!this.canEquipExtendFormula(item)) {
             return false;
         }
+        for (let i = 0; i <= 7; i++) {
+            if (!this.canEquipExtendParam(item, i)) {
+                return false;
+            }
+        }
         return true;
     };
 
     Game_BattlerBase.prototype.canEquipExtendSkill = function(item) {
         const metaValue = this.findEquipExtendValue(item, ['装備条件スキル', 'EquipCondSkill']);
         if (!metaValue) return true;
-        return metaValue[this.findEquipExtendConditionMethod()](function(skillId) {
+        return metaValue[this.findEquipExtendConditionMethod()](skillId => {
             const hasSkill = this.skills().contains($dataSkills[Math.abs(skillId)]);
             return skillId < 0 ? !hasSkill : hasSkill;
-        }.bind(this));
+        });
     };
 
     Game_BattlerBase.prototype.canEquipExtendState = function(item) {
         const metaValue = this.findEquipExtendValue(item, ['装備条件ステート', 'EquipCondState']);
         if (!metaValue) return true;
-        return metaValue[this.findEquipExtendConditionMethod()](function(stateId) {
+        return metaValue[this.findEquipExtendConditionMethod()](stateId => {
             const isState = this.isStateAffected(stateId);
             return stateId < 0 ? !isState : isState;
-        }.bind(this));
+        });
     };
 
     Game_BattlerBase.prototype.canEquipExtendActor = function(item) {
@@ -119,10 +133,26 @@
     Game_BattlerBase.prototype.canEquipExtendSwitch = function(item) {
         const metaValue = this.findEquipExtendValue(item, ['装備条件スイッチ', 'EquipCondSwitch']);
         if (!metaValue) return true;
-        return metaValue[this.findEquipExtendConditionMethod()](function(switchId) {
+        return metaValue[this.findEquipExtendConditionMethod()](switchId => {
             return $gameSwitches.value(switchId);
-        }.bind(this));
+        });
     };
+
+    Game_BattlerBase.prototype.canEquipExtendParam = function(item, paramId) {
+        const tags = [
+            ['装備条件HP', 'EquipCondHp'],
+            ['装備条件MP', 'EquipCondMp'],
+            ['装備条件攻撃', 'EquipCondAtk'],
+            ['装備条件防御', 'EquipCondDef'],
+            ['装備条件魔法', 'EquipCondMat'],
+            ['装備条件魔防', 'EquipCondMdf'],
+            ['装備条件敏捷', 'EquipCondAgi'],
+            ['装備条件運', 'EquipCondLuk']
+        ];
+        const value = this.findEquipExtendValue(item, tags[paramId]);
+        return value ? (this.paramBase(paramId) + this._paramPlus[paramId]) >= value : true;
+    };
+
 
     Game_BattlerBase.prototype.findEquipExtendValue = function(item, tags) {
         const metaValue = PluginManagerEx.findMetaValue(item, tags);
