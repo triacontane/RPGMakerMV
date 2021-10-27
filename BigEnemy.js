@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2021/10/27 エネミー表示時、下端に24ピクセル前後の空きが出来てしまう問題を修正
 // 2.1.0 2021/03/30 MZで動作するよう修正
 // 2.0.2 2018/10/05 連続回数が2以上のダメージを表示する際、一瞬だけおかしな位置に表示される問題を修正
 // 2.0.1 2017/03/16 2.0.0で巨大サイズ以外の敵に対するポップアップが表示されなくなっていた問題を修正
@@ -46,6 +47,15 @@
 (()=> {
     'use strict';
 
+    let offsetY = 0;
+
+    const _Spriteset_Battle_battleFieldOffsetY = Spriteset_Battle.prototype.battleFieldOffsetY;
+    Spriteset_Battle.prototype.battleFieldOffsetY = function() {
+        const result = _Spriteset_Battle_battleFieldOffsetY.apply(this, arguments);
+        offsetY = result;
+        return result;
+    };
+
     //=============================================================================
     // Game_Enemy
     //  巨大モンスター判定を行います。
@@ -63,7 +73,7 @@
         _Sprite_Enemy_updatePosition.apply(this, arguments);
         if (this._enemy.isBigEnemy() && this.bitmap) {
             this._originalY = this.y;
-            this.y = Graphics.boxHeight;
+            this.y = Graphics.height + offsetY;
         }
     };
 
