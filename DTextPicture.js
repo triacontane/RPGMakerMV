@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2021/10/29 行の高さをコマンドから指定できる機能を追加
+//                  直前に生成したピクチャの横幅、高さを変数に格納する機能
 // 2.3.0 2021/06/05 フォントロードプラグインと組み合わせて動的文字列ピクチャに好きなフォントを指定できる機能を追加
 // 2.2.3 2021/05/04 一部の制御文字を使っていると揃えを中央もしくは右揃えにしたときに正しく表示されない問題を修正
 //                  フォントサイズを小さくして複数行表示したときに1行目の高さが正しく計算されない問題を修正
@@ -57,6 +59,18 @@
  * @text 接頭辞文字列
  * @desc すべての文字列ピクチャの前に挿入されるテキストです。主にデフォルトの制御文字などを指定します。
  * @default
+ *
+ * @param widthVariable
+ * @text 横幅格納変数
+ * @desc 直前に描画した動的文字列の横幅(ピクセル数)を格納する変数です。
+ * @default 0
+ * @type variable
+ *
+ * @param heightVariable
+ * @text 高さ格納変数
+ * @desc 直前に描画した動的文字列の高さ(ピクセル数)を格納する変数です。
+ * @default 0
+ * @type variable
  *
  * @command dText
  * @text 文字列ピクチャ準備
@@ -123,6 +137,11 @@
  * @text フォント
  * @desc 文字列ピクチャのフォントです。フォントロードプラグインで読み込んだフォントの名称を指定します。
  * @default
+ *
+ * @arg lineHeight
+ * @text 行の高さ
+ * @desc 文字列ピクチャの1行分の高さです。
+ * @default 0
  *
  * @command windowCursor
  * @text ウィンドウカーソル設定
@@ -191,8 +210,8 @@
  * \oc[rgb(0,255,0)] カラーコードで指定
  * \oc[2] 文字色番号\c[n]と同様のもので指定
  *
- * 動的文字列ピクチャのフォントを変えたい場合は、別途フォントロードプラグインを使って
- * 読み込んでください。
+ * 動的文字列ピクチャのフォントを変えたい場合は、
+ * 別途フォントロードプラグインを使って読み込んでください。
  * https://github.com/triacontane/RPGMakerMV/blob/mz_master/FontLoad.js
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
@@ -248,6 +267,9 @@
         if (setting.fontFace !== '') {
             this.dTextFontFace = setting.fontFace;
         }
+        if (setting.lineHeight > 0) {
+            this.dTextLineHeight = setting.lineHeight;
+        }
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
@@ -285,7 +307,8 @@
             gradationLeft : this.dTextGradationLeft,
             gradationRight: this.dTextGradationRight,
             align         : this.dTextAlign,
-            font          : this.dTextFontFace
+            font          : this.dTextFontFace,
+            lineHeight    : this.dTextLineHeight
         };
     };
 
@@ -494,6 +517,12 @@
     Sprite_Picture.prototype.makeDynamicBitmap = function() {
         const tempWindow = new Window_Dummy();
         this.bitmap = tempWindow.createTextContents(this.picture().getDText(), this.dTextInfo);
+        if (param.widthVariable) {
+            $gameVariables.setValue(param.widthVariable, this.bitmap.width);
+        }
+        if (param.heightVariable) {
+            $gameVariables.setValue(param.heightVariable, this.bitmap.height);
+        }
         if (this.dTextInfo.color) {
             this.makeDynamicBitmapBack();
         }
@@ -537,6 +566,7 @@
         createTextContents(text, dTextInfo) {
             this._size = dTextInfo.size;
             this._face = dTextInfo.font;
+            this._lineHeight = dTextInfo.lineHeight;
             this._text = text;
             const rect = this.textSizeEx(text);
             this.textPictureWidth = rect.width;
@@ -549,6 +579,10 @@
             this.drawTextEx(this._text, 0, 0);
             this.contents = null;
             this.destroy();
+        }
+
+        calcTextHeight(textState) {
+            return this._lineHeight || super.calcTextHeight(textState);
         }
 
         processAllText(textState) {
