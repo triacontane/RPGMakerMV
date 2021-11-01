@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.24.1 2021/11/01 描画内容がnullの場合に描画をスキップするよう修正
  1.24.0 2021/09/19 カーソル位置を記憶して画面を開き直したときに復元できる機能を追加
  1.23.0 2021/09/19 ウィンドウカーソルを項目の上に表示できる機能を追加
  1.22.3 2021/09/08 メモ欄から値を取得してピクチャを表示するとき、制御文字を変換するよう修正
@@ -1934,6 +1935,8 @@
                         outputError(e, script);
                     }
                 });
+            } else if (item === undefined || item === null) {
+                // do nothing
             } else if (item === String(item)) {
                 this.drawTextEx(item, r.x, r.y);
             } else if (item.hasOwnProperty('iconIndex')) {
