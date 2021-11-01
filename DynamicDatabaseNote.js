@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/11/01 MZで動作するよう修正
  1.0.0 2019/10/22 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -14,50 +15,140 @@
 =============================================================================*/
 
 /*:
- * @plugindesc DynamicDatabaseNotePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param commandPrefix
- * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
- * @default
- *
- * @help DynamicDatabaseNote.js
- *
- * データベースのメモ欄をゲーム中に上書き変更します。
- * 変更対象のデータと、変更前後のIDを指定してください。
- * 存在しないIDやデータベースを指定するとエラーになります。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * メモ欄変更 $dataActors 1 2   # ID[1]のアクター(※1)のメモ欄をID[2]のメモ欄で上書き。
- * CHANGE_NOTE $dataActors 1 2 # 同上
- *
- * ※1
- * 変更対象のデータベース以下の通り指定してください。
- * $dataActors : アクター
- * $dataItems : アイテム
- * $dataWeapons : 武器
- * $dataArmors : 防具
- * $dataStates : ステート
- * $dataEnemies : 敵キャラ
- *
- * 注意事項：
- * 使っているプラグインのメモ欄の使い方によっては
- * 当プラグインの変更が反映されない場合があります。
- * その場合、本プラグイン側での対処は難しいです。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc データベースのメモ欄動的設定プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DynamicDatabaseNote.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @param commandPrefix
- * @text メモ欄接頭辞
- * @desc 他のプラグインとメモ欄もしくはプラグインコマンドの名称が被ったときに指定する接頭辞です。通常は指定不要です。
- * @default
+ * @command CHANGE_NOTE_ACTOR
+ * @text アクターメモ欄変更
+ * @desc 指定したデータのメモ欄を別のデータで上書きします。
+ *
+ * @arg destId
+ * @text 上書き先ID
+ * @desc 上書きされる対象となるデータのIDです。
+ * @default 0
+ * @type actor
+ *
+ * @arg srcId
+ * @text 上書き元ID
+ * @desc 上書きする元データとなるデータのIDです。
+ * @default 0
+ * @type actor
+ *
+ * @command CHANGE_NOTE_CLASS
+ * @text 職業メモ欄変更
+ * @desc 指定したデータのメモ欄を別のデータで上書きします。
+ *
+ * @arg destId
+ * @text 上書き先ID
+ * @desc 上書きされる対象となるデータのIDです。
+ * @default 0
+ * @type class
+ *
+ * @arg srcId
+ * @text 上書き元ID
+ * @desc 上書きする元データとなるデータのIDです。
+ * @default 0
+ * @type class
+ * 
+ * @command CHANGE_NOTE_ITEM
+ * @text アイテムメモ欄変更
+ * @desc 指定したデータのメモ欄を別のデータで上書きします。
+ *
+ * @arg destId
+ * @text 上書き先ID
+ * @desc 上書きされる対象となるデータのIDです。
+ * @default 0
+ * @type item
+ *
+ * @arg srcId
+ * @text 上書き元ID
+ * @desc 上書きする元データとなるデータのIDです。
+ * @default 0
+ * @type item
+ * 
+ * @command CHANGE_NOTE_SKILL
+ * @text スキルメモ欄変更
+ * @desc 指定したデータのメモ欄を別のデータで上書きします。
+ *
+ * @arg destId
+ * @text 上書き先ID
+ * @desc 上書きされる対象となるデータのIDです。
+ * @default 0
+ * @type skill
+ *
+ * @arg srcId
+ * @text 上書き元ID
+ * @desc 上書きする元データとなるデータのIDです。
+ * @default 0
+ * @type skill
+ *
+ * @command CHANGE_NOTE_WEAPON
+ * @text 武器メモ欄変更
+ * @desc 指定したデータのメモ欄を別のデータで上書きします。
+ *
+ * @arg destId
+ * @text 上書き先ID
+ * @desc 上書きされる対象となるデータのIDです。
+ * @default 0
+ * @type weapon
+ *
+ * @arg srcId
+ * @text 上書き元ID
+ * @desc 上書きする元データとなるデータのIDです。
+ * @default 0
+ * @type weapon
+ * 
+ * @command CHANGE_NOTE_ARMOR
+ * @text 防具メモ欄変更
+ * @desc 指定したデータのメモ欄を別のデータで上書きします。
+ *
+ * @arg destId
+ * @text 上書き先ID
+ * @desc 上書きされる対象となるデータのIDです。
+ * @default 0
+ * @type armor
+ *
+ * @arg srcId
+ * @text 上書き元ID
+ * @desc 上書きする元データとなるデータのIDです。
+ * @default 0
+ * @type armor
+ * 
+ * @command CHANGE_NOTE_STATE
+ * @text ステートメモ欄変更
+ * @desc 指定したデータのメモ欄を別のデータで上書きします。
+ *
+ * @arg destId
+ * @text 上書き先ID
+ * @desc 上書きされる対象となるデータのIDです。
+ * @default 0
+ * @type state
+ *
+ * @arg srcId
+ * @text 上書き元ID
+ * @desc 上書きする元データとなるデータのIDです。
+ * @default 0
+ * @type state
+ * 
+ * @command CHANGE_NOTE_ENEMY
+ * @text 敵キャラメモ欄変更
+ * @desc 指定したデータのメモ欄を別のデータで上書きします。
+ *
+ * @arg destId
+ * @text 上書き先ID
+ * @desc 上書きされる対象となるデータのIDです。
+ * @default 0
+ * @type enemy
+ *
+ * @arg srcId
+ * @text 上書き元ID
+ * @desc 上書きする元データとなるデータのIDです。
+ * @default 0
+ * @type enemy
  *
  * @help DynamicDatabaseNote.js
  *
@@ -65,26 +156,15 @@
  * 変更対象のデータと、変更前後のIDを指定してください。
  * 存在しないIDやデータベースを指定するとエラーになります。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * メモ欄変更 $dataActors 1 2   # ID[1]のアクター(※1)のメモ欄をID[2]のメモ欄で上書き。
- * CHANGE_NOTE $dataActors 1 2 # 同上
- *
- * ※1
- * 変更対象のデータベース以下の通り指定してください。
- * $dataActors : アクター
- * $dataItems : アイテム
- * $dataWeapons : 武器
- * $dataArmors : 防具
- * $dataStates : ステート
- * $dataEnemies : 敵キャラ
- *
  * 注意事項：
  * 使っているプラグインのメモ欄の使い方によっては
  * 当プラグインの変更が反映されない場合があります。
  * その場合、本プラグイン側での対処は難しいです。
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -92,97 +172,55 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
+    const script = document.currentScript;
 
-    /**
-     * Convert escape characters.(require any window object)
-     * @param text Target text
-     * @returns {String} Converted text
-     */
-    var convertEscapeCharacters = function(text) {
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
-    };
+    PluginManagerEx.registerCommand(script, 'CHANGE_NOTE_ACTOR', function (args) {
+        this.changeDataNote('$dataActors', args);
+    });
 
-    /**
-     * Convert escape characters.(for text array)
-     * @param texts Target text array
-     * @returns {Array<String>} Converted text array
-     */
-    var convertEscapeCharactersAll = function(texts) {
-        return texts.map(function(text) {
-            return convertEscapeCharacters(text);
-        });
-    };
+    PluginManagerEx.registerCommand(script, 'CHANGE_NOTE_CLASS', function (args) {
+        this.changeDataNote('$dataClasses', args);
+    });
 
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    var createPluginParameter = function(pluginName) {
-        var paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
+    PluginManagerEx.registerCommand(script, 'CHANGE_NOTE_ITEM', function (args) {
+        this.changeDataNote('$dataItems', args);
+    });
 
-    var param = createPluginParameter('DynamicDatabaseNote');
+    PluginManagerEx.registerCommand(script, 'CHANGE_NOTE_SKILL', function (args) {
+        this.changeDataNote('$dataSkills', args);
+    });
 
-    /**
-     * Set plugin command to method
-     * @param commandName plugin command name
-     * @param methodName execute method(Game_Interpreter)
-     */
-    var setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(param.commandPrefix + commandName, methodName);
-    };
+    PluginManagerEx.registerCommand(script, 'CHANGE_NOTE_WEAPON', function (args) {
+        this.changeDataNote('$dataWeapons', args);
+    });
 
-    var pluginCommandMap = new Map();
-    setPluginCommand('メモ欄変更', 'changeDataNote');
-    setPluginCommand('CHANGE_NOTE', 'changeDataNote');
+    PluginManagerEx.registerCommand(script, 'CHANGE_NOTE_ARMOR', function (args) {
+        this.changeDataNote('$dataArmors', args);
+    });
 
-    /**
-     * Game_Interpreter
-     * プラグインコマンドを追加定義します。
-     */
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertEscapeCharactersAll(args));
-        }
-    };
+    PluginManagerEx.registerCommand(script, 'CHANGE_NOTE_STATE', function (args) {
+        this.changeDataNote('$dataStates', args);
+    });
 
-    Game_Interpreter.prototype.changeDataNote = function(args) {
-        var targetId = parseInt(args[1]) || 1;
-        var srcId = parseInt(args[2]) || 1;
-        $gameSystem.changeMetaData(args[0], targetId, srcId);
+    PluginManagerEx.registerCommand(script, 'CHANGE_NOTE_ENEMY', function (args) {
+        this.changeDataNote('$dataEnemies', args);
+    });
+
+    Game_Interpreter.prototype.changeDataNote = function(databaseName, args) {
+        $gameSystem.changeMetaData(databaseName, args.destId, args.srcId);
     };
 
     Game_System.prototype.restoreMetaData = function() {
         if (!this._notes) {
             return;
         }
-        Object.keys(this._notes).forEach(function(databaseName) {
-            Object.keys(this._notes[databaseName]).forEach(function(key) {
+        Object.keys(this._notes).forEach(databaseName => {
+            Object.keys(this._notes[databaseName]).forEach(key => {
                 this.rewriteMetaData(databaseName, key, this._notes[databaseName][key]);
-            }, this);
-        }, this);
+            });
+        });
     };
 
     Game_System.prototype.saveMetaData = function(databaseName, targetId, srcId) {
@@ -201,21 +239,26 @@
     };
 
     Game_System.prototype.rewriteMetaData = function(databaseName, targetId, srcId) {
-        var database = window[databaseName];
+        const database = window[databaseName];
         if (database && Array.isArray(database)) {
             DataManager.rewriteMetadata(database[targetId], database[srcId]);
         }
+    };
+
+    const _Scene_GameEnd_create = Scene_GameEnd.prototype.create;
+    Scene_GameEnd.prototype.create = function() {
+        _Scene_GameEnd_create.apply(this, arguments);
+        DataManager.loadDatabase();
     };
 
     //=============================================================================
     // DataManager
     //  メタデータの更新処理を追加定義します。
     //=============================================================================
-    var _DataManager_loadGameWithoutRescue = DataManager.loadGameWithoutRescue;
-    DataManager.loadGameWithoutRescue      = function(saveFileId) {
-        var result = _DataManager_loadGameWithoutRescue.apply(this, arguments);
+    const _DataManager_extractSaveContents = DataManager.extractSaveContents;
+    DataManager.extractSaveContents      = function(saveFileId) {
+        _DataManager_extractSaveContents.apply(this, arguments);
         $gameSystem.restoreMetaData();
-        return result;
     };
 
     DataManager.rewriteMetadata = function(targetData, srcData) {
