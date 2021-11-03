@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.3 2021/11/04 テール画像を指定した場合、特定の手順を踏んで選択肢の表示などを実行するとエラーになる問題を修正
  1.1.2 2021/01/17 パラメータでテール画像を指定していない状態でプラグインコマンドからテール画像を変更しても正しく反映されない問題を修正
  1.1.1 2020/11/30 英訳版ヘルプをご提供いただいて追加
  1.1.0 2020/10/17 テール画像を変更できるプラグインコマンドを追加
@@ -959,6 +960,9 @@
     };
 
     Window_Base.prototype.setPauseSignToTail = function(lowerFlg) {
+    };
+
+    Window_Message.prototype.setPauseSignToTail = function(lowerFlg) {
         if (lowerFlg) {
             this._pauseSignSprite.rotation = 180 * Math.PI / 180;
             this._pauseSignSprite.y        = 12;
@@ -973,6 +977,9 @@
     };
 
     Window_Base.prototype.setPauseSignImageToTail = function(lowerFlg) {
+    };
+
+    Window_Message.prototype.setPauseSignImageToTail = function(lowerFlg) {
         this._pauseSignSprite.visible = false;
         if (lowerFlg) {
             this._messageTailImage.rotation = 180 * Math.PI / 180;
