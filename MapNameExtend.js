@@ -1,11 +1,12 @@
 //=============================================================================
 // MapNameExtend.js
 // ----------------------------------------------------------------------------
-// (C) 2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2021/11/04 背景画像を指定したとき、メニューを閉じた時などに背景が一瞬表示される問題を修正
 // 1.3.1 2021/06/26 マップ名ウィンドウの横幅設定が機能していなかった問題を修正
 // 1.3.0 2021/06/25 MZ向けに再作成
 // 1.2.0 2019/11/18 総フレーム数にInfinityを設定した場合の挙動を自然なものに変更
@@ -183,6 +184,7 @@
             this._backSprite.x = this.width / 2 - this._backSprite.width / 2;
             this._backSprite.y = this.height / 2 - this._backSprite.height / 2;
         });
+        this._backSprite.visible = false;
         this.addChildToBack(this._backSprite);
     };
 
@@ -275,6 +277,9 @@
             this._showCount = param.allDuration / 2;
         }
         this.updatePlacementInit();
+        if (this._backSprite) {
+            this._backSprite.visible = true;
+        }
     };
 
     const _Window_MapName_hide = Window_MapName.prototype.hide;
