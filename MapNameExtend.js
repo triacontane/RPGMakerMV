@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.3 2021/11/05 実名表示が無効な場合でも、表示名が空だと表示されてしまう問題を修正
 // 1.3.2 2021/11/04 背景画像を指定したとき、メニューを閉じた時などに背景が一瞬表示される問題を修正
 // 1.3.1 2021/06/26 マップ名ウィンドウの横幅設定が機能していなかった問題を修正
 // 1.3.0 2021/06/25 MZ向けに再作成
@@ -91,7 +92,7 @@
  * @dir img/pictures/
  * @type file
  *
- * @param showRealName
+ * @param showReal
  * @text 実名表示
  * @desc エディタの「表示名」が未指定の場合、ツリー表示される「実名」でマップ名を表示します。
  * @default false
@@ -156,7 +157,7 @@
     };
 
     Game_Map.prototype.getRealMapName = function() {
-        return param.showRealName && $dataMapInfos[this._mapId] ? $dataMapInfos[this._mapId].name : '';
+        return param.showReal && $dataMapInfos[this._mapId] ? $dataMapInfos[this._mapId].name : '';
     };
 
     //=============================================================================
