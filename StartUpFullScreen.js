@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2021/11/04 MZで動作するよう修正
 // 1.0.3 2019/01/14 1.0.3でコアスクリプトv1.6.1以前で逆に動作しなくなっていた問題を修正
 // 1.0.2 2019/01/14 コアスクリプトv1.6.1以降で正常に動作していなかった問題を修正
 // 1.0.1 2018/06/30 タイトルコマンドウィンドウのY座標整数になっていなかった問題を修正
@@ -17,43 +18,37 @@
 //=============================================================================
 
 /*:
- * @plugindesc Start up full screen
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc フルスクリーンで起動プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StartUpFullScreen.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @param Shutdown
- * @desc Command name for shutdown.
- * @default Shutdown
- *
- * @param StartUpFullScreen
- * @desc Command name for full screen option.
- * @default Full Screen
- *
- * @help Add option start up full screen.
- * This plugin is using only local execute.
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
- * @plugindesc フルスクリーンで起動プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param シャットダウン
+ * @text シャットダウン
  * @desc タイトル画面に追加するシャットダウンの項目名です。
  * ローカル環境での実行時のみ表示されます。
  * @default シャットダウン
  *
- * @param フルスクリーンで起動
+ * @param StartUpFullScreen
+ * @text フルスクリーンで起動
  * @desc オプション画面に追加する全画面で起動の項目名です。
  * ローカル環境での実行時のみ表示されます。
  * @default フルスクリーンで起動
  *
- * @help オプション画面に「フルスクリーンで起動」を追加します。
+ * @help StartUpFullScreen.js
+ *
+ * オプション画面に「フルスクリーンで起動」を追加します。
  * 有効な場合、ゲームをフルスクリーンで起動します。
  * またタイトル画面にシャットダウンを追加します。
  *
  * このプラグインはローカル環境で実行した場合のみ有効です。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -65,31 +60,16 @@ function Scene_Terminate() {
     this.initialize.apply(this, arguments);
 }
 
-(function () {
+(()=> {
     'use strict';
+
     // Nw.js環境下以外では一切の機能を無効
     if (!Utils.isNwjs()) {
         return;
     }
-
-    var pluginName = 'StartUpFullScreen';
-
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value == null ? '' : value;
-    };
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var paramShutdown          = getParamString(['Shutdown', 'シャットダウン']);
-    var paramStartUpFullScreen = getParamString(['StartUpFullScreen', 'フルスクリーンで起動']);
+    
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Graphics
@@ -118,7 +98,7 @@ function Scene_Terminate() {
     // Scene_Boot
     //  フルスクリーンで起動する処理を追加します。
     //=============================================================================
-    var _Scene_Boot_start = Scene_Boot.prototype.start;
+    const _Scene_Boot_start = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
         if (ConfigManager.startUpFullScreen) Graphics.requestFullScreen();
@@ -128,10 +108,12 @@ function Scene_Terminate() {
     // Scene_Title
     //  シャットダウンの処理を追加定義します。
     //=============================================================================
-    var _Scene_Title_createCommandWindow = Scene_Title.prototype.createCommandWindow;
+    const _Scene_Title_createCommandWindow = Scene_Title.prototype.createCommandWindow;
     Scene_Title.prototype.createCommandWindow = function() {
         _Scene_Title_createCommandWindow.apply(this, arguments);
-        if (paramShutdown) this._commandWindow.setHandler('shutdown',  this.commandShutdown.bind(this));
+        if (param.Shutdown) {
+            this._commandWindow.setHandler('shutdown',  this.commandShutdown.bind(this));
+        }
     };
 
     Scene_Title.prototype.commandShutdown = function() {
@@ -144,16 +126,19 @@ function Scene_Terminate() {
     // Window_TitleCommand
     //  シャットダウンの選択肢を追加定義します。
     //=============================================================================
-    var _Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
+    const _Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function() {
         _Window_TitleCommand_makeCommandList.apply(this, arguments);
-        if (paramShutdown) this.addCommand(paramShutdown, 'shutdown');
+        if (param.Shutdown) {
+            this.addCommand(param.Shutdown, 'shutdown');
+            this.height = this.fittingHeight(this._list.length);
+            this.createContents();
+        }
     };
 
-    var _Window_TitleCommand_updatePlacement = Window_TitleCommand.prototype.updatePlacement;
-    Window_TitleCommand.prototype.updatePlacement = function() {
-        _Window_TitleCommand_updatePlacement.apply(this, arguments);
-        if (paramShutdown) this.y += Math.floor(this.height / 8);
+    const _Scene_Options_maxCommands = Scene_Options.prototype.maxCommands;
+    Scene_Options.prototype.maxCommands = function() {
+        return _Scene_Options_maxCommands.apply(this, arguments) + 1;
     };
 
     //=============================================================================
@@ -162,15 +147,15 @@ function Scene_Terminate() {
     //=============================================================================
     ConfigManager.startUpFullScreen = false;
 
-    var _ConfigManager_applyData = ConfigManager.applyData;
+    const _ConfigManager_applyData = ConfigManager.applyData;
     ConfigManager.applyData = function(config) {
         _ConfigManager_applyData.apply(this, arguments);
         this.startUpFullScreen = this.readFlag(config, 'startUpFullScreen');
     };
 
-    var _ConfigManager_makeData = ConfigManager.makeData;
+    const _ConfigManager_makeData = ConfigManager.makeData;
     ConfigManager.makeData = function() {
-        var config = _ConfigManager_makeData.apply(this, arguments);
+        const config = _ConfigManager_makeData.apply(this, arguments);
         config.startUpFullScreen = this.startUpFullScreen;
         return config;
     };
@@ -179,10 +164,10 @@ function Scene_Terminate() {
     // Window_Options
     //  オプションに「フルスクリーンで起動」項目を追加します。
     //=============================================================================
-    var _Window_Options_addGeneralOptions = Window_Options.prototype.addGeneralOptions;
+    const _Window_Options_addGeneralOptions = Window_Options.prototype.addGeneralOptions;
     Window_Options.prototype.addGeneralOptions = function() {
         _Window_Options_addGeneralOptions.apply(this, arguments);
-        this.addCommand(paramStartUpFullScreen, 'startUpFullScreen');
+        this.addCommand(param.StartUpFullScreen, 'startUpFullScreen');
     };
 
     //=============================================================================
