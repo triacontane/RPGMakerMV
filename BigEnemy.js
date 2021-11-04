@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.3 2021/11/04 ベースプラグインの必須アノテーションが入っていなかったので修正
 // 2.1.2 2021/11/03 連続攻撃が発生したとき、ダメージ表記が上方に大きくズレてしまう問題を修正
 // 2.1.1 2021/10/27 エネミー表示時、下端に24ピクセル前後の空きが出来てしまう問題を修正
 // 2.1.0 2021/03/30 MZで動作するよう修正
@@ -24,6 +25,8 @@
  * @plugindesc 巨大モンスタープラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BigEnemy.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @help BigEnemy.js
