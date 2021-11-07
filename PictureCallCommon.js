@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2021/11/07 異なるピクチャのトリガーを同一フレームで同時に満たした場合、すべてのタッチ処理が実行されるよう修正
 // 1.2.1 2021/10/08 トリガー種別がマウスが重なった場合のとき無効スイッチ中に条件を満たしていると、無効スイッチがOFFになった瞬間にイベントが発生してしまう問題を修正
 // 1.2.0 2021/05/20 APNGピクチャプラグインと組み合わせたときにAPNGピクチャをボタン化できるよう修正（ただし透過色は考慮されない）
 // 1.1.2 2021/04/08 トリガー「マウスをピクチャ内で移動した場合」がマウスを押していないと反応しない問題を修正
@@ -309,6 +310,12 @@
         }
     };
 
+    const _Spriteset_Base_update = Spriteset_Base.prototype.update;
+    Spriteset_Base.prototype.update = function() {
+        _Spriteset_Base_update.apply(this, arguments);
+        TouchInput.suppressIfNeed();
+    };
+
     /**
      * PictureTouch
      * ピクチャのタッチ状態を管理します。
@@ -393,7 +400,7 @@
         }
 
         fireTouchEvent(eventData, trigger) {
-            TouchInput.suppress();
+            TouchInput.requestSuppress();
             if (trigger === 3) {
                 TouchInput._pressedTime = -60;
             }
@@ -509,8 +516,15 @@
         return state;
     };
 
-    TouchInput.suppress = function() {
-        this._currentState = this._createNewState();
+    TouchInput.requestSuppress = function() {
+        this._requestSuppress = true;
+    };
+
+    TouchInput.suppressIfNeed = function() {
+        if (this._requestSuppress) {
+            this._currentState = this._createNewState();
+            this._requestSuppress = false;
+        }
     };
 
     TouchInput.isWheelTriggered = function() {
