@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.0 2022/11/10 用語未入手時の説明文を表示できる機能を追加
+//                  用語ピクチャの表示座標をピクセル単位で調整できる機能を追加
 // 3.6.1 2021/09/15 敵キャラ用語の自動取得で撃破しなくてもエンカウントしただけで登録されてしまう仕様を変更
 // 3.6.0 2021/06/27 ウィンドウスキンを自由に設定できる機能を追加
 // 3.5.1 2021/04/19 カテゴリ表示を有効にしたとき、リストをスクロールさせたあとカテゴリ選択に戻って別の項目を選択するとスクロール位置がおかしくなる問題を修正
@@ -768,11 +770,14 @@
  * 3.「メモ欄」に以下の通り記述(不要な項目は省略可能)
  * <SG説明:説明文>           // 用語の説明文(※1)
  * <SG共通説明:説明文>       // 用語の共通説明文(使い回し用)
+ * <SG未入手説明:説明文>      // 未入手用語の説明文
  * <SGカテゴリ:カテゴリ名>   // 用語の属するカテゴリの名称
  * <SG手動>                  // 用語を自動登録の対象から除外する
  * <SGピクチャ:ファイル名>   // 用語のピクチャのファイル名
  * <SG敵キャラ:敵キャラID>   // ピクチャの代わりに敵キャラの画像を表示(※2)
  * <SGピクチャ位置:text>     // ピクチャの表示位置
+ * <SGピクチャX:100>        // 用語のピクチャのX座標補正
+ * <SGピクチャY:100>        // 用語のピクチャのY座標補正
  * <SGテキスト位置:100>      // テキストの表示位置
  *  top:ウィンドウの先頭 bottom:ウィンドウの下部 text:テキストの末尾
  * <SGピクチャ優先度:top>    // ピクチャの表示プライオリティ
@@ -2390,7 +2395,11 @@
         this.contents.clear();
         this._pageIndex = pageIndex;
         this.updateArrows();
-        if (!this._itemData || !$gameParty.hasGlossary(this._itemData)) {
+        if (!this._itemData) {
+            return;
+        }
+        if (!$gameParty.hasGlossary(this._itemData)) {
+            this.drawNoItemText();
             return;
         }
         var bitmap    = this.getGlossaryBitmap(pageIndex);
@@ -2401,6 +2410,13 @@
             this.drawItemSub(null, listIndex, pageIndex);
         }
         if (!noSound) SoundManager.playCursor();
+    };
+
+    Window_Glossary.prototype.drawNoItemText = function() {
+        var text = this.getMetaContents(['未入手説明', 'NoItemText']);
+        if (text) {
+            this.drawItemText(text, 0);
+        }
     };
 
     Window_Glossary.prototype.clearItem = function() {
@@ -2627,8 +2643,20 @@
                 x = this.contentsWidth() - dw;
                 break;
         }
+        x += this.getPictureAdjustX(item);
+        y += this.getPictureAdjustY(item);
         this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y, dw, dy);
         this.drawPlusPicture();
+    };
+
+    Window_Glossary.prototype.getPictureAdjustX = function(item) {
+        var metaValue = getMetaValues(item, ['ピクチャX', 'PictureX'], this._pageIndex);
+        return metaValue ? getArgNumber(metaValue) : 0;
+    };
+
+    Window_Glossary.prototype.getPictureAdjustY = function(item) {
+        var metaValue = getMetaValues(item, ['ピクチャY', 'PictureY'], this._pageIndex);
+        return metaValue ? getArgNumber(metaValue) : 0;
     };
 
     Window_Glossary.prototype.getPictureScale = function(item, bitmap, text) {
