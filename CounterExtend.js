@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.2 2021/11/10 タイムプログレス戦闘採用時、2回行動の相手に反撃した場合、相手が以後行動しなくなる問題を修正
 // 2.2.1 2021/10/20 行動制約ステートが有効なときに反撃判定が行われてしまう問題を修正
 // 2.2.0 2021/08/09 反撃頻度に値を加算できるタグを追加
 // 2.1.3 2021/07/31 反撃条件に属性を指定したとき、通常攻撃に付与された属性を考慮していなかった問題を修正
@@ -463,6 +464,10 @@
     const _BattleManager_endAction = BattleManager.endAction;
     BattleManager.endAction = function() {
         _BattleManager_endAction.apply(this, arguments);
+        // 行動回数が追加されたバトラーの行動の場合、行動し終わるまでカウンター発動を待機
+        if (this._subject && this._subject !== this._currentActor && !this._counter) {
+            return;
+        }
         const counter = this._counterQueue.shift();
         if (counter) {
             this.invokeCounterAction(counter.subject, counter.target, counter.action);
