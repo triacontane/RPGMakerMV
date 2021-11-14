@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/11/14 プラグインを未適用のデータをロードしたときキャラクターが表示されない問題を修正
  1.0.0 2020/05/10 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -114,11 +115,11 @@
     };
 
     Game_CharacterBase.prototype.getJumpSpeedRate = function() {
-        return this._jumpSpeed / 100;
+        return (this._jumpSpeed || 0) / 100;
     };
 
     Game_CharacterBase.prototype.getJumpHeightRate = function() {
-        return this._jumpHeight / 100;
+        return (this._jumpHeight || 0) / 100;
     };
 
     Game_CharacterBase.prototype.setJumpSpeed = function(value) {
