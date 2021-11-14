@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 3.7.0 2022/11/10 用語未入手時の説明文を表示できる機能を追加
+// 3.7.1 2021/11/14 画像の自動縮小の機能が正常に動作しない問題を修正
+// 3.7.0 2021/11/10 用語未入手時の説明文を表示できる機能を追加
 //                  用語ピクチャの表示座標をピクセル単位で調整できる機能を追加
 // 3.6.1 2021/09/15 敵キャラ用語の自動取得で撃破しなくてもエンカウントしただけで登録されてしまう仕様を変更
 // 3.6.0 2021/06/27 ウィンドウスキンを自由に設定できる機能を追加
@@ -2555,8 +2556,7 @@
     };
 
     Window_Glossary.prototype.calcItemTextHeight = function(text) {
-        var textState = {index: 0, x: 0, y: 0, left: 0, text: text};
-        return this.calcTextHeight(textState, true) + 4;
+        return this.textSizeEx(text).height + 4;
     };
 
     Window_Glossary.prototype.calcItemPictureHeight = function(bitmap, text) {
