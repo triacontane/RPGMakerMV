@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.2 2021/11/14 メニュー画面などで開いたときに一瞬だけウィンドウフレームが見えてしまう問題を修正
 // 2.3.1 2021/09/04 ウィンドウの幅か高さが0のときは背景画像を非表示にするよう修正
 // 2.3.0 2021/05/06 名前ウィンドウがプリセットになかったので追加
 //                  ウィンドウが重なったときに背後をマスキングしない設定を追加
@@ -302,6 +303,12 @@
     // Window
     //  専用の背景画像を設定します。
     //=============================================================================
+    const _Window_initialize = Window.prototype.initialize;
+    Window.prototype.initialize = function() {
+        _Window_initialize.apply(this, arguments);
+        this.frameVisible = this._frameSprite.visible;
+    };
+
     const _Window__createAllParts      = Window.prototype._createAllParts;
     Window.prototype._createAllParts = function() {
         _Window__createAllParts.apply(this, arguments);
