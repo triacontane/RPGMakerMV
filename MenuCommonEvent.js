@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2021/11/17 画面遷移時に通常イベントと同様のキャッシュ処理を追加
 // 1.4.1 2021/09/01 最新版のSceneCustomMenu.jsと併用できるよう修正
 // 1.4.0 2021/03/24 MZで実行できるよう修正
 // 1.3.7 2020/08/28 1.3.6の修正方法が間違っていた問題を修正
@@ -328,6 +329,13 @@
 
     Game_MenuCommonEvent.prototype             = Object.create(Game_CommonEvent.prototype);
     Game_MenuCommonEvent.prototype.constructor = Game_MenuCommonEvent;
+
+    const _Game_MenuCommonEvent_initialize = Game_MenuCommonEvent.prototype.initialize;
+    Game_MenuCommonEvent.prototype.initialize = function(commonEventId) {
+        _Game_MenuCommonEvent_initialize.apply(this, arguments);
+        this._interpreter.setup(this.list());
+        this._interpreter.loadImages();
+    };
 
     Game_MenuCommonEvent.prototype.isActive = function() {
         return true;
