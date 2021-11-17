@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.2 2021/11/17 戦闘不能者については全体化の適用外とするよう仕様変更
 // 1.1.1 2020/11/05 全体化ステートが敵グループに対しても指定可能であることがヘルプの記述だと分かりにくいので記述を修正
 // 1.1.0 2018/09/25 全体化ステートを有するアクターの対象を戦闘メンバーのみにするかどうかの設定を追加
 // 1.0.2 2017/04/02 英語ヘルプ作成
@@ -131,6 +132,9 @@
     var _Game_BattlerBase_traitObjects = Game_BattlerBase.prototype.traitObjects;
     Game_BattlerBase.prototype.traitObjects = function() {
         var objects = _Game_BattlerBase_traitObjects.apply(this, arguments);
+        if (this.isDead()) {
+            return objects;
+        }
         return objects.concat(this.getPartyTotalizationStates());
     };
 
