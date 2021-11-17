@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.5 2021/11/18 メモ欄<LB>に半角数値のみを指定するとエラーになる問題を修正
  1.1.4 2021/06/12 ラベルのZ座標をイベントのプライオリティとは無関係に6で設定するよう変更
  1.1.3 2021/05/07 動的生成したイベントを消去したときにラベルが残ってしまう競合を修正
  1.1.2 2020/09/26 1.1.0でイベントIDを0で指定していた場合に表示されない問題を修正
@@ -210,7 +211,7 @@
     Game_Event.prototype.findLabelName = function() {
         const metaLabel = PluginManagerEx.findMetaValue(this.event(), 'LB');
         if (metaLabel && metaLabel !== true) {
-            return metaLabel;
+            return String(metaLabel);
         } else {
             return param.showDefault || metaLabel ? this.findLabelEventName() : null;
         }
