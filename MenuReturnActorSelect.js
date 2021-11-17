@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.3 2021/11/18 1.0.2の修正により、オプション画面などから戻ったときにアクターが選択された状態で表示されてしまう問題を修正
  1.0.2 2021/10/20 メニューからスキルやアイテムの効果でマップに戻ってから再度メニューを開くとアクターが選択された状態で表示されてしまう問題を修正
  1.0.1 2021/03/16 MZ向けに修正
  1.0.0 2021/03/16 初版
@@ -55,9 +56,22 @@
     const _Scene_Menu_start = Scene_Menu.prototype.start;
     Scene_Menu.prototype.start = function() {
         _Scene_Menu_start.apply(this, arguments);
-        if (Window_MenuCommand._lastCommandSymbol) {
+        if (Window_MenuCommand._lastCommandSymbol &&
+            Window_MenuCommand._lastCommandSymbol === Window_MenuCommand._lastPersonalCommandSymbol) {
             this._commandWindow.deactivate();
             this.commandPersonal();
         }
     }
+
+    const _Scene_Menu_onPersonalOk = Scene_Menu.prototype.onPersonalOk;
+    Scene_Menu.prototype.onPersonalOk = function() {
+        _Scene_Menu_onPersonalOk.apply(this, arguments);
+        Window_MenuCommand._lastPersonalCommandSymbol = this._commandWindow.currentSymbol();
+    };
+
+    const _Window_MenuCommand_initCommandPosition = Window_MenuCommand.initCommandPosition;
+    Window_MenuCommand.initCommandPosition = function() {
+        _Window_MenuCommand_initCommandPosition.apply(this, arguments);
+        Window_MenuCommand._lastPersonalCommandSymbol = null;
+    };
 })();
