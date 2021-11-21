@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/11/21 1.1.0のメモ欄の指定方法変更
 // 1.1.0 2021/11/21 メモタグからも地形、リージョンによる速度変更ができる機能を追加
 // 1.0.1 2018/02/15 フォロワーを連れているときにフォロワーの移動速度がおかしくなる問題を修正
 // 1.0.0 2018/02/12 初版
@@ -95,10 +96,11 @@
  * いずれかのプレイヤーが以下のメモタグを付与されている場合、
  * パラメータより優先して速度が適用されます。
  * ・地形タグ[1]のとき速度が[4]になる
- * <速度指定:{"terrain":1, "speed":4}>
+ * <速度地形指定:1,4>
  *
- * ・リージョン[1]のとき速度が[2]段階下がる
- * <速度指定:{"region":1, "dSpeed":-2}>
+ * 現在の速度から相対的に指定する場合は[+][-]の記号を付けてください。
+ * ・リージョン[1]のとき速度が[2]段階あがる
+ * <速度リージョン指定:1,+2>
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -164,34 +166,31 @@
         if (!(this instanceof Game_Player) && !(this instanceof Game_Follower)) {
             return speed;
         }
-        this.updateSpeedNote();
-        if (this._speedData) {
-            var data = this._speedData;
-            if (data.terrain === this.terrainTag() || data.region === this.regionId()) {
-                if (data.dSpeed) {
-                    speed += this.getDeltaSpeed() * data.dSpeed;
-                } else if (data.speed) {
-                    return data.speed;
+        $gameParty.battleMembers().forEach(function(member) {
+            member.traitObjects().forEach(function(obj) {
+                var terrainNote = obj.meta['速度地形指定'];
+                if (terrainNote) {
+                    speed = this.findSpeedByNote(terrainNote, this.terrainTag(), speed);
                 }
-            }
-        }
+                var regionNote = obj.meta['速度リージョン指定'];
+                if (regionNote) {
+                    speed = this.findSpeedByNote(regionNote, this.regionId(), speed);
+                }
+            }, this);
+        }, this);
         return speed;
     };
 
-    Game_CharacterBase.prototype.updateSpeedNote = function() {
-        var speedNote = null;
-        $gameParty.battleMembers().some(function(member) {
-            member.traitObjects().some(function(obj) {
-                speedNote = obj.meta['速度指定'];
-                return !!speedNote;
-            });
-            return !!speedNote;
-        });
-        if (speedNote && this._speedNote !== speedNote) {
-            this._speedNote = speedNote;
-            this._speedData = JsonEx.parse(speedNote);
-        } else if (!speedNote) {
-            this._speedData = null;
+    Game_CharacterBase.prototype.findSpeedByNote = function(noteText, id, defaultSpeed) {
+        var notes = noteText.split(',');
+        if (parseInt(notes[0]) !== id || !notes[1]) {
+            return defaultSpeed;
+        }
+        var sign = notes[1][0];
+        if (sign === '-' || sign === '+') {
+            return defaultSpeed + parseInt(notes[1]) * this.getDeltaSpeed();
+        } else {
+            return parseInt(notes[1]) || defaultSpeed;
         }
     };
 
