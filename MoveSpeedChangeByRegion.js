@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2021/11/21 メモタグからも地形、リージョンによる速度変更ができる機能を追加
 // 1.0.1 2018/02/15 フォロワーを連れているときにフォロワーの移動速度がおかしくなる問題を修正
 // 1.0.0 2018/02/12 初版
 // ----------------------------------------------------------------------------
@@ -91,6 +92,14 @@
  * 指定した地形もしくはリージョンに乗っている間だけキャラクターの移動速度を
  * 自動的に上昇もしくは低下させます。
  *
+ * いずれかのプレイヤーが以下のメモタグを付与されている場合、
+ * パラメータより優先して速度が適用されます。
+ * ・地形タグ[1]のとき速度が[4]になる
+ * <速度指定:{"terrain":1, "speed":4}>
+ *
+ * ・リージョン[1]のとき速度が[2]段階下がる
+ * <速度指定:{"region":1, "dSpeed":-2}>
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -146,8 +155,44 @@
     //=============================================================================
     var _Game_CharacterBase_realMoveSpeed      = Game_CharacterBase.prototype.realMoveSpeed;
     Game_CharacterBase.prototype.realMoveSpeed = function() {
-        return _Game_CharacterBase_realMoveSpeed.apply(this, arguments) +
+        var speed = _Game_CharacterBase_realMoveSpeed.apply(this, arguments) +
             this.changeSpeedByTerrainTags() + this.changeSpeedByRegions();
+        return this.changeSpeedByNote(speed);
+    };
+
+    Game_CharacterBase.prototype.changeSpeedByNote = function(speed) {
+        if (!(this instanceof Game_Player) && !(this instanceof Game_Follower)) {
+            return speed;
+        }
+        this.updateSpeedNote();
+        if (this._speedData) {
+            var data = this._speedData;
+            if (data.terrain === this.terrainTag() || data.region === this.regionId()) {
+                if (data.dSpeed) {
+                    speed += this.getDeltaSpeed() * data.dSpeed;
+                } else if (data.speed) {
+                    return data.speed;
+                }
+            }
+        }
+        return speed;
+    };
+
+    Game_CharacterBase.prototype.updateSpeedNote = function() {
+        var speedNote = null;
+        $gameParty.battleMembers().some(function(member) {
+            member.traitObjects().some(function(obj) {
+                speedNote = obj.meta['速度指定'];
+                return !!speedNote;
+            });
+            return !!speedNote;
+        });
+        if (speedNote && this._speedNote !== speedNote) {
+            this._speedNote = speedNote;
+            this._speedData = JsonEx.parse(speedNote);
+        } else if (!speedNote) {
+            this._speedData = null;
+        }
     };
 
     Game_CharacterBase.prototype.changeSpeedByTerrainTags = function() {
