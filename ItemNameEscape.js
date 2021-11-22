@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2021/11/22 既存データをロードした直後だと、何らかの変数操作が実行されるまで変数値の制御文字が反映されない問題を修正
 // 1.1.0 2021/11/22 MZで動作するよう修正
 // 1.0.1 2015/12/24 マップデータが歯抜けになっている場合に発生するエラーを対応
 // 1.0.0 2015/12/20 初版
@@ -84,12 +85,12 @@
     };
 
     //=============================================================================
-    // Scene_Boot
+    // Scene_Base
     //  ゲーム開始時にデータベースの制御文字を適用する処理を追加定義します。
     //=============================================================================
-    const _Scene_Boot_start = Scene_Boot.prototype.start;
-    Scene_Boot.prototype.start = function() {
-        _Scene_Boot_start.call(this);
+    const _Scene_Base_start = Scene_Base.prototype.start;
+    Scene_Base.prototype.start = function() {
+        _Scene_Base_start.call(this);
         DataManager.databaseEscape();
     };
 
