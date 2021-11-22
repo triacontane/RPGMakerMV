@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2021/11/22 ダメージを受けたときに立ち絵を自動で振動させる機能を追加
 // 2.4.2 2021/08/08 APNGピクチャを立ち絵に使用したとき、シーン遷移するとエラーになる場合がある問題を修正
 // 2.4.1 2021/05/28 2.3.2の修正によりAPNGピクチャプラグインと連携するとAPNGピクチャ以外が立ち絵として表示できなくなっていた問題を修正
 // 2.4.0 2021/05/20 立ち絵の座標に制御文字を使ったとき、変数の変更が即座に反映されるよう修正
@@ -62,6 +63,27 @@
  * @desc 有効にすると、テストプレー時に立ち絵をドラッグすることで座標を調整する機能が使えます。
  * @default true
  * @type boolean
+ *
+ * @param ShakePower
+ * @text シェイク強さ
+ * @desc 数値を設定すると、ダメージを受けたときに立ち絵がシェイクします。
+ * @default 0
+ * @type number
+ * @min 0
+ *
+ * @param ShakeSpeed
+ * @text シェイク速さ
+ * @desc ダメージを受けたときの立ち絵シェイクの速さです。
+ * @default 8
+ * @type number
+ * @min 0
+ *
+ * @param ShakeDuration
+ * @text シェイク時間
+ * @desc ダメージを受けたときの立ち絵シェイク時間(フレーム数)です。
+ * @default 30
+ * @type number
+ * @min 0
  *
  * @help CharacterPictureManager.js
  *
@@ -546,6 +568,10 @@
             });
             return meta;
         }
+
+        isDamage() {
+            return this._actor && this._actor.isDamage();
+        }
     }
 
     /**
@@ -710,13 +736,53 @@
         setup(pictureParam) {
             this._pictures = pictureParam;
             this._pictures.updatePictureFiles().forEach(picture => this.addChild(this.createChild(picture)));
+            this._shake = 0;
             this.updatePosition();
         }
 
         updatePosition() {
             const basePoint = this._pictures.getBasePoint();
-            this.x = basePoint.X;
+            this.x = basePoint.X + this._shake;
             this.y = basePoint.Y;
+        }
+
+        updateShakeOnDamage() {
+            if (this._pictures.isDamage() && param.ShakePower) {
+                if (!this._damage) {
+                    this._damage = true;
+                    this.shake();
+                }
+            } else {
+                this._damage = false;
+            }
+            if (this._shakeDuration > 0 || this._shake !== 0) {
+                this.updateShake();
+            } else {
+                this._shakeDuration = 0;
+            }
+        }
+
+        shake() {
+            this._shakePower     = param.ShakePower;
+            this._shakeSpeed     = param.ShakeSpeed || 1;
+            this._shakeDuration  = param.ShakeDuration || 30;
+            this._shakeDirection = 1;
+        }
+
+        updateShake() {
+            const delta = (this._shakePower * this._shakeSpeed * this._shakeDirection) / 10;
+            if (this._shakeDuration <= 1 && this._shake * (this._shake + delta) < 0) {
+                this._shake = 0;
+            } else {
+                this._shake += delta;
+            }
+            if (this._shake > this._shakePower * 2) {
+                this._shakeDirection = -1;
+            }
+            if (this._shake < -this._shakePower * 2) {
+                this._shakeDirection = 1;
+            }
+            this._shakeDuration--;
         }
 
         createChild(picture) {
@@ -726,6 +792,7 @@
         update() {
             this._pictures.updatePictureFiles();
             super.update();
+            this.updateShakeOnDamage();
             this.updatePosition();
         }
 
