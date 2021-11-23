@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.2 2021/11/23 セルフスイッチを維持しない設定のときはテンプレートイベントのセルフ変数も消去するよう変更
  1.2.1 2021/10/05 1.2.0の機能でイベントを配置したとき、イベント画像が2つ重なって表示されてしまう問題を修正
  1.2.0 2021/09/16 リージョンを配置するだけでマップイベントやテンプレートイベントのコピーを自動配置できる機能を追加
  1.1.1 2021/05/07 動的生成イベントに対してアニメーションを再生中に『イベントの消去』を実行するとエラーになる問題を修正
@@ -697,10 +698,26 @@ function Game_PrefabEvent() {
             const key = [this._mapId, this._eventId, swCode];
             $gameSelfSwitches.setValue(key, undefined);
         }.bind(this));
+        if (this._selfVariableIndexList) {
+            this._selfVariableIndexList.forEach(index => {
+                this.controlSelfVariable(index, 0, 0, false);
+            });
+        }
     };
 
     Game_PrefabEvent.prototype.getOriginalEventId = function() {
         return this._originalEventId;
+    };
+
+    const _Game_PrefabEvent_controlSelfVariable = Game_PrefabEvent.prototype.controlSelfVariable;
+    Game_PrefabEvent.prototype.controlSelfVariable = function(index, type, operand, formulaFlg) {
+        if (!this._selfVariableIndexList) {
+            this._selfVariableIndexList = [];
+        }
+        if (this._selfVariableIndexList.indexOf(index)) {
+            this._selfVariableIndexList.push(index);
+        }
+        _Game_PrefabEvent_controlSelfVariable.apply(this, arguments);
     };
 
     Game_Event.prototype.getOriginalEventId = function() {
