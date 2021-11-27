@@ -84,6 +84,8 @@
             const rect = this.itemRectWithPadding(index);
             const faceY    = rect.y + this.itemHeight() / 2 - ImageManager.faceHeight / 2 + this.lineHeight() / 2;
             const faceMaxY = rect.y + rect.height - ImageManager.faceHeight;
+            this.resetTextColor();
+            this.changePaintOpacity(this.isEnabled(savefileId));
             this.drawPartyFaces(info, rect.x, Math.min(faceY, faceMaxY));
         }
         _Window_SavefileList_drawItem.apply(this, arguments);
