@@ -1,11 +1,12 @@
 //=============================================================================
 // NpcFollower.js
 // ----------------------------------------------------------------------------
-// (C) 2016 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/11/27 MZで動作するよう修正
 // 1.1.1 2019/11/02 1.1.0の修正でメンバーの入れ替えを実施すると表示が不正になる場合がある問題を修正
 // 1.1.0 2019/01/27 通常のフォロワーを表示せず、NPCフォロワーのみを表示できる機能を追加
 // 1.0.3 2018/08/06 コアスクリプトが1.6.0より古い場合にエラーになる記述を修正
@@ -19,72 +20,64 @@
 //=============================================================================
 
 /*:
- * @plugindesc NPC Follower plugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc NPCフォロワープラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/NpcFollower.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @param MaxNpcNumber
- * @desc 同時に隊列に存在できるNPCの最大数です。
- * @default 1
- *
- * @param HideNormalFollower
- * @desc 隊列歩行の設定にかかわらず通常のフォロワーを一切表示せず、NPCフォロワーのみを表示します。
- * @default false
- * @type boolean
- *
- * @help マップ上の隊列の好きな位置にパーティメンバー以外のNPCを追加します。
- * NPCはデータベース上はアクターで定義してプラグインコマンドから追加、削除します。
- * 戦闘員ではないので、メニュー画面や戦闘画面には影響を与えません。
- * また、隊列表示していない場合は何も表示されません。
- *
- * 同一IDのアクターを複数追加することもできます。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * NF_NPC追加 4 1 # アクターID[4]をNPCとしてパーティの[1]番目の後ろに追加
- * NF_ADD_NPC 5 3 # アクターID[5]をNPCとしてパーティの[3]番目の後ろに追加
- * NF_NPC削除 1   # [1]番目に追加したNPCを全て削除
- * NF_REM_NPC 3   # [3]番目に追加したNPCを全て削除
- *
- * インデックスの指定は追加したNPCとは関係なく、
- * パーティの並び順(1...バトルメンバー数)を指定してください。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
- * @plugindesc NPCフォロワープラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param 最大同時NPC数
+ * @text 最大同時NPC数
  * @desc 同時に隊列に存在できるNPCの最大数です。
  * @default 1
  * @type number
  * @min 1
  *
- * @param 通常フォロワーを表示しない
+ * @param HideNormalFollower
+ * @text 通常フォロワーを表示しない
  * @desc 隊列歩行の設定にかかわらず通常のフォロワーを一切表示せず、NPCフォロワーのみを表示します。
  * @default false
  * @type boolean
  *
- * @help マップ上の隊列の好きな位置にパーティメンバー以外のNPCを追加します。
- * NPCはデータベース上はアクターで定義してプラグインコマンドから追加、削除します。
- * 戦闘員ではないので、メニュー画面や戦闘画面には影響を与えません。
- * また、隊列表示していない場合は何も表示されません。
+ * @command ADD_NPC
+ * @text NPC追加
+ * @desc 指定したアクターをNPCとして隊列に追加します。
  *
+ * @arg actorId
+ * @text アクターID
+ * @desc 追加するアクターID
+ * @default 1
+ * @type actor
+ *
+ * @arg index
+ * @text 隊列位置
+ * @desc 追加する隊列位置(パーティの並び順)です。指定した位置の後ろに追加されます。
+ * @default 0
+ * @type number
+ *
+ * @command REMOVE_NPC
+ * @text NPC削除
+ * @desc 追加位置を指定してNPCを隊列から除去します。
+ *
+ * @arg index
+ * @text 隊列位置
+ * @desc 削除する隊列位置(パーティの並び順)です。
+ * @default 0
+ * @type number
+ *
+ * @help NpcFollower.js
+ *
+ * マップ上の隊列の好きな位置にパーティメンバー以外のNPCを追加します。
+ * NPCはデータベース上はアクターで定義してプラグインコマンドから追加、削除します。
+ * バトルメンバーではないので、メニュー画面や戦闘画面には影響を与えません。
+ * また、隊列表示していない場合は何も表示されません。
  * 同一IDのアクターを複数追加することもできます。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * NF_NPC追加 4 1 # アクターID[4]をNPCとしてパーティの[1]番目の後ろに追加
- * NF_ADD_NPC 5 3 # アクターID[5]をNPCとしてパーティの[3]番目の後ろに追加
- * NF_NPC削除 1   # [1]番目に追加したNPCを全て削除
- * NF_REM_NPC 3   # [3]番目に追加したNPCを全て削除
- *
- * インデックスの指定は追加したNPCとは関係なく、
- * パーティの並び順(1...バトルメンバー数)を指定してください。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -92,83 +85,24 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName    = 'NpcFollower';
-    var metaTagPrefix = 'NF';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    var getCommandName = function(command) {
-        return (command || '').toUpperCase();
-    };
+    PluginManagerEx.registerCommand(script, 'ADD_NPC', args => {
+        $gameParty.addNpc(args.actorId, args.index);
+    });
 
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamBoolean = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return (value || '').toUpperCase() === 'TRUE';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getArgNumberWithEval = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(eval(convertEscapeCharacters(arg)), 10) || 0).clamp(min, max);
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramMaxNpcNumber       = getParamNumber(['MaxNpcNumber', '最大同時NPC数']);
-    var paramHideNormalFollower = getParamBoolean(['HideNormalFollower', '通常フォロワーを表示しない']);
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        this.pluginCommandNpcFollower(command.replace(new RegExp(metaTagPrefix, 'i'), ''), args);
-    };
-
-    Game_Interpreter.prototype.pluginCommandNpcFollower = function(command, args) {
-        switch (getCommandName(command)) {
-            case '_NPC追加' :
-            case '_ADD_NPC' :
-                var actorId = getArgNumberWithEval(args[0]);
-                $gameParty.addNpc(actorId, getArgNumberWithEval(args[1], 1));
-                break;
-            case '_NPC削除' :
-            case '_REM_NPC' :
-                $gameParty.removeNpc(getArgNumberWithEval(args[0], 1));
-                break;
-        }
-    };
+    PluginManagerEx.registerCommand(script, 'REMOVE_NPC', args => {
+        $gameParty.removeNpc(args.index);
+    });
 
     //=============================================================================
     // Game_Party
     //  NPCの追加と削除を追加定義します。
     //=============================================================================
-    var _Game_Party_initialize      = Game_Party.prototype.initialize;
+    const _Game_Party_initialize      = Game_Party.prototype.initialize;
     Game_Party.prototype.initialize = function() {
         _Game_Party_initialize.apply(this, arguments);
         this.initNpc();
@@ -191,7 +125,7 @@
     };
 
     Game_Party.prototype.addNpc = function(actorId, index) {
-        if (this._npcs.length < paramMaxNpcNumber) {
+        if (this._npcs.length < param.MaxNpcNumber) {
             this._npcs.push(actorId);
             this._npcIndexes.push(index);
             $gamePlayer.refresh();
@@ -202,7 +136,7 @@
     };
 
     Game_Party.prototype.removeNpc = function(index) {
-        for (var i = 0, n = this._npcs.length; i < n; i++) {
+        for (let i = 0, n = this._npcs.length; i < n; i++) {
             if (this._npcIndexes[i] === index) {
                 this._npcs.splice(i, 1);
                 this._npcIndexes.splice(i, 1);
@@ -224,16 +158,16 @@
     };
 
     Game_Party.prototype.makeVisibleMembers = function() {
-        var battleMembers  = this.battleMembers();
-        var npcMembers     = this.npcMembers();
-        var visibleMembers = [];
-        for (var i = 0, n = this.maxBattleMembers() + 1; i < n; i++) {
-            for (var j = 0, m = npcMembers.length; j < m; j++) {
+        const battleMembers  = this.battleMembers();
+        const npcMembers     = this.npcMembers();
+        const visibleMembers = [];
+        for (let i = 0, n = this.maxBattleMembers() + 1; i < n; i++) {
+            for (let j = 0, m = npcMembers.length; j < m; j++) {
                 if (this._npcIndexes[j] === i) {
                     visibleMembers.push(npcMembers[j]);
                 }
             }
-            if (battleMembers.length > i && !paramHideNormalFollower) {
+            if (battleMembers.length > i && !param.HideNormalFollower) {
                 visibleMembers.push(battleMembers[i]);
             }
         }
@@ -244,18 +178,18 @@
     // Game_Followers
     //  NPCの最大数ぶんだけ余分にGame_Followerを作成します。
     //=============================================================================
-    var _Game_Followers_initialize      = Game_Followers.prototype.initialize;
+    const _Game_Followers_initialize      = Game_Followers.prototype.initialize;
     Game_Followers.prototype.initialize = function() {
         _Game_Followers_initialize.apply(this, arguments);
-        if (paramHideNormalFollower) {
+        if (param.HideNormalFollower) {
             this._data = [];
         }
         this.initNpc();
     };
 
     Game_Followers.prototype.initNpc = function() {
-        var memberLength = this._data.length > 0 ? this._data.length + 1 : 0;
-        for (var i = 0; i < paramMaxNpcNumber; i++) {
+        const memberLength = this._data.length > 0 ? this._data.length + 1 : 0;
+        for (let i = 0; i < param.MaxNpcNumber; i++) {
             this._data.push(new Game_Follower(memberLength + i));
         }
     };
@@ -264,7 +198,7 @@
     // Game_Follower
     //  NPC判定を追加定義します。
     //=============================================================================
-    var _Game_Follower_actor      = Game_Follower.prototype.actor;
+    const _Game_Follower_actor      = Game_Follower.prototype.actor;
     Game_Follower.prototype.actor = function() {
         _Game_Follower_actor.apply(this, arguments);
         return $gameParty.visibleMembers()[this._memberIndex];
@@ -274,7 +208,7 @@
     // Game_Player
     //  リフレッシュまえに表示メンバーを更新します。
     //=============================================================================
-    var _Game_Player_refresh      = Game_Player.prototype.refresh;
+    const _Game_Player_refresh      = Game_Player.prototype.refresh;
     Game_Player.prototype.refresh = function() {
         $gameParty.makeVisibleMembers();
         _Game_Player_refresh.apply(this, arguments);
@@ -284,11 +218,10 @@
     // DataManager
     //  プラグイン未適用のデータをロードした場合に必要なデータを初期化します。
     //=============================================================================
-    var _DataManager_loadGame = DataManager.loadGame;
-    DataManager.loadGame      = function(saveFileId) {
-        var result = _DataManager_loadGame.apply(this, arguments);
+    const _DataManager_extractSaveContents = DataManager.extractSaveContents;
+    DataManager.extractSaveContents      = function(saveFileId) {
+        _DataManager_extractSaveContents.apply(this, arguments);
         $gameParty.initNpcIfNeed();
-        return result;
     };
 })();
 
