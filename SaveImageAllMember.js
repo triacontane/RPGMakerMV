@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2021/11/27 フェイスグラフィックの全員表示に対応(フェイスグラフィックへの変更機能は実装していません)
  1.0.0 2021/11/17 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -36,6 +37,12 @@
     Game_Party.prototype.charactersForSavefile = function() {
         return this.allMembers().map(function(actor) {
             return [actor.characterName(), actor.characterIndex()];
+        });
+    };
+
+    Game_Party.prototype.facesForSavefile = function() {
+        return this.allMembers().map(function(actor) {
+            return [actor.faceName(), actor.faceIndex()];
         });
     };
 })();
