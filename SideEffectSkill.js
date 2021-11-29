@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.2 2021/11/29 使用者に対する行動結果が出力されない場合がある問題を修正
 // 1.6.1 2021/10/20 メニュー画面でスキルを使用するとエラーになる問題を修正
 // 1.6.0 2021/10/16 MZで動作するよう全面的に修正
 // 1.5.0 2021/06/13 行動が耐性だったのときのみ適用する副作用を指定できる機能を追加
@@ -385,13 +386,13 @@
             return;
         }
         this._applySideEffect[property] = true;
-        if (this.isNeedDisplaySideEffect(property)) {
-            this.subject().result().clear();
-        }
         this.item()[property].forEach(function(effect) {
             this.applyItemEffect(this.subject(), effect);
         }, this);
         this.applyItemSideEffectGlobal(property);
+        if (this.isNeedDisplaySideEffect(property)) {
+            this.subject().result().clear();
+        }
     };
 
     Game_Action.prototype.isValidSideEffect = function() {
