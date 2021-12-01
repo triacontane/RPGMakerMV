@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2021/12/01 任意のスイッチをトリガーに立ち絵のシェイクできる機能を追加
+//                  立ち絵のシェイク時にシェイク方向を指定できる機能を追加
 // 2.5.0 2021/11/22 ダメージを受けたときに立ち絵を自動で振動させる機能を追加
 // 2.4.2 2021/08/08 APNGピクチャを立ち絵に使用したとき、シーン遷移するとエラーになる場合がある問題を修正
 // 2.4.1 2021/05/28 2.3.2の修正によりAPNGピクチャプラグインと連携するとAPNGピクチャ以外が立ち絵として表示できなくなっていた問題を修正
@@ -64,26 +66,40 @@
  * @default true
  * @type boolean
  *
+ * @param ShakeOnDamage
+ * @text ダメージ時にシェイク
+ * @desc 有効にするとダメージを受けたときに立ち絵をシェイクします。
+ * @default false
+ * @type boolean
+ *
  * @param ShakePower
  * @text シェイク強さ
- * @desc 数値を設定すると、ダメージを受けたときに立ち絵がシェイクします。
- * @default 0
+ * @desc 立ち絵がシェイクの強さです。
+ * @default 5
  * @type number
- * @min 0
+ * @min 1
  *
  * @param ShakeSpeed
  * @text シェイク速さ
- * @desc ダメージを受けたときの立ち絵シェイクの速さです。
+ * @desc 立ち絵シェイクの速さです。
  * @default 8
  * @type number
- * @min 0
+ * @min 1
  *
  * @param ShakeDuration
  * @text シェイク時間
- * @desc ダメージを受けたときの立ち絵シェイク時間(フレーム数)です。
+ * @desc 立ち絵シェイク時間(フレーム数)です。
  * @default 30
  * @type number
+ * @min 1
+ *
+ * @param ShakeRotation
+ * @text シェイク方向
+ * @desc 立ち絵シェイク方向(0-360)です。
+ * @default 0
+ * @type number
  * @min 0
+ * @max 360
  *
  * @help CharacterPictureManager.js
  *
@@ -374,6 +390,12 @@
  * @default 0
  * @type switch
  *
+ * @param ShakeSwitch
+ * @text シェイクスイッチ
+ * @desc 指定したスイッチにONになるとピクチャがシェイクします。シェイク後、スイッチは自動でOFFになります。
+ * @default 0
+ * @type switch
+ *
  * @param Mirror
  * @text 反転表示
  * @desc 立ち絵を左右反転させます。
@@ -467,6 +489,7 @@
                 return false;
             }
             this._actor = actor;
+            this._shakeSwitch = scene.ShakeSwitch;
             this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
             if (this._standPictures.length <= 0) {
                 return false;
@@ -571,6 +594,10 @@
 
         isDamage() {
             return this._actor && this._actor.isDamage();
+        }
+
+        getShakeSwitch() {
+            return this._shakeSwitch;
         }
     }
 
@@ -742,12 +769,12 @@
 
         updatePosition() {
             const basePoint = this._pictures.getBasePoint();
-            this.x = basePoint.X + this._shake;
-            this.y = basePoint.Y;
+            this.x = basePoint.X + this.getShakeX();
+            this.y = basePoint.Y + this.getShakeY();
         }
 
-        updateShakeOnDamage() {
-            if (this._pictures.isDamage() && param.ShakePower) {
+        setupShake() {
+            if (this._pictures.isDamage() && param.ShakeOnDamage) {
                 if (!this._damage) {
                     this._damage = true;
                     this.shake();
@@ -755,17 +782,18 @@
             } else {
                 this._damage = false;
             }
-            if (this._shakeDuration > 0 || this._shake !== 0) {
-                this.updateShake();
-            } else {
-                this._shakeDuration = 0;
+            const shakeSwitch = this._pictures.getShakeSwitch();
+            if ($gameSwitches.value(shakeSwitch)) {
+                $gameSwitches.setValue(shakeSwitch, false);
+                this.shake();
             }
         }
 
         shake() {
-            this._shakePower     = param.ShakePower;
+            this._shakePower     = param.ShakePower || 1;
             this._shakeSpeed     = param.ShakeSpeed || 1;
             this._shakeDuration  = param.ShakeDuration || 30;
+            this._shakeRotation  = (param.ShakeRotation || 0) * Math.PI / 180;
             this._shakeDirection = 1;
         }
 
@@ -785,6 +813,14 @@
             this._shakeDuration--;
         }
 
+        getShakeX() {
+            return this._shake ? this._shake * Math.cos(this._shakeRotation) : 0;
+        }
+
+        getShakeY() {
+            return this._shake ? this._shake * Math.sin(this._shakeRotation) : 0;
+        }
+
         createChild(picture) {
             return new Sprite_StandPictureChild(picture);
         }
@@ -792,7 +828,12 @@
         update() {
             this._pictures.updatePictureFiles();
             super.update();
-            this.updateShakeOnDamage();
+            this.setupShake();
+            if (this._shakeDuration > 0 || this._shake !== 0) {
+                this.updateShake();
+            } else {
+                this._shakeDuration = 0;
+            }
             this.updatePosition();
         }
 
