@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2021/12/05 イベント高速化が無効のときはメッセージスキップも無効にできる設定を追加
 // 1.1.0 2021/01/17 MZ向けにリファクタリング
 // 1.0.0 2017/07/01 初版
 // ----------------------------------------------------------------------------
@@ -25,6 +26,11 @@
  * @desc Variable number to get the speed at event acceleration.
  * @default 0
  * @type variable
+ *
+ * @param disableMessageSkip
+ * @desc When the event speed is 0, message skipping is also disabled.
+ * @default false
+ * @type boolean
  *
  * @help FastForwardCustomize.js
  *
@@ -49,6 +55,12 @@
  * @desc イベント高速化時の速度を取得する変数番号です。変数値が0なら高速化禁止、数値が大きくなると速度も速くなります。
  * @default 0
  * @type variable
+ *
+ * @param disableMessageSkip
+ * @text メッセージスキップ禁止
+ * @desc イベント速度が0のときはメッセージスキップも禁止にします。
+ * @default false
+ * @type boolean
  *
  * @help FastForwardCustomize.js
  *
@@ -85,7 +97,7 @@
     };
 
     Scene_Map.prototype.updateMainForMoreFast = function() {
-        const updateCount = this.getFastSpeed() - 1;
+        const updateCount = $gameMap.getFastSpeed() - 1;
         for (let i = 0; i < updateCount; i++) {
             this.updateMain();
         }
@@ -93,11 +105,19 @@
 
     const _Scene_Map_isFastForward = Scene_Map.prototype.isFastForward;
     Scene_Map.prototype.isFastForward = function() {
-        return _Scene_Map_isFastForward.apply(this, arguments) && this.getFastSpeed() > 0;
+        return _Scene_Map_isFastForward.apply(this, arguments) && $gameMap.getFastSpeed() > 0;
     };
 
-    Scene_Map.prototype.getFastSpeed = function() {
+    Game_Map.prototype.getFastSpeed = function() {
         return param.eventSpeedVariableId > 0 ? $gameVariables.value(param.eventSpeedVariableId) : 1;
+    };
+
+    const _Window_Message_updateShowFast = Window_Message.prototype.updateShowFast;
+    Window_Message.prototype.updateShowFast = function() {
+        _Window_Message_updateShowFast.apply(this, arguments);
+        if (param.disableMessageSkip && $gameMap.getFastSpeed() === 0) {
+            this._showFast = false;
+        }
     };
 })();
 
