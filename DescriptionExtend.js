@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2021/12/06 ヘルプ行数の設定が戦闘画面に反映されない問題を修正
+//                  AdditionalDescription.jsとの並び順を定義
 // 1.2.0 2021/10/01 MZで動作するよう修正
 // 1.1.0 2018/05/22 プラグインの機能を無効化するスイッチを追加
 // 1.0.0 2018/05/20 初版
@@ -21,6 +23,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DescriptionExtend.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
+ * @orderBefore AdditionalDescription
  * @author トリアコンタン
  *
  * @param swapDescription
@@ -71,6 +74,16 @@
             return this.calcWindowHeight(lineNumber, false);
         } else {
             return _Scene_MenuBase_helpAreaHeight.apply(this, arguments);
+        }
+    };
+
+    const _Scene_Battle_helpAreaHeight = Scene_Battle.prototype.helpAreaHeight;
+    Scene_Battle.prototype.helpAreaHeight = function() {
+        const lineNumber = param.helpLines;
+        if (lineNumber > 0) {
+            return this.calcWindowHeight(lineNumber, false);
+        } else {
+            return _Scene_Battle_helpAreaHeight.apply(this, arguments);
         }
     };
 
