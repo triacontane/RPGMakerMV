@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.0 2021/12/09 サブメニューで選択したアクターのIDをマップ遷移時以外でも設定するよう変更
 // 3.0.1 2020/10/15 スクリプトに凡例追加
 // 3.0.0 2020/10/10 MZ向けに全面リファクタリング
 // 2.7.3 2020/08/18 イベントの一時消去後にサブコマンドマップに移動して戻ってきたときに消去状態が復元されるよう修正
@@ -80,7 +81,7 @@
  *
  * @param selectActorIdVariable
  * @text 選択アクターID変数
- * @desc サブメニュー用マップに移動する際に選択していたアクターのIDを格納する変数番号です。
+ * @desc サブコマンドからアクターを選択したとき、そのアクターのIDを格納する変数番号です。
  * @default 0
  * @type variable
  *
@@ -651,6 +652,9 @@
     Scene_Menu.prototype.executeSubCommand = function() {
         this.executeSubScript();
         this.moveSubCommandMap();
+        if (param.selectActorIdVariable && this._subCommand.isNeedSelectMember()) {
+            $gameVariables.setValue(param.selectActorIdVariable, this._statusWindow.getSelectedActorId());
+        }
         if (!SceneManager.isSceneChanging()) {
             this.onSubCommandCancel();
             this._statusWindow.deselect();
@@ -680,9 +684,6 @@
             return;
         }
         $gamePlayer.reserveTransferToSubCommandMap(mapId);
-        if (param.selectActorIdVariable && this._subCommand.isNeedSelectMember()) {
-            $gameVariables.setValue(param.selectActorIdVariable, this._statusWindow.getSelectedActorId());
-        }
         SceneManager.pop();
     };
 
