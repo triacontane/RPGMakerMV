@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2021/12/09 サブメニューで選択したアクターのIDをマップ遷移時以外でも設定するよう変更
 // 2.7.4 2020/08/22 2.7.3の修正で復元が、動的イベント生成されたプラグインに対しても行われるよう修正
 // 2.7.3 2020/08/18 イベントの一時消去後にサブコマンドマップに移動して戻ってきたときに消去状態が復元されるよう修正
 // 2.7.2 2020/04/03 2.5.0で適用したMOG_SceneMenu.jsとの競合解消と、2.0.1で適用したMOG_MenuCursor.jsとの競合解消を両立できるよう修正
@@ -63,7 +64,7 @@
  * @default 0
  *
  * @param SelectActorIdVariable
- * @desc サブメニュー用マップに移動する際に選択していたアクターのIDを格納する変数番号です。
+ * @desc サブコマンドからアクターを選択したとき、そのアクターのIDを格納する変数番号です。
  * @default 0
  *
  * @param WindowSkin
@@ -181,7 +182,7 @@
  * @type number
  *
  * @param 選択アクターID変数
- * @desc サブメニュー用マップに移動する際に選択していたアクターのIDを格納する変数番号です。
+ * @desc サブコマンドからアクターを選択したとき、そのアクターのIDを格納する変数番号です。
  * @default 0
  * @type variable
  *
@@ -853,6 +854,9 @@
     Scene_Menu.prototype.executeSubCommand = function() {
         this.executeSubScript();
         this.moveSubCommandMap();
+        if (param.selectActorIdVariable && this._subCommand.isNeedSelectMember()) {
+            $gameVariables.setValue(param.selectActorIdVariable, this._statusWindow.getSelectedActorId());
+        }
         if (!SceneManager.isSceneChanging()) {
             this.onSubCommandCancel();
             this._statusWindow.deselect();
@@ -882,9 +886,6 @@
             return;
         }
         $gamePlayer.reserveTransferToSubCommandMap(mapId);
-        if (param.selectActorIdVariable && this._subCommand.isNeedSelectMember()) {
-            $gameVariables.setValue(param.selectActorIdVariable, this._statusWindow.getSelectedActorId());
-        }
         SceneManager.pop();
     };
 
