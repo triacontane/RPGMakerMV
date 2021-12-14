@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.20.0 2021/12/14 ウィンドウ選択中に任意のボタンが押されたときに発生するイベントを登録できる機能を追加
  1.19.2 2021/09/24 データの項目数が1つのとき、行高さがウィンドウに合わせられてしまう問題を修正
  1.19.1 2021/08/26 プラグインを有効にしてパラメータを一切弄らずにサンプル画面を開くとウィンドウが正常に表示されない問題を修正
  1.19.0 2021/08/26 ウィンドウ選択時の効果音を独自に指定できる機能を追加
@@ -592,6 +593,12 @@
  * @default {}
  * @type struct<Event>
  *
+ * @param ButtonEvent
+ * @text ボタンイベント
+ * @desc 指定されたボタンが押された瞬間に発生するイベントです。
+ * @default []
+ * @type struct<ButtonEvent>[]
+ *
  * @param FontSize
  * @text フォントサイズ
  * @desc デフォルトのフォントサイズです。0を指定すると他のウィンドウと同じサイズになります。
@@ -788,6 +795,27 @@
  * @desc この項目を選択したときに発生するイベントがキャンセルイベントになります。
  * @default false
  * @type boolean
+ */
+
+/*~struct~ButtonEvent:
+ *
+ * @param Name
+ * @text ボタン名
+ * @desc 押したときにイベントが発生するボタン名です。
+ * @default
+ * @type combo
+ * @option shift
+ * @option control
+ * @option pageup
+ * @option pagedown
+ * @option debug
+ * @option tab
+ *
+ * @param Event
+ * @text イベント
+ * @desc 指定したボタンが押された瞬間に発生するイベントです。
+ * @default {}
+ * @type struct<Event>
  */
 
 /*~struct~Event:
@@ -1112,6 +1140,15 @@
                 win.setHandler('pagedown', this.nextActor.bind(this));
                 win.setHandler('pageup', this.previousActor.bind(this));
             }
+            if (data.ButtonEvent) {
+                data.ButtonEvent.forEach(buttonEvent => {
+                    console.log(buttonEvent.Name);
+                    win.setHandler('trigger:' + buttonEvent.Name, () => {
+                        this.fireEvent(buttonEvent.Event, true);
+                    });
+                });
+                win.registerButton(data.ButtonEvent.map(buttonEvent => buttonEvent.Name));
+            }
             this.addWindow(win);
             this._customWindowMap.set(data.Id, win);
         }
@@ -1347,6 +1384,10 @@
             }
         }
 
+        registerButton(buttonList) {
+            this._buttonList = buttonList;
+        }
+
         playOkSound() {
             if (this._data.okSound) {
                 AudioManager.playSe(this._data.okSound);
@@ -1360,10 +1401,22 @@
             super.update();
             this.updateIndexVariable();
             this.updateRotation();
+            this.updateButtonInput();
         }
 
         updateRotation() {
             this.rotation = (this._data.Rotation || 0) * Math.PI / 180;
+        }
+
+        updateButtonInput() {
+            if (!this._buttonList) {
+                return;
+            }
+            this._buttonList.forEach(buttonName => {
+                if (Input.isTriggered(buttonName)) {
+                    this.callHandler('trigger:' + buttonName);
+                }
+            });
         }
 
         select(index) {
