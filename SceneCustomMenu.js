@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.20.1 2021/12/14 1.20.1のボタンの数を増やし不要なログを削除
  1.20.0 2021/12/14 ウィンドウ選択中に任意のボタンが押されたときに発生するイベントを登録できる機能を追加
  1.19.2 2021/09/24 データの項目数が1つのとき、行高さがウィンドウに合わせられてしまう問題を修正
  1.19.1 2021/08/26 プラグインを有効にしてパラメータを一切弄らずにサンプル画面を開くとウィンドウが正常に表示されない問題を修正
@@ -801,11 +802,17 @@
  *
  * @param Name
  * @text ボタン名
- * @desc 押したときにイベントが発生するボタン名です。
+ * @desc 押したときにイベントが発生するボタン名です。独自に追加したボタンの場合は直接入力してください。
  * @default
  * @type combo
+ * @option ok
+ * @option escape
  * @option shift
  * @option control
+ * @option down
+ * @option left
+ * @option right
+ * @option up
  * @option pageup
  * @option pagedown
  * @option debug
@@ -1142,7 +1149,6 @@
             }
             if (data.ButtonEvent) {
                 data.ButtonEvent.forEach(buttonEvent => {
-                    console.log(buttonEvent.Name);
                     win.setHandler('trigger:' + buttonEvent.Name, () => {
                         this.fireEvent(buttonEvent.Event, true);
                     });
