@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2021/12/15 コマンドスキルにソート順を指定できる機能を追加
  1.1.1 2021/06/11 コマンドスキルの並び順をスキルID、アイテムIDの昇順になるよう変更
  1.1.0 2021/05/01 アイテムもアクターコマンド化できるよう修正
                   ヘルプウィンドウを表示できる設定を追加
@@ -50,6 +51,10 @@
  * <CommandSkill>
  * <コマンドスキル>
  *
+ * コマンドスキル間でソート順を設定したいときは以下の通りです。
+ * 指定が無い場合や同一の値を指定した場合はID順となります。
+ * <CommandSkill:2>
+ *
  * アクターが当該スキルを覚えていればコマンドから直接スキルを使用できます。
  * MPが足りなかったり封印されていたりすると選択できません。
  * また、コマンドスキルは戦闘、メニューのスキルウィンドウから除外されます。
@@ -71,7 +76,11 @@
     const param  = PluginManagerEx.createParameter(script);
 
     Game_Temp.prototype.isCommandSkill = function(skill) {
-        return !!PluginManagerEx.findMetaValue(skill, ['CommandSkill', 'コマンドスキル'])
+        return !!this.findCommandSkill(skill);
+    };
+
+    Game_Temp.prototype.findCommandSkill = function(skill) {
+        return PluginManagerEx.findMetaValue(skill, ['CommandSkill', 'コマンドスキル'])
     };
 
     /**
@@ -79,9 +88,18 @@
      * コマンドスキルの判定を追加
      */
     Game_Actor.prototype.findCommandSkills = function() {
-        const skills = this.skills().filter(skill => $gameTemp.isCommandSkill(skill));
-        skills.sort((skillA, skillB) => skillA.id - skillB.id);
-        return skills.concat($gameParty.findCommandItems());
+        const skills = this.skills().filter(skill => $gameTemp.isCommandSkill(skill))
+            .concat($gameParty.findCommandItems());
+        skills.sort((skillA, skillB) => {
+            const sortA = $gameTemp.findCommandSkill(skillA);
+            const sortB = $gameTemp.findCommandSkill(skillB);
+            if (isFinite(sortA) && isFinite(sortB) && sortB !== sortA) {
+                return sortB - sortA;
+            } else {
+                return skillB.id - skillA.id;
+            }
+        });
+        return skills;
     }
 
     Game_Party.prototype.findCommandItems = function() {
@@ -101,7 +119,7 @@
     };
 
     Window_ActorCommand.prototype.addCommandSpecial = function() {
-        this._actor.findCommandSkills().reverse().forEach(skill => {
+        this._actor.findCommandSkills().forEach(skill => {
             this.addCommand(skill.name, `special`, this._actor.canUse(skill), skill);
             this._list.splice(param.index, 0, this._list.pop());
         });
