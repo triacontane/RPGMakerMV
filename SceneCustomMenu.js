@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.25.0 2021/12/14 ウィンドウ選択中に任意のボタンが押されたときに発生するイベントを登録できる機能を追加
  1.24.1 2021/11/01 描画内容がnullの場合に描画をスキップするよう修正
  1.24.0 2021/09/19 カーソル位置を記憶して画面を開き直したときに復元できる機能を追加
  1.23.0 2021/09/19 ウィンドウカーソルを項目の上に表示できる機能を追加
@@ -588,6 +589,12 @@
  * @default {}
  * @type struct<Event>
  *
+ * @param ButtonEvent
+ * @text ボタンイベント
+ * @desc 指定されたボタンが押された瞬間に発生するイベントです。
+ * @default []
+ * @type struct<ButtonEvent>[]
+ *
  * @param FontSize
  * @text フォントサイズ
  * @desc デフォルトのフォントサイズです。0を指定すると他のウィンドウと同じサイズになります。
@@ -803,6 +810,33 @@
  * @desc この項目を選択したときに発生するイベントがキャンセルイベントになります。
  * @default false
  * @type boolean
+ */
+
+/*~struct~ButtonEvent:
+ *
+ * @param Name
+ * @text ボタン名
+ * @desc 押したときにイベントが発生するボタン名です。独自に追加したボタンの場合は直接入力してください。
+ * @default
+ * @type combo
+ * @option ok
+ * @option escape
+ * @option shift
+ * @option control
+ * @option down
+ * @option left
+ * @option right
+ * @option up
+ * @option pageup
+ * @option pagedown
+ * @option debug
+ * @option tab
+ *
+ * @param Event
+ * @text イベント
+ * @desc 指定したボタンが押された瞬間に発生するイベントです。
+ * @default {}
+ * @type struct<Event>
  */
 
 /*~struct~Event:
@@ -1119,6 +1153,14 @@
                 win.setHandler('pagedown', this.nextActor.bind(this));
                 win.setHandler('pageup', this.previousActor.bind(this));
             }
+            if (data.ButtonEvent) {
+                data.ButtonEvent.forEach(buttonEvent => {
+                    win.setHandler('trigger:' + buttonEvent.Name, () => {
+                        this.fireEvent(buttonEvent.Event, true);
+                    });
+                });
+                win.registerButton(data.ButtonEvent.map(buttonEvent => buttonEvent.Name));
+            }
             this.addWindow(win);
             this._customWindowMap.set(data.Id, win);
         }
@@ -1416,6 +1458,10 @@
             super.paint();
         }
 
+        registerButton(buttonList) {
+            this._buttonList = buttonList;
+        }
+
         playOkSound() {
             if (this._data.okSound) {
                 AudioManager.playSe(this._data.okSound);
@@ -1429,6 +1475,7 @@
             super.update();
             this.updateIndexVariable();
             this.updateRotation();
+            this.updateButtonInput();
         }
 
         updateRotation() {
@@ -1446,6 +1493,17 @@
                 filterArea.width = Graphics.width;
                 filterArea.height = Graphics.height;
             }
+        }
+
+        updateButtonInput() {
+            if (!this._buttonList) {
+                return;
+            }
+            this._buttonList.forEach(buttonName => {
+                if (Input.isTriggered(buttonName)) {
+                    this.callHandler('trigger:' + buttonName);
+                }
+            });
         }
 
         select(index) {
