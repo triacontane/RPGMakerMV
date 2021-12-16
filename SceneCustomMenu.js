@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.26.0 2021/12/16 ウィンドウごとに項目の黒い背景を非表示にできる機能を追加
  1.25.0 2021/12/14 ウィンドウ選択中に任意のボタンが押されたときに発生するイベントを登録できる機能を追加
  1.24.1 2021/11/01 描画内容がnullの場合に描画をスキップするよう修正
  1.24.0 2021/09/19 カーソル位置を記憶して画面を開き直したときに復元できる機能を追加
@@ -690,6 +691,12 @@
  * @param cursorOverContents
  * @text カーソルを手前に表示
  * @desc 有効にすると、ウィンドウカーソルが項目の上に被せるように表示されます。
+ * @default false
+ * @type boolean
+ *
+ * @param noItemBackground
+ * @text 項目背景を表示しない
+ * @desc 有効にすると、項目の黒い背景が表示されなくなります。
  * @default false
  * @type boolean
  *
@@ -1869,7 +1876,7 @@
         }
 
         drawItemBackground(index) {
-            if (!this._data.ListWindowId && this._list[0] !== ' ') {
+            if (!this._data.ListWindowId && this._list[0] !== ' ' && !this._data.noItemBackground) {
                 super.drawItemBackground(index);
             }
         }
