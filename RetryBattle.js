@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2021/12/16 リトライにコスト（お金）を設定できる機能を追加
 // 1.2.0 2021/07/20 MZで動作するよう全面的に修正
 // 1.1.3 2020/09/10 強制リトライで戦闘開始に戻ったとき、HPなどの状態が復元されない問題を修正
 //                  ReviceBattleItemNumber.jsと併用したとき、リトライ後にアイテム画面を開くとエラーになる競合を修正
@@ -91,12 +92,18 @@
  * @default 0
  * @type switch
  *
+ * @param RetryCostGold
+ * @text リトライコスト(お金)
+ * @desc リトライする際に必要になるお金です。足りないとリトライできません。
+ * @default 0
+ * @type number
+ *
  * @command FORCE_RETRY
  * @text 強制リトライ
  * @desc 全滅していなくても強制的にリトライを発生させます。
  *
  * @help RetryBattle.js
- * 
+ *
  * 戦闘で敗北したあとのゲームオーバー画面でリトライ可能になります。
  * 雑魚敵とボス敵とでリトライ可能かどうかを分けることができます。
  * リトライを選択すると一度だけメニュー画面を開いた後で、再戦できます。
@@ -229,6 +236,9 @@
         $gameTemp.clearCommonEvent();
         $gameTroop.setup($gameTroop.troop().id);
         $gameSystem.addRetryCount();
+        if (param.RetryCostGold > 0) {
+            $gameParty.gainGold(-param.RetryCostGold);
+        }
         // for ReviceBattleItemNumber.js
         if (this.reservedItem === null) {
             this.reservedItem = new Array($dataItems.length);
@@ -327,6 +337,23 @@
         this.createWindowLayer();
         this.createForeground();
         this.createRetryWindow();
+        if (param.RetryCostGold > 0) {
+            this.createGoldWindow();
+        }
+    };
+
+    Scene_Gameover.prototype.createGoldWindow = function() {
+        this._goldWindow = new Window_Gold(this.goldWindowRect());
+        this._goldWindow.x = Graphics.boxWidth - this._goldWindow.width;
+        this.addWindow(this._goldWindow);
+    };
+
+    Scene_Gameover.prototype.goldWindowRect = function() {
+        const ww = this.mainCommandWidth();
+        const wh = this.calcWindowHeight(1, true);
+        const wx = Graphics.boxWidth - ww;
+        const wy = 0;
+        return new Rectangle(wx, wy, ww, wh);
     };
 
     const _Scene_Gameover_start      = Scene_Gameover.prototype.start;
@@ -339,6 +366,9 @@
             if (SceneManager.isPreviousScene(Scene_Load)) {
                 this.startFadeIn(this.fadeSpeed(), false);
             }
+        }
+        if (param.RetryCostGold > 0) {
+            this._goldWindow.open();
         }
         Scene_Gameover.firstShow = false;
     };
@@ -504,12 +534,16 @@
 
     Window_RetryCommand.prototype.makeCommandList = function() {
         if (BattleManager.canRetry()) {
-            this.addCommand(param.CommandRetry, 'retry');
+            this.addCommand(param.CommandRetry, 'retry', this.canPayRetryCost());
         }
         if (param.CommandLoad) {
             this.addCommand(param.CommandLoad, 'load');
         }
         this.addCommand(param.CommandTitle, 'title');
+    };
+
+    Window_RetryCommand.prototype.canPayRetryCost = function() {
+        return param.RetryCostGold <= 0 || $gameParty.gold() >= param.RetryCostGold;
     };
 })();
 
