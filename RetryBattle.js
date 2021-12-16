@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2021/12/16 リトライにコスト（お金）を設定できる機能を追加
 // 1.2.1 2021/02/09 戦闘中に戦闘背景を変更したとにリトライすると変更後の背景で再戦してしまう不具合を修正
 // 1.2.0 2020/10/14 マップイベントからゲームオーバーになったときもリトライコマンドが表示される場合がある不具合を修正
 //                  パラメータの型指定機能に対応
@@ -81,6 +82,12 @@
  * @text フォントサイズ
  * @desc メッセージのフォントサイズです。
  * @default 32
+ * @type number
+ *
+ * @param RetryCostGold
+ * @text リトライコスト(お金)
+ * @desc リトライする際に必要になるお金です。足りないとリトライできません。
+ * @default 0
  * @type number
  *
  * @help 戦闘でゲームオーバーになったあとのゲームオーバー画面でリトライ可能になります。
@@ -278,6 +285,9 @@
         $gameTemp.clearCommonEvent();
         $gameTroop.setup($gameTroop.troop().id);
         $gameSystem.addRetryCount();
+        if (param.RetryCostGold > 0) {
+            $gameParty.gainGold(-param.RetryCostGold);
+        }
         // for ReviceBattleItemNumber.js
         if (this.reservedItem === null) {
             this.reservedItem = new Array($dataItems.length);
@@ -380,6 +390,15 @@
         this.createWindowLayer();
         this.createForeground();
         this.createRetryWindow();
+        if (param.RetryCostGold > 0) {
+            this.createGoldWindow();
+        }
+    };
+
+    Scene_Gameover.prototype.createGoldWindow = function() {
+        this._goldWindow = new Window_Gold(0, 0);
+        this._goldWindow.x = Graphics.boxWidth - this._goldWindow.width;
+        this.addWindow(this._goldWindow);
     };
 
     var _Scene_Gameover_start      = Scene_Gameover.prototype.start;
@@ -392,6 +411,9 @@
             if (SceneManager.isPreviousScene(Scene_Load)) {
                 this.startFadeIn(this.fadeSpeed(), false);
             }
+        }
+        if (param.RetryCostGold > 0) {
+            this._goldWindow.open();
         }
         Scene_Gameover.firstShow = false;
     };
@@ -566,11 +588,15 @@
     };
 
     Window_RetryCommand.prototype.makeCommandList = function() {
-        this.addCommand(param.CommandRetry, 'retry');
+        this.addCommand(param.CommandRetry, 'retry', this.canPayRetryCost());
         if (param.CommandLoad) {
             this.addCommand(param.CommandLoad, 'load');
         }
         this.addCommand(param.CommandTitle, 'title');
+    };
+
+    Window_RetryCommand.prototype.canPayRetryCost = function() {
+        return param.RetryCostGold <= 0 || $gameParty.gold() >= param.RetryCostGold;
     };
 })();
 
