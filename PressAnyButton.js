@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2021/12/19 独自のフォントを利用する機能が正常に動作しない問題を修正
  1.1.0 2020/12/11 MZ向けに微調整
  1.1.0 2020/12/09 英語ヘルプを追加
                   決定ボタンのみを許容する設定を追加
@@ -100,6 +101,10 @@
  *
  * タイトル画面ですぐにコマンドウィンドウを出さずにテキストを表示します。
  * 何らかのキーを押下すると、通常のウィンドウが表示されます。
+ *
+ * 専用のフォントを使いたい場合は別途公開している
+ * 『フォントロードプラグイン』をご利用ください。
+ * https://raw.githubusercontent.com/triacontane/RPGMakerMV/mz_master/FontLoad.js
  *　
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -141,7 +146,7 @@
 
 /*~struct~Font:
  * @param name
- * @desc 名称です。指定しない場合は空欄です。
+ * @desc フォント名です。『フォントロードプラグイン』で登録した名称を指定します。
  * @default
  *
  * @param size
@@ -263,7 +268,7 @@
             const font = param.font || {size: 52, bold: false, italic: true, color: 'rgba(255,255,255,1.0)'};
             this.bitmap = new Bitmap(Graphics.width, font.size);
             if (font.name) {
-                this.bitmap.fontFace = fontFace;
+                this.bitmap.fontFace = font.name;
             }
             this.bitmap.fontSize   = font.size;
             this.bitmap.fontItalic = font.italic;
