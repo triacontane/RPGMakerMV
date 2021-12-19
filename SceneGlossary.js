@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.23.1 2021/12/19 部分一致で自動登録されない問題を修正
 // 2.23.0 2021/11/10 用語未入手時の説明文を表示できる機能を追加
 //                   用語ピクチャの表示座標をピクセル単位で調整できる機能を追加
 // 2.22.3 2021/07/15 ソート順のタグで制御文字が使えなかった問題を修正
@@ -1184,6 +1185,24 @@ function Window_GlossaryComplete() {
     };
 
     //=============================================================================
+    // Game_Message
+    //  戦闘開始時メッセージフラグを追加定義します。
+    //=============================================================================
+    var _Game_Message_clear      = Game_Message.prototype.clear;
+    Game_Message.prototype.clear = function() {
+      _Game_Message_clear.call(this, arguments);
+      this._isStartBattleMessage = false;
+    };
+
+    Game_Message.prototype.startBattleMessage = function() {
+      this._isStartBattleMessage = true;
+    };
+
+    Game_Message.prototype.isStartBattleMessage = function() {
+      return this._isStartBattleMessage;
+    };
+
+    //=============================================================================
     // Game_System
     //  ロード完了時に履歴情報フィールドを必要に応じて初期化します。
     //=============================================================================
@@ -1599,6 +1618,12 @@ function Window_GlossaryComplete() {
         }
     };
 
+    var _BattleManager_displayStartMessages = BattleManager.displayStartMessages;
+    BattleManager.displayStartMessages = function() {
+      $gameMessage.startBattleMessage();
+      _BattleManager_displayStartMessages.apply(this, arguments);
+    };
+
     //=============================================================================
     // Scene_Menu
     //  用語集画面の呼び出しを追加します。
@@ -1676,7 +1701,7 @@ function Window_GlossaryComplete() {
     var _Window_Message_startMessage      = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
-        if (param.AutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._textState.text), false);
+        if (param.AutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._textState.text), !$gameMessage.isStartBattleMessage());
     };
 
     //=============================================================================
@@ -1686,7 +1711,7 @@ function Window_GlossaryComplete() {
     var _Window_ScrollText_startMessage      = Window_ScrollText.prototype.startMessage;
     Window_ScrollText.prototype.startMessage = function() {
         _Window_ScrollText_startMessage.apply(this, arguments);
-        if (param.AutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._text), false);
+        if (param.AutoAddition) $gameParty.gainGlossaryFromText(this.convertEscapeCharacters(this._text), true);
     };
 
     //=============================================================================
