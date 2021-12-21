@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.2.0 2021/12/21 項目に余白を設定できる機能を追加
 // 3.1.3 2021/08/09 セーブデータをロードした際に、追加オプションの設定値がゲーム変数に反映されない問題を修正
 // 3.1.2 2021/08/05 セーブがある状態で隠し項目を追加した時に上手く動作しない問題を修正
 // 3.1.1 2020/10/13 Mano_InputConfig.jsと併用したとき、項目を末尾以外に追加すると表示不整合が発生する競合を修正
@@ -99,14 +100,8 @@
  * 選択した文字のインデックス(開始位置は0)が変数に設定されます。
  * 初期値に設定する値もインデックスです。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- *  CC_UNLOCK or
- *  オプション任意項目の隠し解除 [項目名]
- *  　指定した項目の隠しフラグを解除します。
- *  使用例：CC_UNLOCK 数値項目1
+ * 項目には余白を設定できますが、設定した場合は
+ * オプションウィンドウのスクロールが無効になります。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -182,6 +177,12 @@
  * @value meVolume
  * @option SE 音量
  * @value seVolume
+ *
+ * @param PaddingTop
+ * @text 余白
+ * @desc 項目の上の余白ピクセル数です。項目の間隔を開けたいときに指定します。
+ * @default 0
+ * @type number
  */
 /*~struct~BooleanData:
  * @param Name
@@ -243,6 +244,12 @@
  * @value meVolume
  * @option SE 音量
  * @value seVolume
+ *
+ * @param PaddingTop
+ * @text 余白
+ * @desc 項目の上の余白ピクセル数です。項目の間隔を開けたいときに指定します。
+ * @default 0
+ * @type number
  */
 /*~struct~StringData:
  * @param Name
@@ -300,6 +307,12 @@
  * @value meVolume
  * @option SE 音量
  * @value seVolume
+ *
+ * @param PaddingTop
+ * @text 余白
+ * @desc 項目の上の余白ピクセル数です。項目の間隔を開けたいときに指定します。
+ * @default 0
+ * @type number
  */
 /*~struct~VolumeData:
  * @param Name
@@ -351,6 +364,12 @@
  * @value meVolume
  * @option SE 音量
  * @value seVolume
+ *
+ * @param PaddingTop
+ * @text 余白
+ * @desc 項目の上の余白ピクセル数です。項目の間隔を開けたいときに指定します。
+ * @default 0
+ * @type number
  */
 
 (function() {
@@ -455,6 +474,7 @@
         data.initValue = optionItem.DefaultValue;
         data.variable  = optionItem.VariableID || 0;
         data.addPotion = optionItem.AddPosition;
+        data.padding   = optionItem.PaddingTop;
         return data;
     };
 
@@ -597,6 +617,26 @@
             param.SwitchOptions.length + param.VolumeOptions.length;
     };
 
+    var _Scene_Options_maxVisibleCommands = Scene_Options.prototype.maxVisibleCommands;
+    Scene_Options.prototype.maxVisibleCommands = function() {
+        var result = _Scene_Options_maxVisibleCommands.apply(this, arguments);
+        return this.findPaddingHeight() > 0 ? Infinity : result;
+    };
+
+    var _Scene_Options_optionsWindowRect = Scene_Options.prototype.optionsWindowRect;
+    Scene_Options.prototype.optionsWindowRect = function() {
+        var rect = _Scene_Options_optionsWindowRect.apply(this, arguments);
+        rect.height += this.findPaddingHeight();
+        return rect;
+    };
+
+    Scene_Options.prototype.findPaddingHeight = function() {
+        var params = ConfigManager.getCustomParams();
+        return Object.keys(params).reduce(function (prev, key) {
+            return prev + (params[key].padding || 0);
+        }, 0);
+    };
+
     //=============================================================================
     // Window_Options
     //  追加項目を描画します。
@@ -609,6 +649,19 @@
         localOptionWindowIndex = 0;
     };
 
+    var _Window_Options_itemRect = Window_Options.prototype.itemRect;
+    Window_Options.prototype.itemRect = function(index) {
+        var rect = _Window_Options_itemRect.apply(this, arguments);
+        rect.y += this.findPaddingHeight(index);
+        return rect;
+    };
+
+    Window_Options.prototype.findPaddingHeight = function(index) {
+        return this._list.reduce(function(prev, item, itemIndex) {
+            return prev + (itemIndex <= index && item.ext ? item.ext : 0);
+        }, 0);
+    };
+
     var _Window_Options_makeCommandList      = Window_Options.prototype.makeCommandList;
     Window_Options.prototype.makeCommandList = function() {
         _Window_Options_makeCommandList.apply(this, arguments);
@@ -618,7 +671,7 @@
     Window_Options.prototype.addCustomOptions = function() {
         iterate(this._customParams, function(key, item) {
             if (!ConfigManager.hiddenInfo[key]) {
-                this.addCommand(item.name, key);
+                this.addCommand(item.name, key, undefined, item.padding);
                 if (item.addPotion) {
                     this.shiftCustomOptions(item.addPotion);
                 }
@@ -751,10 +804,6 @@
         var value = this._customParams[symbol].offset;
         if (Input.isPressed('shift')) value *= 10;
         return value;
-    };
-
-    Window_Options.prototype.windowHeight = function() {
-        return this.fittingHeight(Math.min(this.numVisibleRows(), 14));
     };
 })();
 
