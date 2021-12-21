@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2021/12/21 項目に余白を設定できる機能を追加
 // 2.2.1 2021/08/05 セーブがある状態で隠し項目を追加した時に上手く動作しない問題を修正(by柊菜緒さま)
 // 2.2.0 2021/03/09 スクリプトが指定されているときに項目決定すると決定SEを演奏するよう修正
 // 2.1.2 2020/10/13 Mano_InputConfig.jsと併用したとき、項目を末尾以外に追加すると表示不整合が発生する競合を修正
@@ -162,6 +163,12 @@
  * @value meVolume
  * @option SE 音量
  * @value seVolume
+ *
+ * @param PaddingTop
+ * @text 余白
+ * @desc 項目の上の余白ピクセル数です。項目の間隔を開けたいときに指定します。
+ * @default 0
+ * @type number
  */
 /*~struct~BooleanData:
  * @param Name
@@ -211,6 +218,12 @@
  * @value meVolume
  * @option SE 音量
  * @value seVolume
+ *
+ * @param PaddingTop
+ * @text 余白
+ * @desc 項目の上の余白ピクセル数です。項目の間隔を開けたいときに指定します。
+ * @default 0
+ * @type number
  */
 /*~struct~StringData:
  * @param Name
@@ -266,6 +279,12 @@
  * @value meVolume
  * @option SE 音量
  * @value seVolume
+ *
+ * @param PaddingTop
+ * @text 余白
+ * @desc 項目の上の余白ピクセル数です。項目の間隔を開けたいときに指定します。
+ * @default 0
+ * @type number
  */
 /*~struct~VolumeData:
  * @param Name
@@ -315,6 +334,12 @@
  * @value meVolume
  * @option SE 音量
  * @value seVolume
+ *
+ * @param PaddingTop
+ * @text 余白
+ * @desc 項目の上の余白ピクセル数です。項目の間隔を開けたいときに指定します。
+ * @default 0
+ * @type number
  */
 
 (function() {
@@ -484,6 +509,7 @@
         data.initValue = getArgNumber(optionItem.DefaultValue);
         data.variable  = getArgNumber(optionItem.VariableID, 0);
         data.addPotion = optionItem.AddPosition;
+        data.padding   = getArgNumber(optionItem.PaddingTop);
         return data;
     };
 
@@ -626,6 +652,19 @@
         localOptionWindowIndex = 0;
     };
 
+    var _Window_Options_itemRect = Window_Options.prototype.itemRect;
+    Window_Options.prototype.itemRect = function(index) {
+        var rect = _Window_Options_itemRect.apply(this, arguments);
+        rect.y += this.findAdditionalHeight(index);
+        return rect;
+    };
+
+    Window_Options.prototype.findAdditionalHeight = function(index) {
+        return this._list.reduce(function(prev, item, itemIndex) {
+            return prev + (itemIndex <= index && item.ext ? item.ext : 0);
+        }, 0);
+    };
+
     var _Window_Options_makeCommandList      = Window_Options.prototype.makeCommandList;
     Window_Options.prototype.makeCommandList = function() {
         _Window_Options_makeCommandList.apply(this, arguments);
@@ -635,7 +674,7 @@
     Window_Options.prototype.addCustomOptions = function() {
         iterate(this._customParams, function(key, item) {
             if (!ConfigManager.hiddenInfo[key]) {
-                this.addCommand(item.name, key);
+                this.addCommand(item.name, key, undefined, item.padding);
                 if (item.addPotion) {
                     this.shiftCustomOptions(item.addPotion);
                 }
@@ -758,7 +797,8 @@
     };
 
     Window_Options.prototype.windowHeight = function() {
-        return this.fittingHeight(Math.min(this.numVisibleRows(), 14));
+        var height = this.fittingHeight(Math.min(this.numVisibleRows(), 14));
+        return height + this.findAdditionalHeight(this.maxItems());
     };
 })();
 
