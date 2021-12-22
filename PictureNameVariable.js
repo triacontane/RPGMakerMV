@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2021/12/22 制御文字で指定した変数が変更された場合、ピクチャを再読み込みする機能を追加
  1.0.0 2021/06/06 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -37,6 +38,12 @@
  * @default false
  * @type boolean
  *
+ * @arg realTime
+ * @text リアルタイム変更
+ * @desc 制御文字で指定した変数が変更されたらピクチャを再読込します。本機能は『スクリプトとして評価』とは両立できません。
+ * @default false
+ * @type boolean
+ *
  * @help PictureNameVariable.js
  *
  * イベントコマンド「ピクチャの表示」で使用するファイルをあらかじめ設定できます。
@@ -62,12 +69,17 @@
     const script = document.currentScript;
 
     PluginManagerEx.registerCommand(script, 'SET_PICTURE_NAME', function (args) {
-        const name = PluginManagerEx.convertEscapeCharacters(args.name);
-        $gameScreen.reservePictureName(args.scriptUse ? eval(name) : name);
+        if (args.realTime) {
+            $gameScreen.reservePictureName(args.name, true);
+        } else {
+            const name = PluginManagerEx.convertEscapeCharacters(args.name);
+            $gameScreen.reservePictureName(args.scriptUse ? eval(name) : name);
+        }
     });
 
-    Game_Screen.prototype.reservePictureName = function(name) {
+    Game_Screen.prototype.reservePictureName = function(name, realTime = false) {
         this._reservePictureName = name;
+        this._realTimePictureName = realTime;
     };
 
     const _Game_Screen_showPicture = Game_Screen.prototype.showPicture;
@@ -79,5 +91,34 @@
             this._reservePictureName = null;
         }
         _Game_Screen_showPicture.apply(this, arguments);
+        const picture = this._pictures[this.realPictureId(pictureId)];
+        if (this._realTimePictureName) {
+            picture.setRealTimeName();
+            this._realTimePictureName = false;
+        }
+    };
+
+    Game_Picture.prototype.setRealTimeName = function() {
+        this._realTimeName = true;
+        this._originalName = this._name;
+    };
+
+    const _Game_Picture_show = Game_Picture.prototype.show;
+    Game_Picture.prototype.show = function() {
+        _Game_Picture_show.apply(this, arguments);
+        this._realTimeName = false;
+        this._originalName = '';
     }
+
+    const _Game_Picture_update = Game_Picture.prototype.update;
+    Game_Picture.prototype.update = function() {
+        _Game_Picture_update.apply(this, arguments);
+        if (this._realTimeName) {
+            this.updateName();
+        }
+    };
+
+    Game_Picture.prototype.updateName = function() {
+        this._name = PluginManagerEx.convertEscapeCharacters(this._originalName);
+    };
 })();
