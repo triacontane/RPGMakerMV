@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.3 2021/12/27 1.6.2の修正が一部不十分だった問題を修正
 // 1.6.2 2021/11/29 使用者に対する行動結果が出力されない場合がある問題を修正
 // 1.6.1 2021/10/20 メニュー画面でスキルを使用するとエラーになる問題を修正
 // 1.6.0 2021/10/16 MZで動作するよう全面的に修正
@@ -340,7 +341,7 @@
             this._reflectionForSideEffect = true;
         }
         _Game_Action_apply.apply(this, arguments);
-        this.applyItemSideEffect('sideEffectOnUsing');
+        this.applyItemSideEffect('sideEffectOnUsing', target);
     };
 
     const _Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
@@ -377,7 +378,7 @@
         _Game_Action_executeDamage.apply(this, arguments);
     };
 
-    Game_Action.prototype.applyItemSideEffect = function(property) {
+    Game_Action.prototype.applyItemSideEffect = function(property, target = null) {
         if (!this.isValidSideEffect()) return;
         if (!this._applySideEffect) {
             this._applySideEffect = {};
@@ -390,6 +391,9 @@
             this.applyItemEffect(this.subject(), effect);
         }, this);
         this.applyItemSideEffectGlobal(property);
+        if (this.subject() === target) {
+            return;
+        }
         if (this.isNeedDisplaySideEffect(property)) {
             this.subject().result().clear();
         }
