@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2021/12/26 リトライコストに任意の変数、アイテムを設定できる機能を追加
 // 1.3.0 2021/12/16 リトライにコスト（お金）を設定できる機能を追加
 // 1.2.1 2021/02/09 戦闘中に戦闘背景を変更したとにリトライすると変更後の背景で再戦してしまう不具合を修正
 // 1.2.0 2020/10/14 マップイベントからゲームオーバーになったときもリトライコマンドが表示される場合がある不具合を修正
@@ -89,6 +90,32 @@
  * @desc リトライする際に必要になるお金です。足りないとリトライできません。
  * @default 0
  * @type number
+ *
+ * @param RetryCostVariable
+ * @text リトライコスト(変数)
+ * @desc リトライする際に必要になる変数の番号です。
+ * @default 0
+ * @type variable
+ *
+ * @param RetryCostValue
+ * @text リトライコスト(変数の値)
+ * @desc リトライする際に必要になる変数の値です。足りないとリトライできません。
+ * @default 0
+ * @type number
+ * @parent RetryCostVariable
+ *
+ * @param RetryCostItem
+ * @text リトライコスト(アイテム)
+ * @desc リトライする際に必要になるアイテムです。ひとつも所持していないとリトライできません。
+ * @default 0
+ * @type item
+ *
+ * @param CostItemVariable
+ * @text コストアイテム所持変数
+ * @desc リトライコストアイテムの所持数が格納される変数です。メッセージに所持数を出力する場合などに使います。
+ * @default 0
+ * @type variable
+ * @parent RetryCostItem
  *
  * @help 戦闘でゲームオーバーになったあとのゲームオーバー画面でリトライ可能になります。
  * 雑魚敵とボス敵とでリトライ可能かどうかを分けることができます。
@@ -285,12 +312,23 @@
         $gameTemp.clearCommonEvent();
         $gameTroop.setup($gameTroop.troop().id);
         $gameSystem.addRetryCount();
-        if (param.RetryCostGold > 0) {
-            $gameParty.gainGold(-param.RetryCostGold);
-        }
+        this.payRetryCost();
         // for ReviceBattleItemNumber.js
         if (this.reservedItem === null) {
             this.reservedItem = new Array($dataItems.length);
+        }
+    };
+
+    BattleManager.payRetryCost = function() {
+        if (param.RetryCostGold > 0) {
+            $gameParty.gainGold(-param.RetryCostGold);
+        }
+        if (param.RetryCostVariable > 0) {
+            var prevValue = $gameVariables.value(param.RetryCostVariable);
+            $gameVariables.setValue(param.RetryCostVariable, prevValue - param.RetryCostValue);
+        }
+        if (param.RetryCostItem > 0) {
+            $gameParty.loseItem($dataItems[param.RetryCostItem], 1, false);
         }
     };
 
@@ -472,6 +510,9 @@
         var x       = Graphics.boxWidth / 2 - width / 2;
         this._messageWindow.move(x, param.MessageY, width, height);
         this._messageWindow.createContents();
+        if (param.CostItemVariable > 0 && param.RetryCostItem > 0) {
+            $gameVariables.setValue(param.CostItemVariable, $gameParty.numItems($dataItems[param.RetryCostItem]));
+        }
         this._messageWindow.drawTextEx(param.Message, 0, 0);
     };
 
@@ -596,7 +637,16 @@
     };
 
     Window_RetryCommand.prototype.canPayRetryCost = function() {
-        return param.RetryCostGold <= 0 || $gameParty.gold() >= param.RetryCostGold;
+        if (param.RetryCostGold > 0 && $gameParty.gold() < param.RetryCostGold) {
+            return false;
+        }
+        if (param.RetryCostVariable > 0 && $gameVariables.value(param.RetryCostVariable) < param.RetryCostValue) {
+            return false;
+        }
+        if (param.RetryCostItem > 0 && !$gameParty.hasItem($dataItems[param.RetryCostItem])) {
+            return false;
+        }
+        return true;
     };
 })();
 
