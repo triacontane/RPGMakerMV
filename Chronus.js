@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2021/12/29 天候による色調補正を無効にできる設定を追加
 // 2.2.0 2021/07/15 アナログ時計の短針を24時間で1周するよう変更する機能を追加
 // 2.1.0 2020/11/21 自然時間加算間隔を変更するプラグインコマンドを追加
 // 2.0.2 2020/11/12 イベントコマンド『天候の設定』を実行するとエラーになる問題を修正
@@ -277,6 +278,11 @@
  * @desc イベント実行中も時間経過するようになります。(ON/OFF)
  * @default false
  * @type boolean
+ *
+ * @param 天候補正無効
+ * @type boolean
+ * @desc 天候による色調補正を無効化します。
+ * @default false
  *
  * @command ADD_TIME
  * @text 時間加算
@@ -879,6 +885,7 @@ function Window_Chronus() {
     var paramCalendarLineSpacing = getParamNumber('日時フォーマット行間', 0);
     var paramCalendarHidden      = getParamBoolean('カレンダーの非表示');
     var param24hourClock         = getParamBoolean('24hourClock');
+    var paramDisableWeatherTone  = getParamBoolean('天候補正無効');
 
     const script = document.currentScript;
     PluginManagerEx.registerCommand(script, 'ADD_TIME', args => {
@@ -1473,7 +1480,7 @@ function Window_Chronus() {
                 if (tone.length < 4) throw new Error('色調の値が不正です。:' + tone);
             }
         }.bind(this));
-        if (this.getWeatherTypeId() !== 0) {
+        if (this.getWeatherTypeId() !== 0 && !paramDisableWeatherTone) {
             tone[0] = tone[0] > 0 ? tone[0] / 7 : tone[0] - 14;
             tone[1] = tone[1] > 0 ? tone[1] / 7 : tone[1] - 14;
             tone[2] = tone[2] > 0 ? tone[2] / 7 : tone[1] - 14;
