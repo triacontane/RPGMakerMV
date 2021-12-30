@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2021/12/30 イベントテスト実行時は全画面化を無効にするよう仕様変更
 // 1.1.0 2021/11/04 MZで動作するよう修正
 // 1.0.3 2019/01/14 1.0.3でコアスクリプトv1.6.1以前で逆に動作しなくなっていた問題を修正
 // 1.0.2 2019/01/14 コアスクリプトv1.6.1以降で正常に動作していなかった問題を修正
@@ -44,6 +45,7 @@
  * またタイトル画面にシャットダウンを追加します。
  *
  * このプラグインはローカル環境で実行した場合のみ有効です。
+ * イベントテスト実行時はテンポを優先し全画面化は無効となります。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -67,7 +69,7 @@ function Scene_Terminate() {
     if (!Utils.isNwjs()) {
         return;
     }
-    
+
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
@@ -101,7 +103,9 @@ function Scene_Terminate() {
     const _Scene_Boot_start = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
-        if (ConfigManager.startUpFullScreen) Graphics.requestFullScreen();
+        if (ConfigManager.startUpFullScreen && !DataManager.isEventTest()) {
+            Graphics.requestFullScreen();
+        }
     };
 
     //=============================================================================
