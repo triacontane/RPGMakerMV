@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.7 2021/12/30 FootStepのタグを指定していないイベントの足音が演奏されない問題を修正
 // 3.0.6 2020/12/27 ヘルプの文言を修正
 // 3.0.5 2020/09/26 パラメータ「位相」のデフォルト値が100になっていたので0に修正
 // 3.0.4 2020/09/23 本体v1.5系で動作するよう修正
@@ -481,7 +482,7 @@
     var _Game_Event_findStepSound = Game_Event.prototype.findStepSound;
     Game_Event.prototype.findStepSound = function (soundHash) {
         var se = _Game_Event_findStepSound.apply(this, arguments);
-        if (se && this._footStepSeName !== true) {
+        if (se && this._footStepSeName && this._footStepSeName !== true) {
             return {
                 name: this._footStepSeName,
                 volume: se.volume,
