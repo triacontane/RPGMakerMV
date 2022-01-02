@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/01/02 プラグインを無効にするスイッチを追加
  1.0.0 2021/04/03 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -47,6 +48,11 @@
  * @option #b9ffb5
  * @option white
  * @option rgba(255,255,255,1.0)
+ *
+ * @param InvalidSwitch
+ * @desc Invalid switch
+ * @default 0
+ * @type switch
  *
  * @help ChangeDamageColor.js
  *
@@ -103,6 +109,12 @@
  * @option white
  * @option rgba(255,255,255,1.0)
  *
+ * @param InvalidSwitch
+ * @text 無効スイッチ
+ * @desc 指定したスイッチが有効になるとプラグインの機能が無効になります。
+ * @default 0
+ * @type switch
+ *
  * @help ChangeDamageColor.js
  *
  * ダメージもしくは回復時の文字色を変更します。
@@ -133,7 +145,7 @@
 
     const _ColorManager_damageColor = ColorManager.damageColor;
     ColorManager.damageColor = function(colorType) {
-        if (customColorTypes[colorType]) {
+        if (customColorTypes[colorType] && !$gameSwitches.value(param.InvalidSwitch)) {
             return customColorTypes[colorType];
         } else {
             return _ColorManager_damageColor.apply(this, arguments);
