@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.21.1 2022/01/05 ウィンドウのテキストカラーを設定できる機能を追加
  1.20.1 2021/12/14 1.20.1のボタンの数を増やし不要なログを削除
  1.20.0 2021/12/14 ウィンドウ選択中に任意のボタンが押されたときに発生するイベントを登録できる機能を追加
  1.19.2 2021/09/24 データの項目数が1つのとき、行高さがウィンドウに合わせられてしまう問題を修正
@@ -679,6 +680,12 @@
  * @desc 選択すると通常の決定音の代わりに指定したSEが演奏されます。
  * @default
  * @type struct<AudioSe>
+ *
+ * @param textColor
+ * @text テキストカラー
+ * @desc 描画文字列のデフォルトカラーです。制御文字「\c[n]」で指定する色番号を指定します。
+ * @default 0
+ * @type number
  */
 
 /*~struct~AudioSe:
@@ -1753,6 +1760,14 @@
         }
 
         setActor(actor) {}
+
+        normalColor() {
+            if (this._data.textColor > 0) {
+                return this.textColor(this._data.textColor)
+            } else {
+                return super.normalColor();
+            }
+        }
     }
 
     class Window_CustomMenuCommand extends Window_CustomMenu {
