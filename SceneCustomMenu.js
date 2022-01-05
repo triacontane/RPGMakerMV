@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.27.0 2022/01/05 ウィンドウのテキストカラーを設定できる機能を追加
  1.26.0 2021/12/16 ウィンドウごとに項目の黒い背景を非表示にできる機能を追加
  1.25.0 2021/12/14 ウィンドウ選択中に任意のボタンが押されたときに発生するイベントを登録できる機能を追加
  1.24.1 2021/11/01 描画内容がnullの場合に描画をスキップするよう修正
@@ -700,6 +701,11 @@
  * @default false
  * @type boolean
  *
+ * @param textColor
+ * @text テキストカラー
+ * @desc 描画文字列のデフォルトカラーです。制御文字「\c[n]」で指定する色番号を指定します。
+ * @default 0
+ * @type number
  */
 
 /*~struct~AudioSe:
@@ -1878,6 +1884,13 @@
         drawItemBackground(index) {
             if (!this._data.ListWindowId && this._list[0] !== ' ' && !this._data.noItemBackground) {
                 super.drawItemBackground(index);
+            }
+        }
+
+        resetTextColor() {
+            super.resetTextColor();
+            if (this._data.textColor > 0) {
+                this.changeTextColor(ColorManager.textColor(this._data.textColor));
             }
         }
     }
