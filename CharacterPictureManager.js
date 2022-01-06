@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2022/01/06 立ち絵リストを空にすると動的ファイル名が参照されなくなる問題を修正
 // 2.6.0 2021/12/01 任意のスイッチをトリガーに立ち絵のシェイクできる機能を追加
 //                  立ち絵のシェイク時にシェイク方向を指定できる機能を追加
 // 2.5.0 2021/11/22 ダメージを受けたときに立ち絵を自動で振動させる機能を追加
@@ -513,10 +514,9 @@
 
         updatePictureFiles() {
             this._standPictures.forEach(picture => {
-                if (!picture.FileList) {
-                    return;
+                if (picture.FileList) {
+                    picture.FileList.clone().reverse().some(file => this.setFileNameIfValid(file, picture));
                 }
-                picture.FileList.clone().reverse().some(file => this.setFileNameIfValid(file, picture));
                 if (!picture.FileName && picture.DynamicFileName) {
                     picture.FileName = this.createDynamicFileName(picture.DynamicFileName);
                 }
