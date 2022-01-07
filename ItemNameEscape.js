@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2022/01/07 戦闘中に変更した変数がその戦闘中に開いたスキルやアイテム一覧に反映されない問題を修正
+//                  パフォーマンス対策
 // 1.0.1 2015/12/24 マップデータが歯抜けになっている場合に発生するエラーを対応
 // 1.0.0 2015/12/20 初版
 // ----------------------------------------------------------------------------
@@ -117,13 +119,27 @@
         DataManager.databaseEscape();
     };
 
-    //=============================================================================
-    // Game_Map
-    //  マップリフレッシュ時にデータベースの制御文字を適用する処理を追加定義します。
-    //=============================================================================
-    var _Game_Map_refresh = Game_Map.prototype.refresh;
-    Game_Map.prototype.refresh = function() {
-        _Game_Map_refresh.call(this);
+    var _Scene_MenuBase_create = Scene_MenuBase.prototype.create;
+    Scene_MenuBase.prototype.create = function() {
+        _Scene_MenuBase_create.apply(this, arguments);
+        DataManager.databaseEscape();
+    };
+
+    var _Scene_Battle_create = Scene_Battle.prototype.create;
+    Scene_Battle.prototype.create = function() {
+        _Scene_Battle_create.apply(this, arguments);
+        DataManager.databaseEscape();
+    };
+
+    var _Window_SkillList_refresh = Window_SkillList.prototype.refresh;
+    Window_SkillList.prototype.refresh = function() {
+        _Window_SkillList_refresh.apply(this, arguments);
+        DataManager.databaseEscape();
+    };
+
+    var _Window_ItemList_refresh = Window_ItemList.prototype.refresh;
+    Window_ItemList.prototype.refresh = function() {
+        _Window_ItemList_refresh.apply(this, arguments);
         DataManager.databaseEscape();
     };
 })();
