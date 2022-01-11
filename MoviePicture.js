@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.3b2022/01/11 再生時に動作が存在しない場合を考慮
 // 1.7.2 2020/09/21 autoplayをtrueに変更
 // 1.7.1 2019/08/26 他のプラグインとの組み合わせによりエラーになる可能性のある記述を修正
 // 1.7.0 2019/06/30 動画の取得元フォルダと拡張子を変更して動画を難読化できるようにしました。
@@ -679,7 +680,9 @@
     };
 
     Sprite_Picture.prototype.startVideo = function() {
-        this._bitmap.play();
+        if (this._bitmap) {
+            this._bitmap.play();
+        }
         this._loadingState = null;
         this._frameCount   = 0;
     };
