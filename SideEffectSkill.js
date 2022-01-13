@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.4 2022/01/13 BattleEffectPopup.jsと併用したとき、使用者に対する効果ポップアップが二重に出力される場合がある問題を修正
 // 1.6.3 2021/12/27 1.6.2の修正が一部不十分だった問題を修正
 // 1.6.2 2021/11/29 使用者に対する行動結果が出力されない場合がある問題を修正
 // 1.6.1 2021/10/20 メニュー画面でスキルを使用するとエラーになる問題を修正
@@ -387,13 +388,13 @@
             return;
         }
         this._applySideEffect[property] = true;
+        if (this.subject() === target) {
+            return;
+        }
         this.item()[property].forEach(function(effect) {
             this.applyItemEffect(this.subject(), effect);
         }, this);
         this.applyItemSideEffectGlobal(property);
-        if (this.subject() === target) {
-            return;
-        }
         if (this.isNeedDisplaySideEffect(property)) {
             this.subject().result().clear();
         }
