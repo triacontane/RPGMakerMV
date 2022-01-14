@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2022/01/14 表示遅延を設定しかつ背景画像を指定したとき、背景画像がマップ名表示前に表示されてしまう問題を修正
 // 1.2.0 2019/11/18 総フレーム数にInfinityを設定した場合の挙動を自然なものに変更
 //                  遅延機能をイベントコマンドの「マップ名表示」をONにした場合にも適用されるよう修正
 // 1.1.0 2019/11/17 マップ名表示を指定したフレーム数だけ遅延させる機能を追加
@@ -312,6 +313,7 @@
             this._backSprite.x = this.windowWidth() / 2 - this._backSprite.width / 2;
             this._backSprite.y = this.windowHeight() / 2 - this._backSprite.height / 2;
         }.bind(this));
+        this._backSprite.opacity = 0;
         this.addChildToBack(this._backSprite);
     };
 
