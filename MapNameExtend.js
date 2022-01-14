@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.4 2022/01/14 表示遅延を設定しかつ背景画像を指定したとき、背景画像がマップ名表示前に表示されてしまう問題を修正
 // 1.3.3 2021/11/05 実名表示が無効な場合でも、表示名が空だと表示されてしまう問題を修正
 // 1.3.2 2021/11/04 背景画像を指定したとき、メニューを閉じた時などに背景が一瞬表示される問題を修正
 // 1.3.1 2021/06/26 マップ名ウィンドウの横幅設定が機能していなかった問題を修正
@@ -186,6 +187,7 @@
             this._backSprite.y = this.height / 2 - this._backSprite.height / 2;
         });
         this._backSprite.visible = false;
+        this._backSprite.opacity = 0;
         this.addChildToBack(this._backSprite);
     };
 
