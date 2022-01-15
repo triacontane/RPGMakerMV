@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2022/01/16 画像ごとにシェイクの対象外にできるオプションを追加
 // 2.6.1 2022/01/06 立ち絵リストを空にすると動的ファイル名が参照されなくなる問題を修正
 // 2.6.0 2021/12/01 任意のスイッチをトリガーに立ち絵のシェイクできる機能を追加
 //                  立ち絵のシェイク時にシェイク方向を指定できる機能を追加
@@ -223,6 +224,12 @@
  * @default 100
  * @type number
  * @max 1000
+ *
+ * @param OutOfShake
+ * @text シェイク対象外
+ * @desc この画像を立ち絵シェイクの対象から外します。
+ * @default false
+ * @type boolean
  *
  * @param SpriteSheet
  * @text スプライトシート
@@ -771,6 +778,12 @@
             const basePoint = this._pictures.getBasePoint();
             this.x = basePoint.X + this.getShakeX();
             this.y = basePoint.Y + this.getShakeY();
+            this.children.forEach(child => {
+                if (child.isOutOfShake()) {
+                    child.x -= this.getShakeX();
+                    child.y -= this.getShakeY();
+                }
+            })
         }
 
         setupShake() {
@@ -870,6 +883,10 @@
         updatePosition() {
             this.x = this._picture.X;
             this.y = this._picture.Y;
+        }
+
+        isOutOfShake() {
+            return this._picture.OutOfShake;
         }
 
         update() {
