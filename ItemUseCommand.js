@@ -168,7 +168,6 @@
                 }
                 return;
             }
-            console.log(param.playSe);
             if (param.playSe) {
                 SoundManager.playUseItem();
             }
