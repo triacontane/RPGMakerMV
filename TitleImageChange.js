@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2022/01/16 ゲーム進行度のみ保存のコマンドを使って保存したとき、保存先のセーブファイルIDが間違っていた問題を修正
 // 2.0.0 2021/01/16 MZで動作するよう全面的に修正
 // 1.4.5 2020/03/01 進行度変数の値を戻したときに、リロードするまで元のタイトル画面に戻らない問題を修正
 // 1.4.4 2018/07/11 1.4.3の修正でタイトル画面が変更される条件を満たした状態でセーブ後にタイトルに戻るで再表示しても変更が反映されない問題を修正
@@ -149,7 +150,10 @@
     }
 
     PluginManagerEx.registerCommand(script, 'SAVE_STORY_PHASE', () => {
-        DataManager.saveOnlyGradeVariable();
+        const id = $gameSystem.savefileId();
+        if (id > 0) {
+            DataManager.saveOnlyGradeVariable(id);
+        }
     });
 
     //=============================================================================
@@ -184,8 +188,7 @@
         }
     };
 
-    DataManager.saveOnlyGradeVariable = function() {
-        const saveFileId = this.latestSavefileId();
+    DataManager.saveOnlyGradeVariable = function(saveFileId) {
         const globalInfo = this._globalInfo || [];
         if (globalInfo[saveFileId]) {
             this.setGradeVariable(globalInfo[saveFileId]);
