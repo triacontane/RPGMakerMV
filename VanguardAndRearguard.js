@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.10.0 2022/01/17 敵キャラ座標補正値に負の値を指定できるよう修正
 // 1.9.0 2020/02/15 先頭メンバーの並び替えを禁止できるスイッチを追加
 // 1.8.1 2019/06/17 1.8.0の修正で「後衛メンバー上限」のパラメータ取得処理が消えていたのを戻した
 // 1.8.0 2019/06/15 戦闘画面でX座標やY座標が指定値以下の場合、自動で後衛に配置できる機能を追加
@@ -75,11 +76,15 @@
  * @desc Offset X Position of rearguard.
  * @default 48
  * @type number
+ * @min -9999
+ * @max 9999
  *
  * @param RearguardOffsetY
  * @desc Offset Y Position of rearguard.
  * @default 0
  * @type number
+ * @min -9999
+ * @max 9999
  *
  * @param ChangeSpeed
  * @desc Move speed of formation change.
@@ -217,11 +222,15 @@
  * @desc 後衛時のX座標を前衛時に対する相対値で指定します。サイドビューかつ敵キャラの場合は反転します。
  * @default 48
  * @type number
+ * @min -9999
+ * @max 9999
  *
  * @param 後衛時Y補正
  * @desc 後衛時のX座標を前衛時に対する相対値で指定します。
  * @default 0
  * @type number
+ * @min -9999
+ * @max 9999
  *
  * @param チェンジ速度
  * @desc 戦闘中にチェンジした場合のグラフィックの移動速度です。
