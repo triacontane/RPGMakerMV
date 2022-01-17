@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/01/17 特定のスキルタイプのみ非表示にできる機能を追加
 // 2.1.0 2021/06/29 特定のスキルタイプのみ使用禁止にできる機能を追加
 // 2.0.0 2021/04/14 MZで動作するよう修正し、メモ欄の記法を変更
 // 1.4.0 2018/12/22 禁止コマンドの上に文字を被せられる機能を追加
@@ -63,8 +64,6 @@
  * <SkillSealFormula:f>   # 同上
  *
  * 特定のスキルタイプのみを封印する場合、以下のタグを指定してください。
- * ただしこのタグはパラメータ『コマンド使用禁止』の設定に拘わらず
- * 『非表示』ではなく常に『使用禁止』として扱われます。
  * <スキルタイプ1封印スイッチ:8> # スイッチ[8]がONならスキルタイプ[1]を封印
  * <SkillType1SealSwitch:8> # 同上
  *
@@ -197,7 +196,11 @@
         }
         _Window_ActorCommand_addSkillCommands.apply(this, arguments);
         this._actor.findSealSkillTypes().forEach(type => {
-            this.disableCommand('skill', type);
+            if (param.commandDisable) {
+                this.disableCommand('skill', type);
+            } else {
+                this.eraseCommand('skill', type);
+            }
         });
     };
 
@@ -207,6 +210,13 @@
                 command.enabled = false;
             }
         });
+    };
+
+    Window_ActorCommand.prototype.eraseCommand = function(symbol, ext) {
+        const index = this._list.findIndex(command => command.symbol === symbol && ext === command.ext);
+        if (index >= 0) {
+            this._list.splice(index, 1);
+        }
     };
 
     const _Window_ActorCommand_drawItem = Window_ActorCommand.prototype.drawItem;
