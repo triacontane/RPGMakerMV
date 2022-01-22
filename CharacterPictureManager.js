@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2022/01/22 バトラーのモーションに合わせた立ち絵を指定できる機能を追加(パラメータ：ダメージ条件は廃止)
+//                  表示座標をパーティメンバーの並び順ではなく、アクターIDごとに設定できる機能を追加
 // 2.7.0 2022/01/16 画像ごとにシェイクの対象外にできるオプションを追加
 // 2.6.1 2022/01/06 立ち絵リストを空にすると動的ファイル名が参照されなくなる問題を修正
 // 2.6.0 2021/12/01 任意のスイッチをトリガーに立ち絵のシェイクできる機能を追加
@@ -287,11 +289,49 @@
  * @default false
  * @type boolean
  *
- * @param Damage
- * @text ダメージ条件
- * @desc アクターがダメージを受けている場合に表示条件を満たします。
- * @default false
- * @type boolean
+ * @param Motion
+ * @text モーション条件
+ * @desc アクターが指定モーションを取っている間、表示条件を満たします。サイドビューのバトラー画像の規格準拠ですがフロントビューでも機能します。
+ * @default
+ * @type select
+ * @option なし
+ * @value
+ * @option 前進
+ * @value walk
+ * @option 待機
+ * @value wait
+ * @option 詠唱待機
+ * @value chant
+ * @option 防御
+ * @value guard
+ * @option ダメージ
+ * @value damage
+ * @option 回避
+ * @value evade
+ * @option 突き
+ * @value thrust
+ * @option 振り
+ * @value swing
+ * @option 飛び道具
+ * @value missile
+ * @option 汎用スキル
+ * @value skill
+ * @option 魔法
+ * @value spell
+ * @option アイテム
+ * @value item
+ * @option 逃走
+ * @value escape
+ * @option 勝利
+ * @value victory
+ * @option 瀕死
+ * @value dying
+ * @option 状態異常
+ * @value abnormal
+ * @option 睡眠
+ * @value sleep
+ * @option 戦闘不能
+ * @value dead
  *
  * @param State
  * @text ステート条件
@@ -378,6 +418,12 @@
  * @default ["{\"X\":\"0\",\"Y\":\"0\"}","{\"X\":\"150\",\"Y\":\"0\"}","{\"X\":\"300\",\"Y\":\"0\"}","{\"X\":\"450\",\"Y\":\"0\"}"]
  * @type struct<Position>[]
  *
+ * @param ActorPosition
+ * @text アクターごとの基準座標
+ * @desc アクター単位で基準座標を決めたい場合はこちらを指定します。指定がある場合、メンバーごとの基準座標より優先されます。
+ * @default []
+ * @type struct<ActorPosition>[]
+ *
  * @param ScaleX
  * @text X拡大率
  * @desc 立ち絵の横方向の拡大率です。
@@ -425,6 +471,32 @@
  */
 
 /*~struct~Position:
+ *
+ * @param X
+ * @text 基準X座標
+ * @desc 立ち絵の基準X座標です。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ * @param Y
+ * @text 基準Y座標
+ * @desc 立ち絵の基準Y座標です。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ */
+
+/*~struct~ActorPosition:
+ *
+ * @param ActorId
+ * @text アクターID
+ * @desc 基準座標を設定する対象のアクターIDです。
+ * @default 1
+ * @type actor
  *
  * @param X
  * @text 基準X座標
@@ -493,10 +565,8 @@
      */
     class StandPictureParam {
         setup(actor, scene, index) {
-            if (!scene.MemberPosition || !scene.MemberPosition[index]) {
-                return false;
-            }
             this._actor = actor;
+            this._base = this.findBasePosition(scene, index);
             this._shakeSwitch = scene.ShakeSwitch;
             this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
             if (this._standPictures.length <= 0) {
@@ -512,7 +582,19 @@
             picture.Mirror = scene.Mirror;
             picture.SceneScaleX = scene.ScaleX;
             picture.SceneScaleY = scene.ScaleY;
-            this._base = scene.MemberPosition[index];
+        }
+
+        findBasePosition(scene, index) {
+            if (scene.ActorPosition) {
+                const base = scene.ActorPosition.find(item => item.ActorId === this._actor.actorId());
+                if (base) {
+                    return base;
+                }
+            }
+            if (scene.MemberPosition && scene.MemberPosition[index]) {
+                return scene.MemberPosition[index];
+            }
+            return null;
         }
 
         getBasePoint() {
@@ -537,7 +619,7 @@
             const conditions = [];
             conditions.push(() => !file.HpUpperLimit || file.HpUpperLimit >= a.hpRate() * 100);
             conditions.push(() => !file.HpLowerLimit || file.HpLowerLimit <= a.hpRate() * 100);
-            conditions.push(() => !file.Damage || a.isDamage());
+            conditions.push(() => !file.Motion || a.isMotionTypeValid(file.Motion));
             conditions.push(() => !file.Action || a.isAction());
             conditions.push(() => !file.State || a.isStateAffected(file.State));
             conditions.push(() => !file.Weapon || a.hasWeapon($dataWeapons[file.Weapon]));
@@ -611,12 +693,28 @@
     /**
      * Game_Actor
      */
-    Game_Actor.prototype.isDamage = function() {
-        if (this._damageFrame && this._damageFrame + 30 > Graphics.frameCount) {
+    Game_Actor.prototype.requestPictureMotion = function(motionType) {
+        this._pictureMotion = motionType;
+        this._motionFrame = Graphics.frameCount;
+    };
+
+    Game_Actor.prototype.isMotionTypeValid = function(motionType) {
+        if (this._pictureMotion !== motionType) {
+            return false;
+        }
+        if (Sprite_Actor.MOTIONS[motionType].loop) {
             return true;
         }
-        this._damageFrame = null;
+        if (this._motionFrame && this._motionFrame + 30 > Graphics.frameCount) {
+            return true;
+        }
+        this._pictureMotion = '';
+        this._motionFrame = 0;
         return false;
+    };
+
+    Game_Actor.prototype.isDamage = function() {
+        return this.isMotionTypeValid('damage');
     };
 
     Game_Actor.prototype.isAction = function() {
@@ -626,7 +724,7 @@
     const _Game_Actor_performDamage = Game_Actor.prototype.performDamage;
     Game_Actor.prototype.performDamage = function() {
         _Game_Actor_performDamage.apply(this, arguments);
-        this._damageFrame = Graphics.frameCount;
+        this.requestPictureMotion('damage');
     };
 
     const _Game_Actor_performAction = Game_Actor.prototype.performAction;
@@ -641,11 +739,30 @@
         this._performAction = false;
     };
 
+    const _Game_Battler_requestMotion = Game_Battler.prototype.requestMotion;
+    Game_Battler.prototype.requestMotion = function(motionType) {
+        _Game_Battler_requestMotion.apply(this, arguments);
+        if (this instanceof Game_Actor) {
+            this.requestPictureMotion(motionType);
+        }
+    };
+
     /**
      * Spriteset_Base
      */
     Spriteset_Base.prototype.appendToEffect = function(displayObject) {
         this._effectsContainer.addChild(displayObject);
+    };
+
+    const _Sprite_Actor_startMotion = Sprite_Actor.prototype.startMotion;
+    Sprite_Actor.prototype.startMotion = function(motionType) {
+        if (this._actor) {
+            const newMotion = Sprite_Actor.MOTIONS[motionType];
+            if (this._motion !== newMotion) {
+                this._actor.requestPictureMotion(motionType);
+            }
+        }
+        _Sprite_Actor_startMotion.apply(this, arguments);
     };
 
     /**
