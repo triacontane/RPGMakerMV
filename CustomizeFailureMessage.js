@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/01/23 有効な効果を与えられなかった場合にもカスタム失敗メッセージを表示するよう変更
 // 1.1.0 2021/10/03 MZ用にリファクタリング
 // 1.0.1 2018/02/11 失敗メッセージ表示後に別のスキルで失敗した場合、もとの失敗メッセージが表示される不具合を修正
 // 1.0.0 2016/07/31 初版
@@ -85,6 +86,18 @@
     const _Window_BattleLog_displayMiss = Window_BattleLog.prototype.displayMiss;
     Window_BattleLog.prototype.displayMiss = function(target) {
         _Window_BattleLog_displayMiss.apply(this, arguments);
+        this.displayCustomFailure(target);
+    };
+
+    const _Window_BattleLog_displayFailure = Window_BattleLog.prototype.displayFailure;
+    Window_BattleLog.prototype.displayFailure = function(target) {
+        _Window_BattleLog_displayFailure.apply(this, arguments);
+        if (target.result().isHit() && !target.result().success) {
+            this.displayCustomFailure(target);
+        }
+    };
+
+    Window_BattleLog.prototype.displayCustomFailure = function(target) {
         const fmt = target.getFailureMessage();
         if (fmt) {
             for (let i = this._methods.length - 1; i >= 0; i--) {
