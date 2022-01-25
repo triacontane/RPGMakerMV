@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.3 2022/01/25 二回行動の敵キャラが一回しか行動できなかったときに反撃するとエラーが発生する問題を修正
 // 2.2.2 2021/11/10 タイムプログレス戦闘採用時、2回行動の相手に反撃した場合、相手が以後行動しなくなる問題を修正
 // 2.2.1 2021/10/20 行動制約ステートが有効なときに反撃判定が行われてしまう問題を修正
 // 2.2.0 2021/08/09 反撃頻度に値を加算できるタグを追加
@@ -465,15 +466,23 @@
     BattleManager.endAction = function() {
         _BattleManager_endAction.apply(this, arguments);
         // 行動回数が追加されたバトラーの行動の場合、行動し終わるまでカウンター発動を待機
-        if (this._subject && this._subject !== this._currentActor && !this._counter) {
+        if (this._subject && this._subject !== this._currentActor && !this._counterSubject) {
             return;
         }
         const counter = this._counterQueue.shift();
         if (counter) {
             this.invokeCounterAction(counter.subject, counter.target, counter.action);
-        } else if (this._counter) {
-            this._counter = false;
+        } else if (this._counterSubject) {
+            this._counterSubject = null;
             this._subject = null;
+        }
+    };
+
+    const _BattleManager_processTurn = BattleManager.processTurn;
+    BattleManager.processTurn = function() {
+        _BattleManager_processTurn.apply(this, arguments);
+        if (!this._subject && this._counterSubject) {
+            this._subject = this._counterSubject;
         }
     };
 
@@ -482,7 +491,7 @@
             return;
         }
         this._phase = "action";
-        this._counter = true;
+        this._counterSubject = subject;
         this._subject = subject;
         this._action = counterAction;
         this._targets = counterAction.makeTargets();
