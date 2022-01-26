@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.1 2022/01/26 1.3.0の機能はメモ欄指定に変更
  1.3.0 2022/01/26 コマンドスキルを使用できないときは非表示にする機能を追加
  1.2.0 2021/12/15 コマンドスキルにソート順を指定できる機能を追加
  1.1.1 2021/06/11 コマンドスキルの並び順をスキルID、アイテムIDの昇順になるよう変更
@@ -44,12 +45,6 @@
  * @default false
  * @type boolean
  *
- * @param hiddenCanNotUse
- * @text 使用不可時は隠す
- * @desc コマンドスキルを使用できないとき、選択不可ではなくコマンド自体を非表示にします。
- * @default false
- * @type boolean
- *
  * @help CommandSkill.js
  *
  * 戦闘中、指定したスキル、アイテムをスキルウィンドウからではなく
@@ -61,6 +56,11 @@
  * コマンドスキル間でソート順を設定したいときは以下の通りです。
  * 指定が無い場合や同一の値を指定した場合はID順となります。
  * <CommandSkill:2>
+ *
+ * コマンドスキルを使用できないとき、選択不可ではなく非表示にしたい
+ * 場合は、もとのメモ欄に加えて以下を指定してください。
+ * <HiddenCommandSkill>
+ * <隠しコマンドスキル>
  *
  * アクターが当該スキルを覚えていればコマンドから直接スキルを使用できます。
  * MPが足りなかったり封印されていたりすると選択できません。
@@ -127,8 +127,11 @@
 
     Window_ActorCommand.prototype.addCommandSpecial = function() {
         this._actor.findCommandSkills().forEach(skill => {
-            if (param.hiddenCanNotUse && !this._actor.canUse(skill)) {
-                return;
+            if (!this._actor.canUse(skill)) {
+                const hidden = PluginManagerEx.findMetaValue(skill, ['HiddenCommandSkill', '隠しコマンドスキル']);
+                if (hidden) {
+                    return;
+                }
             }
             this.addCommand(skill.name, `special`, this._actor.canUse(skill), skill);
             this._list.splice(param.index, 0, this._list.pop());
