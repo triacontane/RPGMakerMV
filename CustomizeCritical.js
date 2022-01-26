@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2022/01/26 専用のクリティカルメッセージが表示されたとき、デフォルトのクリティカルメッセージを抑制する機能を追加
 // 1.3.1 2021/08/22 1.3.0の修正により会心でないときにも効果音が演奏されてしまう不具合を修正
 // 1.3.0 2021/08/21 パラメータから共通の計算式、効果音、演出アニメーション、メッセージを指定できる機能を追加
 // 1.2.0 2021/08/20 MZ向けに修正
@@ -51,6 +52,12 @@
  * @desc 会心が発生したときの演奏する効果音です。
  * @default
  * @type struct<SE>
+ *
+ * @param suppressDefault
+ * @text デフォルトメッセージ抑制
+ * @desc 専用のクリティカルメッセージが表示されたとき、デフォルトのクリティカルメッセージを抑制します。
+ * @default false
+ * @type boolean
  *
  * @help 会心（クリティカルヒット）の確率とダメージ、演出をカスタマイズします。
  *
@@ -265,12 +272,19 @@
         if (target.result().critical && param.commonSe　&& param.commonSe.name) {
             AudioManager.playSe(param.commonSe);
         }
+        if (this._suppressCritialMessage) {
+            this._suppressCritialMessage = false;
+            return;
+        }
         _Window_BattleLog_displayCritical.apply(this, arguments);
     };
 
     Window_BattleLog.prototype.showCriticalEffect = function(subject) {
         const message = subject.findCriticalEffect(['CCメッセージ', 'CCMessage']) || param.commonMessage;
         if (message) {
+            if (param.suppressDefault) {
+                this._suppressCritialMessage = true;
+            }
             this.push('addText', message);
         }
         const animationId = subject.findCriticalEffect(['CC演出', 'CCエフェクト']) || param.commonAnimation;
