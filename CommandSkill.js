@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2022/01/26 コマンドスキルを使用できないときは非表示にする機能を追加
  1.2.0 2021/12/15 コマンドスキルにソート順を指定できる機能を追加
  1.1.1 2021/06/11 コマンドスキルの並び順をスキルID、アイテムIDの昇順になるよう変更
  1.1.0 2021/05/01 アイテムもアクターコマンド化できるよう修正
@@ -40,6 +41,12 @@
  * @param showHelp
  * @text ヘルプ表示
  * @desc コマンドスキル選択時にヘルプを表示します。
+ * @default false
+ * @type boolean
+ *
+ * @param hiddenCanNotUse
+ * @text 使用不可時は隠す
+ * @desc コマンドスキルを使用できないとき、選択不可ではなくコマンド自体を非表示にします。
  * @default false
  * @type boolean
  *
@@ -120,6 +127,9 @@
 
     Window_ActorCommand.prototype.addCommandSpecial = function() {
         this._actor.findCommandSkills().forEach(skill => {
+            if (param.hiddenCanNotUse && !this._actor.canUse(skill)) {
+                return;
+            }
             this.addCommand(skill.name, `special`, this._actor.canUse(skill), skill);
             this._list.splice(param.index, 0, this._list.pop());
         });
