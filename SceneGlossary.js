@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.4 2022/01/30 ヘルプに表示する改行コードが効かなくなっていた問題を修正
 // 3.7.3 2021/12/19 部分一致で自動登録されない問題を修正
 // 3.7.2 2021/12/19 敵キャラの自動登録が部分一致になっていた問題を修正
 // 3.7.1 2021/11/14 画像の自動縮小の機能が正常に動作しない問題を修正
@@ -982,7 +983,7 @@
  *
  * @param GlossaryHelp
  * @text 用語ヘルプ
- * @desc 用語リスト選択時のヘルプ画面に表示するテキストです。未指定の場合、ヘルプウィンドウは非表示になります。(改行コード:\n)
+ * @desc 用語リスト選択時のヘルプ画面に表示するテキストです。未指定の場合ウィンドウは非表示になります。(改行コード:\n)
  * @default ゲーム中に登場する用語を解説しています。
  *
  * @param CategoryHelp
@@ -1704,6 +1705,7 @@
     Scene_Glossary.prototype.createHelpWindow = function() {
         Scene_MenuBase.prototype.createHelpWindow.apply(this, arguments);
         this._helpTexts = $gameParty.getGlossaryHelpMessages();
+        console.log(this._helpTexts);
         this.updateHelp('');
         this._helpWindow.setFramelessDesign();
         this._helpWindow.setGlossaryWindowSkin();
@@ -1770,10 +1772,10 @@
         if (this._helpTexts[0]) {
             if (typeof TranslationManager !== 'undefined') {
                 TranslationManager.getTranslatePromise(helpText).then(function(translatedText) {
-                    this._helpWindow.setText(translatedText.replace(/\\n/g, '\n'));
+                    this._helpWindow.setText(translatedText.replace(/\x1bn/g, '\n'));
                 }.bind(this));
             } else {
-                this._helpWindow.setText(helpText.replace(/\\n/g, '\n'));
+                this._helpWindow.setText(helpText.replace(/\x1bn/g, '\n'));
             }
         } else {
             this._helpWindow.visible = false;
