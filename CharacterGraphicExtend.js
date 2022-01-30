@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2022/01/30 色相を変化させたとき入力した数値を反転させた内容が反映されてしまう問題を修正
 // 2.4.0 2021/07/12 敵キャラやピクチャを表示する際、色相を指定できる機能を追加
 // 2.3.2 2021/07/07 ヘルプの記載ミスを修正
 // 2.3.1 2021/06/24 プラグイン未適用のデータをロードしたときに発生するいくつかの事象を修正
@@ -789,7 +790,7 @@
             const hue = this._character.customResourceHue() || 0;
             this.bitmap = ImageManager['load' + this._customResource](this._characterName);
             if (hue > 0) {
-                this.setHue(-hue);
+                this.setHue(hue);
             }
         } else {
             _Sprite_Character_setCharacterBitmap.apply(this, arguments);
