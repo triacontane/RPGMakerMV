@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2022/01/30 スキルのダメージの会心を「あり」に設定したあとで、ダメージタイプを「なし」に変更した場合、会心判定されてしまう問題を修正
 // 1.4.0 2022/01/26 専用のクリティカルメッセージが表示されたとき、デフォルトのクリティカルメッセージを抑制する機能を追加
 // 1.3.1 2021/08/22 1.3.0の修正により会心でないときにも効果音が演奏されてしまう不具合を修正
 // 1.3.0 2021/08/21 パラメータから共通の計算式、効果音、演出アニメーション、メッセージを指定できる機能を追加
@@ -188,6 +189,9 @@
         if (changeValue) {
             itemCritical = changeValue / 100;
         } else {
+            if (this.item().damage.type === 0) {
+                return;
+            }
             const addValue = PluginManagerEx.findMetaValue(this.item(), ['CC確率加算', 'CCProbAdd']);
             itemCritical = _Game_Action_itemCri.apply(this, arguments) + (addValue ? addValue / 100 : 0);
         }
