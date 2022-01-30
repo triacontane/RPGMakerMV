@@ -1705,7 +1705,6 @@
     Scene_Glossary.prototype.createHelpWindow = function() {
         Scene_MenuBase.prototype.createHelpWindow.apply(this, arguments);
         this._helpTexts = $gameParty.getGlossaryHelpMessages();
-        console.log(this._helpTexts);
         this.updateHelp('');
         this._helpWindow.setFramelessDesign();
         this._helpWindow.setGlossaryWindowSkin();
