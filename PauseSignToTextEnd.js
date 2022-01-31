@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2022/01/31 MZで動作するよう修正
 // 1.3.1 2019/06/11 競合する可能性のある記述を修正
 // 1.3.0 2019/05/26 MessageWindowPopup.jsと完全に組み合わせて使用できるよう修正
 // 1.2.1 2018/06/03 MessageWindowPopup.jsとの併用時、プラグインの定義順次第でポーズサインの表示が正常に行われない場合がある問題を修正
@@ -19,35 +20,22 @@
 //=============================================================================
 
 /*:
- * @plugindesc PauseSignToTextEndPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param ValidateSwitchId
- * @type number
- * @desc When the specified switch is ON, the pause sign is displayed at the end. When it is 0, it is always displayed at the end.
- * @default 0
- *
- * @param InvisibleSwitchId
- * @type number
- * @desc When the specified switch is ON, the pause sign is no longer displayed.
- * @default 0
- *
- * @help Message window pause sign
- * It will appear at the end of the text.
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc ポーズサインの末尾表示プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PauseSignToTextEnd.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @param 有効スイッチ番号
- * @type number
+ * @param validateSwitchId
+ * @text 有効スイッチ番号
+ * @type switch
  * @desc 指定したスイッチがONのときポーズサインが末尾に表示されます。0の場合は常に末尾に表示されます。
  * @default 0
  *
- * @param 非表示スイッチ番号
- * @type number
+ * @param invisibleSwitchId
+ * @text 非表示スイッチ番号
+ * @type switch
  * @desc 指定したスイッチがONのときポーズサインが表示されなくなります。
  * @default 0
  *
@@ -65,42 +53,16 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName    = 'PauseSignToTextEnd';
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param = {};
-    param.invisibleSwitchId = getParamNumber(['InvisibleSwitchId', '非表示スイッチ番号'], 0);
-    param.validateSwitchId  = getParamNumber(['ValidateSwitchId', '有効スイッチ番号'], 0);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Window_Message
     //  ポーズサインの位置を変更します。
     //=============================================================================
-    var _Window_Message_startPause = Window_Message.prototype.startPause;
+    const _Window_Message_startPause = Window_Message.prototype.startPause;
     Window_Message.prototype.startPause = function() {
         _Window_Message_startPause.apply(this, arguments);
         if (this.isValidPauseSignTextEnd()) {
@@ -119,17 +81,17 @@
     };
 
     Window_Message.prototype.setPauseSignToTextEnd = function() {
-        var textState = this._textState;
-        var x = this.padding + textState.x;
-        var y = this.padding + textState.y + textState.height;
-        this._windowPauseSignSprite.anchor.x = 0;
-        this._windowPauseSignSprite.anchor.y = 1;
+        const textState = this._textState;
+        let x = this.padding + textState.x;
+        let y = this.padding + textState.y + textState.height;
+        this._pauseSignSprite.anchor.x = 0;
+        this._pauseSignSprite.anchor.y = 1;
         // _windowPauseSignSpriteの絶対座標に小数点以下の端数が出ると表示がおかしくなるので調整
         x -= this.x - Math.floor(this.x);
-        this._windowPauseSignSprite.move(x, y);
+        this._pauseSignSprite.move(x, y);
     };
 
-    var _Window_Message__updatePauseSign = Window_Message.prototype.hasOwnProperty('_updatePauseSign') ?
+    const _Window_Message__updatePauseSign = Window_Message.prototype.hasOwnProperty('_updatePauseSign') ?
         Window_Message.prototype._updatePauseSign : null;
     Window_Message.prototype._updatePauseSign = function() {
         if (_Window_Message__updatePauseSign) {
@@ -137,8 +99,9 @@
         } else {
             Window_Base.prototype._updatePauseSign.apply(this, arguments);
         }
+        // for WindowMessagePopup.js
         if (!this.isPopup || !this.isPopup()) {
-            this._windowPauseSignSprite.visible = this.isVisiblePauseSign();
+            this._pauseSignSprite.visible = this.isVisiblePauseSign();
         }
     };
 })();
