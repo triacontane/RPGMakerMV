@@ -86,7 +86,7 @@
         let y = this.padding + textState.y + textState.height;
         this._pauseSignSprite.anchor.x = 0;
         this._pauseSignSprite.anchor.y = 1;
-        // _windowPauseSignSpriteの絶対座標に小数点以下の端数が出ると表示がおかしくなるので調整
+        // 絶対座標に小数点以下の端数が出ると表示がおかしくなるので調整
         x -= this.x - Math.floor(this.x);
         this._pauseSignSprite.move(x, y);
     };
