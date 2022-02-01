@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.0.0 2022/02/11 サブメニューの表示位置のパラメータ仕様を変更し、ウィンドウの好きな位置に追加できるよう修正
 // 3.1.0 2021/12/09 サブメニューで選択したアクターのIDをマップ遷移時以外でも設定するよう変更
 // 3.0.1 2020/10/15 スクリプトに凡例追加
 // 3.0.0 2020/10/10 MZ向けに全面リファクタリング
@@ -61,17 +62,9 @@
  *
  * @param commandPosition
  * @text コマンド追加位置
- * @desc サブコマンド群を追加する位置です。0:並び替えの下 1:オプションの下 2:セーブの下 3:ゲーム終了の下
+ * @desc サブコマンド群を追加する位置です。0を指定すると、ウィンドウの先頭に追加されます。
  * @default 0
- * @type select
- * @option 並び替えの下
- * @value 0
- * @option オプションの下
- * @value 1
- * @option セーブの下
- * @value 2
- * @option ゲーム終了の下
- * @value 3
+ * @type number
  *
  * @param subMenuWidth
  * @text サブメニュー横幅
@@ -720,22 +713,10 @@
         _Window_MenuCommand_initCommandPosition.apply(this, arguments);
     };
 
-    const _Window_MenuCommand_addOriginalCommands      = Window_MenuCommand.prototype.addOriginalCommands;
-    Window_MenuCommand.prototype.addOriginalCommands = function() {
-        _Window_MenuCommand_addOriginalCommands.apply(this, arguments);
-        if (param.commandPosition === 0) this.makeSubCommandList();
-    };
-
-    const _Window_MenuCommand_addOptionsCommand      = Window_MenuCommand.prototype.addOptionsCommand;
-    Window_MenuCommand.prototype.addOptionsCommand = function() {
-        _Window_MenuCommand_addOptionsCommand.apply(this, arguments);
-        if (param.commandPosition === 1) this.makeSubCommandList();
-    };
-
-    const _Window_MenuCommand_addSaveCommand      = Window_MenuCommand.prototype.addSaveCommand;
-    Window_MenuCommand.prototype.addSaveCommand = function() {
-        _Window_MenuCommand_addSaveCommand.apply(this, arguments);
-        if (param.commandPosition === 2) this.makeSubCommandList();
+    const _Window_MenuCommand_makeCommandList = Window_MenuCommand.prototype.makeCommandList;
+    Window_MenuCommand.prototype.makeCommandList = function() {
+        _Window_MenuCommand_makeCommandList.apply(this, arguments);
+        this.makeSubCommandList();
     };
 
     const _Window_MenuCommand_addGameEndCommand      = Window_MenuCommand.prototype.addGameEndCommand;
@@ -743,7 +724,6 @@
         if (this.needsCommand('gameEnd')) {
             _Window_MenuCommand_addGameEndCommand.apply(this, arguments);
         }
-        if (param.commandPosition === 3) this.makeSubCommandList();
     };
 
     const _Window_MenuCommand_needsCommand      = Window_MenuCommand.prototype.needsCommand;
@@ -759,11 +739,15 @@
     };
 
     Window_MenuCommand.prototype.makeSubCommandList = function() {
+        let addCount = 0;
         $gameTemp.iterateMenuParents((subCommands, parentName) => {
             this._subCommands = subCommands;
             if (this.checkSubCommands('isVisible')) {
                 const commandName = this._maskedName[parentName] ? this._maskedName[parentName] : subCommands[0].getParentName();
                 this.addCommand(commandName, 'parent' + parentName, this.checkSubCommands('isEnable'), parentName);
+                const command = this._list.pop();
+                this._list.splice(param.commandPosition + addCount, 0, command);
+                addCount++;
             }
         });
     };
