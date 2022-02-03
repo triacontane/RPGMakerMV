@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2022/02/03 装備品ウィンドウのスクロールが正常に行えなくなる場合がある問題を修正
  1.0.1 2019/11/30 1.0.0の考慮漏れがあったので実装方法を全体的に変更
  1.0.0 2019/11/24 初版
 ----------------------------------------------------------------------------
@@ -85,9 +86,8 @@
         _Window_EquipSlot_reselect.apply(this, arguments);
     };
 
-    var _Window_EquipSlot_update = Window_EquipSlot.prototype.update;
     Window_EquipSlot.prototype.update = function() {
-        _Window_EquipSlot_update.apply(this, arguments);
+        Window_Selectable.prototype.update.call(this);
         if (this._itemWindow) {
             this._itemWindow.setSlotId(this.convertEquipIndex(this.index()));
         }
