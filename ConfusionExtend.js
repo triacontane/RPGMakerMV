@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2022/02/03 混乱スキルの対象者から使用者本人を除外できる設定を追加
 // 2.0.0 2021/03/28 MZで動作するよう全面的に再構築
 // 1.5.0 2020/05/23 混乱スキルの指定で、最後に使用したスキルを選択できる機能を追加
 // 1.4.1 2020/04/22 混乱スキルのターゲットが「敵n体ランダム」のとき全体攻撃になってしまう問題を修正
@@ -137,6 +138,12 @@
  * @desc 有効にすると直前にターゲットされたアクターもしくは敵キャラをターゲットにします。
  * @default false
  * @type boolean
+ *
+ * @param RemoveUser
+ * @text 使用者を除外
+ * @desc 有効にするとスキルの対象から本人が除外されます。対象が『使用者』のスキルを使おうとすると失敗します。
+ * @default false
+ * @type boolean
  */
 
 (()=> {
@@ -252,8 +259,16 @@
 
     Game_Action.prototype.setupConfusionExtendTarget = function(preTarget, extend) {
         const targetUnit = this.isForFriend() ? preTarget.opponentsUnit() : preTarget.friendsUnit();
+        if (extend.RemoveUser) {
+            targetUnit.setConfusionSubject(this.subject());
+        }
         this.setConfusionTarget(targetUnit, extend);
-        return this.targetsForConfusion(targetUnit);
+        let targets = this.targetsForConfusion(targetUnit);
+        if (extend.RemoveUser) {
+            targets = targetUnit.filterConfusionSubject(targets);
+        }
+        targetUnit.setConfusionSubject(null);
+        return targets;
     };
 
     Game_Action.prototype.targetsForConfusion = function(unit) {
@@ -294,5 +309,28 @@
                 this._targetIndex = $gameTemp.lastActionData(5) - 1;
             }
         }
+    };
+
+    Game_Unit.prototype.setConfusionSubject = function(battler) {
+        this._confusionSubject = battler;
+    };
+
+    Game_Unit.prototype.filterConfusionSubject = function(member) {
+        if (!this._confusionSubject) {
+            return member;
+        }
+        return member.filter(battler => battler !== this._confusionSubject);
+    };
+
+    const _Game_Party_members = Game_Party.prototype.members;
+    Game_Party.prototype.members = function() {
+        const members = _Game_Party_members.apply(this, arguments);
+        return this.filterConfusionSubject(members);
+    };
+
+    const _Game_Troop_members = Game_Troop.prototype.members;
+    Game_Troop.prototype.members = function() {
+        const members = _Game_Troop_members.apply(this, arguments);
+        return this.filterConfusionSubject(members);
     };
 })();
