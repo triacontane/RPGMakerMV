@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.9.0 2022/02/05 apngピクチャのキャッシュを手動削除する機能を追加
  1.8.4 2021/02/01 数字のみのファイルをapng指定して起動するとエラーになる問題を修正
  1.8.3 2021/01/18 1.8.2の修正でapngでないピクチャや敵キャラを表示しようとするとエラーになる問題を修正
  1.8.2 2021/01/17 キャッシュ方針を「あり」にした画像を再表示するとき、フレームを初期化するよう修正
@@ -175,7 +176,13 @@
  * パラメータに拡張子付きのファイル名を直接入力してください。
  * 同一ファイル名のpngファイルが別途必要です。(中身は空の画像でOK)
  * また、GIFはツクールMVの暗号化機能の対象外となります。
- *　
+ *
+ * ピクチャのAPNGのみスクリプトからキャッシュの手動削除ができます。
+ * SceneManager.destroyApngCache('拡張子無しファイル名');
+ *
+ * ファイル名を指定しない場合、キャッシュの全削除となります。
+ * SceneManager.destroyApngCache();
+ * 　
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -687,6 +694,21 @@
             }
         }
 
+        destroyAllCache() {
+            Object.keys(this._spriteCache).forEach(function(key) {
+                this.destroyCache(key);
+            }, this);
+        }
+
+        destroyCache(name) {
+            var sprite = this._spriteCache[name];
+            if (!sprite) {
+                return;
+            }
+            ApngLoader.destroyApng(sprite);
+            delete this._spriteCache[name];
+        }
+
         _createPixiApngAndGif(name) {
             var pixiApng = new PixiApngAndGif(this._fileHash[name], ApngLoader._resource);
             var loopCount = this._options[name].LoopTimes || param.DefaultLoopTimes;
@@ -745,6 +767,18 @@
 
         static convertDecryptExt(key) {
             return key.replace(/\.rpgmvp$/, '.png');
+        }
+
+        static destroyApng(sprite) {
+            var pixiApng = sprite.pixiApng;
+            if (pixiApng) {
+                pixiApng.textures.forEach(function(texture) {
+                    texture.baseTexture.destroy();
+                    texture.destroy();
+                });
+                pixiApng.stop();
+            }
+            sprite.pixiApng = null;
         }
     }
     ApngLoader._resource = null;
@@ -834,6 +868,25 @@
         });
     };
 
+    Spriteset_Base.prototype.removeDestroyedApngPicture = function() {
+        this.removeDestroyedApngPictureContainer(this._pictureContainer);
+        // for PicturePriorityCustomize.js
+        this.removeDestroyedApngPictureContainer(this._pictureContainerLower);
+        this.removeDestroyedApngPictureContainer(this._pictureContainerMiddle);
+        this.removeDestroyedApngPictureContainer(this._pictureContainerUpper);
+    };
+
+    Spriteset_Base.prototype.removeDestroyedApngPictureContainer = function(container) {
+        if (!container) {
+            return;
+        }
+        container.children.forEach(function(sprite) {
+            if (sprite.removeDestroyedApng) {
+                sprite.removeDestroyedApng();
+            }
+        });
+    };
+
     Spriteset_Battle.prototype.destroyApngPicture = function() {
         Spriteset_Base.prototype.destroyApngPicture.call(this);
         this._enemySprites.forEach(function(sprite) {
@@ -855,6 +908,17 @@
         this._apngLoaderSideEnemy = new ApngLoader('sv_enemies', param.SideEnemyList);
         this._apngLoaderSystem = new ApngLoader('system', param.SceneApngList);
         PIXI.loader.load();
+    };
+
+    SceneManager.destroyApngCache = function(name) {
+        if (name) {
+            this._apngLoaderPicture.destroyCache(name);
+        } else {
+            this._apngLoaderPicture.destroyAllCache();
+        }
+        if (this._scene._spriteset) {
+            this._scene._spriteset.removeDestroyedApngPicture();
+        }
     };
 
     SceneManager.tryLoadApngPicture = function(name) {
@@ -908,20 +972,19 @@
     };
 
     Sprite.prototype.destroyApng = function() {
-        var pixiApng = this._apngSprite.pixiApng;
-        if (pixiApng) {
-            pixiApng.textures.forEach(function(texture) {
-                texture.baseTexture.destroy();
-                texture.destroy();
-            });
-            pixiApng.stop();
-        }
+        ApngLoader.destroyApng(this._apngSprite);
         this.removeApng();
     };
 
     Sprite.prototype.removeApng = function() {
         this.removeChild(this._apngSprite);
         this._apngSprite = null;
+    };
+
+    Sprite.prototype.removeDestroyedApng = function() {
+        if (this._apngSprite && !this._apngSprite.pixiApng) {
+            this.removeApng();
+        }
     };
 
     Sprite.prototype.isApngCache = function() {
@@ -1032,6 +1095,23 @@
         var picture = this.picture();
         if (!picture && this._apngSprite) {
             this.destroyApngIfNeed();
+        }
+    };
+
+    Sprite_Picture.prototype.removeDestroyedApng = function() {
+        Sprite.prototype.removeDestroyedApng.apply(this, arguments);
+        var picture = this.picture();
+        if (picture) {
+            $gameScreen.erasePictureByInstance(picture);
+        }
+    };
+
+    Game_Screen.prototype.erasePictureByInstance = function(targetPicture) {
+        var index = this._pictures.findIndex(function(picture) {
+            return picture === targetPicture;
+        });
+        if (index >= 0) {
+            this._pictures[index] = null;
         }
     };
 
