@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2022/02/06 相手の行動の直前に反撃を出してから行動を受ける『インターセプター』型の反撃機能を追加
 // 2.2.3 2022/01/25 二回行動の敵キャラが一回しか行動できなかったときに反撃するとエラーが発生する問題を修正
 // 2.2.2 2021/11/10 タイムプログレス戦闘採用時、2回行動の相手に反撃した場合、相手が以後行動しなくなる問題を修正
 // 2.2.1 2021/10/20 行動制約ステートが有効なときに反撃判定が行われてしまう問題を修正
@@ -160,6 +161,12 @@
  * @param CrossCounter
  * @text クロスカウンター
  * @desc 有効にした場合、攻撃を受けてから反撃します。
+ * @default false
+ * @type boolean
+ *
+ * @param Interceptor
+ * @text インターセプター
+ * @desc 有効にした場合、相手の攻撃を受ける前に割り込んで反撃を出します。
  * @default false
  * @type boolean
  *
@@ -398,6 +405,10 @@
         return false;
     };
 
+    Game_Action.prototype.getCounter = function() {
+        return {};
+    };
+
     Game_Action.prototype.hasElement = function(elementId) {
         if (this.item().damage.type === 0) {
             return false;
@@ -439,15 +450,20 @@
 
     const _BattleManager_invokeNormalAction = BattleManager.invokeNormalAction;
     BattleManager.invokeNormalAction = function(subject, target) {
-        const counterAction = new Game_CounterAction(target);
-        counterAction.setup(this._action, subject);
+        const counterAction = this.createCounterAction(subject, this._action, target);
         const counter = counterAction.getCounter();
-        if (!counter || counter.CrossCounter) {
+        if (!counter || counter.CrossCounter || counter.Interceptor) {
             _BattleManager_invokeNormalAction.apply(this, arguments);
         }
-        if (counter) {
+        if (counter && !counter.Interceptor) {
             this.requestCounterAction(target, subject, counterAction);
         }
+    };
+
+    BattleManager.createCounterAction = function(subject, action, target) {
+        const counterAction = new Game_CounterAction(target);
+        counterAction.setup(action, subject);
+        return counterAction;
     };
 
     BattleManager.requestCounterAction = function(counterSubject, subject, counterAction) {
@@ -545,5 +561,39 @@
 
     Window_BattleLog.prototype.waitForAnimation = function() {
         this.setWaitMode('animation');
+    };
+
+    const _BattleManager_startAction = BattleManager.startAction;
+    BattleManager.startAction = function() {
+        const subject = this._subject;
+        const action = subject.currentAction();
+        const targets = action.makeTargets();
+        let intercepted = false;
+        targets.forEach(target => {
+            const counterAction = this.createCounterAction(subject, action, target);
+            const counter = counterAction.getCounter();
+            if (counter && counter.Interceptor) {
+                this.requestCounterAction(target, subject, counterAction);
+                intercepted = true;
+            }
+        });
+        if (intercepted) {
+            this._counterQueue.push({
+                subject: subject,
+                target: targets[0],
+                action: action
+            });
+            this._logWindow.startInterceptedAction(subject, action);
+        } else {
+            _BattleManager_startAction.apply(this, arguments);
+        }
+    }
+
+    Window_BattleLog.prototype.startInterceptedAction = function(subject, action) {
+        const item = action.item();
+        this.push("performActionStart", subject, action);
+        this.push("waitForMovement");
+        this.push("performAction", subject, action);
+        this.displayAction(subject, item);
     };
 })();
