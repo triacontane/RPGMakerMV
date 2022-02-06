@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/02/06 戦闘中も無効になってしまっていた問題を修正
  1.0.0 2022/02/06 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -32,5 +33,12 @@
 
 (() => {
     'use strict';
-    Game_Battler.prototype.regenerateAll = function() {}
+
+    const _Game_Battler_regenerateAll = Game_Battler.prototype.regenerateAll;
+    Game_Battler.prototype.regenerateAll = function() {
+        if (!$gameParty.inBattle()) {
+            return;
+        }
+        _Game_Battler_regenerateAll.apply(this, arguments);
+    }
 })();
