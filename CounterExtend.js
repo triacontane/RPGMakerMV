@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2022/02/07 反撃実行時に厳密な生存判定を追加
 // 2.3.0 2022/02/06 相手の行動の直前に反撃を出してから行動を受ける『インターセプター』型の反撃機能を追加
 // 2.2.3 2022/01/25 二回行動の敵キャラが一回しか行動できなかったときに反撃するとエラーが発生する問題を修正
 // 2.2.2 2021/11/10 タイムプログレス戦闘採用時、2回行動の相手に反撃した場合、相手が以後行動しなくなる問題を修正
@@ -503,7 +504,7 @@
     };
 
     BattleManager.invokeCounterAction = function(subject, target, counterAction) {
-        if (!subject.canMove()) {
+        if (!subject.canMove() || subject.isDead()) {
             return;
         }
         this._phase = "action";
