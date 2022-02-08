@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2022/02/08 スキルタイプごとの使用回数を取得できる機能を追加
 // 1.4.1 2021/08/28 戦闘不能ステートを直接付与したときに撃破数がカウントされない問題を修正
 // 1.4.0 2021/06/12 MZ用のリファクタリング
 // 1.3.1 2021/03/26 ヘルプの誤記を修正
@@ -40,6 +41,7 @@
  * アクターごとに以下の要素を記録できます。
  *
  * ・スキルごとの使用回数(戦闘中のみカウント。他項目も同様)
+ * ・スキルタイプごとの使用回数
  * ・全スキルの使用回数合計
  * ・アイテムごとの使用回数
  * ・全アイテムの使用回数合計
@@ -59,6 +61,7 @@
  *
  * ・データベースのアクターIDから取得する場合
  * $gameActors.actor(1).getSkillUseCounter(2);   # アクター[1]のスキル[2]使用回数
+ * $gameActors.actor(1).getSkillTypeUseCounter(1)# アクター[1]のスキルタイプ[1]使用回数
  * $gameActors.actor(1).getAllSkillUseCounter(); # アクター[1]の全スキル使用回数
  * $gameActors.actor(1).getItemUseCounter(3);    # アクター[1]のアイテム[3]使用回数
  * $gameActors.actor(1).getAllItemUseCounter();  # アクター[1]の全アイテム使用回数
@@ -273,6 +276,18 @@ function Game_TradeRecord() {
         return this._useSkillCounter[skillId] || 0;
     };
 
+    Game_BattlerBase.prototype.getSkillTypeUseCounter = function(skillTypeId) {
+        if (!this._useSkillCounter) this._useSkillCounter = [];
+        let count = 0;
+        this._useSkillCounter.forEach((value, index) => {
+            const data = $dataSkills[index];
+            if (data && data.stypeId === skillTypeId) {
+                count += value;
+            }
+        });
+        return count;
+    };
+
     Game_BattlerBase.prototype.getItemUseCounter = function(itemId) {
         if (!this._useItemCounter) this._useItemCounter = [];
         return this._useItemCounter[itemId] || 0;
@@ -297,9 +312,7 @@ function Game_TradeRecord() {
 
     Game_BattlerBase.prototype.getSumRecord = function(counterArray) {
         if (!counterArray) return 0;
-        return counterArray.reduce(function(sumValue, value) {
-            return sumValue + value;
-        }, 0);
+        return counterArray.reduce((sumValue, value) => sumValue + value, 0);
     };
 
     const _Game_BattlerBase_paySkillCost      = Game_BattlerBase.prototype.paySkillCost;
