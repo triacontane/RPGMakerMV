@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.0 2022/02/08 立ち絵のフェードイン・アウト機能、アンフォーカス機能、反転表示切替機能を追加
 // 3.0.0 2022/01/22 バトラーのモーションに合わせた立ち絵を指定できる機能を追加(パラメータ：ダメージ条件は廃止)
 //                  表示座標をパーティメンバーの並び順ではなく、アクターIDごとに設定できる機能を追加
 // 2.7.0 2022/01/16 画像ごとにシェイクの対象外にできるオプションを追加
@@ -105,6 +106,14 @@
  * @min 0
  * @max 360
  *
+ * @param UnFocusPower
+ * @text アンフォーカス強さ
+ * @desc 立ち絵がアンフォーカスしたときの強さ(暗さ)です。大きいほど暗くなります。
+ * @default 68
+ * @type number
+ * @min -255
+ * @max 255
+ *
  * @help CharacterPictureManager.js
  *
  * 複数の画像から構成される立ち絵を管理、表示できます。
@@ -129,7 +138,6 @@
  * 画面上に現在の基準座標と固有座標が表示されます。
  * Ctrlキーを押していると奥の画像が、押していないと手前の画像が選択されます。
  * Shiftキーを押していると基準座標を、押していないと固有座標を調整します。
- * Ctrl+Enterで調整した画像がすべて元の位置に戻ります。
  *
  * ●立ち絵ファイルの動的設定(上級者向け)
  * 立ち絵を大量に使いたい場合にファイル名を命名規則に従って動的に決定できます。
@@ -256,6 +264,25 @@
  * @option image_{damage}
  * @option image_{action}
  * @option image_{note}
+ *
+ * @param ShowPictureSwitch
+ * @text 表示スイッチ
+ * @desc 指定した場合、スイッチがONのときのみ立ち絵が表示されます。
+ * @default 0
+ * @type switch
+ *
+ * @param UnFocusSwitch
+ * @text アンフォーカススイッチ
+ * @desc 指定した場合、スイッチがONのとき立ち絵が暗くなります。
+ * @default 0
+ * @type switch
+ *
+ * @param MirrorSwitch
+ * @text 反転スイッチ
+ * @desc 指定した場合、スイッチがONのとき立ち絵が反転します。
+ * @default 0
+ * @type switch
+ *
  */
 
 /*~struct~StandPicture:
@@ -440,21 +467,27 @@
  *
  * @param ShowPictureSwitch
  * @text 表示スイッチ
- * @desc 指定した場合、スイッチがONのときのみピクチャが表示されます。
+ * @desc 指定した場合、スイッチがONのときのみ立ち絵が表示されます。
  * @default 0
  * @type switch
  *
  * @param ShakeSwitch
  * @text シェイクスイッチ
- * @desc 指定したスイッチにONになるとピクチャがシェイクします。シェイク後、スイッチは自動でOFFになります。
+ * @desc 指定したスイッチにONになると立ち絵がシェイクします。シェイク後、スイッチは自動でOFFになります。
  * @default 0
  * @type switch
  *
- * @param Mirror
- * @text 反転表示
- * @desc 立ち絵を左右反転させます。
- * @default false
- * @type boolean
+ * @param UnFocusSwitch
+ * @text アンフォーカススイッチ
+ * @desc 指定した場合、スイッチがONのとき立ち絵が暗くなります。
+ * @default 0
+ * @type switch
+ *
+ * @param MirrorSwitch
+ * @text 反転スイッチ
+ * @desc 指定した場合、スイッチがONのとき立ち絵が反転します。
+ * @default 0
+ * @type switch
  *
  * @param Priority
  * @text 表示優先度
@@ -467,6 +500,12 @@
  * @value 1
  * @option アニメーションの下(戦闘、マップ画面のみ有効)
  * @value 2
+ *
+ * @param FadeFrame
+ * @text フェード時間(フレーム)
+ * @desc 指定した場合、表示非表示が切り替わったときに立ち絵がフェードイン/アウトします。
+ * @default 0
+ * @type number
  *
  */
 
@@ -572,16 +611,18 @@
             if (this._standPictures.length <= 0) {
                 return false;
             }
-            this._standPictures.forEach(picture => this.setupPosition(picture, scene, index));
+            this._standPictures.forEach(picture => this.setupSceneParam(picture, scene));
             this.updatePictureFiles();
             return true;
         }
 
-        setupPosition(picture, scene, index) {
-            picture.ShowPictureSwitch = scene.ShowPictureSwitch;
-            picture.Mirror = scene.Mirror;
+        setupSceneParam(picture, scene) {
+            picture.SceneShowPictureSwitch = scene.ShowPictureSwitch;
+            picture.SceneMirrorSwitch = scene.MirrorSwitch;
             picture.SceneScaleX = scene.ScaleX;
             picture.SceneScaleY = scene.ScaleY;
+            picture.FadeFrame = scene.FadeFrame;
+            picture.SceneUnFocusSwitch = scene.UnFocusSwitch;
         }
 
         findBasePosition(scene, index) {
@@ -987,6 +1028,7 @@
 
         setup(picture) {
             this._picture = picture;
+            this._openness = 0;
             if (param.Origin === 1) {
                 this.anchor.x = 0.5;
                 this.anchor.y = 0.5;
@@ -1012,6 +1054,7 @@
             this.updateBitmap();
             this.updateScale();
             this.updateVisibility();
+            this.updateFocus();
         }
 
         updateBitmap() {
@@ -1042,9 +1085,25 @@
         }
 
         updateVisibility() {
-            this.opacity = this._picture.Opacity;
-            const showSwitch = this._picture.ShowPictureSwitch;
-            this.visible = !showSwitch || $gameSwitches.value(showSwitch);
+            this._openness = (this._openness + this.calcDeltaOpenness()).clamp(0, 1);
+            this.opacity = this._picture.Opacity * this._openness;
+        }
+
+        calcDeltaOpenness() {
+            const openness = 1 / (this._picture.FadeFrame || 1);
+            return this.isShowing() ? openness : -openness;
+        }
+
+        isShowing() {
+            const switchId = this._picture.ShowPictureSwitch;
+            if (switchId && !$gameSwitches.value(switchId)) {
+                return false;
+            }
+            const sceneSwitchId = this._picture.SceneShowPictureSwitch;
+            if (sceneSwitchId && !$gameSwitches.value(sceneSwitchId)) {
+                return false;
+            }
+            return true;
         }
 
         updateScale() {
@@ -1056,9 +1115,42 @@
             if (this._picture.SceneScaleY) {
                 this.scale.y *= this._picture.SceneScaleY / 100;
             }
-            if (this._picture.Mirror) {
+            if (this.isMirror()) {
                 this.scale.x *= -1;
             }
+        }
+
+        updateFocus() {
+            if (this.isUnFocus()) {
+                const power = param.UnFocusPower || 0;
+                this.setColorTone([-power, -power, -power, 0]);
+            } else {
+                this.setColorTone([0, 0, 0, 0]);
+            }
+        }
+
+        isUnFocus() {
+            const switchId = this._picture.UnFocusSwitch;
+            if (switchId && $gameSwitches.value(switchId)) {
+                return true;
+            }
+            const sceneSwitchId = this._picture.SceneUnFocusSwitch;
+            if (sceneSwitchId && $gameSwitches.value(sceneSwitchId)) {
+                return true;
+            }
+            return false;
+        }
+
+        isMirror() {
+            const switchId = this._picture.MirrorSwitch;
+            if (switchId && $gameSwitches.value(switchId)) {
+                return true;
+            }
+            const sceneSwitchId = this._picture.SceneMirrorSwitch;
+            if (sceneSwitchId && $gameSwitches.value(sceneSwitchId)) {
+                return true;
+            }
+            return false;
         }
 
         loadApngSprite(name) {
@@ -1085,11 +1177,6 @@
             return new Sprite_StandPictureChildWithDrag(picture);
         }
 
-        setupPosition() {
-            super.setupPosition();
-            this.children.forEach(child => child.setupPosition());
-        }
-
         update() {
             super.update();
             const children = Input.isPressed('control') ? this.children : this.children.clone().reverse()
@@ -1108,10 +1195,6 @@
 
         updateDrag() {
             this.startDragIfNeed();
-            if (Input.isPressed('control') && Input.isTriggered('ok')) {
-                this.parent.setupPosition();
-                Graphics.drawPositionInfo('');
-            }
             if (!this._drag) {
                 return;
             }
