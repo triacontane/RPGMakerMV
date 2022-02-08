@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.7 2022/02/09 戦闘画面において下層ピクチャの表示位置が実際と比べてズレて表示される問題を修正
 // 1.2.6 2021/08/05 上層ピクチャが画面シェイクに連動しない問題を修正
 // 1.2.5 2020/11/02 NRP_DynamicMotionMZ.jsと併用したとき戦闘画面のピクチャを敵キャラの下に表示できなくなる競合を修正
 // 1.2.4 2020/11/05 戦闘画面で使用するとエラーになる問題を修正
@@ -273,6 +274,8 @@
         if (PluginManagerEx.isExistPlugin('NRP_DynamicMotionMZ')) {
             this._pictureContainerLower.z = param.lowerPictureBattleZ > 0 ? 10 : 0;
         }
+        this._pictureContainerLower.y = -this._battleField.y;
+        this._pictureContainerLower.x = -this._battleField.x;
     };
 
     Spriteset_Battle.prototype.updateLowerPictureContainerZ = function() {
