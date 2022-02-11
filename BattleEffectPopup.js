@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.4 2022/02/11 自動戦闘や他のプラグインと組み合わせたとき、耐性や弱点のポップアップが意図せず表示される場合がある問題を修正
 // 1.11.3 2021/10/10 一度の行動で複数のポップアップが発生したときに最後のポップアップしか表示されない問題を修正
 // 1.11.2 2021/09/01 1.11.1の修正で通常モンスターのポップアップ位置がずれてしまう問題を修正
 // 1.11.1 2021/08/29 BigEnemy.jsと併用したとき、ポップアップがダメージと同じ場所に出るよう修正
@@ -453,16 +454,33 @@
     // Game_Action
     //  弱点によってポップアップを設定します。
     //=============================================================================
-    var _Game_Action_calcElementRate      = Game_Action.prototype.calcElementRate;
-    Game_Action.prototype.calcElementRate = function(target) {
-        var result = _Game_Action_calcElementRate.apply(this, arguments);
-        if (BattleManager.isInputting()) return result;
-        if (result === 0) {
+    var _Game_Action_apply = Game_Action.prototype.apply;
+    Game_Action.prototype.apply = function(target) {
+        this._elementResult = {};
+        _Game_Action_apply.apply(this, arguments);
+        if (this._elementResult.guard) {
             target.appointMessagePopup(paramGuard, paramGuardColor);
-        } else if (result >= paramWeaknessLine / 100) {
+        }
+        if (this._elementResult.weakness) {
             target.appointMessagePopup(paramWeakness, paramWeaknessColor);
-        } else if (result <= paramResistanceLine / 100) {
+        }
+        if (this._elementResult.resist) {
             target.appointMessagePopup(paramResistance, paramResistanceColor);
+        }
+        this._elementResult = null;
+    };
+
+    var _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
+    Game_Action.prototype.calcElementRate = function(target) {
+        const result = _Game_Action_calcElementRate.apply(this, arguments);
+        if (this._elementResult) {
+            if (result === 0) {
+                this._elementResult.guard = true;
+            } else if (result >= paramWeaknessLine / 100) {
+                this._elementResult.weakness = true;
+            } else if (result <= paramResistanceLine / 100) {
+                this._elementResult.resist = true;
+            }
         }
         return result;
     };
