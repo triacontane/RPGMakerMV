@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.2 2022/02/11 自動戦闘や他のプラグインと組み合わせたとき、耐性や弱点のポップアップが意図せず表示される場合がある問題を修正
 // 2.2.1 2021/08/05 ポップアップパラメータが空の場合にエラーが発生する問題を修正
 // 2.2.0 2021/04/21 身代わり発生時にポップアップする機能を追加
 // 2.1.4 2021/02/06 2.1.3の修正で特定のポップアップが重なったときにエラーになる問題を修正
@@ -366,16 +367,33 @@
     // Game_Action
     //  弱点によってポップアップを設定します。
     //=============================================================================
+    const _Game_Action_apply = Game_Action.prototype.apply;
+    Game_Action.prototype.apply = function(target) {
+        this._elementResult = {};
+        _Game_Action_apply.apply(this, arguments);
+        if (this._elementResult.guard) {
+            target.appointMessagePopup(param.Guard);
+        }
+        if (this._elementResult.weakness) {
+            target.appointMessagePopup(param.Weakness);
+        }
+        if (this._elementResult.resist) {
+            target.appointMessagePopup(param.Resistance);
+        }
+        this._elementResult = null;
+    };
+
     const _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         const result = _Game_Action_calcElementRate.apply(this, arguments);
-        if (BattleManager.isInputting()) return result;
-        if (result === 0) {
-            target.appointMessagePopup(param.Guard);
-        } else if (result >= 1.1) {
-            target.appointMessagePopup(param.Weakness);
-        } else if (result <= 0.9) {
-            target.appointMessagePopup(param.Resistance);
+        if (this._elementResult) {
+            if (result === 0) {
+                this._elementResult.guard = true;
+            } else if (result >= 1.1) {
+                this._elementResult.weakness = true;
+            } else if (result <= 0.9) {
+                this._elementResult.resist = true;
+            }
         }
         return result;
     };
