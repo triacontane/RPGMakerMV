@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2022/02/13 パラメータ変換がHPのみ機能していなかった問題を修正
 // 1.4.0 2022/02/13 MZで動作するよう修正
 // 1.3.1 2017/02/07 端末依存の記述を削除
 // 1.3.0 2016/12/09 各種パラメータを固定値で増減できる機能を追加
@@ -86,15 +87,15 @@
         let realParamAdd  = 0;
         this.traitObjects().forEach(function(data) {
             const metaValueTransfer = PluginManagerEx.findMetaValue(data, `PT${originalParamId}`);
-            if (metaValueTransfer) {
+            if (metaValueTransfer !== undefined) {
                 realParamId = parseInt(metaValueTransfer).clamp(0, 7);
             }
             const metaValueRate = PluginManagerEx.findMetaValue(data, `PTRate${originalParamId}`);
-            if (metaValueRate) {
+            if (metaValueRate !== undefined) {
                 realParamRate = realParamRate * this.executeParamFormula(metaValueRate) / 100;
             }
             const metaValueAdd = PluginManagerEx.findMetaValue(data, `PTAdd${originalParamId}`);
-            if (metaValueAdd) {
+            if (metaValueAdd !== undefined) {
                 realParamAdd += this.executeParamFormula(metaValueAdd);
             }
         }, this);
