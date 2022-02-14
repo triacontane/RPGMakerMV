@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2022/02/15 一度もセーブしていない状態で進行度を保存した場合を考慮するため、データの持ち方を変更
 // 2.0.1 2022/01/16 ゲーム進行度のみ保存のコマンドを使って保存したとき、保存先のセーブファイルIDが間違っていた問題を修正
 // 2.0.0 2021/01/16 MZで動作するよう全面的に修正
 // 1.4.5 2020/03/01 進行度変数の値を戻したときに、リロードするまで元のタイトル画面に戻らない問題を修正
@@ -150,10 +151,7 @@
     }
 
     PluginManagerEx.registerCommand(script, 'SAVE_STORY_PHASE', () => {
-        const id = $gameSystem.savefileId();
-        if (id > 0) {
-            DataManager.saveOnlyGradeVariable(id);
-        }
+        DataManager.saveTitleInfo();
     });
 
     //=============================================================================
@@ -162,14 +160,15 @@
     //=============================================================================
     const _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
     DataManager.makeSavefileInfo      = function() {
-        const info = _DataManager_makeSavefileInfo.apply(this, arguments);
-        this.setGradeVariable(info);
-        return info;
+        this.saveTitleInfo();
+        return _DataManager_makeSavefileInfo.apply(this, arguments);
     };
 
     DataManager.getFirstPriorityGradeVariable = function() {
-        const globalInfo = this._globalInfo || [];
-        const sortedGlobalInfo = globalInfo.clone().sort(this._compareOrderForGradeVariable);
+        // 進行度データをglobalInfoに保持する設計を見直したが、後方互換性のため取得している
+        const titleInfoList = this._globalInfo.clone() || [];
+        titleInfoList.push(this._titleInfo);
+        const sortedGlobalInfo = titleInfoList.sort(this._compareOrderForGradeVariable);
         if (sortedGlobalInfo[0]) {
             return sortedGlobalInfo[0].storyPhaseVariable || 0;
         }
@@ -188,19 +187,42 @@
         }
     };
 
-    DataManager.saveOnlyGradeVariable = function(saveFileId) {
-        const globalInfo = this._globalInfo || [];
-        if (globalInfo[saveFileId]) {
-            this.setGradeVariable(globalInfo[saveFileId]);
-        } else {
-            globalInfo[saveFileId] = this.makeSavefileInfo();
-        }
-        this.saveGlobalInfo(globalInfo);
+    DataManager.saveTitleInfo = function() {
+        const newTitleInfo = {};
+        this.setGradeVariable(newTitleInfo);
+        this._titleInfo = [this._titleInfo, newTitleInfo].sort(this._compareOrderForGradeVariable)[0];
+        StorageManager.saveObject('titleInfo', this._titleInfo);
+    };
+
+    DataManager.loadTitleInfo = function() {
+        StorageManager.loadObject('titleInfo')
+            .then(titleInfo => {
+                this._titleInfo = titleInfo;
+                return 0;
+            })
+            .catch(() => {
+                this._titleInfo = {};
+            });
+    };
+
+    DataManager.isTitleInfoLoaded = function() {
+        return !!this._titleInfo;
     };
 
     DataManager.setGradeVariable = function(info) {
         info.storyPhaseVariable = $gameVariables.value(param.StoryPhaseVariable);
         info.priorityVariable = $gameVariables.value(param.PriorityVariable);
+    };
+
+    const _Scene_Boot_loadPlayerData = Scene_Boot.prototype.loadPlayerData;
+    Scene_Boot.prototype.loadPlayerData = function() {
+        _Scene_Boot_loadPlayerData.apply(this, arguments);
+        DataManager.loadTitleInfo();
+    };
+
+    const _Scene_Boot_isPlayerDataLoaded = Scene_Boot.prototype.isPlayerDataLoaded;
+    Scene_Boot.prototype.isPlayerDataLoaded = function() {
+        return _Scene_Boot_isPlayerDataLoaded.apply(this, arguments) && DataManager.isTitleInfoLoaded();
     };
 
     //=============================================================================
