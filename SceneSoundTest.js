@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2022/02/14 ヘルプウィンドウの表示内容を改行できるよう修正
+//                  バー表示の上の曲名表記がファイル名になっていた問題を修正
 // 2.0.0 2022/02/11 MZ用に新規で作り直し
 // 1.0.0 2016/01/29 初版
 // ----------------------------------------------------------------------------
@@ -38,6 +40,7 @@
  * @text 説明
  * @desc カテゴリウィンドウを選択中にヘルプウィンドウに表示される説明です。
  * @default
+ * @type multiline_string
  *
  * @param commandName
  * @text コマンド名称
@@ -156,6 +159,7 @@
  * @text 説明
  * @desc ヘルプウィンドウに表示される曲の説明です。
  * @default
+ * @type multiline_string
  *
  * @param condSwitch
  * @text 登録条件(スイッチ)
@@ -443,7 +447,7 @@
 
         onListOk() {
             this._audioPath = this._listWindow.findFilePath();
-            this._audioName  = this._listWindow.findFileName();
+            this._audioName  = this._listWindow.findItemText();
             this._listWindow.activate();
             this.play();
         }
