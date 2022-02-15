@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2022/02/15 自動蘇生の発動確率を設定できる機能を追加
 // 1.2.0 2021/11/23 MZで動作するよう修正
 // 1.1.1 2020/02/12 蘇生時のHP割合をステートに記述している場合に値が取得できない問題を修正
 // 1.1.0 2020/02/11 蘇生が発動したとき発動アイテムをロストする機能を追加
@@ -48,11 +49,13 @@
  * <RaiseHpRate:50>  # 同上
  * <蘇生ロスト>      # 自動蘇生が発動したとき対象の装備品を失います。
  * <RaiseLost>       # 同上
+ * <蘇生確率:50>     # 蘇生の発動率が50%になります。
+ * <RaiseProb:50>    # 同上
  *
  * スキルなどを使って戦闘中に付与したい場合はステートに
  * 以下のメモ欄を設定してください。
- * <AR_一時自動蘇生>    # 戦闘不能時に自動蘇生します。
- * <AR_TempAutoRaise>  # 同上
+ * <一時自動蘇生>    # 戦闘不能時に自動蘇生します。
+ * <TempAutoRaise>  # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -107,7 +110,7 @@
     };
 
     Game_BattlerBase.prototype.getRaiseHpRate = function() {
-        if (!this.canRaise()) {
+        if (!this.canRaise() || !this.isValidRaiseProbability()) {
             return 0;
         }
         let hpRate = 1;
@@ -119,6 +122,17 @@
             }
         });
         return hpRate;
+    };
+
+    Game_BattlerBase.prototype.isValidRaiseProbability = function() {
+        let probability = 0;
+        this.traitObjects().forEach(state => {
+            const metaValue = PluginManagerEx.findMetaValue(state, ['蘇生確率', 'RaiseProb']);
+            if (metaValue) {
+                probability = Math.max(probability, metaValue / 100);
+            }
+        });
+        return !probability || Math.random() < probability;
     };
 
     Game_BattlerBase.prototype.canRaise = function() {
