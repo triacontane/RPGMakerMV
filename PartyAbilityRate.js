@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2022/02/16 MZで動作するよう修正
 // 1.0.1 2019/06/21 獲得EXPとゴールドに端数が生じた場合切り捨てるよう修正
 // 1.0.0 2016/05/09 初版
 // ----------------------------------------------------------------------------
@@ -15,36 +16,42 @@
 //=============================================================================
 
 /*:
- * @plugindesc Party ability rate
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help enable customize party ability rate
- *
- * note
- * <PAREncounterHalf:4>   -> Encounter rate 1/4
- * <PARRaisePreemptive:8> -> Raise preemptive 8 times
- * <PARGoldDouble:3>      -> Gold triple
- * <PARDropItemDouble:3>  -> Drop item triple
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc パーティ能力レート設定プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PartyAbilityRate.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @help パーティ能力にレートを設定できます。
- * パーティ特徴を定義したデータベースのメモ欄に以下の通り設定してください。
- * タグとは別にパーティ能力の特徴も別途指定してください。
+ * @help PartyAbilityRate.js
+ * 
+ * レートを指定した『パーティ能力』を定義できます。
+ * 特徴『パーティ能力』とは無関係に動作します。
+ * データベースのメモ欄(※)に以下の通り設定してください。
+ * ※アクター、職業、武器、防具、ステート
  *
- * <PARエンカウント半減:4>  // エンカウント率が通常の1/4になります。
- * <PAR先制攻撃率アップ:8>  // 先制攻撃の確率が8倍になります。
- * <PAR獲得金額2倍:0.5>     // 獲得金額が0.5倍になります。
- * 　(タグ名は設定する値にかかわらず「PAR獲得金額2倍」と記述してください)
- * <PARアイテム入手率2倍:4> // アイテム入手確率が4倍になります。(同上)
+ * // エンカウント率が4倍になります
+ * <エンカウント率:4>
+ * <EncounterRate:4>
+ *
+ * // 先制攻撃の確率が8倍になります。
+ * <先制攻撃率:8>
+ * <PreemptiveRate:8>
+ *
+ * // 獲得金額が0.5倍になります。
+ * <獲得金額率:0.5>
+ * <GoldRate:0.5>
+ *
+ * // アイテム入手確率が4倍になります。
+ * <アイテム入手率:4>
+ * <DropItemRate:4>
  *
  * 複数のレートが重複した場合はもっとも数字の大きいものが優先されます。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -52,122 +59,73 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(()=> {
     'use strict';
-    var metaTagPrefix = 'PAR';
 
-    var getArgNumber = function (arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseFloat(convertEscapeCharactersAndEval(arg, true)) || 0).clamp(min, max);
+    Game_BattlerBase.prototype.partyAbilityRate = function(abilityNames) {
+        return this.traitObjects().reduce((prev, traitObject) => {
+            const rate = PluginManagerEx.findMetaValue(traitObject, abilityNames);
+            return rate !== undefined ? Math.max(rate, prev || 0) : prev;
+        }, undefined);
     };
 
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
+    Game_Party.prototype.partyAbilityRate = function(abilityNames) {
+        return this.battleMembers().reduce((prev, actor) => {
+            const rate = actor.partyAbilityRate(abilityNames);
+            return rate !== undefined ? Math.max(rate, prev || 0) : prev;
+        }, undefined);
     };
 
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharactersAndEval = function(text, evalFlg) {
-        if (text === null || text === undefined) {
-            text = evalFlg ? '0' : '';
-        }
-        var window = SceneManager._scene._windowLayer.children[0];
-        if (window) {
-            var result = window.convertEscapeCharacters(text);
-            return evalFlg ? eval(result) : result;
-        } else {
-            return text;
-        }
-    };
-
-    Game_BattlerBase.prototype.partyAbilityRate = function(abilityNames, defaultValue) {
-        var result = defaultValue;
-        this.traitObjects().forEach(function (traitObject) {
-            var metaValue = getMetaValues(traitObject, abilityNames);
-            if (metaValue) result = getArgNumber(metaValue, result);
-        }.bind(this));
-        return result;
-    };
-
-    Game_Party.prototype.partyAbilityRate = function(abilityNames, defaultValue) {
-        var result = defaultValue;
-        this.battleMembers().forEach(function(actor) {
-            result = actor.partyAbilityRate(abilityNames, result);
-        });
-        return result;
-    };
-
-    Game_Party.prototype.getEncounterHalfRate = function() {
-        return this.partyAbilityRate(['エンカウント半減', 'EncounterHalf'], 0) || 2;
+    Game_Party.prototype.getEncounterRate = function() {
+        return this.partyAbilityRate(['エンカウント率', 'EncounterRate']);
     };
 
     Game_Party.prototype.getRaisePreemptiveRate = function() {
-        return this.partyAbilityRate(['先制攻撃率アップ', 'RaisePreemptive'], 0) || 4;
+        return this.partyAbilityRate(['先制攻撃率', 'PreemptiveRate']);
     };
 
-    Game_Party.prototype.getGoldDoubleRate = function() {
-        return this.partyAbilityRate(['獲得金額2倍', 'GoldDouble'], 0) || 2;
+    Game_Party.prototype.getGoldRate = function() {
+        return this.partyAbilityRate(['獲得金額率', 'GoldRate']);
     };
 
-    Game_Party.prototype.getDropItemDoubleRate = function() {
-        return this.partyAbilityRate(['アイテム入手率2倍', 'DropItemDouble'], 0) || 2;
+    Game_Party.prototype.getDropItemRate = function() {
+        return this.partyAbilityRate(['アイテム入手率', 'DropItemRate']);
     };
 
-    var _Game_Party_ratePreemptive = Game_Party.prototype.ratePreemptive;
+    const _Game_Party_ratePreemptive = Game_Party.prototype.ratePreemptive;
     Game_Party.prototype.ratePreemptive = function(troopAgi) {
-        var rate = _Game_Party_ratePreemptive.apply(this, arguments);
-        if (this.hasRaisePreemptive()) {
-            rate /= 4;
-            rate *= this.getRaisePreemptiveRate();
-        }
-        return rate;
+        const rate = _Game_Party_ratePreemptive.apply(this, arguments);
+        const customRate = this.getRaisePreemptiveRate();
+        return customRate !== undefined ? rate * customRate : rate;
     };
 
-    var _Game_Player_encounterProgressValue = Game_Player.prototype.encounterProgressValue;
+    const _Game_Player_encounterProgressValue = Game_Player.prototype.encounterProgressValue;
     Game_Player.prototype.encounterProgressValue = function() {
-        var value = _Game_Player_encounterProgressValue.apply(this, arguments);
-        if ($gameParty.hasEncounterHalf()) {
-            value /= 0.5;
-            value /= $gameParty.getEncounterHalfRate();
-        }
-        return value;
+        const rate = _Game_Player_encounterProgressValue.apply(this, arguments);
+        const customRate = $gameParty.getEncounterRate();
+        return customRate !== undefined ? rate * customRate : rate;
     };
 
-    var _Game_Troop_goldRate = Game_Troop.prototype.goldRate;
+    const _Game_Troop_goldRate = Game_Troop.prototype.goldRate;
     Game_Troop.prototype.goldRate = function() {
-        var rate =_Game_Troop_goldRate.apply(this, arguments);
-        if ($gameParty.hasGoldDouble()) {
-            rate /= 2;
-            rate *= $gameParty.getGoldDoubleRate();
-        }
-        return rate;
+        const rate = _Game_Troop_goldRate.apply(this, arguments);
+        const customRate = $gameParty.getGoldRate();
+        return customRate !== undefined ? rate * customRate : rate;
     };
 
-    var _Game_Enemy_dropItemRate = Game_Enemy.prototype.dropItemRate;
+    const _Game_Enemy_dropItemRate = Game_Enemy.prototype.dropItemRate;
     Game_Enemy.prototype.dropItemRate = function() {
-        var rate = _Game_Enemy_dropItemRate.apply(this, arguments);
-        if ($gameParty.hasDropItemDouble()) {
-            rate /= 2;
-            rate *= $gameParty.getDropItemDoubleRate();
-        }
-        return rate;
+        const rate = _Game_Enemy_dropItemRate.apply(this, arguments);
+        const customRate = $gameParty.getDropItemRate();
+        return customRate !== undefined ? rate * customRate : rate;
     };
 
-    var _Game_Troop_expTotal = Game_Troop.prototype.expTotal;
+    const _Game_Troop_expTotal = Game_Troop.prototype.expTotal;
     Game_Troop.prototype.expTotal = function() {
         return Math.floor(_Game_Troop_expTotal.apply(this, arguments));
     };
 
-    var _Game_Troop_goldTotal = Game_Troop.prototype.goldTotal;
+    const _Game_Troop_goldTotal = Game_Troop.prototype.goldTotal;
     Game_Troop.prototype.goldTotal = function() {
         return Math.floor(_Game_Troop_goldTotal.apply(this, arguments));
     };
