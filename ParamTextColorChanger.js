@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/02/16 アクター名称のテキストカラーをHPカラーと連動させるデフォルト仕様を撤廃できる機能を追加
 // 1.1.0 2022/02/16 MZで動作するよう修正
 //                  パラメータに以上以下の条件を指定できる機能を追加
 // 1.0.0 2016/11/25 初版
@@ -40,6 +41,12 @@
  * @desc TPのテキストカラーを割合に応じて変更します。リストの上から順番に評価されます。
  * @default []
  * @type struct<Color>[]
+ *
+ * @param NameColorNoChange
+ * @text 名称のカラーは変更しない
+ * @desc アクター名称のテキストカラーをHPカラーと連動させるデフォルト仕様を撤廃します。
+ * @default false
+ * @type boolean
  *
  * @help ParamTextColorChanger.js
  *
@@ -125,5 +132,35 @@
         });
         return color ? this.textColor(color.colorIndex) : null;
     };
+
+    if (param.NameColorNoChange) {
+        const _Window_StatusBase_drawActorName = Window_StatusBase.prototype.drawActorName;
+        Window_StatusBase.prototype.drawActorName = function(actor, x, y, width) {
+            this._invalidChangeColor = true;
+            console.log(this._invalidChangeColor);
+            _Window_StatusBase_drawActorName.apply(this, arguments);
+            this._invalidChangeColor = false;
+        };
+
+        const _Window_Base_initialize = Window_Base.prototype.initialize;
+        Window_Base.prototype.initialize = function(rect) {
+            _Window_Base_initialize.apply(this, arguments);
+            this._invalidChangeColor = false;
+        };
+
+        const _Window_Base_changeTextColor = Window_Base.prototype.changeTextColor;
+        Window_Base.prototype.changeTextColor = function(color) {
+            if (this._invalidChangeColor) {
+                return;
+            }
+            _Window_Base_changeTextColor.apply(this, arguments);
+        };
+
+        const _Sprite_Name_textColor = Sprite_Name.prototype.textColor;
+        Sprite_Name.prototype.textColor = function() {
+            _Sprite_Name_textColor.apply(this, arguments);
+            return ColorManager.normalColor();
+        };
+    }
 })();
 
