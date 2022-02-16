@@ -41,10 +41,14 @@
  * @default []
  * @type struct<Color>[]
  *
- * @help HP、MPおよびTPの数値をウィンドウに表示する際に
- * 残量もしくはステートによって表示色を変更することができます。
+ * @help ParamTextColorChanger.js
  *
- * このプラグインにはプラグインコマンドはありません。
+ * 現在の割合に応じて、HP、MPおよびTPの数値のテキストカラーを変更できます。
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
