@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2022/02/17 味方の敗北条件のパラメータが正常に機能していなかった問題を修正
 // 2.1.0 2022/01/17 敵キャラ座標補正値に負の値を指定できるよう修正
 // 2.0.1 2021/05/13 並び順固定のパラメータが正しく取得できていなかった問題を修正
 // 2.0.0 2021/05/13 MZで動作するよう全面的に修正
@@ -156,13 +157,15 @@
  *
  * @param PartyDefeat
  * @text パーティ敗北条件
- * @desc パーティの敗北条件を取得する変数です。変数値[0]:全滅 [1]:前衛全滅 [2]:後衛全滅
+ * @desc パーティの敗北条件を取得する変数です。
+ * 変数値　[0]:全滅 [1]:前衛全滅 [2]:後衛全滅
  * @default 0
  * @type variable
  *
  * @param TroopDefeat
  * @text 敵グループ敗北条件
- * @desc 敵グループの敗北条件を取得する変数です。変数値[0]:全滅 [1]:前衛全滅 [2]:後衛全滅
+ * @desc 敵グループの敗北条件を取得する変数です。
+ * 変数値　[0]:全滅 [1]:前衛全滅 [2]:後衛全滅
  * @default 0
  * @type variable
  *
@@ -517,7 +520,7 @@
         this.members().forEach(enemy => enemy.initFormationState());
     };
 
-    Game_Party.prototype.getDefeatCondition = function() {
+    Game_Troop.prototype.getDefeatCondition = function() {
         return param.TroopDefeat > 0 ? $gameVariables.value(param.TroopDefeat) : 0;
     };
 
