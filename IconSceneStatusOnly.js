@@ -24,7 +24,7 @@
  * @param iconList
  * @text アイコンリスト
  * @desc ステータス画面でのみ表示されるアイコンのリストです。アイコンインデックスを指定します。
- * @default
+ * @default []
  * @type string[]
  *
  * @param iconShowNumber
