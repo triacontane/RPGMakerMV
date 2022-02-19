@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2022/02/19 反撃スキルの計算式で、直前に受けたHPダメージを参照できる機能を追加
 // 2.3.1 2022/02/07 反撃実行時に厳密な生存判定を追加
 // 2.3.0 2022/02/06 相手の行動の直前に反撃を出してから行動を受ける『インターセプター』型の反撃機能を追加
 // 2.2.3 2022/01/25 二回行動の敵キャラが一回しか行動できなかったときに反撃するとエラーが発生する問題を修正
@@ -133,6 +134,15 @@
  * subject -> 反撃するバトラー
  * target -> 相手のバトラー
  * triggerAction -> 相手のバトラーが使用した行動
+ *
+ * 〇反撃スキルの計算式で使用可能な変数
+ * a.lastHpDamage -> 反撃者が直前に受けたHPダメージ
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
+ *
  */
 
 /*~struct~COUNTER:
@@ -421,6 +431,26 @@
         } else {
             return elementId === skillElementId;
         }
+    };
+
+    Object.defineProperties(Game_BattlerBase.prototype, {
+        lastHpDamage: {
+            get: function () {
+                const value = this._lastHpDamage || 0;
+                this._lastHpDamage = 0;
+                return value;
+            },
+            set: function (value) {
+                this._lastHpDamage = value;
+            },
+            configurable: true
+        }
+    });
+
+    const _Game_Battler_onDamage = Game_Battler.prototype.onDamage;
+    Game_Battler.prototype.onDamage = function(value) {
+        _Game_Battler_onDamage.apply(this, arguments);
+        this.lastHpDamage = value;
     };
 
     const _Game_Battler_performActionStart = Game_Battler.prototype.performActionStart;
