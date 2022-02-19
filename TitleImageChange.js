@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.1 2022/02/19 3.0.0でブラウザ環境で正常にゲームが起動できない問題を修正
 // 3.0.0 2022/02/15 一度もセーブしていない状態で進行度を保存した場合を考慮するため、データの持ち方を変更
 // 2.0.1 2022/01/16 ゲーム進行度のみ保存のコマンドを使って保存したとき、保存先のセーブファイルIDが間違っていた問題を修正
 // 2.0.0 2021/01/16 MZで動作するよう全面的に修正
@@ -197,7 +198,7 @@
     DataManager.loadTitleInfo = function() {
         StorageManager.loadObject('titleInfo')
             .then(titleInfo => {
-                this._titleInfo = titleInfo;
+                this._titleInfo = titleInfo || {};
                 return 0;
             })
             .catch(() => {
