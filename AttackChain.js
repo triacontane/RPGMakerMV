@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2022/02/22 「ミスで解除」もしくは「攻撃以外で解除」が有効のとき、連続攻撃の途中で敵を倒すとコンボが途切れる問題を修正
 // 2.3.0 2020/03/22 対象者が指定したメモ欄を保持している場合のみコンボ継続する設定を追加
 // 2.2.0 2020/02/26 戦闘終了時、チェイン表示が残っている場合はフェードアウトするよう仕様変更
 // 2.1.0 2019/05/08 ダメージ数値と単位表記の画像指定で敵専用の画像を指定できる機能を追加
@@ -642,9 +643,9 @@ function Sprite_ChainDamage() {
             return false;
         } else if (this.isForceEndChain()) {
             return true;
-        } else if (param.cancelMiss && !this._hitForChain) {
+        } else if (param.cancelMiss && !this._hitForChain && target.isAlive()) {
             return true;
-        } else if (param.cancelNoAttack && !this._damageForChain) {
+        } else if (param.cancelNoAttack && !this._damageForChain && target.isAlive()) {
             return true;
         }
         return false;
