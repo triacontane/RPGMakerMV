@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.5 2022/02/22 PNDK_LuggageCapacity.jsと併用したとき、未入手アイテムが表示されてしまう競合に対応
 // 3.7.4 2022/01/30 ヘルプに表示する改行コードが効かなくなっていた問題を修正
 // 3.7.3 2021/12/19 部分一致で自動登録されない問題を修正
 // 3.7.2 2021/12/19 敵キャラの自動登録が部分一致になっていた問題を修正
@@ -2065,6 +2066,9 @@
         this.changePaintOpacity(1);
         this.resetTextColor();
     };
+
+    // for PNDK_LuggageCapacity.js
+    Window_GlossaryList.prototype.drawItemNameWithCP = function() {};
 
     Window_GlossaryList.prototype.isShowIcon = function(item) {
         return item.iconIndex > 0 && !$gameParty.isHideGlossaryIcon();
