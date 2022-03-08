@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2022/03/08 特定の装備品を装備しているかどうかを装備条件に追加
 // 1.4.0 2021/10/24 各種パラメータが指定値を超えているかどうかを装備条件に追加
 // 1.3.0 2021/06/18 タグで複数の条件を指定したとき、すべての条件を満たした場合にのみ装備できるよう変更する機能を追加
 //                  ステートの条件が機能していなかった問題を修正
@@ -40,6 +41,8 @@
  * <装備条件ステート:7>   # ID[7]のステートが有効になっている。
  * <装備条件アクター:4>   # ID[4]のアクターである。
  * <装備条件スイッチ:1,3> # ID[1]もしくはID[3]のスイッチがONになっている。
+ * <装備条件武器:6>       # ID[6]の武器を装備している。
+ * <装備条件防具:7>       # ID[7]の防具を装備している。
  * <装備条件計算式:f>     # JS計算式[f]がtrueを返す
  * <装備条件HP:100>      # 装備品や特徴を含まない基礎HPが100以上
  * <装備条件MP:100>      # 装備品や特徴を含まない基礎MPが100以上
@@ -98,6 +101,12 @@
         if (!this.canEquipExtendFormula(item)) {
             return false;
         }
+        if (!this.canEquipExtendWeapon(item)) {
+            return false;
+        }
+        if (!this.canEquipExtendArmor(item)) {
+            return false;
+        }
         for (let i = 0; i <= 7; i++) {
             if (!this.canEquipExtendParam(item, i)) {
                 return false;
@@ -136,6 +145,18 @@
         return metaValue[this.findEquipExtendConditionMethod()](switchId => {
             return $gameSwitches.value(switchId);
         });
+    };
+
+    Game_BattlerBase.prototype.canEquipExtendWeapon = function(item) {
+        const metaValue = this.findEquipExtendValue(item, ['装備条件武器', 'EquipCondWeapon']);
+        if (!metaValue) return true;
+        return this.isActor() ? metaValue.some(id => this.hasWeapon($dataWeapons[id])) : false;
+    };
+
+    Game_BattlerBase.prototype.canEquipExtendArmor = function(item) {
+        const metaValue = this.findEquipExtendValue(item, ['装備条件防具', 'EquipCondArmor']);
+        if (!metaValue) return true;
+        return this.isActor() ? metaValue.some(id => this.hasArmor($dataArmors[id])) : false;
     };
 
     Game_BattlerBase.prototype.canEquipExtendParam = function(item, paramId) {
