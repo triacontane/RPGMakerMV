@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2022/03/09 タッチ移動の移動先画像を半歩に合わせて小さく変更
 // 2.1.0 2022/03/09 タッチ移動を半歩単位で指定できるよう修正
 // 2.0.2 2020/08/21 不要なヘルプを削除
 // 2.0.1 2020/08/21 ヘルプの英語対応
@@ -652,18 +653,28 @@
     //=============================================================================
     Game_Map.tileUnit = 0.5;
 
+    var _Game_Map_canvasToMapX = Game_Map.prototype.canvasToMapX;
     Game_Map.prototype.canvasToMapX = function(x) {
-        const tileWidth = this.tileWidth();
-        const originX = this._displayX * tileWidth;
-        const mapX = Math.floor((originX + x) / tileWidth / Game_Map.tileUnit);
-        return this.roundX(mapX) * Game_Map.tileUnit;
+        if ($gamePlayer.isHalfMove()) {
+            const tileWidth = this.tileWidth();
+            const originX = this._displayX * tileWidth;
+            const mapX = Math.floor((originX + x) / tileWidth / Game_Map.tileUnit);
+            return this.roundX(mapX) * Game_Map.tileUnit;
+        } else {
+            return _Game_Map_canvasToMapX.apply(this, arguments);
+        }
     };
 
+    var _Game_Map_canvasToMapY = Game_Map.prototype.canvasToMapY;
     Game_Map.prototype.canvasToMapY = function(y) {
-        const tileHeight = this.tileHeight();
-        const originY = this._displayY * tileHeight;
-        const mapY = Math.floor((originY + y) / tileHeight / Game_Map.tileUnit);
-        return this.roundY(mapY) * Game_Map.tileUnit;
+        if ($gamePlayer.isHalfMove()) {
+            const tileHeight = this.tileHeight();
+            const originY = this._displayY * tileHeight;
+            const mapY = Math.floor((originY + y) / tileHeight / Game_Map.tileUnit);
+            return this.roundY(mapY) * Game_Map.tileUnit;
+        } else {
+            return _Game_Map_canvasToMapY.apply(this, arguments);
+        }
     };
 
     var _Game_Map_xWithDirection      = Game_Map.prototype.xWithDirection;
@@ -1793,6 +1804,17 @@
     //=============================================================================
     Game_Follower.prototype.isHalfMove = function() {
         return $gamePlayer.isHalfMove() || this.isHalfPosX() || this.isHalfPosY();
+    };
+
+    var _Sprite_Destination_createBitmap = Sprite_Destination.prototype.createBitmap;
+    Sprite_Destination.prototype.createBitmap = function() {
+        _Sprite_Destination_createBitmap.apply(this, arguments);
+        if ($gamePlayer.isHalfMove()) {
+            const tileWidth = $gameMap.tileWidth() * Game_Map.tileUnit;
+            const tileHeight = $gameMap.tileHeight() * Game_Map.tileUnit;
+            this.bitmap = new Bitmap(tileWidth, tileHeight);
+            this.bitmap.fillAll("white");
+        }
     };
 
     // Resolve conflict for MPP_MiniMap_OP1.js
