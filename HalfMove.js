@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2022/03/09 タッチ移動を半歩単位で指定できるよう修正
 // 2.0.2 2020/08/21 不要なヘルプを削除
 // 2.0.1 2020/08/21 ヘルプの英語対応
 // 2.0.0 2020/08/21 MZ用にプラグインコマンドの記述を修正
@@ -650,6 +651,20 @@
     //  座標計算を半分にします。
     //=============================================================================
     Game_Map.tileUnit = 0.5;
+
+    Game_Map.prototype.canvasToMapX = function(x) {
+        const tileWidth = this.tileWidth();
+        const originX = this._displayX * tileWidth;
+        const mapX = Math.floor((originX + x) / tileWidth / Game_Map.tileUnit);
+        return this.roundX(mapX) * Game_Map.tileUnit;
+    };
+
+    Game_Map.prototype.canvasToMapY = function(y) {
+        const tileHeight = this.tileHeight();
+        const originY = this._displayY * tileHeight;
+        const mapY = Math.floor((originY + y) / tileHeight / Game_Map.tileUnit);
+        return this.roundY(mapY) * Game_Map.tileUnit;
+    };
 
     var _Game_Map_xWithDirection      = Game_Map.prototype.xWithDirection;
     Game_Map.prototype.xWithDirection = function(x, d) {
