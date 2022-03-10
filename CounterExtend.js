@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2022/03/10 複数の特徴オブジェクトを持つバトラーについて反撃頻度タグが正常に機能しない問題を修正
 // 2.4.0 2022/02/19 反撃スキルの計算式で、直前に受けたHPダメージを参照できる機能を追加
 // 2.3.1 2022/02/07 反撃実行時に厳密な生存判定を追加
 // 2.3.0 2022/02/06 相手の行動の直前に反撃を出してから行動を受ける『インターセプター』型の反撃機能を追加
@@ -346,7 +347,7 @@
             const subject = this.subject();
             const evasion = PluginManagerEx.findMetaValue(triggerSkill, ['CounterEvasion', '反撃回避']) || 0;
             const frequency = skill.Frequency + subject.traitObjects().reduce((prev, traitObject) => {
-                return prev + PluginManagerEx.findMetaValue(traitObject, skill.FrequencyTag) || 0;
+                return prev + (PluginManagerEx.findMetaValue(traitObject, skill.FrequencyTag) || 0);
             }, 0);
             const checkParam = (param, value) => param && param !== value;
             conditions.push(() => checkParam(skill.IdCondition, triggerSkill.id));
