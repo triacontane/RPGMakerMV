@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/03/10 敵キャラを動画にできる機能を追加
 // 2.1.0 2021/08/15 2.0.3の修正により動画音量種別をnoneにするとエラーになっていた問題を修正
 //                  動画ファイルの再生でファイル名に制御文字を使えるよう修正
 // 2.0.3 2021/07/31 動画音量種別に指定した項目のボリュームを0にしたとき、音量100で再生されてしまう問題を修正
@@ -190,6 +191,13 @@
  *
  * このプラグインは、ローカル実行(Game.exe)のみをサポート対象とします。
  * Webブラウザでも動作する可能性はありますが、自己責任でご利用ください。
+ *
+ * ピクチャ同様、敵キャラを動画表示できます。
+ * 敵キャラのメモ欄に以下の通り設定してください。
+ *
+ * // 動画[aaa]を敵キャラ画像の代わりに表示します。
+ * <動画:aaa>
+ * <Movie:aaa>
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -387,6 +395,59 @@
 
     Game_Picture.prototype.getVideoTimePosition = function() {
         return this._videoTimePosition || 0;
+    };
+
+    const _Game_Enemy_setup = Game_Enemy.prototype.setup;
+    Game_Enemy.prototype.setup = function(enemyId, x, y) {
+        _Game_Enemy_setup.apply(this, arguments);
+        this._videoName = PluginManagerEx.findMetaValue(this.enemy(), ['Movie', '動画']);
+    };
+
+    const _Game_Enemy_battlerName = Game_Enemy.prototype.battlerName;
+    Game_Enemy.prototype.battlerName = function() {
+        return this._videoName ? this._videoName : _Game_Enemy_battlerName.apply(this, arguments);
+    };
+
+    Game_Enemy.prototype.isVideo = function() {
+        return !!this._videoName;
+    };
+
+    const _Sprite_Enemy_loadBitmap = Sprite_Enemy.prototype.loadBitmap;
+    Sprite_Enemy.prototype.loadBitmap = function(name) {
+        if (this._enemy.isVideo()) {
+            this.loadVideo(name);
+        } else {
+            this.destroyVideo();
+            _Sprite_Enemy_loadBitmap.apply(this, arguments);
+        }
+    };
+
+    Sprite_Enemy.prototype.loadVideo = function(name) {
+        if (this.isVideoEnemy()) {
+            this.destroyVideo();
+        }
+        this.bitmap = ImageManager.loadVideo(name, true);
+        this.bitmap.setVideoLoop(true);
+        this.bitmap.addLoadListener(()=> this.prepareVideo());
+        this._loadingState = 'loading';
+    };
+
+    Sprite_Enemy.prototype.isVideoEnemy = function() {
+        return this.bitmap && this.bitmap.isVideo();
+    };
+
+    Sprite_Enemy.prototype.destroyVideo = function() {
+        if (!this.isVideoEnemy()) {
+            return;
+        }
+        this.bitmap.destroy();
+        this.texture = new PIXI.Texture(Sprite._emptyBaseTexture, new Rectangle());
+        this.bitmap = null;
+    };
+
+    Sprite_Enemy.prototype.prepareVideo = function() {
+        this._refresh();
+        this._loadingState = 'prepared';
     };
 
     //=============================================================================
