@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2022/03/10 自動蘇生時にコスト消費できる機能を追加
 // 1.3.0 2022/02/15 自動蘇生の発動確率を設定できる機能を追加
 // 1.2.0 2021/11/23 MZで動作するよう修正
 // 1.1.1 2020/02/12 蘇生時のHP割合をステートに記述している場合に値が取得できない問題を修正
@@ -51,6 +52,12 @@
  * <RaiseLost>       # 同上
  * <蘇生確率:50>     # 蘇生の発動率が50%になります。
  * <RaiseProb:50>    # 同上
+ *
+ * 指定すると蘇生時にコストを消費します。足りなければ蘇生できません。
+ * <蘇生MPコスト:10> # 自動蘇生時にMPを10消費します。
+ * <RaiseMpCost:10> # 同上
+ * <蘇生TPコスト:10> # 自動蘇生時にTPを10消費します。
+ * <RaiseTpCost:10> # 同上
  *
  * スキルなどを使って戦闘中に付与したい場合はステートに
  * 以下のメモ欄を設定してください。
@@ -155,14 +162,39 @@
     const _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
         const rate = this.getRaiseHpRate();
-        if (rate > 0 && !this.hasTempRaise()) {
+        const costResult = rate > 0 && this.payCostAutoRaise();
+        if (costResult && !this.hasTempRaise()) {
             this._autoRaiseCount--;
             this.lostRaiseEquips();
         }
         _Game_BattlerBase_die.apply(this, arguments);
-        if (rate) {
+        if (costResult) {
             this.executeAutoRaise(rate);
         }
+    };
+
+    Game_BattlerBase.prototype.payCostAutoRaise = function() {
+        const mpCost = this.traitObjects().reduce((prev, obj) => {
+            return prev + (PluginManagerEx.findMetaValue(obj, ['蘇生MPコスト', 'RaiseMpCost']) || 0);
+        }, 0);
+        if (mpCost > 0) {
+            if (this.mp >= mpCost) {
+                this._mp -= mpCost;
+            } else {
+                return false;
+            }
+        }
+        const tpCost = this.traitObjects().reduce((prev, obj) => {
+            return prev + (PluginManagerEx.findMetaValue(obj, ['蘇生TPコスト', 'RaiseTpCost']) || 0);
+        }, 0);
+        if (tpCost > 0) {
+            if (this.tp >= tpCost) {
+                this._tp -= tpCost;
+            } else {
+                return false;
+            }
+        }
+        return true;
     };
 
     Game_BattlerBase.prototype.lostRaiseEquips = function() { };
