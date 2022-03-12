@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2022/03/13 計算式を使用したときにローカル変数「battler」が使えない問題を修正
 // 1.3.1 2017/02/07 端末依存の記述を削除
 // 1.3.0 2016/12/09 各種パラメータを固定値で増減できる機能を追加
 // 1.2.0 2016/08/08 変換レート計算式にバトラー情報を設定できるよう修正
@@ -152,7 +153,6 @@
         var realParamId   = originalParamId;
         var realParamRate = 1.0;
         var realParamAdd  = 0;
-        var battler       = this;
         this.traitObjects().forEach(function(data) {
             var paramIdTag = String(originalParamId);
             var metaValueTransfer = getMetaValue(data, paramIdTag);
@@ -167,6 +167,7 @@
 
     Game_BattlerBase.prototype.executeParamFormula = function(formula) {
         try {
+            var battler = this;
             return eval(getArgString(formula));
         } catch (e) {
             console.log(e.stack);
