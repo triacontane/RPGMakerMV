@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/03/17 ライブラリの最新版に対応
+//                  DatabaseConverterで対応した修正を反映
 // 1.1.3 2021/05/07 オリジナルデータを読み込んだときに戦闘テストがエラーになる問題を修正
 // 1.1.2 2019/11/03 1.1.0の修正によりマップおよびコモンイベントが出力できなくなっていた問題を修正
 // 1.1.1 2019/10/12 自動インポートがうまく動作していなかった問題を修正
@@ -710,10 +712,11 @@ function ConverterManager() {
         writeAllWorkbook() {}
 
         writeWorkbookFile(dataBaseName, workbookData) {
-            const writeOption = {bookType: this._format};
+            const writeOption = {bookType: this._format, type: 'buffer'};
             const path        = this._getTargetFilePath(this._target.getFileName() + param.ExportPrefix, dataBaseName);
             try {
-                XLSX.writeFile(workbookData, path, writeOption);
+                const buffer = XLSX.write(workbookData, writeOption);
+                require('fs').writeFileSync(path, buffer);
             } catch (e) {
                 if (e.code === 'EBUSY') {
                     throw new Error(`ファイル[${path}]の書き出しに失敗しました。ファイルを開いている可能性があります。`);
@@ -749,10 +752,11 @@ function ConverterManager() {
         readAllWorkbook() {}
 
         readWorkbookFile(dataBaseName) {
-            const readOption = {};
+            const readOption = {type: 'buffer'};
             const path       = this._getTargetFilePath(this._target.getFileName(), dataBaseName);
             try {
-                return XLSX.readFile(path, readOption);
+                const buffer = require('fs').readFileSync(path);
+                return XLSX.read(buffer, readOption);
             } catch (e) {
                 if (e.code === 'ENOENT') {
                     throw new Error(`ファイル[${path}]が見付かりませんでした。`);
@@ -933,7 +937,7 @@ function ConverterManager() {
         }
 
         static replaceWrongReturnCode(item, propName) {
-            if (item[propName]) {
+            if (item[propName] && String(item[propName]) === item[propName]) {
                 item[propName] = item[propName].replace(/\r\r\n/g, '\n');
             }
         }
@@ -1462,9 +1466,42 @@ function ConverterManager() {
             convertData.shift();
             convertData.forEach(function(dataItem) {
                 this._parseForDeserialize(dataItem);
+                this._replaceForFodsFormat(dataItem);
+                this._convertTextColumns(dataItem);
                 this._target.appendData(database, dataItem, dataName);
             }, this);
             return database;
+        }
+
+        _replaceForFodsFormat(dataItem) {
+            Object.keys(dataItem).forEach(key => {
+                if (key.match(/.+id/)) {
+                    if (dataItem[key]) {
+                        dataItem.id = dataItem[key];
+                    }
+                    delete dataItem[key];
+                }
+            });
+        }
+
+        _convertTextColumns(dataItem) {
+            DataSerializer.TEXT_COLUMNS.forEach(column => {
+                if (dataItem.hasOwnProperty(column)) {
+                    dataItem[column] = String(dataItem[column]);
+                }
+            });
+            if (dataItem.code && dataItem.parameters) {
+                this._convertTextEventParams(dataItem);
+            }
+        }
+
+        _convertTextEventParams(dataItem) {
+            const textParams = DataSerializer.TEXT_PARAMS[dataItem.code];
+            if (textParams) {
+                textParams.forEach(index => {
+                    dataItem.parameters[index] = String(dataItem.parameters[index]);
+                });
+            }
         }
 
         _parseForDeserialize(dataItem) {
@@ -1477,29 +1514,62 @@ function ConverterManager() {
         }
 
         _parseArrayForDeserialize(propName, dataItem) {
-            if (!dataItem.hasOwnProperty(`${propName}0`)) {
-                return;
-            }
             dataItem[propName] = [];
             let index          = 0;
-            while (dataItem.hasOwnProperty(`${propName}${index}`)) {
-                const property            = `${propName}${index}`;
+            while (this._hasArrayProperty(propName, dataItem, index)) {
+                const property = `${propName}${index}`;
+                if (dataItem[property] === undefined) {
+                    dataItem[property] = '';
+                }
                 dataItem[propName][index] = dataItem[property];
                 delete dataItem[property];
                 index++;
             }
         }
 
-        _parseObjectForDeserialize(propName, dataItem, properties) {
-            if (!dataItem.hasOwnProperty(`${propName}_${properties[0]}`)) {
-                return;
+        _hasArrayProperty(propName, dataItem, startIndex) {
+            for (let i = startIndex; i < 30; i++) {
+                if (dataItem.hasOwnProperty(`${propName}${i}`)) {
+                    return true;
+                }
             }
+            return false;
+        }
+
+        _parseObjectForDeserialize(propName, dataItem, properties) {
             dataItem.damage = {};
             properties.forEach(function(keyName) {
-                const property           = `${propName}_${keyName}`;
+                const property = `${propName}_${keyName}`;
+                if (dataItem[property] === undefined) {
+                    dataItem[property] = '';
+                }
                 dataItem.damage[keyName] = dataItem[property];
                 delete dataItem[property];
             });
         }
     }
+
+    DataSerializer.TEXT_COLUMNS = [
+        'profile',
+        'message1',
+        'message2',
+        'message3',
+        'message4',
+        'faceName',
+        'description',
+        'name',
+        'characterName',
+        'faceName',
+        'battlerName'
+    ];
+
+    DataSerializer.TEXT_PARAMS = {
+        101:[0],
+        231:[1],
+        261:[0],
+        283:[0,1],
+        284:[0],
+        322:[1],
+        323:[1]
+    };
 })();
