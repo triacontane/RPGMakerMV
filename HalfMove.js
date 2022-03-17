@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2022/03/17 2.1.0の修正によりループしたマップでタッチ移動すると正しい場所へ移動できない問題を修正
 // 2.1.1 2022/03/09 タッチ移動の移動先画像を半歩に合わせて小さく変更
 // 2.1.0 2022/03/09 タッチ移動を半歩単位で指定できるよう修正
 // 2.0.2 2020/08/21 不要なヘルプを削除
@@ -659,7 +660,7 @@
             const tileWidth = this.tileWidth();
             const originX = this._displayX * tileWidth;
             const mapX = Math.floor((originX + x) / tileWidth / Game_Map.tileUnit);
-            return this.roundX(mapX) * Game_Map.tileUnit;
+            return this.roundX(mapX * Game_Map.tileUnit);
         } else {
             return _Game_Map_canvasToMapX.apply(this, arguments);
         }
@@ -671,7 +672,7 @@
             const tileHeight = this.tileHeight();
             const originY = this._displayY * tileHeight;
             const mapY = Math.floor((originY + y) / tileHeight / Game_Map.tileUnit);
-            return this.roundY(mapY) * Game_Map.tileUnit;
+            return this.roundY(mapY * Game_Map.tileUnit);
         } else {
             return _Game_Map_canvasToMapY.apply(this, arguments);
         }
