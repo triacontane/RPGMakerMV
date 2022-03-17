@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2022/03/18 マップ画面とステータス画面に蓄積ゲージを表示できるよう修正
 // 2.3.0 2021/07/23 敵キャラに対しても蓄積ゲージを表示できる機能を追加
 // 2.2.1 2021/07/16 蓄積型ステートが有効になるごとに耐性が上昇する機能を追加
 // 2.2.0 2021/07/15 MZで動作するよう全面的に修正
@@ -133,6 +134,12 @@
  * <蓄積ゲージX:600>      // ゲージのX座標です。
  * <蓄積ゲージY:400>      // ゲージのY座標です。
  *
+ * マップ画面、ステータス画面にゲージを表示したい場合は座標を指定してください。
+ * <蓄積マップゲージX:600> // マップ画面のゲージのX座標です。
+ * <蓄積マップゲージY:400> // マップ画面のゲージのY座標です。
+ * <蓄積ステータスゲージX:600> // ステータス画面のゲージのX座標です。
+ * <蓄積ステータスゲージY:400> // ステータス画面のゲージのY座標です。
+ *
  * ゲージ画像はパラメータで指定したものを使用します。
  *
  * 利用規約：
@@ -225,11 +232,11 @@
     };
 
     Game_BattlerBase.prototype.getGaugeX = function () {
-        return this.getGaugeInfo(['蓄積ゲージX', 'AccumulateGaugeX']);
+        return this.getGaugeInfo(SceneManager.findAccumulateGaugeTagX());
     };
 
     Game_BattlerBase.prototype.getGaugeY = function () {
-        return this.getGaugeInfo(['蓄積ゲージY', 'AccumulateGaugeY']);
+        return this.getGaugeInfo(SceneManager.findAccumulateGaugeTagY());
     };
 
     Game_BattlerBase.prototype.getGaugeStateId = function () {
@@ -250,6 +257,26 @@
 
     Game_Enemy.prototype.getData = function () {
         return this.enemy();
+    };
+
+    SceneManager.findAccumulateGaugeTagX = function() {
+        if (this._scene instanceof Scene_Map) {
+            return ['蓄積マップゲージX', 'AccumulateMapGaugeX'];
+        }
+        if (this._scene instanceof Scene_Status) {
+            return ['蓄積ステータスゲージX', 'AccumulateStatusGaugeX'];
+        }
+        return ['蓄積ゲージX', 'AccumulateGaugeX'];
+    };
+
+    SceneManager.findAccumulateGaugeTagY = function() {
+        if (this._scene instanceof Scene_Map) {
+            return ['蓄積マップゲージY', 'AccumulateMapGaugeY'];
+        }
+        if (this._scene instanceof Scene_Status) {
+            return ['蓄積ステータスゲージY', 'AccumulateStatusGaugeY'];
+        }
+        return ['蓄積ゲージY', 'AccumulateGaugeY'];
     };
 
     //=============================================================================
@@ -314,14 +341,17 @@
     // Scene_Base
     //  ステートゲージを作成します。
     //=============================================================================
-    Scene_Battle.prototype.createAccumulateState = function () {
-        this._characterPictures = {};
-        for (let i = 0, n = $gameParty.members().length; i < n; i++) {
-            const sprite = new Sprite_AccumulateState(i, $gameParty);
+    Scene_Battle.prototype.createAccumulateState = function (detailMenu) {
+        Scene_Base.prototype.createAccumulateState.call(this, detailMenu);
+        for (let i = 0, n = $gameTroop.members().length; i < n; i++) {
+            const sprite = new Sprite_AccumulateState(i, $gameTroop, false);
             this.addChild(sprite);
         }
-        for (let i = 0, n = $gameTroop.members().length; i < n; i++) {
-            const sprite = new Sprite_AccumulateState(i, $gameTroop);
+    };
+
+    Scene_Base.prototype.createAccumulateState = function (detailMenu) {
+        for (let i = 0, n = $gameParty.members().length; i < n; i++) {
+            const sprite = new Sprite_AccumulateState(i, $gameParty, detailMenu);
             this.addChild(sprite);
         }
     };
@@ -329,7 +359,19 @@
     const _Scene_Battle_createSpriteset = Scene_Battle.prototype.createSpriteset;
     Scene_Battle.prototype.createSpriteset = function () {
         _Scene_Battle_createSpriteset.apply(this, arguments);
-        this.createAccumulateState();
+        this.createAccumulateState(false);
+    };
+
+    const _Scene_Map_createSpriteset = Scene_Map.prototype.createSpriteset;
+    Scene_Map.prototype.createSpriteset = function () {
+        _Scene_Map_createSpriteset.apply(this, arguments);
+        this.createAccumulateState(false);
+    };
+
+    const _Scene_Status_create = Scene_Status.prototype.create;
+    Scene_Status.prototype.create = function() {
+        _Scene_Status_create.apply(this, arguments);
+        this.createAccumulateState(true);
     };
 
     //=============================================================================
@@ -343,11 +385,12 @@
     Sprite_AccumulateState.prototype = Object.create(Sprite.prototype);
     Sprite_AccumulateState.prototype.constructor = Sprite_AccumulateState;
 
-    Sprite_AccumulateState.prototype.initialize = function (index, unit) {
+    Sprite_AccumulateState.prototype.initialize = function (index, unit, detailMenu) {
         this._index = index;
         this._battler = null;
         this._unit = unit;
         this._rate = null;
+        this._detailMenu = detailMenu;
         Sprite.prototype.initialize.call(this);
         this.create();
     };
@@ -383,8 +426,16 @@
             this.refresh();
         }
         this.updateRate();
-        if (param.GaugeSwitchId) {
-            this.visible = $gameSwitches.value(param.GaugeSwitchId);
+        this.updateVisibility();
+    };
+
+    Sprite_AccumulateState.prototype.updateVisibility = function () {
+        this.visible = true;
+        if (param.GaugeSwitchId && !$gameSwitches.value(param.GaugeSwitchId)) {
+            this.visible = false;
+        }
+        if (this._detailMenu && $gameParty.menuActor() !== this._battler) {
+            this.visible = false;
         }
     };
 
