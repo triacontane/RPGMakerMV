@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.9 2022/03/23 MZ向けにリファクタリング
 // 1.1.8 2020/04/20 EventEffects.jsとの競合を解消
 // 1.1.7 2020/08/30 YEP_CoreEngine.jsと併用したとき解像度次第でレイヤーマップのピクセルがずれる場合がある競合を修正
 // 1.1.6 2020/08/21 英語版のヘルプ作成
@@ -25,48 +26,11 @@
 //=============================================================================
 
 /*:
- * @plugindesc ParallaxLayerMapPlugin
- * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ParallaxLayerMap.js
- * @author triacontane
- *
- * @help ParallaxLayerMap.js
- *
- * Allows you to create a multi-layered monolithic map with multiple layers.
- * The number of layers is unlimited, since the layers are created by events.
- *
- * If you create an event and fill in the memo field as follows,
- * the specified image will appear on the map and you can add
- * Also, the top left corner of the image is set to the top left corner of the map,
- * regardless of the event position.
- *
- * <PLM:file>        # Display "img/parallaxes/file" as a single picture.
- * <PLM_Blend:1>     # Set the initial value of the composition method to "Add".
- * <PLM_Opacity:128> # Set the initial value of opacity to 128.
- *
- * The "Image" and "Options" items in the event are ignored,
- * but the other items in the It works the same way as normal events.
- *
- * If you want to change the composition method or opacity later,
- * you can use autonomous movement or
- * Please use with the following "CharacterGraphicExtend.js".
- * https://raw.githubusercontent.com/triacontane/RPGMakerMV/master/CharacterGraphicExtend.js
- *
- * Attention!
- * This plugin does not support map loops.
- *
- * @noteParam PLM
- * @noteRequire 1
- * @noteDir img/parallaxes
- * @noteType file
- * @noteData events
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 多層レイヤー一枚絵マッププラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ParallaxLayerMap.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @help ParallaxLayerMap.js
@@ -74,8 +38,9 @@
  * 複数のレイヤーを使った多層一枚絵マップを作成可能にします。
  * イベントでレイヤーを作成するので、レイヤー数は無制限です。
  *
- * イベントを作成してメモ欄を以下の通り記述すると、指定した画像がマップに表示され、
- * かつイベント位置とは無関係に画像の左上がマップの左上に合わせられます。
+ * イベントを作成してメモ欄を以下の通り記述すると、指定した画像が
+ * マップに表示され、かつイベント位置とは無関係に画像の左上が
+ * マップの左上に合わせられます。
  *
  * <PLM:file>        # 「img/parallaxes/file」を一枚絵として表示します。
  * <PLM_Blend:1>     # 合成方法の初期値を「加算」にします。
@@ -96,7 +61,10 @@
  * 注意！
  * 当プラグインはマップのループには対応していません。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 当プラグインで使用できるサンプルマップをどらぴか様よりご提供いただきました。
  * この場を借りて御礼申し上げます。
@@ -108,51 +76,20 @@
  * PIKA's GAME GALLERY
  * https://mashimarohb252d6.wixsite.com/pikasgame
  *
+ * 利用規約：
+ *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
+ *  についても制限はありません。
+ *  このプラグインはもうあなたのものです。
+ *
  * @noteParam PLM
  * @noteRequire 1
  * @noteDir img/parallaxes
  * @noteType file
  * @noteData events
- *
- * 利用規約：
- *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
- *  についても制限はありません。
- *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var metaTagPrefix = 'PLM';
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + name;
-        if (!object || !object.meta) {
-            return undefined;
-        }
-        return object.meta.hasOwnProperty(metaTagName) ? convertEscapeCharacters(object.meta[metaTagName]) : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var isNotAString = function(args) {
-        return String(args) !== args;
-    };
 
     //=============================================================================
     // Game_Map
@@ -178,7 +115,7 @@
         return !!this._mapLayerName;
     };
 
-    var _Game_CharacterBase_isNearTheScreen = Game_CharacterBase.prototype.isNearTheScreen;
+    const _Game_CharacterBase_isNearTheScreen = Game_CharacterBase.prototype.isNearTheScreen;
     Game_CharacterBase.prototype.isNearTheScreen = function() {
         return this.isMapLayer() || _Game_CharacterBase_isNearTheScreen.apply(this, arguments);
     };
@@ -196,10 +133,10 @@
     // Game_Event
     //  レイヤーイベントに関する機能を実装します。
     //=============================================================================
-    var _Game_Event_initialize      = Game_Event.prototype.initialize;
+    const _Game_Event_initialize      = Game_Event.prototype.initialize;
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
-        this._mapLayerName = getMetaValue(this.getOriginalEvent(), '') || null;
+        this._mapLayerName = PluginManagerEx.findMetaValue(this.getOriginalEvent(), ['PLM']) || null;
         if (this._mapLayerName) {
             this.initBlendMode();
             this.initOpacity();
@@ -207,14 +144,14 @@
     };
 
     Game_Event.prototype.initBlendMode = function() {
-        var blendMode = getMetaValues(this.getOriginalEvent(), ['_Blend', '合成']);
+        const blendMode = PluginManagerEx.findMetaValue(this.getOriginalEvent(), ['PLM_Blend', 'PLM合成']);
         if (blendMode) {
             this._blendMode = parseInt(blendMode);
         }
     };
 
     Game_Event.prototype.initOpacity = function() {
-        var blendMode = getMetaValues(this.getOriginalEvent(), ['_Opacity', '不透明度']);
+        const blendMode = PluginManagerEx.findMetaValue(this.getOriginalEvent(), ['PLM_Opacity', 'PLM不透明度']);
         if (blendMode) {
             this._opacity = parseInt(blendMode);
         }
@@ -241,10 +178,10 @@
     // Spriteset_Map
     //  キャラクタースプライトをマップレイヤースプライトに差し替えます。
     //=============================================================================
-    var _Spriteset_Map_createCharacters      = Spriteset_Map.prototype.createCharacters;
+    const _Spriteset_Map_createCharacters      = Spriteset_Map.prototype.createCharacters;
     Spriteset_Map.prototype.createCharacters = function() {
         _Spriteset_Map_createCharacters.apply(this, arguments);
-        var layerSprites = this._characterSprites.filter(function(sprite) {
+        const layerSprites = this._characterSprites.filter(function(sprite) {
             return sprite.isLayer && sprite.isLayer();
         });
         layerSprites.forEach(function(oldSprite) {
@@ -253,12 +190,12 @@
     };
 
     Spriteset_Map.prototype.replaceLayerSprite = function(oldSprite) {
-        var deleteIndex = this._characterSprites.indexOf(oldSprite);
+        const deleteIndex = this._characterSprites.indexOf(oldSprite);
         if (deleteIndex >= 0) {
             this._characterSprites.splice(deleteIndex, 1);
         }
         this._tilemap.removeChild(oldSprite);
-        var newSprite = new Sprite_MapLayer(oldSprite.getCharacter());
+        const newSprite = new Sprite_MapLayer(oldSprite.getCharacter());
         this._tilemap.addChild(newSprite);
     };
 
@@ -266,7 +203,7 @@
     // Sprite_Character
     //  マップレイヤー判定を追加します。
     //=============================================================================
-    var _Sprite_Character_character         = Sprite_Character.prototype.setCharacter;
+    const _Sprite_Character_character         = Sprite_Character.prototype.setCharacter;
     Sprite_Character.prototype.setCharacter = function(character) {
         _Sprite_Character_character.apply(this, arguments);
         this._layerName = character.getMapLayerName();
