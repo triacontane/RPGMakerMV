@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.0 2022/03/25 バフおよびデバフをポップアップする機能を追加
 // 1.11.4 2022/02/11 自動戦闘や他のプラグインと組み合わせたとき、耐性や弱点のポップアップが意図せず表示される場合がある問題を修正
 // 1.11.3 2021/10/10 一度の行動で複数のポップアップが発生したときに最後のポップアップしか表示されない問題を修正
 // 1.11.2 2021/09/01 1.11.1の修正で通常モンスターのポップアップ位置がずれてしまう問題を修正
@@ -74,12 +75,31 @@
  * @desc 回避発生時の文字のフラッシュ色です。
  * @default 0,128,255,255
  *
- * @param ミス
- * @desc ミス発生時のポップアップメッセージまたはファイル名です。通常のMissは表示されなくなります。
- * @default Miss!
+ * @param バフ
+ * @desc バフ発生時のポップアップメッセージまたはファイル名です。%1で対象パラメータ名称に変換されます。
+ * @default %1 UP!
  * @require 1
  * @dir img/pictures/
  * @type file
+ *
+ * @param バフカラー
+ * @desc バフ発生時の文字のフラッシュ色です。
+ * @default 0,128,255,255
+ *
+ * @param デバフ
+ * @desc デバフ発生時のポップアップメッセージまたはファイル名です。%1で対象パラメータ名称に変換されます。
+ * @default %1 Down!
+ * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param デバフカラー
+ * @desc デバフ発生時の文字のフラッシュ色です。
+ * @default 255,128,0,255
+ *
+ * @param パラメータ名称
+ * @desc バフのポップアップで使うパラメータ名称です。カンマ区切りで指定します。
+ * @default MaxHP,MaxMP,ATK,DEF,MAG,MDF,AGI,LUK
  *
  * @param ミスカラー
  * @desc ミス発生時の文字のフラッシュ色です。
@@ -387,7 +407,12 @@
     var paramAvoidColor       = getParamArrayNumber(['AvoidColor', '回避カラー'], 0, 256);
     var paramMiss             = getParamString(['Miss', 'ミス']);
     var paramMissColor        = getParamArrayNumber(['MissColor', 'ミスカラー'], 0, 256);
+    var paramBuff             = getParamString(['Buff', 'バフ']);
+    var paramBuffColor        = getParamArrayNumber(['BuffColor', 'バフカラー'], 0, 256);
+    var paramDebuff           = getParamString(['Debuff', 'デバフ']);
+    var paramDebuffColor      = getParamArrayNumber(['DebuffColor', 'デバフカラー'], 0, 256);
     var paramInvalid          = getParamString(['Invalid', '無効']);
+    var paramParamName        = getParamArrayString(['ParamName', 'パラメータ名称']);
     var paramInvalidColor     = getParamArrayNumber(['InvalidColor', '無効カラー'], 0, 256);
     var paramGuard            = getParamString(['Guard', 'ガード']);
     var paramGuardColor       = getParamArrayNumber(['GuardColor', 'ガードカラー'], 0, 256);
@@ -643,6 +668,23 @@
                 var flash = getMetaValues(state, ['FlashColor', 'カラー']);
                 if (flash) flash = getArgArrayNumber(flash, 0, 256);
                 this.pushPopupMessage(target, getArgString(message), flash);
+            }
+        }, this);
+    };
+
+    var _Window_BattleLog_displayChangedBuffs = Window_BattleLog.prototype.displayChangedBuffs;
+    Window_BattleLog.prototype.displayChangedBuffs = function(target) {
+        _Window_BattleLog_displayChangedBuffs.apply(this, arguments);
+        target.result().addedBuffs.forEach(function(paramId) {
+            var message = paramBuff.format(paramParamName[paramId] || TextManager.param(paramId));
+            if (message) {
+                this.pushPopupMessage(target, getArgString(message), paramBuffColor);
+            }
+        }, this);
+        target.result().addedDebuffs.forEach(function(paramId) {
+            var message = paramDebuff.format(paramParamName[paramId] || TextManager.param(paramId));
+            if (message) {
+                this.pushPopupMessage(target, getArgString(message), paramDebuffColor);
             }
         }, this);
     };
