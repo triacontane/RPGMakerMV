@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2022/03/25 バフおよびデバフをポップアップする機能を追加
 // 2.2.3 2022/02/11 色指定の凡例の記法が一部間違っていたので修正
 // 2.2.2 2022/02/11 自動戦闘や他のプラグインと組み合わせたとき、耐性や弱点のポップアップが意図せず表示される場合がある問題を修正
 // 2.2.1 2021/08/05 ポップアップパラメータが空の場合にエラーが発生する問題を修正
@@ -69,6 +70,24 @@
  * @desc ミス発生時のポップアップ情報です。
  * @type struct<Popup>
  * @default {"text":"Miss","fileName":"","stateId":"","color":"","flash":"","se":""}
+ *
+ * @param Buff
+ * @text バフポップアップ
+ * @desc バフ発生時のポップアップ情報です。
+ * @type struct<Popup>
+ * @default {"text":"%1 UP!","fileName":"","stateId":"","color":"","flash":"","se":""}
+ *
+ * @param Debuff
+ * @text デバフポップアップ
+ * @desc デバフ発生時のポップアップ情報です。
+ * @type struct<Popup>
+ * @default {"text":"%1 DOWN!","fileName":"","stateId":"","color":"","flash":"","se":""}
+ *
+ * @param ParamName
+ * @text パラメータ名称
+ * @desc バフポップアップ用のパラメータ名称です。
+ * @type string[]
+ * @default ["MaxHP","MaxMP","ATK","DEF","MAG","MDF","AGI","LUK"]
  * 
  * @param Invalid
  * @text 無効ポップアップ
@@ -542,6 +561,25 @@
         });
     };
 
+    const _Window_BattleLog_displayChangedBuffs = Window_BattleLog.prototype.displayChangedBuffs;
+    Window_BattleLog.prototype.displayChangedBuffs = function(target) {
+        _Window_BattleLog_displayChangedBuffs.apply(this, arguments);
+        target.result().addedBuffs.forEach(paramId => {
+            if (param.Buff) {
+                const popup = JsonEx.makeDeepCopy(param.Buff._parameter);
+                popup.param = param.ParamName[paramId] || TextManager.param(paramId);
+                this.pushPopupMessage(target, popup);
+            }
+        });
+        target.result().addedDebuffs.forEach(paramId => {
+            if (param.Debuff) {
+                const popup = JsonEx.makeDeepCopy(param.Debuff._parameter);
+                popup.param = param.ParamName[paramId] || TextManager.param(paramId);
+                this.pushPopupMessage(target, popup);
+            }
+        });
+    };
+
     Window_BattleLog.prototype.pushPopupMessage = function(target, popUp) {
         if (this.hasPopupMessage()) {
             this.push('waitForPopup');
@@ -657,7 +695,8 @@
             return ImageManager.loadPicture(this._popup.fileName, 0);
         } else {
             const bitmap = _Sprite_Damage_createBitmap.apply(this, arguments);
-            bitmap.drawText(this._popup.text, 0, 0, width, height, 'center');
+            const message = this._popup.text.format(this._popup.param);
+            bitmap.drawText(message, 0, 0, width, height, 'center');
             return bitmap;
         }
     };
