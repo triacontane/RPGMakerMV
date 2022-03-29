@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2022/03/29 ターン数表示に数字フォントを使用できる機能を追加
 // 2.5.0 2021/09/11 敵と味方のステート一列表示の基準を別々に設定できるよう修正
 // 2.4.6 2021/04/07 2.4.1の修正で敵キャラのリングアイコンY座標が調整できなくなっていた問題を修正
 //                  2.4.1の修正でフロントビューの場合に、アクターのリングアイコンを表示しない設定が機能しない問題を修正
@@ -126,6 +127,10 @@
  * @type number
  * @min -9999
  * @max 9999
+ *
+ * @param UseNumberFont
+ * @default false
+ * @type boolean
  *
  * @param FontSize
  * @desc The font size of the remaining turns display.
@@ -275,6 +280,12 @@
  * @type number
  * @min -9999
  * @max 9999
+ *
+ * @param UseNumberFont
+ * @text 数字フォントを使用
+ * @desc ターン数の利用フォントに数字フォントを使用します。
+ * @default false
+ * @type boolean
  *
  * @param FontSize
  * @text フォントサイズ
@@ -673,6 +684,9 @@ function Sprite_StateIconChild() {
         if (this._turnSprite) return;
         const sprite           = new Sprite();
         sprite.bitmap          = new Bitmap(ImageManager.iconWidth, ImageManager.iconHeight);
+        if (param.UseNumberFont) {
+            sprite.bitmap.fontFace = $gameSystem.numberFontFace();
+        }
         sprite.bitmap.smooth   = true;
         sprite.bitmap.fontSize = param.FontSize;
         sprite.x               = param.TurnCountX;
