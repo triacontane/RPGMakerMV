@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/03/31 効果範囲が「味方」以外のアイテムを使用できない問題を修正
  1.0.0 2022/01/15 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -137,6 +138,9 @@
 
         isEffectsValid() {
             const action = this._action;
+            if (!action.isForFriend()) {
+                return true;
+            }
             return this.findTarget().some(target => action.testApply(target));
         }
 
