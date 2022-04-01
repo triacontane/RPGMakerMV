@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.5 2022/04/02 ステートおよびバフが解除されたとき、解除メッセージが二重に出力される場合がある問題を修正
 // 1.6.4 2022/01/13 BattleEffectPopup.jsと併用したとき、使用者に対する効果ポップアップが二重に出力される場合がある問題を修正
 // 1.6.3 2021/12/27 1.6.2の修正が一部不十分だった問題を修正
 // 1.6.2 2021/11/29 使用者に対する行動結果が出力されない場合がある問題を修正
@@ -380,7 +381,9 @@
     };
 
     Game_Action.prototype.applyItemSideEffect = function(property, target = null) {
-        if (!this.isValidSideEffect()) return;
+        if (!this.isValidSideEffect(property)) {
+            return;
+        }
         if (!this._applySideEffect) {
             this._applySideEffect = {};
         }
@@ -396,12 +399,13 @@
         }, this);
         this.applyItemSideEffectGlobal(property);
         if (this.isNeedDisplaySideEffect(property)) {
+            BattleManager.displaySideEffectResult(this.subject());
             this.subject().result().clear();
         }
     };
 
-    Game_Action.prototype.isValidSideEffect = function() {
-        if (!this.item()) {
+    Game_Action.prototype.isValidSideEffect = function(property) {
+        if (!this.item() || this.item()[property].length === 0) {
             return false;
         } else {
             return this.isValidSideEffectForSuccess() &&
@@ -449,9 +453,6 @@
                 $gameTemp.setCommonEventSubject(this.subject());
             }
         }, this);
-        if (this.isNeedDisplaySideEffect(property)) {
-            BattleManager.displaySideEffectResult(this.subject());
-        }
     };
 
     Game_Action.prototype.isNeedDisplaySideEffect = function(property) {
