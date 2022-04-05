@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.2 2022/04/06 相手の連続攻撃および複数回行動に対して、複数の反撃条件を満たした場合でも最初の一回しか反撃しなくなる設定を追加
 // 2.4.1 2022/03/10 複数の特徴オブジェクトを持つバトラーについて反撃頻度タグが正常に機能しない問題を修正
 // 2.4.0 2022/02/19 反撃スキルの計算式で、直前に受けたHPダメージを参照できる機能を追加
 // 2.3.1 2022/02/07 反撃実行時に厳密な生存判定を追加
@@ -60,41 +61,6 @@
 //=============================================================================
 
 /*:
- * @plugindesc CounterExtendPlugin
- * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CounterExtend.js
- * @base PluginCommonBase
- * @author triacontane
- *
- * @param CounterList
- * @desc This is a list of counterattack settings. Specify the identifier specified here from each note.
- * @default []
- * @type struct<COUNTER>[]
- *
- * @param UseCounterTrait
- * @desc The characteristic trait "Counter" is added to the "Frequency" for judgment.
- * @default false
- * @type boolean
- *
- * @help CounterExtend.js
- *
- * You can activate skills and items as a reaction (counterattack) to your opponent's actions.
- * You can set up counterattacks under a variety of conditions and settings.
- * This works independently of the "Counterattack Rate" feature, which can be set by default.
- *
- * Specify the following in the memo field (Actor, Occupation, Weapon, Armor, State, Enemy Character)
- * that has the feature.
- * Please specify as follows If the battler has that trait, it will counterattack.
- * For example, if you set it in a state's memo field, the battler with that state on will
- * When the battler is attacked, it will counterattack.
- *
- * <CounterExtend:aaa> # Counterattack with a counterattack setting that matches the identifier [aaa].
- * <CounterExtend:1> # Counterattack with the [1]th counterattack setting in the counterattack list.
- *
- * Detailed counterattack settings can be entered from the plugin parameters.
- * Unlike a normal counterattack, it will be triggered after the opponent's action is over.
- */
-/*:ja
  * @plugindesc 反撃拡張プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CounterExtend.js
@@ -106,6 +72,12 @@
  * @desc 反撃設定のリストです。ここで指定した識別子を各メモ欄から指定します。
  * @default []
  * @type struct<COUNTER>[]
+ *
+ * @param ConsiderateRepeat
+ * @text 連続攻撃を考慮
+ * @desc 有効にした場合、相手の連続攻撃、複数回行動に対して一度しか反撃しなくなります。
+ * @default false
+ * @type boolean
  *
  * @help CounterExtend.js
  *
@@ -501,6 +473,10 @@
     BattleManager.requestCounterAction = function(counterSubject, subject, counterAction) {
         const counter = counterAction.getCounter();
         if (!this.checkCrossCounterCondition(counterSubject.result(), counter)) {
+            return;
+        }
+        if (param.ConsiderateRepeat &&
+            this._counterQueue.find(queue => queue.subject === counterSubject)) {
             return;
         }
         this._counterQueue.push({
