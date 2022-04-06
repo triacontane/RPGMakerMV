@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.27.1 2022/04/06 空の項目を選択できるよう仕様変更
  1.27.0 2022/01/05 ウィンドウのテキストカラーを設定できる機能を追加
  1.26.0 2021/12/16 ウィンドウごとに項目の黒い背景を非表示にできる機能を追加
  1.25.0 2021/12/14 ウィンドウ選択中に任意のボタンが押されたときに発生するイベントを登録できる機能を追加
@@ -1850,7 +1851,7 @@
 
         isEnabled(index) {
             const item = this.getItem(index);
-            return item ? this.isEnabledSub(item) && !this.isMasking(index) : false;
+            return item ? this.isEnabledSub(item) && !this.isMasking(index) : true;
         }
 
         isMasking(index) {
