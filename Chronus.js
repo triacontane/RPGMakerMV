@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2022/04/07 カレンダー表記に制御文字を使える機能を追加
 // 2.3.0 2021/12/29 天候による色調補正を無効にできる設定を追加
 // 2.2.0 2021/07/15 アナログ時計の短針を24時間で1周するよう変更する機能を追加
 // 2.1.0 2020/11/21 自然時間加算間隔を変更するプラグインコマンドを追加
@@ -207,6 +208,11 @@
  * @param カレンダー表示Y座標
  * @type number
  * @desc カレンダーの表示 Y 座標です。
+ * @default 0
+ *
+ * @param カレンダー横幅
+ * @type number
+ * @desc カレンダーの横幅です。指定しなかった場合は自動で調整されます。
  * @default 0
  *
  * @param カレンダーフォントサイズ
@@ -1207,6 +1213,10 @@ function Window_Chronus() {
     Window_Chronus.prototype.getDefaultWidth = function() {
         var bitmap      = new Bitmap();
         bitmap.fontSize = this.standardFontSize();
+        var paramWidth = getParamNumber('カレンダー横幅');
+        if (paramWidth) {
+            return paramWidth + this.standardPadding() * 2;
+        }
         var width1      = bitmap.measureTextWidth(this.getDateFormat(1));
         var width2      = bitmap.measureTextWidth(this.getDateFormat(2));
         return Math.max(width1, width2) + this.standardPadding() * 2;
@@ -1246,10 +1256,9 @@ function Window_Chronus() {
 
     Window_Chronus.prototype.refresh = function() {
         this.contents.clear();
-        var width  = this.contents.width;
         var height = this.lineHeight();
-        this.contents.drawText(this.getDateFormat(1), 0, 0, width, height, 'left');
-        this.contents.drawText(this.getDateFormat(2), 0, height + paramCalendarLineSpacing, width, height, 'left');
+        this.drawTextEx(this.getDateFormat(1), 0, 0);
+        this.drawTextEx(this.getDateFormat(2), 0, height + paramCalendarLineSpacing);
         this.update();
     };
 
