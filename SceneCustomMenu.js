@@ -1851,7 +1851,7 @@
 
         isEnabled(index) {
             const item = this.getItem(index);
-            return item ? this.isEnabledSub(item) && !this.isMasking(index) : true;
+            return this.isEnabledSub(item) && !this.isMasking(index);
         }
 
         isMasking(index) {
