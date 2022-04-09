@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.21.2 2022/04/09 描画内容がnullの場合に描画をスキップするよう修正
  1.21.2 2022/04/06 空の項目を選択できるよう仕様変更
  1.21.1 2022/01/05 ウィンドウのテキストカラーを設定できる機能を追加
  1.20.1 2021/12/14 1.20.1のボタンの数を増やし不要なログを削除
@@ -1897,6 +1898,8 @@
                         outputError(e);
                     }
                 });
+            } else if (item === undefined || item === null) {
+                // do nothing
             } else if (item === String(item)) {
                 this.drawTextEx(item, r.x, r.y);
             } else if (item.hasOwnProperty('iconIndex')) {
