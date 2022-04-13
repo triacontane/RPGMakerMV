@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2022/04/14 2.4.0でカレンダーのフォントサイズを変更したとき描画位置がズレる問題を修正
 // 2.4.0 2022/04/07 カレンダー表記に制御文字を使える機能を追加
 // 2.3.0 2021/12/29 天候による色調補正を無効にできる設定を追加
 // 2.2.0 2021/07/15 アナログ時計の短針を24時間で1周するよう変更する機能を追加
@@ -1257,8 +1258,9 @@ function Window_Chronus() {
     Window_Chronus.prototype.refresh = function() {
         this.contents.clear();
         var height = this.lineHeight();
-        this.drawTextEx(this.getDateFormat(1), 0, 0);
-        this.drawTextEx(this.getDateFormat(2), 0, height + paramCalendarLineSpacing);
+        var padding = ($gameSystem.mainFontSize() - this.contents.fontSize) / 2;
+        this.drawTextEx(this.getDateFormat(1), 0, padding);
+        this.drawTextEx(this.getDateFormat(2), 0, height + paramCalendarLineSpacing + padding);
         this.update();
     };
 
