@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2022/04/14 ピクチャクリック時に変数を操作する機能および任意スクリプトを実行する機能を追加
 // 1.2.2 2021/11/07 異なるピクチャのトリガーを同一フレームで同時に満たした場合、すべてのタッチ処理が実行されるよう修正
 // 1.2.1 2021/10/08 トリガー種別がマウスが重なった場合のとき無効スイッチ中に条件を満たしていると、無効スイッチがOFFになった瞬間にイベントが発生してしまう問題を修正
 // 1.2.0 2021/05/20 APNGピクチャプラグインと組み合わせたときにAPNGピクチャをボタン化できるよう修正（ただし透過色は考慮されない）
@@ -78,6 +79,44 @@
  * @desc イベント発生時にONになるスイッチです。
  * @default 0
  * @type switch
+ *
+ * @arg variableId
+ * @text 変数番号
+ * @desc イベント発生時に値が加減される変数です。
+ * @default 0
+ * @type variable
+ *
+ * @arg operationType
+ * @parent variableId
+ * @text 操作種別
+ * @desc イベント発生時に指定した変数の操作種別です。
+ * @default 0
+ * @type select
+ * @option 代入
+ * @value 0
+ * @option 加算
+ * @value 1
+ * @option 減算
+ * @value 2
+ * @option 乗算
+ * @value 3
+ * @option 除算
+ * @value 4
+ * @option 剰余
+ * @value 5
+ *
+ * @arg operand
+ * @parent variableId
+ * @text オペランド
+ * @desc イベント発生時に指定した変数の操作値です。
+ * @default 0
+ * @type number
+ * @min -99999999
+ *
+ * @arg script
+ * @text スクリプト
+ * @desc イベント発生時に実行されるスクリプトです。
+ * @type multiline_string
  *
  * @arg buttonBind
  * @text ボタンバインド
@@ -342,6 +381,7 @@
             this._outMouse     = false;
             this._wasOnMouse   = false;
             this._flick        = false;
+            this._interpreter  = new Game_Interpreter();
         }
 
         update() {
@@ -416,6 +456,17 @@
         applyTouchEvent(eventData) {
             if (eventData.switchId) {
                 $gameSwitches.setValue(eventData.switchId, true);
+            }
+            if (eventData.variableId) {
+                this._interpreter.operateVariable(eventData.variableId, eventData.operationType, eventData.operand);
+            }
+            if (eventData.script) {
+                try {
+                    eval(eventData.script);
+                } catch (e) {
+                    console.error('Error Script:' + eventData.script);
+                    PluginManagerEx.throwError(e.message, script);
+                }
             }
             if (eventData.buttonBind) {
                 Input.bindKeyState(eventData.buttonBind);
