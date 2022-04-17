@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.2.0 2022/04/18 タッチ時に任意のスイッチをONにできる機能を追加
 // 3.1.0 2022/02/08 立ち絵のフェードイン・アウト機能、アンフォーカス機能、反転表示切替機能を追加
 // 3.0.0 2022/01/22 バトラーのモーションに合わせた立ち絵を指定できる機能を追加(パラメータ：ダメージ条件は廃止)
 //                  表示座標をパーティメンバーの並び順ではなく、アクターIDごとに設定できる機能を追加
@@ -280,6 +281,12 @@
  * @param MirrorSwitch
  * @text 反転スイッチ
  * @desc 指定した場合、スイッチがONのとき立ち絵が反転します。
+ * @default 0
+ * @type switch
+ *
+ * @param TouchSwitch
+ * @text タッチスイッチ
+ * @desc 指定した場合、ピクチャをタッチ、クリックすることでスイッチがONになります。ピクチャの透明色は考慮しません。
  * @default 0
  * @type switch
  *
@@ -1070,6 +1077,13 @@
                 bitmap.addLoadListener(() => this.setBitmap(bitmap));
             }
             this._fileName = file;
+        }
+
+        onClick() {
+            const switchId = this._picture.TouchSwitch;
+            if (this.isShowing() && switchId > 0) {
+                $gameSwitches.setValue(switchId, true);
+            }
         }
 
         setBitmap(bitmap) {
