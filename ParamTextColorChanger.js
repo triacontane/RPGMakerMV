@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2022/04/19 名称のカラーは変更しない設定のとき装備変更画面でアクター変更すると、アクター名称がシステムカラーで表示されてしまう問題を修正
 // 1.2.0 2022/02/16 アクター名称のテキストカラーをHPカラーと連動させるデフォルト仕様を撤廃できる機能を追加
 // 1.1.0 2022/02/16 MZで動作するよう修正
 //                  パラメータに以上以下の条件を指定できる機能を追加
@@ -137,9 +138,14 @@
         const _Window_StatusBase_drawActorName = Window_StatusBase.prototype.drawActorName;
         Window_StatusBase.prototype.drawActorName = function(actor, x, y, width) {
             this._invalidChangeColor = true;
-            console.log(this._invalidChangeColor);
             _Window_StatusBase_drawActorName.apply(this, arguments);
             this._invalidChangeColor = false;
+        };
+
+        const _Window_EquipStatus_refresh = Window_EquipStatus.prototype.refresh;
+        Window_EquipStatus.prototype.refresh = function() {
+            this.changeTextColor(ColorManager.normalColor());
+            _Window_EquipStatus_refresh.apply(this, arguments);
         };
 
         const _Window_Base_initialize = Window_Base.prototype.initialize;
