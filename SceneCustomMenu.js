@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.28.0 2022/04/20 カスタムシーンクラスをSceneManager配下に保持するよう変更
  1.27.1 2022/04/06 空の項目を選択できるよう仕様変更
  1.27.0 2022/01/05 ウィンドウのテキストカラーを設定できる機能を追加
  1.26.0 2021/12/16 ウィンドウごとに項目の黒い背景を非表示にできる機能を追加
@@ -269,6 +270,9 @@
  *
  * マップ画面にピクチャを表示します。
  * SceneManager.showMapPicture(1, 'ファイル名', 0, 0, 0, 100, 100, 255, 1);
+ *
+ * 現在のシーンが指定した識別子のカスタムシーンかどうかを返します。
+ * SceneManager.isCurrentScene(SceneManager._customScene.シーン識別子)
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -972,6 +976,12 @@
         }
     };
 
+    const _SceneManager_initialize = SceneManager.initialize;
+    SceneManager.initialize = function() {
+        _SceneManager_initialize.apply(this, arguments);
+        this._customScene = {};
+    };
+
     SceneManager.callCustomMenu = function (sceneId) {
         if (!this.findSceneData(sceneId)) {
             throw new Error(`Scene data '${sceneId}' is not found`);
@@ -1012,6 +1022,7 @@
         eval(createClassEval);
         sceneClass.prototype = Object.create(Scene_CustomMenu.prototype);
         sceneClass.prototype.constructor = sceneClass;
+        this._customScene[sceneId] = sceneClass;
         return sceneClass;
     };
 
