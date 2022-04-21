@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.3.0 2022/04/21 シーン設定のパラメータにもタッチスイッチ設定を追加
+//                  タッチスイッチ有効時は、他のタッチ処理を無効化するよう変更
 // 3.2.0 2022/04/18 タッチ時に任意のスイッチをONにできる機能を追加
 // 3.1.0 2022/02/08 立ち絵のフェードイン・アウト機能、アンフォーカス機能、反転表示切替機能を追加
 // 3.0.0 2022/01/22 バトラーのモーションに合わせた立ち絵を指定できる機能を追加(パラメータ：ダメージ条件は廃止)
@@ -496,6 +498,12 @@
  * @default 0
  * @type switch
  *
+ * @param TouchSwitch
+ * @text タッチスイッチ
+ * @desc 指定した場合、ピクチャをタッチ、クリックすることでスイッチがONになります。ピクチャの透明色は考慮しません。
+ * @default 0
+ * @type switch
+ *
  * @param Priority
  * @text 表示優先度
  * @desc 立ち絵の表示優先度です。
@@ -630,6 +638,7 @@
             picture.SceneScaleY = scene.ScaleY;
             picture.FadeFrame = scene.FadeFrame;
             picture.SceneUnFocusSwitch = scene.UnFocusSwitch;
+            picture.SceneTouchSwitch = scene.TouchSwitch;
         }
 
         findBasePosition(scene, index) {
@@ -1079,10 +1088,17 @@
             this._fileName = file;
         }
 
-        onClick() {
-            const switchId = this._picture.TouchSwitch;
-            if (this.isShowing() && switchId > 0) {
-                $gameSwitches.setValue(switchId, true);
+        onPress() {
+            if (!this.isShowing()) {
+                return;
+            }
+            if (this._picture.TouchSwitch > 0) {
+                $gameSwitches.setValue(this._picture.TouchSwitch, true);
+                TouchInput.clear();
+            }
+            if (this._picture.SceneTouchSwitch > 0) {
+                $gameSwitches.setValue(this._picture.SceneTouchSwitch, true);
+                TouchInput.clear();
             }
         }
 
@@ -1256,6 +1272,7 @@
         }
 
         onPress() {
+            super.onPress();
             if (this.canDrag()) {
                 this._requestDrag = true;
             }
