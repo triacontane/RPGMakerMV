@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.21.4 2022/04/25 前バージョンで追加したカレントシーンの判定方法を変更
  1.21.3 2022/04/22 カスタムシーンクラスをSceneManager配下に保持するよう変更
  1.21.2 2022/04/09 描画内容がnullの場合に描画をスキップするよう修正
  1.21.2 2022/04/06 空の項目を選択できるよう仕様変更
@@ -251,7 +252,7 @@
  * SceneManager.showMapPicture(1, 'ファイル名', 0, 0, 0, 100, 100, 255, 1);
  *
  * 現在のシーンが指定した識別子のカスタムシーンかどうかを返します。
- * SceneManager.isCurrentScene(SceneManager._customScene.シーン識別子)
+ * SceneManager.isCustomScene('Scene_ActorList')
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -1052,6 +1053,10 @@
 
     SceneManager.findCustomMenuWindow = function(windowId) {
         return this._scene.findWindow ? this._scene.findWindow(windowId) : null;
+    };
+
+    SceneManager.isCustomScene = function(id) {
+        return this._scene && this._scene.constructor === this._customScene[id];
     };
 
     Game_Party.prototype.reserveMembers = function() {
