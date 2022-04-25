@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.28.1 2022/04/25 前バージョンで追加したカレントシーンの判定方法を変更
  1.28.0 2022/04/20 カスタムシーンクラスをSceneManager配下に保持するよう変更
  1.27.1 2022/04/06 空の項目を選択できるよう仕様変更
  1.27.0 2022/01/05 ウィンドウのテキストカラーを設定できる機能を追加
@@ -272,7 +273,7 @@
  * SceneManager.showMapPicture(1, 'ファイル名', 0, 0, 0, 100, 100, 255, 1);
  *
  * 現在のシーンが指定した識別子のカスタムシーンかどうかを返します。
- * SceneManager.isCurrentScene(SceneManager._customScene.シーン識別子)
+ * SceneManager.isCustomScene('Scene_ActorList')
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -1051,6 +1052,10 @@
         if (win) {
             win.select(index);
         }
+    };
+
+    SceneManager.isCustomScene = function(id) {
+        return this._scene && this._scene.constructor === this._customScene[id];
     };
 
     SceneManager.findChangeWindowFocus = function () {
