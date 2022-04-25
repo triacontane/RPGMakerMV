@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/04/25 スクリプトの評価結果がtrueのときに使用不可にできる機能を追加
 // 2.1.2 2021/10/12 循環参照による競合が起こりにくい実装に変更
 // 2.1.1 2021/10/11 2.1.0の更新でスキルに対する対象限定が効かなくなっていた問題を修正
 // 2.1.0 2021/10/10 アイテムに対して制約を適用できるよう修正
@@ -122,6 +123,12 @@
  * @default false
  * @type boolean
  *
+ * @param script
+ * @text スクリプト
+ * @desc スクリプトの実行結果がtrueを返した場合、使用不可となります。
+ * @default
+ * @type multiline_string
+ *
  */
 
 (()=> {
@@ -172,6 +179,9 @@
             return this.traitObjects().some(obj => {
                 return PluginManagerEx.findMetaValue(obj, data.validNote);
             });
+        }
+        if (data.script && !!eval(data.script)) {
+            return false;
         }
         if (data.invalidNote) {
             return !this.traitObjects().some(obj => {
