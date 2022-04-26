@@ -1,11 +1,12 @@
 //=============================================================================
 // LoadingExtend.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2022/04/26 ロード中画像を指定するセルをランダムではなく任意の番号の変数値にできる機能を追加
 // 1.0.0 2017/06/04 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -26,8 +27,23 @@
  * @default 1
  *
  * @param ShowingType
- * @desc ローディング画像の表示タイプです。(0通常、1:ランダム、2:アニメーション)
+ * @desc ローディング画像の表示タイプです。
  * @default 0
+ * @type select
+ * @option 0:通常
+ * @value 0
+ * @option 1:ランダム
+ * @value 1
+ * @option 2:アニメーション
+ * @value 2
+ * @option 3:変数でセル指定
+ * @value 3
+ *
+ * @param CellVariable
+ * @desc 表示タイプを「変数でセル指定」にしたときのセル番号を取得する変数番号です。
+ * @default 1
+ * @type variable
+ * @parent ShowingType
  *
  * @param AnimationInterval
  * @desc 表示タイプが「アニメーション」の場合は表示間隔です。
@@ -79,8 +95,23 @@
  * @default 1
  *
  * @param 表示タイプ
- * @desc ローディング画像の表示タイプです。(0通常、1:ランダム、2:アニメーション)
+ * @desc ローディング画像の表示タイプです。
  * @default 0
+ * @type select
+ * @option 0:通常
+ * @value 0
+ * @option 1:ランダム
+ * @value 1
+ * @option 2:アニメーション
+ * @value 2
+ * @option 3:変数でセル指定
+ * @value 3
+ *
+ * @param セル指定変数
+ * @desc 表示タイプを「変数でセル指定」にしたときのセル番号を取得する変数番号です。
+ * @default 1
+ * @type variable
+ * @parent 表示タイプ
  *
  * @param アニメーション間隔
  * @desc 表示タイプが「アニメーション」の場合は表示間隔です。
@@ -180,6 +211,7 @@
     param.yPosition         = getParamString(['YPosition', '表示位置Y座標']);
     param.waitingFrames     = getParamNumber(['WaitingFrames', '待機フレーム数'], 1) || 20;
     param.noFlashing        = getParamBoolean(['NoFlashing', '点滅なし']);
+    param.cellVariable      = getParamNumber(['CellVariable', 'セル指定変数'], 0);
 
     //=============================================================================
     // Graphics
@@ -196,6 +228,8 @@
         _Graphics_startLoading.apply(this, arguments);
         if (param.showingType === 1) {
             this._loadingPattern = Math.randomInt(this._getLoadingImageAllCount());
+        } else if (param.showingType === 3 && $gameVariables) {
+            this._loadingPattern = $gameVariables.value(param.cellVariable) || 0;
         }
     };
 
