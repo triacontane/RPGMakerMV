@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/04/29 別シーンから戻ってきたあと、アクターコマンドに進んでからキャンセルして戻ると『戦う』が選択できなくなる場合がある問題を修正
  1.0.0 2022/04/10 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -266,7 +267,7 @@
         _Scene_Battle_startPartyCommandSelection.apply(this, arguments);
         if (Scene_Battle._partyCommandIndex >= 0) {
             this._partyCommandWindow.select(Scene_Battle._partyCommandIndex);
-            Scene_Battle._partyCommandIndex = null;
+            Scene_Battle._partyCommandIndex = -1;
         }
     };
 
