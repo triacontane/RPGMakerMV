@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2022/04/30 EventRespawn.jsのリージョン機能で複製したイベントを消去してからマップリロード機能を使うとエラーになる問題に対処
 // 1.1.3 2021/04/10 タイトルカット設定時にCTRLキーを押し続けているとカットしなくなる機能が不完全だったので無効化
 // 1.1.2 2021/03/27 通常のロード時はイベントの消去状態を復元しないよう修正
 // 1.1.1 2020/10/11 AnimationMv.jsと組み合わせたとき、戦闘テストの敵グループが正常に選択されない競合を修正
@@ -1103,7 +1104,9 @@ function Controller_NwJs() {
 
     Game_Map.prototype.restoreEventErase = function() {
         this._eraseEvents.forEach(eventId => {
-            this._events[eventId].erase();
+            if (this._events[eventId]) {
+                this._events[eventId].erase();
+            }
         });
     };
 
