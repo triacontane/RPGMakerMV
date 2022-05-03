@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2022/05/08 プラグインによる変換適用前のパラメータを取得できるメソッドを追加
 // 1.4.1 2022/02/13 パラメータ変換がHPのみ機能していなかった問題を修正
 // 1.4.0 2022/02/13 MZで動作するよう修正
 // 1.3.1 2017/02/07 端末依存の記述を削除
@@ -66,6 +67,11 @@
  * 変換されるのはベースパラメータで、装備品やバフによる加算は
  * 含まれません。
  *
+ * アクターの変換前のパラメータを取得するスクリプトです。
+ * $gameActors.actor(n).paramRealBase(m);
+ * n : アクターID
+ * m : パラメータID
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
@@ -124,6 +130,10 @@
         return this.getTransParam(paramId, _Game_Actor_paramBase.bind(this));
     };
 
+    Game_Actor.prototype.paramRealBase = function(paramId) {
+        return _Game_Actor_paramBase.apply(this, arguments);
+    };
+
     //=============================================================================
     // Game_Enemy
     //  ベースパラメータを変換します。
@@ -131,6 +141,10 @@
     const _Game_Enemy_paramBase      = Game_Enemy.prototype.paramBase;
     Game_Enemy.prototype.paramBase = function(paramId) {
         return this.getTransParam(paramId, _Game_Enemy_paramBase.bind(this));
+    };
+
+    Game_Enemy.prototype.paramRealBase = function(paramId) {
+        return _Game_Enemy_paramBase.apply(this, arguments);
     };
 })();
 
