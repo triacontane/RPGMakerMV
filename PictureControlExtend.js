@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2022/05/04 DirectivityShake.jsと併用してピクチャをシェイク無効にしたとき、縦方向のシェイクに対しても影響を受けなくなるよう修正
  1.1.1 2021/06/03 ピクチャの変数指定が解除コマンドで正常に解除されない問題を修正
  1.1.0 2021/05/29 ピクチャの原点を詳細指定できるコマンドを追加
  1.0.0 2021/05/15 初版
@@ -386,13 +387,32 @@
      */
     const _Game_Picture_x      = Game_Picture.prototype.x;
     Game_Picture.prototype.x = function() {
-        return _Game_Picture_x.apply(this, arguments) + this.getShakeX() -
-            (this._outOfScreenShake ? Math.round($gameScreen.shake()) : 0);
+        let x = _Game_Picture_x.apply(this, arguments) + this.getShakeX();
+        if (this._outOfScreenShake) {
+            // for DirectivityShake.js
+            if ($gameScreen.getShakeRotation) {
+                const shakeRotation  = $gameScreen.getShakeRotation();
+                const shakeDistance = Math.round($gameScreen.shake());
+                x -= Math.cos(shakeRotation) * shakeDistance;
+            } else {
+                x -= Math.round($gameScreen.shake());
+            }
+        }
+        return x;
     };
 
     const _Game_Picture_y      = Game_Picture.prototype.y;
     Game_Picture.prototype.y = function() {
-        return _Game_Picture_y.apply(this, arguments) + this.getShakeY();
+        let y = _Game_Picture_y.apply(this, arguments) + this.getShakeY();
+        if (this._outOfScreenShake) {
+            // for DirectivityShake.js
+            if ($gameScreen.getShakeRotation) {
+                const shakeRotation  = $gameScreen.getShakeRotation();
+                const shakeDistance = Math.round($gameScreen.shake());
+                y -= Math.sin(shakeRotation) * shakeDistance;
+            }
+        }
+        return y;
     };
 
     Game_Picture.prototype.setCustomOrigin = function(ox, oy) {
