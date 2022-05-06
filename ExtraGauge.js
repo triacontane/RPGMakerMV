@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2022/05/06 ゲージの表示優先度をピクチャの下に変更できる機能を追加
  1.1.2 2021/10/20 フォント指定のヘルプが誤っていたのを修正
  1.1.1 2021/09/15 コアスクリプトv1.3.3に伴う修正
  1.1.0 2021/04/10 座標に計算式や変数を指定した場合、表示位置やリアルタイムに変更できる機能を追加
@@ -31,6 +32,16 @@
  * @desc 各画面に追加するゲージのリストです。
  * @default []
  * @type struct<Gauge>[]
+ *
+ * @param Priority
+ * @text 表示優先度
+ * @desc ゲージ画像の表示優先度です。マップ画面および戦闘画面のみ『ピクチャの下』に変更できます。
+ * @default 0
+ * @type select
+ * @option 0:通常
+ * @value 0
+ * @option 1:ピクチャの下
+ * @value 1
  *
  * @help ExtraGauge.js
  *
@@ -443,10 +454,29 @@
             return;
         }
         this._extraGauges.forEach(extraGauge => {
-            this.addChild(extraGauge);
+            this.addChildExtraGauge(extraGauge);
         });
         this._extraGaugesAdd = true;
     };
+
+    Scene_Base.prototype.addChildExtraGauge = function(extraGauge) {
+        this.addChild(extraGauge);
+    };
+
+    if (param.Priority === 1) {
+        Scene_Battle.prototype.addChildExtraGauge = function(extraGauge) {
+            this._spriteset.addChildExtraGauge(extraGauge);
+        };
+
+        Scene_Map.prototype.addChildExtraGauge = function(extraGauge) {
+            this._spriteset.addChildExtraGauge(extraGauge);
+        };
+
+        Spriteset_Base.prototype.addChildExtraGauge = function(extraGauge) {
+            const index = this.getChildIndex(this._pictureContainer);
+            this.addChildAt(extraGauge, index);
+        };
+    }
 
     Scene_Base.prototype.findExtraGaugeList = function() {
         const currentSceneName = PluginManagerEx.findClassName(this);
