@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.6 2022/05/06 プラグインコマンドから用語辞典を呼び出したとき、カテゴリ指定が正常に機能しない問題を修正
 // 3.7.5 2022/02/22 PNDK_LuggageCapacity.jsと併用したとき、未入手アイテムが表示されてしまう競合に対応
 // 3.7.4 2022/01/30 ヘルプに表示する改行コードが効かなくなっていた問題を修正
 // 3.7.3 2021/12/19 部分一致で自動登録されない問題を修正
@@ -1112,7 +1113,7 @@
     PluginManagerEx.registerCommand(script, 'GLOSSARY_CALL', function(args) {
         $gameParty.clearGlossaryIndex();
         $gameParty.setSelectedGlossaryType(args.type);
-        if (args[1]) {
+        if (args.category) {
             var index = $gameParty.setGlossaryCategoryIndexByName(args.category);
             if (index >= 0) {
                 $gameParty.setGlossaryListIndex(args.listIndex || 0);
