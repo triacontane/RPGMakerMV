@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2022/05/10 全回復実行時もステートが解除されない設定を追加
  1.2.1 2021/09/16 戦闘不能後継続ステートをすでに戦闘不能のバトラーに付与したときにも付与できるよう修正
  1.2.0 2021/08/25 対象ステートを範囲指定できるパラメータを追加
  1.1.0 2021/05/28 MZ用にリファクタリング
@@ -42,6 +43,12 @@
  * @type state
  * @default 0
  *
+ * @param considerRecoverAll
+ * @text 全回復を考慮
+ * @desc 戦闘不能だけでなく全回復をした場合もステートが解除されず、永続的に付与されるようになります。
+ * @type boolean
+ * @default false
+ *
  * @help StateAfterDeath.js
  *
  * 戦闘不能後も解除されず継続するステートを作成できます。
@@ -77,6 +84,12 @@
  * @type state
  * @default 0
  *
+ * @param considerRecoverAll
+ * @text 全回復を考慮
+ * @desc 戦闘不能だけでなく全回復をした場合もステートが解除されず、永続的に付与されるようになります。
+ * @type boolean
+ * @default false
+ *
  * @help StateAfterDeath.js
  *
  * 戦闘不能後も解除されず継続するステートを作成できます。
@@ -98,13 +111,20 @@
         param.states = [];
     }
 
-    const _Game_BattlerBase_die      = Game_BattlerBase.prototype.die;
-    Game_BattlerBase.prototype.die = function() {
+    const _Game_BattlerBase_clearStates      = Game_BattlerBase.prototype.clearStates;
+    Game_BattlerBase.prototype.clearStates = function() {
+        if (!this._states) {
+            _Game_BattlerBase_clearStates.apply(this, arguments);
+            return;
+        }
         const deathStates = this.findStateAfterDeath();
         const stillStates = this._states.filter(stateId => deathStates.includes(stateId));
         const stillStateTurns = {};
         stillStates.forEach(stateId => stillStateTurns[stateId] = this._stateTurns[stateId]);
-        _Game_BattlerBase_die.apply(this, arguments);
+        _Game_BattlerBase_clearStates.apply(this, arguments);
+        if (!param.considerRecoverAll && this.hp > 0) {
+            return;
+        }
         this._states     = this._states.concat(stillStates);
         this._stateTurns = stillStateTurns;
     };
