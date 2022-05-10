@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.11.0 2022/05/10 スキル名の簡易表示が有効なときスキルにアイコンを表示するよう仕様変更
 // 1.10.2 2021/03/09 戦闘から逃走、敗北した際はログウィンドウが消えるよう修正
 // 1.10.1 2020/06/04 1.9.1の修正により、ステータスウィンドウを下部に配置するとメッセージの上に表示されてしまう問題を修正
 // 1.10.0 2020/05/30 バトルログウィンドウのフォントサイズを変更できる機能を追加
@@ -390,8 +391,9 @@
 
     if (paramSkillViewSimplified) {
         Window_BattleLog.prototype.displayAction = function(subject, item) {
-            this.push('addText', item.name);
-            this._displayCenterText = item.name;
+            var text = '\\i[' + item.iconIndex + ']' + item.name;
+            this.push('addText', text);
+            this._displayCenterText = text;
         };
 
         var _Window_BattleLog_drawLineText      = Window_BattleLog.prototype.drawLineText;
