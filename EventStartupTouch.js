@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2022/05/10 タッチイベントが終了した同一フレームでタッチイベントを開始できなくなるよう修正
 // 1.2.0 2021/03/09 MZ向けにリファクタリング
 // 1.1.3 2017/11/20 ヘルプのスクリプトの記述を追加
 // 1.1.2 2017/02/07 端末依存の記述を削除
@@ -76,6 +77,7 @@
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+    let eventTouchFrame = 0;
 
     //=============================================================================
     // Game_Player
@@ -92,7 +94,7 @@
 
     Game_Player.prototype.isTouchStartupValid = function() {
         return !$gameSwitches.value(param.InvalidSwitchId) &&
-            TouchInput.isTriggered() && !$gameMap.isEventRunning();
+            TouchInput.isTriggered() && !$gameMap.isEventRunning() && eventTouchFrame !== Graphics.frameCount;
     };
 
     Game_Player.prototype.triggerTouchActionStartupEvent = function() {
@@ -144,6 +146,7 @@
         _Game_Interpreter_terminate.apply(this, arguments);
         if ($gameMap.isMapInterpreterOf(this) && this._depth === 0) {
             $gameSwitches.setValue(param.StartupSwitchId, false);
+            eventTouchFrame = Graphics.frameCount;
         }
     };
 
