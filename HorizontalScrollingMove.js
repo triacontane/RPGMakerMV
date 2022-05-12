@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2022/05/12 イベントごとに横スクロール移動を無効にできるタグを追加
 // 1.2.2 2021/08/24 画像のみ向き制限する設定のとき、メニュー画面を開いて戻ると向きが戻ってしまう問題を修正
 // 1.2.1 2021/05/17 プレイヤーの初期の向きを下から右に変更
 // 1.2.0 2019/07/20 画像のみ向き制限する仕様を追加
@@ -45,6 +46,9 @@
  * 主に横スクロールのゲームにおけるキャラ移動を想定しています。
  * ただし、梯子属性のタイルでは例外的に上を向きます。
  *
+ * イベントに以下のタグを設定すると横スクロール移動は無効になります。
+ * <HSOff>
+ *
  * 指定したスイッチがONのときのみ有効です。
  *
  * This plugin is released under the MIT License.
@@ -76,6 +80,9 @@
  * @help キャラクターが移動する際の向きを左右に限定します。
  * 主に横スクロールのゲームにおけるキャラ移動を想定しています。
  * ただし、梯子属性のタイルでは例外的に上を向きます。
+ *
+ * イベントに以下のタグを設定すると横スクロール移動は無効になります。
+ * <HSOff>
  *
  * 指定したスイッチがONのときのみ有効です。
  *
@@ -184,6 +191,13 @@
 
     Game_Event.prototype.isNeedModifyUpper = function() {
         return !param.validUpEvent;
+    };
+
+    Game_Event.prototype.isHorizontalMove = function() {
+        if (this.event().meta.HSOff) {
+            return false;
+        }
+        return Game_Character.prototype.isHorizontalMove.call(this);
     };
 
     if (param.imageOnly) {
