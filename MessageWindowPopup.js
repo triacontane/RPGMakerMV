@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.10 2022/05/14 MWP_SETTING SUB_POS_PLAYER実行後に選択を表示するとエラーになる問題を修正
 // 2.14.9 2019/12/27 StandPictureEC.jsおよびMessageAlignmentEC.jsと組み合わせた場合に発生する競合を修正
 // 2.14.8 2019/12/27 2.14.7の修正で一部制御文字を使用するとウィンドウ幅の計算が正しく行われない問題を修正
 // 2.14.7 2019/12/22 不明な制御文字が挿入されたとき、ウィンドウの横幅が拡張されないよう修正
@@ -1049,6 +1050,9 @@
 
     Window_Base.prototype.setPauseSignImageToTail = function(lowerFlg) {
         this._windowPauseSignSprite.visible = false;
+        if (!this._messageTailImage) {
+            return;
+        }
         if (lowerFlg) {
             this._messageTailImage.rotation = 180 * Math.PI / 180;
             this._messageTailImage.y        = -paramTailImageAdjustY;
@@ -1115,7 +1119,9 @@
         var position = Math.sin(this._shakeCount / 10 * speed) * this._shakePower;
         this.x += position;
         this._windowPauseSignSprite.x -= position;
-        this._messageTailImage.x -= position;
+        if (this._messageTailImage) {
+            this._messageTailImage.x -= position;
+        }
         this._shakeCount++;
     };
 
@@ -1141,7 +1147,9 @@
         if (!this.isUsePauseSignTextEnd()) {
             this._windowPauseSignSprite.x = tailX
         }
-        this._messageTailImage.x = tailX;
+        if (this._messageTailImage) {
+            this._messageTailImage.x = tailX;
+        }
     };
 
     Window_Base.prototype.setWindowShake = function(power) {
