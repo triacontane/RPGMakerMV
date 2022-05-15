@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2022/05/16 全体化ステートの当事者に対して一部の効果が重複して適用されていた問題を修正
 // 1.1.2 2021/11/17 戦闘不能者については全体化の適用外とするよう仕様変更
 // 1.1.1 2020/11/05 全体化ステートが敵グループに対しても指定可能であることがヘルプの記述だと分かりにくいので記述を修正
 // 1.1.0 2018/09/25 全体化ステートを有するアクターの対象を戦闘メンバーのみにするかどうかの設定を追加
@@ -141,7 +142,7 @@
     Game_BattlerBase.prototype.getPartyTotalizationStates = function() {
         return this.friendsUnit().getStateTotalizationMember().reduce(function(totalizationStates, member) {
             return member !== this ? totalizationStates.concat(member.getTotalizationStates()) : totalizationStates;
-        }, []);
+        }.bind(this), []);
     };
 
     Game_BattlerBase.prototype.getTotalizationStates = function() {
