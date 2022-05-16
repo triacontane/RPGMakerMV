@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2022/05/16 リングアイコン全体を一時的に非表示にできるスイッチを追加
 // 2.6.0 2022/03/29 ターン数表示に数字フォントを使用できる機能を追加
 // 2.5.0 2021/09/11 敵と味方のステート一列表示の基準を別々に設定できるよう修正
 // 2.4.6 2021/04/07 2.4.1の修正で敵キャラのリングアイコンY座標が調整できなくなっていた問題を修正
@@ -170,6 +171,11 @@
  * @min -1000
  * @max 1000
  *
+ * @param IconHideSwitch
+ * @desc When the switch is ON, the ring icon is hidden.
+ * @default 0
+ * @type switch
+ *
  * @help StateRingIcon.js
  *
  * You can rotate the state icons of enemy characters
@@ -330,6 +336,12 @@
  * @type number
  * @min -1000
  * @max 1000
+ *
+ * @param IconHideSwitch
+ * @text アイコン非表示スイッチ
+ * @desc 指定したスイッチがONのとき、リングアイコンが非表示になります。
+ * @default 0
+ * @type switch
  *
  * @help StateRingIcon.js
  *
@@ -519,6 +531,9 @@ function Sprite_StateIconChild() {
         }
         this.x = (this._baseX || 0) + this._battler.findRingStateX();
         this.y = (this._baseY || 0) + this._battler.findRingStateY();
+        if (param.IconHideSwitch) {
+            this.visible = !$gameSwitches.value(param.IconHideSwitch);
+        }
         this.updateRingIconChild();
     };
 
