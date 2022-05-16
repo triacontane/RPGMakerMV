@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2022/05/16 マウスオーバーしたときにさらに別の画像に差し替える機能を追加
 // 2.3.2 2021/11/14 メニュー画面などで開いたときに一瞬だけウィンドウフレームが見えてしまう問題を修正
 // 2.3.1 2021/09/04 ウィンドウの幅か高さが0のときは背景画像を非表示にするよう修正
 // 2.3.0 2021/05/06 名前ウィンドウがプリセットになかったので追加
@@ -213,7 +214,13 @@
  * @text 差し替えファイル名
  * @desc 差し替える画像のファイル名です。(img/pictureの中から選択します)　空を指定すると枠だけが非表示になります。
  * @default
- * @require 1
+ * @dir img/pictures/
+ * @type file
+ *
+ * @param ImageFileHover
+ * @text ホバーファイル名
+ * @desc マウスを重ねたときに差し替えられる画像のファイル名です。
+ * @default
  * @dir img/pictures/
  * @type file
  *
@@ -336,7 +343,9 @@
         this._windowBackImageSprites    = [];
         this._backImageDataList.forEach(backImageData => {
             const bitmap     = ImageManager.loadPicture(backImageData['ImageFile']);
-            const sprite     = new Sprite_WindowBackImage(bitmap);
+            const hoverBitmapName = backImageData['ImageFileHover'];
+            const hoverBitmap = hoverBitmapName ? ImageManager.loadPicture(hoverBitmapName) : null;
+            const sprite     = new Sprite_WindowBackImage(bitmap, hoverBitmap);
             sprite.scale.x = (backImageData['ScaleX'] || 100) / 100;
             sprite.scale.y = (backImageData['ScaleY'] || 100) / 100;
             this._windowBackImageSprites.push(sprite);
@@ -397,6 +406,7 @@
             if (sprite.visible && !this.getBackImageDataItem(index, 'WindowShow')) {
                 defaultVisible = false;
             }
+            sprite.update();
         });
         this._backSprite.visible  = defaultVisible;
         this._frameSprite.visible = defaultVisible;
@@ -429,14 +439,26 @@
         this.initialize.apply(this, arguments);
     }
 
-    Sprite_WindowBackImage.prototype             = Object.create(Sprite.prototype);
+    Sprite_WindowBackImage.prototype             = Object.create(Sprite_Clickable.prototype);
     Sprite_WindowBackImage.prototype.constructor = Sprite_WindowBackImage;
 
-    Sprite_WindowBackImage.prototype.initialize = function(bitmap) {
-        Sprite.prototype.initialize.call(this);
+    Sprite_WindowBackImage.prototype.initialize = function(bitmap, hoverBitmap) {
+        Sprite_Clickable.prototype.initialize.call(this);
         this.bitmap   = bitmap;
+        this._hoverBitmap = hoverBitmap;
+        this._originalBitmap = bitmap;
         this.anchor.x = 0.5;
         this.anchor.y = 0.5;
+    };
+
+    Sprite_WindowBackImage.prototype.onMouseEnter = function() {
+        if (this._hoverBitmap) {
+            this.bitmap = this._hoverBitmap;
+        }
+    };
+
+    Sprite_WindowBackImage.prototype.onMouseExit = function() {
+        this.bitmap = this._originalBitmap;
     };
 })();
 
