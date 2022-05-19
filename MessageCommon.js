@@ -1,11 +1,12 @@
 //=============================================================================
 // MessageCommon.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2022/05/20 MZで動作するよう修正
 // 1.0.0 2017/05/02 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -14,22 +15,12 @@
 //=============================================================================
 
 /*:
- * @plugindesc MessageCommonPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help メッセージの表示中にコモンイベントを呼び出します。
- * コモンイベントは並列扱いで実行されます。
- *
- * 以下の制御文字を含めて「文章の表示」を実行してください。
- * \CE[1] # コモンイベント[1]を実行します。
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc メッセージコモンプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageCommon.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @help メッセージの表示中にコモンイベントを呼び出します。
  * コモンイベントは並列扱いで実行されます。
@@ -45,7 +36,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
 
     //=============================================================================
@@ -56,7 +47,7 @@
         if (!this._messageCommonEvents) {
             this._messageCommonEvents = [];
         }
-        var interpreter = new Game_Interpreter();
+        const interpreter = new Game_Interpreter();
         interpreter.setup($dataCommonEvents[id].list);
         this._messageCommonEvents.push(interpreter);
     };
@@ -66,16 +57,14 @@
         this._messageCommonEvents.forEach(function(interpreter) {
             interpreter.update();
         });
-        this._messageCommonEvents = this._messageCommonEvents.filter(function(interpreter) {
-            return interpreter.isRunning();
-        });
+        this._messageCommonEvents = this._messageCommonEvents.filter(interpreter =>interpreter.isRunning());
     };
 
     //=============================================================================
     // Window_Message
     //  メッセージコモンイベントを呼び出します。
     //=============================================================================
-    var _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
+    const _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
     Window_Message.prototype.processEscapeCharacter = function(code, textState) {
         if (code === 'CE') {
             this.callMessageCommon(this.obtainEscapeParam(textState));
@@ -88,7 +77,7 @@
         $gameSystem.addMessageCommonEvents(commonEventId);
     };
 
-    var _Window_Message_update = Window_Message.prototype.update;
+    const _Window_Message_update = Window_Message.prototype.update;
     Window_Message.prototype.update = function() {
         $gameSystem.updateMessageCommonEvents();
         _Window_Message_update.apply(this, arguments);
