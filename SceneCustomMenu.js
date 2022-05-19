@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.28.2 2022/05/20 メモ欄の内容を右寄せで描画する凡例を追加
  1.28.1 2022/04/25 前バージョンで追加したカレントシーンの判定方法を変更
  1.28.0 2022/04/20 カスタムシーンクラスをSceneManager配下に保持するよう変更
  1.27.1 2022/04/06 空の項目を選択できるよう仕様変更
@@ -552,6 +553,7 @@
  * @option this.placeGauge(item, 'hp', r.x, r.y); // HPゲージ(戦闘用)
  * @option this.placeBasicGauges(item, r.x, r.y); // ゲージセット(戦闘用)
  * @option this.drawNoteText('noteValue', r.x, r.y); // 指定したメモ欄の内容を描画
+ * @option this.drawNoteText('noteValue', r.x, r.y, 'right'); // メモ欄の内容を右寄せ描画
  *
  * @param IsEnableScript
  * @parent DataScript
@@ -1757,10 +1759,15 @@
             }
         }
 
-        drawNoteText(metaValue, x, y) {
+        drawNoteText(metaValue, x, y, align = null) {
             const meta = this.findMetaData(this._drawingIndex);
             if (meta && meta[metaValue] !== undefined) {
-                this.drawTextEx(meta[metaValue], x, y);
+                if (align) {
+                    const rect = this.itemRect(this._drawingIndex);
+                    this.drawText(meta[metaValue], x, y, rect.width - x, align)
+                } else {
+                    this.drawTextEx(meta[metaValue], x, y);
+                }
             }
         }
 
