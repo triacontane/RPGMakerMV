@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.2 2022/05/20 進行度をクリアするコマンドを追加
 // 3.0.1 2022/02/19 3.0.0でブラウザ環境で正常にゲームが起動できない問題を修正
 // 3.0.0 2022/02/15 一度もセーブしていない状態で進行度を保存した場合を考慮するため、データの持ち方を変更
 // 2.0.1 2022/01/16 ゲーム進行度のみ保存のコマンドを使って保存したとき、保存先のセーブファイルIDが間違っていた問題を修正
@@ -58,6 +59,10 @@
  * @text SAVE_STORY_PHASE
  * @desc Saves only the progress without saving the game data.
  *
+ * @command CLEAR_STORY_PHASE
+ * @text CLEAR_STORY_PHASE
+ * @desc
+ *
  * @help TitleImageChange.js
  *
  * Changes the title screen image and BGM according to the game progress (an arbitrary variable).
@@ -100,6 +105,10 @@
  * @command SAVE_STORY_PHASE
  * @text ゲーム進行度のみ保存
  * @desc ゲームデータをセーブせず進行状況のみをセーブします。
+ *
+ * @command CLEAR_STORY_PHASE
+ * @text 進行度クリア
+ * @desc 進行度の保存情報をクリアし、デフォルトのタイトルに戻します。
  *
  * @help TitleImageChange.js
  *
@@ -155,6 +164,10 @@
         DataManager.saveTitleInfo();
     });
 
+    PluginManagerEx.registerCommand(script, 'CLEAR_STORY_PHASE', () => {
+        DataManager.clearTitleInfo();
+    });
+
     //=============================================================================
     // DataManager
     //  ゲーム進行状況を保存します。
@@ -192,6 +205,11 @@
         const newTitleInfo = {};
         this.setGradeVariable(newTitleInfo);
         this._titleInfo = [this._titleInfo, newTitleInfo].sort(this._compareOrderForGradeVariable)[0];
+        StorageManager.saveObject('titleInfo', this._titleInfo);
+    };
+
+    DataManager.clearTitleInfo = function() {
+        this._titleInfo = {};
         StorageManager.saveObject('titleInfo', this._titleInfo);
     };
 
