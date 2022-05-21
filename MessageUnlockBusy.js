@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2022/05/21 文章の表示に続けて選択肢を表示したときの挙動がおかしくなる問題を修正
 // 1.2.0 2022/05/20 MZで動作するよう修正
 // 1.1.1 2016/08/23 プラグインコマンドが小文字でも機能するよう修正
 // 1.1.0 2016/08/23 一度ロックを解除したあとで再度、ロック状態に戻すプラグインコマンドを追加
@@ -88,7 +89,7 @@
         if (!$gameMessage.isBusy()) {
             $gameMessage.setInterpreter(this);
         }
-        _Game_Interpreter_command101.apply(this, arguments);
+        return _Game_Interpreter_command101.apply(this, arguments);
     };
 
     //=============================================================================
