@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2022/05/25 2.4.0の修正で不要なゲージが表示される婆街ある問題を修正
 // 2.4.0 2022/03/18 マップ画面とステータス画面に蓄積ゲージを表示できるよう修正
 // 2.3.0 2021/07/23 敵キャラに対しても蓄積ゲージを表示できる機能を追加
 // 2.2.1 2021/07/16 蓄積型ステートが有効になるごとに耐性が上昇する機能を追加
@@ -423,14 +424,20 @@
         if (!battler) return;
         if (this._battler !== battler) {
             this._battler = battler;
-            this.refresh();
         }
-        this.updateRate();
         this.updateVisibility();
+        if (this.visible) {
+            this.updatePosition();
+            this.updateRate();
+        }
     };
 
     Sprite_AccumulateState.prototype.updateVisibility = function () {
         this.visible = true;
+        const stateId = this._battler.getGaugeStateId();
+        if (!stateId) {
+            this.visible = false;
+        }
         if (param.GaugeSwitchId && !$gameSwitches.value(param.GaugeSwitchId)) {
             this.visible = false;
         }
@@ -449,15 +456,9 @@
         }
     };
 
-    Sprite_AccumulateState.prototype.refresh = function () {
-        const stateId = this._battler.getGaugeStateId();
-        if (stateId > 0) {
-            this.x = this._battler.getGaugeX();
-            this.y = this._battler.getGaugeY();
-            this.visible = true;
-        } else {
-            this.visible = false;
-        }
+    Sprite_AccumulateState.prototype.updatePosition = function () {
+        this.x = this._battler.getGaugeX();
+        this.y = this._battler.getGaugeY();
     };
 })();
 
