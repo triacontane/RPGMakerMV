@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2022/05/26 動的文字列ピクチャの設定を解除するコマンドを追加
 // 2.4.0 2021/10/29 行の高さをコマンドから指定できる機能を追加
 //                  直前に生成したピクチャの横幅、高さを変数に格納する機能
 // 2.3.0 2021/06/05 フォントロードプラグインと組み合わせて動的文字列ピクチャに好きなフォントを指定できる機能を追加
@@ -90,7 +91,7 @@
  *
  * @command dTextSetting
  * @text 文字列ピクチャ設定
- * @desc 文字列ピクチャの表示方法に関する設定です。変更した設定は描画後も保持されます。
+ * @desc 文字列ピクチャの表示方法に関する設定です。変更した設定は描画後も保持されます。未設定の項目は現状維持されます。
  *
  * @arg backGroundColor
  * @text 背景色
@@ -142,6 +143,10 @@
  * @text 行の高さ
  * @desc 文字列ピクチャの1行分の高さです。
  * @default 0
+ *
+ * @command dTextSettingClear
+ * @text 文字列ピクチャ設定解除
+ * @desc 文字列ピクチャの表示方法に関する設定を全て解除し初期化します。
  *
  * @command windowCursor
  * @text ウィンドウカーソル設定
@@ -237,6 +242,10 @@
         $gameScreen.setDtextSetting(args);
     });
 
+    PluginManagerEx.registerCommand(script, 'dTextSettingClear', function(args) {
+        $gameScreen.clearDtextSetting();
+    });
+
     PluginManagerEx.registerCommand(script, 'windowCursor', function(args) {
         $gameScreen.setDTextWindowCursor(args.pictureId, args, args.activateSwitch);
     });
@@ -270,6 +279,17 @@
         if (setting.lineHeight > 0) {
             this.dTextLineHeight = setting.lineHeight;
         }
+    };
+
+    Game_Screen.prototype.clearDtextSetting = function() {
+        this.dTextBackColor = null;
+        this.dTextGradationLeft = null;
+        this.dTextGradationRight = null;
+        this.dTextRealTime = null;
+        this.dWindowFrame = null;
+        this.dTextAlign = null;
+        this.dTextFontFace = null;
+        this.dTextLineHeight = null;
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
