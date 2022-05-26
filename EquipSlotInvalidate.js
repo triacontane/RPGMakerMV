@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2022/05/26 スロット無効化が武器グラフィックに反映されない問題を修正
  1.1.0 2019/06/09 ステートなどのメモ欄の記述でスロット無効化できる機能を追加
  1.0.1 2019/06/08 二刀流設定時、対象スロットが無効化されていると戦闘アニメーションも表示されないよう修正
  1.0.0 2019/05/24 初版
@@ -311,5 +312,17 @@ function GameInvalidEquipSlot() {
     Game_Actor.prototype.traitObjects = function() {
         this._calcInvalidSlot = true;
         return _Game_Actor_traitObjects.apply(this, arguments);
+    };
+
+    var _Game_Actor_weapons = Game_Actor.prototype.weapons;
+    Game_Actor.prototype.weapons = function() {
+        this._calcInvalidSlot = true;
+        return _Game_Actor_weapons.apply(this, arguments);
+    };
+
+    var _Game_Actor_armors = Game_Actor.prototype.armors;
+    Game_Actor.prototype.armors = function() {
+        this._calcInvalidSlot = true;
+        return _Game_Actor_armors.apply(this, arguments);
     };
 })();
