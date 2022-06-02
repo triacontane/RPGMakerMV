@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.3.0 2022/06/03 イベント感知の距離を上下左右で個別に指定できる機能を追加
 // 3.2.1 2021/06/01 フラッシュとフキダシの無効設定のメモタグが正常に機能していなかった問題を修正
 // 3.2.0 2021/01/27 MZで動作するよう修正
 // 3.1.1 2020/07/05 3.1.0の修正をイベント開始時にも適用できるよう変更
@@ -86,9 +87,15 @@
  *
  * @param SensorDistance
  * @text 感知距離
- * @desc イベントを関知する距離です。
+ * @desc イベントを感知する距離です。
  * @default 2
  * @type number
+ *
+ * @param SensorRange
+ * @text 感知範囲
+ * @desc イベントを感知する範囲を上下左右で細かく設定します。
+ * @default {}
+ * @type struct<Range>
  *
  * @param FlashColor
  * @text フラッシュカラー
@@ -195,6 +202,32 @@
  * @min 0
  * @max 255
  * @default 255
+ */
+
+/*~struct~Range:
+ * @param Left
+ * @text 左マス数
+ * @desc 左方向のマス数
+ * @type number
+ * @default 0
+ *
+ * @param Right
+ * @text 右マス数
+ * @desc 右方向のマス数
+ * @type number
+ * @default 0
+ *
+ * @param Up
+ * @text 上マス数
+ * @desc 上方向のマス数
+ * @type number
+ * @default 0
+ *
+ * @param Down
+ * @text 下マス数
+ * @desc 下方向のマス数
+ * @type number
+ * @default 0
  */
 
 (function() {
@@ -382,7 +415,18 @@
         const sy = this.deltaYFrom($gamePlayer.y);
         const ax = Math.abs(sx);
         const ay = Math.abs(sy);
-        const result = (ax + ay <= param.SensorDistance);
+        if (param.SensorRange) {
+            if (this.x - $gamePlayer.x > param.SensorRange.Left) {
+                return false;
+            } else if ($gamePlayer.x - this.x > param.SensorRange.Right) {
+                return false;
+            } else if (this.y - $gamePlayer.y > param.SensorRange.Up) {
+                return false;
+            } else if ($gamePlayer.y - this.y > param.SensorRange.Down) {
+                return false;
+            }
+        }
+        const result = (ax + ay <= param.SensorDistance) || !param.SensorDistance;
         if (result && param.ConsiderationDir) {
             if (ax > ay) {
                 return $gamePlayer.direction() === (sx > 0 ? 6 : 4);
