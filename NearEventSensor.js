@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.4.0 2022/06/03 イベントごと、ページごとにフキダシや感知距離、範囲を変えられる設定を追加
 // 3.3.0 2022/06/03 イベント感知の距離を上下左右で個別に指定できる機能を追加
 // 3.2.1 2021/06/01 フラッシュとフキダシの無効設定のメモタグが正常に機能していなかった問題を修正
 // 3.2.0 2021/01/27 MZで動作するよう修正
@@ -139,6 +140,12 @@
  * @default false
  * @type boolean
  *
+ * @param DetailList
+ * @text 詳細設定リスト
+ * @desc イベントごと、ページごとに異なる設定をしたい場合に使用します。
+ * @default []
+ * @type struct<Detail>[]
+ *
  * @help 周囲に存在するイベントを感知してイベントにエフェクトを発生させます。
  * 実行可能なイベントをプレイヤーに伝えてユーザビリティを向上させます。
  * 使用できるエフェクトはフラッシュとフキダシアイコン（およびその両方）です。
@@ -162,6 +169,11 @@
  * <NESSwitch:1>         # 同上
  * <NESセルフスイッチ:A> # セルフスイッチ[A]がONのときのみエフェクトを出します。
  * <NESSelfSwitch:1>     # 同上
+ *
+ * イベントごと、ページごとに感知設定を細かく指定したい場合は
+ * パラメータ「詳細設定」で設定した内容を以下のタグで適用できます。
+ * <NES詳細:sensor01>    # 識別子[sensor01]の設定を適用
+ * <NESDetail:sensor01> # 同上
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -230,11 +242,90 @@
  * @default 0
  */
 
+/*~struct~Detail:
+ * @param Id
+ * @text 識別子
+ * @desc 設定の識別子です。同一識別子を複数件定義した場合、条件に一致するリスト上の設定が優先されます。
+ * @default sensor01
+ *
+ * @param Page
+ * @text ページ条件
+ * @desc イベントページが指定した値のときに有効になります。0を指定すると全ページで有効になります。
+ * @default 0
+ * @type number
+ *
+ * @param Switch
+ * @text スイッチ条件
+ * @desc 指定したスイッチがONのときに有効になります。0を指定すると常に有効になります。
+ * @default 0
+ * @type switch
+ *
+ * @param SensorDistance
+ * @text 感知距離
+ * @desc イベントを感知する距離です。
+ * @default 2
+ * @type number
+ *
+ * @param SensorRange
+ * @text 感知範囲
+ * @desc イベントを感知する範囲を上下左右で細かく設定します。
+ * @default {}
+ * @type struct<Range>
+ *
+ * @param Balloon
+ * @text フキダシ
+ * @desc 感知時にイベントに自動でフキダシアイコンを出します。
+ * (1:びっくり 2:はてな 3:音符 4:ハート 5:怒り....)
+ * @default 0
+ * @type select
+ * @option なし
+ * @value 0
+ * @option びっくり
+ * @value 1
+ * @option はてな
+ * @value 2
+ * @option 音符
+ * @value 3
+ * @option ハート
+ * @value 4
+ * @option 怒り
+ * @value 5
+ * @option 汗
+ * @value 6
+ * @option くしゃくしゃ
+ * @value 7
+ * @option 沈黙
+ * @value 8
+ * @option 電球
+ * @value 9
+ * @option Zzz
+ * @value 10
+ * @option ユーザ定義1
+ * @value 11
+ * @option ユーザ定義2
+ * @value 12
+ * @option ユーザ定義3
+ * @value 13
+ * @option ユーザ定義4
+ * @value 14
+ * @option ユーザ定義5
+ * @value 15
+ *
+ * @param FlashColor
+ * @text フラッシュカラー
+ * @desc 感知時のフラッシュ色です。R(赤),G(緑),B(青),A(強さ)の順番で指定してください。
+ * @default
+ * @type struct<Color>
+ *
+ */
+
 (function() {
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
-    param.FlashColorArray = [param.FlashColor.Red, param.FlashColor.Green, param.FlashColor.Blue, param.FlashColor.Alpha];
+    if (!param.DetailList) {
+        param.DetailList = [];
+    }
 
     //=============================================================================
     // Sprite_Character
@@ -299,7 +390,11 @@
 
     Game_CharacterBase.prototype.applySensorEffect = function(targetEvent) {
         if (!this.isFlash() && targetEvent.isFlashEvent()) {
-            this.startFlash(param.FlashColorArray.clone(), param.FlashDuration);
+            const color = targetEvent.findSensorFlash();
+            if (color) {
+                this.startFlash([color.Red, color.Green, color.Blue, color.Alpha], param.FlashDuration);
+            }
+
         }
         const balloonId = targetEvent.getSensorBalloonId();
         if (balloonId && (!param.WaitForBalloon || !this.isBalloonPlaying())) {
@@ -336,6 +431,28 @@
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         this._balloonInterval = 0;
+    };
+
+    Game_Event.prototype.findEventSensorDetail = function() {
+        const detailTag = this.findEventSensorNote( ['NES詳細', 'NESDetail']);
+        if (!detailTag) {
+            return null;
+        }
+        return param.DetailList.find(item => {
+            if (item.Id !== detailTag) {
+                return false;
+            }
+            if (item.Page && item.Page !== this._pageIndex + 1) {
+                return false;
+            }
+            if (item.Switch && !$gameSwitches.value(item.Switch)) {
+                return false;
+            }
+            if (item.SelfSwitch && !$gameSelfSwitches.value([$gameMap.mapId(), this._eventId, item.SelfSwitch])) {
+                return false;
+            }
+            return true;
+        });
     };
 
     const _Game_EventUpdate       = Game_Event.prototype.update;
@@ -402,6 +519,10 @@
     };
 
     Game_Event.prototype.getSensorBalloonId = function() {
+        const detail = this.findEventSensorDetail();
+        if (detail && detail.Balloon) {
+            return detail.Balloon;
+        }
         const balloonId = this.findEventSensorNote( ['NESフキダシ対象', 'NESBalloonEvent']);
         return balloonId >= 0 ? balloonId : param.DefaultBalloon;
     };
@@ -415,18 +536,20 @@
         const sy = this.deltaYFrom($gamePlayer.y);
         const ax = Math.abs(sx);
         const ay = Math.abs(sy);
-        if (param.SensorRange) {
-            if (this.x - $gamePlayer.x > param.SensorRange.Left) {
+        const sensorRange = this.findSensorRange();
+        if (sensorRange) {
+            if (this.x - $gamePlayer.x > sensorRange.Left) {
                 return false;
-            } else if ($gamePlayer.x - this.x > param.SensorRange.Right) {
+            } else if ($gamePlayer.x - this.x > sensorRange.Right) {
                 return false;
-            } else if (this.y - $gamePlayer.y > param.SensorRange.Up) {
+            } else if (this.y - $gamePlayer.y > sensorRange.Up) {
                 return false;
-            } else if ($gamePlayer.y - this.y > param.SensorRange.Down) {
+            } else if ($gamePlayer.y - this.y > sensorRange.Down) {
                 return false;
             }
         }
-        const result = (ax + ay <= param.SensorDistance) || !param.SensorDistance;
+        const sensorDistance = this.findSensorDistance();
+        const result = (ax + ay <= sensorDistance) || !sensorDistance;
         if (result && param.ConsiderationDir) {
             if (ax > ay) {
                 return $gamePlayer.direction() === (sx > 0 ? 6 : 4);
@@ -437,5 +560,32 @@
             }
         }
         return result;
+    };
+
+    Game_Event.prototype.findSensorRange = function() {
+        const detail = this.findEventSensorDetail();
+        if (detail && detail.SensorRange) {
+            return detail.SensorRange;
+        } else {
+            return param.SensorRange;
+        }
+    };
+
+    Game_Event.prototype.findSensorDistance = function() {
+        const detail = this.findEventSensorDetail();
+        if (detail && detail.SensorDistance) {
+            return detail.SensorDistance;
+        } else {
+            return param.SensorDistance;
+        }
+    };
+
+    Game_Event.prototype.findSensorFlash = function() {
+        const detail = this.findEventSensorDetail();
+        if (detail && detail.FlashColor) {
+            return detail.FlashColor;
+        } else {
+            return param.FlashColor;
+        }
     };
 })();
