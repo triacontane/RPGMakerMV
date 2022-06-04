@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.28.3 2022/06/05 カスタムメニュー用のシーンクラス、ウィンドウクラスを外部から参照できるよう変更
  1.28.2 2022/05/20 メモ欄の内容を右寄せで描画する凡例を追加
  1.28.1 2022/04/25 前バージョンで追加したカレントシーンの判定方法を変更
  1.28.0 2022/04/20 カスタムシーンクラスをSceneManager配下に保持するよう変更
@@ -1445,6 +1446,7 @@
             }
         }
     }
+    window.Scene_CustomMenu = Scene_CustomMenu;
 
     const _Window_StatusBase_initialize = Window_StatusBase.prototype.initialize;
     Window_StatusBase.prototype.initialize = function (rect, data) {
@@ -2096,6 +2098,10 @@
             }
         }
     }
+
+    window.Window_CustomMenu = Window_CustomMenu;
+    window.Window_CustomMenuCommand = Window_CustomMenuCommand;
+    window.Window_CustomMenuDataList = Window_CustomMenuDataList;
 
     class Spriteset_Menu extends Spriteset_Base {
         createBaseSprite() {
