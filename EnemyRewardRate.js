@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/06/05 撃破前に経験値やお金を参照しようとしたとき正常に取得できない問題を修正
  1.0.0 2022/03/08 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -70,11 +71,11 @@
 
     const _Game_Enemy_exp = Game_Enemy.prototype.exp;
     Game_Enemy.prototype.exp = function() {
-        return _Game_Enemy_exp.apply(this, arguments) * this._expRate;
+        return _Game_Enemy_exp.apply(this, arguments) * (this._expRate || 1);
     };
 
     const _Game_Enemy_gold = Game_Enemy.prototype.gold;
     Game_Enemy.prototype.gold = function() {
-        return _Game_Enemy_gold.apply(this, arguments) * this._goldRate;
+        return _Game_Enemy_gold.apply(this, arguments) * (this._goldRate || 1);
     };
 })();
