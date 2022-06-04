@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.25.2 2022/11/03 カスタムメニュー用のシーンクラス、ウィンドウクラスを外部から参照できるよう変更
  1.25.1 2022/10/16 データスクリプトとコマンドリストを併用したウィンドウを一覧ウィンドウに指定した詳細情報ウィンドウでは、コマンドリストの詳細は表示しないよう仕様変更
  1.25.0 2022/10/12 データスクリプトとコマンドリストを併用したウィンドウを作成できるよう修正
  1.24.1 2022/10/12 MOG_Weather_EX.jsとの併用で発生しうるエラーに対処
@@ -1408,6 +1409,7 @@
             Scene_Map.prototype.stopAudioOnBattleStart.apply(this, arguments);
         }
     }
+    window.Scene_CustomMenu = Scene_CustomMenu;
 
     const _Window_Selectable_initialize    = Window_Selectable.prototype.initialize;
     Window_Selectable.prototype.initialize = function(x, y, width, height, data) {
@@ -2038,6 +2040,10 @@
             }
         }
     }
+
+    window.Window_CustomMenu = Window_CustomMenu;
+    window.Window_CustomMenuCommand = Window_CustomMenuCommand;
+    window.Window_CustomMenuDataList = Window_CustomMenuDataList;
 
     class Spriteset_Menu extends Spriteset_Base {
         createBaseSprite() {
