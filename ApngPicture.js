@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.3.1 2022/06/06 apngのフレーム数を指定したとき停止スイッチが機能しない問題を修正
  2.3.0 2022/02/06 1セルごとのフレーム数をゲーム側で設定できるパラメータを追加
  2.2.1 2021/10/09 AltMenuScreen2MZとの並び順を指定するアノテーションを追加
  2.2.0 2021/04/26 2.1.6の修正でGIFファイルが使えなくなっていた問題を修正
@@ -970,7 +971,7 @@
     Sprite.prototype.update = function() {
         _Sprite_update.apply(this, arguments);
         if (this._apngSprite) {
-            if (param.FrameCount > 0) {
+            if (param.FrameCount > 0 && !this._apngSpritePause) {
                 this.updateApngFrameFrame();
             }
             this.updateApngSwitchStop();
