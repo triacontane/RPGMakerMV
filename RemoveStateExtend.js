@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/06/08 解除条件にスクリプトを設定、解除確率を補正するタグを追加
  1.0.0 2022/03/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -33,6 +34,11 @@
  * 特定の属性を含む（含まない）攻撃を受けたときや、魔法攻撃を受けたとき
  * HP割合が指定値を下回った場合のみ解除されるステートなどが作成できます。
  * パラメータから条件リストを設定します。
+ *
+ * ステートを解除するときの確率を補正(加算)するメモ欄です。
+ * アクター、職業、武器、防具、敵キャラ、ステートのメモ欄で有効です。
+ * ex:ステートID[3]のステート解除確率が20%加算されます。
+ * <ステート解除補正3:20>
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -95,6 +101,12 @@
  * @min 0
  * @max 100
  *
+ * @param script
+ * @text スクリプト
+ * @desc 指定した場合、スクリプトの評価結果がtrueを返した場合に解除されます。thisでバトラー、stateでステートが参照できます。
+ * @default
+ * @type multiline_string
+ *
  * @param reverse
  * @text 条件反転
  * @desc 上記の条件を『満たさなかった』場合に解除されるよう変更します。
@@ -149,10 +161,20 @@
         if (paramItem.tpRate && this.tpRate() > paramItem.tpRate / 100) {
             result = false;
         }
+        if (paramItem.script && !eval(paramItem.script)) {
+            result = false;
+        }
         if (paramItem.reverse) {
             result = !result;
         }
-        return Math.randomInt(100) < paramItem.chanceByDamage ? result : false;
+        return Math.randomInt(100) < this.findRemoveStateRate(paramItem, state) ? result : false;
+    }
+
+    Game_Battler.prototype.findRemoveStateRate = function(paramItem, state) {
+        const tag = `ステート解除補正${state.id}`
+        const rate = this.traitObjects()
+            .reduce((prev, obj) => prev + (PluginManagerEx.findMetaValue(obj, tag) || 0), 0);
+        return paramItem.chanceByDamage + rate;
     }
 
     Game_Battler.prototype.setAcceptedItem = function(item) {
