@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.0.2 2022/06/10 コマンド選択時に消去：OFF、メンバー選択あり：ON、親がひとつしかないサブコマンドを選択するとエラーになる現象を修正
 // 4.0.1 2022/05/20 コマンドのデフォルト揃えが中央揃えになっていたので、プラグイン側もデフォルトを中央揃えに変更
 // 4.0.0 2022/02/11 サブメニューの表示位置のパラメータ仕様を変更し、ウィンドウの好きな位置に追加できるよう修正
 // 3.1.0 2021/12/09 サブメニューで選択したアクターのIDをマップ遷移時以外でも設定するよう変更
@@ -596,16 +597,16 @@
         if (this._subCommand.isNeedSelectMember()) {
             if (this._subMenuWindow) {
                 this._commandWindow.maskCommand(this._subCommand.getName());
+                if (param.clearSubMenuOneByObe) {
+                    this.removeSubMenuCommandWindow();
+                } else {
+                    this._subMenuWindow.deactivate();
+                }
             }
             this._statusWindow.selectLast();
             this._statusWindow.activate();
             this._statusWindow.setHandler('ok', this.executeSubCommand.bind(this));
             this._statusWindow.setHandler('cancel', this.onPersonalCancel.bind(this));
-            if (param.clearSubMenuOneByObe) {
-                this.removeSubMenuCommandWindow();
-            } else {
-                this._subMenuWindow.deactivate();
-            }
         } else {
             this.executeSubCommand();
         }
