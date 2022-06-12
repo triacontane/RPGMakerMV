@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2022/06/12 lowerLimitXなどいくつかのパラメータが機能していなかった問題を修正
  1.2.0 2021/12/06 フォロワーのフキダシ表示機能をMV版から流用して追加
  1.1.3 2021/11/04 テール画像を指定した場合、特定の手順を踏んで選択肢の表示などを実行するとエラーになる問題を修正
  1.1.2 2021/01/17 パラメータでテール画像を指定していない状態でプラグインコマンドからテール画像を変更しても正しく反映されない問題を修正
@@ -438,13 +439,13 @@
  *
  * @param lowerLimitY
  * @text 下限Y座標
- * @desc フキダシウィンドウの下限Y座標です。
+ * @desc フキダシウィンドウの下限Y座標です。このパラメータを使用する場合、パラメータ『画面内に収める』を有効にします。
  * @default 0
  * @type number
  *
  * @param upperLimitY
  * @text 上限Y座標
- * @desc フキダシウィンドウの上限Y座標です。
+ * @desc フキダシウィンドウの上限Y座標です。このパラメータを使用する場合、パラメータ『画面内に収める』を有効にします。
  * @default 0
  * @type number
  *
@@ -1112,8 +1113,8 @@
 
     Window_Base.prototype.adjustPopupPositionX = function() {
         let deltaX = 0;
-        const minX = param.LowerLimitX || 0;
-        const maxX = param.UpperLimitX || Graphics.boxWidth;
+        const minX = param.lowerLimitX || 0;
+        const maxX = param.upperLimitX || Graphics.boxWidth;
         if (this.x < minX) {
             deltaX = this.x - minX;
             this.x = minX;
@@ -1127,11 +1128,11 @@
 
     Window_Base.prototype.adjustPopupPositionY = function() {
         let minY = (this._pauseSignLower ? this._pauseSignSprite.height / 2 : 0);
-        minY += param.LowerLimitY || 0;
+        minY += param.lowerLimitY || 0;
         if (this.y < minY) {
             this.y = minY;
         }
-        const maxY = (param.UpperLimitY || Graphics.boxHeight) - this._pauseSignSprite.height / 2;
+        const maxY = (param.upperLimitY || Graphics.boxHeight) - this._pauseSignSprite.height / 2;
         if (this.y + this.height > maxY) {
             this.y = maxY - this.height;
         }
