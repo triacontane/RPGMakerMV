@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2022/06/12 反撃条件に、メモ欄に指定したタグが書かれている場合のみ反撃できる設定を追加
 // 2.4.2 2022/04/06 相手の連続攻撃および複数回行動に対して、複数の反撃条件を満たした場合でも最初の一回しか反撃しなくなる設定を追加
 // 2.4.1 2022/03/10 複数の特徴オブジェクトを持つバトラーについて反撃頻度タグが正常に機能しない問題を修正
 // 2.4.0 2022/02/19 反撃スキルの計算式で、直前に受けたHPダメージを参照できる機能を追加
@@ -244,6 +245,11 @@
  * @type switch
  * @default 0
  *
+ * @param MemoTagCondition
+ * @text 反撃条件(メモタグ)
+ * @desc 指定した場合、メモ欄に指定したタグが書かれているスキルに対してのみ反撃します。
+ * @default
+ *
  * @param ScriptCondition
  * @text 反撃条件(スクリプト)
  * @desc 指定した場合、スクリプトの評価結果が有効なときのみ反撃します。
@@ -326,6 +332,7 @@
             conditions.push(() => checkParam(skill.HitTypeCondition, triggerSkill.hitType));
             conditions.push(() => skill.ElementCondition && !triggerAction.hasElement(skill.ElementCondition));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
+            conditions.push(() => skill.MemoTagCondition && !triggerSkill.meta[skill.MemoTagCondition]);
             conditions.push(() => skill.ScriptCondition && !eval(skill.ScriptCondition));
             conditions.push(() => Math.randomInt(100) >= frequency - evasion);
             conditions.push(() => counter.PayCounterCost && !this.isValid());
