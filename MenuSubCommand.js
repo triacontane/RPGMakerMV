@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.1.0 2022/06/13 サブウィンドウを透過しない設定を追加、サブウィンドウの開閉にアニメーションを付ける設定を追加
 // 4.0.2 2022/06/10 コマンド選択時に消去：OFF、メンバー選択あり：ON、親がひとつしかないサブコマンドを選択するとエラーになる現象を修正
 // 4.0.1 2022/05/20 コマンドのデフォルト揃えが中央揃えになっていたので、プラグイン側もデフォルトを中央揃えに変更
 // 4.0.0 2022/02/11 サブメニューの表示位置のパラメータ仕様を変更し、ウィンドウの好きな位置に追加できるよう修正
@@ -149,6 +150,18 @@
  * @value center
  * @option 右揃え
  * @value right
+ *
+ * @param overlapOther
+ * @text 他ウィンドウに重ねる
+ * @desc サブメニューウィンドウを透過し、背後のウィンドウが見えるようにします。
+ * @type boolean
+ * @default true
+ *
+ * @param openAnimation
+ * @text 開閉アニメ表示
+ * @desc サブメニューウィンドウを表示するとき開閉アニメーションを表示します。
+ * @type boolean
+ * @default false
  *
  * @param anotherPicInMenuMap
  * @text メニューピクチャ別管理
@@ -571,12 +584,10 @@
         if (typeof this._subMenuWindow.updateBackgroundOpacity === 'function') {
             this._subMenuWindow.updateBackgroundOpacity();
         }
-        // for MOG_MenuCursor.js and MOG_SceneMenu.js
-        if (typeof Imported !== 'undefined' && Imported.MMOG_SceneMenu) {
-            this.addChild(this._subMenuWindow);
-        } else {
-            const index = this.getChildIndex(this._windowLayer) + 1;
-            this.addChildAt(this._subMenuWindow, index);
+        this.addWindow(this._subMenuWindow);
+        if (this._subMenuClosing) {
+            this._windowLayer.removeChild(this._subMenuClosing);
+            this._subMenuClosing = null;
         }
     };
 
@@ -586,7 +597,12 @@
 
     Scene_Menu.prototype.removeSubMenuCommandWindow = function() {
         if (this._subMenuWindow) {
-            this.removeChild(this._subMenuWindow);
+            if (param.openAnimation) {
+                this._subMenuWindow.close();
+                this._subMenuClosing = this._subMenuWindow;
+            } else {
+                this._windowLayer.removeChild(this._subMenuWindow);
+            }
         }
         this._subMenuWindow = null;
     };
@@ -825,6 +841,13 @@
     Window_MenuSubCommand.prototype.initialize = function(rectangle, parentName) {
         this._parentName = parentName;
         Window_Command.prototype.initialize.call(this, rectangle);
+        if (param.overlapOther) {
+            this._isWindow = false;
+        }
+        if (param.openAnimation) {
+            this._openness = 0;
+            this.open();
+        }
     };
 
     Window_MenuSubCommand.prototype.makeCommandList = function() {
