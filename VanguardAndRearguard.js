@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/06/13 後衛の座標補正を敵キャラとアクターで別々に管理するよう変更
 // 2.1.1 2022/02/17 味方の敗北条件のパラメータが正常に機能していなかった問題を修正
 // 2.1.0 2022/01/17 敵キャラ座標補正値に負の値を指定できるよう修正
 // 2.0.1 2021/05/13 並び順固定のパラメータが正しく取得できていなかった問題を修正
@@ -87,7 +88,7 @@
  *
  * @param RearguardOffsetX
  * @text 後衛時X補正
- * @desc 後衛時のX座標を前衛時に対する相対値で指定します。サイドビューかつ敵キャラの場合は反転します。
+ * @desc 後衛時のX座標を前衛時に対する相対値で指定します。
  * @default 48
  * @type number
  * @min -9999
@@ -96,6 +97,22 @@
  * @param RearguardOffsetY
  * @text 後衛時Y補正
  * @desc 後衛時のX座標を前衛時に対する相対値で指定します。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ * @param EnemyRearguardOffsetX
+ * @text 後衛時敵キャラX補正
+ * @desc 後衛時の敵キャラのX座標を前衛時に対する相対値で指定します。サイドビューの場合は反転します。
+ * @default 48
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ * @param EnemyRearguardOffsetY
+ * @text 後衛時敵キャラY補正
+ * @desc 後衛時の敵キャラのX座標を前衛時に対する相対値で指定します。
  * @default 0
  * @type number
  * @min -9999
@@ -311,7 +328,27 @@
     };
 
     Game_BattlerBase.prototype.getFormationOffsetX = function() {
-        return this.isRearguard() ? param.RearguardOffsetX : 0;
+        return this.isRearguard() ? this.getRearguardOffsetX() : 0;
+    };
+
+    Game_BattlerBase.prototype.getFormationOffsetY = function() {
+        return this.isRearguard() ? this.getRearguardOffsetY() : 0;
+    };
+
+    Game_BattlerBase.prototype.getRearguardOffsetX = function() {
+        return param.RearguardOffsetX;
+    };
+
+    Game_BattlerBase.prototype.getRearguardOffsetY = function() {
+        return param.RearguardOffsetY;
+    };
+
+    Game_Enemy.prototype.getRearguardOffsetX = function() {
+        return param.EnemyRearguardOffsetX;
+    };
+
+    Game_Enemy.prototype.getRearguardOffsetY = function() {
+        return param.EnemyRearguardOffsetY;
     };
 
     Game_BattlerBase.prototype.getFormationOffsetY = function() {
