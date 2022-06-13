@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2022/06/13 2.5.0の機能の範囲をスキルから対象のバトラー全体に拡張
 // 2.5.0 2022/06/12 反撃条件に、メモ欄に指定したタグが書かれている場合のみ反撃できる設定を追加
 // 2.4.2 2022/04/06 相手の連続攻撃および複数回行動に対して、複数の反撃条件を満たした場合でも最初の一回しか反撃しなくなる設定を追加
 // 2.4.1 2022/03/10 複数の特徴オブジェクトを持つバトラーについて反撃頻度タグが正常に機能しない問題を修正
@@ -247,7 +248,7 @@
  *
  * @param MemoTagCondition
  * @text 反撃条件(メモタグ)
- * @desc 指定した場合、メモ欄に指定したタグが書かれているスキルに対してのみ反撃します。
+ * @desc 指定した場合、メモ欄に指定したタグが書かれているスキル、バトラー(武器防具含む)に対してのみ反撃します。
  * @default
  *
  * @param ScriptCondition
@@ -332,13 +333,19 @@
             conditions.push(() => checkParam(skill.HitTypeCondition, triggerSkill.hitType));
             conditions.push(() => skill.ElementCondition && !triggerAction.hasElement(skill.ElementCondition));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
-            conditions.push(() => skill.MemoTagCondition && !triggerSkill.meta[skill.MemoTagCondition]);
+            conditions.push(() => skill.MemoTagCondition && !this.hasMemoTag(triggerSkill, subject, skill.MemoTagCondition));
             conditions.push(() => skill.ScriptCondition && !eval(skill.ScriptCondition));
             conditions.push(() => Math.randomInt(100) >= frequency - evasion);
             conditions.push(() => counter.PayCounterCost && !this.isValid());
             this.setCounterSkill(skill, triggerSkill);
             this.setCounterTarget(target);
             return !conditions.some(condition => condition());
+        }
+
+        hasMemoTag(skill, target, tagName) {
+            const objList = target.traitObjects();
+            objList.push(skill);
+            return objList.some(obj => PluginManagerEx.findMetaValue(obj, tagName));
         }
 
         setCounterSkill(skill, triggerSkill) {
