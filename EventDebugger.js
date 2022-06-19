@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.3 2022/06/19 一部のパラメータの初期値を変更
 // 1.5.2 2022/06/19 イベントの最後がコモンイベントの呼び出しで終わっているときにエラーになる現象を修正
 //                  自動で開発者ツールを開く仕様を廃止
 // 1.5.1 2019/01/25 本体バージョン1.6.0で正常に動作しない問題を修正
@@ -213,7 +214,7 @@
  *
  * @param DisableDebugCtrlKey
  * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
- * @default true
+ * @default false
  * @type boolean
  *
  * @help 任意の箇所でイベントの実行を一時停止して、1行ずつ実行(ステップ実行)が
@@ -340,7 +341,7 @@
  *
  * @param 表示切替
  * @desc デバッグ用ウィンドウの表示状態を切り替えます。Shiftキーでも切り替えることができます。
- * @default F12
+ * @default F6
  * @type select
  * @option none
  * @option F1
@@ -448,7 +449,7 @@
  *
  * @param CTRLで無効化
  * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
- * @default true
+ * @default false
  * @type boolean
  *
  * @help 任意の箇所でイベントの実行を一時停止して、1行ずつ実行(ステップ実行)が
@@ -552,7 +553,7 @@ function DebugManager() {
 
     const getParamBoolean = function(paramNames) {
         const value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
+        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
     };
 
     const convertEscapeCharacters = function(text) {
