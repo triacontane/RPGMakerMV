@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.17.0 2022/06/19 スキップモードのときは同時にイベントのFastForwardも有効になるよう仕様変更
 // 1.16.1 2021/08/29 スキップ中はウィンドウ背景が変わってもウィンドウを閉じないよう修正
 // 1.16.0 2021/06/15 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様変更
 // 1.15.1 2021/06/01 1.15.0でループボイスを再生するとオートモードで文章が送られなくなる問題を修正
@@ -581,6 +582,15 @@ function Sprite_Frame() {
 
     Game_Interpreter.prototype.isNeedClearSkip = function() {
         return ($gameMap.isMapInterpreterOf(this) || !$gameMap.isEventRunning()) && this._depth === 0;
+    };
+
+    var _Scene_Map_isFastForward = Scene_Map.prototype.isFastForward;
+    Scene_Map.prototype.isFastForward = function() {
+        const result = _Scene_Map_isFastForward.apply(this, arguments);
+        if (!result && $gameMap.isEventRunning() && !SceneManager.isSceneChanging()) {
+            return $gameMessage.skipFlg();
+        }
+        return result;
     };
 
     //=============================================================================
