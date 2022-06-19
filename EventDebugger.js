@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2022/06/19 イベントの最後がコモンイベントの呼び出しで終わっているときにエラーになる現象を修正
+//                  自動で開発者ツールを開く仕様を廃止
 // 1.5.1 2019/01/25 本体バージョン1.6.0で正常に動作しない問題を修正
 // 1.5.0 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
 // 1.4.1 2017/10/29 アイテムからコモンイベントを実行した後にマップイベントを実行したときのスクリプトエラー情報が間違っていた問題を修正
@@ -103,7 +105,7 @@
  *
  * @param ToggleWindow
  * @desc デバッグ用ウィンドウの表示状態を切り替えます。Shiftキーでも切り替えることができます。
- * @default F12
+ * @default F6
  * @type select
  * @option none
  * @option F1
@@ -853,7 +855,6 @@ function DebugManager() {
 
     DebugManager.start = function(interpreter) {
         this._interpreter = interpreter;
-        this.showDevTools();
         if (this._debugCount === 0) {
             this.outputDebugDescription(this._startDescription);
         }
@@ -904,12 +905,6 @@ function DebugManager() {
 
     DebugManager.isAnyStep = function() {
         return this.isStepIn() || this.isStepOver() || this.isContinue();
-    };
-
-    DebugManager.showDevTools = function() {
-        if (!Utils.isNwjs()) return;
-        const nwWin = require('nw.gui').Window.get();
-        nwWin.showDevTools();
     };
 
     DebugManager.getInterpreter = function() {
@@ -1509,6 +1504,9 @@ function DebugManager() {
         }
 
         updateIndex() {
+            if (!this._interpreter.isRunning()) {
+                return;
+            }
             this.select(this.getCurrentIndex());
             const halfRow = Math.floor(this.numVisibleRows() / 2);
             if (this.index() - this.topRow() > halfRow) {
