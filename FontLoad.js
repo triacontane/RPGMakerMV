@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2022/06/19 メッセージフォントを変更できるプラグインコマンドを追加
 // 2.0.1 2021/10/20 ヘルプ微修正
 // 2.0.0 2021/06/05 MZで動作するよう再構築
 // 1.1.1 2019/09/15 パラメータの型指定機能に対応
@@ -31,9 +32,20 @@
  * @default []
  * @type struct<Font>[]
  *
+ * @command CHANGE_MESSAGE_FONT
+ * @text メッセージフォント変更
+ * @desc メッセージ表示のフォントを変更します。
+ *
+ * @arg name
+ * @text フォント名
+ * @desc 変更するフォントの名称です。
+ * @default
+ *
  * @help 指定したURLのフォントを指定した名前でロードします。
  * ロードするだけなので、基本的には他のプラグインやスクリプトと
  * 組み合わせて使用します。
+ *
+ * 例外的にメッセージフォントの変更だけはプラグインコマンドを用意しています。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -65,6 +77,10 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
+    PluginManagerEx.registerCommand(script, 'CHANGE_MESSAGE_FONT', args => {
+        $gameMessage.setFontFace(args.name);
+    });
+
     const _Scene_Boot_loadGameFonts = Scene_Boot.prototype.loadGameFonts;
     Scene_Boot.prototype.loadGameFonts = function() {
         _Scene_Boot_loadGameFonts.apply(this, arguments);
@@ -72,6 +88,23 @@
             const name = font.name || font.fileName.replace(/\..*/, '');
             FontManager.load(name, font.fileName);
         });
+    };
+
+    const _Window_Message_newPage = Window_Message.prototype.newPage;
+    Window_Message.prototype.newPage = function(textState) {
+        _Window_Message_newPage.apply(this, arguments);
+        if ($gameMessage.getFontFace()) {
+            this.contents.fontFace = $gameMessage.getFontFace();
+        }
+    };
+
+
+    Game_Message.prototype.getFontFace = function() {
+        return this._faceFace;
+    };
+
+    Game_Message.prototype.setFontFace = function(font) {
+        this._faceFace = font;
     };
 })();
 
