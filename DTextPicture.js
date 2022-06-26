@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2022/06/26 背景ウィンドウの透明度を指定できる機能を追加
 // 2.5.0 2022/05/26 動的文字列ピクチャの設定を解除するコマンドを追加
 // 2.4.0 2021/10/29 行の高さをコマンドから指定できる機能を追加
 //                  直前に生成したピクチャの横幅、高さを変数に格納する機能
@@ -120,6 +121,12 @@
  * @text ウィンドウ
  * @desc 文字列ピクチャの背景にウィンドウを表示します。
  * @type boolean
+ * @default
+ *
+ * @arg windowOpacity
+ * @text ウィンドウ不透明度
+ * @desc 文字列ピクチャ背景のウィンドウの不透明度です。
+ * @type number
  * @default
  *
  * @arg align
@@ -279,6 +286,9 @@
         if (setting.lineHeight > 0) {
             this.dTextLineHeight = setting.lineHeight;
         }
+        if (setting.windowOpacity !== '') {
+            this.dTextWindowOpacity = setting.windowOpacity;
+        }
     };
 
     Game_Screen.prototype.clearDtextSetting = function() {
@@ -290,6 +300,7 @@
         this.dTextAlign = null;
         this.dTextFontFace = null;
         this.dTextLineHeight = null;
+        this.dTextWindowOpacity = null;
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
@@ -328,7 +339,8 @@
             gradationRight: this.dTextGradationRight,
             align         : this.dTextAlign,
             font          : this.dTextFontFace,
-            lineHeight    : this.dTextLineHeight
+            lineHeight    : this.dTextLineHeight,
+            windowOpacity : this.dTextWindowOpacity
         };
     };
 
@@ -459,6 +471,9 @@
         this._frameWindow.x       = this.x - (this.anchor.x * this.width * this.scale.x) - padding;
         this._frameWindow.y       = this.y - (this.anchor.y * this.height * this.scale.y) - padding;
         this._frameWindow.opacity = this.opacity;
+        if (this.dTextInfo && this.dTextInfo.windowOpacity !== null) {
+            this._frameWindow.backOpacity = this.dTextInfo.windowOpacity;
+        }
         if (!this.visible || !this.dTextInfo) {
             this.removeFrameWindow();
             return;
