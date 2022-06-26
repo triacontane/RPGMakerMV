@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2022/06/26 2.6.0で不透明度を指定せず実行するとエラーになる問題を修正
 // 2.6.0 2022/06/26 背景ウィンドウの透明度を指定できる機能を追加
 // 2.5.0 2022/05/26 動的文字列ピクチャの設定を解除するコマンドを追加
 // 2.4.0 2021/10/29 行の高さをコマンドから指定できる機能を追加
@@ -471,7 +472,7 @@
         this._frameWindow.x       = this.x - (this.anchor.x * this.width * this.scale.x) - padding;
         this._frameWindow.y       = this.y - (this.anchor.y * this.height * this.scale.y) - padding;
         this._frameWindow.opacity = this.opacity;
-        if (this.dTextInfo && this.dTextInfo.windowOpacity !== null) {
+        if (this.dTextInfo && this.dTextInfo.windowOpacity >= 0) {
             this._frameWindow.backOpacity = this.dTextInfo.windowOpacity;
         }
         if (!this.visible || !this.dTextInfo) {
