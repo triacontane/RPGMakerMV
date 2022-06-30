@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2022/06/30 アニメーションをマップのスクロールに合わせる機能を追加
  1.1.0 2021/01/03 マップ座標にアニメーションを表示できるコマンドを追加
  1.0.0 2020/12/29 初版
 ----------------------------------------------------------------------------
@@ -96,6 +97,12 @@
  * @default false
  * @type boolean
  *
+ * @arg scroll
+ * @text スクロールに合わせる
+ * @desc マップをスクロールに合わせてアニメーションが表示されます。、
+ * @default false
+ * @type boolean
+ *
  * @command SHOW_ANIMATION_BY_MAP_POINT
  * @text マップ座標にアニメーション表示
  * @desc マップ上の指定座標(マス指定)にアニメーションを表示します。
@@ -121,6 +128,12 @@
  * @arg wait
  * @text 完了までウェイト
  * @desc アニメーション表示が終わるまでイベントの進行を待機します。
+ * @default false
+ * @type boolean
+ *
+ * @arg scroll
+ * @text スクロールに合わせる
+ * @desc マップをスクロールに合わせてアニメーションが表示されます。、
  * @default false
  * @type boolean
  *
@@ -225,6 +238,7 @@
         constructor(args) {
             super(args.x, args.y);
             this._wait = args.wait;
+            this._scroll = args.scroll;
         }
 
         startAnimation() {
@@ -238,13 +252,29 @@
                 pointAnimationCount--;
             }
         }
+
+        isScroll() {
+            return this._scroll;
+        }
     }
 
     class Sprite_AnimationPoint extends Sprite {
         constructor(point) {
             super();
-            this.x = point.x;
-            this.y = point.y;
+            this._point = point;
+            this._dx = $gameMap.displayX();
+            this._dy = $gameMap.displayY();
+            this.update();
+        }
+
+        update() {
+            super.update();
+            this.x = this._point.x;
+            this.y = this._point.y;
+            if (this._point.isScroll()) {
+                this.x += (this._dx - $gameMap.displayX()) * $gameMap.tileWidth();
+                this.y += (this._dy - $gameMap.displayY()) * $gameMap.tileWidth();
+            }
         }
     }
 })();
