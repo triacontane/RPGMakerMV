@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/06/30 二刀流の特徴を持つ武器を装備しているときにスロット2に両手持ちの武器を装備したときに装備状態が不正になる問題を修正
  1.0.0 2022/06/29 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -63,15 +64,22 @@
 
     const _Game_Actor_releaseUnequippableItems = Game_Actor.prototype.releaseUnequippableItems;
     Game_Actor.prototype.releaseUnequippableItems = function(forcing) {
-        _Game_Actor_releaseUnequippableItems.apply(this, arguments);
-        const equips = this.equips();
-        for (let i = 0; i < equips.length; i++) {
-            const item = equips[i];
-            if (!this.canEquipTwoHanded(item, i)) {
-                if (!forcing) {
-                    this.tradeItemWithParty(null, item);
+        for (;;) {
+            _Game_Actor_releaseUnequippableItems.apply(this, arguments);
+            const equips = this.equips();
+            let changed = false;
+            for (let i = 0; i < equips.length; i++) {
+                const item = equips[i];
+                if (!this.canEquipTwoHanded(item, i)) {
+                    if (!forcing) {
+                        this.tradeItemWithParty(null, item);
+                    }
+                    this._equips[i].setObject(null);
+                    changed = true;
                 }
-                this._equips[i].setObject(null);
+            }
+            if (!changed) {
+                break;
             }
         }
     };
