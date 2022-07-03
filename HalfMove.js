@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.17.0 2022/07/03 プレイヤーやイベント単位で半歩移動を禁止にできる機能を追加
 // 1.16.1 2020/07/02 スクリプトからキャラクターの座標を0.5以外の端数にするとエラーになる問題を修正
 // 1.16.0 2020/04/18 右上、右下、左上、左下のみ移動可能な地形、リージョンの設定を追加
 // 1.15.4 2020/04/15 英語版の一部のパラメータの型指定と初期値が日本語版と合っていなかった問題を修正
@@ -413,6 +414,18 @@
  * ・HALF_MOVE_ENABLE
  * 禁止していた半歩移動をもとに戻します。
  *
+ * プレイヤーやイベントの半歩移動可否を個別に設定したいときは
+ * コマンドの後に以下のキャラクターIDを指定してください。
+ * -1  : プレイヤー
+ *  0  : 実行中のイベント
+ *  1..: 指定したIDのイベント
+ *
+ * プレイヤーの半歩移動を禁止
+ * HALF_MOVE_DISABLE -1
+ *
+ * ただし、プレイヤーの半歩移動のみを禁止にした場合、
+ * 半歩位置にいるイベントを起動できない場合があります。
+ *
  * イベントごとの拡張機能を利用するには、
  * イベントのメモ欄に以下の通り記述してください。
  *
@@ -656,16 +669,31 @@
         this.pluginCommandHalfMove(command, args);
     };
 
-    Game_Interpreter.prototype.pluginCommandHalfMove = function(command) {
+    Game_Interpreter.prototype.pluginCommandHalfMove = function(command, args) {
         switch (getCommandName(command)) {
             case '半歩移動禁止' :
             case 'HALF_MOVE_DISABLE':
-                $gameSystem.setEnableHalfMove(false);
+                if (args.length > 0) {
+                    this.setHalfMove(args[0], false);
+                } else {
+                    $gameSystem.setEnableHalfMove(false);
+                }
                 break;
             case '半歩移動許可' :
             case 'HALF_MOVE_ENABLE':
-                $gameSystem.setEnableHalfMove(true);
+                if (args.length > 0) {
+                    this.setHalfMove(args[0], true);
+                } else {
+                    $gameSystem.setEnableHalfMove(true);
+                }
                 break;
+        }
+    };
+
+    Game_Interpreter.prototype.setHalfMove = function(id, value) {
+        var character = this.character(parseInt(id));
+        if (character) {
+            character.setHalfMove(value);
         }
     };
 
@@ -1783,6 +1811,11 @@
     //=============================================================================
     Game_CharacterBase.prototype.isHalfMove = function() {
         return !this._halfDisable && $gameSystem.canHalfMove();
+    };
+
+    Game_CharacterBase.prototype.setHalfMove = function(value) {
+        this._halfDisable = !value;
+        this.locate(this.x, this.y);
     };
 
     //=============================================================================
