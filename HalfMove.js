@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/07/03 プレイヤーやイベント単位で半歩移動を禁止にできる機能を追加
 // 2.1.2 2022/03/17 2.1.0の修正によりループしたマップでタッチ移動すると正しい場所へ移動できない問題を修正
 // 2.1.1 2022/03/09 タッチ移動の移動先画像を半歩に合わせて小さく変更
 // 2.1.0 2022/03/09 タッチ移動を半歩単位で指定できるよう修正
@@ -402,11 +403,53 @@
  *
  * @command HALF_MOVE_DISABLE
  * @text 半歩移動禁止
- * @desc 半歩移動を一時的に禁止します。この情報はセーブデータに含まれます。特定のイベント等で禁止したい場合等に使用します。
+ * @desc 半歩移動を一時的に禁止します。プレイヤーの半歩移動を禁止すると、半歩位置のイベントを起動できなくなる場合があります。
+ *
+ * @arg target
+ * @text 対象
+ * @desc 半歩移動を禁止にする対象です。
+ * @default -2
+ * @type select
+ * @option -2:全体
+ * @value -2
+ * @option -1:プレイヤー
+ * @value -1
+ * @option 0:このイベント
+ * @value 0
+ * @option 1:指定したIDのイベント
+ * @value 1
+ *
+ * @arg id
+ * @text イベントID
+ * @desc 対象を「指定したIDのイベント」に指定したときのイベントIDです。
+ * @type number
+ * @default 1
+ * @min 1
  *
  * @command HALF_MOVE_ENABLE
  * @text 半歩移動許可
  * @desc 禁止していた半歩移動をもとに戻します。
+ *
+ * @arg target
+ * @text 対象
+ * @desc 半歩移動を禁止にする対象です。
+ * @default -2
+ * @type select
+ * @option -2:全体
+ * @value -2
+ * @option -1:プレイヤー
+ * @value -1
+ * @option 0:このイベント
+ * @value 0
+ * @option 1:指定したIDのイベント
+ * @value 1
+ *
+ * @arg id
+ * @text イベントID
+ * @desc 対象を「指定したIDのイベント」に指定したときのイベントIDです。
+ * @type number
+ * @default 1
+ * @min 1
  *
  * @help キャラクターの移動単位が1タイルの半分になります。
  * 半歩移動が有効なら、乗り物以外は全て半歩移動になります。
@@ -612,13 +655,28 @@
     //=============================================================================
     var localHalfPositionCount = 0;
 
-    PluginManager.registerCommand(pluginName, 'HALF_MOVE_DISABLE', function () {
-        $gameSystem.setEnableHalfMove(false);
+    PluginManager.registerCommand(pluginName, 'HALF_MOVE_DISABLE', function (args) {
+        if (args.target >= -1) {
+            this.setHalfMove(args.target === '1' ? args.id : args.target, false);
+        } else {
+            $gameSystem.setEnableHalfMove(false);
+        }
     });
 
-    PluginManager.registerCommand(pluginName, 'HALF_MOVE_ENABLE', function () {
-        $gameSystem.setEnableHalfMove(true);
+    PluginManager.registerCommand(pluginName, 'HALF_MOVE_ENABLE', function (args) {
+        if (args.target >= -1) {
+            this.setHalfMove(args.target === '1' ? args.id : args.target, true);
+        } else {
+            $gameSystem.setEnableHalfMove(true);
+        }
     });
+
+    Game_Interpreter.prototype.setHalfMove = function(id, value) {
+        const character = this.character(parseInt(id));
+        if (character) {
+            character.setHalfMove(value);
+        }
+    };
 
     //=============================================================================
     // Game_System
@@ -1758,6 +1816,11 @@
     //=============================================================================
     Game_CharacterBase.prototype.isHalfMove = function() {
         return !this._halfDisable && $gameSystem.canHalfMove();
+    };
+
+    Game_CharacterBase.prototype.setHalfMove = function(value) {
+        this._halfDisable = !value;
+        this.locate(this.x, this.y);
     };
 
     //=============================================================================
