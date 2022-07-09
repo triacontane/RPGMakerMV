@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.29.0 2022/07/09 アクター変更時にイベント発火できる機能を追加
  1.28.3 2022/06/05 カスタムメニュー用のシーンクラス、ウィンドウクラスを外部から参照できるよう変更
  1.28.2 2022/05/20 メモ欄の内容を右寄せで描画する凡例を追加
  1.28.1 2022/04/25 前バージョンで追加したカレントシーンの判定方法を変更
@@ -600,6 +601,12 @@
  * @default {}
  * @type struct<Event>
  *
+ * @param ActorChangeEvent
+ * @text アクター変更イベント
+ * @desc アクターを変更した瞬間に発生するイベントです。
+ * @default {}
+ * @type struct<Event>
+ *
  * @param ButtonEvent
  * @text ボタンイベント
  * @desc 指定されたボタンが押された瞬間に発生するイベントです。
@@ -1183,8 +1190,19 @@
                 });
             }
             if (data.ActorChangeable) {
-                win.setHandler('pagedown', this.nextActor.bind(this));
-                win.setHandler('pageup', this.previousActor.bind(this));
+                if (data.ActorChangeEvent) {
+                    win.setHandler('pagedown', () => {
+                        this.nextActor();
+                        this.fireEvent(data.ActorChangeEvent, true);
+                    });
+                    win.setHandler('pageup', () => {
+                        this.previousActor();
+                        this.fireEvent(data.ActorChangeEvent, true);
+                    });
+                } else {
+                    win.setHandler('pagedown', this.nextActor.bind(this));
+                    win.setHandler('pageup', this.previousActor.bind(this));
+                }
             }
             if (data.ButtonEvent) {
                 data.ButtonEvent.forEach(buttonEvent => {
