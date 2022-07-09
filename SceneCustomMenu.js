@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.29.1 2022/07/09 1.29.0でページボタンを考慮できていなかったので対応
  1.29.0 2022/07/09 アクター変更時にイベント発火できる機能を追加
  1.28.3 2022/06/05 カスタムメニュー用のシーンクラス、ウィンドウクラスを外部から参照できるよう変更
  1.28.2 2022/05/20 メモ欄の内容を右寄せで描画する凡例を追加
@@ -310,6 +311,12 @@
  * @default {}
  * @type struct<Event>
  *
+ * @param ActorChangeEvent
+ * @text アクター変更イベント
+ * @desc アクターを変更した瞬間に発生するイベントです。
+ * @default
+ * @type struct<Event>
+ *
  * @param WindowList
  * @text ウィンドウ一覧
  * @desc シーンで使用されるウィンドウの一覧です。
@@ -598,12 +605,6 @@
  * @param CursorEvent
  * @text カーソルイベント
  * @desc カーソルが動いた瞬間に発生するイベントです。このイベントではウィンドウのフォーカスは変更されません。
- * @default {}
- * @type struct<Event>
- *
- * @param ActorChangeEvent
- * @text アクター変更イベント
- * @desc アクターを変更した瞬間に発生するイベントです。
  * @default {}
  * @type struct<Event>
  *
@@ -1190,19 +1191,8 @@
                 });
             }
             if (data.ActorChangeable) {
-                if (data.ActorChangeEvent) {
-                    win.setHandler('pagedown', () => {
-                        this.nextActor();
-                        this.fireEvent(data.ActorChangeEvent, true);
-                    });
-                    win.setHandler('pageup', () => {
-                        this.previousActor();
-                        this.fireEvent(data.ActorChangeEvent, true);
-                    });
-                } else {
-                    win.setHandler('pagedown', this.nextActor.bind(this));
-                    win.setHandler('pageup', this.previousActor.bind(this));
-                }
+                win.setHandler('pagedown', this.nextActor.bind(this));
+                win.setHandler('pageup', this.previousActor.bind(this));
             }
             if (data.ButtonEvent) {
                 data.ButtonEvent.forEach(buttonEvent => {
@@ -1214,6 +1204,20 @@
             }
             this.addWindow(win);
             this._customWindowMap.set(data.Id, win);
+        }
+
+        nextActor() {
+            super.nextActor();
+            if (this._customData.ActorChangeEvent) {
+                this.fireEvent(this._customData.ActorChangeEvent, true);
+            }
+        }
+
+        previousActor() {
+            super.previousActor();
+            if (this._customData.ActorChangeEvent) {
+                this.fireEvent(this._customData.ActorChangeEvent, true);
+            }
         }
 
         setPanoramaBitmap() {
