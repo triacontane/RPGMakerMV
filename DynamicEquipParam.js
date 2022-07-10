@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2a 2022/07/10 ショップ画面で装備アイテムの全情報を表示するプラグインと併用可能なよう修正
 // 1.0.2 2021/05/03 動的パラメータがお店のパラメータ増減に反映されていなかった問題を修正
 // 1.0.1 2017/07/23 ヘルプにアクターのレベルやIDを参照する計算式を追記
 // 1.0.0 2017/07/18 初版
@@ -203,12 +204,13 @@
     // override
     Window_ShopStatus.prototype.drawActorParamChange = function(x, y, actor, item1) {
         var width = this.contents.width - this.textPadding() - x;
-        var paramId = this.paramId();
-        var targetParam = actor.paramPlusDynamic(paramId, this._item) + this._item.params[paramId];
-        var equipParam = item1 ? actor.paramPlusDynamic(paramId, item1) + item1.params[paramId] : 0;
-        var change = targetParam - equipParam;
-        this.changeTextColor(this.paramchangeTextColor(change));
-        this.drawText((change > 0 ? '+' : '') + change, x, y, width, 'right');
+        for(var i = 0;i < 8;i++){
+            var targetParam = actor.paramPlusDynamic(i, this._item) + this._item.params[i];
+            var equipParam = item1 ? actor.paramPlusDynamic(i, item1) + item1.params[i] : 0;
+            var change = targetParam - equipParam;
+            this.changeTextColor(this.paramchangeTextColor(change));
+            this.drawText((change > 0 ? '+' : '') + change, x, 60 + y + i*35, width, 'right');
+        }
     };
 })();
 
