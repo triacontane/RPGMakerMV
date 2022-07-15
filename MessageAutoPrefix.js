@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/07/15 全ての行頭に追加される接頭辞を指定できるパラメータを追加
  1.0.0 2022/03/10 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -24,6 +25,12 @@
  * @param prefixList
  * @text 接頭辞リスト
  * @desc すべての『文章の表示』の先頭に追加されるテキストのリストです。それぞれ条件スイッチを指定できます。
+ * @default []
+ * @type struct<PREFIX>[]
+ *
+ * @param rowPrefixList
+ * @text 行頭接頭辞リスト
+ * @desc すべての『文章の表示』の行頭に追加されるテキストのリストです。それぞれ条件スイッチを指定できます。
  * @default []
  * @type struct<PREFIX>[]
  *
@@ -71,11 +78,15 @@
 
     const _Game_Message_allText = Game_Message.prototype.allText;
     Game_Message.prototype.allText = function() {
-        return this.findTextPrefix() + _Game_Message_allText.apply(this, arguments);
+        const rowPrefix = this.findTextPrefix(param.rowPrefixList);
+        for (let i = 0; i < this._texts.length; i++) {
+            this._texts[i] = rowPrefix + this._texts[i];
+        }
+        return this.findTextPrefix(param.prefixList) + _Game_Message_allText.apply(this, arguments);
     };
 
-    Game_Message.prototype.findTextPrefix = function() {
-        return param.prefixList.reduce((prev, item) => {
+    Game_Message.prototype.findTextPrefix = function(list) {
+        return list.reduce((prev, item) => {
             if (!item.switchId || $gameSwitches.value(item.switchId)) {
                 return prev + item.text;
             } else {
