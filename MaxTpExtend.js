@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/07/16 TP拡張のタグの対象にスキルを追加
  1.0.2 2021/03/27 タグを付けてメニューを開くとエラーになっていた問題を修正
  1.0.1 2021/02/06 MZ向けにヘルプのアノテーションを微修正
  1.0.0 2020/05/08 初版
@@ -50,7 +51,7 @@
  * 特徴を有するデータベース(※)のメモ欄に以下の通り記述してください。
  * <MaxTp:30>  // 最大TPが30加算されます。
  * <最大TP:30> // 同上
- * ※アクター、職業、武器、防具、敵キャラ、ステート
+ * ※アクター、職業、武器、防具、敵キャラ、ステート、スキル
  *
  * 負の値も設定できます。実際のTPは基本値の100に対して指定した
  * メモ欄全ての値が合算されます。制御文字\v[n]で変数の値を参照できます。
@@ -79,12 +80,21 @@
     };
 
     Game_BattlerBase.prototype.findMaxTpExtend = function() {
-        return this.traitObjects().reduce(function(tp, traitObj) {
+        return this.findMaxTpTraits().reduce(function(tp, traitObj) {
             const meta = PluginManagerEx.findMetaValue(traitObj, ['最大TP', 'MaxTp']);
             if (meta) {
                 tp = tp + parseInt(meta);
             }
             return tp;
         }, 0);
+    };
+
+    Game_BattlerBase.prototype.findMaxTpTraits = function() {
+        return this.traitObjects();
+    };
+
+    Game_Actor.prototype.findMaxTpTraits = function() {
+        const traits = Game_BattlerBase.prototype.findMaxTpTraits.apply(this, arguments);
+        return traits.concat(this.skills());
     };
 })();
