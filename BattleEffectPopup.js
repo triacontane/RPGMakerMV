@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2022/07/16 ポップアップメッセージが重なったときに次のメッセージが表示されるY座標を補正できる機能を追加
 // 2.3.0 2022/03/25 バフおよびデバフをポップアップする機能を追加
 // 2.2.3 2022/02/11 色指定の凡例の記法が一部間違っていたので修正
 // 2.2.2 2022/02/11 自動戦闘や他のプラグインと組み合わせたとき、耐性や弱点のポップアップが意図せず表示される場合がある問題を修正
@@ -168,6 +169,12 @@
  * @param MessageWait
  * @text メッセージウェイト
  * @desc ポップアップメッセージが重なったときに次のメッセージが表示されるまでのウェイトフレーム数です。
+ * @default 16
+ * @type number
+ *
+ * @param MessageMarginY
+ * @text メッセージ間隔Y
+ * @desc ポップアップメッセージが重なったときに次のメッセージが表示されるY座標を補正します。
  * @default 16
  * @type number
  *
@@ -621,7 +628,12 @@
         } else if (this._battler.result().evaded && param.Avoid) {
             return;
         }
+        const last = this._damages[this._damages.length - 1];
         _Sprite_Battler_createDamageSprite.apply(this, arguments);
+        const sprite = this._damages[this._damages.length - 1];
+        if (last && last instanceof Sprite_PopupMessage) {
+            sprite.y = last.y - param.MessageMarginY || 16;
+        }
     };
 
     Sprite_Battler.prototype.setupMessagePopup = function() {
@@ -638,7 +650,7 @@
         const sprite = new Sprite_PopupMessage();
         if (last) {
             sprite.x = last.x + 8;
-            sprite.y = last.y - 16;
+            sprite.y = last.y - param.MessageMarginY || 16;
         } else {
             sprite.x = this.x + this.damageOffsetX();
             sprite.y = this.y + this.damageOffsetY();
