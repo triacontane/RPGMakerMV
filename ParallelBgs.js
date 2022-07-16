@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2022/07/16 BGSの自動演奏が設定されているマップに移動したとき、もとのBGSを全停止できる機能を追加
 // 1.0.4 2021/03/06 BGMのフェードアウトのイベントコマンドでは現在のラインのBGSのみフェードアウトするよう修正
 // 1.0.3 2020/02/02 ヘルプのプラグインコマンド「PB_BGSライン変更」が間違っていたので「PB_BGS_ライン変更」に修正(コード修正なし)
 // 1.0.2 2017/01/05 BGSの演奏状態によっては、セーブ＆ロードした際に一部のBGSが演奏されなくなる現象の修正(byくらむぼん氏)
@@ -18,49 +19,14 @@
 //=============================================================================
 
 /*:
- * @plugindesc ParallelBgsPlugin
- * @author triacontane
- *
- * @help 複数のBGSを並行して演奏できます。プラグインコマンドからBGSの演奏ラインを
- * 変更すると元のBGSを演奏したまま、新しくBGSを演奏することができます。
- * 並行演奏しているBGSはそれぞれ個別に、音量やピッチ、左右バランスを調節できます。
- * 演奏ラインのデフォルトは[1]です。
- *
- * ラインの数に制限はありませんが、あまりに大量のBGSを
- * 同時に演奏しようとすると動作に影響がでる恐れがあります。
- *
- * なお、マップで指定するオート演奏のBGSはラインが[1]で固定になります。
- *
- * 追加機能として、BGS演奏中にSEを演奏すると自動でBGSを一時フェードアウトする
- * プラグインコマンドを提供します。SEがより明瞭に聴き取れるようになります。
- * フェードアウト時間やSEの演奏タイミングを設定することもできます。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * PB_BGS_ライン変更 2              # BGSの演奏ラインを[2]に変更します。
- * PB_BGS_CHANGE_LINE 2            # 同上
- * PB_BGS_全停止                   # 全ての演奏中のBGSを停止します。
- * PB_BGS_ALL_STOP                 # 同上
- * PB_BGS_SE演奏時フェードアウト 1 # SE演奏時にBGSを自動フェードアウトします
- * PB_BGS_FADEOUT_FOR_SE 1         # 同上(※1)
- * PB_BGS_フェードアウト時間 3     # 自動フェードアウトに掛かる時間を指定します。
- * PB_BGS_FADEOUT_TIME 3           # 同上
- *
- * ※1 フェードアウト方法を指定できます。
- *  0 : フェードアウトせずに通常通りSEを演奏します。
- *  1 : SE演奏と同時にフェードアウトを開始します。
- *  2 : フェードアウトが完了してからSE演奏します。
- *
- * 2の設定はSEの演奏を実行してから、実際に演奏されるまで時間が掛かります。
- * 使いどころにご注意ください。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc BGS並行演奏プラグイン
  * @author トリアコンタン
+ *
+ * @param stopAllAutoPlay
+ * @text 自動演奏により停止
+ * @desc BGSの自動演奏が設定されたマップに移動したとき、全ラインのBGSの演奏を停止します。
+ * @default false
+ * @type boolean
  *
  * @help 複数のBGSを並行して演奏できます。プラグインコマンドからBGSの演奏ラインを
  * 変更すると元のBGSを演奏したまま、新しくBGSを演奏することができます。
@@ -122,6 +88,32 @@
         var windowLayer = SceneManager._scene._windowLayer;
         return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
     };
+
+    /**
+     * Create plugin parameter. param[paramName] ex. param.commandPrefix
+     * @param pluginName plugin name(EncounterSwitchConditions)
+     * @returns {Object} Created parameter
+     */
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
+    };
+
+    var param = createPluginParameter('ParallelBgs');
 
     //=============================================================================
     // Game_Interpreter
@@ -214,6 +206,9 @@
 
     var _Game_Map_autoplay      = Game_Map.prototype.autoplay;
     Game_Map.prototype.autoplay = function() {
+        if ($dataMap.autoplayBgs && param.stopAllAutoPlay) {
+            AudioManager.stopAllBgs();
+        }
         AudioManager.multiLineDisable = true;
         _Game_Map_autoplay.apply(this, arguments);
         AudioManager.multiLineDisable = false;
