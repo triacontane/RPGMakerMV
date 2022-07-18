@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2022/07/18 用語に制御文字を使える機能を追加
 // 2.0.1 2021/06/09 ドロップアイテムと出現率のタグが逆だったので修正
 // 2.0.0 2020/09/25 MZ向けにリファクタリング。ヘルプを修正
 // 1.3.2 2019/08/25 1.3.1の修正方法に誤りがあったため再度修正
@@ -38,6 +39,12 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DynamicDatabase.js
  * @base PluginCommonBase
  * @author トリアコンタン
+ *
+ * @param dynamicTerm
+ * @text 動的用語
+ * @desc データベースの用語にも制御文字が使えるようになります。
+ * @default false
+ * @type boolean
  *
  * @help データベースの各項目を動的な値に変更するプラグインです。
  * 変数やJavaScript計算式を使ってより高度なデータベースを構築できます。
@@ -90,8 +97,10 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Scene_Boot
@@ -375,4 +384,22 @@
             }
         });
     };
+
+    if (param.dynamicTerm) {
+        TextManager.basic = function(basicId) {
+            return PluginManagerEx.convertEscapeCharacters($dataSystem.terms.basic[basicId] || '');
+        };
+
+        TextManager.param = function(paramId) {
+            return PluginManagerEx.convertEscapeCharacters($dataSystem.terms.params[paramId] || '');
+        };
+
+        TextManager.command = function(commandId) {
+            return PluginManagerEx.convertEscapeCharacters($dataSystem.terms.commands[commandId] || '');
+        };
+
+        TextManager.message = function(messageId) {
+            return PluginManagerEx.convertEscapeCharacters($dataSystem.terms.messages[messageId] || '');
+        };
+    }
 })();
