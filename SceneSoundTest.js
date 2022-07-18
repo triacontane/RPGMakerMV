@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/07/18 シークバーを非表示にできる機能を追加
 // 2.1.0 2022/02/14 ヘルプウィンドウの表示内容を改行できるよう修正
 //                  バー表示の上の曲名表記がファイル名になっていた問題を修正
 // 2.0.0 2022/02/11 MZ用に新規で作り直し
@@ -97,6 +98,12 @@
  * @text 未登録テキスト
  * @desc 未登録で演奏できない項目に代わりに表示するテキストです。
  * @default ？？？
+ *
+ * @param HiddenSeekBar
+ * @text シークバー非表示
+ * @desc 再生時間を表示するシークバーを隠します。
+ * @default false
+ * @type boolean
  *
  * @command OPEN
  * @text サウンドテスト画面を開く
@@ -698,7 +705,9 @@
 
         setup(webAudio, name) {
             this._audioName = name;
-            this.placeSeekGauge(webAudio, 0, this.lineHeight() + 8);
+            if (!param.HiddenSeekBar) {
+                this.placeSeekGauge(webAudio, 0, this.lineHeight() + 8);
+            }
             this.refresh();
         }
 
