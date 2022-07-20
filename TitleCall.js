@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.1 2022/07/20 BGM遅延を設定したとき、コンティニュー画面などから戻ってくるとBGMが止まってしまう問題を修正
  1.4.0 2021/07/11 タイトルコールに発動条件を設定する機能を追加
  1.3.0 2021/06/11 タイトルBGMの演奏を遅らせる機能を追加
  1.2.0 2021/05/03 コールSEを複数指定してランダム再生できる機能を追加
@@ -112,10 +113,10 @@
     };
 
     Scene_Title.prototype.playDelayTitleMusic = function() {
-        AudioManager.stopBgm();
         if (this.isReturnToTitle()) {
             return;
         }
+        AudioManager.stopBgm();
         setTimeout(function() {
             if (!gameStart) {
                 AudioManager.playBgm($dataSystem.titleBgm);
