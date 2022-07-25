@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.0 2022/07/25 保守性維持のためBGM遅延の機能を削除
  1.4.1 2022/07/20 BGM遅延を設定したとき、コンティニュー画面などから戻ってくるとBGMが止まってしまう問題を修正
  1.4.0 2021/07/11 タイトルコールに発動条件を設定する機能を追加
  1.3.0 2021/06/11 タイトルBGMの演奏を遅らせる機能を追加
@@ -64,13 +65,6 @@
  * @type number
  * @max 99999
  *
- * @param bgmDelay
- * @text BGM遅延(ミリ秒)
- * @desc デフォルトのタイトルBGMの演奏を指定したミリ秒ぶんだけ遅らせます。
- * @default 0
- * @type number
- * @max 99999
- *
  * @param randomList
  * @text ランダムSEファイルリスト
  * @desc 設定しておくとリストの中からランダムで再生されます。
@@ -106,22 +100,7 @@
     const _Scene_Title_playTitleMusic = Scene_Title.prototype.playTitleMusic;
     Scene_Title.prototype.playTitleMusic = function() {
         _Scene_Title_playTitleMusic.apply(this, arguments);
-        if (param.bgmDelay) {
-            this.playDelayTitleMusic();
-        }
         this.playTitleCall();
-    };
-
-    Scene_Title.prototype.playDelayTitleMusic = function() {
-        if (this.isReturnToTitle()) {
-            return;
-        }
-        AudioManager.stopBgm();
-        setTimeout(function() {
-            if (!gameStart) {
-                AudioManager.playBgm($dataSystem.titleBgm);
-            }
-        }.bind(this), param.bgmDelay);
     };
 
     const _Scene_Title_commandNewGame = Scene_Title.prototype.commandNewGame;
