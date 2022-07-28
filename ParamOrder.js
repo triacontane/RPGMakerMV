@@ -34,6 +34,9 @@
  * @option 運
  *
  * @help ParamOrder.js
+ *
+ * メニュー画面におけるパラメータの並び順を任意の順番で入れ替えます。
+ * 装備画面、ステータス画面が対象です。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
