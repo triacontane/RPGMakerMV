@@ -82,4 +82,9 @@
     Window_EquipStatus.prototype.drawCurrentParam = function(x, y, paramId) {
         _Window_EquipStatus_drawCurrentParam.call(this, x, y, this.convertParamId(paramId));
     };
+
+    const _Window_EquipStatus_drawNewParam = Window_EquipStatus.prototype.drawNewParam;
+    Window_EquipStatus.prototype.drawNewParam = function(x, y, paramId) {
+        _Window_EquipStatus_drawNewParam.call(this, x, y, this.convertParamId(paramId));
+    };
 })();
