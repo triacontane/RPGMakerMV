@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2022/07/30 マップ名ウィンドウの高さを指定できる機能を追加
 // 1.3.4 2022/01/14 表示遅延を設定しかつ背景画像を指定したとき、背景画像がマップ名表示前に表示されてしまう問題を修正
 // 1.3.3 2021/11/05 実名表示が無効な場合でも、表示名が空だと表示されてしまう問題を修正
 // 1.3.2 2021/11/04 背景画像を指定したとき、メニューを閉じた時などに背景が一瞬表示される問題を修正
@@ -76,6 +77,12 @@
  * @param width
  * @text 横幅
  * @desc 横幅を指定する場合は入力してください。
+ * @default 0
+ * @type number
+ *
+ * @param height
+ * @text 高さ
+ * @desc 高さを指定する場合は入力してください。
  * @default 0
  * @type number
  *
@@ -169,6 +176,9 @@
     Window_MapName.prototype.initialize = function(rect) {
         if (param.width) {
             rect.width = param.width;
+        }
+        if (param.height) {
+            rect.height = param.height;
         }
         _Window_MapName_initialize.apply(this, arguments);
         this._originalX    = this.x;
