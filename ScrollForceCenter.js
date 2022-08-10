@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0/4 2022/08/10 2.0.3の修正を近景プラグインにも正しく適用
 // 2.0.3 2021/08/24 遠景を設定してスクロールしたときに画面端に近づくと遠景が高速でスクロールしてしまう問題を修正
 // 2.0.2 2021/04/19 マップがループしているとき画面シフトが機能しない問題を修正
 // 2.0.1 2020/11/26 イベントテストでエラーになる問題を修正
@@ -213,11 +214,12 @@
         const forceCenterDisplayY = this._displayY + distance;
         const lastY = this._displayY;
         const lastPy = this._parallaxY;
+        const lastFy = this._foregroundY;
         _Game_Map_scrollDown.apply(this, arguments);
         if (this.isForceCenterVertical()) {
             this._displayY = forceCenterDisplayY;
             this._parallaxY = lastPy + this._displayY - lastY;
-            this._foregroundY = this._parallaxY;
+            this._foregroundY = lastFy + this._displayY - lastY;
         }
     };
 
@@ -226,11 +228,12 @@
         const forceCenterDisplayX = this._displayX - distance;
         const lastX = this._displayX;
         const lastPx = this._parallaxX;
+        const lastFx = this._foregroundX;
         _Game_Map_scrollLeft.apply(this, arguments);
         if (this.isForceCenterHorizontal()) {
             this._displayX = forceCenterDisplayX;
             this._parallaxX = lastPx + this._displayX - lastX;
-            this._foregroundX = this._parallaxX;
+            this._foregroundX = lastFx + this._displayX - lastX;
         }
     };
 
@@ -239,11 +242,12 @@
         const forceCenterDisplayX = this._displayX + distance;
         const lastX = this._displayX;
         const lastPx = this._parallaxX;
+        const lastFx = this._foregroundX;
         _Game_Map_scrollRight.apply(this, arguments);
         if (this.isForceCenterHorizontal()) {
             this._displayX = forceCenterDisplayX;
             this._parallaxX = lastPx + this._displayX - lastX;
-            this._foregroundX = this._parallaxX;
+            this._foregroundX = lastFx + this._displayX - lastX;
         }
     };
 
@@ -252,11 +256,12 @@
         const forceCenterDisplayY = this._displayY - distance;
         const lastY = this._displayY;
         const lastPy = this._parallaxY;
+        const lastFy = this._foregroundY;
         _Game_Map_scrollUp.apply(this, arguments);
         if (this.isForceCenterVertical()) {
             this._displayY = forceCenterDisplayY;
             this._parallaxY = lastPy + this._displayY - lastY;
-            this._foregroundY = this._parallaxY;
+            this._foregroundY = lastFy + this._displayY - lastY;
         }
     };
 })();
