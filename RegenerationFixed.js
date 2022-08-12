@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/08/12 再生倍率に0を指定したとき正常に動作しない問題を修正
  1.0.0 2022/08/11 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -88,7 +89,8 @@
 
     Game_Battler.prototype.findRegenerateRate = function(tags) {
         return this.traitObjects().reduce((prev, obj) => {
-            return prev * ((PluginManagerEx.findMetaValue(obj, tags) / 100) || 1);
+            const rate = PluginManagerEx.findMetaValue(obj, tags);
+            return prev * (rate !== undefined ? rate / 100 : 1);
         }, 1);
     };
 })();
