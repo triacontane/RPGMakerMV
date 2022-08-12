@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.30.0 2022/08/12 背景として表示するスナップ画像のぼかしを無効化する設定を追加
+                   ウィンドウごとのアクター切り替えがボタン表示も含めて正常に動作するよう修正
  1.29.1 2022/07/09 1.29.0でページボタンを考慮できていなかったので対応
  1.29.0 2022/07/09 アクター変更時にイベント発火できる機能を追加
  1.28.3 2022/06/05 カスタムメニュー用のシーンクラス、ウィンドウクラスを外部から参照できるよう変更
@@ -344,6 +346,12 @@
  * @param UsePageButtons
  * @text ページボタンの使用
  * @desc 有効にした場合、ページボタンを表示します。
+ * @default false
+ * @type boolean
+ *
+ * @param SnapNoFilter
+ * @text 背景ぼかし無効化
+ * @desc 指定した場合、背景スナップのぼかしが適用されなくなります。
  * @default false
  * @type boolean
  *
@@ -1137,6 +1145,10 @@
             this._panorama = new TilingSprite();
             this._panorama.move(0, 0, Graphics.width, Graphics.height);
             this.addChild(this._panorama);
+            if (this._customData.SnapNoFilter) {
+                this._backgroundSprite.filters = [];
+                this.setBackgroundOpacity(255);
+            }
         }
 
         createAllObjects() {
@@ -1190,10 +1202,8 @@
                     this.fireEvent(data.CursorEvent, false);
                 });
             }
-            if (data.ActorChangeable) {
-                win.setHandler('pagedown', this.nextActor.bind(this));
-                win.setHandler('pageup', this.previousActor.bind(this));
-            }
+            win.setHandler('pagedown', this.nextActor.bind(this));
+            win.setHandler('pageup', this.previousActor.bind(this));
             if (data.ButtonEvent) {
                 data.ButtonEvent.forEach(buttonEvent => {
                     win.setHandler('trigger:' + buttonEvent.Name, () => {
@@ -1207,6 +1217,9 @@
         }
 
         nextActor() {
+            if (!this.canActorChange()) {
+                return;
+            }
             super.nextActor();
             if (this._customData.ActorChangeEvent) {
                 this.fireEvent(this._customData.ActorChangeEvent, true);
@@ -1214,10 +1227,25 @@
         }
 
         previousActor() {
+            if (!this.canActorChange()) {
+                return;
+            }
             super.previousActor();
             if (this._customData.ActorChangeEvent) {
                 this.fireEvent(this._customData.ActorChangeEvent, true);
             }
+        }
+
+        canActorChange() {
+            const changeable = this.findWindow(this._activeWindowId).canActorChange();
+            if (!changeable) {
+                this.changeWindowFocus(this._activeWindowId, -1);
+            }
+            return changeable;
+        }
+
+        arePageButtonsEnabled() {
+            return super.arePageButtonsEnabled() && this.canActorChange();
         }
 
         setPanoramaBitmap() {
@@ -1866,6 +1894,10 @@
 
         findDecisionEvent() {
             return this._data.DecisionEvent;
+        }
+
+        canActorChange() {
+            return this._data.ActorChangeable;
         }
 
         findCurrentItem() {
