@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2022/08/15 公式プラグインTextPicture.jsに接頭辞を適用できる機能を追加
  1.1.0 2022/07/15 全ての行頭に追加される接頭辞を指定できるパラメータを追加
  1.0.0 2022/03/10 初版
 ----------------------------------------------------------------------------
@@ -20,6 +21,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageAutoPrefix.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
+ * @orderAfter TextPicture
  * @author トリアコンタン
  *
  * @param prefixList
@@ -33,6 +35,12 @@
  * @desc すべての『文章の表示』の行頭に追加されるテキストのリストです。それぞれ条件スイッチを指定できます。
  * @default []
  * @type struct<PREFIX>[]
+ *
+ * @param applyTextPicture
+ * @text テキストピクチャに適用
+ * @desc 公式プラグインTextPicture.jsに接頭辞を適用します。
+ * @default false
+ * @type boolean
  *
  * @help MessageAutoPrefix.js
  *
@@ -93,5 +101,15 @@
                 return prev;
             }
         }, '');
+    };
+
+    const _Game_Picture_show = Game_Picture.prototype.show;
+    Game_Picture.prototype.show = function() {
+        _Game_Picture_show.apply(this, arguments);
+        if (param.applyTextPicture && this.mzkp_text && this.mzkp_textChanged) {
+            const rowPrefix = $gameMessage.findTextPrefix(param.rowPrefixList);
+            this.mzkp_text = this.mzkp_text.replace(/^/gm, text => rowPrefix + text);
+            this.mzkp_text = $gameMessage.findTextPrefix(param.prefixList) + this.mzkp_text;
+        }
     };
 })();
