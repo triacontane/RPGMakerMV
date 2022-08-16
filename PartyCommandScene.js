@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/08/06 遷移対象画面にステータス画面、装備画面を追加
+                  遷移時に任意のスクリプトを実行できる機能を追加
  1.0.1 2022/04/29 別シーンから戻ってきたあと、アクターコマンドに進んでからキャンセルして戻ると『戦う』が選択できなくなる場合がある問題を修正
  1.0.0 2022/04/10 初版
 ----------------------------------------------------------------------------
@@ -73,6 +75,10 @@
  * @value Scene_Gameover
  * @option メニュー画面
  * @value Scene_Menu
+ * @option ステータス画面
+ * @value Scene_Status
+ * @option 装備画面
+ * @value Scene_Equip
  * @option 用語辞典画面(要プラグイン)
  * @value Scene_Glossary
  * @option サウンドテスト画面(要プラグイン)
@@ -125,6 +131,12 @@
  * @default false
  * @type boolean
  *
+ * @param Script
+ * @text スクリプト
+ * @desc 指定しておくと画面遷移前に任意のスクリプトを実行できます。
+ * @default
+ * @type multiline_string
+ *
  * @param GlossaryType
  * @text 用語種別
  * @desc 用語集画面を選択したときの用語種別です。
@@ -154,6 +166,9 @@
             this.push(scene);
         }
         this.snapForBackground();
+        if (sceneData.Script) {
+            eval(sceneData.Script);
+        }
         switch (sceneData.SceneType) {
             case 'Scene_Name':
                 this.prepareNextScene(sceneData.ActorId, sceneData.MaxNameLength);

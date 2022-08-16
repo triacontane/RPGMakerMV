@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2022/08/12 弱点耐性ポップアップの対象にならない属性を指定できるパラメータを追加
 // 2.4.0 2022/07/16 ポップアップメッセージが重なったときに次のメッセージが表示されるY座標を補正できる機能を追加
 // 2.3.0 2022/03/25 バフおよびデバフをポップアップする機能を追加
 // 2.2.3 2022/02/11 色指定の凡例の記法が一部間違っていたので修正
@@ -137,6 +138,12 @@
  * @desc 耐性時のポップアップ情報です。
  * @type struct<Popup>
  * @default {"text":"Resist","fileName":"","stateId":"","color":"","flash":"","se":""}
+ *
+ * @param IgnoreElements
+ * @text 弱点耐性無視属性リスト
+ * @desc リストに含まれる番号の属性は弱点耐性ポップアップの対象から除外されます。
+ * @type number[]
+ * @default []
  *
  * @param StateList
  * @text ステートポップアップリスト
@@ -413,6 +420,9 @@
     const _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
     Game_Action.prototype.calcElementRate = function(target) {
         const result = _Game_Action_calcElementRate.apply(this, arguments);
+        if (param.IgnoreElements && param.IgnoreElements.includes(this.findActionElement())) {
+            return  result;
+        }
         if (this._elementResult) {
             if (result === 0) {
                 this._elementResult.guard = true;
@@ -423,6 +433,14 @@
             }
         }
         return result;
+    };
+
+    Game_Action.prototype.findActionElement = function() {
+        if (this.item().damage.elementId < 0) {
+            return this.subject().attackElements();
+        } else {
+            return this.item().damage.elementId;
+        }
     };
 
     //=============================================================================
