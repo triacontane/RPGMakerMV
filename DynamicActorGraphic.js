@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2022/08/18 動的グラフィックの条件にモーション条件を追加
 // 2.5.1 2021/10/01 データベースの防具選択で武器の一覧が表示されていた問題を修正
 // 2.5.0 2021/10/01 指定したタグが職業、武器、防具、ステートに記載されている場合にグラフィックを変更できる機能を追加
 // 2.4.0 2021/10/01 指定した武器、防具、職業が有効な場合にグラフィックを変更できる機能を追加
@@ -186,6 +187,50 @@
  * @default false
  * @type boolean
  *
+ * @param motion
+ * @text モーション条件
+ * @desc アクターが指定モーションを取っている間、グラフィック変更
+ * @default
+ * @type select
+ * @option なし
+ * @value
+ * @option 前進
+ * @value walk
+ * @option 待機
+ * @value wait
+ * @option 詠唱待機
+ * @value chant
+ * @option 防御
+ * @value guard
+ * @option ダメージ
+ * @value damage
+ * @option 回避
+ * @value evade
+ * @option 突き
+ * @value thrust
+ * @option 振り
+ * @value swing
+ * @option 飛び道具
+ * @value missile
+ * @option 汎用スキル
+ * @value skill
+ * @option 魔法
+ * @value spell
+ * @option アイテム
+ * @value item
+ * @option 逃走
+ * @value escape
+ * @option 勝利
+ * @value victory
+ * @option 瀕死
+ * @value dying
+ * @option 状態異常
+ * @value abnormal
+ * @option 睡眠
+ * @value sleep
+ * @option 戦闘不能
+ * @value dead
+ *
  * @param switchId
  * @text スイッチ条件
  * @desc 指定したスイッチがONの場合にグラフィック変更
@@ -275,6 +320,7 @@
         conditions.push(() => !item.variableId || this.isValidVariable(item.variableId, item.compareType, item.operand));
         conditions.push(() => !item.dashing || $gamePlayer.isDashing());
         conditions.push(() => !item.inBattle || $gameParty.inBattle());
+        conditions.push(() => !item.motion || this.isMotionTypeValid(item.motion));
         return conditions.every(condition => condition());
     };
 
@@ -347,6 +393,71 @@
         return this._battlerNameCustom || _Game_Actor_battlerName.apply(this, arguments);
     };
 
+    Game_Actor.prototype.requestPictureMotion = function(motionType) {
+        this._pictureMotion = motionType;
+        this._motionFrame = Graphics.frameCount;
+    };
+
+    Game_Actor.prototype.clearPictureMotion = function() {
+        this._pictureMotion = '';
+        this._motionFrame = 0;
+    };
+
+    Game_Actor.prototype.isMotionTypeValid = function(motionType) {
+        if (this._pictureMotion !== motionType) {
+            return false;
+        }
+        if (Sprite_Actor.MOTIONS[motionType].loop) {
+            return true;
+        }
+        if (this._motionFrame && this._motionFrame + 30 > Graphics.frameCount) {
+            return true;
+        }
+        this.clearPictureMotion();
+        return false;
+    };
+
+    Game_Actor.prototype.updateMotionGraphic = function() {
+        if (!this._pictureMotion) {
+            return;
+        }
+        this.refreshCustomGraphic();
+    };
+
+    const _Game_Actor_performDamage = Game_Actor.prototype.performDamage;
+    Game_Actor.prototype.performDamage = function() {
+        _Game_Actor_performDamage.apply(this, arguments);
+        this.requestPictureMotion('damage');
+    };
+
+    const _Game_Actor_performAction = Game_Actor.prototype.performAction;
+    Game_Actor.prototype.performAction = function(action) {
+        _Game_Actor_performAction.apply(this, arguments);
+        this._performAction = true;
+    };
+
+    const _Game_Actor_performActionEnd = Game_Actor.prototype.performActionEnd;
+    Game_Actor.prototype.performActionEnd = function() {
+        _Game_Actor_performActionEnd.apply(this, arguments);
+        this._performAction = false;
+    };
+
+    const _Game_Battler_requestMotion = Game_Battler.prototype.requestMotion;
+    Game_Battler.prototype.requestMotion = function(motionType) {
+        _Game_Battler_requestMotion.apply(this, arguments);
+        if (this instanceof Game_Actor) {
+            this.requestPictureMotion(motionType);
+        }
+    };
+
+    const _Game_Battler_onBattleEnd = Game_Battler.prototype.onBattleEnd;
+    Game_Battler.prototype.onBattleEnd = function() {
+        _Game_Battler_onBattleEnd.apply(this, arguments);
+        if (this instanceof Game_Actor) {
+            this.clearPictureMotion();
+        }
+    };
+
     //=============================================================================
     // Game_Player
     //  リフレッシュ要求に応じてリフレッシュします。
@@ -412,5 +523,24 @@
     Scene_MenuBase.prototype.create = function() {
         $gameParty.refreshMemberCustomGraphic();
         _Scene_MenuBase_create.apply(this, arguments);
+    };
+
+    const _Sprite_Actor_startMotion = Sprite_Actor.prototype.startMotion;
+    Sprite_Actor.prototype.startMotion = function(motionType) {
+        if (this._actor) {
+            const newMotion = Sprite_Actor.MOTIONS[motionType];
+            if (this._motion !== newMotion) {
+                this._actor.requestPictureMotion(motionType);
+            }
+        }
+        _Sprite_Actor_startMotion.apply(this, arguments);
+    };
+
+    const _Sprite_Actor_updateMotion = Sprite_Actor.prototype.updateMotion;
+    Sprite_Actor.prototype.updateMotion = function() {
+        _Sprite_Actor_updateMotion.apply(this, arguments);
+        if (this._actor) {
+            this._actor.updateMotionGraphic();
+        }
     };
 })();
