@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/08/19 MZでの動作を確認しリファクタリング
  1.0.0 2020/05/11 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -14,23 +15,10 @@
 =============================================================================*/
 
 /*:
- * @plugindesc BattleToneTemporaryPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help BattleToneTemporary.js
- *
- * Temporalize the color tone during combat by separating
- * it from the map.
- * It is initialized at the start of the battle,
- * and when the battle ends
- * It will return to the color tone you have specified
- * on the map.
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 戦闘時の色調の一時化プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattleToneTemporary.js
+ * @author トリアコンタン
  *
  * @help BattleToneTemporary.js
  *
@@ -68,13 +56,13 @@
     // Scene_Battle
     //  戦闘中にマップの色調変更が反映されなくなります。
     //=============================================================================
-    var _Scene_Battle_start = Scene_Battle.prototype.start;
+    const _Scene_Battle_start = Scene_Battle.prototype.start;
     Scene_Battle.prototype.start = function() {
         $gameScreen.saveTone();
         _Scene_Battle_start.apply(this, arguments);
     };
 
-    var _Scene_Battle_terminate = Scene_Battle.prototype.terminate;
+    const _Scene_Battle_terminate = Scene_Battle.prototype.terminate;
     Scene_Battle.prototype.terminate = function() {
         $gameScreen.restoreTone();
         _Scene_Battle_terminate.apply(this, arguments);
