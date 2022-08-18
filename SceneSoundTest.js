@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2022/08/19 サブフォルダに配置したオーディオが演奏できない問題を修正
 // 2.2.0 2022/07/18 シークバーを非表示にできる機能を追加
 // 2.1.0 2022/02/14 ヘルプウィンドウの表示内容を改行できるよう修正
 //                  バー表示の上の曲名表記がファイル名になっていた問題を修正
@@ -528,7 +529,7 @@
 
         play() {
             const audio = this._optionWindow.getAudio();
-            audio.name = this._audioPath[1];
+            audio.name = this._audioPath.slice(1).join('/');
             audio.type = this._audioPath[0];
             const buffer = AudioManager.playForSoundTest(audio);
             this._audioWindow.setup(buffer, this._audioName);
