@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2022/08/21 すべての敵キャラに適用できる初期ステートをパラメータで指定できる機能を追加
 // 1.2.0 2022/01/07 MZで動作するよう修正
 // 1.1.0 2018/07/08 複数の初期ステートを設定できる機能を追加
 // 1.0.1 2017/02/07 端末依存の記述を削除
@@ -23,6 +24,12 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
+ *
+ * @param stateList
+ * @text ステートリスト
+ * @desc すべての敵キャラに適用する初期ステートのリストです。
+ * @default []
+ * @type struct<STATE>[]
  *
  * @help InitialState.js
  *
@@ -43,12 +50,33 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~STATE:
+ *
+ * @param stateId
+ * @text ステートID
+ * @desc 適用する初期ステートのIDです。
+ * @default 1
+ * @type state
+ *
+ * @param switchId
+ * @text 条件スイッチ
+ * @desc 初期ステートの適用条件スイッチです。0を指定すると常に適用します。
+ * @default 0
+ * @type switch
+ */
+
 (()=> {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+    if (!param.stateList) {
+        param.stateList = [];
+    }
 
     const _Game_Enemy_setup = Game_Enemy.prototype.setup;
     Game_Enemy.prototype.setup = function(enemyId, x, y) {
         _Game_Enemy_setup.apply(this, arguments);
+        this.setupAllInitialState();
         this.setupInitialState();
     };
 
@@ -58,6 +86,12 @@
             return;
         }
         String(stateList).split(',').forEach(state => this.addState(parseInt(state)));
+    };
+
+    Game_Enemy.prototype.setupAllInitialState = function() {
+        param.stateList
+            .filter(state => !state.switchId || $gameSwitches.value(state.switchId))
+            .forEach(state => this.addState(state.stateId));
     };
 })();
 
