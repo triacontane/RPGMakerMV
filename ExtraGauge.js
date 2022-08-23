@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2022/08/23 現在値の描画フォーマットを指定できる機能を追加
  1.2.0 2022/05/06 ゲージの表示優先度をピクチャの下に変更できる機能を追加
  1.1.2 2021/10/20 フォント指定のヘルプが誤っていたのを修正
  1.1.1 2021/09/15 コアスクリプトv1.3.3に伴う修正
@@ -329,6 +330,11 @@
  * @desc 現在値を表示するときのフォント情報です。未指定の場合はゲージのデフォルト値が使用されます。
  * @default
  * @type struct<Font>
+ *
+ * @param ValueFormat
+ * @text 現在値フォーマット
+ * @desc 現在値を表示する際の表示フォーマットです。%1:現在値 %2:最大値に置き換えられます。
+ * @default %1/%2
  *
  * @param FlashIfFull
  * @text 満タン時にフラッシュ
@@ -788,8 +794,20 @@
 
         drawValue() {
             if (this._detail.DrawValue) {
-                super.drawValue();
+                if (this._detail.ValueFormat) {
+                    this.drawCustomValue();
+                } else {
+                    super.drawValue();
+                }
             }
+        }
+
+        drawCustomValue() {
+            const text = this._detail.ValueFormat.format(this.currentValue(), this.currentMaxValue());
+            const width = this.bitmapWidth() - 2;
+            const height = this.textHeight();
+            this.setupValueFont();
+            this.bitmap.drawText(text, 0, 0, width, height, "right");
         }
 
         findColor(code, defaultColor = null) {
