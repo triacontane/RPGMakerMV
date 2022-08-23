@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/08/24 Windowクラスを外向けに参照できるよう修正
  1.0.0 2022/08/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -143,7 +144,7 @@
         if (this._confirmWindow) {
             this._windowLayer.removeChild(this._confirmWindow);
         }
-        const confirm = new Window_Confirm(this.confirmWindowRect());
+        const confirm = new Window_SaveFileConfirm(this.confirmWindowRect());
         confirm.setHandler("ok", this.onConfirmOk.bind(this));
         confirm.setHandler("cancel", this.onConfirmNg.bind(this));
         confirm.setTerm(this.findTerm());
@@ -191,7 +192,7 @@
      * Window_Confirm
      * 確認ウィンドウ
      */
-    class Window_Confirm extends Window_Command {
+    class Window_SaveFileConfirm extends Window_Command {
         constructor(rect) {
             super(rect);
             this.openness = 0;
@@ -207,4 +208,5 @@
             this.addCommand(param.confirmNg.format(this._term), 'ng');
         }
     }
+    window.Window_SaveFileConfirm = Window_SaveFileConfirm;
 })();
