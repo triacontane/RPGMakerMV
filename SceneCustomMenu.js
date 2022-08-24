@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.30.1 2022/08/24 カスタムシーン中にコモンイベント等で場所移動が実行された場合は、即座にマップ画面に移動するよう修正
  1.30.0 2022/08/12 背景として表示するスナップ画像のぼかしを無効化する設定を追加
                    ウィンドウごとのアクター切り替えがボタン表示も含めて正常に動作するよう修正
  1.29.1 2022/07/09 1.29.0でページボタンを考慮できていなかったので対応
@@ -1385,6 +1386,9 @@
 
         updateInterpreter() {
             this._interpreter.update();
+            if ($gamePlayer.isTransferring()) {
+                SceneManager.goto(Scene_Map);
+            }
             if (!this._interpreter.isRunning()) {
                 this.changeWindowFocus(this._activeWindowId, -1);
                 this._interpreter.terminate();
