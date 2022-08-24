@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2022/08/24 ファイルリスト選択時に決定効果音が演奏されない問題を修正
  1.0.1 2022/08/24 Windowクラスを外向けに参照できるよう修正
  1.0.0 2022/08/23 初版
 ----------------------------------------------------------------------------
@@ -134,6 +135,14 @@
         return param.termLoad;
     };
 
+    const _Window_SavefileList_playOkSound = Window_SavefileList.prototype.playOkSound;
+    Window_SavefileList.prototype.playOkSound = function() {
+        _Window_SavefileList_playOkSound.apply(this, arguments);
+        if (SceneManager._scene.isNeedConfirm()) {
+            Window_Base.prototype.playOkSound.call(this);
+        }
+    };
+
     /**
      * Scene_File
      */
@@ -206,6 +215,12 @@
         makeCommandList() {
             this.addCommand(param.confirmOk.format(this._term), 'ok');
             this.addCommand(param.confirmNg.format(this._term), 'ng');
+        }
+
+        playOkSound() {
+            if (this.index() !== 0) {
+                super.playOkSound();
+            }
         }
     }
     window.Window_SaveFileConfirm = Window_SaveFileConfirm;
