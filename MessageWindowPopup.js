@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.15.1 2022/08/26 2.15.0の修正で、パラメータが未指定だとテール画像を変更しても反映されない問題を修正
 // 2.15.0 2022/08/26 テール画像を変更できるプラグインコマンドを追加
 // 2.14.10 2022/05/14 MWP_SETTING SUB_POS_PLAYER実行後に選択を表示するとエラーになる問題を修正
 // 2.14.9 2019/12/27 StandPictureEC.jsおよびMessageAlignmentEC.jsと組み合わせた場合に発生する競合を修正
@@ -547,6 +548,7 @@
  *
  * テール画像を変更します。img/system配下の画像を
  * 拡張子無しで指定してください。
+ * 空を指定するとパラメータで指定した画像に戻ります。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -1290,13 +1292,10 @@
     Window_Message.prototype._createAllParts = function() {
         _Window_Message__createAllParts.apply(this, arguments);
         this._messageTailImage = new Sprite();
-        var tailImage = $gameSystem.getTailImage();
-        if (tailImage) {
-            this.refreshTailImage();
-            this._messageTailImage.visible  = false;
-            this._messageTailImage.anchor.x = 0.5;
-            this.addChild(this._messageTailImage);
-        }
+        this.refreshTailImage();
+        this._messageTailImage.visible  = false;
+        this._messageTailImage.anchor.x = 0.5;
+        this.addChild(this._messageTailImage);
     };
 
     Window_Message.prototype.refreshTailImage = function() {
