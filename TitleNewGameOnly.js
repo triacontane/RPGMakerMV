@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/08/26 X座標の調整機能とスタート画像をピクチャから指定できる機能を追加
 // 2.1.0 2018/12/01 スタート文字列のY座標を調整できるようにしました。
 // 2.0.0 2017/03/01 セーブファイルが存在する場合の動作を3通りから選択できる機能を追加
 // 1.3.0 2017/06/12 型指定機能に対応
@@ -34,6 +35,14 @@
  * @default
  * @type struct<Font>
  *
+ * @param startImage
+ * @text スタート画像
+ * @desc スタート文字列の代わりに指定する画像です。指定した場合スタート文字列は無視されます。
+ * @default
+ * @type file
+ * @dir img/pictures
+ * @require 1
+ *
  * @param fileExistAction
  * @text ファイル存在時の動作
  * @desc セーブが存在する場合の動作を選択します。
@@ -51,6 +60,14 @@
  * @desc スタートしたときの効果音情報です。指定しない場合はシステム効果音の決定が演奏されます。
  * @default
  * @type struct<AudioSe>
+ *
+ * @param adjustX
+ * @text X座標調整値
+ * @desc スタート文字列の表示X座標を補正します。
+ * @default 0
+ * @min -9999
+ * @max 9999
+ * @type number
  *
  * @param adjustY
  * @text Y座標調整値
@@ -266,10 +283,16 @@
     Sprite_GameStart.prototype.initialize = function() {
         Sprite_Base.prototype.initialize.call(this);
         this.y             = Graphics.height - 160 + (param.adjustY || 0);
+        this.x             = Graphics.width / 2 + (param.adjustX || 0);
+        this.anchor.x = 0.5;
         this.opacity_shift = -2;
     };
 
     Sprite_GameStart.prototype.draw = function() {
+        if (param.startImage) {
+            this.bitmap = ImageManager.loadPicture(param.startImage);
+            return;
+        }
         var font    = param.font || Sprite_GameStart.DEFALT_FONT;
         this.bitmap = new Bitmap(Graphics.width, font.size);
         if (font.name) {
