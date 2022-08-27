@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/08/28 メッセージ中に一時的にフォントを変更できる機能を追加
 // 2.1.0 2022/06/19 メッセージフォントを変更できるプラグインコマンドを追加
 // 2.0.1 2021/10/20 ヘルプ微修正
 // 2.0.0 2021/06/05 MZで動作するよう再構築
@@ -45,7 +46,13 @@
  * ロードするだけなので、基本的には他のプラグインやスクリプトと
  * 組み合わせて使用します。
  *
- * 例外的にメッセージフォントの変更だけはプラグインコマンドを用意しています。
+ * 例外的にメッセージフォントの変更だけはプラグインコマンドと制御文字を用意しています。
+ * メッセージ中に以下の制御文字が使用できます。
+ * ・nameで指定したフォント名に一時的に変更
+ * \fn[name]
+ *
+ * ・デフォルトのフォントに戻す
+ * \fn
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -98,6 +105,24 @@
         }
     };
 
+    const _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
+    Window_Message.prototype.processEscapeCharacter = function(code, textState) {
+        _Window_Message_processEscapeCharacter.apply(this, arguments);
+        if (code === 'FN') {
+            const font = this.obtainEscapeParamForFontLoad(textState);
+            this.contents.fontFace = font ? font : $gameSystem.mainFontFace();
+        }
+    };
+
+    Window_Message.prototype.obtainEscapeParamForFontLoad = function(textState) {
+        const arr = /^\[.+?]/.exec(textState.text.slice(textState.index));
+        if (arr) {
+            textState.index += arr[0].length;
+            return arr[0].substring(1, arr[0].length - 1);
+        } else {
+            return '';
+        }
+    };
 
     Game_Message.prototype.getFontFace = function() {
         return this._faceFace;
