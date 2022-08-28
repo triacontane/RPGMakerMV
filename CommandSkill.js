@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.2 2022/08/28 ActorCommandHelp.jsと併用するための修正
  1.3.1 2022/01/26 1.3.0の機能はメモ欄指定に変更
  1.3.0 2022/01/26 コマンドスキルを使用できないときは非表示にする機能を追加
  1.2.0 2021/12/15 コマンドスキルにソート順を指定できる機能を追加
@@ -157,13 +158,21 @@
         }
     };
 
-    Window_ActorCommand.prototype.updateHelp = function() {
+    const _Window_Selectable_updateHelp = Window_Selectable.prototype.updateHelp;
+    Window_Selectable.prototype.updateHelp = function() {
+        _Window_Selectable_updateHelp.apply(this, arguments);
+        if (this instanceof Window_ActorCommand) {
+            this.updateCommandSkillHelp();
+        }
+    };
+
+    Window_Selectable.prototype.updateCommandSkillHelp = function() {}
+
+    Window_ActorCommand.prototype.updateCommandSkillHelp = function() {
         const skill = this.currentExt();
         if (skill && skill.id > 0) {
             this.setHelpWindowItem(skill);
             this.showHelpWindow();
-        } else {
-            this.hideHelpWindow();
         }
     };
 
