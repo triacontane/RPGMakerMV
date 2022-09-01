@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.31.0 2022/09/01 項目描画スクリプトの実行結果が文字列を返したとき、その文字列を描画するよう修正
  1.30.1 2022/08/24 カスタムシーン中にコモンイベント等で場所移動が実行された場合は、即座にマップ画面に移動するよう修正
  1.30.0 2022/08/12 背景として表示するスナップ画像のぼかしを無効化する設定を追加
                    ウィンドウごとのアクター切り替えがボタン表示も含めて正常に動作するよう修正
@@ -2092,7 +2093,10 @@
             if (scriptList && scriptList.length > 0) {
                 scriptList.forEach(script => {
                     try {
-                        eval(script)
+                        const itemText = eval(script);
+                        if (itemText === String(itemText)) {
+                            this.drawTextEx(itemText, r.x, r.y);
+                        }
                     } catch (e) {
                         outputError(e, script);
                     }
