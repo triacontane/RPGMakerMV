@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.23.0 2022/09/01 項目描画スクリプトの実行結果が文字列を返したとき、その文字列を描画するよう修正
  1.22.0 2021/09/19 カーソル位置を記憶して画面を開き直したときに復元できる機能を追加
  1.21.4 2022/04/25 前バージョンで追加したカレントシーンの判定方法を変更
  1.21.3 2022/04/22 カスタムシーンクラスをSceneManager配下に保持するよう変更
@@ -1931,7 +1932,10 @@
             if (scriptList && scriptList.length > 0) {
                 scriptList.forEach(script => {
                     try {
-                        eval(script)
+                        const itemText = eval(script);
+                        if (itemText === String(itemText)) {
+                            this.drawTextEx(itemText, r.x, r.y);
+                        }
                     } catch (e) {
                         outputError(e);
                     }
