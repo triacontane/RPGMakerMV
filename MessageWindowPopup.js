@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.15.2 2022/09/03 テール画像を未指定にしたときに、ポーズサインをテールとして使う機能が有効化されない問題を修正
 // 2.15.1 2022/08/26 2.15.0の修正で、パラメータが未指定だとテール画像を変更しても反映されない問題を修正
 // 2.15.0 2022/08/26 テール画像を変更できるプラグインコマンドを追加
 // 2.14.10 2022/05/14 MWP_SETTING SUB_POS_PLAYER実行後に選択を表示するとエラーになる問題を修正
@@ -1459,7 +1460,7 @@
         } else if (this._messageTailImage.bitmap) {
             this.refreshTailImage();
             this._messageTailImage.visible = this.isOpen();
-            if (!this.isUsePauseSignTextEnd() && !paramNoUseTail) {
+            if (!this.isUsePauseSignTextEnd() && !!$gameSystem.getTailImage()) {
                 this._windowPauseSignSprite.visible = false;
             }
         }
