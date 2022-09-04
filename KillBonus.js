@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2022/09/04 MZ向けに再設計
 // 1.4.0 2020/03/10 撃破ボーナス発生時にボーナス対象にアニメーションを再生できる機能を追加
 // 1.3.0 2019/11/09 条件に指定ターン以内撃破、クリティカル撃破を追加。ボーナスに最初のドロップアイテムの確率変更追加
 // 1.2.0 2019/06/11 撃破ボーナスとして任意の変数を増減させる機能を追加
@@ -19,54 +20,38 @@
 
 /*:
  * @plugindesc 撃破ボーナスプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/KillBonus.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @help 敵を撃破した際に何らかの報酬を得ることができます。
- * 撃破するとHPやMPを回復するステートや装備品等が作成できます。
+ * @param bonusList
+ * @text ボーナス設定リスト
+ * @desc 撃破ボーナスの設定リストです。
+ * @default []
+ * @type struct<Setting>[]
  *
- * 特徴を有するデータベースのメモ欄に以下の通り記述してください。
- * <KB_HP:20>          # 自身のHPを20回復します。
- * <KB_HPRate:5>       # 自身のHPを5%回復します。
- * <KB_MP:20>          # 自身のMPを20回復します。
- * <KB_MPRate:5>       # 自身のMPを5%回復します。
- * <KB_TP:20>          # 自身のTPを20回復します。
- * <KB_TPRate:5>       # 自身のTPを5%回復します。
- * <KB_Gold:5>         # お金が5G増加します。
- * <KB_お金:5>         # 同上
- * <KB_State:5>        # 自身にステートID[5]を付与します。
- * <KB_ステート:5>     # 同上
- * <KB_StateAll:5>     # 味方全体にステートID[5]を付与します。
- * <KB_ステート全体:5> # 同上
- * <KB_StateEnemy:5>   # 敵全体にステートID[5]を付与します。
- * <KB_ステート敵:5>   # 同上
- * <KB_Variable:1, 20> # 変数[1]が20増加します。
- * <KB_変数:1, 20>     # 同上
- * <KB_Script:script>  # 任意のJavaScriptを実行します。
- * <KB_ドロップ率:2>    # 最初のドロップアイテムのドロップ率を2倍にします。
- * <KB_DropRate:2>     # 同上
+ * @help KillBonus.js
  *
- * 撃破ボーナス条件をひとつだけ付けることができます。
- * <KB_条件:ノーダメージ> # ダメージを受けずに撃破で報酬
- * <KB_Cond:NoDamage>     # 同上
- * <KB_条件:ノースキル>   # スキルを使わずに撃破で報酬
- * <KB_Cond:NoSkill>      # 同上
- * <KB_条件:ノーデス>     # 戦闘不能者を出さずに撃破で報酬
- * <KB_Cond:NoDeath>      # 同上
- * <KB_条件:1>            # スイッチ[1]がONのときに撃破で報酬
- * <KB_Cond:1>            # 同上
- * <KB_条件:turn[1]>     # [1]ターン以内に撃破で報酬
- * <KB_Cond:turn[1]>     # 同上
- * <KB_条件:クリティカル> # クリティカル撃破で報酬
- * <KB_Cond:Critical>    # 同上
+ * 敵を撃破した際に何らかの報酬を得ることができます。
+ * 報酬は主に以下の通りです。
+ * ・パラメータ回復
+ * ・報酬レート、獲得率変動
+ * ・変数加算、スクリプト実行
+ * ・ステート付与
+ * ・アニメーション表示
  *
- * 撃破ボーナスの発動時にアニメーションを再生できます。
- * 対象は撃破した側のバトラーですが、ステートの場合は付与された対象になります。
- * <KB_アニメーション:1>   # ボーナス発生時アニメーション[1]を再生
- * <KB_Animation:1>       # 同上
- * <KB_アニメ遅延:64>      # ボーナス発生時アニメーションの遅延を64フレームに設定
- * <KB_AnimationDelay:64> # 同上
+ * 撃破するとHPやMPを回復するステートや装備品などが作成できます。
+ * 具体的な報酬の内容はプラグインパラメータで指定してください。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * 特徴を有するデータベース(アクター、職業、武具、ステート、敵キャラ)のメモ欄に
+ * 以下の通り記述してください。
+ * "撃破した側"がボーナスの特徴を持っていると撃破ボーナスを獲得できます。
+ *
+ * bonus01 : プラグインパラメータで指定した識別子
+ * <撃破ボーナス:bonus01>
+ * <KillBonus:bonus01>
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -74,62 +59,222 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+/*~struct~Setting:
+ *
+ * @param id
+ * @text 識別子
+ * @desc 識別子です。一意の値を指定してください。この値をメモ欄に指定します。
+ * @default bonus01
+ *
+ * @param hp
+ * @text HP回復
+ * @desc HPが指定したぶんだけ回復します。
+ * @default 0
+ * @type number
+ * @min -99999
+ * @max 99999
+ *
+ * @param hpRate
+ * @text HP回復レート
+ * @desc HPが指定した割合(0-100)だけ回復します。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param mp
+ * @text MP回復
+ * @desc MPが指定したぶんだけ回復します。
+ * @default 0
+ * @type number
+ * @min -99999
+ * @max 99999
+ *
+ * @param mpRate
+ * @text MP回復レート
+ * @desc MPが指定した割合(0-100)だけ回復します。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param tp
+ * @text TP回復
+ * @desc TPが指定したぶんだけ回復します。
+ * @default 0
+ * @type number
+ * @min -99999
+ * @max 99999
+ *
+ * @param tpRate
+ * @text TP回復レート
+ * @desc TPが指定した割合(0-100)だけ回復します。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param gold
+ * @text お金
+ * @desc 指定した額のお金を直接獲得します。
+ * @default 0
+ * @type number
+ *
+ * @param goldRate
+ * @text お金レート
+ * @desc 指定した倍率で対象の獲得金額が変動します。
+ * @default 100
+ * @type number
+ *
+ * @param expRate
+ * @text 経験値レート
+ * @desc 指定した倍率で対象の獲得経験値が変動します。
+ * @default 100
+ * @type number
+ *
+ * @param drop1Rate
+ * @text ドロップ1レート
+ * @desc ドロップアイテム1の取得率を指定値に変更します。データベースで指定した値は無視されます。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param drop2Rate
+ * @text ドロップ2レート
+ * @desc ドロップアイテム2の取得率を指定値に変更します。データベースで指定した値は無視されます。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param drop3Rate
+ * @text ドロップ3レート
+ * @desc ドロップアイテム3の取得率を指定値に変更します。データベースで指定した値は無視されます。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param state
+ * @text ステート
+ * @desc 自身に指定したステートを付与します。
+ * @default 0
+ * @type state
+ *
+ * @param stateParty
+ * @text パーティステート
+ * @desc パーティ全員にステートを付与します。
+ * @default 0
+ * @type state
+ *
+ * @param stateTroop
+ * @text 敵グループステート
+ * @desc 敵グループ全員にステートを付与します。
+ * @default 0
+ * @type state
+ *
+ * @param variableId
+ * @text 変数番号
+ * @desc 変数を加算させたい対象の変数IDです。
+ * @default 0
+ * @type variable
+ *
+ * @param variableValue
+ * @text 変数の設定値
+ * @desc 変数の加算値です。
+ * @default 0
+ * @type number
+ * @min -999999
+ * @parent variableId
+ *
+ * @param script
+ * @text スクリプト
+ * @desc 指定したスクリプトを実行します。
+ * @default
+ * @type multiline_string
+ *
+ * @param animationId
+ * @text アニメーション
+ * @desc 撃破ボーナスの発動時にアニメーションを再生できます。
+ * @default 0
+ * @type animation
+ *
+ * @param condition
+ * @text 適用条件
+ * @desc 撃破ボーナスが適用される条件です。指定が無い場合は常に適用されます。
+ * @type struct<Condition>
+ * @default
+ *
+ */
+
+/*~struct~Condition:
+ *
+ * @param noDamage
+ * @text ノーダメージ
+ * @desc ダメージを受けずに撃破したとき、条件を満たします。
+ * @default false
+ * @type boolean
+ *
+ * @param noSkill
+ * @text スキル不使用
+ * @desc スキルを使わずに撃破したとき、条件を満たします。
+ * @default false
+ * @type boolean
+ *
+ * @param noDeath
+ * @text ノーデス
+ * @desc 戦闘不能者を出さずに撃破したとき、条件を満たします。
+ * @default false
+ * @type boolean
+ * 
+ * @param critical
+ * @text クリティカル
+ * @desc クリティカルで撃破したとき、条件を満たします。
+ * @default false
+ * @type boolean
+ * 
+ * @param switchId
+ * @text スイッチ
+ * @desc 指定したスイッチがONのとき条件を満たします。
+ * @default 0
+ * @type switch
+ * 
+ * @param turnCount
+ * @text ターン数
+ * @desc 指定したターン数以内に撃破したとき、条件を満たします。
+ * @default 0
+ * @type number
+ * 
+ * @param script
+ * @text スクリプト
+ * @desc 指定したスクリプトがtrueを返したとき条件を満たします。
+ * @default 
+ *
+ */
+
+(()=> {
     'use strict';
-    var metaTagPrefix = 'KB_';
-
-    var getArgNumberWithEval = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(eval(convertEscapeCharacters(arg)), 10) || 0).clamp(min, max);
-    };
-
-    var getArgString = function(arg, upperFlg) {
-        arg = convertEscapeCharacters(arg);
-        return upperFlg ? arg.toUpperCase() : arg;
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+    if (!param.bonusList) {
+        param.bonusList = [];
+    }
 
     //=============================================================================
     // BattleManager
     //  スキルやダメージの状況を保持します。
     //=============================================================================
-    var _BattleManager_setup = BattleManager.setup;
+    const _BattleManager_setup = BattleManager.setup;
     BattleManager.setup = function(troopId, canEscape, canLose) {
         _BattleManager_setup.apply(this, arguments);
-        $gameParty.members().forEach(function(member) {
-            member.initKillBonusCondition();
-        });
+        $gameParty.members().forEach(member => member.initKillBonusCondition());
     };
 
     //=============================================================================
     // Game_BattlerBase
     //  スキルやダメージの状況を保持します。
     //=============================================================================
-    Game_BattlerBase._condNoDamages = ['NoDamage', 'ノーダメージ'];
-    Game_BattlerBase._condNoSkill   = ['NoSkill', 'ノースキル'];
-    Game_BattlerBase._condNoDeath   = ['NoDeath', 'ノーデス'];
-    Game_BattlerBase._condCritial   = ['Critical', 'クリティカル'];
-
     Game_BattlerBase.prototype.initKillBonusCondition = function() {
         this._noSkill  = true;
         this._noDamage = true;
@@ -148,39 +293,34 @@
         this._noDeath  = false;
     };
 
-    Game_BattlerBase.prototype.canAcceptKillBonus = function(critical) {
-        return this.traitObjects().every(function(data) {
-            return this.checkDataForKillBonus(data, critical);
-        }.bind(this));
+    Game_BattlerBase.prototype.findKillBonusParamList = function(critical) {
+        return this.traitObjects()
+            .map(obj => this.findKillBonusParam(obj))
+            .filter(data => !!data && this.checkDataForKillBonus(data, critical));
+    };
+
+    Game_BattlerBase.prototype.findKillBonusParam = function(traitObj) {
+        const id = PluginManagerEx.findMetaValue(traitObj, ['KillBonus', '撃破ボーナス']);
+        return param.bonusList.filter(item => item.id === id)[0] || null;
     };
 
     Game_BattlerBase.prototype.checkDataForKillBonus = function(data, critical) {
-        var condition = getMetaValues(data, ['Cond', '条件']);
-        if (!condition) return true;
-        if (Game_BattlerBase._condNoDamages.contains(condition) && !this._noDamage) {
-            return false;
+        const condition = data.condition;
+        if (!condition) {
+            return true;
         }
-        if (Game_BattlerBase._condNoSkill.contains(condition) && !this._noSkill) {
-            return false;
-        }
-        if (Game_BattlerBase._condNoDeath.contains(condition) && !this._noDeath) {
-            return false;
-        }
-        if (Game_BattlerBase._condCritial.contains(condition) && !critical) {
-            return false;
-        }
-        var regResult = /turn\[(\d+)]/gi.exec(condition);
-        if (regResult && $gameTroop.turnCount() > parseInt(regResult[1])) {
-            return false;
-        }
-        var switchId = parseInt(convertEscapeCharacters(condition));
-        if (switchId > 0 && !$gameSwitches.value(switchId)) {
-            return false;
-        }
-        return true;
+        const conditions = [];
+        conditions.push(() => condition.noDamage && !this._noDamage);
+        conditions.push(() => condition.noSkill && !this._noSkill);
+        conditions.push(() => condition.noDeath && !this._noDeath);
+        conditions.push(() => condition.critical && !critical);
+        conditions.push(() => condition.turnCount > 0 && condition.turnCount < $gameTroop.turnCount());
+        conditions.push(() => condition.switchId > 0 && !$gameSwitches.value(condition.switchId));
+        conditions.push(() => condition.script && !eval(condition.script));
+        return !conditions.some(cond => cond.call(this));
     };
 
-    var _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
+    const _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
         _Game_BattlerBase_die.apply(this, arguments);
         this.breakNoDeath();
@@ -190,7 +330,7 @@
     // Game_Battler
     //  ダメージ時にノーダメージフラグを解除します。
     //=============================================================================
-    var _Game_Battler_performDamage = Game_Battler.prototype.performDamage;
+    const _Game_Battler_performDamage = Game_Battler.prototype.performDamage;
     Game_Battler.prototype.performDamage = function() {
         _Game_Battler_performDamage.apply(this, arguments);
         this.breakNoDamage();
@@ -200,23 +340,23 @@
     // Game_Action
     //  撃破ボーナスを適用します。
     //=============================================================================
-    var _Game_Action_testApply = Game_Action.prototype.testApply;
+    const _Game_Action_testApply = Game_Action.prototype.testApply;
     Game_Action.prototype.testApply = function(target) {
         this._criticalForKillBonus = false;
-        var result = _Game_Action_testApply.apply(this, arguments);
+        const result = _Game_Action_testApply.apply(this, arguments);
         if (result && !this.isAttack() && !this.isGuard()) {
             this.subject().breakNoSkill();
         }
         return result;
     };
 
-    var _Game_Action_applyCritical = Game_Action.prototype.applyCritical;
+    const _Game_Action_applyCritical = Game_Action.prototype.applyCritical;
     Game_Action.prototype.applyCritical = function(damage) {
         this._criticalForKillBonus = true;
         return _Game_Action_applyCritical.apply(this, arguments);
     };
 
-    var _Game_Action_executeHpDamage      = Game_Action.prototype.executeHpDamage;
+    const _Game_Action_executeHpDamage      = Game_Action.prototype.executeHpDamage;
     Game_Action.prototype.executeHpDamage = function(target, value) {
         _Game_Action_executeHpDamage.apply(this, arguments);
         if (target.hp === 0) {
@@ -225,160 +365,152 @@
     };
 
     Game_Action.prototype.executeKillBonus = function(target) {
-        var subject = this.subject();
-        if (!subject || !subject.canAcceptKillBonus(this._criticalForKillBonus)) return;
+        const subject = this.subject();
+        if (!subject) {
+            return;
+        }
         this._gainHp = 0;
         this._gainMp = 0;
         this._gainTp = 0;
-        this._bonusTarget = subject;
-        subject.traitObjects().forEach(function(data) {
-            this.executeKillBonusRecoverHp(data, subject);
-            this.executeKillBonusRecoverMp(data, subject);
-            this.executeKillBonusRecoverTp(data, subject);
-            this.executeKillBonusGold(data, subject);
+        target.clearRewardRate();
+        subject.findKillBonusParamList(this._criticalForKillBonus).forEach(data => {
+            this.executeKillBonusRecover(data, subject);
             this.executeKillBonusState(data, subject);
-            this.executeKillBonusStateAll(data, subject);
-            this.executeKillBonusStateEnemy(data, subject);
-            this.executeKillBonusVariable(data, subject);
-            this.executeKillBonusScript(data, subject);
-            this.executeKillBonusDropRate(data, target);
-        }.bind(this));
-        this._bonusTarget = null;
+            this.executeKillBonusVariable(data);
+            this.executeKillBonusScript(data, subject, target);
+            this.executeKillBonusReward(data, target);
+            this.executeKillBonusAnimation(data, subject);
+        });
         if (this._gainHp !== 0) subject.gainHp(this._gainHp);
         if (this._gainMp !== 0) subject.gainMp(this._gainMp);
         if (this._gainTp !== 0) subject.gainTp(this._gainTp);
     };
 
-    Game_Action.prototype.findMetaForKillBonus = function(data, name) {
-        var value = getMetaValues(data, name);
-        if (!!value) {
-            console.log(name);
-            this.executeKillBonusAnimation(data);
-        }
-        return value;
-    };
-
-    Game_Action.prototype.executeKillBonusAnimation = function(data) {
-        var id = parseInt(getMetaValues(data, ['アニメーション', 'Animation']));
+    Game_Action.prototype.executeKillBonusAnimation = function(data, subject) {
+        const id = data.animationId
         if (id > 0) {
-            var delay = parseInt(getMetaValues(data, ['アニメ遅延', 'AnimationDelay']));
-            if (this._bonusTarget instanceof Game_Unit) {
-                this._bonusTarget.members().forEach(function(target) {
-                    target.startAnimation(id, false, delay || 0);
-                });
-            } else {
-                this._bonusTarget.startAnimation(id, false, delay || 0);
-            }
+            $gameTemp.requestAnimation([subject], id, false);
         }
     };
 
-    Game_Action.prototype.executeKillBonusRecoverHp = function(data, subject) {
-        var value = this.findMetaForKillBonus(data, 'HP');
-        if (value) this._gainHp += getArgNumberWithEval(value);
-        var value2 = this.findMetaForKillBonus(data, 'HPRate');
-        if (value2) this._gainHp += Math.floor(subject.mhp * getArgNumberWithEval(value2) / 100);
-    };
-
-    Game_Action.prototype.executeKillBonusRecoverMp = function(data, subject) {
-        var value = this.findMetaForKillBonus(data, 'MP');
-        if (value) this._gainMp += getArgNumberWithEval(value);
-        var value2 = this.findMetaForKillBonus(data, 'MPRate');
-        if (value2) this._gainMp += Math.floor(subject.mmp * getArgNumberWithEval(value2) / 100);
-    };
-
-    Game_Action.prototype.executeKillBonusRecoverTp = function(data, subject) {
-        var value = this.findMetaForKillBonus(data, 'TP');
-        if (value) this._gainTp += getArgNumberWithEval(value);
-        var value2 = this.findMetaForKillBonus(data, 'TPRate');
-        if (value2) this._gainTp += Math.floor(subject.maxTp() * getArgNumberWithEval(value2) / 100);
-    };
-
-    Game_Action.prototype.executeKillBonusGold = function(data, subject) {
-        var value = this.findMetaForKillBonus(data, ['Gold', 'お金']);
-        if (value) {
-            $gameParty.gainGold(getArgNumberWithEval(value));
+    Game_Action.prototype.executeKillBonusRecover = function(data, subject) {
+        if (data.hp) {
+            this._gainHp += data.hp;
+        }
+        if (data.hpRate) {
+            this._gainHp += Math.floor(subject.mhp * data.hpRate / 100);
+        }
+        if (data.mp) {
+            this._gainMp += data.mp;
+        }
+        if (data.mpRate) {
+            this._gainMp += Math.floor(subject.mhp * data.mpRate / 100);
+        }
+        if (data.tp) {
+            this._gainTp += data.tp;
+        }
+        if (data.tpRate) {
+            this._gainTp += Math.floor(subject.maxTp() * data.tpRate / 100);
         }
     };
 
-    Game_Action.prototype.executeKillBonusVariable = function(data, subject) {
-        var value = this.findMetaForKillBonus(data, ['Variable', '変数']);
-        if (value) {
-            var args = getArgString(value).split(',');
-            var id = parseInt(args[0]);
-            $gameVariables.setValue(id, $gameVariables.value(id) + parseInt(args[1]) || 0);
+    Game_Action.prototype.executeKillBonusVariable = function(data) {
+        const id = data.variableId;
+        if (id) {
+            $gameVariables.setValue(id, $gameVariables.value(id) + data.variableValue);
         }
     };
 
     Game_Action.prototype.executeKillBonusState = function(data, subject) {
-        var value = this.findMetaForKillBonus(data, ['State', 'ステート']);
-        if (value) {
-            subject.addState(getArgNumberWithEval(value));
+        if (data.state) {
+            subject.addState(data.state);
+        }
+        if (data.stateParty) {
+            subject.friendsUnit().members().forEach(member => member.addState(data.stateParty));
+        }
+        if (data.stateTroop) {
+            subject.opponentsUnit().members().forEach(member => member.addState(data.stateTroop));
         }
     };
 
-    Game_Action.prototype.executeKillBonusStateAll = function(data, subject) {
-        this._bonusTarget = subject.friendsUnit();
-        var value = this.findMetaForKillBonus(data, ['StateAll', 'ステート全体']);
-        if (value) {
-            subject.friendsUnit().members().forEach(function(member) {
-                member.addState(getArgNumberWithEval(value));
-            });
-        }
-        this._bonusTarget = subject;
-    };
-
-    Game_Action.prototype.executeKillBonusStateEnemy = function(data, subject) {
-        this._bonusTarget = subject.opponentsUnit();
-        var value = this.findMetaForKillBonus(data, ['StateEnemy', 'ステート敵']);
-        if (value) {
-            subject.opponentsUnit().members().forEach(function(member) {
-                member.addState(getArgNumberWithEval(value));
-            });
-        }
-        this._bonusTarget = subject;
-    };
-
-    Game_Action.prototype.executeKillBonusScript = function(data, subject) {
-        var value = this.findMetaForKillBonus(data, ['Script', 'スクリプト']);
-        if (value) {
+    Game_Action.prototype.executeKillBonusScript = function(data, subject, target) {
+        if (data.script) {
             try {
-                eval(getArgString(value));
+                eval(data.script);
             } catch (e) {
-                console.log(e.stack);
+                console.error(e.stack);
             }
         }
     };
 
-    Game_Action.prototype.executeKillBonusDropRate = function(data, target) {
-        var value = this.findMetaForKillBonus(data, ['DropRate', 'ドロップ率']);
-        if (value) {
-            target.setCustomDropRate(getArgNumberWithEval(value));
+    Game_Action.prototype.executeKillBonusReward = function(data, target) {
+        if (data.gold) {
+            $gameParty.gainGold(data.gold);
         }
+        target.setRewardRate(data.drop1Rate, data.drop2Rate, data.drop3Rate, data.goldRate, data.expRate);
     };
 
     /**
      * Game_Enemy
      * ドロップ率変更を実装します。
      */
-    Game_Enemy.prototype.setCustomDropRate = function(value) {
-        this._customDropRate = value;
-    };
-
-    var _Game_Enemy_makeDropItems = Game_Enemy.prototype.makeDropItems;
-    Game_Enemy.prototype.makeDropItems = function() {
-        this._firstDrop = true;
-        return _Game_Enemy_makeDropItems.apply(this, arguments);
-    };
-
-    var _Game_Enemy_dropItemRate = Game_Enemy.prototype.dropItemRate;
-    Game_Enemy.prototype.dropItemRate = function() {
-        var result = _Game_Enemy_dropItemRate.apply(this, arguments);
-        if (this._firstDrop && this._customDropRate !== undefined) {
-            result *= this._customDropRate;
-            this._customDropRate = undefined;
+    Game_Battler.prototype.setRewardRate = function(drop1Rate, drop2Rate, drop3Rate, goldRate, expRate) {
+        if (this._customRewardRate) {
+            this._customRewardRate.dropRate[0] += drop1Rate;
+            this._customRewardRate.dropRate[1] += drop2Rate;
+            this._customRewardRate.dropRate[2] += drop3Rate;
+            this._customRewardRate.goldRate += goldRate;
+            this._customRewardRate.expRate += expRate;
+        } else {
+            this._customRewardRate = {
+                dropRate: [drop1Rate, drop2Rate, drop3Rate],
+                goldRate: goldRate,
+                expRate: expRate
+            };
         }
-        this._firstDrop = false;
-        return result;
+    };
+
+    Game_Battler.prototype.clearRewardRate = function () {
+        this._customRewardRate = null;
+    }
+
+    const _Game_Enemy_exp = Game_Enemy.prototype.exp;
+    Game_Enemy.prototype.exp = function() {
+        const exp = _Game_Enemy_exp.apply(this, arguments);
+        if (this._customRewardRate?.expRate) {
+            return exp * this._customRewardRate.expRate / 100;
+        } else {
+            return exp;
+        }
+    };
+
+    const _Game_Enemy_gold = Game_Enemy.prototype.gold;
+    Game_Enemy.prototype.gold = function() {
+        const gold = _Game_Enemy_gold.apply(this, arguments);
+        if (this._customRewardRate?.goldRate) {
+            return gold * this._customRewardRate.goldRate / 100;
+        } else {
+            return gold;
+        }
+    };
+
+    const _Game_Enemy_makeDropItems = Game_Enemy.prototype.makeDropItems;
+    Game_Enemy.prototype.makeDropItems = function() {
+        const prevItems = _Game_Enemy_makeDropItems.apply(this, arguments);
+        const newRate = this._customRewardRate?.dropRate || [];
+        if (newRate[0] || newRate[1] || newRate[2]) {
+            const rate = this.dropItemRate();
+            return this.enemy().dropItems.reduce((r, dropItem, index) => {
+                const customResult = newRate[index] ? Math.random() < newRate[index] / 100 : Math.random() * dropItem.denominator < rate;
+                if (dropItem.kind > 0 && customResult) {
+                    return r.concat(this.itemObject(dropItem.kind, dropItem.dataId));
+                } else {
+                    return r;
+                }
+            }, []);
+        } else {
+            return prevItems;
+        }
     };
 })();
 
