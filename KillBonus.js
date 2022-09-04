@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2022/09/04 ドロップ率に関する仕様をヘルプに記載
 // 2.0.0 2022/09/04 MZ向けに再設計
 // 1.4.0 2020/03/10 撃破ボーナス発生時にボーナス対象にアニメーションを再生できる機能を追加
 // 1.3.0 2019/11/09 条件に指定ターン以内撃破、クリティカル撃破を追加。ボーナスに最初のドロップアイテムの確率変更追加
@@ -52,6 +53,12 @@
  * bonus01 : プラグインパラメータで指定した識別子
  * <撃破ボーナス:bonus01>
  * <KillBonus:bonus01>
+ *
+ * ※1 複数の撃破ボーナスが有効な場合、経験値やお金のレートやドロップ率は
+ * 最も高い値が採用されます。
+ *
+ * ※2 ドロップ率に0を指定すると、DBで指定したデフォルトの
+ * ドロップ率になります。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -455,12 +462,13 @@
      * ドロップ率変更を実装します。
      */
     Game_Battler.prototype.setRewardRate = function(drop1Rate, drop2Rate, drop3Rate, goldRate, expRate) {
+        const rate = this._customRewardRate;
         if (this._customRewardRate) {
-            this._customRewardRate.dropRate[0] += drop1Rate;
-            this._customRewardRate.dropRate[1] += drop2Rate;
-            this._customRewardRate.dropRate[2] += drop3Rate;
-            this._customRewardRate.goldRate += goldRate;
-            this._customRewardRate.expRate += expRate;
+            rate.dropRate[0] = Math.max(rate.dropRate[0], drop1Rate);
+            rate.dropRate[1] = Math.max(rate.dropRate[1], drop2Rate);
+            rate.dropRate[2] = Math.max(rate.dropRate[2], drop3Rate);
+            rate.goldRate = Math.max(rate.goldRate, goldRate);
+            rate.expRate = Math.max(rate.expRate, expRate);
         } else {
             this._customRewardRate = {
                 dropRate: [drop1Rate, drop2Rate, drop3Rate],
