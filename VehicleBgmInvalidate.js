@@ -41,7 +41,8 @@
  *
  * @help VehicleBgmInvalidate.js
  *
- * 乗り物に搭乗したとき、演奏を無効化しもともと演奏していたBGMを演奏しつづけます。
+ * 乗り物に搭乗したときのBGM演奏を無効化し、もとのBGMを演奏しつづけます。
+ * 小型船、大型船、飛行船ごとに個別制御が可能です。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
