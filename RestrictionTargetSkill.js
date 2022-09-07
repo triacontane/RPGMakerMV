@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2022/09/07 選択できないバトラーをウィンドウから非表示にできる機能を追加(敵キャラのみ)
 // 2.2.0 2022/04/25 スクリプトの評価結果がtrueのときに使用不可にできる機能を追加
 // 2.1.2 2021/10/12 循環参照による競合が起こりにくい実装に変更
 // 2.1.1 2021/10/11 2.1.0の更新でスキルに対する対象限定が効かなくなっていた問題を修正
@@ -128,6 +129,12 @@
  * @desc スクリプトの実行結果がtrueを返した場合、使用不可となります。
  * @default
  * @type multiline_string
+ *
+ * @param invalidTargetHidden
+ * @text 無効バトラー非表示
+ * @desc スキルが使用できないバトラーを選択不可ではなく非表示にします。敵キャラが対象の場合だけ有効です。
+ * @default false
+ * @type boolean
  *
  */
 
@@ -375,7 +382,7 @@
     //  対象アクターに対してスキルを使用可能か判定します。
     //=============================================================================
     Window_Selectable.prototype.canSelectSkillTarget = function(item, index, user) {
-        return this.getMember(index).canSelectTarget(item, user);
+        return this.getMember(index)?.canSelectTarget(item, user);
     };
 
     Window_Selectable.prototype.deactivateBatter = function(index) {
@@ -423,7 +430,7 @@
     //=============================================================================
     const _Window_BattleEnemy_drawItem      = Window_BattleEnemy.prototype.drawItem;
     Window_BattleEnemy.prototype.drawItem = function(index) {
-        if (!this.canSelectSkillTarget(index)) {
+        if (!this.canSelectSkillTarget(index) && !this.isRestrictionHidden()) {
             this.deactivateBatter(index);
         }
         _Window_BattleEnemy_drawItem.apply(this, arguments);
@@ -445,6 +452,23 @@
                 enemy.activateSelect();
             });
         }
+    };
+
+    const _Window_BattleEnemy_refresh = Window_BattleEnemy.prototype.refresh;
+    Window_BattleEnemy.prototype.refresh = function() {
+        _Window_BattleEnemy_refresh.apply(this, arguments);
+        if (this.isRestrictionHidden()) {
+            this._enemies = this._enemies.filter((enemy, index) => this.canSelectSkillTarget(index));
+            Window_Selectable.prototype.refresh.call(this);
+        }
+    };
+
+    Window_BattleEnemy.prototype.isRestrictionHidden = function() {
+        const action = BattleManager.inputtingAction();
+        if (!action) {
+            return false;
+        }
+        return action.subject().findRestrictionData(action.item())?.invalidTargetHidden;
     };
 
     //=============================================================================
