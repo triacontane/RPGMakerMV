@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.4.0 2022/09/07 現在のシーンによって表示する立ち絵画像を出し分けられる機能を追加
 // 3.3.0 2022/04/21 シーン設定のパラメータにもタッチスイッチ設定を追加
 //                  タッチスイッチ有効時は、他のタッチ処理を無効化するよう変更
 // 3.2.0 2022/04/18 タッチ時に任意のスイッチをONにできる機能を追加
@@ -387,6 +388,47 @@
  * @default 0
  * @type armor
  *
+ * @param Scene
+ * @text シーン条件
+ * @desc 現在のシーンが選択したシーンであるときに表示条件を満たします。
+ * @default none
+ * @type select
+ * @default
+ * @option 条件なし
+ * @value
+ * @option タイトル
+ * @value Scene_Title
+ * @option マップ
+ * @value Scene_Map
+ * @option ゲームオーバー
+ * @value Scene_Gameover
+ * @option バトル
+ * @value Scene_Battle
+ * @option メインメニュー
+ * @value Scene_Menu
+ * @option アイテム
+ * @value Scene_Item
+ * @option スキル
+ * @value Scene_Skill
+ * @option 装備
+ * @value Scene_Equip
+ * @option ステータス
+ * @value Scene_Status
+ * @option オプション
+ * @value Scene_Options
+ * @option セーブ
+ * @value Scene_Save
+ * @option ロード
+ * @value Scene_Load
+ * @option ゲーム終了
+ * @value Scene_End
+ * @option ショップ
+ * @value Scene_Shop
+ * @option 名前入力
+ * @value Scene_Name
+ * @option デバッグ
+ * @value Scene_Debug
+ *
  * @param Note
  * @text メモ欄条件
  * @desc データベースのメモ欄<StandPicture:aaa>が指定値と等しい場合に表示条件を満たします。
@@ -681,6 +723,7 @@
             conditions.push(() => !file.State || a.isStateAffected(file.State));
             conditions.push(() => !file.Weapon || a.hasWeapon($dataWeapons[file.Weapon]));
             conditions.push(() => !file.Armor || a.hasArmor($dataArmors[file.Armor]));
+            conditions.push(() => !file.Scene || SceneManager._scene.isStandPictureScene(file.Scene));
             conditions.push(() => !file.Note || this.findStandPictureMeta() === file.Note);
             conditions.push(() => !file.Switch || $gameSwitches.value(file.Switch));
             conditions.push(() => !file.Script || eval(file.Script));
@@ -914,6 +957,10 @@
         if (this._standSprites) {
             this._standSprites.forEach(picture => picture.destroyStandApng());
         }
+    };
+
+    Scene_Base.prototype.isStandPictureScene = function(sceneName) {
+        return this._standSpriteScene?.SceneName === sceneName;
     };
 
     Scene_Skill.prototype.findStandPictureMember = function() {
