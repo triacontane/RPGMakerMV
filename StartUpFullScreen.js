@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2022/09/09 ゲーム終了画面にもシャットダウン項目を追加できる機能を追加
 // 1.2.0 2021/12/30 イベントテスト実行時は全画面化を無効にするよう仕様変更
 // 1.1.0 2021/11/04 MZで動作するよう修正
 // 1.0.3 2019/01/14 1.0.3でコアスクリプトv1.6.1以前で逆に動作しなくなっていた問題を修正
@@ -37,6 +38,12 @@
  * @desc オプション画面に追加する全画面で起動の項目名です。
  * ローカル環境での実行時のみ表示されます。
  * @default フルスクリーンで起動
+ *
+ * @param UseGameEnd
+ * @text ゲーム終了画面に追加
+ * @desc ゲーム終了画面にシャットダウンの項目を追加します。
+ * @default true
+ * @type boolean
  *
  * @help StartUpFullScreen.js
  *
@@ -124,6 +131,55 @@ function Scene_Terminate() {
         this._commandWindow.close();
         this.fadeOutAll();
         SceneManager.goto(Scene_Terminate);
+    };
+
+    //=============================================================================
+    // Scene_GameEnd
+    //  シャットダウンの処理を追加定義します。
+    //=============================================================================
+    const _Scene_GameEnd_createCommandWindow = Scene_GameEnd.prototype.createCommandWindow;
+    Scene_GameEnd.prototype.createCommandWindow = function() {
+        _Scene_GameEnd_createCommandWindow.apply(this, arguments);
+        if (param.UseGameEnd) {
+            this._commandWindow.setHandler('shutdown',  this.commandShutdown.bind(this));
+        }
+    };
+
+    Scene_GameEnd.prototype.commandShutdown = function() {
+        this._commandWindow.close();
+        this.fadeOutAll();
+        SceneManager.goto(Scene_Terminate);
+    };
+
+    const _Scene_GameEnd_commandWindowRect = Scene_GameEnd.prototype.commandWindowRect;
+    Scene_GameEnd.prototype.commandWindowRect = function() {
+        const rect = _Scene_GameEnd_commandWindowRect.apply(this, arguments);
+        if (param.UseGameEnd) {
+            // Risk of conflicts due to poor implementation of core scripts.
+            rect.height = this.calcWindowHeight(3, true);
+        }
+        return rect;
+    };
+
+    //=============================================================================
+    // Window_GameEnd
+    //  シャットダウンの選択肢を追加定義します。
+    //=============================================================================
+    const _Window_GameEnd_makeCommandList = Window_GameEnd.prototype.makeCommandList;
+    Window_GameEnd.prototype.makeCommandList = function() {
+        _Window_GameEnd_makeCommandList.apply(this, arguments);
+        if (param.UseGameEnd) {
+            this.addCommand(param.Shutdown, 'shutdown');
+            this._list.splice(1, 0, this._list.pop());
+        }
+    };
+
+    const _Window_GameEnd_updatePlacement = Window_GameEnd.prototype.updatePlacement;
+    Window_GameEnd.prototype.updatePlacement = function() {
+        _Window_GameEnd_updatePlacement.apply(this, arguments);
+        if (param.UseGameEnd) {
+            this.y += Math.floor(this.height / 8);
+        }
     };
 
     //=============================================================================
