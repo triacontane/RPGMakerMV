@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/09/09 ゲーム終了画面にもシャットダウン項目を追加できる機能を追加
 // 1.1.0 2021/12/30 イベントテスト実行時は全画面化を無効にするよう仕様変更
 // 1.0.3 2019/01/14 1.0.3でコアスクリプトv1.6.1以前で逆に動作しなくなっていた問題を修正
 // 1.0.2 2019/01/14 コアスクリプトv1.6.1以降で正常に動作していなかった問題を修正
@@ -25,6 +26,14 @@
  * @desc Command name for shutdown.
  * @default Shutdown
  *
+ * @param UseTitle
+ * @default true
+ * @type boolean
+ *
+ * @param UseGameEnd
+ * @default true
+ * @type boolean
+ *
  * @param StartUpFullScreen
  * @desc Command name for full screen option.
  * @default Full Screen
@@ -38,14 +47,26 @@
  * @plugindesc フルスクリーンで起動プラグイン
  * @author トリアコンタン
  *
- * @param シャットダウン
- * @desc タイトル画面に追加するシャットダウンの項目名です。
- * ローカル環境での実行時のみ表示されます。
+ * @param Shutdown
+ * @text シャットダウン
+ * @desc タイトル画面、ゲーム終了画面に追加するシャットダウンの項目名です。
  * @default シャットダウン
  *
- * @param フルスクリーンで起動
+ * @param UseTitle
+ * @text タイトル画面に追加
+ * @desc タイトル画面にシャットダウンの項目を追加します。
+ * @default true
+ * @type boolean
+ *
+ * @param UseGameEnd
+ * @text ゲーム終了画面に追加
+ * @desc ゲーム終了画面にシャットダウンの項目を追加します。
+ * @default true
+ * @type boolean
+ *
+ * @param StartUpFullScreen
+ * @text フルスクリーンで起動
  * @desc オプション画面に追加する全画面で起動の項目名です。
- * ローカル環境での実行時のみ表示されます。
  * @default フルスクリーンで起動
  *
  * @help オプション画面に「フルスクリーンで起動」を追加します。
@@ -73,25 +94,26 @@ function Scene_Terminate() {
     if (!Utils.isNwjs()) {
         return;
     }
-
-    var pluginName = 'StartUpFullScreen';
-
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value == null ? '' : value;
+    var createPluginParameter = function(pluginName) {
+        var paramReplacer = function(key, value) {
+            if (value === 'null') {
+                return value;
+            }
+            if (value[0] === '"' && value[value.length - 1] === '"') {
+                return value;
+            }
+            try {
+                return JSON.parse(value);
+            } catch (e) {
+                return value;
+            }
+        };
+        var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
+        PluginManager.setParameters(pluginName, parameter);
+        return parameter;
     };
 
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var paramShutdown          = getParamString(['Shutdown', 'シャットダウン']);
-    var paramStartUpFullScreen = getParamString(['StartUpFullScreen', 'フルスクリーンで起動']);
+    var param = createPluginParameter('StartUpFullScreen');
 
     //=============================================================================
     // Graphics
@@ -135,10 +157,30 @@ function Scene_Terminate() {
     var _Scene_Title_createCommandWindow = Scene_Title.prototype.createCommandWindow;
     Scene_Title.prototype.createCommandWindow = function() {
         _Scene_Title_createCommandWindow.apply(this, arguments);
-        if (paramShutdown) this._commandWindow.setHandler('shutdown',  this.commandShutdown.bind(this));
+        if (param.UseTitle) {
+            this._commandWindow.setHandler('shutdown',  this.commandShutdown.bind(this));
+        }
     };
 
     Scene_Title.prototype.commandShutdown = function() {
+        this._commandWindow.close();
+        this.fadeOutAll();
+        SceneManager.goto(Scene_Terminate);
+    };
+
+    //=============================================================================
+    // Scene_GameEnd
+    //  シャットダウンの処理を追加定義します。
+    //=============================================================================
+    var _Scene_GameEnd_createCommandWindow = Scene_GameEnd.prototype.createCommandWindow;
+    Scene_GameEnd.prototype.createCommandWindow = function() {
+        _Scene_GameEnd_createCommandWindow.apply(this, arguments);
+        if (param.UseGameEnd) {
+            this._commandWindow.setHandler('shutdown',  this.commandShutdown.bind(this));
+        }
+    };
+
+    Scene_GameEnd.prototype.commandShutdown = function() {
         this._commandWindow.close();
         this.fadeOutAll();
         SceneManager.goto(Scene_Terminate);
@@ -151,13 +193,38 @@ function Scene_Terminate() {
     var _Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function() {
         _Window_TitleCommand_makeCommandList.apply(this, arguments);
-        if (paramShutdown) this.addCommand(paramShutdown, 'shutdown');
+        if (param.UseTitle) {
+            this.addCommand(param.Shutdown, 'shutdown');
+        }
     };
 
     var _Window_TitleCommand_updatePlacement = Window_TitleCommand.prototype.updatePlacement;
     Window_TitleCommand.prototype.updatePlacement = function() {
         _Window_TitleCommand_updatePlacement.apply(this, arguments);
-        if (paramShutdown) this.y += Math.floor(this.height / 8);
+        if (param.UseTitle) {
+            this.y += Math.floor(this.height / 8);
+        }
+    };
+
+    //=============================================================================
+    // Window_GameEnd
+    //  シャットダウンの選択肢を追加定義します。
+    //=============================================================================
+    var _Window_GameEnd_makeCommandList = Window_GameEnd.prototype.makeCommandList;
+    Window_GameEnd.prototype.makeCommandList = function() {
+        _Window_GameEnd_makeCommandList.apply(this, arguments);
+        if (param.UseGameEnd) {
+            this.addCommand(param.Shutdown, 'shutdown');
+            this._list.splice(1, 0, this._list.pop());
+        }
+    };
+
+    var _Window_GameEnd_updatePlacement = Window_GameEnd.prototype.updatePlacement;
+    Window_GameEnd.prototype.updatePlacement = function() {
+        _Window_GameEnd_updatePlacement.apply(this, arguments);
+        if (param.UseGameEnd) {
+            this.y += Math.floor(this.height / 8);
+        }
     };
 
     //=============================================================================
@@ -186,7 +253,7 @@ function Scene_Terminate() {
     var _Window_Options_addGeneralOptions = Window_Options.prototype.addGeneralOptions;
     Window_Options.prototype.addGeneralOptions = function() {
         _Window_Options_addGeneralOptions.apply(this, arguments);
-        this.addCommand(paramStartUpFullScreen, 'startUpFullScreen');
+        this.addCommand(param.StartUpFullScreen, 'startUpFullScreen');
     };
 
     //=============================================================================
