@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.5.0 2022/09/11 基準座標が取得できないメンバーがいた場合にエラーになる問題を修正
 // 3.4.0 2022/09/07 現在のシーンによって表示する立ち絵画像を出し分けられる機能を追加
 // 3.3.0 2022/04/21 シーン設定のパラメータにもタッチスイッチ設定を追加
 //                  タッチスイッチ有効時は、他のタッチ処理を無効化するよう変更
@@ -663,6 +664,9 @@
         setup(actor, scene, index) {
             this._actor = actor;
             this._base = this.findBasePosition(scene, index);
+            if (!this._base) {
+                return false;
+            }
             this._shakeSwitch = scene.ShakeSwitch;
             this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
             if (this._standPictures.length <= 0) {
@@ -932,8 +936,8 @@
             return;
         }
         const pictureParam = new StandPictureParam();
-        const result = pictureParam.setup(actor, this._standSpriteScene, index);
-        if (!result) {
+        const existPicture = pictureParam.setup(actor, this._standSpriteScene, index);
+        if (!existPicture) {
             return;
         }
         const sprite = usePointAdjust ? new Sprite_StandPictureWithDrag(pictureParam) :
