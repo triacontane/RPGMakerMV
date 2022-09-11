@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2022/09/11 満タン時のゲージ色を指定できる機能を追加
  1.3.0 2022/08/23 現在値の描画フォーマットを指定できる機能を追加
  1.2.0 2022/05/06 ゲージの表示優先度をピクチャの下に変更できる機能を追加
  1.1.2 2021/10/20 フォント指定のヘルプが誤っていたのを修正
@@ -301,6 +302,16 @@
  * @param GaugeColorRight
  * @text ゲージ色(右)
  * @desc 右側のゲージ色です。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
+ * @default 0
+ *
+ * @param GaugeColorFullLeft
+ * @text 満タン時のゲージ色(左)
+ * @desc 満タン時の左側のゲージ色です。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
+ * @default 0
+ *
+ * @param GaugeColorFullRight
+ * @text 満タン時のゲージ色(右)
+ * @desc 満タン時の右側のゲージ色です。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
  * @default 0
  *
  * @param BackColor
@@ -773,11 +784,15 @@
         }
 
         gaugeColor1() {
-            return this.findColor(this._detail.GaugeColorLeft, super.gaugeColor1());
+            const fullColor = this._detail.GaugeColorFullLeft;
+            const color = this._detail.GaugeColorLeft;
+            return this.findColor(this.isFull() ? (fullColor || color) : color, super.gaugeColor1());
         }
 
         gaugeColor2() {
-            return this.findColor(this._detail.GaugeColorRight, super.gaugeColor2());
+            const fullColor = this._detail.GaugeColorFullRight;
+            const color = this._detail.GaugeColorRight;
+            return this.findColor(this.isFull() ? (fullColor || color) : color, super.gaugeColor2());
         }
 
         isValid() {
