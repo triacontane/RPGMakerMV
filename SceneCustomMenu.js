@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.31.1 2022/09/12 スクリプト「$gameParty.reserveMembers();」を戦闘中に実行すると控えメンバーが取得できない問題を修正
  1.31.0 2022/09/01 項目描画スクリプトの実行結果が文字列を返したとき、その文字列を描画するよう修正
  1.30.1 2022/08/24 カスタムシーン中にコモンイベント等で場所移動が実行された場合は、即座にマップ画面に移動するよう修正
  1.30.0 2022/08/12 背景として表示するスナップ画像のぼかしを無効化する設定を追加
@@ -1093,7 +1094,7 @@
 
     Game_Party.prototype.reserveMembers = function () {
         const battleMembers = this.battleMembers();
-        return this.members().filter(function (actor) {
+        return this.allMembers().filter(function (actor) {
             return !battleMembers.contains(actor);
         });
     };
