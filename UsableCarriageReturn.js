@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2022/09/15 ヘルプウィンドウの行数指定が戦闘画面で有効になっていなかった問題を修正
 // 1.1.0 2021/09/12 ヘルプウィンドウの行数をパラメータから指定できる機能を追加
 // 1.0.1 2020/11/22 MZで正常に機能するよう修正
 // 1.0.0 2016/05/09 初版
@@ -66,6 +67,16 @@
             return this.calcWindowHeight(lineNumber, false);
         } else {
             return _Scene_MenuBase_helpAreaHeight.apply(this, arguments);
+        }
+    };
+
+    const _Scene_Battle_helpAreaHeight = Scene_Battle.prototype.helpAreaHeight;
+    Scene_Battle.prototype.helpAreaHeight = function() {
+        const lineNumber = param.lineNumber;
+        if (lineNumber > 0) {
+            return this.calcWindowHeight(lineNumber, false);
+        } else {
+            return _Scene_Battle_helpAreaHeight.apply(this, arguments);
         }
     };
 })();
