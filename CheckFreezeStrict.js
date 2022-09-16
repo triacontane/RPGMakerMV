@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/09/16 メッセージを日本語に変更
  1.0.0 2022/09/16 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -54,7 +55,7 @@
     Game_Interpreter.prototype.checkFreeze = function() {
         _Game_Interpreter_checkFreeze.apply(this, arguments);
         if (this._freezeChecker >= param.freezeCommandCount) {
-            PluginManagerEx.throwError(`Executed has exceeded the limit. 
+            PluginManagerEx.throwError(`イベント実行コマンド数が制限を超えました。 
             EventID:${this._eventId} Index:${this._index} Count:${this._freezeChecker}`, script)
         }
         // this._freezeCheckerのデフォルト仕様は無視する
