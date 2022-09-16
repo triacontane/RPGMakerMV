@@ -55,7 +55,7 @@
     Game_Interpreter.prototype.checkFreeze = function() {
         _Game_Interpreter_checkFreeze.apply(this, arguments);
         if (this._freezeChecker >= param.freezeCommandCount) {
-            PluginManagerEx.throwError(`イベント実行コマンド数が制限を超えました。 
+            PluginManagerEx.throwError(`コマンド実行数が制限を超えました。 
             EventID:${this._eventId} Index:${this._index} Count:${this._freezeChecker}`, script)
         }
         // this._freezeCheckerのデフォルト仕様は無視する
