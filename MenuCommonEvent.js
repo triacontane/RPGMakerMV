@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2022/09/17 ピクチャのボタン化プラグインで指定したコモンイベントがメニュー画面中で実行されるよう仕様変更
 // 1.4.2 2021/11/17 画面遷移時に通常イベントと同様のキャッシュ処理を追加
 // 1.4.1 2021/09/01 最新版のSceneCustomMenu.jsと併用できるよう修正
 // 1.4.0 2021/03/24 MZで実行できるよう修正
@@ -481,6 +482,7 @@
         if (param.activateTimer) {
             $gameTimer.update(true);
         }
+        $gameMap._dynamicEvents.forEach(interpreter => interpreter.update());
         this.checkGameover();
     };
 
