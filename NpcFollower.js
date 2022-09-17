@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/09/17 アクターIDを指定してNPCを削除できるコマンドを追加
 // 1.1.2 2022/05/10 パラメータの説明文を修正
 // 1.1.1 2019/11/02 1.1.0の修正でメンバーの入れ替えを実施すると表示が不正になる場合がある問題を修正
 // 1.1.0 2019/01/27 通常のフォロワーを表示せず、NPCフォロワーのみを表示できる機能を追加
@@ -87,6 +88,10 @@
  * インデックスの指定は追加したNPCとは関係なく、
  * パーティの並び順(1...バトルメンバー数)を指定してください。
  *
+ * 並び順ではなくIDを指定したNPCを削除したい場合、以下のコマンドです。
+ * NF_NPC_ID削除 4 # アクターID[4]のNPCを削除
+ * NF_REM_NPC_ID 4 # 同上
+ *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
@@ -162,6 +167,10 @@
             case '_REM_NPC' :
                 $gameParty.removeNpc(getArgNumberWithEval(args[0], 1));
                 break;
+            case '_NPC_ID削除' :
+            case '_REM_NPC_ID':
+                var removeActorId = getArgNumberWithEval(args[0]);
+                $gameParty.removeNpcById(removeActorId);
         }
     };
 
@@ -205,6 +214,18 @@
     Game_Party.prototype.removeNpc = function(index) {
         for (var i = 0, n = this._npcs.length; i < n; i++) {
             if (this._npcIndexes[i] === index) {
+                this._npcs.splice(i, 1);
+                this._npcIndexes.splice(i, 1);
+                i--;
+            }
+        }
+        $gamePlayer.refresh();
+        $gameMap.requestRefresh();
+    };
+
+    Game_Party.prototype.removeNpcById = function(id) {
+        for (var i = 0, n = this._npcs.length; i < n; i++) {
+            if (this._npcs[i] === id) {
                 this._npcs.splice(i, 1);
                 this._npcIndexes.splice(i, 1);
                 i--;
