@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2022/09/20 副作用を無効化できる特徴を追加
 // 1.6.5 2022/04/02 ステートおよびバフが解除されたとき、解除メッセージが二重に出力される場合がある問題を修正
 // 1.6.4 2022/01/13 BattleEffectPopup.jsと併用したとき、使用者に対する効果ポップアップが二重に出力される場合がある問題を修正
 // 1.6.3 2021/12/27 1.6.2の修正が一部不十分だった問題を修正
@@ -111,6 +112,14 @@
  * 　スキル入力時
  * 　スキル使用前
  * 　ターン開始時
+ *
+ * スキルの副作用を無効化したい場合は、ステートや装備品のメモ欄に
+ * 以下の通り記述します。
+ *
+ * <スキル副作用無効化:3> # ID[3]のスキルの副作用を無効化
+ * <SESkillInvalidate:3> # 同上
+ * <アイテム副作用無効化:3> # ID[3]のアイテムの副作用を無効化
+ * <SEItemInvalidate:3> # 同上
  *
  * 効果「コモンイベント」はタイミングが
  * 「ターン開始時」「スキル使用時」「スキル使用後」「ターン終了時」
@@ -414,7 +423,8 @@
                 this.isValidSideEffectForResist() &&
                 this.isValidSideEffectForCritical() &&
                 this.isValidSideEffectForInvalid() &&
-                this.isValidSideEffectForReflection();
+                this.isValidSideEffectForReflection() &&
+                this.isValidSideEffectForTag();
         }
     };
 
@@ -444,6 +454,20 @@
 
     Game_Action.prototype.isValidSideEffectForReflection = function() {
         return this._reflectionForSideEffect || !PluginManagerEx.findMetaValue(this.item(), ['ReflectionOnly', '反射時のみ']);
+    };
+
+    Game_Action.prototype.isValidSideEffectForTag = function() {
+        if (DataManager.isSkill(this.item())) {
+            const skillId = this.subject().traitObjects()
+                .map(obj => PluginManagerEx.findMetaValue(obj, ['SESkillInvalidate', 'スキル副作用無効化']))
+                .find(id => id);
+            return this.item().id !== skillId;
+        } else {
+            const itemId = this.subject().traitObjects()
+                .map(obj => PluginManagerEx.findMetaValue(obj, ['SEItemInvalidate', 'アイテム副作用無効化']))
+                .find(id => id);
+            return this.item().id !== itemId;
+        }
     };
 
     Game_Action.prototype.applyItemSideEffectGlobal = function(property) {
