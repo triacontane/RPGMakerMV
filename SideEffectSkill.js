@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.2 2022/09/20 ID問わずすべての副作用を無効化できる特徴を追加
 // 1.7.1 2022/09/20 1.7.0のメモ欄の仕様を変更
 // 1.7.0 2022/09/20 副作用を無効化できる特徴を追加
 // 1.6.5 2022/04/02 ステートおよびバフが解除されたとき、解除メッセージが二重に出力される場合がある問題を修正
@@ -121,6 +122,8 @@
  * <SESkillInvalidate_3> # 同上
  * <アイテム副作用無効化_3> # ID[3]のアイテムの副作用を無効化
  * <SEItemInvalidate_3> # 同上
+ * <スキル副作用無効化> # すべてのスキル、アイテムの副作用を無効化
+ * <SESkillInvalidate> # 同上
  *
  * 効果「コモンイベント」はタイミングが
  * 「ターン開始時」「スキル使用時」「スキル使用後」「ターン終了時」
@@ -459,6 +462,11 @@
 
     Game_Action.prototype.isValidSideEffectForTag = function() {
         const id = this.item().id;
+        const allInvalidate = this.subject().traitObjects()
+            .some(obj => PluginManagerEx.findMetaValue(obj, [`SESkillInvalidate`, `スキル副作用無効化`]));
+        if (allInvalidate) {
+            return false;
+        }
         if (DataManager.isSkill(this.item())) {
             return this.subject().traitObjects()
                 .every(obj => !PluginManagerEx.findMetaValue(obj, [`SESkillInvalidate_${id}`, `スキル副作用無効化_${id}`]));
