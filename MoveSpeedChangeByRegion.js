@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2022/09/19 控えメンバーの速度変化メモタグを有効化するパラメータを追加
 // 1.4.0 2022/02/01 速度変化をイベントに適用するかどうかを設定できるパラメータ、メモ欄を追加
 // 1.3.1 2022/01/27 ヘルプの記述を修正
 // 1.3.0 2022/01/27 MZで動作するよう修正
@@ -60,6 +61,12 @@
  * @param eventNoApply
  * @text イベントには適用しない
  * @desc 有効にするとイベントには速度補正を適用しなくなります。
+ * @default false
+ * @type boolean
+ *
+ * @param enableBenchMembersTrait
+ * @text 控えメンバーのメモタグ有効化
+ * @desc 控えメンバーの速度変化メモタグを有効にします。
  * @default false
  * @type boolean
  *
@@ -129,7 +136,8 @@
         if (!this.isValidMoveSpeedChangeByNote()) {
             return speed;
         }
-        $gameParty.battleMembers().forEach(function(member) {
+        const targetMembers = param.enableBenchMembersTrait ? $gameParty.allMembers() : $gameParty.battleMembers();
+        targetMembers.forEach(function(member) {
             member.traitObjects().forEach(function(obj) {
                 const terrainNote = PluginManagerEx.findMetaValue(obj, ['速度地形指定']);
                 if (terrainNote) {
