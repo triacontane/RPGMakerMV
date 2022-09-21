@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2022/09/21 オートスイッチが有効なとき戦闘中のメッセージをすべて自動送りするよう修正
 // 1.1.0 2022/09/21 MZ向けに修正
 //                  戦闘中一切の操作が不要になる放置バトルを可能にするスイッチを追加
 // 1.0.1 2018/12/30 コマンド位置の指定のパラメータ設定が一部正常に機能していなかった問題を修正
@@ -52,10 +53,14 @@
  *
  * @help アクターの行動を自動選択するオートバトルを実装します。
  *
- * １．パーティコマンドからオートを選択すると、アクターコマンドの選択をスキップして全員
+ * １．パーティコマンドからオートを選択すると、アクターコマンドの選択を
+ * スキップして全員オートバトルになります。
+ *
+ * ２．アクターコマンドからオートを選択すると、対象アクターのみ
  * オートバトルになります。
  *
- * ２．アクターコマンドからオートを選択すると、対象アクターのみオートバトルになります。
+ * ３．オートスイッチがONになっていると戦闘中一切のコマンド入力を
+ * スキップして完全オートで戦闘が進みます。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -124,16 +129,30 @@
         }
     };
 
-    const _BattleManager_displayStartMessages = BattleManager.displayStartMessages;
-    BattleManager.displayStartMessages = function() {
-        _BattleManager_displayStartMessages.apply(this, arguments);
-        if (this.isValidAutoSwitch()) {
-            $gameMessage.add('\\|\\^');
+    const _Window_Message_startPause = Window_Message.prototype.startPause;
+    Window_Message.prototype.startPause = function() {
+        _Window_Message_startPause.apply(this, arguments);
+        if (BattleManager.isValidAutoSwitch()) {
+            this.startWait(30);
         }
     };
 
+    const _Window_Message_updateInput = Window_Message.prototype.updateInput;
+    Window_Message.prototype.updateInput = function() {
+        const result = _Window_Message_updateInput.apply(this, arguments);
+        if (this.pause && BattleManager.isValidAutoSwitch()) {
+            Input.update();
+            this.pause = false;
+            if (!this._textState) {
+                this.terminateMessage();
+            }
+            return true;
+        }
+        return result;
+    };
+
     BattleManager.isValidAutoSwitch = function() {
-        return $gameSwitches.value(param.AutoSwitch);
+        return $gameParty.inBattle() && $gameSwitches.value(param.AutoSwitch);
     };
 
     //=============================================================================
