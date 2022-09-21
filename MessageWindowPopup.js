@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2022/09/21 戦闘画面でバトラーを指定したフキダシウィンドウが表示できる機能を追加
  1.2.1 2022/06/12 lowerLimitXなどいくつかのパラメータが機能していなかった問題を修正
  1.2.0 2021/12/06 フォロワーのフキダシ表示機能をMV版から流用して追加
  1.1.3 2021/11/04 テール画像を指定した場合、特定の手順を踏んで選択肢の表示などを実行するとエラーになる問題を修正
@@ -517,6 +518,28 @@
  * @min -2000
  * @max 2000
  *
+ * @command BATTLE_POPUP_VALID
+ * @text 戦闘用フキダシ有効化
+ * @desc バトラーを指定してフキダシを有効化します。アクターIDかパーティ、敵キャラインデックスのいずれかを指定します。
+ *
+ * @arg actorId
+ * @text アクターID
+ * @desc フキダシ表示対象となるアクターです。指定した場合、最優先で参照されます。
+ * @default 0
+ * @type actor
+ *
+ * @arg partyIndex
+ * @text パーティインデックス
+ * @desc フキダシ表示対象となるパーティインデックス(1...)です。
+ * @default 0
+ * @type number
+ *
+ * @arg enemyIndex
+ * @text 敵キャラインデックス
+ * @desc フキダシ表示対象となる敵キャラインデックス(1...)です。
+ * @default 0
+ * @type number
+ *
  * @command POPUP_WINDOW_SETTING
  * @text フキダシウィンドウ表示設定
  * @desc フキダシウィンドウ表示設定を変更します。
@@ -686,6 +709,16 @@
         $gameSystem.setTailImage(args.tailImage);
     });
 
+    PluginManagerEx.registerCommand(script, 'BATTLE_POPUP_VALID', function(args) {
+        if (args.actorId > 0) {
+            $gameSystem.setMessagePopupBattler($gameActors.actor(args.actorId));
+        } else if (args.partyIndex > 0) {
+            $gameSystem.setMessagePopupBattler($gameParty.members()[args.partyIndex - 1]);
+        } else if (args.enemyIndex > 0) {
+            $gameSystem.setMessagePopupBattler($gameTroop.members()[args.enemyIndex - 1]);
+        }
+    });
+
     Game_Interpreter.prototype.setPopupWindowPosition = function(windowPosition, characterId) {
         switch (windowPosition) {
             case 'upper':
@@ -702,7 +735,7 @@
     const _Game_Interpreter_terminate    = Game_Interpreter.prototype.terminate;
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
-        if (this._depth === 0 && $gameMap.isInterpreterOf(this)) {
+        if (this._depth === 0 && ($gameMap.isInterpreterOf(this) || $gameParty.inBattle())) {
             $gameSystem.clearMessagePopup();
         }
     };
@@ -720,6 +753,8 @@
         this._messagePopupAdjustPosition    = null;
         this._messagePopupWindowSkin        = null;
         this._messagePopupSubWindowPosition = 0;
+        this._messagePopupEnemyIndex = null;
+        this._messagePopupActorId = null;
     };
 
     Game_System.prototype.initMessagePositionEvents = function() {
@@ -749,9 +784,39 @@
         this._messagePopupCharacterId = id;
     };
 
+    Game_System.prototype.setMessagePopupBattler = function(battler) {
+        if (!battler) {
+            this.clearBattleMessagePopup();
+            return;
+        }
+        if (battler.isActor()) {
+            this._messagePopupActorId = battler.actorId();
+            this._messagePopupEnemyIndex = null;
+        } else {
+            this._messagePopupEnemyIndex = battler.index();
+            this._messagePopupActorId = null;
+        }
+    };
+
+    Game_System.prototype.getMessagePopupBattler = function() {
+        if (this._messagePopupActorId > 0) {
+            return $gameActors.actor(this._messagePopupActorId);
+        } else if (this._messagePopupEnemyIndex >= 0) {
+            return $gameTroop.members()[this._messagePopupEnemyIndex];
+        } else {
+            return null;
+        }
+    };
+
+    Game_System.prototype.clearBattleMessagePopup = function() {
+        this._messagePopupEnemyIndex = null;
+        this._messagePopupActorId = null;
+    };
+
     Game_System.prototype.clearMessagePopup = function() {
         this._messagePopupCharacterId    = 0;
         this._messagePopupPositionEvents = [];
+        this.clearBattleMessagePopup();
     };
 
     Game_System.prototype.setMessagePopupFree = function(x, y) {
@@ -901,6 +966,28 @@
     };
 
     //=============================================================================
+    // Game_BattlerBase
+    //  戦闘画面でフキダシウィンドウを表示するための設定
+    //=============================================================================
+    Game_BattlerBase.prototype.setRealScreenPosition = function(x, y, height) {
+        this._realScreenX = x;
+        this._realScreenY = y;
+        this._imageHeight = height;
+    };
+
+    Game_BattlerBase.prototype.getRealScreenX = function() {
+        return this._realScreenX;
+    };
+
+    Game_BattlerBase.prototype.getRealScreenY = function() {
+        return this._realScreenY;
+    };
+
+    Game_BattlerBase.prototype.getHeightForPopup = function() {
+        return this._imageHeight;
+    };
+
+    //=============================================================================
     // Game_Screen
     //  画面座標をズームを考慮した座標に変換します。
     //=============================================================================
@@ -944,6 +1031,15 @@
                 this._character.setSizeForMessagePopup(width, height);
             });
             this._imageChange = false;
+        }
+    };
+
+    const _Sprite_Battler_updatePosition = Sprite_Battler.prototype.updatePosition;
+    Sprite_Battler.prototype.updatePosition = function() {
+        _Sprite_Battler_updatePosition.apply(this, arguments);
+        if (this._battler) {
+            const target = this.mainSprite();
+            this._battler.setRealScreenPosition(this.x, this.y, target?.height || 0);
         }
     };
 
@@ -1317,9 +1413,15 @@
 
     Window_Message.prototype.updateTargetCharacterId = function() {
         this._targetCharacterId = $gameSystem.getMessagePopupId();
+        if ($gameParty.inBattle()) {
+            this._targetBattler = $gameSystem.getMessagePopupBattler();
+        }
     };
 
     Window_Message.prototype.getPopupTargetCharacter = function() {
+        if (this._targetBattler) {
+            return this._targetBattler;
+        }
         const id = this._targetCharacterId;
         if (id < -1) {
             return $gamePlayer.followers().follower((id * -1) - 2);
