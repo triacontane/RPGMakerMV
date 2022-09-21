@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2022/09/21 MZ向けに修正
+//                  戦闘中一切の操作が不要になる放置バトルを可能にするスイッチを追加
 // 1.0.1 2018/12/30 コマンド位置の指定のパラメータ設定が一部正常に機能していなかった問題を修正
 // 1.0.0 2016/09/29 初版
 // ----------------------------------------------------------------------------
@@ -15,48 +17,38 @@
 //=============================================================================
 
 /*:
- * @plugindesc AutoBattlePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc 自動戦闘プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AutoBattle.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @param PartyCommandName
- * @desc Auto battle command name for Window party command.
- * @default Auto
- *
- * @param PartyCommandIndex
- * @desc Auto battle command index for Window party command.
- * @default -1
- *
- * @param ActorCommandName
- * @desc Auto battle command name for Window actor command.
- * @default Auto
- *
- * @param ActorCommandIndex
- * @desc Auto battle command index for Window actor command.
- * @default -1
- *
- * @help Auto battle system added.
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
- * @plugindesc 自動戦闘プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param パーティコマンド名称
+ * @text パーティコマンド名称
  * @desc パーティコマンドに追加される一括オートコマンドの名称です。未入力にすると追加されません。
  * @default オート
  *
- * @param パーティコマンド位置
+ * @param PartyCommandIndex
+ * @text パーティコマンド位置
  * @desc パーティコマンドでオートコマンドが追加される位置です。-1の場合、末尾に追加されます。
  * @default -1
  *
- * @param アクターコマンド名称
+ * @param ActorCommandName
+ * @text アクターコマンド名称
  * @desc アクターコマンドに追加される個別オートコマンドの名称です。未入力にすると追加されません。
  * @default オート
  *
- * @param アクターコマンド位置
+ * @param ActorCommandIndex
+ * @text アクターコマンド位置
  * @desc アクターコマンドでオートコマンドが追加される位置です。-1の場合、末尾に追加されます。
  * @default -1
+ *
+ * @param AutoSwitch
+ * @text オートスイッチ
+ * @desc 指定したスイッチがONのとき常に全員がオートバトルになります。
+ * @default 0
+ * @type switch
  *
  * @help アクターの行動を自動選択するオートバトルを実装します。
  *
@@ -73,38 +65,10 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName = 'AutoBattle';
-
-    var getParamOther = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var getParamString = function(paramNames) {
-        var value = getParamOther(paramNames);
-        return value === null ? '' : value;
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var paramPartyCommandName  = getParamString(['PartyCommandName', 'パーティコマンド名称']);
-    var paramPartyCommandIndex = getParamNumber(['PartyCommandIndex', 'パーティコマンド位置']);
-    var paramActorCommandName  = getParamString(['ActorCommandName', 'アクターコマンド名称']);
-    var paramActorCommandIndex = getParamNumber(['ActorCommandIndex', 'アクターコマンド位置']);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // BattleManager
@@ -125,18 +89,18 @@
     // Scene_Battle
     //  オートバトルコマンドを選択した場合の処理を追加定義します。
     //=============================================================================
-    var _Scene_Battle_createPartyCommandWindow      = Scene_Battle.prototype.createPartyCommandWindow;
+    const _Scene_Battle_createPartyCommandWindow      = Scene_Battle.prototype.createPartyCommandWindow;
     Scene_Battle.prototype.createPartyCommandWindow = function() {
         _Scene_Battle_createPartyCommandWindow.apply(this, arguments);
-        if (paramPartyCommandName) {
+        if (param.PartyCommandName) {
             this._partyCommandWindow.setHandler('auto', this.commandPartyAutoBattle.bind(this));
         }
     };
 
-    var _Scene_Battle_createActorCommandWindow      = Scene_Battle.prototype.createActorCommandWindow;
+    const _Scene_Battle_createActorCommandWindow      = Scene_Battle.prototype.createActorCommandWindow;
     Scene_Battle.prototype.createActorCommandWindow = function() {
         _Scene_Battle_createActorCommandWindow.apply(this, arguments);
-        if (paramActorCommandName) {
+        if (param.ActorCommandName) {
             this._actorCommandWindow.setHandler('auto', this.commandActorAutoBattle.bind(this));
         }
     };
@@ -151,21 +115,44 @@
         this.selectNextCommand();
     };
 
+    const _Scene_Battle_startPartyCommandSelection = Scene_Battle.prototype.startPartyCommandSelection;
+    Scene_Battle.prototype.startPartyCommandSelection = function() {
+        _Scene_Battle_startPartyCommandSelection.apply(this, arguments);
+        if (BattleManager.isValidAutoSwitch()) {
+            this.commandPartyAutoBattle();
+            this.endCommandSelection();
+        }
+    };
+
+    const _BattleManager_displayStartMessages = BattleManager.displayStartMessages;
+    BattleManager.displayStartMessages = function() {
+        _BattleManager_displayStartMessages.apply(this, arguments);
+        if (this.isValidAutoSwitch()) {
+            $gameMessage.add('\\|\\^');
+        }
+    };
+
+    BattleManager.isValidAutoSwitch = function() {
+        return $gameSwitches.value(param.AutoSwitch);
+    };
+
     //=============================================================================
     // Window_PartyCommand
     //  オートバトルコマンドを追加します。
     //=============================================================================
-    var _Window_PartyCommand_makeCommandList      = Window_PartyCommand.prototype.makeCommandList;
+    const _Window_PartyCommand_makeCommandList      = Window_PartyCommand.prototype.makeCommandList;
     Window_PartyCommand.prototype.makeCommandList = function() {
         _Window_PartyCommand_makeCommandList.apply(this, arguments);
-        if (paramPartyCommandName) this.addAutoCommand();
+        if (param.PartyCommandName) {
+            this.addAutoCommand();
+        }
     };
 
     Window_PartyCommand.prototype.addAutoCommand = function() {
-        this.addCommand(paramPartyCommandName, 'auto');
-        if (this._list[paramPartyCommandIndex]) {
-            var command = this._list.pop();
-            this._list.splice(paramPartyCommandIndex, 0, command);
+        this.addCommand(param.PartyCommandName, 'auto');
+        if (this._list[param.PartyCommandIndex]) {
+            const command = this._list.pop();
+            this._list.splice(param.PartyCommandIndex, 0, command);
         }
     };
 
@@ -173,19 +160,19 @@
     // Window_ActorCommand
     //  オートバトルコマンドを追加します。
     //=============================================================================
-    var _Window_ActorCommand_makeCommandList      = Window_ActorCommand.prototype.makeCommandList;
+    const _Window_ActorCommand_makeCommandList      = Window_ActorCommand.prototype.makeCommandList;
     Window_ActorCommand.prototype.makeCommandList = function() {
         _Window_ActorCommand_makeCommandList.apply(this, arguments);
-        if (this._actor && paramActorCommandName) {
+        if (this._actor && param.ActorCommandName) {
             this.addAutoCommand();
         }
     };
 
     Window_ActorCommand.prototype.addAutoCommand = function() {
-        this.addCommand(paramActorCommandName, 'auto');
-        if (this._list[paramActorCommandIndex]) {
-            var command = this._list.pop();
-            this._list.splice(paramActorCommandIndex, 0, command);
+        this.addCommand(param.ActorCommandName, 'auto');
+        if (this._list[param.ActorCommandIndex]) {
+            const command = this._list.pop();
+            this._list.splice(param.ActorCommandIndex, 0, command);
         }
     };
 })();
