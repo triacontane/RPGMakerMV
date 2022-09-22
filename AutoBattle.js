@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2022/09/22 1.2.0の修正によりオートスイッチが有効なときにタイムプログレス戦闘を開始するとエラーになる問題を修正
 // 1.2.0 2022/09/22 パーティコマンドのオートがタイムプログレス戦闘に対応していなかった問題を修正
 // 1.1.1 2022/09/21 オートスイッチが有効なとき戦闘中のメッセージをすべて自動送りするよう修正
 // 1.1.0 2022/09/21 MZ向けに修正
@@ -144,7 +145,7 @@
     Scene_Battle.prototype.startPartyCommandSelection = function() {
         _Scene_Battle_startPartyCommandSelection.apply(this, arguments);
         if (BattleManager.isValidAutoSwitch()) {
-            this.commandPartyAutoBattle();
+            BattleManager.processPartyAuto();
             this.endCommandSelection();
         }
     };
