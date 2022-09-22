@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/09/22 パーティコマンドのオートがタイムプログレス戦闘に対応していなかった問題を修正
 // 1.1.1 2022/09/21 オートスイッチが有効なとき戦闘中のメッセージをすべて自動送りするよう修正
 // 1.1.0 2022/09/21 MZ向けに修正
 //                  戦闘中一切の操作が不要になる放置バトルを可能にするスイッチを追加
@@ -84,10 +85,29 @@
     };
 
     BattleManager.processPartyAuto = function() {
-        $gameParty.members().forEach(function(member) {
-            member.makeAutoBattleActions();
+        $gameParty.members().forEach(member => {
+            if (this.isTpb()) {
+                member.setAutoBattle();
+            } else {
+                member.makeAutoBattleActions();
+            }
         });
         this.startTurn();
+    };
+
+    Game_BattlerBase.prototype.setAutoBattle = function() {
+        this._autoBattle = true;
+    };
+
+    const _Game_BattlerBase_isAutoBattle = Game_BattlerBase.prototype.isAutoBattle;
+    Game_BattlerBase.prototype.isAutoBattle = function() {
+        return _Game_BattlerBase_isAutoBattle.apply(this, arguments) || this._autoBattle;
+    };
+
+    const _Game_Battler_onBattleEnd = Game_Battler.prototype.onBattleEnd;
+    Game_Battler.prototype.onBattleEnd = function() {
+        _Game_Battler_onBattleEnd.apply(this, arguments);
+        this._autoBattle = false;
     };
 
     //=============================================================================
