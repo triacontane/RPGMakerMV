@@ -1,0 +1,94 @@
+/*=============================================================================
+ AudioSuppression.js
+----------------------------------------------------------------------------
+ (C)2022 Triacontane
+ This software is released under the MIT License.
+ http://opensource.org/licenses/mit-license.php
+----------------------------------------------------------------------------
+ Version
+ 1.0.0 2022/09/23 初版
+----------------------------------------------------------------------------
+ [Blog]   : https://triacontane.blogspot.jp/
+ [Twitter]: https://twitter.com/triacontane/
+ [GitHub] : https://github.com/triacontane/
+=============================================================================*/
+
+/*:
+ * @plugindesc オーディオ音量抑制プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AudioSuppression.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
+ *
+ * @param triggerSwitch
+ * @text トリガースイッチ
+ * @desc オーディオが最小音量までフェードアウトするフレーム数です。
+ * @default 1
+ * @type switch
+ *
+ * @param minVolume
+ * @text 最小音量
+ * @desc 最小となる音量値です。
+ * @default 50
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param fadeTime
+ * @text フェード時間
+ * @desc オーディオが最小音量までフェードアウトするフレーム数です。
+ * @default 60
+ * @type number
+ * @min 1
+ *
+ * @help AudioSuppression.js
+ *
+ * 指定したスイッチがONのとき演奏中のオーディオのボリュームを抑制します。
+ * ただしSE,MEには適用されません。
+ *　
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
+ *
+ * 利用規約：
+ *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
+ *  についても制限はありません。
+ *  このプラグインはもうあなたのものです。
+ */
+
+(() => {
+    'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+
+    const _AudioManager_updateBufferParameters = AudioManager.updateBufferParameters;
+    AudioManager.updateBufferParameters = function(buffer, configVolume, audio) {
+        if (buffer === this._bgmBuffer || buffer === this._bgsBuffer) {
+            configVolume *= (this._audioSuppression / 100);
+        }
+        _AudioManager_updateBufferParameters.call(this, buffer, configVolume, audio);
+    };
+
+    AudioManager._audioSuppression = 100;
+    AudioManager._suppressionDelta = (100 - param.minVolume) / (param.fadeTime || 1);
+    AudioManager.updateAudioSuppression = function() {
+        if (!$gameSwitches) {
+            return;
+        }
+        const sign = $gameSwitches.value(param.triggerSwitch) ? -1 : 1;
+        const newVolume = (this._audioSuppression + (this._suppressionDelta * sign)).clamp(param.minVolume, 100);
+        if (this._audioSuppression !== newVolume) {
+            this._audioSuppression = newVolume;
+            this.updateBgmParameters(this._currentBgm);
+            this.updateBgsParameters(this._currentBgs);
+        }
+    };
+
+    const _SceneManager_updateMain = SceneManager.updateMain;
+    SceneManager.updateMain = function() {
+        _SceneManager_updateMain.apply(this, arguments);
+        AudioManager.updateAudioSuppression();
+    };
+})();
