@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.7 2022/09/24 無効なIDのテンプレートイベントが指定されたとき専用のエラーを投げるよう修正
 // 2.1.6 2022/09/06 テンプレートイベントを指定する際、ID指定より名勝指定を優先させるよう変更
 // 2.1.5 2022/01/26 ヘルプの誤記を修正
 // 2.1.4 2021/03/27 テンプレートIDの指定に制御文字\v[n]が使えなくなっていた問題を修正
@@ -741,6 +742,9 @@ var $dataTemplateEvents = null;
         if (templateId) {
             this._templateId = templateId;
             this._templateEvent = $dataTemplateEvents[this._templateId];
+            if (!this._templateEvent) {
+                throw new Error('無効なテンプレートイベントが指定されました。 ID:' + this._templateId);
+            }
             this._override   = param.AutoOverride || !!getMetaValues(event, ['OverRide', '上書き']);
             if (param.IntegrateNote > 0) {
                 this.integrateNote(event, param.IntegrateNote);
