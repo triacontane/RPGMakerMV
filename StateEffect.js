@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/09/25 ステート効果をポップアップやメッセージの表示対象外にできる機能を追加
  1.0.0 2022/04/10 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -20,6 +21,12 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
+ *
+ * @param noDisplay
+ * @text ステート効果非表示
+ * @desc 本プラグインで適用されたステート効果をポップアップやメッセージの表示対象外にします。
+ * @default false
+ * @type boolean
  *
  * @help StateEffect.js
  *
@@ -46,6 +53,8 @@
 
 (()=> {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     const _Game_BattlerBase_addNewState = Game_BattlerBase.prototype.addNewState;
     Game_BattlerBase.prototype.addNewState = function(stateId) {
@@ -65,10 +74,26 @@
         action.applyStateEffect(this);
     };
 
+    Game_Battler.prototype.setDummyResult = function() {
+        this._realResult = this._result;
+        this._result = new Game_ActionResult();
+    };
+
+    Game_Battler.prototype.restoreResult = function() {
+        if (this._realResult) {
+            this._result = this._realResult;
+            this._realResult = null;
+        }
+    };
+
     Game_Action.prototype.applyStateEffect = function(target) {
+        if (param.noDisplay) {
+            target.setDummyResult();
+        }
         this.item().effects.forEach(function(effect) {
             this.applyItemEffect(target, effect);
         }, this);
         this.applyGlobal();
+        target.restoreResult();
     };
 })();
