@@ -85,6 +85,10 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
+    //=============================================================================
+    // Game_Temp
+    //  IDを指定してコモンイベントを予約キャンセル
+    //=============================================================================
     Game_Temp.prototype.clearCommonEventReservationById = function(commonEventId) {
         this._commonEventQueue = this._commonEventQueue.filter(id => id !== commonEventId);
     };
@@ -136,10 +140,7 @@
     Game_Action.prototype.findEffectCondition = function(effect) {
         const index = this.getEffectIndex(effect);
         const id = PluginManagerEx.findMetaValue(this.item(), [`EffectCond_${index}`, `効果条件_${index}`]);
-        if (!id) {
-            return null;
-        }
-        return param.conditionList?.find(item => item.id === id);
+        return id ? param.conditionList?.find(item => item.id === id) : null;
     };
 
     Game_Action.prototype.getEffectIndex = function(effect) {
