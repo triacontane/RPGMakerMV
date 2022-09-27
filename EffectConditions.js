@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/09/27 適用条件に「戦闘中かどうか」を追加
 // 1.1.0 2022/09/25 MZ用に再作成
 // 1.0.3 2017/02/07 端末依存の記述を削除
 // 1.0.2 2017/01/12 メモ欄の値が空で設定された場合にエラーが発生するかもしれない問題を修正
@@ -68,6 +69,12 @@
  * @default 0
  * @type number
  * @max 100
+ *
+ * @param battleOnly
+ * @text 戦闘中のみ
+ * @desc ONにすると戦闘中のみ有効な効果と判断されます。(OFFにすると戦闘中、メニュー中どちらでも有効)
+ * @default false
+ * @type boolean
  * 
  * @param script
  * @text スクリプト
@@ -103,6 +110,15 @@
         _Game_Action_executeDamage.apply(this, arguments);
     };
 
+    const _Game_Action_testItemEffect = Game_Action.prototype.testItemEffect;
+    Game_Action.prototype.testItemEffect = function(target, effect) {
+        if (this.isValidEffect(target, effect)) {
+            return _Game_Action_testItemEffect.apply(this, arguments);
+        } else {
+            return false;
+        }
+    };
+
     const _Game_Action_applyItemEffect = Game_Action.prototype.applyItemEffect;
     Game_Action.prototype.applyItemEffect = function(target, effect) {
         if (this.isValidEffect(target, effect)) {
@@ -134,6 +150,7 @@
         conditions.push(() => !condParam.switch || $gameSwitches.value(condParam.switch));
         conditions.push(() => !condParam.probability || Math.randomInt(100) < condParam.probability);
         conditions.push(() => !condParam.script || eval(condParam.script));
+        conditions.push(() => !condParam.battleOnly || $gameParty.inBattle());
         return !conditions.some(condition => !condition());
     };
 
