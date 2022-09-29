@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.32.0 2022/09/29 コマンドウィンドウで選択肢ごとに異なる決定SEを演奏できる機能を追加
  1.31.1 2022/09/12 スクリプト「$gameParty.reserveMembers();」を戦闘中に実行すると控えメンバーが取得できない問題を修正
  1.31.0 2022/09/01 項目描画スクリプトの実行結果が文字列を返したとき、その文字列を描画するよう修正
  1.30.1 2022/08/24 カスタムシーン中にコモンイベント等で場所移動が実行された場合は、即座にマップ画面に移動するよう修正
@@ -851,6 +852,13 @@
  * @desc この項目を選択したときに発生するイベントがキャンセルイベントになります。
  * @default false
  * @type boolean
+ *
+ * @param OkSound
+ * @text 決定SE
+ * @desc 選択すると通常の決定音の代わりに指定したSEが演奏されます。
+ * @default
+ * @type struct<AudioSe>
+ *
  */
 
 /*~struct~ButtonEvent:
@@ -2042,6 +2050,15 @@
                 return this._data.CancelEvent;
             } else {
                 return super.findDecisionEvent();
+            }
+        }
+
+        playOkSound() {
+            const item = this.getItem();
+            if (item?.OkSound) {
+                AudioManager.playSe(item.OkSound);
+            } else {
+                super.playOkSound();
             }
         }
     }
