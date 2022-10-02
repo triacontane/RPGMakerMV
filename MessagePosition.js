@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2022/10/02 幅と高さを変えたときにコンテンツが再作成されない問題を修正
+//                  ネームウィンドウが見切れることがある問題を修正
 // 1.0.0 2022/10/01 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -103,14 +105,27 @@
 		if (param.x) {
 			this.x = (param.relative ? this._originalX : 0) + param.x;
 		}
+		const width = this.width;
+		const height = this.height;
 		if (param.width) {
 			this.width = (param.relative ? this._originalWidth : 0) + param.width;
 		}
 		if (param.height) {
 			this.height = (param.relative ? this._originalHeight : 0) + param.height;
 		}
+		if (this.width !== width || this.height !== height) {
+			this.createContents();
+		}
 		_Window_Message_updatePlacement.apply(this, arguments);
 		const posit = [param.yTop, param.yMiddle, param.yBottom];
 		this.y = (param.relative ? this.y : 0) + posit[this._positionType];
+	};
+
+	const _Window_NameBox_updatePlacement = Window_NameBox.prototype.updatePlacement;
+	Window_NameBox.prototype.updatePlacement = function() {
+		_Window_NameBox_updatePlacement.apply(this, arguments);
+		if (this._messageWindow.y < this.height) {
+			this.y = this._messageWindow.y + this._messageWindow.height;
+		}
 	};
 })();
