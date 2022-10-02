@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/10/02 最小音量とフェード時間に制御文字\v[n]が使えるよう修正
  1.0.0 2022/09/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -72,14 +73,19 @@
     };
 
     AudioManager._audioSuppression = 100;
-    AudioManager._suppressionDelta = (100 - param.minVolume) / (param.fadeTime || 1);
     AudioManager.updateAudioSuppression = function() {
         if (!$gameSwitches) {
             return;
         }
         const sign = $gameSwitches.value(param.triggerSwitch) ? -1 : 1;
-        const newVolume = (this._audioSuppression + (this._suppressionDelta * sign)).clamp(param.minVolume, 100);
-        if (this._audioSuppression !== newVolume) {
+        if (this._audioSuppressionSign === sign && !this._audioSuppressionChange) {
+            return;
+        }
+        this._audioSuppressionSign = sign;
+        const suppressionDelta = (100 - param.minVolume) / (param.fadeTime || 1);
+        const newVolume = (this._audioSuppression + (suppressionDelta * sign)).clamp(param.minVolume, 100);
+        this._audioSuppressionChange = this._audioSuppression !== newVolume;
+        if (this._audioSuppressionChange) {
             this._audioSuppression = newVolume;
             this.updateBgmParameters(this._currentBgm);
             this.updateBgsParameters(this._currentBgs);
