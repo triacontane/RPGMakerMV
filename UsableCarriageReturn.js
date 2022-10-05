@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/10/05 プロフィールウィンドウの行数も変更できる機能を追加
 // 1.1.1 2022/09/15 ヘルプウィンドウの行数指定が戦闘画面で有効になっていなかった問題を修正
 // 1.1.0 2021/09/12 ヘルプウィンドウの行数をパラメータから指定できる機能を追加
 // 1.0.1 2020/11/22 MZで正常に機能するよう修正
@@ -27,6 +28,12 @@
  * @param lineNumber
  * @text ヘルプウィンドウ行数
  * @desc ヘルプウィンドウの行数です。0を指定するとデフォルトの2行になります。
+ * @default 0
+ * @type number
+ *
+ * @param profileLineNumber
+ * @text プロフィール行数
+ * @desc プロフィールの行数です。0を指定するとデフォルトの2行になります。
  * @default 0
  * @type number
  *
@@ -67,6 +74,24 @@
             return this.calcWindowHeight(lineNumber, false);
         } else {
             return _Scene_MenuBase_helpAreaHeight.apply(this, arguments);
+        }
+    };
+
+    const _Scene_Status_profileHeight = Scene_Status.prototype.profileHeight;
+    Scene_Status.prototype.profileHeight = function() {
+        const lineNumber = param.profileLineNumber;
+        if (lineNumber > 0) {
+            return this.calcWindowHeight(lineNumber, false);
+        } else {
+            return _Scene_Status_profileHeight.apply(this, arguments);
+        }
+    };
+
+    const _Window_Status_refresh = Window_Status.prototype.refresh;
+    Window_Status.prototype.refresh = function() {
+        _Window_Status_refresh.apply(this, arguments);
+        if (this._actor && param.profileLineNumber > 2) {
+            this.drawBlock1();
         }
     };
 
