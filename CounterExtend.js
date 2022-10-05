@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2022/10/05 複数の反撃条件を同時に満たしたとき、ステートの優先度の高い方の設定で優先的に反撃するよう修正
 // 2.7.0 2022/08/30 パラメータのスキルリストに識別子を追加
 // 2.6.0 2022/06/13 2.5.0の機能の範囲をスキルから対象のバトラー全体に拡張
 // 2.5.0 2022/06/12 反撃条件に、メモ欄に指定したタグが書かれている場合のみ反撃できる設定を追加
@@ -100,6 +101,9 @@
  *
  * 反撃の詳細設定はプラグインパラメータから入力します。
  * 通常の反撃とは異なり、相手の行動が終わってから発動します。
+ *
+ * 複数の反撃タグを同時に満たしたときは以下の順で発動します。
+ * ステート(優先度順) > アクター、敵キャラ > 職業 > 装備品
  *
  * メモ欄に以下の通り入力したスキル、アイテムは相手の反撃頻度を
  * 指定した値だけ減らすことができます。
@@ -316,9 +320,15 @@
             const tagList = this.subject().traitObjects().map(traitObject => {
                 return PluginManagerEx.findMetaValue(traitObject, ['反撃拡張', 'CounterExtend']);
             });
-            const indexList = tagList.map(tag => parseInt(tag));
-            return param.CounterList.filter((item, index) =>
-                tagList.contains(item.Id) || indexList.contains(index + 1));
+            const paramList = [];
+            tagList.forEach(tag => {
+                const tagIndex = parseInt(tag) - 1;
+                const counter = param.CounterList.find((item, index) => tagList.contains(item.Id) || tagIndex === index);
+                if (counter) {
+                    paramList.push(counter);
+                }
+            });
+            return paramList;
         }
 
         isValidSkill(counter, triggerAction) {
