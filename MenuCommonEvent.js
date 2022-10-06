@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2022/10/06 メニュー画面のサブコマンドプラグインとの定義順の制約アノテーションを追加
 // 1.5.0 2022/09/17 ピクチャのボタン化プラグインで指定したコモンイベントがメニュー画面中で実行されるよう仕様変更
 // 1.4.2 2021/11/17 画面遷移時に通常イベントと同様のキャッシュ処理を追加
 // 1.4.1 2021/09/01 最新版のSceneCustomMenu.jsと併用できるよう修正
@@ -35,6 +36,8 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MenuCommonEvent.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderBefore MenuSubCommand
  * @author トリアコンタン
  *
  * @param commonEventInfo
