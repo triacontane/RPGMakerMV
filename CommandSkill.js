@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2022/10/06 コマンドスキルにコスト表示できる機能を追加
  1.3.2 2022/08/28 ActorCommandHelp.jsと併用するための修正
  1.3.1 2022/01/26 1.3.0の機能はメモ欄指定に変更
  1.3.0 2022/01/26 コマンドスキルを使用できないときは非表示にする機能を追加
@@ -43,6 +44,12 @@
  * @param showHelp
  * @text ヘルプ表示
  * @desc コマンドスキル選択時にヘルプを表示します。
+ * @default false
+ * @type boolean
+ *
+ * @param showCost
+ * @text コスト表示
+ * @desc コマンドスキルの右端に消費コストを表示します。
  * @default false
  * @type boolean
  *
@@ -114,6 +121,16 @@
         return this.items().filter(item => $gameTemp.isCommandSkill(item));
     }
 
+    const _Window_Command_drawItem = Window_Command.prototype.drawItem;
+    Window_Command.prototype.drawItem = function(index) {
+        _Window_Command_drawItem.apply(this, arguments);
+        if (param.showCost) {
+            this.drawSkillCost(index);
+        }
+    };
+
+    Window_Command.prototype.drawSkillCost = function(index) {};
+
     /**
      * Window_ActorCommand
      * コマンドスキルを追加
@@ -155,6 +172,21 @@
         const item = this._list.filter(item => item.symbol === 'special' && item.ext === id)[0];
         if (item) {
             this.select(this._list.indexOf(item));
+        }
+    };
+
+    Window_ActorCommand.prototype.drawSkillCost = function(index) {
+        const skill = this._list[index].ext;
+        if (!skill) {
+            return;
+        }
+        const rect = this.itemLineRect(index);
+        if (this._actor.skillTpCost(skill) > 0) {
+            this.changeTextColor(ColorManager.tpCostColor());
+            this.drawText(this._actor.skillTpCost(skill), rect.x, rect.y, rect.width, "right");
+        } else if (this._actor.skillMpCost(skill) > 0) {
+            this.changeTextColor(ColorManager.mpCostColor());
+            this.drawText(this._actor.skillMpCost(skill), rect.x, rect.y, rect.width, "right");
         }
     };
 
