@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/10/07 視差ゼロ遠景に個別のぼかし設定ができる機能を追加
 // 2.1.0 2021/03/10 システム画像に対するぼかし設定を追加
 // 2.0.0 2021/01/23 MZで動作するよう修正
 // 1.1.0 2017/06/24 テキストなど動的画像のぼかし設定を追加
@@ -16,7 +17,7 @@
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
-/*:ja
+/*:
  * @plugindesc 画像ぼかし個別設定プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ImageSmoothSetting.js
@@ -44,6 +45,12 @@
  * @param Parallax
  * @text 遠景
  * @desc 遠景画像にぼかしをかけます。
+ * @default true
+ * @type boolean
+ *
+ * @param ZeroParallax
+ * @text 視差ゼロ遠景
+ * @desc 視差ゼロの遠景画像にぼかしをかけます。
  * @default true
  * @type boolean
  *
@@ -122,7 +129,11 @@
     ImageManager.loadBitmap      = function(folder, filename) {
         const bitmap = _ImageManager_loadBitmap.apply(this, arguments);
         if (this._smoothMap.hasOwnProperty(folder)) {
-            bitmap.smooth = this._smoothMap[folder];
+            if (this.isZeroParallax(filename)) {
+                bitmap.smooth = param.ZeroParallax;
+            } else {
+                bitmap.smooth = this._smoothMap[folder];
+            }
         }
         return bitmap;
     };
