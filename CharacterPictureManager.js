@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.6.0 2022/10/08 立ち絵の表示条件にメッセージ表示中かどうかと変数による判定を追加
 // 3.5.0 2022/09/11 基準座標が取得できないメンバーがいた場合にエラーになる問題を修正
 // 3.4.0 2022/09/07 現在のシーンによって表示する立ち絵画像を出し分けられる機能を追加
 // 3.3.0 2022/04/21 シーン設定のパラメータにもタッチスイッチ設定を追加
@@ -435,11 +436,62 @@
  * @desc データベースのメモ欄<StandPicture:aaa>が指定値と等しい場合に表示条件を満たします。
  * @default
  *
+ * @param Message
+ * @text メッセージ条件
+ * @desc 指定した場合、メッセージ表示中のみ条件を満たします。
+ * @default false
+ * @type boolean
+ *
+ * @param Face
+ * @text フェイス条件
+ * @desc 指定した場合、メッセージ表示中かつフェイス画像がアクターのフェイスと一致するとき条件を満たします。
+ * @default false
+ * @type boolean
+ *
+ * @param Speaker
+ * @text スピーカー条件
+ * @desc 指定した場合、メッセージ表示中かつメッセージの名前がアクターの名前と一致するとき条件を満たします。
+ * @default false
+ * @type boolean
+ *
  * @param Switch
  * @text スイッチ条件
  * @desc 指定したスイッチがONの場合に表示条件を満たします。0を指定すると条件判定を行いません。
  * @default 0
  * @type switch
+ *
+ * @param Variable
+ * @text 変数条件
+ * @desc 指定した変数が条件を満たしたときに表示条件を満たします。判定種別とオペランドを別途指定します。
+ * @default 0
+ * @type variable
+ *
+ * @param VariableType
+ * @parent Variable
+ * @text 判定種別
+ * @desc 変数と値との比較方法です。変数値が左辺、オペランドが右辺です。
+ * @default 0
+ * @type select
+ * @option =(等しい)
+ * @value 0
+ * @option >=(以上)
+ * @value 1
+ * @option <=(以下)
+ * @value 2
+ * @option >(より大きい)
+ * @value 3
+ * @option <(より小さい)
+ * @value 4
+ * @option !=(異なる)
+ * @value 5
+ *
+ * @param VariableOperand
+ * @parent Variable
+ * @text オペランド
+ * @desc 変数と比較される値です。変数値との比較にしたい場合は制御文字\v[n]を指定します。
+ * @default 0
+ * @type number
+ * @min -999999999
  *
  * @param Script
  * @text スクリプト条件
@@ -729,13 +781,38 @@
             conditions.push(() => !file.Armor || a.hasArmor($dataArmors[file.Armor]));
             conditions.push(() => !file.Scene || SceneManager._scene.isStandPictureScene(file.Scene));
             conditions.push(() => !file.Note || this.findStandPictureMeta() === file.Note);
+            conditions.push(() => !file.Message || $gameMessage.isBusy());
+            conditions.push(() => !file.Face || $gameMessage.isFaceActor(a));
+            conditions.push(() => !file.Speaker || $gameMessage.isSpeakerActor(a));
             conditions.push(() => !file.Switch || $gameSwitches.value(file.Switch));
+            conditions.push(() => !file.Variable || this.isVariableValid(file));
             conditions.push(() => !file.Script || eval(file.Script));
             if (conditions.every(condition => condition())) {
                 picture.FileName = file.FileName;
                 return true;
             } else {
                 return false;
+            }
+        }
+
+        isVariableValid(file) {
+            const value1 = $gameVariables.value(file.Variable);
+            const value2 = file.VariableOperand;
+            switch (file.VariableType) {
+                case 0:
+                    return value1 === value2;
+                case 1:
+                    return value1 >= value2;
+                case 2:
+                    return value1 <= value2;
+                case 3:
+                    return value1 > value2;
+                case 4:
+                    return value1 < value2;
+                case 5:
+                    return value1 !== value2;
+                default:
+                    return false;
             }
         }
 
@@ -793,6 +870,14 @@
             return this._shakeSwitch;
         }
     }
+
+    Game_Message.prototype.isFaceActor = function(gameActor) {
+        return this._faceName === gameActor.faceName() && this._faceIndex === gameActor.faceIndex();
+    };
+
+    Game_Message.prototype.isSpeakerActor = function(gameActor) {
+        return this._speakerName === gameActor.name();
+    };
 
     /**
      * Game_Actor
@@ -1132,7 +1217,7 @@
             if (this.addApngChild) {
                 this.addApngChild(file);
             }
-            if (!this._apngSprite) {
+            if (!this._apngSprite && file) {
                 const bitmap = ImageManager.loadPicture(file);
                 bitmap.addLoadListener(() => this.setBitmap(bitmap));
             }
@@ -1176,6 +1261,9 @@
         }
 
         isShowing() {
+            if (!this._fileName) {
+                return false;
+            }
             const switchId = this._picture.ShowPictureSwitch;
             if (switchId && !$gameSwitches.value(switchId)) {
                 return false;
