@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/10/08 共通のコマンドヘルプを指定できる機能を追加
+                  ヘルプ中に%1を記述すると選択中のアクター名称に置き換わる機能を追加
  1.0.0 2022/08/28 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -51,11 +53,24 @@
  * @default []
  * @type multiline_string[]
  *
+ * @param actorCommonDesc
+ * @text アクター共通説明
+ * @desc アクターコマンドで共通使用されるメッセージです。コマンド毎の説明が不要な場合に使います。
+ * @default
+ * @type multiline_string
+ *
+ * @param partyCommonDesc
+ * @text パーティ共通説明
+ * @desc パーティコマンドで共通使用されるメッセージです。コマンド毎の説明が不要な場合に使います。
+ * @default
+ * @type multiline_string
+ *
  * @help ActorCommandHelp.js
  *
  * アクターコマンドやパーティコマンドにコマンドごとに定義したヘルプを表示します。
  * 攻撃や防御は、それぞれ割り当てられたスキルの説明が表示され
  * それ以外のコマンドはプラグインパラメータから定義します。
+ * アクターコマンドのヘルプは%1で選択中のアクター名称に置き換わります。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -100,31 +115,41 @@
             this._helpWindow.setText(text);
             this.showHelpWindow();
         }
+        this._helpWindow.setText(this._actor ? text.format(this._actor.name()) : text);
+        this.showHelpWindow();
     };
 
     Window_Selectable.prototype.findActorCommandHelpText = function() {}
 
     Window_PartyCommand.prototype.findActorCommandHelpText = function() {
+        let text;
         switch (this.currentSymbol()) {
             case 'fight':
-                return param.fightDesc;
+                text = param.fightDesc;
+                break;
             case 'escape':
-                return param.escapeDesc;
+                text = param.escapeDesc;
+                break;
         }
+        return text || param.partyCommonDesc;
     };
 
     Window_ActorCommand.prototype.findActorCommandHelpText = function() {
+        let text;
         switch (this.currentSymbol()) {
             case 'attack':
-                return $dataSkills[this._actor.attackSkillId()].description;
+                text = $dataSkills[this._actor.attackSkillId()].description;
+                break;
             case 'guard':
-                return $dataSkills[this._actor.guardSkillId()].description;
+                text =  $dataSkills[this._actor.guardSkillId()].description;
+                break;
             case 'skill':
-                return param.skillTypeDescList[this.currentExt() - 1];
+                text = param.skillTypeDescList[this.currentExt() - 1];
+                break;
             case 'item':
-                return param.itemDesc;
-            default:
-                return null;
+                text = param.itemDesc;
+                break;
         }
+        return text || param.actorCommonDesc;
     };
 })();
