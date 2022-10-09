@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2022/10/09 リファクタリング
 // 1.0.2 2020/09/04 ロードコモンが正常に呼ばれていなかった問題を修正
 // 1.0.1 2020/08/23 MZ用にヘルプを修正
 // 1.0.0 2016/01/20 初版
@@ -16,148 +17,93 @@
 //=============================================================================
 
 /*:
- * @plugindesc CommonInterceptorPlugin
- * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CommonInterceptor.js
- * @author triacontane
- *
- * @param ニューゲームコモン
- * @text NewGameCommonEvent
- * @desc Common Event ID to be called at the time of the new game
- * @default 0
- * @type common_event
- *
- * @param ロードコモン
- * @text LoadCommonEvent
- * @desc Common Event ID to be called at load completion
- * @default 0
- * @type common_event
- *
- * @param メニューコモン
- * @text MenuCommonEvent
- * @desc Common Event ID to be called when the menu screen is closed
- * @default 0
- * @type common_event
- *
- * @help Call a common event at the following times
- *
- * * New Game
- * * Continue
- * * Menu Close
- *
- * MIT License
- */
-/*:ja
  * @plugindesc 割り込みコモンイベントプラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CommonInterceptor.js
  * @author トリアコンタン
  *
- * @param ニューゲームコモン
+ * @param newGameCommon
+ * @text ニューゲームコモン
  * @desc ニューゲーム時に呼ばれるコモンイベントID
  * @default 0
  * @type common_event
  *
- * @param ロードコモン
+ * @param loadCommon
+ * @text ロードコモン
  * @desc ロード完了時に呼ばれるコモンイベントID
  * @default 0
  * @type common_event
  *
- * @param メニューコモン
+ * @param menuCommon
+ * @text メニューコモン
  * @desc メニュー画面を閉じた時に呼ばれるコモンイベントID
  * @default 0
  * @type common_event
  *
- * @help 以下のタイミングでコモンイベントを呼び出します。
+ * @help CommonInterceptor.js
  *
+ * 以下のタイミングでコモンイベントを呼び出します。
  * ・ニューゲーム時
  * ・ロード完了時
  * ・メニュー終了時
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
-(function () {
+(()=> {
     'use strict';
-    var pluginName = 'CommonInterceptor';
-    var paramNames = ['', 'ニューゲームコモン', 'ロードコモン', 'メニューコモン'];
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamNumber = function (paramNames, min, max) {
-        var value = getParamOther(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value, 10) || 0).clamp(min, max);
-    };
-
-    var getParamOther = function (paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return null;
-    };
-
-    var _Game_Temp_initialize = Game_Temp.prototype.initialize;
-    Game_Temp.prototype.initialize = function() {
-        _Game_Temp_initialize.apply(this, arguments);
-        this._interceptorType = 0;
-    };
-
-    Object.defineProperty(Game_Temp.prototype, 'interceptorType', {
-        get: function() {
-            return this._interceptorType;
-        },
-        set: function(value) {
-            this._interceptorType = value.clamp(0, 3);
-        },
-        configurable: false
-    });
-
-    var _DataManager_setupNewGame = DataManager.setupNewGame;
+    DataManager._interceptorType = null;
+    const _DataManager_setupNewGame = DataManager.setupNewGame;
     DataManager.setupNewGame = function() {
         _DataManager_setupNewGame.apply(this, arguments);
-        $gameTemp.interceptorType = 1;
+        this._interceptorType = 'newGameCommon';
     };
 
-    var _DataManager_loadGame = DataManager.loadGame;
+    const _DataManager_loadGame = DataManager.loadGame;
     DataManager.loadGame = function(savefileId) {
         return _DataManager_loadGame.apply(this, arguments).then(()=> {
-            $gameTemp.interceptorType = 2;
+            this._interceptorType = 'loadCommon';
         })
     };
 
-    var _Scene_Menu_terminate = Scene_Menu.prototype.terminate;
+    const _Scene_Menu_terminate = Scene_Menu.prototype.terminate;
     Scene_Menu.prototype.terminate = function() {
         _Scene_Menu_terminate.apply(this, arguments);
-        $gameTemp.interceptorType = 3;
+        DataManager._interceptorType = 'menuCommon';
     };
+
     //=============================================================================
     // Game_Map
     //  条件を満たした場合のコモンイベント呼び出し処理を追加定義します。
     //=============================================================================
-    var _Game_Map_setupStartingEvent = Game_Map.prototype.setupStartingEvent;
+    const _Game_Map_setupStartingEvent = Game_Map.prototype.setupStartingEvent;
     Game_Map.prototype.setupStartingEvent = function() {
-        var result = _Game_Map_setupStartingEvent.apply(this, arguments);
+        const result = _Game_Map_setupStartingEvent.apply(this, arguments);
         return result || this.setupInterceptorCommonEvent();
     };
 
     Game_Map.prototype.setupInterceptorCommonEvent = function() {
-        var commonId = getParamNumber(paramNames[$gameTemp.interceptorType]);
-        var event    = $dataCommonEvents[commonId];
-        var result   = false;
+        if (!DataManager._interceptorType) {
+            return false;
+        }
+        const commonId = param[DataManager._interceptorType];
+        const event    = $dataCommonEvents[commonId];
         if (commonId > 0 && !this.isEventRunning() && event) {
             this._interpreter.setup(event.list);
-            $gameTemp.interceptorType = 0;
-            result = true;
+            DataManager._interceptorType = null;
+            return true;
         }
-        return result;
+        return false;
     };
 })();
 
