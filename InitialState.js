@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2022/10/09 変身後の敵キャラにも初期ステートを適用できる機能を追加
 // 1.3.0 2022/08/21 すべての敵キャラに適用できる初期ステートをパラメータで指定できる機能を追加
 // 1.2.0 2022/01/07 MZで動作するよう修正
 // 1.1.0 2018/07/08 複数の初期ステートを設定できる機能を追加
@@ -30,6 +31,12 @@
  * @desc すべての敵キャラに適用する初期ステートのリストです。
  * @default []
  * @type struct<STATE>[]
+ *
+ * @param applyTransform
+ * @text 変身に適用
+ * @desc 敵キャラが変身したあとにも初期ステートを適用
+ * @default false
+ * @type boolean
  *
  * @help InitialState.js
  *
@@ -76,11 +83,19 @@
     const _Game_Enemy_setup = Game_Enemy.prototype.setup;
     Game_Enemy.prototype.setup = function(enemyId, x, y) {
         _Game_Enemy_setup.apply(this, arguments);
-        this.setupAllInitialState();
         this.setupInitialState();
     };
 
+    const _Game_Enemy_transform = Game_Enemy.prototype.transform;
+    Game_Enemy.prototype.transform = function(enemyId) {
+        _Game_Enemy_transform.apply(this, arguments);
+        if (param.applyTransform) {
+            this.setupInitialState();
+        }
+    };
+
     Game_Enemy.prototype.setupInitialState = function() {
+        this.setupAllInitialState();
         const stateList = PluginManagerEx.findMetaValue(this.enemy(), ['初期ステート', 'InitialState']);
         if (!stateList) {
             return;
