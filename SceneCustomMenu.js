@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.33.0 2022/10/12 データスクリプトとコマンドリストを併用したウィンドウを作成できるよう修正
  1.32.0 2022/09/29 コマンドウィンドウで選択肢ごとに異なる決定SEを演奏できる機能を追加
  1.31.1 2022/09/12 スクリプト「$gameParty.reserveMembers();」を戦闘中に実行すると控えメンバーが取得できない問題を修正
  1.31.0 2022/09/01 項目描画スクリプトの実行結果が文字列を返したとき、その文字列を描画するよう修正
@@ -460,7 +461,7 @@
  *
  * @param DataScript
  * @text データスクリプト
- * @desc ウィンドウに表示される項目や表示可否をスクリプトから構築します。使用する場合はコマンドリストを空にしてください。
+ * @desc ウィンドウに表示される項目や表示可否をスクリプトから構築します。
  *
  * @param ListWindowId
  * @parent DataScript
@@ -1282,7 +1283,7 @@
         }
 
         createCustomWindowInstance(data) {
-            if (data.CommandList && data.CommandList.length > 0) {
+            if (!data.ListScript && !data.ListWindowId) {
                 return new Window_CustomMenuCommand(data, this._actor, this._customWindowMap);
             } else {
                 return new Window_CustomMenuDataList(data, this._actor, this._customWindowMap);
@@ -1873,9 +1874,7 @@
         }
 
         findItemRect(index) {
-            const rect = this.itemRectWithPadding(index);
-            rect.y += this.rowSpacing() / 2;
-            return rect;
+            return null;
         }
 
         drawItemSub(item, rect, index) {
@@ -2063,7 +2062,7 @@
         }
     }
 
-    class Window_CustomMenuDataList extends Window_CustomMenu {
+    class Window_CustomMenuDataList extends Window_CustomMenuCommand {
         makeCommandList() {
             if (this._data.ListWindowId) {
                 const data = this.findListWindowItem();
@@ -2094,10 +2093,26 @@
                     }
                 });
             }
+            if (this._data.CommandList) {
+                return list.concat(super.makeCommandList());
+            }
             return list;
         }
 
+        findItemRect(index) {
+            const rect = this.itemRectWithPadding(index);
+            rect.y += this.rowSpacing() / 2;
+            return rect;
+        }
+
+        isCommandItem(item) {
+            return item.Text;
+        }
+
         isVisible(item, v, s) {
+            if (this.isCommandItem(item)) {
+                return super.isVisible(item, v, s);
+            }
             try {
                 return eval(this._data.FilterScript)
             } catch (e) {
@@ -2107,6 +2122,10 @@
         }
 
         drawItemSub(item, r, index) {
+            if (this.isCommandItem(item)) {
+                super.drawItemSub(item, r, index);
+                return;
+            }
             const scriptList = this._data.ItemDrawScript;
             if (scriptList && scriptList.length > 0) {
                 scriptList.forEach(script => {
@@ -2141,6 +2160,9 @@
         }
 
         isEnabledSub(item) {
+            if (this.isCommandItem(item)) {
+                return super.isEnabledSub(item);
+            }
             const v = $gameVariables.value.bind($gameVariables); // used by eval
             const s = $gameSwitches.value.bind($gameSwitches); // used by eval
             const script = this._data.IsEnableScript;
