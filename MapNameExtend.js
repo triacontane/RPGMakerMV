@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2022/10/13 総フレーム数をInfinityにしたとき、メッセージ表示と共にマップ名がフェードアウトしてしまう問題を修正
 // 1.4.0 2022/07/30 マップ名ウィンドウの高さを指定できる機能を追加
 // 1.3.4 2022/01/14 表示遅延を設定しかつ背景画像を指定したとき、背景画像がマップ名表示前に表示されてしまう問題を修正
 // 1.3.3 2021/11/05 実名表示が無効な場合でも、表示名が空だと表示されてしまう問題を修正
@@ -301,6 +302,14 @@
             return;
         }
         _Window_MapName_hide.apply(this, arguments);
+    };
+
+    const _Window_MapName_close = Window_MapName.prototype.close;
+    Window_MapName.prototype.close = function() {
+        if (this.isNeverHide()) {
+            return;
+        }
+        _Window_MapName_close.apply(this, arguments);
     };
 
     Window_MapName.prototype.reOpen = function() {
