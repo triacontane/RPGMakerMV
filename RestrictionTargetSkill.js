@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2022/10/15 範囲を「なし」にしたスキルを敵が使わなくなる問題を修正
 // 2.3.0 2022/09/07 選択できないバトラーをウィンドウから非表示にできる機能を追加(敵キャラのみ)
 // 2.2.0 2022/04/25 スクリプトの評価結果がtrueのときに使用不可にできる機能を追加
 // 2.1.2 2021/10/12 循環参照による競合が起こりにくい実装に変更
@@ -152,6 +153,9 @@
     //  スキルやアイテムの対象として選択可能かどうかを返します。
     //=============================================================================
     Game_Battler.prototype.isExistValidTarget = function(item) {
+        if (item.scope === 0) {
+            return true;
+        }
         const trialAction = new Game_Action(this, false);
         trialAction.setItemObject(item);
         return trialAction.isExistTarget();
