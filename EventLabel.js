@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2022/10/16 ラベルにフキダシ(テール)を表示できる機能を追加
  1.1.6 2022/02/01 イベントラベルに制御文字を使ったとき、変数値の変更がリアルタイムで反映されない問題を修正
  1.1.5 2021/11/18 メモ欄<LB>に半角数値のみを指定するとエラーになる問題を修正
  1.1.4 2021/06/12 ラベルのZ座標をイベントのプライオリティとは無関係に6で設定するよう変更
@@ -77,6 +78,24 @@
  * @desc The font size of the label.
  * @default 0
  *
+ * @param showTail
+ * @text Show label tail
+ * @desc Show label tail
+ * @default false
+ * @type boolean
+ *
+ * @param tailWidth
+ * @text Tail width
+ * @desc テールを表示する場合の横幅です。
+ * @default 12
+ * @type number
+ *
+ * @param tailHeight
+ * @text テール高さ
+ * @desc テールを表示する場合の高さです。
+ * @default 8
+ * @type number
+ *
  * @help EventLabel.js
  *　
  * The label appears at the top of the event. Specify the following in the memo field.
@@ -133,6 +152,24 @@
  * @text 余白
  * @desc ラベルの余白です。
  * @default 2
+ *
+ * @param showTail
+ * @text テール表示
+ * @desc ラベルの下部に三角形のテールがデフォルトで表示されます。
+ * @default false
+ * @type boolean
+ *
+ * @param tailWidth
+ * @text テール横幅
+ * @desc テールを表示する場合の横幅です。
+ * @default 12
+ * @type number
+ *
+ * @param tailHeight
+ * @text テール高さ
+ * @desc テールを表示する場合の高さです。
+ * @default 8
+ * @type number
  * 
  * @command SHOW_LABEL
  * @text ラベル表示
@@ -164,6 +201,8 @@
  * <LB_Y:-4> // ラベルのY方向の位置をずらします。
  * <LB_S:1>  // スイッチ[1]がONのときラベル表示します。
  * <LB_S:A>  // セルフスイッチ[A]がONのときラベル表示します。
+ * <LB_T:true> // テールを表示します。プラグインパラメータより優先されます。
+ * <LB_T:false> // テールを表示しません。プラグインパラメータより優先されます。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -195,6 +234,7 @@
         this._labelX = PluginManagerEx.findMetaValue(this.event(), 'LB_X') || 0;
         this._labelY = PluginManagerEx.findMetaValue(this.event(), 'LB_Y') || 0;
         this._labelSwitch = PluginManagerEx.findMetaValue(this.event(), 'LB_S') || null;
+        this._labelTail = PluginManagerEx.findMetaValue(this.event(), 'LB_T');
     };
 
     Game_Event.prototype.findLabelX = function() {
@@ -264,6 +304,10 @@
 
     Game_Event.prototype.isHideLabelBecauseOfNoImage = function() {
         return param.hideNoImage && !this._characterName && !this._tileId;
+    };
+
+    Game_Event.prototype.isNeedLabelTail = function() {
+        return this._labelTail !== undefined ? this._labelTail : param.showTail;
     };
 
     /**
@@ -362,7 +406,7 @@
 
         refresh() {
             const dummyWindow = new Window_Dummy();
-            this.bitmap       = dummyWindow.createTextBitmap(this._text, this._size);
+            this.bitmap       = dummyWindow.createTextBitmap(this._text, this._size, this.event());
         }
     }
 
@@ -374,20 +418,41 @@
             super(new Rectangle());
         }
 
-        createTextBitmap(text, fontSize) {
+        createTextBitmap(text, fontSize, event) {
             this._fontSize = fontSize;
             this.resetFontSettings();
             const bitmapSize = this.textSizeEx(text);
             const p = param.padding || 0;
             this.padding     = 0;
             this.move(0, 0, bitmapSize.width + p * 2, bitmapSize.height + p * 2);
+            const labelHeight = this.height;
+            if (event.isNeedLabelTail()) {
+                this.height += param.tailHeight;
+            }
             this.createContents();
-            this.contents.fillAll(param.backColor || 'rgba(0,0,0,0.5)');
+            const fillColor = param.backColor || 'rgba(0,0,0,0.5)';
+            this.contents.fillRect(0, 0, this.width, labelHeight, fillColor);
+            if (event.isNeedLabelTail()) {
+                this.createLabelTail(labelHeight, fillColor, event);
+            }
             this.drawTextEx(text, p, p, bitmapSize.width + p * 2);
             const bitmap  = this.contents;
             this.contents = null;
             this.destroy();
             return bitmap;
+        }
+
+        createLabelTail(labelHeight, fillColor, event) {
+            const ctx = this.contents.context;
+            ctx.beginPath();
+            const halfWidth = param.tailWidth / 2;
+            const baseX = (this.width / 2 - event.findLabelX() + event.screenX()).clamp(halfWidth, this.width - halfWidth);
+            ctx.moveTo(baseX - halfWidth, labelHeight);
+            ctx.lineTo(baseX + halfWidth, labelHeight);
+            ctx.lineTo(baseX, this.height);
+            ctx.closePath();
+            ctx.fillStyle = fillColor
+            ctx.fill();
         }
 
         resetFontSettings() {
