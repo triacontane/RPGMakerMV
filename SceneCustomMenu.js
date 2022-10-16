@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.25.1 2022/10/16 データスクリプトとコマンドリストを併用したウィンドウを一覧ウィンドウに指定した詳細情報ウィンドウでは、コマンドリストの詳細は表示しないよう仕様変更
  1.25.0 2022/10/12 データスクリプトとコマンドリストを併用したウィンドウを作成できるよう修正
  1.24.1 2022/10/12 MOG_Weather_EX.jsとの併用で発生しうるエラーに対処
  1.24.0 2022/09/29 コマンドウィンドウで選択肢ごとに異なる決定SEを演奏できる機能を追加
@@ -1958,7 +1959,9 @@
 
         drawItemSub(item, r, index) {
             if (this.isCommandItem(item)) {
-                super.drawItemSub(item, r, index);
+                if (!this._data.ListWindowId) {
+                    super.drawItemSub(item, r, index);
+                }
                 return;
             }
             const scriptList = this._data.ItemDrawScript;
