@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.1 2022/10/16 ベースプラグインの説明を追加
  1.3.0 2022/10/16 ラベル位置によってはテールを上向きに表示するよう変更
  1.2.0 2022/10/16 ラベルにフキダシ(テール)を表示できる機能を追加
  1.1.6 2022/02/01 イベントラベルに制御文字を使ったとき、変数値の変更がリアルタイムで反映されない問題を修正
@@ -31,6 +32,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventLabel.js
  * @author triacontane
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  *
  * @param showDefault
  * @desc You don't need to set anything up to see the label in the event name.
@@ -119,6 +121,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventLabel.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param showDefault
@@ -204,6 +207,11 @@
  * <LB_S:A>  // セルフスイッチ[A]がONのときラベル表示します。
  * <LB_T:true> // テールを表示します。プラグインパラメータより優先されます。
  * <LB_T:false> // テールを表示しません。プラグインパラメータより優先されます。
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
