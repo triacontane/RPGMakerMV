@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2022/10/16 ラベル位置によってはテールを上向きに表示するよう変更
  1.2.0 2022/10/16 ラベルにフキダシ(テール)を表示できる機能を追加
  1.1.6 2022/02/01 イベントラベルに制御文字を使ったとき、変数値の変更がリアルタイムで反映されない問題を修正
  1.1.5 2021/11/18 メモ欄<LB>に半角数値のみを指定するとエラーになる問題を修正
@@ -249,6 +250,10 @@
         return 6;
     };
 
+    Game_Event.prototype.isLabelTailTop = function() {
+        return this.isNeedLabelTail() && this._labelY - $gameMap.tileHeight() >= 0;
+    };
+
     Game_Event.prototype.findLabelName = function() {
         const metaLabel = this.event().meta['LB'];
         if (metaLabel && metaLabel !== true) {
@@ -431,11 +436,12 @@
             }
             this.createContents();
             const fillColor = param.backColor || 'rgba(0,0,0,0.5)';
-            this.contents.fillRect(0, 0, this.width, labelHeight, fillColor);
+            const y = event.isLabelTailTop() ? param.tailHeight : 0;
+            this.contents.fillRect(0, y, this.width, labelHeight, fillColor);
             if (event.isNeedLabelTail()) {
                 this.createLabelTail(labelHeight, fillColor, event);
             }
-            this.drawTextEx(text, p, p, bitmapSize.width + p * 2);
+            this.drawTextEx(text, p, p + y, bitmapSize.width + p * 2);
             const bitmap  = this.contents;
             this.contents = null;
             this.destroy();
@@ -447,9 +453,15 @@
             ctx.beginPath();
             const halfWidth = param.tailWidth / 2;
             const baseX = (this.width / 2 - event.findLabelX() + event.screenX()).clamp(halfWidth, this.width - halfWidth);
-            ctx.moveTo(baseX - halfWidth, labelHeight);
-            ctx.lineTo(baseX + halfWidth, labelHeight);
-            ctx.lineTo(baseX, this.height);
+            if (event.isLabelTailTop()) {
+                ctx.moveTo(baseX - halfWidth, this.height - labelHeight);
+                ctx.lineTo(baseX + halfWidth, this.height - labelHeight);
+                ctx.lineTo(baseX, 0);
+            } else {
+                ctx.moveTo(baseX - halfWidth, labelHeight);
+                ctx.lineTo(baseX + halfWidth, labelHeight);
+                ctx.lineTo(baseX, this.height);
+            }
             ctx.closePath();
             ctx.fillStyle = fillColor
             ctx.fill();
