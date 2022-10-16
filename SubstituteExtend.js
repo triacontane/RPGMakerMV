@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2022/10/16 身代わり中だけ指定してステートを付与できる機能を追加
 // 1.7.0 2021/09/01 身代わりの発動率を設定するタグを追加
 // 1.6.0 2021/07/31 指定した属性の場合のみ身代わりするためのスクリプト凡例を追加
 // 1.5.0 2021/07/18 MZで動作するよう修正
@@ -110,6 +111,8 @@
  * <SE_SubstituteFormula:f> # 同上
  * <SE_身代わり率:50>       # 50%の確率で身代わり発動します。
  * <SE_SubstituteRate:50> # 同上
+ * <SE_身代わりステート:5>   # 身代わり中だけステート[5]が自動付与されます。
+ * <SE_SubstituteState:5> # 同上
  *
  * ※1 パラメータからデフォルトの身代わり条件である「瀕死」を
  * 無効にした場合のみ判定します。
@@ -263,6 +266,10 @@
         return this.getSubstituteMetaInfo(['SE_SubstituteSkillId', 'SE_身代わりスキルID'], true);
     };
 
+    Game_BattlerBase.prototype.getSubstituteStateId = function() {
+        return this.getSubstituteMetaInfo(['SE_SubstituteState', 'SE_身代わりステート'], true);
+    };
+
     Game_BattlerBase.prototype.getSubstituteMetaInfo = function(tagNames, isNumber) {
         let metaValue = null;
         this.traitObjects().some(function(traitObject) {
@@ -305,6 +312,7 @@
         const substitute = _BattleManager_applySubstitute.apply(this, arguments);
         this._substituteTarget = null;
         if (substitute !== target) {
+            this._substitute = substitute;
             this.applySubstituteEffect(substitute);
         }
         return substitute;
@@ -312,10 +320,26 @@
 
     BattleManager.applySubstituteEffect = function(substitute) {
         const skillId = substitute.getSubstituteSkillId();
-        if (!skillId) return;
-        const action = new Game_Action(substitute);
-        action.setSkill(skillId);
-        action.apply(substitute);
+        if (skillId) {
+            const action = new Game_Action(substitute);
+            action.setSkill(skillId);
+            action.apply(substitute);
+        }
+        const stateId = substitute.getSubstituteStateId();
+        if (stateId) {
+            substitute.addState(stateId);
+            this._substituteState = stateId;
+        }
+    };
+
+    const _BattleManager_endAction = BattleManager.endAction;
+    BattleManager.endAction = function() {
+        _BattleManager_endAction.apply(this, arguments);
+        if (this._substitute && this._substituteState > 0) {
+            this._substitute.removeState(this._substituteState);
+        }
+        this._substituteState = null;
+        this._substitute = null;
     };
 
     BattleManager.checkSubstituteTargetHpRate = function(hpRate) {
