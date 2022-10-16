@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.0.0 2022/10/16 フキダシもアニメーションと同様に表示できる機能を追加
  1.2.1 2022/06/30 ヘルプ文言修正
  1.2.0 2022/06/30 アニメーションをマップのスクロールに合わせる機能を追加
  1.1.0 2021/01/03 マップ座標にアニメーションを表示できるコマンドを追加
@@ -17,53 +18,6 @@
 =============================================================================*/
 
 /*:
- * @plugindesc AnimationByPointPlugin
- * @target MZ
- * @base PluginCommonBase
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AnimationByPoint.js
- * @author triacontane
- *
- * @command SHOW_ANIMATION
- * @desc Displays the animation at the specified coordinates (specified in pixels) on the screen.
- *
- * @arg id
- * @text Animation ID
- * @desc The animation ID to display.
- * @default 1
- * @type animation
- *
- * @arg x
- * @text X
- * @desc The X to display the animation.
- * @default 0
- * @type number
- *
- * @arg y
- * @text Y
- * @desc The Y to display the animation.
- * @default 0
- * @type number
- *
- * @arg wait
- * @text Wait to completion
- * @desc Wait for the event to progress until the animation display finishes.
- * @default false
- * @type boolean
- *
- * @help AnimationByPoint.js
- *
- * Provides a command to display an animation at a
- * specified coordinate (pixel specification) on the screen.
- * Since the target of the animation does not exist,
- * flashing to the target is invalid.
- *
- * The base plugin "PluginCommonBase.js" is required to use this plugin.
- * The "PluginCommonBase.js" is here.
- * (MZ install path)dlc/BasicResources/plugins/official/PluginCommonBase.js
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 指定座標へのアニメ表示プラグイン
  * @target MZ
  * @base PluginCommonBase
@@ -72,13 +26,61 @@
  * 
  * @command SHOW_ANIMATION
  * @text アニメーション表示
- * @desc 画面上の指定座標(ピクセル指定)にアニメーションを表示します。
+ * @desc 画面上の指定座標(ピクセル指定)にアニメーションやフキダシを表示します。
  *
  * @arg id
  * @text アニメーションID
  * @desc 表示するアニメーションIDです。
  * @default 1
  * @type animation
+ *
+ * @arg balloonId
+ * @text フキダシID
+ * @desc 表示するフキダシIDです。アニメーションではなくフキダシを表示したいときはこちらを指定します。
+ * @default 0
+ * @type select
+ * @option なし
+ * @value 0
+ * @option びっくり
+ * @value 1
+ * @option はてな
+ * @value 2
+ * @option 音符
+ * @value 3
+ * @option ハート
+ * @value 4
+ * @option 怒り
+ * @value 5
+ * @option 汗
+ * @value 6
+ * @option くしゃくしゃ
+ * @value 7
+ * @option 沈黙
+ * @value 8
+ * @option 電球
+ * @value 9
+ * @option Zzz
+ * @value 10
+ * @option ユーザ定義1
+ * @value 11
+ * @option ユーザ定義2
+ * @value 12
+ * @option ユーザ定義3
+ * @value 13
+ * @option ユーザ定義4
+ * @value 14
+ * @option ユーザ定義5
+ * @value 15
+ *
+ * @arg positionType
+ * @text 座標タイプ
+ * @desc 座標の決定タイプを画面座標とマップ座標から選択します。
+ * @default screen
+ * @type select
+ * @option 画面座標
+ * @value screen
+ * @option マップ座標
+ * @value map
  *
  * @arg x
  * @text X座標
@@ -104,45 +106,15 @@
  * @default false
  * @type boolean
  *
- * @command SHOW_ANIMATION_BY_MAP_POINT
- * @text マップ座標にアニメーション表示
- * @desc マップ上の指定座標(マス指定)にアニメーションを表示します。
- *
- * @arg id
- * @text アニメーションID
- * @desc 表示するアニメーションIDです。
- * @default 1
- * @type animation
- *
- * @arg x
- * @text X座標
- * @desc アニメーションを表示するマップX座標です。
- * @default 0
- * @type number
- *
- * @arg y
- * @text Y座標
- * @desc アニメーションを表示するマップY座標です。
- * @default 0
- * @type number
- *
- * @arg wait
- * @text 完了までウェイト
- * @desc アニメーション表示が終わるまでイベントの進行を待機します。
- * @default false
- * @type boolean
- *
- * @arg scroll
- * @text スクロールに連動
- * @desc マップをスクロールに合わせてアニメーションの表示座標が変わります。
- * @default false
- * @type boolean
- *
  * @help AnimationByPoint.js
  *
- * 画面上の指定座標(ピクセル指定)にアニメーションを表示するコマンドを提供します。
+ * 画面上の指定座標(ピクセル指定)にアニメーションやフキダシをを表示する
+ * コマンドを提供します。
  * アニメーションの対象が存在しないため、対象へのフラッシュは無効です。
  * またプラグインの構造上、プライオリティ変更の機能追加はできません。
+ *
+ * フキダシを戦闘画面で表示したい場合、別途『BattleBalloon.js』が
+ * 必要です。本プラグインと同じ場所で配布しています。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -160,6 +132,10 @@
     const script = document.currentScript;
 
     PluginManagerEx.registerCommand(script, 'SHOW_ANIMATION', function(args) {
+        if (args.positionType === 'map') {
+            args.x = $gameMap.convertToScreenX(args.x);
+            args.y = $gameMap.convertToScreenY(args.y);
+        }
         this.requestAnimationByPoint(args);
     });
 
@@ -181,7 +157,11 @@
 
     Game_Interpreter.prototype.requestAnimationByPoint = function(args) {
         const point = new Game_AnimationPoint(args);
-        $gameTemp.requestAnimation([point], args.id);
+        if (args.id > 0) {
+            $gameTemp.requestAnimation([point], args.id);
+        } else if (args.balloonId > 0) {
+            $gameTemp.requestBalloon(point, args.balloonId);
+        }
         if (args.wait) {
             this.setWaitMode("pointAnimation");
         }
@@ -205,6 +185,15 @@
                 this.removeChild(targetSprite);
             }
         })
+    };
+
+    const _Spriteset_Map_removeBalloon = Spriteset_Map.prototype.removeBalloon;
+    Spriteset_Map.prototype.removeBalloon = function(sprite) {
+        _Spriteset_Map_removeBalloon.apply(this, arguments);
+        const targetSprite = sprite._target;
+        if (targetSprite instanceof Sprite_AnimationPoint) {
+            this.removeChild(targetSprite);
+        }
     };
 
     const _Spriteset_Map_findTargetSprite = Spriteset_Map.prototype.findTargetSprite
@@ -249,6 +238,18 @@
         }
 
         endAnimation() {
+            if (this._wait) {
+                pointAnimationCount--;
+            }
+        }
+
+        startBalloon() {
+            if (this._wait) {
+                pointAnimationCount++;
+            }
+        }
+
+        endBalloon() {
             if (this._wait) {
                 pointAnimationCount--;
             }
