@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.2 2022/10/17 自動戦闘の特徴が有効なとき、選択可能対象がいないスキルを選択対象外にするよう修正
 // 2.3.1 2022/10/15 範囲を「なし」にしたスキルを敵が使わなくなる問題を修正
 // 2.3.0 2022/09/07 選択できないバトラーをウィンドウから非表示にできる機能を追加(敵キャラのみ)
 // 2.2.0 2022/04/25 スクリプトの評価結果がtrueのときに使用不可にできる機能を追加
@@ -232,6 +233,12 @@
     const _Game_Enemy_isActionValid = Game_Enemy.prototype.isActionValid;
     Game_Enemy.prototype.isActionValid = function(action) {
         return _Game_Enemy_isActionValid.apply(this, arguments) && this.isExistValidTarget($dataSkills[action.skillId]);
+    };
+
+    const _Game_Actor_makeActionList = Game_Actor.prototype.makeActionList;
+    Game_Actor.prototype.makeActionList = function() {
+        const list = _Game_Actor_makeActionList.apply(this, arguments);
+        return list.filter(action => this.isExistValidTarget($dataSkills[action.item().id]));
     };
 
     //=============================================================================
