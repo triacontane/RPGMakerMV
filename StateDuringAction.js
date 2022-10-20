@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/10/20 スキル使用者の解除メッセージが正しく表示されていなかった問題を修正
  1.0.0 2022/01/25 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -77,6 +78,7 @@
             ['StateDuringActionSubject', '行動中使用者ステート付与']);
         if (subjectStateId) {
             this.subject().removeState(subjectStateId);
+            BattleManager._logWindow.displayRemovedStates(this.subject());
         }
         const targetStateId = PluginManagerEx.findMetaValue(this.item(),
             ['StateDuringActionTarget', '行動中対象者ステート付与']);
