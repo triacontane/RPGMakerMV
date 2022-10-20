@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.0 2022/10/20 パフォーマンス対策
 // 3.6.0 2022/10/08 立ち絵の表示条件にメッセージ表示中かどうかと変数による判定を追加
 // 3.5.0 2022/09/11 基準座標が取得できないメンバーがいた場合にエラーになる問題を修正
 // 3.4.0 2022/09/07 現在のシーンによって表示する立ち絵画像を出し分けられる機能を追加
@@ -617,6 +618,12 @@
  * @default 0
  * @type number
  *
+ * @param UpdateInterval
+ * @text 更新間隔
+ * @desc 立ち絵の表示条件を確認するインターバルです。多数の立ち絵を表示してパフォーマンスが低下する場合に変更します。
+ * @default 1
+ * @type number
+ *
  */
 
 /*~struct~Position:
@@ -721,12 +728,39 @@
             }
             this._shakeSwitch = scene.ShakeSwitch;
             this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
+            this._updateInterval = scene.UpdateInterval || 1;
             if (this._standPictures.length <= 0) {
                 return false;
             }
             this._standPictures.forEach(picture => this.setupSceneParam(picture, scene));
+            this.createCondition();
             this.updatePictureFiles();
             return true;
+        }
+
+        createCondition() {
+            const conditions = [];
+            const a = this._actor;
+            conditions.push(file => !file.HpUpperLimit || file.HpUpperLimit >= a.hpRate() * 100);
+            conditions.push(file => !file.HpLowerLimit || file.HpLowerLimit <= a.hpRate() * 100);
+            conditions.push(file => !file.Motion || a.isMotionTypeValid(file.Motion));
+            conditions.push(file => !file.Action || a.isAction());
+            conditions.push(file => !file.State || a.isStateAffected(file.State));
+            conditions.push(file => !file.Weapon || a.hasWeapon($dataWeapons[file.Weapon]));
+            conditions.push(file => !file.Armor || a.hasArmor($dataArmors[file.Armor]));
+            conditions.push(file => !file.Scene || SceneManager._scene.isStandPictureScene(file.Scene));
+            conditions.push(file => !file.Note || this.findStandPictureMeta() === file.Note);
+            conditions.push(file => !file.Message || $gameMessage.isBusy());
+            conditions.push(file => !file.Face || $gameMessage.isFaceActor(a));
+            conditions.push(file => !file.Speaker || $gameMessage.isSpeakerActor(a));
+            conditions.push(file => !file.Switch || $gameSwitches.value(file.Switch));
+            conditions.push(file => !file.Variable || this.isVariableValid(file));
+            conditions.push(file => !file.Script || eval(file.Script));
+            this._conditions = conditions;
+        }
+
+        isNeedUpdatePicture() {
+            return Graphics.frameCount % this._updateInterval === 0;
         }
 
         setupSceneParam(picture, scene) {
@@ -770,24 +804,7 @@
 
         setFileNameIfValid(file, picture) {
             picture.FileName = null;
-            const a = this._actor;
-            const conditions = [];
-            conditions.push(() => !file.HpUpperLimit || file.HpUpperLimit >= a.hpRate() * 100);
-            conditions.push(() => !file.HpLowerLimit || file.HpLowerLimit <= a.hpRate() * 100);
-            conditions.push(() => !file.Motion || a.isMotionTypeValid(file.Motion));
-            conditions.push(() => !file.Action || a.isAction());
-            conditions.push(() => !file.State || a.isStateAffected(file.State));
-            conditions.push(() => !file.Weapon || a.hasWeapon($dataWeapons[file.Weapon]));
-            conditions.push(() => !file.Armor || a.hasArmor($dataArmors[file.Armor]));
-            conditions.push(() => !file.Scene || SceneManager._scene.isStandPictureScene(file.Scene));
-            conditions.push(() => !file.Note || this.findStandPictureMeta() === file.Note);
-            conditions.push(() => !file.Message || $gameMessage.isBusy());
-            conditions.push(() => !file.Face || $gameMessage.isFaceActor(a));
-            conditions.push(() => !file.Speaker || $gameMessage.isSpeakerActor(a));
-            conditions.push(() => !file.Switch || $gameSwitches.value(file.Switch));
-            conditions.push(() => !file.Variable || this.isVariableValid(file));
-            conditions.push(() => !file.Script || eval(file.Script));
-            if (conditions.every(condition => condition())) {
+            if (this._conditions.every(condition => condition(file))) {
                 picture.FileName = file.FileName;
                 return true;
             } else {
@@ -973,6 +990,7 @@
 
     Scene_Base.prototype.createAllStandPicture = function() {
         this._standSprites = new Map();
+        this._standActors = [];
         const sceneName = PluginManagerEx.findClassName(this);
         this._standSpriteScene = param.SceneList.filter(item => item.SceneName === sceneName)[0];
         if (this._standSpriteScene) {
@@ -1017,9 +1035,10 @@
 
     Scene_Base.prototype.updateStandPicture = function(actor, index) {
         const id = actor.actorId();
-        if (this._standSprites.has(id)) {
+        if (this._standActors.includes(id)) {
             return;
         }
+        this._standActors.push(id);
         const pictureParam = new StandPictureParam();
         const existPicture = pictureParam.setup(actor, this._standSpriteScene, index);
         if (!existPicture) {
@@ -1149,7 +1168,9 @@
         }
 
         update() {
-            this._pictures.updatePictureFiles();
+            if (this._pictures.isNeedUpdatePicture()) {
+                this._pictures.updatePictureFiles();
+            }
             super.update();
             this.setupShake();
             if (this._shakeDuration > 0 || this._shake !== 0) {
