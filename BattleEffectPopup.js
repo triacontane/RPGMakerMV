@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2022/10/22 ポップアップの対象外スキルを設定できる機能を追加
 // 2.5.0 2022/08/12 弱点耐性ポップアップの対象にならない属性を指定できるパラメータを追加
 // 2.4.0 2022/07/16 ポップアップメッセージが重なったときに次のメッセージが表示されるY座標を補正できる機能を追加
 // 2.3.0 2022/03/25 バフおよびデバフをポップアップする機能を追加
@@ -254,6 +255,12 @@
  * @desc ポップアップ表示対象のステートIDです。ステートリスト以外では指定不要です。
  * @type state
  *
+ * @param invalidSkillList
+ * @text 無効スキルリスト
+ * @desc 指定したスキルではこのポップアップは使用されません。
+ * @type skill[]
+ * @default []
+ *
  * @param color
  * @text ポップアップカラー
  * @desc ポップアップカラーです。CSSの色指定文字列を指定します。
@@ -393,9 +400,28 @@
         _BattleManager_endBattle.apply(this, arguments);
     };
 
+    const _BattleManager_endAction = BattleManager.endAction;
+    BattleManager.endAction = function() {
+        _BattleManager_endAction.apply(this, arguments);
+        this._usedItem = null;
+    };
+
     BattleManager.getActionTarget = function() {
         return this._actionTarget;
     };
+
+    BattleManager.setUsedItem = function(item) {
+        this._usedItem = item;
+    };
+
+    BattleManager.isValidEffectPopup = function(popUp) {
+        if (DataManager.isSkill(this._usedItem) && popUp.invalidSkillList) {
+            return !popUp.invalidSkillList.includes(this._usedItem.id);
+        } else {
+            return true;
+        }
+    };
+
 
     //=============================================================================
     // Game_Action
@@ -403,6 +429,7 @@
     //=============================================================================
     const _Game_Action_apply = Game_Action.prototype.apply;
     Game_Action.prototype.apply = function(target) {
+        BattleManager.setUsedItem(this.item());
         this._elementResult = {};
         _Game_Action_apply.apply(this, arguments);
         if (this._elementResult.guard) {
@@ -461,6 +488,9 @@
     };
 
     Game_Battler.prototype.startMessagePopup = function(popUp) {
+        if (!BattleManager.isValidEffectPopup(popUp)) {
+            return;
+        }
         if (popUp && (popUp.text || popUp.fileName)) {
             this._messagePopup = popUp;
         }
