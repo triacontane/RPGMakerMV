@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2022/10/22 DTextPicture.jsと組み合わせたとき、フレームウィンドウをクリックイベントの範囲に含めるよう変更
 // 1.3.1 2022/05/19 ヘルプ微修正
 // 1.3.0 2022/04/14 ピクチャクリック時に変数を操作する機能および任意スクリプトを実行する機能を追加
 // 1.2.2 2021/11/07 異なるピクチャのトリガーを同一フレームで同時に満たした場合、すべてのタッチ処理が実行されるよう修正
@@ -491,7 +492,7 @@
             if (!pic.bitmap || !pic.bitmap.isReady() || pic.scale.x === 0 || pic.scale.y === 0) {
                 return false;
             }
-            if (this.isTouchPosInFrameWindow()) {
+            if (this.isTouchPosInFrameWindow(x, y)) {
                 return true;
             }
             const dx  = this.getTouchScreenX(x) - pic.x;
@@ -506,11 +507,12 @@
             return pic.bitmap.getAlphaPixel(bx, by) !== 0;
         }
 
+        // for DTextPicture.js
         isTouchPosInFrameWindow(x, y) {
-            if (!this._frameWindow) {
+            if (!this._picture._frameWindow) {
                 return false;
             }
-            const frame = this._frameWindow;
+            const frame = this._picture._frameWindow;
             const sx    = this.getTouchScreenX(x);
             const sy    = this.getTouchScreenY(y);
             return frame.x <= sx && frame.x + frame.width >= sx &&
