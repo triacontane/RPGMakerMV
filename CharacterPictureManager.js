@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.8.0 2022/10/22 立ち絵の更新を手動(スイッチ)で行える機能を追加
 // 3.7.0 2022/10/20 パフォーマンス対策
 // 3.6.0 2022/10/08 立ち絵の表示条件にメッセージ表示中かどうかと変数による判定を追加
 // 3.5.0 2022/09/11 基準座標が取得できないメンバーがいた場合にエラーになる問題を修正
@@ -624,6 +625,12 @@
  * @default 1
  * @type number
  *
+ * @param UpdateSwitch
+ * @text 更新スイッチ
+ * @desc スイッチがONのとき立ち絵の表示条件を確認します。この設定を有効にすると、フレーム毎の自動更新は無効になります。
+ * @default 0
+ * @type switch
+ *
  */
 
 /*~struct~Position:
@@ -728,7 +735,10 @@
             }
             this._shakeSwitch = scene.ShakeSwitch;
             this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
-            this._updateInterval = scene.UpdateInterval || 1;
+            this._updateCondition = {
+                UpdateInterval: scene.UpdateInterval,
+                UpdateSwitch: scene.UpdateSwitch
+            }
             if (this._standPictures.length <= 0) {
                 return false;
             }
@@ -760,7 +770,18 @@
         }
 
         isNeedUpdatePicture() {
-            return Graphics.frameCount % this._updateInterval === 0;
+            const condition = this._updateCondition;
+            if (condition.UpdateSwitch) {
+                const value = $gameSwitches.value(condition.UpdateSwitch);
+                if (value) {
+                    $gameSwitches.setValue(condition.UpdateSwitch, false)
+                }
+                return value;
+            } else if (condition.UpdateInterval) {
+                return Graphics.frameCount % condition.UpdateInterval === 0;
+            } else {
+                return true;
+            }
         }
 
         setupSceneParam(picture, scene) {
