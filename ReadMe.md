@@ -1,3 +1,7 @@
+# translations
+
+- [English](https://github.com/oericdacosta/RPGMakerMV/blob/mz_master/translate/en/contribution.md)
+
 # RPGツクールMZ対応プラグイン
 
 RPGツクールMZで動作するプラグイン(JavaScript)を置いています。どうぞご自由にお使いください。  
