@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2022/10/25 武器タイプ、防具タイプを条件に変数を増減できる機能を追加
+//                  装備タイプのみを指定したとき変数の増減が正しく行われていなかった問題を修正
 // 2.0.0 2021/05/08 MZ向けに再設計
 // 1.5.1 2019/12/29 1.5.0の修正以後、パーティメンバーを外したときにエラーになっていた問題を修正
 // 1.5.0 2019/11/25 装備スロットごとに変数を増減できる機能を追加
@@ -92,6 +94,18 @@
  * @param equipType
  * @text 装備タイプ
  * @desc 指定した装備タイプを装備すると変数およびスイッチが変動します。武器や防具ID条件との組み合わせも可能です。
+ * @type number
+ * @default 0
+ *
+ * @param weaponType
+ * @text 武器タイプ
+ * @desc 指定した武器タイプを装備すると変数およびスイッチが変動します。武器や防具ID条件との組み合わせも可能です。
+ * @type number
+ * @default 0
+ *
+ * @param armorType
+ * @text 防具タイプ
+ * @desc 指定した防具タイプを装備すると変数およびスイッチが変動します。武器や防具ID条件との組み合わせも可能です。
  * @type number
  * @default 0
  *
@@ -313,12 +327,16 @@
         isValidParam(record, item, slotId) {
             if (record.equipType && record.equipType !== slotId + 1) {
                 return false;
-            } else if (DataManager.isWeapon(item)) {
+            } else if (record.weaponType && record.weaponType !== item.wtypeId) {
+                return false;
+            } else if (record.armorType && record.armorType !== item.atypeId) {
+                return false;
+            } else if (record.weaponId && DataManager.isWeapon(item)) {
                 return record.weaponId === item.id;
-            } else if (DataManager.isArmor(item)) {
+            } else if (record.armorId && DataManager.isArmor(item)) {
                 return record.armorId === item.id;
-            } else if (!record.equipType) {
-                return record.stateId === item.id;
+            } else if (record.stateId) {
+                return !DataManager.isWeapon(item) && !DataManager.isArmor(item) && record.stateId === item.id;
             } else {
                 return true;
             }
