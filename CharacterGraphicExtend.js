@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.15.0 2022/10/25 いくつかの表示拡張スクリプトをプレイヤーに実行すると連動してフォロワーにも適用される機能を追加
 // 1.14.0 2021/02/22 色調変更でグレースケールを扱えるよう機能を追加
 // 1.13.1 2021/08/19 ParallaxLayerMap.jsと併用したとき、先方のプラグインで指定した合成方法が無効になる競合を修正
 // 1.13.0 2021/07/12 敵キャラやピクチャを表示する際、色相を指定できる機能を追加
@@ -56,6 +57,11 @@
  *
  * @param イベント消去無効
  * @desc エンカウント発生時にイベントを一瞬消去するエフェクトを無効にします。
+ * @default false
+ * @type boolean
+ *
+ * @param フォロワー連動
+ * @desc プレイヤーに対して表示拡張スクリプトを実行するとフォロワーにも適用されます。
  * @default false
  * @type boolean
  *
@@ -294,6 +300,7 @@
     // パラメータの取得とバリデーション
     //=============================================================================
     var paramEventHideInvalid = getParamBoolean(['EventHideInvalid', 'イベント消去無効']);
+    var paramLinkFollower = getParamBoolean(['LinkFollower', 'フォロワー連動']);
 
     //=============================================================================
     // Game_CharacterBase
@@ -399,6 +406,16 @@
         this._scaleY = y;
     };
 
+    var _Game_Player_setScale = Game_Player.prototype.setScale
+    Game_Player.prototype.setScale = function(x, y) {
+        _Game_Player_setScale.apply(this, arguments);
+        if (paramLinkFollower) {
+            this.followers().forEach(function (follower) {
+                follower.setScale(x, y);
+            });
+        }
+    };
+
     Game_CharacterBase.prototype.originX = function() {
         return this._originX;
     };
@@ -433,6 +450,16 @@
         this._tone = [r, g, b, gray || 0];
     };
 
+    var _Game_Player_setTone = Game_Player.prototype.setTone;
+    Game_Player.prototype.setTone = function(r, g, b, gray) {
+        _Game_Player_setTone.apply(this, arguments);
+        if (paramLinkFollower) {
+            this.followers().forEach(function (follower) {
+                follower.setTone(r, g, b, gray);
+            });
+        }
+    };
+
     Game_CharacterBase.prototype.angle = function() {
         return this._angle;
     };
@@ -441,9 +468,29 @@
         this._angle = angle;
     };
 
+    var _Game_Player_setAngle = Game_Player.prototype.setAngle;
+    Game_Player.prototype.setAngle = function(angle) {
+        _Game_Player_setAngle.apply(this, arguments);
+        if (paramLinkFollower) {
+            this.followers().forEach(function (follower) {
+                follower.setAngle(angle);
+            });
+        }
+    };
+
     Game_CharacterBase.prototype.shiftPosition = function(x, y) {
         this._additionalX = x;
         this._additionalY = y;
+    };
+
+    var _Game_Player_shiftPosition = Game_Player.prototype.shiftPosition;
+    Game_Player.prototype.shiftPosition = function(x, y) {
+        _Game_Player_shiftPosition.apply(this, arguments);
+        if (paramLinkFollower) {
+            this.followers().forEach(function (follower) {
+                follower.shiftPosition(x, y);
+            });
+        }
     };
 
     Game_CharacterBase.prototype.tileBlockWidth = function() {
