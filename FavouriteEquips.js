@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2022/10/26 MZで動作するよう修正
 // 1.0.1 2018/10/14 セーブ＆ロードを挟むとお気に入り装備が復元されない問題を修正
 // 1.0.0 2017/10/01 初版
 // ----------------------------------------------------------------------------
@@ -15,54 +16,54 @@
 //=============================================================================
 
 /*:
- * @plugindesc FavouriteEquipsPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help FavouriteEquips.js
- *
- * お気に入りの装備パターンをプラグインコマンドで記憶、再現します。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * FE_お気に入り設定 1 3     # ID[1]のアクターの装備をお気に入り[3]に設定します。
- * FE_SET_FAVOURITE 1 3      # 同上
- * FE_お気に入り復元 \v[2] 3 # [3]の装備を変数[2]のIDのアクターに復元します。
- * FE_GET_FAVOURITE \v[2] 3  # 同上
- *
- * お気に入り設定数に制限はありません。1以上の値を指定してください。
- *
- * スクリプト詳細
- * $gameActors.actor(id).getFavouriteEquipName(index, slotId);
- *
- * [id]で指定したアクターのお気に入り[index]の[slotId]の装備品名を取得します。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc お気に入り装備プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/FavouriteEquips.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * 
+ * @command FAVOURITE
+ * @text お気に入り操作
+ * @desc 指定したアクターの装備をお気に入り登録、復元、クリアします。
+ *
+ * @arg actorId
+ * @text アクターID
+ * @desc 登録対象のアクターIDです。
+ * @default 1
+ * @type actor
+ * 
+ * @arg type
+ * @text 操作種別
+ * @desc 操作種別です。登録:現装備の登録 復元:登録装備の復元 クリア:登録装備のクリア
+ * @default set
+ * @type select
+ * @option 登録
+ * @value set
+ * @option 復元
+ * @value get
+ * @option クリア
+ * @value clear
+ * 
+ * @arg index
+ * @text インデックス
+ * @desc お気に入り装備のインデックスです。
+ * @default 1
+ * @type number
+ * @min 1
  *
  * @help FavouriteEquips.js
  *
- * お気に入りの装備パターンをプラグインコマンドで記憶、再現します。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * FE_お気に入り設定 1 3     # ID[1]のアクターの装備をお気に入り[3]に設定します。
- * FE_SET_FAVOURITE 1 3      # 同上
- * FE_お気に入り復元 \v[2] 3 # [3]の装備を変数[2]のIDのアクターに復元します。
- * FE_GET_FAVOURITE \v[2] 3  # 同上
- *
- * お気に入り設定数に制限はありません。1以上の値を指定してください。
+ * お気に入りの装備パターンをプラグインコマンドで記憶、復元します。
  *
  * スクリプト詳細
  * $gameActors.actor(id).getFavouriteEquipName(index, slotId);
  *
  * [id]で指定したアクターのお気に入り[index]の[slotId]の装備品名を取得します。
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -70,80 +71,34 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var metaTagPrefix = 'FE_';
+    const script = document.currentScript;
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var isNotAString = function(args) {
-        return String(args) !== args;
-    };
-
-    var convertAllArguments = function(args) {
-        return args.map(function(arg) {
-            return convertEscapeCharacters(arg);
-        });
-    };
-
-    var setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(metaTagPrefix + commandName, methodName);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var pluginCommandMap = new Map();
-    setPluginCommand('GET_FAVOURITE', 'execRestoreFavouriteEquip');
-    setPluginCommand('お気に入り復元', 'execRestoreFavouriteEquip');
-    setPluginCommand('SET_FAVOURITE', 'execSetFavouriteEquip');
-    setPluginCommand('お気に入り設定', 'execSetFavouriteEquip');
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertAllArguments(args));
+    PluginManagerEx.registerCommand(script, 'FAVOURITE', args => {
+        const actor = $gameActors.actor(args.actorId);
+        switch (args.type) {
+            case 'set':
+                actor.setFavouriteEquip(args.index);
+                break;
+            case 'get':
+                actor.restoreFavouriteEquip(args.index);
+                break;
+            case 'clear':
+                actor.clearFavouriteEquip(args.index);
+                break;
         }
-    };
-
-    Game_Interpreter.prototype.execSetFavouriteEquip = function(args) {
-        var actor = $gameActors.actor(getArgNumber(args[0], 1));
-        if (actor) {
-            actor.setFavouriteEquip(getArgNumber(args[1], 1));
-        }
-    };
-
-    Game_Interpreter.prototype.execRestoreFavouriteEquip = function(args) {
-        var actor = $gameActors.actor(getArgNumber(args[0], 1));
-        if (actor) {
-            actor.restoreFavouriteEquip(getArgNumber(args[1], 1));
-        }
-    };
+    });
 
     Game_Actor.prototype.initFavouriteEquipIfNeed = function() {
         if (!this._favouriteEquipsList) {
             this._favouriteEquipsList = [];
         }
+    };
+
+    Game_Actor.prototype.clearFavouriteEquip = function(index) {
+        this.initFavouriteEquipIfNeed();
+        this._favouriteEquipsList[index] = undefined;
     };
 
     Game_Actor.prototype.setFavouriteEquip = function(index) {
@@ -157,17 +112,17 @@
     };
 
     Game_Actor.prototype.getFavouriteEquipName = function(index, slotId) {
-        var equips = this.getFavouriteEquip(index);
+        const equips = this.getFavouriteEquip(index);
         return equips && equips[slotId] ? equips[slotId].name : ' ';
     };
 
     Game_Actor.prototype.restoreFavouriteEquip = function(index) {
-        var favouriteEquips = this.getFavouriteEquip(index);
+        const favouriteEquips = this.getFavouriteEquip(index);
         if (!favouriteEquips) {
             return;
         }
         this.clearEquipments();
-        favouriteEquips.forEach(function(equipItem, slotId) {
+        favouriteEquips.forEach((equipItem, slotId) => {
             if (!equipItem) {
                 return;
             }
@@ -177,7 +132,7 @@
                 equipItem = $dataArmors[equipItem.id];
             }
             this.changeEquip(slotId, equipItem);
-        }, this);
+        });
     };
 })();
 
