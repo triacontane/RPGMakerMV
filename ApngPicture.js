@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.3.2 2022/10/27 1セルのフレーム数を変更したとき、ループ回数の設定が機能しなくなる問題を修正
  2.3.1 2022/06/06 apngのフレーム数を指定したとき停止スイッチが機能しない問題を修正
  2.3.0 2022/02/06 1セルごとのフレーム数をゲーム側で設定できるパラメータを追加
  2.2.1 2021/10/09 AltMenuScreen2MZとの並び順を指定するアノテーションを追加
@@ -972,21 +973,24 @@
         _Sprite_update.apply(this, arguments);
         if (this._apngSprite) {
             if (param.FrameCount > 0 && !this._apngSpritePause) {
-                this.updateApngFrameFrame();
+                this.updateApngFrame();
             }
             this.updateApngSwitchStop();
             this.updateApngFrameStop();
         }
     };
 
-    Sprite.prototype.updateApngFrameFrame = function() {
+    Sprite.prototype.updateApngFrame = function() {
+        if (this._apngStop) {
+            return;
+        }
         const frameLength = this._apngSprite.pixiApng.getFramesLength();
         const frame = Math.floor(Graphics.frameCount / param.FrameCount) % frameLength;
         this._apngSprite.pixiApng.jumpToFrame(frame);
     };
 
     Sprite.prototype.updateApngFrameStop = function() {
-        if (!param.StopLastFrame) {
+        if (!param.StopLastFrame && !param.FrameCount) {
             return;
         }
         const frame = this._apngSprite.pixiApng.__status.frame;
@@ -1001,6 +1005,7 @@
         const frameLength = this._apngSprite.pixiApng.getFramesLength();
         if (loopLimit <= this._apngLoopCount && frameLength <= frame + 1) {
             this._apngSprite.pixiApng.stop();
+            this._apngStop = true;
         }
     };
 
