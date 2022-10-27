@@ -1,16 +1,12 @@
 /*=============================================================================
  SceneCustomMenuEx.js
 ----------------------------------------------------------------------------
- (C)${YEAR} Triacontane
+ (C)2022 Triacontane, (改造したらここに作者名を追加)
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
- 1.0.0 2022/10/27 初版
-----------------------------------------------------------------------------
- [Blog]   : https://triacontane.blogspot.jp/
- [Twitter]: https://twitter.com/triacontane/
- [GitHub] : https://github.com/triacontane/
+ 1.0.0 2022/10/27 テンプレート作成
 =============================================================================*/
 
 /*:
@@ -19,7 +15,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SceneCustomMenuEx.js
  * @base SceneCustomMenu
  * @orderAfter SceneCustomMenu
- * @author トリアコンタン
+ * @author 作者名を入れます
  *
  * @help SceneCustomMenuEx.js
  *
