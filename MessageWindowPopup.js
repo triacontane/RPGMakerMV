@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.1 2022/10/29 MPP_ChoiceEX.jsと併用するとマップ表示時にエラーになる問題に対処
  1.3.0 2022/09/21 戦闘画面でバトラーを指定したフキダシウィンドウが表示できる機能を追加
  1.2.1 2022/06/12 lowerLimitXなどいくつかのパラメータが機能していなかった問題を修正
  1.2.0 2021/12/06 フォロワーのフキダシ表示機能をMV版から流用して追加
@@ -1459,7 +1460,7 @@
     Window_Message.prototype.updatePlacement = function() {
         this.x = this._defaultRect.x;
         _Window_Message_updatePlacement.apply(this, arguments);
-        this._nameBoxWindow.updatePlacement();
+        this._nameBoxWindow?.updatePlacement();
         if (!this.isPopup()) {
             return;
         }
