@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2022/10/31 曲を選択していない状態でピッチなどを変更しようとするとエラーになる問題を修正
 // 2.3.0 2022/10/30 ピッチと左右バランスのオプション項目について、パラメータを空にすると項目も消去されるよう修正
 // 2.2.1 2022/08/19 サブフォルダに配置したオーディオが演奏できない問題を修正
 // 2.2.0 2022/07/18 シークバーを非表示にできる機能を追加
@@ -540,6 +541,9 @@
         }
 
         play() {
+            if (!this._audioPath) {
+                return;
+            }
             const audio = this._optionWindow.getAudio();
             audio.name = this._audioPath.slice(1).join('/');
             audio.type = this._audioPath[0];
