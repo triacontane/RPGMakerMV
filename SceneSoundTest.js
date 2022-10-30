@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2022/10/30 ピッチと左右バランスのオプション項目について、パラメータを空にすると項目も消去されるよう修正
 // 2.2.1 2022/08/19 サブフォルダに配置したオーディオが演奏できない問題を修正
 // 2.2.0 2022/07/18 シークバーを非表示にできる機能を追加
 // 2.1.0 2022/02/14 ヘルプウィンドウの表示内容を改行できるよう修正
@@ -74,12 +75,12 @@
  *
  * @param pitch
  * @text ピッチ名称
- * @desc BGMの設定項目「ピッチ」のゲーム内での名称です。
+ * @desc BGMの設定項目「ピッチ」のゲーム内での名称です。空欄にすると設定項目自体がなくなります。
  * @default Pitch
  *
  * @param pan
  * @text 位相名称
- * @desc BGMの設定項目「位相」のゲーム内での名称です。
+ * @desc BGMの設定項目「位相」のゲーム内での名称です。空欄にすると設定項目自体がなくなります。
  * @default Pan
  *
  * @param backImage
@@ -510,8 +511,19 @@
             const wx = param.listWidth;
             const wy = this._listWindow.y;
             const ww = Graphics.boxWidth - param.listWidth;
-            const wh = this.calcWindowHeight(3, true);
+            const wh = this.calcWindowHeight(this.optionWindowLines(), true);
             return new Rectangle(wx, wy, ww, wh);
+        }
+
+        optionWindowLines() {
+            let lines = 1;
+            if (param.pitch) {
+                lines++;
+            }
+            if (param.pan) {
+                lines++;
+            }
+            return lines;
         }
 
         createAudioWindow() {
@@ -656,8 +668,12 @@
                 name: '', volume: 90, pitch: 100, pan: 0
             }
             this.addCommand(param.volume, 'volume');
-            this.addCommand(param.pitch, 'pitch');
-            this.addCommand(param.pan, 'pan');
+            if (param.pitch) {
+                this.addCommand(param.pitch, 'pitch');
+            }
+            if (param.pan) {
+                this.addCommand(param.pan, 'pan');
+            }
         }
 
         changeVolume(symbol, forward, wrap) {
