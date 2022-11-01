@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2022/11/01 中央揃え、右揃えにする際の描画位置をピクセル単位で調整できる機能を追加
  1.2.2 2021/10/08 1.2.1の修正により、\c[n]などの制御文字が文字幅としてカウントされ揃え位置がズレてしまう問題を修正
  1.2.1 2021/09/24 ウェイト系の制御文字を使ったときに、正常な動作をしなくなる問題を修正
  1.2.0 2021/09/19 縦方向の揃えを中央揃え、下揃えにする機能を追加
@@ -54,6 +55,9 @@
  * \ar : 右揃え
  * \vc : 縦方向の中央揃え
  * \vb : 縦方向の下揃え
+ *
+ * 後ろに数値を指定すると描画位置が指定したピクセル分、左にずれて描画されます。
+ * \ac[20]
  *
  * メッセージのプレビューには反映されません。
  * 制御文字は必ず行の先頭に記述してください。
@@ -115,7 +119,8 @@
     };
 
     Window_Base.prototype.findInnerSpace = function(textState) {
-        return this.innerWidth - this.textSizeEx(this.findLineText(textState)).width - textState.startX;
+        const shift = this.obtainEscapeParam(textState);
+        return this.innerWidth - this.textSizeEx(this.findLineText(textState)).width - textState.startX - (shift || 0);
     };
 
     Window_Base.prototype.findInnerVSpace = function(textState) {
