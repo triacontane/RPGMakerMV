@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.34.0 2022/11/03 ピクチャ描画メソッドでピクチャの拡大率を設定できるよう修正
  1.33.3 2022/11/01 1.33.0の修正で空の項目を選択したときにエラーになる可能性がある問題を修正
  1.33.2 2022/10/16 データスクリプトとコマンドリストを併用したウィンドウを一覧ウィンドウに指定した詳細情報ウィンドウでは、コマンドリストの詳細は表示しないよう仕様変更
  1.33.1 2022/10/13 MOG_Weather_EX.jsとの併用で発生しうるエラーに対処
@@ -572,7 +573,7 @@
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
  * @option this.changeTextColor(ColorManager.textColor(1)); // テキストカラー変更(drawTextでのみ有効)
  * @option this.drawText(this.findWindowItem('window1').name, r.x, r.y, r.width); // 別ウィンドウで選択している項目名
- * @option this.drawNotePicture('noteValue', r.x, r.y, 'left', 'center'); // 指定したメモ欄のピクチャを描画
+ * @option this.drawNotePicture('noteValue', r.x, r.y, 'left', 'center', 1.0, 1.0); // 指定したメモ欄のピクチャを描画
  * @option this.placeActorName(item, r.x, r.y); // アクター名称(戦闘用)
  * @option this.placeStateIcon(item, r.x, r.y); // ステートアイコン(戦闘用)
  * @option this.placeGauge(item, 'hp', r.x, r.y); // HPゲージ(戦闘用)
@@ -1749,23 +1750,25 @@
             return null;
         }
 
-        drawNotePicture(metaValue, x, y, align = 'left', valign = 'top') {
+        drawNotePicture(metaValue, x, y, align = 'left', valign = 'top', xScale = 1, yScale = 1) {
             const meta = this.findMetaData(this._drawingIndex);
             if (!meta || !meta[metaValue]) {
                 return;
             }
             const fileName = PluginManagerEx.convertEscapeCharacters(meta[metaValue]);
             if (fileName) {
-                this.drawPicture(fileName, x, y, align, valign);
+                this.drawPicture(fileName, x, y, align, valign, xScale, yScale);
             }
         };
 
-        drawPicture(file, x, y, align = 'left', valign = 'top') {
+        drawPicture(file, x, y, align = 'left', valign = 'top', xScale = 1, yScale = 1) {
             const bitmap = ImageManager.loadPicture(file);
             if (bitmap.isReady()) {
-                x += this.findAlignX(align, bitmap);
-                y += this.findAlignY(valign, bitmap);
-                this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
+                const dw = bitmap.width * xScale;
+                const dh = bitmap.height * yScale;
+                x += this.findAlignX(align, dw);
+                y += this.findAlignY(valign, dh);
+                this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y, dw, dh);
             } else {
                 this.retryDrawItem(bitmap);
             }
@@ -1787,9 +1790,9 @@
             }
         }
 
-        findAlignX(align, bitmap) {
+        findAlignX(align, dw) {
             const width = this.itemRect(this._drawingIndex).width;
-            const shiftX = width - bitmap.width;
+            const shiftX = width - dw;
             switch (align.toLowerCase()) {
                 case 'right':
                     return shiftX;
@@ -1800,9 +1803,9 @@
             }
         }
 
-        findAlignY(valign, bitmap) {
+        findAlignY(valign, dh) {
             const height = this.innerHeight;
-            const shiftY = height - bitmap.height;
+            const shiftY = height - dh;
             switch (valign.toLowerCase()) {
                 case 'bottom':
                     return shiftY;
