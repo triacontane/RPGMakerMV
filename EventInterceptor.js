@@ -6,6 +6,9 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/11/04 特定のページ番号にのみ割り込みする機能を追加
+                  並列処理のイベントを割り込み対象外にできる機能を追加
+                  選択肢や条件分岐の分岐終了のタイミングで終了後の割り込み処理が走ってしまう問題を修正
  1.0.0 2022/11/03 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -45,6 +48,9 @@
  * その場合、割り込み不要なイベントには以下のタグをメモ欄に設定します。　
  * <EvTp:none>
  *
+ * イベント中で『場所移動』した場合、終了の割り込みは行われません。
+ * こちらは制約事項となります。
+ *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
  * 以下のフォルダに格納されています。
@@ -77,6 +83,18 @@
  * @value start
  * @option 終了後
  * @value finish
+ *
+ * @param pageIndex
+ * @text ページインデックス
+ * @desc イベントのページが指定値と一致するときだけ実行します。
+ * @default 0
+ * @type number
+ *
+ * @param invalidParallel
+ * @text 並列処理は無効
+ * @desc 並列処理のマップイベントには割り込みしません。
+ * @default false
+ * @type boolean
  *
  * @param commonEventId
  * @text コモンイベントID
@@ -115,6 +133,9 @@
         if (_Game_Interpreter_command0) {
             _Game_Interpreter_command0.apply(this, arguments);
         }
+        if (this._list[this._index + 1]) {
+            return true;
+        }
         this.setupInterceptor(this.eventId(), 'finish');
         return true;
     };
@@ -124,10 +145,7 @@
         if (this._depth > 0 || !this.isOnCurrentMap() || !event) {
             return;
         }
-        const type = event.findEventType();
-        const interceptor = param.interceptorList.find(item => {
-            return ((!item.tagValue && type !== 'none') || item.tagValue === type) && item.timing === timing;
-        });
+        const interceptor = param.interceptorList.find(item => this.isInterceptorValid(item, event, timing));
         if (!interceptor) {
             return;
         }
@@ -136,5 +154,23 @@
             return;
         }
         this.setupChild(commonEvent.list, eventId);
+    };
+
+    Game_Interpreter.prototype.isInterceptorValid = function(item, event, timing) {
+        const type = event.findEventType();
+        const pageIndex = event._pageIndex + 1;
+        if (item.timing !== timing) {
+            return false;
+        } else if (item.invalidParallel && !($gameMap.isInterpreterOf(this))) {
+            return false;
+        } else if (item.pageIndex > 0 && pageIndex !== item.pageIndex) {
+            return false;
+        } else if (!item.tagValue && type !== 'none') {
+            return true;
+        } else if (item.tagValue === type) {
+            return true;
+        } else {
+            return false;
+        }
     };
 })();
