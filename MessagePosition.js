@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2022/11/06 MessageWindowPopup.jsと併用できるよう調整
+//                  相対座標のデフォルト値をfalseに変更
 // 1.0.1 2022/10/02 幅と高さを変えたときにコンテンツが再作成されない問題を修正
 //                  ネームウィンドウが見切れることがある問題を修正
 // 1.0.0 2022/10/01 初版
@@ -21,6 +23,7 @@
  * @url 
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
+ * @orderBefore MessageWindowPopup
  * @author COBURA, トリアコンタン
  *
  * @param x
@@ -68,7 +71,7 @@
  * @param relative
  * @text 相対座標
  * @desc 各設定値をデフォルト座標からの相対値とします。
- * @default true
+ * @default false
  * @type boolean
  *
  * @help MessagePosition.js
@@ -98,23 +101,26 @@
 		this._originalX = rect.x;
 		this._originalWidth = rect.width;
 		this._originalHeight = rect.height;
+		// メッセージ系プラグインとの競合回避のためコンテンツサイズは最大サイズで作成
+		this.destroyContents();
+		this.contents = new Bitmap(Graphics.width, Graphics.height);
+		this.contentsBack = new Bitmap(Graphics.width, Graphics.height);
 	};
 
 	const _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
 	Window_Message.prototype.updatePlacement = function() {
+		if (this.isPopup && this.isPopup()) {
+			_Window_Message_updatePlacement.apply(this, arguments);
+			return;
+		}
 		if (param.x) {
 			this.x = (param.relative ? this._originalX : 0) + param.x;
 		}
-		const width = this.width;
-		const height = this.height;
 		if (param.width) {
 			this.width = (param.relative ? this._originalWidth : 0) + param.width;
 		}
 		if (param.height) {
 			this.height = (param.relative ? this._originalHeight : 0) + param.height;
-		}
-		if (this.width !== width || this.height !== height) {
-			this.createContents();
 		}
 		_Window_Message_updatePlacement.apply(this, arguments);
 		const posit = [param.yTop, param.yMiddle, param.yBottom];
@@ -124,6 +130,9 @@
 	const _Window_NameBox_updatePlacement = Window_NameBox.prototype.updatePlacement;
 	Window_NameBox.prototype.updatePlacement = function() {
 		_Window_NameBox_updatePlacement.apply(this, arguments);
+		if (this.isPopup && this.isPopup()) {
+			return;
+		}
 		if (this._messageWindow.y < this.height) {
 			this.y = this._messageWindow.y + this._messageWindow.height;
 		}
