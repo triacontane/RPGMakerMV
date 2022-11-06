@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2022/11/06 小型船および大型船を通行可能にできる設定を追加
 // 1.3.0 2022/05/17 MZで動作するよう修正
 // 1.2.0 2016/07/31 乗降可能な地形タグ、リージョンを設定できる機能を追加
 // 1.1.0 2016/07/09 飛行船の通行不可、通行可能に対応
@@ -32,19 +33,19 @@
  *
  * @param BoatPassableTerrainTags
  * @text 小型船通行地形タグ
- * @desc 小型船で通行可能になる地形タグです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 小型船で通行可能になる地形タグです。
  * @default []
  * @type number[]
  *
  * @param BoatNonPassableRegions
  * @text 小型船不可リージョン
- * @desc 小型船で通行不可になるリージョンです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 小型船で通行不可になるリージョンです。
  * @default []
  * @type number[]
  *
  * @param BoatNonPassableTerrainTags
  * @text 小型船不可地形タグ
- * @desc 小型船で通行不可になる地形タグです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 小型船で通行不可になる地形タグです。
  * @default []
  * @type number[]
  *
@@ -62,25 +63,25 @@
  *
  * @param ShipPassableRegions
  * @text 大型船通行リージョン
- * @desc 大型船で通行可能になるリージョンです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 大型船で通行可能になるリージョンです。
  * @default []
  * @type number[]
  *
  * @param ShipPassableTerrainTags
  * @text 大型船通行地形タグ
- * @desc 大型船で通行可能になる地形タグです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 大型船で通行可能になる地形タグです。
  * @default []
  * @type number[]
  *
  * @param ShipNonPassableRegions
  * @text 大型船不可リージョン
- * @desc 大型船で通行不可になるリージョンです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 大型船で通行不可になるリージョンです。
  * @default []
  * @type number[]
  *
  * @param ShipNonPassableTerrainTags
  * @text 大型船不可地形タグ
- * @desc 大型船で通行不可になる地形タグです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 大型船で通行不可になる地形タグです。
  * @default []
  * @type number[]
  *
@@ -98,13 +99,13 @@
  *
  * @param AirShipNonPassableRegions
  * @text 飛行船不可リージョン
- * @desc 飛行船で通行不可になるリージョンです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 飛行船で通行不可になるリージョンです。
  * @default []
  * @type number[]
  *
  * @param AirShipNonPassableTerrainTags
  * @text 飛行船不可地形タグ
- * @desc 飛行船で通行不可になる地形タグです。カンマ(,)区切りで指定してください。例「1,2,3」
+ * @desc 飛行船で通行不可になる地形タグです。
  * @default []
  * @type number[]
  *
@@ -119,6 +120,12 @@
  * @desc 飛行船で乗降可能になるリージョンです。未入力にするとどこでも乗降可能になります。
  * @default []
  * @type number[]
+ *
+ * @param ShipPassable
+ * @text 船を通行可能にする
+ * @desc 小型船および大型船のうえを通行可能にします。
+ * @default false
+ * @type boolean
  *
  * @help 乗り物の通行判定を拡張します。
  * リージョンおよび地形タグを設定して柔軟な通行可能設定が可能です。
@@ -275,6 +282,38 @@
         }
     };
 
+    const _Game_CharacterBase_isCollidedWithVehicles = Game_CharacterBase.prototype.isCollidedWithVehicles;
+    Game_CharacterBase.prototype.isCollidedWithVehicles = function(x, y) {
+        const result = _Game_CharacterBase_isCollidedWithVehicles.apply(this, arguments);
+        if (param.ShipPassable && this === $gamePlayer) {
+            return false;
+        }
+        return result;
+    };
+
+    const _Game_Player_getOnVehicle = Game_Player.prototype.getOnVehicle;
+    Game_Player.prototype.getOnVehicle = function() {
+        if (param.ShipPassable) {
+            if ($gameMap.ship().pos(this.x, this.y)) {
+                this._vehicleType = "ship";
+                this._samePositionInVehicle = true;
+            } else if ($gameMap.boat().pos(this.x, this.y)) {
+                this._vehicleType = "boat";
+                this._samePositionInVehicle = true;
+            }
+        }
+        return _Game_Player_getOnVehicle.apply(this, arguments);
+    };
+
+    const _Game_Player_forceMoveForward = Game_Player.prototype.forceMoveForward;
+    Game_Player.prototype.forceMoveForward = function() {
+        if (this._samePositionInVehicle) {
+            this._samePositionInVehicle = false;
+            return;
+        }
+        _Game_Player_forceMoveForward.apply(this, arguments);
+    };
+
     //=============================================================================
     // Game_Vehicle
     //  乗降可能な地形タグおよびリージョンを制限します。
@@ -310,12 +349,20 @@
     Game_Vehicle.prototype.isLandOkTerrainTagAndRegion = function(x, y, terrainTags, regionIds) {
         let result = null;
         if (terrainTags.length > 0) {
-            result = result || terrainTags.contains($gameMap.terrainTag(x, y));
+            result = terrainTags.contains($gameMap.terrainTag(x, y));
         }
         if (regionIds.length > 0) {
             result = result || regionIds.contains($gameMap.regionId(x, y));
         }
         return result !== null ? result : true;
+    };
+
+    const _Game_Vehicle_refresh = Game_Vehicle.prototype.refresh;
+    Game_Vehicle.prototype.refresh = function() {
+        _Game_Vehicle_refresh.apply(this, arguments);
+        if (!this.isAirship() && param.ShipPassable) {
+            this.setPriorityType(this._driving ? 1 : 0);
+        }
     };
 })();
 
