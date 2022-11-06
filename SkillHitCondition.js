@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/11/07 MZ版としてリファクタリング
  1.0.0 2022/11/06 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -15,6 +16,10 @@
 
 /*:
  * @plugindesc スキル命中条件設定プラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SkillHitCondition.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param conditionList
@@ -34,7 +39,10 @@
  *　
  * 条件を満たさず実行しても失敗するだけでスキル自体は使用できます。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -92,38 +100,13 @@
  *
  */
 
-(function() {
+(()=> {
     'use strict';
-
-    /**
-     * Create plugin parameter. param[paramName] ex. param.commandPrefix
-     * @param pluginName plugin name(EncounterSwitchConditions)
-     * @returns {Object} Created parameter
-     */
-    const createPluginParameter = function(pluginName) {
-        const paramReplacer = function(key, value) {
-            if (value === 'null') {
-                return value;
-            }
-            if (value[0] === '"' && value[value.length - 1] === '"') {
-                return value;
-            }
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        };
-        const parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
-        PluginManager.setParameters(pluginName, parameter);
-        return parameter;
-    };
-
-    const param = createPluginParameter('SkillHitCondition');
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
     if (!param.conditionList) {
         param.conditionList = [];
     }
-
 
     const _Game_Action_itemHit = Game_Action.prototype.itemHit;
     Game_Action.prototype.itemHit = function(target) {
@@ -132,7 +115,7 @@
     };
 
     Game_Action.prototype.isValidHitCondition = function(target) {
-        const id = this.item().meta.HitCondition;
+        const id = PluginManagerEx.findMetaValue(this.item(), 'HitCondition');
         if (!id) {
             return true;
         }
@@ -156,6 +139,6 @@
     };
 
     Game_BattlerBase.prototype.hasHitConditionTag = function(tagName) {
-        return this.traitObjects().some(obj => !!obj.meta[tagName]);
+        return this.traitObjects().some(obj => PluginManagerEx.findMetaValue(obj, tagName));
     };
 })();
