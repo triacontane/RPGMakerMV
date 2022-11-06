@@ -25,7 +25,7 @@
  * @text パラメータ名称
  * @desc パラメータ説明
  * @default
- * @type number
+ * @type struct<TEST>[]
  *
  * @command command
  * @text コマンド名称
@@ -48,6 +48,15 @@
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
+ */
+
+/*~struct~TEST:
+ * @param name
+ * @desc ファイル名称です。
+ * @default
+ * @require 1
+ * @dir audio/se/
+ * @type file
  */
 
 (()=> {
