@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/11/07 敵キャラもしくは自動戦闘の場合に命中条件を満たさない行動を除外するよう修正
  1.0.0 2022/11/06 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -157,5 +158,53 @@
 
     Game_BattlerBase.prototype.hasHitConditionTag = function(tagName) {
         return this.traitObjects().some(obj => !!obj.meta[tagName]);
+    };
+
+    Game_Battler.prototype.isValidHitCondition = function(skillId) {
+        const gameAction = new Game_Action(this, false);
+        gameAction.setSkill(skillId);
+        return gameAction.opponentsUnit().members().some(target => gameAction.isValidHitCondition(target));
+    };
+
+    const _Game_Enemy_isActionValid = Game_Enemy.prototype.isActionValid;
+    Game_Enemy.prototype.isActionValid = function(action) {
+        const result = _Game_Enemy_isActionValid.apply(this, arguments);
+        return result && this.isValidHitCondition(action.skillId);
+    };
+
+    const _Game_Actor_makeActionList = Game_Actor.prototype.makeActionList;
+    Game_Actor.prototype.makeActionList = function() {
+        const list = _Game_Actor_makeActionList.apply(this, arguments);
+        return list.filter(action => this.isValidHitCondition(action.item().id));
+    };
+
+    let hitConditionAction = null;
+
+    const _Game_Action_makeTargets = Game_Action.prototype.makeTargets;
+    Game_Action.prototype.makeTargets = function() {
+        hitConditionAction = this;
+        const targets = _Game_Action_makeTargets.apply(this, arguments);
+        hitConditionAction = null;
+        return targets;
+    };
+
+    Game_Unit.prototype.filterHitCondition = function(members) {
+        if (hitConditionAction) {
+            const action = hitConditionAction;
+            hitConditionAction = null;
+            members = members.filter(battler => action.isValidHitCondition(battler));
+            hitConditionAction = action;
+        }
+        return members;
+    };
+
+    const _Game_Party_members = Game_Party.prototype.members;
+    Game_Party.prototype.members = function() {
+        return this.filterHitCondition(_Game_Party_members.apply(this, arguments));
+    };
+
+    const _Game_Troop_members = Game_Troop.prototype.members;
+    Game_Troop.prototype.members = function() {
+        return this.filterHitCondition(_Game_Troop_members.apply(this, arguments));
     };
 })();
