@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.1 2022/11/08 初期表示されるコマンドとそうでないコマンドが混在しているとき、特定条件で初期表示コマンドが消えてしまう問題を修正
 // 3.0.0 2020/03/08 アナザーニューゲームコマンドを複数登録できるよう修正。以前のバージョンと互換性がありません。
 // 2.0.0 2019/03/19 アナザーロード時に場所移動せず、セーブ位置から開始できる機能を追加
 //                  アナザーニューゲーム時に自動でONになるスイッチを追加
@@ -376,7 +377,7 @@
     };
 
     ANGSettingManager.isVisible = function(index) {
-        if (this._visible[index] !== undefined) {
+        if (this._visible[index] !== undefined && this._visible[index] !== null) {
             return this._visible[index];
         } else {
             return !parameters.anotherDataList[index].hidden;
@@ -388,7 +389,7 @@
     };
 
     ANGSettingManager.isEnable = function(index) {
-        if (this._enable[index] !== undefined) {
+        if (this._enable[index] !== undefined && this._visible[index] !== null) {
             return this._enable[index];
         } else {
             return !parameters.anotherDataList[index].disable;
