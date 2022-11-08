@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2022/11/08 カーソル初期位置を「しない」にできる機能を追加
  1.0.2 2022/08/24 ファイルリスト選択時に決定効果音が演奏されない問題を修正
  1.0.1 2022/08/24 Windowクラスを外向けに参照できるよう修正
  1.0.0 2022/08/23 初版
@@ -72,6 +73,18 @@
  * @default false
  * @type boolean
  *
+ * @param defaultCancelSave
+ * @text 初期キャンセル(セーブ)
+ * @desc セーブ画面の確認ウィンドウのカーソル初期値が「しない」になります。
+ * @default false
+ * @type boolean
+ *
+ * @param defaultCancelLoad
+ * @text 初期キャンセル(ロード)
+ * @desc ロード画面の確認ウィンドウのカーソル初期値が「しない」になります。
+ * @default false
+ * @type boolean
+ *
  * @help SaveLoadConfirm.js
  *
  * セーブ画面、ロード画面で対象ファイル選択後に
@@ -114,6 +127,10 @@
         return param.termSave;
     };
 
+    Scene_Save.prototype.isDefaultCancel = function() {
+        return param.defaultCancelSave;
+    };
+
     /**
      * Scene_Load
      */
@@ -133,6 +150,10 @@
 
     Scene_Load.prototype.findTerm = function() {
         return param.termLoad;
+    };
+
+    Scene_Load.prototype.isDefaultCancel = function() {
+        return param.defaultCancelLoad;
     };
 
     const _Window_SavefileList_playOkSound = Window_SavefileList.prototype.playOkSound;
@@ -160,6 +181,9 @@
         confirm.refresh();
         confirm.open();
         confirm.activate();
+        if (this.isDefaultCancel()) {
+            confirm.select(1);
+        }
         this._confirmWindow = confirm;
         this._confirmHandler = null;
         this._helpWindow.setText(param.helpText.format(this.findTerm()));
@@ -180,6 +204,10 @@
 
     Scene_File.prototype.findTerm = function() {
         return '';
+    };
+
+    Scene_File.prototype.isDefaultCancel = function() {
+        return false;
     };
 
     Scene_File.prototype.onConfirmOk = function() {
