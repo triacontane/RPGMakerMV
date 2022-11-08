@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2022/11/08 Scene_CustomMenuのテンプレートを追加
  1.0.0 2022/10/27 テンプレート作成
 =============================================================================*/
 
@@ -36,12 +37,25 @@
 
     /**
      * メソッドを追加したい場合
-     * [methodName]を自由に変更します。
+     * [methodName]を任意のメソッド名に変更します。
+     * 定義したメソッドはウィンドウのフィルタスクリプトや項目描画スクリプトで使えます。
      *
      * 呼び出し例:
      * this.methodName();
      */
     Window_CustomMenu.prototype.methodName = function() {
+        console.log('test');
+    };
+
+    /**
+     * メソッドを追加したい場合
+     * [methodName]を任意のメソッド名に変更します。
+     * 定義したメソッドは決定イベントやキャンセルイベントのスクリプトで使えます。
+     *
+     * 呼び出し例:
+     * this.methodName();
+     */
+    Scene_CustomMenu.prototype.methodName = function () {
         console.log('test');
     };
 })();
