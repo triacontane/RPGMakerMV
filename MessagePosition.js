@@ -73,7 +73,6 @@
  * @help MessagePosition.js
  *
  * ウィンドウの位置を調節できます。
- * 各パラメータには制御文字\v[n]が利用できます。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
