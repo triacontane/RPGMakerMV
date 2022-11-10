@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.9.0 2022/11/10 ショップ画面と装備画面において装備を選んだ時点で立ち絵に反映できる機能を追加
 // 3.8.1 2022/11/06 ヘルプの記述を修正
 // 3.8.0 2022/10/22 立ち絵の更新を手動(スイッチ)で行える機能を追加
 // 3.7.0 2022/10/20 パフォーマンス対策
@@ -122,6 +123,18 @@
  * @type number
  * @min -255
  * @max 255
+ *
+ * @param MenuActorOnly
+ * @text メニューアクターのみ表示
+ * @desc 装備、スキル、ステータス、名前画面では表示対象のアクターの立ち絵のみを表示します。
+ * @default true
+ * @type boolean
+ *
+ * @param DressUp
+ * @text 試着機能
+ * @desc ショップ画面と装備画面において装備を選んだ時点で立ち絵に反映されます。
+ * @default true
+ * @type boolean
  *
  * @help CharacterPictureManager.js
  *
@@ -749,21 +762,26 @@
             return true;
         }
 
+        changeActorIfNeed(actor) {
+            if (this._actor !== actor) {
+                this._actor = actor;
+            }
+        }
+
         createCondition() {
             const conditions = [];
-            const a = this._actor;
-            conditions.push(file => !file.HpUpperLimit || file.HpUpperLimit >= a.hpRate() * 100);
-            conditions.push(file => !file.HpLowerLimit || file.HpLowerLimit <= a.hpRate() * 100);
-            conditions.push(file => !file.Motion || a.isMotionTypeValid(file.Motion));
-            conditions.push(file => !file.Action || a.isAction());
-            conditions.push(file => !file.State || a.isStateAffected(file.State));
-            conditions.push(file => !file.Weapon || a.hasWeapon($dataWeapons[file.Weapon]));
-            conditions.push(file => !file.Armor || a.hasArmor($dataArmors[file.Armor]));
+            conditions.push(file => !file.HpUpperLimit || file.HpUpperLimit >= this._actor.hpRate() * 100);
+            conditions.push(file => !file.HpLowerLimit || file.HpLowerLimit <= this._actor.hpRate() * 100);
+            conditions.push(file => !file.Motion || this._actor.isMotionTypeValid(file.Motion));
+            conditions.push(file => !file.Action || this._actor.isAction());
+            conditions.push(file => !file.State || this._actor.isStateAffected(file.State));
+            conditions.push(file => !file.Weapon || this._actor.hasWeapon($dataWeapons[file.Weapon]));
+            conditions.push(file => !file.Armor || this._actor.hasArmor($dataArmors[file.Armor]));
             conditions.push(file => !file.Scene || SceneManager._scene.isStandPictureScene(file.Scene));
             conditions.push(file => !file.Note || this.findStandPictureMeta() === file.Note);
             conditions.push(file => !file.Message || $gameMessage.isBusy());
-            conditions.push(file => !file.Face || $gameMessage.isFaceActor(a));
-            conditions.push(file => !file.Speaker || $gameMessage.isSpeakerActor(a));
+            conditions.push(file => !file.Face || $gameMessage.isFaceActor(this._actor));
+            conditions.push(file => !file.Speaker || $gameMessage.isSpeakerActor(this._actor));
             conditions.push(file => !file.Switch || $gameSwitches.value(file.Switch));
             conditions.push(file => !file.Variable || this.isVariableValid(file));
             conditions.push(file => !file.Script || eval(file.Script));
@@ -1012,7 +1030,7 @@
 
     Scene_Base.prototype.createAllStandPicture = function() {
         this._standSprites = new Map();
-        this._standActors = [];
+        this._standActors = new Set();
         const sceneName = PluginManagerEx.findClassName(this);
         this._standSpriteScene = param.SceneList.filter(item => item.SceneName === sceneName)[0];
         if (this._standSpriteScene) {
@@ -1057,10 +1075,11 @@
 
     Scene_Base.prototype.updateStandPicture = function(actor, index) {
         const id = actor.actorId();
-        if (this._standActors.includes(id)) {
+        if (this._standActors.has(id)) {
+            this._standSprites.get(id)?.changeActor(actor);
             return;
         }
-        this._standActors.push(id);
+        this._standActors.add(id);
         const pictureParam = new StandPictureParam();
         const existPicture = pictureParam.setup(actor, this._standSpriteScene, index);
         if (!existPicture) {
@@ -1079,6 +1098,7 @@
         }
         this._standSpriteContainer.removeChild(this._standSprites.get(id));
         this._standSprites.delete(id);
+        this._standActors.delete(id)
     };
 
     const _Scene_Base_terminate = Scene_Base.prototype.terminate;
@@ -1094,19 +1114,69 @@
     };
 
     Scene_Skill.prototype.findStandPictureMember = function() {
-        return [this.actor()];
+        return param.MenuActorOnly ? [this.actor()] : Scene_Base.prototype.findStandPictureMember.call(this);
     };
 
     Scene_Equip.prototype.findStandPictureMember = function() {
-        return [this.actor()];
+        const tempActor = this._statusWindow?.getTempActor();
+        if (param.MenuActorOnly) {
+            return tempActor ? [tempActor] : [this.actor()];
+        } else {
+            const member = Scene_Base.prototype.findStandPictureMember.call(this);
+            return member.map(actor => actor.actorId() === tempActor?.actorId() ? tempActor : actor);
+        }
     };
 
     Scene_Status.prototype.findStandPictureMember = function() {
-        return [this.actor()];
+        return param.MenuActorOnly ? [this.actor()] : Scene_Base.prototype.findStandPictureMember.call(this);
     };
 
     Scene_Name.prototype.findStandPictureMember = function() {
-        return [this._actor];
+        return param.MenuActorOnly ? [this.actor()] : Scene_Base.prototype.findStandPictureMember.call(this);
+    };
+
+    Scene_Shop.prototype.findStandPictureMember = function() {
+        const tempActors = this._statusWindow?.getTempActors();
+        const member = Scene_Base.prototype.findStandPictureMember.call(this);
+        return member.map(actor => tempActors?.has(actor.actorId()) ? tempActors.get(actor.actorId()) : actor);
+    };
+
+    Window_EquipStatus.prototype.getTempActor = function() {
+        return param.DressUp ? this._tempActor : null;
+    };
+
+    const _Window_ShopStatus_refresh = Window_ShopStatus.prototype.refresh;
+    Window_ShopStatus.prototype.refresh = function() {
+        this._tempActors = new Map();
+        _Window_ShopStatus_refresh.apply(this, arguments);
+    };
+
+    Window_ShopStatus.prototype.getTempActors = function() {
+        return param.DressUp ? this._tempActors : null;
+    };
+
+    const _Window_ShopStatus_drawActorEquipInfo = Window_ShopStatus.prototype.drawActorEquipInfo;
+    Window_ShopStatus.prototype.drawActorEquipInfo = function(x, y, actor) {
+        _Window_ShopStatus_drawActorEquipInfo.apply(this, arguments);
+        if (param.DressUp) {
+            this.appendTempActor(actor);
+        }
+    };
+
+    Window_ShopStatus.prototype.appendTempActor = function(actor) {
+        if (!actor.canEquip(this._item)) {
+            return;
+        }
+        const slotId = this.findSlotId(actor);
+        if (slotId !== -1) {
+            const tempActor = JsonEx.makeDeepCopy(actor);
+            tempActor.forceChangeEquip(slotId, this._item);
+            this._tempActors.set(actor.actorId(), tempActor);
+        }
+    };
+
+    Window_ShopStatus.prototype.findSlotId = function(actor) {
+        return actor.equipSlots().findIndex(slot => slot === this._item.etypeId);
     };
 
     /**
@@ -1123,6 +1193,10 @@
             this._pictures.updatePictureFiles().forEach(picture => this.addChild(this.createChild(picture)));
             this._shake = 0;
             this.updatePosition();
+        }
+
+        changeActor(actor) {
+            this._pictures.changeActorIfNeed(actor);
         }
 
         updatePosition() {
