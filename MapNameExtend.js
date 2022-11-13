@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2022/11/13 同じマップ名を連続して表示しないようにする設定を追加
 // 1.4.1 2022/10/13 総フレーム数をInfinityにしたとき、メッセージ表示と共にマップ名がフェードアウトしてしまう問題を修正
 // 1.4.0 2022/07/30 マップ名ウィンドウの高さを指定できる機能を追加
 // 1.3.4 2022/01/14 表示遅延を設定しかつ背景画像を指定したとき、背景画像がマップ名表示前に表示されてしまう問題を修正
@@ -113,6 +114,12 @@
  * @default false
  * @type boolean
  *
+ * @param noSameNameDisplay
+ * @text 同じマップ名は出力しない
+ * @desc 場所移動時、マップ表示名が移動前のマップと同じ場合はマップ名を出力しません。
+ * @default false
+ * @type boolean
+ *
  * @help MapNameExtend.js
  *
  * マップ名表示機能を拡張します。
@@ -163,6 +170,13 @@
         } else {
             return _Game_Map_displayName.apply(this, arguments) || this.getRealMapName();
         }
+    };
+
+    Game_Map.prototype.isSameDisplayName = function() {
+        const name = this.displayName();
+        const result = this._prevDisplayName === name;
+        this._prevDisplayName = this.displayName();
+        return result;
     };
 
     Game_Map.prototype.getRealMapName = function() {
@@ -339,6 +353,14 @@
         _Scene_Map_start.apply(this, arguments);
         if (!this._transfer) {
             this._mapNameWindow.flash();
+        }
+    };
+
+    const _Scene_Map_onTransferEnd = Scene_Map.prototype.onTransferEnd;
+    Scene_Map.prototype.onTransferEnd = function() {
+        _Scene_Map_onTransferEnd.apply(this, arguments);
+        if (param.noSameNameDisplay && $gameMap.isSameDisplayName()) {
+            this._mapNameWindow.close();
         }
     };
 })();
