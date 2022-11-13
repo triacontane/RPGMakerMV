@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2022/11/13 同じマップ名を連続して表示しないようにする設定を追加
 // 1.2.1 2022/01/14 表示遅延を設定しかつ背景画像を指定したとき、背景画像がマップ名表示前に表示されてしまう問題を修正
 // 1.2.0 2019/11/18 総フレーム数にInfinityを設定した場合の挙動を自然なものに変更
 //                  遅延機能をイベントコマンドの「マップ名表示」をONにした場合にも適用されるよう修正
@@ -173,6 +174,12 @@
  * @default false
  * @type boolean
  *
+ * @param noSameNameDisplay
+ * @text 同じマップ名は出力しない
+ * @desc 場所移動時、マップ表示名が移動前のマップと同じ場合はマップ名を出力しません。
+ * @default false
+ * @type boolean
+ *
  * @param 無効タイルセット
  * @desc マップ名を表示しないタイルセットです。複数指定できます。
  * @default
@@ -266,6 +273,7 @@
     param.backgroundImage     = getParamString(['BackgroundImage', '背景画像']);
     param.showRealName        = getParamBoolean(['ShowRealName', '実名表示']);
     param.viewDelay           = getParamNumber(['ViewDelay', '表示遅延']);
+    param.noSameNameDisplay   = getParamBoolean(['noSameNameDisplay']);
 
     //=============================================================================
     // ローカル変数
@@ -285,6 +293,13 @@
         } else {
             return _Game_Map_displayName.apply(this, arguments) || this.getRealMapName();
         }
+    };
+
+    Game_Map.prototype.isSameDisplayName = function() {
+        const name = this.displayName();
+        const result = this._prevDisplayName === name;
+        this._prevDisplayName = this.displayName();
+        return result;
     };
 
     Game_Map.prototype.getRealMapName = function() {
@@ -448,6 +463,9 @@
         _Scene_Map_start.apply(this, arguments);
         if (!this._transfer) {
             this._mapNameWindow.flash();
+        }
+        if (this._transfer && param.noSameNameDisplay && $gameMap.isSameDisplayName()) {
+            this._mapNameWindow.close();
         }
     };
 })();
