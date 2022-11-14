@@ -1099,6 +1099,9 @@
         const sceneName = PluginManagerEx.findClassName(new sceneClass());
         const customScene = param.ReplacementList.find(item => item.scene === sceneName)?.customScene;
         if (customScene) {
+            if (this._stack[this._stack.length - 1] === this._scene.constructor) {
+                this._stack.pop();
+            }
             SceneManager.callCustomMenu(customScene);
             return;
         }
