@@ -953,7 +953,7 @@
  *
  * @param customScene
  * @text カスタムメニューシーン
- * @desc 差し替え先のカスタムメニューシーンの識別子を指定します。
+ * @desc 差し替え先のカスタムメニューシーンの識別子を指定します。制御文字\v[n]が使えます。
  * @default
  */
 
@@ -987,6 +987,11 @@
     if (!param.ReplacementList) {
         param.ReplacementList = [];
     }
+
+    var convertEscapeCharacters = function(text) {
+        var windowLayer = SceneManager._scene._windowLayer;
+        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text.toString()) : text;
+    };
 
     const getClassName = function(object) {
         const define = object.constructor.toString();
@@ -1073,8 +1078,14 @@
         const sceneName = getClassName(new sceneClass());
         const customScene = (param.ReplacementList.find(item => item.scene === sceneName) || {}).customScene;
         if (customScene) {
-            SceneManager.callCustomMenu(customScene);
-            return;
+            if (this._stack[this._stack.length - 1] === this._scene.constructor) {
+                this._stack.pop();
+            }
+            const realCustomScene = convertEscapeCharacters(customScene);
+            if (realCustomScene !== '0') {
+                SceneManager.callCustomMenu(realCustomScene);
+                return;
+            }
         }
         _SceneManager_goto.apply(this, arguments);
     };
