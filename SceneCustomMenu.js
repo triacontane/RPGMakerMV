@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.26.0 2022/11/14 既存シーンをカスタムメニューシーンに自由に差し替えられる機能を追加
  1.25.2 2022/11/03 カスタムメニュー用のシーンクラス、ウィンドウクラスを外部から参照できるよう変更
  1.25.1 2022/10/16 データスクリプトとコマンドリストを併用したウィンドウを一覧ウィンドウに指定した詳細情報ウィンドウでは、コマンドリストの詳細は表示しないよう仕様変更
  1.25.0 2022/10/12 データスクリプトとコマンドリストを併用したウィンドウを作成できるよう修正
@@ -206,6 +207,12 @@
  * @desc 生成するカスタムメニュー用のシーン情報です。
  * @default {}
  * @type struct<Scene>
+ *
+ * @param ReplacementList
+ * @text シーン差し替えリスト
+ * @desc メインメニューを指定した識別子のカスタムメニューに差し替えます。
+ * @default []
+ * @type struct<ReplacementScene>[]
  *
  * @help SceneCustomMenu.js
  *
@@ -905,6 +912,51 @@
  * @type boolean
  */
 
+/*~struct~ReplacementScene:
+ * @param scene
+ * @text 差し替え元シーン
+ * @desc カスタムメニューに差し替えるもとになるシーンです。マップなども選択できますが挙動が大きく変わるのでご注意ください。
+ * @type select
+ * @default Scene_Menu
+ * @option タイトル
+ * @value Scene_Title
+ * @option マップ
+ * @value Scene_Map
+ * @option ゲームオーバー
+ * @value Scene_Gameover
+ * @option バトル
+ * @value Scene_Battle
+ * @option メインメニュー
+ * @value Scene_Menu
+ * @option アイテム
+ * @value Scene_Item
+ * @option スキル
+ * @value Scene_Skill
+ * @option 装備
+ * @value Scene_Equip
+ * @option ステータス
+ * @value Scene_Status
+ * @option オプション
+ * @value Scene_Options
+ * @option セーブ
+ * @value Scene_Save
+ * @option ロード
+ * @value Scene_Load
+ * @option ゲーム終了
+ * @value Scene_End
+ * @option ショップ
+ * @value Scene_Shop
+ * @option 名前入力
+ * @value Scene_Name
+ * @option デバッグ
+ * @value Scene_Debug
+ *
+ * @param customScene
+ * @text カスタムメニューシーン
+ * @desc 差し替え先のカスタムメニューシーンの識別子を指定します。
+ * @default
+ */
+
 (() => {
     'use strict';
     const createPluginParameter = function(pluginName) {
@@ -931,6 +983,9 @@
         if (param[`Scene${i}`]) {
             param.SceneList.push(param[`Scene${i}`]);
         }
+    }
+    if (!param.ReplacementList) {
+        param.ReplacementList = [];
     }
 
     const getClassName = function(object) {
@@ -1014,6 +1069,12 @@
     SceneManager.goto = function(sceneClass) {
         if (this._scene instanceof Scene_Map) {
             this._mapGameScreen = $gameScreen;
+        }
+        const sceneName = getClassName(new sceneClass());
+        const customScene = (param.ReplacementList.find(item => item.scene === sceneName) || {}).customScene;
+        if (customScene) {
+            SceneManager.callCustomMenu(customScene);
+            return;
         }
         _SceneManager_goto.apply(this, arguments);
     };
