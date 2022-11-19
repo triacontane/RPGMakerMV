@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.0 2022/11/19 ラベル部分にアイコンを表示できる機能を追加
  1.4.0 2022/09/11 満タン時のゲージ色を指定できる機能を追加
  1.3.0 2022/08/23 現在値の描画フォーマットを指定できる機能を追加
  1.2.0 2022/05/06 ゲージの表示優先度をピクチャの下に変更できる機能を追加
@@ -323,6 +324,11 @@
  * @text ラベル
  * @desc ゲージの左に表示されるラベル文字列です。
  * @default
+ *
+ * @param IconIndex
+ * @text アイコン
+ * @desc ラベルと一緒に描画されるアイコンです。ラベルと一緒に表示させると重なって表示されるので注意してください。
+ * @default 0
  *
  * @param LabelFont
  * @text ラベルフォント
@@ -731,6 +737,10 @@
             return this._detail.Label || '';
         }
 
+        iconIndex() {
+            return this._detail.IconIndex || 0;
+        }
+
         labelColor() {
             return this.findColor(this.findLabelFont().Color, super.labelColor());
         }
@@ -833,6 +843,25 @@
             } else {
                 return ColorManager.textColor(code);
             }
+        }
+
+        drawLabel() {
+            super.drawLabel();
+            const icon = this.iconIndex();
+            if (icon) {
+                this.drawIcon(icon);
+            }
+        }
+
+        drawIcon(iconIndex) {
+            const bitmap = ImageManager.loadSystem("IconSet");
+            const pw = ImageManager.iconWidth;
+            const ph = ImageManager.iconHeight;
+            const sx = (iconIndex % 16) * pw;
+            const sy = Math.floor(iconIndex / 16) * ph;
+            const x = this.labelOutlineWidth() / 2;
+            const y = (this.bitmap.height - ph) / 2;
+            this.bitmap.blt(bitmap, sx, sy, pw, ph, x, y);
         }
     }
 })();
