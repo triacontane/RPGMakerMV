@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2022/11/20 1.1.0の修正でメッセージの自動ページ送りが機能しなくなっていた問題を修正
 // 1.1.0 2022/11/06 MessageWindowPopup.jsと併用できるよう調整
 //                  相対座標のデフォルト値をfalseに変更
 // 1.0.1 2022/10/02 幅と高さを変えたときにコンテンツが再作成されない問題を修正
@@ -101,10 +102,6 @@
 		this._originalX = rect.x;
 		this._originalWidth = rect.width;
 		this._originalHeight = rect.height;
-		// メッセージ系プラグインとの競合回避のためコンテンツサイズは最大サイズで作成
-		this.destroyContents();
-		this.contents = new Bitmap(Graphics.width, Graphics.height);
-		this.contentsBack = new Bitmap(Graphics.width, Graphics.height);
 	};
 
 	const _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
@@ -116,15 +113,22 @@
 		if (param.x) {
 			this.x = (param.relative ? this._originalX : 0) + param.x;
 		}
+		const width = this.width;
+		const height = this.height;
 		if (param.width) {
 			this.width = (param.relative ? this._originalWidth : 0) + param.width;
 		}
 		if (param.height) {
 			this.height = (param.relative ? this._originalHeight : 0) + param.height;
 		}
+		if (this.width !== width || this.height !== height) {
+			this.createContents();
+		}
 		_Window_Message_updatePlacement.apply(this, arguments);
 		const posit = [param.yTop, param.yMiddle, param.yBottom];
-		this.y = (param.relative ? this.y : 0) + posit[this._positionType];
+		if (posit[this._positionType]) {
+			this.y = (param.relative ? this.y : 0) + posit[this._positionType];
+		}
 	};
 
 	const _Window_NameBox_updatePlacement = Window_NameBox.prototype.updatePlacement;
