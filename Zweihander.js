@@ -1,11 +1,12 @@
 /*=============================================================================
- Zweihänder.js
+ Zweihander.js
 ----------------------------------------------------------------------------
  (C)2022 Triacontane
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2022/11/20 プラグイン名称変更
  1.0.1 2022/06/30 二刀流の特徴を持つ武器を装備しているときにスロット2に両手持ちの武器を装備したときに装備状態が不正になる問題を修正
  1.0.0 2022/06/29 初版
 ----------------------------------------------------------------------------
@@ -17,7 +18,7 @@
 /*:
  * @plugindesc 武器両手持ちプラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/Zweihänder.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/Zweihander.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
@@ -28,7 +29,7 @@
  * @default 100
  * @type number
  *
- * @help Zweihänder.js
+ * @help Zweihander.js
  *
  * 両手持ち専用武器を作れたり、アクターのスキルとして両手持ちを定義できます。
  * 両手持ちすると物理ダメージの倍率が増加しますが、代わりに
