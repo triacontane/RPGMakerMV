@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.4 2022/11/20 動画ピクチャの再生でエラーになる原因不明のケースに対処
 // 1.7.3 2022/09/16 動画のロード完了とマップ遷移が同一フレームで起こるとエラーになる不具合を修正
 // 1.7.2 2020/09/21 autoplayをtrueに変更
 // 1.7.1 2019/08/26 他のプラグインとの組み合わせによりエラーになる可能性のある記述を修正
@@ -681,8 +682,16 @@
     };
 
     Sprite_Picture.prototype.startVideo = function() {
-        this._bitmap.play();
         this._loadingState = null;
+        if (!this.isVideoPicture()) {
+            if (this._bitmap) {
+                console.error('ピクチャが消去されたため、動画ピクチャの再生に失敗しました。');
+            } else {
+                console.error('ピクチャが動画ではなかっため、動画ピクチャの再生に失敗しました。');
+            }
+            return;
+        }
+        this._bitmap.play();
         this._frameCount   = 0;
     };
 
