@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2022/11/21 巨大モンスターに対する下揃えアニメーションの表示座標を補正できる機能を追加
 // 2.1.3 2021/11/04 ベースプラグインの必須アノテーションが入っていなかったので修正
 // 2.1.2 2021/11/03 連続攻撃が発生したとき、ダメージ表記が上方に大きくズレてしまう問題を修正
 // 2.1.1 2021/10/27 エネミー表示時、下端に24ピクセル前後の空きが出来てしまう問題を修正
@@ -29,6 +30,12 @@
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
+ * @param animationOffsetY
+ * @text アニメーションY補正
+ * @desc 巨大モンスターに対する下揃えアニメーションの表示Y座標を指定ピクセルぶん上方に補正します。
+ * @default 0
+ * @type number
+ *
  * @help BigEnemy.js
  *
  * モンスター画像の下端を画面の下端に強制的に合わせることで
@@ -50,6 +57,8 @@
 
 (()=> {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     let offsetY = 0;
 
@@ -99,6 +108,37 @@
             if (!last) {
                 this._damages[length - 1].y -= (this.y - this._originalY);
             }
+        }
+    };
+
+    Sprite_Enemy.prototype.isBigEnemy = function() {
+        return this._enemy?.isBigEnemy();
+    };
+
+    const _Sprite_Animation_targetSpritePosition = Sprite_Animation.prototype.targetSpritePosition;
+    Sprite_Animation.prototype.targetSpritePosition = function(sprite) {
+        if (this.isBigEnemySprite(sprite)) {
+            const point = new Point(0, -sprite.height / 2);
+            if (this._animation.alignBottom) {
+                point.y = -param.animationOffsetY;
+            }
+            sprite.updateTransform();
+            return sprite.worldTransform.apply(point);
+        } else {
+            return _Sprite_Animation_targetSpritePosition.apply(this, arguments);
+        }
+    };
+
+    Sprite.prototype.isBigEnemySprite = function(sprite) {
+        return param.animationOffsetY > 0 && sprite &&
+            sprite instanceof Sprite_Enemy && sprite.isBigEnemy();
+    };
+
+    const _Sprite_AnimationMV_updatePosition = Sprite_AnimationMV.prototype.updatePosition;
+    Sprite_AnimationMV.prototype.updatePosition = function() {
+        _Sprite_AnimationMV_updatePosition.apply(this, arguments);
+        if (this.isBigEnemySprite(this._targets[0]) && this._animation.position === 2) {
+            this.y -= param.animationOffsetY;
         }
     };
 })();
