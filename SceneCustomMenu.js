@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.35.2 2022/11/26 コマンドリスト、一覧ウィンドウ識別子、一覧取得スクリプトをすべて空にして画面表示するとエラーになる問題を修正
  1.35.1 2022/11/22 1.35.0で戦闘テストを終了したときにエラーになる問題を修正
  1.35.0 2022/11/14 既存シーンをカスタムメニューシーンに自由に差し替えられる機能を追加
  1.34.0 2022/11/03 ピクチャ描画メソッドでピクチャの拡大率を設定できるよう修正
@@ -2065,6 +2066,9 @@
     class Window_CustomMenuCommand extends Window_CustomMenu {
         makeCommandList() {
             const list = this._data.CommandList;
+            if (!list) {
+                return [];
+            }
             return this.isUseMasking() ? list : list.filter(data => this.isVisible(data));
         }
 
