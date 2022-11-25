@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2022/11/26 競合を避けるためのリファクタリング
  1.3.0 2022/11/01 中央揃え、右揃えにする際の描画位置をピクセル単位で調整できる機能を追加
  1.2.2 2021/10/08 1.2.1の修正により、\c[n]などの制御文字が文字幅としてカウントされ揃え位置がズレてしまう問題を修正
  1.2.1 2021/09/24 ウェイト系の制御文字を使ったときに、正常な動作をしなくなる問題を修正
@@ -84,65 +85,73 @@
     const _Window_Base_processEscapeCharacter = Window_Base.prototype.processEscapeCharacter;
     Window_Base.prototype.processEscapeCharacter = function(code, textState) {
         if (textState.drawing) {
+            const dummy = Window_Base.createDummyWindow();
             switch (code) {
-                case this.findEscapeCenter():
-                    textState.x += this.findInnerSpace(textState) / 2;
+                case dummy.findEscapeCenter():
+                    textState.x += dummy.findInnerSpace(textState, this.innerWidth) / 2;
                     break;
-                case this.findEscapeRight():
-                    textState.x += this.findInnerSpace(textState);
+                case dummy.findEscapeRight():
+                    textState.x += dummy.findInnerSpace(textState, this.innerWidth);
                     break;
-                case this.findEscapeVCenter():
-                    textState.y += this.findInnerVSpace(textState) / 2;
+                case dummy.findEscapeVCenter():
+                    textState.y += dummy.findInnerVSpace(textState, this.innerHeight) / 2;
                     break;
-                case this.findEscapeVBottom():
-                    textState.y += this.findInnerVSpace(textState);
+                case dummy.findEscapeVBottom():
+                    textState.y += dummy.findInnerVSpace(textState, this.innerHeight);
                     break;
             }
         }
         _Window_Base_processEscapeCharacter.apply(this, arguments);
     };
 
-    Window_Base.prototype.findEscapeCenter = function() {
-        return (param.escapeCharacterCenter || 'AC').toUpperCase();
-    };
-
-    Window_Base.prototype.findEscapeRight = function() {
-        return (param.escapeCharacterRight || 'AR').toUpperCase();
-    };
-
-    Window_Base.prototype.findEscapeVCenter = function() {
-        return (param.escapeCharacterVCenter || 'VC').toUpperCase();
-    };
-
-    Window_Base.prototype.findEscapeVBottom = function() {
-        return (param.escapeCharacterVBottom || 'VB').toUpperCase();
-    };
-
-    Window_Base.prototype.findInnerSpace = function(textState) {
-        const shift = this.obtainEscapeParam(textState);
-        return this.innerWidth - this.textSizeEx(this.findLineText(textState)).width - textState.startX - (shift || 0);
-    };
-
-    Window_Base.prototype.findInnerVSpace = function(textState) {
-        return this.innerHeight - this.textSizeEx(textState.text).height - textState.startY;
-    };
-
-    Window_Base.prototype.findLineText = function(textState) {
-        let text = '';
-        let index = textState.index;
-        while (textState.text[index] !== '\n' && !!textState.text[index]) {
-            text += textState.text[index++];
+    Window_Base.createDummyWindow = function() {
+        if (!this._dummyWindow) {
+            this._dummyWindow = new Window_MessageDummy();
         }
-        return text;
+        return this._dummyWindow;
     };
 
-    const _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
-    Window_Message.prototype.processEscapeCharacter = function(code, textState) {
-        if (!textState.drawing) {
-            Window_Base.prototype.processEscapeCharacter.apply(this, arguments);
-            this.changeTextColor(ColorManager.textColor(0));
-            return;
+    /**
+     * Window_MessageDummy
+     * メッセージ幅を取得するためのダミーウィンドウです
+     */
+    class Window_MessageDummy extends Window_Message {
+        constructor() {
+            super(new Rectangle(0,0,1,1));
         }
-        _Window_Message_processEscapeCharacter.apply(this, arguments);
-    };
+
+        findEscapeCenter() {
+            return (param.escapeCharacterCenter || 'AC').toUpperCase();
+        }
+
+        findEscapeRight() {
+            return (param.escapeCharacterRight || 'AR').toUpperCase();
+        }
+
+        findEscapeVCenter() {
+            return (param.escapeCharacterVCenter || 'VC').toUpperCase();
+        }
+
+        findEscapeVBottom() {
+            return (param.escapeCharacterVBottom || 'VB').toUpperCase();
+        }
+
+        findInnerSpace(textState, innerWidth) {
+            const shift = this.obtainEscapeParam(textState);
+            return innerWidth - this.textSizeEx(this.findLineText(textState)).width - textState.startX - (shift || 0);
+        }
+
+        findInnerVSpace(textState, innerHeight) {
+            return innerHeight - this.textSizeEx(textState.text).height - textState.startY;
+        }
+
+        findLineText(textState) {
+            let text = '';
+            let index = textState.index;
+            while (textState.text[index] !== '\n' && !!textState.text[index]) {
+                text += textState.text[index++];
+            }
+            return text;
+        }
+    }
 })();
