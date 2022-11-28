@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.36.0 2022/11/28 ウィンドウのフォントを変更できる機能を追加
  1.35.2 2022/11/26 コマンドリスト、一覧ウィンドウ識別子、一覧取得スクリプトをすべて空にして画面表示するとエラーになる問題を修正
  1.35.1 2022/11/22 1.35.0で戦闘テストを終了したときにエラーになる問題を修正
  1.35.0 2022/11/14 既存シーンをカスタムメニューシーンに自由に差し替えられる機能を追加
@@ -645,6 +646,11 @@
  * @desc デフォルトのフォントサイズです。0を指定すると他のウィンドウと同じサイズになります。
  * @default 0
  * @type number
+ *
+ * @param FontFace
+ * @text フォント
+ * @desc ウィンドウのフォントを変更します。フォントファイルのロード機能は提供しないので別途用意してください。
+ * @default
  *
  * @param OverlapOther
  * @text 他ウィンドウに重ねる
@@ -1777,6 +1783,9 @@
             super.resetFontSettings();
             if (this._data.FontSize) {
                 this.contents.fontSize = this._data.FontSize;
+            }
+            if (this._data.FontFace) {
+                this.contents.fontFace = this._data.FontFace;
             }
         };
 
