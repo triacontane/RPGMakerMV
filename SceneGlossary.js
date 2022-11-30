@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.7 2022/11/30 背景画像の伸縮表示が正常に行われていなかった問題を修正
 // 3.7.6 2022/05/06 プラグインコマンドから用語辞典を呼び出したとき、カテゴリ指定が正常に機能しない問題を修正
 // 3.7.5 2022/02/22 PNDK_LuggageCapacity.jsと併用したとき、未入手アイテムが表示されてしまう競合に対応
 // 3.7.4 2022/01/30 ヘルプに表示する改行コードが効かなくなっていた問題を修正
@@ -1755,8 +1756,8 @@
             var sprite    = new Sprite();
             sprite.bitmap = ImageManager.loadPicture(pictureName, 0);
             sprite.bitmap.addLoadListener(function() {
-                sprite.scale.x = Graphics.boxWidth / sprite.width;
-                sprite.scale.y = Graphics.boxHeight / sprite.height;
+                sprite.scale.x = Graphics.width / sprite.width;
+                sprite.scale.y = Graphics.height / sprite.height;
             }.bind(this));
             this._backgroundSprite = sprite;
             this.addChild(this._backgroundSprite);
