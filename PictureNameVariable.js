@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2022/12/04 ダウンロードURLが間違っていたので修正
  1.1.0 2021/12/22 制御文字で指定した変数が変更された場合、ピクチャを再読み込みする機能を追加
  1.0.0 2021/06/06 初版
 ----------------------------------------------------------------------------
@@ -17,7 +18,7 @@
 /*:
  * @plugindesc ピクチャ名の変数設定プラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PictureNameDynamic.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/PictureNameVariable.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
