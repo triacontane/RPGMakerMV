@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2022/12/04 フェイスグラフィックをトリミングできる機能を追加
 // 1.2.0 2021/11/27 MZで動作するよう修正
 // 1.1.1 2017/03/28 既存のタイトルを非表示にする機能を追加
 // 1.1.0 2017/03/26 マップ名表示機能を追加
@@ -35,6 +36,42 @@
  * @desc もともとゲームタイトルを表示している箇所を非表示にします。(ON/OFF)
  * @default false
  * @type boolean
+ *
+ * @param trimmingX
+ * @text トリミングX座標
+ * @desc フェイス画像をトリミングする場合のX座標です。
+ * @default 0
+ * @type number
+ *
+ * @param trimmingY
+ * @text トリミングY座標
+ * @desc フェイス画像をトリミングする場合のY座標です。
+ * @default 0
+ * @type number
+ *
+ * @param trimmingWidth
+ * @text トリミング横幅
+ * @desc フェイス画像をトリミングする場合の横幅です。
+ * @default 0
+ * @type number
+ *
+ * @param trimmingHeight
+ * @text トリミング高さ
+ * @desc フェイス画像をトリミングする場合の高さです。
+ * @default 0
+ * @type number
+ *
+ * @param drawX
+ * @text 描画X座標
+ * @desc フェイス画像の描画X座標です。
+ * @default 0
+ * @type number
+ *
+ * @param drawY
+ * @text 描画Y座標
+ * @desc フェイス画像の描画Y座標です。
+ * @default 0
+ * @type number
  *
  * @help SaveFileDrawFace.js
  * 
@@ -72,8 +109,42 @@
             return;
         }
         info.faces.forEach((faceData, index)=> {
-            this.drawFace(faceData[0], faceData[1], x + index * (ImageManager.faceWidth + 4), y);
+            this.drawFaceForSave(faceData[0], faceData[1], x + index * this.drawFaceWidth() + 4, y);
         });
+    };
+
+    Window_SavefileList.prototype.isTrimming = function() {
+        return param.trimmingX || param.trimmingY || param.trimmingWidth ||
+            param.trimmingHeight || param.drawX || param.drawY;
+    };
+
+    Window_SavefileList.prototype.drawFaceWidth = function() {
+        return param.trimmingWidth || ImageManager.faceWidth;
+    }
+
+    Window_SavefileList.prototype.drawFaceHeight = function() {
+        return param.trimmingHeight || ImageManager.faceHeight;
+    }
+
+    Window_SavefileList.prototype.drawFaceForSave = function(faceName, faceIndex, x, y, width, height) {
+        if (!this.isTrimming()) {
+            this.drawFace(faceName, faceIndex, x, y, width, height);
+            return;
+        }
+        width = width || this.drawFaceWidth();
+        height = height || this.drawFaceHeight();
+        const bitmap = ImageManager.loadFace(faceName);
+        const pw = ImageManager.faceWidth;
+        const ph = ImageManager.faceHeight;
+        const sw = Math.min(width, pw);
+        const sh = Math.min(height, ph);
+        const tx = (param.trimmingX || 0);
+        const ty = (param.trimmingY || 0)
+        const dx = Math.floor(x + Math.max(width - pw, 0) / 2) + (param.drawX || 0);
+        const dy = Math.floor(y + Math.max(height - ph, 0) / 2) + (param.drawY || 0);
+        const sx = Math.floor((faceIndex % 4) * pw + (pw - sw) / 2) + tx;
+        const sy = Math.floor(Math.floor(faceIndex / 4) * ph + (ph - sh) / 2) + ty;
+        this.contents.blt(bitmap, sx, sy, sw, sh, dx, dy);
     };
 
     const _Window_SavefileList_drawItem = Window_SavefileList.prototype.drawItem;
