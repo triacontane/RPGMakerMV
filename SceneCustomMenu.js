@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.36.1 2022/12/06 空のウィンドウリストで決定ボタンを押したときにエラーになる問題を修正
  1.36.0 2022/11/28 ウィンドウのフォントを変更できる機能を追加
  1.35.2 2022/11/26 コマンドリスト、一覧ウィンドウ識別子、一覧取得スクリプトをすべて空にして画面表示するとエラーになる問題を修正
  1.35.1 2022/11/22 1.35.0で戦闘テストを終了したときにエラーになる問題を修正
@@ -2105,7 +2106,7 @@
         }
 
         isEnabledSub(item) {
-            return this.isScriptValid(item.IsEnableScript) && this.isSwitchValid(item.EnableSwitchId);
+            return item && this.isScriptValid(item.IsEnableScript) && this.isSwitchValid(item.EnableSwitchId);
         }
 
         isSwitchValid(id) {
