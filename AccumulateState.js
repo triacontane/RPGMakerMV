@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2022/12/06 2.3.0の修正で蓄積ステートタグがある場合、マップ、ステータス、戦闘の全画面で必ずゲージが表示されていた問題を修正
+//                  2.4.0の修正でステータス画面にゲージが表示されなくなっていた問題を修正
 // 2.4.0 2022/04/17 敵キャラに対しても蓄積ゲージを表示できる機能を追加
 // 2.3.0 2022/03/18 マップ画面とステータス画面に蓄積ゲージを表示できるよう修正
 // 2.2.0 2022/02/16 蓄積型ステートが有効になるごとに耐性が上昇する機能を追加
@@ -305,7 +307,11 @@
     };
 
     Game_BattlerBase.prototype.getGaugeInfo = function (names) {
-        return getArgNumber(getMetaValues(this.getData(), names)) || 0;
+        var value = getMetaValues(this.getData(), names);
+        if (!value) {
+            return undefined;
+        }
+        return getArgNumber(value) || 0;
     };
 
     Game_Actor.prototype.getData = function () {
@@ -491,7 +497,7 @@
         if (paramGaugeSwitchId && !$gameSwitches.value(paramGaugeSwitchId)) {
             this.visible = false;
         }
-        if (this._detailMenu && $gameParty.menuActor() !== this._actor) {
+        if (this._detailMenu && $gameParty.menuActor() !== this._battler) {
             this.visible = false;
         }
     };
