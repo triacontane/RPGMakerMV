@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2022/12/05 表示対象外アイコンを指定したとき、アイコンのターン数が実際の値と異なる表示になる場合がある問題を修正
+//                  パラメータのアイコンtypeに対応
 // 2.7.0 2022/05/16 リングアイコン全体を一時的に非表示にできるスイッチを追加
 // 2.6.0 2022/03/29 ターン数表示に数字フォントを使用できる機能を追加
 // 2.5.0 2021/09/11 敵と味方のステート一列表示の基準を別々に設定できるよう修正
@@ -101,12 +103,12 @@
  * @param IconIndexWithoutRing
  * @desc This is an "icon index" that is not subject to the ring display.
  * @default []
- * @type string[]
+ * @type icon[]
  *
  * @param IconIndexWithoutShowTurns
  * @desc The "icon index" is excluded from the display of the number of state-turns.
  * @default []
- * @type string[]
+ * @type icon[]
  *
  * @param TurnCountX
  * @desc Adjusts the X coordinate display position of the number of turns.
@@ -255,13 +257,13 @@
  * @text 表示対象外アイコン
  * @desc リング表示の対象外になる「アイコンインデックス」です。
  * @default []
- * @type string[]
+ * @type icon[]
  *
  * @param IconIndexWithoutShowTurns
  * @text ターン数表示対象外アイコン
  * @desc ステートターン数の表示対象外になる「アイコンインデックス」です。
  * @default []
- * @type string[]
+ * @type icon[]
  *
  * @param TurnCountX
  * @text ターン数X座標
@@ -389,7 +391,7 @@ function Sprite_StateIconChild() {
     //=============================================================================
     Game_BattlerBase.prototype.getStateTurns = function() {
         const stateTurns = this.states().map(function(state) {
-            if (state.iconIndex <= 0) {
+            if (state.iconIndex <= 0 || param.IconIndexWithoutRing.includes(state.iconIndex)) {
                 return null;
             } else if (state.autoRemovalTiming <= 0) {
                 return '';
@@ -404,7 +406,8 @@ function Sprite_StateIconChild() {
 
     Game_BattlerBase.prototype.getBuffTurns = function() {
         return this._buffTurns.filter(function(turns, index) {
-            return this._buffs[index] !== 0;
+            const icon = this.buffIconIndex(this._buffs[index], index);
+            return this._buffs[index] !== 0 && !param.IconIndexWithoutRing.includes(icon);
         }, this);
     };
 
