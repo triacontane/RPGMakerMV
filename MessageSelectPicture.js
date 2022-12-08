@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2022/12/08 選択肢ピクチャに同一のピクチャ番号を指定できるよう修正
 // 2.0.0 2021/05/22 MZで動作するようプラグインコマンド周りの処理を修正
 // 1.2.4 2020/07/12 1.2.3の対応で選択肢をイベントコマンドの上限を超えて指定すると正常に機能しない問題を修正
 // 1.2.3 2020/07/12 MPP_ChoiceEX.jsと併用したとき、非表示の選択肢があると選択肢と表示ピクチャとがズレる競合を修正
@@ -106,12 +107,17 @@
     };
 
     Window_ChoiceList.prototype.updateSelectPicture = function() {
+        let selectedPictureId = 0;
         $gameMessage.getSelectPictures().forEach(function(data) {
             const picture = $gameScreen.picture(data.pictureId);
             if (!picture) {
                 return;
             }
-            picture.setOpacity(data.index === this.findMessageIndex() ? 255 : 0);
+            const selected = data.index === this.findMessageIndex() || data.pictureId === selectedPictureId;
+            if (selected) {
+                selectedPictureId = data.pictureId;
+            }
+            picture.setOpacity(selected ? 255 : 0);
         }, this);
     };
 
