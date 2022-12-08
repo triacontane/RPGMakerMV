@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2022/12/08 フキダシウィンドウプラグインの横幅に拘わらず、左側の座標を固定する機能を追加
  1.3.1 2022/10/29 MPP_ChoiceEX.jsと併用するとマップ表示時にエラーになる問題に対処
  1.3.0 2022/09/21 戦闘画面でバトラーを指定したフキダシウィンドウが表示できる機能を追加
  1.2.1 2022/06/12 lowerLimitXなどいくつかのパラメータが機能していなかった問題を修正
@@ -165,6 +166,11 @@
  * @type number
  * @min -2000
  * @max 2000
+ *
+ * @param FixedLeftX
+ * @desc
+ * @default 0
+ * @type number
  *
  * @command POPUP_VALID
  * @text Enable balloon window
@@ -465,6 +471,12 @@
  * @type number
  * @min -2000
  * @max 2000
+ *
+ * @param FixedLeftX
+ * @text 固定左X座標
+ * @desc 指定した場合フキダシウィンドウの横幅に拘わらず、ウィンドウの左端が固定されます。
+ * @default 0
+ * @type number
  *
  * @command POPUP_VALID
  * @text フキダシ有効化
@@ -1143,8 +1155,12 @@
 
     Window_Base.prototype.setPopupBasePosition = function() {
         const pos = $gameSystem.getPopupAdjustPosition();
-        this.x    = this.getPopupBaseX() - this.width / 2 + (pos ? pos[0] : 0) - 4;
+        this.x    = this.getPopupBaseX() - this.findPopupLeftX() + (pos ? pos[0] : 0) - 4;
         this.y    = this.getPopupBaseY() - this.height - this.getHeightForPopup() + (pos ? pos[1] : 0);
+    };
+
+    Window_Base.prototype.findPopupLeftX = function() {
+        return param.FixedLeftX || this.width / 2;
     };
 
     const _Window_Base_updatePadding    = Window_Base.prototype.updatePadding;
@@ -1194,7 +1210,7 @@
             this.adjustPopupPositionY();
         }
         const adjustResultX = this.adjustPopupPositionX();
-        const tailX         = this._width / 2 + adjustResultX;
+        const tailX         = this.findPopupLeftX() + adjustResultX;
         if (!this.isUsePauseSignTextEnd()) {
             this._pauseSignSprite.x = tailX;
         }
