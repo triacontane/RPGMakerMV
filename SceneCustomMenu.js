@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.36.2 2022/12/08 アクティブでないウィンドウのボタンイベントが実行されていた問題を修正
+                   パッド操作を考慮しボタン名のオプションをescapeからcancelおよびmenuに変更
  1.36.1 2022/12/06 空のウィンドウリストで決定ボタンを押したときにエラーになる問題を修正
  1.36.0 2022/11/28 ウィンドウのフォントを変更できる機能を追加
  1.35.2 2022/11/26 コマンドリスト、一覧ウィンドウ識別子、一覧取得スクリプトをすべて空にして画面表示するとエラーになる問題を修正
@@ -890,7 +892,8 @@
  * @default
  * @type combo
  * @option ok
- * @option escape
+ * @option cancel
+ * @option menu
  * @option shift
  * @option control
  * @option down
@@ -1651,10 +1654,10 @@
 
         update() {
             this.updateOpenClose();
+            this.updateButtonInput();
             super.update();
             this.updateIndexVariable();
             this.updateRotation();
-            this.updateButtonInput();
         }
 
         updateRotation() {
@@ -1675,7 +1678,7 @@
         }
 
         updateButtonInput() {
-            if (!this._buttonList) {
+            if (!this._buttonList || !this.active) {
                 return;
             }
             this._buttonList.forEach(buttonName => {
