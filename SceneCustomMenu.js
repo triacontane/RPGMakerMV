@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.26.1 2022/12/08 アクティブでないウィンドウのボタンイベントが実行されていた問題を修正
+                   パッド操作を考慮しボタン名のオプションをescapeからcancelおよびmenuに変更
  1.26.0 2022/11/14 既存シーンをカスタムメニューシーンに自由に差し替えられる機能を追加
  1.25.2 2022/11/03 カスタムメニュー用のシーンクラス、ウィンドウクラスを外部から参照できるよう変更
  1.25.1 2022/10/16 データスクリプトとコマンドリストを併用したウィンドウを一覧ウィンドウに指定した詳細情報ウィンドウでは、コマンドリストの詳細は表示しないよう仕様変更
@@ -847,7 +849,8 @@
  * @default
  * @type combo
  * @option ok
- * @option escape
+ * @option cancel
+ * @option menu
  * @option shift
  * @option control
  * @option down
@@ -1525,10 +1528,10 @@
 
         update() {
             this.updateOpenClose();
+            this.updateButtonInput();
             super.update();
             this.updateIndexVariable();
             this.updateRotation();
-            this.updateButtonInput();
         }
 
         updateRotation() {
@@ -1536,7 +1539,7 @@
         }
 
         updateButtonInput() {
-            if (!this._buttonList) {
+            if (!this._buttonList || !this.active) {
                 return;
             }
             this._buttonList.forEach(buttonName => {
