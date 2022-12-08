@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.16.0 2022/12/08 フキダシウィンドウプラグインの横幅に拘わらず、左側の座標を固定する機能を追加
 // 2.15.2 2022/09/03 テール画像を未指定にしたときに、ポーズサインをテールとして使う機能が有効化されない問題を修正
 // 2.15.1 2022/08/26 2.15.0の修正で、パラメータが未指定だとテール画像を変更しても反映されない問題を修正
 // 2.15.0 2022/08/26 テール画像を変更できるプラグインコマンドを追加
@@ -397,6 +398,12 @@
  * @min -2000
  * @max 2000
  *
+ * @param FixedLeftX
+ * @text 固定左X座標
+ * @desc 指定した場合フキダシウィンドウの横幅に拘わらず、ウィンドウの左端が固定されます。
+ * @default 0
+ * @type number
+ *
  * @help メッセージウィンドウを指定したキャラクターの頭上にフキダシで
  * 表示するよう変更します。
  *
@@ -645,6 +652,7 @@
     var paramUpperLimitY         = getParamNumber(['upperLimitY']);
     var paramTailImage           = getParamString(['tailImage']);
     var paramTailImageAdjustY    = getParamNumber(['tailImageAdjustY']);
+    var paramFixedLeftX          = getParamNumber(['FixedLeftX']);
 
     //=============================================================================
     // Game_Interpreter
@@ -1128,8 +1136,12 @@
 
     Window_Base.prototype.setPopupBasePosition = function() {
         var pos = $gameSystem.getPopupAdjustPosition();
-        this.x  = this.getPopupBaseX() - this.width / 2 + (pos ? pos[0] : 0);
+        this.x  = this.getPopupBaseX() - this.findPopupLeftX() + (pos ? pos[0] : 0);
         this.y  = this.getPopupBaseY() - this.height - this.getHeightForPopup() + (pos ? pos[1] : 0);
+    };
+
+    Window_Base.prototype.findPopupLeftX = function() {
+        return paramFixedLeftX || this.width / 2;
     };
 
     Window_Base.prototype.setPopupShakePosition = function() {
@@ -1165,7 +1177,7 @@
             this.adjustPopupPositionY();
         }
         var adjustResultX = this.adjustPopupPositionX();
-        var tailX         = this._width / 2 + adjustResultX;
+        var tailX         = this.findPopupLeftX() + adjustResultX;
         if (!this.isUsePauseSignTextEnd()) {
             this._windowPauseSignSprite.x = tailX
         }
