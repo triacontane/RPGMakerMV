@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2022/12/11 本プラグインの機能をスイッチで一時的に無効にできる機能を追加
 // 1.5.0 2022/09/19 控えメンバーの速度変化メモタグを有効化するパラメータを追加
 // 1.4.0 2022/02/01 速度変化をイベントに適用するかどうかを設定できるパラメータ、メモ欄を追加
 // 1.3.1 2022/01/27 ヘルプの記述を修正
@@ -69,6 +70,12 @@
  * @desc 控えメンバーの速度変化メモタグを有効にします。
  * @default false
  * @type boolean
+ *
+ * @param invalidSwitch
+ * @text 無効スイッチ
+ * @desc 指定した番号のスイッチがONのとき地形による速度変化がすべて無効になります。
+ * @default 0
+ * @type switch
  *
  * @help MoveSpeedChangeByRegion.js
  *
@@ -153,7 +160,7 @@
     };
 
     Game_CharacterBase.prototype.isValidMoveSpeedChange = function() {
-        return true;
+        return $gameSwitches.value(param.invalidSwitch);
     };
 
     Game_CharacterBase.prototype.isValidMoveSpeedChangeByNote = function() {
