@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2022/12/11 本プラグインの機能をスイッチで一時的に無効にできる機能を追加
 // 1.2.0 2021/11/21 1.1.0のメモ欄の指定方法変更
 // 1.1.0 2021/11/21 メモタグからも地形、リージョンによる速度変更ができる機能を追加
 // 1.0.1 2018/02/15 フォロワーを連れているときにフォロワーの移動速度がおかしくなる問題を修正
@@ -17,44 +18,6 @@
 //=============================================================================
 
 /*:
- * @plugindesc MoveSpeedChangeByRegionPlugin
- * @author triacontane
- *
- * @param slowlyTerrainTags
- * @desc 移動中に速度が低下する地形タグです。複数指定できます。
- * @default
- * @type number[]
- *
- * @param fasterTerrainTags
- * @desc 移動中に速度が上昇する地形タグです。複数指定できます。
- * @default
- * @type number[]
- *
- * @param slowlyRegions
- * @desc 移動中に速度が低下するリージョンです。複数指定できます。
- * @default
- * @type number[]
- *
- * @param fasterRegions
- * @desc 移動中に速度が上昇するリージョンです。複数指定できます。
- * @default
- * @type number[]
- *
- * @param deltaSpeed
- * @desc 速度が上昇、低下するときの変化量です。
- * @default 1
- * @type number
- *
- * @help MoveSpeedChangeByRegion.js
- *
- * 指定した地形もしくはリージョンに乗っている間だけキャラクターの移動速度を
- * 自動的に上昇もしくは低下させます。
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 地形による速度変化プラグイン
  * @author トリアコンタン
  *
@@ -87,6 +50,12 @@
  * @desc 速度が上昇、低下するときの変化量です。
  * @default 1
  * @type number
+ *
+ * @param invalidSwitch
+ * @text 無効スイッチ
+ * @desc 指定した番号のスイッチがONのとき地形による速度変化がすべて無効になります。
+ * @default 0
+ * @type switch
  *
  * @help MoveSpeedChangeByRegion.js
  *
@@ -157,9 +126,15 @@
     //=============================================================================
     var _Game_CharacterBase_realMoveSpeed      = Game_CharacterBase.prototype.realMoveSpeed;
     Game_CharacterBase.prototype.realMoveSpeed = function() {
-        var speed = _Game_CharacterBase_realMoveSpeed.apply(this, arguments) +
-            this.changeSpeedByTerrainTags() + this.changeSpeedByRegions();
-        return this.changeSpeedByNote(speed);
+        var speed = _Game_CharacterBase_realMoveSpeed.apply(this, arguments);
+        if (this.isInvalidChangeMoveSpeed()) {
+            return speed;
+        }
+        return this.changeSpeedByTerrainTags() + this.changeSpeedByRegions() + this.changeSpeedByNote(speed);
+    };
+
+    Game_CharacterBase.prototype.isInvalidChangeMoveSpeed = function() {
+        return $gameSwitches.value(param.invalidSwitch);
     };
 
     Game_CharacterBase.prototype.changeSpeedByNote = function(speed) {
