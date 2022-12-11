@@ -66,7 +66,7 @@
  * @type boolean
  *
  * @param enableBenchMembersTrait
- * @text 控えメンバーのメモタグ有効化
+ * @text 控えメンバーのタグ有効化
  * @desc 控えメンバーの速度変化メモタグを有効にします。
  * @default false
  * @type boolean
