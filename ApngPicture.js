@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.3.3 2022/12/14 サイドビュー用の敵キャラファイルの設定パラメータにgifファイルかどうかのフラグがなかった問題を修正
  2.3.2 2022/10/27 1セルのフレーム数を変更したとき、ループ回数の設定が機能しなくなる問題を修正
  2.3.1 2022/06/06 apngのフレーム数を指定したとき停止スイッチが機能しない問題を修正
  2.3.0 2022/02/06 1セルごとのフレーム数をゲーム側で設定できるパラメータを追加
@@ -418,6 +419,12 @@
  * @dir img/sv_enemies/
  * @type file
  *
+ * @param Gif
+ * @text GIFファイル
+ * @desc 対象がGIFファイルの場合はONにしてください。ファイル名は拡張子なしのファイル名を指定してください。
+ * @default false
+ * @type boolean
+ *
  * @param CachePolicy
  * @text キャッシュ方針
  * @desc 画像のキャッシュ方針です。大量にキャッシュするとメモリ使用量に影響が出る場合があります。
@@ -473,6 +480,12 @@
  * @require 1
  * @dir img/system/
  * @type file
+ *
+ * @param Gif
+ * @text
+ * @desc
+ * @default false
+ * @type boolean
  *
  * @param CachePolicy
  * @desc Cache policy
@@ -540,6 +553,12 @@
  * @dir img/pictures/
  * @type file
  *
+ * @param Gif
+ * @text
+ * @desc
+ * @default false
+ * @type boolean
+ *
  * @param CachePolicy
  * @desc Cache policy
  * @default 0
@@ -571,6 +590,12 @@
  * @dir img/enemies/
  * @type file
  *
+ * @param Gif
+ * @text
+ * @desc
+ * @default false
+ * @type boolean
+ *
  * @param CachePolicy
  * @desc Cache policy
  * @default 0
@@ -601,6 +626,12 @@
  * @require 1
  * @dir img/sv_enemies/
  * @type file
+ *
+ * @param Gif
+ * @text
+ * @desc
+ * @default false
+ * @type boolean
  *
  * @param CachePolicy
  * @desc Cache policy
