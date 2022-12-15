@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.3.4 2022/12/15 GIFファイルを選択したとき内部で保持する画像サイズが0になってしまう問題を修正
  2.3.3 2022/12/14 サイドビュー用の敵キャラファイルの設定パラメータにgifファイルかどうかのフラグがなかった問題を修正
  2.3.2 2022/10/27 1セルのフレーム数を変更したとき、ループ回数の設定が機能しなくなる問題を修正
  2.3.1 2022/06/06 apngのフレーム数を指定したとき停止スイッチが機能しない問題を修正
@@ -932,23 +933,13 @@
                 this._apngSprite.pixiApng.play();
             }
             this.addChild(this._apngSprite);
-            if (!this.isGif()) {
-                const original = this.loadStaticImage(name);
-                original.addLoadListener(() => {
-                    this.bitmap = new Bitmap(original.width, original.height);
-                });
-            } else {
-                this.bitmap = ImageManager.loadPicture('');
-            }
+            const frame = this._apngSprite.pixiApng.textures[0]._frame;
+            this.bitmap = new Bitmap(frame.width, frame.height);
             this.updateApngAnchor();
             this.updateApngBlendMode();
         }
         this._apngLoopCount = 1;
         this._apngLoopFrame = 0;
-    };
-
-    Sprite.prototype.loadStaticImage = function(name) {
-        return ImageManager.loadPicture(name);
     };
 
     Sprite.prototype.destroyApngIfNeed = function() {
@@ -1115,14 +1106,6 @@
         }
     };
 
-    Sprite_Enemy.prototype.loadStaticImage = function(name) {
-        if ($gameSystem.isSideView()) {
-            return ImageManager.loadSvEnemy(name);
-        } else {
-            return ImageManager.loadEnemy(name);
-        }
-    };
-
     /**
      * SpriteSceneApng
      * シーンに追加表示するAPNGスプライトです。
@@ -1160,10 +1143,6 @@
 
         getPriority() {
             return this._priority;
-        }
-
-        loadStaticImage(name) {
-            return ImageManager.loadSystem(name);
         }
     }
 })();
