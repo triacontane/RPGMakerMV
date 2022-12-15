@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2022/12/15 項目、項目背景、カーソルをパーツ単位で非表示にできる機能を追加
 // 2.5.0 2022/06/06 ステータス画面用の装備、パラメータウィンドウを編集対象に追加
 // 2.4.0 2022/05/16 マウスオーバーしたときにさらに別の画像に差し替える機能を追加
 // 2.3.2 2021/11/14 メニュー画面などで開いたときに一瞬だけウィンドウフレームが見えてしまう問題を修正
@@ -279,6 +280,30 @@
  * @default false
  * @type boolean
  *
+ * @param ItemHide
+ * @text 項目非表示
+ * @desc ウィンドウの中身を非表示にします。
+ * @default false
+ * @type boolean
+ *
+ * @param ItemBackHide
+ * @text 項目背景非表示
+ * @desc ウィンドウの項目背景を非表示にします。
+ * @default false
+ * @type boolean
+ *
+ * @param CursorHide
+ * @text カーソル非表示
+ * @desc ウィンドウのカーソルを非表示にします。
+ * @default false
+ * @type boolean
+ *
+ * @param AllHide
+ * @text 全体非表示
+ * @desc ウィンドウ全体を非表示にします。注意して設定してください。
+ * @default false
+ * @type boolean
+ *
  * @param SwitchId
  * @text 差し替えスイッチ番号
  * @desc 指定したスイッチがONのときのみウィンドウを差し替えます。
@@ -410,6 +435,18 @@
             }
             if (sprite.visible && !this.getBackImageDataItem(index, 'WindowShow')) {
                 defaultVisible = false;
+            }
+            if (this.getBackImageDataItem(index, 'ItemHide')) {
+                this._contentsSprite.visible = false;
+            }
+            if (this.getBackImageDataItem(index, 'ItemBackHide')) {
+                this._contentsBackSprite.visible = false;
+            }
+            if (this.getBackImageDataItem(index, 'CursorHide')) {
+                this.cursorVisible = false;
+            }
+            if (this.getBackImageDataItem(index, 'AllHide')) {
+                this.visible = false;
             }
             sprite.update();
         });
