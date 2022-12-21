@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.1 2022/12/21 1.4.0以降、\$を使用するとエラーになっていた問題を修正
  1.4.0 2022/11/26 競合を避けるためのリファクタリング
  1.3.0 2022/11/01 中央揃え、右揃えにする際の描画位置をピクセル単位で調整できる機能を追加
  1.2.2 2021/10/08 1.2.1の修正により、\c[n]などの制御文字が文字幅としてカウントされ揃え位置がズレてしまう問題を修正
@@ -118,6 +119,7 @@
     class Window_MessageDummy extends Window_Message {
         constructor() {
             super(new Rectangle(0,0,1,1));
+            this._goldWindow = new Window_Gold(new Rectangle(0,0,1,1));
         }
 
         findEscapeCenter() {
