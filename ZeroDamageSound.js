@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2022/12/21 ノーダメージ効果音演奏の対象外になるスキルやアイテムを作成できる機能を追加
 // 1.0.0 2022/11/07 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -57,6 +58,10 @@
  *
  * ダメージが0の時効果音を鳴らします。
  *
+ * ダメージが0でも効果音を鳴らしたくないときは、対象スキル、アイテムの
+ * メモ欄に以下のタグを記述します。
+ * <NoZeroSound>
+ *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
  * 以下のフォルダに格納されています。
@@ -77,8 +82,12 @@
 	Game_Action.prototype.executeDamage = function(target, value) {
 		_Game_Action_executeDamage.apply(this, arguments);
 		
-		if (value === 0) {
+		if (value === 0 && this.isNeedZeroSound()) {
 			AudioManager.playSe({"name":param.name, "volume":param.volume, "pitch":param.pitch, "pan":param.pan});
 		}
+	};
+
+	Game_Action.prototype.isNeedZeroSound = function() {
+		return !PluginManagerEx.findMetaValue(this.item(), ['NoZeroSound']);
 	};
 })();
