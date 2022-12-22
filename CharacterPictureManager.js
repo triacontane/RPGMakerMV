@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.10.0 2022/12/22 フロントビュー採用時、戦闘アニメの表示対象を立ち絵にできる機能を追加
+//                   パラメータ「原点」の設定が正常に動作していなかった問題を修正
 // 3.9.0 2022/11/10 ショップ画面と装備画面において装備を選んだ時点で立ち絵に反映できる機能を追加
 // 3.8.1 2022/11/06 ヘルプの記述を修正
 // 3.8.0 2022/10/22 立ち絵の更新を手動(スイッチ)で行える機能を追加
@@ -65,8 +67,8 @@
  *
  * @param Origin
  * @text 原点
- * @desc 立ち絵画像の原点です。全画像で共通の設定です。
- * @default 0
+ * @desc 立ち絵画像の原点です。全画像で共通の設定です。戦闘アニメを立ち絵に表示する際は『中央下』を設定します。
+ * @default 2
  * @type select
  * @option 左上
  * @value 0
@@ -134,6 +136,12 @@
  * @text 試着機能
  * @desc ショップ画面と装備画面において装備を選んだ時点で立ち絵に反映されます。
  * @default true
+ * @type boolean
+ *
+ * @param UseAnimationTarget
+ * @text 戦闘アニメ対象にする
+ * @desc フロントビューの戦闘アニメの対象が立ち絵になります。立ち絵の表示優先度を『アニメーションの下』に設定してください。
+ * @default false
  * @type boolean
  *
  * @help CharacterPictureManager.js
@@ -1000,6 +1008,25 @@
         this._effectsContainer.addChild(displayObject);
     };
 
+    Spriteset_Base.prototype.findTargetStand = function(target) {
+        if (target instanceof Game_Actor) {
+            return this.parent.findStandSprite(target);
+        } else {
+            return null;
+        }
+    };
+
+    const _Spriteset_Battle_findTargetSprite = Spriteset_Battle.prototype.findTargetSprite;
+    Spriteset_Battle.prototype.findTargetSprite = function(target) {
+        if (!$gameSystem.isSideView() && param.UseAnimationTarget) {
+            const sprite = this.findTargetStand(target);
+            if (sprite) {
+                return sprite;
+            }
+        }
+        return _Spriteset_Battle_findTargetSprite.apply(this, arguments);
+    };
+
     const _Sprite_Actor_startMotion = Sprite_Actor.prototype.startMotion;
     Sprite_Actor.prototype.startMotion = function(motionType) {
         if (this._actor) {
@@ -1089,6 +1116,10 @@
             new Sprite_StandPicture(pictureParam);
         this._standSpriteContainer.addChild(sprite);
         this._standSprites.set(id, sprite);
+    };
+
+    Scene_Base.prototype.findStandSprite = function(actor) {
+        return this._standSprites.get(actor.actorId());
     };
 
     Scene_Base.prototype.removeStandPicture = function(actor) {
@@ -1193,6 +1224,13 @@
             this._pictures.updatePictureFiles().forEach(picture => this.addChild(this.createChild(picture)));
             this._shake = 0;
             this.updatePosition();
+            if (param.Origin === 1) {
+                this.anchor.x = 0.5;
+                this.anchor.y = 0.5;
+            } else if (param.Origin === 2) {
+                this.anchor.x = 0.5;
+                this.anchor.y = 1.0;
+            }
         }
 
         changeActor(actor) {
