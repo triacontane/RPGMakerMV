@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.4.0 2022/12/25 APNG画像のぼかしを除去できる設定を追加
  2.3.4 2022/12/15 GIFファイルを選択したとき内部で保持する画像サイズが0になってしまう問題を修正
  2.3.3 2022/12/14 サイドビュー用の敵キャラファイルの設定パラメータにgifファイルかどうかのフラグがなかった問題を修正
  2.3.2 2022/10/27 1セルのフレーム数を変更したとき、ループ回数の設定が機能しなくなる問題を修正
@@ -175,6 +176,12 @@
  * @desc 設定すると1セルごとのフレーム数をゲーム側で固定にできます。
  * @default 0
  * @type number
+ *
+ * @param NoSmooth
+ * @text ぼかし除去
+ * @desc 画像拡大時にぼかしが入らなくなります。
+ * @default false
+ * @type boolean
  *
  * @help ApngPicture.js
  *
@@ -740,7 +747,10 @@
             }
             const sprite = pixiApng.sprite;
             sprite.pixiApng = pixiApng;
-            sprite.pixiApngOption = this._options[name]
+            sprite.pixiApngOption = this._options[name];
+            if (param.NoSmooth) {
+                pixiApng.textures.forEach(texture => texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST);
+            }
             return sprite;
         }
 
