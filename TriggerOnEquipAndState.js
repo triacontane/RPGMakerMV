@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2022/12/26 2.2.0の修正で武器UD、防具IDのみを指定した場合の判定が特定条件下で誤っていた問題を修正
 // 2.1.0 2022/10/25 武器タイプ、防具タイプを条件に変数を増減できる機能を追加
 //                  装備タイプのみを指定したとき変数の増減が正しく行われていなかった問題を修正
 // 2.0.0 2021/05/08 MZ向けに再設計
@@ -331,10 +332,10 @@
                 return false;
             } else if (record.armorType && record.armorType !== item.atypeId) {
                 return false;
-            } else if (record.weaponId && DataManager.isWeapon(item)) {
-                return record.weaponId === item.id;
-            } else if (record.armorId && DataManager.isArmor(item)) {
-                return record.armorId === item.id;
+            } else if (record.weaponId) {
+                return DataManager.isWeapon(item) && record.weaponId === item.id;
+            } else if (record.armorId) {
+                return DataManager.isArmor(item) && record.armorId === item.id;
             } else if (record.stateId) {
                 return !DataManager.isWeapon(item) && !DataManager.isArmor(item) && record.stateId === item.id;
             } else {
