@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2022/12/30 説明が通常かカスタムのどちらか片方しか設定されていない場合は、切り替えを無効にするよう仕様変更
 // 2.0.1 2020/10/17 キーコードの仕様を撤廃
 //                  英語ヘルプを作成
 // 2.0.0 2020/10/17 初期表示時に追加テキストの方が表示される設定を追加
@@ -186,7 +187,7 @@
         this._anotherTextVisible = false;
         this._item               = null;
         this._itemExist          = false;
-        if (param.InitialReverse) {
+        if ((param.InitialReverse || !this._originalText) && this._anotherText) {
             this.toggleDesc();
         }
     };
@@ -239,15 +240,16 @@
     };
 
     Window_Help.prototype.refreshChangePage = function() {
-        if (param.ChangePage && this._anotherText && this._itemExist) {
+        if (param.ChangePage && this.hasDoubleText() &&  this._itemExist) {
             var width = this.drawTextEx(param.ChangePage, 0, this.contents.height);
             var x = this.contentsWidth() - width;
             var y = this.contentsHeight() - this.lineHeight();
             this.drawTextEx(param.ChangePage, x, y);
-        } else {
-            this._anotherText  = null;
-            this._originalText = null;
         }
+    };
+
+    Window_Help.prototype.hasDoubleText = function() {
+        return this._anotherText && this._originalText;
     };
 
     var _Window_Help_update      = Window_Help.prototype.update;
@@ -263,7 +265,7 @@
     };
 
     Window_Help.prototype.updateAnotherDesc = function() {
-        if (this._anotherText && this.isAnotherTriggered() && this.isAnyParentActive()) {
+        if (this.hasDoubleText() && this.isAnotherTriggered() && this.isAnyParentActive()) {
             SoundManager.playCursor();
             this.toggleDesc();
         }
