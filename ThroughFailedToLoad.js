@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.1 2022/12/30 画像のエラー無視が、ピクチャの表示など限られたケースでしか機能していなかった問題を修正
 // 2.4.0 2021/06/07 MZ版としてリファクタリング
 // 2.3.1 2017/10/30 アニメーション画像に対するエラーが無視が無効になっていた問題を修正
 // 2.3.0 2017/10/29 音声ファイルと画像ファイルのいずれかのみ無視する機能を追加
@@ -99,9 +100,11 @@
         };
 
         Bitmap.prototype.eraseError = function() {
-            this._hasError     = false;
-            this._isLoading    = false;
             this._loadingState = 'loaded';
+        };
+
+        ImageManager.throwLoadError = function(bitmap) {
+            bitmap.eraseError();
         };
     }
 
