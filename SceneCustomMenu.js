@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.26.2 2022/12/30 戦闘テストを終了する際にエラーが出る不具合を修正
  1.26.1 2022/12/08 アクティブでないウィンドウのボタンイベントが実行されていた問題を修正
                    パッド操作を考慮しボタン名のオプションをescapeからcancelおよびmenuに変更
  1.26.0 2022/11/14 既存シーンをカスタムメニューシーンに自由に差し替えられる機能を追加
@@ -1078,16 +1079,18 @@
         if (this._scene instanceof Scene_Map) {
             this._mapGameScreen = $gameScreen;
         }
-        const sceneName = getClassName(new sceneClass());
-        const customScene = (param.ReplacementList.find(item => item.scene === sceneName) || {}).customScene;
-        if (customScene) {
-            if (this._stack[this._stack.length - 1] === this._scene.constructor) {
-                this._stack.pop();
-            }
-            const realCustomScene = convertEscapeCharacters(customScene);
-            if (realCustomScene !== '0') {
-                SceneManager.callCustomMenu(realCustomScene);
-                return;
+        if (sceneClass) {
+            const sceneName = getClassName(new sceneClass());
+            const customScene = (param.ReplacementList.find(item => item.scene === sceneName) || {}).customScene;
+            if (customScene) {
+                if (this._stack[this._stack.length - 1] === this._scene.constructor) {
+                    this._stack.pop();
+                }
+                const realCustomScene = convertEscapeCharacters(customScene);
+                if (realCustomScene !== '0') {
+                    SceneManager.callCustomMenu(realCustomScene);
+                    return;
+                }
             }
         }
         _SceneManager_goto.apply(this, arguments);
