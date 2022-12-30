@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.11.0 2022/12/30 アクターがコマンド入力中のみ立ち絵を表示する機能を追加
 // 3.10.0 2022/12/22 フロントビュー採用時、戦闘アニメの表示対象を立ち絵にできる機能を追加
 //                   パラメータ「原点」の設定が正常に動作していなかった問題を修正
 // 3.9.0 2022/11/10 ショップ画面と装備画面において装備を選んだ時点で立ち絵に反映できる機能を追加
@@ -345,6 +346,12 @@
  * @type number
  * @max 100
  * @min 0
+ *
+ * @param Inputting
+ * @text 入力中条件
+ * @desc アクターがコマンド入力の場合に表示条件を満たします。
+ * @default false
+ * @type boolean
  *
  * @param Action
  * @text 行動中条件
@@ -782,6 +789,7 @@
             conditions.push(file => !file.HpLowerLimit || file.HpLowerLimit <= this._actor.hpRate() * 100);
             conditions.push(file => !file.Motion || this._actor.isMotionTypeValid(file.Motion));
             conditions.push(file => !file.Action || this._actor.isAction());
+            conditions.push(file => !file.Inputting || this._actor.isInputting());
             conditions.push(file => !file.State || this._actor.isStateAffected(file.State));
             conditions.push(file => !file.Weapon || this._actor.hasWeapon($dataWeapons[file.Weapon]));
             conditions.push(file => !file.Armor || this._actor.hasArmor($dataArmors[file.Armor]));
