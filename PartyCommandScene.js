@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2023/01/01 カスタムメニューシーンから戻ると、戦闘終了処理が正しく行われない不具合を修正
  1.0.1 2022/04/29 別シーンから戻ってきたあと、アクターコマンドに進んでからキャンセルして戻ると『戦う』が選択できなくなる場合がある問題を修正
  1.0.0 2022/04/10 初版
 ----------------------------------------------------------------------------
@@ -255,11 +256,19 @@
     var _Scene_Battle_start = Scene_Battle.prototype.start;
     Scene_Battle.prototype.start = function() {
         if (SceneManager.isPartyCommandScene()) {
+            this.resetCallAnotherSceneFlags();
             Scene_Base.prototype.start.call(this);
-            SceneManager.clearPartyCommandScene();
         } else {
             _Scene_Battle_start.apply(this);
         }
+    };
+
+    const _Scene_Battle_resetCallAnotherSceneFlags = Scene_Battle.prototype.resetCallAnotherSceneFlags;
+    Scene_Battle.prototype.resetCallAnotherSceneFlags = function () {
+        if (_Scene_Battle_resetCallAnotherSceneFlags) {
+            _Scene_Battle_resetCallAnotherSceneFlags.call(this);
+        }
+        SceneManager.clearPartyCommandScene();
     };
 
     var _Scene_Battle_startPartyCommandSelection = Scene_Battle.prototype.startPartyCommandSelection;
