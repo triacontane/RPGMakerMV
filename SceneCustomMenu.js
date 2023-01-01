@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.36.3 2023/01/01 PartyCommandScene.jsで戦闘シーンから遷移して戻ると戦闘終了処理が正しく行われない不具合を修正
  1.36.2 2022/12/08 アクティブでないウィンドウのボタンイベントが実行されていた問題を修正
                    パッド操作を考慮しボタン名のオプションをescapeからcancelおよびmenuに変更
  1.36.1 2022/12/06 空のウィンドウリストで決定ボタンを押したときにエラーになる問題を修正
@@ -1036,11 +1037,19 @@
     const _Scene_Battle_start = Scene_Battle.prototype.start;
     Scene_Battle.prototype.start = function() {
         if (SceneManager.isCalledCustomMenuFromBattle()) {
-            SceneManager.resetCalledCustomMenuFromBattle();
+            this.resetCallAnotherSceneFlags();
             Scene_Base.prototype.start.call(this);
         } else {
             _Scene_Battle_start.apply(this);
         }
+    };
+
+    const _Scene_Battle_resetCallAnotherSceneFlags = Scene_Battle.prototype.resetCallAnotherSceneFlags;
+    Scene_Battle.prototype.resetCallAnotherSceneFlags = function () {
+        if (_Scene_Battle_resetCallAnotherSceneFlags) {
+            _Scene_Battle_resetCallAnotherSceneFlags.call(this);
+        }
+        SceneManager.resetCalledCustomMenuFromBattle();
     };
 
     const _Scene_Battle_terminate = Scene_Battle.prototype.terminate;
