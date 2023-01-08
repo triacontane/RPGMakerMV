@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2023/01/08 反撃条件に「弱点」および「耐性」だった場合を追加
 // 2.8.0 2022/10/05 複数の反撃条件を同時に満たしたとき、ステートの優先度の高い方の設定で優先的に反撃するよう修正
 // 2.7.0 2022/08/30 パラメータのスキルリストに識別子を追加
 // 2.6.0 2022/06/13 2.5.0の機能の範囲をスキルから対象のバトラー全体に拡張
@@ -250,6 +251,18 @@
  * @type number
  * @default 0
  *
+ * @param WeakCondition
+ * @text 反撃条件(弱点)
+ * @desc 指定した場合、受けたスキルが弱点もしくは耐性だった場合のみ反撃します。
+ * @type select
+ * @default 0
+ * @option なし
+ * @value 0
+ * @option 弱点
+ * @value 1
+ * @option 耐性
+ * @value 2
+ *
  * @param SwitchCondition
  * @text 反撃条件(スイッチ)
  * @desc 指定した場合、スイッチがONのときのみ反撃します。
@@ -348,6 +361,7 @@
             conditions.push(() => checkParam(skill.IdCondition, triggerSkill.id));
             conditions.push(() => checkParam(skill.HitTypeCondition, triggerSkill.hitType));
             conditions.push(() => skill.ElementCondition && !triggerAction.hasElement(skill.ElementCondition));
+            conditions.push(() => skill.WeakCondition && !this.hasWeakResistance(triggerAction, subject, skill.WeakCondition));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
             conditions.push(() => skill.MemoTagCondition && !this.hasMemoTag(triggerSkill, subject, skill.MemoTagCondition));
             conditions.push(() => skill.ScriptCondition && !eval(skill.ScriptCondition));
@@ -362,6 +376,11 @@
             const objList = target.traitObjects();
             objList.push(skill);
             return objList.some(obj => PluginManagerEx.findMetaValue(obj, tagName));
+        }
+
+        hasWeakResistance(action, target, weakCondition) {
+            const rate = action.calcElementRate(target);
+            return weakCondition === 1 ? rate > 1.0 : rate < 1.0;
         }
 
         setCounterSkill(skill, triggerSkill) {
