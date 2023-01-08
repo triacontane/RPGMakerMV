@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2022/01/08 ランダムシェイクするコマンドを追加
 // 1.1.1 2021/07/10 SINカーブで始点が0でなくなる問題を修正
 // 1.1.0 2021/01/10 MZで動作するよう修正
 // 1.0.0 2016/11/03 初版
@@ -41,6 +42,22 @@
  * @default false
  * @type boolean
  *
+ * @command RANDOM_SHAKE_SETTING
+ * @text ランダムシェイク設定
+ * @desc 「画面のシェイク」コマンドの角度をランダムにします。
+ *
+ * @arg sinWave
+ * @text SINカーブ
+ * @desc 有効にすると振動がSINカーブを描くようになります。
+ * @default false
+ * @type boolean
+ *
+ * @arg interval
+ * @text 更新間隔
+ * @desc シェイク中に角度が更新される間隔です。0を指定すると更新されなくなります。
+ * @default 1
+ * @type number
+ *
  * @help イベントコマンド「画面のシェイク」に指向性を持たせることができます。
  * 角度を指定して縦や斜めに振動させることが可能です。
  *
@@ -68,6 +85,10 @@
         $gameScreen.setShakeRotation(args.rotation, args.sinWave);
     });
 
+    PluginManagerEx.registerCommand(script, 'RANDOM_SHAKE_SETTING', args => {
+        $gameScreen.setShakeRandom(args.interval, args.sinWave);
+    });
+
     //=============================================================================
     // Game_Screen
     //  シェイクの方向を保持します。
@@ -79,6 +100,13 @@
     Game_Screen.prototype.setShakeRotation = function(value, sin) {
         this._shakeRotation = value * Math.PI / 180;
         this._shakeSinWave = sin;
+        this._shakeRandomInterval = 0;
+    };
+
+    Game_Screen.prototype.setShakeRandom = function(interval, sin) {
+        this._shakeRotation = Math.randomInt(360) * Math.PI / 180;
+        this._shakeSinWave = sin;
+        this._shakeRandomInterval = interval;
     };
 
     const _Game_Screen_clearShake = Game_Screen.prototype.clearShake;
@@ -95,6 +123,9 @@
     const _Game_Screen_updateShake = Game_Screen.prototype.updateShake;
     Game_Screen.prototype.updateShake = function() {
         const wasShake = this.isNeedShakeUpdate();
+        if (this._shakeRandomInterval > 0 && Graphics.frameCount % this._shakeRandomInterval === 0) {
+            this._shakeRotation = Math.randomInt(360) * Math.PI / 180;
+        }
         if (this._shakeSinWave && wasShake) {
             this.updateSinShake();
         } else {
