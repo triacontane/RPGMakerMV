@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2023/01/08 タイトルカット時の動作をニューゲーム開始か最新データをロードかで選べるよう仕様変更
 // 1.1.4 2022/04/30 EventRespawn.jsのリージョン機能で複製したイベントを消去してからマップリロード機能を使うとエラーになる問題に対処
 // 1.1.3 2021/04/10 タイトルカット設定時にCTRLキーを押し続けているとカットしなくなる機能が不完全だったので無効化
 // 1.1.2 2021/03/27 通常のロード時はイベントの消去状態を復元しないよう修正
@@ -247,10 +248,15 @@
  *
  * @param CutTitle
  * @text タイトルカット
- * @desc タイトル画面をとばして最新のセーブファイルをロードします。
- * 起動時にCTRLを押し続けるとカットが無効になります。
- * @default false
- * @type boolean
+ * @desc タイトル画面をとばしてゲームを開始します。
+ * @default 0
+ * @type select
+ * @option 無効
+ * @value 0
+ * @option ニューゲーム開始
+ * @value 1
+ * @option 最新データをロード
+ * @value 2
  *
  * @param RapidStart
  * @text 高速開始
@@ -1033,11 +1039,19 @@ function Controller_NwJs() {
     };
 
     Scene_Boot.prototype.cutSceneTitle = function() {
-        if (param.CutTitle && !DataManager.isBattleTest() &&
-            !DataManager.isEventTest() && !Input.isPressed('control')) {
-            if (!this.goToLatestContinue()) {
+        if (DataManager.isBattleTest() || DataManager.isEventTest()) {
+            return;
+        }
+        switch (param.CutTitle) {
+            case 1:
                 this.goToNewGame();
-            }
+                break;
+            case 2:
+                const result = this.goToLatestContinue();
+                if (!result) {
+                    this.goToNewGame();
+                }
+                break;
         }
     };
 
