@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2023/01/09 撃破ボーナスの適用条件に「特定のスキルを使った場合」を追加
 // 2.0.1 2022/09/04 ドロップ率に関する仕様をヘルプに記載
 // 2.0.0 2022/09/04 MZ向けに再設計
 // 1.4.0 2020/03/10 撃破ボーナス発生時にボーナス対象にアニメーションを再生できる機能を追加
@@ -246,6 +247,12 @@
  * @desc 指定したスイッチがONのとき条件を満たします。
  * @default 0
  * @type switch
+ *
+ * @param skillId
+ * @text スキルID
+ * @desc 特定のスキルで撃破したとき条件を満たします。
+ * @default 0
+ * @type skill
  * 
  * @param turnCount
  * @text ターン数
@@ -286,6 +293,7 @@
         this._noSkill  = true;
         this._noDamage = true;
         this._noDeath  = true;
+        this._usedSkillId = 0;
     };
 
     Game_BattlerBase.prototype.breakNoSkill = function() {
@@ -298,6 +306,10 @@
 
     Game_BattlerBase.prototype.breakNoDeath = function() {
         this._noDeath  = false;
+    };
+
+    Game_BattlerBase.prototype.setUsedSkillId = function(skillId) {
+        this._usedSkillId = skillId
     };
 
     Game_BattlerBase.prototype.findKillBonusParamList = function(critical) {
@@ -320,6 +332,7 @@
         conditions.push(() => condition.noDamage && !this._noDamage);
         conditions.push(() => condition.noSkill && !this._noSkill);
         conditions.push(() => condition.noDeath && !this._noDeath);
+        conditions.push(() => condition.skillId && this._usedSkillId !== condition.skillId);
         conditions.push(() => condition.critical && !critical);
         conditions.push(() => condition.turnCount > 0 && condition.turnCount < $gameTroop.turnCount());
         conditions.push(() => condition.switchId > 0 && !$gameSwitches.value(condition.switchId));
@@ -351,8 +364,13 @@
     Game_Action.prototype.testApply = function(target) {
         this._criticalForKillBonus = false;
         const result = _Game_Action_testApply.apply(this, arguments);
-        if (result && !this.isAttack() && !this.isGuard()) {
-            this.subject().breakNoSkill();
+        if (result) {
+            if (!this.isAttack() && !this.isGuard()) {
+                this.subject().breakNoSkill();
+            }
+            if (DataManager.isSkill(this.item())) {
+                this.subject().setUsedSkillId(this.item().id);
+            }
         }
         return result;
     };
