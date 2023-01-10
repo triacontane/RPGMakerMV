@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.16.1 2022/01/10 MessagePosition.jsと組み合わせたとき、相手のプラグインで指定した幅と高さより大きなフキダシが正しく文章表示できない問題を修正
 // 2.16.0 2022/12/08 フキダシウィンドウプラグインの横幅に拘わらず、左側の座標を固定する機能を追加
 // 2.15.2 2022/09/03 テール画像を未指定にしたときに、ポーズサインをテールとして使う機能が有効化されない問題を修正
 // 2.15.1 2022/08/26 2.15.0の修正で、パラメータが未指定だとテール画像を変更しても反映されない問題を修正
@@ -1527,8 +1528,13 @@
         } else if (paramNoUseTail) {
             height += 8;
         }
+        const prevWidth = this.width;
+        const prevHeight = this.height;
         this.width  = Math.max(width, this.getMinimumWidth());
         this.height = Math.max(height, this.getMinimumHeight());
+        if (this.width !== prevWidth || this.height !== prevHeight) {
+            this.createContents();
+        }
         this.resetFontSettings();
     };
 
