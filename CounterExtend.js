@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.1 2023/01/13 連続攻撃を考慮がOFFにとき、連続攻撃の途中で戦闘不能になったバトラーを蘇生すると、蘇生時に反撃が発動する問題を修正
+//                  連続攻撃を考慮がOFFにとき、lastHpDamageのプロパティが最初の1回以外は0になってしまう問題を修正
 // 2.9.0 2023/01/08 反撃条件に「弱点」および「耐性」だった場合を追加
 // 2.8.0 2022/10/05 複数の反撃条件を同時に満たしたとき、ステートの優先度の高い方の設定で優先的に反撃するよう修正
 // 2.7.0 2022/08/30 パラメータのスキルリストに識別子を追加
@@ -458,9 +460,7 @@
     Object.defineProperties(Game_BattlerBase.prototype, {
         lastHpDamage: {
             get: function () {
-                const value = this._lastHpDamage || 0;
-                this._lastHpDamage = 0;
-                return value;
+                return this._lastHpDamage || 0;
             },
             set: function (value) {
                 this._lastHpDamage = value;
@@ -499,6 +499,7 @@
     BattleManager.initMembers = function() {
         _BattleManager_initMembers.apply(this, arguments);
         this._counterQueue = [];
+        $gameParty.members().forEach(member => member.lastHpDamage = 0);
     };
 
     const _BattleManager_invokeNormalAction = BattleManager.invokeNormalAction;
@@ -528,11 +529,16 @@
             this._counterQueue.find(queue => queue.subject === counterSubject)) {
             return;
         }
+        this.filterInvalidCounter();
         this._counterQueue.push({
             subject: counterSubject,
             target: subject,
             action: counterAction
         });
+    };
+
+    BattleManager.filterInvalidCounter = function() {
+        this._counterQueue = this._counterQueue.filter(data => data.subject.canMove());
     };
 
     const _BattleManager_endAction = BattleManager.endAction;
