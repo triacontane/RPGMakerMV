@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.1 2023/01/17 決定動作で復帰するとき左クリックで復帰するとメッセージが送られてしまう問題を修正
 // 2.7.0 2022/09/12 ウィンドウ消去時、決定動作によってウィンドウを再表示できる設定を追加(by unaunagiさま)
 // 2.6.1 2020/05/21 トリガースイッチと連動無効スイッチの状態によってエラーが起きうる記述を修正
 // 2.6.0 2020/05/20 ピクチャの連動を無効にできるスイッチを追加
@@ -229,6 +230,7 @@
         } else if (this.isHidden() && this.isTriggered() && param.restoreByDecision) {
             this.showAllWindow();
             Input.update();
+            TouchInput.update();
         }
         var wait = _Window_Message_updateWait.apply(this, arguments);
         if (this.isHidden() && this.visible) {
