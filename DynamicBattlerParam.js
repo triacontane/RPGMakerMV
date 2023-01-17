@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2023/01/18 最大HP、最大MPの計算式に制御文字を使うとエラーになる問題を修正
 // 2.0.0 2018/07/11 計算式の対象が追加能力値もしくは特殊能力値、計算式で参照する能力値を装備品やバフを適用した能力値になるよう仕様変更しました
 // 1.2.1 2017/10/31 1.2.0でデバッグ用のコードが混入していたので修正
 // 1.2.0 2017/10/28 追加能力値および特殊能力値についても計算式を適用できる機能を追加
@@ -453,9 +454,27 @@
     };
 
     var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
+        if (text == null || text === true) text = '';
+        text = text.replace(/&gt;?/gi, '>');
+        text = text.replace(/&lt;?/gi, '<');
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bN\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameActors.actor(parseInt(arguments[1])) : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bP\[(\d+)\]/gi, function() {
+            var actor = parseInt(arguments[1]) >= 1 ? $gameParty.members()[parseInt(arguments[1]) - 1] : null;
+            return actor ? actor.name() : '';
+        }.bind(this));
+        text = text.replace(/\x1bG/gi, TextManager.currencyUnit);
+        return text;
     };
 
     var isNotAString = function(args) {
@@ -561,6 +580,7 @@
         this._baseFlag = baseFlag;
         var formula = this.getParamFormula(paramId);
         var a = this;
+        console.log(formula)
         var dynamicParam = formula ? this.roundParamIfNeed(paramId, eval(formula)) : param;
         this._calcParameter = false;
         this._baseFlag = false;
