@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2023/01/26 1.6.0で追加した無効スイッチが逆になっていた問題を修正
 // 1.6.0 2022/12/11 本プラグインの機能をスイッチで一時的に無効にできる機能を追加
 // 1.5.0 2022/09/19 控えメンバーの速度変化メモタグを有効化するパラメータを追加
 // 1.4.0 2022/02/01 速度変化をイベントに適用するかどうかを設定できるパラメータ、メモ欄を追加
@@ -160,7 +161,7 @@
     };
 
     Game_CharacterBase.prototype.isValidMoveSpeedChange = function() {
-        return $gameSwitches.value(param.invalidSwitch);
+        return !$gameSwitches.value(param.invalidSwitch);
     };
 
     Game_CharacterBase.prototype.isValidMoveSpeedChangeByNote = function() {
