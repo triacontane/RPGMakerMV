@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2023/01/31 コマンド記憶がONのとき、パーティコマンドの選択を記憶するよう仕様変更
 // 1.2.1 2022/09/22 1.2.0の修正によりオートスイッチが有効なときにタイムプログレス戦闘を開始するとエラーになる問題を修正
 // 1.2.0 2022/09/22 パーティコマンドのオートがタイムプログレス戦闘に対応していなかった問題を修正
 // 1.1.1 2022/09/21 オートスイッチが有効なとき戦闘中のメッセージをすべて自動送りするよう修正
@@ -196,6 +197,33 @@
         }
     };
 
+    const _Window_PartyCommand_processOk = Window_PartyCommand.prototype.processOk;
+    Window_PartyCommand.prototype.processOk = function() {
+        if (this.isNeedRemember()) {
+            $gameParty.setLastCommandSymbol(this.currentSymbol());
+        } else {
+            $gameParty.setLastCommandSymbol("");
+        }
+        _Window_PartyCommand_processOk.apply(this, arguments);
+    };
+
+    const _Window_PartyCommand_setup = Window_PartyCommand.prototype.setup;
+    Window_PartyCommand.prototype.setup = function() {
+        _Window_PartyCommand_setup.apply(this, arguments);
+        this.selectLast();
+    };
+
+    Window_PartyCommand.prototype.selectLast = function() {
+        if (this.isNeedRemember()) {
+            const symbol = $gameParty.lastCommandSymbol();
+            this.selectSymbol(symbol);
+        }
+    };
+
+    Window_PartyCommand.prototype.isNeedRemember = function() {
+        return ConfigManager.commandRemember;
+    };
+
     //=============================================================================
     // Window_ActorCommand
     //  オートバトルコマンドを追加します。
@@ -214,6 +242,14 @@
             const command = this._list.pop();
             this._list.splice(param.ActorCommandIndex, 0, command);
         }
+    };
+
+    Game_Party.prototype.lastCommandSymbol = function() {
+        return this._lastCommandSymbol;
+    };
+
+    Game_Party.prototype.setLastCommandSymbol = function(symbol) {
+        this._lastCommandSymbol = symbol;
     };
 })();
 
