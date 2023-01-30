@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2023/01/30 選択不可能なファイルを指定したときもダイアログが出てしまう問題を修正
  1.1.0 2022/11/08 カーソル初期位置を「しない」にできる機能を追加
  1.0.2 2022/08/24 ファイルリスト選択時に決定効果音が演奏されない問題を修正
  1.0.1 2022/08/24 Windowクラスを外向けに参照できるよう修正
@@ -120,7 +121,7 @@
     };
 
     Scene_Save.prototype.isNeedConfirm = function() {
-        return param.saveConfirm;
+        return Scene_File.prototype.isNeedConfirm.call(this) && param.saveConfirm;
     };
 
     Scene_Save.prototype.findTerm = function() {
@@ -145,7 +146,7 @@
     };
 
     Scene_Load.prototype.isNeedConfirm = function() {
-        return param.loadConfirm;
+        return Scene_File.prototype.isNeedConfirm.call(this) && param.loadConfirm;
     };
 
     Scene_Load.prototype.findTerm = function() {
@@ -168,11 +169,12 @@
      * Scene_File
      */
     Scene_File.prototype.createConfirmWindowIfNeed = function() {
-        if (!this.isNeedConfirm()) {
-            return;
-        }
         if (this._confirmWindow) {
             this._windowLayer.removeChild(this._confirmWindow);
+        }
+        this._confirmWindow = null;
+        if (!this.isNeedConfirm()) {
+            return;
         }
         const confirm = new Window_SaveFileConfirm(this.confirmWindowRect());
         confirm.setHandler("ok", this.onConfirmOk.bind(this));
@@ -199,7 +201,8 @@
     };
 
     Scene_File.prototype.isNeedConfirm = function() {
-        return false;
+        const savefileId = this.savefileId();
+        return this.isSavefileEnabled(savefileId);
     };
 
     Scene_File.prototype.findTerm = function() {
