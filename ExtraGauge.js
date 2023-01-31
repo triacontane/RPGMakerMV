@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.3 2023/01/31 ゲージを非表示にして現在値を変更してから再表示すると変更前の数値が一瞬表示されてしまう問題を修正
  1.5.2 2022/12/08 ゲージX座標のパラメータ初期値を変更
  1.5.1 2022/11/20 プリセットをtimeにするとラベルが表示されなくなる件を制約事項としてヘルプに記載
  1.5.0 2022/11/19 ラベル部分にアイコンを表示できる機能を追加
@@ -548,11 +549,11 @@
         }
 
         update() {
+            this.updateVisibly();
             super.update();
             if (this._layout.realTime) {
                 this.setupPosition();
             }
-            this.updateVisibly();
             this.updateOpacity();
         }
 
