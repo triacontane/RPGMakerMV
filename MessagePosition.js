@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2023/02/06 MZから移植した際に不要なコードが混じっていたので削除
 // 1.1.2 2022/11/20 1.1.1の修正でメッセージの自動ページ送りが機能しなくなっていた問題を修正
 // 1.1.1 2022/11/09 MV向けに作成
 // 1.1.0 2022/11/06 MessageWindowPopup.jsと併用できるよう調整
@@ -141,17 +142,6 @@
 		const posit = [param.yTop, param.yMiddle, param.yBottom];
 		if (posit[this._positionType]) {
 			this.y = (param.relative ? this.y : 0) + posit[this._positionType];
-		}
-	};
-
-	const _Window_NameBox_updatePlacement = Window_NameBox.prototype.updatePlacement;
-	Window_NameBox.prototype.updatePlacement = function() {
-		_Window_NameBox_updatePlacement.apply(this, arguments);
-		if (this.isPopup && this.isPopup()) {
-			return;
-		}
-		if (this._messageWindow.y < this.height) {
-			this.y = this._messageWindow.y + this._messageWindow.height;
 		}
 	};
 })();
