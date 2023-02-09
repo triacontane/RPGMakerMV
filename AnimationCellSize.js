@@ -28,6 +28,9 @@
  * @type struct<CellSize>[]
  *
  * @help AnimationCellSize.js
+ *
+ * MV方式のアニメーションのセルサイズを変更可能にします。
+ * エディタ上には反映されませんのでご注意ください。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
