@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.2.0 2023/02/12 スイッチ、セルフスイッチのセンサー条件を反転（OFFのとき有効）にできる設定を追加
 // 3.1.1 2020/07/05 3.1.0の修正をイベント開始時にも適用できるよう変更
 // 3.1.0 2020/07/05 イベントから離れたらエフェクトを即時消去できる設定を追加
 // 3.0.0 2020/05/26 センサーエフェクトをイベントではなくプレイヤーに適用できる機能を追加。パラメータの再設定が必要です。
@@ -127,6 +128,12 @@
  * @default false
  * @type boolean
  *
+ * @param ConditionReverse
+ * @text 条件反転
+ * @desc スイッチおよびセルフスイッチがONのときエフェクトを出す条件を反転し、OFFのときにエフェクトを出します。
+ * @default false
+ * @type boolean
+ *
  * @help 周囲に存在するイベントを感知してイベントにエフェクトを発生させます。
  * 実行可能なイベントをプレイヤーに伝えてユーザビリティを向上させます。
  * 使用できるエフェクトはフラッシュとフキダシアイコン（およびその両方）です。
@@ -149,11 +156,7 @@
  * <NESスイッチ:1>       # スイッチ[1]がONのときのみエフェクトを出します。
  * <NESSwitch:1>         # 同上
  * <NESセルフスイッチ:A> # セルフスイッチ[A]がONのときのみエフェクトを出します。
- * <NESSelfSwitch:1>     # 同上
- *
- * 注意！
- * モバイル端末では、フラッシュを使用すると動作が
- * 少し重くなるようです。ご利用の際はご注意ください。
+ * <NESSelfSwitch:A>     # 同上
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -351,6 +354,8 @@
     Game_Event.prototype.initialize = function(mapId, eventId) {
         _Game_Event_initialize.apply(this, arguments);
         this._balloonInterval = 0;
+        this._sensorswitchId = getMetaValues(this.event(), ['スイッチ', 'Switch']);
+        this._sensorSelfSwitchType = getMetaValues(this.event(), ['セルフスイッチ', 'SelfSwitch']);
     };
 
     var _Game_EventUpdate       = Game_Event.prototype.update;
@@ -401,13 +406,23 @@
     };
 
     Game_Event.prototype.isValidSensorSwitch = function() {
-        var switchId = getMetaValues(this.event(), ['スイッチ', 'Switch']);
-        return switchId ? $gameSwitches.value(getArgNumber(switchId, 1)) : true;
+        var switchId = this._sensorswitchId;
+        if (switchId) {
+            var result = $gameSwitches.value(getArgNumber(switchId, 1));
+            return param.ConditionReverse ? !result : result;
+        } else {
+            return true;
+        }
     };
 
     Game_Event.prototype.isValidSensorSelfSwitch = function() {
-        var selfSwitchType = getMetaValues(this.event(), ['セルフスイッチ', 'SelfSwitch']);
-        return selfSwitchType ? $gameSelfSwitches.value([this._mapId, this._eventId, selfSwitchType.toUpperCase()]) : true;
+        var selfSwitchType = this._sensorSelfSwitchType;
+        if (selfSwitchType) {
+            var result = $gameSelfSwitches.value([this._mapId, this._eventId, selfSwitchType.toUpperCase()]);
+            return param.ConditionReverse ? !result : result;
+        } else {
+            return true;
+        }
     };
 
     Game_Event.prototype.getSensorBalloonId = function() {
