@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.2 2023/02/12 プラグイン未適用のセーブデータをロードしたときエラーになる場合がある問題を修正
 // 2.4.1 2022/05/25 2.4.0の修正で不要なゲージが表示される場合がある問題を修正
 // 2.4.0 2022/03/18 マップ画面とステータス画面に蓄積ゲージを表示できるよう修正
 // 2.3.0 2021/07/23 敵キャラに対しても蓄積ゲージを表示できる機能を追加
@@ -258,6 +259,20 @@
 
     Game_Enemy.prototype.getData = function () {
         return this.enemy();
+    };
+
+    const _Game_System_onAfterLoad = Game_System.prototype.onAfterLoad;
+    Game_System.prototype.onAfterLoad = function() {
+        _Game_System_onAfterLoad.apply(this, arguments);
+        $gameActors.clearStateAccumulationsIfNeed();
+    };
+
+    Game_Actors.prototype.clearStateAccumulationsIfNeed = function() {
+        this._data.forEach(actor => {
+            if (actor) {
+                actor.clearStateAccumulationsIfNeed();
+            }
+        });
     };
 
     SceneManager.findAccumulateGaugeTagX = function() {
