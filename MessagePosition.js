@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2023/02/13 名前欄の相対的なXY座標を指定可能に
 // 1.1.1 2022/11/20 1.1.0の修正でメッセージの自動ページ送りが機能しなくなっていた問題を修正
 // 1.1.0 2022/11/06 MessageWindowPopup.jsと併用できるよう調整
 //                  相対座標のデフォルト値をfalseに変更
@@ -75,6 +76,18 @@
  * @default false
  * @type boolean
  *
+ * @param nameX
+ * @text 名前欄のx座標
+ * @desc 名前欄の相対的なY座標です。
+ * @default 0
+ * @type number
+ *
+ * @param nameY
+ * @text 名前欄のy座標
+ * @desc 名前欄の相対的なY座標です。
+ * @default 0
+ * @type number
+ *
  * @help MessagePosition.js
  *
  * ウィンドウの位置を調節できます。
@@ -139,6 +152,12 @@
 		}
 		if (this._messageWindow.y < this.height) {
 			this.y = this._messageWindow.y + this._messageWindow.height;
+		}
+		if (param.nameY) {
+			this.y += param.nameY;
+		}
+		if (param.nameX) {
+			this.x += param.nameX;
 		}
 	};
 })();
