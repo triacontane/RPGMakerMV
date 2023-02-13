@@ -81,12 +81,14 @@
  * @desc 名前欄の相対的なY座標です。
  * @default 0
  * @type number
+ * @min -2000
  *
  * @param nameY
  * @text 名前欄のy座標
  * @desc 名前欄の相対的なY座標です。
  * @default 0
  * @type number
+ * @min -2000
  *
  * @help MessagePosition.js
  *
