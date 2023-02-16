@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2023/02/16 文字列をポップアップできる機能を追加
 // 2.0.1 2021/03/20 コマンドの設定が空の状態でもポップアップされるよう修正
 // 2.0.0 2021/03/19 MZ向けに全面的に修正
 // 1.6.1 2019/04/20 ダメージが0だった場合の表記を「MISS」から「0」に変更
@@ -154,7 +155,7 @@
  *
  * @arg value
  * @text ポップアップ値(直接指定)
- * @desc ポップアップする数値です。
+ * @desc ポップアップする数値です。文字列をポップアップさせたい場合、テキストタブから入力してください。
  * @default 0
  * @type number
  * @min -999999999
@@ -604,12 +605,26 @@
         if (this.isMiss()) {
             this.createMiss();
             this._degitWidth = this.fontSize() * 3;
-        } else {
+        } else if (!isNaN(damageInfo.value)) {
             this.createDigits(damageInfo.value);
             this._degitWidth = this.fontSize() * 0.75;
+        } else {
+            this.createTexts(damageInfo.value);
+            this._degitWidth = this.fontSize() * 0.65;
         }
         if (damageInfo.critical) {
             this.setupCriticalEffect();
+        }
+    };
+
+    Sprite_Damage.prototype.createTexts = function(string) {
+        const h = this.fontSize();
+        const w = Math.floor(h * 0.75);
+        for (let i = 0; i < string.length; i++) {
+            const sprite = this.createChildSprite(w, h);
+            sprite.bitmap.drawText(string[i], 0, 0, w, h, "center");
+            sprite.x = (i - (string.length - 1) / 2) * w;
+            sprite.dy = -i;
         }
     };
 
