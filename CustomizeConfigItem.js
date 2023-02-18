@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2023/02/16 スクリプトで現在の設定値を取得できるよう修正
 // 2.3.0 2021/12/21 項目に余白を設定できる機能を追加
 // 2.2.1 2021/08/05 セーブがある状態で隠し項目を追加した時に上手く動作しない問題を修正(by柊菜緒さま)
 // 2.2.0 2021/03/09 スクリプトが指定されているときに項目決定すると決定SEを演奏するよう修正
@@ -312,7 +313,7 @@
  *
  * @param Script
  * @text スクリプト
- * @desc 項目を決定したときに実行されるスクリプトです。
+ * @desc 項目を決定したときに実行されるスクリプトです。変数[value]で現在の選択値が参照できます。
  * @default
  *
  * @param AddPosition
@@ -746,11 +747,13 @@
     var _Window_Options_cursorRight      = Window_Options.prototype.cursorRight;
     Window_Options.prototype.cursorRight = function(wrap) {
         if (!this._shiftValue(1, false)) _Window_Options_cursorRight.apply(this, arguments);
+        this.execScript();
     };
 
     var _Window_Options_cursorLeft      = Window_Options.prototype.cursorLeft;
     Window_Options.prototype.cursorLeft = function(wrap) {
         if (!this._shiftValue(-1, false)) _Window_Options_cursorLeft.apply(this, arguments);
+        this.execScript();
     };
 
     Window_Options.prototype._shiftValue = function(sign, loopFlg) {
@@ -773,6 +776,7 @@
         var symbol = this.commandSymbol(this.index());
         if (!this.isCustomSymbol(symbol)) return;
         var script = this._customParams[symbol].script;
+        var value = this.getConfigValue(symbol);
         if (script) {
             eval(script);
             SoundManager.playOk();
