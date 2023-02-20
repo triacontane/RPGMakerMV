@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.5 2023/02/20 ピクチャの紐付けがされていない状態でもマウスオーバー判定が裏で動作してしまう問題を修正
 // 1.14.4 2021/08/22 「並列処理として実行」のパラメータが戦闘画面には適用されない問題を修正
 // 1.14.3 2021/05/01 紐付け解除の際の設定値を変更
 // 1.14.2 2020/06/05 ヘルプのキーバインドにpagedownとpageupを追加
@@ -857,15 +858,21 @@
     };
 
     Sprite_Picture.prototype.updateMouseMove = function() {
+        var commandIds = $gameScreen.getPictureCid(this._pictureId);
+        if (!commandIds) {
+            this._outMouse   = false;
+            this._wasOnMouse = false;
+            return;
+        }
         if (this.isIncludePointer()) {
             if (!this._wasOnMouse) {
                 this._onMouse    = true;
                 this._wasOnMouse = true;
             }
         } else if (this._wasOnMouse) {
-                this._outMouse   = true;
-                this._wasOnMouse = false;
-            }
+            this._outMouse   = true;
+            this._wasOnMouse = false;
+        }
     };
 
     Sprite_Picture.prototype.isIncludePointer = function() {
