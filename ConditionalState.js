@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.4 2023/02/20 全回復や初期化の操作の時に自動付与が解除されてしまう問題を修正
 // 1.0.3 2021/07/23 上回った場合の判定処理が正常に機能していなかった問題を修正
 // 1.0.2 2020/09/06 条件付きステートが付与されている状態で装備変更するとエラーになる問題を修正
 // 1.0.1 2020/08/16 戦闘不能から復帰したときに正常にステートが付与されない問題を修正
@@ -155,6 +156,12 @@
     Game_BattlerBase.prototype.clearStates = function() {
         _Game_BattlerBase_clearStates.apply(this, arguments);
         this._conditionalStates = [];
+    };
+
+    var _Game_BattlerBase_recoverAll = Game_BattlerBase.prototype.recoverAll;
+    Game_BattlerBase.prototype.recoverAll = function() {
+        _Game_BattlerBase_recoverAll.apply(this, arguments);
+        this.refreshConditionalState();
     };
 
     Game_BattlerBase.prototype.getConditionalStates = function() {
