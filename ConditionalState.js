@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2023/02/20 戦闘開始時に自動付与の再チェックを実施するよう仕様変更
 // 1.0.4 2023/02/20 全回復や初期化の操作の時に自動付与が解除されてしまう問題を修正
 // 1.0.3 2021/07/23 上回った場合の判定処理が正常に機能していなかった問題を修正
 // 1.0.2 2020/09/06 条件付きステートが付与されている状態で装備変更するとエラーになる問題を修正
@@ -140,6 +141,12 @@
             values[i] = (parseFloat(values[i]) || 0).clamp(min, max);
         }
         return values;
+    };
+
+    var _BattleManager_setup = BattleManager.setup;
+    BattleManager.setup = function(troopId, canEscape, canLose) {
+        _BattleManager_setup.apply(this, arguments);
+        $gameParty.members().forEach(actor => actor.refreshConditionalState());
     };
 
     //=============================================================================
