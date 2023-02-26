@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2023/02/26 1.1.0の修正が一部不完全だった問題を修正
 // 1.1.0 2023/02/20 戦闘開始時に自動付与の再チェックを実施するよう仕様変更
 // 1.0.4 2023/02/20 全回復や初期化の操作の時に自動付与が解除されてしまう問題を修正
 // 1.0.3 2021/07/23 上回った場合の判定処理が正常に機能していなかった問題を修正
@@ -71,6 +72,10 @@
  *
  * 類似プラグイン「AutomaticState.js」はステート単位で設定しますが
  * こちらはバトラー単位で設定します。
+ *
+ * 本プラグインで指定したステートは解除条件の指定や
+ * イベントコマンドから解除できますが、解除されることは仕様上
+ * 想定していません。ご注意ください。
  *
  * このプラグインにはプラグインコマンドはありません。
  *
@@ -146,7 +151,7 @@
     var _BattleManager_setup = BattleManager.setup;
     BattleManager.setup = function(troopId, canEscape, canLose) {
         _BattleManager_setup.apply(this, arguments);
-        $gameParty.members().forEach(actor => actor.refreshConditionalState());
+        $gameParty.members().forEach(actor => actor.resetConditionalState());
     };
 
     //=============================================================================
@@ -187,6 +192,11 @@
         if (!states.contains(stateId)) return;
         states.splice(states.indexOf(stateId), 1);
         this.removeState(stateId);
+    };
+
+    Game_BattlerBase.prototype.resetConditionalState = function() {
+        this._conditionalStates = [];
+        this.refreshConditionalState();
     };
 
     Game_BattlerBase.prototype.refreshConditionalState = function() {
