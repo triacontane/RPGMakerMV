@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2023/02/26 プレイヤー以外にも光源イベントを作成できる機能を追加
  1.5.1 2021/05/11 1.5.0の修正により、パーティメンバーが0人になるとエラーになる問題を修正
  1.5.0 2021/05/04 アクターごとに可視距離のレートを指定できる機能を追加
  1.4.1 2020/12/09 マップ改編系プラグインとの一般的な競合対策を追加
@@ -97,7 +98,12 @@
  * <可視距離倍率:150> // 可視距離が1.5倍になります。
  + <VisibleDistanceRate:150> // 同上
  * ※ アクター、職業、武器、防具、ステートが該当します。
- *　
+ *
+ * プレイヤー以外にも光源となるイベントを作成できます。
+ * メモ欄に以下の通り指定してください。
+ * <light>
+ + <光源>
+ *
  * このプラグインにはプラグインコマンドはありません。
  *
  * This plugin is released under the MIT License.
@@ -294,6 +300,18 @@
         return result;
     };
 
+    Game_Map.prototype.findLightSource = function() {
+        if (this._lights) {
+            return this._lights;
+        }
+        var light = this.events().filter(function(e) {
+            return e.isLight();
+        });
+        light.push($gamePlayer);
+        this._lights = light;
+        return light;
+    };
+
     Game_Actor.prototype.findVisibleDistanceRate = function() {
         var result = 0;
         this.traitObjects().forEach(function(obj) {
@@ -338,11 +356,19 @@
         _Game_Event_initialize.apply(this, arguments);
         this._visibleDistance = parseInt(getMetaValues(this.event(), ['可視距離', 'VisibleDistance'])) * $gameMap.tileWidth() || 0;
         this._triggerDistance = parseInt(getMetaValues(this.event(), ['トリガー距離', 'TriggerDistance'])) * $gameMap.tileWidth() || 0;
-        this._opacityReverse  = !!getMetaValues(this.event(), ['透明度反転', 'OpacityReverse'])
+        this._opacityReverse  = !!getMetaValues(this.event(), ['透明度反転', 'OpacityReverse']);
+        this._lightSource = !!getMetaValues(this.event(), ['光源', 'Light']);
+    };
+
+    Game_Event.prototype.isLight = function() {
+        return this._lightSource;
     };
 
     Game_Event.prototype.getDistanceFromPlayer = function() {
-        return $gameMap.realDistance(this._realX, this._realY, $gamePlayer._realX, $gamePlayer._realY);
+        var dList = $gameMap.findLightSource().map(e => {
+            return $gameMap.realDistance(this._realX, this._realY, e._realX, e._realY);
+        });
+        return Math.min(...dList);
     };
 
     Game_Event.prototype.isPhantom = function() {
