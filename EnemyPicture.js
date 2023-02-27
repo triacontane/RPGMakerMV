@@ -100,7 +100,7 @@
             const data = $dataEnemies[picture.enemyId()];
             if (data) {
                 this.bitmap = ImageManager.loadEnemy(data.battlerName);
-                this.setHue(-data.battlerHue);
+                this.setHue(data.battlerHue);
             }
         } else {
             this.setHue(0);
