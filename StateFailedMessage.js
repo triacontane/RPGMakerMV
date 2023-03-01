@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/03/01 ステート解除の判定に失敗したパターンの失敗メッセージを表示できる機能を追加
  1.0.0 2023/02/10 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -59,7 +60,12 @@
  *
  * @param removedFailedStates
  * @text 解除失敗メッセージ
- * @desc ステート解除が失敗した場合のメッセージ
+ * @desc ステート解除が失敗した場合のメッセージ。最初から対象ステートに掛かっていなかった場合
+ * @default
+ *
+ * @param removedJudgeFailedStates
+ * @text 解除判定失敗メッセージ
+ * @desc ステート解除が失敗した場合のメッセージ。ステート解除効果の成功判定に失敗した場合
  * @default
  *
  */
@@ -76,11 +82,20 @@
         return param.messageList.find(item => item.stateId === stateId) || {};
     }
 
+    const _Game_Action_itemEffectRemoveState = Game_Action.prototype.itemEffectRemoveState;
+    Game_Action.prototype.itemEffectRemoveState = function(target, effect) {
+        _Game_Action_itemEffectRemoveState.apply(this, arguments);
+        if (target.isStateAffected(effect.dataId)) {
+            target.result().pushRemovedJudgeFailedState(effect.dataId);
+        }
+    };
+
     const _Game_ActionResult_clear = Game_ActionResult.prototype.clear;
     Game_ActionResult.prototype.clear = function() {
         _Game_ActionResult_clear.apply(this, arguments);
         this.resistStates = [];
         this.removedFailedStates = [];
+        this.removedJudgeFailedStates = [];
     };
 
     const _Game_ActionResult_isStatusAffected = Game_ActionResult.prototype.isStatusAffected;
@@ -99,6 +114,12 @@
     Game_ActionResult.prototype.pushRemovedFailedState = function(stateId) {
         if (!this.removedFailedStates.includes(stateId) && !this.isStateRemoved(stateId)) {
             this.removedFailedStates.push(stateId);
+        }
+    };
+
+    Game_ActionResult.prototype.pushRemovedJudgeFailedState = function(stateId) {
+        if (!this.removedJudgeFailedStates.includes(stateId)) {
+            this.removedJudgeFailedStates.push(stateId);
         }
     };
 
@@ -121,6 +142,7 @@
         _Window_BattleLog_displayChangedStates.apply(this, arguments);
         this.displayFailedStates(target, 'resistStates');
         this.displayFailedStates(target, 'removedFailedStates');
+        this.displayFailedStates(target, 'removedJudgeFailedStates');
     };
 
     Window_BattleLog.prototype.displayFailedStates = function(target, property) {
@@ -131,6 +153,7 @@
                 this.push("popBaseLine");
                 this.push("pushBaseLine");
                 this.push("addText", stateText.format(target.name()));
+                this.push("waitForEffect");
             }
         }
     };
