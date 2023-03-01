@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2023/03/01 インデックスの指定値によっては正常なフェイスグラフィックが表示されない問題を修正
 // 2.0.0 2023/02/24 MZ向けに実装を一新
 // 1.2.1 2019/06/27 最新のコアスクリプトでもbltで正常表示できるよう修正
 // 1.2.0 2017/03/08 ピクチャのファイル名に制御文字を使っていた場合にリフレッシュで再表示できる機能を追加
@@ -149,7 +150,7 @@
             const h = ImageManager.faceHeight;
             const index = picture.faceInfo().index;
             const sx = index % 4 * w;
-            const sy = Math.floor(index / 2) * h;
+            const sy = Math.floor(index / 4) * h;
             this.setFrame(sx, sy, w, h);
         }
     };
