@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2023/03/07 ロード成功時、マップが更新されていてもリロードされない問題を修正
 // 1.0.1 2021/04/17 ロードタイミングを項目追加にしたときは追加した項目が初期選択されるよう修正
 // 1.0.0 2021/04/11 MZ版初版
 // ----------------------------------------------------------------------------
@@ -151,9 +152,21 @@
         promise.then(() => {
             this._commandWindow.close();
             this.fadeOutAll();
+            this.reloadMapIfUpdated();
             this._loadSuccess = true;
             SceneManager.goto(Scene_Map);
         });
+    };
+
+    Scene_Title.prototype.reloadMapIfUpdated = function() {
+        if ($gameSystem.versionId() !== $dataSystem.versionId) {
+            const mapId = $gameMap.mapId();
+            const x = $gamePlayer.x;
+            const y = $gamePlayer.y;
+            const d = $gamePlayer.direction();
+            $gamePlayer.reserveTransfer(mapId, x, y, d, 0);
+            $gamePlayer.requestMapReload();
+        }
     };
 
     const _Scene_Title_terminate = Scene_Title.prototype.terminate;
