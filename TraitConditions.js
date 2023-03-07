@@ -16,7 +16,7 @@
 // 1.0.1 2016/05/25 スクリプトに「>」「<」を使えるように修正
 // 1.0.0 2016/05/18 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
