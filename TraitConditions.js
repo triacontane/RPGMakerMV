@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2023/03/07 MZで動作するよう修正
 // 1.2.2 2018/04/03 ヘルプの記載が誤っていたので、ヘルプに合わせて実装を修正
 // 1.2.1 2018/03/29 処理の軽量化
 // 1.2.0 2017/04/23 ランダム要素を簡単に扱える関数を追加
@@ -22,19 +23,21 @@
 
 /*:
  * @plugindesc 特徴の条件適用プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TraitConditions.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @help 特徴のひとつひとつに適用条件を設定します。
+ * @help TraitConditions.js
+ *
+ * 特徴のひとつひとつに適用条件を設定します。
  * 条件を満たさない特徴は無効になります。
  * 特徴を記述するデータベースのメモ欄に以下の通り入力してください。
  *
  * <TC1スイッチ:10>     // スイッチ[10]がONの場合、1番目の特徴が有効になる
  * <TC1ステート:4>      // ステート[4]が有効な場合、1番目の特徴が有効になる
  * <TC1スクリプト:JS式> // [式]の評価結果がtrueの場合、1番目の特徴が有効になる
- * スクリプト中で不等号を使いたい場合、以下のように記述してください。
- * < → &lt;
- * > → &gt;
- * 例：<TC1スクリプト:\v[1] &gt; 10> // 変数[1]が10より大きい場合
  *
  * スクリプト中で「data」と記述すると
  * 対象のアクター・エネミーオブジェクトを参照できます。
@@ -43,12 +46,12 @@
  * 例1:対象がID[1]のアクターの場合のみ有効になります。
  * <TC1スクリプト:data.isActor() && data.actorId() === 1>
  *
- * 例2:50%の確率で有効になります。
- * <TC1スクリプト:random(50)>
- *
  * 2番目以降の特徴も同様に設定可能です。
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -56,50 +59,8 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function () {
+(()=> {
     'use strict';
-    var metaTagPrefix = 'TC';
-
-    var getArgString = function (arg, upperFlg) {
-        arg = convertEscapeCharacters(arg);
-        return upperFlg ? arg.toUpperCase() : arg;
-    };
-
-    var getArgNumber = function (arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(convertEscapeCharacters(arg), 10) || 0).clamp(min, max);
-    };
-
-    var getMetaValue = function(object, name) {
-        var metaTagName = metaTagPrefix + (name ? name : '');
-        return object.meta.hasOwnProperty(metaTagName) ? object.meta[metaTagName] : undefined;
-    };
-
-    var getMetaValues = function(object, names) {
-        if (!Array.isArray(names)) return getMetaValue(object, names);
-        for (var i = 0, n = names.length; i < n; i++) {
-            var value = getMetaValue(object, names[i]);
-            if (value !== undefined) return value;
-        }
-        return undefined;
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (text == null || text === true) text = '';
-        text = text.replace(/&gt;?/gi, '>');
-        text = text.replace(/&lt;?/gi, '<');
-        text = text.replace(/\\/g, '\x1b');
-        text = text.replace(/\x1b\x1b/g, '\\');
-        text = text.replace(/\x1bV\[(\d+)]/gi, function() {
-            return $gameVariables.value(parseInt(arguments[1], 10));
-        }.bind(this));
-        return text;
-    };
-
-    var random = function(percent) {
-        return Math.random() < percent / 100;
-    };
 
     //=============================================================================
     // Game_BattlerBase
@@ -107,7 +68,7 @@
     //=============================================================================
     Game_BattlerBase.prototype.allTraits = function() {
         return this.traitObjects().reduce(function(r, obj) {
-            for (var i = 0, n = obj.traits.length; i < n; i++) {
+            for (let i = 0, n = obj.traits.length; i < n; i++) {
                 if (this.isValidTrait(i, obj)) r.push(obj.traits[i]);
             }
             return r;
@@ -115,11 +76,11 @@
     };
 
     Game_BattlerBase.prototype.isValidTrait = function(i, obj) {
-        var id = String(i + 1);
+        const id = 'TC' + String(i + 1);
         if (!this.isValidTraitSwitch(id , obj)) {
             return false;
         }
-        if (!this.isValidTraitState (id , obj)) {
+        if (!this.isValidTraitState(id , obj)) {
             return false;
         }
         if (!this.isValidTraitScript(id , obj)) {
@@ -129,26 +90,28 @@
     };
 
     Game_BattlerBase.prototype.isValidTraitSwitch = function(id, obj) {
-        var metaValue = getMetaValues(obj, [id + 'スイッチ', id + 'Switch']);
+        const metaValue = PluginManagerEx.findMetaValue(obj, [id + 'スイッチ', id + 'Switch']);
         if (!metaValue) return true;
-        return $gameSwitches.value(getArgNumber(metaValue, 1));
+        return $gameSwitches.value(metaValue);
     };
 
     Game_BattlerBase.prototype.isValidTraitState = function(id, obj) {
-        var metaValue = getMetaValues(obj, [id + 'ステート', id + 'State']);
+        const metaValue = PluginManagerEx.findMetaValue(obj, [id + 'ステート', id + 'State']);
         if (!metaValue) return true;
-        return this.isStateAffected(getArgNumber(metaValue, 1));
+        return this.isStateAffected(metaValue);
     };
 
     Game_BattlerBase.prototype.isValidTraitScript = function(id, obj) {
         if (this._calcScript) {
             return false;
         }
-        var metaValue = getMetaValues(obj, [id + 'スクリプト', id + 'Script']);
-        if (!metaValue) return true;
+        const metaValue = PluginManagerEx.findMetaValue(obj, [id + 'スクリプト', id + 'Script']);
+        if (!metaValue) {
+            return true;
+        }
         this._calcScript = true;
-        var data = this;
-        var result = eval(getArgString(metaValue));
+        const data = this;
+        const result = eval(metaValue);
         this._calcScript = false;
         return result;
     };
