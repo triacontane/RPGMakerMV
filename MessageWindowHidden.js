@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.1 0223/03/11 決定動作により復帰するとき、左クリックで復帰するとメッセージが進んでしまう問題を修正
 // 2.8.0 2022/06/06 トリガースイッチをウィンドウの表示状態と同期する機能を追加
 // 2.7.0 2021/01/25 ウィンドウ消去時、決定動作によってウィンドウを再表示できる設定を追加(by unaunagiさま)
 // 2.6.2 2020/09/02 MZ向けにコード修正
@@ -178,6 +179,7 @@
         } else if (this.isHidden() && this.isTriggered() && param.restoreByDecision) {
             this.showAllWindow();
             Input.update();
+            TouchInput.update();
         }
         const wait = _Window_Message_updateWait.apply(this, arguments);
         if (this.isHidden() && this.visible) {
