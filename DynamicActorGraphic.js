@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2023/03/16 動的グラフィックが設定されているとき各種ゲージの増減が一瞬で行われてしまう現象を修正
 // 2.6.0 2022/08/18 動的グラフィックの条件にモーション条件を追加
 // 2.5.1 2021/10/01 データベースの防具選択で武器の一覧が表示されていた問題を修正
 // 2.5.0 2021/10/01 指定したタグが職業、武器、防具、ステートに記載されている場合にグラフィックを変更できる機能を追加
@@ -300,11 +301,13 @@
     };
 
     Game_Actor.prototype.refreshCustomGraphic = function() {
-        this.initCustomGraphic();
+        this._customGraphicChange = false;
         param.list.filter(item => this.isValidCustomGraphic(item))
             .forEach(item => this.setCustomGraphic(item));
-        $gamePlayer.requestRefresh();
-        $gameTemp.requestBattleRefresh();
+        if (this._customGraphicChange) {
+            $gamePlayer.requestRefresh();
+            $gameTemp.requestBattleRefresh();
+        }
     };
 
     Game_Actor.prototype.isValidCustomGraphic = function(item) {
@@ -347,17 +350,33 @@
     };
 
     Game_Actor.prototype.setCustomGraphic = function(item) {
+        let change = this._customGraphicChange;
         if (item.faceImage) {
-            this._faceNameCustom  = item.faceImage;
-            this._faceIndexCustom = item.faceIndex;
+            if (this._faceNameCustom !== item.faceImage) {
+                this._faceNameCustom = item.faceImage;
+                change = true;
+            }
+            if (this._faceIndexCustom !== item.faceIndex) {
+                this._faceIndexCustom = item.faceIndex;
+                change = true;
+            }
         }
         if (item.characterImage) {
-            this._characterNameCustom  = item.characterImage;
-            this._characterIndexCustom = item.characterIndex;
+            if (this._characterNameCustom !== item.characterImage) {
+                this._characterNameCustom = item.characterImage;
+                change = true;
+            }
+            if (this._characterIndexCustom !== item.characterIndex) {
+                this._characterIndexCustom = item.characterIndex;
+                change = true;
+            }
         }
         if (item.battlerImage) {
-            this._battlerNameCustom = item.battlerImage;
+            if (this._battlerNameCustom !== item.battlerImage) {
+                change = true;
+            }
         }
+        this._customGraphicChange = change;
     };
 
     Game_Actor.prototype.initCustomGraphic = function() {
@@ -421,7 +440,7 @@
         if (!this._pictureMotion) {
             return;
         }
-        this.refreshCustomGraphic();
+        //this.refreshCustomGraphic();
     };
 
     const _Game_Actor_performDamage = Game_Actor.prototype.performDamage;
@@ -491,7 +510,7 @@
     //=============================================================================
     Game_Party.prototype.refreshMemberCustomGraphic = function() {
         this.members().forEach(function(actor) {
-            actor.refreshCustomGraphic();
+            //actor.refreshCustomGraphic();
         });
     };
 
