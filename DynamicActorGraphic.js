@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.2 2023/03/22 2.6.1の修正方針が不十分だった問題を修正
+// 2.6.1 2023/03/16 動的グラフィックが設定されているとき各種ゲージの増減が一瞬で行われてしまう現象を修正
 // 2.6.0 2022/08/18 動的グラフィックの条件にモーション条件を追加
 // 2.5.1 2021/10/01 データベースの防具選択で武器の一覧が表示されていた問題を修正
 // 2.5.0 2021/10/01 指定したタグが職業、武器、防具、ステートに記載されている場合にグラフィックを変更できる機能を追加
@@ -300,11 +302,18 @@
     };
 
     Game_Actor.prototype.refreshCustomGraphic = function() {
+        const serialize = this.createGraphicSerialize();
         this.initCustomGraphic();
         param.list.filter(item => this.isValidCustomGraphic(item))
             .forEach(item => this.setCustomGraphic(item));
-        $gamePlayer.requestRefresh();
-        $gameTemp.requestBattleRefresh();
+        if (serialize !== this.createGraphicSerialize()) {
+            $gamePlayer.requestRefresh();
+            $gameTemp.requestBattleRefresh();
+        }
+    };
+
+    Game_Actor.prototype.createGraphicSerialize = function() {
+        return `${this.characterName()}:${this.characterIndex()}:${this.faceName()}:${this.faceIndex()}:${this.battlerName()}`;
     };
 
     Game_Actor.prototype.isValidCustomGraphic = function(item) {
