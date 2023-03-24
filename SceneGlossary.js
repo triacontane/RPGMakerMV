@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.23.2 2023/03/24 スクリプトの制御文字を同じ行で2回使うとエラーになる問題を修正
 // 2.23.1 2021/12/19 部分一致で自動登録されない問題を修正
 // 2.23.0 2021/11/10 用語未入手時の説明文を表示できる機能を追加
 //                   用語ピクチャの表示座標をピクセル単位で調整できる機能を追加
@@ -2335,7 +2336,7 @@ function Window_GlossaryComplete() {
         description    = description.replace(/\x1bDATA\[(\w+)]/gi, function() {
             return data[arguments[1]];
         }.bind(this));
-        description    = description.replace(/\x1bSCRIPT{(.+)}/gi, function() {
+        description    = description.replace(/\x1bSCRIPT{(.+?)}/gi, function() {
             return eval(arguments[1]);
         }.bind(this));
         description    = description.replace(/\x1bCOMMON\[(\d+)]/gi, function() {
@@ -2632,7 +2633,7 @@ function Window_GlossaryComplete() {
             }
             return '';
         });
-        text          = text.replace(/\x1bSCRIPT{(\s+)}/gi, function() {
+        text          = text.replace(/\x1bSCRIPT{(\s+?)}/gi, function() {
             return eval(arguments[1]);
         });
         return text;
