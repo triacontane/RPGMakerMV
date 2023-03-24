@@ -62,7 +62,6 @@
 (() => {
     'use strict';
     const script = document.currentScript;
-    const param = PluginManagerEx.createParameter(script);
 
     PluginManagerEx.registerCommand(script, 'REMOVE_ANIMATION', function(args) {
         const character = this.character(args.id);
