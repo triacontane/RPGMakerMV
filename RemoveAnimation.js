@@ -79,7 +79,7 @@
 
     Sprite.prototype.isAbortAnimation = function() {
         if (this.targetObjects) {
-            return this.targetObjects.every(obj => obj instanceof Game_Character && !obj.isAnimationPlaying());
+            return this.targetObjects.every(obj => obj.isAnimationPlaying && !obj.isAnimationPlaying());
         } else {
             return false;
         }
@@ -115,7 +115,7 @@
 
     Sprite_Balloon.prototype.isAbortBalloon = function() {
         if (this.targetObject) {
-            return this.targetObject instanceof Game_Character && !this.targetObject.isBalloonPlaying();
+            return this.targetObject.isBalloonPlaying && !this.targetObject.isBalloonPlaying();
         } else {
             return false;
         }

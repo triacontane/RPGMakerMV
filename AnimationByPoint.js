@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.1.0 2023/03/27 RemoveAnimation.jsと組み合わせて表示中のアニメーションやフキダシを即時消去できる機能を追加
  2.0.0 2022/10/16 フキダシもアニメーションと同様に表示できる機能を追加
  1.2.1 2022/06/30 ヘルプ文言修正
  1.2.0 2022/06/30 アニメーションをマップのスクロールに合わせる機能を追加
@@ -27,6 +28,11 @@
  * @command SHOW_ANIMATION
  * @text アニメーション表示
  * @desc 画面上の指定座標(ピクセル指定)にアニメーションやフキダシを表示します。
+ *
+ * @arg label
+ * @text ラベル
+ * @desc 表示するアニメーションのラベルです。途中消去する場合にあらかじめ指定しておきます。
+ * @default
  *
  * @arg id
  * @text アニメーションID
@@ -106,6 +112,15 @@
  * @default false
  * @type boolean
  *
+ * @command REMOVE_ANIMATION
+ * @text アニメーション消去
+ * @desc ラベルを指定して表示中のアニメーションやフキダシを即時消去します。利用にはRemoveAnimation.jsが必要です。
+ *
+ * @arg label
+ * @text ラベル
+ * @desc 表示する際に指定してアニメーションのラベルです。
+ * @default
+ *
  * @help AnimationByPoint.js
  *
  * 画面上の指定座標(ピクセル指定)にアニメーションやフキダシをを表示する
@@ -115,6 +130,9 @@
  *
  * フキダシを戦闘画面で表示したい場合、別途『BattleBalloon.js』が
  * 必要です。本プラグインと同じ場所で配布しています。
+ *
+ * 表示中のアニメーションやフキダシを即時消去したいときは
+ * 別途『RemoveAnimation.js』を適用して消去コマンドを実行してください。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -139,10 +157,8 @@
         this.requestAnimationByPoint(args);
     });
 
-    PluginManagerEx.registerCommand(script, 'SHOW_ANIMATION_BY_MAP_POINT', function(args) {
-        args.x = $gameMap.convertToScreenX(args.x);
-        args.y = $gameMap.convertToScreenY(args.y);
-        this.requestAnimationByPoint(args);
+    PluginManagerEx.registerCommand(script, 'REMOVE_ANIMATION', function(args) {
+        $gameTemp.removePointAnimation(args.label);
     });
 
     Game_Map.prototype.convertToScreenX = function(mapX) {
@@ -162,9 +178,29 @@
         } else if (args.balloonId > 0) {
             $gameTemp.requestBalloon(point, args.balloonId);
         }
+        if (args.label) {
+            $gameTemp.pushPointAnimation(point);
+        }
         if (args.wait) {
             this.setWaitMode("pointAnimation");
         }
+    };
+
+    Game_Temp.prototype.pushPointAnimation = function(point) {
+        if (!this._pointQueue) {
+            this._pointQueue = [];
+        }
+        this._pointQueue.push(point);
+    };
+
+    Game_Temp.prototype.removePointAnimation = function(label) {
+        if (!this._pointQueue) {
+            return;
+        }
+        this._pointQueue
+            .filter(target => target.getLabel() === label)
+            .forEach(target => target.endAnimation());
+        this._pointQueue = this._pointQueue.filter(target => target.isAnimationPlaying());
     };
 
     Spriteset_Base.prototype.findPointTargetSprite = function(point) {
@@ -229,34 +265,51 @@
             super(args.x, args.y);
             this._wait = args.wait;
             this._scroll = args.scroll;
+            this._label = args.label;
         }
 
         startAnimation() {
             if (this._wait) {
                 pointAnimationCount++;
             }
+            this._playing = true;
         }
 
         endAnimation() {
             if (this._wait) {
                 pointAnimationCount--;
             }
+            this._playing = false;
         }
 
         startBalloon() {
             if (this._wait) {
                 pointAnimationCount++;
             }
+            this._playing = true;
         }
 
         endBalloon() {
             if (this._wait) {
                 pointAnimationCount--;
             }
+            this._playing = false;
         }
 
         isScroll() {
             return this._scroll;
+        }
+
+        isAnimationPlaying() {
+            return this._playing;
+        }
+
+        isBalloonPlaying() {
+            return this._playing;
+        }
+
+        getLabel() {
+            return this._label;
         }
     }
 
