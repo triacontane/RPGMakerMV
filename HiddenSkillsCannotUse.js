@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2023/04/01 非表示の対象外にできるスキルを設定できる機能を追加
 // 1.3.0 2022/10/02 MZで動作するよう修正
 // 1.2.0 2022/10/01 コスト不足無視できるフラグを追加
 // 1.0.0 2016/06/16 初版
@@ -16,7 +17,7 @@
 //=============================================================================
 
 /*:
- * @plugindesc 使用不可スキルの非表示
+ * @plugindesc 使用不可スキルの非表示プラグイン
  * @author トリアコンタン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/HiddenSkillsCannotUse.js
@@ -30,7 +31,15 @@
  * @default false
  * @type boolean
  *
- * @help 戦闘画面のスキル選択ウィンドウにおいて
+ * @param ignoreSkills
+ * @text 対象外スキルリスト
+ * @desc 本プラグインの対象外(非表示にならない)スキル一覧です。
+ * @default []
+ * @type skill[]
+ *
+ * @help HiddenSkillsCannotUse.js
+ *
+ * 戦闘画面のスキル選択ウィンドウにおいて
  * 使用できないスキルを非表示にします。
  * メニュー画面では通常通り表示されます。
  *
@@ -46,16 +55,23 @@
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+    if (!param.ignoreSkills) {
+        param.ignoreSkills = [];
+    }
 
     //=============================================================================
     // Window_BattleSkill
     //  使用できないスキルを非表示にします。
     //=============================================================================
     Window_BattleSkill.prototype.includes = function(item) {
+        const result = Window_SkillList.prototype.includes.call(this, item);
         if (param.ignoreCost) {
             this._actor.ignoreCost();
         }
-        return Window_SkillList.prototype.includes.call(this, item) && this._actor.canUse(item);
+        if (param.ignoreSkills.includes(item.id) && DataManager.isSkill(item)) {
+            return result;
+        }
+        return result && this._actor.canUse(item);
     };
 
     //=============================================================================
