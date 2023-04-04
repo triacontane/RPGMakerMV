@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.2 2023/04/04 インターバルを0に設定したアラームを指定すると、設定次第でフリーズする場合がある問題を修正
 // 2.4.1 2022/04/14 2.4.0でカレンダーのフォントサイズを変更したとき描画位置がズレる問題を修正
 // 2.4.0 2022/04/07 カレンダー表記に制御文字を使える機能を追加
 // 2.3.0 2021/12/29 天候による色調補正を無効にできる設定を追加
@@ -1981,7 +1982,7 @@ function Window_Chronus() {
         var year       = Math.floor(timeNumber / 100000000);
         var dayMeter   = this.calcNewDay(year, month, day) - (this._criterionDay || 0);
         var targetTime = dayMeter * 24 * 60 + timeMeter;
-        this.makeTimer(timerName, (targetTime - baseTime) || 0, switchKey, true, interval);
+        this.makeTimer(timerName, (targetTime - baseTime) || 0, switchKey, interval > 0, interval);
     };
 
     Game_Chronus.prototype.makeTimer = function(timerName, timeout, switchKey, loop, interval) {
