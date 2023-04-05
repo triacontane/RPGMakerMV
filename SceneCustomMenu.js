@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.26.4 2023/04/05 未キャッシュの画像が2枚以上あるときに描画処理が2回以上実行される場合がある問題を修正
  1.26.3 2023/01/01 PartyCommandScene.jsで戦闘シーンから遷移して戻ると戦闘終了処理が正しく行われない不具合を修正
  1.26.2 2022/12/30 戦闘テストを終了する際にエラーが出る不具合を修正
  1.26.1 2022/12/08 アクティブでないウィンドウのボタンイベントが実行されていた問題を修正
@@ -1793,6 +1794,7 @@
             this._drawingIndex = index;
             const item = this.getItem(index);
             const rect = this.itemRect(index);
+            this.contents.clearRect(rect.x, rect.y, rect.width, rect.height);
             rect.x += this.textPadding();
             rect.width -= this.textPadding() * 2;
             this.changePaintOpacity(this.isEnabled(index));
