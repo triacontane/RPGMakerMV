@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.12.0 2023/04/09 カスタムメニュープラグインで作成した画面に立ち絵を表示するとき、単一アクターのカスタムメニューなら立ち絵も単一表示になるよう修正
 // 3.11.0 2022/12/30 アクターがコマンド入力中のみ立ち絵を表示する機能を追加
 // 3.10.0 2022/12/22 フロントビュー採用時、戦闘アニメの表示対象を立ち絵にできる機能を追加
 //                   パラメータ「原点」の設定が正常に動作していなかった問題を修正
@@ -52,6 +53,8 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/CharacterPictureManager.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderAfter SceneCustomMenu
  * @author トリアコンタン
  *
  * @param PictureList
@@ -1179,6 +1182,13 @@
         const member = Scene_Base.prototype.findStandPictureMember.call(this);
         return member.map(actor => tempActors?.has(actor.actorId()) ? tempActors.get(actor.actorId()) : actor);
     };
+
+    if (window.Scene_CustomMenu){
+        Scene_CustomMenu.prototype.findStandPictureMember = function() {
+            const changeable = !!this._customData.WindowList.find(win => win.ActorChangeable);
+            return param.MenuActorOnly && changeable ? [this.actor()] : Scene_Base.prototype.findStandPictureMember.call(this);
+        };
+    }
 
     Window_EquipStatus.prototype.getTempActor = function() {
         return param.DressUp ? this._tempActor : null;
