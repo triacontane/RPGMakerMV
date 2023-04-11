@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2021/04/11 複数のアニメーションを同時に表示できるよう修正
  1.1.1 2020/12/16 アニメーション解放処理を微修正
  1.1.0 2020/12/15 MZ版として全面的に修正
  1.0.0 2020/12/06 初版
@@ -45,10 +46,12 @@
  * <TraitAnimation:1> // アニメーションID[1]を再生し続けます。
  * <特徴アニメ:1>     // 同上
  *
+ * 同一バトラーに複数のアニメーションを表示させることも可能ですが
+ * パフォーマンスにはご注意ください。
+ * また、同一のデータベースに対して同一のメモ欄は指定できません。
+ *
  * なお、Effekseerを使用したアニメーションを同時に複数再生すると
  * パフォーマンスに影響が出る場合があるのでご注意ください。
- * ロンチプラグイン『AnimationMv.js』を使ったMV方式の
- * アニメーションの利用も可能です。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -64,29 +67,24 @@
      * 特徴の情報を取得します。
      */
     Game_BattlerBase.prototype.findTraitAnimation = function() {
-        let animationId = 0;
-        this.traitObjects().forEach(function(obj) {
+        const animations = [];
+        this.traitObjects().forEach(obj => {
             const meta = PluginManagerEx.findMetaValue(obj, ['TraitAnimation', '特徴アニメ']);
             if (meta) {
-                animationId = parseInt(meta);
+                animations.push({
+                    id : parseInt(meta),
+                    mirror: this.isActor()
+                });
             }
         });
-        if (animationId > 0) {
-            return {
-                id : animationId,
-                mirror: this.isActor()
-            }
-        } else {
-            return null;
-        }
+        return animations;
     };
 
     Game_BattlerBase.prototype.updateTraitAnimation = function() {
-        const data = this.findTraitAnimation();
-        if (!data || !$dataAnimations[data.id]) {
-            return;
-        }
-        $gameTemp.requestTraitAnimation([this], data.id, data.mirror);
+        const list = this.findTraitAnimation();
+        list.forEach(data => {
+            $gameTemp.requestTraitAnimation([this], data.id, data.mirror);
+        });
     };
 
     const _BattleManager_update = BattleManager.update;
@@ -130,37 +128,46 @@
 
     Spriteset_Base.prototype.isTraitAnimationPlaying = function(request) {
         const targetSprites = this.makeTargetSprites(request.targets);
-        return targetSprites.some(item => item.hasTraitAnimationSprite());
+        return targetSprites.some(item => item.hasTraitAnimationSprite(request.animationId));
     };
 
     const _Spriteset_Base_createAnimationSprite = Spriteset_Base.prototype.createAnimationSprite;
     Spriteset_Base.prototype.createAnimationSprite = function(targets, animation, mirror, delay) {
         _Spriteset_Base_createAnimationSprite.apply(this, arguments);
         if (this._createTraitAnimation) {
-            this.createTraitAnimationSprite(targets);
+            this.createTraitAnimationSprite(targets, animation.id);
         }
     };
 
-    Spriteset_Base.prototype.createTraitAnimationSprite = function(targets) {
+    Spriteset_Base.prototype.createTraitAnimationSprite = function(targets, animationId) {
         const sprite = this._animationSprites.pop();
         const targetSprites = this.makeTargetSprites(targets);
         targetSprites.forEach(item => item.setTraitAnimationSprite(sprite));
+        sprite.animationId = animationId;
         this._traitAnimationSprites.push(sprite);
     };
 
-    Sprite_Battler.prototype.setTraitAnimationSprite = function(sprite) {
-        this._traitAnimationSprite = sprite;
+    const _Sprite_Battler_initialize = Sprite_Battler.prototype.initialize;
+    Sprite_Battler.prototype.initialize = function(battler) {
+        _Sprite_Battler_initialize.apply(this, arguments);
+        this._traitAnimationSprite = [];
     };
 
-    Sprite_Battler.prototype.hasTraitAnimationSprite = function() {
-        if (!this._traitAnimationSprite) {
-            return false;
-        } else {
-            const playing = this._traitAnimationSprite.isPlaying();
+    Sprite_Battler.prototype.setTraitAnimationSprite = function(sprite) {
+        this._traitAnimationSprite.push(sprite);
+    };
+
+    Sprite_Battler.prototype.hasTraitAnimationSprite = function(animationId) {
+        let result = false;
+        this._traitAnimationSprite.clone().forEach(sprite => {
+            const playing = sprite.isPlaying();
             if (!playing) {
-                this._traitAnimationSprite = null;
+                console.log('remove');
+                this._traitAnimationSprite.remove(sprite);
+            } else if (sprite.animationId === animationId) {
+                result = true;
             }
-            return playing;
-        }
+        });
+        return result;
     };
 })();
