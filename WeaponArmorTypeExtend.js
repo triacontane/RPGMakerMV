@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2023/04/16 誤って出力したログを削除
  1.1.0 2023/04/16 MZで動作するよう修正
  1.0.0 2019/06/12 初版
 ----------------------------------------------------------------------------
@@ -68,7 +69,6 @@
     Game_BattlerBase.prototype.canEquipArmor = function(item) {
         const result = _Game_BattlerBase_canEquipArmor.apply(this, arguments);
         const metaValues = PluginManagerEx.findMetaValue(item, ['AddArmorType', '追加防具タイプ']);
-        console.log(item);
         return this.isEquipAdditionalTypeOk(result, metaValues, Game_BattlerBase.TRAIT_EQUIP_ATYPE);
     };
 
