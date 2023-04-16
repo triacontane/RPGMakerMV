@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/04/16 パフォーマンス対策で、メモ欄の解析を廃止
  1.1.1 2023/04/16 誤って出力したログを削除
  1.1.0 2023/04/16 MZで動作するよう修正
  1.0.0 2019/06/12 初版
@@ -61,14 +62,14 @@
     const _Game_BattlerBase_canEquipWeapon = Game_BattlerBase.prototype.canEquipWeapon;
     Game_BattlerBase.prototype.canEquipWeapon = function(item) {
         const result = _Game_BattlerBase_canEquipWeapon.apply(this, arguments);
-        const metaValues = PluginManagerEx.findMetaValue(item,['AddWeaponType', '追加武器タイプ']);
+        const metaValues = item.meta['AddWeaponType'] || item.meta['追加武器タイプ'];
         return this.isEquipAdditionalTypeOk(result, metaValues, Game_BattlerBase.TRAIT_EQUIP_WTYPE);
     };
 
     const _Game_BattlerBase_canEquipArmor = Game_BattlerBase.prototype.canEquipArmor;
     Game_BattlerBase.prototype.canEquipArmor = function(item) {
         const result = _Game_BattlerBase_canEquipArmor.apply(this, arguments);
-        const metaValues = PluginManagerEx.findMetaValue(item, ['AddArmorType', '追加防具タイプ']);
+        const metaValues = item.meta['AddArmorType'] || item.meta['追加防具タイプ'];
         return this.isEquipAdditionalTypeOk(result, metaValues, Game_BattlerBase.TRAIT_EQUIP_ATYPE);
     };
 
