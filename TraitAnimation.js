@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/04/16 戦闘中にメンバーを入れ替えたとき即座にアニメーションを消去するよう修正
  1.1.0 2021/04/11 複数のアニメーションを同時に表示できるよう修正
  1.0.0 2020/12/06 初版
 ----------------------------------------------------------------------------
@@ -125,8 +126,11 @@
             if (!sprite.isPlaying()) {
                 sprite.remove();
             }
+            if (this._battler instanceof Game_Actor && !$gameParty.members().contains(this._battler)) {
+                sprite.remove();
+            }
             return sprite.isPlaying();
-        });
+        }, this);
         this.setupTraitAnimation();
     };
 
