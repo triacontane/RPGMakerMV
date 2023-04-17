@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2023/04/18 複数回行動できるアクターの場合、前に選択したスキルのコストを考慮して使用可能か判定する機能を追加
  1.2.0 2023/04/17 CSVN_armsAsSpecialEffectItem.jsと併用できるよう専用のコードを追加
  1.1.0 2023/04/17 テスト用コードが誤って混入していたので修正
  1.0.0 2023/04/16 初版
@@ -23,6 +24,12 @@
  * @orderAfter PluginCommonBase
  * @orderAfter CSVN_armsAsSpecialEffectItem
  * @author トリアコンタン
+ *
+ * @param multiActionCost
+ * @text 複数回行動のコストを考慮
+ * @desc 複数回行動できるアクターの場合、前に選択したスキルのコストを考慮して使用可能か判定します。
+ * @default false
+ * @type boolean
  *
  * @param excludeNonConsumed
  * @text 非消耗アイテム除外
@@ -89,6 +96,18 @@
     Game_Party.prototype.findReserveSkillTpCost = function(battler) {
         return this._actionStack.filter(a => a.isSkill() && a.subject() === battler)
             .reduce((a, b) => a + b.item().tpCost, 0);
+    };
+
+    const _Game_BattlerBase_canPaySkillCost = Game_BattlerBase.prototype.canPaySkillCost;
+    Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
+        const result = _Game_BattlerBase_canPaySkillCost.apply(this, arguments);
+        if (BattleManager.isInputting() && param.multiActionCost) {
+            const party = $gameParty;
+            return result && this.mp - party.findReserveSkillMpCost(this) >= skill.mpCost &&
+                this.tp - party.findReserveSkillTpCost(this) >= skill.tpCost;
+        } else {
+            return result;
+        }
     };
 
     const _Game_Party_numItems = Game_Party.prototype.numItems;
