@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/04/17 CSVN_armsAsSpecialEffectItem.jsと併用できるよう専用のコードを追加
  1.1.0 2023/04/17 テスト用コードが誤って混入していたので修正
  1.0.0 2023/04/16 初版
 ----------------------------------------------------------------------------
@@ -20,6 +21,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/SameItemDisabled.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
+ * @orderAfter CSVN_armsAsSpecialEffectItem
  * @author トリアコンタン
  *
  * @param excludeNonConsumed
@@ -76,7 +78,7 @@
     };
 
     Game_Party.prototype.findReserveItemCount = function(item) {
-        return this._actionStack.filter(a => a.item() === item).length;
+        return this._actionStack.filter(a => a.item() === item || a.subItem === item).length;
     };
 
     Game_Party.prototype.findReserveSkillMpCost = function(battler) {
@@ -87,7 +89,7 @@
     Game_Party.prototype.findReserveSkillTpCost = function(battler) {
         return this._actionStack.filter(a => a.isSkill() && a.subject() === battler)
             .reduce((a, b) => a + b.item().tpCost, 0);
-    }
+    };
 
     const _Game_Party_numItems = Game_Party.prototype.numItems;
     Game_Party.prototype.numItems = function(item) {
@@ -102,6 +104,36 @@
             return result;
         }
     };
+
+    // for CSVN_armsAsSpecialEffectItem.js start
+    const _Scene_Battle_onItemOk = Scene_Battle.prototype.onItemOk;
+    Scene_Battle.prototype.onItemOk = function() {
+        _Scene_Battle_onItemOk.apply(this, arguments);
+        const item = this._itemWindow.item();
+        if (DataManager.isWeapon(item) || DataManager.isArmor(item)) {
+            const action = BattleManager.inputtingAction();
+            action.subItem = item;
+        }
+    };
+
+    const _Game_Party_canUse = Game_Party.prototype.canUse;
+    Game_Party.prototype.canUse = function(item) {
+        const result = _Game_Party_canUse.apply(this, arguments);
+        if (BattleManager.isInputting()) {
+            return result && this.canUseEquipItem(item);
+        } else {
+            return result;
+        }
+    };
+
+    Game_Party.prototype.canUseEquipItem = function(item) {
+        if (!DataManager.isArmor(item) && !DataManager.isWeapon(item)) {
+            return true;
+        }
+        const count = this.numItems(item) - this.findReserveItemCount(item);
+        return count > 0;
+    };
+    // for CSVN_armsAsSpecialEffectItem.js end
 
     const _BattleManager_setup = BattleManager.setup;
     BattleManager.setup = function(troopId, canEscape, canLose) {
