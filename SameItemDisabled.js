@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/04/17 テスト用コードが誤って混入していたので修正
  1.0.0 2023/04/16 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -100,10 +101,6 @@
         } else {
             return result;
         }
-    };
-
-    Game_Party.prototype.maxItems = function(/*item*/) {
-        return 3;
     };
 
     const _BattleManager_setup = BattleManager.setup;
