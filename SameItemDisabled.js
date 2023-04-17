@@ -127,6 +127,9 @@
     };
 
     Game_Party.prototype.canUseEquipItem = function(item) {
+        if (param.excludeNonConsumed) {
+            return true;
+        }
         if (!DataManager.isArmor(item) && !DataManager.isWeapon(item)) {
             return true;
         }
