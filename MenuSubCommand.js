@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.1.1 2023/04/19 ロード画面を開くスクリプトの凡例を追加
 // 4.1.0 2022/06/13 サブウィンドウを透過しない設定を追加、サブウィンドウの開閉にアニメーションを付ける設定を追加
 // 4.0.2 2022/06/10 コマンド選択時に消去：OFF、メンバー選択あり：ON、親がひとつしかないサブコマンドを選択するとエラーになる現象を修正
 // 4.0.1 2022/05/20 コマンドのデフォルト揃えが中央揃えになっていたので、プラグイン側もデフォルトを中央揃えに変更
@@ -241,6 +242,7 @@
  * @type combo
  * @option this.commandItem(); // アイテム画面を開く
  * @option this.commandSave(); // セーブ画面を開く
+ * @option SceneManager.push(Scene_Load); // ロード画面を開く
  * @option this.commandOptions(); // オプション画面を開く
  * @option this.commandGlossary(1); // 用語辞典を呼ぶ(用語辞典プラグイン使用時)
  * @option $gameSwitches.setValue(1, true); // スイッチ[1]をONにする
