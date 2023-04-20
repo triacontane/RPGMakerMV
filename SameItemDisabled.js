@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.1 2023/04/20 1.2.0で追加した併用対応にいくつか不具合があったので修正
  1.3.0 2023/04/18 複数回行動できるアクターの場合、前に選択したスキルのコストを考慮して使用可能か判定する機能を追加
  1.2.0 2023/04/17 CSVN_armsAsSpecialEffectItem.jsと併用できるよう専用のコードを追加
  1.1.0 2023/04/17 テスト用コードが誤って混入していたので修正
@@ -77,7 +78,11 @@
     };
 
     Game_Party.prototype.popAction = function() {
-        return this._actionStack.pop();
+        const action = this._actionStack.pop();
+        if (action?.subItem) {
+            action.subItem = null;
+        }
+        return action;
     };
 
     Game_Party.prototype.execAction = function(action) {
@@ -127,12 +132,12 @@
     // for CSVN_armsAsSpecialEffectItem.js start
     const _Scene_Battle_onItemOk = Scene_Battle.prototype.onItemOk;
     Scene_Battle.prototype.onItemOk = function() {
-        _Scene_Battle_onItemOk.apply(this, arguments);
         const item = this._itemWindow.item();
         if (DataManager.isWeapon(item) || DataManager.isArmor(item)) {
             const action = BattleManager.inputtingAction();
             action.subItem = item;
         }
+        _Scene_Battle_onItemOk.apply(this, arguments);
     };
 
     const _Game_Party_canUse = Game_Party.prototype.canUse;
@@ -152,8 +157,7 @@
         if (!DataManager.isArmor(item) && !DataManager.isWeapon(item)) {
             return true;
         }
-        const count = this.numItems(item) - this.findReserveItemCount(item);
-        return count > 0;
+        return this.numItems(item) > 0;
     };
     // for CSVN_armsAsSpecialEffectItem.js end
 
