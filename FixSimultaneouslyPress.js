@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2023/04/20 MZ向けに動作確認のうえヘルプ修正
  1.1.1 2019/06/15 ゲームパッド使用時、任意のボタンを押下したまま別のボタンを押下すると、最初のボタンのisTriggeredが有効になってしまう問題を修正
  1.1.0 2019/03/31 ゲームパッドでも同時押しできるよう対応
  1.0.0 2018/09/17 初版
@@ -16,21 +17,10 @@
 =============================================================================*/
 
 /*:
- * @plugindesc FixSimultaneouslyPressPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help FixSimultaneouslyPress.js
- *
- * 同一フレーム内で複数のキーを同時押しした際に
- * Input.isTriggeredがいずれか一つのキーしか感知しない仕様を変更します。
- *　
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 同時押し仕様変更プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/FixSimultaneouslyPress.js
+ * @author トリアコンタン
  *
  * @help FixSimultaneouslyPress.js
  *
