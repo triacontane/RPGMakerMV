@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2023/04/20 すべてのスキルの対象にならなくなる無敵タグを設定できる機能を追加
 // 2.3.2 2022/10/17 自動戦闘の特徴が有効なとき、選択可能対象がいないスキルを選択対象外にするよう修正
 // 2.3.1 2022/10/15 範囲を「なし」にしたスキルを敵が使わなくなる問題を修正
 // 2.3.0 2022/09/07 選択できないバトラーをウィンドウから非表示にできる機能を追加(敵キャラのみ)
@@ -46,6 +47,11 @@
  * @desc 対象限定スキルの制約情報一覧を設定します。スキルIDかアイテムIDのどちらかひとつだけを指定してください。
  * @default []
  * @type struct<RESTRICTION>[]
+ *
+ * @param invincibleNote
+ * @text 無敵タグ
+ * @desc 指定したメモ欄<xxx>ですべてのスキルを無効化できます。アクター、敵キャラ、武器、防具、職業、ステートが対象です。
+ * @default
  *
  * @help RestrictionTargetSkill.js
  *
@@ -112,12 +118,12 @@
  *
  * @param validNote
  * @text 有効メモタグ
- * @desc 指定したメモ欄<xxx>を持つバトラーに対してのみ使用可能となります。アクター、敵キャラ、武器、防具、職業、ステートが対象です。
+ * @desc 指定したメモ欄<xxx>を持つバトラーに対してのみ使用可能となります。アクター、敵キャラ、武器、防具、職業、ステートが対象。
  * @default
  *
  * @param invalidNote
  * @text 無効メモタグ
- * @desc 指定したメモ欄<xxx>を持つバトラーに対して使用不可となります。アクター、敵キャラ、武器、防具、職業、ステートが対象です。
+ * @desc 指定したメモ欄<xxx>を持つバトラーに対して使用不可となります。アクター、敵キャラ、武器、防具、職業、ステートが対象。
  * @default
  *
  * @param invalidUser
@@ -145,8 +151,7 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
     if (!param.list || param.list.length === 0) {
-        console.warn('!!Restriction list not found. by ' + PluginManagerEx.findPluginName(script));
-        return;
+        param.list = [];
     }
 
     //=============================================================================
@@ -179,7 +184,19 @@
         return param.list.find(data => (isSkill ? data.skillId : data.itemId) === item.id);
     };
 
+    Game_BattlerBase.prototype.findSomeRestrictionNote = function(tagName) {
+        return this.traitObjects().some(obj => {
+            return PluginManagerEx.findMetaValue(obj, tagName);
+        });
+    };
+
     Game_BattlerBase.prototype.canSelectTarget = function(item, user) {
+        if (param.invincibleNote) {
+            const result = this.findSomeRestrictionNote(param.invincibleNote);
+            if (result) {
+                return false;
+            }
+        }
         const data = this.findRestrictionData(item);
         if (!data) {
             return true;
@@ -188,17 +205,13 @@
             return false;
         }
         if (data.validNote) {
-            return this.traitObjects().some(obj => {
-                return PluginManagerEx.findMetaValue(obj, data.validNote);
-            });
+            return this.findSomeRestrictionNote(data.validNote);
         }
         if (data.script && !!eval(data.script)) {
             return false;
         }
         if (data.invalidNote) {
-            return !this.traitObjects().some(obj => {
-                return PluginManagerEx.findMetaValue(obj, data.invalidNote);
-            });
+            return !this.findSomeRestrictionNote(data.invalidNote);
         }
         const restrictInfo = this.getRestrictInfo(data);
         if (restrictInfo.validList.length > 0) {
