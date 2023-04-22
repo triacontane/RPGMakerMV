@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2023/04/22 ピクチャイベントを発生させる際、透過部分に反応するかどうかを設定できる機能を追加
 // 1.4.0 2022/10/22 DTextPicture.jsと組み合わせたとき、フレームウィンドウをクリックイベントの範囲に含めるよう変更
 // 1.3.1 2022/05/19 ヘルプ微修正
 // 1.3.0 2022/04/14 ピクチャクリック時に変数を操作する機能および任意スクリプトを実行する機能を追加
@@ -174,6 +175,22 @@
  * @default 0
  * @type switch
  *
+ * @command SET_PICTURE_PREFERENCE
+ * @text ピクチャ設定
+ * @desc　ピクチャイベントの設定を変更します。
+ *
+ * @arg pictureId
+ * @text ピクチャ番号
+ * @desc 変更対象のピクチャ番号です。
+ * @default 1
+ * @type number
+ *
+ * @arg includeOpacityZero
+ * @text 透過部分も含む
+ * @desc ピクチャの透明部分にも反応するかどうかです。
+ * @default false
+ * @type boolean
+ *
  * @command REMOVE_PICTURE_EVENT
  * @text ピクチャイベント解除
  * @desc 登録したピクチャイベントを解除します。
@@ -215,6 +232,10 @@
 
     PluginManagerEx.registerCommand(script, 'REMOVE_PICTURE_EVENT', args => {
         $gameScreen.removePictureEvent(args.pictureId);
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_PICTURE_PREFERENCE', args => {
+        $gameScreen.setPicturePreference(args.pictureId, args);
     });
 
     //=============================================================================
@@ -262,6 +283,16 @@
         return this._pictureEventMap.find(realPictureId, trigger);
     };
 
+    Game_Screen.prototype.setPicturePreference = function(pictureId, param) {
+        const realPictureId = this.realPictureId(pictureId);
+        this._pictureEventMap.setPreference(realPictureId, param);
+    };
+
+    Game_Screen.prototype.getPicturePreference = function(pictureId) {
+        const realPictureId = this.realPictureId(pictureId);
+        return this._pictureEventMap.getPreference(realPictureId);
+    }
+
     Game_Screen.prototype.disConvertPositionX = function(x) {
         const unshiftX = x - this.zoomX() * (1 - this.zoomScale());
         return Math.round(unshiftX / this.zoomScale());
@@ -306,6 +337,7 @@
     class Game_PictureEventMap {
         constructor() {
             this._map = {}
+            this._preference = {};
         }
 
         append(pictureId, trigger, option) {
@@ -331,6 +363,14 @@
 
         generateKey(pictureId, trigger) {
             return `${pictureId}:${trigger}`;
+        }
+
+        setPreference(pictureId, option) {
+            this._preference[pictureId] = option;
+        }
+
+        getPreference(pictureId) {
+            return this._preference[pictureId];
         }
     }
     window.Game_PictureEventMap = Game_PictureEventMap;
@@ -400,7 +440,7 @@
             }
             this._handlers.forEach((handler, trigger) => {
                 if (this.isValidTrigger(handler, trigger)) {
-                    const eventData = $gameScreen.findPictureEvent(this._pictureId, trigger);
+                    const eventData = this.findPictureEvent(this._pictureId, trigger);
                     this.fireTouchEvent(eventData, trigger);
                 }
             });
@@ -438,9 +478,13 @@
         }
 
         isValidTrigger(handler, trigger) {
-            const eventData = $gameScreen.findPictureEvent(this._pictureId, trigger);
+            const eventData = this.findPictureEvent(this._pictureId, trigger);
             return  eventData && !$gameSwitches.value(eventData.invalidSwitchId) &&
                 handler && handler.call(this);
+        }
+
+        findPictureEvent(pictureId, trigger) {
+            return $gameScreen.findPictureEvent(pictureId, trigger);
         }
 
         fireTouchEvent(eventData, trigger) {
@@ -501,7 +545,8 @@
             const cos = Math.cos(-pic.rotation);
             const bx = Math.floor(dx * cos + dy * -sin) / pic.scale.x + pic.anchor.x * pic.width;
             const by = Math.floor(dx * sin + dy * cos) / pic.scale.y + pic.anchor.y * pic.height;
-            if (pic._apngSprite) {
+            const preference = $gameScreen.getPicturePreference(this._pictureId);
+            if (pic._apngSprite || preference?.includeOpacityZero) {
                 return bx >= 0 && by >= 0 && bx <= pic.bitmap.width && by <= pic.bitmap.height;
             }
             return pic.bitmap.getAlphaPixel(bx, by) !== 0;
