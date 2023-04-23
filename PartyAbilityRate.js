@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2023/04/23 タグの値に0を設定できるよう修正
 // 1.0.1 2019/06/21 獲得EXPとゴールドに端数が生じた場合切り捨てるよう修正
 // 1.0.0 2016/05/09 初版
 // ----------------------------------------------------------------------------
@@ -99,27 +100,27 @@
     };
 
     Game_Party.prototype.partyAbilityRate = function(abilityNames, defaultValue) {
-        var result = defaultValue;
+        var result = null;
         this.battleMembers().forEach(function(actor) {
             result = actor.partyAbilityRate(abilityNames, result);
         });
-        return result;
+        return result === null ? defaultValue : result;
     };
 
     Game_Party.prototype.getEncounterHalfRate = function() {
-        return this.partyAbilityRate(['エンカウント半減', 'EncounterHalf'], 0) || 2;
+        return this.partyAbilityRate(['エンカウント半減', 'EncounterHalf'], 2);
     };
 
     Game_Party.prototype.getRaisePreemptiveRate = function() {
-        return this.partyAbilityRate(['先制攻撃率アップ', 'RaisePreemptive'], 0) || 4;
+        return this.partyAbilityRate(['先制攻撃率アップ', 'RaisePreemptive'], 4);
     };
 
     Game_Party.prototype.getGoldDoubleRate = function() {
-        return this.partyAbilityRate(['獲得金額2倍', 'GoldDouble'], 0) || 2;
+        return this.partyAbilityRate(['獲得金額2倍', 'GoldDouble'], 2);
     };
 
     Game_Party.prototype.getDropItemDoubleRate = function() {
-        return this.partyAbilityRate(['アイテム入手率2倍', 'DropItemDouble'], 0) || 2;
+        return this.partyAbilityRate(['アイテム入手率2倍', 'DropItemDouble'], 2);
     };
 
     var _Game_Party_ratePreemptive = Game_Party.prototype.ratePreemptive;
