@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/04/23 テンプレートイベントの処理を直接呼び出せるコマンドを追加
  1.1.5 2022/05/25 RandomDungeon.jsとの競合対策が一部誤っていた問題を修正
  1.1.4 2022/01/26 ヘルプの誤記を修正
  1.1.3 2021/10/05 1.1.2の修正で「固有イベント呼び出し」をページ番号[0]で呼び出したときエラーになる問題を修正
@@ -373,6 +374,22 @@
  * @desc 呼び出すイベントのIDもしくはイベント名です。0を指定すると実行中のイベントが対象になります。
  * @default 0
  *
+ * @command CALL_TEMPLATE_EVENT
+ * @text テンプレートイベント呼び出し
+ * @desc テンプレートイベントの処理を呼び出します。
+ *
+ * @arg pageIndex
+ * @text ページ番号
+ * @desc 呼び出すイベントのページ番号です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @arg eventId
+ * @text イベントID(もしくは名称)
+ * @desc 呼び出すイベントのIDもしくはイベント名です。0を指定すると実行中のイベントが対象になります。
+ * @default 1
+ *
  * @command SET_SELF_VARIABLE
  * @text セルフ変数の操作
  * @desc セルフ変数を操作します。
@@ -656,6 +673,16 @@ let $dataTemplateEvents = null;
         }
     });
 
+    PluginManagerEx.registerCommand(script, 'CALL_TEMPLATE_EVENT', function(args) {
+        const pageIndex = args.pageIndex;
+        const eventId   = args.eventId;
+        if ($dataTemplateEvents[eventId]) {
+            this.callTemplateEventById(pageIndex, eventId);
+        } else {
+            this.callTemplateEventByName(pageIndex, eventId);
+        }
+    });
+
     PluginManagerEx.registerCommand(script, 'SET_SELF_VARIABLE', function(args) {
         const index   = args.index;
         const type    = args.type;
@@ -733,6 +760,20 @@ let $dataTemplateEvents = null;
             this.callMapEventById(pageIndex, event.id);
         }
     };
+
+    Game_Interpreter.prototype.callTemplateEventById = function(pageIndex, eventId) {
+        const event = $dataTemplateEvents[eventId];
+        if (event) {
+            this.setupAnotherList(eventId, event.pages, pageIndex);
+        }
+    };
+
+    Game_Interpreter.prototype.callTemplateEventByName = function(pageIndex, eventName) {
+        const event = searchDataItem($dataTemplateEvents, 'name', eventName);
+        if (event) {
+            this.callTemplateEventById(pageIndex, event.id);
+        }
+    }
 
     Game_Interpreter.prototype.setupAnotherList = function(eventId, pages, pageIndex) {
         const page = pages[pageIndex - 1];
