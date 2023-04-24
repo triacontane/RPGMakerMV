@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2021/04/24 マップ、戦闘画面でゲージをウィンドウの上に表示できる機能を追加
  1.5.3 2023/01/31 ゲージを非表示にして現在値を変更してから再表示すると変更前の数値が一瞬表示されてしまう問題を修正
  1.5.2 2022/12/08 ゲージX座標のパラメータ初期値を変更
  1.5.1 2022/11/20 プリセットをtimeにするとラベルが表示されなくなる件を制約事項としてヘルプに記載
@@ -41,13 +42,15 @@
  *
  * @param Priority
  * @text 表示優先度
- * @desc ゲージ画像の表示優先度です。マップ画面および戦闘画面のみ『ピクチャの下』に変更できます。
+ * @desc マップ画面および戦闘画面におけるゲージ画像の表示優先度です。
  * @default 0
  * @type select
  * @option 0:通常
  * @value 0
  * @option 1:ピクチャの下
  * @value 1
+ * @option 2:ウィンドウの上
+ * @value 2
  *
  * @help ExtraGauge.js
  *
@@ -463,7 +466,7 @@
 
     const _Scene_Base_createWindowLayer = Scene_Base.prototype.createWindowLayer;
     Scene_Base.prototype.createWindowLayer = function() {
-        if (this instanceof Scene_Message) {
+        if (this instanceof Scene_Message && param.Priority !== 2) {
             this.addExtraGauge();
         }
         _Scene_Base_createWindowLayer.apply(this, arguments);
