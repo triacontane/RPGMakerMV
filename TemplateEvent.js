@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2023/04/26 テンプレートイベントの処理を呼び出したとき、呼び出しもとのイベントIDが保持されない問題を修正
  1.2.0 2023/04/23 テンプレートイベントの処理を直接呼び出せるコマンドを追加
  1.1.5 2022/05/25 RandomDungeon.jsとの競合対策が一部誤っていた問題を修正
  1.1.4 2022/01/26 ヘルプの誤記を修正
@@ -764,7 +765,7 @@ let $dataTemplateEvents = null;
     Game_Interpreter.prototype.callTemplateEventById = function(pageIndex, eventId) {
         const event = $dataTemplateEvents[eventId];
         if (event) {
-            this.setupAnotherList(eventId, event.pages, pageIndex);
+            this.setupAnotherList(null, event.pages, pageIndex);
         }
     };
 
