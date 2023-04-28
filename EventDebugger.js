@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2023/04/28 MZ移植に伴うレイアウト調整、考慮漏れ修正等
 // 1.6.0 2023/04/28 MZで動作するよう修正
 // 1.5.1 2019/01/25 本体バージョン1.6.0で正常に動作しない問題を修正
 // 1.5.0 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
@@ -34,7 +35,7 @@
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
- * @param StepStart
+ * @param stepStart
  * @text ステップ開始
  * @desc 次に実行されたイベントコマンドからステップ実行を開始するためのファンクションキーです。
  * @default F7
@@ -311,7 +312,7 @@ function DebugManager() {
         /* インタプリタウィンドウのプロパティ */
         interpreterWindow: {width: 280, lines: 12, fontSize: 18, padding: 8},
         /* 監視ウィンドウの横幅 */
-        watcherWindow    : {width: 400, fontSize: 16, padding: 8}
+        watcherWindow    : {width: 400, fontSize: 20, padding: 8}
     };
 
     if (!Utils.isOptionValid('test')) {
@@ -423,10 +424,13 @@ function DebugManager() {
         104: 'アイテム選択の処理',
         402: '選択肢の表示(**のとき)',
         403: '選択肢の表示(キャンセルのとき)',
+        404: '分岐終了',
         105: '文章のスクロール表示',
         405: '文章のスクロール表示(メッセージ内容)',
         108: '注釈',
+        109: 'スキップ',
         111: '条件分岐',
+        409: 'スキップの終了',
         411: '条件分岐(それ以外の場合)',
         412: '条件分岐(分岐終了)',
         112: 'ループ',
@@ -530,7 +534,8 @@ function DebugManager() {
         353: 'ゲームオーバー',
         354: 'タイトル画面に戻す',
         355: 'スクリプト',
-        356: 'プラグインコマンド'
+        356: 'プラグインコマンド(MV)',
+        357: 'プラグインコマンド',
     };
     DebugManager._startDescription  = [
         '-------------------ステップ実行を開始します。-------------------\n',
@@ -754,6 +759,15 @@ function DebugManager() {
         return param.breakSwitchId > 0 ? $gameSwitches.value(param.breakSwitchId) : false;
     };
 
+    DebugManager.canStart = function(interpreter) {
+        if ($gameMap.isInterpreterOf(interpreter) || $gameTroop._interpreter === interpreter) {
+            if (SceneManager.isStepStart()) {
+                return true;
+            }
+        }
+        return this.isAutoBreak() && !this.isValid();
+    };
+
     //=============================================================================
     // Game_Interpreter
     //  ステップ実行の場合は、デバッガに自身を渡します。
@@ -800,9 +814,18 @@ function DebugManager() {
         DebugManager.stop();
     };
 
+    const _Game_Interpreter_updateWait    = Game_Interpreter.prototype.updateWait;
+    Game_Interpreter.prototype.updateWait = function() {
+        const result = _Game_Interpreter_updateWait.apply(this, arguments);
+        if (DebugManager.canStart(this)) {
+            this.enableStepExecute();
+        }
+        return result;
+    };
+
     const _Game_Interpreter_executeCommand    = Game_Interpreter.prototype.executeCommand;
     Game_Interpreter.prototype.executeCommand = function() {
-        if ((SceneManager.isStepStart() || DebugManager.isAutoBreak()) && !DebugManager.isValid()) {
+        if (DebugManager.canStart(this)) {
             this.enableStepExecute();
         }
         if (this.isDebugging()) {
@@ -936,9 +959,7 @@ function DebugManager() {
     };
 
     Game_Interpreter.prototype.getVisibleList = function() {
-        return this._list.filter(function(command) {
-            return !!DebugManager.getEventName(command.code);
-        });
+        return this._list.filter(command => !!DebugManager.getEventName(command.code));
     };
 
     //=============================================================================
@@ -1113,20 +1134,32 @@ function DebugManager() {
         }
 
         lineHeight() {
-            return this.contents.fontSize + 8;
+            return this.standardFontSize() + 8;
+        }
+
+        fittingHeight(numLines) {
+            return numLines * this.itemHeight() + this.standardPadding() * 2;
         }
 
         resetFontSettings() {
             super.resetFontSettings();
-            this.contents.fontSize = settings.debugWindow.fontSize;
+            this.contents.fontSize = this.standardFontSize();
         }
 
         updatePadding() {
-            this.padding = settings.debugWindow.padding;
+            this.padding = this.standardPadding();
+        }
+
+        standardFontSize() {
+            return settings.debugWindow.fontSize;
+        }
+
+        standardPadding() {
+            return settings.debugWindow.padding;
         }
 
         drawText(text, line) {
-            this.contents.drawText(text, 0, this.lineHeight() * line, this.contentsWidth(), this.lineHeight(), 1);
+            this.contents.drawText(text, 0, this.lineHeight() * line, this.contentsWidth(), this.lineHeight(), 'left');
         }
 
         update() {
@@ -1159,25 +1192,29 @@ function DebugManager() {
             this.updateIndex();
         }
 
-        windowWidth() {
-            return settings.interpreterWindow.width;
-        }
-
         numVisibleRows() {
             return settings.interpreterWindow.lines;
         }
 
         resetFontSettings() {
             super.resetFontSettings();
-            this.contents.fontSize = settings.interpreterWindow.fontSize;
+            this.contents.fontSize = this.standardFontSize();
         }
 
         updatePadding() {
-            this.padding = settings.interpreterWindow.padding;
+            this.padding = this.standardPadding();
         }
 
         lineHeight() {
-            return settings.interpreterWindow.fontSize + 8;
+            return this.standardFontSize() + 8;
+        }
+
+        standardFontSize() {
+            return settings.interpreterWindow.fontSize;
+        }
+
+        standardPadding() {
+            return settings.interpreterWindow.padding;
         }
 
         makeCommandList() {
@@ -1224,7 +1261,9 @@ function DebugManager() {
             for (let i = 0; i < this._list[index].indent; i++) {
                 commandValue += '  ';
             }
-            commandValue += DebugManager.getEventName(this._list[index].code) || '';
+            const code = this._list[index].code;
+            const prefix = code >= 400 ? '：' : '◆';
+            commandValue += prefix + (DebugManager.getEventName(code) || code);
             return commandValue;
         }
 
@@ -1262,17 +1301,29 @@ function DebugManager() {
             return param.maxWatchNum;
         }
 
-        lineHeight() {
-            return settings.watcherWindow.fontSize + 8;
-        }
-
         resetFontSettings() {
             super.resetFontSettings();
-            this.contents.fontSize = settings.watcherWindow.fontSize;
+            this.contents.fontSize = this.standardFontSize();
         }
 
         updatePadding() {
-            this.padding = settings.watcherWindow.padding;
+            this.padding = this.standardPadding();
+        }
+
+        lineHeight() {
+            return this.standardFontSize() + 8;
+        }
+
+        fittingHeight(numLines) {
+            return numLines * this.itemHeight() + this.standardPadding() * 2;
+        }
+
+        standardFontSize() {
+            return settings.watcherWindow.fontSize;
+        }
+
+        standardPadding() {
+            return settings.watcherWindow.padding;
         }
 
         makeCommandList() {
