@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2023/04/28 MZで動作するよう修正
 // 1.5.1 2019/01/25 本体バージョン1.6.0で正常に動作しない問題を修正
 // 1.5.0 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
 // 1.4.1 2017/10/29 アイテムからコモンイベントを実行した後にマップイベントを実行したときのスクリプトエラー情報が間違っていた問題を修正
@@ -26,10 +27,15 @@
 //=============================================================================
 
 /*:
- * @plugindesc EventDebuggerPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc イベントデバッグプラグイン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventDebugger.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
  * @param StepStart
+ * @text ステップ開始
  * @desc 次に実行されたイベントコマンドからステップ実行を開始するためのファンクションキーです。
  * @default F7
  * @type select
@@ -47,7 +53,8 @@
  * @option F11
  * @option F12
  *
- * @param StepIn
+ * @param stepIn
+ * @text ステップイン
  * @desc ステップ実行時にステップイン(1コマンド実行)するためのファンクションキーです。
  * @default F11
  * @type select
@@ -65,7 +72,8 @@
  * @option F11
  * @option F12
  *
- * @param StepOver
+ * @param stepOver
+ * @text ステップオーバー
  * @desc ステップ実行時にステップオーバー(1コマンド実行)するためのファンクションキーです。コモンイベントを飛ばします。
  * @default F10
  * @type select
@@ -83,7 +91,8 @@
  * @option F11
  * @option F12
  *
- * @param Continue
+ * @param continue
+ * @text 続行
  * @desc ステップ実行を中断して続行するためのファンクションキーです。
  * @default F6
  * @type select
@@ -101,9 +110,10 @@
  * @option F11
  * @option F12
  *
- * @param ToggleWindow
+ * @param toggleWindow
+ * @text 表示切替
  * @desc デバッグ用ウィンドウの表示状態を切り替えます。Shiftキーでも切り替えることができます。
- * @default F12
+ * @default none
  * @type select
  * @option none
  * @option F1
@@ -119,7 +129,8 @@
  * @option F11
  * @option F12
  *
- * @param WatchVariable
+ * @param watchVariable
+ * @text 変数監視
  * @desc 常駐して監視するゲーム変数もしくはスクリプトを入力するダイアログが表示されます。
  * @default F1
  * @type select
@@ -137,22 +148,26 @@
  * @option F11
  * @option F12
  *
- * @param MaxWatchNum
+ * @param maxWatchNum
+ * @text 監視最大数
  * @desc 監視する変数の最大数です。あまりに大きな値を指定するとパフォーマンスが低下する可能性があります。
  * @default 3
  * @type number
  *
- * @param EventTest
+ * @param eventTest
+ * @text イベントテスト
  * @desc イベントテストを行うと自動でステップ実行になります。
  * @default true
  * @type boolean
  *
- * @param SuppressFunc
+ * @param suppressFunc
+ * @text 機能キー抑制
  * @desc ファンクションキー押下時、デフォルトや他のプラグインの動作を抑制します。
  * @default false
  * @type boolean
  *
- * @param OkHandler
+ * @param okHandler
+ * @text OK動作
  * @desc ステップ実行時に決定ボタンを押した場合のファンクションキーの動作を設定します。
  * @default F11
  * @type select
@@ -170,7 +185,8 @@
  * @option F11
  * @option F12
  *
- * @param CancelHandler
+ * @param cancelHandler
+ * @text キャンセル動作
  * @desc ステップ実行時にキャンセルボタンを押した場合のファンクションキーの動作を設定します。
  * @default F6
  * @type select
@@ -188,19 +204,22 @@
  * @option F11
  * @option F12
  *
- * @param SimultaneousCtrl
+ * @param simultaneousCtrl
+ * @text Ctrl同時押し
  * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
  * @default false
  * @type boolean
  *
- * @param SimultaneousAlt
+ * @param simultaneousAlt
+ * @text Alt同時押し
  * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
  * @default false
  * @type boolean
  *
- * @param ScriptDebug
+ * @param scriptDebug
+ * @text スクリプトデバッグ
  * @desc イベントコマンドの「スクリプト」でエラーが発生した際の動作を設定します。0:エラー(通常通り) 1:ステップ実行 2:無視
- * @default 1
+ * @default 0
  * @type select
  * @option エラー（通常通り）
  * @value 0
@@ -209,16 +228,38 @@
  * @option 無視
  * @value 2
  *
- * @param DisableDebugCtrlKey
+ * @param disableDebugCtrlKey
+ * @text CTRLで無効化
  * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
  * @default true
  * @type boolean
+ *
+ * @param showDevTools
+ * @text 開発者ツール表示
+ * @desc 有効にするとデバッグを開始したときに開発者ツールが表示されます。
+ * @default true
+ * @type boolean
+ *
+ * @param breakSwitchId
+ * @text ブレークスイッチ番号
+ * @desc 指定したスイッチがONになったときデバッグ実行を開始します。
+ * @default 0
+ * @type switch
+ *
+ * @command BREAK_POINT
+ * @text ブレークポイント
+ * @desc ブレークポイントを設定します。条件を指定することもできます。
+ *
+ * @arg script
+ * @text スクリプト
+ * @desc 条件を指定する場合に使用します。条件を満たした場合にブレークポイントが有効になります。
+ * @default
  *
  * @help 任意の箇所でイベントの実行を一時停止して、1行ずつ実行(ステップ実行)が
  * できるようになります。開始方法は以下の3通りです。
  *
  * 1. 指定されたキー(デフォルトF7)を押下する。(※1)
- * 2. プラグインコマンド[BREAK_POINT]を実行する。（条件が指定可能です）
+ * 2. プラグインコマンド[ブレークポイント]を実行する。（条件が指定可能です）
  * 3. イベントテストを実行する。
  * ※1 並列イベントが複数実行されている場合、どこで止まるかは不確定です。
  *
@@ -249,254 +290,6 @@
  * DebugManager.watchVariable(5); # 変数[5]の値を常に監視します。
  *
  * このプラグインはテストモードでのみ動作し製品版にはなんら影響を与えません。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * BREAK_POINT \v[1] === 3 # 条件式[v[1] === 3]を満たしたらステップ実行開始
- * B \v[1] === 3           # 同上
- *
- * This plugin is released under the MIT License.
- */
-
-/*:ja
- * @plugindesc イベントデバッグプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @param ステップ開始
- * @desc 次に実行されたイベントコマンドからステップ実行を開始するためのファンクションキーです。
- * @default F7
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
- *
- * @param ステップイン
- * @desc ステップ実行時にステップイン(1コマンド実行)するためのファンクションキーです。
- * @default F11
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
- *
- * @param ステップオーバー
- * @desc ステップ実行時にステップオーバー(1コマンド実行)するためのファンクションキーです。コモンイベントを飛ばします。
- * @default F10
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
- *
- * @param 続行
- * @desc ステップ実行を中断して続行するためのファンクションキーです。
- * @default F6
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
- *
- * @param 表示切替
- * @desc デバッグ用ウィンドウの表示状態を切り替えます。Shiftキーでも切り替えることができます。
- * @default F12
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
- *
- * @param 変数監視
- * @desc 常駐して監視するゲーム変数もしくはスクリプトを入力するダイアログが表示されます。
- * @default F1
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
- *
- * @param 監視最大数
- * @desc 監視する変数の最大数です。あまりに大きな値を指定するとパフォーマンスが低下する可能性があります。
- * @default 3
- * @type number
- *
- * @param イベントテスト
- * @desc イベントテストを行うと自動でステップ実行になります。
- * @default true
- * @type boolean
- *
- * @param 機能キー抑制
- * @desc ファンクションキー押下時、デフォルトや他のプラグインの動作を抑制します。
- * @default false
- * @type boolean
- *
- * @param OK動作
- * @desc ステップ実行時に決定ボタンを押した場合のファンクションキーの動作を設定します。
- * @default F11
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
- *
- * @param キャンセル動作
- * @desc ステップ実行時にキャンセルボタンを押した場合のファンクションキーの動作を設定します。
- * @default F6
- * @type select
- * @option none
- * @option F1
- * @option F2
- * @option F3
- * @option F4
- * @option F5
- * @option F6
- * @option F7
- * @option F8
- * @option F9
- * @option F10
- * @option F11
- * @option F12
- *
- * @param Ctrl同時押し
- * @desc 各機能を利用する際にCtrlキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
- * @default false
- * @type boolean
- *
- * @param Alt同時押し
- * @desc 各機能を利用する際にAltキーの同時押しが必要かどうかです。他のプラグインと対象キーが競合する場合に利用します。
- * @default false
- * @type boolean
- *
- * @param スクリプトデバッグ
- * @desc イベントコマンドの「スクリプト」でエラーが発生した際の動作を設定します。0:エラー(通常通り) 1:ステップ実行 2:無視
- * @default 1
- * @type select
- * @option エラー（通常通り）
- * @value 0
- * @option ステップ実行
- * @value 1
- * @option 無視
- * @value 2
- *
- * @param CTRLで無効化
- * @desc CTRL(Macの場合はoption)キーを押している間はステップ実行の条件を満たしてもステップ実行しません。
- * @default true
- * @type boolean
- *
- * @help 任意の箇所でイベントの実行を一時停止して、1行ずつ実行(ステップ実行)が
- * できるようになります。開始方法は以下の3通りです。
- *
- * 1. 指定されたキー(デフォルトF7)を押下する。(※1)
- * 2. プラグインコマンド[BREAK_POINT]を実行する。（条件が指定可能です）
- * 3. イベントテストを実行する。
- * 4. プラグインコマンド[AUTO_BREAK]で指定した条件を満たす。(※2)
- * ※1 並列イベントが複数実行されている場合、どこで止まるかは不確定です。
- * ※2 条件を満たした次のイベント命令からステップ実行が開始します。
- *     1フレーム中で実行しているイベント数が多い場合、この機能はパフォーマンスを
- *     低下させる可能性があります。
- *
- * 止めている間は以下の操作が可能です。
- *
- * 1. ステップ実行（イベントを1コマンドずつ実行）
- * 2. 実行中のイベントリスト確認
- * 3. 実行したイベントのパラメータ確認
- * 4. デバッグ画面(F9)を開いてスイッチや変数の操作(※2)
- * 5. コンソールから任意のJavaScriptを実行
- * ※2 マップ画面でのみ有効です。
- *
- * ステップ実行には以下の種類があり、対応するファンクションキーを指定できます。
- *
- * ステップイン:1行実行する。コモンイベントの呼び出し先もステップ実行する。
- * ステップオーバー:1行実行する。コモンイベントの呼び出しは一括実行する。
- * 再開:ステップ実行を終了し、通常のイベント実行に戻る。
- *
- * また、各イベントコマンドの実行にどのくらい時間が掛かったかを出力します。
- *
- * さらに、変数やスクリプトの評価結果を常時監視することができます。
- * 監視対象が登録されている場合、右上にウィンドウが表示されます。
- * 数値を指定した場合は変数値が、文字列を指定した場合はスクリプトの
- * 評価結果が表示されます。
- * 所定のファンクションキーを押下するか、以下のスクリプトを
- * デベロッパツールから実行すると監視対象を登録できます。
- *
- * DebugManager.watchVariable(5); # 変数[5]の値を常に監視します。
- *
- * このプラグインはテストモードでのみ動作し製品版にはなんら影響を与えません。
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * BREAK_POINT \v[1] === 3 # 条件式[\v[1] === 3]を満たしていたらステップ実行開始
- * B \v[1] === 3           # 同上
- * AUTO_BREAK \v[1] === 3  # 条件式[\v[1] === 3]を満たした時点でステップ実行開始
- * AB \v[1] === 3          # 同上
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -508,97 +301,32 @@ function DebugManager() {
     throw new Error('This is a static class');
 }
 
-(function() {
+(()=> {
     'use strict';
-    const pluginName = 'EventDebugger';
-    //=============================================================================
-    // ユーザ設定
-    //=============================================================================
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
     const settings = {
         /* デバッグウィンドウのプロパティ */
-        debugWindow      : {width: 360, fontSize: 20, padding: 12},
+        debugWindow      : {width: 360, fontSize: 20, padding: 8},
         /* インタプリタウィンドウのプロパティ */
-        interpreterWindow: {width: 280, lines: 12, fontSize: 18, padding: 12},
+        interpreterWindow: {width: 280, lines: 12, fontSize: 18, padding: 8},
         /* 監視ウィンドウの横幅 */
-        watcherWindow    : {width: 400, fontSize: 18, padding: 12}
+        watcherWindow    : {width: 400, fontSize: 16, padding: 8}
     };
 
     if (!Utils.isOptionValid('test')) {
-        console.log(`${pluginName} is valid only test play!`);
+        console.log(`${PluginManagerEx.findPluginName(script)} is valid only test play!`);
         return;
     }
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    const getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
+    PluginManagerEx.registerCommand(script, 'BREAK_POINT', function (args) {
+        if (DebugManager.isValid()) {
+            return;
         }
-        return '';
-    };
-
-    const getParamNumber = function(paramNames, min, max) {
-        const value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    const getParamBoolean = function(paramNames) {
-        const value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON';
-    };
-
-    const convertEscapeCharacters = function(text) {
-        if (text == null) text = '';
-        const windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    const convertAllArguments = function(args) {
-        for (let i = 0; i < args.length; i++) {
-            args[i] = convertEscapeCharacters(args[i]);
+        if (!args.script || eval(args.script)) {
+            this.enableStepExecute();
         }
-        return args;
-    };
-
-    const concatAllArguments = function(args) {
-        return args.reduce(function(prevValue, arg) {
-            return prevValue + ' ' + arg;
-        }, '');
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    const param               = {};
-    param.stepStart           = getParamString(['StepStart', 'ステップ開始']);
-    param.stepIn              = getParamString(['StepIn', 'ステップイン']);
-    param.stepOver            = getParamString(['StepOver', 'ステップオーバー']);
-    param.continue            = getParamString(['Continue', '続行']);
-    param.toggleWindow        = getParamString(['ToggleWindow', '表示切替']);
-    param.stepStart           = getParamString(['StepStart', 'ステップ開始']);
-    param.watchVariable       = getParamString(['WatchVariable', '変数監視']);
-    param.maxWatchNum         = getParamNumber(['MaxWatchNum', '監視最大数'], 1);
-    param.eventTest           = getParamBoolean(['EventTest', 'イベントテスト']);
-    param.suppressFunc        = getParamBoolean(['SuppressFunc', '機能キー抑制']);
-    param.okHandler           = getParamString(['OkHandler', 'OK動作']);
-    param.cancelHandler       = getParamString(['CancelHandler', 'キャンセル動作']);
-    param.scriptDebug         = getParamNumber(['ScriptDebug', 'スクリプトデバッグ'], 0, 2);
-    param.disableDebugCtrlKey = getParamBoolean(['DisableDebugCtrlKey', 'CTRLで無効化']);
-    param.simultaneousCtrl    = getParamBoolean(['SimultaneousCtrl', 'Ctrl同時押し']);
-    param.simultaneousAlt     = getParamBoolean(['SimultaneousAlt', 'Alt同時押し']);
-
-    const pluginCommandMap = new Map([
-        ['B', 'setBreakPoint'],
-        ['BREAK_POINT', 'setBreakPoint'],
-        ['AB', 'setAutoBreakPoint'],
-        ['AUTO_BREAK', 'setAutoBreakPoint'],
-    ]);
+    });
 
     //=============================================================================
     // Input
@@ -853,12 +581,13 @@ function DebugManager() {
 
     DebugManager.start = function(interpreter) {
         this._interpreter = interpreter;
-        this.showDevTools();
+        if (param.showDevTools) {
+            SceneManager.showDevTools();
+        }
         if (this._debugCount === 0) {
             this.outputDebugDescription(this._startDescription);
         }
         this.clearStepFlags();
-        Graphics.hideFps();
         this._debugCount++;
     };
 
@@ -870,6 +599,9 @@ function DebugManager() {
         this._debugCount--;
         if (this._debugCount <= 0) {
             this.outputDebugDescription(this._stopDescription);
+        }
+        if (param.breakSwitchId > 0) {
+            $gameSwitches.setValue(param.breakSwitchId, false);
         }
         this.clearStepFlags();
     };
@@ -906,12 +638,6 @@ function DebugManager() {
         return this.isStepIn() || this.isStepOver() || this.isContinue();
     };
 
-    DebugManager.showDevTools = function() {
-        if (!Utils.isNwjs()) return;
-        const nwWin = require('nw.gui').Window.get();
-        nwWin.showDevTools();
-    };
-
     DebugManager.getInterpreter = function() {
         return this._interpreter;
     };
@@ -946,19 +672,11 @@ function DebugManager() {
     };
 
     DebugManager.updateExecMainCommand = function() {
-        this.updateTouchInput();
         if (this.isAnyStep()) {
             this.updateContinue();
             return this.execInterpreterWithLog();
         } else {
             return false;
-        }
-    };
-
-    DebugManager.updateTouchInput = function() {
-        if (TouchInput.isTriggered()) {
-            TouchInput.clear();
-            this._stepIn = true;
         }
     };
 
@@ -1032,41 +750,14 @@ function DebugManager() {
         return this._watchList.length;
     };
 
-    DebugManager.setAutoBreakPoint = function(formula) {
-        if (this._autoBreakFormulas.contains(formula)) return;
-        this._autoBreakFormulas.push(formula);
-    };
-
     DebugManager.isAutoBreak = function() {
-        return this._autoBreakFormulas.some(function(formula) {
-            return eval(convertEscapeCharacters(formula));
-        });
+        return param.breakSwitchId > 0 ? $gameSwitches.value(param.breakSwitchId) : false;
     };
 
     //=============================================================================
     // Game_Interpreter
     //  ステップ実行の場合は、デバッガに自身を渡します。
     //=============================================================================
-    const _Game_Interpreter_pluginCommand    = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        const pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](args);
-        }
-    };
-
-    Game_Interpreter.prototype.setBreakPoint = function(args) {
-        if (DebugManager.isValid()) return;
-        if (args.length === 0 || eval(concatAllArguments(convertAllArguments(args)))) {
-            this.enableStepExecute();
-        }
-    };
-
-    Game_Interpreter.prototype.setAutoBreakPoint = function(args) {
-        DebugManager.setAutoBreakPoint(concatAllArguments(args));
-    };
-
     const _Game_Interpreter_setup    = Game_Interpreter.prototype.setup;
     Game_Interpreter.prototype.setup = function(list, eventId) {
         _Game_Interpreter_setup.apply(this, arguments);
@@ -1083,7 +774,7 @@ function DebugManager() {
     };
 
     Game_Interpreter.prototype.setPageIndex = function() {
-        var event = $gameMap.event(this._eventId);
+        const event = $gameMap.event(this._eventId);
         if (event) {
             this._pageIndex = event.getPageIndex() + 1;
             this._eventName = event.event().name;
@@ -1134,10 +825,10 @@ function DebugManager() {
     };
 
     const _Game_Interpreter_command117    = Game_Interpreter.prototype.command117;
-    Game_Interpreter.prototype.command117 = function() {
+    Game_Interpreter.prototype.command117 = function(params) {
         const result = _Game_Interpreter_command117.apply(this, arguments);
         if (this._childInterpreter) {
-            const commonEventId = this._params[0];
+            const commonEventId = params[0];
             this._childInterpreter.setCommonEventId(commonEventId);
             if (this.isDebugging() && DebugManager.isStepIn()) {
                 this._childInterpreter.enableStepExecute();
@@ -1147,8 +838,8 @@ function DebugManager() {
     };
 
     const _Game_Interpreter_command122    = Game_Interpreter.prototype.command122;
-    Game_Interpreter.prototype.command122 = function() {
-        return this._params[3] === 4 ? this.execScriptCommandWithRescue(this._params[4], _Game_Interpreter_command122) :
+    Game_Interpreter.prototype.command122 = function(params) {
+        return params[3] === 4 ? this.execScriptCommandWithRescue(params[4], _Game_Interpreter_command122) :
             _Game_Interpreter_command122.apply(this, arguments);
     };
 
@@ -1158,11 +849,11 @@ function DebugManager() {
     };
 
     Game_Interpreter.prototype.execScriptCommandWithRescue = function(script, process) {
-        var result = true;
+        let result = true;
         try {
             result = process.apply(this, arguments);
         } catch (e) {
-            var logValue = [
+            const logValue = [
                 '----- スクリプトエラーを検知しました。----- \n',
                 `- Error Process Id   : ${this.getProcessNumber()}\n`,
                 `- Error Process Line : ${this.getProcessLine()}\n`,
@@ -1182,8 +873,8 @@ function DebugManager() {
     };
 
     Game_Interpreter.prototype.getScriptString = function() {
-        var script = this.currentCommand().parameters[0] + '\n';
-        var index  = this._index + 1;
+        let script = this.currentCommand().parameters[0] + '\n';
+        let index  = this._index + 1;
         while (this._list[index] && this._list[index].code === 655) {
             script += this._list[index].parameters[0] + '\n';
             index++;
@@ -1204,7 +895,7 @@ function DebugManager() {
     };
 
     Game_Interpreter.prototype.getProcessLine = function() {
-        var line = 0;
+        let line = 0;
         this._list.some(function(command, index) {
             if (command.code < 400 && command.code > 0) {
                 line++;
@@ -1332,19 +1023,24 @@ function DebugManager() {
     };
 
     Scene_Base.prototype.createInterpreterWindow = function() {
-        this._interpreterWindow = new Window_Interpreter(this._debugWindow);
+        const debug = this._debugWindow;
+        const y = debug.y + debug.height;
+        const rect = new Rectangle(debug.x, y, settings.interpreterWindow.width, Graphics.boxHeight - y);
+        this._interpreterWindow = new Window_Interpreter(rect);
         this._interpreterWindow.setHandler('ok', this.onInterpreterWindowOk.bind(this));
         this._interpreterWindow.setHandler('cancel', this.onInterpreterWindowCancel.bind(this));
         this.addWindow(this._interpreterWindow);
     };
 
     Scene_Base.prototype.createDebugWindow = function() {
-        this._debugWindow = new Window_DebugInfo();
+        const rect = new Rectangle(0, 0, settings.debugWindow.width, 1);
+        this._debugWindow = new Window_DebugInfo(rect);
         this.addWindow(this._debugWindow);
     };
 
     Scene_Base.prototype.createWatcherWindow = function() {
-        this._watcherWindow = new Window_Watcher();
+        const rect = new Rectangle(0, 0, settings.watcherWindow.width, 1);
+        this._watcherWindow = new Window_Watcher(rect);
         this.addWindow(this._watcherWindow);
     };
 
@@ -1402,10 +1098,9 @@ function DebugManager() {
     //  デバッグ情報ウィンドウを扱うクラスです。
     //=============================================================================
     class Window_DebugInfo extends Window_Base {
-        constructor() {
-            super(0, 0, 1, 1);
-            this.width  = this.windowWidth();
-            this.height = this.windowHeight();
+        constructor(rect) {
+            super(rect);
+            this.height = this.fittingHeight(2);
             this.createContents();
             this.refresh();
         }
@@ -1417,24 +1112,17 @@ function DebugManager() {
             this.drawText(this._interpreter.getProcessNumber(), 1);
         }
 
-        windowWidth() {
-            return settings.debugWindow.width;
-        }
-
-        windowHeight() {
-            return this.fittingHeight(2);
-        }
-
-        standardFontSize() {
-            return settings.debugWindow.fontSize;
-        }
-
-        standardPadding() {
-            return settings.debugWindow.padding;
-        }
-
         lineHeight() {
-            return this.standardFontSize() + 8;
+            return this.contents.fontSize + 8;
+        }
+
+        resetFontSettings() {
+            super.resetFontSettings();
+            this.contents.fontSize = settings.debugWindow.fontSize;
+        }
+
+        updatePadding() {
+            this.padding = settings.debugWindow.padding;
         }
 
         drawText(text, line) {
@@ -1454,10 +1142,14 @@ function DebugManager() {
     //  インタプリタウィンドウを扱うクラスです。
     //=============================================================================
     class Window_Interpreter extends Window_Command {
-        constructor(debugWindow) {
-            super(debugWindow.x, debugWindow.y + debugWindow.height);
+        constructor(rect) {
+            super(rect);
             this.setCursorFixed(true);
             this.setup();
+        }
+
+        itemTextAlign() {
+            return 'left';
         }
 
         setup() {
@@ -1475,16 +1167,17 @@ function DebugManager() {
             return settings.interpreterWindow.lines;
         }
 
-        standardFontSize() {
-            return settings.interpreterWindow.fontSize;
+        resetFontSettings() {
+            super.resetFontSettings();
+            this.contents.fontSize = settings.interpreterWindow.fontSize;
         }
 
-        standardPadding() {
-            return settings.interpreterWindow.padding;
+        updatePadding() {
+            this.padding = settings.interpreterWindow.padding;
         }
 
         lineHeight() {
-            return this.standardFontSize() + 8;
+            return settings.interpreterWindow.fontSize + 8;
         }
 
         makeCommandList() {
@@ -1551,32 +1244,35 @@ function DebugManager() {
     //  監視ウィンドウを扱うクラスです。
     //=============================================================================
     class Window_Watcher extends Window_Command {
-        constructor() {
-            super(0, 0);
+        constructor(rect) {
+            super(rect);
+            this.height = this.fittingHeight(this.numVisibleRows());
+            this.createContents();
             this.refresh();
             this.select(-1);
             this.deactivate();
-            this.x = SceneManager._boxWidth - this.windowWidth();
+            this.x = Graphics.boxWidth - this.width;
         }
 
-        windowWidth() {
-            return settings.watcherWindow.width;
+        itemTextAlign() {
+            return 'left';
         }
 
         numVisibleRows() {
             return param.maxWatchNum;
         }
 
-        standardFontSize() {
-            return settings.watcherWindow.fontSize;
-        }
-
         lineHeight() {
-            return this.standardFontSize() + 8;
+            return settings.watcherWindow.fontSize + 8;
         }
 
-        standardPadding() {
-            return settings.watcherWindow.padding;
+        resetFontSettings() {
+            super.resetFontSettings();
+            this.contents.fontSize = settings.watcherWindow.fontSize;
+        }
+
+        updatePadding() {
+            this.padding = settings.watcherWindow.padding;
         }
 
         makeCommandList() {
