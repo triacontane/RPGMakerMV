@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2023/05/01 参照されていないメソッドを削除し、一部パラメータのデフォルト値を変更
 // 2.6.0 2022/12/15 項目、項目背景、カーソルをパーツ単位で非表示にできる機能を追加
 // 2.5.0 2022/06/06 ステータス画面用の装備、パラメータウィンドウを編集対象に追加
 // 2.4.0 2022/05/16 マウスオーバーしたときにさらに別の画像に差し替える機能を追加
@@ -276,8 +277,8 @@
  *
  * @param WindowShow
  * @text ウィンドウを残す
- * @desc 画像が表示されているときでもウィンドウの元背景を表示したままにします。
- * @default false
+ * @desc ウィンドウの元背景を表示したままにします。
+ * @default true
  * @type boolean
  *
  * @param ItemHide
@@ -353,13 +354,6 @@
         if (this._backImageDataList.length > 0) {
             this._createBackImage();
         }
-    };
-
-    Window.prototype._setBackImageProperty = function(backImageData) {
-        this._backImageDx        = parseInt(backImageData['OffsetX']) || 0;
-        this._backImageDy        = parseInt(backImageData['OffsetY']) || 0;
-        this._backSprite.scale.x = (parseInt(backImageData['ScaleX']) || 100) / 100;
-        this._backSprite.scale.y = (parseInt(backImageData['ScaleY']) || 100) / 100;
     };
 
     /**
