@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2023/95/01 デフォルトでフルスクリーン起動できるパラメータを追加
 // 1.3.0 2022/09/09 ゲーム終了画面にもシャットダウン項目を追加できる機能を追加
 // 1.2.0 2021/12/30 イベントテスト実行時は全画面化を無効にするよう仕様変更
 // 1.1.0 2021/11/04 MZで動作するよう修正
@@ -32,6 +33,12 @@
  * @desc タイトル画面に追加するシャットダウンの項目名です。
  * ローカル環境での実行時のみ表示されます。
  * @default シャットダウン
+ *
+ * @param DefaultFullScreen
+ * @text デフォルトでフルスクリーン
+ * @desc 有効にするとデフォルトでフルスクリーン起動します。
+ * @default false
+ * @type boolean
  *
  * @param StartUpFullScreen
  * @text フルスクリーンで起動
@@ -205,7 +212,7 @@ function Scene_Terminate() {
     // ConfigManager
     //  オプションに「フルスクリーンで起動」項目を追加します。
     //=============================================================================
-    ConfigManager.startUpFullScreen = false;
+    ConfigManager.startUpFullScreen = param.DefaultFullScreen;
 
     const _ConfigManager_applyData = ConfigManager.applyData;
     ConfigManager.applyData = function(config) {
