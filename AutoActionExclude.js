@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/05/03 条件にスクリプトを追加
  1.0.0 2023/05/03 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -56,6 +57,12 @@
  * @default 0
  * @type switch
  *
+ * @param conditionScript
+ * @text 条件スクリプト
+ * @desc 指定したスクリプトがtrueのときのみ対象外になります。
+ * @default
+ * @type multiline_string
+ *
  */
 
 (() => {
@@ -78,7 +85,9 @@
 
     Game_Action.prototype.isAutoExclude = function() {
         return param.skillList.some(skill => {
-            return skill.id === this.item().id && (!skill.conditionSwitch || $gameSwitches.value(skill.conditionSwitch));
+            return skill.id === this.item().id
+                && (!skill.conditionSwitch || $gameSwitches.value(skill.conditionSwitch))
+                && (!skill.conditionScript || eval(skill.conditionScript));
         });
     };
 })();
