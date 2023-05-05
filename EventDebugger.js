@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.2 2023/05/05 変数の操作で「スクリプト」を指定したとき、値が正常に設定されない問題を修正
 // 1.6.1 2023/04/28 MZ移植に伴うレイアウト調整、考慮漏れ修正等
 // 1.6.0 2023/04/28 MZで動作するよう修正
 // 1.5.1 2019/01/25 本体バージョン1.6.0で正常に動作しない問題を修正
@@ -869,7 +870,7 @@ function DebugManager() {
 
     const _Game_Interpreter_command122    = Game_Interpreter.prototype.command122;
     Game_Interpreter.prototype.command122 = function(params) {
-        return params[3] === 4 ? this.execScriptCommandWithRescue(params[4], _Game_Interpreter_command122) :
+        return params[3] === 4 ? this.execScriptCommandWithRescue(params, _Game_Interpreter_command122) :
             _Game_Interpreter_command122.apply(this, arguments);
     };
 
