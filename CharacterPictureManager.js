@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.13.0 2023/05/06 行動中条件、入力中条件の立ち絵は、戦闘中以外では常に条件を満たすよう仕様変更
 // 3.12.0 2023/04/09 カスタムメニュープラグインで作成した画面に立ち絵を表示するとき、単一アクターのカスタムメニューなら立ち絵も単一表示になるよう修正
 // 3.11.0 2022/12/30 アクターがコマンド入力中のみ立ち絵を表示する機能を追加
 // 3.10.0 2022/12/22 フロントビュー採用時、戦闘アニメの表示対象を立ち絵にできる機能を追加
@@ -352,19 +353,19 @@
  *
  * @param Inputting
  * @text 入力中条件
- * @desc アクターがコマンド入力の場合に表示条件を満たします。
+ * @desc アクターがコマンド入力の場合に表示条件を満たします。戦闘中以外は常に表示条件を満たします。
  * @default false
  * @type boolean
  *
  * @param Action
  * @text 行動中条件
- * @desc アクターが行動中の場合に表示条件を満たします。
+ * @desc アクターが行動中の場合に表示条件を満たします。戦闘中以外は常に表示条件を満たします。
  * @default false
  * @type boolean
  *
  * @param Motion
  * @text モーション条件
- * @desc アクターが指定モーションを取っている間、表示条件を満たします。フロントビューでも機能します。
+ * @desc アクターが指定モーションを取っている間、表示条件を満たします。フロントビューでも機能します。戦闘中以外は表示条件を満たしません。
  * @default
  * @type select
  * @option なし
@@ -791,8 +792,8 @@
             conditions.push(file => !file.HpUpperLimit || file.HpUpperLimit >= this._actor.hpRate() * 100);
             conditions.push(file => !file.HpLowerLimit || file.HpLowerLimit <= this._actor.hpRate() * 100);
             conditions.push(file => !file.Motion || this._actor.isMotionTypeValid(file.Motion));
-            conditions.push(file => !file.Action || this._actor.isAction());
-            conditions.push(file => !file.Inputting || this._actor.isInputting());
+            conditions.push(file => !file.Action || this._actor.isAction() || !$gameParty.inBattle());
+            conditions.push(file => !file.Inputting || this._actor.isInputting() || !$gameParty.inBattle());
             conditions.push(file => !file.State || this._actor.isStateAffected(file.State));
             conditions.push(file => !file.Weapon || this._actor.hasWeapon($dataWeapons[file.Weapon]));
             conditions.push(file => !file.Armor || this._actor.hasArmor($dataArmors[file.Armor]));
