@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2023/05/07 特徴アニメーションが常に通常のアニメーションの背後に表示されるよう修正
  1.2.0 2023/04/16 戦闘中にメンバーを入れ替えたとき即座にアニメーションを消去するよう修正
  1.1.0 2021/04/11 複数のアニメーションを同時に表示できるよう修正
  1.0.0 2020/12/06 初版
@@ -150,6 +151,12 @@
             var sprite = this._animationSprites.pop();
             sprite.animationId = data.id;
             this._traitAnimationSprite.push(sprite);
+            var index = this.parent.children.findIndex(function(child) {
+                return child instanceof Sprite_Animation && !this._traitAnimationSprite.contains(child);
+            }, this);
+            if (index >= 0) {
+                this.parent.addChildAt(sprite, index);
+            }
         }, this);
     };
 })();
