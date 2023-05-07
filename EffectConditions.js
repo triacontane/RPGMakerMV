@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2023/05/07 適用条件スクリプトの凡例「subject.isActor();」を選択するとエラーになっていた問題を修正
 // 1.2.0 2022/09/27 適用条件に「戦闘中かどうか」を追加
 // 1.1.0 2022/09/25 MZ用に再作成
 // 1.0.3 2017/02/07 端末依存の記述を削除
@@ -147,6 +148,7 @@
         }
         const conditions = [];
         const damage = this._damageValue;
+        const subject = this.subject();
         conditions.push(() => !condParam.switch || $gameSwitches.value(condParam.switch));
         conditions.push(() => !condParam.probability || Math.randomInt(100) < condParam.probability);
         conditions.push(() => !condParam.script || eval(condParam.script));
