@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.3 2023/05/07 監視ウィンドウで指定した変数に数値や文字列以外（配列など）を指定して表示しようとするとエラーになる問題を修正
 // 1.6.2 2023/05/05 変数の操作で「スクリプト」を指定したとき、値が正常に設定されない問題を修正
 // 1.6.1 2023/04/28 MZ移植に伴うレイアウト調整、考慮漏れ修正等
 // 1.6.0 2023/04/28 MZで動作するよう修正
@@ -1355,7 +1356,9 @@ function DebugManager() {
         makeCommandItem(watchTarget) {
             if (!DebugManager.isScriptWatcher(watchTarget)) {
                 const variableName = $dataSystem.variables[watchTarget];
-                return `変数[${watchTarget.padZero(4)}]:[${$gameVariables.value(watchTarget).padZero(6)}](${variableName})`;
+                const value = $gameVariables.value(watchTarget);
+                const text = isFinite(value) ? value.padZero(6) : String(value);
+                return `変数[${watchTarget.padZero(4)}]:[${text}](${variableName})`;
             } else {
                 let result;
                 try {
