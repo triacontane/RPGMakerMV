@@ -32,6 +32,9 @@
  * @type string
  *
  * @help OpenExternalLink.js
+ *
+ * 指定したURLを既定のブラウザで開きます。
+ * プラグインコマンドから実行してください。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
