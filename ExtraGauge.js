@@ -6,7 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
- 1.6.0 2021/04/24 マップ、戦闘画面でゲージをウィンドウの上に表示できる機能を追加
+ 1.6.1 2023/05/09 不透明度のパラメータが正常に機能していなかった問題を修正
+ 1.6.0 2023/04/24 マップ、戦闘画面でゲージをウィンドウの上に表示できる機能を追加
  1.5.3 2023/01/31 ゲージを非表示にして現在値を変更してから再表示すると変更前の数値が一瞬表示されてしまう問題を修正
  1.5.2 2022/12/08 ゲージX座標のパラメータ初期値を変更
  1.5.1 2022/11/20 プリセットをtimeにするとラベルが表示されなくなる件を制約事項としてヘルプに記載
@@ -565,8 +566,8 @@
         }
 
         updateOpacity() {
-            if (this._detail.OpacityVariable) {
-                this.opacity = $gameVariables.value(this._detail.OpacityVariable);
+            if (this._data.OpacityVariable) {
+                this.opacity = $gameVariables.value(this._data.OpacityVariable);
             }
         }
 
