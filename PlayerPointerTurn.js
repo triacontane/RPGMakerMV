@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2023/05/11 クリック時のみポインタの方を向く機能を追加
 // 1.4.0 2021/08/26 プラグインの機能を一時無効化するスイッチを追加
 // 1.3.0 2021/06/20 MZで動作するよう修正
 // 1.2.0 2021/06/20 移動中も常にポインタの方を向く機能を追加
@@ -37,6 +38,12 @@
  * @default 0
  * @type switch
  *
+ * @param clickOnly
+ * @text クリック時のみ
+ * @desc マウスクリック時のみポインタの方を向きます。この機能を有効にする場合、何らかの方法でマップタッチ移動の無効化を推奨します。
+ * @default false
+ * @type boolean
+ *
  * @help 移動可能な場合にプレイヤーが
  * マウスポインタの方を向きます。
  *
@@ -58,7 +65,7 @@
     //=============================================================================
     const _Game_Player_moveByInput      = Game_Player.prototype.moveByInput;
     Game_Player.prototype.moveByInput = function() {
-        if (!this.isMoving() && this.canMove() && TouchInput.isHovered()) {
+        if (!this.isMoving() && this.canMove() && (TouchInput.isHovered() || TouchInput.isTriggered())) {
             this.turnToPointer();
         }
         _Game_Player_moveByInput.apply(this, arguments);
@@ -74,6 +81,9 @@
 
     Game_Player.prototype.turnToPointer = function() {
         if ($gameSwitches.value(param.invalidSwitch)) {
+            return;
+        }
+        if (param.clickOnly && !TouchInput.isTriggered()) {
             return;
         }
         const tx = TouchInput.x, ty = TouchInput.y, sx = this.screenX(), sy = this.screenY();
