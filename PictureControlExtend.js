@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/05/10 ピクチャのシェイクを時間指定無しでシェイクし続けられる機能を追加
  1.1.2 2022/05/04 DirectivityShake.jsと併用してピクチャをシェイク無効にしたとき、縦方向のシェイクに対しても影響を受けなくなるよう修正
  1.1.1 2021/06/03 ピクチャの変数指定が解除コマンドで正常に解除されない問題を修正
  1.1.0 2021/05/29 ピクチャの原点を詳細指定できるコマンドを追加
@@ -100,9 +101,10 @@
  * @arg duration
  * @text 時間
  * @desc 処理時間(フレーム単位)です。
+ * ずっとシェイクし続けたい場合、-1を指定してください。
  * @default 0
  * @type number
- * @min 0
+ * @min -1
  *
  * @arg wait
  * @text 完了までウェイト
@@ -347,10 +349,11 @@
     };
 
     Game_Screen.prototype.shakePicture = function(pictureId, args) {
+        const duration = args.duration === -1 ? Infinity : args.duration;
         this.iteratePictures((pictureId, args) => {
             const picture = this.picture(pictureId);
             if (picture) {
-                picture.shake(args.power, args.speed, args.rotation, args.duration);
+                picture.shake(args.power, args.speed, args.rotation, duration);
             }
         }, arguments);
     };
