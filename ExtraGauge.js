@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.0 2023/05/12 ゲージにオリジナルの画像を指定できる機能を追加
  1.6.1 2023/05/09 不透明度のパラメータが正常に機能していなかった問題を修正
  1.6.0 2023/04/24 マップ、戦闘画面でゲージをウィンドウの上に表示できる機能を追加
  1.5.3 2023/01/31 ゲージを非表示にして現在値を変更してから再表示すると変更前の数値が一瞬表示されてしまう問題を修正
@@ -210,6 +211,11 @@
  * @desc ゲージのX座標です。ラベルが長い文字の場合は変更してください。
  * @default 28
  *
+ * @param GaugeEndX
+ * @text ゲージ終端X座標
+ * @desc ゲージの終端X座標です。数値の表示をゲージの外に表示したい場合に指定してください。
+ * @default 0
+ *
  * @param GaugeHeight
  * @text ゲージ高さ
  * @desc ゲージの高さです。0を指定すると全体の高さに合わせられます。
@@ -291,6 +297,18 @@
  * @type number
  * @min 1
  *
+ * @param GaugeImage
+ * @text ゲージ画像
+ * @desc ゲージ画像に専用の画像を指定します。ゲージ量に応じてトリミングされます。有効にするとゲージ色などの各種設定は無視されます。
+ * @type file
+ * @dir img/pictures
+ *
+ * @param ScaleAutoAdjust
+ * @text 拡大率自動調整
+ * @desc ゲージ画像の拡大率をゲージサイズに合わせて自動で調整します。
+ * @type boolean
+ * @default true
+ *
  * @param GaugeColorPreset
  * @text ゲージ色のプリセット
  * @desc ゲージ色をプリセットから簡易指定します。既存のゲージ仕様を流用する関係上、timeに設定するとラベルが表示されません。
@@ -306,26 +324,31 @@
  * @text ゲージ色(左)
  * @desc 左側のゲージ色です。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
  * @default 0
+ * @type color
  *
  * @param GaugeColorRight
  * @text ゲージ色(右)
  * @desc 右側のゲージ色です。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
  * @default 0
+ * @type color
  *
  * @param GaugeColorFullLeft
  * @text 満タン時のゲージ色(左)
  * @desc 満タン時の左側のゲージ色です。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
  * @default 0
+ * @type color
  *
  * @param GaugeColorFullRight
  * @text 満タン時のゲージ色(右)
  * @desc 満タン時の右側のゲージ色です。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
  * @default 0
+ * @type color
  *
  * @param BackColor
  * @text ゲージ背景色
  * @desc ゲージ背景色です。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
  * @default 0
+ * @type color
  *
  * @param Label
  * @text ラベル
@@ -336,6 +359,7 @@
  * @text アイコン
  * @desc ラベルと一緒に描画されるアイコンです。ラベルと一緒に表示させると重なって表示されるので注意してください。
  * @default 0
+ * @type icon
  *
  * @param LabelFont
  * @text ラベルフォント
@@ -599,6 +623,25 @@
             super(data, detail, layout);
             this.setup(this.findBattler(), this._detail.GaugeColorPreset);
             this.setupPosition();
+            if (this._detail.GaugeImage) {
+                this.setupImage();
+            }
+        }
+
+        setupImage() {
+            const gauge = new Sprite();
+            gauge.bitmap = ImageManager.loadPicture(this._detail.GaugeImage);
+            gauge.x = -this.width / 2 + this.gaugeX();
+            gauge.y = -this.gaugeHeight() / 2 + (this.height - this.gaugeHeight()) / 2;
+            if (this._detail.ScaleAutoAdjust) {
+                gauge.bitmap.addLoadListener(() => {
+                    gauge.scale.x = (this.width - this.gaugeX() - this.gaugeEndX()) / gauge.width;
+                    gauge.scale.y = this.gaugeHeight() / gauge.height;
+                });
+            }
+            this._gaugeImage = gauge;
+            this.bitmap.gradientFillRect = new Function();
+            this.addChild(gauge);
         }
 
         findBattler() {
@@ -696,6 +739,25 @@
 
         gaugeX() {
             return this.findLayoutValue(this._layout.GaugeX) || 0;
+        }
+
+        gaugeEndX() {
+            return this.findLayoutValue(this._layout.GaugeEndX) || 0;
+        }
+
+        drawGaugeRect(x, y, width, height) {
+            super.drawGaugeRect(x, y, width - this.gaugeEndX(), height);
+            if (this._gaugeImage) {
+                this.drawGaugeImage();
+            }
+        }
+
+        drawGaugeImage() {
+            const gauge = this._gaugeImage;
+            gauge.bitmap.addLoadListener(() => {
+                const rate = this.gaugeRate();
+                gauge.setFrame(0, 0, gauge.bitmap.width * rate, gauge.bitmap.height);
+            });
         }
 
         findLayoutValue(value) {
