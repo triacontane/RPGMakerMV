@@ -75,7 +75,10 @@
  * this.awayEventByName('name');   # nameの名前のイベントから遠ざかる
  * this.awayEventByTag('tagName'); # 指定したメモ(※1)のイベントから遠ざかる
  *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
