@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.9 2023/05/13 制約対象のスキルやアイテムをID単位ではなくメモタグでまとめて指定できる機能を追加
 // 2.4.0 2023/04/20 すべてのスキルの対象にならなくなる無敵タグを設定できる機能を追加
 // 2.3.2 2022/10/17 自動戦闘の特徴が有効なとき、選択可能対象がいないスキルを選択対象外にするよう修正
 // 2.3.1 2022/10/15 範囲を「なし」にしたスキルを敵が使わなくなる問題を修正
@@ -44,7 +45,7 @@
  *
  * @param list
  * @text 対象限定スキルリスト
- * @desc 対象限定スキルの制約情報一覧を設定します。スキルIDかアイテムIDのどちらかひとつだけを指定してください。
+ * @desc 対象限定スキルの制約情報一覧を設定します。
  * @default []
  * @type struct<RESTRICTION>[]
  *
@@ -91,6 +92,11 @@
  * @desc 制約の対象となるアイテムIDです。
  * @default 0
  * @type item
+ *
+ * @param tagName
+ * @text タグ名称
+ * @desc 制約の対象となるタグ名称です。複数まとめて制約対象にできます。スキルやアイテムのメモ欄に記載します。例：<xxx>
+ * @default
  *
  * @param validActors
  * @text 有効アクター
@@ -181,7 +187,17 @@
 
     Game_BattlerBase.prototype.findRestrictionData = function(item) {
         const isSkill = DataManager.isSkill(item);
-        return param.list.find(data => (isSkill ? data.skillId : data.itemId) === item.id);
+        return param.list.find(data => this.isRestrictionData(data, item, isSkill));
+    };
+
+    Game_BattlerBase.prototype.isRestrictionData = function(data, item, isSkill) {
+        if ((isSkill ? data.skillId : data.itemId) === item.id) {
+            return true;
+        } else if (!!item.meta[data.tagName]) {
+            return true;
+        } else {
+            return false;
+        }
     };
 
     Game_BattlerBase.prototype.findSomeRestrictionNote = function(tagName) {
