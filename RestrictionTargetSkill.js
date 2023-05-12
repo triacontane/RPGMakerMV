@@ -94,7 +94,7 @@
  * @type item
  *
  * @param tagName
- * @text タグ名称
+ * @text 対象タグ名称
  * @desc 制約の対象となるタグ名称です。複数まとめて制約対象にできます。スキルやアイテムのメモ欄に記載します。例：<xxx>
  * @default
  *
