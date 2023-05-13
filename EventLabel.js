@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2023/05/13 すべてのラベルを一時的に非表示にできる機能を追加
  1.3.1 2022/10/16 ベースプラグインの説明を追加
  1.3.0 2022/10/16 ラベル位置によってはテールを上向きに表示するよう変更
  1.2.0 2022/10/16 ラベルにフキダシ(テール)を表示できる機能を追加
@@ -60,6 +61,11 @@
  * @param padding
  * @desc The padding of the label.
  * @default 2
+ *
+ * @param invisibleSwitchId
+ * @desc 指定したスイッチがONのとき、すべてのラベルを非表示にします。
+ * @default 0
+ * @type switch
  *
  * @command SHOW_LABEL
  * @text Show label
@@ -146,6 +152,7 @@
  * @text フォントサイズ
  * @desc ラベルのフォントサイズです。
  * @default 16
+ * @type number
  *
  * @param backColor
  * @text 背景カラー
@@ -174,6 +181,12 @@
  * @desc テールを表示する場合の高さです。
  * @default 8
  * @type number
+ *
+ * @param invisibleSwitchId
+ * @text 非表示スイッチID
+ * @desc 指定したスイッチがONのとき、すべてのラベルを非表示にします。
+ * @default 0
+ * @type switch
  * 
  * @command SHOW_LABEL
  * @text ラベル表示
@@ -393,6 +406,13 @@
             }
             this.updateLabel(event);
             this.updatePosition(event);
+            this.updateVisibly();
+        }
+
+        updateVisibly() {
+            if (param.invisibleSwitchId) {
+                this.visible = !$gameSwitches.value(param.invisibleSwitchId);
+            }
         }
 
         updatePosition(event) {
