@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.16.3 2023/05/14 フキダシ表示直後に通常ウィンドウに戻してメッセージ表示すると正常に表示されない場合がある問題を修正
 // 2.16.2 2023/03/02 フキダシウィンドウ表示時に特定条件下で空のフキダシが表示される問題を修正
 // 2.16.1 2023/01/10 MessagePosition.jsと組み合わせたとき、相手のプラグインで指定した幅と高さより大きなフキダシが正しく文章表示できない問題を修正
 // 2.16.0 2022/12/08 フキダシウィンドウプラグインの横幅に拘わらず、左側の座標を固定する機能を追加
@@ -1493,8 +1494,13 @@
         if (this.getPopupTargetCharacter()) {
             this.processVirtual();
         } else {
+            var width = this.width;
+            var height = this.height;
             this.width  = this.windowWidth();
             this.height = this.windowHeight();
+            if (this.width !== width || this.height !== height) {
+                this.createContents();
+            }
             this.setPauseSignToNormal();
         }
         this.updatePlacement();
