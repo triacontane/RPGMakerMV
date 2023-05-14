@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2023/05/14 キャラクターグラフィック表示拡張プラグインと連携可能なように修正
 // 1.2.0 2022/11/23 レイヤーマップのプライオリティを細かく9段階で指定できる機能を追加
 // 1.1.9 2022/03/23 MZ向けにリファクタリング
 // 1.1.8 2020/04/20 EventEffects.jsとの競合を解消
@@ -281,6 +282,9 @@
 
     Sprite_MapLayer.prototype.updateBitmap = function() {
         this._characterName = '';
+        if (this.updateExtend) {
+            this.updateExtend();
+        }
     };
 
     Sprite_MapLayer.prototype.updateFrame = function() {
