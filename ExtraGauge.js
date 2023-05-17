@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.8.0 2023/05/17 ゲージの背景部分を非表示にできる機能を追加
  1.7.0 2023/05/12 ゲージにオリジナルの画像を指定できる機能を追加
  1.6.1 2023/05/09 不透明度のパラメータが正常に機能していなかった問題を修正
  1.6.0 2023/04/24 マップ、戦闘画面でゲージをウィンドウの上に表示できる機能を追加
@@ -299,9 +300,15 @@
  *
  * @param GaugeImage
  * @text ゲージ画像
- * @desc ゲージ画像に専用の画像を指定します。ゲージ量に応じてトリミングされます。有効にするとゲージ色などの各種設定は無視されます。
+ * @desc ゲージ画像に専用の画像を指定します。ゲージ量に応じてトリミングされます。ゲージ色などの各種設定は無視されます。
  * @type file
  * @dir img/pictures
+ *
+ * @param GaugeBackHidden
+ * @text ゲージ背景を非表示
+ * @desc ゲージ画像の背景部分を非表示にします。主にゲージ画像を指定した場合に有効にします。
+ * @type boolean
+ * @default false
  *
  * @param ScaleAutoAdjust
  * @text 拡大率自動調整
@@ -641,6 +648,9 @@
             }
             this._gaugeImage = gauge;
             this.bitmap.gradientFillRect = new Function();
+            if (this._detail.GaugeBackHidden) {
+                this.bitmap.fillRect = new Function();
+            }
             this.addChild(gauge);
         }
 
