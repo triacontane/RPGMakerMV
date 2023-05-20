@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.4 2023/05/20 Cannot read property 'code' of undefinedが発生しないよう対症療法で修正
 // 1.6.3 2023/05/07 監視ウィンドウで指定した変数に数値や文字列以外（配列など）を指定して表示しようとするとエラーになる問題を修正
 // 1.6.2 2023/05/05 変数の操作で「スクリプト」を指定したとき、値が正常に設定されない問題を修正
 // 1.6.1 2023/04/28 MZ移植に伴うレイアウト調整、考慮漏れ修正等
@@ -1277,7 +1278,7 @@ function DebugManager() {
         }
 
         isCommandEnabled(index) {
-            return DebugManager.isStepTargetCommand(this._list[index].code);
+            return DebugManager.isStepTargetCommand(this._list[index]?.code);
         }
 
         isCurrentItemEnabled() {
