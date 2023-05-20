@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2023/05/20 カラーフェードを指定しているとき、画面のフラッシュが機能しなくなる問題を修正
  1.0.0 2023/05/05 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -92,7 +93,7 @@
     };
 
     Game_Screen.prototype.isColorFade = function() {
-        return !!this._fadeColor;
+        return !!this._fadeColor && this._fadeColor[3] > 0;
     };
 
     Game_Screen.prototype.fadeColor = function() {
