@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.9.1 2023/05/21 1.9.0の機能で、ゲージX座標を変更していると現在値の位置が揃え次第でずれる問題を修正
  1.9.0 2023/05/21 現在値表示の揃えとゼロ埋め表示を指定できる機能を追加
  1.8.0 2023/05/17 ゲージの背景部分を非表示にできる機能を追加
  1.7.0 2023/05/12 ゲージにオリジナルの画像を指定できる機能を追加
@@ -933,7 +934,7 @@
             const max = this.currentMaxValue().padZero(digit);
             const text = this._detail.ValueFormat.format(current, max);
             const x = this.gaugeX();
-            const width = this.bitmapWidth() - 2;
+            const width = this.bitmapWidth() - 2 - x;
             const height = this.textHeight();
             const align = this._detail.ValueAlign || 'right';
             this.setupValueFont();
