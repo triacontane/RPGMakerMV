@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.9.0 2023/05/21 現在値表示の揃えとゼロ埋め表示を指定できる機能を追加
  1.8.0 2023/05/17 ゲージの背景部分を非表示にできる機能を追加
  1.7.0 2023/05/12 ゲージにオリジナルの画像を指定できる機能を追加
  1.6.1 2023/05/09 不透明度のパラメータが正常に機能していなかった問題を修正
@@ -63,6 +64,9 @@
  *
  * ゲージは、マップ画面と戦闘画面ではピクチャの上かつウィンドウの下に、
  * それ以外の画面ではウィンドウの上に表示されます。
+ *
+ * ゲージにオリジナルの画像も指定できます。
+ * ただし、オリジナル画像のゲージは現在値表示より上に表示されます。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -390,6 +394,23 @@
  * @text 現在値フォーマット
  * @desc 現在値を表示する際の表示フォーマットです。%1:現在値 %2:最大値に置き換えられます。
  * @default %1/%2
+ *
+ * @param ValuePadZeroDigit
+ * @text 現在値を0埋め
+ * @desc 現在値を0埋めして表示します。
+ * @default 0
+ * @type number
+ * @parent ValueFormat
+ *
+ * @param ValueAlign
+ * @text 現在値の揃え
+ * @desc 現在値の揃え方向です。
+ * @default right
+ * @type select
+ * @option left
+ * @option center
+ * @option right
+ * @parent ValueFormat
  *
  * @param FlashIfFull
  * @text 満タン時にフラッシュ
@@ -907,11 +928,16 @@
         }
 
         drawCustomValue() {
-            const text = this._detail.ValueFormat.format(this.currentValue(), this.currentMaxValue());
+            const digit = this._detail.ValuePadZeroDigit || 0;
+            const current = this.currentValue().padZero(digit);
+            const max = this.currentMaxValue().padZero(digit);
+            const text = this._detail.ValueFormat.format(current, max);
+            const x = this.gaugeX();
             const width = this.bitmapWidth() - 2;
             const height = this.textHeight();
+            const align = this._detail.ValueAlign || 'right';
             this.setupValueFont();
-            this.bitmap.drawText(text, 0, 0, width, height, "right");
+            this.bitmap.drawText(text, x, 0, width, height, align);
         }
 
         findColor(code, defaultColor = null) {
