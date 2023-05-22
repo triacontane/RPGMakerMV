@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2023/05/22 キャラクターではない通常のピクチャ表示でエラーになる問題を修正
  1.0.0 2023/05/20 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -168,7 +169,7 @@
     Sprite_Picture.prototype.updateOther = function() {
         _Sprite_Picture_updateOther.apply(this, arguments);
         const picture = this.picture();
-        if (picture && picture.getCharacterCell() !== this._cellNumber) {
+        if (picture && picture.characterInfo() && picture.getCharacterCell() !== this._cellNumber) {
             this._cellNumber = picture.getCharacterCell();
             this.updateCharacterFrame();
         }
