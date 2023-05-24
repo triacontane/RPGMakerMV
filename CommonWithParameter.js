@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/05/24 名称による検索を完全一致と部分一致の2種類に対応
  1.0.0 2023/03/12 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -20,6 +21,12 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
+ *
+ * @param likeSearch
+ * @text 名称部分一致検索
+ * @desc コモンイベント名称を基準にコモンイベントを呼び出します。名称の部分一致検索になります。
+ * @default true
+ * @type boolean
  *
  * @param arguments
  * @text 引数リスト
@@ -114,7 +121,7 @@
         if ($dataCommonEvents[id]) {
             return $dataCommonEvents[id];
         } else {
-            return $dataCommonEvents.find(event => event?.name.includes(name));
+            return $dataCommonEvents.find(event => param.likeSearch ? event?.name.includes(name) : event?.name === name);
         }
     }
 })();
