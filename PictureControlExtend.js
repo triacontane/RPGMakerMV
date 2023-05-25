@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2023/05/25 ピクチャを複製できるコマンドを追加
  1.2.0 2023/05/10 ピクチャのシェイクを時間指定無しでシェイクし続けられる機能を追加
  1.1.2 2022/05/04 DirectivityShake.jsと併用してピクチャをシェイク無効にしたとき、縦方向のシェイクに対しても影響を受けなくなるよう修正
  1.1.1 2021/06/03 ピクチャの変数指定が解除コマンドで正常に解除されない問題を修正
@@ -194,6 +195,24 @@
  * @max 100
  * @min 0
  *
+ * @command PICTURE_COPY
+ * @text ピクチャのコピー
+ * @desc コピー元、コピー先のピクチャ番号を指定してピクチャをコピーします。
+ *
+ * @arg srcPictureId
+ * @text コピー元ピクチャ番号
+ * @desc コピー元のピクチャ番号です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @arg destPictureId
+ * @text コピー先ピクチャ番号
+ * @desc コピー先のピクチャ番号です。
+ * @default 2
+ * @type number
+ * @min 1
+ *
  * @help PictureControlExtend.js
  *
  * ピクチャ関連のイベントコマンドの機能を拡張します。
@@ -264,6 +283,10 @@
         $gameScreen.setPictureOrigin(args.pictureId, args);
     });
 
+    PluginManagerEx.registerCommand(script, 'PICTURE_COPY', function(args) {
+        $gameScreen.copyPicture(args.srcPictureId, args.destPictureId);
+    });
+
     /**
      * Game_Screen
      */
@@ -313,6 +336,14 @@
             callBack.apply(this, args);
         }
     };
+
+    Game_Screen.prototype.copyPicture = function(srcId, destId) {
+        const src = this.picture(srcId);
+        if (src) {
+            this.showPicture(destId, src.name(), src.origin(), src.x(), src.y(),
+                src.scaleX(), src.scaleY(), src.opacity(), src.blendMode());
+        }
+    }
 
     const _Game_Screen_showPicture = Game_Screen.prototype.showPicture;
     Game_Screen.prototype.showPicture = function() {
