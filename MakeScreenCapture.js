@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.1 2023/05/26 ウィンドウレイヤーを持たないシーンで署名の制御文字変換ができるよう修正
+//                  $gameSystem, $gameVariables初期化前にはキャプチャできないよう修正
 // 1.8.0 2021/09/24 署名に制御文字\v[n]を使えるよう修正
 // 1.7.3 2018/06/28 出力パスの算出方法を変更
 // 1.7.2 2018/03/06 各種ファンクションキーにCtrlおよびAltの同時押し要否の設定を追加しました。
@@ -467,7 +469,11 @@
 
     var convertEscapeCharacters = function(text) {
         if (text == null) text = '';
-        var window = SceneManager._scene._windowLayer.children[0];
+        var window = SceneManager._scene._windowLayer
+            ? SceneManager._scene._windowLayer.children[0]
+            : !!$gameSystem && !!$gameVariables
+                ? new Window_Base(0, 0, 0, 0)   // 初期化時にupdateToneが呼ばれるため、$gameSystemの初期化も必須
+                : null;
         return window ? window.convertEscapeCharacters(text) : text;
     };
 
@@ -661,7 +667,7 @@
     };
 
     SceneManager.saveCapture = function(fileName, format) {
-        if (!this._captureBitmap) return;
+        if (!this._captureBitmap || !$gameSystem || !$gameVariables) return;
         var signature = this.getSignature();
         if (paramSignatureImage) {
             var image = ImageManager.loadPicture(paramSignatureImage, 0);
