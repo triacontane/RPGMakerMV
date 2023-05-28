@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.1.0 2023/05/28 タイトル画面で無操作状態が続くと自動で専用ニューゲームを開始できる機能を追加
 // 4.0.2 2021/04/08 orderAfterアノテーションを追加
 // 4.0.1 2020/11/29 ブラウザからの実行でエラーになる問題を修正
 // 4.0.0 2020/11/11 MZ向けに全面的にリファクタリング
@@ -149,8 +150,14 @@
  * @option オプションの上
  * @value 3
  *
+ * @param demoWaitFrame
+ * @text デモ待機フレーム数
+ * @desc 指定したフレーム数ぶん無操作状態が続いたときに開始します。指定するとコマンドには出現しなくなります。
+ * @default 0
+ * @type number
+ *
  * @param switchId
- * @text 開始時にONになるスイッチ
+ * @text 開始時有効スイッチ
  * @desc アナザーニューゲーム開始時に自動でONになるスイッチを指定できます。
  * @default 0
  * @type switch
@@ -235,12 +242,42 @@
         localExtraStageIndex = -1;
     };
 
+    const _Scene_Title_update = Scene_Title.prototype.update;
+    Scene_Title.prototype.update = function() {
+        _Scene_Title_update.apply(this, arguments);
+        if (!this.isBusy() && !this._callAnotherNewGame) {
+            this.updateWait();
+        }
+    };
+
+    Scene_Title.prototype.updateWait = function() {
+        if (this._commandWindowIndex !== this._commandWindow.index()) {
+            this._commandWindowIndex = this._commandWindow.index();
+            this._waitFrame = 0;
+        } else {
+            this._waitFrame++;
+        }
+        ANGSettingManager.findList(true).forEach(command => {
+            if (this._waitFrame >= command.demoWaitFrame) {
+                this.callAnotherNewGame(command);
+            }
+        });
+        if (this._callAnotherNewGame) {
+            this._commandWindow.open();
+            this._commandWindow.deactivate();
+        }
+    };
+
     const _Scene_Title_commandNewGameSecond    = Scene_Title.prototype.commandNewGameSecond;
     Scene_Title.prototype.commandNewGameSecond = function(index) {
         if (_Scene_Title_commandNewGameSecond) {
             _Scene_Title_commandNewGameSecond.apply(this, arguments);
         }
-        const command = parameters.anotherDataList[index];
+        const command = ANGSettingManager.findList(false)[index];
+        this.callAnotherNewGame(command);
+    };
+
+    Scene_Title.prototype.callAnotherNewGame = function(command) {
         if (command.noFadeout) {
             this._noFadeout = true;
         }
@@ -266,17 +303,16 @@
             this.commandContinue();
             localExtraStageIndex = index;
         }
+        this._callAnotherNewGame = true;
     };
 
     const _Scene_Title_createCommandWindow    = Scene_Title.prototype.createCommandWindow;
     Scene_Title.prototype.createCommandWindow = function() {
         _Scene_Title_createCommandWindow.call(this);
-        parameters.anotherDataList.forEach((command, index) => {
-            if (ANGSettingManager.isVisible(index)) {
-                this._commandWindow.setHandler('nameGame2_' + index,
-                    this.commandNewGameSecond.bind(this, index));
-            }
-        }, this);
+        ANGSettingManager.findList(false).forEach((command, index) => {
+            this._commandWindow.setHandler('nameGame2_' + index,
+                this.commandNewGameSecond.bind(this, index));
+        });
     };
 
     Scene_Title.prototype.fadeOutAll = function() {
@@ -316,11 +352,9 @@
     const _Window_TitleCommand_makeCommandList    = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function() {
         _Window_TitleCommand_makeCommandList.call(this);
-        parameters.anotherDataList.forEach(function(command, index) {
-            if (ANGSettingManager.isVisible(index)) {
-                this.makeAnotherNewGameCommand(command, index);
-            }
-        }, this);
+        ANGSettingManager.findList(false).forEach((command, index) => {
+            this.makeAnotherNewGameCommand(command, index);
+        });
         if (ANGSettingManager.newGameHidden) {
             this.eraseCommandNewGame();
         }
@@ -392,6 +426,12 @@
             return !parameters.anotherDataList[index].disable;
         }
     };
+
+    ANGSettingManager.findList = function (waitFlag) {
+        return parameters.anotherDataList.filter((command, index) => {
+            return this.isVisible(index) && command.demoWaitFrame > 0 === waitFlag;
+        });
+    }
 
     ANGSettingManager.setEnable = function(index, value) {
         this._enableList[index] = value;
