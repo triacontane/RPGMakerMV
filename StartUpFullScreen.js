@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 1.4.0 2023/95/01 デフォルトでフルスクリーン起動できるパラメータを追加
+// 1.5.0 2023/06/01 ElectronForMz.jsに対応
+// 1.4.0 2023/05/01 デフォルトでフルスクリーン起動できるパラメータを追加
 // 1.3.0 2022/09/09 ゲーム終了画面にもシャットダウン項目を追加できる機能を追加
 // 1.2.0 2021/12/30 イベントテスト実行時は全画面化を無効にするよう仕様変更
 // 1.1.0 2021/11/04 MZで動作するよう修正
@@ -80,7 +81,7 @@ function Scene_Terminate() {
     'use strict';
 
     // Nw.js環境下以外では一切の機能を無効
-    if (!Utils.isNwjs()) {
+    if (!Utils.isNwjs() && !window.electronAPI) {
         return;
     }
 
@@ -92,7 +93,10 @@ function Scene_Terminate() {
     //  privateメソッド「_requestFullScreen」を呼び出します。
     //=============================================================================
     Graphics.requestFullScreen = function() {
-        if (!this._isFullScreenForPrevVersion()) {
+        if (window.electronAPI) {
+            this._stretchEnabled = true;
+            window.electronAPI.fullScreen();
+        } else {
             this._requestFullScreen();
         }
     };
