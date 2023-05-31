@@ -80,8 +80,14 @@ function Scene_Terminate() {
 (()=> {
     'use strict';
 
-    // Nw.js環境下以外では一切の機能を無効
-    if (!Utils.isNwjs() && !window.electronAPI) {
+    if (!Utils.isElectron) {
+        Utils.isElectron = function() {
+            return false;
+        }
+    }
+
+    // Nw.jsおよびElectron環境下以外では一切の機能を無効
+    if (!Utils.isNwjs() && !Utils.isElectron()) {
         return;
     }
 
@@ -92,26 +98,42 @@ function Scene_Terminate() {
     // Graphics
     //  privateメソッド「_requestFullScreen」を呼び出します。
     //=============================================================================
-    Graphics.requestFullScreen = function() {
-        if (window.electronAPI) {
-            this._stretchEnabled = true;
-            window.electronAPI.fullScreen();
+    const _Graphics__requestFullScreen = Graphics._requestFullScreen;
+    Graphics._requestFullScreen = function() {
+        if (Utils.isElectron()) {
+            window.electronAPI.fullScreen(true);
+            this._fullScreenForElectron = true;
         } else {
-            this._requestFullScreen();
+            _Graphics__requestFullScreen.apply(this, arguments);
         }
     };
 
-    /**
-     * @static
-     * @method _isFullScreenForPrevVersion
-     * @return {Boolean}
-     * @private
-     */
-    Graphics._isFullScreenForPrevVersion = function() {
-        return document.fullscreenElement ||
-            document.mozFullScreen ||
-            document.webkitFullscreenElement ||
-            document.msFullscreenElement;
+    const _Graphics__cancelFullScreen = Graphics._cancelFullScreen;
+    Graphics._cancelFullScreen = function() {
+        if (Utils.isElectron()) {
+            window.electronAPI.fullScreen(false);
+            this._fullScreenForElectron = false;
+        } else {
+            _Graphics__cancelFullScreen.apply(this, arguments);
+        }
+    };
+
+    const _Graphics__isFullScreen = Graphics._isFullScreen;
+    Graphics._isFullScreen = function() {
+        if (Utils.isElectron()) {
+            return this._fullScreenForElectron;
+        } else {
+            return _Graphics__isFullScreen.apply(this, arguments);
+        }
+    };
+
+    const _Graphics__defaultStretchMode = Graphics._defaultStretchMode;
+    Graphics._defaultStretchMode = function() {
+        if (Utils.isElectron()) {
+            return true;
+        } else {
+            return _Graphics__defaultStretchMode.apply(this, arguments);
+        }
     };
 
     //=============================================================================
@@ -120,11 +142,12 @@ function Scene_Terminate() {
     //=============================================================================
     const _Scene_Boot_start = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
-        _Scene_Boot_start.apply(this, arguments);
+        _Scene_Boot_start.apply(this, arguments)
         if (ConfigManager.startUpFullScreen && !DataManager.isEventTest()) {
-            Graphics.requestFullScreen();
+            Graphics._requestFullScreen();
         }
     };
+
 
     //=============================================================================
     // Scene_Title
