@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.18.2 2023/06/03 スキップスイッチ、オートスイッチが設定されているとキーによるスキップオートが効かなくなる問題を修正
 // 1.18.1 2022/01/08 1.18.0でループボイスを再生するとオートモードで文章が送られなくなる問題を修正
 // 1.18.0 2022/01/08 SimpleVoice.jsと併用したとき、ボイス演奏中はオートモードによる文章送りを待機するよう変更
 // 1.17.0 2021/09/12 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様をパラメータで選択可能にできるよう修正
@@ -263,12 +264,12 @@
  * @option A
  *
  * @param スキップスイッチ
- * @desc 指定した番号のスイッチがONになっている場合は常にスキップします。
+ * @desc 指定した番号のスイッチがONになっている場合は常にスキップします。OFFになると止まります。
  * @default 0
  * @type switch
  *
  * @param オートスイッチ
- * @desc 指定した番号のスイッチがONになっている場合は常にオートします。スキップが優先されます。
+ * @desc 指定した番号のスイッチがONになっている場合は常にオートします。スキップが優先されます。OFFになると止まります。
  * @default 0
  * @type switch
  *
@@ -582,12 +583,20 @@ function Sprite_Frame() {
 
     Game_Message.prototype.setSkipFlg = function(value) {
         this._skipFlg = value;
-        if (this._skipFlg) this._autoFlg = false;
+        if (this._skipFlg) {
+            this._autoFlg = false;
+        }
+        if (paramSkipSwitchId > 0) {
+            $gameSwitches.setValue(paramSkipSwitchId, value);
+        }
     };
 
     Game_Message.prototype.setAutoFlg = function(value) {
         if (!this._skipFlg) {
             this._autoFlg = value;
+            if (paramAutoSwitchIId > 0) {
+                $gameSwitches.setValue(paramAutoSwitchIId, value);
+            }
         }
     };
 
