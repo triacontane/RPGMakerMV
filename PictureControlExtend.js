@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2023/06/04 ピクチャをフラッシュさせるコマンドを追加
  1.3.0 2023/05/25 ピクチャを複製できるコマンドを追加
  1.2.0 2023/05/10 ピクチャのシェイクを時間指定無しでシェイクし続けられる機能を追加
  1.1.2 2022/05/04 DirectivityShake.jsと併用してピクチャをシェイク無効にしたとき、縦方向のシェイクに対しても影響を受けなくなるよう修正
@@ -213,6 +214,60 @@
  * @type number
  * @min 1
  *
+ * @command PICTURE_FLASH
+ * @text ピクチャのフラッシュ
+ * @desc ピクチャをフラッシュさせます。
+ *
+ * @arg pictureId
+ * @text ピクチャ番号
+ * @desc 操作対象のピクチャ番号です。
+ * @default 1
+ *
+ * @arg red
+ * @text フラッシュ色（赤）
+ * @desc フラッシュの赤成分です。
+ * @default 255
+ * @type number
+ * @max 255
+ * @min 0
+ *
+ * @arg green
+ * @text フラッシュ色（緑）
+ * @desc フラッシュの緑成分です。
+ * @default 255
+ * @type number
+ * @max 255
+ * @min 0
+ *
+ * @arg blue
+ * @text フラッシュ色（青）
+ * @desc フラッシュの青成分です。
+ * @default 255
+ * @type number
+ * @max 255
+ * @min 0
+ *
+ * @arg alpha
+ * @text フラッシュ強度
+ * @desc フラッシュの強度です。
+ * @default 255
+ * @type number
+ * @max 255
+ * @min 0
+ *
+ * @arg duration
+ * @text 時間
+ * @desc 処理時間(フレーム単位)です。
+ * @default 60
+ * @type number
+ * @min 0
+ *
+ * @arg wait
+ * @text 完了までウェイト
+ * @desc 処理が完了するまでウェイトします。
+ * @default false
+ * @type boolean
+ *
  * @help PictureControlExtend.js
  *
  * ピクチャ関連のイベントコマンドの機能を拡張します。
@@ -285,6 +340,13 @@
 
     PluginManagerEx.registerCommand(script, 'PICTURE_COPY', function(args) {
         $gameScreen.copyPicture(args.srcPictureId, args.destPictureId);
+    });
+
+    PluginManagerEx.registerCommand(script, 'PICTURE_FLASH', function(args) {
+        $gameScreen.flashPicture(args.pictureId, args);
+        if (args.wait) {
+            this.wait(args.duration);
+        }
     });
 
     /**
@@ -416,6 +478,15 @@
         }, arguments);
     };
 
+    Game_Screen.prototype.flashPicture = function(pictureId, args) {
+        this.iteratePictures((pictureId, args) => {
+            const picture = this.picture(pictureId);
+            if (picture) {
+                picture.flash([args.red, args.green, args.blue, args.alpha], args.duration);
+            }
+        }, arguments);
+    }
+
     /**
      * Game_Picture
      */
@@ -489,11 +560,26 @@
         this._shake          = 0;
     };
 
+    Game_Picture.prototype.flash = function(color, duration) {
+        this._flashColor = color.clone();
+        this._flashDuration = duration;
+    };
+
+    Game_Picture.prototype.clearFlash = function() {
+        this._flashColor = null;
+        this._flashDuration = 0;
+    };
+
+    Game_Picture.prototype.getFlash = function() {
+        return this._flashColor;
+    };
+
     const _Game_Picture_update      = Game_Picture.prototype.update;
     Game_Picture.prototype.update = function() {
         _Game_Picture_update.apply(this, arguments);
         this.updateSpin();
         this.updateShake();
+        this.updateFlash();
     };
 
     Game_Picture.prototype.updateSpin = function() {
@@ -524,6 +610,16 @@
         }
     };
 
+    Game_Picture.prototype.updateFlash = function() {
+        if (this._flashDuration > 0) {
+            const d = this._flashDuration--;
+            this._flashColor[3] *= (d - 1) / d;
+            if (this._flashDuration === 0) {
+                this.clearFlash();
+            }
+        }
+    }
+
     Game_Picture.prototype.getShakeX = function() {
         return this._shake ? this._shake * Math.cos(this._shakeRotation) : 0;
     };
@@ -543,4 +639,20 @@
             }
         }
     };
+
+    const _Sprite_Picture_update = Sprite_Picture.prototype.update;
+    Sprite_Picture.prototype.update = function() {
+        _Sprite_Picture_update.apply(this, arguments);
+        this.updateFlash();
+    };
+
+    Sprite_Picture.prototype.updateFlash = function() {
+        const picture = this.picture();
+        if (picture) {
+            const flash = picture.getFlash();
+            if (flash) {
+                this.setBlendColor(flash);
+            }
+        }
+    }
 })();
