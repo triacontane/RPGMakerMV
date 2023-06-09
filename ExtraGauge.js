@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.10.0 2023/06/09 ゲージを任意のウィンドウの子要素にできる機能を追加
  1.9.1 2023/05/21 1.9.0の機能で、ゲージX座標を変更していると現在値の位置が揃え次第でずれる問題を修正
  1.9.0 2023/05/21 現在値表示の揃えとゼロ埋め表示を指定できる機能を追加
  1.8.0 2023/05/17 ゲージの背景部分を非表示にできる機能を追加
@@ -232,6 +233,156 @@
  * @desc 有効にすると縦方向ゲージになります。ラベルなども縦方向になるので注意してください。
  * @default false
  * @type boolean
+ *
+ * @param ParentWindow
+ * @text 親ウィンドウ
+ * @desc ゲージを特定のウィンドウの子要素にしたい場合に指定します。
+ * @type select
+ * @default
+ * @option なし
+ * @value
+ * @option [ゲーム全般]ヘルプウィンドウ
+ * @value Window_Help
+ * @option [ゲーム全般]お金ウィンドウ
+ * @value Window_Gold
+ * @option [メインメニュー]メインコマンドウィンドウ
+ * @value Window_MenuCommand
+ * @option [メインメニュー]アクターステータスウィンドウ
+ * @value Window_MenuStatus
+ * @option [アイテム画面]アイテムカテゴリウィンドウ
+ * @value Window_ItemCategory
+ * @option [アイテム画面]アイテムリストウィンドウ
+ * @value Window_ItemList
+ * @option [アイテム画面]アクター選択ウィンドウ
+ * @value Window_MenuActor
+ * @option [スキル画面]スキルタイプウィンドウ
+ * @value Window_SkillType
+ * @option [スキル画面]ステータスウィンドウ
+ * @value Window_SkillStatus
+ * @option [スキル画面]スキルリストウィンドウ
+ * @value Window_SkillList
+ * @option [装備画面]ステータスウィンドウ
+ * @value Window_EquipStatus
+ * @option [装備画面]装備コマンドウィンドウ
+ * @value Window_EquipCommand
+ * @option [装備画面]装備スロットウィンドウ
+ * @value Window_EquipSlot
+ * @option [装備画面]装備リストウィンドウ
+ * @value Window_EquipItem
+ * @option [ステータス画面]ステータスウィンドウ
+ * @value Window_Status
+ * @option [ステータス画面]装備ウィンドウ
+ * @value Window_StatusEquip
+ * @option [ステータス画面]パラメータウィンドウ
+ * @value Window_StatusParams
+ * @option [オプション画面]オプションウィンドウ
+ * @value Window_Options
+ * @option [セーブ、ロード画面]ファイルリストウィンドウ
+ * @value Window_SavefileList
+ * @option [ショップ画面]ショップコマンドウィンドウ
+ * @value Window_ShopCommand
+ * @option [ショップ画面]購入アイテムウィンドウ
+ * @value Window_ShopBuy
+ * @option [ショップ画面]売却アイテムウィンドウ
+ * @value Window_ShopSell
+ * @option [ショップ画面]数値入力ウィンドウ
+ * @value Window_ShopNumber
+ * @option [ショップ画面]ステータスウィンドウ
+ * @value Window_ShopStatus
+ * @option [名前入力画面]名前ウィンドウ
+ * @value Window_NameEdit
+ * @option [名前入力画面]名前入力ウィンドウ
+ * @value Window_NameInput
+ * @option [マップ画面]選択肢ウィンドウ
+ * @value Window_ChoiceList
+ * @option [マップ画面]数値入力ウィンドウ
+ * @value Window_NumberInput
+ * @option [マップ画面]アイテム選択ウィンドウ
+ * @value Window_EventItem
+ * @option [マップ画面]名前ウィンドウ
+ * @value Window_NameBox
+ * @option [マップ画面]メッセージウィンドウ
+ * @value Window_Message
+ * @option [マップ画面]スクロールメッセージウィンドウ
+ * @value Window_ScrollText
+ * @option [マップ画面]マップ名ウィンドウ
+ * @value Window_MapName
+ * @option [戦闘画面]バトルログウィンドウ
+ * @value Window_BattleLog
+ * @option [戦闘画面]パーティコマンドウィンドウ
+ * @value Window_PartyCommand
+ * @option [戦闘画面]アクターコマンドウィンドウ
+ * @value Window_ActorCommand
+ * @option [戦闘画面]バトラーステータスウィンドウ
+ * @value Window_BattleStatus
+ * @option [戦闘画面]アクター一覧ウィンドウ
+ * @value Window_BattleActor
+ * @option [戦闘画面]敵キャラ一覧ウィンドウ
+ * @value Window_BattleEnemy
+ * @option [戦闘画面]スキル一覧ウィンドウ
+ * @value Window_BattleSkill
+ * @option [戦闘画面]アイテム一覧ウィンドウ
+ * @value Window_BattleItem
+ * @option [タイトル画面]タイトルウィンドウ
+ * @value Window_TitleCommand
+ * @option [ゲーム終了画面]終了確認ウィンドウ
+ * @value Window_GameEnd
+ * @option [デバッグ画面]変数選択ウィンドウ
+ * @value Window_DebugRange
+ * @option [デバッグ画面]変数設定ウィンドウ
+ * @value Window_DebugEdit
+ * @option [行動目標ウィンドウプラグイン]行動目標ウィンドウ
+ * @value Window_Destination
+ * @option [行動目標ウィンドウプラグイン]メニュー行動目標ウィンドウ
+ * @value Window_DestinationMenu
+ * @option [ゲーム内時間の導入プラグイン]時間ウィンドウ
+ * @value Window_Chronus
+ * @option [公式ガチャプラグイン]ガチャ表示ウィンドウ
+ * @value Window_Gacha
+ * @option [公式ガチャプラグイン]コマンドウィンドウ
+ * @value Window_GachaCommand
+ * @option [公式ガチャプラグイン]入手確認ウィンドウ
+ * @value Window_GachaGetCommand
+ * @option [公式ガチャプラグイン]入手情報ウィンドウ
+ * @value Window_GachaGet
+ * @option [公式ガチャプラグイン]コストウィンドウ
+ * @value Window_Cost
+ * @option [ノベルゲーム総合プラグイン]ノベル選択肢ウィンドウ
+ * @value Window_NovelChoiceList
+ * @option [ノベルゲーム総合プラグイン]ノベルメッセージウィンドウ
+ * @value Window_NovelMessage
+ * @option [ノベルゲーム総合プラグイン]ノベルタイトルコマンドウィンドウ
+ * @value Window_NovelTitleCommand
+ * @option [ノベルゲーム総合プラグイン]ノベル数値入力ウィンドウ
+ * @value Window_NovelNumberInput
+ * @option [ノベルゲーム総合プラグイン]ポーズメニューウィンドウ
+ * @value Window_PauseMenu
+ * @option [クロスセーブプラグイン]パスワード入力ウィンドウ
+ * @value Window_PasswordInput
+ * @option [クロスセーブプラグイン]パスワードウィンドウ
+ * @value Window_PasswordEdit
+ * @option [用語辞典プラグイン]用語カテゴリウィンドウ
+ * @value Window_GlossaryCategory
+ * @option [用語辞典プラグイン]用語リストウィンドウ
+ * @value Window_GlossaryList
+ * @option [用語辞典プラグイン]使用確認ウィンドウ
+ * @value Window_GlossaryConfirm
+ * @option [用語辞典プラグイン]収集率ウィンドウ
+ * @value Window_GlossaryComplete
+ * @option [用語辞典プラグイン]用語ウィンドウ
+ * @value Window_Glossary
+ * @option [サウンドテストプラグイン]オーディオカテゴリウィンドウ
+ * @value Window_AudioCategory
+ * @option [サウンドテストプラグイン]オーディオリストウィンドウ
+ * @value Window_AudioList
+ * @option [サウンドテストプラグイン]オーディオ設定ウィンドウ
+ * @value Window_AudioSetting
+ * @option [数値入力画面プラグイン]数値入力ウィンドウ
+ * @value Window_NumberInput
+ * @option [数値入力画面プラグイン]数値ウィンドウ
+ * @value Window_NumberEdit
+ *
+ *
  */
 
 /*~struct~Picture:
@@ -543,6 +694,15 @@
     };
 
     Scene_Base.prototype.addChildExtraGauge = function(extraGauge) {
+        const parentName = extraGauge.getParentWindowName();
+        if (parentName && this._windowLayer) {
+            const win = this._windowLayer.children.find(window =>
+                window instanceof Window && window.findWindowClassName() === parentName);
+            if (win) {
+                win.addChild(extraGauge);
+                return;
+            }
+        }
         this.addChild(extraGauge);
     };
 
@@ -578,6 +738,16 @@
         _Sprite_Gauge_initialize.apply(this, arguments);
     };
 
+    Window.prototype.findWindowClassName = function() {
+        const className = PluginManagerEx.findClassName(this);
+        // for SceneCustomMenu.js
+        if (this._data?.Id) {
+            return this._data.Id;
+        } else {
+            return className;
+        }
+    };
+
     /**
      * Sprite_ExtraGaugeContainer
      * 追加ゲージとピクチャを含むコンテナです。
@@ -589,6 +759,10 @@
             this._detail = detail;
             this._layout = layout;
             this.create();
+        }
+
+        getParentWindowName() {
+            return this._layout.ParentWindow;
         }
 
         create() {
