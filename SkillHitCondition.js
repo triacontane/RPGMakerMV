@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2023/06/11 1.2.0の機能で手動で無効スキルを使用したときに失敗メッセージが表示されない問題を修正
  1.2.0 2022/11/07 敵キャラもしくは自動戦闘の場合に命中条件を満たさない行動を除外するよう修正
  1.1.0 2022/11/07 MZ版としてリファクタリング
  1.0.0 2022/11/06 初版
@@ -165,10 +166,21 @@
 
     const _Game_Action_makeTargets = Game_Action.prototype.makeTargets;
     Game_Action.prototype.makeTargets = function() {
+        if (!this.subject().isNeedTargetFilter()) {
+            return _Game_Action_makeTargets.apply(this, arguments);
+        }
         hitConditionAction = this;
         const targets = _Game_Action_makeTargets.apply(this, arguments);
         hitConditionAction = null;
         return targets;
+    };
+
+    Game_BattlerBase.prototype.isNeedTargetFilter = function() {
+        return true;
+    };
+
+    Game_Actor.prototype.isNeedTargetFilter = function() {
+        return this.isAutoBattle();
     };
 
     Game_Unit.prototype.filterHitCondition = function(members) {
