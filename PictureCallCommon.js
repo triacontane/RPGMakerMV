@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2023/06/12 ピクチャイベント解除時に指定した番号以外の番号のピクチャイベントも一緒に解除される可能性がある問題を修正
 // 1.5.0 2023/04/22 ピクチャイベントを発生させる際、透過部分に反応するかどうかを設定できる機能を追加
 // 1.4.0 2022/10/22 DTextPicture.jsと組み合わせたとき、フレームウィンドウをクリックイベントの範囲に含めるよう変更
 // 1.3.1 2022/05/19 ヘルプ微修正
@@ -353,7 +354,7 @@
         }
 
         removeById(pictureId) {
-            const regExp = new RegExp(`^${pictureId}`);
+            const regExp = new RegExp(`^${pictureId}\:`);
             Object.keys(this._map).forEach(key => {
                 if (key.match(regExp)) {
                     delete this._map[key];
