@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.37.0 2023/06/14 ウィンドウを操作(再描画やフォーカスなど)するプラグインコマンドを追加
  1.36.4 2023/06/14 ウィンドウリフレッシュ時にインデックスが項目数を上回っていたら自動で補正するよう修正
  1.36.3 2023/01/01 PartyCommandScene.jsで戦闘シーンから遷移して戻ると戦闘終了処理が正しく行われない不具合を修正
  1.36.2 2022/12/08 アクティブでないウィンドウのボタンイベントが実行されていた問題を修正
@@ -254,6 +255,34 @@
  * @text シーン識別子
  * @desc 呼び出すシーン識別子です。
  * @default Scene_ActorList
+ *
+ * @command CONTROL_WINDOW
+ * @text ウィンドウ操作
+ * @desc IDを指定してウィンドウを操作します。
+ *
+ * @arg id
+ * @text ウィンドウID
+ * @desc 操作するウィンドウのIDです。
+ * @default
+ * @type string
+ *
+ * @arg type
+ * @text 操作タイプ
+ * @desc 操作種別です。
+ * @default refresh
+ * @type select
+ * @option ウィンドウを再描画
+ * @value refresh
+ * @option ウィンドウにフォーカス
+ * @value activate
+ * @option インデックス変更
+ * @value select
+ *
+ * @arg index
+ * @text インデックス
+ * @desc 操作タイプがインデックス変更の場合に使用するインデックスです。
+ * @default 0
+ * @type number
  *
  * @help SceneCustomMenu.js
  *
@@ -1024,6 +1053,21 @@
         SceneManager.callCustomMenu(args.id);
     });
 
+    PluginManagerEx.registerCommand(script, 'CONTROL_WINDOW', args => {
+        const id = args.id;
+        switch (args.type) {
+            case 'activate':
+                SceneManager.changeWindowFocus(id);
+                break;
+            case 'select':
+                SceneManager.changeWindowIndex(id, args.index);
+                break;
+            case 'refresh':
+                SceneManager.refreshWindow(id);
+                break;
+        }
+    });
+
     const outputError = function (e, script = null) {
         SoundManager.playBuzzer();
         if (script) {
@@ -1177,6 +1221,13 @@
             win.select(index);
         }
     };
+
+    SceneManager.refreshWindow = function (windowId) {
+        const win = this.findCustomMenuWindow(windowId);
+        if (win) {
+            win.refresh();
+        }
+    }
 
     SceneManager.isCustomScene = function(id) {
         return this._scene && this._scene.constructor === this._customScene[id];
