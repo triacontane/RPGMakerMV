@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.4 2023/06/14 ピクチャのシェイクでシェイク終了後にピクチャがシェイク前の位置まで戻るよう修正
 // 1.5.3 2021/08/29 DirectivityShake.jsと併用したとき、角度を付けたシェイクにもP_OUT_OF_SCREEN_SHAKE_ONが対応できるよう修正
 // 1.5.2 2019/06/02 P_OUT_OF_SCREEN_SHAKE_ON設定時、シェイクの強さ次第で僅かに揺れていた問題を修正
 // 1.5.1 2019/05/02 P_OUT_OF_SCREEN_SHAKE_ONのヘルプを追記
@@ -579,8 +580,8 @@
     };
 
     Game_Picture.prototype.updateShake = function() {
-        if (this._shakeDuration > 0) {
-            var delta = (this._shakePower * this._shakeSpeed * this._shakeDirection) / 10;
+        if (this._shakeDuration > 0 || this._shake !== 0) {
+            const delta = (this._shakePower * this._shakeSpeed * this._shakeDirection) / 10;
             if (this._shakeDuration <= 1 && this._shake * (this._shake + delta) < 0) {
                 this._shake = 0;
             } else {
@@ -593,6 +594,8 @@
                 this._shakeDirection = 1;
             }
             this._shakeDuration--;
+        } else {
+            this._shakeDuration = 0;
         }
     };
 
