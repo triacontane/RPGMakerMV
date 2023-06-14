@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.36.4 2023/06/14 ウィンドウリフレッシュ時にインデックスが項目数を上回っていたら自動で補正するよう修正
  1.36.3 2023/01/01 PartyCommandScene.jsで戦闘シーンから遷移して戻ると戦闘終了処理が正しく行われない不具合を修正
  1.36.2 2022/12/08 アクティブでないウィンドウのボタンイベントが実行されていた問題を修正
                    パッド操作を考慮しボタン名のオプションをescapeからcancelおよびmenuに変更
@@ -1825,6 +1826,9 @@
             super.refresh();
             if (this._data.WindowSkin) {
                 this.windowskin = ImageManager.loadSystem(this._data.WindowSkin);
+            }
+            if (this.maxItems() <= this.index()) {
+                this.select(this.maxItems() - 1);
             }
         }
 
