@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.38.0 2023/06/14 カスタムメニュー表示中、コモンイベントを並列実行できる機能を追加
  1.37.0 2023/06/14 ウィンドウを操作(再描画やフォーカスなど)するプラグインコマンドを追加
  1.36.4 2023/06/14 ウィンドウリフレッシュ時にインデックスが項目数を上回っていたら自動で補正するよう修正
  1.36.3 2023/01/01 PartyCommandScene.jsで戦闘シーンから遷移して戻ると戦闘終了処理が正しく行われない不具合を修正
@@ -316,11 +317,6 @@
  * 既存のプラグイン等と連携させてください。
  *
  * ・スクリプト
- * 指定したウィンドウにフォーカスを移します。
- * SceneManager.changeWindowFocus('window1');
- *
- * 指定したウィンドウのインデックスを変更します。
- * SceneManager.changeWindowIndex('window1', 1);
  *
  * 遷移元シーンの情報をひとつ破棄します。
  * SceneManager.trashScene();
@@ -333,6 +329,9 @@
  *
  * 現在のシーンが指定した識別子のカスタムシーンかどうかを返します。
  * SceneManager.isCustomScene('Scene_ActorList')
+ *
+ * 指定したIDのウィンドウがアクティブになっているかどうかを返します。
+ * SceneManager.isCustomMenuActiveWindow('window1')
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -365,6 +364,12 @@
  * @desc シーンが表示された瞬間に発生するイベントです。初期イベントに指定したウィンドウでキャンセルすると画面から抜けます。
  * @default {}
  * @type struct<Event>
+ *
+ * @param ParallelEventId
+ * @text 並列コモンイベントID
+ * @desc シーンが表示されている間、常に実行され続けるコモンイベントです。パフォーマンスの低下に注意して使ってください。
+ * @default 0
+ * @type common_event
  *
  * @param ActorChangeEvent
  * @text アクター変更イベント
@@ -492,7 +497,7 @@
  *
  * @param Rotation
  * @text 回転角度
- * @desc ウィンドウの角度です。度数法(0-360)で指定します。中身のフィルタが効かなくなる制約があり、スクロールするウィンドウには不向きです。
+ * @desc ウィンドウの角度です。度数法(0-360)で指定します。中身のフィルタが効かなくなる制約があります。
  * @default 0
  * @type number
  *
@@ -1245,12 +1250,29 @@
         return this._scene.findWindow ? this._scene.findWindow(windowId) : null;
     };
 
+    SceneManager.isCustomMenuActiveWindow = function (windowId) {
+        if (this._scene.findActiveWindowId) {
+            return this._scene.findActiveWindowId() === windowId;
+        }
+        return false;
+    };
+
     Game_Party.prototype.reserveMembers = function () {
         const battleMembers = this.battleMembers();
         return this.allMembers().filter(function (actor) {
             return !battleMembers.contains(actor);
         });
     };
+
+    class Game_CustomMenuComonnEvent extends Game_CommonEvent {
+        constructor(commonEventId) {
+            super(commonEventId);
+        }
+
+        isActive() {
+            return !!this.event();
+        }
+    }
 
     class Scene_CustomMenu extends Scene_MenuBase {
         create() {
@@ -1259,6 +1281,9 @@
             super.create();
             this.swapGameScreen();
             this._interpreter = new Game_Interpreter();
+            if (this._customData.ParallelEventId) {
+                this._parallelCommon = new Game_CustomMenuComonnEvent(this._customData.ParallelEventId);
+            }
             this.createAllObjects();
         }
 
@@ -1450,10 +1475,17 @@
             return this._customWindowMap.get(id);
         }
 
+        findActiveWindowId() {
+            return this._activeWindowId;
+        }
+
         update() {
             super.update();
             if (this._interpreter.isRunning()) {
                 this.updateInterpreter();
+            }
+            if (this._parallelCommon) {
+                this._parallelCommon.update();
             }
             const focusId = SceneManager.findChangeWindowFocus();
             if (focusId) {
