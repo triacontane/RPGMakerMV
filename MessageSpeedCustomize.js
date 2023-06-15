@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2023/06/15 メッセージの高速表示(決定ボタン押し続け)時のメッセージ表示速度を別途指定できる機能を追加
 // 1.4.0 2021/10/21 MZで動作するよう修正
 // 1.3.0 2019/12/27 瞬間表示の利用可否をゲーム中にスイッチで変更できるようにしました
 // 1.2.3 2018/11/28 BugFixWaitOfTextEnd.jsと組み合わせたとき、末尾の動作がおかしくなる問題を修正
@@ -34,6 +35,12 @@
  * @text 表示速度変数
  * @desc メッセージ表示速度を格納する変数の番号。この変数に格納された値がメッセージ表示速度になります。
  * @default 1
+ * @type variable
+ *
+ * @param SpeedVariableOnFast
+ * @text 表示速度変数(高速表示)
+ * @desc 高速表示(決定ボタン押し続け時)が有効な場合のメッセージ表示速度を格納する変数の番号。
+ * @default 0
  * @type variable
  *
  * @param FastSwitch
@@ -114,7 +121,13 @@
     };
 
     Window_Message.prototype.getMessageSpeed = function() {
-        return this._tempMessageSpeed !== null ? this._tempMessageSpeed : $gameVariables.value(param.SpeedVariable);
+        if (this._tempMessageSpeed !== null) {
+            return this._tempMessageSpeed;
+        } else if (this._showFast && param.SpeedVariableOnFast > 0) {
+            return $gameVariables.value(param.SpeedVariableOnFast);
+        } else {
+            return $gameVariables.value(param.SpeedVariable);
+        }
     };
 
     Window_Message.prototype.setTempMessageSpeed = function(speed) {
