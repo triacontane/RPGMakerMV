@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2023/06/16 1.5.0で追加した機能で表示速度変数(高速表示)での表示速度を\msで指定した表示速度より優先するよう仕様変更し、ヘルプに明記
 // 1.5.0 2023/06/15 メッセージの高速表示(決定ボタン押し続け)時のメッセージ表示速度を別途指定できる機能を追加
 // 1.4.0 2021/10/21 MZで動作するよう修正
 // 1.3.0 2019/12/27 瞬間表示の利用可否をゲーム中にスイッチで変更できるようにしました
@@ -64,6 +65,9 @@
  * 制御文字「\ms[n]」を利用すると、そのメッセージ中のみ表示速度を
  * 任意の値に設定することができます。
  * 一時的にメッセージ表示速度を変更したい場合に有効です。
+ * \ms[n]で変更した速度は、パラメータ「表示速度変数」での表示速度より
+ * 優先されます。
+ * パラメータ「表示速度変数(高速表示)」よりは優先されません。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -98,6 +102,7 @@
             this.isTriggered() && !this.pause) {
             this._showAll = true;
         }
+        this.updateShowFast();
         return _Window_Message_updateWait.apply(this, arguments);
     };
 
@@ -121,10 +126,10 @@
     };
 
     Window_Message.prototype.getMessageSpeed = function() {
-        if (this._tempMessageSpeed !== null) {
-            return this._tempMessageSpeed;
-        } else if (this._showFast && param.SpeedVariableOnFast > 0) {
+        if (this._showFast && param.SpeedVariableOnFast > 0) {
             return $gameVariables.value(param.SpeedVariableOnFast);
+        } else if (this._tempMessageSpeed !== null) {
+            return this._tempMessageSpeed;
         } else {
             return $gameVariables.value(param.SpeedVariable);
         }
