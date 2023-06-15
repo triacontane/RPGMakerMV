@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2023/06/15 最新データの判定処理にオートセーブのデータが含まれていなかった問題を修正
 // 1.1.0 2023/03/07 ロード成功時、マップが更新されていてもリロードされない問題を修正
 // 1.0.1 2021/04/17 ロードタイミングを項目追加にしたときは追加した項目が初期選択されるよう修正
 // 1.0.0 2021/04/11 MZ版初版
@@ -87,10 +88,18 @@
 
     DataManager.loadGameLatest = function() {
         if (this.isAnySavefileExists()) {
-            return this.loadGame(this.latestSavefileId());
+            return this.loadGame(this.latestSavefileIdIncludeAuto());
         } else {
             return null;
         }
+    };
+
+    DataManager.latestSavefileIdIncludeAuto = function() {
+        const globalInfo = this._globalInfo;
+        const validInfo = globalInfo.filter(x => x);
+        const latest = Math.max(...validInfo.map(x => x.timestamp));
+        const index = globalInfo.findIndex(x => x && x.timestamp === latest);
+        return index > 0 ? index : 0;
     };
 
     const _Scene_Title_create = Scene_Title.prototype.start;
