@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/06/18 戦闘不能ステートが対象外に含まれいた場合、戦闘不能者は全回復でHPやMPが回復しなくなるよう修正
  1.0.0 2023/06/17 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -61,6 +62,9 @@
         }
         const states = param.states;
         const stillStates = this._states.filter(stateId => states.includes(stateId));
+        if (stillStates.includes(this.deathStateId()) && !this.isAlive()) {
+            return;
+        }
         const stillStateTurns = {};
         stillStates.forEach(stateId => stillStateTurns[stateId] = this._stateTurns[stateId]);
         _Game_BattlerBase_recoverAll.apply(this, arguments);
