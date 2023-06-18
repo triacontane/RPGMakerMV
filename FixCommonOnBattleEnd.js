@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2023/06/18 実装ミス修正
  1.1.0 2023/06/17 MZ用にリファクタリング
  1.0.0 2020/04/05 初版
 ----------------------------------------------------------------------------
@@ -36,11 +37,10 @@
 
     const _BattleManager_checkBattleEnd = BattleManager.checkBattleEnd;
     BattleManager.checkBattleEnd = function() {
-        const result = _BattleManager_checkBattleEnd.apply(this, arguments);
         if ($gameTemp.isCommonEventReserved()) {
             return false;
         } else {
-            return result;
+            return _BattleManager_checkBattleEnd.apply(this, arguments);
         }
     }
 })();
