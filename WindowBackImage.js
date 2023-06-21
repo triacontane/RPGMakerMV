@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.2 2023/06/22 差し替えスイッチが無効なときでも、差し替え画像が一瞬表示されてしまう問題を修正
 // 2.6.1 2023/05/01 参照されていないメソッドを削除し、一部パラメータのデフォルト値を変更
 // 2.6.0 2022/12/15 項目、項目背景、カーソルをパーツ単位で非表示にできる機能を追加
 // 2.5.0 2022/06/06 ステータス画面用の装備、パラメータウィンドウを編集対象に追加
@@ -377,7 +378,8 @@
             if (backImageData.OverlapOther) {
                 this._isWindow = false;
             }
-        }, this);
+        });
+        this.updateBackImageList();
     };
 
     Window.prototype.initBackImageData = function() {
@@ -417,6 +419,10 @@
     const _Window_update      = Window.prototype.update;
     Window.prototype.update = function() {
         _Window_update.apply(this, arguments);
+        this.updateBackImageList();
+    };
+
+    Window.prototype.updateBackImageList = function() {
         if (!this._windowBackImageSprites) {
             return;
         }
@@ -424,9 +430,6 @@
         this._windowBackImageSprites.forEach((sprite, index) => {
             const switchId = this.getBackImageDataItem(index, 'SwitchId');
             sprite.visible = !switchId || $gameSwitches.value(switchId);
-            if (this.width === 0 || this.height === 0) {
-                sprite.visible = false;
-            }
             if (sprite.visible && !this.getBackImageDataItem(index, 'WindowShow')) {
                 defaultVisible = false;
             }
