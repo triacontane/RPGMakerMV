@@ -45,7 +45,8 @@
 
 /*~struct~MESSAGE:
  * @param type
- * @desc メッセージ種別です。
+ * @text メッセージ種別
+ * @desc メッセージ種別です。変更したい用語に合わせて選択してください。
  * @default alwaysDash
  * @type select
  * @option 常時ダッシュ
