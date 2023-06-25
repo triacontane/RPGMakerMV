@@ -46,8 +46,34 @@
 /*~struct~MESSAGE:
  * @param type
  * @desc メッセージ種別です。
- * @default partyName
+ * @default alwaysDash
  * @type select
+ * @option 常時ダッシュ
+ * @value alwaysDash
+ * @option コマンド記憶
+ * @value commandRemember
+ * @option BGM音量
+ * @value bgmVolume
+ * @option BGS音量
+ * @value bgsVolume
+ * @option ME音量
+ * @value meVolume
+ * @option SE音量
+ * @value seVolume
+ * @option 持っている数
+ * @value possession
+ * @option 現在の経験値
+ * @value expTotal
+ * @option 次のレベルまで
+ * @value expNext
+ * @option セーブメッセージ
+ * @value saveMessage
+ * @option ロードメッセージ
+ * @value loadMessage
+ * @option ファイル
+ * @value file
+ * @option オートセーブ
+ * @value autosave
  * @option パーティ名
  * @value partyName
  * @option 出現
