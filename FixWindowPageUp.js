@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2023/07/01 1.1.0でウィンドウが1ページに収まっているかどうかの判定が誤っていた問題を修正
  1.1.0 2023/07/01 ページダウンボタンを押したときにウィンドウが1ページに収まっていてもカーソルが一番下まで移動するよう修正
  1.0.0 2023/06/29 初版
 ----------------------------------------------------------------------------
@@ -48,10 +49,9 @@
     const _Window_Selectable_cursorPagedown = Window_Selectable.prototype.cursorPagedown;
     Window_Selectable.prototype.cursorPagedown = function() {
         _Window_Selectable_cursorPagedown.apply(this, arguments);
-        if (this.topRow() === 0) {
+        if (this.topRow() === this.maxTopRow()) {
             const index = this.index();
             const maxItems = this.maxItems();
-            this.smoothScrollDown(this.maxPageRows());
             this.select(Math.min(index + this.maxPageItems(), maxItems - 1));
         }
     };
