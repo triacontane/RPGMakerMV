@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.3 2023/07/03 「並列処理は無効」の設定を削除
  1.1.2 2023/07/03 不要なヘルプの記述を削除
  1.1.1 2022/11/07 MZ版を移植
  1.1.0 2022/11/04 特定のページ番号にのみ割り込みする機能を追加
@@ -82,12 +83,6 @@
  * @desc イベントのページが指定値と一致するときだけ実行します。
  * @default 0
  * @type number
- *
- * @param invalidParallel
- * @text 並列処理は無効
- * @desc 並列処理のマップイベントには割り込みしません。
- * @default false
- * @type boolean
  *
  * @param commonEventId
  * @text コモンイベントID
@@ -172,8 +167,6 @@
         var type = event.findEventType();
         var pageIndex = event._pageIndex + 1;
         if (item.timing !== timing) {
-            return false;
-        } else if (item.invalidParallel && !($gameMap.isInterpreterOf(this))) {
             return false;
         } else if (item.pageIndex > 0 && pageIndex !== item.pageIndex) {
             return false;
