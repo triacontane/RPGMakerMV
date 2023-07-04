@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.3 2023/07/01 2.6.2の変更でウィンドウの幅か高さが0のときは背景画像を非表示にする仕様が無効になっていた問題を修正
 // 2.6.2 2023/06/22 差し替えスイッチが無効なときでも、差し替え画像が一瞬表示されてしまう問題を修正
 // 2.6.1 2023/05/01 参照されていないメソッドを削除し、一部パラメータのデフォルト値を変更
 // 2.6.0 2022/12/15 項目、項目背景、カーソルをパーツ単位で非表示にできる機能を追加
@@ -419,13 +420,13 @@
     const _Window_update      = Window.prototype.update;
     Window.prototype.update = function() {
         _Window_update.apply(this, arguments);
-        this.updateBackImageList();
+        if (this._windowBackImageSprites) {
+            this.updateBackImageList();
+            this.updateBackImageVisibly();
+        }
     };
 
     Window.prototype.updateBackImageList = function() {
-        if (!this._windowBackImageSprites) {
-            return;
-        }
         let defaultVisible = true;
         this._windowBackImageSprites.forEach((sprite, index) => {
             const switchId = this.getBackImageDataItem(index, 'SwitchId');
@@ -450,6 +451,13 @@
         this._backSprite.visible  = defaultVisible;
         this._frameSprite.visible = defaultVisible;
         this.frameVisible = defaultVisible;
+    };
+
+    Window.prototype.updateBackImageVisibly = function() {
+        const visibly = this.width !== 0 && this.height !== 0;
+        if (!visibly) {
+            this._windowBackImageSprites.forEach(sprite => sprite.visible = visibly);
+        }
     };
 
     const _Window_Base_loadWindowskin = Window_Base.prototype.loadWindowskin;
