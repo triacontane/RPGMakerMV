@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2023/07/07 経験値とゴールドのレートを変更したとき、小数値になってしまう場合がある問題を修正
 // 2.1.0 2023/01/09 撃破ボーナスの適用条件に「特定のスキルを使った場合」を追加
 // 2.0.1 2022/09/04 ドロップ率に関する仕様をヘルプに記載
 // 2.0.0 2022/09/04 MZ向けに再設計
@@ -504,7 +505,7 @@
     Game_Enemy.prototype.exp = function() {
         const exp = _Game_Enemy_exp.apply(this, arguments);
         if (this._customRewardRate?.expRate) {
-            return exp * this._customRewardRate.expRate / 100;
+            return Math.floor(exp * this._customRewardRate.expRate / 100);
         } else {
             return exp;
         }
@@ -514,7 +515,7 @@
     Game_Enemy.prototype.gold = function() {
         const gold = _Game_Enemy_gold.apply(this, arguments);
         if (this._customRewardRate?.goldRate) {
-            return gold * this._customRewardRate.goldRate / 100;
+            return Math.floor(gold * this._customRewardRate.goldRate / 100);
         } else {
             return gold;
         }
