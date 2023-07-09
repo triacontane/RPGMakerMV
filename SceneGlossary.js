@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.8 2022/07/09 ウィンドウクラスを外部から参照できるよう修正
 // 3.7.7 2022/11/30 背景画像の伸縮表示が正常に行われていなかった問題を修正
 // 3.7.6 2022/05/06 プラグインコマンドから用語辞典を呼び出したとき、カテゴリ指定が正常に機能しない問題を修正
 // 3.7.5 2022/02/22 PNDK_LuggageCapacity.jsと併用したとき、未入手アイテムが表示されてしまう競合に対応
@@ -1946,6 +1947,7 @@
     function Window_GlossaryCategory() {
         this.initialize.apply(this, arguments);
     }
+    window.Window_GlossaryCategory = Window_GlossaryCategory;
     Window_GlossaryCategory.prototype             = Object.create(Window_Selectable.prototype);
     Window_GlossaryCategory.prototype.constructor = Window_GlossaryCategory;
 
@@ -2013,6 +2015,7 @@
     function Window_GlossaryList() {
         this.initialize.apply(this, arguments);
     }
+    window.Window_GlossaryList = Window_GlossaryList;
     Window_GlossaryList.prototype             = Object.create(Window_ItemList.prototype);
     Window_GlossaryList.prototype.constructor = Window_GlossaryList;
 
@@ -2276,6 +2279,7 @@
     function Window_Glossary() {
         this.initialize.apply(this, arguments);
     }
+    window.Window_Glossary = Window_Glossary;
     Window_Glossary.prototype             = Object.create(Window_Base.prototype);
     Window_Glossary.prototype.constructor = Window_Glossary;
 
