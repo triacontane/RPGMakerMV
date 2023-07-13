@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.2 2023/07/13 揃えを変更する制御文字を使用したとき既にフォントサイズが変更されていると位置がズレる問題を修正
  1.4.1 2022/12/21 1.4.0以降、\$を使用するとエラーになっていた問題を修正
  1.4.0 2022/11/26 競合を避けるためのリファクタリング
  1.3.0 2022/11/01 中央揃え、右揃えにする際の描画位置をピクセル単位で調整できる機能を追加
@@ -87,6 +88,7 @@
     Window_Base.prototype.processEscapeCharacter = function(code, textState) {
         if (textState.drawing) {
             const dummy = Window_Base.createDummyWindow();
+            dummy.setRealFontSize(this.contents.fontSize);
             switch (code) {
                 case dummy.findEscapeCenter():
                     textState.x += dummy.findInnerSpace(textState, this.innerWidth) / 2;
@@ -154,6 +156,17 @@
                 text += textState.text[index++];
             }
             return text;
+        }
+
+        setRealFontSize(fontSize) {
+            this._fontSize = fontSize;
+        }
+
+        resetFontSettings() {
+            super.resetFontSettings();
+            if (this._fontSize) {
+                this.contents.fontSize = this._fontSize;
+            }
         }
     }
 })();
