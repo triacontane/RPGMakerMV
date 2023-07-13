@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.11.0 2023/07/13 ゲージを左右反転させる設定を追加
  1.10.0 2023/06/09 ゲージを任意のウィンドウの子要素にできる機能を追加
  1.9.1 2023/05/21 1.9.0の機能で、ゲージX座標を変更していると現在値の位置が揃え次第でずれる問題を修正
  1.9.0 2023/05/21 現在値表示の揃えとゼロ埋め表示を指定できる機能を追加
@@ -231,6 +232,12 @@
  * @param Vertical
  * @text 縦ゲージ
  * @desc 有効にすると縦方向ゲージになります。ラベルなども縦方向になるので注意してください。
+ * @default false
+ * @type boolean
+ *
+ * @param Mirror
+ * @text 反転
+ * @desc 有効にするとゲージの左右が反転します。ラベルや値も一緒に反転するので、これらを表示する場合は注意してください。
  * @default false
  * @type boolean
  *
@@ -777,6 +784,9 @@
         setupPosition() {
             this.x = this._gauge.findLayoutValue(this._layout.x);
             this.y = this._gauge.findLayoutValue(this._layout.y);
+            if (this._layout.Mirror) {
+                this.scale.x = -1;
+            }
         }
 
         update() {
