@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2023/07/20 英語版パラメータのタイトルカットが間違っていたので修正
 // 1.2.0 2023/01/08 タイトルカット時の動作をニューゲーム開始か最新データをロードかで選べるよう仕様変更
 // 1.1.4 2022/04/30 EventRespawn.jsのリージョン機能で複製したイベントを消去してからマップリロード機能を使うとエラーになる問題に対処
 // 1.1.3 2021/04/10 タイトルカット設定時にCTRLキーを押し続けているとカットしなくなる機能が不完全だったので無効化
@@ -55,9 +56,14 @@
  * @param CutTitle
  * @text Title Skip
  * @desc Skips the title screen and loads the most recent save file.
- * Hold down CTRL on launch to disable skip.
- * @default false
- * @type boolean
+ * @default 0
+ * @type select
+ * @option Invalid
+ * @value 0
+ * @option New game
+ * @value 1
+ * @option Latest data load
+ * @value 2
  *
  * @param RapidStart
  * @text Start Rapid Mode
