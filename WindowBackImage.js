@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2023/07/19 ウィンドウのベースフォントサイズ、テキストカラーを変更できる機能を追加
 // 2.6.3 2023/07/01 2.6.2の変更でウィンドウの幅か高さが0のときは背景画像を非表示にする仕様が無効になっていた問題を修正
 // 2.6.2 2023/06/22 差し替えスイッチが無効なときでも、差し替え画像が一瞬表示されてしまう問題を修正
 // 2.6.1 2023/05/01 参照されていないメソッドを削除し、一部パラメータのデフォルト値を変更
@@ -245,6 +246,18 @@
  * @desc ウィンドウの専用フォントです。woffファイルを拡張子付きで指定してください。
  * @default
  *
+ * @param FontSize
+ * @text フォントサイズ
+ * @desc ウィンドウの基本フォントサイズです。
+ * @default 0
+ * @type number
+ *
+ * @param FontColor
+ * @text フォントカラー
+ * @desc ウィンドウのテキストカラー番号です。
+ * @default 0
+ * @type color
+ *
  * @param OffsetX
  * @text X座標補正
  * @desc 表示X座標の補正値です。
@@ -473,8 +486,32 @@
     Window_Base.prototype.resetFontSettings = function() {
         _Window_Base_resetFontSettings.apply(this, arguments);
         const list = this._backImageDataList;
-        if (list && list.length > 0 && list[0].FontFace) {
-            this.contents.fontFace = list[0].FontFace.replace(/\..*/, '');
+        if (list && list.length > 0) {
+            this.setCustomFontSettings(list[0]);
+        }
+    };
+
+    const _Window_Base_resetTextColor = Window_Base.prototype.resetTextColor;
+    Window_Base.prototype.resetTextColor = function() {
+        _Window_Base_resetTextColor.apply(this, arguments);
+        const list = this._backImageDataList;
+        if (list && list.length > 0) {
+            this.setCustomFontColor(list[0]);
+        }
+    };
+
+    Window_Base.prototype.setCustomFontSettings = function(data) {
+        if (data.FontFace) {
+            this.contents.fontFace = data.FontFace.replace(/\..*/, '');
+        }
+        if (data.FontSize) {
+            this.contents.fontSize = data.FontSize;
+        }
+    };
+
+    Window_Base.prototype.setCustomFontColor = function(data) {
+        if (data.FontColor) {
+            this.processColorChange(data.FontColor);
         }
     };
 
