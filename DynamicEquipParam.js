@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2023/07/19 パフォーマンス維持のため、制御文字の変換処理を撤廃し、変数はv[n]で指定するよう変更
 // 1.1.0 2021/05/03 MZで動作するよう修正
 // 1.0.2 2021/05/03 動的パラメータがお店のパラメータ増減に反映されていなかった問題を修正
 // 1.0.1 2017/07/23 ヘルプにアクターのレベルやIDを参照する計算式を追記
@@ -59,6 +60,7 @@
  * a.actorId()    # アクターID
  * a._classId     # 職業ID
  * a.currentExp() # 経験値
+ * v[1] # 変数[1]の値
  *
  * ※特徴を有するメモ欄から指定した内容に対応する数値を取得
  * <aaa:100> # a.special('aaa')で[100]を返す。
@@ -105,12 +107,14 @@
     };
 
     Game_Actor.prototype.paramPlusDynamic = function (paramId, item) {
-        const paramFormula = PluginManagerEx.findMetaValue(item, Game_Actor._paramNames[paramId]);
+        const names = Game_Actor._paramNames[paramId];
+        const paramFormula = item.meta[names[0]] || item.meta[names[1]];
         let value = 0;
         if (paramFormula) {
             const param = item.params[paramId];
             const a = this;
-            value = Math.round(eval(paramFormula)) - param;
+            const v = $gameVariables._data;
+            value = Math.round(eval(paramFormula) || 0) - param;
         }
         return value;
     };
