@@ -1,11 +1,12 @@
 //=============================================================================
 // MasterVolumeOption.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2023/07/20 MZで動作するよう修正
 // 1.1.2 2018/01/15 RPGアツマールのマスターボリューム調整機能と競合する旨をヘルプに追記
 // 1.1.1 2017/06/29 マスターボリュームの増減値を変更したときに計算誤差が表示される場合がある問題を修正
 // 1.1.0 2017/06/26 ボリュームの変化量を変更できる機能を追加（byツミオさん）
@@ -18,62 +19,80 @@
 
 /*:
  * @plugindesc MasterVolumePlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane      (Tsumio altered a portion.)
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MasterVolumeOption.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author Triacontane
  *
- * @param ItemName
+ * @param itemName
  * @type string
  * @desc It is a setting item name displayed on Options.
  * @default Master Volume
  *
- * @param DefaultValue
+ * @param defaultValue
  * @type number
  * @desc Default value of the master volume.
  * @default 100
  *
- * @param OffsetValue
+ * @param offsetValue
  * @type number
  * @desc Offset value of the all volume(including other volume).
  * @default 20
  *
- * @help Add the master volume to the option screen using the master volume API
- * added in RPG Maker version 1.5.0.
- * You can adjust the volume of all BGM / BGS / ME / SE at once.
+ * @param optionNumber
+ * @type number
+ * @desc Number of options displayed on the option screen.
+ * @default 8
  *
- * Of course, it can not be used on main body version 1.5.0 or earlier.
+ * @help MasterVolumeOption.js
+ * 
+ * Add the master volume to the option screen.
+ * You can adjust the volume of all BGM / BGS / ME / SE at once.
  *
  * This plugin is released under the MIT License.
  */
 /*:ja
  * @plugindesc マスターボリューム設定プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン     （ツミオが一部改変）
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MasterVolumeOption.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @param 項目名称
+ * @param itemName
+ * @text 項目名称
  * @type string
  * @desc オプション画面に表示される設定項目名称です。
- * @default 全体 音量
+ * @default マスター音量
  *
- * @param 初期値
+ * @param defaultValue
+ * @text 初期値
  * @type number
  * @desc マスターボリュームの初期値です。
  * @default 100
  *
- * @param 音量の増減量
+ * @param offsetValue
+ * @text 音量の増減量
  * @type number
  * @desc マスターボリュームと、その他全ての音量値を含めた音量の増減量です。
  * @default 20
  *
- * @help 注意！
- * 本プラグインは、RPGアツマールのサービス側で提供している
- * マスターボリューム調整機能と競合します。
- * よってRPGアツマールでは使用できません。
+ * @param optionNumber
+ * @text オプション項目数
+ * @type number
+ * @desc オプション画面に表示される項目数です。他プラグインと競合する場合は、この値を変更してください。
+ * @default 8
  *
- * 本体バージョン1.5.0で追加されたマスターボリュームAPIを利用して
+ * @help MasterVolumeOption.js
+ * 
  * オプション画面にマスターボリュームを追加します。
  * BGM/BGS/ME/SE全ての音量を一括調整できます。
  *
- * 本体バージョン1.5.0以前では使用できません。
- *
- * このプラグインにはプラグインコマンドはありません。
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -81,37 +100,10 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName = 'MasterVolumeOption';
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param          = {};
-    param.itemName     = getParamString(['ItemName', '項目名称']);
-    param.defaultValue = getParamNumber(['DefaultValue', '初期値']);
-    param.offsetValue  = getParamNumber(['OffsetValue', '音量の増減量']);//ツミオ加筆
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // ConfigManager
@@ -119,24 +111,24 @@
     //=============================================================================
     Object.defineProperty(ConfigManager, 'masterVolume', {
         get: function() {
-            return Math.floor(AudioManager._masterVolume * 100);
+            return Math.floor(WebAudio._masterVolume * 100);
         },
         set: function(value) {
-            AudioManager.masterVolume = value.clamp(0, 100) / 100;
+            WebAudio.setMasterVolume(value.clamp(0, 100) / 100);
         }
     });
 
-    var _ConfigManager_makeData = ConfigManager.makeData;
+    const _ConfigManager_makeData = ConfigManager.makeData;
     ConfigManager.makeData      = function() {
-        var config          = _ConfigManager_makeData.apply(this, arguments);
+        const config          = _ConfigManager_makeData.apply(this, arguments);
         config.masterVolume = this.masterVolume;
         return config;
     };
 
-    var _ConfigManager_applyData = ConfigManager.applyData;
+    const _ConfigManager_applyData = ConfigManager.applyData;
     ConfigManager.applyData      = function(config) {
         _ConfigManager_applyData.apply(this, arguments);
-        var symbol        = 'masterVolume';
+        const symbol        = 'masterVolume';
         this.masterVolume = config.hasOwnProperty(symbol) ? this.readVolume(config, symbol) : param.defaultValue;
     };
 
@@ -144,7 +136,7 @@
     // Window_Options
     //  マスターボリュームの設定項目を追加します。
     //=============================================================================
-    var _Window_Options_addVolumeOptions      = Window_Options.prototype.addVolumeOptions;
+    const _Window_Options_addVolumeOptions      = Window_Options.prototype.addVolumeOptions;
     Window_Options.prototype.addVolumeOptions = function() {
         this.addCommand(param.itemName, 'masterVolume');
         _Window_Options_addVolumeOptions.apply(this, arguments);
@@ -154,11 +146,20 @@
     // Window_Options
     //  バーの移動量の設定を付け加えます（ツミオ加筆）
     //=============================================================================
-    var _Window_Options_volumeOffset      = Window_Options.prototype.volumeOffset;
+    const _Window_Options_volumeOffset      = Window_Options.prototype.volumeOffset;
     Window_Options.prototype.volumeOffset = function() {
         _Window_Options_volumeOffset.call(this);
         return param.offsetValue;
     };
 
+    const _Scene_Options_optionsWindowRect      = Scene_Options.prototype.optionsWindowRect;
+    Scene_Options.prototype.optionsWindowRect = function() {
+        const rect = _Scene_Options_optionsWindowRect.call(this);
+        if (param.optionNumber) {
+            rect.height = this.calcWindowHeight(param.optionNumber, true);
+            rect.y = (Graphics.boxHeight - rect.height) / 2;
+        }
+        return rect;
+    };
 })();
 
