@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.3 2023/07/23 2.6.2の修正で高さが反映されていなかった問題を修正
 // 2.6.2 2023/07/23 ウィンドウのカーソル設定のコマンドでX, Y座標の変更が機能していなかった問題と、高さ項目の表示名が間違っていた問題を修正
 // 2.6.1 2022/06/26 2.6.0で不透明度を指定せず実行するとエラーになる問題を修正
 // 2.6.0 2022/06/26 背景ウィンドウの透明度を指定できる機能を追加
@@ -497,7 +498,7 @@
         const rect = picture.getWindowCursor();
         if (rect) {
             const width  = rect.width || this._frameWindow.contentsWidth();
-            const height = rect.width || this._frameWindow.contentsHeight();
+            const height = rect.height || this._frameWindow.contentsHeight();
             const x = rect.x || 0;
             const y = rect.y || 0;
             this._frameWindow.setCursorRect(x, y, width, height);
