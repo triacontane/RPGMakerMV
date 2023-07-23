@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2023/07/23 コマンド数変更のパラメータを廃止
 // 1.2.0 2023/07/20 MZで動作するよう修正
 // 1.1.2 2018/01/15 RPGアツマールのマスターボリューム調整機能と競合する旨をヘルプに追記
 // 1.1.1 2017/06/29 マスターボリュームの増減値を変更したときに計算誤差が表示される場合がある問題を修正
@@ -40,11 +41,6 @@
  * @desc Offset value of the all volume(including other volume).
  * @default 20
  *
- * @param optionNumber
- * @type number
- * @desc Number of options displayed on the option screen.
- * @default 8
- *
  * @help MasterVolumeOption.js
  * 
  * Add the master volume to the option screen.
@@ -77,12 +73,6 @@
  * @type number
  * @desc マスターボリュームと、その他全ての音量値を含めた音量の増減量です。
  * @default 20
- *
- * @param optionNumber
- * @text オプション項目数
- * @type number
- * @desc オプション画面に表示される項目数です。他プラグインと競合する場合は、この値を変更してください。
- * @default 8
  *
  * @help MasterVolumeOption.js
  * 
@@ -152,14 +142,9 @@
         return param.offsetValue;
     };
 
-    const _Scene_Options_optionsWindowRect      = Scene_Options.prototype.optionsWindowRect;
-    Scene_Options.prototype.optionsWindowRect = function() {
-        const rect = _Scene_Options_optionsWindowRect.call(this);
-        if (param.optionNumber) {
-            rect.height = this.calcWindowHeight(param.optionNumber, true);
-            rect.y = (Graphics.boxHeight - rect.height) / 2;
-        }
-        return rect;
+    const _Scene_Options_maxCommands = Scene_Options.prototype.maxCommands;
+    Scene_Options.prototype.maxCommands = function() {
+        return _Scene_Options_maxCommands.apply(this, arguments) + 1;
     };
 })();
 
