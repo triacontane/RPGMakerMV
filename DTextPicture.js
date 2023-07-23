@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.2 2023/07/23 ウィンドウのカーソル設定のコマンドでX, Y座標の変更が機能していなかった問題と、高さ項目の表示名が間違っていた問題を修正
 // 2.6.1 2022/06/26 2.6.0で不透明度を指定せず実行するとエラーになる問題を修正
 // 2.6.0 2022/06/26 背景ウィンドウの透明度を指定できる機能を追加
 // 2.5.0 2022/05/26 動的文字列ピクチャの設定を解除するコマンドを追加
@@ -185,8 +186,8 @@
  * @default 100
  *
  * @arg height
- * @text 横幅
- * @desc カーソルの横幅です。
+ * @text 高さ
+ * @desc カーソルの高さです。
  * @type number
  * @default 100
  *
@@ -497,7 +498,9 @@
         if (rect) {
             const width  = rect.width || this._frameWindow.contentsWidth();
             const height = rect.width || this._frameWindow.contentsHeight();
-            this._frameWindow.setCursorRect(0, 0, width, height);
+            const x = rect.x || 0;
+            const y = rect.y || 0;
+            this._frameWindow.setCursorRect(x, y, width, height);
             this._frameWindow.active = picture.getWindowCursorActive();
         } else {
             this._frameWindow.setCursorRect(0, 0, 0, 0);
