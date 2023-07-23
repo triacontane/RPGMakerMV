@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2023/07/23 オプション変更時にフルスクリーン状態を即時反映させる機能を追加
 // 1.5.0 2023/06/01 ElectronForMz.jsに対応
 // 1.4.0 2023/05/01 デフォルトでフルスクリーン起動できるパラメータを追加
 // 1.3.0 2022/09/09 ゲーム終了画面にもシャットダウン項目を追加できる機能を追加
@@ -38,6 +39,12 @@
  * @param DefaultFullScreen
  * @text デフォルトでフルスクリーン
  * @desc 有効にするとデフォルトでフルスクリーン起動します。
+ * @default false
+ * @type boolean
+ *
+ * @param Immediate
+ * @text 即時反映
+ * @desc 有効にするとオプションで起動オプションを変更したときに、その場でフルスクリーン状態が変更されます。
  * @default false
  * @type boolean
  *
@@ -239,12 +246,32 @@ function Scene_Terminate() {
     // ConfigManager
     //  オプションに「フルスクリーンで起動」項目を追加します。
     //=============================================================================
-    ConfigManager.startUpFullScreen = param.DefaultFullScreen;
+    ConfigManager._startUpFullScreen = param.DefaultFullScreen;
+
+    Object.defineProperty(ConfigManager, 'startUpFullScreen', {
+        get: function() {
+            return this._startUpFullScreen;
+        },
+        set: function(value) {
+            if (this._startUpFullScreen === value) {
+                return;
+            }
+            this._startUpFullScreen = value;
+            if (!param.Immediate) {
+                return;
+            }
+            if (value) {
+                Graphics._requestFullScreen();
+            } else {
+                Graphics._cancelFullScreen();
+            }
+        }
+    });
 
     const _ConfigManager_applyData = ConfigManager.applyData;
     ConfigManager.applyData = function(config) {
         _ConfigManager_applyData.apply(this, arguments);
-        this.startUpFullScreen = this.readFlag(config, 'startUpFullScreen');
+        this._startUpFullScreen = this.readFlag(config, 'startUpFullScreen');
     };
 
     const _ConfigManager_makeData = ConfigManager.makeData;
