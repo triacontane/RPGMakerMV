@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.0 2023/07/24 反撃条件に「スキルタイプ」を追加
 // 2.9.1 2023/01/13 連続攻撃を考慮がOFFにとき、連続攻撃の途中で戦闘不能になったバトラーを蘇生すると、蘇生時に反撃が発動する問題を修正
 //                  連続攻撃を考慮がOFFにとき、lastHpDamageのプロパティが最初の1回以外は0になってしまう問題を修正
 // 2.9.0 2023/01/08 反撃条件に「弱点」および「耐性」だった場合を追加
@@ -247,6 +248,11 @@
  * @option 魔法攻撃
  * @value 2
  *
+ * @param SkillTypeCondition
+ * @text 反撃条件(スキルタイプ)
+ * @desc 指定した場合、特定のスキルタイプのスキルに対してのみ反撃します。
+ * @type number
+ *
  * @param ElementCondition
  * @text 反撃条件(属性)
  * @desc 指定した場合、特定の属性(データベースの『タイプ』->『属性』の数値)のスキルに対してのみ反撃します。
@@ -362,6 +368,7 @@
             const checkParam = (param, value) => param && param !== value;
             conditions.push(() => checkParam(skill.IdCondition, triggerSkill.id));
             conditions.push(() => checkParam(skill.HitTypeCondition, triggerSkill.hitType));
+            conditions.push(() => checkParam(skill.SkillTypeCondition, triggerSkill.stypeId));
             conditions.push(() => skill.ElementCondition && !triggerAction.hasElement(skill.ElementCondition));
             conditions.push(() => skill.WeakCondition && !this.hasWeakResistance(triggerAction, subject, skill.WeakCondition));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
