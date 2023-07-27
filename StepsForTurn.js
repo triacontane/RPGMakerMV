@@ -76,9 +76,15 @@
 
     var _Game_Actor_stepsForTurn = Game_Actor.prototype.stepsForTurn;
     Game_Actor.prototype.stepsForTurn = function() {
+        const originalTurn = _Game_Actor_stepsForTurn.apply(this, arguments);
+        return this.findStepsForTurnCustom() || originalTurn;
+    };
+
+    Game_Actor.prototype.findStepsForTurnCustom = function() {
         if (param.turnVariable > 0) {
             return $gameVariables.value(param.turnVariable);
+        } else {
+            return param.turn;
         }
-        return param.turn || _Game_Actor_stepsForTurn.apply(this, arguments);
     };
 })();
