@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2023/07/27 サブフォルダを指定したボイス停止ができていなかった問題を修正
 // 2.0.2 2022/02/19 ボイスファイルに制御文字\v[n]が指定できるよう修正
 // 2.0.1 2021/05/16 サブフォルダを指定できるよう修正
 // 2.0.0 2021/03/17 MZで動作するよう修正し、仕様を見直し
@@ -200,21 +201,22 @@
         const voicePath = PluginManagerEx.convertEscapeCharacters(voice.name);
         if (voicePath) {
             const path = ('se/' + voicePath).split('/');
-            voice.name = path.pop();
+            const name = path.pop();
             const folder = path.join('/') + '/';
             this.stopVoice(voice.name, channel);
-            const buffer = this.createBuffer(folder, voice.name);
+            const buffer = this.createBuffer(folder, name);
             this.updateVoiceParameters(buffer, voice);
             buffer.play(loop, 0);
-            buffer.name = voice.name;
+            buffer.path = voicePath;
             buffer.channel = channel;
             this._voiceBuffers.push(buffer);
         }
     };
 
     AudioManager.stopVoice = function(name, channel) {
+        const voicePath = name ? PluginManagerEx.convertEscapeCharacters(name) : null;
         this._voiceBuffers.forEach(function(buffer) {
-            if (!name && !channel || buffer.name === name || buffer.channel === channel) {
+            if (!name && !channel || buffer.path === voicePath || buffer.channel === channel) {
                 buffer.stop();
             }
         });
