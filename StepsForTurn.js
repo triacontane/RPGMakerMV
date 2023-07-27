@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/07/27 ターン経過歩数を変数で指定できる機能を追加
  1.0.0 2021/05/20 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -23,6 +24,12 @@
  * @default 20
  * @type number
  * @min 1
+ *
+ * @param turnVariable
+ * @text ターン経過歩数変数
+ * @desc 1ターン経過歩数を格納する変数番号です。指定した場合、直接指定より優先されます。
+ * @default 0
+ * @type variable
  *
  * @help StepsForTurn.js
  *
@@ -69,6 +76,9 @@
 
     var _Game_Actor_stepsForTurn = Game_Actor.prototype.stepsForTurn;
     Game_Actor.prototype.stepsForTurn = function() {
+        if (param.turnVariable > 0) {
+            return $gameVariables.value(param.turnVariable);
+        }
         return param.turn || _Game_Actor_stepsForTurn.apply(this, arguments);
     };
 })();
