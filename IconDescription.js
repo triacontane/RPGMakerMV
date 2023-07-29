@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2023/07/29 表示位置の微調整
  1.0.0 2023/07/29 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -173,7 +174,10 @@
                 return rect.contains(localPos.x, localPos.y);
             });
             if (icon) {
-                SceneManager.addIconCaption(icon.index, this.x + icon.x, this.y + icon.y);
+                const worldPos = this.worldTransform.apply(new Point(0, 0));
+                const x = worldPos.x + icon.x;
+                const y = worldPos.y + icon.y;
+                SceneManager.addIconCaption(icon.index, x, y);
             }
         }
     }
@@ -311,6 +315,14 @@
             }
             if (this.x + this.width > Graphics.width) {
                 this.x = Math.max(0, Graphics.width - this.width);
+            }
+            this.hide();
+        }
+
+        update() {
+            super.update();
+            if (this.windowskin.isReady()) {
+                this.show();
             }
         }
 
