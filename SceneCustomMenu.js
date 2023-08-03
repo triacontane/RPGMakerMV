@@ -6,6 +6,10 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.39.0 2023/08/03 タイトル画面やゲームオーバー画面を差し替えたとき、キャンセルボタンは表示されないよう修正
+                   ウィンドウ位置のX原点を中央もしくは右にできる機能を追加
+                   コマンドウィンドウの選択肢ごとに別々のイベントを設定できる機能を追加
+                   ウィンドウのフレームを非表示にできる機能を追加
  1.38.0 2023/06/14 カスタムメニュー表示中、コモンイベントを並列実行できる機能を追加
  1.37.0 2023/06/14 ウィンドウを操作(再描画やフォーカスなど)するプラグインコマンドを追加
  1.36.4 2023/06/14 ウィンドウリフレッシュ時にインデックスが項目数を上回っていたら自動で補正するよう修正
@@ -482,6 +486,18 @@
  * @default 0
  * @type number
  *
+ * @param originX
+ * @text X軸原点
+ * @desc ウィンドウの座標を決める原点です。指定する場合、横幅も指定してください。
+ * @default 0
+ * @type select
+ * @option 左
+ * @value 0
+ * @option 中央
+ * @value 1
+ * @option 右
+ * @value 2
+ *
  * @param ColumnNumber
  * @text 列数
  * @desc ウィンドウの列数です。
@@ -789,11 +805,17 @@
  * @default false
  * @type boolean
  *
+ * @param noFrame
+ * @text 枠を表示しない
+ * @desc 有効にすると、ウィンドウの枠が表示されなくなります。
+ * @default false
+ * @type boolean
+ *
  * @param textColor
  * @text テキストカラー
  * @desc 描画文字列のデフォルトカラーです。制御文字「\c[n]」で指定する色番号を指定します。
  * @default 0
- * @type number
+ * @type color
  */
 
 /*~struct~AudioSe:
@@ -905,6 +927,12 @@
  * @desc ヘルプウィンドウを表示している場合、ヘルプテキストが表示されます。改行したい場合は「\n」と入力してください。
  * @default
  * @type string
+ *
+ * @param DecisionEvent
+ * @text 決定イベント
+ * @desc この項目が決定された瞬間に発生するイベントです。指定した場合、共通の決定イベントより優先されます。
+ * @default
+ * @type struct<Event>
  *
  * @param CancelChoice
  * @text キャンセル選択肢
@@ -1287,6 +1315,16 @@
             this.createAllObjects();
         }
 
+        needsCancelButton() {
+            const sceneName = PluginManagerEx.findClassName(this);
+            const scene = param.ReplacementList.find(item => item.customScene === sceneName)?.scene;
+            if (['Scene_Boot', 'Scene_Title', 'Scene_Gameover', 'Scene_Map', 'Scene_Battle'].includes(scene)) {
+                return false;
+            } else {
+                return super.needsCancelButton();
+            }
+        }
+
         start() {
             super.start();
             this.refresh();
@@ -1442,6 +1480,11 @@
                 if (!data.width) {
                     win.width = Graphics.boxWidth - win.x;
                 }
+            }
+            if (data.originX === 1) {
+                win.x -= Math.floor(win.width / 2);
+            } else if (data.originX === 2) {
+                win.x -= win.width;
             }
             const parentY = this.findWindow(data.RelativeWindowIdY);
             if (parentY) {
@@ -1715,6 +1758,11 @@
             }
             if (this._data.RememberIndex) {
                 this.restoreIndexVariable();
+            }
+            if (this._data.noFrame) {
+                this.frameVisible = false;
+                this._backSprite.visible  = false;
+                this._frameSprite.visible = false;
             }
         }
 
@@ -2232,8 +2280,10 @@
 
         findDecisionEvent() {
             const item = this.getItem();
-            if (item && item.CancelChoice) {
+            if (item?.CancelChoice) {
                 return this._data.CancelEvent;
+            } else if (item?.DecisionEvent) {
+                return item.DecisionEvent;
             } else {
                 return super.findDecisionEvent();
             }
