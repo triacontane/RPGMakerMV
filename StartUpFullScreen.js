@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2023/08/05 ElectronForMz.jsとの順序を定義するアノテーションを追加
 // 1.6.0 2023/07/23 オプション変更時にフルスクリーン状態を即時反映させる機能を追加
 // 1.5.0 2023/06/01 ElectronForMz.jsに対応
 // 1.4.0 2023/05/01 デフォルトでフルスクリーン起動できるパラメータを追加
@@ -28,6 +29,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StartUpFullScreen.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
+ * @orderAfter ElectronForMz
  * @author トリアコンタン
  *
  * @param Shutdown
