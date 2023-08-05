@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2023/08/05 ファイル10以上のときロード専用アイコンの表示位置が一部重なってしまう現象を修正
 // 1.1.0 2021/10/22 MZで動作するよう修正
 // 1.0.0 2017/08/09 初版
 // ----------------------------------------------------------------------------
@@ -76,7 +77,8 @@
     Window_SavefileList.prototype.drawTitle = function(id, x, y) {
         _Window_SavefileList_drawTitle.apply(this, arguments);
         if (this.isLoadOnly(id) && param.iconId > 0) {
-            this.drawIcon(param.iconId, x + 188 - ImageManager.iconWidth, y + 2);
+            const offset = id >= 10 ? 204 : 188;
+            this.drawIcon(param.iconId, x + offset - ImageManager.iconWidth, y + 2);
         }
     };
 
