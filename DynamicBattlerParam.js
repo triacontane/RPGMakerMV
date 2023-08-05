@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.2 2023/08/05 テストコードを削除
 // 2.0.1 2023/01/18 最大HP、最大MPの計算式に制御文字を使うとエラーになる問題を修正
 // 2.0.0 2018/07/11 計算式の対象が追加能力値もしくは特殊能力値、計算式で参照する能力値を装備品やバフを適用した能力値になるよう仕様変更しました
 // 1.2.1 2017/10/31 1.2.0でデバッグ用のコードが混入していたので修正
@@ -580,7 +581,6 @@
         this._baseFlag = baseFlag;
         var formula = this.getParamFormula(paramId);
         var a = this;
-        console.log(formula)
         var dynamicParam = formula ? this.roundParamIfNeed(paramId, eval(formula)) : param;
         this._calcParameter = false;
         this._baseFlag = false;
