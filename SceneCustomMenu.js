@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.39.1 2023/08/08 タイトル画面を差し替えた画面でコモンイベントを実行すると初期位置のマップに場所移動してしまう問題を修正
  1.39.0 2023/08/03 タイトル画面やゲームオーバー画面を差し替えたとき、キャンセルボタンは表示されないよう修正
                    ウィンドウ位置のX原点を中央もしくは右にできる機能を追加
                    コマンドウィンドウの選択肢ごとに別々のイベントを設定できる機能を追加
@@ -1110,6 +1111,12 @@
         if (Utils.isNwjs()) {
             nw.Window.get().showDevTools();
         }
+    };
+
+    const _Scene_Boot_startNormalGame = Scene_Boot.prototype.startNormalGame;
+    Scene_Boot.prototype.startNormalGame = function() {
+        _Scene_Boot_startNormalGame.apply(this, arguments);
+        $gamePlayer.clearTransferInfo();
     };
 
     const _Scene_Battle_start = Scene_Battle.prototype.start;
