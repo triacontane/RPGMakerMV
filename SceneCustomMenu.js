@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.40.0 2023/08/08 複数行入力できる項目描画スクリプトのパラメータを別に追加
  1.39.1 2023/08/08 タイトル画面を差し替えた画面でコモンイベントを実行すると初期位置のマップに場所移動してしまう問題を修正
  1.39.0 2023/08/03 タイトル画面やゲームオーバー画面を差し替えたとき、キャンセルボタンは表示されないよう修正
                    ウィンドウ位置のX原点を中央もしくは右にできる機能を追加
@@ -646,6 +647,13 @@
  * @option this.placeBasicGauges(item, r.x, r.y); // ゲージセット(戦闘用)
  * @option this.drawNoteText('noteValue', r.x, r.y); // 指定したメモ欄の内容を描画
  * @option this.drawNoteText('noteValue', r.x, r.y, 'right'); // メモ欄の内容を右寄せ描画
+ *
+ * @param ItemDrawScriptMultiLine
+ * @parent DataScript
+ * @text 描画スクリプト(複数)
+ * @desc 項目を描画するスクリプトです。変数[item]から各要素が参照できます。複数行のスクリプトを入力したいときに使います。
+ * @default
+ * @type multiline_string
  *
  * @param IsEnableScript
  * @parent DataScript
@@ -2397,6 +2405,14 @@
             } else {
                 this.drawTextEx(item.toString(), r.x, r.y);
                 console.warn(item);
+            }
+            const multiScript = this._data.ItemDrawScriptMultiLine;
+            if (multiScript) {
+                try {
+                    eval(multiScript);
+                } catch (e) {
+                    outputError(e, script);
+                }
             }
         }
 
