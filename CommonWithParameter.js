@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/08/11 メッセージコモンプラグインと連携して、引数付きコモンを制御文字から呼べる機能を追加
  1.1.0 2023/05/24 名称による検索を完全一致と部分一致の2種類に対応
  1.0.0 2023/03/12 初版
 ----------------------------------------------------------------------------
@@ -94,20 +95,18 @@
     }
 
     PluginManagerEx.registerCommand(script, 'CALL', function(args) {
-        const commonEvent = DataManager.findCommonEvent(args.id, String(args.id));
-        if (commonEvent) {
-            const id = $dataCommonEvents.findIndex(event => event === commonEvent);
-            this.setupCommonParameter(id, args.parameters);
-            const eventId = this.isOnCurrentMap() ? this._eventId : 0;
-            this.setupChild(commonEvent.list, eventId);
-        }
+        const commonEvent = DataManager.setupCommonParameter(args.id, args.parameters);
+        const eventId = this.isOnCurrentMap() ? this._eventId : 0;
+        this.setupChild(commonEvent.list, eventId);
     });
 
-    Game_Interpreter.prototype.setupCommonParameter = function(id, parameters) {
-        const variables = param.arguments.find(item => item.id === id)?.variables;
-        if (!variables) {
-            return;
+    DataManager.setupCommonParameter = function(idValue, parameters) {
+        const commonEvent = this.findCommonEvent(idValue, String(idValue));
+        if (!commonEvent) {
+            PluginManagerEx.throwError('Common event is not found. id=' + idValue, script);
         }
+        const id = $dataCommonEvents.findIndex(event => event === commonEvent);
+        const variables = param.arguments.find(item => item.id === id)?.variables || [];
         variables.forEach((variableId, index) => {
             if (parameters[index] !== undefined) {
                 $gameVariables.setValue(variableId, parameters[index]);
@@ -115,6 +114,7 @@
                 $gameVariables.setValue(variableId, 0);
             }
         });
+        return commonEvent;
     };
 
     DataManager.findCommonEvent = function(id, name) {
