@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.40.1 2023/08/11 1.40.0で追加した機能で、制御文字が使えない問題を修正
  1.40.0 2023/08/08 複数行入力できる項目描画スクリプトのパラメータを別に追加
  1.39.1 2023/08/08 タイトル画面を差し替えた画面でコモンイベントを実行すると初期位置のマップに場所移動してしまう問題を修正
  1.39.0 2023/08/03 タイトル画面やゲームオーバー画面を差し替えたとき、キャンセルボタンは表示されないよう修正
@@ -648,7 +649,7 @@
  * @option this.drawNoteText('noteValue', r.x, r.y); // 指定したメモ欄の内容を描画
  * @option this.drawNoteText('noteValue', r.x, r.y, 'right'); // メモ欄の内容を右寄せ描画
  *
- * @param ItemDrawScriptMultiLine
+ * @param ItemDrawMultiLineScript
  * @parent DataScript
  * @text 描画スクリプト(複数)
  * @desc 項目を描画するスクリプトです。変数[item]から各要素が参照できます。複数行のスクリプトを入力したいときに使います。
@@ -2380,21 +2381,32 @@
                 }
                 return;
             }
-            const scriptList = this._data.ItemDrawScript;
-            if (scriptList && scriptList.length > 0) {
-                scriptList.forEach(script => {
-                    try {
-                        const itemText = eval(script);
-                        if (itemText === String(itemText)) {
-                            this.drawTextEx(itemText, r.x, r.y);
-                        }
-                    } catch (e) {
-                        outputError(e, script);
+            const scriptList = this._data.ItemDrawScript || [];
+            scriptList.forEach(script => {
+                try {
+                    const itemText = eval(script);
+                    if (itemText === String(itemText)) {
+                        this.drawTextEx(itemText, r.x, r.y);
                     }
-                });
-            } else if (item === undefined || item === null) {
-                // do nothing
-            } else if (item === String(item)) {
+                } catch (e) {
+                    outputError(e, script);
+                }
+            });
+            const multiScript = this._data.ItemDrawMultiLineScript;
+            if (multiScript) {
+                try {
+                    eval(multiScript);
+                } catch (e) {
+                    outputError(e, script);
+                }
+            }
+            if (scriptList.length === 0 && !multiScript && item !== undefined && item !== null) {
+                this.drawItemSubAuto(item, r, index);
+            }
+        }
+
+        drawItemSubAuto(item, r, index) {
+            if (item === String(item)) {
                 this.drawTextEx(item, r.x, r.y);
             } else if (item.hasOwnProperty('iconIndex')) {
                 this.drawItemName(item, r.x, r.y, r.width);
@@ -2405,14 +2417,6 @@
             } else {
                 this.drawTextEx(item.toString(), r.x, r.y);
                 console.warn(item);
-            }
-            const multiScript = this._data.ItemDrawScriptMultiLine;
-            if (multiScript) {
-                try {
-                    eval(multiScript);
-                } catch (e) {
-                    outputError(e, script);
-                }
             }
         }
 
