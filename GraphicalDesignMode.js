@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.10 2023/08/12 2.10.9の修正方法が間違っていたので修正
 // 2.10.9 2023/07/16 クラス名取得関数の実装を変更
 // 2.10.8 2020/06/21 ウィンドウ高さが項目の高さを下回った場合に項目が描画されない場合がある問題を修正
 // 2.10.7 2020/04/29 バトルログウィンドウの位置変更ができない問題を修正
@@ -448,9 +449,9 @@ var $dataContainerProperties = null;
     var getClassName = function(object) {
         var define = object.constructor.toString();
         if (define.match(/^class/)) {
-            return define.replace(/class\s+(.*?)\s+?[\s\S]*/m, '$1');
+            return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
         }
-        return define.replace(/function\s+(.*)\s*?\([\s\S]*/m, '$1');
+        return define.replace(/function\s+(.*?)\s*\([\s\S]*/m, '$1');
     };
 
     var getCommandName = function(command) {
