@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2023/08/13 割合をメモ欄から指定するとき、0も指定できるよう修正
  1.2.0 2023/08/12 MZで動作するよう修正
  1.1.0 2018/09/16 一度もパーティに加わっていないアクターも対しても経験値が加算される場合がある問題を修正
                   パーティ外アクターのレベルアップ時にメッセージを表示するかどうかを選択できる機能を追加
@@ -116,7 +117,7 @@
         const rate = _Game_Actor_benchMembersExpRate.apply(this, arguments);
         if (!$gameParty.battleMembers().includes(this)) {
             const customRate = this.findOutsideCustomExpRate();
-            return (customRate || param.expPercent) / 100;
+            return (customRate !== undefined ? customRate : param.expPercent) / 100;
         } else {
             return rate;
         }
@@ -125,7 +126,7 @@
     Game_Actor.prototype.findOutsideCustomExpRate = function() {
         return this.traitObjects()
             .map(obj => PluginManagerEx.findMetaValue(obj, ['OutsidePartyExpRate', 'パーティ外経験値レート']))
-            .filter(value => !!value)
+            .filter(value => value !== undefined)
             .sort().pop();
     };
 
