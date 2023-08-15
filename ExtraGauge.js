@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.12.0 2023/08/16 ゲージの現在値、最大値に数値以外の値が設定されたとき、分かりやすいエラーを表示してゲームが停止するよう修正
  1.11.0 2023/07/13 ゲージを左右反転させる設定を追加
  1.10.0 2023/06/09 ゲージを任意のウィンドウの子要素にできる機能を追加
  1.9.1 2023/05/21 1.9.0の機能で、ゲージX座標を変更していると現在値の位置が揃え次第でずれる問題を修正
@@ -992,11 +993,19 @@
         }
 
         currentValue() {
-            return this.findValue(this._data.CurrentMethod);
+            const value = this.findValue(this._data.CurrentMethod);
+            if (!isFinite(value)) {
+                PluginManagerEx.throwError(`Invalid current value[${value}] id[${this._data.Id}]`, script);
+            }
+            return value;
         }
 
         currentMaxValue() {
-            return Math.max(this.findValue(this._data.MaxMethod), 1)
+            const value = Math.max(this.findValue(this._data.MaxMethod), 1);
+            if (!isFinite(value)) {
+                PluginManagerEx.throwError(`Invalid current max value[${value}] id[${this._data.Id}]`, script);
+            }
+            return value;
         }
 
         findValue(method) {
