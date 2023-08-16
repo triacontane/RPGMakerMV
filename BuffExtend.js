@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/08/16 複数回のバフを適用するメモ欄「BuffLevel」を撤廃しました。（デフォルト機能で実現できたため）
  1.0.0 2023/08/13 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -118,14 +119,12 @@
  *
  * @help BuffExtend.js
  *
- * バフ、デバフの重ね掛け回数を増やしたり、効果量を増加させたりできます。
+ * バフ、デバフの重ね掛け回数を増やしたり、倍率を増加させたりできます。
  * また、プラグインコマンドからバフ、デバフ効果を適用できます。
  * 3回以上、重ね掛けした場合もアイコンは変わりません。
  *
- * バフ、デバフの進行度を強化するメモタグです。2以上の値を指定します。
- * スキル、アイテムのメモ欄に以下の通り設定してください。
- * <BuffLevel:2> # バフ、デバフの進行度を2段階進めます。
- * <バフレベル:2> # 同上
+ * 2段階以上のバフ、デバフを適用したい場合は、
+ * スキルやアイテムの特徴で「強化」を二つ設定してください。
  *
  * 2段階以上バフ、デバフが適用された場合の専用メッセージや
  * 効果がなかった場合の専用メッセージも設定できます。
@@ -212,29 +211,18 @@
 
     const _Game_Action_itemEffectAddBuff = Game_Action.prototype.itemEffectAddBuff;
     Game_Action.prototype.itemEffectAddBuff = function(target, effect) {
-        if (target.isMaxBuffAffected(effect.dataId)) {
+        if (target.isMaxBuffAffected(effect.dataId) && !target.result().addedBuffs.includes(effect.dataId)) {
             target.result().pushNoEffectBuff(effect.dataId);
         }
         _Game_Action_itemEffectAddBuff.apply(this, arguments);
-        const count = PluginManagerEx.findMetaValue(this.item(), ['バフレベル', 'BuffLevel']);
-        if (count > 1) {
-            target.addMultiBuff(effect.dataId, effect.value1, count - 1);
-        }
     };
 
     const _Game_Action_itemEffectAddDebuff = Game_Action.prototype.itemEffectAddDebuff;
     Game_Action.prototype.itemEffectAddDebuff = function(target, effect) {
-        if (target.isMaxDebuffAffected(effect.dataId)) {
+        if (target.isMaxDebuffAffected(effect.dataId) && !target.result().addedDebuffs.includes(effect.dataId)) {
             target.result().pushNoEffectDebuff(effect.dataId);
         }
         _Game_Action_itemEffectAddDebuff.apply(this, arguments);
-        if (!target.result().success) {
-            return;
-        }
-        const count = PluginManagerEx.findMetaValue(this.item(), ['バフレベル', 'BuffLevel']);
-        if (count > 1) {
-            target.addMultiDebuff(effect.dataId, effect.value1, count - 1);
-        }
     };
 
     const _Game_ActionResult_clear = Game_ActionResult.prototype.clear;
