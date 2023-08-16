@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 3.7.8 2022/07/09 ウィンドウクラスを外部から参照できるよう修正
+// 3.8.0 2023/08/16 用語辞典をキャンセルしてマップに戻ったときにONになるスイッチを追加
+// 3.7.8 2023/07/09 ウィンドウクラスを外部から参照できるよう修正
 // 3.7.7 2022/11/30 背景画像の伸縮表示が正常に行われていなかった問題を修正
 // 3.7.6 2022/05/06 プラグインコマンドから用語辞典を呼び出したとき、カテゴリ指定が正常に機能しない問題を修正
 // 3.7.5 2022/02/22 PNDK_LuggageCapacity.jsと併用したとき、未入手アイテムが表示されてしまう競合に対応
@@ -513,6 +514,13 @@
  * @text 未入手アイテムの表示
  * @desc 未入手アイテムを指定した名前（？？？等）で表示します。指定しない場合この機能は無効になります。
  * @default
+ *
+ * @param CancelSwitchId
+ * @text キャンセル時スイッチ
+ * @desc 用語集画面でキャンセルしたときにONになるスイッチ番号です。
+ * @default 0
+ * @type switch
+ *
  */
 
 /*:ja
@@ -1054,6 +1062,13 @@
  * @desc 用語アイテムのデータベース上の設定にかかわらず、アイコンを非表示にします。
  * @default false
  * @type boolean
+ *
+ * @param CancelSwitchId
+ * @text キャンセル時スイッチ
+ * @desc 用語集画面でキャンセルしたときにONになるスイッチ番号です。
+ * @default 0
+ * @type switch
+ *
  */
 
 (function() {
@@ -1561,6 +1576,12 @@
         return this._glossarySetting.HideIcon;
     };
 
+    Game_Party.prototype.applyGlossaryCancelSwitch = function() {
+        if (this._glossarySetting.CancelSwitchId > 0) {
+            $gameSwitches.setValue(this._glossarySetting.CancelSwitchId, true);
+        }
+    };
+
     //=============================================================================
     // Game_Troop
     //  敵キャラの名前を自動登録します。
@@ -1887,6 +1908,7 @@
     };
 
     Scene_Glossary.prototype.escapeScene = function() {
+        $gameParty.applyGlossaryCancelSwitch();
         this.popScene();
     };
 
