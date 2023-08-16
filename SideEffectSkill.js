@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.3 2023/08/17 コモンイベントを複数定義したとき、最初のひとつしか実行されない問題を修正
 // 1.7.2 2022/09/20 ID問わずすべての副作用を無効化できる特徴を追加
 // 1.7.1 2022/09/20 1.7.0のメモ欄の仕様を変更
 // 1.7.0 2022/09/20 副作用を無効化できる特徴を追加
@@ -128,11 +129,6 @@
  * 効果「コモンイベント」はタイミングが
  * 「ターン開始時」「スキル使用時」「スキル使用後」「ターン終了時」
  * の場合のみ適切なタイミングで実行されます。
- *
- * ・スクリプト（上級者向け）
- * 副作用でコモンイベントを実行した際、以下のスクリプトで
- * 副作用の対象バトラーを取得できます。
- * $gameTemp.getCommonEventSubjectBattler();
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -480,7 +476,6 @@
         this.item()[property].forEach(function(effect) {
             if (effect.code === Game_Action.EFFECT_COMMON_EVENT) {
                 $gameTemp.reserveCommonEvent(effect.dataId);
-                $gameTemp.setCommonEventSubject(this.subject());
             }
         }, this);
     };
@@ -490,49 +485,6 @@
             return false;
         }
         return !BattleManager.isTpb() || property !== 'sideEffectOnInput';
-    };
-
-    //=============================================================================
-    // Game_Temp
-    //  コモンイベントの予約をスタックします。
-    //=============================================================================
-    const _Game_Temp_initialize      = Game_Temp.prototype.initialize;
-    Game_Temp.prototype.initialize = function() {
-        _Game_Temp_initialize.apply(this, arguments);
-        this._commonEventReserveStack   = [];
-        this._commonEventSubjects       = [];
-        this._commonEventSubjectBattler = null;
-        this.getCommonEventSubjectBattler();
-    };
-
-    const _Game_Temp_reserveCommonEvent      = Game_Temp.prototype.reserveCommonEvent;
-    Game_Temp.prototype.reserveCommonEvent = function(commonEventId) {
-        if (this.isCommonEventReserved()) {
-            this._commonEventReserveStack.push(commonEventId);
-        } else {
-            _Game_Temp_reserveCommonEvent.apply(this, arguments);
-        }
-    };
-
-    Game_Temp.prototype.setCommonEventSubject = function(battler) {
-        this._commonEventSubjects.push(battler);
-    };
-
-    const _Game_Temp_clearCommonEvent      = Game_Temp.prototype.clearCommonEvent;
-    Game_Temp.prototype.clearCommonEvent = function() {
-        _Game_Temp_clearCommonEvent.apply(this, arguments);
-        if (this._commonEventReserveStack.length > 0) {
-            this.reserveCommonEvent(this._commonEventReserveStack.shift());
-        }
-        if (this._commonEventSubjects.length > 0) {
-            this._commonEventSubjectBattler = this._commonEventSubjects.shift();
-        } else {
-            this._commonEventSubjectBattler = null;
-        }
-    };
-
-    Game_Temp.prototype.getCommonEventSubjectBattler = function() {
-        return this._commonEventSubjectBattler;
     };
 
     //=============================================================================
