@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.0 2023/08/17 ラベルのZ座標を変更できる機能を追加
  1.4.0 2023/05/13 すべてのラベルを一時的に非表示にできる機能を追加
  1.3.1 2022/10/16 ベースプラグインの説明を追加
  1.3.0 2022/10/16 ラベル位置によってはテールを上向きに表示するよう変更
@@ -115,6 +116,7 @@
  * <LB_Y:-4> // Shifts the label's position in the Y direction.
  * <LB_S:1>  // The label is displayed when the switch [1] is ON.
  * <LB_S:A>  // The label is displayed when the self-switch [A] is ON.
+ * <LB_Z:2>
  *
  * The base plugin "PluginCommonBase.js" is required to use this plugin.
  * The "PluginCommonBase.js" is here.
@@ -221,6 +223,7 @@
  * <LB_S:A>  // セルフスイッチ[A]がONのときラベル表示します。
  * <LB_T:true> // テールを表示します。プラグインパラメータより優先されます。
  * <LB_T:false> // テールを表示しません。プラグインパラメータより優先されます。
+ * <LB_Z:2> // ラベルのZ座標を2(通常キャラの下)にします。デフォルトは6です。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -256,6 +259,7 @@
         this._labelSize = param.fontSize || 16;
         this._labelX = PluginManagerEx.findMetaValue(this.event(), 'LB_X') || 0;
         this._labelY = PluginManagerEx.findMetaValue(this.event(), 'LB_Y') || 0;
+        this._labelZ = PluginManagerEx.findMetaValue(this.event(), 'LB_Z') || 0;
         this._labelSwitch = PluginManagerEx.findMetaValue(this.event(), 'LB_S') || null;
         this._labelTail = PluginManagerEx.findMetaValue(this.event(), 'LB_T');
     };
@@ -269,7 +273,7 @@
     };
 
     Game_Event.prototype.findLabelZ = function() {
-        return 6;
+        return this._labelZ || 6;
     };
 
     Game_Event.prototype.isLabelTailTop = function() {
