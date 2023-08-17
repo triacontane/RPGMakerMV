@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.12.0 2023/08/17 反撃条件を「満たさなかったときに」だけ反撃できる設定を追加
 // 2.11.0 2023/08/11 デフォルトの反撃メッセージを表示する設定を追加
 // 2.10.0 2023/07/24 反撃条件に「スキルタイプ」を追加
 // 2.9.1 2023/01/13 連続攻撃を考慮がOFFにとき、連続攻撃の途中で戦闘不能になったバトラーを蘇生すると、蘇生時に反撃が発動する問題を修正
@@ -310,6 +311,12 @@
  * @desc 指定した名前のタグ（例：<CounterFrequency:100>）から取得した値を『反撃頻度』に加算して判定します。
  * @default CounterFrequency
  *
+ * @param ConditionReverse
+ * @text 反撃条件反転
+ * @desc 有効にすると、反撃条件を満たさなかったときに反撃します。
+ * @type boolean
+ * @default false
+ *
  */
 
 (function() {
@@ -385,7 +392,8 @@
             conditions.push(() => counter.PayCounterCost && !this.isValid());
             this.setCounterSkill(skill, triggerSkill);
             this.setCounterTarget(target);
-            return !conditions.some(condition => condition());
+            const result = !conditions.some(condition => condition());
+            return skill.ConditionReverse ? !result : result;
         }
 
         hasMemoTag(skill, target, tagName) {
