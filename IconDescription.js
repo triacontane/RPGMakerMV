@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2023/08/20 アイコンが一度表示され消去された後もクリック判定残ってしまう場合がある問題を修正
  1.0.1 2023/07/29 表示位置の微調整
  1.0.0 2023/07/29 初版
 ----------------------------------------------------------------------------
@@ -145,6 +146,14 @@
         this.appendIconMap(iconIndex, x, y);
     };
 
+    const _Window_Selectable_refresh = Window_Selectable.prototype.refresh;
+    Window_Selectable.prototype.refresh = function() {
+        if (this._iconMap) {
+            this._iconMap.clear();
+        }
+        _Window_Selectable_refresh.apply(this, arguments);
+    };
+
     Window_Base.prototype.appendIconMap = function(iconIndex, x, y) {
         if (!findIconCaptionParam(iconIndex)) {
             return;
@@ -158,7 +167,7 @@
     const _Window_Base_update = Window_Base.prototype.update;
     Window_Base.prototype.update = function() {
         _Window_Base_update.apply(this, arguments);
-        if (this._iconMap) {
+        if (this._iconMap && this.isOpen() && this.visible) {
             this.updateIconCaption();
         }
     };
