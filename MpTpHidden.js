@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/08/26 タイムプログレス戦闘でタイムゲージが非表示になっていた問題を修正し、パラメータで非表示にできる設定を追加
  1.0.0 2023/02/26 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -36,6 +37,12 @@
  * @param tpHiddenActors
  * @text TP非表示アクター
  * @desc TPを非表示にするアクターの一覧です。
+ * @default []
+ * @type actor[]
+ *
+ * @param timeHiddenActors
+ * @text タイム非表示アクター
+ * @desc タイムプログレス戦闘で、タイムゲージを非表示にするアクターの一覧です。
  * @default []
  * @type actor[]
  *
@@ -71,6 +78,10 @@
         return param.tpHiddenActors?.includes(this.actorId());
     };
 
+    Game_Actor.prototype.isHiddenTime = function() {
+        return param.timeHiddenActors?.includes(this.actorId());
+    };
+
     Game_Actor.prototype.isHiddenParam = function(type) {
         switch (type) {
             case 'hp':
@@ -79,8 +90,10 @@
                 return this.isHiddenMp();
             case 'tp':
                 return this.isHiddenTp();
+            case 'time':
+                return this.isHiddenTime();
             default:
-                return true;
+                return false;
         }
     };
 
