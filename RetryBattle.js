@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2023/08/26 リトライウィンドウを瞬間表示およびリトライできないときのウィンドウ表示方法の設定を追加
 // 1.4.0 2021/12/26 リトライコストに任意の変数、アイテムを設定できる機能を追加
 // 1.3.0 2021/12/16 リトライにコスト（お金）を設定できる機能を追加
 //                  戦闘中に戦闘背景を変更したとにリトライすると変更後の背景で再戦してしまう不具合を修正
@@ -126,6 +127,24 @@
  * @default 0
  * @type variable
  * @parent RetryCostItem
+ *
+ * @param FadeRetryWindow
+ * @text リトライ高速化
+ * @desc リトライウィンドウの開閉を高速化し、最初から開いている状態で表示します。
+ * @default false
+ * @type boolean
+ *
+ * @param DisableRetryOption
+ * @text 無効オプション
+ * @desc リトライできないときのリトライウィンドウ表示方法です。(コストが足りない場合は含みません)
+ * @default
+ * @type select
+ * @option ウィンドウ非表示
+ * @value
+ * @option コマンド非表示
+ * @value hidden
+ * @option コマンド無効化
+ * @value disable
  *
  * @command FORCE_RETRY
  * @text 強制リトライ
@@ -453,7 +472,7 @@
         this._retryWindow.setHandler('retry', this.commandRetry.bind(this));
         this._retryWindow.setHandler('load', this.commandLoad.bind(this));
         this._retryWindow.setHandler('title', this.commandTitle.bind(this));
-        if (BattleManager.canRetry()) {
+        if (BattleManager.canRetry() || !!param.DisableRetryOption) {
             this.addWindow(this._retryWindow);
         } else {
             this._noRetry = true;
@@ -462,7 +481,8 @@
 
     Scene_Gameover.prototype.rectRetryWindow = function() {
         const w = 180;
-        const h = this.calcWindowHeight(BattleManager.canRetry() ? 3 : 2, true);
+        const lines = (BattleManager.canRetry() || param.DisableRetryOption === 'disable') ? 3 : 2;
+        const h = this.calcWindowHeight(lines, true);
         const x = (Graphics.boxWidth - w) / 2;
         const y = param.WindowY;
         return new Rectangle(x, y, w, h);
@@ -591,11 +611,15 @@
 
     Window_RetryCommand.prototype.initialize = function(rectangle) {
         Window_Command.prototype.initialize.apply(this, arguments);
-        this.openness = 0;
+        if (param.FadeRetryWindow) {
+            this.openness = 255;
+        } else {
+            this.openness = 0;
+        }
     };
 
     Window_RetryCommand.prototype.makeCommandList = function() {
-        if (BattleManager.canRetry()) {
+        if (BattleManager.canRetry() || param.DisableRetryOption === 'disable') {
             this.addCommand(param.CommandRetry, 'retry', this.canPayRetryCost());
         }
         if (param.CommandLoad) {
@@ -614,7 +638,11 @@
         if (param.RetryCostItem > 0 && !$gameParty.hasItem($dataItems[param.RetryCostItem])) {
             return false;
         }
+        if (!BattleManager.canRetry()) {
+            return false;
+        }
         return true;
     };
+    window.Window_RetryCommand = Window_RetryCommand;
 })();
 
