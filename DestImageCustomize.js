@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2023/08/26 点滅速度のパラメータを追加
 // 1.1.0 2021/08/05 MZ向けにリファクタリング
 // 1.0.0 2017/02/24 初版
 // ----------------------------------------------------------------------------
@@ -27,6 +28,12 @@
  * @desc 目的地画像の不透明度です。0にすると見えなくなります。
  * @default 255
  *
+ * @param blinkSpeed
+ * @text 点滅速度
+ * @desc 点滅速度です。数字が小さいほど速くなります。デフォルト値は20です。
+ * @default 0
+ * @type number
+ *
  * @param blendMode
  * @text 合成方法
  * @desc 目的地画像の合成方法です。
@@ -45,8 +52,9 @@
  *
  * @param color
  * @text 表示色
- * @desc 目的地画像の表示色です。独自画像を設定した場合は無効です。(通常:white)
- * @default white
+ * @desc 目的地画像の表示色です。独自画像を設定した場合は無効です。テキストカラーから選択するか、CSS色情報を直接入力します。
+ * @default 0
+ * @type color
  *
  * @param originalImage
  * @text 独自画像
@@ -80,7 +88,8 @@
         if (param.originalImage) {
             this.createOriginalBitmap();
         } else if (param.color) {
-            this.bitmap.fillAll(param.color);
+            const color = isFinite(param.color) ? ColorManager.textColor(param.color) : param.color;
+            this.bitmap.fillAll(color);
         }
         this.blendMode = param.blendMode;
     };
@@ -91,7 +100,15 @@
 
     const _Sprite_Destination_updateAnimation = Sprite_Destination.prototype.updateAnimation;
     Sprite_Destination.prototype.updateAnimation = function() {
-        _Sprite_Destination_updateAnimation.apply(this, arguments);
+        if (param.blinkSpeed > 0) {
+            this._frameCount++;
+            this._frameCount %= param.blinkSpeed;
+            this.opacity = (param.blinkSpeed - this._frameCount) * 6;
+            this.scale.x = 1 + this._frameCount / param.blinkSpeed;
+            this.scale.y = this.scale.x;
+        } else {
+            _Sprite_Destination_updateAnimation.apply(this, arguments);
+        }
         this.opacity *= (param.opacity / 255);
     };
 })();
