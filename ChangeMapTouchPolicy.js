@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2023/08/27 メニューボタンを押したタイミングではタッチ移動しないよう修正
 // 1.2.0 2022/10/14 MZで動作するよう修正
 // 1.1.0 2018/03/01 パラメータの型指定機能に対応。マップタッチ移動時の強制ダッシュを無効にする機能を追加。
 // 1.0.1 2016/09/11 レベル「簡易」の時の押し続け判定を変更
@@ -137,6 +138,9 @@
     };
 
     Scene_Map.prototype.processMapTouchLevel2 = function() {
+        if (this.isAnyButtonPressed()) {
+            return;
+        }
         if (TouchInput.isTriggered() || TouchInput.isLongPressed()) {
             let px = $gamePlayer.x;
             let py = $gamePlayer.y;
@@ -183,6 +187,9 @@
     };
 
     Scene_Map.prototype.processMapTouchLevel4 = function() {
+        if (this.isAnyButtonPressed()) {
+            return;
+        }
         const x = $gameMap.canvasToMapX(TouchInput.x);
         const y = $gameMap.canvasToMapY(TouchInput.y);
         if (TouchInput.isTriggered()) {
