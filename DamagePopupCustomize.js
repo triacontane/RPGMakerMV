@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/08/27 ポップアップ座標を敵味方ごとに調整できる機能を追加
  1.0.0 2023/08/11 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -75,6 +76,34 @@
  * @default 0
  * @type color
  *
+ * @param actorPopupOffsetX
+ * @text 味方ポップアップX座標補正
+ * @desc 味方のポップアップのX座標補正です。デフォルトは0です。
+ * @default 0
+ * @type number
+ * @min -999
+ *
+ * @param actorPopupOffsetY
+ * @text 味方ポップアップY座標補正
+ * @desc 味方のポップアップのY座標補正です。デフォルトは0です。
+ * @default 0
+ * @type number
+ * @min -999
+ *
+ * @param enemyPopupOffsetX
+ * @text 敵ポップアップX座標補正
+ * @desc 敵のポップアップのX座標補正です。デフォルトは0です。
+ * @default 0
+ * @type number
+ * @min -999
+ *
+ * @param enemyPopupOffsetY
+ * @text 敵ポップアップY座標補正
+ * @desc 敵のポップアップのY座標補正です。デフォルトは0です。
+ * @default 0
+ * @type number
+ * @min -999
+ *
  * @help DamagePopupCustomize.js
  *
  * ダメージポップアップの表示内容や色調を調整します。
@@ -96,6 +125,26 @@
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+
+    const _Sprite_Battler_damageOffsetX = Sprite_Battler.prototype.damageOffsetX;
+    Sprite_Battler.prototype.damageOffsetX = function() {
+        const offsetX = _Sprite_Battler_damageOffsetX.apply(this, arguments);
+        if (this instanceof Sprite_Actor) {
+            return offsetX + (param.actorPopupOffsetX || 0);
+        } else {
+            return offsetX + (param.enemyPopupOffsetX || 0);
+        }
+    };
+
+    const _Sprite_Battler_damageOffsetY = Sprite_Battler.prototype.damageOffsetY;
+    Sprite_Battler.prototype.damageOffsetY = function() {
+        const offsetY = _Sprite_Battler_damageOffsetY.apply(this, arguments);
+        if (this instanceof Sprite_Actor) {
+            return offsetY + (param.actorPopupOffsetY || 0);
+        } else {
+            return offsetY + (param.enemyPopupOffsetY || 0);
+        }
+    };
 
     const _Sprite_Damage_setup = Sprite_Damage.prototype.setup;
     Sprite_Damage.prototype.setup = function(target) {
