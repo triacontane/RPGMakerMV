@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.13.0 2023/08/28 戦闘画面でゲージ画像をバトラー表示位置と連動させる機能を追加
+                   無効なバトラーのゲージを表示した場合にエラーになる問題を修正
  1.12.0 2023/08/16 ゲージの現在値、最大値に数値以外の値が設定されたとき、分かりやすいエラーを表示してゲームが停止するよう修正
  1.11.0 2023/07/13 ゲージを左右反転させる設定を追加
  1.10.0 2023/06/09 ゲージを任意のウィンドウの子要素にできる機能を追加
@@ -617,7 +619,7 @@
  * @param Type
  * @text バトラー種別
  * @desc ゲージの主体となるバトラーの取得方法です。
- * @default
+ * @default ActorId
  * @type select
  * @option アクターID
  * @value ActorId
@@ -647,6 +649,12 @@
  * @desc 種別選択で『パーティの並び順』『敵グループの並び順』を選択したときの並び順です。先頭は[0]です。
  * @default 0
  * @type number
+ *
+ * @param LinkPosition
+ * @text バトラー画像連動
+ * @desc ゲージの表示座標をバトラーの座標と連動させます。
+ * @default true
+ * @type boolean
  */
 
 (() => {
@@ -756,6 +764,27 @@
         }
     };
 
+    const _Sprite_Battler_updatePosition = Sprite_Battler.prototype.updatePosition;
+    Sprite_Battler.prototype.updatePosition = function() {
+        _Sprite_Battler_updatePosition.apply(this, arguments);
+        if (this._battler) {
+            this._battler.updateSpritePosition(this);
+        }
+    };
+
+    Game_Battler.prototype.updateSpritePosition = function(sprite) {
+        this._imageX = sprite.x;
+        this._imageY = sprite.y;
+    };
+
+    Game_Battler.prototype.findImageX = function() {
+        return this._imageX || 0;
+    };
+
+    Game_Battler.prototype.findImageY = function() {
+        return this._imageY || 0;
+    }
+
     /**
      * Sprite_ExtraGaugeContainer
      * 追加ゲージとピクチャを含むコンテナです。
@@ -788,12 +817,17 @@
             if (this._layout.Mirror) {
                 this.scale.x = -1;
             }
+            const battler = this._gauge.findLinkBattler();
+            if (battler) {
+                this.x += battler.findImageX();
+                this.y += battler.findImageY();
+            }
         }
 
         update() {
             this.updateVisibly();
             super.update();
-            if (this._layout.realTime) {
+            if (this._layout.realTime || !!this._gauge.findLinkBattler()) {
                 this.setupPosition();
             }
             this.updateOpacity();
@@ -863,7 +897,7 @@
 
         findBattler() {
             const battlerData = this._data.Battler;
-            if (!battlerData) {
+            if (!battlerData || !battlerData.Type) {
                 return $gameParty.menuActor();
             }
             const methodName = `findBattler${battlerData.Type}`;
@@ -871,6 +905,14 @@
                 return this[methodName](battlerData);
             } else {
                 return $gameParty.menuActor();
+            }
+        }
+
+        findLinkBattler() {
+            if (this._data.Battler?.Type && this._data.Battler?.LinkPosition) {
+                return this.findBattler();
+            } else {
+                return null;
             }
         }
 
@@ -1015,6 +1057,9 @@
                 return $gameVariables.value(method.VariableId)
             } else if (method.Script) {
                 const battler = this._battler;
+                if (!battler) {
+                    return 0;
+                }
                 const meta = battler.isActor() ? battler.actor().meta : battler.enemy().meta;
                 try {
                     return eval(method.Script);
@@ -1100,7 +1145,7 @@
         }
 
         isValid() {
-            return true;
+            return !!this.findBattler();
         }
 
         smoothness() {
