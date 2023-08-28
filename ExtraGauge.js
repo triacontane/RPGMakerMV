@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.13.1 2023/08/29 バトラータイプで敵キャラIDを選択したとき、戦闘中かつ対象がグループにいればそのオブジェクトを返すよう修正
  1.13.0 2023/08/28 戦闘画面でゲージ画像をバトラー表示位置と連動させる機能を追加
                    無効なバトラーのゲージを表示した場合にエラーになる問題を修正
  1.12.0 2023/08/16 ゲージの現在値、最大値に数値以外の値が設定されたとき、分かりやすいエラーを表示してゲームが停止するよう修正
@@ -925,7 +926,9 @@
         }
 
         findBattlerEnemyId(battlerData) {
-            return new Game_Enemy(battlerData.EnemyId, 0, 0);
+            const id = battlerData.EnemyId;
+            const enemy = $gameTroop.members().find(battler => battler.enemyId() === id);
+            return enemy || new Game_Enemy(battlerData.EnemyId, 0, 0);
         }
 
         findBattlerTroopIndex(battlerData) {
