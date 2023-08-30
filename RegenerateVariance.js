@@ -14,7 +14,7 @@
 =============================================================================*/
 
 /*:
- * @plugindesc 回復率の分散度設定プラグイン
+ * @plugindesc 再生率の分散度設定プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/RegenerateVariance.js
  * @base PluginCommonBase
