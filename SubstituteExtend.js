@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.2 2023/08/30 身代わり反撃の設定が有効なとき、身代わり判定が2回行われていた問題を修正
 // 1.8.1 2023/08/26 ヘルプの記述が誤っていたので修正
 // 1.8.0 2022/10/16 身代わり中だけ指定してステートを付与できる機能を追加
 // 1.7.0 2021/09/01 身代わりの発動率を設定するタグを追加
@@ -293,6 +294,7 @@
     //=============================================================================
     const _BattleManager_invokeAction = BattleManager.invokeAction;
     BattleManager.invokeAction = function(subject, target) {
+        this._invokeSubstitute = false;
         if (param.substituteCounter) {
             const realTarget = this.applySubstitute(target);
             _BattleManager_invokeAction.call(this, subject, realTarget);
@@ -303,6 +305,10 @@
 
     const _BattleManager_applySubstitute = BattleManager.applySubstitute;
     BattleManager.applySubstitute      = function(target) {
+        if (this._invokeSubstitute) {
+            return target;
+        }
+        this._invokeSubstitute = true;
         this._substituteTarget = target;
         const substitute = _BattleManager_applySubstitute.apply(this, arguments);
         this._substituteTarget = null;
@@ -335,6 +341,7 @@
         }
         this._substituteState = null;
         this._substitute = null;
+        this._invokeSubstitute = false;
     };
 
     BattleManager.checkSubstituteTargetHpRate = function(hpRate) {
