@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2023/09/02 別プラグインと組み合わせて別パーティをマップ上に表示できる機能を追加
+//                  別パーティの位置設定やメンバー入れ替えをプラグインコマンドから実行できる機能を追加
 // 2.0.2 2021/05/12 初期パーティから変更後、セーブ、ロードを介することで正常に初期パーティに戻らなくなる場合がある問題を修正
 // 2.0.1 2020/09/17 英語版のヘルプ作成とバグ修正
 // 2.0.0 2020/09/17 MZ版向けに修正
@@ -25,6 +27,8 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ParallelParty.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderAfter EventReSpawn
  * @author triacontane
  *
  * @param shareResource
@@ -36,6 +40,16 @@
  * @desc Moves itself to a new location when you switch back to the original party.
  * @default false
  * @type boolean
+ *
+ * @param partyIdVariable
+ * @desc パーティIDを格納する変数です。パーティIDについてはヘルプをご確認ください。
+ * @default 0
+ * @type variable
+ *
+ * @param partyEventId
+ * @desc 操作中でない並列パーティをイベントとして表示するときのテンプレートイベントIDです。
+ * @default 0
+ * @type number
  *
  * @command CHANGE_PARTY
  * @text Change Party
@@ -53,7 +67,67 @@
  * @default false
  * @type boolean
  *
- * @help You can manage multiple parties at the same time.
+ * @command CHANGE_PARTY_POSITION
+ * @desc 指定したIDのパーティの位置を設定します。現在のパーティに対する操作は無効です。
+ *
+ * @arg partyId
+ * @desc パーティIDです。パーティIDについてはヘルプをご確認ください。
+ * @default 0
+ * @type number
+ *
+ * @arg mapId
+ * @desc 移動先のマップIDです。
+ * @default 0
+ * @type number
+ *
+ * @arg x
+ * @desc 移動先のX座標です。
+ * @default 0
+ * @type number
+ *
+ * @arg y
+ * @desc 移動先のY座標です。
+ * @default 0
+ * @type number
+ *
+ * @arg direction
+ * @desc 移動先の向きです。
+ * @default 2
+ * @type select
+ * @option 下
+ * @value 2
+ * @option 左
+ * @value 4
+ * @option 右
+ * @value 6
+ * @option 上
+ * @value 8
+ *
+ * @command CHANGE_PARTY_MEMBER
+ * @desc 指定したIDのパーティのメンバーを変更します。現在のパーティに対する操作は無効です。
+ *
+ * @arg partyId
+ * @desc パーティIDです。パーティIDについてはヘルプをご確認ください。
+ * @default 0
+ * @type number
+ *
+ * @arg actorId
+ * @desc パーティに加入させるアクターIDです。
+ * @default 0
+ * @type actor
+ *
+ * @arg type
+ * @desc パーティに加入させるか外すかを指定します。
+ * @default 0
+ * @type select
+ * @option 加える
+ * @value 0
+ * @option 外す
+ * @value 1
+ *
+ * @help ParallelParty.js
+ *
+ * You can manage multiple parties at the same time.
  * Each party is managed by a "party ID", which is initially set to "0".
  * Each of them has its own set of money and items, and you can use the plugin commands to add
  * You can switch to another party.
@@ -71,6 +145,8 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ParallelParty.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderAfter EventReSpawn
  * @author トリアコンタン
  *
  * @param shareResource
@@ -84,6 +160,18 @@
  * @desc パーティを切り替えたときに元の位置を保存し、元のパーティに戻したときに自働で場所移動します。
  * @default false
  * @type boolean
+ *
+ * @param partyIdVariable
+ * @text パーティID変数
+ * @desc パーティIDを格納する変数です。パーティIDについてはヘルプをご確認ください。
+ * @default 0
+ * @type variable
+ *
+ * @param partyEventId
+ * @text パーティイベントID
+ * @desc 操作中でない並列パーティをイベントとして表示するときのテンプレートイベントIDです。
+ * @default 0
+ * @type number
  *
  * @command CHANGE_PARTY
  * @text パーティ変更
@@ -101,7 +189,77 @@
  * @default false
  * @type boolean
  *
- * @help 複数のパーティを同時に管理できます。
+ * @command CHANGE_PARTY_POSITION
+ * @text パーティ位置変更
+ * @desc 指定したIDのパーティの位置を設定します。現在のパーティに対する操作は無効です。
+ *
+ * @arg partyId
+ * @text パーティID
+ * @desc パーティIDです。パーティIDについてはヘルプをご確認ください。
+ * @default 0
+ * @type number
+ *
+ * @arg mapId
+ * @text マップID
+ * @desc 移動先のマップIDです。
+ * @default 0
+ * @type number
+ *
+ * @arg x
+ * @text X座標
+ * @desc 移動先のX座標です。
+ * @default 0
+ * @type number
+ *
+ * @arg y
+ * @text Y座標
+ * @desc 移動先のY座標です。
+ * @default 0
+ * @type number
+ *
+ * @arg direction
+ * @text 向き
+ * @desc 移動先の向きです。
+ * @default 2
+ * @type select
+ * @option 下
+ * @value 2
+ * @option 左
+ * @value 4
+ * @option 右
+ * @value 6
+ * @option 上
+ * @value 8
+ *
+ * @command CHANGE_PARTY_MEMBER
+ * @text パーティメンバー変更
+ * @desc 指定したIDのパーティのメンバーを変更します。現在のパーティに対する操作は無効です。
+ *
+ * @arg partyId
+ * @text パーティID
+ * @desc パーティIDです。パーティIDについてはヘルプをご確認ください。
+ * @default 0
+ * @type number
+ *
+ * @arg actorId
+ * @text アクターID
+ * @desc パーティに加入させるアクターIDです。
+ * @default 0
+ * @type actor
+ *
+ * @arg type
+ * @text 操作タイプ
+ * @desc パーティに加入させるか外すかを指定します。
+ * @default 0
+ * @type select
+ * @option 加える
+ * @value 0
+ * @option 外す
+ * @value 1
+ *
+ * @help ParallelParty.js
+ *
+ * 複数のパーティを同時に管理できます。
  * 各パーティは「パーティID」で管理され、初期状態のパーティIDは「0」です。
  * それぞれ所持金やアイテムが別々に管理され、プラグインコマンドで
  * 別のパーティに交代できます。
@@ -113,6 +271,17 @@
  * 別のパーティに入れた場合、状態を引き継ぎます。
  *
  * 戦闘中のパーティの入れ替えはできません。
+ *
+ * パラメータ「パーティイベントID」を指定すると
+ * 操作中でない並列パーティをイベントとして表示できます。
+ * この機能を使うためには以下のプラグインが追加で必要です。
+ *
+ * テンプレートイベントプラグイン
+ * イベント動的生成プラグイン
+ *
+ * 別パーティのテンプレートイベントでは以下のスクリプトが使えます。
+ * this.character(0).partyId; // パーティIDを取得
+ * this.character(0).leaderActorId; // リーダーのアクターIDを取得
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -140,17 +309,57 @@ function Game_Parties() {
         } else {
             this.setWaitMode('transfer');
         }
+        if (!param.savePosition) {
+            $gameMap.refreshParallelParty(false);
+        }
+    });
+
+    PluginManagerEx.registerCommand(script, 'CHANGE_PARTY_POSITION', function(args) {
+        $gameSystem.changePartyPosition(args.partyId, args.mapId, args.x, args.y, args.direction);
+        $gameMap.refreshParallelParty(false);
+    });
+
+    PluginManagerEx.registerCommand(script, 'CHANGE_PARTY_MEMBER', function(args) {
+        $gameSystem.changePartyActor(args.partyId, args.actorId, args.type);
+        $gameMap.refreshParallelParty(false);
     });
 
     //=============================================================================
     // Game_System
     //  Game_Partiesを生成します。
     //=============================================================================
-    Game_System.prototype.changeParty = function(partyId, resourceCombine) {
+    const _Game_System_initialize = Game_System.prototype.initialize;
+    Game_System.prototype.initialize = function() {
+        _Game_System_initialize.apply(this, arguments);
+        this._parties = new Game_Parties();
+    };
+
+    const _Game_System_onAfterLoad = Game_System.prototype.onAfterLoad;
+    Game_System.prototype.onAfterLoad = function() {
+        _Game_System_onAfterLoad.apply(this, arguments);
         if (!this._parties) {
             this._parties = new Game_Parties();
         }
+    };
+
+    Game_System.prototype.changeParty = function(partyId, resourceCombine) {
         this._parties.change(partyId, resourceCombine);
+    };
+
+    Game_System.prototype.changePartyPosition = function(partyId, mapId, x, y, direction) {
+        this._parties.setPosition(partyId, mapId, x, y, direction);
+    };
+
+    Game_System.prototype.changePartyActor = function(partyId, actorId, type) {
+        this._parties.changeActor(partyId, actorId, type);
+    };
+
+    Game_System.prototype.findExistParallels = function() {
+        return this._parties ? this._parties.findExistParallels() : [];
+    };
+
+    Game_System.prototype.findPartyId = function(party) {
+        return this._parties ? this._parties.findPartyId(party) : -1;
     };
 
     //=============================================================================
@@ -171,7 +380,7 @@ function Game_Parties() {
     };
 
     Game_Party.prototype.inheritAllResources = function(prevParty) {
-        var resources = prevParty.getAllResources();
+        const resources = prevParty.getAllResources();
         this._items   = resources.items;
         this._weapons = resources.weapons;
         this._armors  = resources.armors;
@@ -181,7 +390,7 @@ function Game_Parties() {
     };
 
     Game_Party.prototype.combineAllResources = function(targetParty) {
-        var resources = targetParty.getAllResources();
+        const resources = targetParty.getAllResources();
         Object.keys(resources.items).forEach(function(id) {
             this.gainItem($dataItems[id], resources.items[id], false);
         }, this);
@@ -200,22 +409,38 @@ function Game_Parties() {
 
     // for SceneGlossary.js
     Game_Party.prototype.inheritItemHistory = function(prevParty) {
-        var resources       = prevParty.getAllResources();
+        const resources       = prevParty.getAllResources();
         this._itemHistory   = resources.itemHistory;
         this._weaponHistory = resources.weaponHistory;
         this._armorHistory  = resources.armorHistory;
     };
 
     Game_Party.prototype.moveSavedPosition = function() {
-        if (!this._savedMapId) return;
-        $gamePlayer.reserveTransfer(this._savedMapId, this._savedX, this._savedY, this._savedDirection, 2);
+        $gamePlayer.reserveTransfer(this._savedMapId, this._savedX, this._savedY, this._savedDirection, 0);
     };
 
     Game_Party.prototype.savePosition = function() {
-        this._savedMapId     = $gameMap.mapId();
-        this._savedX         = $gamePlayer.x;
-        this._savedY         = $gamePlayer.y;
-        this._savedDirection = $gamePlayer.direction();
+        this.setPosition($gameMap.mapId(), $gamePlayer.x, $gamePlayer.y, $gamePlayer.direction());
+    };
+
+    Game_Party.prototype.setPosition = function(mapId, x, y, direction) {
+        this._savedMapId     = mapId;
+        this._savedX         = x;
+        this._savedY         = y;
+        this._savedDirection = direction;
+    };
+
+    Game_Party.prototype.findPosition = function() {
+        return {
+            mapId    : this._savedMapId,
+            x        : this._savedX,
+            y        : this._savedY,
+            direction: this._savedDirection
+        }
+    };
+
+    Game_Party.prototype.isExistParallel = function() {
+        return this._savedMapId === $gameMap.mapId() && this !== $gameParty;
     };
 
     //=============================================================================
@@ -227,12 +452,6 @@ function Game_Parties() {
         this._partyId = 0;
     };
 
-    Game_Parties.prototype.createPartyIfNeed = function() {
-        if (!this.isExistParty()) {
-            this._data[this._partyId] = new Game_Party();
-        }
-    };
-
     Game_Parties.prototype.isExistParty = function() {
         return !!this.getCurrentParty();
     };
@@ -241,18 +460,16 @@ function Game_Parties() {
         return this._data[this._partyId];
     };
 
-    Game_Parties.prototype.setCurrentParty = function() {
-        this._data[this._partyId] = $gameParty;
+    Game_Parties.prototype.findPartyId = function(party) {
+        return this._data.findIndex(date => date === party);
     };
 
     Game_Parties.prototype.change = function(partyId, resourceCombine) {
         if (this._partyId === partyId) {
             return;
         }
-        this.setCurrentParty();
-        this._partyId = partyId;
-        this.createPartyIfNeed();
-        var currentParty = this.getCurrentParty();
+        this.changePartyId(partyId);
+        const currentParty = this.getCurrentParty();
         if (param.shareResource) {
             currentParty.inheritAllResources($gameParty);
         } else if (resourceCombine) {
@@ -266,10 +483,100 @@ function Game_Parties() {
         $gameParty = currentParty;
     };
 
-    Game_Parties.prototype.moveSavedPosition = function() {
+    Game_Parties.prototype.changePartyId = function(newPartyId) {
         $gameParty.savePosition();
-        var currentParty = this.getCurrentParty();
+        this._data[this._partyId] = $gameParty;
+        this._partyId = newPartyId;
+        this.createPartyIfNeed(newPartyId);
+        if (param.partyIdVariable) {
+            $gameVariables.setValue(param.partyIdVariable, this._partyId);
+        }
+    };
+
+    Game_Parties.prototype.setPosition = function(partyId, mapId, x, y, direction) {
+        if (this._partyId === partyId) {
+            return;
+        }
+        this.createPartyIfNeed(partyId);
+        this._data[partyId].setPosition(mapId, x, y, direction);
+    };
+
+    Game_Parties.prototype.changeActor = function(partyId, actorId, type) {
+        this.createPartyIfNeed(partyId);
+        const actor = $gameActors.actor(actorId);
+        if (actor) {
+            if (type === 0) {
+                this._data[partyId].addActor(actorId);
+            } else {
+                this._data[partyId].removeActor(actorId);
+            }
+        }
+    };
+
+    Game_Parties.prototype.createPartyIfNeed = function(partyId) {
+        if (!this._data[partyId]) {
+            const party = new Game_Party();
+            party.savePosition();
+            this._data[partyId] = party;
+        }
+    };
+
+    Game_Parties.prototype.moveSavedPosition = function() {
+        const currentParty = this.getCurrentParty();
         currentParty.moveSavedPosition();
+    };
+
+    Game_Parties.prototype.findExistParallels = function() {
+        return this._data.filter(party => party.isExistParallel());
+    };
+
+    const _Game_Map_setupInitialSpawnEvents = Game_Map.prototype.setupInitialSpawnEvents;
+    Game_Map.prototype.setupInitialSpawnEvents = function() {
+        _Game_Map_setupInitialSpawnEvents.apply(this, arguments);
+        this._parallelPlayers = null;
+        this.refreshParallelParty();
+    };
+
+    Game_Map.prototype.refreshParallelParty = function() {
+        if (!param.partyEventId) {
+            return;
+        }
+        if (this._parallelPlayers) {
+            this._parallelPlayers.forEach(event => event.erase());
+        }
+        this._parallelPlayers = [];
+        $gameSystem.findExistParallels().forEach(party => {
+            this.spawnParallelPlayer(party);
+        });
+    };
+
+    Game_Map.prototype.spawnParallelPlayer = function(party) {
+        const position = party.findPosition();
+        if (!this.spawnEvent) {
+            PluginManagerEx.throwError('EventReSpawn.js is not installed. Please install it.', script);
+        }
+        this.spawnEvent(param.partyEventId, position.x, position.y, true);
+        const event = this._events[this._lastSpawnEventId];
+        event.setDirection(position.direction);
+        event.setParty(party);
+        this._parallelPlayers.push(event);
+    };
+
+    Game_Event.prototype.setParty = function(party) {
+        const leader = party.leader();
+        if (leader) {
+            this.setImage(leader.characterName(), leader.characterIndex());
+            this.leaderActorId = leader.actorId();
+        }
+        this.partyId = $gameSystem.findPartyId(party);
+    };
+
+    const _Game_Player_performTransfer = Game_Player.prototype.performTransfer;
+    Game_Player.prototype.performTransfer = function() {
+        _Game_Player_performTransfer.apply(this, arguments);
+        if (param.savePosition) {
+            $gameMap.refreshParallelParty();
+        }
     };
 })();
 
