@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.3 2023/09/05 ウィンドウリサイズのコードが古かったので修正
 // 1.0.2 2016/06/15 1.0.1の修正が正しく行われていなかったので再修正
 // 1.0.1 2016/06/14 YEP_CoreEngine.jsと併用したときにウィンドウ高さ補正が効かなくなる問題を修正
 // 1.0.0 2016/06/04 初版
@@ -185,8 +186,6 @@
     //=============================================================================
     // ローカル変数
     //=============================================================================
-    var localIsAddMenuBar = false;
-
     Input.functionReverseMapper = {
         F1 : 112,
         F2 : 113,
@@ -235,9 +234,7 @@
     SceneManager.initMenuBar = function() {
         var gui = require('nw.gui');
         var win = gui.Window.get();
-        if (!win.menu) {
-            localIsAddMenuBar = true;
-        }
+        this._needAdjustScreen = true;
         var menuBar = new gui.Menu({type: 'menubar'});
         if (process.platform === 'darwin') {
             menuBar.createMacBuiltin('Game', option);
@@ -249,12 +246,23 @@
     var _SceneManager_run = SceneManager.run;
     SceneManager.run      = function(sceneClass) {
         _SceneManager_run.apply(this, arguments);
-        var gui = require('nw.gui');
-        var win = gui.Window.get();
-        if (localIsAddMenuBar) {
-            win.y -= paramWindowHeight;
-            win.height += paramWindowHeight;
+        this.setWindowSizeForMenuBar();
+    };
+
+    SceneManager.setWindowSizeForMenuBar = function() {
+        if (!this._needAdjustScreen) {
+            return;
         }
+        const gui        = require('nw.gui');
+        const gameWindow = gui.Window.get();
+        setTimeout(function() { // Fix missing menu bar height
+            var style_height = parseInt(Graphics._canvas.style.height, 10);
+            var height_diff  = SceneManager._screenHeight - style_height;
+            if (height_diff !== 0) {
+                gameWindow.moveBy(0, -height_diff);
+                gameWindow.resizeBy(0, height_diff);
+            }
+        }, 100);
     };
 
     SceneManager.initClickMenu = function() {
