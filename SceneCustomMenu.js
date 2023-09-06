@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.41.0 2023/09/07 メッセージオブジェクトをカスタムシーンごとに保持する仕様に変更
  1.40.1 2023/08/11 1.40.0で追加した機能で、制御文字が使えない問題を修正
  1.40.0 2023/08/08 複数行入力できる項目描画スクリプトのパラメータを別に追加
  1.39.1 2023/08/08 タイトル画面を差し替えた画面でコモンイベントを実行すると初期位置のマップに場所移動してしまう問題を修正
@@ -1323,7 +1324,7 @@
             // super.createのneedsPageButtonsで参照できるように、this._customDataの取得を一番上にする
             this._customData = SceneManager.findSceneData(PluginManagerEx.findClassName(this));
             super.create();
-            this.swapGameScreen();
+            this.swapGameObject();
             this._interpreter = new Game_Interpreter();
             if (this._customData.ParallelEventId) {
                 this._parallelCommon = new Game_CustomMenuComonnEvent(this._customData.ParallelEventId);
@@ -1349,7 +1350,7 @@
 
         terminate() {
             super.terminate();
-            this.restoreGameScreen();
+            this.restoreGameObject();
         }
 
         stop() {
@@ -1360,13 +1361,16 @@
             }
         }
 
-        swapGameScreen() {
+        swapGameObject() {
             this._previousGameScreen = $gameScreen;
+            this._previousGameMessage = $gameMessage;
             window.$gameScreen = new Game_Screen();
+            window.$gameMessage = new Game_Message();
         }
 
-        restoreGameScreen() {
+        restoreGameObject() {
             window.$gameScreen = this._previousGameScreen;
+            window.$gameMessage = this._previousGameMessage;
         }
 
         needsPageButtons() {
