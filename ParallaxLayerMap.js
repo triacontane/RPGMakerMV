@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2023/09/08 不透明度の0指定が無効になる問題を修正
 // 1.2.0 2021/05/03 合成方法『オーバーレイ』『ハードライト』を使用可能にしました。
 // 1.1.5 2020/08/30 YEP_CoreEngine.jsと併用したとき解像度次第でレイヤーマップのピクセルがずれる場合がある競合を修正
 // 1.1.4 2020/07/05 MOG_ChronoEngine.jsと併用したときマップの一部がちらつく場合がある競合を修正
@@ -180,15 +181,15 @@
 
     Game_Event.prototype.initBlendMode = function() {
         var blendMode = getMetaValues(this.getOriginalEvent(), ['_Blend', '合成']);
-        if (blendMode) {
+        if (blendMode !== undefined) {
             this._blendMode = parseInt(blendMode);
         }
     };
 
     Game_Event.prototype.initOpacity = function() {
-        var blendMode = getMetaValues(this.getOriginalEvent(), ['_Opacity', '不透明度']);
-        if (blendMode) {
-            this._opacity = parseInt(blendMode);
+        var opacity = getMetaValues(this.getOriginalEvent(), ['_Opacity', '不透明度']);
+        if (opacity !== undefined) {
+            this._opacity = parseInt(opacity);
         }
     };
 
