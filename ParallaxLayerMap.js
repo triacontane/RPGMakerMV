@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2023/09/08 不透明度の0指定が無効になる問題を修正
 // 1.3.0 2023/05/14 キャラクターグラフィック表示拡張プラグインと連携可能なように修正
 // 1.2.0 2022/11/23 レイヤーマップのプライオリティを細かく9段階で指定できる機能を追加
 // 1.1.9 2022/03/23 MZ向けにリファクタリング
@@ -155,15 +156,15 @@
 
     Game_Event.prototype.initBlendMode = function() {
         const blendMode = PluginManagerEx.findMetaValue(this.getOriginalEvent(), ['PLM_Blend', 'PLM合成']);
-        if (blendMode) {
+        if (blendMode !== undefined) {
             this._blendMode = parseInt(blendMode);
         }
     };
 
     Game_Event.prototype.initOpacity = function() {
-        const blendMode = PluginManagerEx.findMetaValue(this.getOriginalEvent(), ['PLM_Opacity', 'PLM不透明度']);
-        if (blendMode) {
-            this._opacity = parseInt(blendMode);
+        const opacity = PluginManagerEx.findMetaValue(this.getOriginalEvent(), ['PLM_Opacity', 'PLM不透明度']);
+        if (opacity !== undefined) {
+            this._opacity = parseInt(opacity);
         }
     };
 
