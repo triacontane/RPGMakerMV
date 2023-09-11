@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2023/09/11 カレンダーウィンドウのプライオリティをメッセージウィンドウの下に変更
 // 2.4.2 2023/04/04 インターバルを0に設定したアラームを指定すると、設定次第でフリーズする場合がある問題を修正
 // 2.4.1 2022/04/14 2.4.0でカレンダーのフォントサイズを変更したとき描画位置がズレる問題を修正
 // 2.4.0 2022/04/07 カレンダー表記に制御文字を使える機能を追加
@@ -1180,7 +1181,8 @@ function Window_Chronus() {
 
     Scene_Map.prototype.createChronusWindow = function() {
         this._chronusWindow = new Window_Chronus();
-        this.addWindow(this._chronusWindow);
+        const index = this._windowLayer.getChildIndex(this._messageWindow);
+        this._windowLayer.addChildAt(this._chronusWindow, index);
     };
 
     //=============================================================================
