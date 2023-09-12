@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2023/09/12 動的文字列ピクチャの幅と高さを直接指定できる機能を追加
 // 2.6.3 2023/07/23 2.6.2の修正で高さが反映されていなかった問題を修正
 // 2.6.2 2023/07/23 ウィンドウのカーソル設定のコマンドでX, Y座標の変更が機能していなかった問題と、高さ項目の表示名が間違っていた問題を修正
 // 2.6.1 2022/06/26 2.6.0で不透明度を指定せず実行するとエラーになる問題を修正
@@ -132,9 +133,21 @@
  * @type number
  * @default
  *
+ * @arg pictureWidth
+ * @text 横幅
+ * @desc 文字列ピクチャの横幅です。文字の描画幅とは無関係にサイズを指定した場合に使います。
+ * @type number
+ * @default
+ *
+ * @arg pictureHeight
+ * @text 高さ
+ * @desc 文字列ピクチャの高さです。文字の描画高さとは無関係にサイズを指定した場合に使います。
+ * @type number
+ * @default
+ *
  * @arg align
  * @text 揃え
- * @desc 複数行の動的文字列を指定したときの揃えです。
+ * @desc 動的文字列の揃えです。
  * @default
  * @type select
  * @option 左揃え
@@ -292,6 +305,12 @@
         if (setting.windowOpacity !== '') {
             this.dTextWindowOpacity = setting.windowOpacity;
         }
+        if (setting.pictureWidth !== '') {
+            this.dTextPictureWidth = setting.pictureWidth;
+        }
+        if (setting.pictureHeight !== '') {
+            this.dTextPictureHeight = setting.pictureHeight;
+        }
     };
 
     Game_Screen.prototype.clearDtextSetting = function() {
@@ -304,6 +323,8 @@
         this.dTextFontFace = null;
         this.dTextLineHeight = null;
         this.dTextWindowOpacity = null;
+        this.dTextPictureWidth = null;
+        this.dTextPictureHeight = null;
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
@@ -343,7 +364,9 @@
             align         : this.dTextAlign,
             font          : this.dTextFontFace,
             lineHeight    : this.dTextLineHeight,
-            windowOpacity : this.dTextWindowOpacity
+            windowOpacity : this.dTextWindowOpacity,
+            pictureWidth  : this.dTextPictureWidth,
+            pictureHeight : this.dTextPictureHeight
         };
     };
 
@@ -609,6 +632,12 @@
             this._lineHeight = dTextInfo.lineHeight;
             this._text = text;
             const rect = this.textSizeEx(text);
+            if (dTextInfo.pictureWidth) {
+                rect.width = dTextInfo.pictureWidth;
+            }
+            if (dTextInfo.pictureHeight) {
+                rect.height = dTextInfo.pictureHeight;
+            }
             this.textPictureWidth = rect.width;
             this.textPictureAlign = dTextInfo.align;
             this.contents = new Bitmap(rect.width, rect.height);
