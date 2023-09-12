@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/09/12 ダメージの属性ごとにポップアップ色を設定できる機能を追加
  1.1.0 2023/08/27 ポップアップ座標を敵味方ごとに調整できる機能を追加
  1.0.0 2023/08/11 初版
 ----------------------------------------------------------------------------
@@ -76,6 +77,12 @@
  * @default 0
  * @type color
  *
+ * @param elementPopupColors
+ * @text 属性ポップアップ色
+ * @desc 属性ごとにポップアップ色を設定します。先頭から順に対応している属性IDになります。0は無属性です。
+ * @default []
+ * @type color[]
+ *
  * @param actorPopupOffsetX
  * @text 味方ポップアップX座標補正
  * @desc 味方のポップアップのX座標補正です。デフォルトは0です。
@@ -126,6 +133,22 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
+    const _Game_ActionResult_clear = Game_ActionResult.prototype.clear;
+    Game_ActionResult.prototype.clear = function() {
+        _Game_ActionResult_clear.apply(this, arguments);
+        this.elementId = 0;
+    };
+
+    const _Game_Action_executeHpDamage = Game_Action.prototype.executeHpDamage;
+    Game_Action.prototype.executeHpDamage = function(target, value) {
+        _Game_Action_executeHpDamage.apply(this, arguments);
+        if (this.item().damage.elementId < 0) {
+            target.result().elementId = this.subject().attackElements()[0];
+        } else {
+            target.result().elementId = this.item().damage.elementId;
+        }
+    };
+
     const _Sprite_Battler_damageOffsetX = Sprite_Battler.prototype.damageOffsetX;
     Sprite_Battler.prototype.damageOffsetX = function() {
         const offsetX = _Sprite_Battler_damageOffsetX.apply(this, arguments);
@@ -149,6 +172,7 @@
     const _Sprite_Damage_setup = Sprite_Damage.prototype.setup;
     Sprite_Damage.prototype.setup = function(target) {
         this._isActor = target.isActor();
+        this._elementId = target.result().elementId;
         _Sprite_Damage_setup.apply(this, arguments);
     };
 
@@ -165,7 +189,7 @@
     }
 
     Sprite_Damage.prototype.customDamageColor = function() {
-        const color = this._isActor ? this.actorDamageColor() : this.enemyDamageColor();
+        const color = this.findDamageColor();
         if (color > 0) {
             return ColorManager.textColor(color);
         } else if (!!color) {
@@ -173,6 +197,14 @@
         } else {
             return null;
         }
+    };
+
+    Sprite_Damage.prototype.findDamageColor = function() {
+        const elementColors = param.elementPopupColors;
+        if (this._elementId > 0 && elementColors && elementColors[this._elementId]) {
+            return elementColors[this._elementId];
+        }
+        return this._isActor ? this.actorDamageColor() : this.enemyDamageColor();
     };
 
     Sprite_Damage.prototype.actorDamageColor = function() {
