@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2023/09/13 決定ボタン以外のボタンでゲームスタートしていた現象を修正
 // 2.3.0 2022/08/26 X座標の調整機能とスタート画像をピクチャから指定できる機能を追加
 // 2.2.0 2021/03/23 MZで動作するよう修正
 // 2.1.0 2018/12/01 スタート文字列のY座標を調整できるようにしました。
@@ -251,12 +252,7 @@
     };
 
     Scene_Title.prototype.isTriggered = function() {
-        return Object.keys(Input.keyMapper).some(function(keyCode) {
-                return Input.isTriggered(Input.keyMapper[keyCode]);
-            }.bind(this)) ||
-            Object.keys(Input.gamepadMapper).some(function(keyCode) {
-                return Input.isTriggered(Input.gamepadMapper[keyCode]);
-            }.bind(this)) || TouchInput.isTriggered();
+        return Input.isTriggered('ok') || TouchInput.isTriggered();
     };
 
     //=============================================================================
