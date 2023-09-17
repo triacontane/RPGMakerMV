@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.4.0 2023/09/17 リストウィンドウとオプションウィンドウとの切り替えをタッチ操作でできる機能を追加
 // 2.3.1 2022/10/31 曲を選択していない状態でピッチなどを変更しようとするとエラーになる問題を修正
 // 2.3.0 2022/10/30 ピッチと左右バランスのオプション項目について、パラメータを空にすると項目も消去されるよう修正
 // 2.2.1 2022/08/19 サブフォルダに配置したオーディオが演奏できない問題を修正
@@ -105,6 +106,12 @@
  * @param HiddenSeekBar
  * @text シークバー非表示
  * @desc 再生時間を表示するシークバーを隠します。
+ * @default false
+ * @type boolean
+ *
+ * @param ToggleOnTouch
+ * @text タッチでウィンドウ切り替え
+ * @desc タッチ操作でリストウィンドウとオプションウィンドウを切り替えます。
  * @default false
  * @type boolean
  *
@@ -374,6 +381,22 @@
             this.createListWindow();
             this.createOptionWindow();
             this.createAudioWindow();
+        }
+
+        update() {
+            super.update();
+            if (TouchInput.isTriggered() && param.ToggleOnTouch) {
+                this.updateTouch();
+            }
+        }
+
+        updateTouch() {
+            if (this._optionWindow.hitIndex() >= 0) {
+                this.onPageDown();
+            }
+            if (this._listWindow.hitIndex() >= 0) {
+                this.onPageUp();
+            }
         }
 
         needsPageButtons() {
