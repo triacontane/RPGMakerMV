@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2023/09/19 指定イベントの方向を向くあるいは逆方向を向くスクリプトを追加
 // 1.2.0 2023/05/11 MZで動作するよう修正
 // 1.1.0 2017/10/22 イベントの検索範囲と範囲外だった場合の動作を指定できる機能を追加
 // 1.0.0 2017/10/14 初版
@@ -75,6 +76,12 @@
  * this.awayEventByName('name');   # nameの名前のイベントから遠ざかる
  * this.awayEventByTag('tagName'); # 指定したメモ(※1)のイベントから遠ざかる
  *
+ * イベントの方向を向きます。
+ * this.turnEventById(id);         # idの番号のイベントのを向く
+ * this.turnEventByName('name');   # nameの名前のイベントの方を向く
+ * this.turnEventByTag('tagName'); # 指定したメモのイベントの方を向く
+ * this.turnEventById(id, true);  # idの番号のイベントの逆の方向を向く
+ *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
  * 以下のフォルダに格納されています。
@@ -95,6 +102,33 @@
     // Game_Character
     //  イベント追跡のスクリプトを実装します。
     //=============================================================================
+    Game_Character.prototype.turnEventById = function(id, awayFlg = false) {
+        const character = (id > 0 ? $gameMap.event(id) : $gamePlayer);
+        if (awayFlg) {
+            this.turnAwayFromCharacter(character);
+        } else {
+            this.turnTowardCharacter(character);
+        }
+    };
+
+    Game_Character.prototype.traceEventByName = function(name, awayFlg) {
+        const character = this.findHighestPriorityEvent($gameMap.filterEventsByName(name));
+        if (awayFlg) {
+            this.turnAwayFromCharacter(character);
+        } else {
+            this.turnTowardCharacter(character);
+        }
+    };
+
+    Game_Character.prototype.traceEventByTag = function(tagName, awayFlg) {
+        const character = this.findHighestPriorityEvent($gameMap.filterEventsByTag(tagName));
+        if (awayFlg) {
+            this.turnAwayFromCharacter(character);
+        } else {
+            this.turnTowardCharacter(character);
+        }
+    };
+
     Game_Character.prototype.traceEventById = function(id, awayFlg) {
         const character = (id > 0 ? $gameMap.event(id) : $gamePlayer);
         this.traceEvent(character, awayFlg);
