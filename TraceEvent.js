@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2023/09/20 1.3.0で追加したスクリプトが一部間違っていた問題を修正
 // 1.3.0 2023/09/19 指定イベントの方向を向くあるいは逆方向を向くスクリプトを追加
 // 1.2.0 2023/05/11 MZで動作するよう修正
 // 1.1.0 2017/10/22 イベントの検索範囲と範囲外だった場合の動作を指定できる機能を追加
@@ -111,7 +112,7 @@
         }
     };
 
-    Game_Character.prototype.traceEventByName = function(name, awayFlg) {
+    Game_Character.prototype.turnEventByName = function(name, awayFlg) {
         const character = this.findHighestPriorityEvent($gameMap.filterEventsByName(name));
         if (awayFlg) {
             this.turnAwayFromCharacter(character);
@@ -120,7 +121,7 @@
         }
     };
 
-    Game_Character.prototype.traceEventByTag = function(tagName, awayFlg) {
+    Game_Character.prototype.turnEventByTag = function(tagName, awayFlg) {
         const character = this.findHighestPriorityEvent($gameMap.filterEventsByTag(tagName));
         if (awayFlg) {
             this.turnAwayFromCharacter(character);
