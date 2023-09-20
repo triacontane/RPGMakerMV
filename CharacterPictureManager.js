@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.14.0 2023/09/20 アイテム、スキル画面ではアクターウィンドウで選択中のアクターのみ立ち絵が表示される設定を追加
 // 3.13.0 2023/05/06 行動中条件、入力中条件の立ち絵は、戦闘中以外では常に条件を満たすよう仕様変更
 // 3.12.0 2023/04/09 カスタムメニュープラグインで作成した画面に立ち絵を表示するとき、単一アクターのカスタムメニューなら立ち絵も単一表示になるよう修正
 // 3.11.0 2022/12/30 アクターがコマンド入力中のみ立ち絵を表示する機能を追加
@@ -135,6 +136,12 @@
  * @text メニューアクターのみ表示
  * @desc 装備、スキル、ステータス、名前画面では表示対象のアクターの立ち絵のみを表示します。
  * @default true
+ * @type boolean
+ *
+ * @param SelectActorOnly
+ * @text 選択アクターのみ表示
+ * @desc アイテム、スキル画面ではアクターウィンドウで選択中のアクターの立ち絵のみを表示します。
+ * @default false
  * @type boolean
  *
  * @param DressUp
@@ -1156,7 +1163,17 @@
         return this._standSpriteScene?.SceneName === sceneName;
     };
 
+    Scene_Item.prototype.findStandPictureMember = function() {
+        if (param.SelectActorOnly) {
+            return this._actorWindow?.active ? [$gameParty.members()[this._actorWindow.index()]] : [];
+        }
+        return Scene_Base.prototype.findStandPictureMember.call(this);
+    }
+
     Scene_Skill.prototype.findStandPictureMember = function() {
+        if (param.SelectActorOnly) {
+            return this._actorWindow?.active ? [$gameParty.members()[this._actorWindow.index()]] : [];
+        }
         return param.MenuActorOnly ? [this.actor()] : Scene_Base.prototype.findStandPictureMember.call(this);
     };
 
