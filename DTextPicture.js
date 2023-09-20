@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2023/09/21 MessageAlignCenter.jsの制御文字が使えるよう修正
 // 2.7.0 2023/09/12 動的文字列ピクチャの幅と高さを直接指定できる機能を追加
 // 2.6.3 2023/07/23 2.6.2の修正で高さが反映されていなかった問題を修正
 // 2.6.2 2023/07/23 ウィンドウのカーソル設定のコマンドでX, Y座標の変更が機能していなかった問題と、高さ項目の表示名が間違っていた問題を修正
@@ -638,6 +639,8 @@
             if (dTextInfo.pictureHeight) {
                 rect.height = dTextInfo.pictureHeight;
             }
+            this._height = rect.height + this._padding * 2;
+            this._width = rect.width + this._padding * 2;
             this.textPictureWidth = rect.width;
             this.textPictureAlign = dTextInfo.align;
             this.contents = new Bitmap(rect.width, rect.height);
