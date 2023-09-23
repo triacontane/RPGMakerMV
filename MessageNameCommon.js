@@ -65,6 +65,9 @@
     const _Window_Message_startMessage = Window_Message.prototype.startMessage;
     Window_Message.prototype.startMessage = function() {
         _Window_Message_startMessage.apply(this, arguments);
+        if ($gameParty.inBattle()) {
+            return;
+        }
         this.callSpeakerCommon();
     };
 
