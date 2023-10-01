@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2023/10/01 タッチ起動の判定をマスではなくイベント画像自体に変更できる機能を追加
 // 1.2.2 2022/05/10 ヘルプ修正
 // 1.2.1 2022/05/10 タッチイベントが終了した同一フレームでタッチイベントを開始できなくなるよう修正
 // 1.2.0 2021/03/09 MZ向けにリファクタリング
@@ -38,6 +39,12 @@
  * @desc タッチでイベントを起動したときにONになるスイッチです。イベントが終わると自動でOFFに戻ります。
  * @default 0
  * @type switch
+ *
+ * @param ImageClick
+ * @text 画像クリック起動
+ * @desc イベントの起動判定をイベントのマスではなく画像そのものにします。
+ * @default false
+ * @type boolean
  *
  * @param ValidTriggers
  * @text 有効トリガー
@@ -108,15 +115,23 @@
     };
 
     Game_Player.prototype.getTouchStartupEvent = function() {
-        const x = $gameMap.canvasToMapX(TouchInput.x);
-        const y = $gameMap.canvasToMapY(TouchInput.y);
         let startupEvent = null;
-        $gameMap.eventsXy(x, y).some(function(event) {
-            if (event.isTriggerIn(param.ValidTriggers)) {
-                startupEvent = event;
-            }
-            return startupEvent;
-        });
+        if (param.ImageClick) {
+            $gameMap.events().forEach(function(event) {
+                if (event.isImageClick() && event.isTriggerIn(param.ValidTriggers)) {
+                    startupEvent = event;
+                }
+            });
+        } else {
+            const x = $gameMap.canvasToMapX(TouchInput.x);
+            const y = $gameMap.canvasToMapY(TouchInput.y);
+            $gameMap.eventsXy(x, y).some(function(event) {
+                if (event.isTriggerIn(param.ValidTriggers)) {
+                    startupEvent = event;
+                }
+                return startupEvent;
+            });
+        }
         return startupEvent;
     };
 
@@ -137,6 +152,18 @@
             this.setDirection(this._prelockDirection);
         }
     };
+
+    Game_CharacterBase.prototype.clearImageClick = function() {
+        this._imageClick = false;
+    };
+
+    Game_CharacterBase.prototype.onImageClick = function() {
+        this._imageClick = true;
+    };
+
+    Game_CharacterBase.prototype.isImageClick = function() {
+        return this._imageClick;
+    }
 
     //=============================================================================
     // Game_Interpreter
@@ -169,5 +196,39 @@
         if ($gameTemp.isDestinationValid() && $gamePlayer.isTouchStartupValid() && $gamePlayer.getTouchStartupEvent()) {
             $gameTemp.clearDestination();
         }
+    };
+
+    const _Sprite_Character_update = Sprite_Character.prototype.update;
+    Sprite_Character.prototype.update = function() {
+        _Sprite_Character_update.apply(this, arguments);
+        if (this._character && param.ImageClick && TouchInput.isTriggered()) {
+            this.processTouch();
+        }
+    };
+
+    Sprite_Character.prototype.processTouch = function() {
+        this._character.clearImageClick();
+        if (!this.bitmap || !this.bitmap.isReady()) {
+            return;
+        }
+        const dx  = $gameScreen.disConvertPositionX(TouchInput.x) - this.x;
+        const dy  = $gameScreen.disConvertPositionY(TouchInput.y) - this.y;
+        const sin = Math.sin(-this.rotation);
+        const cos = Math.cos(-this.rotation);
+        const bx = this._frame.x + Math.floor(dx * cos + dy * -sin) / this.scale.x + this.anchor.x * this.width;
+        const by = this._frame.y + Math.floor(dx * sin + dy * cos) / this.scale.y + this.anchor.y * this.height;
+        if (this._frame.contains(bx, by) && this.bitmap.getAlphaPixel(bx, by) !== 0) {
+            this._character.onImageClick();
+        }
+    };
+
+    Game_Screen.prototype.disConvertPositionX = function(x) {
+        const unshiftX = x - this.zoomX() * (1 - this.zoomScale());
+        return Math.round(unshiftX / this.zoomScale());
+    };
+
+    Game_Screen.prototype.disConvertPositionY = function(y) {
+        const unshiftY = y - this.zoomY() * (1 - this.zoomScale());
+        return Math.round(unshiftY / this.zoomScale());
     };
 })();
