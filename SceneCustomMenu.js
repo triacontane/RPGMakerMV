@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.42.0 2023/10/03 ヘルプウィンドウを画面上部に設定できる機能を追加
  1.41.0 2023/09/07 メッセージオブジェクトをカスタムシーンごとに保持する仕様に変更
  1.40.1 2023/08/11 1.40.0で追加した機能で、制御文字が使えない問題を修正
  1.40.0 2023/08/08 複数行入力できる項目描画スクリプトのパラメータを別に追加
@@ -357,9 +358,15 @@
  *
  * @param UseHelp
  * @text ヘルプウィンドウ使用
- * @desc 有効にした場合、画面下部にヘルプウィンドウを表示します。
- * @default true
- * @type boolean
+ * @desc 有効にした場合、ヘルプウィンドウを表示します。
+ * @default 1
+ * @type select
+ * @option 使用しない
+ * @value 0
+ * @option 画面下部に表示(MZデフォルト)
+ * @value 1
+ * @option 画面上部に表示
+ * @value 2
  *
  * @param HelpRows
  * @text ヘルプ行数
@@ -1401,6 +1408,14 @@
             this.createSpriteset();
             if (this._customData.Panorama) {
                 this.setPanoramaBitmap();
+            }
+        }
+
+        isBottomHelpMode() {
+            if (this._customData.UseHelp === 2) {
+                return false;
+            } else {
+                return super.isBottomHelpMode();
             }
         }
 
