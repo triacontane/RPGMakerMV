@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.3 2023/10/05 背景画像の原点をウィンドウの左上にする機能を追加
 // 2.7.2 2023/08/26 戦闘リトライプラグインのウィンドウを追加
 // 2.7.1 2023/07/29 アイコン説明プラグイン用のウィンドウをパラメータに追加
 // 2.7.0 2023/07/19 ウィンドウのベースフォントサイズ、テキストカラーを変更できる機能を追加
@@ -264,6 +265,16 @@
  * @default 0
  * @type color
  *
+ * @param Origin
+ * @text 原点
+ * @desc 背景画像の原点です。
+ * @default 1
+ * @type select
+ * @option 左上(ウィンドウの左上と画像の左上が一致)
+ * @value 0
+ * @option 中央(ウィンドウの中央と画像の中央が一致)
+ * @value 1
+ *
  * @param OffsetX
  * @text X座標補正
  * @desc 表示X座標の補正値です。
@@ -431,8 +442,10 @@
      */
     Window.prototype._refreshBackImage = function() {
         this._windowBackImageSprites.forEach((sprite, index) => {
-            sprite.x = this.width / 2 + this.getBackImageDataItem(index, 'OffsetX');
-            sprite.y = this.height / 2 + this.getBackImageDataItem(index, 'OffsetY');
+            const origin = this.getBackImageDataItem(index, 'Origin');
+            const offsetX = this.getBackImageDataItem(index, 'OffsetX');
+            const offsetY = this.getBackImageDataItem(index, 'OffsetY');
+            sprite.refreshPosition(this, origin, offsetX, offsetY);
         });
     };
 
@@ -537,8 +550,22 @@
         this.bitmap   = bitmap;
         this._hoverBitmap = hoverBitmap;
         this._originalBitmap = bitmap;
-        this.anchor.x = 0.5;
-        this.anchor.y = 0.5;
+    };
+
+    Sprite_WindowBackImage.prototype.refreshPosition = function(parent, origin, offsetX, offsetY) {
+        if (origin === 0) {
+            this.x = 0;
+            this.y = 0;
+            this.anchor.x = 0.0;
+            this.anchor.y = 0.0;
+        } else {
+            this.x = parent.width / 2;
+            this.y = parent.height / 2;
+            this.anchor.x = 0.5;
+            this.anchor.y = 0.5;
+        }
+        this.x += offsetX;
+        this.y += offsetY;
     };
 
     Sprite_WindowBackImage.prototype.onMouseEnter = function() {
