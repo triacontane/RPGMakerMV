@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.14.1 2023/10/06 動的ファイル名のみを指定しているとき、画像が適切に更新されなくなっていた問題を修正
 // 3.14.0 2023/09/20 アイテム、スキル画面ではアクターウィンドウで選択中のアクターのみ立ち絵が表示される設定を追加
 // 3.13.0 2023/05/06 行動中条件、入力中条件の立ち絵は、戦闘中以外では常に条件を満たすよう仕様変更
 // 3.12.0 2023/04/09 カスタムメニュープラグインで作成した画面に立ち絵を表示するとき、単一アクターのカスタムメニューなら立ち絵も単一表示になるよう修正
@@ -859,8 +860,10 @@
 
         updatePictureFiles() {
             this._standPictures.forEach(picture => {
-                if (picture.FileList) {
+                if (picture.FileList && picture.FileList.length > 0) {
                     picture.FileList.clone().reverse().some(file => this.setFileNameIfValid(file, picture));
+                } else {
+                    picture.FileName = null;
                 }
                 if (!picture.FileName && picture.DynamicFileName) {
                     picture.FileName = this.createDynamicFileName(picture.DynamicFileName);
