@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/10/07 フェードイン時間とフェードアウト時間を別々に指定できるよう修正
  1.0.1 2022/10/02 最小音量とフェード時間に制御文字\v[n]が使えるよう修正
  1.0.0 2022/09/23 初版
 ----------------------------------------------------------------------------
@@ -37,8 +38,15 @@
  * @max 100
  *
  * @param fadeTime
- * @text フェード時間
+ * @text フェードアウト時間
  * @desc オーディオが最小音量までフェードアウトするフレーム数です。
+ * @default 60
+ * @type number
+ * @min 1
+ *
+ * @param fadeInTime
+ * @text フェードイン時間
+ * @desc オーディオが最小音量からフェードインするフレーム数です。
  * @default 60
  * @type number
  * @min 1
@@ -82,7 +90,8 @@
             return;
         }
         this._audioSuppressionSign = sign;
-        const suppressionDelta = (100 - param.minVolume) / (param.fadeTime || 1);
+        const fadeFrame = (sign === 1 ? param.fadeInTime || param.fadeTime : param.fadeTime) || 1;
+        const suppressionDelta = (100 - param.minVolume) / fadeFrame;
         const newVolume = (this._audioSuppression + (suppressionDelta * sign)).clamp(param.minVolume, 100);
         this._audioSuppressionChange = this._audioSuppression !== newVolume;
         if (this._audioSuppressionChange) {
