@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/10/07 制御文字で効果音演奏するときに音量、ピッチ、位相を指定できるよう修正
  1.0.0 2020/09/20 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -90,6 +91,7 @@
  * dlc/BasicResources/plugins/official
  *
  * \se[id] // 識別子 id の効果音を演奏します。
+ * \se[id,40,100,0] // 識別子 id の効果音を音量40、ピッチ100、位相0で演奏します。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -151,15 +153,16 @@
     };
 
     AudioManager.playMaterialAudio = function(seId) {
-        let fileName = $gameSystem.getMaterialAudio(seId);
+        const params = seId.split(',');
+        let fileName = $gameSystem.getMaterialAudio(params[0]);
         if (!fileName) {
             fileName = seId;
         }
         const audio = {
             name: fileName,
-            volume: param.volume || 90,
-            pitch: param.pitch || 100,
-            pan: param.pan || 0
+            volume: parseInt(params[1]) || param.volume || 90,
+            pitch: parseInt(params[2]) || param.pitch || 100,
+            pan: parseInt(params[3]) || param.pan || 0
         }
         this.playSe(audio);
     };
