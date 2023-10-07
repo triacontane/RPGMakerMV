@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2023/10/07 IDEのブレークポイントを支援する機能はオプションにしました。
 // 1.2.1 2023/07/20 英語版パラメータのタイトルカットが間違っていたので修正
 // 1.2.0 2023/01/08 タイトルカット時の動作をニューゲーム開始か最新データをロードかで選べるよう仕様変更
 // 1.1.4 2022/04/30 EventRespawn.jsのリージョン機能で複製したイベントを消去してからマップリロード機能を使うとエラーになる問題に対処
@@ -328,6 +329,12 @@
  * @default true
  * @type boolean
  *
+ * @param UseBreakPoint
+ * @text ブレークポイントを使う
+ * @desc IDEなどが提供するブレークポイント機能を使ったときに、キー押下判定が解除されない問題の対策です。
+ * @default false
+ * @type boolean
+ *
  * @help デベロッパツールの挙動を調整する制作支援プラグインです。
  * このプラグインはローカル環境でのテストプレー時のみ有効となります。
  * 快適な開発支援のために以下の機能を提供します。
@@ -513,7 +520,7 @@ function Controller_NwJs() {
     const _Graphics__onTick = Graphics._onTick;
     Graphics._onTick = function(deltaTime) {
         // for break point
-        if (deltaTime >= 6) {
+        if (deltaTime >= 6 && param.UseBreakPoint) {
             Input.clear();
             TouchInput.clear();
         }
