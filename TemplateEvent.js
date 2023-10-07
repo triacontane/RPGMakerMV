@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.2 2023/10/07 パラメータ「メモ欄統合」で「何もしない」を選択した場合、テンプレートイベントデータをセーブデータに含めないよう修正
  1.2.1 2023/04/26 テンプレートイベントの処理を呼び出したとき、呼び出しもとのイベントIDが保持されない問題を修正
  1.2.0 2023/04/23 テンプレートイベントの処理を直接呼び出せるコマンドを追加
  1.1.5 2022/05/25 RandomDungeon.jsとの競合対策が一部誤っていた問題を修正
@@ -962,22 +963,17 @@ let $dataTemplateEvents = null;
     };
 
     Game_Event.prototype.setTemplate = function(event) {
-        const templateId    = this.generateTemplateId(event);
-        const templateEvent = $dataTemplateEvents[templateId];
-        if (templateEvent) {
-            this._templateId    = templateId;
-            this._templateEvent = templateEvent;
+        this._templateId    = this.generateTemplateId(event);
+        if (this.hasTemplate()) {
             this._override      = param.AutoOverride || !!PluginManagerEx.findMetaValue(event, ['TEOverRide', 'TE上書き']);
-            const type = parseInt(param.IntegrateNote);
-            if (type > 0) {
-                this.integrateNote(event, type);
+            if (param.IntegrateNote > 0) {
+                this.integrateNote(event);
             }
         } else {
-            if (templateId) {
-                console.error(`Invalid templateId : ${templateId}`);
+            if (this._templateId) {
+                console.error(`Invalid templateId : ${this._templateId}`);
             }
             this._templateId    = 0;
-            this._templateEvent = null;
             this._override      = false;
         }
     };
@@ -994,28 +990,31 @@ let $dataTemplateEvents = null;
         return templateId;
     };
 
-    Game_Event.prototype.integrateNote = function(event, type) {
-        this._templateEvent      = JsonEx.makeDeepCopy(this._templateEvent);
-        this._templateEvent.note = (type === 1 ? this._templateEvent.note : '') + event.note;
+    Game_Event.prototype.integrateNote = function(event) {
+        this._templateEvent      = JsonEx.makeDeepCopy(this.templateEvent());
+        this._templateEvent.note = (param.IntegrateNote === 1 ? this._templateEvent.note : '') + event.note;
         DataManager.extractMetadata(this._templateEvent);
     };
 
-    Game_Event._userScripts            = ['getTemplateId', 'getTemplateName'];
     Game_Event.prototype.getTemplateId = function() {
         return this._templateId;
     };
 
     Game_Event.prototype.getTemplateName = function() {
-        return this.hasTemplate() ? this._templateEvent.name : '';
+        return this.hasTemplate() ? this.templateEvent().name : '';
     };
 
     Game_Event.prototype.hasTemplate = function() {
-        return this._templateId > 0;
+        return !!this.templateEvent();
     };
 
     const _Game_Event_event    = Game_Event.prototype.event;
     Game_Event.prototype.event = function() {
-        return this.hasTemplate() ? this._templateEvent : _Game_Event_event.apply(this, arguments);
+        return this.hasTemplate() ? this.templateEvent() : _Game_Event_event.apply(this, arguments);
+    };
+
+    Game_Event.prototype.templateEvent = function() {
+        return this._templateEvent || $dataTemplateEvents[this._templateId];
     };
 
     Game_Event.prototype.getOriginalPages = function() {
