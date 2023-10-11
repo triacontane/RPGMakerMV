@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2023/10/11 タッチ起動のトリガーを左クリック以外にも指定可能になる機能を追加
 // 1.3.0 2023/10/01 タッチ起動の判定をマスではなくイベント画像自体に変更できる機能を追加
 // 1.2.2 2022/05/10 ヘルプ修正
 // 1.2.1 2022/05/10 タッチイベントが終了した同一フレームでタッチイベントを開始できなくなるよう修正
@@ -33,6 +34,22 @@
  * @desc 指定したスイッチがONになっているとタッチ起動が無効になります。
  * @default 0
  * @type switch
+ *
+ * @param TouchTriggerTypes
+ * @text タッチトリガー種別
+ * @desc タッチ起動のトリガー種別です。複数指定可能。指定方法によってはタッチ移動やメニュー画面と干渉する場合があります。
+ * @default []
+ * @type select[]
+ * @option 左クリック
+ * @value isTriggered
+ * @option 右クリック
+ * @value isCancelled
+ * @option 左長押し
+ * @value isLongPressed
+ * @option 重ね合わせ
+ * @value isHovered
+ * @option 左リリース
+ * @value isReleased
  *
  * @param StartupSwitchId
  * @text 起動トリガースイッチ
@@ -101,8 +118,17 @@
     };
 
     Game_Player.prototype.isTouchStartupValid = function() {
-        return !$gameSwitches.value(param.InvalidSwitchId) &&
-            TouchInput.isTriggered() && !$gameMap.isEventRunning() && eventTouchFrame !== Graphics.frameCount;
+        return !$gameSwitches.value(param.InvalidSwitchId) && TouchInput.isEventTouchTriggered() &&
+            !$gameMap.isEventRunning() && eventTouchFrame !== Graphics.frameCount;
+    };
+
+    TouchInput.isEventTouchTriggered = function() {
+        const methods = param.TouchTriggerTypes;
+        if (methods && methods.length > 0) {
+            return methods.some(method => this[method]());
+        } else {
+            return this.isTriggered();
+        }
     };
 
     Game_Player.prototype.triggerTouchActionStartupEvent = function() {
