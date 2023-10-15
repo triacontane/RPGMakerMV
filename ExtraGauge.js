@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.14.0 2023/10/15 ゲージ画像が下ピクチャに合わせて表示されるよう仕様変更
  1.13.2 2023/09/01 ゲージ画像を使わない場合も背景を非表示に出来るよう修正
  1.13.1 2023/08/29 バトラータイプで敵キャラIDを選択したとき、戦闘中かつ対象がグループにいればそのオブジェクトを返すよう修正
  1.13.0 2023/08/28 戦闘画面でゲージ画像をバトラー表示位置と連動させる機能を追加
@@ -74,7 +75,13 @@
  * それ以外の画面ではウィンドウの上に表示されます。
  *
  * ゲージにオリジナルの画像も指定できます。
- * ただし、オリジナル画像のゲージは現在値表示より上に表示されます。
+ * オリジナル画像の規格および表示仕様は以下の通りです。
+ * ・画像ゲージは、現在値表示より上に表示されます。
+ * ・画像ゲージの表示座標は、ゲージ背景と左上座標を合わせて表示されます。
+ * 　ただし、ゲージ背景を非表示かつ下ピクチャを表示した場合、
+ * 　下ピクチャに左上座標を合わせて表示されます。
+ * ・画像ゲージはゲージの現在値に合わせて左右にトリミングされます。
+ * 　ゆえに左右に透過色による余白を設けることは推奨されません。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -824,6 +831,9 @@
                 this.x += battler.findImageX();
                 this.y += battler.findImageY();
             }
+            if (this._lower && this._detail.GaugeBackHidden) {
+                this._gauge.syncWithPicture(this._lower);
+            }
         }
 
         update() {
@@ -982,6 +992,16 @@
             if (this._layout.Vertical) {
                 this.rotation = (270 * Math.PI) / 180;
             }
+        }
+
+        syncWithPicture(sprite) {
+            if (!this._gaugeImage) {
+                return;
+            }
+            sprite.bitmap.addLoadListener(() => {
+                this._gaugeImage.x = sprite.x - sprite.anchor.x * sprite.width;
+                this._gaugeImage.y = sprite.y - sprite.anchor.y * sprite.height;
+            });
         }
 
         bitmapWidth() {
