@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2023/10/15 簡易的な縦書き機能を追加
 // 2.8.0 2023/09/21 MessageAlignCenter.jsの制御文字が使えるよう修正
 // 2.7.0 2023/09/12 動的文字列ピクチャの幅と高さを直接指定できる機能を追加
 // 2.6.3 2023/07/23 2.6.2の修正で高さが反映されていなかった問題を修正
@@ -168,6 +169,12 @@
  * @desc 文字列ピクチャの1行分の高さです。
  * @default 0
  *
+ * @arg vertical
+ * @text 簡易縦書き
+ * @desc 文字列ピクチャを縦書きにします。これは簡易機能です。2行以上の文章は縦書きできません。
+ * @default false
+ * @type boolean
+ *
  * @command dTextSettingClear
  * @text 文字列ピクチャ設定解除
  * @desc 文字列ピクチャの表示方法に関する設定を全て解除し初期化します。
@@ -312,6 +319,9 @@
         if (setting.pictureHeight !== '') {
             this.dTextPictureHeight = setting.pictureHeight;
         }
+        if (setting.vertical !== '') {
+            this.dTextVertical = setting.vertical;
+        }
     };
 
     Game_Screen.prototype.clearDtextSetting = function() {
@@ -326,6 +336,7 @@
         this.dTextWindowOpacity = null;
         this.dTextPictureWidth = null;
         this.dTextPictureHeight = null;
+        this.dTextVertical = null;
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
@@ -367,7 +378,8 @@
             lineHeight    : this.dTextLineHeight,
             windowOpacity : this.dTextWindowOpacity,
             pictureWidth  : this.dTextPictureWidth,
-            pictureHeight : this.dTextPictureHeight
+            pictureHeight : this.dTextPictureHeight,
+            vertical      : this.dTextVertical
         };
     };
 
@@ -410,7 +422,11 @@
     };
 
     Game_Picture.prototype.updateDText = function() {
-        const text = PluginManagerEx.convertEscapeCharacters(this.dTextInfo.value);
+        let text = PluginManagerEx.convertEscapeCharacters(this.dTextInfo.value);
+        if (this.dTextInfo.vertical) {
+            text = text.replace(/[^\x01-\x7E]|\x1bi\[.*?]/gi, '$&\n');
+            text = text.replace(/\n$/gi, '');
+        }
         if (text !== this._dTextValue) {
             this._name = Date.now().toString();
         }
