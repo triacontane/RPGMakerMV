@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/10/15 プラグイン等で追加されたパーティコマンド、アクターコマンドのヘルプを表示できる機能を追加
  1.1.0 2022/10/08 共通のコマンドヘルプを指定できる機能を追加
                   ヘルプ中に%1を記述すると選択中のアクター名称に置き換わる機能を追加
  1.0.0 2022/08/28 初版
@@ -65,6 +66,18 @@
  * @default
  * @type multiline_string
  *
+ * @param customPartyDescList
+ * @text カスタムパーティ説明リスト
+ * @desc プラグイン等で追加されたカスタムコマンドごとの説明です。シンボルとインデックスで一意に特定します。
+ * @default []
+ * @type struct<CustomDesc>[]
+ *
+ * @param customActorDescList
+ * @text カスタムアクター説明リスト
+ * @desc プラグイン等で追加されたカスタムコマンドごとの説明です。シンボルとインデックスで一意に特定します。
+ * @default []
+ * @type struct<CustomDesc>[]
+ *
  * @help ActorCommandHelp.js
  *
  * アクターコマンドやパーティコマンドにコマンドごとに定義したヘルプを表示します。
@@ -81,6 +94,27 @@
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
+ */
+
+/*~struct~CustomDesc:
+ *
+ * @param symbol
+ * @text シンボル
+ * @desc コマンドのシンボルです。プラグインのコードを見ないと特定できない場合があります。不明な場合はインデックスのみ指定してください。
+ * @default
+ *
+ * @param index
+ * @text インデックス
+ * @desc コマンドのインデックスです。シンボルで一意に特定できる場合は指定不要です。
+ * @default 0
+ * @type number
+ *
+ * @param desc
+ * @text 説明
+ * @desc コマンドの説明です。
+ * @default
+ * @type multiline_string
+ *
  */
 
 (() => {
@@ -121,22 +155,39 @@
 
     Window_Selectable.prototype.findActorCommandHelpText = function() {}
 
+    Window_Selectable.prototype.findCustomCommandHelpText = function(symbol, list) {
+        if (!list) {
+            return null;
+        }
+        const data = list.find(item => {
+            if (item.symbol && item.symbol !== symbol) {
+                return false;
+            }
+            return !(item.index && item.index !== this.index());
+        });
+        return data ? data.desc : null;
+    };
+
     Window_PartyCommand.prototype.findActorCommandHelpText = function() {
         let text;
-        switch (this.currentSymbol()) {
+        const symbol = this.currentSymbol();
+        switch (symbol) {
             case 'fight':
                 text = param.fightDesc;
                 break;
             case 'escape':
                 text = param.escapeDesc;
                 break;
+            default :
+                text = this.findCustomCommandHelpText(symbol, param.customPartyDescList);
         }
         return text || param.partyCommonDesc;
     };
 
     Window_ActorCommand.prototype.findActorCommandHelpText = function() {
         let text;
-        switch (this.currentSymbol()) {
+        const symbol = this.currentSymbol();
+        switch (symbol) {
             case 'attack':
                 text = $dataSkills[this._actor.attackSkillId()].description;
                 break;
@@ -149,6 +200,8 @@
             case 'item':
                 text = param.itemDesc;
                 break;
+            default :
+                text = this.findCustomCommandHelpText(symbol, param.customActorDescList);
         }
         return text || param.actorCommonDesc;
     };
