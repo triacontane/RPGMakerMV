@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2023/10/16 マップ名の表示をセンタリングする機能を追加
+//                  背景画像もウィンドウも指定しない場合は、通常の黒背景でマップ表示できるよう修正
 // 1.5.0 2022/11/13 同じマップ名を連続して表示しないようにする設定を追加
 // 1.4.1 2022/10/13 総フレーム数をInfinityにしたとき、メッセージ表示と共にマップ名がフェードアウトしてしまう問題を修正
 // 1.4.0 2022/07/30 マップ名ウィンドウの高さを指定できる機能を追加
@@ -44,6 +46,12 @@
  * @desc Y座標を指定する場合は入力してください。
  * @default 0
  * @type number
+ *
+ * @param centering
+ * @text センタリング
+ * @desc マップ名を画面中央に表示します。
+ * @default false
+ * @type boolean
  *
  * @param moveXInFade
  * @text フェード中移動X
@@ -205,15 +213,16 @@
 
     Window_MapName.prototype.createBackground = function() {
         if (!param.backgroundImage) return;
-        this._backSprite = new Sprite();
-        this._backSprite.bitmap = ImageManager.loadPicture(param.backgroundImage);
-        this._backSprite.bitmap.addLoadListener(()=> {
-            this._backSprite.x = this.width / 2 - this._backSprite.width / 2;
-            this._backSprite.y = this.height / 2 - this._backSprite.height / 2;
+        const sprite = new Sprite();
+        sprite.bitmap = ImageManager.loadPicture(param.backgroundImage);
+        sprite.bitmap.addLoadListener(()=> {
+            sprite.x = this.width / 2 - sprite.width / 2;
+            sprite.y = this.height / 2 - sprite.height / 2;
         });
-        this._backSprite.visible = false;
-        this._backSprite.opacity = 0;
-        this.addChildToBack(this._backSprite);
+        sprite.visible = false;
+        sprite.opacity = 0;
+        this._backGroundSprite = sprite;
+        this.addChildToBack(this._backGroundSprite);
     };
 
     const _Window_MapName_updateFadeIn      = Window_MapName.prototype.updateFadeIn;
@@ -269,14 +278,17 @@
         if (this.isWindow()) {
             this.opacity = this.contentsOpacity;
         }
-        if (this._backSprite) {
-            this._backSprite.opacity = this.contentsOpacity;
+        if (this._backGroundSprite) {
+            this._backGroundSprite.opacity = this.contentsOpacity;
         }
     };
 
     Window_MapName.prototype.updatePlacementInit = function() {
         this.x = (param.positionX ? param.positionX : this._originalX);
         this.y = (param.positionY ? param.positionY : this._originalY);
+        if (param.centering) {
+            this.x = Graphics.width / 2 - this.width / 2;
+        }
     };
 
     Window_MapName.prototype.updatePlacementInFading = function(oldOpacity) {
@@ -288,7 +300,9 @@
 
     const _Window_MapName_drawBackground      = Window_MapName.prototype.drawBackground;
     Window_MapName.prototype.drawBackground = function(x, y, width, height) {
-        if (this.isWindow() || this._backSprite) return;
+        if (this.isWindow() || this._backGroundSprite) {
+            return;
+        }
         _Window_MapName_drawBackground.apply(this, arguments);
     };
 
@@ -305,8 +319,8 @@
             this._showCount = param.allDuration / 2;
         }
         this.updatePlacementInit();
-        if (this._backSprite) {
-            this._backSprite.visible = true;
+        if (this._backGroundSprite) {
+            this._backGroundSprite.visible = true;
         }
     };
 
