@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2023/10/18 マップ名の表示フォーマットを指定できる機能を追加
 // 1.6.0 2023/10/16 マップ名の表示をセンタリングする機能を追加
 //                  背景画像もウィンドウも指定しない場合は、通常の黒背景でマップ表示できるよう修正
 // 1.5.0 2022/11/13 同じマップ名を連続して表示しないようにする設定を追加
@@ -115,6 +116,12 @@
  * @desc エディタの「表示名」が未指定の場合、ツリー表示される「実名」でマップ名を表示します。
  * @default false
  * @type boolean
+ *
+ * @param mapNameFormat
+ * @text マップ名フォーマット
+ * @desc マップ名の表示フォーマットです。各種制御文字が使えます。%1でマップ名に置き換わります。
+ * @default
+ * @type string
  *
  * @param useControlCharacter
  * @text 制御文字使用
@@ -308,7 +315,16 @@
 
     const _Window_MapName_refresh      = Window_MapName.prototype.refresh;
     Window_MapName.prototype.refresh = function() {
-        _Window_MapName_refresh.apply(this, arguments);
+        if (param.mapNameFormat && $gameMap.displayName()) {
+            this.contents.clear();
+            const width = this.innerWidth;
+            this.drawBackground(0, 0, width, this.lineHeight());
+            const text = param.mapNameFormat.format($gameMap.displayName());
+            const size = this.textSizeEx(text).width;
+            this.drawTextEx(text, width / 2 - size / 2, 0, width);
+        } else {
+            _Window_MapName_refresh.apply(this, arguments);
+        }
         this.visible = !!$gameMap.displayName();
     };
 
