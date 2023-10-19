@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2023/10/19 アウトラインカラーの指定機能を追加
 // 2.7.3 2023/10/05 背景画像の原点をウィンドウの左上にする機能を追加
 // 2.7.2 2023/08/26 戦闘リトライプラグインのウィンドウを追加
 // 2.7.1 2023/07/29 アイコン説明プラグイン用のウィンドウをパラメータに追加
@@ -261,7 +262,13 @@
  *
  * @param FontColor
  * @text フォントカラー
- * @desc ウィンドウのテキストカラー番号です。
+ * @desc ウィンドウのテキストカラー番号です。テキストカラーから選択するかCSS形式(rgba(0,0,0,0)など)で直接指定してください。
+ * @default 0
+ * @type color
+ *
+ * @param OutlineColor
+ * @text アウトラインカラー
+ * @desc ウィンドウのテキストカラー番号です。テキストカラーから選択するかCSS形式(rgba(0,0,0,0)など)で直接指定してください。
  * @default 0
  * @type color
  *
@@ -529,8 +536,15 @@
     };
 
     Window_Base.prototype.setCustomFontColor = function(data) {
-        if (data.FontColor) {
-            this.processColorChange(data.FontColor);
+        const fontColor = data.FontColor;
+        if (fontColor) {
+            const color = isFinite(fontColor) ? ColorManager.textColor(fontColor) : fontColor;
+            this.changeTextColor(color);
+        }
+        const outlineColor = data.OutlineColor;
+        if (outlineColor) {
+            const color = isFinite(outlineColor) ? ColorManager.textColor(outlineColor) : outlineColor;
+            this.changeOutlineColor(color);
         }
     };
 
