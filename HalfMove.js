@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2023/10/22 イベントの初期位置を半歩ずらしたときにアニメパターンが一瞬だけ初期化されてしまう問題を修正
 // 2.2.0 2022/07/03 プレイヤーやイベント単位で半歩移動を禁止にできる機能を追加
 // 2.1.2 2022/03/17 2.1.0の修正によりループしたマップでタッチ移動すると正しい場所へ移動できない問題を修正
 // 2.1.1 2022/03/09 タッチ移動の移動先画像を半歩に合わせて小さく変更
@@ -1652,7 +1653,9 @@
         } else if (halfY) {
             newY += Game_Map.tileUnit;
         }
+        var pattern = this.pattern();
         this.locate(newX, newY);
+        this.setPattern(pattern);
     };
 
     var _Game_Event_setupPage      = Game_Event.prototype.setupPage;
