@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2023/10/21 変数の代わりにスイッチを操作できる機能を追加
 // 1.3.0 2020/11/23 変数操作の実行条件に実行者を指定できる機能を追加
 // 1.2.0 2020/11/22 MZで動作するよう全面的に修正
 // 1.1.1 2017/04/19 範囲が「なし」の場合も操作できるよう修正
@@ -49,6 +50,8 @@
  * @help アイテム（スキル）を使用し、かつ行動が成功した場合に変数を操作できます。
  * アイテムもしくはスキルのメモ欄に以下の通り指定してください。
  *
+ * <VCIスイッチ番号:3> # スイッチ番号[3]をONにします。
+ * <VCISwiNumber:3> # 同上
  * <VCI変数番号:3>  # 変数番号[3]に値を設定します。
  * <VCIVarNumber:3> # 同上
  * <VCI代入値:5>    # 指定した変数に値[5]を代入します。
@@ -114,13 +117,17 @@
             const setValue = this.findMetaForVariableControl(['SetValue', '代入値']);
             if (setValue) {
                 $gameVariables.setValue(varNumber, eval(setValue));
-                return;
             }
             const addValue = this.findMetaForVariableControl(['AddValue', '加算値']);
             if (addValue) {
                 const originalValue = $gameVariables.value(varNumber);
                 $gameVariables.setValue(varNumber, originalValue + eval(addValue));
             }
+        }
+        const swiNumberStr = this.findMetaForVariableControl(['SwiNumber', 'スイッチ番号']);
+        if (swiNumberStr) {
+            const swiNumber = parseInt(swiNumberStr);
+            $gameSwitches.setValue(swiNumber, true);
         }
     };
 
