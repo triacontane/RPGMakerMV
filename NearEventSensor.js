@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.5.0 2023/10/23 検知範囲に入ったときにONになるスイッチ、セルフスイッチを指定できる機能を追加
 // 3.4.0 2022/06/03 イベントごと、ページごとにフキダシや感知距離、範囲を変えられる設定を追加
 // 3.3.0 2022/06/03 イベント感知の距離を上下左右で個別に指定できる機能を追加
 // 3.2.1 2021/06/01 フラッシュとフキダシの無効設定のメモタグが正常に機能していなかった問題を修正
@@ -79,6 +80,22 @@
  * @value 14
  * @option ユーザ定義5
  * @value 15
+ *
+ * @param SensorSelfSwitch
+ * @text センサーセルフスイッチ
+ * @desc 感知したときに自動でONになるセルフスイッチです。離れたらOFFになります。
+ * @default
+ * @type select
+ * @option A
+ * @option B
+ * @option C
+ * @option D
+ *
+ * @param SensorSwitch
+ * @text センサースイッチ
+ * @desc 感知したときに自動でONになるスイッチです。離れたらOFFになります。
+ * @default 0
+ * @type switch
  *
  * @param DisableEmpty
  * @text 空イベントは無効
@@ -471,11 +488,27 @@
 
     Game_Event.prototype.updateSensorEffect = function() {
         const subject = this.findNearEffectSubject();
-        if (this.isSensorOn()) {
+        const sensorOn = this.isSensorOn();
+        if (sensorOn) {
             subject.applySensorEffect(this);
         } else {
             subject.eraseSensorEffect(this);
             this._balloonInterval = 0;
+        }
+        if (this._sensorOn !== sensorOn) {
+            this._sensorOn = sensorOn;
+            this.updateSensorSwitch();
+        }
+    };
+
+    Game_Event.prototype.updateSensorSwitch= function() {
+        const switchId = param.SensorSwitch;
+        if (switchId) {
+            $gameSwitches.setValue(switchId, this._sensorOn);
+        }
+        const selfSwitchType = param.SensorSelfSwitch;
+        if (selfSwitchType) {
+            $gameSelfSwitches.setValue([this._mapId, this._eventId, selfSwitchType.toUpperCase()], this._sensorOn);
         }
     };
 
