@@ -14,17 +14,10 @@
  * イベントコマンド『アイテム選択の処理』で
  * 隠しアイテムの個数を表示するよう仕様変更します。
  */
-(()=> {
-
-    const _Window_EventItem_needsNumber = Window_EventItem.prototype.needsNumber;
-    Window_EventItem.prototype.needsNumber = function() {
-        const result = _Window_EventItem_needsNumber.apply(this, arguments);
-        const itypeId = $gameMessage.itemChoiceItypeId();
-        if (itypeId >= 3) {
-            return true;
-        } else {
-            return result;
-        }
+(function() {
+    var _Window_NumberInput_start = Window_NumberInput.prototype.start;
+    Window_NumberInput.prototype.start = function() {
+        _Window_NumberInput_start.call(this);
+        this.setBackgroundType(2);
     };
 })();
-
