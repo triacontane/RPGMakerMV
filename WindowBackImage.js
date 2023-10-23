@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.1 2023/10/23 サウンドテストプラグイン用の凡例がMV向けになっていたのを修正
 // 2.8.0 2023/10/19 アウトラインカラーの指定機能を追加
 // 2.7.3 2023/10/05 背景画像の原点をウィンドウの左上にする機能を追加
 // 2.7.2 2023/08/26 戦闘リトライプラグインのウィンドウを追加
@@ -215,12 +216,16 @@
  * @value Window_GlossaryComplete
  * @option [用語辞典プラグイン]用語ウィンドウ
  * @value Window_Glossary
- * @option [サウンドテストプラグイン]オーディオカテゴリウィンドウ
- * @value Window_AudioCategory
- * @option [サウンドテストプラグイン]オーディオリストウィンドウ
- * @value Window_AudioList
+ * @option [サウンドテストプラグイン]サウンドカテゴリウィンドウ
+ * @value Window_SoundCategory
+ * @option [サウンドテストプラグイン]サウンドリストウィンドウ
+ * @value Window_SoundList
  * @option [サウンドテストプラグイン]オーディオ設定ウィンドウ
- * @value Window_AudioSetting
+ * @value Window_AudioConfig
+ * @option [サウンドテストプラグイン]オーディオウィンドウ
+ * @value Window_Audio
+ * @option [サウンドテストプラグイン]オーディオシークバーウィンドウ
+ * @value Sprite_AudioSeek
  * @option [数値入力画面プラグイン]数値入力ウィンドウ
  * @value Window_NumberInput
  * @option [数値入力画面プラグイン]数値ウィンドウ
