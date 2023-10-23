@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2023/10/23 解除条件に属性を指定したとき、スキルの指定が「通常攻撃」の場合、解除の対象にならない問題を修正
  1.1.0 2022/06/08 解除条件にスクリプトを設定、解除確率を補正するタグを追加
  1.0.0 2022/03/23 初版
 ----------------------------------------------------------------------------
@@ -131,7 +132,7 @@
     const _Game_Battler_removeStatesByDamage = Game_Battler.prototype.removeStatesByDamage;
     Game_Battler.prototype.removeStatesByDamage = function() {
         _Game_Battler_removeStatesByDamage.apply(this, arguments);
-        if (!this._acceptItem) {
+        if (!this._acceptAction) {
             return;
         }
         this.states().forEach(state => {
@@ -145,11 +146,12 @@
         if (state.id !== paramItem.stateId) {
             return false;
         }
+        const acceptItem = this._acceptAction.item();
         let result = true;
-        if (paramItem.elementId && this._acceptItem.damage.elementId !== paramItem.elementId) {
+        if (paramItem.elementId && !this._acceptAction.hasElement(paramItem.elementId)) {
             result = false;
         }
-        if (paramItem.hitType && this._acceptItem.hitType !== paramItem.hitType) {
+        if (paramItem.hitType && acceptItem.hitType !== paramItem.hitType) {
             result = false;
         }
         if (paramItem.hpRate && this.hpRate() > paramItem.hpRate / 100) {
@@ -177,14 +179,27 @@
         return paramItem.chanceByDamage + rate;
     }
 
-    Game_Battler.prototype.setAcceptedItem = function(item) {
-        this._acceptItem = item;
+    Game_Battler.prototype.setAcceptedAction = function(action) {
+        this._acceptAction = action;
     }
+
+    Game_Action.prototype.hasElement = function(elementId) {
+        if (this.item().damage.type === 0) {
+            return false;
+        }
+        const skillElementId = this.item().damage.elementId;
+        // Normal attack elementID[-1]
+        if (skillElementId === -1) {
+            return this.subject().attackElements().contains(elementId);
+        } else {
+            return elementId === skillElementId;
+        }
+    };
 
     const _Game_Action_executeHpDamage = Game_Action.prototype.executeHpDamage;
     Game_Action.prototype.executeHpDamage = function(target, value) {
-        target.setAcceptedItem(this.item());
+        target.setAcceptedAction(this);
         _Game_Action_executeHpDamage.apply(this, arguments);
-        target.setAcceptedItem(null);
+        target.setAcceptedAction(null);
     };
 })();
