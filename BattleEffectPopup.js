@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2023/10/24 物理ダメージ率および魔法ダメージ率によってダメージが無効化されたときもガードのポップアップ判定を有効にするよう修正
 // 2.6.0 2022/10/22 ポップアップの対象外スキルを設定できる機能を追加
 // 2.5.0 2022/08/12 弱点耐性ポップアップの対象にならない属性を指定できるパラメータを追加
 // 2.4.0 2022/07/16 ポップアップメッセージが重なったときに次のメッセージが表示されるY座標を補正できる機能を追加
@@ -451,7 +452,7 @@
             return  result;
         }
         if (this._elementResult) {
-            if (result === 0) {
+            if (result === 0 || (this.isPhysical() && target.pdr === 0) || (this.isMagical() && target.mdr === 0)) {
                 this._elementResult.guard = true;
             } else if (result >= 1.1) {
                 this._elementResult.weakness = true;
