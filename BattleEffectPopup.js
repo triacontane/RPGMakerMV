@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.1 2023/10/24 物理ダメージ率および魔法ダメージ率によってダメージが無効化されたときもガードのポップアップ判定を有効にするよう修正
 // 1.12.0 2022/03/25 バフおよびデバフをポップアップする機能を追加
 // 1.11.4 2022/02/11 自動戦闘や他のプラグインと組み合わせたとき、耐性や弱点のポップアップが意図せず表示される場合がある問題を修正
 // 1.11.3 2021/10/10 一度の行動で複数のポップアップが発生したときに最後のポップアップしか表示されない問題を修正
@@ -499,7 +500,7 @@
     Game_Action.prototype.calcElementRate = function(target) {
         const result = _Game_Action_calcElementRate.apply(this, arguments);
         if (this._elementResult) {
-            if (result === 0) {
+            if (result === 0 || (this.isPhysical() && target.pdr === 0) || (this.isMagical() && target.mdr === 0)) {
                 this._elementResult.guard = true;
             } else if (result >= paramWeaknessLine / 100) {
                 this._elementResult.weakness = true;
