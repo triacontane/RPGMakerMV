@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2023/10/26 装備スロット選択時、選択中のヘルプが表示されなくなっていた問題を修正
  1.1.0 2022/08/31 MZ向けにリファクタリング
  1.0.1 2019/11/30 1.0.0の考慮漏れがあったので実装方法を全体的に変更
  1.0.0 2019/11/24 初版
@@ -66,8 +67,9 @@
 
     Window_EquipSlot.prototype.callProcessNeedRealIndex = function(process) {
         this._needRealIndex = true;
-        process();
+        const result = process();
         this._needRealIndex = false;
+        return result;
     };
 
     const _Window_EquipSlot_reselect = Window_EquipSlot.prototype.reselect;
@@ -86,7 +88,7 @@
 
     const _Window_EquipSlot_item = Window_EquipSlot.prototype.item;
     Window_EquipSlot.prototype.item = function() {
-        this.callProcessNeedRealIndex(_Window_EquipSlot_item.bind(this));
+        return this.callProcessNeedRealIndex(_Window_EquipSlot_item.bind(this));
     };
 
     Window_EquipSlot.prototype.maxItems = function() {
