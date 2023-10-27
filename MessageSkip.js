@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.18.4 2023/10/27 選択肢や数値入力のタイミングでは常にスキップを解除するよう修正
 // 1.18.3 2023/10/16 ボタンピクチャの原点設定の説明文を分かりやすく修正
 // 1.18.2 2023/06/03 スキップスイッチ、オートスイッチが設定されているとキーによるスキップオートが効かなくなる問題を修正
 // 1.18.1 2022/01/08 1.18.0でループボイスを再生するとオートモードで文章が送られなくなる問題を修正
@@ -801,9 +802,10 @@ function Sprite_Frame() {
     };
 
     Window_Message.prototype.updateSkipAuto = function() {
-        if (this.isClosed()) return;
         if (this.isAnySubWindowActive()) {
             $gameMessage.clearSkipInfo();
+        } else if (this.isClosed()) {
+            return;
         } else {
             this.setSkipAutoFlagByTrigger();
             this.setSkipAutoFlagBySwitch();
