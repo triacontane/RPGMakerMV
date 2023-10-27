@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.4.2 2023/10/27 シーンのAPNGに表示スイッチを指定したとき、スイッチがOFFでも一瞬だけ表示されてしまう問題を修正
  2.4.1 2023/03/21 GIFファイルを使用する場合のヘルプ文言を分かりやすく修正
  2.4.0 2022/12/25 APNG画像のぼかしを除去できる設定を追加
  2.3.4 2022/12/15 GIFファイルを選択したとき内部で保持する画像サイズが0になってしまう問題を修正
@@ -1135,6 +1136,7 @@
             }
             this._switch = item.Switch;
             this._priority = item.Priority;
+            this.updateVisibly();
         }
 
         loadApngSprite(name) {
@@ -1143,6 +1145,10 @@
 
         update() {
             super.update();
+            this.updateVisibly();
+        }
+
+        updateVisibly() {
             this.visible = this.isValid();
         }
 
