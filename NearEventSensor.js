@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.6.0 2023/11/02 3.5.0で追加した機能で、イベントごとに異なるスイッチ、セルフスイッチを指定できる機能を追加
 // 3.5.0 2023/10/23 検知範囲に入ったときにONになるスイッチ、セルフスイッチを指定できる機能を追加
 // 3.4.0 2022/06/03 イベントごと、ページごとにフキダシや感知距離、範囲を変えられる設定を追加
 // 3.3.0 2022/06/03 イベント感知の距離を上下左右で個別に指定できる機能を追加
@@ -334,6 +335,22 @@
  * @default
  * @type struct<Color>
  *
+ * @param SensorSelfSwitch
+ * @text センサーセルフスイッチ
+ * @desc 感知したときに自動でONになるセルフスイッチです。離れたらOFFになります。
+ * @default
+ * @type select
+ * @option A
+ * @option B
+ * @option C
+ * @option D
+ *
+ * @param SensorSwitch
+ * @text センサースイッチ
+ * @desc 感知したときに自動でONになるスイッチです。離れたらOFFになります。
+ * @default 0
+ * @type switch
+ *
  */
 
 (function() {
@@ -502,11 +519,11 @@
     };
 
     Game_Event.prototype.updateSensorSwitch= function() {
-        const switchId = param.SensorSwitch;
+        const switchId = this.findSensorSwitch();
         if (switchId) {
             $gameSwitches.setValue(switchId, this._sensorOn);
         }
-        const selfSwitchType = param.SensorSelfSwitch;
+        const selfSwitchType = this.findSensorSelfSwitch();
         if (selfSwitchType) {
             $gameSelfSwitches.setValue([this._mapId, this._eventId, selfSwitchType.toUpperCase()], this._sensorOn);
         }
@@ -619,6 +636,24 @@
             return detail.FlashColor;
         } else {
             return param.FlashColor;
+        }
+    };
+
+    Game_Event.prototype.findSensorSwitch = function() {
+        const detail = this.findEventSensorDetail();
+        if (detail && detail.SensorSwitch) {
+            return detail.SensorSwitch;
+        } else {
+            return param.SensorSwitch;
+        }
+    };
+
+    Game_Event.prototype.findSensorSelfSwitch = function() {
+        const detail = this.findEventSensorDetail();
+        if (detail && detail.SensorSelfSwitch) {
+            return detail.SensorSelfSwitch;
+        } else {
+            return param.SensorSelfSwitch;
         }
     };
 })();
