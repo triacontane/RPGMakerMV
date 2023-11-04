@@ -41,7 +41,7 @@
 
     Game_Battler.prototype.cancelMultiAction = function() {
         const actionCount = this.actionPlusSet().length + 1;
-        while (actionCount < this._actions.length) {
+        while (this._actions && actionCount < this._actions.length) {
             this._actions.pop();
         }
     };
