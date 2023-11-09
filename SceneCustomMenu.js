@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.43.0 2023/11/09 すべてのスクリプトでv(n) s(n)が使えるよう修正
  1.42.0 2023/10/03 ヘルプウィンドウを画面上部に設定できる機能を追加
  1.41.0 2023/09/07 メッセージオブジェクトをカスタムシーンごとに保持する仕様に変更
  1.40.1 2023/08/11 1.40.0で追加した機能で、制御文字が使えない問題を修正
@@ -341,6 +342,10 @@
  *
  * 指定したIDのウィンドウがアクティブになっているかどうかを返します。
  * SceneManager.isCustomMenuActiveWindow('window1')
+ *
+ * 指定した番号のスイッチや変数の値を取得します。
+ * v(1)
+ * s(1)
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -1597,6 +1602,8 @@
             }
             if (event.Script) {
                 try {
+                    const v = $gameVariables.value.bind($gameVariables); // used by eval
+                    const s = $gameSwitches.value.bind($gameSwitches); // used by eval
                     eval(event.Script);
                 } catch (e) {
                     outputError(e, event.Script);
@@ -2400,6 +2407,8 @@
                 }
                 return;
             }
+            const v = $gameVariables.value.bind($gameVariables); // used by eval
+            const s = $gameSwitches.value.bind($gameSwitches); // used by eval
             const scriptList = this._data.ItemDrawScript || [];
             scriptList.forEach(script => {
                 try {
