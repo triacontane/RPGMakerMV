@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2023/11/09 不要なコードを削除
 // 2.2.1 2023/07/16 ヘルプ文言追加
 // 2.2.0 2022/06/13 後衛の座標補正を敵キャラとアクターで別々に管理するよう変更
 // 2.1.1 2022/02/17 味方の敗北条件のパラメータが正常に機能していなかった問題を修正
@@ -355,10 +356,6 @@
 
     Game_Enemy.prototype.getRearguardOffsetY = function() {
         return param.EnemyRearguardOffsetY;
-    };
-
-    Game_BattlerBase.prototype.getFormationOffsetY = function() {
-        return this.isRearguard() ? param.RearguardOffsetY : 0;
     };
 
     Game_BattlerBase.prototype.isChangeableFormationState = function() {
