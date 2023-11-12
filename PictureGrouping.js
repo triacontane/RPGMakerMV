@@ -35,8 +35,9 @@
  *
  * 複数のピクチャファイルをひとつのピクチャとして表示できます。
  * 座標や拡大率、不透明度などを一括管理できます。
- *
  * プラグインコマンドからグループ化するピクチャを指定してください。
+ * その後、イベントコマンド「ピクチャの表示」を実行すると、元のピクチャのうえに
+ * グループ化で指定したピクチャがすべて重なって表示されます。
  * 表示後にピクチャを追加削除することはできません。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
@@ -127,8 +128,11 @@
         name, origin, x, y, scaleX, scaleY, opacity, blendMode
     ) {
         const grouping = $gameScreen.groupingPicture();
-        if (grouping.length > 0 && !name) {
+        if (grouping.length > 0) {
             this._grouping = grouping;
+            if (name) {
+                this._grouping.unshift({fileName: name, x: 0, y: 0});
+            }
             arguments[0]   = Date.now().toString();
             $gameScreen.clearGroupingPicture();
         }
