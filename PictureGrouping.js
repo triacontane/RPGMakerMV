@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2023/11/12 グループ化していないピクチャを再表示できなくなる問題を修正
  1.0.0 2023/11/12 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -198,13 +199,11 @@
     };
 
     Sprite_Picture.prototype.destroyGrouping = function() {
-        if (this.bitmap) {
+        if (this.bitmap && this._grouping) {
             this.bitmap.destroy();
             this.bitmap = null;
         }
-        if (this._grouping) {
-            this._grouping = null;
-            this._groupingBitmaps = null;
-        }
+        this._grouping = null;
+        this._groupingBitmaps = null;
     };
 })();
