@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.44.0 2023/11/13 ウィンドウのカーソルを全選択あるいは選択固定状態にできるスイッチを追加
  1.43.0 2023/11/09 すべてのスクリプトでv(n) s(n)が使えるよう修正
  1.42.0 2023/10/03 ヘルプウィンドウを画面上部に設定できる機能を追加
  1.41.0 2023/09/07 メッセージオブジェクトをカスタムシーンごとに保持する仕様に変更
@@ -839,6 +840,18 @@
  * @desc 描画文字列のデフォルトカラーです。制御文字「\c[n]」で指定する色番号を指定します。
  * @default 0
  * @type color
+ *
+ * @param cursorAllSwitchId
+ * @text 全選択スイッチID
+ * @desc 指定したスイッチがONのときカーソルが全選択状態になります。
+ * @default 0
+ * @type switch
+ *
+ * @param cursorFixedSwitchId
+ * @text 選択固定スイッチID
+ * @desc 指定したスイッチがONのときカーソル選択が固定されます。
+ * @default 0
+ * @type switch
  */
 
 /*~struct~AudioSe:
@@ -1841,11 +1854,25 @@
             super.update();
             this.updateIndexVariable();
             this.updateRotation();
+            this.updateCursorStatus();
         }
 
         updateRotation() {
             if (this._data.Rotation) {
                 this.rotation = this._data.Rotation * Math.PI / 180;
+            }
+        }
+
+        updateCursorStatus() {
+            if (this._data.cursorFixedSwitchId) {
+                this._cursorFixed = $gameSwitches.value(this._data.cursorFixedSwitchId);
+            }
+            if (this._data.cursorAllSwitchId) {
+                const all = $gameSwitches.value(this._data.cursorAllSwitchId);
+                if (this._cursorAll !== all) {
+                    this._cursorAll = all;
+                    this.refreshCursor();
+                }
             }
         }
 
