@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.4 2023/10/14 動的イベントを生成した瞬間にアニメーションやフキダシを再生しようとすると表示されない問題を修正
  1.2.3 2022/03/02 無効なイベントIDもしくは座標を指定したときエラーではなく、警告ログの出力に留めるよう仕様変更
  1.2.2 2021/11/23 セルフスイッチを維持しない設定のときはテンプレートイベントのセルフ変数も消去するよう変更
  1.2.1 2021/10/05 1.2.0の機能でイベントを配置したとき、イベント画像が2つ重なって表示されてしまう問題を修正
@@ -375,6 +376,60 @@ function Game_PrefabEvent() {
         const template = args.template;
         $gameMap.spawnEventRandom(this.getEventIdForEventReSpawn(args.id, template), args, template, args.algorithm);
     });
+
+    Game_Temp.prototype.unshiftAnimation = function(request) {
+        this._animationQueue.unshift(request);
+    };
+
+    Game_Temp.prototype.unshiftBalloon = function(request) {
+        this._balloonQueue.unshift(request);
+    };
+
+    const _Spriteset_Base_createAnimation = Spriteset_Base.prototype.createAnimation;
+    Spriteset_Base.prototype.createAnimation = function(request) {
+        if (this.isExistNotPreparedPrefabSprite(request)) {
+            return;
+        }
+        _Spriteset_Base_createAnimation.apply(this, arguments);
+    };
+
+    const _Spriteset_Base_processAnimationRequests = Spriteset_Base.prototype.processAnimationRequests;
+    Spriteset_Base.prototype.processAnimationRequests = function() {
+        this._unshiftRequest = [];
+        _Spriteset_Base_processAnimationRequests.apply(this, arguments);
+        this._unshiftRequest.forEach(request => {
+            $gameTemp.unshiftAnimation(request);
+        });
+        this._unshiftRequest = null;
+    };
+
+    const _Spriteset_Map_createBalloon = Spriteset_Map.prototype.createBalloon;
+    Spriteset_Map.prototype.createBalloon = function(request) {
+        if (this.isExistNotPreparedPrefabSprite(request)) {
+            return;
+        }
+        _Spriteset_Map_createBalloon.apply(this, arguments);
+    };
+
+    const _Spriteset_Map_processBalloonRequests = Spriteset_Map.prototype.processBalloonRequests;
+    Spriteset_Map.prototype.processBalloonRequests = function() {
+        this._unshiftRequest = [];
+        _Spriteset_Map_processBalloonRequests.apply(this, arguments);
+        this._unshiftRequest.forEach(request => {
+            $gameTemp.unshiftBalloon(request);
+        });
+        this._unshiftRequest = null;
+    }
+
+    Spriteset_Base.prototype.isExistNotPreparedPrefabSprite = function(request) {
+        const targets = request.targets || [request.target];
+        if (targets.some(target =>  target instanceof Game_PrefabEvent && !target.isSpritePrepared())) {
+            this._unshiftRequest.push(request);
+            return true;
+        } else {
+            return false;
+        }
+    };
 
     Game_Interpreter.prototype.getEventIdForEventReSpawn = function(idOrName, isTemplate) {
         let id = 0;
