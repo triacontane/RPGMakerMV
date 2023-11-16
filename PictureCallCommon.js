@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2023/11/16 プラグインコマンドを「ピクチャの操作拡張プラグイン」が提供する一括指定機能に対応させました。
 // 1.5.1 2023/06/12 ピクチャイベント解除時に指定した番号以外の番号のピクチャイベントも一緒に解除される可能性がある問題を修正
 // 1.5.0 2023/04/22 ピクチャイベントを発生させる際、透過部分に反応するかどうかを設定できる機能を追加
 // 1.4.0 2022/10/22 DTextPicture.jsと組み合わせたとき、フレームウィンドウをクリックイベントの範囲に含めるよう変更
@@ -228,15 +229,27 @@
     const param  = PluginManagerEx.createParameter(script);
 
     PluginManagerEx.registerCommand(script, 'ADD_PICTURE_EVENT', args => {
-        $gameScreen.addPictureEvent(args.pictureId, args.triggerType, args);
+        if ($gameScreen.iteratePictures) {
+            $gameScreen.iteratePictures($gameScreen.addPictureEvent, [args.pictureId, args.triggerType, args]);
+        } else {
+            $gameScreen.addPictureEvent(args.pictureId, args.triggerType, args);
+        }
     });
 
     PluginManagerEx.registerCommand(script, 'REMOVE_PICTURE_EVENT', args => {
-        $gameScreen.removePictureEvent(args.pictureId);
+        if ($gameScreen.iteratePictures) {
+            $gameScreen.iteratePictures($gameScreen.removePictureEvent, [args.pictureId]);
+        } else {
+            $gameScreen.removePictureEvent(args.pictureId);
+        }
     });
 
     PluginManagerEx.registerCommand(script, 'SET_PICTURE_PREFERENCE', args => {
-        $gameScreen.setPicturePreference(args.pictureId, args);
+        if ($gameScreen.iteratePictures) {
+            $gameScreen.iteratePictures($gameScreen.setPicturePreference, [args.pictureId, args]);
+        } else {
+            $gameScreen.setPicturePreference(args.pictureId, args);
+        }
     });
 
     //=============================================================================
