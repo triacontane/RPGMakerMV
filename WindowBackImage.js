@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.2 2023/11/21 フォント関連設定は差し替えスイッチとは無関係に適用される旨の説明を追加
 // 2.8.1 2023/10/23 サウンドテストプラグイン用の凡例がMV向けになっていたのを修正
 // 2.8.0 2023/10/19 アウトラインカラーの指定機能を追加
 // 2.7.3 2023/10/05 背景画像の原点をウィンドウの左上にする機能を追加
@@ -247,36 +248,6 @@
  * @dir img/pictures/
  * @type file
  *
- * @param WindowSkin
- * @text ウィンドウスキン
- * @desc 専用のウィンドウスキン画像です。
- * @default
- * @dir img/system/
- * @type file
- *
- * @param FontFace
- * @text フォント
- * @desc ウィンドウの専用フォントです。woffファイルを拡張子付きで指定してください。
- * @default
- *
- * @param FontSize
- * @text フォントサイズ
- * @desc ウィンドウの基本フォントサイズです。
- * @default 0
- * @type number
- *
- * @param FontColor
- * @text フォントカラー
- * @desc ウィンドウのテキストカラー番号です。テキストカラーから選択するかCSS形式(rgba(0,0,0,0)など)で直接指定してください。
- * @default 0
- * @type color
- *
- * @param OutlineColor
- * @text アウトラインカラー
- * @desc ウィンドウのテキストカラー番号です。テキストカラーから選択するかCSS形式(rgba(0,0,0,0)など)で直接指定してください。
- * @default 0
- * @type color
- *
  * @param Origin
  * @text 原点
  * @desc 背景画像の原点です。
@@ -360,6 +331,45 @@
  * @desc 他のウィンドウと重なって表示させたときに背後のウィンドウをマスキングさせなくなります。
  * @default false
  * @type boolean
+ *
+ * @param Font
+ * @text フォント関連設定
+ * @desc ウィンドウスキンやフォント関連設定です。この設定は差し替えスイッチとは無関係に適用されます。
+ *
+ * @param WindowSkin
+ * @text ウィンドウスキン
+ * @desc 専用のウィンドウスキン画像です。
+ * @default
+ * @dir img/system/
+ * @type file
+ * @parent Font
+ *
+ * @param FontFace
+ * @text フォント
+ * @desc ウィンドウの専用フォントです。woffファイルを拡張子付きで指定してください。
+ * @default
+ * @parent Font
+ *
+ * @param FontSize
+ * @text フォントサイズ
+ * @desc ウィンドウの基本フォントサイズです。
+ * @default 0
+ * @type number
+ * @parent Font
+ *
+ * @param FontColor
+ * @text フォントカラー
+ * @desc ウィンドウのテキストカラー番号です。テキストカラーから選択するかCSS形式(rgba(0,0,0,0)など)で直接指定してください。
+ * @default 0
+ * @type color
+ * @parent Font
+ *
+ * @param OutlineColor
+ * @text アウトラインカラー
+ * @desc ウィンドウのテキストカラー番号です。テキストカラーから選択するかCSS形式(rgba(0,0,0,0)など)で直接指定してください。
+ * @default 0
+ * @type color
+ * @parent Font
  *
  */
 
@@ -507,28 +517,23 @@
     const _Window_Base_loadWindowskin = Window_Base.prototype.loadWindowskin;
     Window_Base.prototype.loadWindowskin = function() {
         _Window_Base_loadWindowskin.apply(this, arguments);
-        const list = this._backImageDataList;
-        if (list && list.length > 0 && list[0].WindowSkin) {
-            this.windowskin = ImageManager.loadSystem(list[0].WindowSkin);
-        }
+        const list = this._backImageDataList || [];
+        list.filter(data => !!data.WindowSkin)
+            .forEach(data => this.windowskin = ImageManager.loadSystem(data.WindowSkin));
     };
 
     const _Window_Base_resetFontSettings = Window_Base.prototype.resetFontSettings;
     Window_Base.prototype.resetFontSettings = function() {
         _Window_Base_resetFontSettings.apply(this, arguments);
-        const list = this._backImageDataList;
-        if (list && list.length > 0) {
-            this.setCustomFontSettings(list[0]);
-        }
+        const list = this._backImageDataList || [];
+        list.forEach(data => this.setCustomFontSettings(data));
     };
 
     const _Window_Base_resetTextColor = Window_Base.prototype.resetTextColor;
     Window_Base.prototype.resetTextColor = function() {
         _Window_Base_resetTextColor.apply(this, arguments);
-        const list = this._backImageDataList;
-        if (list && list.length > 0) {
-            this.setCustomFontColor(list[0]);
-        }
+        const list = this._backImageDataList || [];
+        list.forEach(data => this.setCustomFontColor(data));
     };
 
     Window_Base.prototype.setCustomFontSettings = function(data) {
