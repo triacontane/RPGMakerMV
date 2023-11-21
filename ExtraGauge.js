@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.15.0 2023/11/21 表示優先度の仕様を再検討し、「最前面」「ピクチャの下」「ピクチャの上」からの選択にしました。
  1.14.0 2023/10/15 ゲージ画像が下ピクチャに合わせて表示されるよう仕様変更
  1.13.2 2023/09/01 ゲージ画像を使わない場合も背景を非表示に出来るよう修正
  1.13.1 2023/08/29 バトラータイプで敵キャラIDを選択したとき、戦闘中かつ対象がグループにいればそのオブジェクトを返すよう修正
@@ -58,11 +59,11 @@
  * @desc マップ画面および戦闘画面におけるゲージ画像の表示優先度です。
  * @default 0
  * @type select
- * @option 0:通常
+ * @option 0:最前面(画面のフェードアウトの影響を受けない)
  * @value 0
  * @option 1:ピクチャの下
  * @value 1
- * @option 2:ウィンドウの上
+ * @option 2:ピクチャの上
  * @value 2
  *
  * @help ExtraGauge.js
@@ -255,7 +256,7 @@
  *
  * @param ParentWindow
  * @text 親ウィンドウ
- * @desc ゲージを特定のウィンドウの子要素にしたい場合に指定します。
+ * @desc ゲージを特定のウィンドウの子要素にしたい場合に指定します。この設定は全体の表示優先度の設定より優先されます。
  * @type select
  * @default
  * @option なし
@@ -677,14 +678,6 @@
     const _Scene_Base_create    = Scene_Base.prototype.create;
     Scene_Base.prototype.create = function() {
         _Scene_Base_create.apply(this, arguments);
-        if (!(this instanceof Scene_Map)) {
-            this.createExtraGauges();
-        }
-    };
-
-    const _Scene_Map_create = Scene_Map.prototype.create;
-    Scene_Map.prototype.create = function() {
-        _Scene_Map_create.apply(this, arguments);
         this.createExtraGauges();
     };
 
@@ -692,14 +685,6 @@
         this._extraGauges = this.findExtraGaugeList().map(data => {
             return new Sprite_ExtraGaugeContainer(data, data.Detail || {}, data.Layout || {});
         });
-    };
-
-    const _Scene_Base_createWindowLayer = Scene_Base.prototype.createWindowLayer;
-    Scene_Base.prototype.createWindowLayer = function() {
-        if (this instanceof Scene_Message && param.Priority !== 2) {
-            this.addExtraGauge();
-        }
-        _Scene_Base_createWindowLayer.apply(this, arguments);
     };
 
     const _Scene_Base_start    = Scene_Base.prototype.start;
@@ -725,26 +710,23 @@
                 window instanceof Window && window.findWindowClassName() === parentName);
             if (win) {
                 win.addChild(extraGauge);
-                return;
+            } else {
+                PluginManagerEx.throwError('Window is not found : ' + parentName, script);
             }
+        } else if (param.Priority > 0 && !!this._spriteset) {
+            this._spriteset.addChildExtraGauge(extraGauge);
+        } else {
+            this.addChild(extraGauge);
         }
-        this.addChild(extraGauge);
     };
 
-    if (param.Priority === 1) {
-        Scene_Battle.prototype.addChildExtraGauge = function(extraGauge) {
-            this._spriteset.addChildExtraGauge(extraGauge);
-        };
-
-        Scene_Map.prototype.addChildExtraGauge = function(extraGauge) {
-            this._spriteset.addChildExtraGauge(extraGauge);
-        };
-
-        Spriteset_Base.prototype.addChildExtraGauge = function(extraGauge) {
-            const index = this.getChildIndex(this._pictureContainer);
-            this.addChildAt(extraGauge, index);
-        };
-    }
+    Spriteset_Base.prototype.addChildExtraGauge = function(extraGauge) {
+        let index = this.getChildIndex(this._pictureContainer);
+        if (param.Priority === 2) {
+            index++;
+        }
+        this.addChildAt(extraGauge, index);
+    };
 
     Scene_Base.prototype.findExtraGaugeList = function() {
         const currentSceneName = PluginManagerEx.findClassName(this);
