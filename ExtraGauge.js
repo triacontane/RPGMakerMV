@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.15.1 2023/11/22 1.0.3の修正内容のデグレが発生していたので再修正
  1.15.0 2023/11/21 表示優先度の仕様を再検討し、「最前面」「ピクチャの下」「ピクチャの上」からの選択にしました。
  1.14.0 2023/10/15 ゲージ画像が下ピクチャに合わせて表示されるよう仕様変更
  1.13.2 2023/09/01 ゲージ画像を使わない場合も背景を非表示に出来るよう修正
@@ -678,6 +679,15 @@
     const _Scene_Base_create    = Scene_Base.prototype.create;
     Scene_Base.prototype.create = function() {
         _Scene_Base_create.apply(this, arguments);
+        if (!(this instanceof Scene_Map)) {
+            this.createExtraGauges();
+        }
+    };
+
+    // 場所移動時に画像キャッシュが破棄される仕様のためマップ画面ではキャッシュ破棄後にゲージを作成する
+    const _Scene_Map_create = Scene_Map.prototype.create;
+    Scene_Map.prototype.create = function() {
+        _Scene_Map_create.apply(this, arguments);
         this.createExtraGauges();
     };
 
