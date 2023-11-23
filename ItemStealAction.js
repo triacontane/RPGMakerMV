@@ -22,8 +22,8 @@
  * @author トリアコンタン
  *
  * @param stealList
- * @text アイテム獲得設定リスト
- * @desc アイテム獲得設定の一覧です。
+ * @text アイテム設定リスト
+ * @desc アイテム強奪設定のリストです。
  * @default []
  * @type struct<STEAL>[]
  *
@@ -64,13 +64,13 @@
  *
  * @param lifeSteal
  * @text ライフスティール
- * @desc 有効にするとアイテム獲得行動をうけた敵キャラは消滅します。アイテム変化などの表現に使います。
+ * @desc 有効にすると強奪行動をうけた敵キャラは消滅します。アイテム変化などの表現に使います。
  * @default false
  * @type boolean
  *
  * @param rateFormula
  * @text 計算式
- * @desc アイテム獲得確率の計算式です。結果にさらにドロップアイテムの確率が乗算されます。指定しない場合は1.0(100%)です。
+ * @desc アイテム強奪確率の計算式です。結果にさらにドロップアイテムの確率が乗算されます。指定しない場合は1.0(100%)です。
  * @default
  * @type string
  *
@@ -93,7 +93,7 @@
  *
  * @param noLimitation
  * @text 制限なし
- * @desc 有効にすると同じ敵キャラから何度でもアイテムを獲得できます。
+ * @desc 有効にすると同じ敵キャラから何度でもアイテムを強奪できます。
  * @default false
  * @type boolean
  */
