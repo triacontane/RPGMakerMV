@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.45.0 2023/11/25 セーブファイルの一覧取得と項目描画のプリセットを追加
  1.44.0 2023/11/13 ウィンドウのカーソルを全選択あるいは選択固定状態にできるスイッチを追加
  1.43.0 2023/11/09 すべてのスクリプトでv(n) s(n)が使えるよう修正
  1.42.0 2023/10/03 ヘルプウィンドウを画面上部に設定できる機能を追加
@@ -573,6 +574,7 @@
  * @option [this._actor]; // メインメニューで選択したアクター
  * @option this._actor.weapons(); // メインメニューで選択したアクターの装備武器
  * @option $gameParty.members()[v(1)].weapons(); // 変数[1]のPTメンバーの装備武器
+ * @option this.createSaveFiles(); // セーブファイル一覧
  * @option this._actor.armors(); // メインメニューで選択したアクターの装備防具
  * @option this._actor.equips(); // メインメニューで選択したアクターの装備品
  * @option this._actor.equipSlots(); // メインメニューで選択したアクターの装備スロットID
@@ -662,6 +664,7 @@
  * @option this.placeBasicGauges(item, r.x, r.y); // ゲージセット(戦闘用)
  * @option this.drawNoteText('noteValue', r.x, r.y); // 指定したメモ欄の内容を描画
  * @option this.drawNoteText('noteValue', r.x, r.y, 'right'); // メモ欄の内容を右寄せ描画
+ * @option this.drawSavefileInfo(item, r.x, r.y, r.width); // セーブファイルの内容を描画
  *
  * @param ItemDrawMultiLineScript
  * @parent DataScript
@@ -2405,6 +2408,17 @@
             return list;
         }
 
+        createSaveFiles() {
+            const autoSave = $gameSystem.isAutosaveEnabled();
+            const count =  DataManager.maxSavefiles() + (autoSave ? 1 : 0);
+            const list = [];
+            for (let i = 0; i <= count; i++) {
+                const savefileId = this.indexToSavefileId(i);
+                list.push(DataManager.savefileInfo(savefileId));
+            }
+            return list;
+        }
+
         findItemRect(index) {
             const rect = this.itemRectWithPadding(index);
             rect.y += this.rowSpacing() / 2;
@@ -2519,6 +2533,58 @@
             } else {
                 this.retryDrawItem(bitmap);
             }
+        }
+
+        drawSavefileInfo(info, x, y, width) {
+            const index = this._drawingIndex;
+            const savefileId = this.indexToSavefileId(index);
+            const rect = this.itemRectWithPadding(index);
+            this.resetTextColor();
+            this.changePaintOpacity(this.isEnabled(savefileId));
+            this.drawSaveTitle(savefileId, rect.x, rect.y + 4, width);
+            if (info) {
+                this.drawSaveContents(info, rect);
+            }
+        }
+
+        drawSaveTitle(savefileId, x, y, width) {
+            if (savefileId === 0) {
+                this.drawText(TextManager.autosave, x, y, width);
+            } else {
+                this.drawText(TextManager.file + " " + savefileId, x, y, width);
+            }
+        }
+
+        drawSaveContents(info, rect) {
+            const bottom = rect.y + rect.height;
+            if (rect.width >= 420) {
+                this.drawPartyCharacters(info, rect.x + 220, bottom - 8);
+            }
+            const lineHeight = this.lineHeight();
+            const y2 = bottom - lineHeight - 4;
+            if (y2 >= lineHeight) {
+                this.drawPlaytime(info, rect.x, y2, rect.width);
+            }
+        }
+
+        drawPartyCharacters(info, x, y) {
+            if (info.characters) {
+                let characterX = x;
+                for (const data of info.characters) {
+                    this.drawCharacter(data[0], data[1], characterX, y);
+                    characterX += 48;
+                }
+            }
+        }
+
+        drawPlaytime(info, x, y, width) {
+            if (info.playtime) {
+                this.drawText(info.playtime, x, y, width, "right");
+            }
+        }
+
+        indexToSavefileId(index) {
+            return index + ($gameSystem.isAutosaveEnabled() ? 0 : 1);
         }
     }
 
