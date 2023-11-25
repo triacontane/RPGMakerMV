@@ -1048,6 +1048,8 @@
  * @option SceneManager.changeWindowIndex('window1', 1); // 指定ウィンドウのインデックス変更
  * @option SceneManager.trashScene(); // 元のシーン情報を破棄する
  * @option SceneManager.showMapPicture(1, '', 0, 0, 0, 100, 100, 255, 1); // マップ画面にピクチャを表示
+ * @option this.executeSave(v(1)); // セーブ実行
+ * @option this.executeLoad(v(1)); // ロード実行
  *
  * @param SwitchId
  * @text スイッチ
@@ -1378,6 +1380,9 @@
 
         terminate() {
             super.terminate();
+            if (this._loadSuccess) {
+                $gameSystem.onAfterLoad();
+            }
             this.restoreGameObject();
         }
 
@@ -1785,6 +1790,41 @@
                 return this.calcWindowHeight(rows, false);
             } else {
                 return super.helpAreaHeight();
+            }
+        }
+
+        executeSave(index) {
+            const savefileId = $gameSystem.indexToSavefileId(index);
+            $gameSystem.setSavefileId(savefileId);
+            $gameSystem.onBeforeSave();
+            DataManager.saveGame(savefileId)
+                .then(() => SoundManager.playSave())
+                .catch(() => SoundManager.playBuzzer());
+        }
+
+        executeLoad(index) {
+            const savefileId = $gameSystem.indexToSavefileId(index);
+            DataManager.loadGame(savefileId)
+                .then(() => this.onLoadSuccess())
+                .catch(() => SoundManager.playBuzzer());
+        }
+
+        onLoadSuccess() {
+            SoundManager.playLoad();
+            this.fadeOutAll();
+            this.reloadMapIfUpdated();
+            SceneManager.goto(Scene_Map);
+            this._loadSuccess = true;
+        }
+
+        reloadMapIfUpdated() {
+            if ($gameSystem.versionId() !== $dataSystem.versionId) {
+                const mapId = $gameMap.mapId();
+                const x = $gamePlayer.x;
+                const y = $gamePlayer.y;
+                const d = $gamePlayer.direction();
+                $gamePlayer.reserveTransfer(mapId, x, y, d, 0);
+                $gamePlayer.requestMapReload();
             }
         }
     }
@@ -2413,7 +2453,7 @@
             const count =  DataManager.maxSavefiles() + (autoSave ? 1 : 0);
             const list = [];
             for (let i = 0; i <= count; i++) {
-                const savefileId = this.indexToSavefileId(i);
+                const savefileId = $gameSystem.indexToSavefileId(i);
                 list.push(DataManager.savefileInfo(savefileId));
             }
             return list;
@@ -2537,7 +2577,7 @@
 
         drawSavefileInfo(info, x, y, width) {
             const index = this._drawingIndex;
-            const savefileId = this.indexToSavefileId(index);
+            const savefileId = $gameSystem.indexToSavefileId(index);
             const rect = this.itemRectWithPadding(index);
             this.resetTextColor();
             this.changePaintOpacity(this.isEnabled(savefileId));
@@ -2582,11 +2622,11 @@
                 this.drawText(info.playtime, x, y, width, "right");
             }
         }
-
-        indexToSavefileId(index) {
-            return index + ($gameSystem.isAutosaveEnabled() ? 0 : 1);
-        }
     }
+
+    Game_System.prototype.indexToSavefileId = function(index) {
+        return index + (this.isAutosaveEnabled() ? 0 : 1);
+    };
 
     window.Window_CustomMenu = Window_CustomMenu;
     window.Window_CustomMenuCommand = Window_CustomMenuCommand;
