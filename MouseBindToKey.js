@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2023/11/26 押し続けに対応
 // 1.1.0 2023/11/26 MZで動作するよう修正
 // 1.0.0 2016/02/27 初版
 // ----------------------------------------------------------------------------
@@ -101,16 +102,11 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
-    const _Input_isPressed = Input.isPressed;
-    Input.isPressed = function(keyName) {
-        return _Input_isPressed.apply(this, arguments) || this.isTriggered(keyName);
-    };
-
     const _TouchInput__onLeftButtonDown = TouchInput._onLeftButtonDown;
     TouchInput._onLeftButtonDown = function(event) {
         _TouchInput__onLeftButtonDown.apply(this, arguments);
         if (param.LeftButton) {
-            Input.virtualClick(param.LeftButton);
+            Input.setCurrentState(param.LeftButton, true);
         }
     };
 
@@ -118,7 +114,7 @@
     TouchInput._onMiddleButtonDown = function(event) {
         _TouchInput__onMiddleButtonDown.apply(this, arguments);
         if (param.MiddleButton) {
-            Input.virtualClick(param.MiddleButton);
+            Input.setCurrentState(param.MiddleButton, true);
         }
     };
 
@@ -126,8 +122,26 @@
     TouchInput._onRightButtonDown = function(event) {
         _TouchInput__onRightButtonDown.apply(this, arguments);
         if (param.RightButton) {
-            Input.virtualClick(param.RightButton);
+            Input.setCurrentState(param.RightButton, true);
         }
+    };
+
+    const _TouchInput__onMouseUp = TouchInput._onMouseUp;
+    TouchInput._onMouseUp = function(event) {
+        _TouchInput__onMouseUp.apply(this, arguments);
+        if (param.LeftButton && event.button === 0) {
+            Input.setCurrentState(param.LeftButton, false);
+        }
+        if (param.MiddleButton && event.button === 1) {
+            Input.setCurrentState(param.MiddleButton, false);
+        }
+        if (param.RightButton && event.button === 2) {
+            Input.setCurrentState(param.RightButton, false);
+        }
+    };
+
+    Input.setCurrentState = function(button, value) {
+        this._currentState[button] = value;
     };
 
     const _TouchInput___onTrigger = TouchInput._onTrigger;
