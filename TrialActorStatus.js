@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2023/11/28 戦闘中でも呼び出せるよう修正
  1.0.0 2023/11/28 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -95,7 +96,7 @@
     const _Scene_Base_terminate = Scene_Base.prototype.terminate;
     Scene_Base.prototype.terminate = function() {
         _Scene_Base_terminate.apply(this, arguments);
-        if (!(this instanceof Scene_Map)) {
+        if (!(this instanceof Scene_Map) && !(this instanceof Scene_Battle)) {
             $gameParty.clearCustomMenuActor();
         }
     };
