@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2023/11/28 スタックトレース表示サイズ調整
 // 1.4.0 2023/11/28 エラーメッセージに制御文字を使えるよう修正
 // 1.3.0 2020/11/29 パラメータの型指定機能に対応
 // 1.2.1 2020/11/29 非同期処理でエラーイベントを捕捉したときスタックトレースの表示が正しく行えない問題を修正
@@ -122,12 +123,6 @@
         }
     };
 
-    var _SceneManager_catchException = SceneManager.catchException;
-    SceneManager.catchException      = function(e) {
-        _SceneManager_catchException.apply(this, arguments);
-        Graphics.printErrorDetail(e);
-    };
-
     //=============================================================================
     // Graphics
     //  エラー情報を出力します。
@@ -199,7 +194,7 @@
         var style              = stackTrace.style;
         style.color            = 'white';
         style.textAlign        = 'left';
-        style.fontSize         = '18px';
+        style.fontSize         = '12px';
         style.userSelect       = 'text';
         style.webkitUserSelect = 'text';
         style.msUserSelect     = 'text';
