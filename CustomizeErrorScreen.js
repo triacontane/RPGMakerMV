@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2023/11/28 エラーメッセージに制御文字を使えるよう修正
 // 1.3.0 2020/11/29 パラメータの型指定機能に対応
 // 1.2.1 2020/11/29 非同期処理でエラーイベントを捕捉したときスタックトレースの表示が正しく行えない問題を修正
 // 1.2.0 2016/11/10 連絡先のリンクを開く際に、既定のブラウザで開くよう変更
@@ -45,7 +46,7 @@
  *
  * @param MainMessage
  * @text メインメッセージ
- * @desc エラー画面に共通で表示されるメッセージ
+ * @desc エラー画面に共通で表示されるメッセージ。制御文字\v[n]が使えます。
  * @default 以下のエラーが発生しました。
  *
  * @param HyperLink
@@ -92,6 +93,18 @@
         var parameter     = JSON.parse(JSON.stringify(PluginManager.parameters(pluginName), paramReplacer));
         PluginManager.setParameters(pluginName, parameter);
         return parameter;
+    };
+
+    var convertEscapeCharacters = function(text) {
+        text = text.replace(/\\/g, '\x1b');
+        text = text.replace(/\x1b\x1b/g, '\\');
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        text = text.replace(/\x1bV\[(\d+)\]/gi, function() {
+            return $gameVariables.value(parseInt(arguments[1]));
+        }.bind(this));
+        return text;
     };
 
     var param = createPluginParameter('CustomizeErrorScreen');
@@ -148,7 +161,7 @@
         style.color           = 'white';
         style.textAlign       = 'left';
         style.fontSize        = '18px';
-        mainMessage.innerHTML = '<hr>' + param.MainMessage;
+        mainMessage.innerHTML = '<hr>' + convertEscapeCharacters(param.MainMessage || '');
         this._errorPrinter.appendChild(mainMessage);
     };
 
