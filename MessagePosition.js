@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2023/11/30 MessageWindowPopup.jsと併用したとき、特定条件下で表示したメッセージが一瞬で消えてしまう問題を修正
 // 1.2.0 2023/02/13 名前欄の相対的なXY座標を指定可能に
 // 1.1.1 2022/11/20 1.1.0の修正でメッセージの自動ページ送りが機能しなくなっていた問題を修正
 // 1.1.0 2022/11/06 MessageWindowPopup.jsと併用できるよう調整
@@ -137,6 +138,11 @@
 			this.height = (param.relative ? this._originalHeight : 0) + param.height;
 		}
 		if (this.width !== width || this.height !== height) {
+			// for MessageWindowPopup.js
+			if (this._defaultRect) {
+				this._defaultRect.width = this.width;
+				this._defaultRect.height = this.height;
+			}
 			this.createContents();
 		}
 		_Window_Message_updatePlacement.apply(this, arguments);
