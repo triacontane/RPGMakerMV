@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/12/02 データベースの説明文などにも置換を適用できる機能を追加
  1.1.0 2022/04/05 正規表現の凡例をヘルプに追加
  1.0.0 2022/04/05 初版
 ----------------------------------------------------------------------------
@@ -27,6 +28,12 @@
  * @desc すべての『文章の表示』の内容を自動で置換するリストです。
  * @default []
  * @type struct<REPLACE>[]
+ *
+ * @param applyDescription
+ * @text 説明文にも適用
+ * @desc アイテムなどの説明文にも置換を適用します。制御文字による変換処理が掛かる箇所すべてに影響します。
+ * @default false
+ * @type boolean
  *
  * @help MessageAutoReplace.js
  *
@@ -106,7 +113,6 @@
             if (item.switchId && !$gameSwitches.value(item.switchId)) {
                 return;
             }
-            console.log(item.targetText)
             const regExp = new RegExp(item.targetText, 'g');
             text = text.replace(regExp, function() {
                 const params = Array.from(arguments).slice(1);
@@ -114,5 +120,15 @@
             });
         });
         return text;
+    };
+
+    const _Window_Base_convertEscapeCharacters = Window_Base.prototype.convertEscapeCharacters;
+    Window_Base.prototype.convertEscapeCharacters = function(text) {
+        text = _Window_Base_convertEscapeCharacters.apply(this, arguments);
+        if (param.applyDescription) {
+            return $gameMessage.applyTextReplace(text);
+        } else {
+            return text;
+        }
     };
 })();
