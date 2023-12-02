@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2023/12/03 1.2.0の機能で置換後に制御文字を指定したとき、変換が行われない問題を修正
  1.2.0 2023/12/02 データベースの説明文などにも置換を適用できる機能を追加
  1.1.0 2022/04/05 正規表現の凡例をヘルプに追加
  1.0.0 2022/04/05 初版
@@ -124,11 +125,9 @@
 
     const _Window_Base_convertEscapeCharacters = Window_Base.prototype.convertEscapeCharacters;
     Window_Base.prototype.convertEscapeCharacters = function(text) {
-        text = _Window_Base_convertEscapeCharacters.apply(this, arguments);
         if (param.applyDescription) {
-            return $gameMessage.applyTextReplace(text);
-        } else {
-            return text;
+            arguments[0] = $gameMessage.applyTextReplace(text);
         }
+        return _Window_Base_convertEscapeCharacters.apply(this, arguments);
     };
 })();
