@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2023/12/04 副作用スキルを実行したアクターのIDを変数に格納できる機能を追加
 // 1.7.3 2023/08/17 コモンイベントを複数定義したとき、最初のひとつしか実行されない問題を修正
 // 1.7.2 2022/09/20 ID問わずすべての副作用を無効化できる特徴を追加
 // 1.7.1 2022/09/20 1.7.0のメモ欄の仕様を変更
@@ -44,6 +45,12 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
+ *
+ * @param sideEffectActorVariable
+ * @text 副作用対象アクター変数
+ * @desc 副作用の対象となるアクターIDを格納する変数番号です。
+ * @default 0
+ * @type variable
  *
  * @help SideEffectSkill.js
  *
@@ -476,6 +483,7 @@
         this.item()[property].forEach(function(effect) {
             if (effect.code === Game_Action.EFFECT_COMMON_EVENT) {
                 $gameTemp.reserveCommonEvent(effect.dataId);
+                $gameTemp.reserveCommonEventSubject(this.subject());
             }
         }, this);
     };
@@ -485,6 +493,28 @@
             return false;
         }
         return !BattleManager.isTpb() || property !== 'sideEffectOnInput';
+    };
+
+    const _Game_Temp_initialize = Game_Temp.prototype.initialize;
+    Game_Temp.prototype.initialize = function() {
+        _Game_Temp_initialize.apply(this, arguments);
+        this._commonEventSubjectQueue = [];
+    };
+
+    Game_Temp.prototype.reserveCommonEventSubject = function(subject) {
+        this._commonEventSubjectQueue.push(subject);
+    };
+
+    const _Game_Temp_retrieveCommonEvent = Game_Temp.prototype.retrieveCommonEvent;
+    Game_Temp.prototype.retrieveCommonEvent = function() {
+        const subject = this._commonEventSubjectQueue.shift();
+        const id = param.sideEffectActorVariable;
+        if (subject && subject.isActor() && id > 0) {
+            $gameVariables.setValue(id, subject.actorId());
+        } else {
+            $gameVariables.setValue(id, 0);
+        }
+        return _Game_Temp_retrieveCommonEvent.apply(this, arguments);
     };
 
     //=============================================================================
