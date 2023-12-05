@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.15.0 2023/12/05 立ち絵ファイルの切り替わり時にクロスフェードできる機能を追加
 // 3.14.1 2023/10/06 動的ファイル名のみを指定しているとき、画像が適切に更新されなくなっていた問題を修正
 // 3.14.0 2023/09/20 アイテム、スキル画面ではアクターウィンドウで選択中のアクターのみ立ち絵が表示される設定を追加
 // 3.13.0 2023/05/06 行動中条件、入力中条件の立ち絵は、戦闘中以外では常に条件を満たすよう仕様変更
@@ -169,6 +170,7 @@
  *
  * また、別途公開しているAPNGピクチャプラグインと組み合わせると
  * 立ち絵をアニメーションできます。ただし、使いすぎに注意してください。
+ * APNGはクロスフェード機能の対象外となります。
  *
  * ●メモ欄条件に指定方法
  * 表示条件のメモ欄に『aaa』と指定した場合、対象アクターのデータベース(※)に
@@ -655,8 +657,14 @@
  * @value 2
  *
  * @param FadeFrame
- * @text フェード時間(フレーム)
+ * @text フェード時間
  * @desc 指定した場合、表示非表示が切り替わったときに立ち絵がフェードイン/アウトします。
+ * @default 0
+ * @type number
+ *
+ * @param CrossFadeFrame
+ * @text クロスフェード時間
+ * @desc 指定した場合、表示された立ち絵が切り替わったときに立ち絵がクロスフェードします。
  * @default 0
  * @type number
  *
@@ -837,6 +845,7 @@
             picture.SceneScaleX = scene.ScaleX;
             picture.SceneScaleY = scene.ScaleY;
             picture.FadeFrame = scene.FadeFrame;
+            picture.CrossFadeFrame = scene.CrossFadeFrame;
             picture.SceneUnFocusSwitch = scene.UnFocusSwitch;
             picture.SceneTouchSwitch = scene.TouchSwitch;
         }
@@ -1408,7 +1417,8 @@
             if (this._fileName === file) {
                 return;
             }
-            if (this.addApngChild) {
+            this.updateCrossFade(file);
+            if (this.addApngChild && file) {
                 this.addApngChild(file);
             }
             if (!this._apngSprite && file) {
@@ -1416,6 +1426,24 @@
                 bitmap.addLoadListener(() => this.setBitmap(bitmap));
             }
             this._fileName = file;
+        }
+
+        updateCrossFade(file) {
+            if (this._crossFadeSprite) {
+                this.removeCrossFade();
+            }
+            if (this._fileName && file && !this._apngSprite && this._picture.CrossFadeFrame > 0) {
+                this.createCrossFade();
+                this._fadeFrame = this._picture.CrossFadeFrame;
+            } else {
+                this._fadeFrame = this._picture.FadeFrame;
+            }
+        }
+
+        createCrossFade() {
+            this._crossFadeSprite = new Sprite_StandPictureChildCrossFade(this);
+            this._openness = 0;
+            this.parent.addChild(this._crossFadeSprite);
         }
 
         onPress() {
@@ -1447,10 +1475,25 @@
         updateVisibility() {
             this._openness = (this._openness + this.calcDeltaOpenness()).clamp(0, 1);
             this.opacity = this._picture.Opacity * this._openness;
+            if (this._crossFadeSprite) {
+                this.updateCrossFadeVisibility();
+            }
+        }
+
+        updateCrossFadeVisibility() {
+            this._crossFadeSprite.opacity = this._picture.Opacity * (1 - this._openness);
+            if (this._crossFadeSprite.opacity === 0) {
+                this.removeCrossFade();
+            }
+        }
+
+        removeCrossFade() {
+            this.parent.removeChild(this._crossFadeSprite);
+            this._crossFadeSprite = null;
         }
 
         calcDeltaOpenness() {
-            const openness = 1 / (this._picture.FadeFrame || 1);
+            const openness = 1 / (this._fadeFrame || 1);
             return this.isShowing() ? openness : -openness;
         }
 
@@ -1519,6 +1562,29 @@
         loadApngSprite(name) {
             return SceneManager.tryLoadApngPicture(name);
         }
+    }
+
+    class Sprite_StandPictureChildCrossFade extends Sprite {
+        constructor(baseSprite) {
+            super();
+            this.setup(baseSprite);
+        }
+
+        setup(baseSprite) {
+            this.bitmap = baseSprite.bitmap;
+            this.anchor.x = baseSprite.anchor.x;
+            this.anchor.y = baseSprite.anchor.y;
+            this.x = baseSprite.x;
+            this.y = baseSprite.y;
+            this.scale.x = baseSprite.scale.x;
+            this.scale.y = baseSprite.scale.y;
+        }
+
+        isOutOfShake() {
+            return false;
+        }
+
+        updateDrag() {}
     }
 
     // for Drag by test play
