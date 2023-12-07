@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.46.0 2023/12/07 データ一覧のソートスクリプトを設定する機能を追加
  1.45.0 2023/11/25 セーブファイルの一覧取得と項目描画のプリセットを追加
  1.44.0 2023/11/13 ウィンドウのカーソルを全選択あるいは選択固定状態にできるスイッチを追加
  1.43.0 2023/11/09 すべてのスクリプトでv(n) s(n)が使えるよう修正
@@ -630,6 +631,24 @@
  * @option item.actor(); // Game_ActorからデータベースのActorに変換
  * @option $dataSkills[item.skillId]; // 習得スキル情報をデータベースのSkillに変換
  * @option $dataSystem.equipTypes[item]; // 装備スロットIDを装備スロット名称に変換
+ *
+ * @param SortScript
+ * @parent DataScript
+ * @text ソートスクリプト
+ * @desc 一覧の項目をソートします。変数[a] 変数[b]が比較用の各要素の参照です。
+ * @type combo
+ * @option a.id - b.id; // ID順
+ * @option a.name.localeCompare(b.name); // 名前順
+ * @option this.intMeta(a,'order') - this.intMeta(b,'order'); // メモ欄のorder順
+ * @option a.price - b.price; // 値段順
+ * @option a.params[0] - b.params[0]; // HP順
+ * @option a.params[1] - b.params[1]; // MP順
+ * @option a.params[2] - b.params[2]; // 攻撃力順
+ * @option a.params[3] - b.params[3]; // 防御力順
+ * @option a.params[4] - b.params[4]; // 魔法力順
+ * @option a.params[5] - b.params[5]; // 魔法防御順
+ * @option a.params[6] - b.params[6]; // 敏捷性順
+ * @option a.params[7] - b.params[7]; // 運順
  *
  * @param ItemDrawScript
  * @parent DataScript
@@ -2442,10 +2461,21 @@
                     }
                 });
             }
+            if (this._data.SortScript) {
+                try {
+                    list.sort((a, b) => eval(this._data.SortScript) || -1);
+                } catch (e) {
+                    outputError(e, this._data.SortScript);
+                }
+            }
             if (this._data.CommandList) {
                 return list.concat(super.makeCommandList());
             }
             return list;
+        }
+
+        intMeta(item, name, defaultValue = 0) {
+            return parseInt(item.meta[name]) || defaultValue;
         }
 
         createSaveFiles() {
