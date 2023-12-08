@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2023/12/08 マップ上でステート付与した場合に名前が消されていなかった問題を修正
  1.0.0 2019/09/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -47,23 +48,20 @@
      * 名称を返却する際に空文字を返します。
      */
     Game_Battler.prototype.hiddenNameOnlyTargetProcess = function(process) {
-        this._removeName = true;
+        var prevName = this._name;
+        this._name = ''
         process();
-        this._removeName = false;
+        this._name = prevName;
     };
 
-    Game_Battler.prototype.removeNameIfNeed = function(name) {
-        return this._removeName ? '' : name;
+    var _Game_Actor_showAddedStates = Game_Actor.prototype.showAddedStates;
+    Game_Actor.prototype.showAddedStates = function() {
+        this.hiddenNameOnlyTargetProcess(_Game_Actor_showAddedStates.bind(this));
     };
 
-    var _Game_Actor_name = Game_Actor.prototype.name;
-    Game_Actor.prototype.name = function() {
-        return this.removeNameIfNeed( _Game_Actor_name.apply(this, arguments));
-    };
-
-    var _Game_Enemy_name = Game_Enemy.prototype.name;
-    Game_Enemy.prototype.name = function() {
-        return this.removeNameIfNeed(_Game_Enemy_name.apply(this, arguments));
+    var _Game_Actor_showRemovedStates = Game_Actor.prototype.showRemovedStates;
+    Game_Actor.prototype.showRemovedStates = function() {
+        this.hiddenNameOnlyTargetProcess(_Game_Actor_showRemovedStates.bind(this));
     };
 
     /**
