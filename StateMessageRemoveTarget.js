@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2023/12/10 敵キャラに適用されていなかった問題を修正
  1.0.1 2023/12/08 マップ上でステート付与した場合に名前が消されていなかった問題を修正
  1.0.0 2019/09/23 初版
 ----------------------------------------------------------------------------
@@ -48,10 +49,18 @@
      * 名称を返却する際に空文字を返します。
      */
     Game_Battler.prototype.hiddenNameOnlyTargetProcess = function(process) {
-        var prevName = this._name;
+        const prevName = this._name;
         this._name = ''
+        this._nameHidden = true;
         process();
         this._name = prevName;
+        this._nameHidden = false;
+    };
+
+    const _Game_Enemy_name = Game_Enemy.prototype.name;
+    Game_Enemy.prototype.name = function() {
+        const name = _Game_Enemy_name.apply(this, arguments);
+        return this._nameHidden ? '' : name;
     };
 
     var _Game_Actor_showAddedStates = Game_Actor.prototype.showAddedStates;
