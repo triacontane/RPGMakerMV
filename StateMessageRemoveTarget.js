@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/12/10 MZで動作するよう修正
+ 1.0.1 2023/12/08 マップ上でステート付与した場合に名前が消されていなかった問題を修正
  1.0.0 2019/09/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -14,24 +16,14 @@
 =============================================================================*/
 
 /*:
- * @plugindesc StateMessageRemoveTargetPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
+ * @plugindesc ステートメッセージから対象者名を消去
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateMessageRemoveTarget.js
+ * @author トリアコンタン
  *
  * @help StateMessageRemoveBattler.js
+ * 
  * ステートメッセージの先頭に自動付与される「対象者の名前」を消去します。
- *　
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
- * @plugindesc ステートメッセージから対象者の名前を消去するプラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
- *
- * @help StateMessageRemoveBattler.js
- * ステートメッセージの先頭に自動付与される「対象者の名前」を消去します。
- *　
- * このプラグインにはプラグインコマンドはありません。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -39,7 +31,7 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
 
     /**
@@ -47,34 +39,39 @@
      * 名称を返却する際に空文字を返します。
      */
     Game_Battler.prototype.hiddenNameOnlyTargetProcess = function(process) {
-        this._removeName = true;
+        const prevName = this._name;
+        this._name = ''
+        this._nameHidden = true;
         process();
-        this._removeName = false;
+        this._name = prevName;
+        this._nameHidden = false;
     };
 
-    Game_Battler.prototype.removeNameIfNeed = function(name) {
-        return this._removeName ? '' : name;
+    const _Game_Actor_showAddedStates = Game_Actor.prototype.showAddedStates;
+    Game_Actor.prototype.showAddedStates = function() {
+        this.hiddenNameOnlyTargetProcess(_Game_Actor_showAddedStates.bind(this));
     };
 
-    var _Game_Actor_name = Game_Actor.prototype.name;
-    Game_Actor.prototype.name = function() {
-        return this.removeNameIfNeed( _Game_Actor_name.apply(this, arguments));
-    };
-
-    var _Game_Enemy_name = Game_Enemy.prototype.name;
+    const _Game_Enemy_name = Game_Enemy.prototype.name;
     Game_Enemy.prototype.name = function() {
-        return this.removeNameIfNeed(_Game_Enemy_name.apply(this, arguments));
+        const name = _Game_Enemy_name.apply(this, arguments);
+        return this._nameHidden ? '' : name;
+    };
+
+    const _Game_Actor_showRemovedStates = Game_Actor.prototype.showRemovedStates;
+    Game_Actor.prototype.showRemovedStates = function() {
+        this.hiddenNameOnlyTargetProcess(_Game_Actor_showRemovedStates.bind(this));
     };
 
     /**
      * Window_BattleLog ステートメッセージから対象者名を除去します。
      */
-    var _Window_BattleLog_displayCurrentState = Window_BattleLog.prototype.displayCurrentState;
+    const _Window_BattleLog_displayCurrentState = Window_BattleLog.prototype.displayCurrentState;
     Window_BattleLog.prototype.displayCurrentState = function(subject) {
         subject.hiddenNameOnlyTargetProcess(_Window_BattleLog_displayCurrentState.bind(this, subject));
     };
 
-    var _Window_BattleLog_displayChangedStates = Window_BattleLog.prototype.displayChangedStates;
+    const _Window_BattleLog_displayChangedStates = Window_BattleLog.prototype.displayChangedStates;
     Window_BattleLog.prototype.displayChangedStates = function(target) {
         target.hiddenNameOnlyTargetProcess(_Window_BattleLog_displayChangedStates.bind(this, target));
     };
