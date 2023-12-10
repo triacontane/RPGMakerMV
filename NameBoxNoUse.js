@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/12/10 メッセージの字下げをする機能を追加しました。
  1.0.0 2023/07/20 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -33,6 +34,12 @@
  * @default true
  * @type boolean
  *
+ * @param messageOffsetX
+ * @text X座標オフセット
+ * @desc 2行目以降のメッセージのX座標オフセットです。
+ * @default 0
+ * @type number
+ *
  * @help NameBoxNoUse.js
  *
  * 名前ウィンドウを使用せず、メッセージウィンドウの先頭に指定した名前を表示します。
@@ -59,6 +66,14 @@
         _Window_Message_synchronizeNameBox.apply(this, arguments);
         this._nameBoxWindow.hide();
     };
+
+    const _Window_Message_processNewLine = Window_Message.prototype.processNewLine;
+    Window_Message.prototype.processNewLine = function(textState) {
+        _Window_Message_processNewLine.apply(this, arguments);
+        if (!this.needsNewPage(textState)) {
+            textState.x += param.messageOffsetX;
+        }
+    }
 
     const _Game_Message_allText = Game_Message.prototype.allText;
     Game_Message.prototype.allText = function() {
