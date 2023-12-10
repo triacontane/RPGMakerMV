@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/12/10 複数の背景を条件によって使い分けられる機能を追加
  1.0.0 2023/12/07 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -27,6 +28,12 @@
  * @default
  * @type file
  * @dir img/parallaxes
+ *
+ * @param backgroundList
+ * @text 背景リスト
+ * @desc 背景に表示する画像ファイルです。条件によって複数のファイルを使い分けたいときに利用します。
+ * @default []
+ * @type struct<Background>[]
  *
  * @param method
  * @text 繰り返し表示方法
@@ -56,24 +63,59 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~Background:
+ * @param backgroundImage
+ * @text 背景画像
+ * @desc 背景に表示する画像ファイルです。
+ * @default
+ * @type file
+ * @dir img/parallaxes
+ *
+ * @param switchId
+ * @text スイッチID
+ * @desc 指定したスイッチがONのときのみ背景画像を表示します。
+ * @default 0
+ * @type switch
+ */
+
 (() => {
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
-    if (!param.backgroundImage) {
-        return;
+    if (!param.backgroundList) {
+        param.backgroundList = [];
     }
 
     const _Scene_Boot_start = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.apply(this, arguments);
-        Graphics.setBackAreaImage();
+        Graphics.updateBackAreaImage();
     };
 
-    Graphics.setBackAreaImage = function() {
-        const url = `url(img/parallaxes/${param.backgroundImage}.png)`;
+    const _Scene_Base_update = Scene_Base.prototype.update;
+    Scene_Base.prototype.update = function() {
+        _Scene_Base_update.apply(this, arguments);
+        if (this.isActive() && Graphics.frameCount % 10 === 0) {
+            Graphics.updateBackAreaImage();
+        }
+    };
+
+    Graphics.updateBackAreaImage = function() {
+        const back = param.backgroundList.find(item => item.switchId === 0 || $gameSwitches.value(item.switchId));
+        if (back) {
+            this.setBackAreaImage(back.backgroundImage);
+        } else {
+            this.setBackAreaImage(param.backgroundImage);
+        }
+    };
+
+    Graphics.setBackAreaImage = function(fileName) {
         const style = this._back.style;
-        style.backgroundImage = url;
+        if (!fileName) {
+            style.backgroundImage = "";
+            return;
+        }
+        style.backgroundImage = `url(img/parallaxes/${fileName}.png)`;
         switch (param.method) {
             case 'repeat':
                 style.backgroundRepeat = "repeat";
