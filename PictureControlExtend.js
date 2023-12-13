@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.0 2023/12/13 ピクチャの表示位置をマップのスクロールに連動させる機能を追加
  1.4.1 2023/11/16 一括操作の対応プラグインに「ピクチャのボタン化プラグイン」を追加
  1.4.0 2023/06/04 ピクチャをフラッシュさせるコマンドを追加
  1.3.0 2023/05/25 ピクチャを複製できるコマンドを追加
@@ -197,6 +198,21 @@
  * @max 100
  * @min 0
  *
+ * @command PICTURE_TO_MAP
+ * @text 位置をマップに合わせる
+ * @desc ピクチャ表示位置がマップのスクロールに合わせられます。
+ *
+ * @arg pictureId
+ * @text ピクチャ番号
+ * @desc 操作対象のピクチャ番号です。
+ * @default 1
+ *
+ * @arg toMap
+ * @text マップに合わせる
+ * @desc ピクチャ表示位置がマップのスクロールに合わせられます。OFFにすると元に戻ります。
+ * @default true
+ * @type boolean
+ *
  * @command PICTURE_COPY
  * @text ピクチャのコピー
  * @desc コピー元、コピー先のピクチャ番号を指定してピクチャをコピーします。
@@ -354,6 +370,10 @@
         }
     });
 
+    PluginManagerEx.registerCommand(script, 'PICTURE_TO_MAP', function(args) {
+        $gameScreen.setPictureToMap(args.pictureId, args);
+    });
+
     /**
      * Game_Screen
      */
@@ -483,6 +503,15 @@
         }, arguments);
     };
 
+    Game_Screen.prototype.setPictureToMap = function(pictureId, args) {
+        this.iteratePictures((pictureId, args) => {
+            const picture = this.picture(pictureId);
+            if (picture) {
+                picture.setPositionToMap(args.toMap);
+            }
+        }, arguments);
+    };
+
     Game_Screen.prototype.flashPicture = function(pictureId, args) {
         this.iteratePictures((pictureId, args) => {
             const picture = this.picture(pictureId);
@@ -497,7 +526,12 @@
      */
     const _Game_Picture_x      = Game_Picture.prototype.x;
     Game_Picture.prototype.x = function() {
-        let x = _Game_Picture_x.apply(this, arguments) + this.getShakeX();
+        let x = _Game_Picture_x.apply(this, arguments);
+        if (this.isPositionToMap()) {
+            const tile = $gameMap.tileWidth();
+            x = Math.round($gameMap.adjustX(x / tile) * tile);
+        }
+        x += this.getShakeX();
         if (this._outOfScreenShake) {
             // for DirectivityShake.js
             if ($gameScreen.getShakeRotation) {
@@ -513,7 +547,12 @@
 
     const _Game_Picture_y      = Game_Picture.prototype.y;
     Game_Picture.prototype.y = function() {
-        let y = _Game_Picture_y.apply(this, arguments) + this.getShakeY();
+        let y = _Game_Picture_y.apply(this, arguments);
+        if (this.isPositionToMap()) {
+            const tile = $gameMap.tileHeight();
+            y = Math.round($gameMap.adjustY(y / tile) * tile);
+        }
+        y += this.getShakeY();
         if (this._outOfScreenShake) {
             // for DirectivityShake.js
             if ($gameScreen.getShakeRotation) {
@@ -532,6 +571,14 @@
     Game_Picture.prototype.customOrigin = function() {
         return this._customOrigin;
     };
+
+    Game_Picture.prototype.setPositionToMap = function(value) {
+        this._positionToMap = !!value;
+    };
+
+    Game_Picture.prototype.isPositionToMap = function() {
+        return this._positionToMap;
+    }
 
     Game_Picture.prototype.setOutOfScreenShake = function(value) {
         this._outOfScreenShake = !!value;
