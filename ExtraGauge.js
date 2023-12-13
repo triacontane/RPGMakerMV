@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.16.0 2023/12/13 ゲージの表示位置をプレイヤーやイベントに連動させる機能を追加
  1.15.1 2023/11/22 1.0.3の修正内容のデグレが発生していたので再修正
  1.15.0 2023/11/21 表示優先度の仕様を再検討し、「最前面」「ピクチャの下」「ピクチャの上」からの選択にしました。
  1.14.0 2023/10/15 ゲージ画像が下ピクチャに合わせて表示されるよう仕様変更
@@ -211,6 +212,13 @@
  * @text Y座標
  * @desc Y座標です。原点は中央です。数値以外を指定した場合はスクリプトとして評価します。
  * @default 30
+ *
+ * @param linkCharacter
+ * @text 連動するキャラクター
+ * @desc ゲージの座標を連動させるキャラクターです。マップ画面でのみ有効です。-1でプレイヤー、1以上でイベントIDになります。
+ * @default 0
+ * @type number
+ * @min -1
  *
  * @param realTime
  * @text リアルタイム座標反映
@@ -815,24 +823,42 @@
         setupPosition() {
             this.x = this._gauge.findLayoutValue(this._layout.x);
             this.y = this._gauge.findLayoutValue(this._layout.y);
+            this._baseX = this.x;
+            this._baseY = this.y;
             if (this._layout.Mirror) {
                 this.scale.x = -1;
-            }
-            const battler = this._gauge.findLinkBattler();
-            if (battler) {
-                this.x += battler.findImageX();
-                this.y += battler.findImageY();
             }
             if (this._lower && this._detail.GaugeBackHidden) {
                 this._gauge.syncWithPicture(this._lower);
             }
         }
 
+        syncBattler() {
+            const battler = this._gauge.findLinkBattler();
+            this.x = this._baseX + battler.findImageX();
+            this.y = this._baseY + battler.findImageY();
+        }
+
+        syncCharacter() {
+            const id = this._layout.linkCharacter;
+            const character = id < 0 ? $gamePlayer : $gameMap.event(id);
+            if (character) {
+                this.x = this._baseX + character.screenX();
+                this.y = this._baseY + character.screenY();
+            }
+        }
+
         update() {
             this.updateVisibly();
             super.update();
-            if (this._layout.realTime || !!this._gauge.findLinkBattler()) {
+            if (this._layout.realTime) {
                 this.setupPosition();
+            }
+            if (!!this._gauge.findLinkBattler()) {
+                this.syncBattler();
+            }
+            if (this._layout.linkCharacter && !!$dataMap) {
+                this.syncCharacter();
             }
             this.updateOpacity();
         }
