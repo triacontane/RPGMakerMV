@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2023/12/18 名前表示時のみ字下げ機能が有効になるよう修正
  1.1.0 2023/12/10 メッセージの字下げをする機能を追加しました。
  1.0.0 2023/07/20 初版
 ----------------------------------------------------------------------------
@@ -36,7 +37,7 @@
  *
  * @param messageOffsetX
  * @text X座標オフセット
- * @desc 2行目以降のメッセージのX座標オフセットです。
+ * @desc 2行目以降のメッセージのX座標オフセットです。名前表示が有効の場合のみ字下げされます。
  * @default 0
  * @type number
  *
@@ -70,7 +71,7 @@
     const _Window_Message_processNewLine = Window_Message.prototype.processNewLine;
     Window_Message.prototype.processNewLine = function(textState) {
         _Window_Message_processNewLine.apply(this, arguments);
-        if (!this.needsNewPage(textState)) {
+        if (!!$gameMessage.speakerName() && !this.needsNewPage(textState)) {
             textState.x += param.messageOffsetX;
         }
     }
