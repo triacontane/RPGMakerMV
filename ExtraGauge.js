@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.17.0 2023/12/19 ゲージが満タンのときにONになるスイッチを指定できる機能を追加
  1.16.0 2023/12/13 ゲージの表示位置をプレイヤーやイベントに連動させる機能を追加
  1.15.1 2023/11/22 1.0.3の修正内容のデグレが発生していたので再修正
  1.15.0 2023/11/21 表示優先度の仕様を再検討し、「最前面」「ピクチャの下」「ピクチャの上」からの選択にしました。
@@ -598,6 +599,12 @@
  * @desc ゲージの現在値が最大値以上になるとゲージをフラッシュさせます。
  * @default false
  * @type boolean
+ *
+ * @param FullSwitchId
+ * @text 満タンスイッチID
+ * @desc ゲージの現在値が最大値以上になると指定したスイッチをONにします。最大値を下回るとOFFになります。
+ * @default 0
+ * @type switch
  */
 
 /*~struct~Font:
@@ -861,6 +868,7 @@
                 this.syncCharacter();
             }
             this.updateOpacity();
+            this.updateFullSwitch();
         }
 
         updateVisibly() {
@@ -870,6 +878,13 @@
         updateOpacity() {
             if (this._data.OpacityVariable) {
                 this.opacity = $gameVariables.value(this._data.OpacityVariable);
+            }
+        }
+
+        updateFullSwitch() {
+            const id = this._detail.FullSwitchId;
+            if (id > 0) {
+                $gameSwitches.setValue(id, this._gauge.isFull());
             }
         }
 
