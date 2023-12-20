@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2023/12/21 スクリプトの条件を追加
  1.0.0 2023/12/20 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -137,6 +138,12 @@
  * @default
  * @type number
  *
+ * @param script
+ * @text スクリプト
+ * @desc 指定したスクリプトがtrueを返した場合に演奏されます。
+ * @default
+ * @type multiline_string
+ *
  */
 
 (()=> {
@@ -195,6 +202,7 @@
             list.push(c.damageLower === '' || result.hpDamage >= c.damageLower);
             list.push(c.critical === '' || result.critical === c.critical);
             list.push(c.switchId === '' || $gameSwitches.value(c.switchId));
+            list.push(c.script === '' || eval(c.script));
             return list.every(c => c);
         });
     };
