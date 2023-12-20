@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.1 2023/12/20 可能な範囲でNovelMessageMZ.jsと併用できるよう修正
  1.4.0 2022/12/08 フキダシウィンドウプラグインの横幅に拘わらず、左側の座標を固定する機能を追加
  1.3.1 2022/10/29 MPP_ChoiceEX.jsと併用するとマップ表示時にエラーになる問題に対処
  1.3.0 2022/09/21 戦闘画面でバトラーを指定したフキダシウィンドウが表示できる機能を追加
@@ -1531,7 +1532,7 @@
 
     Window_Message.prototype.resetLayout = function() {
         if (this.getPopupTargetCharacter()) {
-            this.processVirtual();
+            this.resizeForPopup();
         } else {
             this.width  = this.windowWidth();
             this.height = this.windowHeight();
@@ -1541,7 +1542,7 @@
         this.updateBackground();
     };
 
-    Window_Message.prototype.processVirtual = function() {
+    Window_Message.prototype.resizeForPopup = function() {
         this.updatePadding();
         const virtual = this.createVirtualTextState();
         let width    = virtual.outputWidth + this.padding * 2;
@@ -1558,6 +1559,11 @@
         }
         this.width  = Math.max(width, this.getMinimumWidth());
         this.height = Math.max(height, this.getMinimumHeight());
+        // for NovelMessageMZ.js
+        if (this._windowRect) {
+            this._windowRect.width = this.width;
+            this._windowRect.height = this.height;
+        }
         this.resetFontSettings();
     };
 
