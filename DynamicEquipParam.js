@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2023/12/21 specialメソッドが正常に機能しない問題を修正
 // 2.0.2 2023/12/06 ヘルプに注意書きを追加
 // 2.0.1 2023/10/19 変数v[n]を使う場合の注意点をヘルプに記載
 // 2.0.0 2023/07/19 パフォーマンス維持のため、制御文字の変換処理を撤廃し、変数はv[n]で指定するよう変更
@@ -129,7 +130,9 @@
     Game_Actor.prototype.special = function (tagName) {
         let value = 0;
         this.traitObjects().forEach(function (traitObject) {
-            value += PluginManagerEx.findMetaValue(traitObject, tagName);
+            if (traitObject.meta.hasOwnProperty(tagName)) {
+                value += parseInt(traitObject.meta[tagName]);
+            }
         });
         return Math.round(value);
     };
