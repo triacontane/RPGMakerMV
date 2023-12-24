@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2023/12/24 本プラグインの機能を無効にできるスイッチを追加
  1.1.0 2023/08/26 タイムプログレス戦闘でタイムゲージが非表示になっていた問題を修正し、パラメータで非表示にできる設定を追加
  1.0.0 2023/02/26 初版
 ----------------------------------------------------------------------------
@@ -46,6 +47,12 @@
  * @default []
  * @type actor[]
  *
+ * @param invalidSwitchId
+ * @text 無効スイッチID
+ * @desc 指定したスイッチがONのとき、非表示設定が無効になります。
+ * @default 0
+ * @type switch
+ *
  * @help MpTpHidden.js
  *
  * HP, MP, TPをアクター毎に個別に非表示にできます。
@@ -83,6 +90,9 @@
     };
 
     Game_Actor.prototype.isHiddenParam = function(type) {
+        if (param.invalidSwitchId > 0 && $gameSwitches.value(param.invalidSwitchId)) {
+            return false;
+        }
         switch (type) {
             case 'hp':
                 return this.isHiddenHp();
