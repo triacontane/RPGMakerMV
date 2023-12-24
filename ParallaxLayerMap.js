@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.2 2023/12/24 簡易的な競合対策
 // 1.3.1 2023/09/08 不透明度の0指定が無効になる問題を修正
 // 1.3.0 2023/05/14 キャラクターグラフィック表示拡張プラグインと連携可能なように修正
 // 1.2.0 2022/11/23 レイヤーマップのプライオリティを細かく9段階で指定できる機能を追加
@@ -228,7 +229,7 @@
     const _Sprite_Character_character         = Sprite_Character.prototype.setCharacter;
     Sprite_Character.prototype.setCharacter = function(character) {
         _Sprite_Character_character.apply(this, arguments);
-        this._layerName = character.getMapLayerName();
+        this._layerName = character ? character.getMapLayerName() : undefined;
     };
 
     Sprite_Character.prototype.getCharacter = function() {
