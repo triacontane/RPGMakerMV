@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2023/12/27 タイトルスキップ機能に対応
  1.0.0 2023/08/24 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -40,6 +41,6 @@
     };
 
     SceneManager.isFromTitle = function() {
-        return this._previousClass === Scene_Title;
-    }
+        return this._previousClass === Scene_Title || this._previousClass === Scene_Boot;
+    };
 })();
