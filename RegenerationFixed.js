@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2023/12/30 URLの指定誤りを修正
  1.0.1 2022/08/12 再生倍率に0を指定したとき正常に動作しない問題を修正
  1.0.0 2022/08/11 初版
 ----------------------------------------------------------------------------
@@ -17,7 +18,7 @@
 /*:
  * @plugindesc 再生値の固定化プラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/RegenerationFixet.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/RegenerationFixed.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
