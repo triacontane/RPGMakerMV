@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/01/02 控えメンバーとパーティ外メンバとで別々の取得割合を指定できる機能を追加
  1.2.1 2023/08/13 割合をメモ欄から指定するとき、0も指定できるよう修正
  1.2.0 2023/08/12 MZで動作するよう修正
  1.1.0 2018/09/16 一度もパーティに加わっていないアクターも対しても経験値が加算される場合がある問題を修正
@@ -28,6 +29,12 @@
  *
  * @param expPercent
  * @text 経験値取得割合
+ * @desc 控えメンバーが受け取ることのできる経験値の割合(%)です。
+ * @default 100
+ * @type number
+ *
+ * @param expPercentForOutParty
+ * @text パーティ外経験値取得割合
  * @desc パーティ外の仲間が受け取ることのできる経験値の割合(%)です。
  * @default 100
  * @type number
@@ -49,6 +56,7 @@
  * なお、本プラグインを適用前のセーブデータには使用できません。
  *
  * 経験値の割合(%)をメモ欄から指定することもできます。
+ * この指定がある場合、プラグインパラメータの値は無視されます。
  * アクター、職業、武器、防具、ステートのメモ欄に以下の通り記述してください。
  * 重複して定義されていた場合は大きい値が優先されます。
  * <OutsidePartyExpRate:50> # 経験値取得割合を50%に設定
@@ -87,7 +95,7 @@
      */
     Game_Actors.prototype.gainExpWithoutParty = function(exp) {
         const partyMember = $gameParty.allMembers();
-        this._data.filter(actor => actor && !partyMember.contains(actor) && actor.isInPartyAtLeastOnce())
+        this._data.filter(actor => actor && !partyMember.includes(actor) && actor.isInPartyAtLeastOnce())
             .forEach(actor => actor.gainExp(exp));
     };
 
@@ -117,7 +125,8 @@
         const rate = _Game_Actor_benchMembersExpRate.apply(this, arguments);
         if (!$gameParty.battleMembers().includes(this)) {
             const customRate = this.findOutsideCustomExpRate();
-            return (customRate !== undefined ? customRate : param.expPercent) / 100;
+            const paramRate = $gameParty.allMembers().includes(this) ? param.expPercent : param.expPercentForOutParty;
+            return (customRate !== undefined ? customRate : paramRate) / 100;
         } else {
             return rate;
         }
