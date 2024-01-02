@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.10 2024/01/02 範囲を「味方単体(無条件)」にしたスキルに制約を設定したとき、正常に対象を特定できない場合がある問題を修正
 // 2.5.9 2023/05/13 制約対象のスキルやアイテムをID単位ではなくメモタグでまとめて指定できる機能を追加
 // 2.4.0 2023/04/20 すべてのスキルの対象にならなくなる無敵タグを設定できる機能を追加
 // 2.3.2 2022/10/17 自動戦闘の特徴が有効なとき、選択可能対象がいないスキルを選択対象外にするよう修正
@@ -307,6 +308,14 @@
         BattleManager.setTargetAction(this);
         _Game_Action_decideRandomTarget.apply(this, arguments);
         BattleManager.setTargetAction(null);
+    };
+
+    const _Game_Action_targetsForDeadAndAlive = Game_Action.prototype.targetsForDeadAndAlive;
+    Game_Action.prototype.targetsForDeadAndAlive = function(unit) {
+        unit.setNeedOriginalMemberCounter(true);
+        const targets = _Game_Action_targetsForDeadAndAlive.apply(this, arguments);
+        unit.setNeedOriginalMemberCounter(false);
+        return targets;
     };
 
     //=============================================================================
