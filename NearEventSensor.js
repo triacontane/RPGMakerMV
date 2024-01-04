@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.7.0 2024/01/04 後方互換性のために残しておいたタグ設定の説明をヘルプから削除（実装は残ります）
 // 3.6.0 2023/11/02 3.5.0で追加した機能で、イベントごとに異なるスイッチ、セルフスイッチを指定できる機能を追加
 // 3.5.0 2023/10/23 検知範囲に入ったときにONになるスイッチ、セルフスイッチを指定できる機能を追加
 // 3.4.0 2022/06/03 イベントごと、ページごとにフキダシや感知距離、範囲を変えられる設定を追加
@@ -164,32 +165,12 @@
  * @default []
  * @type struct<Detail>[]
  *
- * @help 周囲に存在するイベントを感知してイベントにエフェクトを発生させます。
+ * @help NearEventSensor.js
+ *
+ * 周囲に存在するイベントを感知してイベントにエフェクトを発生させます。
  * 実行可能なイベントをプレイヤーに伝えてユーザビリティを向上させます。
- * 使用できるエフェクトはフラッシュとフキダシアイコン（およびその両方）です。
- *
- * 各エフェクトの有効可否は、プラグインパラメータによる一括設定と
- * イベントのメモ欄による個別設定があり、個別設定が優先されます。
- *
- * 感知時のエフェクトをフラッシュにしたい場合は、
- * メモ欄を以下の通り指定してください。
- * <NESフラッシュ対象:ON>  # 対象イベントのフラッシュを有効にします。
- * <NESフラッシュ対象:OFF> # 対象イベントのフラッシュを無効にします。
- *
- * 感知時のエフェクトをフキダシアイコンにしたい場合は、
- * メモ欄を以下の通り指定してください。
- * <NESフキダシ対象:1> # 対象イベントのフキダシを(1:びっくり)にします。
- * <NESフキダシ対象:0> # 対象イベントのフキダシを無効にします。
- *
- * 特定のスイッチもしくはセルフスイッチがONのときのみ感知エフェクトを
- * 表示したい場合は、メモ欄を以下の通り指定してください。
- * <NESスイッチ:1>       # スイッチ[1]がONのときのみエフェクトを出します。
- * <NESSwitch:1>         # 同上
- * <NESセルフスイッチ:A> # セルフスイッチ[A]がONのときのみエフェクトを出します。
- * <NESSelfSwitch:1>     # 同上
- *
- * イベントごと、ページごとに感知設定を細かく指定したい場合は
- * パラメータ「詳細設定」で設定した内容を以下のタグで適用できます。
+ * パラメータ「詳細設定リスト」で感知設定を入力し、
+ * イベントのメモ欄に以下の通り入力します。
  * <NES詳細:sensor01>    # 識別子[sensor01]の設定を適用
  * <NESDetail:sensor01> # 同上
  *
@@ -428,7 +409,6 @@
             if (color) {
                 this.startFlash([color.Red, color.Green, color.Blue, color.Alpha], param.FlashDuration);
             }
-
         }
         const balloonId = targetEvent.getSensorBalloonId();
         if (balloonId && (!param.WaitForBalloon || !this.isBalloonPlaying())) {
@@ -550,7 +530,8 @@
         } else if (useFlash === 'OFF') {
             return false;
         } else {
-            return param.DefaultFlash;
+            const detail = this.findEventSensorNote( ['NES詳細', 'NESDetail']);
+            return !!detail || param.DefaultFlash;
         }
     };
 
@@ -578,7 +559,7 @@
     };
 
     Game_Event.prototype.findEventSensorNote = function(tags) {
-        return PluginManagerEx.findMetaValue(this.event(), tags);
+        return this.event().meta[tags[0]] || this.event().meta[tags[1]];
     };
 
     Game_Event.prototype.isVeryNearThePlayer = function() {
