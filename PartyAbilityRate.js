@@ -65,14 +65,14 @@
     Game_BattlerBase.prototype.partyAbilityRate = function(abilityNames) {
         return this.traitObjects().reduce((prev, traitObject) => {
             const rate = PluginManagerEx.findMetaValue(traitObject, abilityNames);
-            return !(rate == null) ? Math.max(rate, prev || 0) : prev;
+            return rate != null ? Math.max(rate, prev || 0) : prev;
         }, undefined);
     };
 
     Game_Party.prototype.partyAbilityRate = function(abilityNames) {
         return this.battleMembers().reduce((prev, actor) => {
             const rate = actor.partyAbilityRate(abilityNames);
-            return !(rate == null) ? Math.max(rate, prev || 0) : prev;
+            return rate != null ? Math.max(rate, prev || 0) : prev;
         }, undefined);
     };
 
