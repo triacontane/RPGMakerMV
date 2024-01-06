@@ -46,6 +46,10 @@
 
 /*~struct~AudioBgm:
  *
+ * @param label
+ * @text ラベル
+ * @desc ラベルです。識別用の設定値でありプラグインからは参照されません。
+ *
  * @param troopList
  * @text 敵グループリスト
  * @desc 対象のBGMを演奏する敵グループの一覧です。
