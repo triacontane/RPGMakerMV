@@ -50,13 +50,67 @@
  *  このプラグインはもうあなたのものです。
  */
 
-/*~struct~TEST:
+/*~struct~AudioSe:
  * @param name
+ * @text ファイル名称
  * @desc ファイル名称です。
  * @default
- * @require 1
  * @dir audio/se/
  * @type file
+ *
+ * @param volume
+ * @text ボリューム
+ * @desc ボリュームです。
+ * @default 90
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param pitch
+ * @text ピッチ
+ * @desc ピッチです。
+ * @default 100
+ * @type number
+ * @min 50
+ * @max 150
+ *
+ * @param pan
+ * @text 左右バランス
+ * @desc 左右バランスです。
+ * @default 0
+ * @type number
+ * @min -100
+ * @max 100
+ */
+
+/*~struct~Color:
+ * @param red
+ * @text 赤色
+ * @desc フラッシュの赤色の度合いです。
+ * @default 255
+ * @type number
+ * @max 255
+ *
+ * @param green
+ * @text 緑色
+ * @desc フラッシュの緑色の度合いです。
+ * @default 255
+ * @type number
+ * @max 255
+ *
+ * @param blue
+ * @text 青色
+ * @desc フラッシュの青色の度合いです。
+ * @default 255
+ * @type number
+ * @max 255
+ *
+ * @param alpha
+ * @text 強さ
+ * @desc フラッシュの強さです。
+ * @default 0
+ * @type number
+ * @max 255
  */
 
 (()=> {
