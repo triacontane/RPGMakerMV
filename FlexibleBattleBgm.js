@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/01/12 敵グループIDの範囲指定機能を追加
  1.0.0 2024/01/06 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -56,6 +57,18 @@
  * @default []
  * @type troop[]
  *
+ * @param startTroopId
+ * @text 敵グループID(開始)
+ * @desc 対象のBGMを演奏する敵グループを範囲指定したいときのIDの開始値です。
+ * @default 0
+ * @type troop
+ *
+ * @param endTroopId
+ * @text 敵グループID(終了)
+ * @desc 対象のBGMを演奏する敵グループを範囲指定したいときのIDの終了値です。
+ * @default 0
+ * @type troop
+ *
  * @param name
  * @text ファイル名称
  * @desc ファイル名称です。
@@ -103,9 +116,14 @@
     };
 
     Game_Troop.prototype.playTroopBattleBgm = function() {
-        const bgm = param.bgmList.find(bgm => bgm.troopList.includes(this._troopId));
+        const bgm = param.bgmList.find(bgm => this.isFlexibleBattleBgm(bgm));
         if (bgm) {
             AudioManager.playBgm(bgm);
         }
+    };
+
+    Game_Troop.prototype.isFlexibleBattleBgm = function(bgm) {
+        return bgm.troopList.includes(this._troopId) ||
+            (bgm.startTroopId <= this._troopId && bgm.endTroopId >= this._troopId);
     };
 })();
