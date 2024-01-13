@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2024/01/13 簡易ボイスプラグインと併用したとき、ボイスの音量設定でタイトルコールされるよう修正
  1.5.0 2022/07/25 BGM遅延を設定したとき、ゲーム終了してタイトル画面に戻ってくるとBGMが止まってしまう問題を修正
  1.4.1 2022/07/20 BGM遅延を設定したとき、コンティニュー画面などから戻ってくるとBGMが止まってしまう問題を修正
  1.4.0 2021/07/11 タイトルコールに発動条件を設定する機能を追加
@@ -154,10 +155,11 @@
         if (list && list.length > 0) {
             param.name = list[Math.randomInt(list.length)];
         }
+        const method = AudioManager.playVoice ? 'playVoice' : 'playSe';
         if (param.delay) {
-            setTimeout(AudioManager.playSe.bind(AudioManager, param), param.delay);
+            setTimeout(AudioManager[method].bind(AudioManager, param), param.delay);
         } else {
-            AudioManager.playSe(param);
+            AudioManager[method](param);
         }
     };
 })();
