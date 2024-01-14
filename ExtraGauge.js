@@ -240,7 +240,7 @@
  *
  * @param GaugeX
  * @text ゲージX座標
- * @desc ゲージのX座標です。ラベルが長い文字の場合は変更してください。
+ * @desc ゲージのX座標です。ラベル文字列をゲージに被らせたくないときに指定してください。
  * @default 28
  *
  * @param GaugeEndX
