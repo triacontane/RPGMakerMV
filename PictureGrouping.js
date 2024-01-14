@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2024/01/14 同じピクチャ番号でグループピクチャを再表示したときに一瞬チラつきが発生する現象を修正
  1.0.1 2023/11/12 グループ化していないピクチャを再表示できなくなる問題を修正
  1.0.0 2023/11/12 初版
 ----------------------------------------------------------------------------
@@ -155,39 +156,40 @@
 
     const _Sprite_Picture_loadBitmap      = Sprite_Picture.prototype.loadBitmap;
     Sprite_Picture.prototype.loadBitmap = function() {
-        this.destroyGrouping();
-        this._grouping = this.picture().findGrouping();
-        if (this._grouping) {
-            this.makeGroupingBitmap().then(() => null);
+        const grouping = this.picture().findGrouping();
+        if (grouping) {
+            this.makeGroupingBitmap(grouping).then(() => null);
         } else {
             _Sprite_Picture_loadBitmap.apply(this, arguments);
+            this.destroyGrouping();
         }
     };
 
-    Sprite_Picture.prototype.makeGroupingBitmap = async function() {
-        this.bitmap = new Bitmap();
-        this._groupingBitmaps = this._grouping.map(data => ImageManager.loadPicture(data.fileName));
-        await this.waitForGroupingLoad();
-        const width = this._grouping.reduce((prev, data) => {
+    Sprite_Picture.prototype.makeGroupingBitmap = async function(grouping) {
+        const bitmaps = grouping.map(data => ImageManager.loadPicture(data.fileName));
+        await this.waitForGroupingLoad(bitmaps);
+        const width = grouping.reduce((prev, data) => {
             const bitmap = ImageManager.loadPicture(data.fileName);
             return Math.max(prev, bitmap.width + data.x)
         }, 1);
-        const height = this._grouping.reduce((prev, data) => {
+        const height = grouping.reduce((prev, data) => {
             const bitmap = ImageManager.loadPicture(data.fileName);
             return Math.max(prev, bitmap.height + data.y)
         }, 1);
         this.bitmap = new Bitmap(width, height);
-        this._grouping.forEach(data => {
+        grouping.forEach(data => {
             const bitmap = ImageManager.loadPicture(data.fileName);
             this.bitmap.blt(bitmap, 0, 0, bitmap.width, bitmap.height, data.x, data.y);
         });
+        this.destroyGrouping();
+        this._groupingBitmap = this.bitmap;
     };
 
-    Sprite_Picture.prototype.waitForGroupingLoad = function() {
+    Sprite_Picture.prototype.waitForGroupingLoad = function(bitmaps) {
         return new Promise(resolve => {
-            this._groupingBitmaps.some(bitmap => {
+            bitmaps.some(bitmap => {
                 bitmap.addLoadListener(() => {
-                    if (this._groupingBitmaps.every(data => data.isReady())) {
+                    if (bitmaps.every(data => data.isReady())) {
                         resolve();
                         return true;
                     } else {
@@ -199,11 +201,9 @@
     };
 
     Sprite_Picture.prototype.destroyGrouping = function() {
-        if (this.bitmap && this._grouping) {
-            this.bitmap.destroy();
-            this.bitmap = null;
+        if (this._groupingBitmap) {
+            this._groupingBitmap.destroy();
+            this._groupingBitmap = null;
         }
-        this._grouping = null;
-        this._groupingBitmaps = null;
     };
 })();
