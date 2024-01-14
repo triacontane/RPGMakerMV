@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.18.0 2024/01/14 アクターのレベルゲージと経験値ゲージを簡単に表示できるスクリプト凡例を追加
  1.17.0 2023/12/19 ゲージが満タンのときにONになるスイッチを指定できる機能を追加
  1.16.0 2023/12/13 ゲージの表示位置をプレイヤーやイベントに連動させる機能を追加
  1.15.1 2023/11/22 1.0.3の修正内容のデグレが発生していたので再修正
@@ -168,13 +169,13 @@
  * @param CurrentMethod
  * @text 現在値取得方法
  * @desc ゲージの現在値を取得する方法です。変数、スクリプトのいずれかを設定します。
- * @default {"VariableId":"1","Script":"","FixedValue":""}
+ * @default {"VariableId":"0","Script":"","FixedValue":""}
  * @type struct<Method>
  *
  * @param MaxMethod
  * @text 最大値取得方法
  * @desc ゲージの最大値を取得する方法です。変数、スクリプト、固定値のいずれかを設定します。
- * @default {"VariableId":"0","Script":"","FixedValue":"100"}
+ * @default {"VariableId":"0","Script":"","FixedValue":""}
  * @type struct<Method>
  *
  * @param Detail
@@ -458,6 +459,10 @@
  * @option battler.mmp; // 最大MP
  * @option battler.tp; // TP
  * @option battler.maxTp(); // 最大MP
+ * @option battler.currentLevelGetExp(); // 現レベルの獲得経験値
+ * @option battler.currentLevelUpExp(); // 次レベルの必要経験値
+ * @option battler.level; // レベル
+ * @option battler.maxLevel(); // 最大レベル
  * @option meta.value; // メモ欄[value]の値
  *
  * @param FixedValue
@@ -799,7 +804,15 @@
 
     Game_Battler.prototype.findImageY = function() {
         return this._imageY || 0;
-    }
+    };
+
+    Game_Actor.prototype.currentLevelUpExp = function() {
+        return this.nextLevelExp() - this.currentLevelExp();
+    };
+
+    Game_Actor.prototype.currentLevelGetExp = function() {
+        return this.currentExp() - this.currentLevelExp();
+    };
 
     /**
      * Sprite_ExtraGaugeContainer
