@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2023/01/14 ダメージを受けたときを条件に重ね合わせや画像差し替えできる機能を追加
  1.0.0 2023/09/02 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -176,6 +177,12 @@
  * @default 0
  * @type state
  *
+ * @param damage
+ * @text ダメージ中
+ * @desc ダメージを受けたときに重ね合わせが表示されます。
+ * @default false
+ * @type boolean
+ *
  * @param script
  * @text スクリプト
  * @desc 重ね合わせる敵キャラの表示条件となるスクリプトです。指定スクリプトがtrueを返したときに表示されます。
@@ -219,9 +226,17 @@
         conditions.push(data.mpRate === 0 || this.mpRate() <= data.mpRate / 100);
         conditions.push(data.tpRate === 0 || this.tpRate() <= data.tpRate / 100);
         conditions.push(data.stateId === 0 || this.isStateAffected(data.stateId));
+        conditions.push(data.damage === false || this._performDamage);
         conditions.push(!data.script || eval(data.script));
         const result = conditions.every(condition => condition);
         return data.reverse ? !result : result;
+    };
+
+    const _Game_Enemy_performDamage = Game_Enemy.prototype.performDamage;
+    Game_Enemy.prototype.performDamage = function() {
+        _Game_Enemy_performDamage.apply(this, arguments);
+        this._performDamage = true;
+        setTimeout(() => this._performDamage = false, 500);
     };
 
     const _Sprite_Enemy_initialize = Sprite_Enemy.prototype.initialize;
