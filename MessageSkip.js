@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.17.1 2024/01/14 メッセージウィンドウが表示されていないときも、スキップの解除判定が有効になるよう修正
 // 1.17.0 2022/06/19 スキップモードのときは同時にイベントのFastForwardも有効になるよう仕様変更
 // 1.16.1 2021/08/29 スキップ中はウィンドウ背景が変わってもウィンドウを閉じないよう修正
 // 1.16.0 2021/06/15 ピクチャによるクリックは押し続けスキップの対象外とするよう仕様変更
@@ -760,7 +761,9 @@ function Sprite_Frame() {
     };
 
     Window_Message.prototype.updateSkipAuto = function() {
-        if (this.isClosed()) return;
+        if (this.isClosed() && !$gameMessage.skipFlg()) {
+            return;
+        }
         if (this.isAnySubWindowActive()) {
             $gameMessage.clearSkipInfo();
         } else {
