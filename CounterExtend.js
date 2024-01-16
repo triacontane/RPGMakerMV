@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.12.2 2024/01/17 2.12.1の修正で、行動制約の状態異常から復帰したときにゲージが溜まらなくなる問題を修正
 // 2.12.1 2024/01/16 タイムプログレス戦闘において、インターセプター設定で反撃で相手を行動不能にしたとき、行動入力中だと行動決定時にエラーになる問題を修正
 // 2.12.0 2023/08/17 反撃条件を「満たさなかったときに」だけ反撃できる設定を追加
 // 2.11.0 2023/08/11 デフォルトの反撃メッセージを表示する設定を追加
@@ -514,7 +515,7 @@
     Game_Battler.prototype.currentAction = function() {
         const action = _Game_Battler_currentAction.apply(this, arguments);
         // 無効なアクション(ユーザ入力中のアクション)をprocessTurnでスタックから取り除くと行動決定時にエラーになるので回避する
-        if (action && !action.isValidAction()) {
+        if (action && !action.isValidAction() && this.isInputting()) {
             return null;
         } else {
             return action;
