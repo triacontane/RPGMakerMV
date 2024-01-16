@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.1.1 2024/01/16 戦闘中にアニメーションを表示したとき、完了までウェイトを無効にしていてもイベント実行が止まってしまう場合がある問題を修正
  2.1.0 2023/03/27 RemoveAnimation.jsと組み合わせて表示中のアニメーションやフキダシを即時消去できる機能を追加
  2.0.0 2022/10/16 フキダシもアニメーションと同様に表示できる機能を追加
  1.2.1 2022/06/30 ヘルプ文言修正
@@ -242,6 +243,17 @@
     Spriteset_Battle.prototype.findTargetSprite = function(target) {
         const sprite = _Spriteset_Battle_findTargetSprite.apply(this, arguments);
         return sprite ? sprite : this.findPointTargetSprite(target);
+    };
+
+    const _Spriteset_Base_isAnimationPlaying = Spriteset_Base.prototype.isAnimationPlaying;
+    Spriteset_Base.prototype.isAnimationPlaying = function() {
+        const result = _Spriteset_Base_isAnimationPlaying.apply(this, arguments);
+        if (result) {
+            if (this._animationSprites.every(sprite => sprite.targetObjects[0] instanceof Point)) {
+                return false;
+            }
+        }
+        return result;
     };
 
     let pointAnimationCount = 0;
