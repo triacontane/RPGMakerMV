@@ -75,7 +75,7 @@
         const item = this.itemAt(index);
         if (!item && this.isEquipItem() && param.removeText) {
             const rect = this.itemLineRect(index);
-            this.drawText(param.removeText, rect.x, rect.y, rect.width, 'left');
+            this.drawTextEx(param.removeText, rect.x, rect.y, rect.width);
         }
     };
 
