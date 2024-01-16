@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.12.1 2024/01/16 タイムプログレス戦闘において、インターセプター設定で反撃で相手を行動不能にしたとき、行動入力中だと行動決定時にエラーになる問題を修正
 // 2.12.0 2023/08/17 反撃条件を「満たさなかったときに」だけ反撃できる設定を追加
 // 2.11.0 2023/08/11 デフォルトの反撃メッセージを表示する設定を追加
 // 2.10.0 2023/07/24 反撃条件に「スキルタイプ」を追加
@@ -466,6 +467,10 @@
         return {};
     };
 
+    Game_Action.prototype.isValidAction = function() {
+        return this.isSkill() || this.isItem();
+    };
+
     Game_Action.prototype.hasElement = function(elementId) {
         if (this.item().damage.type === 0) {
             return false;
@@ -503,6 +508,17 @@
             return;
         }
         _Game_Battler_performActionStart.apply(this, arguments);
+    };
+
+    const _Game_Battler_currentAction = Game_Battler.prototype.currentAction;
+    Game_Battler.prototype.currentAction = function() {
+        const action = _Game_Battler_currentAction.apply(this, arguments);
+        // 無効なアクション(ユーザ入力中のアクション)をprocessTurnでスタックから取り除くと行動決定時にエラーになるので回避する
+        if (action && !action.isValidAction()) {
+            return null;
+        } else {
+            return action;
+        }
     };
 
     const _BattleManager_endBattlerActions = BattleManager.endBattlerActions;
