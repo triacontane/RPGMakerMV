@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.12.3 2024/01/17 2.12.1の修正方法を変更
 // 2.12.2 2024/01/17 2.12.1の修正で、行動制約の状態異常から復帰したときにゲージが溜まらなくなる問題を修正
 // 2.12.1 2024/01/16 タイムプログレス戦闘において、インターセプター設定で反撃で相手を行動不能にしたとき、行動入力中だと行動決定時にエラーになる問題を修正
 // 2.12.0 2023/08/17 反撃条件を「満たさなかったときに」だけ反撃できる設定を追加
@@ -511,17 +512,6 @@
         _Game_Battler_performActionStart.apply(this, arguments);
     };
 
-    const _Game_Battler_currentAction = Game_Battler.prototype.currentAction;
-    Game_Battler.prototype.currentAction = function() {
-        const action = _Game_Battler_currentAction.apply(this, arguments);
-        // 無効なアクション(ユーザ入力中のアクション)をprocessTurnでスタックから取り除くと行動決定時にエラーになるので回避する
-        if (action && !action.isValidAction() && this.isInputting()) {
-            return null;
-        } else {
-            return action;
-        }
-    };
-
     const _BattleManager_endBattlerActions = BattleManager.endBattlerActions;
     BattleManager.endBattlerActions = function(battler) {
         if (this._action && this._action.isCounter()) {
@@ -588,8 +578,8 @@
             return;
         }
         const counter = this._counterQueue.shift();
-        if (counter) {
-            this.invokeCounterAction(counter.subject, counter.target, counter.action);
+        if (counter && counter.subject.canMove()) {
+            this.startCounterAction(counter.subject, counter.target, counter.action);
         } else if (this._counterSubject) {
             this._counterSubject = null;
             this._subject = null;
@@ -598,16 +588,17 @@
 
     const _BattleManager_processTurn = BattleManager.processTurn;
     BattleManager.processTurn = function() {
+        if (this._subject === this._counterSubject) {
+            this.endAction();
+            return;
+        }
         _BattleManager_processTurn.apply(this, arguments);
         if (!this._subject && this._counterSubject) {
             this._subject = this._counterSubject;
         }
     };
 
-    BattleManager.invokeCounterAction = function(subject, target, counterAction) {
-        if (!subject.canMove() || subject.isDead()) {
-            return;
-        }
+    BattleManager.startCounterAction = function(subject, target, counterAction) {
         this._phase = "action";
         this._counterSubject = subject;
         this._subject = subject;
@@ -683,6 +674,7 @@
             }
         });
         if (intercepted) {
+            // インターセプトされた行動は、カウンターアクション扱いで実行される
             this._counterQueue.push({
                 subject: subject,
                 target: targets[0],
