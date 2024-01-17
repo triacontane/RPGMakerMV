@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.19.0 2024/01/17 ラベルの表示位置を調整できる機能を追加
  1.18.0 2024/01/14 アクターのレベルゲージと経験値ゲージを簡単に表示できるスクリプト凡例を追加
  1.17.0 2023/12/19 ゲージが満タンのときにONになるスイッチを指定できる機能を追加
  1.16.0 2023/12/13 ゲージの表示位置をプレイヤーやイベントに連動させる機能を追加
@@ -553,6 +554,15 @@
  * @desc ゲージの左に表示されるラベル文字列です。
  * @default
  *
+ * @param LabelY
+ * @text ラベルY座標
+ * @desc ラベルのY座標です。
+ * @default 3
+ * @type number
+ * @min -9999
+ * @max 9999
+ * @parent Label
+ *
  * @param IconIndex
  * @text アイコン
  * @desc ラベルと一緒に描画されるアイコンです。ラベルと一緒に表示させると重なって表示されるので注意してください。
@@ -630,13 +640,13 @@
  * @text テキストカラー
  * @desc テキストカラーです。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
  * @default 0
- * @type number
+ * @type color
  *
  * @param OutlineColor
  * @text アウトラインカラー
  * @desc アウトラインカラーです。テキストカラー番号かCSS色指定(rgba(0, 0, 0, 0))を指定します。
  * @default 0
- * @type number
+ * @type color
  *
  * @param OutlineWidth
  * @text アウトライン横幅
@@ -919,6 +929,7 @@
             return sprite;
         }
     }
+    window.Sprite_ExtraGaugeContainer = Sprite_ExtraGaugeContainer;
 
     /**
      * Sprite_ExtraGauge
@@ -993,7 +1004,7 @@
         }
 
         updateBitmap() {
-            const visible = this.parent ? this.parent.visible : false;
+            const visible = this.parent ? this.parent.isVisible() : false;
             if (visible) {
                 if (!this._prevVisible) {
                     this._value = this._targetValue;
@@ -1146,6 +1157,11 @@
             return this._detail.Label || '';
         }
 
+        labelY() {
+            const y = this._detail.LabelY;
+            return isFinite(y) ? y : super.labelY();
+        }
+
         iconIndex() {
             return this._detail.IconIndex || 0;
         }
@@ -1278,4 +1294,5 @@
             this.bitmap.blt(bitmap, sx, sy, pw, ph, x, y);
         }
     }
+    window.Sprite_ExtraGauge = Sprite_ExtraGauge;
 })();
