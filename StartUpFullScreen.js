@@ -24,6 +24,64 @@
 //=============================================================================
 
 /*:
+ * @plugindesc Full Screen Startup
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StartUpFullScreen.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderAfter ElectronForMz
+ * @author triacontane
+ *
+ * @param Shutdown
+ * @text Shutdown
+ * @desc The name of the shutdown item to be added to the title screen.
+ * It is displayed only when running in the local environment.
+ * @default Shutdown
+ *
+ * @param DefaultFullScreen
+ * @text Starts up in full screen by default
+ * @desc If enabled, it will start full screen by default.
+ * @default false
+ * @type boolean
+ *
+ * @param Immediate
+ * @text immediate reflection
+ * @desc If enabled, the full screen state will be changed on the fly when the startup options are changed in the options.
+ * @default false
+ * @type boolean
+ *
+ * @param StartUpFullScreen
+ * @text full screen startup
+ * @desc The name of the item to be activated in all screens to be added to the options screen.
+ * It is displayed only when running in the local environment.
+ * @default Full Screen Startup
+ *
+ * @param UseGameEnd
+ * @text Added to Game End command
+ * @desc Add a shutdown item to the "Game End" command.
+ * @default true
+ * @type boolean
+ *
+ * @help StartUpFullScreen.js
+ *
+ * Add "Full Screen Startup" to the options screen.
+ * If enabled, the game will launch in full screen.
+ * Also add "Shutdown" to the title screen.
+ *
+ * This plugin is only valid when run in a local environment.
+ * When the event test is executed, tempo is prioritized and full-screening is disabled.
+ *
+ * You need the base plugin "PluginCommonBase.js" to use this plugin.
+ * The "PluginCommonBase.js" is stored in the following folder under the installation folder of RPG Maker MZ.
+ * dlc/BasicResources/plugins/official
+ *
+ * User Agreement:
+ *  You may alter or redistribute the plugin without permission. There are no restrictions on usage format
+ *  (such as adult- or commercial-use only).
+ *  This plugin is now all yours.
+ */
+
+/*:ja
  * @plugindesc フルスクリーンで起動プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StartUpFullScreen.js
@@ -304,4 +362,3 @@ function Scene_Terminate() {
         SceneManager.terminate();
     };
 })();
-
