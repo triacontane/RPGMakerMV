@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/01/18 長押しにマウスクリックを追加、リファクタリング
  1.0.0 2024/01/17 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -30,7 +31,7 @@
  * @help ExtraGaugePressAttachment.js
  *
  * 汎用ゲージプラグインのボタン長押しアタッチメントです。
- * 同プラグインのv1.18.0以降が必要です。
+ * 同プラグインのv1.19.0以降が必要です。
  *
  * パラメータで指定したボタンを長押ししているあいだ、ゲージが増加します。
  * 指定した場合、汎用ゲージプラグインの現在値設定は無視されます。
@@ -73,6 +74,7 @@
  * @option debug
  * @option escape
  * @option menu
+ * @option left_click
  *
  * @param hiddenByDefault
  * @text 長押し以外では非表示
@@ -91,6 +93,12 @@
  * @desc ゲージが最大値になったときに演奏されるSEです。
  * @default
  * @type struct<AudioSe>
+ *
+ * @param maxSwitchId
+ * @text 最大値スイッチ
+ * @desc ゲージが最大値になったときにONになるスイッチです。
+ * @default 0
+ * @type switch
  *
  */
 
@@ -148,7 +156,6 @@
         _Sprite_ExtraGaugeContainer_createGauge.apply(this, arguments);
         if (this._longPress && this.isVisible()) {
             this.updateLongPress();
-            this.updateLongPressMaxSe();
         }
     };
 
@@ -159,16 +166,24 @@
             this._longPressGaugeValue = 0;
         }
         this._gauge.setLongPressValue(this._longPressGaugeValue);
+        if (this._gauge.isFull()) {
+            if (!this._onMax) {
+                this.updateLongPressOnMax();
+            }
+            this._onMax = true;
+        } else {
+            this._onMax = false;
+        }
     };
 
-    Sprite_ExtraGaugeContainer.prototype.updateLongPressMaxSe = function() {
-        if (this._gauge.isFull()) {
-            if (!this._playMaxSe) {
-                AudioManager.playSe(this._longPress.maxSe);
-            }
-            this._playMaxSe = true;
-        } else {
-            this._playMaxSe = false;
+    Sprite_ExtraGaugeContainer.prototype.updateLongPressOnMax = function() {
+        const se = this._longPress.maxSe;
+        if (se && se.name) {
+            AudioManager.playSe(se);
+        }
+        const switchId = this._longPress.maxSwitchId;
+        if (switchId) {
+            $gameSwitches.setValue(switchId, true);
         }
     };
 
@@ -187,7 +202,11 @@
     };
 
     Sprite_ExtraGaugeContainer.prototype.isButtonPress = function() {
-        return this._longPress.Buttons.some(button => Input.isPressed(button));
+        const buttons = this._longPress.Buttons || [];
+        if (buttons.includes('left_click') && TouchInput.isPressed()) {
+            return true;
+        }
+        return buttons.some(button => Input.isPressed(button));
     };
 
     Sprite_ExtraGauge.prototype.setLongPressValue = function(value) {
