@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/01/19 汎用ゲージプラグインで設定した「取得変数ID」の変数に長押しによって蓄積された値が設定されるよう修正
  1.1.0 2024/01/18 長押しにマウスクリックを追加、リファクタリング
  1.0.0 2024/01/17 初版
 ----------------------------------------------------------------------------
@@ -34,12 +35,16 @@
  * 同プラグインのv1.19.0以降が必要です。
  *
  * パラメータで指定したボタンを長押ししているあいだ、ゲージが増加します。
- * 指定した場合、汎用ゲージプラグインの現在値設定は無視されます。
+ * 指定した場合、汎用ゲージプラグインの現在値設定は無視されます。(※1)
  * ゲージの増加量は1フレームにつき1なので、ゲージ最大値を変更することで
  * 満タンになるまでの時間を調整できます。
  *
  * 汎用ゲージプラグイン側の表示スイッチの条件を満たしていないときは
  * 長押しは無効となります。
+ *
+ * ※1
+ * ただし、取得変数IDを指定しておくとその変数に
+ * 長押しで蓄積された値が自動設定されます。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -210,7 +215,16 @@
     };
 
     Sprite_ExtraGauge.prototype.setLongPressValue = function(value) {
+        if (this._longPressGaugeValue === value) {
+            return;
+        }
         this._longPressGaugeValue = value;
+        if (value > 0) {
+            const variableId = this._data.CurrentMethod?.VariableId;
+            if (variableId) {
+                $gameVariables.setValue(variableId, value);
+            }
+        }
     };
 
     const _Sprite_ExtraGauge_currentValue = Sprite_ExtraGauge.prototype.currentValue;
