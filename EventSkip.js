@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/01/20 フェードアウト時に暗転の代わりに画像を表示できる機能を追加
  1.0.0 2024/01/18 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -40,6 +41,13 @@
  * @desc スキップ開始時のフェードアウトと終了時のフェードインにかかるフレーム数です。
  * @default 8
  * @type number
+ *
+ * @param pictureFadeImage
+ * @text ピクチャフェード画像
+ * @desc フェードアウト時に暗転する代わりに表示する画像です。遠景フォルダから選択します。
+ * @default
+ * @dir img/parallaxes
+ * @type file
  *
  * @help EventSkip.js
  *
@@ -111,6 +119,7 @@
     Scene_Map.prototype.initialize = function() {
         _Scene_Map_initialize.apply(this, arguments);
         this._eventSkip = $gameMap.isNeedEventSkip() || false;
+        this._skipSwitchId = param.skipSwitchId;
     };
 
     const _Scene_Map_isFastForward = Scene_Map.prototype.isFastForward;
@@ -139,13 +148,14 @@
 
     Scene_Map.prototype.updateEventSkip = function() {
         const skip = $gameMap.isNeedEventSkip();
-        if (!skip) {
-            $gameSwitches.setValue(param.skipSwitchId, false);
+        if (!skip && $gameSwitches.value(this._skipSwitchId)) {
+            $gameSwitches.setValue(this._skipSwitchId, false);
         }
         if (this._eventSkip !== skip) {
             this._eventSkip = skip;
             const frame = param.fadeFrame;
             if (skip) {
+                this.createPictureFadeIfNeed();
                 this.startFadeOut(frame, false);
             } else {
                 this.startFadeIn(frame, false);
@@ -154,11 +164,36 @@
         $gameMap.setEventSkip(this.isEventSkip());
     };
 
+    Scene_Map.prototype.createPictureFadeIfNeed = function() {
+        if (!param.pictureFadeImage) {
+            return;
+        }
+        this._pictureFadeSprite = new TilingSprite();
+        this._pictureFadeSprite.move(0, 0, Graphics.width, Graphics.height);
+        this._pictureFadeSprite.bitmap = ImageManager.loadParallax(param.pictureFadeImage);
+        this.addChild(this._pictureFadeSprite);
+    };
+
+    const _Scene_Map_updateColorFilter = Scene_Map.prototype.updateColorFilter;
+    Scene_Map.prototype.updateColorFilter = function() {
+        if (this._pictureFadeSprite) {
+            if (this._fadeDuration > 0 || this._fadeOpacity > 0) {
+                this._pictureFadeSprite.opacity = this._fadeOpacity;
+                return;
+            } else {
+                this.removeChild(this._pictureFadeSprite);
+                this._pictureFadeSprite = null;
+            }
+        }
+        _Scene_Map_updateColorFilter.apply(this, arguments);
+    };
+
     const _Scene_Map_fadeInForTransfer = Scene_Map.prototype.fadeInForTransfer;
     Scene_Map.prototype.fadeInForTransfer = function() {
         if (this.isEventSkip()) {
             this._fadeWhite = false;
             this._fadeOpacity = 255;
+            this.createPictureFadeIfNeed();
             this.updateColorFilter();
             return;
         }
