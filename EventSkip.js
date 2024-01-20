@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/01/20 フェードアウト中にローディングスピナーを表示できる機能を追加
  1.1.0 2024/01/20 フェードアウト時に暗転の代わりに画像を表示できる機能を追加
  1.0.0 2024/01/18 初版
 ----------------------------------------------------------------------------
@@ -48,6 +49,12 @@
  * @default
  * @dir img/parallaxes
  * @type file
+ *
+ * @param loadingSpinner
+ * @text ローディングスピナー
+ * @desc スキップ中にローディングスピナーを表示します。
+ * @default false
+ * @type boolean
  *
  * @help EventSkip.js
  *
@@ -153,15 +160,35 @@
         }
         if (this._eventSkip !== skip) {
             this._eventSkip = skip;
-            const frame = param.fadeFrame;
             if (skip) {
-                this.createPictureFadeIfNeed();
-                this.startFadeOut(frame, false);
+                this.startEventSkip();
             } else {
-                this.startFadeIn(frame, false);
+                this.endEventSkip();
             }
         }
         $gameMap.setEventSkip(this.isEventSkip());
+    };
+
+    Scene_Map.prototype.startEventSkip = function() {
+        this.createPictureFadeIfNeed();
+        if (param.loadingSpinner) {
+            Graphics.startLoading();
+        }
+        this.startFadeOut(param.fadeFrame, false);
+    };
+
+    Scene_Map.prototype.endEventSkip = function() {
+        if (param.loadingSpinner) {
+            Graphics.endLoading();
+        }
+        this.startFadeIn(param.fadeFrame, false);
+    };
+
+    Scene_Map.prototype.continueEventSkip = function() {
+        this._fadeWhite = false;
+        this._fadeOpacity = 255;
+        this.createPictureFadeIfNeed();
+        this.updateColorFilter();
     };
 
     Scene_Map.prototype.createPictureFadeIfNeed = function() {
@@ -191,10 +218,7 @@
     const _Scene_Map_fadeInForTransfer = Scene_Map.prototype.fadeInForTransfer;
     Scene_Map.prototype.fadeInForTransfer = function() {
         if (this.isEventSkip()) {
-            this._fadeWhite = false;
-            this._fadeOpacity = 255;
-            this.createPictureFadeIfNeed();
-            this.updateColorFilter();
+            this.continueEventSkip();
             return;
         }
         _Scene_Map_fadeInForTransfer.apply(this, arguments);
