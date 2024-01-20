@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2024/01/20 最大値スイッチがONになったあとで場所移動すると、再度最大値スイッチがONになる問題を修正
  1.2.0 2024/01/19 汎用ゲージプラグインで設定した「取得変数ID」の変数に長押しによって蓄積された値が設定されるよう修正
  1.1.0 2024/01/18 長押しにマウスクリックを追加、リファクタリング
  1.0.0 2024/01/17 初版
@@ -219,6 +220,7 @@
             return;
         }
         this._longPressGaugeValue = value;
+        this._value = value;
         if (value > 0) {
             const variableId = this._data.CurrentMethod?.VariableId;
             if (variableId) {
