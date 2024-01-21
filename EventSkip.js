@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2024/01/21 場所移動後にローディングスピナーが消えてしまう問題を修正
  1.2.0 2024/01/20 フェードアウト中にローディングスピナーを表示できる機能を追加
  1.1.0 2024/01/20 フェードアウト時に暗転の代わりに画像を表示できる機能を追加
  1.0.0 2024/01/18 初版
@@ -149,6 +150,10 @@
         this.updateEventSkip();
     };
 
+    Scene_Base.prototype.isEventSkip = function() {
+        return false;
+    };
+
     Scene_Map.prototype.isEventSkip = function() {
         return this._eventSkip && !this.isFading();
     };
@@ -238,5 +243,13 @@
             return;
         }
         _AudioManager_playSe.apply(this, arguments);
+    };
+
+    const _SceneManager_onSceneStart = SceneManager.onSceneStart;
+    SceneManager.onSceneStart = function() {
+        _SceneManager_onSceneStart.apply(this, arguments);
+        if (this._scene.isEventSkip() && param.loadingSpinner) {
+            Graphics.startLoading();
+        }
     };
 })();
