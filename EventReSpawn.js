@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.5 2024/01/21 テンプレートイベントとの順序関係を明記
  1.2.4 2023/10/14 動的イベントを生成した瞬間にアニメーションやフキダシを再生しようとすると表示されない問題を修正
  1.2.3 2022/03/02 無効なイベントIDもしくは座標を指定したときエラーではなく、警告ログの出力に留めるよう仕様変更
  1.2.2 2021/11/23 セルフスイッチを維持しない設定のときはテンプレートイベントのセルフ変数も消去するよう変更
@@ -28,6 +29,7 @@
  * @author Triacontane
  * @target MZ
  * @base PluginCommonBase
+ * @orderAfter TemplateEvent
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventReSpawn.js
  *
  * @param keepSelfSwitch
@@ -186,6 +188,7 @@
  * @author トリアコンタン
  * @target MZ
  * @base PluginCommonBase
+ * @orderAfter TemplateEvent
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventReSpawn.js
  *
  * @param keepSelfSwitch
