@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.16.0 2024/01/24 入力中のアクターコマンドによって立ち絵を切り替える機能を追加
 // 3.15.1 2023/12/05 プラグインパラメータの一部初期値を使いやすいように変更
 // 3.15.0 2023/12/05 立ち絵ファイルの切り替わり時にクロスフェードできる機能を追加
 // 3.14.1 2023/10/06 動的ファイル名のみを指定しているとき、画像が適切に更新されなくなっていた問題を修正
@@ -367,6 +368,31 @@
  * @desc アクターがコマンド入力の場合に表示条件を満たします。戦闘中以外は常に表示条件を満たします。
  * @default false
  * @type boolean
+ *
+ * @param InputCommand
+ * @text 入力コマンド条件
+ * @desc 入力中条件を有効にしたときの対象コマンドを指定します。なしを設定すると、常に表示条件を満たします。
+ * @default
+ * @type select
+ * @parent Inputting
+ * @option なし
+ * @value
+ * @option 攻撃
+ * @value attack
+ * @option 防御
+ * @value guard
+ * @option スキル
+ * @value skill
+ * @option アイテム
+ * @value item
+ *
+ * @param InputSkillType
+ * @text 入力スキルタイプ条件
+ * @desc 入力コマンド条件をスキルにしたときの対象スキルタイプを指定します。
+ * @default 1
+ * @type number
+ * @min 1
+ * @parent Inputting
  *
  * @param Action
  * @text 行動中条件
@@ -810,7 +836,8 @@
             conditions.push(file => !file.HpLowerLimit || file.HpLowerLimit <= this._actor.hpRate() * 100);
             conditions.push(file => !file.Motion || this._actor.isMotionTypeValid(file.Motion));
             conditions.push(file => !file.Action || this._actor.isAction() || !$gameParty.inBattle());
-            conditions.push(file => !file.Inputting || this._actor.isInputting() || !$gameParty.inBattle());
+            conditions.push(file => !file.Inputting ||
+                this._actor.isInputCommand(file.InputCommand, file.InputSkillType) ||!$gameParty.inBattle());
             conditions.push(file => !file.State || this._actor.isStateAffected(file.State));
             conditions.push(file => !file.Weapon || this._actor.hasWeapon($dataWeapons[file.Weapon]));
             conditions.push(file => !file.Armor || this._actor.hasArmor($dataArmors[file.Armor]));
@@ -1030,6 +1057,35 @@
         _Game_Battler_requestMotion.apply(this, arguments);
         if (this instanceof Game_Actor) {
             this.requestPictureMotion(motionType);
+        }
+    };
+
+    Game_Battler.prototype.isInputCommand = function(command, skillType) {
+        if (!this.isInputting()) {
+            this._commandSymbol = null;
+            this._commandSkillType = null;
+            return false;
+        } else if (command && this._commandSymbol !== command) {
+            return false;
+        } else if (command === 'skill' && this._commandSkillType !== skillType) {
+            return false;
+        } else {
+            return true;
+        }
+    };
+
+    Game_Battler.prototype.setCommandSymbol = function(symbol, skillType) {
+        this._commandSymbol = symbol;
+        this._commandSkillType = skillType;
+    };
+
+    const _Window_ActorCommand_select = Window_ActorCommand.prototype.select;
+    Window_ActorCommand.prototype.select = function(index) {
+        _Window_ActorCommand_select.apply(this, arguments);
+        if (this._actor) {
+            const symbol = this.currentSymbol();
+            const ext = this.currentExt();
+            this._actor.setCommandSymbol(symbol, ext);
         }
     };
 
