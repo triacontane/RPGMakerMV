@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2024/01/25 カレンダーウィンドウの下をプレイヤーが通ったらウィンドウを半透明にするよう修正
 // 2.5.0 2023/09/11 カレンダーウィンドウのプライオリティをメッセージウィンドウの下に変更
 // 2.4.2 2023/04/04 インターバルを0に設定したアラームを指定すると、設定次第でフリーズする場合がある問題を修正
 // 2.4.1 2022/04/14 2.4.0でカレンダーのフォントサイズを変更したとき描画位置がズレる問題を修正
@@ -1270,9 +1271,27 @@ function Window_Chronus() {
     Window_Chronus.prototype.update = function() {
         if (this.chronus().isShowingCalendar()) {
             this.show();
-            if (this.chronus().isNeedRefresh()) this.refresh();
+            if (this.chronus().isNeedRefresh()) {
+                this.refresh();
+            }
+            this.updateOpacity();
         } else {
             this.hide();
+        }
+    };
+
+    Window_Chronus.prototype.updateOpacity = function() {
+        const px = $gamePlayer.screenX();
+        const py = $gamePlayer.screenY() - $gameMap.tileHeight() / 2;
+        if (this.x <= px && this.x + this.width >= px &&
+            this.y <= py && this.y + this.height >= py) {
+            this.opacity = 128;
+            this.backOpacity = 128;
+            this.contentsOpacity = 128;
+        } else {
+            this.opacity = 255;
+            this.backOpacity = 255;
+            this.contentsOpacity = 255;
         }
     };
 
