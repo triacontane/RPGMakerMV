@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/01/28 長押しボタンを離したときにゲージをリセットするか維持するかを設定できる機能を追加
  1.2.1 2024/01/20 最大値スイッチがONになったあとで場所移動すると、再度最大値スイッチがONになる問題を修正
  1.2.0 2024/01/19 汎用ゲージプラグインで設定した「取得変数ID」の変数に長押しによって蓄積された値が設定されるよう修正
  1.1.0 2024/01/18 長押しにマウスクリックを追加、リファクタリング
@@ -106,6 +107,15 @@
  * @default 0
  * @type switch
  *
+ * @param onRelease
+ * @text 離したときの動作
+ * @desc 長押しを離したときの動作です。
+ * @default reset
+ * @type select
+ * @option リセット
+ * @value reset
+ * @option 維持
+ * @value keep
  */
 
 /*~struct~AudioSe:
@@ -169,7 +179,9 @@
         if (this.isButtonPress()) {
             this._longPressGaugeValue = Math.min(this._longPressGaugeValue + 1, this._gauge.currentMaxValue());
         } else {
-            this._longPressGaugeValue = 0;
+            if (this._longPress.onRelease !== 'keep') {
+                this._longPressGaugeValue = 0;
+            }
         }
         this._gauge.setLongPressValue(this._longPressGaugeValue);
         if (this._gauge.isFull()) {
