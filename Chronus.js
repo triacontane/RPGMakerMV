@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2024/01/28 天候を設定しているときにメニューの開閉を実施すると、天候の強さが変わってしまう場合がある問題を修正
 // 2.6.0 2024/01/25 カレンダーウィンドウの下をプレイヤーが通ったらウィンドウを半透明にするよう修正
 // 2.5.0 2023/09/11 カレンダーウィンドウのプライオリティをメッセージウィンドウの下に変更
 // 2.4.2 2023/04/04 インターバルを0に設定したアラームを指定すると、設定次第でフリーズする場合がある問題を修正
@@ -1437,7 +1438,6 @@ function Window_Chronus() {
 
     Game_Chronus.prototype.onMapLoaded = function() {
         this.updateWeatherType();
-        this.updateWeatherPower();
         this.refreshWeather(true);
     };
 
