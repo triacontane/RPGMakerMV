@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/01/29 イベントグラフィックが指定されているときだけ割り込み実行する機能を追加
  1.1.0 2022/11/04 特定のページ番号にのみ割り込みする機能を追加
                   並列処理のイベントを割り込み対象外にできる機能を追加
                   選択肢や条件分岐の分岐終了のタイミングで終了後の割り込み処理が走ってしまう問題を修正
@@ -90,6 +91,12 @@
  * @default 0
  * @type number
  *
+ * @param graphicExist
+ * @text グラフィック存在判定
+ * @desc イベントグラフィック(タイルは含まない)が指定されているときだけ実行します。
+ * @default false
+ * @type boolean
+ *
  * @param invalidParallel
  * @text 並列処理は無効
  * @desc 並列処理のマップイベントには割り込みしません。
@@ -164,6 +171,8 @@
         } else if (item.invalidParallel && !($gameMap.isInterpreterOf(this))) {
             return false;
         } else if (item.pageIndex > 0 && pageIndex !== item.pageIndex) {
+            return false;
+        } else if (item.graphicExist && !event.characterName()) {
             return false;
         } else if (!item.tagValue && type !== 'none') {
             return true;
