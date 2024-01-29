@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.3 2024/01/28 一度もパーティに加わったことのないアクターに対する名前入力ができない不具合を修正
 // 1.4.2 2020/08/29 RestrictionTargetSkill.jsと組み合わせたときの軽量化対策
 // 1.4.1 2019/09/16 1.4.0の機能追加により発生した問題を修正
 // 1.4.0 2019/09/16 バトラーグラフィックを反転できる機能を追加
@@ -173,7 +174,7 @@
         }
         var windowLayer = SceneManager._scene._windowLayer;
         if (windowLayer) {
-            var result = windowLayer.children[0].convertEscapeCharacters(text);
+            var result = (windowLayer.children[0] || new Window_Base(0, 0, 0, 0)).convertEscapeCharacters(text);
             return evalFlg ? eval(result) : result;
         } else {
             return text;
