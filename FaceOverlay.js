@@ -28,6 +28,10 @@
  * @type struct<Overlay>[]
  *
  * @help FaceOverlay.js
+ *
+ * フェイス画像に別の画像を重ね合わせて表示できます。
+ * スイッチやフェイス画像を表示条件に指定できます。
+ * 画像はウィンドウの枠外にも表示されるので共通の装飾枠などに使えます。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
