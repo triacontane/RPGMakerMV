@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.1 2024/02/04 詳細タグが指定されていた場合は、必ずその設定を利用するよう修正
 // 3.7.0 2024/01/04 後方互換性のために残しておいたタグ設定の説明をヘルプから削除（実装は残ります）
 // 3.6.0 2023/11/02 3.5.0で追加した機能で、イベントごとに異なるスイッチ、セルフスイッチを指定できる機能を追加
 // 3.5.0 2023/10/23 検知範囲に入ったときにONになるスイッチ、セルフスイッチを指定できる機能を追加
@@ -551,7 +552,7 @@
 
     Game_Event.prototype.getSensorBalloonId = function() {
         const detail = this.findEventSensorDetail();
-        if (detail && detail.Balloon) {
+        if (detail) {
             return detail.Balloon;
         }
         const balloonId = this.findEventSensorNote( ['NESフキダシ対象', 'NESBalloonEvent']);
@@ -595,7 +596,7 @@
 
     Game_Event.prototype.findSensorRange = function() {
         const detail = this.findEventSensorDetail();
-        if (detail && detail.SensorRange) {
+        if (detail) {
             return detail.SensorRange;
         } else {
             return param.SensorRange;
@@ -604,7 +605,7 @@
 
     Game_Event.prototype.findSensorDistance = function() {
         const detail = this.findEventSensorDetail();
-        if (detail && detail.SensorDistance) {
+        if (detail) {
             return detail.SensorDistance;
         } else {
             return param.SensorDistance;
@@ -613,7 +614,7 @@
 
     Game_Event.prototype.findSensorFlash = function() {
         const detail = this.findEventSensorDetail();
-        if (detail && detail.FlashColor) {
+        if (detail) {
             return detail.FlashColor;
         } else {
             return param.FlashColor;
@@ -622,7 +623,7 @@
 
     Game_Event.prototype.findSensorSwitch = function() {
         const detail = this.findEventSensorDetail();
-        if (detail && detail.SensorSwitch) {
+        if (detail) {
             return detail.SensorSwitch;
         } else {
             return param.SensorSwitch;
@@ -631,7 +632,7 @@
 
     Game_Event.prototype.findSensorSelfSwitch = function() {
         const detail = this.findEventSensorDetail();
-        if (detail && detail.SensorSelfSwitch) {
+        if (detail) {
             return detail.SensorSelfSwitch;
         } else {
             return param.SensorSelfSwitch;
