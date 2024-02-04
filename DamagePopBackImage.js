@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/02/04 MPダメージとMP回復の背景画像を指定できる機能を追加
  1.0.0 2024/02/04 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -30,6 +31,20 @@
  *
  * @param recoveryImage
  * @text 回復背景
+ * @desc HP,MP回復を受けたときの背景画像
+ * @default
+ * @type file
+ * @dir img/pictures
+ *
+ * @param mpDamageImage
+ * @text MPダメージ背景
+ * @desc HP,MPダメージを受けたときの背景画像
+ * @default
+ * @type file
+ * @dir img/pictures
+ *
+ * @param mpRecoveryImage
+ * @text MP回復背景
  * @desc HP,MP回復を受けたときの背景画像
  * @default
  * @type file
@@ -96,9 +111,8 @@
     };
 
     Sprite_Damage.prototype.createBackImageSprite = function() {
-        const name = this._colorType % 2 === 0 ? param.damageImage : param.recoveryImage;
         const sprite = this.createChildSprite(200, 200);
-        sprite.bitmap = ImageManager.loadPicture(name);
+        sprite.bitmap = ImageManager.loadPicture(this.findBackImageName());
         sprite.anchor.y = 0.5;
         sprite.x = param.offsetX || 0;
         sprite.dy = 0;
@@ -108,6 +122,19 @@
         }
         this._backSprite = sprite;
         return sprite;
+    };
+
+    Sprite_Damage.prototype.findBackImageName = function() {
+        switch (this._colorType) {
+            case 0:
+                return param.damageImage;
+            case 1:
+                return param.recoveryImage;
+            case 2:
+                return param.mpDamageImage || param.damageImage;
+            case 3:
+                return param.mpRecoveryImage || param.recoveryImage;
+        }
     };
 
     const _Sprite_Damage_updateChild = Sprite_Damage.prototype.updateChild;
