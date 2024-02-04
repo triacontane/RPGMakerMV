@@ -60,6 +60,9 @@
  * @max 255
  *
  * @help DamagePopBackImage.js
+ *
+ * ダメージポップアップに背景画像を指定できます。
+ * ダメージと回復とで異なる画像を指定可能です。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
