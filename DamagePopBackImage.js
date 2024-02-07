@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.0.0 2024/02/08 ダメージの量や種別に応じて複数のポップアップ画像を使い分けられるよう仕様変更
  1.1.0 2024/02/04 MPダメージとMP回復の背景画像を指定できる機能を追加
  1.0.0 2024/02/04 初版
 ----------------------------------------------------------------------------
@@ -22,33 +23,11 @@
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
- * @param damageImage
- * @text ダメージ背景
- * @desc HP,MPダメージを受けたときの背景画像
- * @default
- * @type file
- * @dir img/pictures
- *
- * @param recoveryImage
- * @text 回復背景
- * @desc HP,MP回復を受けたときの背景画像
- * @default
- * @type file
- * @dir img/pictures
- *
- * @param mpDamageImage
- * @text MPダメージ背景
- * @desc HP,MPダメージを受けたときの背景画像
- * @default
- * @type file
- * @dir img/pictures
- *
- * @param mpRecoveryImage
- * @text MP回復背景
- * @desc HP,MP回復を受けたときの背景画像
- * @default
- * @type file
- * @dir img/pictures
+ * @param damageImageList
+ * @text ダメージ背景リスト
+ * @desc ダメージや回復を受けたときの背景画像のリストです。条件を満たす最初の画像が表示されます。
+ * @default []
+ * @type struct<Image>[]
  *
  * @param offsetX
  * @text X座標調整値
@@ -90,29 +69,67 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~Image:
+ *
+ * @param damageImage
+ * @text 背景画像
+ * @desc ダメージを受けたときの背景画像
+ * @default
+ * @type file
+ * @dir img/pictures
+ *
+ * @param damageType
+ * @text ダメージ種別
+ * @desc ダメージをHP,MPのいずれかで指定します。
+ * @default hp
+ * @type select
+ * @option HP
+ * @value hp
+ * @option MP
+ * @value mp
+ *
+ * @param damageUpper
+ * @text ダメージ上限
+ * @desc ダメージが指定値以下だった場合に表示されます。
+ * @default
+ * @type number
+ *
+ * @param damageLower
+ * @text ダメージ下限
+ * @desc ダメージが指定値以上だった場合に演奏されます。
+ * @default
+ * @type number
+ *
+ * @param miss
+ * @text ミス条件
+ * @desc ミスだった場合に表示されます。
+ * @default false
+ * @type boolean
+ */
+
 (() => {
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
-    const _Sprite_Damage_createMiss = Sprite_Damage.prototype.createMiss;
-    Sprite_Damage.prototype.createMiss = function() {
-        this.createBackImageSprite();
-        _Sprite_Damage_createMiss.apply(this, arguments);
+    const _Sprite_Damage_setup = Sprite_Damage.prototype.setup;
+    Sprite_Damage.prototype.setup = function(target) {
+        const result = target.result();
+        this.createBackImageSprite(result);
+        _Sprite_Damage_setup.apply(this, arguments);
     };
 
     const _Sprite_Damage_createDigits = Sprite_Damage.prototype.createDigits;
-    Sprite_Damage.prototype.createDigits = function(baseRow, value) {
-        this.createBackImageSprite();
+    Sprite_Damage.prototype.createDigits = function(value) {
         _Sprite_Damage_createDigits.apply(this, arguments);
         if (this._digit) {
             this._backSprite.digit = (this._digit - 1) / 2;
         }
     };
 
-    Sprite_Damage.prototype.createBackImageSprite = function() {
+    Sprite_Damage.prototype.createBackImageSprite = function(result) {
         const sprite = this.createChildSprite(200, 200);
-        sprite.bitmap = ImageManager.loadPicture(this.findBackImageName());
+        sprite.bitmap = ImageManager.loadPicture(this.findBackImageName(result));
         sprite.anchor.y = 0.5;
         sprite.x = param.offsetX || 0;
         sprite.dy = 0;
@@ -124,18 +141,32 @@
         return sprite;
     };
 
-    Sprite_Damage.prototype.findBackImageName = function() {
-        switch (this._colorType) {
-            case 0:
-                return param.damageImage;
-            case 1:
-                return param.recoveryImage;
-            case 2:
-                return param.mpDamageImage || param.damageImage;
-            case 3:
-                return param.mpRecoveryImage || param.recoveryImage;
+    Sprite_Damage.prototype.findBackImageName = function(result) {
+        const list = param.damageImageList;
+        for (const data of list) {
+            if (this.isMatchCondition(data, result)) {
+                return data.damageImage;
+            }
         }
+        return '';
     };
+
+    Sprite_Damage.prototype.isMatchCondition = function(data, result) {
+        if (data.damageType === 'hp' && result.hpAffected) {
+            return this.isMatchDamageCondition(data, result.hpDamage);
+        } else if (data.damageType === 'mp' && result.mpDamage !== 0) {
+            return this.isMatchDamageCondition(data, result.mpDamage);
+        } else if (data.miss && result.missed) {
+            return true;
+        }
+        return false;
+    }
+
+    Sprite_Damage.prototype.isMatchDamageCondition = function(data, damage) {
+        const lower = data.damageLower !== '' ? data.damageLower : -Infinity;
+        const upper = data.damageUpper !== '' ? data.damageUpper : Infinity;
+        return lower <= damage && damage <= upper;
+    }
 
     const _Sprite_Damage_updateChild = Sprite_Damage.prototype.updateChild;
     Sprite_Damage.prototype.updateChild = function(sprite) {
