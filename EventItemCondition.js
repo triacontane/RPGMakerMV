@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.1 2024/02/07 競合対策
 // 1.0.0 2024/02/07 MZ向けに仕様を再検討
 // ----------------------------------------------------------------------------
 // [Blog]   : http://triacontane.blogspot.jp/
@@ -86,7 +87,7 @@
     };
 
     Window_EventItem.prototype.findEventItemCondition = function(item) {
-        return param.ConditionList.find(condition => condition.itemId === item.id);
+        return DataManager.isItem(item) && param.ConditionList.find(condition => condition.itemId === item.id);
     };
 
     Window_EventItem.prototype.isOkEventItem = function(item) {
