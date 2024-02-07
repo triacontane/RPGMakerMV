@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/02/07 ダメージ効果音が変更されたときに専用メッセージを表示する機能を追加
  1.0.1 2023/12/21 スクリプトの条件を追加
  1.0.0 2023/12/20 初版
 ----------------------------------------------------------------------------
@@ -54,6 +55,10 @@
  * @param label
  * @text ラベル
  * @desc 効果音を識別するためのラベルです。特に使用されない管理用の値です。
+ *
+ * @param message
+ * @text メッセージ
+ * @desc SE演奏と同時にバトルログを出力します。
  *
  * @param name
  * @text ファイル名
@@ -173,9 +178,12 @@
 
     const _Window_BattleLog_displayHpDamage = Window_BattleLog.prototype.displayHpDamage;
     Window_BattleLog.prototype.displayHpDamage = function(target) {
-        SoundManager.setDamageSeEffective(target.result());
+        const message = SoundManager.setDamageSeEffective(target.result());
         this.push('performDamageSeEffective');
         _Window_BattleLog_displayHpDamage.apply(this, arguments);
+        if (message) {
+            this.push("addText", message);
+        }
         this.push('clearDamageSeEffective');
     };
 
@@ -205,6 +213,7 @@
             list.push(c.script === '' || eval(c.script));
             return list.every(c => c);
         });
+        return this._damageSe ? this._damageSe.message : '';
     };
 
     SoundManager.playDamageSeEffective = function() {
