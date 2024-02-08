@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2024/02/08 メニュー画面でも使用不可スキルを非表示にできる機能を追加
 // 1.4.0 2023/04/01 非表示の対象外にできるスキルを設定できる機能を追加
 // 1.3.0 2022/10/02 MZで動作するよう修正
 // 1.2.0 2022/10/01 コスト不足無視できるフラグを追加
@@ -28,6 +29,12 @@
  * @param ignoreCost
  * @text コスト不足は無視
  * @desc コスト不足によって使用できないスキルは本プラグインの対象外(非表示にならない)とします。
+ * @default false
+ * @type boolean
+ *
+ * @param validInMenu
+ * @text メニュー画面でも有効
+ * @desc 戦闘画面だけでなくメニュー画面にも本プラグインの機能を適用し、使用不可は非表示となります。
  * @default false
  * @type boolean
  *
@@ -63,8 +70,12 @@
     // Window_BattleSkill
     //  使用できないスキルを非表示にします。
     //=============================================================================
-    Window_BattleSkill.prototype.includes = function(item) {
-        const result = Window_SkillList.prototype.includes.call(this, item);
+    const _Window_SkillList_includes = Window_SkillList.prototype.includes;
+    Window_SkillList.prototype.includes = function(item) {
+        const result = _Window_SkillList_includes.apply(this, arguments);
+        if (!param.validInMenu && !(this instanceof Window_BattleSkill)) {
+            return result;
+        }
         if (param.ignoreCost) {
             this._actor.ignoreCost();
         }
