@@ -38,6 +38,9 @@
  * @value right
  *
  * @help BattleActorFaceVisibility.js
+ *
+ * 戦闘中、コマンド入力中のアクターの顔グラフィックを表示する
+ * ウィンドウを追加表示します。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
