@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/02/10 ウィンドウの表示座標補正機能を追加
  1.0.0 2024/02/08 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -36,6 +37,22 @@
  * @value left
  * @option 右
  * @value right
+ *
+ * @param offsetX
+ * @text X座標補正
+ * @desc フェイスウィンドウのX座標補正です。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ * @param offsetY
+ * @text Y座標補正
+ * @desc フェイスウィンドウのY座標補正です。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
  *
  * @help BattleActorFaceVisibility.js
  *
@@ -72,10 +89,10 @@
 
     Scene_Battle.prototype.actorFaceWindowRect = function() {
         const p = $gameSystem.windowPadding();
-        const ww = ImageManager.faceWidth + p * 2
+        const ww = ImageManager.faceWidth + p * 2;
         const wh = ImageManager.faceHeight + p * 2 + (param.nameVisible ? this._actorWindow.lineHeight() : 0);
-        const wx = param.position === 'left' ? 0 : Graphics.boxWidth - ww;
-        const wy = this._actorWindow.y - wh;
+        const wx = (param.position === 'left' ? 0 : Graphics.boxWidth - ww) + (param.offsetX || 0);
+        const wy = this._actorWindow.y - wh + (param.offsetY || 0);
         return new Rectangle(wx, wy, ww, wh);
     };
 
