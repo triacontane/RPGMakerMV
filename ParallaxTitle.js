@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2024/02/12 近景と遠景を両方表示できるよう修正
 // 1.3.0 2021/07/07 MZで動作するよう修正
 // 1.2.0 2018/10/14 TemplateEvent.jsとの競合を解消
 // 1.1.0 2016/11/23 遠景のスクロール速度がマップとずれていた問題を修正
@@ -32,12 +33,6 @@
  * @default 0
  * @type number
  *
- * @param ViewForeground
- * @text 近景表示
- * @desc もともとのタイトル画面より上に表示します。霧のような演出に使えます。
- * @default false
- * @type boolean
- *
  * @param InheritScroll
  * @text スクロール引き継ぎ
  * @desc ニューゲーム時に遠景のスクロール状態を引き継ぎます。
@@ -60,6 +55,23 @@
  *
  * 画面やオーディオをフェードアウトせずシームレスにマップに移行する機能も
  * ありますが、シーン遷移にともなう一瞬の硬直は避けられないのでご注意ください。
+ *
+ * 近景を表示したい場合、ローンチプラグインForeground.jsと同等のメモタグを
+ * マップ設定に記述してください。(以下Foreground.jsより転記)
+ *
+ *  <fgName:ファイル名> 前景として使うファイル名です（拡張子なし）
+ *    名前が '!'で始まる場合、遠景同様視差ゼロとなります。
+ *    ファイルは img/parallaxes に置いてください
+ *  <fgLoopX:数字> X座標にループするかどうか  (0:no 1:yes)。
+ *    省略時は0(=no)になります。
+ *  <fgLoopY:number> Y座標にループするかどうか  (0:no 1:yes)。
+ *    省略時は0(=no)になります。
+ *  <fgSx:数字>    X座標のスクロール速度です
+ *    X座標にループしない場合は無視されます。
+ *    省略時は0になります。
+ *  <fgSy:数字>    Y座標のスクロール速度です
+ *    Y座標にループしない場合は無視されます。
+ *    省略時は0になります。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -138,56 +150,68 @@ let $dataTitleMap = null;
     //=============================================================================
     const _Scene_Title_createBackground      = Scene_Title.prototype.createBackground;
     Scene_Title.prototype.createBackground = function() {
-        if (!param.ViewForeground) {
-            this.createParallax();
-        }
+        this.createParallax();
         _Scene_Title_createBackground.apply(this, arguments);
     };
 
     const _Scene_Title_createForeground      = Scene_Title.prototype.createForeground;
     Scene_Title.prototype.createForeground = function() {
-        if (param.ViewForeground) {
-            this.createParallax();
-        }
+        this.createForegroundParallax();
         _Scene_Title_createForeground.apply(this, arguments);
     };
 
     Scene_Title.prototype.createParallax = function() {
-        this.setupParallax();
-        this._parallax = new TilingSprite();
-        this._parallax.move(0, 0, Graphics.width, Graphics.height);
-        this._parallax.bitmap = ImageManager.loadParallax(this._parallaxName);
-        this.addChild(this._parallax);
+        this._parallax = this.setupParallax($dataTitleMap);
     };
 
-    Scene_Title.prototype.setupParallax = function() {
-        const data            = $dataTitleMap;
-        this._parallaxName  = data.parallaxName || '';
-        this._parallaxZero  = ImageManager.isZeroParallax(this._parallaxName);
-        this._parallaxLoopX = data.parallaxLoopX;
-        this._parallaxLoopY = data.parallaxLoopY;
-        this._parallaxSx    = data.parallaxSx;
-        this._parallaxSy    = data.parallaxSy;
-        this._parallaxX     = 0;
-        this._parallaxY     = 0;
+    Scene_Title.prototype.createForegroundParallax = function() {
+        const data = {
+            parallaxName: $dataTitleMap.meta.fgName,
+            parallaxLoopX: $dataTitleMap.meta.fgLoopX,
+            parallaxLoopY: $dataTitleMap.meta.fgLoopY,
+            parallaxSx: $dataTitleMap.meta.fgSx,
+            parallaxSy: $dataTitleMap.meta.fgSy
+        };
+        this._foreground = this.setupParallax(data);
+    };
+
+    Scene_Title.prototype.setupParallax = function(data) {
+        const name = data.parallaxName || '';
+        const sprite = new TilingSprite();
+        sprite.move(0, 0, Graphics.width, Graphics.height);
+        sprite.bitmap = ImageManager.loadParallax(name);
+        this.addChild(sprite);
+        return {
+            name: name,
+            zero: ImageManager.isZeroParallax(name),
+            loopX: data.parallaxLoopX,
+            loopY: data.parallaxLoopY,
+            sx: data.parallaxSx,
+            sy: data.parallaxSy,
+            x: 0,
+            y: 0,
+            sprite: sprite
+        };
     };
 
     const _Scene_Title_update      = Scene_Title.prototype.update;
     Scene_Title.prototype.update = function() {
         _Scene_Title_update.apply(this, arguments);
-        this.updateParallax();
+        this.updateParallax(this._parallax);
+        this.updateParallax(this._foreground);
     };
 
-    Scene_Title.prototype.updateParallax = function() {
-        if (this._parallaxLoopX) {
-            this._parallaxX += this._parallaxSx / (this.getTileWidth() * 2);
+    Scene_Title.prototype.updateParallax = function(parallax) {
+        if (parallax.loopX) {
+            parallax.x += parallax.sx / (this.getTileWidth() * 2);
         }
-        if (this._parallaxLoopY) {
-            this._parallaxY += this._parallaxSy / (this.getTileWidth() * 2);
+        if (parallax.loopY) {
+            parallax.y += parallax.sy / (this.getTileWidth() * 2);
         }
-        if (this._parallax.bitmap) {
-            this._parallax.origin.x = this.parallaxOx();
-            this._parallax.origin.y = this.parallaxOy();
+        const sprite = parallax.sprite;
+        if (sprite.bitmap) {
+            sprite.origin.x = this.parallaxOx(parallax);
+            sprite.origin.y = this.parallaxOy(parallax);
         }
     };
 
@@ -199,21 +223,21 @@ let $dataTitleMap = null;
         return this.getTileWidth() / 2;
     };
 
-    Scene_Title.prototype.parallaxOx = function() {
-        if (this._parallaxZero) {
-            return this._parallaxX * this.getTileWidth();
-        } else if (this._parallaxLoopX) {
-            return this._parallaxX * this.getHalfTileWidth();
+    Scene_Title.prototype.parallaxOx = function(parallax) {
+        if (parallax.zero) {
+            return parallax.x * this.getTileWidth();
+        } else if (parallax.loopX) {
+            return parallax.x * this.getHalfTileWidth();
         } else {
             return 0;
         }
     };
 
-    Scene_Title.prototype.parallaxOy = function() {
-        if (this._parallaxZero) {
-            return this._parallaxY * this.getTileWidth();
-        } else if (this._parallaxLoopY) {
-            return this._parallaxY * this.getHalfTileWidth();
+    Scene_Title.prototype.parallaxOy = function(parallax) {
+        if (parallax.zero) {
+            return parallax.y * this.getTileWidth();
+        } else if (parallax.loopY) {
+            return parallax.y * this.getHalfTileWidth();
         } else {
             return 0;
         }
@@ -244,8 +268,8 @@ let $dataTitleMap = null;
 
     Scene_Title.prototype.keepParallaxOrigin = function() {
         if (param.InheritScroll) {
-            localParallaxX = this._parallaxX;
-            localParallaxY = this._parallaxY;
+            localParallaxX = this._parallax.x;
+            localParallaxY = this._parallax.y;
         }
     };
 
