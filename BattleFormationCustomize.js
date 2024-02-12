@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2024/02/12 座標と相対座標の両方を指定したときに相対座標が正しく反映されない問題を修正
 // 1.1.0 2021/03/14 MZで動作するよう修正
 // 1.0.0 2017/08/26 初版
 // ----------------------------------------------------------------------------
@@ -15,27 +16,6 @@
 //=============================================================================
 
 /*:
- * @plugindesc BattleFormationCustomizePlugin
- * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattleFormationCustomize.js
- * @base PluginCommonBase
- * @author triacontane
- *
- * @help BattleFormationCustomize.js
- * 
- * 戦闘における隊列の位置を調整します。
- * アクターなど特徴を有するメモ欄に以下の通り指定してください。
- *
- * <BFC_座標:100,200>   # 隊列座標をX座標を[100]に、Y座標を[200]に設定
- * <BFC_Pos:10,20>      # 同上
- * <BFC_相対座標:10,20> # 隊列座標を元位置からX方向に[10]、Y方向に[20]ずらす
- * <BFC_DeltaPos:10,20> # 同上
- *
- * X座標とY座標は両方指定してください。
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 戦闘隊列調整プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattleFormationCustomize.js
@@ -87,6 +67,8 @@
         const customPosition = this.getCustomHomePosition(['BFC_座標', 'BFC_Pos']);
         if (customPosition) {
             this.setHome(customPosition[0], customPosition[1]);
+            this._homeDx = 0;
+            this._homeDy = 0;
         }
     };
 
