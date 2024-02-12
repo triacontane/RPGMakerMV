@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2024/02/12 対象が敵グループのスキルで敵キャラを選択するとき、対象者をすべてフラッシュするよう修正
 // 1.7.0 2021/07/11 MZ向けに全面的に修正
 // 1.6.1 2018/06/09　範囲が「なし」になっているグループ攻撃使用時にエラーになる問題を修正
 // 1.6.0 2017/07/09 「敵単体（戦闘不能）」および「敵全体（戦闘不能）」の効果範囲を追加
@@ -112,7 +113,7 @@
                 targets = this.targetsForAll(targets);
             }
         }
-        if (this.isScopeExtendInfo(['SEグループ', 'SEGroup']) && targets[0]) {
+        if (this.isGroupAction() && targets[0]) {
             let targetsForGroup, prevTarget = targets[0];
             if (prevTarget.isActor()) {
                 targetsForGroup = prevTarget.friendsUnit().aliveMembers();
@@ -152,6 +153,10 @@
         arguments[0] = targets;
         return _Game_Action_repeatTargets.apply(this, arguments);
     };
+
+    Game_Action.prototype.isGroupAction = function() {
+        return this.isScopeExtendInfo(['SEグループ', 'SEGroup']);
+    }
 
     const _Game_Action_numTargets = Game_Action.prototype.numTargets;
     Game_Action.prototype.numTargets = function() {
@@ -240,6 +245,25 @@
     Game_Action.prototype.getScopeExtendInfo = function(names) {
         const result = PluginManagerEx.findMetaValue(this.item(), names);
         return result === true ? 1 : result;
+    };
+
+    Game_Troop.prototype.selectGroup = function(activeMember) {
+        for (const member of this.members()) {
+            if (member?.originalName() === activeMember?.originalName()) {
+                member.select();
+            } else {
+                member.deselect();
+            }
+        }
+    };
+
+    const _Window_BattleEnemy_select = Window_BattleEnemy.prototype.select;
+    Window_BattleEnemy.prototype.select = function(index) {
+        _Window_BattleEnemy_select.apply(this, arguments);
+        const action = BattleManager.inputtingAction();
+        if (action && action.item() && action.isGroupAction()) {
+            $gameTroop.selectGroup(this.enemy());
+        }
     };
 })();
 
