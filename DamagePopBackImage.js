@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.1.0 2024/02/12 DarkPlasma_DisplayHpMpDamageでHPMPダメージのポップアップを行ったときに両方の背景画像が表示されるよう対応
  2.0.0 2024/02/08 ダメージの量や種別に応じて複数のポップアップ画像を使い分けられるよう仕様変更
  1.1.0 2024/02/04 MPダメージとMP回復の背景画像を指定できる機能を追加
  1.0.0 2024/02/04 初版
@@ -119,6 +120,15 @@
         _Sprite_Damage_setup.apply(this, arguments);
     };
 
+    // for DarkPlasma_DisplayHpMpDamage.js
+    const _Sprite_Damage_setupMpChangeWithHp = Sprite_Damage.prototype.setupMpChangeWithHp;
+    Sprite_Damage.prototype.setupMpChangeWithHp = function (target) {
+        const result = target.result();
+        this.createBackImageSprite(result, true);
+        _Sprite_Damage_setupMpChangeWithHp.apply(this, arguments);
+    };
+    // for DarkPlasma_DisplayHpMpDamage.js end
+
     const _Sprite_Damage_createDigits = Sprite_Damage.prototype.createDigits;
     Sprite_Damage.prototype.createDigits = function(value) {
         _Sprite_Damage_createDigits.apply(this, arguments);
@@ -127,9 +137,9 @@
         }
     };
 
-    Sprite_Damage.prototype.createBackImageSprite = function(result) {
+    Sprite_Damage.prototype.createBackImageSprite = function(result, mpOnly = false) {
         const sprite = this.createChildSprite(200, 200);
-        sprite.bitmap = ImageManager.loadPicture(this.findBackImageName(result));
+        sprite.bitmap = ImageManager.loadPicture(this.findBackImageName(result, mpOnly));
         sprite.anchor.y = 0.5;
         sprite.x = param.offsetX || 0;
         sprite.dy = 0;
@@ -141,18 +151,18 @@
         return sprite;
     };
 
-    Sprite_Damage.prototype.findBackImageName = function(result) {
+    Sprite_Damage.prototype.findBackImageName = function(result, mpOnly) {
         const list = param.damageImageList;
         for (const data of list) {
-            if (this.isMatchCondition(data, result)) {
+            if (this.isMatchCondition(data, result, mpOnly)) {
                 return data.damageImage;
             }
         }
         return '';
     };
 
-    Sprite_Damage.prototype.isMatchCondition = function(data, result) {
-        if (data.damageType === 'hp' && result.hpAffected) {
+    Sprite_Damage.prototype.isMatchCondition = function(data, result, mpOnly) {
+        if (data.damageType === 'hp' && result.hpAffected && !mpOnly) {
             return this.isMatchDamageCondition(data, result.hpDamage);
         } else if (data.damageType === 'mp' && result.mpDamage !== 0) {
             return this.isMatchDamageCondition(data, result.mpDamage);
