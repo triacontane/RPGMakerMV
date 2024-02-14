@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/02/14 メッセージ終了時にもコモンイベントを呼べるよう修正
  1.0.0 2023/09/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -46,14 +47,28 @@
 
 /*~struct~COMMON:
  * @param commonEventId
+ * @text コモンイベントID
  * @desc 呼び出すコモンイベントのIDです。
  * @default 1
  * @type common_event
  *
  * @param SpeakerName
+ * @text 名前
  * @desc 文章の表示の「名前」が指定値と一致するときにコモンイベントを呼び出します。（正規表現が使えます）
  * @default
  * @type string
+ *
+ * @param timing
+ * @text メッセージタイミング
+ * @desc コモンイベントの呼び出しタイミングを選択します。
+ * @default start
+ * @type select
+ * @option 開始時
+ * @value start
+ * @option 終了時
+ * @value end
+ * @option 終了時(継続メッセージがない場合のみ)
+ * @value all_end
  *
  */
 
@@ -68,12 +83,41 @@
         if ($gameParty.inBattle()) {
             return;
         }
-        this.callSpeakerCommon();
+        this.callSpeakerCommon('start');
     };
 
-    Window_Message.prototype.callSpeakerCommon = function() {
-        const speakerName = $gameMessage.speakerName();
-        const commonEvents = param.commonList.filter(common => speakerName.match(new RegExp(common.SpeakerName)));
+    const _Window_Message_terminateMessage = Window_Message.prototype.terminateMessage;
+    Window_Message.prototype.terminateMessage = function() {
+        _Window_Message_terminateMessage.apply(this, arguments);
+        if ($gameParty.inBattle()) {
+            return;
+        }
+        this.callSpeakerCommon('end');
+    };
+
+    const _Window_Message_checkToNotClose = Window_Message.prototype.checkToNotClose;
+    Window_Message.prototype.checkToNotClose = function() {
+        _Window_Message_checkToNotClose.apply(this, arguments);
+        if (this.isOpen() && this.isClosing() && !this.doesContinue()) {
+            this.callSpeakerCommon('all_end');
+        }
+    };
+
+    Window_Message.prototype.callSpeakerCommon = function(timing) {
+        const speakerName = $gameMessage.getLastSpeakerName();
+        const commonEvents = param.commonList.filter(common => {
+            return speakerName.match(new RegExp(common.SpeakerName)) && timing === (common.timing || 'start');
+        });
         commonEvents.forEach(common => $gameMap.setupDynamicCommon(common.commonEventId));
-    }
+    };
+
+    const _Game_Message_setSpeakerName = Game_Message.prototype.setSpeakerName;
+    Game_Message.prototype.setSpeakerName = function(speakerName) {
+        _Game_Message_setSpeakerName.apply(this, arguments);
+        this._lastSpakerName = speakerName;
+    };
+
+    Game_Message.prototype.getLastSpeakerName = function() {
+        return this._lastSpakerName;
+    };
 })();
