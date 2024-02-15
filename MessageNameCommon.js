@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/02/15 タイミングにメッセージ終了待機時を追加
  1.1.0 2024/02/14 メッセージ終了時にもコモンイベントを呼べるよう修正
  1.0.0 2023/09/23 初版
 ----------------------------------------------------------------------------
@@ -65,6 +66,8 @@
  * @type select
  * @option 開始時
  * @value start
+ * @option 終了待機時
+ * @value waiting
  * @option 終了時
  * @value end
  * @option 終了時(継続メッセージがない場合のみ)
@@ -98,9 +101,21 @@
     const _Window_Message_checkToNotClose = Window_Message.prototype.checkToNotClose;
     Window_Message.prototype.checkToNotClose = function() {
         _Window_Message_checkToNotClose.apply(this, arguments);
+        if ($gameParty.inBattle()) {
+            return;
+        }
         if (this.isOpen() && this.isClosing() && !this.doesContinue()) {
             this.callSpeakerCommon('all_end');
         }
+    };
+
+    const _Window_Message_onEndOfText = Window_Message.prototype.onEndOfText;
+    Window_Message.prototype.onEndOfText = function() {
+        _Window_Message_onEndOfText.apply(this, arguments);
+        if ($gameParty.inBattle()) {
+            return;
+        }
+        this.callSpeakerCommon('waiting');
     };
 
     Window_Message.prototype.callSpeakerCommon = function(timing) {
