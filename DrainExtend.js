@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2024/02/15 吸収率にマイナス値を設定してかつ敵キャラが戦闘不能になったとき、消滅エフェクトが表示されない問題を修正
 // 2.0.0 2022/05/26 MZ向けに全面的に仕様変更
 // 1.2.0 2020/04/29 計算式中でローカル変数[a][b]を使えるよう修正
 // 1.1.0 2020/04/29 吸収HPの有効率を設定できる機能を追加
@@ -261,5 +262,13 @@
 
     Window_BattleLog.prototype.isNeedDrainRecoverSe = function(result) {
         return param.recoverSe && !result.missed && !result.evaded && result.drain;
+    };
+
+    const _Window_BattleLog_displayActionResults = Window_BattleLog.prototype.displayActionResults;
+    Window_BattleLog.prototype.displayActionResults = function(subject, target) {
+        _Window_BattleLog_displayActionResults.apply(this, arguments);
+        if (target.result().used && subject.isDead()) {
+            this.displayAffectedStatus(subject);
+        }
     };
 })();
