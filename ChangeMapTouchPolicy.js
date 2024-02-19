@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.2 2024/02/19 仕様レベルが2のときに乗り物の乗降ができない問題を修正
 // 1.2.1 2023/08/27 メニューボタンを押したタイミングではタッチ移動しないよう修正
 // 1.2.0 2022/10/14 MZで動作するよう修正
 // 1.1.0 2018/03/01 パラメータの型指定機能に対応。マップタッチ移動時の強制ダッシュを無効にする機能を追加。
@@ -154,7 +155,10 @@
                 if (deltaX > 0) d = 6;
                 if (deltaX < 0) d = 4;
             }
-            if (d === 0) return;
+            if (d === 0) {
+                $gamePlayer.getOnOffVehicle();
+                return;
+            }
             if (!$gamePlayer.isMapPassable(px, py, d)) {
                 if (Math.abs(deltaX) < Math.abs(deltaY)) {
                     if (deltaX > 0) d = 6;
@@ -164,7 +168,10 @@
                     if (deltaY < 0) d = 8;
                 }
             }
-            if (d === 0) return;
+            if (d === 0) {
+                $gamePlayer.getOnOffVehicle();
+                return;
+            }
             if ($gamePlayer.isMapPassable(px, py, d)) {
                 switch (d) {
                     case 2:
@@ -182,6 +189,11 @@
                 }
                 $gameTemp.setDestination(px, py);
                 $gameTemp.setMoveStart(true);
+            } else {
+                $gamePlayer.setDirection(d);
+            }
+            if (!$gameTemp.isDestinationValid()) {
+                $gamePlayer.getOnOffVehicle();
             }
         }
     };
