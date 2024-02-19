@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/02/19 縦と横のサイズを別々に指定できる機能を追加
  1.0.0 2023/02/09 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -51,9 +52,15 @@
  * @dir img/animation
  * @type file
  *
- * @param size
- * @text セルサイズ
- * @desc 変更したいセルサイズです。
+ * @param sizeWidth
+ * @text セルサイズ(横)
+ * @desc 変更したい横方向のセルサイズです。
+ * @default 192
+ * @type number
+ *
+ * @param sizeHeight
+ * @text セルサイズ(縦)
+ * @desc 変更したい縦方向のセルサイズです。
  * @default 192
  * @type number
  */
@@ -71,25 +78,34 @@
         _Sprite_AnimationMV_loadBitmaps.apply(this, arguments);
         const name1 = this._animation.animation1Name;
         const name2 = this._animation.animation2Name;
-        this._size1 = param.imageList.find(item => item.animation === name1)?.size;
-        this._size2 = param.imageList.find(item => item.animation === name2)?.size;
+        const size1 = param.imageList.find(item => item.animation === name1);
+        const size2 = param.imageList.find(item => item.animation === name2);
+        if (size1) {
+            this._size1Width = size1.sizeWidth || size1.size;
+            this._size1Height = size1.sizeHeight || size1.size;
+        }
+        if (size2) {
+            this._size2Width = size2.sizeWidth || size2.size;
+            this._size2Height = size2.sizeHeight || size2.size;
+        }
     };
 
     const _Sprite_AnimationMV_updateCellSprite = Sprite_AnimationMV.prototype.updateCellSprite;
     Sprite_AnimationMV.prototype.updateCellSprite = function(sprite, cell) {
-        if (!this._size1 && !this._size2) {
+        if (!this._size1Width && !this._size2Width) {
             _Sprite_AnimationMV_updateCellSprite.apply(this, arguments);
             return;
         }
         const pattern = cell[0];
         if (pattern >= 0) {
-            const size = (pattern < 100 ? this._size1 : this._size2) || 192;
-            const sx = (pattern % 5) * size;
-            const sy = Math.floor((pattern % 100) / 5) * size;
+            const sizeWidth = (pattern < 100 ? this._size1Width : this._size2Width) || 192;
+            const sizeHeight = (pattern < 100 ? this._size1Height : this._size2Height) || 192;
+            const sx = (pattern % 5) * sizeWidth;
+            const sy = Math.floor((pattern % 100) / 5) * sizeHeight;
             const mirror = this._mirror;
             sprite.bitmap = pattern < 100 ? this._bitmap1 : this._bitmap2;
             sprite.setHue(pattern < 100 ? this._hue1 : this._hue2);
-            sprite.setFrame(sx, sy, size, size);
+            sprite.setFrame(sx, sy, sizeWidth, sizeHeight);
             sprite.x = cell[1];
             sprite.y = cell[2];
             sprite.rotation = (cell[4] * Math.PI) / 180;
