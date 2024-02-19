@@ -1,5 +1,5 @@
 /*=============================================================================
- AnimationBySkillUser.js
+ AnimationBySubject.js
 ----------------------------------------------------------------------------
  (C)2024 Triacontane
  This software is released under the MIT License.
@@ -16,7 +16,7 @@
 /*:
  * @plugindesc スキル使用者アニメーションプラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AnimationBySkillUser.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AnimationBySubject.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
@@ -45,7 +45,7 @@
  * @default true
  * @type boolean
  *
- * @help AnimationBySkillUser.js
+ * @help AnimationBySubject.js
  *
  * スキルやアイテムの使用者にアニメーションを表示します。
  * パラメータから直接スキルIDを指定するか、メモタグを指定してください。
