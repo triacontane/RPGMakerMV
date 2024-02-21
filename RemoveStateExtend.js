@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/02/22 魔法反射や回避など特定行動でステート解除できる機能を追加
+                  ステートの付与によって別のステートを解除できる機能を追加
  1.1.1 2023/10/23 解除条件に属性を指定したとき、スキルの指定が「通常攻撃」の場合、解除の対象にならない問題を修正
  1.1.0 2022/06/08 解除条件にスクリプトを設定、解除確率を補正するタグを追加
  1.0.0 2022/03/23 初版
@@ -28,6 +30,18 @@
  * @desc ダメージを受けたときのステート解除を条件付きにします。データベースの当該項目とは独立して動作します。
  * @default []
  * @type struct<DAMAGE>[]
+ *
+ * @param byCountList
+ * @text 継続ターン数で解除のリスト
+ * @desc 継続ターン数を指定したステートの減少条件が、ターン数ではなく指定した条件になります。
+ * @default []
+ * @type struct<COUNT>[]
+ *
+ * @param byAddList
+ * @text 付与ステートで解除のリスト
+ * @desc 付与されたステートによって解除されるステートを設定します。
+ * @default []
+ * @type struct<ADD>[]
  *
  * @help RemoveStateExtend.js
  *
@@ -124,10 +138,127 @@
  *
  */
 
+/*~struct~COUNT:
+ *
+ * @param stateId
+ * @text ステートID
+ * @desc 解除条件を設定するステートIDです。
+ * @default 1
+ * @type state
+ *
+ * @param condition
+ * @text 解除条件
+ * @desc 継続ターンの代わりになる条件です。ターン数で指定した回数分これらが行われると解除されます。
+ * @type select
+ * @option 回避
+ * @value evasion
+ * @option 魔法回避
+ * @value magicEvasion
+ * @option 魔法反射
+ * @value reflection
+ * @option 反撃
+ * @value counter
+ * @option 身代わり
+ * @value substitute
+ *
+ */
+
+/*~struct~ADD:
+ *
+ * @param removeStates
+ * @text 解除ステート一覧
+ * @desc 対象ステート一覧で指定したステートが付与されたときに解除されるステートの一覧です。
+ * @default []
+ * @type state[]
+ *
+ * @param targetStates
+ * @text 対象ステート一覧
+ * @desc ここで指定したステートが付与されると解除ステートで指定したステートが解除されます。
+ * @default []
+ * @type state[]
+ *
+ */
+
 (() => {
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+    if (!param.byDamageList) {
+        param.byDamageList = [];
+    }
+    if (!param.byCountList) {
+        param.byCountList = [];
+    }
+    if (!param.byAddList) {
+        param.byAddList = [];
+    }
+
+    const _Game_BattlerBase_updateStateTurns = Game_BattlerBase.prototype.updateStateTurns;
+    Game_BattlerBase.prototype.updateStateTurns = function() {
+        for (const stateId of this._states) {
+            if (this._stateTurns[stateId] > 0 && param.byCountList.some(item => item.stateId === stateId)) {
+                this._stateTurns[stateId]++;
+            }
+        }
+        _Game_BattlerBase_updateStateTurns.apply(this, arguments);
+    };
+
+    Game_BattlerBase.prototype.findAltConditionStates = function(condition) {
+        return this._states.filter(stateId => param.byCountList.some(item => {
+            return item.stateId === stateId && item.condition === condition;
+        }));
+    };
+
+    Game_Battler.prototype.removeStateTurnsByAltCondition = function(condition) {
+        this.findAltConditionStates(condition).forEach(stateId => {
+            if (this._stateTurns[stateId] > 0) {
+                this._stateTurns[stateId]--;
+                if (this.isStateExpired(stateId)) {
+                    this.removeState(stateId);
+                }
+            }
+        });
+    };
+
+    const _Game_Battler_performEvasion = Game_Battler.prototype.performEvasion;
+    Game_Battler.prototype.performEvasion = function() {
+        _Game_Battler_performEvasion.apply(this, arguments);
+        this.removeStateTurnsByAltCondition('evasion');
+    };
+
+    const _Game_Battler_performMagicEvasion = Game_Battler.prototype.performMagicEvasion;
+    Game_Battler.prototype.performMagicEvasion = function() {
+        _Game_Battler_performMagicEvasion.apply(this, arguments);
+        this.removeStateTurnsByAltCondition('magicEvasion');
+    };
+
+    const _Game_Battler_performReflection = Game_Battler.prototype.performReflection;
+    Game_Battler.prototype.performReflection = function() {
+        _Game_Battler_performReflection.apply(this, arguments);
+        this.removeStateTurnsByAltCondition('reflection');
+    };
+
+    const _Game_Battler_performCounter = Game_Battler.prototype.performCounter;
+    Game_Battler.prototype.performCounter = function() {
+        _Game_Battler_performCounter.apply(this, arguments);
+        this.removeStateTurnsByAltCondition('counter');
+    };
+
+    const _Game_Battler_performSubstitute = Game_Battler.prototype.performSubstitute;
+    Game_Battler.prototype.performSubstitute = function(target) {
+        _Game_Battler_performSubstitute.apply(this, arguments);
+        this.removeStateTurnsByAltCondition('substitute');
+    };
+
+    const _Game_Battler_addState = Game_Battler.prototype.addState;
+    Game_Battler.prototype.addState = function(stateId) {
+        _Game_Battler_addState.apply(this, arguments);
+        if (this.isStateAffected(stateId)) {
+            param.byAddList
+                .filter(item => item.targetStates.includes(stateId))
+                .forEach(item => item.removeStates.forEach(id => this.removeState(id)));
+        }
+    };
 
     const _Game_Battler_removeStatesByDamage = Game_Battler.prototype.removeStatesByDamage;
     Game_Battler.prototype.removeStatesByDamage = function() {
