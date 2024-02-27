@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2024/02/27 スプライトシートを設定したピクチャを消去後に同じ番号で別のピクチャを再表示したとき、表示がおかしくなる問題を修正
 // 1.1.0 2021/10/24 MZで動作するよう修正
 // 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2016/12/31 初版
@@ -196,6 +197,11 @@
         _Sprite_Picture_update.apply(this, arguments);
         if (this.visible && this.picture().isUsingSpriteSheet()) {
             this.updateFrameForPss();
+        } else if (this._spriteSheet) {
+            this._spriteSheet = false;
+            const w = this.bitmap?.width || 0;
+            const h = this.bitmap?.height || 0;
+            this.setFrame(0, 0, w, h);
         }
     };
 
@@ -204,6 +210,7 @@
         const width    = this.getCellWidth();
         const height   = this.getCellHeight();
         this.setFrame(position[0] * width, position[1] * height, width, height);
+        this._spriteSheet = true;
     };
 
     Sprite_Picture.prototype.getCellWidth = function() {
