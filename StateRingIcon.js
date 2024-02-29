@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2024/02/29 ターン数によってアイコンを点滅表示される機能を追加
 // 2.8.0 2022/12/05 表示対象外アイコンを指定したとき、アイコンのターン数が実際の値と異なる表示になる場合がある問題を修正
 //                  パラメータのアイコンtypeに対応
 // 2.7.0 2022/05/16 リングアイコン全体を一時的に非表示にできるスイッチを追加
@@ -253,6 +254,24 @@
  * @default true
  * @type boolean
  *
+ * @param BlinkTurn
+ * @text 点滅表示
+ * @desc 残りターン数が指定値以下になった場合、アイコンは点滅表示になります。
+ * @default 0
+ * @type number
+ *
+ * @param BlinkSpeed
+ * @text 点滅速度
+ * @desc アイコンを点滅表示される場合の速度です。
+ * @default 3
+ * @type select
+ * @option 1
+ * @option 2
+ * @option 3
+ * @option 4
+ * @option 5
+ * @option 6
+ *
  * @param IconIndexWithoutRing
  * @text 表示対象外アイコン
  * @desc リング表示の対象外になる「アイコンインデックス」です。
@@ -262,6 +281,12 @@
  * @param IconIndexWithoutShowTurns
  * @text ターン数表示対象外アイコン
  * @desc ステートターン数の表示対象外になる「アイコンインデックス」です。
+ * @default []
+ * @type icon[]
+ *
+ * @param IconIndexWithoutBlink
+ * @text 点滅表示対象外アイコン
+ * @desc アイコン点滅表示の対象外になる「アイコンインデックス」です。
  * @default []
  * @type icon[]
  *
@@ -546,7 +571,7 @@ function Sprite_StateIconChild() {
         } else {
             this.updateNormalPosition();
         }
-        if (this._battler && param.ShowTurnCount) {
+        if (this._battler) {
             this.updateTurns();
         }
         this._sortChildren();
@@ -661,6 +686,7 @@ function Sprite_StateIconChild() {
         this.visible     = false;
         this._turnSprite = null;
         this._turn       = 0;
+        this._frameCount = 0;
         this.scale.x = this.getScaleX();
         this.scale.y = this.getScaleY();
     };
@@ -673,7 +699,15 @@ function Sprite_StateIconChild() {
         return (param.ScaleY || 100) / 100;
     };
 
-    Sprite_StateIconChild.prototype.update = function() {};
+    Sprite_StateIconChild.prototype.update = function() {
+        if (this._turn <= param.BlinkTurn && !param.IconIndexWithoutBlink.includes(this._iconIndex)) {
+            this._frameCount++;
+            this.opacity = (Math.sin(this._frameCount / (48 / param.BlinkSpeed)) + 1) * 256;
+        } else {
+            this._frameCount = 0;
+            this.opacity = 255;
+        }
+    };
 
     Sprite_StateIconChild.prototype.setIconIndex = function(index) {
         this._iconIndex = index;
@@ -690,10 +724,10 @@ function Sprite_StateIconChild() {
     Sprite_StateIconChild.prototype.refreshIconTurn = function() {
         const bitmap = this._turnSprite.bitmap;
         bitmap.clear();
-        if (param.IconIndexWithoutShowTurns.contains(this._iconIndex)) {
+        if (param.IconIndexWithoutShowTurns.includes(this._iconIndex)) {
             return;
         }
-        if (this._turn > 0) {
+        if (this._turn > 0 && param.ShowTurnCount) {
             bitmap.drawText(this._turn, 0, 0, bitmap.width, bitmap.height, 'center');
         }
     };
