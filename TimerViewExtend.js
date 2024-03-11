@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/03/11 フォントサイズを変数指定したとき即時反映されるよう修正
  1.0.0 2023/11/29 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -130,14 +131,19 @@
             const w = param.timerWidth || this.bitmap.width;
             const h = param.timerHeight || this.bitmap.height;
             this.bitmap = new Bitmap(w, h);
-            this.bitmap.fontFace = this.fontFace();
-            this.bitmap.fontSize = this.fontSize();
-            this.bitmap.outlineColor = ColorManager.outlineColor();
         }
+        this.redraw();
+    };
+
+    const _Sprite_Timer_redraw = Sprite_Timer.prototype.redraw;
+    Sprite_Timer.prototype.redraw = function() {
+        this.bitmap.fontFace = this.fontFace();
+        this.bitmap.fontSize = this.fontSize();
+        this.bitmap.outlineColor = ColorManager.outlineColor();
         if (param.fontColor) {
             this.bitmap.textColor = isFinite(param.outlineColor) ? ColorManager.textColor(param.fontColor) : param.fontColor;
         }
-        this.redraw();
+        _Sprite_Timer_redraw.apply(this, arguments);
     };
 
     const _Sprite_Timer_fontFace = Sprite_Timer.prototype.fontFace;
