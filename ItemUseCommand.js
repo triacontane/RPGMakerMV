@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/02/12 スキル使用コマンドを追加
  1.0.1 2022/03/31 効果範囲が「味方」以外のアイテムを使用できない問題を修正
  1.0.0 2022/01/15 初版
 ----------------------------------------------------------------------------
@@ -52,21 +53,61 @@
  * 
  * @arg targetIndex
  * @text 使用対象
- * @desc アイテムを使用する対象のインデックス(並び順)です。1が先頭です。味方全体のアイテムなどでは指定不要です。
+ * @desc アイテムの対象者のインデックス(並び順)です。1が先頭です。味方全体のアイテムなどでは指定不要です。
  * @default 1
  * @type number
  *
  * @arg targetActor
  * @text 使用対象(直接指定)
- * @desc アイテムを使用する対象をアクターから直接指定する場合に選択します。パーティにいないアクター場合は無視されます。
+ * @desc アイテムの対象者をアクターから直接指定する場合に選択します。パーティにいないアクター場合は無視されます。
+ * @default 0
+ * @type actor
+ *
+ * @command SKILL_USE
+ * @text スキル使用
+ * @desc 指定した対象にスキルを使用します。
+ *
+ * @arg skillId
+ * @text スキルID
+ * @desc 使用するスキルのIDです。
+ * @default 1
+ * @type skill
+ *
+ * @arg skillIdVariable
+ * @text スキルID(変数から取得)
+ * @desc 使用するスキルのIDを変数値から取得する場合こちらを指定します。
+ * @default 0
+ * @type variable
+ *
+ * @arg targetIndex
+ * @text 使用対象
+ * @desc スキルの対象者のインデックス(並び順)です。1が先頭です。味方全体のスキルなどでは指定不要です。
+ * @default 1
+ * @type number
+ *
+ * @arg targetActor
+ * @text 使用対象(直接指定)
+ * @desc スキルの対象者をアクターから直接指定する場合に選択します。パーティにいないアクター場合は無視されます。
+ * @default 0
+ * @type actor
+ *
+ * @arg userIndex
+ * @text 使用者
+ * @desc スキルの使用者のインデックス(並び順)です。1が先頭です。味方全体のスキルなどでは指定不要です。
+ * @default 1
+ * @type number
+ *
+ * @arg userActor
+ * @text 使用者(直接指定)
+ * @desc スキルの使用者をアクターから直接指定する場合に選択します。パーティにいないアクター場合は無視されます。
  * @default 0
  * @type actor
  *
  * @help ItemUseCommand.js
  *
- * 指定したIDのアイテムを使用するコマンドを提供します。
- * コマンド実行後は必要に応じてアイテムを消費し、
- * またアイテムがなければ使用はできません。
+ * 指定したIDのアイテムもしくはスキルを使用するコマンドを提供します。
+ * コマンド実行後は必要に応じてアイテムやコストを消費し、
+ * 条件を満たさなければ使用はできません。
  *
  * メニュー画面で使用可能なアイテムのみが対象で戦闘用の
  * アイテムは使用できず、敵キャラは効果の適用外です。
@@ -83,28 +124,53 @@
     const param = PluginManagerEx.createParameter(script);
 
     PluginManagerEx.registerCommand(script, 'ITEM_USE', args => {
-        const itemId = args.itemIdVariable ? $gameVariables.value(args.itemIdVariable) : args.itemId;
-        let target = $gameParty.members().findIndex(actor => actor.actorId() === args.targetActor);
-        if (target < 0) {
-            target = args.targetIndex - 1;
-        }
-        $gameTemp.callItemUse(itemId, target);
+        const id = args.itemIdVariable ? $gameVariables.value(args.itemIdVariable) : args.itemId;
+        const targetIndex = $gameTemp.findCallItemTarget(args);
+        $gameTemp.callItemUse($dataItems[id], targetIndex, null);
     });
 
-    Game_Temp.prototype.callItemUse = function(itemId, targetIndex) {
-        const item = $dataItems[itemId];
+    PluginManagerEx.registerCommand(script, 'SKILL_USE', args => {
+        const id = args.skillIdVariable ? $gameVariables.value(args.skillIdVariable) : args.skillId;
+        const targetIndex = $gameTemp.findCallItemTarget(args);
+        const userIndex = $gameTemp.findCallItemUser(args);
+        $gameTemp.callItemUse($dataSkills[id], targetIndex, userIndex);
+    });
+
+    Game_Temp.prototype.callItemUse = function(item, targetIndex, userIndex) {
         if (item) {
-            const itemUse = new Game_ItemUse(item, targetIndex);
+            const itemUse = new Game_ItemUse(item, targetIndex, userIndex);
             itemUse.execute();
         }
     };
+
+    Game_Temp.prototype.findCallItemTarget = function(targetArgs) {
+        const targetIndex = $gameParty.members().findIndex(actor => actor.actorId() === targetArgs.targetActor);
+        if (targetIndex < 0) {
+            return targetArgs.targetIndex - 1;
+        } else {
+            return targetIndex;
+        }
+    };
+
+    Game_Temp.prototype.findCallItemUser = function(targetArgs) {
+        const userIndex = $gameParty.members().findIndex(actor => actor.actorId() === targetArgs.userActor);
+        if (userIndex < 0) {
+            return targetArgs.userIndex - 1;
+        } else {
+            return userIndex;
+        }
+    };
+
 
     /**
      * Game_ItemUse
      */
     class Game_ItemUse {
-        constructor(item, targetIndex) {
-            this._user = this.findUser();
+        constructor(item, targetIndex, userIndex) {
+            this._user = DataManager.isSkill(item) ? $gameParty.members()[userIndex] : this.findUser();
+            if (!this._user) {
+                return;
+            }
             this._item = item;
             this._targetIndex = targetIndex || 0;
             this._action = new Game_Action(this._user);
@@ -112,7 +178,7 @@
         }
 
         canUse() {
-            return this._user.canUse(this._item) && this.isEffectsValid();
+            return this._user && this._user.canUse(this._item) && this.isEffectsValid();
         }
 
         execute() {
@@ -125,7 +191,7 @@
             if (param.playSe) {
                 SoundManager.playUseItem();
             }
-            this._user.consumeItem(this._item);
+            this._user.useItem(this._item);
             const action = this._action;
             this.findTarget().forEach(target => {
                 const repeats = action.numRepeats();
