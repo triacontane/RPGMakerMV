@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.2 2024/03/12 敵キャラの最大HPに動的データを適用しているとき、戦闘テスト時にHPが最大値にならない問題を修正
 // 2.1.1 2022/07/22 ヘルプに注釈を追記
 // 2.1.0 2022/07/18 用語に制御文字を使える機能を追加
 // 2.0.1 2021/06/09 ドロップアイテムと出現率のタグが逆だったので修正
@@ -115,6 +116,9 @@
     Scene_Boot.prototype.start = function() {
         _Scene_Boot_start.call(this);
         DynamicDatabaseManager.makeDynamicDatabase();
+        if (DataManager.isBattleTest()) {
+            $gameTroop.members().forEach(enemy => enemy.recoverAll());
+        }
     };
 
     //=============================================================================
