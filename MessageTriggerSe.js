@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2024/03/16 \!による待機で効果音が演奏されない問題を修正
 // 1.3.0 2022/12/13 MZ版として仕様を再検討
 // 1.2.1 2020/03/06 ページ送りSEを演奏後すぐに通常のSEを演奏すると、SEの停止で当該SEが停止されない問題を修正
 // 1.2.0 2018/06/22 メッセージに続きがある場合のみ効果音を演奏する設定を追加
@@ -106,7 +107,7 @@
         const input = _Window_Message_updateInput.apply(this, arguments);
         if (wasPause && !this.pause) {
             if (this.doesContinue()) {
-                this.playMessageTriggerSe();
+                this.playMessageTriggerSe(param.soundEffect);
             } else {
                 this._needMessageSe = true;
             }
