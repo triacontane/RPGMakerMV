@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.2.0 2024/03/16 アニメーションやフキダシをループ再生する機能を追加
  2.1.1 2024/01/16 戦闘中にアニメーションを表示したとき、完了までウェイトを無効にしていてもイベント実行が止まってしまう場合がある問題を修正
  2.1.0 2023/03/27 RemoveAnimation.jsと組み合わせて表示中のアニメーションやフキダシを即時消去できる機能を追加
  2.0.0 2022/10/16 フキダシもアニメーションと同様に表示できる機能を追加
@@ -113,6 +114,12 @@
  * @default false
  * @type boolean
  *
+ * @arg loop
+ * @text ループ再生
+ * @desc アニメーションをループ再生します。止めるときはアニメーション消去から止めてください。
+ * @default false
+ * @type boolean
+ *
  * @command REMOVE_ANIMATION
  * @text アニメーション消去
  * @desc ラベルを指定して表示中のアニメーションやフキダシを即時消去します。利用にはRemoveAnimation.jsが必要です。
@@ -174,14 +181,7 @@
 
     Game_Interpreter.prototype.requestAnimationByPoint = function(args) {
         const point = new Game_AnimationPoint(args);
-        if (args.id > 0) {
-            $gameTemp.requestAnimation([point], args.id);
-        } else if (args.balloonId > 0) {
-            $gameTemp.requestBalloon(point, args.balloonId);
-        }
-        if (args.label) {
-            $gameTemp.pushPointAnimation(point);
-        }
+        point.request();
         if (args.wait) {
             this.setWaitMode("pointAnimation");
         }
@@ -200,7 +200,7 @@
         }
         this._pointQueue
             .filter(target => target.getLabel() === label)
-            .forEach(target => target.endAnimation());
+            .forEach(target => target.endLoop());
         this._pointQueue = this._pointQueue.filter(target => target.isAnimationPlaying());
     };
 
@@ -278,6 +278,29 @@
             this._wait = args.wait;
             this._scroll = args.scroll;
             this._label = args.label;
+            this._loop = args.loop;
+            this._animationId = args.id;
+            this._balloonId = args.balloonId;
+        }
+
+        request() {
+            if (this._animationId > 0) {
+                $gameTemp.requestAnimation([this], this._animationId);
+            } else if (this._balloonId > 0) {
+                $gameTemp.requestBalloon(this, this._balloonId);
+            }
+            if (this._label) {
+                $gameTemp.pushPointAnimation(this);
+            }
+        }
+
+        endLoop() {
+            this._loop = false;
+            if (this._animationId) {
+                this.endAnimation();
+            } else if (this._balloonId > 0) {
+                this.endBalloon();
+            }
         }
 
         startAnimation() {
@@ -292,6 +315,10 @@
                 pointAnimationCount--;
             }
             this._playing = false;
+            if (this._loop) {
+                this._wait = false;
+                this.request();
+            }
         }
 
         startBalloon() {
@@ -306,6 +333,10 @@
                 pointAnimationCount--;
             }
             this._playing = false;
+            if (this._loop) {
+                this._wait = false;
+                this.request();
+            }
         }
 
         isScroll() {
