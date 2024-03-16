@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.2.1 2024/03/16 戦闘中にマップ座標のアニメーションを表示したとき専用エラーになるよう修正
  2.2.0 2024/03/16 アニメーションやフキダシをループ再生する機能を追加
  2.1.1 2024/01/16 戦闘中にアニメーションを表示したとき、完了までウェイトを無効にしていてもイベント実行が止まってしまう場合がある問題を修正
  2.1.0 2023/03/27 RemoveAnimation.jsと組み合わせて表示中のアニメーションやフキダシを即時消去できる機能を追加
@@ -159,6 +160,10 @@
 
     PluginManagerEx.registerCommand(script, 'SHOW_ANIMATION', function(args) {
         if (args.positionType === 'map') {
+            if ($gameParty.inBattle()) {
+                PluginManagerEx.throwError(
+                    'In battle, you can\'t specify map coordinates. Please specify screen coordinates.', script);
+            }
             args.x = $gameMap.convertToScreenX(args.x);
             args.y = $gameMap.convertToScreenY(args.y);
         }
