@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.13.0 2024/03/17 自分自身や味方を対象にした行動でも反撃(リアクション)が発動できる機能を追加
 // 2.12.5 2024/02/27 インターセプター設定で割り込みされたあとでスキルを発動するとコストが消費されない問題を修正
 // 2.12.4 2024/02/27 行動制約が有効なときに、対象が使用者のスキルで反撃すると、使用者以外を対象にしてしまう場合がある問題を修正
 // 2.12.3 2024/01/17 2.12.1の修正方法を変更
@@ -290,6 +291,22 @@
  * @type switch
  * @default 0
  *
+ * @param Subject
+ * @text 反撃条件(使用者)
+ * @desc 指定した場合、使用者が特定のバトラーのときのみ反撃します。
+ * @type select
+ * @default opponentsUnit
+ * @option 相手ユニット
+ * @value opponentsUnit
+ * @option 味方ユニット(自身含む)
+ * @value friendsUnit
+ * @option 味方ユニット(自身含まない)
+ * @value friendsUnitWithoutUser
+ * @option 自分自身
+ * @value user
+ * @option 全員
+ * @value all
+ *
  * @param MemoTagCondition
  * @text 反撃条件(メモタグ)
  * @desc 指定した場合、メモ欄に指定したタグが書かれているスキル、バトラー(武器防具含む)に対してのみ反撃します。
@@ -343,8 +360,7 @@
         }
 
         setup(triggerAction, target) {
-            if (triggerAction.isCounter() ||
-                this.friendsUnit().members().contains(target) || !this.subject().canMove()) {
+            if (triggerAction.isCounter() || !this.subject().canMove()) {
                 return;
             }
             for (const counter of this.findParams()) {
@@ -395,10 +411,30 @@
             conditions.push(() => skill.ScriptCondition && !eval(skill.ScriptCondition));
             conditions.push(() => Math.randomInt(100) >= frequency - evasion);
             conditions.push(() => counter.PayCounterCost && !this.isValid());
+            conditions.push(() => !this.isIncludesSubject(target, skill.Subject));
             this.setCounterSkill(skill, triggerSkill);
             this.setCounterTarget(target);
             const result = !conditions.some(condition => condition());
             return skill.ConditionReverse ? !result : result;
+        }
+
+        isIncludesSubject(triggerSubject, condition) {
+            const subject = this.subject();
+            const friends = subject.friendsUnit().members();
+            const opponents = subject.opponentsUnit().members();
+            switch (condition) {
+                case 'friendsUnit':
+                    return friends.includes(triggerSubject);
+                case 'friendsUnitWithoutUser':
+                    return friends.includes(triggerSubject) && subject !== triggerSubject;
+                case 'user':
+                    return subject === triggerSubject;
+                case 'all':
+                    return true;
+                case 'opponentsUnit':
+                default:
+                    return opponents.includes(triggerSubject);
+            }
         }
 
         hasMemoTag(skill, target, tagName) {
