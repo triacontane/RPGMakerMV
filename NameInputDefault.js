@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/03/19 初期値を適用するボタンを選択できる機能を追加
  1.0.0 2024/02/27 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -33,11 +34,15 @@
  * @default false
  * @type boolean
  *
- * @param shiftDefault
- * @text シフトで初期値適用
- * @desc シフトキーを押すとデフォルト名称が適用されます。
- * @default false
- * @type boolean
+ * @param defaultButton
+ * @text 初期値適用ボタン
+ * @desc 指定したボタンを押下するとデフォルト名称が適用されます。
+ * @default
+ * @type select
+ * @option
+ * @option shift
+ * @option control
+ * @option tab
  *
  * @help NameInputDefault.js
  *
@@ -94,13 +99,13 @@
         return _Window_NameEdit_restoreDefault.apply(this, arguments);
     };
 
-    const _Window_NameInput_processJump = Window_NameInput.prototype.processJump;
-    Window_NameInput.prototype.processJump = function() {
-        if (param.shiftDefault) {
-            this._index = 89;
+    const _Window_NameInput_processHandling = Window_NameInput.prototype.processHandling;
+    Window_NameInput.prototype.processHandling = function() {
+        _Window_NameInput_processHandling.apply(this, arguments);
+        if (param.defaultButton && Input.isTriggered(param.defaultButton)) {
             this._editWindow.restoreDefault();
-            this.playOkSound();
+            this.processJump();
+            this.playCursorSound();
         }
-        _Window_NameInput_processJump.apply(this, arguments);
     };
 })();
