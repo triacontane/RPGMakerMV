@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.3 2024/03/19 ピクチャのファイル名に制御文字を使用できるよう修正
  1.0.2 2024/01/14 同じピクチャ番号でグループピクチャを再表示したときに一瞬チラつきが発生する現象を修正
  1.0.1 2023/11/12 グループ化していないピクチャを再表示できなくなる問題を修正
  1.0.0 2023/11/12 初版
@@ -107,12 +108,13 @@
     };
 
     Game_Screen.prototype.addGroupingPicture = function(picture) {
+        const name = PluginManagerEx.convertEscapeCharacters(picture.FileName);
         this._groupingPicture.push({
-            fileName: picture.FileName,
+            fileName: name,
             x: picture.X,
             y: picture.Y
         });
-        ImageManager.loadPicture(picture.FileName);
+        ImageManager.loadPicture(name);
     };
 
     const _Game_Screen_erasePicture = Game_Screen.prototype.erasePicture;
