@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2024/03/20 競合対策コードを追加
 // 1.4.0 2022/01/31 MZで動作するよう修正
 // 1.3.1 2019/06/11 競合する可能性のある記述を修正
 // 1.3.0 2019/05/26 MessageWindowPopup.jsと完全に組み合わせて使用できるよう修正
@@ -82,6 +83,9 @@
 
     Window_Message.prototype.setPauseSignToTextEnd = function() {
         const textState = this._textState;
+        if (!textState) {
+            return;
+        }
         let x = this.padding + textState.x;
         let y = this.padding + textState.y + textState.height;
         this._pauseSignSprite.anchor.x = 0;
