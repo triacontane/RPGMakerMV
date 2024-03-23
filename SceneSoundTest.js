@@ -611,7 +611,6 @@
             const audio = this._optionWindow.getAudio();
             audio.name = this._audioPath.slice(1).join('/');
             audio.type = this._audioPath[0];
-            console.log(audio);
             const buffer = AudioManager.playForSoundTest(audio);
             this._audioWindow.setup(buffer, this._audioName);
         }
