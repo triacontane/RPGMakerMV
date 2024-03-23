@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2024/03/23 オーディオごとにデフォルトの音量、ピッチ、左右バランスを設定できる機能を追加
 // 2.4.0 2023/09/17 リストウィンドウとオプションウィンドウとの切り替えをタッチ操作でできる機能を追加
 // 2.3.1 2022/10/31 曲を選択していない状態でピッチなどを変更しようとするとエラーになる問題を修正
 // 2.3.0 2022/10/30 ピッチと左右バランスのオプション項目について、パラメータを空にすると項目も消去されるよう修正
@@ -189,6 +190,30 @@
  * @desc 最初から登録済みで演奏可能な状態になります。
  * @default false
  * @type boolean
+ *
+ * @param volume
+ * @text 音量
+ * @desc 演奏時のデフォルト音量です。指定がなければ、もともと演奏していた音量が引き継がれます。
+ * @default
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param pitch
+ * @text ピッチ
+ * @desc 演奏時のデフォルトピッチです。指定がなければ、もともと演奏していたピッチが引き継がれます。
+ * @default
+ * @type number
+ * @min 50
+ * @max 150
+ *
+ * @param pan
+ * @text 位相(左右バランス)
+ * @desc 演奏時のデフォルト位相です。指定がなければ、もともと演奏していた位相が引き継がれます。
+ * @default
+ * @type number
+ * @min -100
+ * @max 100
  *
  */
 
@@ -482,7 +507,23 @@
             this._audioPath = this._listWindow.findFilePath();
             this._audioName  = this._listWindow.findItemText();
             this._listWindow.activate();
+            this.setOptionValues();
             this.play();
+        }
+
+        setOptionValues() {
+            const audio = this._optionWindow.getAudio();
+            const item = this._listWindow.item();
+            if (item.volume) {
+                audio.volume = item.volume;
+            }
+            if (item.pitch) {
+                audio.pitch = item.pitch;
+            }
+            if (item.pan) {
+                audio.pan = item.pan;
+            }
+            this._optionWindow.refresh();
         }
 
         onListCancel() {
@@ -570,6 +611,7 @@
             const audio = this._optionWindow.getAudio();
             audio.name = this._audioPath.slice(1).join('/');
             audio.type = this._audioPath[0];
+            console.log(audio);
             const buffer = AudioManager.playForSoundTest(audio);
             this._audioWindow.setup(buffer, this._audioName);
         }
@@ -691,8 +733,10 @@
         }
 
         makeCommandList() {
-            this._audio = {
-                name: '', volume: 90, pitch: 100, pan: 0
+            if (!this._audio) {
+                this._audio = {
+                    name: '', volume: 90, pitch: 100, pan: 0
+                }
             }
             this.addCommand(param.volume, 'volume');
             if (param.pitch) {
