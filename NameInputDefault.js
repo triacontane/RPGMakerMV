@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/03/24 デフォルト名の候補アクターをタグで指定できる機能を追加
  1.1.0 2024/03/19 初期値を適用するボタンを選択できる機能を追加
  1.0.0 2024/02/27 初版
 ----------------------------------------------------------------------------
@@ -69,6 +70,11 @@
  * @default 0
  * @type actor
  *
+ * @param actorTag
+ * @text アクタータグ
+ * @desc 名前を設定するアクターのメモタグです。aaaと指定するとメモ欄に<aaa>と記載されたアクターが候補になります。
+ * @default
+ *
  * @param name
  * @text 名称
  * @desc アクターのデフォルト名称です。
@@ -92,11 +98,19 @@
 
     const _Window_NameEdit_restoreDefault = Window_NameEdit.prototype.restoreDefault;
     Window_NameEdit.prototype.restoreDefault = function() {
-        const names = param.nameList.filter(data => data.actorId === this._actor.actorId() || !data.actorId);
+        const names = param.nameList.filter(data => this.isDefaultNameTargetActor(data));
         if (names.length > 0) {
             this._defaultName = names[Math.randomInt(names.length)].name;
         }
         return _Window_NameEdit_restoreDefault.apply(this, arguments);
+    };
+
+    Window_NameEdit.prototype.isDefaultNameTargetActor = function(data) {
+        if (!data.actorId && !data.actorTag) {
+            return true;
+        }
+        return data.actorId === this._actor.actorId() ||
+            PluginManagerEx.findMetaValue(this._actor.actor(), data.actorTag);
     };
 
     const _Window_NameInput_processHandling = Window_NameInput.prototype.processHandling;
