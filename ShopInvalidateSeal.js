@@ -16,7 +16,7 @@
 /*:
  * @plugindesc ショップ画面での装備封印無効化プラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ShopStatusInvalidateSeal.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ShopInvalidateSeal.js
  * @author トリアコンタン
  *
  * @help ShopInvalidateSeal.js
