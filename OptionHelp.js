@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/03/27 シンボルの型をコンボボックスに変更
  1.0.0 2024/03/27 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -65,7 +66,18 @@
  * @text シンボル
  * @desc ヘルプ項目のシンボル文字列です。
  * @default
- * @type string
+ * @type combo
+ * @option alwaysDash
+ * @option commandRemember
+ * @option touchUI
+ * @option bgmVolume
+ * @option bgsVolume
+ * @option meVolume
+ * @option seVolume
+ * @option Number1
+ * @option Boolean1
+ * @option String1
+ * @option Volume1
  *
  * @param description
  * @text 説明
