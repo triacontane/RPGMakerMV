@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.3.0 2024/03/30 追加項目同士の並び順を変更できる機能を追加
 // 3.2.0 2021/12/21 項目に余白を設定できる機能を追加
 // 3.1.3 2021/08/09 セーブデータをロードした際に、追加オプションの設定値がゲーム変数に反映されない問題を修正
 // 3.1.2 2021/08/05 セーブがある状態で隠し項目を追加した時に上手く動作しない問題を修正
@@ -59,6 +60,20 @@
  * @desc 追加する音量項目のオプション項目情報です。
  * @default
  * @type struct<VolumeData>[]
+ *
+ * @param CustomOrder
+ * @text 追加項目の並び順
+ * @desc 同じ追加位置を指定した項目同士の並び順をデフォルトから変更したい場合に設定してください。
+ * @default ["NumberOptions","StringOptions","SwitchOptions","VolumeOptions"]
+ * @type select[]
+ * @option 数値項目
+ * @value NumberOptions
+ * @option 文字列項目
+ * @value StringOptions
+ * @option スイッチ項目
+ * @value SwitchOptions
+ * @option 音量項目
+ * @value VolumeOptions
  *
  * @command UNLOCK
  * @text オプション任意項目の隠し解除
@@ -402,6 +417,9 @@
     if (!param.VolumeOptions) {
         param.VolumeOptions = [];
     }
+    if (!param.CustomOrder) {
+        param.CustomOrder = ['NumberOptions', 'StringOptions', 'SwitchOptions', 'VolumeOptions'];
+    }
 
     var localOptionWindowIndex = 0;
 
@@ -421,22 +439,15 @@
             return this.customParams;
         }
         this.customParams = {};
-        param.NumberOptions.forEach(function(optionItem, index) {
-            this.makeNumberOption(optionItem, index);
-        }, this);
-        param.StringOptions.forEach(function(optionItem, index) {
-            this.makeStringOption(optionItem, index);
-        }, this);
-        param.SwitchOptions.forEach(function(optionItem, index) {
-            this.makeSwitchOption(optionItem, index);
-        }, this);
-        param.VolumeOptions.forEach(function(optionItem, index) {
-            this.makeVolumeOption(optionItem, index);
-        }, this);
+        param.CustomOrder.forEach(orderName => {
+            param[orderName].forEach((optionItem, index) => {
+                this[`make${orderName}`](optionItem, index);
+            });
+        });
         return this.customParams;
     };
 
-    ConfigManager.makeNumberOption = function(optionItem, index) {
+    ConfigManager.makeNumberOptions = function(optionItem, index) {
         var data    = this.makeCommonOption(optionItem, index, this._symbolNumber);
         data.min    = optionItem.NumberMin;
         data.max    = optionItem.NumberMax;
@@ -444,7 +455,7 @@
         this.pushOptionData(data);
     };
 
-    ConfigManager.makeStringOption = function(optionItem, index) {
+    ConfigManager.makeStringOptions = function(optionItem, index) {
         var data    = this.makeCommonOption(optionItem, index, this._symbolString);
         data.values = optionItem.StringItems || ['no item'];
         data.min    = 0;
@@ -452,7 +463,7 @@
         this.pushOptionData(data);
     };
 
-    ConfigManager.makeSwitchOption = function(optionItem, index) {
+    ConfigManager.makeSwitchOptions = function(optionItem, index) {
         var data       = this.makeCommonOption(optionItem, index, this._symbolBoolean);
         data.variable  = optionItem.SwitchID;
         data.onText    = optionItem.OnText;
@@ -460,7 +471,7 @@
         this.pushOptionData(data);
     };
 
-    ConfigManager.makeVolumeOption = function(optionItem, index) {
+    ConfigManager.makeVolumeOptions = function(optionItem, index) {
         var data = this.makeCommonOption(optionItem, index, this._symbolVolume);
         this.pushOptionData(data);
     };
