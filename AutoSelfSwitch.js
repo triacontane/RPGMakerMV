@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/03/31 条件種別を「以内」以外にも設定できる機能を追加
  1.0.0 2021/06/25 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -52,9 +53,27 @@
  *
  * @param playerDistance
  * @text プレイヤーとの距離
- * @desc プレイヤーとの距離が指定値以内のときに条件を満たします。
+ * @desc プレイヤーとの距離が条件種別で指定した条件を満たしたときに条件を満たします。
  * @default 0
  * @type number
+ *
+ * @param conditionType
+ * @text 条件種別
+ * @desc 距離の条件を判定する際の種別です。
+ * @default 0
+ * @type select
+ * @option <=(以内)
+ * @value 0
+ * @option <(未満)
+ * @value 1
+ * @option >=(以上)
+ * @value 2
+ * @option >(より大きい)
+ * @value 3
+ * @option ==(等しい)
+ * @value 4
+ * @option !=(等しくない)
+ * @value 5
  *
  * @param type
  * @text セルフスイッチ種別
@@ -134,6 +153,20 @@
     Game_Event.prototype.isValidAutoSelfSwitchList = function(data) {
         const sx = Math.abs(this.deltaXFrom($gamePlayer.x));
         const sy = Math.abs(this.deltaYFrom($gamePlayer.y));
-        return sx + sy <= data.playerDistance;
+        const distance = sx + sy;
+        switch (data.conditionType) {
+            case 1:
+                return distance < data.playerDistance;
+            case 2:
+                return distance >= data.playerDistance;
+            case 3:
+                return distance > data.playerDistance;
+            case 4:
+                return distance === data.playerDistance;
+            case 5:
+                return distance !== data.playerDistance;
+            default:
+                return distance <= data.playerDistance;
+        }
     };
 })();
