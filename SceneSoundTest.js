@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2024/03/24 オーディオごとにジャケット画像を表示できる機能を追加
 // 2.5.0 2024/03/23 オーディオごとにデフォルトの音量、ピッチ、左右バランスを設定できる機能を追加
 // 2.4.0 2023/09/17 リストウィンドウとオプションウィンドウとの切り替えをタッチ操作でできる機能を追加
 // 2.3.1 2022/10/31 曲を選択していない状態でピッチなどを変更しようとするとエラーになる問題を修正
@@ -116,6 +117,27 @@
  * @default false
  * @type boolean
  *
+ * @param audioAlign
+ * @text オーディオ情報揃え
+ * @desc オーディオ情報(曲名＋ジャケット)の揃えです。
+ * @default left
+ * @type select
+ * @option left
+ * @option center
+ * @option right
+ *
+ * @param jacketWidth
+ * @text ジャケット横幅
+ * @desc ジャケット画像の横幅です。
+ * @default 0
+ * @type number
+ *
+ * @param jacketHeight
+ * @text ジャケット高さ
+ * @desc ジャケット画像の高さです。
+ * @default 0
+ * @type number
+ *
  * @command OPEN
  * @text サウンドテスト画面を開く
  * @desc サウンドテスト画面を開きます。
@@ -214,6 +236,13 @@
  * @type number
  * @min -100
  * @max 100
+ *
+ * @param jacket
+ * @text ジャケット画像
+ * @desc ジャケット画像です。使用する場合、パラメータのジャケットサイズを別途指定してください。
+ * @default
+ * @type file
+ * @dir img/pictures
  *
  */
 
@@ -600,7 +629,10 @@
             const wx = this._optionWindow.x;
             const wy = this._optionWindow.y + this._optionWindow.height;
             const ww = this._optionWindow.width;
-            const wh = this.calcWindowHeight(2, false);
+            let wh = this.calcWindowHeight(param.HiddenSeekBar ? 1 : 2, false);
+            if (param.jacketHeight > 0) {
+                wh += param.jacketHeight;
+            }
             return new Rectangle(wx, wy, ww, wh);
         }
 
@@ -612,7 +644,7 @@
             audio.name = this._audioPath.slice(1).join('/');
             audio.type = this._audioPath[0];
             const buffer = AudioManager.playForSoundTest(audio);
-            this._audioWindow.setup(buffer, this._audioName);
+            this._audioWindow.setup(buffer, this._audioName, this._listWindow.item().jacket);
         }
 
         isUseCategory() {
@@ -790,10 +822,11 @@
             this.setup(null, '');
         }
 
-        setup(webAudio, name) {
+        setup(webAudio, name, jacket) {
             this._audioName = name;
+            this._jacket = jacket;
             if (!param.HiddenSeekBar) {
-                this.placeSeekGauge(webAudio, 0, this.lineHeight() + 8);
+                this.placeSeekGauge(webAudio, 0, this.lineHeight());
             }
             this.refresh();
         }
@@ -803,11 +836,37 @@
             sprite.setup(webAudio);
             sprite.move(x, y);
             sprite.show();
+            this._seekSprite = sprite;
         }
 
         refresh() {
             this.contents.clear();
-            this.drawText(this._audioName, 0, 0, this.innerWidth);
+            this.drawText(this._audioName, 0, 0, this.innerWidth, param.audioAlign || 'left');
+            if (this._jacket) {
+                this.drawJacket();
+            }
+        }
+
+        drawJacket() {
+            const bitmap = ImageManager.loadPicture(this._jacket);
+            const position = this.findJacketPosition();
+            bitmap.addLoadListener(() => {
+                this.contents.blt(bitmap, 0, 0, bitmap.width, bitmap.height,
+                    position.x, position.y, param.jacketWidth, param.jacketHeight);
+            });
+        }
+
+        findJacketPosition() {
+            const position = {
+                x: 0, y: 0
+            }
+            if (param.audioAlign === 'right') {
+                position.x = this.innerWidth - param.jacketWidth;
+            } else if (param.audioAlign === 'center') {
+                position.x = (this.innerWidth - param.jacketWidth) / 2;
+            }
+            position.y = this.lineHeight() + (this._seekSprite ? this._seekSprite.height : 0);
+            return position;
         }
     }
 
