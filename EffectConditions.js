@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2024/03/31 メモタグの有無を適用条件に追加
 // 1.3.0 2023/05/07 適用条件スクリプトの凡例「subject.isActor();」を選択するとエラーになっていた問題を修正
 // 1.2.0 2022/09/27 適用条件に「戦闘中かどうか」を追加
 // 1.1.0 2022/09/25 MZ用に再作成
@@ -39,6 +40,17 @@
  * 満たしたときだけ[1]番目に設定した効果が適用されます。
  * <効果条件_1:cond01>
  * <EffectCond_1:cond01>
+ *
+ * 使用者、対象者タグは特徴を有するデータベースのメモ欄(※1)に指定したタグが
+ * 記載されている場合に有効になります。
+ * パラメータにaaaと入力した場合、メモ欄には<aaa>と記述します。
+ *
+ * ※1 アクター、職業、武器、防具、ステート、敵キャラ
+ *
+ * スクリプトでは以下のローカル変数が使えます。
+ * subject : 使用者(Game_Battler)
+ * target : 対象者(Game_Battler)
+ * damage : ダメージ値(Number)
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -76,6 +88,18 @@
  * @desc ONにすると戦闘中のみ有効な効果と判断されます。(OFFにすると戦闘中、メニュー中どちらでも有効)
  * @default false
  * @type boolean
+ *
+ * @param subjectTag
+ * @text 使用者タグ
+ * @desc 使用者が保持する特徴のメモ欄に指定したタグがある場合に有効と判定される条件です。
+ * @default
+ * @type string
+ *
+ * @param targetTag
+ * @text 対象者タグ
+ * @desc 対象者が保持する特徴のメモ欄に指定したタグがある場合に有効と判定される条件です。
+ * @default
+ * @type string
  * 
  * @param script
  * @text スクリプト
@@ -100,6 +124,14 @@
     Game_Temp.prototype.clearCommonEventReservationById = function(commonEventId) {
         this._commonEventQueue = this._commonEventQueue.filter(id => id !== commonEventId);
     };
+
+    //=============================================================================
+    // Game_Battler
+    //  指定したメモタグの保持を判定します。
+    //=============================================================================
+    Game_Battler.prototype.hasMemoTag = function(tagName) {
+        return this.traitObjects().some(object => object.meta[tagName]);
+    }
 
     //=============================================================================
     // Game_Action
@@ -147,12 +179,14 @@
             return true;
         }
         const conditions = [];
-        const damage = this._damageValue;
+        const damage = this._damageValue; // Use in eval
         const subject = this.subject();
         conditions.push(() => !condParam.switch || $gameSwitches.value(condParam.switch));
         conditions.push(() => !condParam.probability || Math.randomInt(100) < condParam.probability);
         conditions.push(() => !condParam.script || eval(condParam.script));
         conditions.push(() => !condParam.battleOnly || $gameParty.inBattle());
+        conditions.push(() => !condParam.subjectTag || subject.hasMemoTag(condParam.subjectTag));
+        conditions.push(() => !condParam.targetTag || target.hasMemoTag(condParam.targetTag));
         return !conditions.some(condition => !condition());
     };
 
