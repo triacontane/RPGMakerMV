@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/04/01 すべてのコモンイベントで共通の引数を定義できる機能を追加
  1.2.0 2023/08/11 メッセージコモンプラグインと連携して、引数付きコモンを制御文字から呼べる機能を追加
  1.1.0 2023/05/24 名称による検索を完全一致と部分一致の2種類に対応
  1.0.0 2023/03/12 初版
@@ -57,6 +58,10 @@
  * プラグインパラメータで引数が渡される変数番号を登録し、
  * 専用のプラグインコマンドからパラメータを指定してコモンイベントを呼びます。
  *
+ * ずべてのコモンイベントで共通の引数を定義することも可能です。
+ * その場合、コモンイベントIDに0を指定したうえで、
+ * そのデータをリストの一番下に定義してください。
+ *
  * また、コモンイベント名称を基準にコモンイベントを呼ぶことも可能です。
  * 名称によるコモンイベント呼び出しは名称の部分一致検索になります。
  *　
@@ -74,8 +79,8 @@
 /*~struct~CommonArguments:
  * @param id
  * @text コモンイベントID
- * @desc 引数情報を登録するコモンイベントのIDです。
- * @default 1
+ * @desc 引数情報を登録するコモンイベントのIDです。0を指定すると全コモンイベントで共通で使われる変数になります。
+ * @default 0
  * @type common_event
  *
  * @param variables
@@ -106,7 +111,7 @@
             PluginManagerEx.throwError('Common event is not found. id=' + idValue, script);
         }
         const id = $dataCommonEvents.findIndex(event => event === commonEvent);
-        const variables = param.arguments.find(item => item.id === id)?.variables || [];
+        const variables = param.arguments.find(item => item.id === id || item.id === 0)?.variables || [];
         variables.forEach((variableId, index) => {
             if (parameters[index] !== undefined) {
                 $gameVariables.setValue(variableId, parameters[index]);
