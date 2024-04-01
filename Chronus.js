@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.2 2024/04/01 2.6.0の修正によりカレンダーの枠の非表示が機能しなくなっていた問題を修正
 // 2.6.1 2024/01/28 天候を設定しているときにメニューの開閉を実施すると、天候の強さが変わってしまう場合がある問題を修正
 // 2.6.0 2024/01/25 カレンダーウィンドウの下をプレイヤーが通ったらウィンドウを半透明にするよう修正
 // 2.5.0 2023/09/11 カレンダーウィンドウのプライオリティをメッセージウィンドウの下に変更
@@ -1210,9 +1211,6 @@ function Window_Chronus() {
         this.createContents();
         this.x = getParamNumber('カレンダー表示X座標');
         this.y = getParamNumber('カレンダー表示Y座標');
-        if (paramCalendarFrameHidden) {
-            this.opacity = 0;
-        }
         this.refresh();
     };
 
@@ -1293,6 +1291,9 @@ function Window_Chronus() {
             this.opacity = 255;
             this.backOpacity = 255;
             this.contentsOpacity = 255;
+        }
+        if (paramCalendarFrameHidden) {
+            this.opacity = 0;
         }
     };
 
