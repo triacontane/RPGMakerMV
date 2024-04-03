@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/04/03 ヘルプの行数を変更できる機能を追加
  1.0.1 2024/03/27 シンボルの型をコンボボックスに変更
  1.0.0 2024/03/27 初版
 ----------------------------------------------------------------------------
@@ -27,6 +28,12 @@
  * @desc オプション画面で表示するヘルプのリストです。
  * @default ["{\"symbol\":\"alwaysDash\",\"description\":\"Shiftキーを押さなくても自動でダッシュします。\"}","{\"symbol\":\"commandRemember\",\"description\":\"戦闘中に選択したコマンドの入力内容を記憶します。\"}","{\"symbol\":\"touchUI\",\"description\":\"メニュー画面にタッチ用のボタンを表示します。\"}","{\"symbol\":\"bgmVolume\",\"description\":\"BGMの音量を調整します。\"}","{\"symbol\":\"bgsVolume\",\"description\":\"BGSの音量を調整します。\"}","{\"symbol\":\"meVolume\",\"description\":\"MEの音量を調整します。\"}","{\"symbol\":\"seVolume\",\"description\":\"SEの音量を調整します。\"}"]
  * @type struct<Help>[]
+ *
+ * @param helpLines
+ * @text ヘルプ行数
+ * @desc ヘルプウィンドウの行数です。0を指定するとデフォルト値の2になります。
+ * @default 0
+ * @type number
  *
  * @help OptionHelp.js
  *
@@ -78,6 +85,7 @@
  * @option Boolean1
  * @option String1
  * @option Volume1
+ * @option reset
  *
  * @param description
  * @text 説明
@@ -100,6 +108,12 @@
         _Scene_Options_create.apply(this, arguments);
         this.createHelpWindow();
         this._optionsWindow.setHelpWindow(this._helpWindow);
+    };
+
+    const _Scene_Options_helpAreaHeight = Scene_Options.prototype.helpAreaHeight;
+    Scene_Options.prototype.helpAreaHeight = function() {
+        const result = _Scene_Options_helpAreaHeight.apply(this, arguments);
+        return param.helpLines > 0 ?this.calcWindowHeight(param.helpLines, false) : result;
     };
 
     const _Window_Options_updateHelp = Window_Options.prototype.updateHelp;
