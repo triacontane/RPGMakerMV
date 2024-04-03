@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2024/04/03 リトライ画面で「タイトルに戻る」の選択肢を非表示にできるよう修正
 // 1.5.0 2023/08/26 リトライウィンドウを瞬間表示およびリトライできないときのウィンドウ表示方法の設定を追加
 // 1.4.0 2021/12/26 リトライコストに任意の変数、アイテムを設定できる機能を追加
 // 1.3.0 2021/12/16 リトライにコスト（お金）を設定できる機能を追加
@@ -53,12 +54,12 @@
  *
  * @param CommandLoad
  * @text コマンドロード
- * @desc ゲームオーバー画面で表示する「ロード画面に移行する」ためのコマンド文字列です。
+ * @desc ゲームオーバー画面で表示する「ロード画面に移行する」ためのコマンド文字列です。空欄にするとコマンドが非表示になります。
  * @default ロード
  *
  * @param CommandTitle
  * @text コマンドタイトル
- * @desc ゲームオーバー画面で表示する「タイトル画面に移行する」ためのコマンド文字列です。
+ * @desc ゲームオーバー画面で表示する「タイトル画面に移行する」ためのコマンド文字列です。空欄にするとコマンドが非表示になります。
  * @default タイトルへ
  *
  * @param WindowY
@@ -481,8 +482,7 @@
 
     Scene_Gameover.prototype.rectRetryWindow = function() {
         const w = 180;
-        const lines = (BattleManager.canRetry() || param.DisableRetryOption === 'disable') ? 3 : 2;
-        const h = this.calcWindowHeight(lines, true);
+        const h = this.calcWindowHeight(3, true);
         const x = (Graphics.boxWidth - w) / 2;
         const y = param.WindowY;
         return new Rectangle(x, y, w, h);
@@ -625,7 +625,11 @@
         if (param.CommandLoad) {
             this.addCommand(param.CommandLoad, 'load');
         }
-        this.addCommand(param.CommandTitle, 'title');
+        if (param.CommandTitle) {
+            this.addCommand(param.CommandTitle, 'title');
+        }
+        this.height = this.fittingHeight(this.maxItems());
+        this.createContents();
     };
 
     Window_RetryCommand.prototype.canPayRetryCost = function() {
