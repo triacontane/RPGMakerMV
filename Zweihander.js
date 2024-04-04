@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/04/04 1.0.1で修正した条件の操作をしたときに、武器を外すのではなくスロット1に量手持ち武器を装備し直すよう仕様変更
  1.0.2 2022/11/20 プラグイン名称変更
  1.0.1 2022/06/30 二刀流の特徴を持つ武器を装備しているときにスロット2に両手持ちの武器を装備したときに装備状態が不正になる問題を修正
  1.0.0 2022/06/29 初版
@@ -63,6 +64,11 @@
         return this.isEquipTypeSealed(2) && this.weapons().length > 0;
     };
 
+    DataManager.isTwoHandedWeapon = function(item) {
+        return this.isWeapon(item) && item.traits.some(trait =>
+            trait.code === Game_BattlerBase.TRAIT_EQUIP_SEAL && trait.dataId === 2);
+    };
+
     const _Game_Actor_releaseUnequippableItems = Game_Actor.prototype.releaseUnequippableItems;
     Game_Actor.prototype.releaseUnequippableItems = function(forcing) {
         for (;;) {
@@ -102,6 +108,9 @@
 
     const _Game_Actor_changeEquip = Game_Actor.prototype.changeEquip;
     Game_Actor.prototype.changeEquip = function(slotId, item) {
+        if (slotId === 1 && (this.isTwoHanded() || DataManager.isTwoHandedWeapon(item))) {
+            this.changeEquip(0, item);
+        }
         this._lastChangeSlot = slotId;
         _Game_Actor_changeEquip.apply(this, arguments);
         this._lastChangeSlot = null;
