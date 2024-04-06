@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2024/04/06 1.1.0の修正で発生しうるいくつかのバグを修正し、かつ両手持ち状態になったときは二刀流を無効にするよう修正
  1.1.0 2024/04/04 1.0.1で修正した条件の操作をしたときに、武器を外すのではなくスロット1に量手持ち武器を装備し直すよう仕様変更
  1.0.2 2022/11/20 プラグイン名称変更
  1.0.1 2022/06/30 二刀流の特徴を持つ武器を装備しているときにスロット2に両手持ちの武器を装備したときに装備状態が不正になる問題を修正
@@ -60,8 +61,21 @@
         return false;
     };
 
+    const _Game_BattlerBase_isDualWield = Game_BattlerBase.prototype.isDualWield;
+    Game_BattlerBase.prototype.isDualWield = function() {
+        const result= _Game_BattlerBase_isDualWield.apply(this, arguments);
+        if (this.isTwoHanded()) {
+            return false;
+        }
+        return result;
+    };
+
     Game_Actor.prototype.isTwoHanded = function() {
         return this.isEquipTypeSealed(2) && this.weapons().length > 0;
+    };
+
+    Game_Actor.prototype.isTwoHandedWithItem = function(item) {
+        return this.isTwoHanded() || DataManager.isTwoHandedWeapon(item);
     };
 
     DataManager.isTwoHandedWeapon = function(item) {
@@ -108,8 +122,9 @@
 
     const _Game_Actor_changeEquip = Game_Actor.prototype.changeEquip;
     Game_Actor.prototype.changeEquip = function(slotId, item) {
-        if (slotId === 1 && (this.isTwoHanded() || DataManager.isTwoHandedWeapon(item))) {
+        if (slotId === 1 && this.isTwoHandedWithItem(item)) {
             this.changeEquip(0, item);
+            return;
         }
         this._lastChangeSlot = slotId;
         _Game_Actor_changeEquip.apply(this, arguments);
@@ -118,6 +133,10 @@
 
     const _Game_Actor_forceChangeEquip = Game_Actor.prototype.forceChangeEquip;
     Game_Actor.prototype.forceChangeEquip = function(slotId, item) {
+        if (slotId === 1 && this.isTwoHandedWithItem(item)) {
+            this.forceChangeEquip(0, item);
+            return;
+        }
         this._lastChangeSlot = slotId;
         _Game_Actor_forceChangeEquip.apply(this, arguments);
         this._lastChangeSlot = null;
