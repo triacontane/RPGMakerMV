@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/04/06 名前欄に制御文字\v[n]などが含まれていた場合は、変換後の値で一致するコモンイベントの呼び出しを行うよう修正
  1.2.0 2024/02/15 タイミングにメッセージ終了待機時を追加
  1.1.0 2024/02/14 メッセージ終了時にもコモンイベントを呼べるよう修正
  1.0.0 2023/09/23 初版
@@ -34,6 +35,9 @@
  * メッセージの表示で名前を指定したときに自動でコモンイベントを呼び出します。
  * 名前とコモンイベントのIDをプラグインパラメータから指定してください。
  * このイベント呼び出しは、マップ画面でのみ有効です。
+ *
+ * 名前欄に制御文字\v[n]などが含まれていた場合は、変換後の値で
+ * 一致するコモンイベントの呼び出しを行います。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -119,7 +123,7 @@
     };
 
     Window_Message.prototype.callSpeakerCommon = function(timing) {
-        const speakerName = $gameMessage.getLastSpeakerName();
+        const speakerName = PluginManagerEx.convertEscapeCharacters($gameMessage.getLastSpeakerName());
         const commonEvents = param.commonList.filter(common => {
             return speakerName.match(new RegExp(common.SpeakerName)) && timing === (common.timing || 'start');
         });
