@@ -69,7 +69,7 @@
 
     const _SceneManager_catchLoadError = SceneManager.catchLoadError;
     SceneManager.catchLoadError = function(e) {
-        if (param.openDirectly) {
+        if (param.openDirectly && Utils.isOptionValid('test')) {
             SceneManager.openResourceDirectly(e[1]);
         }
         e[2] = null;
