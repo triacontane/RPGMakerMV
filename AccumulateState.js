@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.0 2024/04/10 蓄積ステートの解除条件に「戦闘終了時に解除」がある場合、蓄積率も同時にリセットできる機能を追加
 // 2.4.2 2023/02/12 プラグイン未適用のセーブデータをロードしたときエラーになる場合がある問題を修正
 // 2.4.1 2022/05/25 2.4.0の修正で不要なゲージが表示される場合がある問題を修正
 // 2.4.0 2022/03/18 マップ画面とステータス画面に蓄積ゲージを表示できるよう修正
@@ -67,6 +68,12 @@
  * @desc ステートが有効になるごとに加算される耐性値です。100になると一切、上昇しなくなります。
  * @default 0
  * @type number
+ *
+ * @param ResetAccumulateEndBattle
+ * @text 戦闘終了時にリセット
+ * @desc 蓄積ステートの解除条件「戦闘終了時に解除」が有効な場合、戦闘終了時に蓄積率をリセットします。
+ * @default false
+ * @type boolean
  *
  * @command ACCUMULATE
  * @text 蓄積
@@ -219,6 +226,19 @@
             }
         }
         return false;
+    };
+
+    const _Game_Battler_removeBattleStates = Game_Battler.prototype.removeBattleStates;
+    Game_Battler.prototype.removeBattleStates = function() {
+        _Game_Battler_removeBattleStates.apply(this, arguments);
+        if (param.ResetAccumulateEndBattle) {
+            for (const stateId in this._stateAccumulations) {
+                const state = $dataStates[stateId];
+                if (state.removeAtBattleEnd && this._stateAccumulations[stateId] > 0) {
+                    this._stateAccumulations[stateId] = 0
+                }
+            }
+        }
     };
 
     Game_BattlerBase.prototype.getStateImmunity = function (stateId) {
