@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.46.1 2024/04/11 戦闘画面以外でもplaceGaugeでTPゲージを表示できるよう修正
  1.46.0 2023/12/07 データ一覧のソートスクリプトを設定する機能を追加
  1.45.0 2023/11/25 セーブファイルの一覧取得と項目描画のプリセットを追加
  1.44.0 2023/11/13 ウィンドウのカーソルを全選択あるいは選択固定状態にできるスイッチを追加
@@ -2656,6 +2657,16 @@
 
     Game_System.prototype.indexToSavefileId = function(index) {
         return index + (this.isAutosaveEnabled() ? 0 : 1);
+    };
+
+    const _Sprite_Gauge_isValid = Sprite_Gauge.prototype.isValid;
+    Sprite_Gauge.prototype.isValid = function() {
+        const valid = _Sprite_Gauge_isValid.apply(this, arguments);
+        if (SceneManager._scene instanceof Scene_CustomMenu) {
+            return true;
+        } else {
+            return valid;
+        }
     };
 
     window.Window_CustomMenu = Window_CustomMenu;
