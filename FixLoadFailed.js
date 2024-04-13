@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/04/13 リトライボタンを無効にしない機能を追加
  1.0.0 2024/04/08 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -33,11 +34,19 @@
  * @default true
  * @type boolean
  *
+ * @param noRetry
+ * @text リトライ無効
+ * @desc ロード失敗時のリトライ機能を無効化し、リトライボタンを非表示にします。
+ * @default true
+ * @type boolean
+ *
  * @help FixLoadFailed.js
  *
  * 表示しようとした画像がなかったときに即座にエラーが発生するようになります。
  * （デフォルト仕様ではシーン遷移するタイミングでエラー発生）
  * また、ブラウザ実行以外ではほぼ意味を為さないRetry機能を無効化します。
+ * Retry機能は設定により有効化できますが、リトライで表示成功した場合も
+ * 画面上には画像が表示されない場合があります。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -61,18 +70,30 @@
     const _Bitmap_isReady = Bitmap.prototype.isReady;
     Bitmap.prototype.isReady = function() {
         if (this.isError()) {
-            this._loadingState = "loaded";
+            Bitmap._loadError = true;
             ImageManager.throwLoadError(this);
         }
         return _Bitmap_isReady.apply(this, arguments);
     };
+
+    if (!param.noRetry) {
+        const _SceneManager_updateScene = SceneManager.updateScene;
+        SceneManager.updateScene = function() {
+            _SceneManager_updateScene.apply(this, arguments);
+            if (Bitmap._loadError && ImageManager.isReady()) {
+                Bitmap._loadError = false;
+            }
+        };
+    }
 
     const _SceneManager_catchLoadError = SceneManager.catchLoadError;
     SceneManager.catchLoadError = function(e) {
         if (param.openDirectly && Utils.isOptionValid('test')) {
             SceneManager.openResourceDirectly(e[1]);
         }
-        e[2] = null;
+        if (param.noRetry) {
+            e[2] = null;
+        }
         _SceneManager_catchLoadError.apply(this, arguments);
     };
 
