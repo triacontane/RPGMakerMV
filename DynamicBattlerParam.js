@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.1 2024/04/13 パフォーマンス対策とヘルプの記述修正
 // 3.0.0 2024/04/13 MZ向けに全面的なリファクタリング
 // 2.0.0 2018/07/11 計算式の対象が追加能力値もしくは特殊能力値、計算式で参照する能力値を装備品やバフを適用した能力値になるよう仕様変更しました
 // 1.2.1 2017/10/31 1.2.0でデバッグ用のコードが混入していたので修正
@@ -34,8 +35,7 @@
  *
  * @help DynamicBattlerParameter.js
  *
- * バトラーのパラメータをJavaScript計算式に置き換えます。
- * パラメータを参照すると計算式を評価した結果が返ります。
+ * バトラーの能力値を指定したJavaScript計算式の評価結果に置き換えます。
  * バトラーが特定のメモタグを持つ場合のみ計算式を適用することも可能です。
  * メモタグ名のパラメータにaaaを指定するとタグ<aaa>を持つバトラーにのみ
  * 計算式が適用されます。(※1)
@@ -44,17 +44,21 @@
  *
  * 本プラグインはプラグインの特性上、他のプラグインと組み合わせた場合
  * パフォーマンスが低下する可能性があります。
+ * また、evalを多用するのでデベロッパーツールを開いていると
+ * 同様にパフォーマンスが低下する場合があります。
  *
  * 各パラメータの値は以下の仕様に従います。
  *
  * ・計算式の対象が通常能力値(最大HP～運)の場合
  * 装備品、バフによる変動を考慮しないバトラー本来のパラメータとなります。
  * これは装備品やバフの効果が二重に適用されてしまう現象を防ぐためです。
+ * また、計算式の結果は整数に丸められます。
  *
  * ・計算式の対象が追加能力値もしくは特殊能力値(命中率～経験獲得率)の場合
  * 装備品、バフによる変動を考慮したパラメータとなります。
+ * 計算式の結果は小数点以下を含む実数となり、100%=1.0となります。
  *
- * ※いずれの場合も本プラグインによる変動は含まれません。
+ * また、いずれの能力値も本プラグインによる変動は含まれません。
  * これは計算式の参照元にさらに計算式を適用しようとして処理が循環したり
  * 著しくパフォーマンスが低下するのを避けるためです。
  *
@@ -153,7 +157,7 @@
  *
  * @param formula
  * @text 計算式
- * @desc パラメータを計算するJavaScript式です。
+ * @desc パラメータを計算するJavaScript式です。ヘルプを参考に式を設定してください。バトラーオブジェクトを[a]として参照可能です。
  * @default
  * @type multiline_string
  *
@@ -169,23 +173,30 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
     if (!param.formulaList) {
-        return;
+        param.formulaList = [];
     }
+    const formulas = [];
+    param.formulaList.forEach(item => {
+        if (!formulas[item.paramId]) {
+            formulas[item.paramId] = [];
+        }
+        formulas[item.paramId].push({
+            formula: item.formula,
+            tagName: item.tagName
+        });
+    });
 
     Game_BattlerBase._paramNumber = 8;
     Game_BattlerBase._xParamNumber = 10;
     Game_BattlerBase._sParamNumber = 10;
 
     Game_BattlerBase.prototype.getParamFormula = function(paramId) {
-        return param.formulaList.find(item => {
-            if (item.paramId !== paramId) {
-                return false;
-            } else if (item.tagName) {
-                return this.traitObjects().some(obj => obj.meta[item.tagName]);
-            } else {
-                return true;
-            }
-        })?.formula;
+        if (!formulas[paramId]) {
+            return null;
+        }
+        return formulas[paramId].find(item =>
+            item.tagName ? this.traitObjects().some(obj => obj.meta[item.tagName]) : true
+        )?.formula;
     };
 
     Game_BattlerBase.prototype.getDynamicParam = function(paramId, param, baseFlag) {
