@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.1.0 2024/04/20 反射された側にアニメーションを表示しない設定を追加
  2.0.1 2021/03/28 MVで廃止されたメソッド呼び出しが含まれていた問題を修正
  2.0.0 2020/12/28 MZ向けに実装を修正
  1.1.3 2020/05/24 反射したときのステータスウィンドウへのダメージ反映を、反射エフェクト後に変更
@@ -36,6 +37,12 @@
  * @text 完了までウェイト
  * @desc 反射アニメーションが完了するまで待機します。
  * @default true
+ * @type boolean
+ *
+ * @param noAttackAnimation
+ * @text 攻撃アニメは表示しない
+ * @desc 反射された側に攻撃アニメーションを表示しません。
+ * @default false
  * @type boolean
  *
  * @help ReflectionAnimation.js
@@ -73,8 +80,10 @@
             }
         }
         _Window_BattleLog_displayReflection.apply(this, arguments);
-        this.push('showAnimation', target, [this._relectionTarget], this._relectionItem.animationId);
-        this.push('waitForAnimation');
+        if (!param.noAttackAnimation) {
+            this.push('showAnimation', target, [this._relectionTarget], this._relectionItem.animationId);
+            this.push('waitForAnimation');
+        }
         this.push('restoreGaugeStop');
     };
 
