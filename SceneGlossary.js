@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.8.1 2024/04/20 用語辞典に戻るのコマンドを使ったとき、選択中の用語までスクロールしない問題を修正
 // 3.8.0 2023/08/16 用語辞典をキャンセルしてマップに戻ったときにONになるスイッチを追加
 // 3.7.8 2023/07/09 ウィンドウクラスを外部から参照できるよう修正
 // 3.7.7 2022/11/30 背景画像の伸縮表示が正常に行われていなかった問題を修正
@@ -2059,6 +2060,10 @@
         var lastIndex = $gameParty.getGlossaryListIndex();
         if (lastIndex >= 0) {
             this.select(Math.min(lastIndex, this.maxItems() - 1));
+            const row = this.row();
+            if (row >= this.maxPageRows()) {
+                this.setTopRow(this.row());
+            }
         }
     };
 
