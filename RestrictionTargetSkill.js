@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.5.11 2024/04/23 ヘルプの記述を修正し、PluginCommonBaseのbaseアノテーションを追加
 // 2.5.10 2024/01/02 範囲を「味方単体(無条件)」にしたスキルに制約を設定したとき、正常に対象を特定できない場合がある問題を修正
 // 2.5.9 2023/05/13 制約対象のスキルやアイテムをID単位ではなくメモタグでまとめて指定できる機能を追加
 // 2.4.0 2023/04/20 すべてのスキルの対象にならなくなる無敵タグを設定できる機能を追加
@@ -42,6 +43,8 @@
  * @plugindesc 対象限定スキルプラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/RestrictionTargetSkill.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param list
@@ -68,6 +71,9 @@
  * 敵がスキルを使う場合や、自動戦闘、混乱、複数対象の場合も適用されます。
  *
  * パラメータから制約情報を設定してください。
+ *
+ * パラメータにメモタグを記載するときは、括弧は不要です。
+ * メモ欄に記載するタグが<xxx>の場合、パラメータにはxxxと入力してください。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
