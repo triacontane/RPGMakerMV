@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2024/04/25 フォロワーのジャンプ速度、高度は個別に設定されない限りプレイヤーに準拠するよう修正
  1.1.1 2021/11/14 プラグインを未適用のデータをロードしたときキャラクターが表示されない問題を修正
  1.1.0 2021/07/18 MZで動作するよう修正
  1.0.0 2020/05/10 初版
@@ -114,5 +115,13 @@
         if (jumpHeight) {
             this.setJumpHeight(jumpHeight);
         }
+    };
+
+    Game_Follower.prototype.getJumpSpeedRate = function() {
+        return this._jumpSpeed ? Game_CharacterBase.prototype.getJumpSpeedRate.call(this) : $gamePlayer.getJumpSpeedRate();
+    };
+
+    Game_Follower.prototype.getJumpHeightRate = function() {
+        return this._jumpHeight ? Game_CharacterBase.prototype.getJumpHeightRate.call(this) : $gamePlayer.getJumpHeightRate();
     };
 })();
