@@ -16,7 +16,7 @@
 /*:
  * @plugindesc オートセーブ禁止プラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AutoSaveDisbale.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AutoSaveDisable.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
