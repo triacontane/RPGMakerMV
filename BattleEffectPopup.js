@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.2 2024/04/27 デバッグ用のログ出力を削除
 // 1.12.1 2023/10/24 物理ダメージ率および魔法ダメージ率によってダメージが無効化されたときもガードのポップアップ判定を有効にするよう修正
 // 1.12.0 2022/03/25 バフおよびデバフをポップアップする機能を追加
 // 1.11.4 2022/02/11 自動戦闘や他のプラグインと組み合わせたとき、耐性や弱点のポップアップが意図せず表示される場合がある問題を修正
@@ -844,7 +845,6 @@
         if (paramUsingOutline) {
             bitmap.outlineWidth = Math.floor(bitmap.fontSize / 6);
             bitmap.outlineColor = paramOutlineColor || 'gray';
-            console.log(bitmap.outlineColor);
         }
         bitmap.drawText(text, 0, 0, bitmap.width, bitmap.height, 'center');
         return bitmap;
