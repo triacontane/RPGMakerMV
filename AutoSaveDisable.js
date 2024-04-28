@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/04/28 オートセーブ禁止状態になっていると、セーブおよびロード画面でオートセーブの枠が表示されない問題を修正
  1.0.0 2024/04/27 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -49,7 +50,12 @@
 
     const _Game_System_isAutosaveEnabled = Game_System.prototype.isAutosaveEnabled;
     Game_System.prototype.isAutosaveEnabled = function() {
-        return _Game_System_isAutosaveEnabled.apply(this, arguments) && !this.isAutoSaveDisabled();
+        const result = _Game_System_isAutosaveEnabled.apply(this, arguments);
+        if (SceneManager._scene instanceof Scene_File) {
+            return result;
+        } else {
+            return result && !this.isAutoSaveDisabled();
+        }
     }
 
     Game_System.prototype.isAutoSaveDisabled = function() {
