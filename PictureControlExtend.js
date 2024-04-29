@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2024/04/29 ピクチャにぼかしを入れるコマンドを追加
  1.5.0 2023/12/13 ピクチャの表示位置をマップのスクロールに連動させる機能を追加
  1.4.1 2023/11/16 一括操作の対応プラグインに「ピクチャのボタン化プラグイン」を追加
  1.4.0 2023/06/04 ピクチャをフラッシュさせるコマンドを追加
@@ -285,6 +286,23 @@
  * @default false
  * @type boolean
  *
+ * @command PICTURE_BLUR
+ * @text ピクチャのぼかし
+ * @desc ピクチャをぼかします。
+ *
+ * @arg pictureId
+ * @text ピクチャ番号
+ * @desc 操作対象のピクチャ番号です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @arg value
+ * @text 設定値
+ * @desc ぼかしを有効にするかどうかです。
+ * @default true
+ * @type boolean
+ *
  * @help PictureControlExtend.js
  *
  * ピクチャ関連のイベントコマンドの機能を拡張します。
@@ -372,6 +390,10 @@
 
     PluginManagerEx.registerCommand(script, 'PICTURE_TO_MAP', function(args) {
         $gameScreen.setPictureToMap(args.pictureId, args);
+    });
+
+    PluginManagerEx.registerCommand(script, 'PICTURE_BLUR', function(args) {
+        $gameScreen.setPictureBlur(args.pictureId, args.value);
     });
 
     /**
@@ -519,7 +541,16 @@
                 picture.flash([args.red, args.green, args.blue, args.alpha], args.duration);
             }
         }, arguments);
-    }
+    };
+
+    Game_Screen.prototype.setPictureBlur = function(pictureId, value) {
+        this.iteratePictures(pictureId => {
+            const picture = this.picture(pictureId);
+            if (picture) {
+                picture.setBlur(value);
+            }
+        }, arguments);
+    };
 
     /**
      * Game_Picture
@@ -626,6 +657,14 @@
         return this._flashColor;
     };
 
+    Game_Picture.prototype.setBlur = function(value) {
+        this._blur = value;
+    };
+
+    Game_Picture.prototype.isBlur = function() {
+        return this._blur;
+    };
+
     const _Game_Picture_update      = Game_Picture.prototype.update;
     Game_Picture.prototype.update = function() {
         _Game_Picture_update.apply(this, arguments);
@@ -696,6 +735,7 @@
     Sprite_Picture.prototype.update = function() {
         _Sprite_Picture_update.apply(this, arguments);
         this.updateFlash();
+        this.updateBlur();
     };
 
     Sprite_Picture.prototype.updateFlash = function() {
@@ -706,5 +746,33 @@
                 this.setBlendColor(flash);
             }
         }
+    };
+
+    Sprite_Picture.prototype.updateBlur = function() {
+        const picture = this.picture();
+        if (picture && picture.isBlur()) {
+            if (!this._blur) {
+                this.addBlurFilter();
+            }
+        } else if (this._blur) {
+            this.removeBlurFilter();
+        }
+    };
+
+    Sprite_Picture.prototype.addBlurFilter = function() {
+        if (!this.filters) {
+            this.filters = [];
+        }
+        if (!this.filters.some(filter => filter instanceof PIXI.filters.BlurFilter)) {
+            this.filters.push(new PIXI.filters.BlurFilter());
+        }
+        this._blur = true;
+    };
+
+    Sprite_Picture.prototype.removeBlurFilter = function() {
+        if (this.filters) {
+            this.filters = this.filters.filter(filter => !(filter instanceof PIXI.filters.BlurFilter));
+        }
+        this._blur = false;
     }
 })();
