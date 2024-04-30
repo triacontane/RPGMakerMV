@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.20.0 2024/04/30 ゲージの表示原点を指定できる機能を追加
+                   バトラー情報をMenuActorにしたとき、メニュー画面でアクターを切り替えてもゲージ内容が更新されない問題を修正
  1.19.0 2024/01/17 ラベルの表示位置を調整できる機能を追加
  1.18.0 2024/01/14 アクターのレベルゲージと経験値ゲージを簡単に表示できるスクリプト凡例を追加
  1.17.0 2023/12/19 ゲージが満タンのときにONになるスイッチを指定できる機能を追加
@@ -215,6 +217,30 @@
  * @text Y座標
  * @desc Y座標です。原点は中央です。数値以外を指定した場合はスクリプトとして評価します。
  * @default 30
+ *
+ * @param originX
+ * @text 原点X
+ * @desc ゲージのX座標原点です。
+ * @default center
+ * @type select
+ * @option 左
+ * @value left
+ * @option 中央
+ * @value center
+ * @option 右
+ * @value right
+ *
+ * @param originY
+ * @text 原点Y
+ * @desc ゲージのY座標原点です。
+ * @default center
+ * @type select
+ * @option 上
+ * @value top
+ * @option 中央
+ * @value center
+ * @option 下
+ * @value bottom
  *
  * @param linkCharacter
  * @text 連動するキャラクター
@@ -892,6 +918,7 @@
             }
             this.updateOpacity();
             this.updateFullSwitch();
+            this._gauge.updateBattler();
         }
 
         updateVisibly() {
@@ -920,9 +947,8 @@
                 return null;
             }
             const sprite = new Sprite();
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
             sprite.bitmap = ImageManager.loadPicture(pictureData.FileName);
+            this._gauge.setSpriteOrigin(sprite);
             sprite.x = pictureData.OffsetX || 0;
             sprite.y = pictureData.OffsetY || 0;
             this.addChild(sprite);
@@ -964,16 +990,39 @@
             this.addChild(gauge);
         }
 
+        updateBattler() {
+            if (this._menuActor) {
+                this._battler = $gameParty.menuActor();
+            }
+        }
+
         findBattler() {
             const battlerData = this._data.Battler;
             if (!battlerData || !battlerData.Type) {
-                return $gameParty.menuActor();
+                return $gameParty.members()[0];
             }
             const methodName = `findBattler${battlerData.Type}`;
             if (this[methodName]) {
                 return this[methodName](battlerData);
             } else {
-                return $gameParty.menuActor();
+                return null;
+            }
+        }
+
+        setSpriteOrigin(sprite) {
+            if (this._layout.originX === 'left') {
+                sprite.anchor.x = 0;
+            } else if (this._layout.originX === 'right') {
+                sprite.anchor.x = 1;
+            } else {
+                sprite.anchor.x = 0.5;
+            }
+            if (this._layout.originY === 'top') {
+                sprite.anchor.y = 0;
+            } else if (this._layout.originY === 'bottom') {
+                sprite.anchor.y = 1;
+            } else {
+                sprite.anchor.y = 0.5;
             }
         }
 
@@ -987,6 +1036,11 @@
 
         findBattlerActorId(battlerData) {
             return $gameActors.actor(battlerData.ActorId);
+        }
+
+        findBattlerMenuActor(battlerData) {
+            this._menuActor = true;
+            return $gameParty.menuActor();
         }
 
         findBattlerPartyIndex(battlerData) {
@@ -1044,8 +1098,7 @@
         }
 
         setupPosition() {
-            this.anchor.x = 0.5;
-            this.anchor.y = 0.5;
+            this.setSpriteOrigin(this);
             if (this._layout.Vertical) {
                 this.rotation = (270 * Math.PI) / 180;
             }
@@ -1231,7 +1284,7 @@
         }
 
         isValid() {
-            return !!this.findBattler();
+            return !!this._battler;
         }
 
         smoothness() {
