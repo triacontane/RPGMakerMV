@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.26.5 2024/05/02 クラス名取得関数の実装を変更
  1.26.4 2023/04/05 未キャッシュの画像が2枚以上あるときに描画処理が2回以上実行される場合がある問題を修正
  1.26.3 2023/01/01 PartyCommandScene.jsで戦闘シーンから遷移して戻ると戦闘終了処理が正しく行われない不具合を修正
  1.26.2 2022/12/30 戦闘テストを終了する際にエラーが出る不具合を修正
@@ -1004,7 +1005,7 @@
         if (define.match(/^class/)) {
             return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
         }
-        return define.replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
+        return define.replace(/function\s+(.*?)\s*\([\s\S]*/m, '$1');
     };
 
     const outputError = function(e) {
