@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2024/05/02 戦闘不能によるステート解除、全回復によるステート解除でもステート変化を行えるよう修正
 // 2.0.0 2021/10/08 MZで動作するよう全面的に修正
 // 1.2.0 2018/08/05 ステート解除でスイッチを操作する機能を追加
 // 1.1.2 2017/07/12 YEP_BattleEngineCore.jsと組み合わせたときに戦闘不能へのステート変化ができない競合を解消
@@ -77,6 +78,18 @@
  * @option ターン経過等で自動解除
  * @value auto
  *
+ * @param includeDie
+ * @text 死亡による解除を含む
+ * @desc 戦闘不能になることでステート解除された場合も変化ステートを付与します。
+ * @default false
+ * @type boolean
+ *
+ * @param includeRecoverAll
+ * @text 全回復による解除を含む
+ * @desc 全回復によるステート解除された場合も変化ステートを付与します。
+ * @default false
+ * @type boolean
+ *
  * @param triggerSwitch
  * @text 変化トリガースイッチ
  * @desc 対象ステートが変化したとき、指定したスイッチがONになります。
@@ -129,6 +142,33 @@
     //  Game_Battler
     //   解除時のステート変更処理を追加
     //=============================================================================
+    const _Game_BattlerBase_clearStates = Game_BattlerBase.prototype.clearStates;
+    Game_BattlerBase.prototype.clearStates = function() {
+        if (this._states) {
+            const states = this._states.clone();
+            _Game_BattlerBase_clearStates.apply(this, arguments);
+            states.forEach(stateId => this.changeState(stateId, ''));
+        } else {
+            _Game_BattlerBase_clearStates.apply(this, arguments);
+        }
+    };
+
+    const _Game_BattlerBase_recoverAll = Game_BattlerBase.prototype.recoverAll;
+    Game_BattlerBase.prototype.recoverAll = function() {
+        this._processRecoverAll = true;
+        _Game_BattlerBase_recoverAll.apply(this, arguments);
+        this._processRecoverAll = false;
+    };
+
+    const _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
+    Game_BattlerBase.prototype.die = function() {
+        this._processDie = true;
+        _Game_BattlerBase_die.apply(this, arguments);
+        this._processDie = false;
+    };
+
+    Game_BattlerBase.prototype.changeState = function(stateId, condition) {}
+
     const _Game_Battler_removeState = Game_Battler.prototype.removeState;
     Game_Battler.prototype.removeState = function(stateId) {
         _Game_Battler_removeState.apply(this, arguments);
@@ -170,9 +210,12 @@
         const data = param.list.find(item => item.targetStateId === stateId);
         if (!data || this.hasState(stateId)) {
             return;
-        }
-        if (data.condition && data.condition.length > 0 &&
+        } else if (data.condition && data.condition.length > 0 &&
             !data.condition.find(item => item === condition)) {
+            return;
+        } else if (!data.includeDie && this._processDie) {
+            return;
+        } else if (!data.includeRecoverAll && this._processRecoverAll) {
             return;
         }
         if (data.noRemoveMessage) {
@@ -187,6 +230,14 @@
         if (data.triggerSwitch) {
             $gameSwitches.setValue(data.triggerSwitch, true);
         }
+    };
+
+    const _Game_Battler_addState = Game_Battler.prototype.addState;
+    Game_Battler.prototype.addState = function(stateId) {
+        if (stateId === this.deathStateId() && this._processDie) {
+            return;
+        }
+        _Game_Battler_addState.apply(this, arguments);
     };
 
     Game_Battler.prototype.hasState = function(stateId) {
