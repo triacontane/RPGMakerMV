@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2024/05/03 弱点と耐性のポップアップ閾値を変更できる機能を追加
 // 2.6.1 2023/10/24 物理ダメージ率および魔法ダメージ率によってダメージが無効化されたときもガードのポップアップ判定を有効にするよう修正
 // 2.6.0 2022/10/22 ポップアップの対象外スキルを設定できる機能を追加
 // 2.5.0 2022/08/12 弱点耐性ポップアップの対象にならない属性を指定できるパラメータを追加
@@ -185,6 +186,18 @@
  * @text メッセージ間隔Y
  * @desc ポップアップメッセージが重なったときに次のメッセージが表示されるY座標を補正します。
  * @default 16
+ * @type number
+ *
+ * @param weaknessThreshold
+ * @text 弱点閾値
+ * @desc 弱点と見なすダメージ倍率の閾値です。百分率(%)で指定します。
+ * @default 110
+ * @type number
+ *
+ * @param resistanceThreshold
+ * @text 耐性閾値
+ * @desc 耐性と見なすダメージ倍率の閾値です。百分率(%)で指定します。
+ * @default 90
  * @type number
  *
  * @command USER_POPUP
@@ -452,11 +465,13 @@
             return  result;
         }
         if (this._elementResult) {
+            const weaknessThreshold = (param.weaknessThreshold || 110) / 100;
+            const resistanceThreshold = (param.resistanceThreshold || 90) / 100;
             if (result === 0 || (this.isPhysical() && target.pdr === 0) || (this.isMagical() && target.mdr === 0)) {
                 this._elementResult.guard = true;
-            } else if (result >= 1.1) {
+            } else if (result >= weaknessThreshold) {
                 this._elementResult.weakness = true;
-            } else if (result <= 0.9) {
+            } else if (result <= resistanceThreshold) {
                 this._elementResult.resist = true;
             }
         }
