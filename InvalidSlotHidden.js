@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2024/05/06 非表示スロットがステータス画面でも非表示になるよう修正
  1.1.1 2023/10/26 装備スロット選択時、選択中のヘルプが表示されなくなっていた問題を修正
  1.1.0 2022/08/31 MZ向けにリファクタリング
  1.0.1 2019/11/30 1.0.0の考慮漏れがあったので実装方法を全体的に変更
@@ -134,5 +135,21 @@
     const _Scene_Equip_onItemOk = Scene_Equip.prototype.onItemOk;
     Scene_Equip.prototype.onItemOk = function() {
         this._slotWindow.callProcessNeedRealIndex(_Scene_Equip_onItemOk.bind(this));
+    };
+
+    Window_StatusEquip.prototype.maxItems = function() {
+        return this._actor ? this._actor.validEquipIndexList().length : 0;
+    };
+
+    Window_StatusEquip.prototype.drawItem = function(index) {
+        const rect = this.itemLineRect(index);
+        index = this._actor.validEquipIndexList()[index];
+        const equips = this._actor.equips();
+        const item = equips[index];
+        const slotName = this.actorSlotName(this._actor, index);
+        const sw = 138;
+        this.changeTextColor(ColorManager.systemColor());
+        this.drawText(slotName, rect.x, rect.y, sw, rect.height);
+        this.drawItemName(item, rect.x + sw, rect.y, rect.width - sw);
     };
 })();
