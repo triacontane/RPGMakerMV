@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2024/05/09 アナログ時計をズームや画面のフェードアウトの影響を受けないよう変更
 // 2.6.2 2024/04/01 2.6.0の修正によりカレンダーの枠の非表示が機能しなくなっていた問題を修正
 // 2.6.1 2024/01/28 天候を設定しているときにメニューの開閉を実施すると、天候の強さが変わってしまう場合がある問題を修正
 // 2.6.0 2024/01/25 カレンダーウィンドウの下をプレイヤーが通ったらウィンドウを半透明にするよう修正
@@ -1368,17 +1369,13 @@ function Window_Chronus() {
         return $gameSystem.chronus();
     };
 
-    //=============================================================================
-    // Spriteset_Map
-    //  アナログ時計の画像を追加定義します。
-    //=============================================================================
-    var _Spriteset_Base_createUpperLayer      = Spriteset_Base.prototype.createUpperLayer;
-    Spriteset_Base.prototype.createUpperLayer = function() {
-        _Spriteset_Base_createUpperLayer.apply(this, arguments);
-        if (this instanceof Spriteset_Map) this.createClockSprite();
+    var _Scene_Map_createSpriteset = Scene_Map.prototype.createSpriteset;
+    Scene_Map.prototype.createSpriteset = function() {
+        _Scene_Map_createSpriteset.apply(this, arguments);
+        this.createClockSprite();
     };
 
-    Spriteset_Map.prototype.createClockSprite = function() {
+    Scene_Map.prototype.createClockSprite = function() {
         if (isParamExist('文字盤画像ファイル')) {
             this._clockSprite = new Sprite_Chronicle_Clock();
             this.addChild(this._clockSprite);
