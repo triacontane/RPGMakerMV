@@ -1,7 +1,7 @@
 //=============================================================================
 // ScreenRotation.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
@@ -9,7 +9,7 @@
 // 1.1.0 2024/05/09 MZ対応版を作成
 // 1.0.0 2017/01/08 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
+// [Blog]   : https://triacontane.blogspot.jp/
 // [Twitter]: https://twitter.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
