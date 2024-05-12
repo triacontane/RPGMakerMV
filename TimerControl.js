@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/05/12 不要パラメータを削除
  1.0.0 2022/05/12 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -20,12 +21,6 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
- *
- * @param param
- * @text パラメータ名称
- * @desc パラメータ説明
- * @default
- * @type number
  *
  * @command PAUSE
  * @text 一時停止
