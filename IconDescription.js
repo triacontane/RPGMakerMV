@@ -6,7 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
-// 2.0.1 2018 05/05 古いコアスクリプト用の設定を削除
+// 2.0.2 2024/05/12 メッセージウィンドウのアイコンをクリックしてもメッセージが閉じないよう修正
+// 2.0.1 2018/05/05 古いコアスクリプト用の設定を削除
 //                  バトル画面で除去されたステータスアイコンの説明が残ってしまう問題を修正
 // 2.0.0 2016/08/22 本体v1.3.0によりウィンドウ透過の実装が変更されたので対応
 // 1.0.1 2016/05/31 ウィンドウが重なったときに裏側のウィンドウのアイコンに反応する不具合を修正
@@ -187,7 +188,7 @@
         _Scene_Base_updateChildren.apply(this, arguments);
         if (!this._windowLayer) return;
         this._windowLayer.children.some(function(windowObject) {
-            return windowObject.updateIconTouch();
+            return windowObject.updateIconTouch(false);
         });
     };
 
@@ -212,23 +213,29 @@
         this._iconRects[rect.x + ':' + rect.y] = {index:iconIndex, rect:rect};
     };
 
-    Window_Base.prototype.updateIconTouch = function() {
+    Window_Base.prototype.updateIconTouch = function(test) {
         if (this.isAnyTriggered() && this._captionWindow) {
             this.eraseCaption();
-            return false;
+            return true;
         }
         if (!TouchInput.isTriggered() || !this.isTouchedInsideFrame()) return false;
         var tx = this.canvasToLocalX(TouchInput.x) - this.padding;
         var ty = this.canvasToLocalY(TouchInput.y) - this.padding;
+        var result = false;
         for (var propName in this._iconRects) {
             if (!this._iconRects.hasOwnProperty(propName)) continue;
             var rectInfo = this._iconRects[propName];
             if (rectInfo.rect.contains(tx, ty)) {
                 var text = $gameSystem.getIconDescription(rectInfo.index) || settings.iconDesc[rectInfo.index];
-                if (text) this.popupCaption(text);
+                if (text) {
+                    if (!test) {
+                        this.popupCaption(text);
+                    }
+                    result = true;
+                }
             }
         }
-        return true;
+        return result;
     };
 
     Window_Base.prototype.popupCaption = function(text) {
@@ -268,6 +275,15 @@
     Window_Selectable.prototype.drawAllItems = function() {
         this._iconRects = {};
         _Window_Selectable_drawAllItems.apply(this, arguments);
+    };
+
+    var _Window_Message_isTriggered = Window_Message.prototype.isTriggered;
+    Window_Message.prototype.isTriggered = function() {
+        var result = _Window_Message_isTriggered.apply(this, arguments);
+        if (result && this.updateIconTouch(true)) {
+            return false;
+        }
+        return result
     };
 
     /**
