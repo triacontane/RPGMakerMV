@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2024/05/16 ゲーム変数、スイッチを参照するローカル変数の定義を追加、誤ったヘルプの記載を削除
 // 1.3.0 2020/10/18 MZ版としてリファクタリング。MV版からメモ欄の仕様を変更
 // 1.2.0 2020/10/18 リファクタリングとヘルプの整理
 // 1.1.1 2018/09/27 テストプレー時はパラメータ「例外処理」の値に関係なくスクリプトエラーで異常終了しないよう修正
@@ -23,61 +24,6 @@
 //=============================================================================
 
 /*:
- * @plugindesc DynamicVariablesPlugin
- * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DynamicVariables.js
- * @base PluginCommonBase
- * @author triacontane
- *
- * @param DynamicSwitchStart
- * @desc The start position number of the dynamic switch.
- * @default 0
- * @type switch
- *
- * @param DynamicSwitchEnd
- * @desc The end position number of the dynamic switch.
- * @default 0
- * @type switch
- *
- * @param DynamicVariableStart
- * @desc The start position number of the dynamic variable.
- * @default 0
- * @type variable
- *
- * @param DynamicVariableEnd
- * @desc The end position number of the dynamic variable.
- * @default 0
- * @type variable
- *
- * @param ValidException
- * @desc Handles exceptions during script execution.
- * @default false
- * @type boolean
- *
- * @help When a variable or switch in the specified range is referenced
- * Returns the result of evaluating "variable name" and "switch name" as a script.
- * The following local variables can be used in the script
- *
- * id # ID of the switch or variable to be processed
- * value # the value that was originally in the switch or variable ID to be processed
- *
- * Dynamic variables are valid in all places (*) that refer to variables and switches.
- *
- * Examples of referring to variables and switches
- * 1. decision processing of the event page
- * 2. enemy character action decision processing
- * 3. conditional branching
- * 4. various operands of event commands.
- * 5. Other plug-in references
- *
- * You can also reference additional dynamic variables and switches in your scripts, but you can also use the
- * If you try to reference the variable (switch) with the same number, a circular reference occurs and an error occurs.
- *
- * There are no plug-in commands in this plugin.
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 動的変数プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DynamicVariables.js
@@ -122,15 +68,16 @@
  * value # 処理対象のスイッチ、変数IDにもともと入っていた値
  *
  * イベントページの出現条件でスイッチを参照する場合、以下の変数が使えます。
- * e     # イベントオブジェクトへの参照
- * d     # イベントデータへの参照
+ * e # イベントオブジェクトへの参照
+ * d # イベントデータへの参照
  *
  * 敵キャラの行動パターンでスイッチを参照する場合、以下の変数が使えます。
- * e     # 敵キャラオブジェクトへの参照
- * d     # 敵キャラデータへの参照
+ * e # 敵キャラオブジェクトへの参照
+ * d # 敵キャラデータへの参照
  *
- * 公式プラグイン『TextScriptBase.js』と併用すると以下の制御文字も使えます。
- * \tx[aaa]
+ * 使用する局面を問わず、以下の変数が使えます。
+ * v # ゲーム変数オブジェクトへの参照
+ * s # ゲームスイッチオブジェクトへの参照
  *
  * 動的変数は、変数およびスイッチを参照するすべての箇所(※)で有効です。
  *
@@ -195,9 +142,11 @@
         if (!dynamicScript) {
             return value;
         }
+        const v = $gameVariables.value.bind($gameVariables);
+        const s = $gameSwitches.value.bind($gameSwitches);
         if (param.ValidException || $gameTemp.isPlaytest()) {
             try {
-                return eval(PluginManagerEx.convertEscapeCharacters(dynamicScript));
+                return eval(dynamicScript);
             } catch (e) {
                 console.error(e.message);
                 return 0;
