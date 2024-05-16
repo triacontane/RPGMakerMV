@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.1 2024/05/16 ピクチャのフラッシュをしたときに最終フレームの色味が維持されてしまう問題を修正
  1.6.0 2024/04/29 ピクチャにぼかしを入れるコマンドを追加
  1.5.0 2023/12/13 ピクチャの表示位置をマップのスクロールに連動させる機能を追加
  1.4.1 2023/11/16 一括操作の対応プラグインに「ピクチャのボタン化プラグイン」を追加
@@ -703,11 +704,11 @@
 
     Game_Picture.prototype.updateFlash = function() {
         if (this._flashDuration > 0) {
-            const d = this._flashDuration--;
+            const d = this._flashDuration;
             this._flashColor[3] *= (d - 1) / d;
-            if (this._flashDuration === 0) {
-                this.clearFlash();
-            }
+            this._flashDuration--;
+        } else if (this._flashColor) {
+            this.clearFlash();
         }
     }
 
