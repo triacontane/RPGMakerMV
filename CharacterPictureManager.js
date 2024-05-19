@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.16.1 2024/05/19 表示優先度を「アニメーションの下」に設定しているとき、戦闘画面で立ち絵の表示位置がずれる問題を修正
 // 3.16.0 2024/01/24 入力中のアクターコマンドによって立ち絵を切り替える機能を追加
 // 3.15.1 2023/12/05 プラグインパラメータの一部初期値を使いやすいように変更
 // 3.15.0 2023/12/05 立ち絵ファイルの切り替わり時にクロスフェードできる機能を追加
@@ -1094,6 +1095,8 @@
      */
     Spriteset_Base.prototype.appendToEffect = function(displayObject) {
         this._effectsContainer.addChild(displayObject);
+        displayObject.x = -this._effectsContainer.x;
+        displayObject.y = -this._effectsContainer.y;
     };
 
     Spriteset_Base.prototype.findTargetStand = function(target) {
