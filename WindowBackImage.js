@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2024/05/25 フォントのアウトライン幅を指定できる機能を追加
 // 2.8.2 2023/11/21 フォント関連設定は差し替えスイッチとは無関係に適用される旨の説明を追加
 // 2.8.1 2023/10/23 サウンドテストプラグイン用の凡例がMV向けになっていたのを修正
 // 2.8.0 2023/10/19 アウトラインカラーの指定機能を追加
@@ -371,6 +372,13 @@
  * @type color
  * @parent Font
  *
+ * @param OutlineWidth
+ * @text アウトライン幅
+ * @desc ウィンドウのテキストアウトラインの幅です。
+ * @default 3
+ * @type number
+ * @parent Font
+ *
  */
 
 (function() {
@@ -555,6 +563,10 @@
         if (outlineColor) {
             const color = isFinite(outlineColor) ? ColorManager.textColor(outlineColor) : outlineColor;
             this.changeOutlineColor(color);
+        }
+        const outlineWidth = data.OutlineWidth;
+        if (outlineWidth >= 0) {
+            this.contents.outlineWidth = outlineWidth;
         }
     };
 
