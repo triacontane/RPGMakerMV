@@ -23,7 +23,7 @@
  *
  * @param formula
  * @text 計算式
- * @desc エンカウント率を計算するJavaScriptの式です。
+ * @desc エンカウントまでの歩数を計算する計算式です。nでマップ設定で入力した「敵出現歩数」を参照できます。
  * @default Math.randomInt(n) + Math.randomInt(n) + 1;
  * @type multiline_string
  *
