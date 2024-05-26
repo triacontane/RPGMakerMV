@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2024/05/26 総フレーム数をInfinityにしているとき、スイッチやイベント実行を条件にマップ名を一時的に非表示にできる機能を追加
 // 1.7.0 2023/10/18 マップ名の表示フォーマットを指定できる機能を追加
 // 1.6.0 2023/10/16 マップ名の表示をセンタリングする機能を追加
 //                  背景画像もウィンドウも指定しない場合は、通常の黒背景でマップ表示できるよう修正
@@ -132,6 +133,18 @@
  * @param noSameNameDisplay
  * @text 同じマップ名は出力しない
  * @desc 場所移動時、マップ表示名が移動前のマップと同じ場合はマップ名を出力しません。
+ * @default false
+ * @type boolean
+ *
+ * @param hideSwitch
+ * @text 非表示スイッチ
+ * @desc 総フレーム数をInfinityにしている場合に、指定したスイッチがONのときマップ名を非表示にします。
+ * @default 0
+ * @type switch
+ *
+ * @param hideInEventRunning
+ * @text イベント実行中非表示
+ * @desc 総フレーム数をInfinityにしている場合に、イベント実行中はマップ名を非表示にします。
  * @default false
  * @type boolean
  *
@@ -264,6 +277,28 @@
     Window_MapName.prototype.updateDelay = function() {
         this._delayCount = (this._delayCount || 0) + 1;
         return this._delayCount < param.viewDelay;
+    };
+
+    const _Window_MapName_update      = Window_MapName.prototype.update;
+    Window_MapName.prototype.update = function() {
+        _Window_MapName_update.apply(this, arguments);
+        if (this.isNeverHide()) {
+            this.updateTempHide();
+        }
+    };
+
+    Window_MapName.prototype.updateTempHide = function() {
+        const hide = this.isNeedHide();
+        if (hide && this.isOpen()) {
+            this.openness = 0;
+        } else if (!hide && this.isClosed()) {
+            this.openness = 255;
+        }
+    };
+
+    Window_MapName.prototype.isNeedHide = function() {
+        return $gameSwitches.value(param.hideSwitch) ||
+            (param.hideInEventRunning && $gameMap.isEventRunning());
     };
 
     const _Window_MapName_updateFadeOut      = Window_MapName.prototype.updateFadeOut;
