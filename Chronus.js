@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2024/05/28 2.8.0の機能をプラグインコマンドに変更
 // 2.8.0 2024/05/26 現在の月名、曜日名、時間帯名を取得するスクリプトをヘルプに記載
 // 2.7.0 2024/05/09 アナログ時計をズームや画面のフェードアウトの影響を受けないよう変更
 // 2.6.2 2024/04/01 2.6.0の修正によりカレンダーの枠の非表示が機能しなくなっていた問題を修正
@@ -679,6 +680,28 @@
  * @desc タイマーの識別子です。
  * @default
  *
+ * @command SET_TIME_INFO_NAME
+ * @text 現在時刻情報設定
+ * @desc 指定した変数に現在時刻の関連情報を設定します。
+ *
+ * @arg variableId
+ * @text 変数番号
+ * @desc 時刻情報を設定する変数番号です。
+ * @default 1
+ * @type variable
+ *
+ * @arg method
+ * @text 情報種別
+ * @desc 設定する情報の種別です。
+ * @default getMonthName
+ * @type select
+ * @option 月名
+ * @value getMonthName
+ * @option 曜日名
+ * @value getWeekName
+ * @option 時間帯名
+ * @value getTimeZoneName
+ *
  * @help ゲーム内で時刻と天候の概念を表現できるプラグインです。
  * 自動、マップ移動、戦闘で時間が経過し、時間と共に天候と色調が変化します。
  * これらの時間は調節可能で、またイベント中は時間の進行が停止します。
@@ -739,15 +762,6 @@
  * スクリプト
  *  frameで指定したフレーム数を自然時間加算間隔に設定します。
  *  $gameSystem.setAutoAddInterval(frame);
- *
- *  現在の月名を取得します。
- *  $gameSystem.chronus().getMonthName();
- *
- *  現在の時間帯名を取得します。
- *  $gameSystem.chronus().getTimeZoneName();
- *
- *  現在の曜日名を取得します。
- *  $gameSystem.chronus().getWeekName();
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -1032,6 +1046,13 @@ function Window_Chronus() {
         }
         if (args.minuteFileName) {
             $gameSystem.chronus().setMinuteHandFile(args.minuteFileName);
+        }
+    });
+
+    PluginManagerEx.registerCommand(script, 'SET_TIME_INFO_NAME', args => {
+        var chronus = $gameSystem.chronus();
+        if (chronus[args.method]) {
+            $gameVariables.setValue(args.variableId, chronus[args.method]());
         }
     });
 
