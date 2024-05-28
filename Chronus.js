@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2024/05/26 現在の月名、曜日名、時間帯名を取得するスクリプトをヘルプに記載
 // 2.7.0 2024/05/09 アナログ時計をズームや画面のフェードアウトの影響を受けないよう変更
 // 2.6.2 2024/04/01 2.6.0の修正によりカレンダーの枠の非表示が機能しなくなっていた問題を修正
 // 2.6.1 2024/01/28 天候を設定しているときにメニューの開閉を実施すると、天候の強さが変わってしまう場合がある問題を修正
@@ -738,6 +739,15 @@
  * スクリプト
  *  frameで指定したフレーム数を自然時間加算間隔に設定します。
  *  $gameSystem.setAutoAddInterval(frame);
+ *
+ *  現在の月名を取得します。
+ *  $gameSystem.chronus().getMonthName();
+ *
+ *  現在の時間帯名を取得します。
+ *  $gameSystem.chronus().getTimeZoneName();
+ *
+ *  現在の曜日名を取得します。
+ *  $gameSystem.chronus().getWeekName();
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -1886,7 +1896,7 @@ function Window_Chronus() {
             return this.getValuePadding(this.getYear(), arguments[1].length);
         }.bind(this));
         format = format.replace(/MON/gi, function() {
-            return this._monthNames[this.getMonth() - 1];
+            return this.getMonthName();
         }.bind(this));
         format = format.replace(/MM/gi, function() {
             return this.getValuePadding(this.getMonth(), String(this.getMonthOfYear()).length);
@@ -1919,6 +1929,10 @@ function Window_Chronus() {
             return this.getTimeZoneName();
         }.bind(this));
         return format;
+    };
+
+    Game_Chronus.prototype.getMonthName = function() {
+        return this._monthNames[this.getMonth() - 1]
     };
 
     Game_Chronus.prototype.getTimeZone = function() {
