@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2024/05/39 1.2.0の修正で戦闘画面に入るとエラーになっていた問題を修正
 // 1.2.0 2024/05/30 装備品にタグを付けていたとき、その装備品を外したときにステートが解除されない問題を修正
 // 1.1.1 2023/02/26 1.1.0の修正が一部不完全だった問題を修正
 // 1.1.0 2023/02/20 戦闘開始時に自動付与の再チェックを実施するよう仕様変更
@@ -124,7 +125,7 @@
     const _BattleManager_setup = BattleManager.setup;
     BattleManager.setup = function(troopId, canEscape, canLose) {
         _BattleManager_setup.apply(this, arguments);
-        $gameParty.members().forEach(actor => actor.resetConditionalState());
+        $gameParty.members().forEach(actor => actor.refreshConditionalState());
     };
 
     //=============================================================================
