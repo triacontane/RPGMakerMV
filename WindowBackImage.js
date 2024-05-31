@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2024/06/01 class記法で書かれたウィンドウクラスに対応
 // 1.5.1 2021/01/30 バトラーステータスウィンドウが選択肢に抜けていたので追加
 // 1.5.0 2021/01/24 ウィンドウごとに個別のウィンドウスキンを指定できる機能を追加
 // 1.4.0 2020/12/28 JK_MailSystem.jsの各ウィンドウをオプション項目に追加
@@ -264,7 +265,11 @@
     'use strict';
 
     var getClassName = function(object) {
-        return object.constructor.toString().replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
+        var define = object.constructor.toString();
+        if (define.match(/^class/)) {
+            return define.replace(/class\s+(.*?)\s+[\s\S]*/m, '$1');
+        }
+        return define.replace(/function\s+(.*)\s*\([\s\S]*/m, '$1');
     };
 
     //=============================================================================
