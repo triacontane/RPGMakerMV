@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.20.1 2024/06/02 タイムプログレスゲージを表示するための凡例を追加
  1.20.0 2024/04/30 ゲージの表示原点を指定できる機能を追加
                    バトラー情報をMenuActorにしたとき、メニュー画面でアクターを切り替えてもゲージ内容が更新されない問題を修正
  1.19.0 2024/01/17 ラベルの表示位置を調整できる機能を追加
@@ -491,6 +492,7 @@
  * @option battler.level; // レベル
  * @option battler.maxLevel(); // 最大レベル
  * @option meta.value; // メモ欄[value]の値
+ * @option battler.tpbChargeTime(); // タイムゲージ蓄積割合(0～1)
  *
  * @param FixedValue
  * @text 固定値
