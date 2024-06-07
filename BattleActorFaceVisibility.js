@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2024/06/07 前バージョンの修正内容に誤りがあったため修正
  1.2.0 2024/06/06 コマンド入力中にフェイスグラフィックが変わった場合、即座に更新するよう修正
  1.1.0 2024/02/10 ウィンドウの表示座標補正機能を追加
  1.0.0 2024/02/08 初版
@@ -107,8 +108,13 @@
         setActor(actor) {
             this._actor = actor;
             this.refresh();
-            this._faceName = actor.faceName();
-            this._faceIndex = actor.faceIndex();
+            if (actor) {
+                this._faceName = actor.faceName();
+                this._faceIndex = actor.faceIndex();
+            } else {
+                this._faceName = null;
+                this._faceIndex = null;
+            }
         }
 
         isFaceChanged() {
