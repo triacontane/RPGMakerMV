@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.3 2024/06/09 行動選択してから実際に行動する前に行動不能になったとき、使用予定だったコストが解放されない問題を修正
  1.3.2 2024/01/11 1.3.0の機能説明をヘルプに追加
  1.3.1 2023/04/20 1.2.0で追加した併用対応にいくつか不具合があったので修正
  1.3.0 2023/04/18 複数回行動できるアクターの場合、前に選択したスキルのコストを考慮して使用可能か判定する機能を追加
@@ -93,6 +94,10 @@
         this._actionStack = this._actionStack.filter(a => a !== action);
     };
 
+    Game_Party.prototype.clearActionByBattler = function(battler) {
+        this._actionStack = this._actionStack.filter(a => a.subject() !== battler);
+    };
+
     Game_Party.prototype.findReserveItemCount = function(item) {
         return this._actionStack.filter(a => a.item() === item || a.subItem === item).length;
     };
@@ -117,6 +122,12 @@
         } else {
             return result;
         }
+    };
+
+    const _Game_Battler_clearActions = Game_Battler.prototype.clearActions;
+    Game_Battler.prototype.clearActions = function() {
+        _Game_Battler_clearActions.apply(this, arguments);
+        $gameParty.clearActionByBattler(this);
     };
 
     const _Game_Party_numItems = Game_Party.prototype.numItems;
