@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.47.0 2024/06/09 ウィンドウがアクティブでないときに暗くできる機能を追加
  1.46.1 2024/04/11 戦闘画面以外でもplaceGaugeでTPゲージを表示できるよう修正
  1.46.0 2023/12/07 データ一覧のソートスクリプトを設定する機能を追加
  1.45.0 2023/11/25 セーブファイルの一覧取得と項目描画のプリセットを追加
@@ -825,6 +826,12 @@
  * @param HiddenNoFocus
  * @text 非フォーカス時は隠す
  * @desc 有効にするとウィンドウにフォーカスが当たっていないときはウィンドウが非表示になります。
+ * @default false
+ * @type boolean
+ *
+ * @param DarkNoFocus
+ * @text 非フォーカス時は暗転
+ * @desc 有効にするとウィンドウにフォーカスが当たっていないときはウィンドウの中身が暗くなります。
  * @default false
  * @type boolean
  *
@@ -1913,6 +1920,7 @@
 
         update() {
             this.updateOpenClose();
+            this.updateFilter();
             this.updateButtonInput();
             super.update();
             this.updateIndexVariable();
@@ -1998,6 +2006,17 @@
                 } else {
                     this.openness = 0;
                 }
+            }
+        }
+
+        updateFilter() {
+            if (!this._data.DarkNoFocus) {
+                return;
+            }
+            if (!this.active) {
+                this._clientArea.setBlendColor([0, 0, 0, 128]);
+            } else {
+                this._clientArea.setBlendColor([0, 0, 0, 0]);
             }
         }
 
