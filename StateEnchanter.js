@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/06/12 ダメージのパラメータ型を数値に変更し、一定以上のダメージによって解除される機能を追加
  1.0.0 2024/06/06 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -30,8 +31,8 @@
  * @help StateEnchanter.js
  *
  * 付与者が存在するステートを定義できます。
- * 通常の解除条件に加えて、付与者が戦闘不能になった場合やダメージを受けた場合にも
- * 解除されるようなステートを作成できます。
+ * 通常の解除条件に加えて、付与者が戦闘不能になった場合や一定以上のダメージを
+ * 受けた場合にも解除されるようなステートを作成できます。
  *
  * イベントなどでステートを付与した場合は（付与者を特定できないので）無効です。
  * また、解除は戦闘画面でのみ行われます。
@@ -57,7 +58,7 @@
  *
  * @param condition
  * @text 解除条件
- * @desc ステートの解除条件です。
+ * @desc ステートの解除条件です。解除条件を最初から満たした状態でステートを付与しようとすると即座に解除されます。
  *
  * @param dead
  * @text 戦闘不能
@@ -71,30 +72,32 @@
  * @desc 付与者のHPが指定した割合(100分率)より小さくなった場合に解除されます。0を指定した場合は無効です。
  * @default 0
  * @type number
+ * @parent condition
  *
  * @param mpRate
  * @text MP割合
  * @desc 付与者のMPが指定した割合(100分率)より小さくなった場合に解除されます。0を指定した場合は無効です。
  * @default 0
  * @type number
+ * @parent condition
  *
  * @param damage
  * @text ダメージ
- * @desc 付与者がダメージを受けた場合に解除されます。
- * @default false
- * @type boolean
+ * @desc 付与者が指定値以上のダメージを受けた場合に解除されます。イベントや特徴による増減は含みません。
+ * @default 0
+ * @type number
  * @parent condition
  *
  * @param validStates
  * @text 有効ステート
- * @desc 付与者が、指定したいずれかのステートになった場合に解除されます。ステートがすでに有効な状態での付与は無視されます。
+ * @desc 付与者が、指定したいずれかのステートになった場合に解除されます。
  * @default []
  * @type state[]
  * @parent condition
  *
  * @param invalidStates
  * @text 無効ステート
- * @desc 付与者が、指定したいずれかのステートになっていない場合に解除されます。ステートがすでに無効な状態での付与は無視されます。
+ * @desc 付与者が、指定したいずれかのステートに"なっていない"場合に解除されます。
  * @default []
  * @type state[]
  * @parent condition
@@ -104,6 +107,7 @@
  * @desc 指定したスクリプトがtrueを返すと解除されます。eは付与者を参照できます。
  * @default
  * @type multiline_string
+ * @parent condition
  *
  */
 
@@ -125,7 +129,7 @@
     const _Game_Battler_onDamage = Game_Battler.prototype.onDamage;
     Game_Battler.prototype.onDamage = function(value) {
         _Game_Battler_onDamage.apply(this, arguments);
-        BattleManager.setEnchanterDamaged(this);
+        BattleManager.setEnchanterDamaged(this, value);
     };
 
     const _Game_Battler_addState = Game_Battler.prototype.addState;
@@ -141,10 +145,7 @@
     };
 
     BattleManager.updateEnchanterStates = function() {
-        this._enchanterStates = this._enchanterStates.filter(state => {
-            state.update();
-            return !state.isExpired();
-        });
+        this._enchanterStates = this._enchanterStates.filter(state => state.update());
     };
 
     BattleManager._enchanterStates = [];
@@ -162,8 +163,8 @@
         }
     };
 
-    BattleManager.setEnchanterDamaged = function(battler) {
-        this._enchanterStates.forEach(state => state.setDamaged(battler));
+    BattleManager.setEnchanterDamaged = function(battler, value) {
+        this._enchanterStates.forEach(state => state.setDamaged(battler, value));
     };
 
     class Game_StateEnchanter {
@@ -172,7 +173,7 @@
             this._enchanter = enchanter;
             this._target = target;
             this._condition = condition;
-            this._damaged = false;
+            this._damageValue = 0;
         }
 
         isExpired() {
@@ -183,17 +184,18 @@
             }
         }
 
-        setDamaged(battler) {
+        setDamaged(battler, value) {
             if (battler === this._enchanter) {
-                this._damaged = true;
+                this._damageValue += value;
             }
         }
 
         update() {
-            if (this.isRemovable()) {
+            if (this._target.isStateAffected(this._stateId) && this.isRemovable()) {
                 this._target.removeState(this._stateId);
                 BattleManager._logWindow.displayRemovedStates(this._target);
             }
+            return !this.isExpired();
         }
 
         isRemovable() {
@@ -204,7 +206,7 @@
             const e = this._enchanter;
             const conditions = [
                 () => c.dead && e.isDead(),
-                () => c.damage && this._damaged,
+                () => c.damage > 0 && this._damageValue >= c.damage,
                 () => c.validStates && c.validStates.some(stateId => e.isStateAffected(stateId)),
                 () => c.invalidStates && c.invalidStates.some(stateId => !e.isStateAffected(stateId)),
                 () => c.hpRate > 0 && e.hpRate() < c.hpRate / 100,
