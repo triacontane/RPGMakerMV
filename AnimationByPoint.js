@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.3.0 2024/06/16 MV方式のアニメーションに角度を設定できる機能を追加
  2.2.1 2024/03/16 戦闘中にマップ座標のアニメーションを表示したとき専用エラーになるよう修正
  2.2.0 2024/03/16 アニメーションやフキダシをループ再生する機能を追加
  2.1.1 2024/01/16 戦闘中にアニメーションを表示したとき、完了までウェイトを無効にしていてもイベント実行が止まってしまう場合がある問題を修正
@@ -120,6 +121,14 @@
  * @desc アニメーションをループ再生します。止めるときはアニメーション消去から止めてください。
  * @default false
  * @type boolean
+ *
+ * @arg angle
+ * @text 角度
+ * @desc アニメーションの角度(0-360)です。MV方式のアニメーションのみ有効です。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 360
  *
  * @command REMOVE_ANIMATION
  * @text アニメーション消去
@@ -277,6 +286,18 @@
         }
     };
 
+    const _Spriteset_Base_createAnimationSprite = Spriteset_Base.prototype.createAnimationSprite;
+    Spriteset_Base.prototype.createAnimationSprite = function(
+        targets, animation, mirror, delay
+    ) {
+        _Spriteset_Base_createAnimationSprite.apply(this, arguments);
+        const sprite = this._animationSprites[this._animationSprites.length - 1];
+        const point = sprite.targetObjects[0];
+        if (point instanceof Game_AnimationPoint) {
+            sprite.rotation = point.getRotation();
+        }
+    }
+
     class Game_AnimationPoint extends Point {
         constructor(args) {
             super(args.x, args.y);
@@ -286,6 +307,7 @@
             this._loop = args.loop;
             this._animationId = args.id;
             this._balloonId = args.balloonId;
+            this._rotation = (args.angle || 0) * Math.PI / 180;
         }
 
         request() {
@@ -359,6 +381,10 @@
         getLabel() {
             return this._label;
         }
+
+        getRotation() {
+            return this._rotation;
+        }
     }
 
     class Sprite_AnimationPoint extends Sprite {
@@ -367,6 +393,7 @@
             this._point = point;
             this._dx = $gameMap.displayX();
             this._dy = $gameMap.displayY();
+            this.rotation = this._point.getRotation();
             this.update();
         }
 
