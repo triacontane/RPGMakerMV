@@ -1,11 +1,12 @@
 //=============================================================================
 // EquipChangeRandom.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.0 2024/06/17 MZ版を新規作成
 // 1.0.0 2017/06/18 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -14,36 +15,33 @@
 //=============================================================================
 
 /*:
- * @plugindesc EquipChangeRandomPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @help アクターの装備品を所持品の中からランダムで強制変更します。
- * アクターIDもしくは隊列番号とスロットIDを指定して変更します。
- * スロットIDとはデータベースの装備タイプで指定した番号です。(最低1)
- *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
- *
- * ECR_アクターの装備変更 3 1 # ID[3]のアクターのスロットID[1]の装備を変更
- * ECR_パーティの装備変更 1 2 # 隊列[1]番目のアクターのスロットID[2]の装備を変更
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc 装備品ランダム変更プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EquipChangeRandom.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @help アクターの装備品を所持品の中からランダムで強制変更します。
- * アクターIDもしくは隊列番号とスロットIDを指定して変更します。
- * スロットIDとはデータベースの装備タイプで指定した番号です。(最低1)
+ * @command FORCE_CHANGE
+ * @text 装備品ランダム変更
+ * @desc アクターの装備品を所持品の中からランダムで強制変更します。
  *
- * プラグインコマンド詳細
- *  イベントコマンド「プラグインコマンド」から実行。
- *  （パラメータの間は半角スペースで区切る）
+ * @arg actorId
+ * @text アクターID
+ * @desc 変更対象のアクターIDです。変数で指定したいときは制御文字\V[n]を利用してください。
+ * @default 1
+ * @type actor
  *
- * ECR_アクターの装備変更 3 1 # ID[3]のアクターのスロットID[1]の装備を変更
- * ECR_パーティの装備変更 1 2 # 隊列[1]番目のアクターのスロットID[2]の装備を変更
+ * @arg slotId
+ * @text スロットID
+ * @desc 変更対象のスロットIDです。データベースのタイプで設定した『装備タイプ』の数値（1以上）を入力します。
+ * @default 1
+ * @type number
+ *
+ * @help EquipChangeRandom.js
+ *
+ * アクターの装備品を所持品の中からランダムで強制変更します。
+ * プラグインコマンドから実行してください。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -51,65 +49,16 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var metaTagPrefix = 'ECR_';
+    const script = document.currentScript;
 
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
-    };
-
-    var convertEscapeCharacters = function(text) {
-        if (isNotAString(text)) text = '';
-        var windowLayer = SceneManager._scene._windowLayer;
-        return windowLayer ? windowLayer.children[0].convertEscapeCharacters(text) : text;
-    };
-
-    var isNotAString = function(args) {
-        return String(args) !== args;
-    };
-
-    var convertAllArguments = function(args) {
-        for (var i = 0; i < args.length; i++) {
-            args[i] = convertEscapeCharacters(args[i]);
+    PluginManagerEx.registerCommand(script, 'FORCE_CHANGE', args => {
+        const actor = $gameActors.actor(args.actorId);
+        if (actor) {
+            actor.randomizeEquipments(args.slotId - 1);
         }
-        return args;
-    };
-
-    var setPluginCommand = function(commandName, methodName) {
-        pluginCommandMap.set(metaTagPrefix + commandName, methodName);
-    };
-
-    var pluginCommandMap = new Map();
-    setPluginCommand('アクターの装備変更', 'execEquipChangeRandomActor');
-    setPluginCommand('パーティの装備変更', 'execEquipChangeRandomParty');
-
-    //=============================================================================
-    // Game_Interpreter
-    //  プラグインコマンドを追加定義します。
-    //=============================================================================
-    var _Game_Interpreter_pluginCommand      = Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args) {
-        _Game_Interpreter_pluginCommand.apply(this, arguments);
-        var pluginCommandMethod = pluginCommandMap.get(command.toUpperCase());
-        if (pluginCommandMethod) {
-            this[pluginCommandMethod](convertAllArguments(args));
-        }
-    };
-
-    Game_Interpreter.prototype.execEquipChangeRandomActor = function(args) {
-        $gameActors.actor(getArgNumber(args[0], 1)).randomizeEquipments(getArgNumber(args[1]) - 1);
-    };
-
-    Game_Interpreter.prototype.execEquipChangeRandomParty = function(args) {
-        $gameParty.members()[getArgNumber(args[0], 1) - 1].randomizeEquipments(getArgNumber(args[1]) - 1);
-    };
+    });
 
     //=============================================================================
     // Game_Actor
@@ -121,10 +70,8 @@
     };
 
     Game_Actor.prototype.randomEquipItem = function(slotId) {
-        var equipTypeId = this.equipSlots()[slotId];
-        var items = $gameParty.equipItems().filter(function(item) {
-            return item.etypeId === equipTypeId && this.canEquip(item);
-        }, this);
+        const equipTypeId = this.equipSlots()[slotId];
+        const items = $gameParty.equipItems().filter(item => item.etypeId === equipTypeId && this.canEquip(item));
         return items[Math.randomInt(items.length)];
     };
 })();
