@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2024/06/20 メッセージの表示位置ごとにX座標とY座標を調整する機能を追加
 // 1.2.1 2023/11/30 MessageWindowPopup.jsと併用したとき、特定条件下で表示したメッセージが一瞬で消えてしまう問題を修正
 // 1.2.0 2023/02/13 名前欄の相対的なXY座標を指定可能に
 // 1.1.1 2022/11/20 1.1.0の修正でメッセージの自動ページ送りが機能しなくなっていた問題を修正
@@ -29,30 +30,44 @@
  * @orderBefore MessageWindowPopup
  * @author COBURA, トリアコンタン
  *
- * @param x
- * @text X座標
- * @desc X座標です。
+ * @param xTop
+ * @text 上のX座標
+ * @desc ウィンドウの位置で「上」を選択したときのX座標です。
  * @default 0
  * @type number
  * @min -2000
  *
  * @param yTop
  * @text 上のY座標
- * @desc 上のY座標です。
+ * @desc ウィンドウの位置で「上」を選択したときのY座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ *
+ * @param xMiddle
+ * @text 中のX座標
+ * @desc ウィンドウの位置で「中」を選択したときのX座標です。
  * @default 0
  * @type number
  * @min -2000
  *
  * @param yMiddle
  * @text 中のY座標
- * @desc 中のY座標です。
+ * @desc ウィンドウの位置で「中」を選択したときのY座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ *
+ * @param xBottom
+ * @text 下のX座標
+ * @desc ウィンドウの位置で「下」を選択したときのX座標です。
  * @default 0
  * @type number
  * @min -2000
  *
  * @param yBottom
  * @text 下のY座標
- * @desc 下のY座標です。
+ * @desc ウィンドウの位置で「下」を選択したときのY座標です。
  * @default 0
  * @type number
  * @min -2000
@@ -126,9 +141,6 @@
 			_Window_Message_updatePlacement.apply(this, arguments);
 			return;
 		}
-		if (param.x) {
-			this.x = (param.relative ? this._originalX : 0) + param.x;
-		}
 		const width = this.width;
 		const height = this.height;
 		if (param.width) {
@@ -146,9 +158,15 @@
 			this.createContents();
 		}
 		_Window_Message_updatePlacement.apply(this, arguments);
-		const posit = [param.yTop, param.yMiddle, param.yBottom];
-		if (posit[this._positionType]) {
-			this.y = (param.relative ? this.y : 0) + posit[this._positionType];
+		const posXList = [param.xTop, param.xMiddle, param.xBottom];
+		const x = posXList[this._positionType];
+		if (x !== undefined) {
+			this.x = (param.relative ? this._originalX : 0) + x;
+		}
+		const posYList = [param.yTop, param.yMiddle, param.yBottom];
+		const y = posYList[this._positionType];
+		if (y !== undefined) {
+			this.y = (param.relative ? this.y : 0) + y;
 		}
 	};
 
