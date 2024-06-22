@@ -24,7 +24,7 @@
 /*:
  * @plugindesc メッセージの位置調整プラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/blob/mz_master/MessageFontChange.js
+ * @url https://github.com/triacontane/RPGMakerMV/blob/mz_master/MessagePosition.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @orderBefore MessageWindowPopup
