@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/06/29 名前入力NGプラグインで指定したNG文字列を候補から除外する機能を追加
  1.2.0 2024/03/24 デフォルト名の候補アクターをタグで指定できる機能を追加
  1.1.0 2024/03/19 初期値を適用するボタンを選択できる機能を追加
  1.0.0 2024/02/27 初版
@@ -44,6 +45,12 @@
  * @option shift
  * @option control
  * @option tab
+ *
+ * @param ngFilter
+ * @text NGフィルター
+ * @desc 別途公開している『名前入力NGプラグイン』で指定されたNG文字列を候補から除外します。
+ * @default false
+ * @type boolean
  *
  * @help NameInputDefault.js
  *
@@ -108,6 +115,9 @@
     Window_NameEdit.prototype.isDefaultNameTargetActor = function(data) {
         if (!data.actorId && !data.actorTag) {
             return true;
+        }
+        if (param.ngFilter && this.isNgName && this.isNgName(data.name)) {
+            return false;
         }
         return data.actorId === this._actor.actorId() ||
             PluginManagerEx.findMetaValue(this._actor.actor(), data.actorTag);
