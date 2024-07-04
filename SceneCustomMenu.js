@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.48.0 2024/07/04 共通ヘルプテキストが設定されたウィンドウは優先表示するよう仕様変更
  1.47.0 2024/06/09 ウィンドウがアクティブでないときに暗くできる機能を追加
  1.46.1 2024/04/11 戦闘画面以外でもplaceGaugeでTPゲージを表示できるよう修正
  1.46.0 2023/12/07 データ一覧のソートスクリプトを設定する機能を追加
@@ -716,9 +717,9 @@
  *
  * @param CommonHelpText
  * @text 共通ヘルプテキスト
- * @desc 選択している項目とは関係なく表示されるヘルプテキストです。改行したい場合は「\n」と入力してください。
+ * @desc 選択している項目とは関係なく表示されるヘルプテキストです。
  * @default
- * @type string
+ * @type multiline_string
  *
  * @param DecisionEvent
  * @text 決定イベント
@@ -990,9 +991,9 @@
  *
  * @param HelpText
  * @text ヘルプテキスト
- * @desc ヘルプウィンドウを表示している場合、ヘルプテキストが表示されます。改行したい場合は「\n」と入力してください。
+ * @desc ヘルプウィンドウを表示している場合、ヘルプテキストが表示されます。
  * @default
- * @type string
+ * @type multiline_string
  *
  * @param DecisionEvent
  * @text 決定イベント
@@ -2580,8 +2581,12 @@
         }
 
         findHelpText() {
+            const text = super.findHelpText();
+            if (text) {
+                return text;
+            }
             const item = this.getItem();
-            return item && item.description ? item.description : super.findHelpText();
+            return item && item.description ? item.description : '';
         }
 
         isEnabledSub(item) {
