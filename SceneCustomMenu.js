@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.49.0 2024/07/05 スクリプトからセーブを実行して成功したとき自動でウィンドウを再描画するよう修正
  1.48.0 2024/07/04 共通ヘルプテキストが設定されたウィンドウは優先表示するよう仕様変更
  1.47.0 2024/06/09 ウィンドウがアクティブでないときに暗くできる機能を追加
  1.46.1 2024/04/11 戦闘画面以外でもplaceGaugeでTPゲージを表示できるよう修正
@@ -1826,8 +1827,13 @@
             $gameSystem.setSavefileId(savefileId);
             $gameSystem.onBeforeSave();
             DataManager.saveGame(savefileId)
-                .then(() => SoundManager.playSave())
-                .catch(() => SoundManager.playBuzzer());
+                .then(() => {
+                    SoundManager.playSave();
+                    this.refresh();
+                })
+                .catch(() => {
+                    SoundManager.playBuzzer()
+                });
         }
 
         executeLoad(index) {
