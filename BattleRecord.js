@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2024/07/08 1.5.0で追加した機能でアクター全員の合計値を取得するスクリプトが存在していなかった問題を修正
 // 1.5.0 2022/02/08 スキルタイプごとの使用回数を取得できる機能を追加
 // 1.4.1 2021/08/28 戦闘不能ステートを直接付与したときに撃破数がカウントされない問題を修正
 // 1.4.0 2021/06/12 MZ用のリファクタリング
@@ -404,6 +405,10 @@ function Game_TradeRecord() {
 
     Game_Actors.prototype.getSkillUseCounter = function(skillId) {
         return this.getSumRecord('getSkillUseCounter', [skillId]);
+    };
+
+    Game_Actors.prototype.getSkillTypeUseCounter = function(skillId) {
+        return this.getSumRecord('getSkillTypeUseCounter', [skillId]);
     };
 
     Game_Actors.prototype.getItemUseCounter = function(itemId) {
