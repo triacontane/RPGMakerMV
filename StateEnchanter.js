@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/07/08 ステートの付与者自身に対して別のステートを付与できる機能を追加
  1.1.0 2024/06/12 ダメージのパラメータ型を数値に変更し、一定以上のダメージによって解除される機能を追加
  1.0.0 2024/06/06 初版
 ----------------------------------------------------------------------------
@@ -89,15 +90,15 @@
  * @parent condition
  *
  * @param validStates
- * @text 有効ステート
+ * @text ステート付与
  * @desc 付与者が、指定したいずれかのステートになった場合に解除されます。
  * @default []
  * @type state[]
  * @parent condition
  *
  * @param invalidStates
- * @text 無効ステート
- * @desc 付与者が、指定したいずれかのステートに"なっていない"場合に解除されます。
+ * @text ステート解除
+ * @desc 付与者が、指定したいずれかのステートを解除された（最初から有効になっていない場合含む）場合に解除されます。
  * @default []
  * @type state[]
  * @parent condition
@@ -108,6 +109,12 @@
  * @default
  * @type multiline_string
  * @parent condition
+ *
+ * @param addState
+ * @text 付与者へのステート付与
+ * @desc ステートの付与者に対して付与するステートを指定できます。
+ * @default []
+ * @type state[]
  *
  */
 
@@ -174,6 +181,15 @@
             this._target = target;
             this._condition = condition;
             this._damageValue = 0;
+            this.addStateForEnchanter();
+        }
+
+        addStateForEnchanter() {
+            const c = this._condition;
+            if (!c.addState) {
+                return;
+            }
+            c.addState.forEach(stateId => this._enchanter.addState(stateId));
         }
 
         isExpired() {
