@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/07/10 通常キャラの下かつ決定ボタンのイベントが起動しない問題を修正
  1.0.0 2024/03/20 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -51,7 +52,7 @@
 
     const _Game_Player_startMapEvent = Game_Player.prototype.startMapEvent;
     Game_Player.prototype.startMapEvent = function(x, y, triggers, normal) {
-        if (!$gameSwitches.value(param.disableSwitchId)) {
+        if (!$gameSwitches.value(param.disableSwitchId) && triggers.includes(2)) {
             triggers.splice(triggers.indexOf(2), 1);
         }
         _Game_Player_startMapEvent.apply(this, arguments);
