@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2024/07/12 行動目標ウィンドウの背景タイプを設定できる機能を追加
 // 2.1.0 2021/11/10 フェードインを有効にしているとメニュー画面のウィンドウでも適用される問題を修正
 //                  一部のパラメータの初期値を修正、ヘルプを微修正
 // 2.0.3 2020/12/13 非表示状態でメニューからマップへ戻ると1フレームだけ行動目標が表示される不具合を修正
@@ -34,69 +35,106 @@
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
- * @param 表示スイッチID
+ * @param showingSwitchId
+ * @text 表示スイッチID
  * @desc 行動目標ウィンドウが表示されるスイッチIDです。0を指定した場合、無条件で表示されます。
  * @default 0
  * @type switch
  *
- * @param イベント中は閉じる
+ * @param closeEventRunning
+ * @text イベント中は閉じる
  * @desc イベントが実行されている間はウィンドウを閉じます。
  * @default true
  * @type boolean
  *
- * @param ウィンドウX座標
+ * @param windowX
+ * @text ウィンドウX座標
  * @desc ウィンドウのX横幅です。
  * @default 24
  * @type number
  *
- * @param ウィンドウY座標
+ * @param windowY
+ * @text ウィンドウY座標
  * @desc ウィンドウのY横幅です。
  * @default 24
  * @type number
  *
- * @param ウィンドウ横幅
+ * @param windowWidth
+ * @text ウィンドウ横幅
  * @desc ウィンドウの横幅です。
  * @default 320
  * @type number
  *
- * @param ウィンドウ不透明度
+ * @param windowOpacity
+ * @text ウィンドウ不透明度
  * @desc ウィンドウの不透明度です。
  * @default 255
  * @type number
  *
- * @param ウィンドウスキン名
+ * @param windowSkin
+ * @text ウィンドウスキン名
  * @desc ウィンドウスキンのファイル名(img/system)です。拡張子不要。
  * @default
  * @require 1
  * @dir img/system/
  * @type file
  *
- * @param フェード時間
+ * @param windowBack
+ * @text ウィンドウ背景
+ * @desc ウィンドウの背景タイプです。
+ * @default 0
+ * @type select
+ * @option ウィンドウ
+ * @value 0
+ * @option 暗くする
+ * @value 1
+ * @option 透明
+ * @value 2
+ *
+ * @param windowBackMenu
+ * @text ウィンドウ背景(メニュー)
+ * @desc ウィンドウの背景タイプ(メニュー画面表示用)です。
+ * @default 0
+ * @type select
+ * @option ウィンドウ
+ * @value 0
+ * @option 暗くする
+ * @value 1
+ * @option 透明
+ * @value 2
+ *
+ * @param fadeFrame
+ * @text フェード時間
  * @desc ウィンドウのフェードイン、フェードアウト時間(フレーム数)です。
  * @default 8
  * @type number
  *
- * @param フォントサイズ
+ * @param fontSize
+ * @text フォントサイズ
  * @desc ウィンドウのフォントサイズです。
  * @default 22
  * @type number
  *
- * @param メニュー画面に表示
+ * @param showingInMenu
+ * @text メニュー画面に表示
  * @desc 行動目標ウィンドウをメニュー画面にも表示します。ただし座標やサイズは自働で整形されます。
  * @default false
  * @type boolean
  *
- * @param 自動調整
+ * @param autoAdjust
+ * @text 自動調整
  * @desc 指定した文字列がウィンドウに収まらない場合に自動で調整します。ただし一部の制御文字が使用不可となります。
  * @default false
  * @type boolean
  *
- * @param 表示フレーム数
+ * @param showingFrames
+ * @text 表示フレーム数
  * @desc 行動目標ウィンドウの表示フレーム数です。0を指定すると常時表示されます。
  * @default 0
  * @type number
  *
- * @param 文字列揃え
+ * @param textAlign
+ * @text 文字列揃え
  * @desc 文字列の揃えです。
  * @default 0
  * @type select
@@ -107,7 +145,7 @@
  * @option 右揃え
  * @value 2
  *
- * @param NoDestinationWindowMapIds
+ * @param noDestinationWindowMapIds
  * @text 非表示マップIDリスト
  * @desc 非表示にしたいマップIDのリスト
  * @default []
@@ -126,7 +164,7 @@
  * @arg icon
  * @text アイコン
  * @desc 行動目標の先頭に表示するアイコン番号です。
- * @type string
+ * @type icon
  * @default
  *
  * @help マップ中に行動目標ウィンドウを表示します。
@@ -137,10 +175,8 @@
  * ただし、以下の制御文字が無効になります。
  * \i[n]、\c[n]、\{、\}
  *
- * 複数行の目標を表示したい場合は、文章中に改行を挿入してください。
- *
  * 以下のいずれかの条件を満たすマップでは、行動目標は非表示になります。
- * - プラグインパラメータ NoDestinationWindowMapIds で指定したIDを持つ
+ * - プラグインパラメータ noDestinationWindowMapIds で指定したIDを持つ
  * - マップのメモ欄に <noDestinationWindow> と記述されている
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
@@ -154,65 +190,10 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    const pluginName    = 'DestinationWindow';
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    const getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (let i = 0; i < paramNames.length; i++) {
-            const name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        return '';
-    };
-
-    const getParamNumber = function(paramNames, min, max) {
-        const value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    const getParamBoolean = function(paramNames) {
-        const value = getParamString(paramNames);
-        return value.toUpperCase() === 'ON' || value.toUpperCase() === 'TRUE';
-    };
-
-    const getParamNumberArray = function(paramNames) {
-        const value = PluginManager.parameters(pluginName)[paramNames];
-        return JSON.parse(value)
-            .map(function(e){ return Number(JSON.parse(e)); }, this);
-    };
-
-    const getArgNumber = function(arg, min, max) {
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(arg) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    const param                       = {};
-    param.showingSwitchId           = getParamNumber(['ShowingSwitchId', '表示スイッチID'], 0);
-    param.windowX                   = getParamNumber(['WindowX', 'ウィンドウX座標']);
-    param.windowY                   = getParamNumber(['WindowY', 'ウィンドウY座標']);
-    param.windowWidth               = getParamNumber(['WindowWidth', 'ウィンドウ横幅'], 1);
-    param.windowSkin                = getParamString(['WindowSkin', 'ウィンドウスキン名']);
-    param.windowOpacity             = getParamNumber(['WindowOpacity', 'ウィンドウ不透明度']);
-    param.fadeFrame                 = getParamNumber(['FadeFrame', 'フェード時間'], 1);
-    param.fontSize                  = getParamNumber(['FontSize', 'フォントサイズ'], 12);
-    param.closeEventRunning         = getParamBoolean(['CloseEventRunning', 'イベント中は閉じる']);
-    param.showingInMenu             = getParamBoolean(['ShowingInMenu', 'メニュー画面に表示']);
-    param.autoAdjust                = getParamBoolean(['AutoAdjust', '自働調整']);
-    param.showingFrames             = getParamNumber(['ShowingFrames', '表示フレーム数'], 0);
-    param.textAlign                 = getParamNumber(['TextAlign', '文字列揃え'], 0);
-    param.noDestinationWindowMapIds = getParamNumberArray(['NoDestinationWindowMapIds']);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     const _extractMetadata = DataManager.extractMetadata;
     DataManager.extractMetadata = function(data) {
@@ -222,10 +203,9 @@
         }
     };
 
-    const script = document.currentScript;
     PluginManagerEx.registerCommand(script, 'SET_DESTINATION', function(args) {
         if (args.icon > 0) {
-            this.execSetDestinationWithIcon(args.destination, String(args.icon));
+            this.execSetDestinationWithIcon(args.destination, args.icon);
         } else {
             this.execSetDestination(args.destination);
         }
@@ -263,7 +243,7 @@
     };
 
     Game_System.prototype.getDestinationIcon = function() {
-        return this._destinationIconIndex || '';
+        return this._destinationIconIndex || 0;
     };
 
     Game_System.prototype.resetDestinationFrame = function() {
@@ -366,7 +346,12 @@
         this._textList  = [];
         this._iconIndex = 0;
         this.opacity = this.isVisible() ? 255 : 0;
+        this.setBackgroundType(this.findWindowBackType());
         this.update();
+    };
+
+    Window_Destination.prototype.findWindowBackType = function() {
+        return SceneManager._scene instanceof Scene_Menu ? param.windowBackMenu : param.windowBack;
     };
 
     Window_Destination.prototype.loadWindowskin = function() {
@@ -406,6 +391,10 @@
     };
 
     Window_Destination.prototype.updateOpacity = function() {
+        if (this.findWindowBackType() > 0) {
+            this.visible = this.isVisible();
+            return;
+        }
         if (this.isVisible()) {
             this.setOpacity(this.opacity + this.getFadeValue());
         } else {
@@ -416,13 +405,13 @@
 
     Window_Destination.prototype.updateText = function() {
         const textList  = $gameSystem.getDestination();
-        const iconIndex = getArgNumber(this.convertEscapeCharacters($gameSystem.getDestinationIcon()), 0);
+        const iconIndex = $gameSystem.getDestinationIcon();
         if (textList.length !== this._textList.length) {
             this.height = this.fittingHeight(textList.length);
             this.createContents();
             this._textList = [];
         }
-        textList.forEach(function(text, index) {
+        textList.forEach((text, index) => {
             if (this._textList[index] === text && this._iconIndex === iconIndex) {
                 return;
             }
@@ -430,7 +419,7 @@
             this._text      = text;
             this._iconIndex = iconIndex;
             this.drawDestination(index);
-        }, this);
+        });
     };
 
     Window_Destination.prototype.drawDestination = function(lineNumber) {
