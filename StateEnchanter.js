@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2024/07/16 1.2.0で付与者に対して付与したステートについて、ターゲットからステート解除されたときに付与者へのステートも解除されるよう修正
  1.2.0 2024/07/08 ステートの付与者自身に対して別のステートを付与できる機能を追加
  1.1.0 2024/06/12 ダメージのパラメータ型を数値に変更し、一定以上のダメージによって解除される機能を追加
  1.0.0 2024/06/06 初版
@@ -112,7 +113,7 @@
  *
  * @param addState
  * @text 付与者へのステート付与
- * @desc ステートの付与者に対して付与するステートを指定できます。
+ * @desc ステートの付与者に対して付与するステートを指定できます。ステートが解除された場合、このステートも解除されます。
  * @default []
  * @type state[]
  *
@@ -192,6 +193,14 @@
             c.addState.forEach(stateId => this._enchanter.addState(stateId));
         }
 
+        removeStateForEnchanter() {
+            const c = this._condition;
+            if (!c.addState) {
+                return;
+            }
+            c.addState.forEach(stateId => this._enchanter.removeState(stateId));
+        }
+
         isExpired() {
             if (!$gameParty.members().concat($gameTroop.members()).includes(this._enchanter)) {
                 return true;
@@ -211,7 +220,11 @@
                 this._target.removeState(this._stateId);
                 BattleManager._logWindow.displayRemovedStates(this._target);
             }
-            return !this.isExpired();
+            const expired = this.isExpired();
+            if (expired) {
+                this.removeStateForEnchanter();
+            }
+            return !expired;
         }
 
         isRemovable() {
