@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.17.0 2024/07/20 立ち絵の合成方法を変更できる機能を追加
 // 3.16.1 2024/05/19 表示優先度を「アニメーションの下」に設定しているとき、戦闘画面で立ち絵の表示位置がずれる問題を修正
 // 3.16.0 2024/01/24 入力中のアクターコマンドによって立ち絵を切り替える機能を追加
 // 3.15.1 2023/12/05 プラグインパラメータの一部初期値を使いやすいように変更
@@ -347,6 +348,20 @@
  * @default
  * @type file
  * @dir img/pictures
+ *
+ * @param BlendMode
+ * @text 合成方法
+ * @desc 立ち絵の合成方法です。
+ * @default 0
+ * @type select
+ * @option 通常
+ * @value 0
+ * @option 加算
+ * @value 1
+ * @option 乗算
+ * @value 2
+ * @option スクリーン
+ * @value 3
  *
  * @param HpUpperLimit
  * @text HP条件(上限)
@@ -858,7 +873,7 @@
             if (condition.UpdateSwitch) {
                 const value = $gameSwitches.value(condition.UpdateSwitch);
                 if (value) {
-                    $gameSwitches.setValue(condition.UpdateSwitch, false)
+                    $gameSwitches.setValue(condition.UpdateSwitch, false);
                 }
                 return value;
             } else if (condition.UpdateInterval) {
@@ -914,6 +929,7 @@
             picture.FileName = null;
             if (this._conditions.every(condition => condition(file))) {
                 picture.FileName = file.FileName;
+                picture.BlendMode = file.BlendMode;
                 return true;
             } else {
                 return false;
@@ -1477,6 +1493,8 @@
             if (this._fileName === file) {
                 return;
             }
+            this.blendMode = this._picture.BlendMode || 0;
+            console.log(this.blendMode);
             this.updateCrossFade(file);
             if (this.addApngChild && file) {
                 this.addApngChild(file);
