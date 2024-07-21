@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/07/21 命中しなかった場合のメッセージ種別を物理魔法ごとに変更できる機能を追加
  1.2.1 2021/08/08 計算式の間違いを修正
  1.2.0 2021/08/08 MZ向けにリファクタリング
  1.1.0 2021/08/08 デフォルトの計算式をプラグインパラメータのデフォルト値に設定
@@ -44,6 +45,26 @@
  * @text 魔法回避計算式
  * @desc 魔法回避の計算式を設定します。空欄の場合、デフォルトの結果がそのまま返ります。
  * @default b.mev
+ *
+ * @param physicalFailureMessageType
+ * @text 物理失敗メッセージ種別
+ * @desc 物理攻撃が失敗した場合のメッセージ種別(ミス or 行動失敗)
+ * @default miss
+ * @type select
+ * @option ミス
+ * @value miss
+ * @option 行動失敗
+ * @value failure
+ *
+ * @param magicalFailureMessageType
+ * @text 魔法失敗メッセージ種別
+ * @desc 魔法攻撃が失敗した場合のメッセージ種別(ミス or 行動失敗)
+ * @default failure
+ * @type select
+ * @option ミス
+ * @value miss
+ * @option 行動失敗
+ * @value failure
  *
  * @help HitAndEvasionExtend.js
  *
@@ -118,5 +139,22 @@
             return eval(param.formulaMagicalEvasion);
         }
         return d;
+    };
+
+    const _Window_BattleLog_displayMiss = Window_BattleLog.prototype.displayMiss;
+    Window_BattleLog.prototype.displayMiss = function(target) {
+        const result = target.result();
+        const isPhysical = result.physical;
+        if (isPhysical) {
+            if (param.physicalFailureMessageType === 'failure') {
+                result.physical = false;
+            }
+        } else {
+            if (param.magicalFailureMessageType === 'miss') {
+                result.physical = true;
+            }
+        }
+        _Window_BattleLog_displayMiss.apply(this, arguments);
+        result.physical = isPhysical;
     };
 })();
