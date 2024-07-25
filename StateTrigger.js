@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/07/26 トリガー有効時にスイッチをOFFにできる機能を追加
  1.0.0 2024/07/23 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -110,9 +111,15 @@
  *
  * @param switchId
  * @text スイッチID
- * @desc トリガーステート有効時にONになるスイッチIDです。
+ * @desc トリガーステート有効時に切り替えるスイッチIDです。
  * @default 0
  * @type switch
+ *
+ * @param switchValue
+ * @text スイッチ設定値
+ * @desc トリガーステート有効時にONになるスイッチの設定値(ON/OFF)です。
+ * @default true
+ * @type boolean
  *
  * @param script
  * @text スクリプト
@@ -223,7 +230,9 @@
         this.executeBuffEffect(trigger.addBuff, 'addBuff');
         this.executeBuffEffect(trigger.removeDebuff, 'removeBuff');
         this.executeBuffEffect(trigger.addDebuff, 'addDebuff');
-        $gameSwitches.setValue(trigger.switchId, true);
+        if (trigger.switchId > 0) {
+            $gameSwitches.setValue(trigger.switchId, !!trigger.switchValue);
+        }
         if (trigger.script) {
             eval(trigger.script);
         }
