@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.0 2024/07/27 タイトルコールと組み合わせてタイトルコールを演奏する機能を追加
 // 3.0.2 2022/05/20 進行度をクリアするコマンドを追加
 // 3.0.1 2022/02/19 3.0.0でブラウザ環境で正常にゲームが起動できない問題を修正
 // 3.0.0 2022/02/15 一度もセーブしていない状態で進行度を保存した場合を考慮するため、データの持ち方を変更
@@ -35,6 +36,8 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TitleImageChange.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderAfter TitleCall
  * @author triacontane
  *
  * @param StoryPhaseVariable
@@ -82,6 +85,8 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TitleImageChange.js
  * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderAfter TitleCall
  * @author トリアコンタン
  *
  * @param StoryPhaseVariable
@@ -150,6 +155,14 @@
  * @default
  * @dir audio/bgm/
  * @type file
+ *
+ * @param TitleCall
+ * @text タイトルコール
+ * @desc 条件を満たしたときに演奏されるタイトルコールです。別途「タイトルコールプラグイン」が必要です。
+ * @default
+ * @type file
+ * @dir audio/se/
+ *
  */
 
 (function() {
@@ -278,6 +291,19 @@
                 $dataSystem.titleBgm.name = set.TitleBgm;
             }
         });
+    };
+
+    const _Scene_Title_findTitleCall = Scene_Title.prototype.findTitleCall;
+    Scene_Title.prototype.findTitleCall = function() {
+        const call = _Scene_Title_findTitleCall.apply(this, arguments);
+        const storyPhase = DataManager.getFirstPriorityGradeVariable();
+        param.TitleList.forEach(set => {
+            if (set.TitleCall && storyPhase >= set.StoryPhaseCondition) {
+                call.name = set.TitleCall;
+            }
+            console.log(call.name);
+        });
+        return call;
     };
 })();
 
