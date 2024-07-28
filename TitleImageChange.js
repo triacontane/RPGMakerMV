@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.2.0 2024/07/28 タイトル画面2を進行状況に応じて変更する機能を追加
 // 3.1.0 2024/07/27 タイトルコールと組み合わせてタイトルコールを演奏する機能を追加
 // 3.0.2 2022/05/20 進行度をクリアするコマンドを追加
 // 3.0.1 2022/02/19 3.0.0でブラウザ環境で正常にゲームが起動できない問題を修正
@@ -149,6 +150,13 @@
  * @dir img/titles1/
  * @type file
  *
+ * @param Title2Image
+ * @text タイトル画像2
+ * @desc 条件を満たしたときに表示されるタイトル画像2(img/titles2)のファイル名です。
+ * @default
+ * @dir img/titles2/
+ * @type file
+ *
  * @param TitleBgm
  * @text タイトルBGM
  * @desc 条件を満たしたときに演奏されるBGM(audio/bgm)のファイル名です。
@@ -277,6 +285,9 @@
             if (set.TitleImage && storyPhase >= set.StoryPhaseCondition) {
                 $dataSystem.originalTitle1Name = $dataSystem.title1Name;
                 $dataSystem.title1Name = set.TitleImage;
+            }
+            if (set.Title2Image && storyPhase >= set.StoryPhaseCondition) {
+                $dataSystem.title2Name = set.Title2Image;
             }
         });
     };
