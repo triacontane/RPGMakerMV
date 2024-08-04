@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/06/04 属性を「通常攻撃」に設定したスキルが複数の属性を持っていたとき、ポップアップ色を最も倍率の大きい属性で表示するよう仕様変更
  1.2.0 2023/09/12 ダメージの属性ごとにポップアップ色を設定できる機能を追加
  1.1.0 2023/08/27 ポップアップ座標を敵味方ごとに調整できる機能を追加
  1.0.0 2023/08/11 初版
@@ -143,7 +144,11 @@
     Game_Action.prototype.executeHpDamage = function(target, value) {
         _Game_Action_executeHpDamage.apply(this, arguments);
         if (this.item().damage.elementId < 0) {
-            target.result().elementId = this.subject().attackElements()[0];
+            const elements = this.subject().attackElements();
+            const maxRateElementId = elements.sort((idA, idB) => {
+                return target.elementRate(idA) > target.elementRate(idB) ? -1 : 1;
+            })[0];
+            target.result().elementId = maxRateElementId || 0;
         } else {
             target.result().elementId = this.item().damage.elementId;
         }
