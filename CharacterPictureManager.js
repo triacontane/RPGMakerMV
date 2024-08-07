@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.17.1 2024/08/07 パラメータにスクリプトを使ったときアクター変数[a]が使えない問題を修正
 // 3.17.0 2024/07/20 立ち絵の合成方法を変更できる機能を追加
 // 3.16.1 2024/05/19 表示優先度を「アニメーションの下」に設定しているとき、戦闘画面で立ち絵の表示位置がずれる問題を修正
 // 3.16.0 2024/01/24 入力中のアクターコマンドによって立ち絵を切り替える機能を追加
@@ -848,6 +849,7 @@
 
         createCondition() {
             const conditions = [];
+            const a = this._actor;
             conditions.push(file => !file.HpUpperLimit || file.HpUpperLimit >= this._actor.hpRate() * 100);
             conditions.push(file => !file.HpLowerLimit || file.HpLowerLimit <= this._actor.hpRate() * 100);
             conditions.push(file => !file.Motion || this._actor.isMotionTypeValid(file.Motion));
