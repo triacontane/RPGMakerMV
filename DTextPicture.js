@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.0 2024/08/07 字間設定プラグインと組み合わせて文字列ピクチャの字間を設定できる機能を追加
 // 2.9.0 2023/10/15 簡易的な縦書き機能を追加
 // 2.8.0 2023/09/21 MessageAlignCenter.jsの制御文字が使えるよう修正
 // 2.7.0 2023/09/12 動的文字列ピクチャの幅と高さを直接指定できる機能を追加
@@ -77,6 +78,12 @@
  * @param heightVariable
  * @text 高さ格納変数
  * @desc 直前に描画した動的文字列の高さ(ピクセル数)を格納する変数です。
+ * @default 0
+ * @type variable
+ *
+ * @param betweenVariableId
+ * @text 字間変数番号
+ * @desc 字間を値(ピクセル単位)を取得する変数番号です。別途、字間設定プラグインが必要です。
  * @default 0
  * @type variable
  *
@@ -679,6 +686,18 @@
             }
             super.processAllText(textState);
         }
+
+        processCharacter(textState) {
+            super.processCharacter(textState);
+            if (this.getBetweenCharacters() > 0) {
+                this.applyBetweenCharacter(textState);
+                this.flushTextState(textState);
+            }
+        }
+
+        getBetweenCharacters() {
+            return $gameVariables.value(param.betweenVariableId) || 0;
+        };
 
         processNewLine(textState) {
             super.processNewLine(textState);
