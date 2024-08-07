@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.5 2024/08/07 変数監視機能で変数に要素数[1]の配列を格納した場合、エラーになる場合がある問題を修正
 // 1.6.4 2023/05/20 Cannot read property 'code' of undefinedが発生しないよう対症療法で修正
 // 1.6.3 2023/05/07 監視ウィンドウで指定した変数に数値や文字列以外（配列など）を指定して表示しようとするとエラーになる問題を修正
 // 1.6.2 2023/05/05 変数の操作で「スクリプト」を指定したとき、値が正常に設定されない問題を修正
@@ -1358,7 +1359,7 @@ function DebugManager() {
             if (!DebugManager.isScriptWatcher(watchTarget)) {
                 const variableName = $dataSystem.variables[watchTarget];
                 const value = $gameVariables.value(watchTarget);
-                const text = isFinite(value) ? value.padZero(6) : String(value);
+                const text = Number.isFinite(value) ? value.padZero(6) : String(value);
                 return `変数[${watchTarget.padZero(4)}]:[${text}](${variableName})`;
             } else {
                 let result;
