@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/08/07 戦闘不能時にエラーになるバグを修正
  1.0.0 2024/08/06 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -67,10 +68,14 @@
 
     const _Game_BattlerBase_die = Game_BattlerBase.prototype.die;
     Game_BattlerBase.prototype.die = function() {
-        const mpLostRate = this.findDeathLostRate('DeathLostMp', param.mpLostRate);
-        const tpLostRate = this.findDeathLostRate('DeathLostTp', param.tpLostRate);
-        this.setMp(Math.floor(this.mp * (100 - mpLostRate) / 100));
-        this.setTp(Math.floor(this.tp * (100 - tpLostRate) / 100));
+        if (!this._deathLostProcess) {
+            this._deathLostProcess = true;
+            const mpLostRate = this.findDeathLostRate('DeathLostMp', param.mpLostRate);
+            const tpLostRate = this.findDeathLostRate('DeathLostTp', param.tpLostRate);
+            this.setMp(Math.floor(this.mp * (100 - mpLostRate) / 100));
+            this.setTp(Math.floor(this.tp * (100 - tpLostRate) / 100));
+            this._deathLostProcess = false;
+        }
         _Game_BattlerBase_die.apply(this, arguments);
     };
 
