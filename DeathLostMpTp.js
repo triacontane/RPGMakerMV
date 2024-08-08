@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/08/08 戦闘不能時はダメージによるTPチャージを無効にする機能を追加
  1.0.1 2024/08/07 戦闘不能時にエラーになるバグを修正
  1.0.0 2024/08/06 初版
 ----------------------------------------------------------------------------
@@ -37,6 +38,12 @@
  * @type number
  * @min 0
  * @max 100
+ *
+ * @param invalidDeathChargeTp
+ * @text 戦闘不能時のTPチャージ無効
+ * @desc 戦闘不能時は、ダメージによるTPチャージを無効にします。
+ * @default false
+ * @type boolean
  *
  * @help DeathLostMpTp.js
  *
@@ -88,5 +95,13 @@
         } else {
             return defaultValue;
         }
+    };
+
+    const _Game_Battler_chargeTpByDamage = Game_Battler.prototype.chargeTpByDamage;
+    Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
+        if (!this.isAlive() && param.invalidDeathChargeTp) {
+            return;
+        }
+        _Game_Battler_chargeTpByDamage.apply(this, arguments);
     };
 })();
