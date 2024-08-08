@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.0 2024/08/08 読み込みが完了したタイミングでONになるスイッチを追加
 // 1.7.4 2022/11/20 動画ピクチャの再生でエラーになる原因不明のケースに対処
 // 1.7.3 2022/09/16 動画のロード完了とマップ遷移が同一フレームで起こるとエラーになる不具合を修正
 // 1.7.2 2020/09/21 autoplayをtrueに変更
@@ -64,6 +65,11 @@
  * @param Mp4Ext
  * @desc mp4形式を再生するときの偽装拡張子です。難読化したい場合に指定します。対応フォーマットが増えるわけではありません。
  * @default
+ *
+ * @param OnLoadSwitch
+ * @desc 動画ファイルの読み込み完了時にONになるスイッチ番号です。
+ * @default 0
+ * @type switch
  *
  * @help Play movies using the picture display frame.
  * In addition to being subject to processing by moving and rotating pictures,
@@ -133,6 +139,11 @@
  * @param mp4偽装拡張子
  * @desc mp4形式を再生するときの偽装拡張子です。難読化したい場合に指定します。対応フォーマットが増えるわけではありません。
  * @default
+ *
+ * @param 読み込み完了スイッチ
+ * @desc 動画ファイルの読み込み完了時にONになるスイッチ番号です。
+ * @default 0
+ * @type switch
  *
  * @help ピクチャの表示枠を使って動画を再生します。
  * ピクチャの移動や回転による処理の対象になるほか、複数の動画の並行再生が
@@ -218,6 +229,13 @@
         return '';
     };
 
+    var getParamNumber = function(paramNames, min, max) {
+        var value = getParamString(paramNames);
+        if (arguments.length < 2) min = -Infinity;
+        if (arguments.length < 3) max = Infinity;
+        return (parseInt(value) || 0).clamp(min, max);
+    };
+
     var getParamBoolean = function(paramNames) {
         var value = getParamString(paramNames);
         return value.toUpperCase() === 'TRUE';
@@ -263,6 +281,7 @@
     param.movieFolder     = getParamString(['MovieFolder', '動画取得フォルダ']);
     param.webmExt         = getParamString(['WebmExt', 'webm偽装拡張子']);
     param.mp4Ext          = getParamString(['Mp4Ext', 'mp4偽装拡張子']);
+    param.onLoadSwitch    = getParamNumber(['OnLoadSwitch', '読み込み完了スイッチ'], 0);
 
     var pluginCommandMap = new Map();
     setPluginCommand('SET_MOVIE', 'execSetVideoPicture');
@@ -899,6 +918,9 @@
     };
 
     Bitmap_Video.prototype._onLoad = function() {
+        if (param.onLoadSwitch) {
+            $gameSwitches.setValue(param.onLoadSwitch, true);
+        }
         this._loadingState = 'loaded';
         if (!this._video) {
             return;
