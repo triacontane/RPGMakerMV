@@ -16,7 +16,7 @@
 /*:
  * @plugindesc 移動ルート終了時のウェイトスキッププラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MoveRouteNoWait.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MoveRouteEndRapid.js
  * @author トリアコンタン
  *
  * @help MoveRouteEndRapid.js
