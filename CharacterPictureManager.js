@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.17.2 2024/08/08 誤って購入したログを削除
 // 3.17.1 2024/08/07 パラメータにスクリプトを使ったときアクター変数[a]が使えない問題を修正
 // 3.17.0 2024/07/20 立ち絵の合成方法を変更できる機能を追加
 // 3.16.1 2024/05/19 表示優先度を「アニメーションの下」に設定しているとき、戦闘画面で立ち絵の表示位置がずれる問題を修正
@@ -1496,7 +1497,6 @@
                 return;
             }
             this.blendMode = this._picture.BlendMode || 0;
-            console.log(this.blendMode);
             this.updateCrossFade(file);
             if (this.addApngChild && file) {
                 this.addApngChild(file);
