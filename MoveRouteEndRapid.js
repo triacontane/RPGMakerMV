@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/08/09 移動ルートの最後の移動で移動開始時点で終了判定が出ていた問題を修正
  1.0.0 2024/08/08 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -33,12 +34,23 @@
 (() => {
     'use strict';
 
-    const _Game_Character_advanceMoveRouteIndex = Game_Character.prototype.advanceMoveRouteIndex;
-    Game_Character.prototype.advanceMoveRouteIndex = function() {
-        _Game_Character_advanceMoveRouteIndex.apply(this, arguments);
-        const command = this._moveRoute.list[this._moveRouteIndex];
-        if (command && command.code === Game_Character.ROUTE_END) {
-            this.processRouteEnd();
+    const _Game_CharacterBase_update = Game_CharacterBase.prototype.update;
+    Game_CharacterBase.prototype.update = function() {
+        const wasStopping = this.isStopping();
+        _Game_CharacterBase_update.apply(this, arguments);
+        if (!wasStopping && this.isStopping()) {
+            this.updateWasMove();
+        }
+    };
+
+    Game_CharacterBase.prototype.updateWasMove = function() {};
+
+    Game_Character.prototype.updateWasMove = function() {
+        if (this._moveRouteForcing) {
+            const command = this._moveRoute.list[this._moveRouteIndex];
+            if (command && command.code === Game_Character.ROUTE_END) {
+                this.processRouteEnd();
+            }
         }
     };
 })();
