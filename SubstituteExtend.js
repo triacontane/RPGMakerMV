@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.2 2024/06/16 身代わりスキル発動でコモンイベントが呼ばれるよう修正
 // 1.4.1 2020/06/10 1.4.0の修正でパラメータ「身代わり条件_必中以外」が消えていた問題を修正
 // 1.4.0 2020/05/19 行動制約「行動できない」状態でも身代わりが発動するように既存仕様を変更する設定を追加
 // 1.3.0 2020/04/14 混乱系のステート有効時は身代わりを発動しないように既存仕様を変更する設定を追加
@@ -464,6 +465,7 @@
         var action = new Game_Action(substitute);
         action.setSkill(skillId);
         action.apply(substitute);
+        action.applyGlobal();
     };
 
     BattleManager.checkSubstituteTargetHpRate = function(hpRate) {
