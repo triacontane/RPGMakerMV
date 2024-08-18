@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.13.2 2024/08/19 反撃頻度の判定が特定条件下で複数回行われていた問題を修正
 // 2.13.1 2024/06/17 反撃頻度に関するヘルプを少し修正
 // 2.13.0 2024/03/17 自分自身や味方を対象にした行動でも反撃(リアクション)が発動できる機能を追加
 // 2.12.5 2024/02/27 インターセプター設定で割り込みされたあとでスキルを発動するとコストが消費されない問題を修正
@@ -376,11 +377,11 @@
         findParams() {
             const tagList = this.subject().traitObjects().map(traitObject => {
                 return PluginManagerEx.findMetaValue(traitObject, ['反撃拡張', 'CounterExtend']);
-            });
+            }).filter(tag => tag);
             const paramList = [];
             tagList.forEach(tag => {
                 const tagIndex = parseInt(tag) - 1;
-                const counter = param.CounterList.find((item, index) => tagList.contains(item.Id) || tagIndex === index);
+                const counter = param.CounterList.find((item, index) => tag === item.Id || tagIndex === index);
                 if (counter) {
                     paramList.push(counter);
                 }
