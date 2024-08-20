@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.8.3 2024/08/20 身代わりによるスキル効果の適用で、コモンイベントが呼び出されない問題を修正
 // 1.8.2 2023/08/30 身代わり反撃の設定が有効なとき、身代わり判定が2回行われていた問題を修正
 // 1.8.1 2023/08/26 ヘルプの記述が誤っていたので修正
 // 1.8.0 2022/10/16 身代わり中だけ指定してステートを付与できる機能を追加
@@ -325,6 +326,7 @@
             const action = new Game_Action(substitute);
             action.setSkill(skillId);
             action.apply(substitute);
+            action.applyGlobal();
         }
         const stateId = substitute.getSubstituteStateId();
         if (stateId) {
