@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2024/08/25 リトライ時に発生する可能性のある競合対策
 // 1.6.0 2024/04/03 リトライ画面で「タイトルに戻る」の選択肢を非表示にできるよう修正
 // 1.5.0 2023/08/26 リトライウィンドウを瞬間表示およびリトライできないときのウィンドウ表示方法の設定を追加
 // 1.4.0 2021/12/26 リトライコストに任意の変数、アイテムを設定できる機能を追加
@@ -586,6 +587,7 @@
     Scene_BattleReturn.prototype.constructor = Scene_BattleReturn;
 
     Scene_BattleReturn.prototype.create = function() {
+        Scene_Base.prototype.create.call(this);
     };
 
     Scene_BattleReturn.prototype.start = function() {
