@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.6 2024/08/25 既存イベントと同じ場所に同じプライオリティで生成したとき、生成イベントが手前に表示されるよう修正
  1.2.5 2024/01/21 テンプレートイベントとの順序関係を明記
  1.2.4 2023/10/14 動的イベントを生成した瞬間にアニメーションやフキダシを再生しようとすると表示されない問題を修正
  1.2.3 2022/03/02 無効なイベントIDもしくは座標を指定したときエラーではなく、警告ログの出力に留めるよう仕様変更
@@ -809,8 +810,8 @@ function Game_PrefabEvent() {
     //=============================================================================
     const _Spriteset_Map_createCharacters    = Spriteset_Map.prototype.createCharacters;
     Spriteset_Map.prototype.createCharacters = function() {
-        this._prefabSpriteId = Sprite.getCounter() + 1;
         _Spriteset_Map_createCharacters.apply(this, arguments);
+        this._prefabSpriteId = Sprite.getCounter() + 1;
     };
 
     const _Spriteset_Map_update    = Spriteset_Map.prototype.update;
