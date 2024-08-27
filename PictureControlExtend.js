@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.0 2024/08/27 ピクチャの色相変更機能を追加
  1.6.1 2024/05/16 ピクチャのフラッシュをしたときに最終フレームの色味が維持されてしまう問題を修正
  1.6.0 2024/04/29 ピクチャにぼかしを入れるコマンドを追加
  1.5.0 2023/12/13 ピクチャの表示位置をマップのスクロールに連動させる機能を追加
@@ -304,6 +305,25 @@
  * @default true
  * @type boolean
  *
+ * @command PICTURE_HUE
+ * @text ピクチャの色相変更
+ * @desc ピクチャの色相を変更します。
+ *
+ * @arg pictureId
+ * @text ピクチャ番号
+ * @desc 操作対象のピクチャ番号です。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @arg hue
+ * @text 設定値
+ * @desc 変更する色相の設定値です。
+ * @default 0
+ * @type number
+ * @min 0
+ * @max 360
+ *
  * @help PictureControlExtend.js
  *
  * ピクチャ関連のイベントコマンドの機能を拡張します。
@@ -395,6 +415,10 @@
 
     PluginManagerEx.registerCommand(script, 'PICTURE_BLUR', function(args) {
         $gameScreen.setPictureBlur(args.pictureId, args.value);
+    });
+
+    PluginManagerEx.registerCommand(script, 'PICTURE_HUE', function(args) {
+        $gameScreen.setPictureHue(args.pictureId, args.hue);
     });
 
     /**
@@ -553,6 +577,15 @@
         }, arguments);
     };
 
+    Game_Screen.prototype.setPictureHue = function(pictureId, hue) {
+        this.iteratePictures(pictureId => {
+            const picture = this.picture(pictureId);
+            if (picture) {
+                picture.setHue(hue);
+            }
+        }, arguments);
+    }
+
     /**
      * Game_Picture
      */
@@ -666,6 +699,14 @@
         return this._blur;
     };
 
+    Game_Picture.prototype.setHue = function(hue) {
+        this._hue = hue;
+    };
+
+    Game_Picture.prototype.getHue = function() {
+        return this._hue;
+    };
+
     const _Game_Picture_update      = Game_Picture.prototype.update;
     Game_Picture.prototype.update = function() {
         _Game_Picture_update.apply(this, arguments);
@@ -737,6 +778,7 @@
         _Sprite_Picture_update.apply(this, arguments);
         this.updateFlash();
         this.updateBlur();
+        this.updateHue();
     };
 
     Sprite_Picture.prototype.updateFlash = function() {
@@ -757,6 +799,16 @@
             }
         } else if (this._blur) {
             this.removeBlurFilter();
+        }
+    };
+
+    Sprite_Picture.prototype.updateHue = function() {
+        const picture = this.picture();
+        if (picture) {
+            const hue = picture.getHue();
+            if (hue !== undefined) {
+                this.setHue(hue);
+            }
         }
     };
 
