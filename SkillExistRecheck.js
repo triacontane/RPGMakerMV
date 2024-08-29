@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/08/29 プラグインを適用すると攻撃と防御が使えなくなっていた問題を修正
  1.0.0 2024/08/24 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -44,6 +45,9 @@
     };
 
     Game_Actor.prototype.hasSkillForUsing = function(skillId) {
+        if (skillId === this.attackSkillId() || skillId === this.guardSkillId()) {
+            return true;
+        }
         return this.hasSkill(skillId);
     };
 })();
