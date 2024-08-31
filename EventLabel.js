@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.1 2024/08/31 テールに縁取りが含まれていなかったので追加
  1.6.0 2024/08/31 ラベルに縁取りできる機能を追加
  1.5.0 2023/08/17 ラベルのZ座標を変更できる機能を追加
  1.4.0 2023/05/13 すべてのラベルを一時的に非表示にできる機能を追加
@@ -494,9 +495,9 @@
             }
             this.createContents();
             const fillColor = param.backColor || 'rgba(0,0,0,0.5)';
+            const borderColor = param.borderColor || 'rgba(0,0,255,1)';
             const y = event.isLabelTailTop() ? param.tailHeight : 0;
             if (b > 0) {
-                const borderColor = param.borderColor || 'rgba(0,0,255,1)';
                 this.contents.fillRect(0, y, this.width, labelHeight, borderColor);
                 this.contents.clearRect(b, y + b, this.width - b * 2, labelHeight - b * 2);
                 this.contents.fillRect(b, y + b, this.width - b * 2, labelHeight - b * 2, fillColor);
@@ -504,7 +505,7 @@
                 this.contents.fillRect(0, y, this.width, labelHeight, fillColor);
             }
             if (event.isNeedLabelTail()) {
-                this.createLabelTail(labelHeight, fillColor, event);
+                this.createLabelTail(labelHeight, fillColor, borderColor, event);
             }
             this.drawTextEx(text, pAndB, pAndB + y, bitmapSize.width + pAndB * 2);
             const bitmap  = this.contents;
@@ -513,7 +514,7 @@
             return bitmap;
         }
 
-        createLabelTail(labelHeight, fillColor, event) {
+        createLabelTail(labelHeight, fillColor, borderColor, event) {
             const ctx = this.contents.context;
             ctx.beginPath();
             const halfWidth = param.tailWidth / 2;
@@ -524,13 +525,16 @@
                 ctx.lineTo(baseX + halfWidth, this.height - labelHeight);
                 ctx.lineTo(baseX, 0);
             } else {
-                ctx.moveTo(baseX - halfWidth, labelHeight - b);
-                ctx.lineTo(baseX + halfWidth, labelHeight - b);
+                ctx.moveTo(baseX - halfWidth, labelHeight);
+                ctx.lineTo(baseX + halfWidth, labelHeight);
                 ctx.lineTo(baseX, this.height);
             }
             ctx.closePath();
-            ctx.fillStyle = fillColor
+            ctx.strokeStyle = borderColor;
+            ctx.fillStyle = fillColor;
+            ctx.lineWidth = b;
             ctx.fill();
+            ctx.stroke();
         }
 
         resetFontSettings() {
