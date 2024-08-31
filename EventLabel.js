@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.6.0 2024/08/31 ラベルに縁取りできる機能を追加
  1.5.0 2023/08/17 ラベルのZ座標を変更できる機能を追加
  1.4.0 2023/05/13 すべてのラベルを一時的に非表示にできる機能を追加
  1.3.1 2022/10/16 ベースプラグインの説明を追加
@@ -106,6 +107,17 @@
  * @default 8
  * @type number
  *
+ * @param borderColor
+ * @text 縁取りカラー
+ * @desc ラベルの縁取りカラーです。赤、緑、青、不透明度の順で設定します。
+ * @default rgba(0,0,255,1)
+ *
+ * @param borderSize
+ * @text 縁取りサイズ
+ * @desc ラベルの縁取りサイズです。
+ * @default 0
+ * @type number
+ *
  * @help EventLabel.js
  *　
  * The label appears at the top of the event. Specify the following in the memo field.
@@ -165,6 +177,17 @@
  * @text 余白
  * @desc ラベルの余白です。
  * @default 2
+ *
+ * @param borderColor
+ * @text 縁取りカラー
+ * @desc ラベルの縁取りカラーです。赤、緑、青、不透明度の順で設定します。
+ * @default rgba(0,0,255,1)
+ *
+ * @param borderSize
+ * @text 縁取りサイズ
+ * @desc ラベルの縁取りサイズです。
+ * @default 0
+ * @type number
  *
  * @param showTail
  * @text テール表示
@@ -460,9 +483,11 @@
             this._fontSize = fontSize;
             this.resetFontSettings();
             const bitmapSize = this.textSizeEx(text);
+            const b = param.borderSize || 0;
             const p = param.padding || 0;
+            const pAndB = p + b;
             this.padding     = 0;
-            this.move(0, 0, bitmapSize.width + p * 2, bitmapSize.height + p * 2);
+            this.move(0, 0, bitmapSize.width + pAndB * 2, bitmapSize.height + pAndB * 2);
             const labelHeight = this.height;
             if (event.isNeedLabelTail()) {
                 this.height += param.tailHeight;
@@ -470,11 +495,18 @@
             this.createContents();
             const fillColor = param.backColor || 'rgba(0,0,0,0.5)';
             const y = event.isLabelTailTop() ? param.tailHeight : 0;
-            this.contents.fillRect(0, y, this.width, labelHeight, fillColor);
+            if (b > 0) {
+                const borderColor = param.borderColor || 'rgba(0,0,255,1)';
+                this.contents.fillRect(0, y, this.width, labelHeight, borderColor);
+                this.contents.clearRect(b, y + b, this.width - b * 2, labelHeight - b * 2);
+                this.contents.fillRect(b, y + b, this.width - b * 2, labelHeight - b * 2, fillColor);
+            } else {
+                this.contents.fillRect(0, y, this.width, labelHeight, fillColor);
+            }
             if (event.isNeedLabelTail()) {
                 this.createLabelTail(labelHeight, fillColor, event);
             }
-            this.drawTextEx(text, p, p + y, bitmapSize.width + p * 2);
+            this.drawTextEx(text, pAndB, pAndB + y, bitmapSize.width + pAndB * 2);
             const bitmap  = this.contents;
             this.contents = null;
             this.destroy();
@@ -485,14 +517,15 @@
             const ctx = this.contents.context;
             ctx.beginPath();
             const halfWidth = param.tailWidth / 2;
+            const b = param.borderSize || 0;
             const baseX = (this.width / 2 - event.findLabelX() + event.screenX()).clamp(halfWidth, this.width - halfWidth);
             if (event.isLabelTailTop()) {
                 ctx.moveTo(baseX - halfWidth, this.height - labelHeight);
                 ctx.lineTo(baseX + halfWidth, this.height - labelHeight);
                 ctx.lineTo(baseX, 0);
             } else {
-                ctx.moveTo(baseX - halfWidth, labelHeight);
-                ctx.lineTo(baseX + halfWidth, labelHeight);
+                ctx.moveTo(baseX - halfWidth, labelHeight - b);
+                ctx.lineTo(baseX + halfWidth, labelHeight - b);
                 ctx.lineTo(baseX, this.height);
             }
             ctx.closePath();
