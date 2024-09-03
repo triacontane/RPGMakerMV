@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2024/08/03 対象が誰もいないスキルを発動しようとしたとき、発動自体をスキップする機能を追加
 // 2.5.12 2024/07/11 効果範囲「使用者」のスキルには本プラグインは適用されないことを明記
 // 2.5.11 2024/04/23 ヘルプの記述を修正し、PluginCommonBaseのbaseアノテーションを追加
 // 2.5.10 2024/01/02 範囲を「味方単体(無条件)」にしたスキルに制約を設定したとき、正常に対象を特定できない場合がある問題を修正
@@ -53,6 +54,12 @@
  * @desc 対象限定スキルの制約情報一覧を設定します。
  * @default []
  * @type struct<RESTRICTION>[]
+ *
+ * @param skipNoTarget
+ * @text 対象なしスキップ
+ * @desc スキル発動時に有効な対象がひとりもいなかったとき、スキルの発動をスキップします。
+ * @default false
+ * @type boolean
  *
  * @param invincibleNote
  * @text 無敵タグ
@@ -413,6 +420,16 @@
 
     BattleManager.getTargetAction = function() {
         return this._targetAction;
+    };
+
+    const _BattleManager_startAction      = BattleManager.startAction;
+    BattleManager.startAction = function() {
+        const action = this._subject.currentAction();
+        const targets = action.makeTargets();
+        if (targets.length === 0 && param.skipNoTarget) {
+            return;
+        }
+        _BattleManager_startAction.apply(this, arguments);
     };
 
     //=============================================================================
