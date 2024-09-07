@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2024/09/07 画面ごとにヘルプウィンドウの行数を変更できる機能を追加
 // 1.2.1 2021/12/06 ヘルプ行数の設定が戦闘画面に反映されない問題を修正
 //                  AdditionalDescription.jsとの並び順を定義
 // 1.2.0 2021/10/01 MZで動作するよう修正
@@ -38,6 +39,12 @@
  * @default 0
  * @type number
  *
+ * @param helpLinesByScene
+ * @text シーン別ヘルプ行数
+ * @desc シーンごとにヘルプウィンドウの高さを変更したい場合は指定してください。指定が無ければ共通設定が適用されます。
+ * @default []
+ * @type struct<Line>[]
+ *
  * @param validSwitch
  * @text 有効スイッチ
  * @desc 指定した番号のスイッチがONのときのみプラグインが有効になります。0の場合は常に有効になります。
@@ -62,6 +69,26 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~Line:
+ * @param scene
+ * @text シーン
+ * @desc ヘルプウィンドウの高さを変更したいシーンを指定してください。
+ * @default Scene_Item
+ * @type select
+ * @option アイテム画面
+ * @value Scene_Item
+ * @option スキル画面
+ * @value Scene_Skill
+ * @option 装備画面
+ * @value Scene_Equip
+ * @option 戦闘画面
+ * @value Scene_Battle
+ *
+ * @param lines
+ * @text 行数
+ * @desc ヘルプウィンドウの高さを変更したい場合は指定してください。
+ * @default 0
+ */
 (()=> {
     'use strict';
     const script = document.currentScript;
@@ -69,7 +96,7 @@
 
     const _Scene_MenuBase_helpAreaHeight = Scene_MenuBase.prototype.helpAreaHeight;
     Scene_MenuBase.prototype.helpAreaHeight = function() {
-        const lineNumber = param.helpLines;
+        const lineNumber = this.findHelpLines();
         if (lineNumber > 0) {
             return this.calcWindowHeight(lineNumber, false);
         } else {
@@ -79,12 +106,23 @@
 
     const _Scene_Battle_helpAreaHeight = Scene_Battle.prototype.helpAreaHeight;
     Scene_Battle.prototype.helpAreaHeight = function() {
-        const lineNumber = param.helpLines;
+        const lineNumber = this.findHelpLines();
         if (lineNumber > 0) {
             return this.calcWindowHeight(lineNumber, false);
         } else {
             return _Scene_Battle_helpAreaHeight.apply(this, arguments);
         }
+    };
+
+    Scene_Base.prototype.findHelpLines = function() {
+        if (param.helpLinesByScene) {
+            const scene = this.constructor.name;
+            const data = param.helpLinesByScene.find(data => data.scene === scene);
+            if (data && data.lines) {
+                return data.lines;
+            }
+        }
+        return param.helpLines;
     };
 
     /**
