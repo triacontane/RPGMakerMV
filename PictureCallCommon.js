@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.14.6 2024/09/07 競合回避用のコードを追加
 // 1.14.5 2023/02/20 ピクチャの紐付けがされていない状態でもマウスオーバー判定が裏で動作してしまう問題を修正
 // 1.14.4 2021/08/22 「並列処理として実行」のパラメータが戦闘画面には適用されない問題を修正
 // 1.14.3 2021/05/01 紐付け解除の際の設定値を変更
@@ -737,7 +738,7 @@
     Scene_Base.prototype.getPictureSprite = function(pictureId) {
         var result = null;
         this._spriteset.iteratePictures(function(picture) {
-            if (picture.isIdEquals(pictureId)) {
+            if (picture instanceof Sprite_Picture && picture.isIdEquals(pictureId)) {
                 result = picture;
                 return false;
             }
