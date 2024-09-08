@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2024/09/08 長押しボタンを放したときにスイッチをONにする機能を追加
  1.3.1 2024/09/08 長押しボタンを離してゲージをリセットしたとき、汎用ゲージの変数値に反映されない問題を修正
  1.3.0 2024/01/28 長押しボタンを離したときにゲージをリセットするか維持するかを設定できる機能を追加
  1.2.1 2024/01/20 最大値スイッチがONになったあとで場所移動すると、再度最大値スイッチがONになる問題を修正
@@ -117,6 +118,13 @@
  * @value reset
  * @option 維持
  * @value keep
+ *
+ * @param releaseSwitchId
+ * @text リリーススイッチ
+ * @desc 長押しを離したときにONになるスイッチです。
+ * @default 0
+ * @type switch
+ *
  */
 
 /*~struct~AudioSe:
@@ -177,16 +185,16 @@
     };
 
     Sprite_ExtraGaugeContainer.prototype.updateLongPress = function() {
-        let refresh = false;
-        if (this.isButtonPress()) {
+        const isButtonPress = this.isButtonPress();
+        if (isButtonPress) {
             this._longPressGaugeValue = Math.min(this._longPressGaugeValue + 1, this._gauge.currentMaxValue());
-        } else {
-            if (this._longPress.onRelease !== 'keep') {
-                this._longPressGaugeValue = 0;
-                refresh = true;
-            }
         }
-        this._gauge.setLongPressValue(this._longPressGaugeValue, refresh);
+        const onRelease = this._wasButtonPress && !isButtonPress;
+        if (onRelease) {
+            this.onRelease();
+        }
+        this._wasButtonPress = isButtonPress;
+        this._gauge.setLongPressValue(this._longPressGaugeValue, onRelease);
         if (this._gauge.isFull()) {
             if (!this._onMax) {
                 this.updateLongPressOnMax();
@@ -194,6 +202,16 @@
             this._onMax = true;
         } else {
             this._onMax = false;
+        }
+    };
+
+    Sprite_ExtraGaugeContainer.prototype.onRelease = function() {
+        if (this._longPress.onRelease !== 'keep') {
+            this._longPressGaugeValue = 0;
+        }
+        const switchId = this._longPress.releaseSwitchId;
+        if (switchId) {
+            $gameSwitches.setValue(switchId, true);
         }
     };
 
