@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.1 2024/09/08 長押しボタンを離してゲージをリセットしたとき、汎用ゲージの変数値に反映されない問題を修正
  1.3.0 2024/01/28 長押しボタンを離したときにゲージをリセットするか維持するかを設定できる機能を追加
  1.2.1 2024/01/20 最大値スイッチがONになったあとで場所移動すると、再度最大値スイッチがONになる問題を修正
  1.2.0 2024/01/19 汎用ゲージプラグインで設定した「取得変数ID」の変数に長押しによって蓄積された値が設定されるよう修正
@@ -176,14 +177,16 @@
     };
 
     Sprite_ExtraGaugeContainer.prototype.updateLongPress = function() {
+        let refresh = false;
         if (this.isButtonPress()) {
             this._longPressGaugeValue = Math.min(this._longPressGaugeValue + 1, this._gauge.currentMaxValue());
         } else {
             if (this._longPress.onRelease !== 'keep') {
                 this._longPressGaugeValue = 0;
+                refresh = true;
             }
         }
-        this._gauge.setLongPressValue(this._longPressGaugeValue);
+        this._gauge.setLongPressValue(this._longPressGaugeValue, refresh);
         if (this._gauge.isFull()) {
             if (!this._onMax) {
                 this.updateLongPressOnMax();
@@ -227,13 +230,13 @@
         return buttons.some(button => Input.isPressed(button));
     };
 
-    Sprite_ExtraGauge.prototype.setLongPressValue = function(value) {
+    Sprite_ExtraGauge.prototype.setLongPressValue = function(value, refresh) {
         if (this._longPressGaugeValue === value) {
             return;
         }
         this._longPressGaugeValue = value;
         this._value = value;
-        if (value > 0) {
+        if (value > 0 || refresh) {
             const variableId = this._data.CurrentMethod?.VariableId;
             if (variableId) {
                 $gameVariables.setValue(variableId, value);
