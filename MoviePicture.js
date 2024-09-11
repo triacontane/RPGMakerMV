@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2024/09/11 サブファオルダに配置された動画ファイルを再生できない問題を修正
 // 2.2.0 2022/03/10 敵キャラを動画にできる機能を追加
 // 2.1.0 2021/08/15 2.0.3の修正により動画音量種別をnoneにするとエラーになっていた問題を修正
 //                  動画ファイルの再生でファイル名に制御文字を使えるよう修正
@@ -670,7 +671,7 @@
     };
 
     ImageManager.getVideoFilePath = function(filename) {
-        return 'movies/' + encodeURIComponent(filename) + this.getVideoFileExt();
+        return 'movies/' + Utils.encodeURI(filename) + this.getVideoFileExt();
     };
 
     ImageManager.getVideoFileExt = function() {
