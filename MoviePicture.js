@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.2 2024/09/15 敵キャラを動画表示する機能で、敵キャラの変身に対応できていなかった問題を修正
 // 2.2.1 2024/09/11 サブファオルダに配置された動画ファイルを再生できない問題を修正
 // 2.2.0 2022/03/10 敵キャラを動画にできる機能を追加
 // 2.1.0 2021/08/15 2.0.3の修正により動画音量種別をnoneにするとエラーになっていた問題を修正
@@ -401,6 +402,16 @@
     const _Game_Enemy_setup = Game_Enemy.prototype.setup;
     Game_Enemy.prototype.setup = function(enemyId, x, y) {
         _Game_Enemy_setup.apply(this, arguments);
+        this.updateVideoName();
+    };
+
+    const _Game_Enemy_transform = Game_Enemy.prototype.transform;
+    Game_Enemy.prototype.transform = function(enemyId) {
+        _Game_Enemy_transform.apply(this, arguments);
+        this.updateVideoName();
+    };
+
+    Game_Enemy.prototype.updateVideoName = function() {
         this._videoName = PluginManagerEx.findMetaValue(this.enemy(), ['Movie', '動画']);
     };
 
