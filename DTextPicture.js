@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.1 2024/09/16 複数行テキストを描画したとき、改行するとテキスト色変更が初期化されてしまう問題を修正
 // 2.10.0 2024/08/07 字間設定プラグインと組み合わせて文字列ピクチャの字間を設定できる機能を追加
 // 2.9.0 2023/10/15 簡易的な縦書き機能を追加
 // 2.8.0 2023/09/21 MessageAlignCenter.jsの制御文字が使えるよう修正
@@ -710,6 +711,15 @@
             const lines = textState.text.slice(textState.index).split("\n");
             textState.widthList = lines.map(line => this.textSizeEx(line).width);
             textState.x = this.findStartXForAlign(textState);
+        }
+
+        textSizeEx(text) {
+            const color = this.contents.textColor;
+            const outlineColor = this.contents.outlineColor;
+            const rect = super.textSizeEx(text);
+            this.contents.textColor = color;
+            this.contents.outlineColor = outlineColor;
+            return rect;
         }
 
         resetFontSettings() {
