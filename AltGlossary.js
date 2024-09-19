@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2024/09/19 カテゴリウィンドウのカーソルを移動したとき、用語ウィンドウをリフレッシュするよう修正
 // 1.2.0 2023/07/09 MZで動作するよう修正
 // 1.1.0 2018/01/21 項目の揃えを設定できる機能を追加
 // 1.0.0 2018/01/20 初版
@@ -84,6 +85,14 @@
         _Window_GlossaryCategory_initialize.apply(this, arguments);
         this.move(0, 0, Graphics.boxWidth, this.windowHeight());
         this.refresh();
+    };
+
+    const _Window_GlossaryCategory_select = Window_GlossaryCategory.prototype.select;
+    Window_GlossaryCategory.prototype.select = function(index) {
+        _Window_GlossaryCategory_select.apply(this, arguments);
+        if (index >= 0) {
+            this._glossaryListWindow.refresh();
+        }
     };
 
     Window_GlossaryCategory.prototype.windowHeight = function() {
