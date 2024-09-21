@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2024/09/21 お気に入り装備のIDとアイコンを取得するスクリプトを追加
 // 1.1.0 2022/10/26 MZで動作するよう修正
 // 1.0.1 2018/10/14 セーブ＆ロードを挟むとお気に入り装備が復元されない問題を修正
 // 1.0.0 2017/10/01 初版
@@ -57,8 +58,13 @@
  *
  * スクリプト詳細
  * $gameActors.actor(id).getFavouriteEquipName(index, slotId);
- *
  * [id]で指定したアクターのお気に入り[index]の[slotId]の装備品名を取得します。
+ *
+ * $gameActors.actor(id).getFavouriteEquipId(index, slotId);
+ * [id]で指定したアクターのお気に入り[index]の[slotId]の装備品IDを取得します。
+ *
+ * $gameActors.actor(id).getFavouriteEquipIcon(index, slotId);
+ * [id]で指定したアクターのお気に入り[index]の[slotId]のアイコンを取得します。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -114,6 +120,16 @@
     Game_Actor.prototype.getFavouriteEquipName = function(index, slotId) {
         const equips = this.getFavouriteEquip(index);
         return equips && equips[slotId] ? equips[slotId].name : ' ';
+    };
+
+    Game_Actor.prototype.getFavouriteEquipId = function(index, slotId) {
+        const equips = this.getFavouriteEquip(index);
+        return equips && equips[slotId] ? equips[slotId].id : 0;
+    };
+
+    Game_Actor.prototype.getFavouriteEquipIcon = function(index, slotId) {
+        const equips = this.getFavouriteEquip(index);
+        return equips && equips[slotId] ? equips[slotId].iconIndex : 0;
     };
 
     Game_Actor.prototype.restoreFavouriteEquip = function(index) {
