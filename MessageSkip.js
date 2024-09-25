@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.19.0.final 2024/09/25 スキップおよびオート時にアイコンではなく任意の画像にできる機能を追加
 // 1.18.4 2023/10/27 選択肢や数値入力のタイミングでは常にスキップを解除するよう修正
 // 1.18.3 2023/10/16 ボタンピクチャの原点設定の説明文を分かりやすく修正
 // 1.18.2 2023/06/03 スキップスイッチ、オートスイッチが設定されているとキーによるスキップオートが効かなくなる問題を修正
@@ -86,12 +87,24 @@
  * @param SkipIcon
  * @desc メッセージスキップ中にウィンドウ右下に表示されるアイコン
  * @default 140
- * @type number
+ * @type icon
  *
  * @param AutoIcon
  * @desc メッセージオート中にウィンドウ右下に表示されるアイコン
  * @default 75
- * @type number
+ * @type icon
+ *
+ * @param SkipIconPicture
+ * @desc メッセージスキップ中にウィンドウ右下に表示されるピクチャ
+ * @default
+ * @type file
+ * @dir img/pictures/
+ *
+ * @param AutoIconPicture
+ * @desc メッセージオート中にウィンドウ右下に表示されるピクチャ
+ * @default
+ * @type file
+ * @dir img/pictures/
  *
  * @param IconX
  * @desc オート、スキップのアイコン位置を自由に変更したい場合に指定するX座標です。
@@ -282,12 +295,24 @@
  * @param スキップアイコン
  * @desc メッセージスキップ中にウィンドウ右下に表示されるアイコン
  * @default 140
- * @type number
+ * @type icon
  *
  * @param オートアイコン
  * @desc メッセージオート中にウィンドウ右下に表示されるアイコン
  * @default 75
- * @type number
+ * @type icon
+ *
+ * @param スキップアイコンピクチャ
+ * @desc メッセージスキップ中にウィンドウ右下に表示されるピクチャ
+ * @default
+ * @type file
+ * @dir img/pictures/
+ *
+ * @param オートアイコンピクチャ
+ * @desc メッセージオート中にウィンドウ右下に表示されるピクチャ
+ * @default
+ * @type file
+ * @dir img/pictures/
  *
  * @param アイコンX
  * @desc オート、スキップのアイコン位置を自由に変更したい場合に指定するX座標です。
@@ -673,8 +698,8 @@ function Sprite_Frame() {
     };
 
     Window_Message.prototype.updatePlacementIcon = function() {
-        this._icon.x = (paramIconX ? paramIconX - this.x : this.width - this._icon.width);
-        this._icon.y = (paramIconY ? paramIconY - this.y : this.height - this._icon.height);
+        this._icon.x = (paramIconX ? paramIconX - this.x : this.width - this._icon.width / 2 - 16);
+        this._icon.y = (paramIconY ? paramIconY - this.y : this.height - this._icon.height / 2 - 16);
     };
 
     Window_Message.prototype.createSpriteSkipButton = function() {
@@ -776,12 +801,14 @@ function Sprite_Frame() {
 
     Window_Message.prototype.updateAutoIcon = function() {
         if (this.messageSkip() && this.openness === 255) {
-            this._icon.refresh(getParamNumber(['SkipIcon', 'スキップアイコン']));
+            this._icon.refresh(getParamNumber(['SkipIcon', 'スキップアイコン']),
+                getParamString(['SkipIconPicture', 'スキップアイコンピクチャ']));
             this._icon.flashSpeed = 16;
             this._icon.flash      = true;
             this.updatePlacementIcon();
         } else if (this.messageAuto() && this.openness === 255) {
-            this._icon.refresh(getParamNumber(['AutoIcon', 'オートアイコン']));
+            this._icon.refresh(getParamNumber(['AutoIcon', 'オートアイコン']),
+                getParamString(['AutoIconPicture', 'オートアイコンピクチャ']));
             this._icon.flashSpeed = 2;
             this._icon.flash      = true;
             this.updatePlacementIcon();
@@ -996,6 +1023,7 @@ function Sprite_Frame() {
             this._row    = Math.floor(bitmap.height / ImageManager.iconHeight);
         }.bind(this));
         this.bitmap      = bitmap;
+        this._iconBitmap = bitmap;
         this.anchor.x    = 0.5;
         this.anchor.y    = 0.5;
         this.flash       = false;
@@ -1004,11 +1032,27 @@ function Sprite_Frame() {
         this.refresh(index ? index : 0);
     };
 
-    Sprite_Frame.prototype.refresh = function(index) {
-        if (!this.bitmap.isReady()) return;
+    Sprite_Frame.prototype.refresh = function(index, pictureName) {
+        if (pictureName) {
+            this.refreshPicture(pictureName);
+            return;
+        }
+        this.bitmap = this._iconBitmap;
+        if (!this.bitmap.isReady()) {
+            return;
+        }
         var w = ImageManager.iconWidth;
         var h = ImageManager.iconHeight;
         this.setFrame((index % this._column) * w, Math.floor(index / this._column) * h, w, h);
+    };
+
+    Sprite_Frame.prototype.refreshPicture = function(pictureName) {
+        this.bitmap = ImageManager.loadPicture(pictureName);
+        this.bitmap.addLoadListener(()=>{
+            if (this.bitmap !== this._iconBitmap) {
+                this.setFrame(0, 0, this.bitmap.width, this.bitmap.height);
+            }
+        });
     };
 
     Sprite_Frame.prototype.update = function() {
