@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/09/29 並び順パラメータの指定によっては正しい並び順にならない場合がある問題を修正
  1.0.0 2022/07/28 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -59,8 +60,8 @@
     const paramNames = ['攻撃力', '防御力', '魔法力', '魔法防御', '敏捷性', '運'];
 
     Window_Base.prototype.convertParamId = function(paramId) {
-        const name = paramNames[paramId - 2];
-        const index = param.paramOrderList.indexOf(name);
+        const name = param.paramOrderList[paramId - 2];
+        const index = paramNames.indexOf(name);
         return index >= 0 ? index + 2 : paramId;
     };
 
