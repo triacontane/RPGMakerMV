@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/09/29 直前で実行されたスキルの使用者と対象者のIDを変数に自動設定できる機能を追加
  1.0.0 2022/08/30 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -32,6 +33,34 @@
  * @desc 行動結果のうち数値、配列項目を指定した変数に格納します。
  * @default []
  * @type struct<VariableResult>[]
+ *
+ * @param lastTargetActorId
+ * @text 対象アクターID変数
+ * @desc 直前の行動の対象アクターIDを格納する変数番号です。
+ * 対象が敵キャラだった場合は0が格納されます。
+ * @default 0
+ * @type variable
+ *
+ * @param lastTargetEnemyId
+ * @text 対象エネミーID変数
+ * @desc 直前の行動の対象エネミーIDを格納する変数番号です。
+ * 対象がアクターだった場合は0が格納されます。
+ * @default 0
+ * @type variable
+ *
+ * @param lastSubjectActorId
+ * @text 使用者アクターID変数
+ * @desc 直前の行動の使用者アクターIDを格納する変数番号です。
+ * 使用者が敵キャラだった場合は0が格納されます。
+ * @default 0
+ * @type variable
+ *
+ * @param lastSubjectEnemyId
+ * @text 使用者エネミーID変数
+ * @desc 直前の行動の使用者エネミーIDを格納する変数番号です。
+ * 使用者がアクターだった場合は0が格納されます。
+ * @default 0
+ * @type variable
  *
  * @help ActionResultKeep.js
  *
@@ -167,10 +196,24 @@
 
         updateSubject(subject) {
             this._subjectIsActor = subject.isActor();
+            if (this._subjectIsActor) {
+                $gameVariables.setValue(param.lastSubjectActorId, subject.actorId());
+                $gameVariables.setValue(param.lastSubjectEnemyId, 0);
+            } else {
+                $gameVariables.setValue(param.lastSubjectEnemyId, subject.enemyId());
+                $gameVariables.setValue(param.lastSubjectActorId, 0);
+            }
         }
 
         updateTarget(target) {
             this._targetIsActor = target.isActor();
+            if (this._targetIsActor) {
+                $gameVariables.setValue(param.lastTargetActorId, target.actorId());
+                $gameVariables.setValue(param.lastTargetEnemyId, 0);
+            } else {
+                $gameVariables.setValue(param.lastTargetEnemyId, target.enemyId());
+                $gameVariables.setValue(param.lastTargetActorId, 0);
+            }
         }
 
         updateUsed(item) {
