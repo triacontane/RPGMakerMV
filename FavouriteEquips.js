@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2024/09/30 お気に入り装備を復元する際、装備変更ができない状態であればスキップするよう修正
 // 1.2.0 2024/09/21 お気に入り装備のIDとアイコンを取得するスクリプトを追加
 // 1.1.0 2022/10/26 MZで動作するよう修正
 // 1.0.1 2018/10/14 セーブ＆ロードを挟むとお気に入り装備が復元されない問題を修正
@@ -147,7 +148,9 @@
             } else {
                 equipItem = $dataArmors[equipItem.id];
             }
-            this.changeEquip(slotId, equipItem);
+            if (this.isEquipChangeOk(slotId)) {
+                this.changeEquip(slotId, equipItem);
+            }
         });
     };
 })();
