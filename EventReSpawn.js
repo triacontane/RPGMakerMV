@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/10/03 EventMovableLimitation.jsと組み合わせたとき、生成イベントにも同プラグインの移動制限を適用できるよう修正
  1.2.6 2024/08/25 既存イベントと同じ場所に同じプライオリティで生成したとき、生成イベントが手前に表示されるよう修正
  1.2.5 2024/01/21 テンプレートイベントとの順序関係を明記
  1.2.4 2023/10/14 動的イベントを生成した瞬間にアニメーションやフキダシを再生しようとすると表示されない問題を修正
@@ -719,6 +720,10 @@ function Game_PrefabEvent() {
     Game_PrefabEvent.prototype.locateWithoutStraighten = function(x, y) {
         this.setPosition(x, y);
         this.refreshBushDepth();
+        if (this._movables) {
+            this._initX = this._x;
+            this._initY = this._y;
+        }
     };
 
     // for TemplateEvent.js
