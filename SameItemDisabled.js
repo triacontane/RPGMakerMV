@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.4 2024/10/07 複数回行動のコストを考慮する設定のとき、MP消費率を計算に入れていなかった問題を修正
  1.3.3 2024/06/09 行動選択してから実際に行動する前に行動不能になったとき、使用予定だったコストが解放されない問題を修正
  1.3.2 2024/01/11 1.3.0の機能説明をヘルプに追加
  1.3.1 2023/04/20 1.2.0で追加した併用対応にいくつか不具合があったので修正
@@ -95,21 +96,25 @@
     };
 
     Game_Party.prototype.clearActionByBattler = function(battler) {
-        this._actionStack = this._actionStack.filter(a => a.subject() !== battler);
+        this._actionStack = this._actionStack.filter(action => action.subject() !== battler);
     };
 
     Game_Party.prototype.findReserveItemCount = function(item) {
-        return this._actionStack.filter(a => a.item() === item || a.subItem === item).length;
+        return this._actionStack.filter(action => action.item() === item || action.subItem === item).length;
     };
 
     Game_Party.prototype.findReserveSkillMpCost = function(battler) {
-        return this._actionStack.filter(a => a.isSkill() && a.subject() === battler)
-            .reduce((a, b) => a + b.item().mpCost, 0);
+        return this.findActionStack(battler)
+            .reduce((prev, action) => prev + battler.skillMpCost(action.item()), 0);
     };
 
     Game_Party.prototype.findReserveSkillTpCost = function(battler) {
-        return this._actionStack.filter(a => a.isSkill() && a.subject() === battler)
-            .reduce((a, b) => a + b.item().tpCost, 0);
+        return this.findActionStack(battler)
+            .reduce((prev, action) => prev + battler.skillTpCost(action.item()), 0);
+    };
+
+    Game_Party.prototype.findActionStack = function(battler) {
+        return this._actionStack.filter(action => action.isSkill() && action.subject() === battler);
     };
 
     const _Game_BattlerBase_canPaySkillCost = Game_BattlerBase.prototype.canPaySkillCost;
@@ -117,8 +122,8 @@
         const result = _Game_BattlerBase_canPaySkillCost.apply(this, arguments);
         if (BattleManager.isInputting() && param.multiActionCost) {
             const party = $gameParty;
-            return result && this.mp - party.findReserveSkillMpCost(this) >= skill.mpCost &&
-                this.tp - party.findReserveSkillTpCost(this) >= skill.tpCost;
+            return result && this._mp - party.findReserveSkillMpCost(this) >= this.skillMpCost(skill) &&
+                this._tp - party.findReserveSkillTpCost(this) >= this.skillTpCost(skill);
         } else {
             return result;
         }
