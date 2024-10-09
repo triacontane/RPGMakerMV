@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.0 2024/10/10 プラグインの機能を一時的に無効化するスイッチを追加
 // 1.1.1 2023/11/26 押し続けに対応
 // 1.1.0 2023/11/26 MZで動作するよう修正
 // 1.0.0 2016/02/27 初版
@@ -86,6 +87,12 @@
  * @default false
  * @type boolean
  *
+ * @param InvalidateSwitch
+ * @text 無効スイッチ
+ * @desc 指定したスイッチがONのとき、本プラグインの機能が無効になります。
+ * @default 0
+ * @type switch
+ *
  * @help MouseBindToKey.js
  *
  * マウスクリックを特定のボタン入力に割り当てることができます。
@@ -141,6 +148,9 @@
     };
 
     Input.setCurrentState = function(button, value) {
+        if ($gameSwitches.value(param.InvalidateSwitch)) {
+            return;
+        }
         this._currentState[button] = value;
     };
 
