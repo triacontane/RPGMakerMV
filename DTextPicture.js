@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.2 2024/10/09 文字列ピクチャの設定解除のコマンドを実行したあとで再度文字列ピクチャを表示しようとすると設定内容次第でエラーになる問題を修正
 // 2.10.1 2024/09/16 複数行テキストを描画したとき、改行するとテキスト色変更が初期化されてしまう問題を修正
 // 2.10.0 2024/08/07 字間設定プラグインと組み合わせて文字列ピクチャの字間を設定できる機能を追加
 // 2.9.0 2023/10/15 簡易的な縦書き機能を追加
@@ -333,18 +334,18 @@
     };
 
     Game_Screen.prototype.clearDtextSetting = function() {
-        this.dTextBackColor = null;
-        this.dTextGradationLeft = null;
-        this.dTextGradationRight = null;
-        this.dTextRealTime = null;
-        this.dWindowFrame = null;
-        this.dTextAlign = null;
-        this.dTextFontFace = null;
-        this.dTextLineHeight = null;
-        this.dTextWindowOpacity = null;
-        this.dTextPictureWidth = null;
-        this.dTextPictureHeight = null;
-        this.dTextVertical = null;
+        this.dTextBackColor = undefined;
+        this.dTextGradationLeft = undefined;
+        this.dTextGradationRight = undefined;
+        this.dTextRealTime = undefined;
+        this.dWindowFrame = undefined;
+        this.dTextAlign = undefined;
+        this.dTextFontFace = undefined;
+        this.dTextLineHeight = undefined;
+        this.dTextWindowOpacity = undefined;
+        this.dTextPictureWidth = undefined;
+        this.dTextPictureHeight = undefined;
+        this.dTextVertical = undefined;
     };
 
     Game_Screen.prototype.clearDTextPicture = function() {
