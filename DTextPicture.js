@@ -307,7 +307,7 @@
     // Game_Interpreter
     //  プラグインコマンド[D_TEXT]を追加定義します。
     //=============================================================================
-    if (PluginManager.parameters('NRP_EvalPluginCommand')) {
+    if ('NRP_EvalPluginCommand'.toLowerCase() in PluginManager._parameters) {
         var _Game_Interpreter_command356 = Game_Interpreter.prototype.command356;
         Game_Interpreter.prototype.command356 = function() {
             this._argClone = this._params[0].split(" ");
