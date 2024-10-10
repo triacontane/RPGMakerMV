@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.21.0 2024/10/11 パーティの並べ替えをしたときゲージに即座に反映されるよう修正
+                   ラベルの表示で%1がバトラー名に置き換わるよう修正
  1.20.3 2024/10/06 カスタムメニュープラグインと併用する場合のヘルプを追記
  1.20.2 2024/07/08 ピクチャの表示優先度調整プラグインと併用する場合、表示優先度は0以外指定できない旨の警告をヘルプに追記
  1.20.1 2024/06/02 タイムプログレスゲージを表示するための凡例を追加
@@ -588,7 +590,7 @@
  *
  * @param Label
  * @text ラベル
- * @desc ゲージの左に表示されるラベル文字列です。
+ * @desc ゲージの左に表示されるラベル文字列です。%1でバトラー名に置き換えられます。
  * @default
  *
  * @param LabelY
@@ -950,6 +952,9 @@
         }
 
         isVisible() {
+            if (!this._gauge.isValid()) {
+                return false;
+            }
             return !this._data.SwitchId || $gameSwitches.value(this._data.SwitchId);
         }
 
@@ -1004,6 +1009,8 @@
         updateBattler() {
             if (this._menuActor) {
                 this._battler = $gameParty.menuActor();
+            } else {
+                this._battler = this.findBattler();
             }
         }
 
@@ -1218,7 +1225,8 @@
         }
 
         label() {
-            return this._detail.Label || '';
+            const label = this._detail.Label || ''
+            return label.format(this._battler?.name() || '');
         }
 
         labelY() {
