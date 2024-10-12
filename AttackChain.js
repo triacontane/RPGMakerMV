@@ -47,13 +47,13 @@
  * @text 連携スキン
  * @desc 連携表示の表示スキン設定です。
  * @type struct<Skin>
- * @default {}
+ * @default {"unit":"Chain!!","unitFont":"{\"face\":\"\",\"size\":\"0\",\"italic\":\"true\",\"color\":\"15\",\"outlineColor\":\"0\",\"outlineWidth\":\"0\",\"image\":\"\"}","valueFont":"{\"face\":\"\",\"size\":\"0\",\"italic\":\"true\",\"color\":\"23\",\"outlineColor\":\"0\",\"outlineWidth\":\"0\",\"image\":\"\"}"}
  *
  * @param damageSkin
  * @text ダメージスキン
  * @desc ダメージ表示の表示スキン設定です。
  * @type struct<Skin>
- * @default {}
+ * @default {"unit":"Damage!!","unitFont":"{\"face\":\"\",\"size\":\"0\",\"italic\":\"true\",\"color\":\"15\",\"outlineColor\":\"0\",\"outlineWidth\":\"4\",\"image\":\"\"}","valueFont":"{\"face\":\"\",\"size\":\"0\",\"italic\":\"true\",\"color\":\"10\",\"outlineColor\":\"0\",\"outlineWidth\":\"4\",\"image\":\"\"}"}
  *
  * @param enemyChainSkin
  * @text 敵連携スキン
