@@ -6,10 +6,11 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/10/12 AttackChain.jsとの連携機能を追加
  1.0.0 2024/09/16 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
- [Twitter]: https://twitter.com/triacontane/
+ [X]      : https://x.com/triacontane
  [GitHub] : https://github.com/triacontane/
 =============================================================================*/
 
@@ -155,6 +156,18 @@
  * @default []
  * @type enemy[]
  *
+ * @param chain
+ * @text 連携条件
+ * @desc AttackChain.jsを使っている場合、連携数が指定値以上になるとスキル変化します。
+ * @default 0
+ * @type number
+ *
+ * @param script
+ * @text スクリプト条件
+ * @desc スクリプトで条件を指定します。条件を満たす場合にスキル変化します。
+ * @default
+ * @type multiline_string
+ *
  * @param reverse
  * @text 条件反転
  * @desc 他の項目で指定した条件を「満たさない場合に」スキル変化します。
@@ -230,6 +243,8 @@
         conditions.push(() => !cData.actorIdList?.length || cData.actorIdList.includes(this._actorId));
         conditions.push(() => !cData.classIdList?.length || cData.classIdList.includes(this._classId));
         conditions.push(() => !cData.enemyIdList?.length || cData.enemyIdList.includes(this._enemyId));
+        conditions.push(() => !cData.chain || this.friendsUnit().getChainCount() >= cData.chain);
+        conditions.push(() => !cData.script || eval(cData.script));
         const result = conditions.every(condition => condition());
         return cData.reverse ? !result : result;
     };
