@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.26.6 2024/10/13 遷移先ウィンドウ識別子が指定されていない場合でも元ウィンドウ選択解除の設定が機能するよう修正
  1.26.5 2024/05/02 クラス名取得関数の実装を変更
  1.26.4 2023/04/05 未キャッシュの画像が2枚以上あるときに描画処理が2回以上実行される場合がある問題を修正
  1.26.3 2023/01/01 PartyCommandScene.jsで戦闘シーンから遷移して戻ると戦闘終了処理が正しく行われない不具合を修正
@@ -1396,8 +1397,11 @@
                     this.changeWindowFocus(this._activeWindowId || this.findFirstWindowId(), -1);
                 }
                 if (event.Deselect) {
-                    const previousWindow = this._customWindowMap.get(this._previousActiveWindowId);
-                    previousWindow.deselect();
+                    const id = this._previousActiveWindowId || this._activeWindowId;
+                    if (id) {
+                        const blurWindow = this._customWindowMap.get(id);
+                        blurWindow.deselect();
+                    }
                 }
             }
             if (event.CommandId) {
