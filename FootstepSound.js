@@ -276,27 +276,29 @@
         this._stepCountForSound = null;
     };
 
-    var _Game_CharacterBase_increaseSteps = Game_CharacterBase.prototype.increaseSteps;
-    Game_CharacterBase.prototype.increaseSteps = function () {
-        _Game_CharacterBase_increaseSteps.apply(this, arguments);
-        if (this.isInvalidFootStepSound()) {
-            return;
+    var _Game_CharacterBase_updatePattern = Game_CharacterBase.prototype.updatePattern;
+    Game_CharacterBase.prototype.updatePattern = function () {
+        _Game_CharacterBase_updatePattern.apply(this, arguments);
+        if (this._pattern === 0 || this._pattern === 2) {
+            if (this.isInvalidFootStepSound()) {
+                return;
+            }
+            var soundsHash = [
+                { key: 'airship', condition: this.isInAirship.bind(this) },
+                { key: 'ship', condition: this.isInShip.bind(this) },
+                { key: 'boat', condition: this.isInBoat.bind(this) },
+                { key: 'regionList', condition: findListItem.bind(this, this.regionId()) },
+                { key: 'damageFloor', condition: this.isOnDamageFloor.bind(this) },
+                { key: 'bush', condition: this.isOnBush.bind(this) },
+                { key: 'counter', condition: this.isOnCounter.bind(this) },
+                { key: 'ladder', condition: this.isOnLadder.bind(this) },
+                { key: 'terrainTagList', condition: findListItem.bind(this, this.terrainTag()) },
+                { key: 'always', condition: this.noCondition.bind(this) }
+            ];
+            soundsHash.some(function (data) {
+                return this.updateStepSound(data.key, data.condition);
+            }.bind(this));
         }
-        var soundsHash = [
-            {key: 'airship', condition: this.isInAirship.bind(this)},
-            {key: 'ship', condition: this.isInShip.bind(this)},
-            {key: 'boat', condition: this.isInBoat.bind(this)},
-            {key: 'regionList', condition: findListItem.bind(this, this.regionId())},
-            {key: 'damageFloor', condition: this.isOnDamageFloor.bind(this)},
-            {key: 'bush', condition: this.isOnBush.bind(this)},
-            {key: 'counter', condition: this.isOnCounter.bind(this)},
-            {key: 'ladder', condition: this.isOnLadder.bind(this)},
-            {key: 'terrainTagList', condition: findListItem.bind(this, this.terrainTag())},
-            {key: 'always', condition: this.noCondition.bind(this)}
-        ];
-        soundsHash.some(function (data) {
-            return this.updateStepSound(data.key, data.condition);
-        }.bind(this));
     };
 
     Game_CharacterBase.prototype.isInvalidFootStepSound = function () {
