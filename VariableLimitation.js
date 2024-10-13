@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/10/13 限界値に適用条件のスイッチを追加
  1.0.0 2021/12/31 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -65,6 +66,12 @@
  * @default 0
  * @min -9999999999
  *
+ * @param conditionSwitch
+ * @text 条件スイッチ
+ * @desc スイッチがONのときのみ限界値を適用します。OFFにときに限界値を超える値を指定してからONにしても値はそのままです。
+ * @default 0
+ * @type switch
+ *
  */
 
 (()=> {
@@ -101,10 +108,18 @@
 
     const _Game_Variables_setValue = Game_Variables.prototype.setValue;
     Game_Variables.prototype.setValue = function(variableId, value) {
+        arguments[1] = this.applyLimitation(variableId, value);
+        _Game_Variables_setValue.apply(this, arguments);
+    };
+
+    Game_Variables.prototype.applyLimitation = function(variableId, value) {
         if (variableMap.has(variableId) && !isNaN(value)) {
             const item = variableMap.get(variableId);
-            arguments[1] = value.clamp(item.min, item.max);
+            if (item.conditionSwitch > 0 && !$gameSwitches.value(item.conditionSwitch)) {
+                return value;
+            }
+            return value.clamp(item.min, item.max);
         }
-        _Game_Variables_setValue.apply(this, arguments);
+        return value;
     };
 })();
