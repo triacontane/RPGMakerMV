@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.49.1 2024/10/13 遷移先ウィンドウ識別子が指定されていない場合でも元ウィンドウ選択解除の設定が機能するよう修正
  1.49.0 2024/07/05 スクリプトからセーブを実行して成功したとき自動でウィンドウを再描画するよう修正
  1.48.0 2024/07/04 共通ヘルプテキストが設定されたウィンドウは優先表示するよう仕様変更
  1.47.0 2024/06/09 ウィンドウがアクティブでないときに暗くできる機能を追加
@@ -1671,8 +1672,11 @@
                     this.changeWindowFocus(this._activeWindowId || this.findFirstWindowId(), -1);
                 }
                 if (event.Deselect) {
-                    const previousWindow = this._customWindowMap.get(this._previousActiveWindowId);
-                    previousWindow.deselect();
+                    const id = this._previousActiveWindowId || this._activeWindowId;
+                    if (id) {
+                        const blurWindow = this._customWindowMap.get(id);
+                        blurWindow.deselect();
+                    }
                 }
             }
             if (event.CommandId) {
