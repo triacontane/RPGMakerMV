@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/10/15 PluginCommonBaseとの定義順を指定するアノテーションを追加
  1.0.0 2023/08/05 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -18,6 +19,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/VariableEscape.js
  * @author トリアコンタン
+ * @orderBefore PluginCommonBase
  *
  * @help VariableEscape.js
  *
