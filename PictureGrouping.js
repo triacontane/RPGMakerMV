@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.4 2024/10/19 グルーピングピクチャを表示しているマップから別のシーンに遷移後、戻ってきたときに画像が一瞬チラつくことがある問題を修正
  1.0.3 2024/03/19 ピクチャのファイル名に制御文字を使用できるよう修正
  1.0.2 2024/01/14 同じピクチャ番号でグループピクチャを再表示したときに一瞬チラつきが発生する現象を修正
  1.0.1 2023/11/12 グループ化していないピクチャを再表示できなくなる問題を修正
@@ -169,7 +170,9 @@
 
     Sprite_Picture.prototype.makeGroupingBitmap = async function(grouping) {
         const bitmaps = grouping.map(data => ImageManager.loadPicture(data.fileName));
-        await this.waitForGroupingLoad(bitmaps);
+        if (bitmaps.some(data => !data.isReady())) {
+            await this.waitForGroupingLoad(bitmaps);
+        }
         const width = grouping.reduce((prev, data) => {
             const bitmap = ImageManager.loadPicture(data.fileName);
             return Math.max(prev, bitmap.width + data.x)
