@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.2 2024/10/20 オプション画面にコモンイベントを設定してタイトル画面から開くとエラーになる問題を修正
 // 1.5.1 2022/10/06 メニュー画面のサブコマンドプラグインとの定義順の制約アノテーションを追加
 // 1.5.0 2022/09/17 ピクチャのボタン化プラグインで指定したコモンイベントがメニュー画面中で実行されるよう仕様変更
 // 1.4.2 2021/11/17 画面遷移時に通常イベントと同様のキャッシュ処理を追加
@@ -485,7 +486,9 @@
         if (param.activateTimer) {
             $gameTimer.update(true);
         }
-        $gameMap._dynamicEvents.forEach(interpreter => interpreter.update());
+        if ($gameMap._dynamicEvents) {
+            $gameMap._dynamicEvents.forEach(interpreter => interpreter.update());
+        }
         this.checkGameover();
     };
 
