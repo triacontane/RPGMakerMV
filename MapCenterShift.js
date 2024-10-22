@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/10/22 マップの端に場所移動したとき、スクロール位置がおかしい場合がある問題を修正
  1.0.0 2024/04/24 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -89,14 +90,22 @@
         _Game_Map_setDisplayPos.apply(this, arguments);
         if (!this.isLoopHorizontal()) {
             const sx = shiftX;
-            const endX = this.width() - this.screenTileX() - sx;
-            this._displayX = endX < -sx ? endX / 2 : x.clamp(-sx, endX);
+            const endX = this.width() - this.screenTileX();
+            if (sx > 0) {
+                this._displayX = endX < 0 ? endX / 2 : x.clamp(-sx * 2, endX);
+            } else if (sx < 0) {
+                this._displayX = endX < 0 ? endX / 2 : x.clamp(0, endX - sx * 2);
+            }
             this._parallaxX = this._displayX;
         }
         if (!this.isLoopVertical()) {
             const sy = shiftY;
             const endY = this.height() - this.screenTileY() - sy;
-            this._displayY = endY < -sy ? endY / 2 : y.clamp(-sy, endY);
+            if (sy > 0) {
+                this._displayY = endY < 0 ? endY / 2 : y.clamp(-sy * 2, endY);
+            } else if (sy < 0) {
+                this._displayY = endY < 0 ? endY / 2 : y.clamp(0, endY - sy * 2);
+            }
             this._parallaxY = this._displayY;
         }
     };
