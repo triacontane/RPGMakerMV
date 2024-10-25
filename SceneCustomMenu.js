@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.27.0 2024/10/25 ボタンイベントのokとcancelがタッチ操作の決定とキャンセルにも反応するよう修正
  1.26.6 2024/10/13 遷移先ウィンドウ識別子が指定されていない場合でも元ウィンドウ選択解除の設定が機能するよう修正
  1.26.5 2024/05/02 クラス名取得関数の実装を変更
  1.26.4 2023/04/05 未キャッシュの画像が2枚以上あるときに描画処理が2回以上実行される場合がある問題を修正
@@ -850,7 +851,7 @@
  *
  * @param Name
  * @text ボタン名
- * @desc 押したときにイベントが発生するボタン名です。独自に追加したボタンの場合は直接入力してください。
+ * @desc 押したときにイベントが発生するボタン名です。okとcancelはタッチ操作と決定とキャンセルにも反応します。
  * @default
  * @type combo
  * @option ok
@@ -1565,6 +1566,12 @@
                     this.callHandler('trigger:' + buttonName);
                 }
             });
+        }
+
+        isTriggered(buttonName) {
+            return Input.isTriggered(buttonName) ||
+                (buttonName === 'ok' && TouchInput.isTriggered()) ||
+                (buttonName === 'cancel' && TouchInput.isCancelled());
         }
 
         select(index) {
