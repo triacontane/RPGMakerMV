@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.3 2024/10/25 英語版ヘルプのプラグインコマンドのキャラクターID下限を削除
  1.4.2 2023/12/27 フキダシ位置の自動設定に関する説明を追記
  1.4.1 2023/12/20 可能な範囲でNovelMessageMZ.jsと併用できるよう修正
  1.4.0 2022/12/08 フキダシウィンドウプラグインの横幅に拘わらず、左側の座標を固定する機能を追加
@@ -183,7 +184,6 @@
  * @desc balloon window Subject ID.[-1]Player [0]this Event [1..]The specified ID event
  * @default 0
  * @type number
- * @min -1
  *
  * @arg name
  * @text Event Name
