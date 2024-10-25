@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.50.0 2024/10/25 ボタンイベントのokとcancelがタッチ操作の決定とキャンセルにも反応するよう修正
  1.49.1 2024/10/13 遷移先ウィンドウ識別子が指定されていない場合でも元ウィンドウ選択解除の設定が機能するよう修正
  1.49.0 2024/07/05 スクリプトからセーブを実行して成功したとき自動でウィンドウを再描画するよう修正
  1.48.0 2024/07/04 共通ヘルプテキストが設定されたウィンドウは優先表示するよう仕様変更
@@ -1021,7 +1022,7 @@
  *
  * @param Name
  * @text ボタン名
- * @desc 押したときにイベントが発生するボタン名です。独自に追加したボタンの場合は直接入力してください。
+ * @desc 押したときにイベントが発生するボタン名です。okとcancelはタッチ操作と決定とキャンセルにも反応します。
  * @default
  * @type combo
  * @option ok
@@ -1974,10 +1975,16 @@
                 return;
             }
             this._buttonList.forEach(buttonName => {
-                if (Input.isTriggered(buttonName)) {
+                if (this.isTriggered(buttonName)) {
                     this.callHandler('trigger:' + buttonName);
                 }
             });
+        }
+
+        isTriggered(buttonName) {
+            return Input.isTriggered(buttonName) ||
+                (buttonName === 'ok' && TouchInput.isTriggered()) ||
+                (buttonName === 'cancel' && TouchInput.isCancelled());
         }
 
         select(index) {
