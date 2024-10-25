@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.0 2024/10/25 画像差し替えの条件にウィンドウの開閉度を追加
 // 2.9.1 2024/07/16 スキンの差し替えがスイッチとは無関係に適用される旨のヘルプを追加
 // 2.9.0 2024/05/25 フォントのアウトライン幅を指定できる機能を追加
 // 2.8.2 2023/11/21 フォント関連設定は差し替えスイッチとは無関係に適用される旨の説明を追加
@@ -328,6 +329,13 @@
  * @default 0
  * @type switch
  *
+ * @param Openness
+ * @text 開閉度条件
+ * @desc ウィンドウの開閉度が指定値以上のときのみウィンドウを差し替えます。
+ * @default 0
+ * @type number
+ * @max 255
+ *
  * @param OverlapOther
  * @text 他ウィンドウに重ねる
  * @desc 他のウィンドウと重なって表示させたときに背後のウィンドウをマスキングさせなくなります。
@@ -493,7 +501,7 @@
         let defaultVisible = true;
         this._windowBackImageSprites.forEach((sprite, index) => {
             const switchId = this.getBackImageDataItem(index, 'SwitchId');
-            sprite.visible = !switchId || $gameSwitches.value(switchId);
+            sprite.visible = this.isValidBackImage(index);
             if (sprite.visible && !this.getBackImageDataItem(index, 'WindowShow')) {
                 defaultVisible = false;
             }
@@ -514,6 +522,18 @@
         this._backSprite.visible  = defaultVisible;
         this._frameSprite.visible = defaultVisible;
         this.frameVisible = defaultVisible;
+    };
+
+    Window.prototype.isValidBackImage = function(index) {
+        const switchId = this.getBackImageDataItem(index, 'SwitchId');
+        if (switchId && !$gameSwitches.value(switchId)) {
+            return false;
+        }
+        const openness = this.getBackImageDataItem(index, 'Openness');
+        if (openness > 0 && this.openness < openness) {
+            return false;
+        }
+        return true;
     };
 
     Window.prototype.updateBackImageVisibly = function() {
