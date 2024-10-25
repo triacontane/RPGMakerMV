@@ -1562,7 +1562,7 @@
                 return;
             }
             this._buttonList.forEach(buttonName => {
-                if (Input.isTriggered(buttonName)) {
+                if (this.isTriggered(buttonName)) {
                     this.callHandler('trigger:' + buttonName);
                 }
             });
