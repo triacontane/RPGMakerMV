@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2024/10/26 NPCを全削除するコマンドを追加
 // 1.2.0 2021/11/27 MZで動作するよう修正
 // 1.1.1 2019/11/02 1.1.0の修正でメンバーの入れ替えを実施すると表示が不正になる場合がある問題を修正
 // 1.1.0 2019/01/27 通常のフォロワーを表示せず、NPCフォロワーのみを表示できる機能を追加
@@ -58,13 +59,17 @@
  *
  * @command REMOVE_NPC
  * @text NPC削除
- * @desc 追加位置を指定してNPCを隊列から除去します。
+ * @desc 位置を指定してNPCを隊列から除去します。
  *
  * @arg index
  * @text 隊列位置
- * @desc 削除する隊列位置(パーティの並び順)です。
+ * @desc 削除する隊列位置(パーティの並び順)です。ADD_NPCで指定したindexで追加したすべてのNPCが削除されます。
  * @default 0
  * @type number
+ *
+ * @command REMOVE_NPC_ALL
+ * @text NPC全削除
+ * @desc 全てのNPCを隊列から除去します。
  *
  * @help NpcFollower.js
  *
@@ -96,6 +101,10 @@
 
     PluginManagerEx.registerCommand(script, 'REMOVE_NPC', args => {
         $gameParty.removeNpc(args.index);
+    });
+
+    PluginManagerEx.registerCommand(script, 'REMOVE_NPC_ALL', args => {
+        $gameParty.removeNpcAll();
     });
 
     //=============================================================================
@@ -143,6 +152,12 @@
                 i--;
             }
         }
+        $gamePlayer.refresh();
+        $gameMap.requestRefresh();
+    };
+
+    Game_Party.prototype.removeNpcAll = function() {
+        this.initNpc();
         $gamePlayer.refresh();
         $gameMap.requestRefresh();
     };
