@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.1 2024/10/29 コマンド記憶の設定が有効かつコマンドスキルが二つ以上存在するとき、前回使用したコマンドスキルにカーソルが合わない問題を修正
  1.4.0 2022/10/06 コマンドスキルにコスト表示できる機能を追加
  1.3.2 2022/08/28 ActorCommandHelp.jsと併用するための修正
  1.3.1 2022/01/26 1.3.0の機能はメモ欄指定に変更
@@ -163,13 +164,13 @@
             const symbol = this._actor.lastCommandSymbol();
             const skill = this._actor.lastBattleSkill();
             if (symbol === 'special' && skill) {
-                this.selectLastSpecial(skill.id);
+                this.selectLastSpecial(skill);
             }
         }
     };
 
-    Window_ActorCommand.prototype.selectLastSpecial = function(id) {
-        const item = this._list.filter(item => item.symbol === 'special' && item.ext === id)[0];
+    Window_ActorCommand.prototype.selectLastSpecial = function(skill) {
+        const item = this._list.filter(item => item.symbol === 'special' && item.ext === skill)[0];
         if (item) {
             this.select(this._list.indexOf(item));
         }
