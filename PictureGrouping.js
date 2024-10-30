@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/10/30 ピクチャ以外のフォルダから画像を指定する機能と、画像をトリミングして表示する機能を追加
  1.0.4 2024/10/19 グルーピングピクチャを表示しているマップから別のシーンに遷移後、戻ってきたときに画像が一瞬チラつくことがある問題を修正
  1.0.3 2024/03/19 ピクチャのファイル名に制御文字を使用できるよう修正
  1.0.2 2024/01/14 同じピクチャ番号でグループピクチャを再表示したときに一瞬チラつきが発生する現象を修正
@@ -56,12 +57,25 @@
  */
 
 /*~struct~Picture:
+ *
  * @param FileName
  * @text ファイル名
  * @desc ピクチャのファイル名です。
  * @default
  * @dir img/pictures/
  * @type file
+ *
+ * @param OtherFileName
+ * @text 他のファイル名
+ * @desc ピクチャ以外の画像を使いたいときは、こちらを指定してください。
+ * @default
+ * @dir img
+ * @type file
+ *
+ * @param Rect
+ * @text トリミング範囲
+ * @desc 画像を切り出して表示したい場合に指定してください。
+ * @type struct<Rect>
  *
  * @param X
  * @text X座標
@@ -77,10 +91,35 @@
  *
  */
 
+/*~struct~Rect:
+ * @param X
+ * @text X座標
+ * @desc 切り出し範囲のX座標です。
+ * @default 0
+ * @type number
+ *
+ * @param Y
+ * @text Y座標
+ * @desc 切り出し範囲のY座標です。
+ * @default 0
+ * @type number
+ *
+ * @param Width
+ * @text 幅
+ * @desc 切り出し範囲の幅です。
+ * @default 0
+ * @type number
+ *
+ * @param Height
+ * @text 高さ
+ * @desc 切り出し範囲の高さです。
+ * @default 0
+ * @type number
+ */
+
 (() => {
     'use strict';
     const script = document.currentScript;
-    const param = PluginManagerEx.createParameter(script);
 
     PluginManagerEx.registerCommand(script, 'GROUPING_PICTURE', args => {
         args.pictureList.forEach(picture => $gameScreen.addGroupingPicture(picture));
@@ -110,10 +149,19 @@
 
     Game_Screen.prototype.addGroupingPicture = function(picture) {
         const name = PluginManagerEx.convertEscapeCharacters(picture.FileName);
+        const otherName = PluginManagerEx.convertEscapeCharacters(picture.OtherFileName || '');
+        const rect = picture.Rect || {};
         this._groupingPicture.push({
             fileName: name,
+            otherName: otherName,
             x: picture.X,
-            y: picture.Y
+            y: picture.Y,
+            rect: {
+                x: rect.X || 0,
+                y: rect.Y || 0,
+                width: rect.Width || 0,
+                height: rect.Height || 0
+            }
         });
         ImageManager.loadPicture(name);
     };
@@ -169,25 +217,41 @@
     };
 
     Sprite_Picture.prototype.makeGroupingBitmap = async function(grouping) {
-        const bitmaps = grouping.map(data => ImageManager.loadPicture(data.fileName));
-        if (bitmaps.some(data => !data.isReady())) {
+        const bitmaps = grouping.map(data => this.loadGroupBitmap(data));
+        if (bitmaps.some(bitmap => !bitmap.isReady())) {
             await this.waitForGroupingLoad(bitmaps);
         }
         const width = grouping.reduce((prev, data) => {
-            const bitmap = ImageManager.loadPicture(data.fileName);
+            const bitmap = this.loadGroupBitmap(data);
             return Math.max(prev, bitmap.width + data.x)
         }, 1);
         const height = grouping.reduce((prev, data) => {
-            const bitmap = ImageManager.loadPicture(data.fileName);
+            const bitmap = this.loadGroupBitmap(data);
             return Math.max(prev, bitmap.height + data.y)
         }, 1);
         this.bitmap = new Bitmap(width, height);
         grouping.forEach(data => {
-            const bitmap = ImageManager.loadPicture(data.fileName);
-            this.bitmap.blt(bitmap, 0, 0, bitmap.width, bitmap.height, data.x, data.y);
+            const bitmap = this.loadGroupBitmap(data);
+            const rect = data.rect || {};
+            const sx = rect.x || 0;
+            const sy = rect.y || 0;
+            const sw = rect.width || bitmap.width;
+            const sh = rect.height || bitmap.height;
+            this.bitmap.blt(bitmap, sx, sy, sw, sh, data.x, data.y);
         });
         this.destroyGrouping();
         this._groupingBitmap = this.bitmap;
+    };
+
+    Sprite_Picture.prototype.loadGroupBitmap = function(data) {
+        if (data.otherName) {
+            const paths = data.otherName.split('/');
+            const folder = 　'img/' + paths.shift() + '/';
+            const name = paths.join('/');
+            return ImageManager.loadBitmap(folder, name);
+        } else {
+            return ImageManager.loadPicture(data.fileName);
+        }
     };
 
     Sprite_Picture.prototype.waitForGroupingLoad = function(bitmaps) {
