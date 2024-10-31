@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.0 2024/11/01 ウィンドウの余白を変更できる機能を追加
 // 2.10.0 2024/10/25 画像差し替えの条件にウィンドウの開閉度を追加
 // 2.9.1 2024/07/16 スキンの差し替えがスイッチとは無関係に適用される旨のヘルプを追加
 // 2.9.0 2024/05/25 フォントのアウトライン幅を指定できる機能を追加
@@ -388,6 +389,13 @@
  * @type number
  * @parent Font
  *
+ * @param Padding
+ * @text 余白
+ * @desc ウィンドウの余白を指定します。標準値は12です。この値を変更する場合、ウィンドウ高さや幅の調整が必要になる場合があります。
+ * @default 0
+ * @type number
+ * @parent Font
+ *
  */
 
 (function() {
@@ -572,6 +580,17 @@
         if (data.FontSize) {
             this.contents.fontSize = data.FontSize;
         }
+    };
+
+    const _Window_Base_updatePadding = Window_Base.prototype.updatePadding;
+    Window_Base.prototype.updatePadding = function() {
+        _Window_Base_updatePadding.apply(this, arguments);
+        const list = this._backImageDataList || [];
+        list.forEach(data => {
+            if (data.Padding >= 0) {
+                this.padding = data.Padding;
+            }
+        });
     };
 
     Window_Base.prototype.setCustomFontColor = function(data) {
