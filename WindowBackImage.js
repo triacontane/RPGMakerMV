@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.1 2024/11/01 2.11.0の修正で余白を0に設定した場合も適用されてしまう問題を修正
 // 2.11.0 2024/11/01 ウィンドウの余白を変更できる機能を追加
 // 2.10.0 2024/10/25 画像差し替えの条件にウィンドウの開閉度を追加
 // 2.9.1 2024/07/16 スキンの差し替えがスイッチとは無関係に適用される旨のヘルプを追加
@@ -587,7 +588,7 @@
         _Window_Base_updatePadding.apply(this, arguments);
         const list = this._backImageDataList || [];
         list.forEach(data => {
-            if (data.Padding >= 0) {
+            if (data.Padding > 0) {
                 this.padding = data.Padding;
             }
         });
