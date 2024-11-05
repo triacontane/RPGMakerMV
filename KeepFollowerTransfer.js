@@ -1,44 +1,29 @@
 //=============================================================================
 // KeepFollowerTransfer.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015-2017 Triacontane
+// (C)2017 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2024/11/06 MZ対応
 // 1.0.0 2017/09/22 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
-// [Twitter]: https://twitter.com/triacontane/
+// [X]      : https://x.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
-/*:
- * @plugindesc KeepFollowerTransferPlugin
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author triacontane
- *
- * @param ValidateSwitchId
- * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効になります。
- * @default 0
- * @type switch
- *
- * @help KeepFollowerTransfer.js
- *
- * プレイヤーとフォロワーの位置関係および向きを維持したまま
- * 場所移動できるようになります。
- *
- * 維持した結果、画面外に出てしまった場合はプレイヤーと同位置になります。
- * イベントとの重なりおよび通行可否設定は考慮しません。
- *
- * このプラグインにはプラグインコマンドはありません。
- *
- * This plugin is released under the MIT License.
- */
 /*:ja
  * @plugindesc 場所移動時のフォロワー位置保存プラグイン
- * @target MZ @url https://github.com/triacontane/RPGMakerMV/tree/mz_master @author トリアコンタン
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/KeepFollowerTransfer.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @author トリアコンタン
  *
- * @param 有効スイッチ番号
+ * @param validateSwitchId
+ * @text 有効スイッチ番号
  * @desc プラグインの機能が有効になるスイッチ番号です。0を指定すると常に有効になります。
  * @default 0
  * @type switch
@@ -59,42 +44,16 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(function() {
+(()=> {
     'use strict';
-    var pluginName = 'KeepFollowerTransfer';
-
-    //=============================================================================
-    // ローカル関数
-    //  プラグインパラメータやプラグインコマンドパラメータの整形やチェックをします
-    //=============================================================================
-    var getParamString = function(paramNames) {
-        if (!Array.isArray(paramNames)) paramNames = [paramNames];
-        for (var i = 0; i < paramNames.length; i++) {
-            var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
-        }
-        alert('Fail to load plugin parameter of ' + pluginName);
-        return null;
-    };
-
-    var getParamNumber = function(paramNames, min, max) {
-        var value = getParamString(paramNames);
-        if (arguments.length < 2) min = -Infinity;
-        if (arguments.length < 3) max = Infinity;
-        return (parseInt(value) || 0).clamp(min, max);
-    };
-
-    //=============================================================================
-    // パラメータの取得と整形
-    //=============================================================================
-    var param              = {};
-    param.validateSwitchId = getParamNumber(['ValidateSwitchId', '有効スイッチ番号'], 0);
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
 
     //=============================================================================
     // Game_Player
     //  場所移動時にフォロワーの位置関係を記憶します。
     //=============================================================================
-    var _Game_Player_performTransfer      = Game_Player.prototype.performTransfer;
+    const _Game_Player_performTransfer      = Game_Player.prototype.performTransfer;
     Game_Player.prototype.performTransfer = function() {
         if (this.isTransferring() && this.isKeepFollowerPosition()) {
             this._followers.saveRelativePositionAll();
@@ -106,7 +65,7 @@
         return param.validateSwitchId === 0 || $gameSwitches.value(param.validateSwitchId);
     };
 
-    var _Game_Player_locate = Game_Player.prototype.locate;
+    const _Game_Player_locate = Game_Player.prototype.locate;
     Game_Player.prototype.locate = function(x, y) {
         _Game_Player_locate.apply(this, arguments);
         this._followers.restoreRelativePositionAll();
@@ -117,15 +76,11 @@
     //  場所移動時にフォロワーの位置関係を記憶します。
     //=============================================================================
     Game_Followers.prototype.saveRelativePositionAll = function() {
-        this.forEach(function(follower) {
-            follower.saveRelativePosition();
-        });
+        this.data().forEach(follower => follower.saveRelativePosition());
     };
 
     Game_Followers.prototype.restoreRelativePositionAll = function() {
-        this.forEach(function(follower) {
-            follower.restoreRelativePosition();
-        });
+        this.data().forEach(follower => follower.restoreRelativePosition());
     };
 
     //=============================================================================
@@ -142,8 +97,8 @@
         if (!this.hasRelativePosition()) {
             return;
         }
-        var newX = this.x + this._relativeX;
-        var newY = this.y + this._relativeY;
+        const newX = this.x + this._relativeX;
+        const newY = this.y + this._relativeY;
         if (!$gameMap.isValid(newX, newY)) {
             return;
         }
