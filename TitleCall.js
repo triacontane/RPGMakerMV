@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.7.1 2024/11/07 1.7.0の修正でランダム演奏のタイトルコールが演奏されなくなっていた問題を修正
  1.7.0 2024/07/27 タイトル画面変更プラグインと組み合わせて進行状況に合わせたタイトルコールを演奏する機能を追加
  1.6.0 2024/01/13 簡易ボイスプラグインと併用したとき、ボイスの音量設定でタイトルコールされるよう修正
  1.5.0 2022/07/25 BGM遅延を設定したとき、ゲーム終了してタイトル画面に戻ってくるとBGMが止まってしまう問題を修正
@@ -170,7 +171,7 @@
         };
         const list = param.randomList;
         if (list && list.length > 0) {
-            param.name = list[Math.randomInt(list.length)];
+            call.name = list[Math.randomInt(list.length)];
         }
         return call;
     }
