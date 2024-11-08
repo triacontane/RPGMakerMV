@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.2 2024/11/08 メッセージ速度が1のとき、決定ボタン押下後は以後のメッセージが瞬間表示になってしまう問題を修正
 // 1.5.1 2023/06/16 1.5.0で追加した機能で表示速度変数(高速表示)での表示速度を\msで指定した表示速度より優先するよう仕様変更し、ヘルプに明記
 // 1.5.0 2023/06/15 メッセージの高速表示(決定ボタン押し続け)時のメッセージ表示速度を別途指定できる機能を追加
 // 1.4.0 2021/10/21 MZで動作するよう修正
@@ -102,6 +103,7 @@
             this.isTriggered() && !this.pause) {
             this._showAll = true;
         }
+        this._showFast = false;
         this.updateShowFast();
         return _Window_Message_updateWait.apply(this, arguments);
     };
