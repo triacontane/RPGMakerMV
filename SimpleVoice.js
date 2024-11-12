@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.4 2024/11/12 オプションウィンドウの項目数をボイス音量の項目に合わせてひとつ追加
 // 2.0.3 2023/07/27 サブフォルダを指定したボイス停止ができていなかった問題を修正
 // 2.0.2 2022/02/19 ボイスファイルに制御文字\v[n]が指定できるよう修正
 // 2.0.1 2021/05/16 サブフォルダを指定できるよう修正
@@ -176,6 +177,11 @@
     Window_Options.prototype.addVolumeOptions = function() {
         _Window_Options_addVolumeOptions.apply(this, arguments);
         this.addCommand(param.optionName, 'voiceVolume');
+    };
+
+    const _Scene_Options_maxCommands = Scene_Options.prototype.maxCommands;
+    Scene_Options.prototype.maxCommands = function() {
+        return _Scene_Options_maxCommands.apply(this, arguments) + 1;
     };
 
     //=============================================================================
