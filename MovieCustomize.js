@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/11/13 ムービー再生時の音量を変数で制御できる機能を追加
  1.0.0 2024/11/04 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -26,6 +27,12 @@
  * @desc ムービー再生時に元の画面を表示したままにします。背景が強制的に黒背景になることを防げます。
  * @default false
  * @type boolean
+ *
+ * @param volumeVariable
+ * @text 音量変数ID
+ * @desc ムービー再生時の音量を制御する変数です。変数の値の範囲有効は0から100です。
+ * @default 0
+ * @type variable
  *
  * @command SET_RECT
  * @text ムービー表示位置設定
@@ -120,6 +127,15 @@
         _Video__updateVisibility.apply(this, arguments);
         if (param.noHideScreen) {
             Graphics.showScreen();
+        }
+    };
+
+    const _Video_play = Video.play;
+    Video.play = function(src) {
+        _Video_play.apply(this, arguments);
+        if (param.volumeVariable) {
+            const volume = $gameVariables.value(param.volumeVariable);
+            this.setVolume(volume.clamp(0, 100) / 100);
         }
     };
 })();
