@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2024/11/16 重ね合わせ画像の表示優先度を変更
  1.1.0 2024/11/16 元のフェイス画像を非表示にする設定を追加
                   重ね合わせ画像の原点を変更できる機能を追加
  1.0.0 2024/02/01 初版
@@ -150,11 +151,20 @@
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
 
+    const _Scene_Message_associateWindows = Scene_Message.prototype.associateWindows;
+    Scene_Message.prototype.associateWindows = function() {
+        _Scene_Message_associateWindows.apply(this, arguments);
+        this.addChild(this._messageWindow.getFaceOverlaySprite());
+    };
+
     const _Window_Message_initMembers = Window_Message.prototype.initMembers;
     Window_Message.prototype.initMembers = function() {
         _Window_Message_initMembers.apply(this, arguments);
         this._faceOverlaySprite = new Sprite();
-        this.addChild(this._faceOverlaySprite);
+    };
+
+    Window_Message.prototype.getFaceOverlaySprite = function() {
+        return this._faceOverlaySprite;
     };
 
     const _Window_Message_drawMessageFace = Window_Message.prototype.drawMessageFace;
@@ -188,8 +198,8 @@
         const sprite = this._faceOverlaySprite;
         if (overlay) {
             sprite.bitmap = ImageManager.loadPicture(overlay.picture);
-            sprite.x = overlay.x;
-            sprite.y = overlay.y;
+            sprite.x = overlay.x + this.x;
+            sprite.y = overlay.y + this.y;
             sprite.scale.x = overlay.scaleX / 100;
             sprite.scale.y = overlay.scaleY / 100;
             sprite.opacity = overlay.opacity;
