@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2024/11/16 元のフェイス画像を非表示にする設定を追加
+                  重ね合わせ画像の原点を変更できる機能を追加
  1.0.0 2024/02/01 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -26,6 +28,12 @@
  * @desc 重ね合わせるフェイス画像のリストです。複数指定可能です。
  * @default []
  * @type struct<Overlay>[]
+ *
+ * @param defaultFaceHide
+ * @text 元フェイス非表示
+ * @desc 重ね合わせ画像表示時に元のフェイス画像を非表示にします。
+ * @default false
+ * @type boolean
  *
  * @help FaceOverlay.js
  *
@@ -84,6 +92,30 @@
  * @min -2000
  * @max 2000
  *
+ * @param originX
+ * @text X原点
+ * @desc 重ね合わせ画像のX方向の原点です。
+ * @default 0
+ * @type select
+ * @option 左端
+ * @value 0
+ * @option 中央
+ * @value 0.5
+ * @option 右端
+ * @value 1
+ *
+ * @param originY
+ * @text Y原点
+ * @desc 重ね合わせ画像のY方向の原点です。
+ * @default 0
+ * @type select
+ * @option 上端
+ * @value 0
+ * @option 中央
+ * @value 0.5
+ * @option 下端
+ * @value 1
+ *
  * @param opacity
  * @text 不透明度
  * @desc 重ね合わせ画像の不透明度です。
@@ -127,8 +159,11 @@
 
     const _Window_Message_drawMessageFace = Window_Message.prototype.drawMessageFace;
     Window_Message.prototype.drawMessageFace = function() {
-        _Window_Message_drawMessageFace.apply(this, arguments);
-        this.drawFaceOverlay();
+        const overlay = this.findFaceOverlay();
+        if (!overlay || !param.defaultFaceHide) {
+            _Window_Message_drawMessageFace.apply(this, arguments);
+        }
+        this.drawFaceOverlay(overlay);
     };
 
     const _Window_Message_checkToNotClose = Window_Message.prototype.checkToNotClose;
@@ -139,19 +174,18 @@
         }
     };
 
-    Window_Message.prototype.drawFaceOverlay = function() {
+    Window_Message.prototype.findFaceOverlay = function() {
         const faceImage = $gameMessage.faceName();
-        const sprite = this._faceOverlaySprite;
-        if (!faceImage) {
-            sprite.bitmap = null;
-            return;
-        }
         const faceIndex = $gameMessage.faceIndex() + 1;
-        const overlay = param.overlayList.find(overlay => {
+        return param.overlayList.find(overlay => {
             return (!overlay.faceImage || overlay.faceImage === faceImage) &&
                 (!overlay.faceIndex || overlay.faceIndex === faceIndex) &&
                 (!overlay.switchId || $gameSwitches.value(overlay.switchId));
         });
+    };
+
+    Window_Message.prototype.drawFaceOverlay = function(overlay) {
+        const sprite = this._faceOverlaySprite;
         if (overlay) {
             sprite.bitmap = ImageManager.loadPicture(overlay.picture);
             sprite.x = overlay.x;
@@ -159,6 +193,8 @@
             sprite.scale.x = overlay.scaleX / 100;
             sprite.scale.y = overlay.scaleY / 100;
             sprite.opacity = overlay.opacity;
+            sprite.anchor.x = overlay.originX || 0;
+            sprite.anchor.y = overlay.originY || 0;
         } else {
             sprite.bitmap = null;
         }
