@@ -1,16 +1,17 @@
 //=============================================================================
 // TileAnimationControl.js
 // ----------------------------------------------------------------------------
-// Copyright (c) 2015 Triacontane
+// (C)2016 Triacontane
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.1 2024/11/18 現行のコアスクリプトで頻度を0に設定した場合にマップが正しく描画されない問題を修正
 // 1.1.0 2016/06/12 より軽量化できるよう設計を見直し
 // 1.0.0 2016/06/11 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : http://triacontane.blogspot.jp/
-// [Twitter]: https://twitter.com/triacontane/
+// [Blog]   : https://triacontane.blogspot.jp/
+// [X]      : https://x.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
@@ -143,7 +144,7 @@
         _Tilemap_update.apply(this, arguments);
         var freq = Tilemap._animationFrequency;
         if (freq === 0) {
-            this.animationCount = NaN;
+            this.animationCount = 0;
         } else if (Graphics.frameCount % freq > 0) {
             this.animationCount--;
         }
