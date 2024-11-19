@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0 2024/11/19 対象がステートに対する完全な耐性をもっていた場合にポップアップする機能を追加
+//                  ポップアップテキストのカラーをテキストカラーから選択できる機能を追加
 // 2.7.0 2024/05/03 弱点と耐性のポップアップ閾値を変更できる機能を追加
 // 2.6.1 2023/10/24 物理ダメージ率および魔法ダメージ率によってダメージが無効化されたときもガードのポップアップ判定を有効にするよう修正
 // 2.6.0 2022/10/22 ポップアップの対象外スキルを設定できる機能を追加
@@ -105,6 +107,12 @@
  * @desc 行動がガード（行動は成功したが相手の耐性によって完全に防がれた）された時のポップアップ情報です。
  * @type struct<Popup>
  * @default {"text":"Guard","fileName":"","stateId":"","color":"","flash":"","se":""}
+ *
+ * @param StateGuard
+ * @text ステート無効ポップアップ
+ * @desc ステートに対する完全な耐性（ステート有効度0%もしくはステート無効化）があった場合のポップアップ情報です。
+ * @type struct<Popup>
+ * @default {"text":"State Guard","fileName":"","stateId":"","color":"","flash":"","se":""}
  * 
  * @param Reflection
  * @text 魔法反射ポップアップ
@@ -299,6 +307,11 @@
  * @option blue
  * @option teal
  * @option aqua
+ *
+ * @param textColor
+ * @text テキストカラー
+ * @desc ポップアップカラーをテキストカラー(\c[n])から指定します。
+ * @type color
  * 
  * @param flash
  * @text フラッシュ
@@ -455,7 +468,27 @@
         if (this._elementResult.resist) {
             target.appointMessagePopup(param.Resistance);
         }
+        if (this._elementResult.stateGuard) {
+            target.appointMessagePopup(param.StateGuard);
+        }
         this._elementResult = null;
+    };
+
+    const _Game_Action_itemEffectAddState = Game_Action.prototype.itemEffectAddState;
+    Game_Action.prototype.itemEffectAddState = function(target, effect) {
+        _Game_Action_itemEffectAddState.apply(this, arguments);
+        if (this._elementResult) {
+            this.itemEffectStateGuard(target, effect);
+        }
+    };
+
+    Game_Action.prototype.itemEffectStateGuard = function(target, effect) {
+        const states = effect.dataId === 0 ? this.subject().attackStates() : [effect.dataId];
+        states.forEach(stateId => {
+            if (!target.isStateAffected(stateId) && (target.stateRate(stateId) === 0 || target.isStateResist(stateId))) {
+                this._elementResult.stateGuard = true;
+            }
+        });
     };
 
     const _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
@@ -758,8 +791,9 @@
 
     const _Sprite_Damage_damageColor = Sprite_Damage.prototype.damageColor;
     Sprite_PopupMessage.prototype.damageColor = function() {
-        if (this._popup && this._popup.color) {
-            return this._popup.color;
+        if (this._popup && (this._popup.color || this._popup.textColor)) {
+            const textColor = this._popup.textColor;
+            return textColor ? ColorManager.textColor(textColor) : this._popup.color;
         } else {
             return _Sprite_Damage_damageColor.apply(this, arguments);
         }
