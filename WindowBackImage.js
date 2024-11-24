@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.11.3 2024/11/24 タイトルヘルププラグインに合わせた調整
 // 2.11.2 2024/11/01 ウィンドウ余白のパラメータの定義場所を変更(動作に影響はありません)
 // 2.11.1 2024/11/01 2.11.0の修正で余白を0に設定した場合も適用されてしまう問題を修正
 // 2.11.0 2024/11/01 ウィンドウの余白を変更できる機能を追加
@@ -177,6 +178,8 @@
  * @value Window_BattleItem
  * @option [タイトル画面]タイトルウィンドウ
  * @value Window_TitleCommand
+ * @option [タイトル画面]タイトルヘルプウィンドウ
+ * @value Window_TitleHelp
  * @option [ゲーム終了画面]終了確認ウィンドウ
  * @value Window_GameEnd
  * @option [デバッグ画面]変数選択ウィンドウ
@@ -189,30 +192,6 @@
  * @value Window_DestinationMenu
  * @option [ゲーム内時間の導入プラグイン]時間ウィンドウ
  * @value Window_Chronus
- * @option [公式ガチャプラグイン]ガチャ表示ウィンドウ
- * @value Window_Gacha
- * @option [公式ガチャプラグイン]コマンドウィンドウ
- * @value Window_GachaCommand
- * @option [公式ガチャプラグイン]入手確認ウィンドウ
- * @value Window_GachaGetCommand
- * @option [公式ガチャプラグイン]入手情報ウィンドウ
- * @value Window_GachaGet
- * @option [公式ガチャプラグイン]コストウィンドウ
- * @value Window_Cost
- * @option [ノベルゲーム総合プラグイン]ノベル選択肢ウィンドウ
- * @value Window_NovelChoiceList
- * @option [ノベルゲーム総合プラグイン]ノベルメッセージウィンドウ
- * @value Window_NovelMessage
- * @option [ノベルゲーム総合プラグイン]ノベルタイトルコマンドウィンドウ
- * @value Window_NovelTitleCommand
- * @option [ノベルゲーム総合プラグイン]ノベル数値入力ウィンドウ
- * @value Window_NovelNumberInput
- * @option [ノベルゲーム総合プラグイン]ポーズメニューウィンドウ
- * @value Window_PauseMenu
- * @option [クロスセーブプラグイン]パスワード入力ウィンドウ
- * @value Window_PasswordInput
- * @option [クロスセーブプラグイン]パスワードウィンドウ
- * @value Window_PasswordEdit
  * @option [用語辞典プラグイン]用語カテゴリウィンドウ
  * @value Window_GlossaryCategory
  * @option [用語辞典プラグイン]用語リストウィンドウ
