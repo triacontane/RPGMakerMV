@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.2.1 2024/11/24 タイトルヘルププラグインに合わせた調整
 // 4.2.0 2023/06/11 タイトルコマンドのカーソル初期位置を設定、変更できる機能を追加
 // 4.1.0 2023/05/28 タイトル画面で無操作状態が続くと自動で専用ニューゲームを開始できる機能を追加
 // 4.0.2 2021/04/08 orderAfterアノテーションを追加
@@ -383,7 +384,8 @@
     const _Window_TitleCommand_makeCommandList    = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function() {
         _Window_TitleCommand_makeCommandList.call(this);
-        ANGSettingManager.findList(false).forEach((command, index) => {
+        ANGSettingManager.findList(false).forEach(command => {
+            const index = parameters.anotherDataList.indexOf(command);
             this.makeAnotherNewGameCommand(command, index);
         });
         if (ANGSettingManager.newGameHidden) {
