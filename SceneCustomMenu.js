@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.50.1 2024/11/26 drawEnemyのメソッドで正しく敵キャラ画像が描画されない場合があった問題を修正
  1.50.0 2024/10/25 ボタンイベントのokとcancelがタッチ操作の決定とキャンセルにも反応するよう修正
  1.49.1 2024/10/13 遷移先ウィンドウ識別子が指定されていない場合でも元ウィンドウ選択解除の設定が機能するよう修正
  1.49.0 2024/07/05 スクリプトからセーブを実行して成功したとき自動でウィンドウを再描画するよう修正
@@ -2177,8 +2178,8 @@
                     this._enemySprite = this.createEnemyContents();
                 }
                 this._enemySprite.setHue(item.battlerHue);
-                x += this.findAlignX(align, bitmap);
-                y += this.findAlignY(valign, bitmap);
+                x += this.findAlignX(align, bitmap.width);
+                y += this.findAlignY(valign, bitmap.height);
                 this._enemySprite.bitmap.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y);
             } else {
                 this.retryDrawItem(bitmap);
