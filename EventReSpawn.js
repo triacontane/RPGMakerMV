@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.12.5 2024/11/27 1.12.4 の修正ロジックに誤りがあった問題を修正
 // 1.12.4 2024/11/26 1.12.3 の修正でイベントIDが0のイベントが生成される可能性がある問題を修正
 // 1.12.3 2024/11/26 イベントの生成と破棄を繰り返したときに徐々に動作が重くなっていく問題を修正
 // 1.12.2 2021/11/23 セルフスイッチを維持しない設定のときはテンプレートイベントのセルフ変数も消去するよう変更
@@ -522,7 +523,7 @@ function Game_PrefabEvent() {
 
     Game_Map.prototype.findSpawnEventId = function() {
         if (this._eventIdSequence > 100) {
-            const erasedIndex = this._events.findIndex(event => !event);
+            const erasedIndex = this._events.findIndex((event, index) => !event && index > 0);
             if (erasedIndex > 0) {
                 return erasedIndex;
             }
