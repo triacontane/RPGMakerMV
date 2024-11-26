@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.3 2024/11/27 1.3.2 の修正ロジックに誤りがあった問題を修正
  1.3.2 2024/11/26 1.3.1の修正でイベントIDが0のイベントが生成される可能性がある問題を修正
  1.3.1 2024/11/24 イベントの生成と破棄を繰り返したときに徐々に動作が重くなっていく問題を修正
  1.3.0 2024/10/03 EventMovableLimitation.jsと組み合わせたとき、生成イベントにも同プラグインの移動制限を適用できるよう修正
@@ -586,7 +587,7 @@ function Game_PrefabEvent() {
 
     Game_Map.prototype.findSpawnEventId = function() {
         if (this._eventIdSequence > 100) {
-            const erasedIndex = this._events.findIndex(event => !event);
+            const erasedIndex = this._events.findIndex((event, index) => !event && index > 0);
             if (erasedIndex > 0) {
                 return erasedIndex;
             }
