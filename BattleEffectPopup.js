@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.0 2024/11/27 ポップアップテキストのフォントサイズとフォント名称を指定できる機能を追加
 // 2.8.0 2024/11/19 対象がステートに対する完全な耐性をもっていた場合にポップアップする機能を追加
 //                  ポップアップテキストのカラーをテキストカラーから選択できる機能を追加
 // 2.7.0 2024/05/03 弱点と耐性のポップアップ閾値を変更できる機能を追加
@@ -312,6 +313,16 @@
  * @text テキストカラー
  * @desc ポップアップカラーをテキストカラー(\c[n])から指定します。
  * @type color
+ *
+ * @param textSize
+ * @text テキストサイズ
+ * @desc ポップアップテキストのサイズです。0を指定した場合、デフォルトサイズとなります。
+ * @default 0
+ *
+ * @param fontFace
+ * @text フォント名称
+ * @desc ポップアップテキストのフォント名称です。指定する場合、別途フォントロードプラグインが必要です。
+ * @default
  * 
  * @param flash
  * @text フラッシュ
@@ -819,5 +830,17 @@
             }
         }
         _Sprite_PopupMessage_destroy.apply(this, arguments);
+    };
+
+    const _Sprite_PopupMessage_fontFace = Sprite_PopupMessage.prototype.fontFace;
+    Sprite_PopupMessage.prototype.fontFace = function() {
+        const face = _Sprite_PopupMessage_fontFace.apply(this, arguments);
+        return this._popup?.fontFace || face;
+    };
+
+    const _Sprite_PopupMessage_fontSize = Sprite_PopupMessage.prototype.fontSize;
+    Sprite_PopupMessage.prototype.fontSize = function() {
+        const size = _Sprite_PopupMessage_fontSize.apply(this, arguments);
+        return this._popup?.textSize || size;
     };
 })();
