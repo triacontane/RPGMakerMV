@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/11/30 5つ以上の選択肢があるときはスクロール表示するよう仕様変更
  1.1.0 2024/11/26 MZ対応版を作成
  1.0.2 2019/02/19 選択肢のみ表示するとき、ウィンドウ位置をスクリプトで変えられるよう調整
  1.0.1 2019/02/18 顔グラフィックを表示した場合、選択肢のカーソル位置がずれる問題を修正
@@ -79,14 +80,6 @@
     };
 
     /**
-     * Window_Base
-     * メッセージウィンドウに内部に表示するかどうかを返します。
-     */
-    Window_Base.prototype.isInnerMessage = function() {
-        return false;
-    };
-
-    /**
      * Window_Message
      * テキストの高さを返します。
      */
@@ -94,12 +87,6 @@
     Window_Message.prototype.initialize = function() {
         _Window_Message_initialize.apply(this, arguments);
         $gameMessage.setBaseWindowLine(this.numVisibleRows());
-    };
-
-    const _Window_Message_startMessage = Window_Message.prototype.startMessage;
-    Window_Message.prototype.startMessage = function() {
-        this.height = this.windowHeight();
-        _Window_Message_startMessage.apply(this, arguments);
     };
 
     const _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
@@ -121,15 +108,6 @@
         if (!this._textState) {
             this.contents.clear();
         }
-        if ($gameMessage.isChoice()) {
-            const lines = $gameMessage.choiceLines();
-            if (lines > this.numVisibleRows()) {
-                this._originalHeight = this.height;
-                this.height = this._choiceListWindow.fittingHeight(lines);
-            } else if (this._originalHeight) {
-                this.height = this._originalHeight;
-            }
-        }
         $gameMessage.setPositionType(this._positionType);
         this.updatePlacement();
         this._nameBoxWindow.updatePlacement();
@@ -138,10 +116,6 @@
 
     Window_Message.prototype.numVisibleRows = function() {
         return 4;
-    };
-
-    Window_Message.prototype.windowHeight = function() {
-        return this.fittingHeight(this.numVisibleRows());
     };
 
     Window_Message.prototype.newLineXForLeft = function() {
@@ -181,6 +155,12 @@
         return this._messageWindow.width;
     };
 
+    const _Window_ChoiceList_maxLines = Window_ChoiceList.prototype.maxLines;
+    Window_ChoiceList.prototype.maxLines = function() {
+        const lines = _Window_ChoiceList_maxLines.apply(this, arguments);
+        return this._messageWindow ? this._messageWindow.numVisibleRows() : lines;
+    };
+
     const _Window_ChoiceList_updateBackground = Window_ChoiceList.prototype.updateBackground;
     Window_ChoiceList.prototype.updateBackground = function() {
         _Window_ChoiceList_updateBackground.apply(this, arguments);
@@ -197,10 +177,6 @@
         rect.x += newLineX;
         rect.width -= newLineX;
         return rect;
-    };
-
-    Window_ChoiceList.prototype.isInnerMessage = function() {
-        return true;
     };
 
     const _Window_ChoiceList_itemHeight = Window_ChoiceList.prototype.itemHeight;
