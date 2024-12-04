@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.1 2024/12/04 コスト不足は無視フラグが有効なとき、特定条件下で使用可否判定が正しく行われない問題を修正
 // 1.5.0 2024/02/08 メニュー画面でも使用不可スキルを非表示にできる機能を追加
 // 1.4.0 2023/04/01 非表示の対象外にできるスキルを設定できる機能を追加
 // 1.3.0 2022/10/02 MZで動作するよう修正
@@ -76,13 +77,13 @@
         if (!param.validInMenu && !(this instanceof Window_BattleSkill)) {
             return result;
         }
-        if (param.ignoreCost) {
-            this._actor.ignoreCost();
-        }
         if (param.ignoreSkills.includes(item.id) && DataManager.isSkill(item)) {
             return result;
         }
-        return result && this._actor.canUse(item);
+        this._actor.setIgnoreCost(param.ignoreCost);
+        const canUse = this._actor.canUse(item);
+        this._actor.setIgnoreCost(false);
+        return result && canUse;
     };
 
     //=============================================================================
@@ -92,16 +93,11 @@
     const _Game_BattlerBase_canPaySkillCost = Game_BattlerBase.prototype.canPaySkillCost;
     Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
         const result = _Game_BattlerBase_canPaySkillCost.apply(this, arguments);
-        if (this._ignoreCost) {
-            this._ignoreCost = false;
-            return true;
-        } else {
-            return result;
-        }
+        return this._ignoreCost ? true : result;
     };
 
-    Game_BattlerBase.prototype.ignoreCost = function() {
-        this._ignoreCost = true;
+    Game_BattlerBase.prototype.setIgnoreCost = function(value) {
+        this._ignoreCost = value;
     };
 })();
 
