@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2024/12/04 視差ゼロ遠景用の設定がオブジェクトキャラクターにも適用されていた問題を修正
 // 2.2.0 2022/10/07 視差ゼロ遠景に個別のぼかし設定ができる機能を追加
 // 2.1.0 2021/03/10 システム画像に対するぼかし設定を追加
 // 2.0.0 2021/01/23 MZで動作するよう修正
@@ -129,7 +130,7 @@
     ImageManager.loadBitmap      = function(folder, filename) {
         const bitmap = _ImageManager_loadBitmap.apply(this, arguments);
         if (this._smoothMap.hasOwnProperty(folder)) {
-            if (this.isZeroParallax(filename)) {
+            if (this.isZeroParallax(filename) && folder === 'img/parallaxes/') {
                 bitmap.smooth = param.ZeroParallax;
             } else {
                 bitmap.smooth = this._smoothMap[folder];
