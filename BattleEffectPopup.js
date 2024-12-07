@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.1 2024/12/07 戦闘不能になったときは耐性ポップアップは出さないよう修正
 // 2.9.0 2024/11/27 ポップアップテキストのフォントサイズとフォント名称を指定できる機能を追加
 // 2.8.0 2024/11/19 対象がステートに対する完全な耐性をもっていた場合にポップアップする機能を追加
 //                  ポップアップテキストのカラーをテキストカラーから選択できる機能を追加
@@ -488,7 +489,7 @@
     const _Game_Action_itemEffectAddState = Game_Action.prototype.itemEffectAddState;
     Game_Action.prototype.itemEffectAddState = function(target, effect) {
         _Game_Action_itemEffectAddState.apply(this, arguments);
-        if (this._elementResult) {
+        if (this._elementResult && target.isAlive()) {
             this.itemEffectStateGuard(target, effect);
         }
     };
