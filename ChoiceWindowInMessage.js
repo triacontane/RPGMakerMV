@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/12/11 選択肢の表示座標を調整できる機能を追加
  1.2.0 2024/11/30 5つ以上の選択肢があるときはスクロール表示するよう仕様変更
  1.1.0 2024/11/26 MZ対応版を作成
  1.0.2 2019/02/19 選択肢のみ表示するとき、ウィンドウ位置をスクリプトで変えられるよう調整
@@ -24,6 +25,22 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
+ *
+ * @param adjustX
+ * @text X座標調整
+ * @desc 選択肢ウィンドウのX座標を調整します。競合などで思い通りの位置に表示されな場合に設定してください。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @param adjustY
+ * @text Y座標調整
+ * @desc 選択肢ウィンドウのY座標を調整します。競合などで思い通りの位置に表示されな場合に設定してください。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
  *
  * @help ChoiceWindowInMessage.js
  *
@@ -144,9 +161,9 @@
     const _Window_ChoiceList_updatePlacement = Window_ChoiceList.prototype.updatePlacement;
     Window_ChoiceList.prototype.updatePlacement = function() {
         _Window_ChoiceList_updatePlacement.apply(this, arguments);
-        this.x = this._messageWindow.x;
+        this.x = this._messageWindow.x + (param.adjustX || 0);
         const textHeight = this._messageWindow.getTextHeight();
-        this.y = this._messageWindow.y + textHeight - (textHeight > 4 ? 4 : 0);
+        this.y = this._messageWindow.y + textHeight - (textHeight > 4 ? 4 : 0) + (param.adjustY || 0);
     };
 
     const _Window_ChoiceList_windowWidth = Window_ChoiceList.prototype.windowWidth;
