@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/12/13 属性によるダメージ倍率を変数に自動設定できる機能を追加
  1.1.0 2024/09/29 直前で実行されたスキルの使用者と対象者のIDを変数に自動設定できる機能を追加
  1.0.0 2022/08/30 初版
 ----------------------------------------------------------------------------
@@ -147,6 +148,8 @@
  * @value addedDebuffs
  * @option 解除バフ配列
  * @value removedBuffs
+ * @option 属性による倍率
+ * @value elementRate
  *
  */
 
@@ -276,5 +279,20 @@
     Game_Action.prototype.updateLastTarget = function(target) {
         _Game_Action_updateLastTarget.apply(this, arguments);
         $gameTemp.lastAction().updateTarget(target);
+    };
+
+    const _Game_ActionResult_clear = Game_ActionResult.prototype.clear;
+    Game_ActionResult.prototype.clear = function() {
+        _Game_ActionResult_clear.apply(this, arguments);
+        this.elementRate = 1;
+    };
+
+    const _Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
+    Game_Action.prototype.calcElementRate = function(target) {
+        const rate =_Game_Action_calcElementRate.apply(this, arguments);
+        if (target.result()) {
+            target.result().elementRate = Math.floor(rate * 100);
+        }
+        return rate;
     };
 })();
