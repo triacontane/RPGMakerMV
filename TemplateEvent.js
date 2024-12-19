@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.3 2024/12/20 パラメータ「メモ欄統合」で「統合」を選択した場合の挙動が正常でない問題を修正
  1.2.2 2023/10/07 パラメータ「メモ欄統合」で「何もしない」を選択した場合、テンプレートイベントデータをセーブデータに含めないよう修正
  1.2.1 2023/04/26 テンプレートイベントの処理を呼び出したとき、呼び出しもとのイベントIDが保持されない問題を修正
  1.2.0 2023/04/23 テンプレートイベントの処理を直接呼び出せるコマンドを追加
@@ -966,7 +967,7 @@ let $dataTemplateEvents = null;
         this._templateId    = this.generateTemplateId(event);
         if (this.hasTemplate()) {
             this._override      = param.AutoOverride || !!PluginManagerEx.findMetaValue(event, ['TEOverRide', 'TE上書き']);
-            if (param.IntegrateNote > 0) {
+            if (parseInt(param.IntegrateNote) > 0) {
                 this.integrateNote(event);
             }
         } else {
@@ -992,7 +993,7 @@ let $dataTemplateEvents = null;
 
     Game_Event.prototype.integrateNote = function(event) {
         this._templateEvent      = JsonEx.makeDeepCopy(this.templateEvent());
-        this._templateEvent.note = (param.IntegrateNote === 1 ? this._templateEvent.note : '') + event.note;
+        this._templateEvent.note = (parseInt(param.IntegrateNote) === 1 ? this._templateEvent.note : '') + event.note;
         DataManager.extractMetadata(this._templateEvent);
     };
 
