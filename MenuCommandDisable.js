@@ -8,8 +8,7 @@
  Version
  1.0.0 2024/12/19 初版
 ----------------------------------------------------------------------------
- [Blog]   : https://triacontane.blogspot.jp/
- [Twitter]: https://twitter.com/triacontane/
+ [X]      : https://x.com/triacontane/
  [GitHub] : https://github.com/triacontane/
 =============================================================================*/
 
