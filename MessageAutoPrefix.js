@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2024/12/21 名前欄にも接頭辞を設定する機能を追加
  1.2.0 2022/08/15 公式プラグインTextPicture.jsに接頭辞を適用できる機能を追加
  1.1.0 2022/07/15 全ての行頭に追加される接頭辞を指定できるパラメータを追加
  1.0.0 2022/03/10 初版
@@ -33,6 +34,12 @@
  * @param rowPrefixList
  * @text 行頭接頭辞リスト
  * @desc すべての『文章の表示』の行頭に追加されるテキストのリストです。それぞれ条件スイッチを指定できます。
+ * @default []
+ * @type struct<PREFIX>[]
+ *
+ * @param speakerPrefixList
+ * @text 名前接頭辞リスト
+ * @desc すべての『文章の表示』の『名前』の先頭に追加されるテキストのリストです。それぞれ条件スイッチを指定できます。
  * @default []
  * @type struct<PREFIX>[]
  *
@@ -101,6 +108,13 @@
                 return prev;
             }
         }, '');
+    };
+
+    const _Game_Message_speakerName = Game_Message.prototype.speakerName;
+    Game_Message.prototype.speakerName = function() {
+        const name = _Game_Message_speakerName.apply(this, arguments);
+        const rowPrefix = this.findTextPrefix(param.speakerPrefixList);
+        return rowPrefix ? rowPrefix + name : name;
     };
 
     const _Game_Picture_show = Game_Picture.prototype.show;
