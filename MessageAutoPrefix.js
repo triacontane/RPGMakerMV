@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.1 2024/12/26 1.3.0の修正で名前が未指定の時にも接頭辞が付与される問題を修正
  1.3.0 2024/12/21 名前欄にも接頭辞を設定する機能を追加
  1.2.0 2022/08/15 公式プラグインTextPicture.jsに接頭辞を適用できる機能を追加
  1.1.0 2022/07/15 全ての行頭に追加される接頭辞を指定できるパラメータを追加
@@ -114,7 +115,7 @@
     Game_Message.prototype.speakerName = function() {
         const name = _Game_Message_speakerName.apply(this, arguments);
         const rowPrefix = this.findTextPrefix(param.speakerPrefixList);
-        return rowPrefix ? rowPrefix + name : name;
+        return rowPrefix && name ? rowPrefix + name : name;
     };
 
     const _Game_Picture_show = Game_Picture.prototype.show;
