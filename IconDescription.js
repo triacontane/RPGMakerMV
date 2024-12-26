@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.3 2024/12/26 ヘルプテキストやメッセージウィンドウにアイコンを表示したとき、切り替わり後も判定が残ってしまう問題を修正
+                  スクロールするウィンドウでアイコン判定の位置がずれる問題を修正
  1.0.2 2023/08/20 アイコンが一度表示され消去された後もクリック判定残ってしまう場合がある問題を修正
  1.0.1 2023/07/29 表示位置の微調整
  1.0.0 2023/07/29 初版
@@ -146,11 +148,27 @@
         this.appendIconMap(iconIndex, x, y);
     };
 
-    const _Window_Selectable_refresh = Window_Selectable.prototype.refresh;
-    Window_Selectable.prototype.refresh = function() {
+    Window_Base.prototype.clearIconMap = function() {
         if (this._iconMap) {
             this._iconMap.clear();
         }
+    };
+
+    const _Window_Help_refresh = Window_Help.prototype.refresh;
+    Window_Help.prototype.refresh = function(text) {
+        this.clearIconMap();
+        _Window_Help_refresh.apply(this, arguments);
+    };
+
+    const _Window_Message_startMessage = Window_Message.prototype.startMessage;
+    Window_Message.prototype.startMessage = function() {
+        this.clearIconMap();
+        _Window_Message_startMessage.apply(this, arguments);
+    };
+
+    const _Window_Selectable_refresh = Window_Selectable.prototype.refresh;
+    Window_Selectable.prototype.refresh = function() {
+        this.clearIconMap();
         _Window_Selectable_refresh.apply(this, arguments);
     };
 
@@ -179,17 +197,17 @@
             const rect = new Rectangle(0, 0, ImageManager.iconWidth, ImageManager.iconHeight);
             const icon = Array.from(this._iconMap.values()).find(icon => {
                 rect.x = icon.x;
-                rect.y = icon.y;
+                rect.y = icon.y - (this.origin.y || 0);
                 return rect.contains(localPos.x, localPos.y);
             });
             if (icon) {
                 const worldPos = this.worldTransform.apply(new Point(0, 0));
-                const x = worldPos.x + icon.x;
-                const y = worldPos.y + icon.y;
+                const x = worldPos.x + rect.x;
+                const y = worldPos.y + rect.y;
                 SceneManager.addIconCaption(icon.index, x, y);
             }
         }
-    }
+    };
 
     const _Sprite_StateIcon_update = Sprite_StateIcon.prototype.update;
     Sprite_StateIcon.prototype.update = function() {
@@ -274,6 +292,7 @@
         }
         this._scene.removeChild(this._iconCaption);
         this._iconCaption = null;
+        TouchInput.update();
     };
 
     const _SceneManager_onSceneTerminate = SceneManager.onSceneTerminate;
