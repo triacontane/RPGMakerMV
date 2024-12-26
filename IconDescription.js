@@ -299,6 +299,12 @@
         _Window_Message_startMessage.apply(this, arguments);
     };
 
+    var _Window_Message_terminateMessage = Window_Message.prototype.terminateMessage;
+    Window_Message.prototype.terminateMessage = function() {
+        this._iconRects = {};
+        _Window_Message_terminateMessage.apply(this, arguments);
+    };
+
     /**
      * Window_Caption
      * アイコン画像に対応するヘルプを表示します。
