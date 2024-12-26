@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.3 2024/12/26 ヘルプテキストやメッセージウィンドウにアイコンを表示したとき、切り替わり後も判定が残ってしまう問題を修正
 // 2.0.2 2024/05/12 メッセージウィンドウのアイコンをクリックしてもメッセージが閉じないよう修正
 // 2.0.1 2018/05/05 古いコアスクリプト用の設定を削除
 //                  バトル画面で除去されたステータスアイコンの説明が残ってしまう問題を修正
@@ -284,6 +285,18 @@
             return false;
         }
         return result
+    };
+
+    var _Window_Help_refresh = Window_Help.prototype.refresh;
+    Window_Help.prototype.refresh = function(text) {
+        this._iconRects = {};
+        _Window_Help_refresh.apply(this, arguments);
+    };
+
+    var _Window_Message_startMessage = Window_Message.prototype.startMessage;
+    Window_Message.prototype.startMessage = function() {
+        this._iconRects = {};
+        _Window_Message_startMessage.apply(this, arguments);
     };
 
     /**
