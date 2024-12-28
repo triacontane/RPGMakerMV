@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.4 2024/12/28 余白設定がフキダシウィンドウを無効にしたときも反映されていた問題を修正
  1.4.3 2024/10/25 英語版ヘルプのプラグインコマンドのキャラクターID下限を削除
  1.4.2 2023/12/27 フキダシ位置の自動設定に関する説明を追記
  1.4.1 2023/12/20 可能な範囲でNovelMessageMZ.jsと併用できるよう修正
@@ -1169,7 +1170,12 @@
     Window_Base.prototype.updatePadding = function() {
         _Window_Base_updatePadding.apply(this, arguments);
         if (this.isPopup() && param.Padding) {
+            this._prevPadding = this.padding;
             this.padding = param.Padding;
+        } else if (this._prevPadding !== undefined) {
+            this.padding = this._prevPadding;
+            this._prevPadding = undefined;
+
         }
     };
 
@@ -1541,6 +1547,7 @@
         }
         this.updatePlacement();
         this.updateBackground();
+        this.updatePadding();
     };
 
     Window_Message.prototype.resizeForPopup = function() {
