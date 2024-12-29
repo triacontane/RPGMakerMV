@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.0 2024/12/30 スキルのメモ欄からも撃破ボーナスのタグを取得できるよう修正
 // 2.1.1 2023/07/07 経験値とゴールドのレートを変更したとき、小数値になってしまう場合がある問題を修正
 // 2.1.0 2023/01/09 撃破ボーナスの適用条件に「特定のスキルを使った場合」を追加
 // 2.0.1 2022/09/04 ドロップ率に関する仕様をヘルプに記載
@@ -48,13 +49,13 @@
  * 撃破するとHPやMPを回復するステートや装備品などが作成できます。
  * 具体的な報酬の内容はプラグインパラメータで指定してください。
  *
- * 特徴を有するデータベース(アクター、職業、武具、ステート、敵キャラ)のメモ欄に
+ * アクター、職業、武具、ステート、敵キャラ、スキルのメモ欄に
  * 以下の通り記述してください。
- * "撃破した側"がボーナスの特徴を持っていると撃破ボーナスを獲得できます。
- *
  * bonus01 : プラグインパラメータで指定した識別子
  * <撃破ボーナス:bonus01>
  * <KillBonus:bonus01>
+ *
+ * "撃破した側"がボーナスの特徴を持っていると撃破ボーナスを獲得できます。
  *
  * ※1 複数の撃破ボーナスが有効な場合、経験値やお金のレートやドロップ率は
  * 最も高い値が採用されます。
@@ -314,9 +315,17 @@
     };
 
     Game_BattlerBase.prototype.findKillBonusParamList = function(critical) {
-        return this.traitObjects()
+        return this.traitObjects().concat(this.actorSkills())
             .map(obj => this.findKillBonusParam(obj))
             .filter(data => !!data && this.checkDataForKillBonus(data, critical));
+    };
+
+    Game_BattlerBase.prototype.actorSkills = function() {
+        return [];
+    };
+
+    Game_Actor.prototype.actorSkills = function() {
+        return this.skills();
     };
 
     Game_BattlerBase.prototype.findKillBonusParam = function(traitObj) {
