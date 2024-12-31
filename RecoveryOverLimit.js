@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2024/12/31 限界突破が有効なとき、HP吸収でも反映されるよう修正
  1.1.0 2024/12/29 MZ対応版を作成
  1.0.0 2020/04/26 初版
 ----------------------------------------------------------------------------
@@ -112,6 +113,18 @@
         }
         const subject = this.subject();
         return subject ? subject.findRecoveryOverLimitRate(this.item()) : 0;
+    };
+
+    const _Game_Action_gainDrainedHp = Game_Action.prototype.gainDrainedHp;
+    Game_Action.prototype.gainDrainedHp = function(value) {
+        if (this.isDrain()) {
+            let gainTarget = this.subject();
+            if (this._reflectionTarget) {
+                gainTarget = this._reflectionTarget;
+            }
+            gainTarget.setOverLimitMaxHp(this.findRecoveryOverLimitRate(-value));
+        }
+        _Game_Action_gainDrainedHp.apply(this, arguments);
     };
 
     /**
