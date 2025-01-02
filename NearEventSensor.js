@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.0.1 2025/01/02 直前の修正でフラッシュが点滅せず光り続ける動作になっていた問題を修正
 // 4.0.0 2024/11/11 後方互換性のために残しておいたタグ設定の実装を削除
 //                  センサー条件にセルフスイッチを追加
 // 3.7.1 2024/02/04 詳細タグが指定されていた場合は、必ずその設定を利用するよう修正
@@ -346,7 +347,7 @@
 
     Game_CharacterBase.prototype.applySensorEffect = function(targetEvent, detail) {
         const color = detail.FlashColor;
-        if (color) {
+        if (color && !this.isFlash()) {
             this.startFlash([color.Red, color.Green, color.Blue, color.Alpha], param.FlashDuration);
         }
         const balloonId = detail.Balloon;
