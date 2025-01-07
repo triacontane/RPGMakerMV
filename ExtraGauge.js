@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.21.2 2025/01/07 1.21.1の修正でゲージ画像を指定した場合の初期表示が正常でない問題を修正
  1.21.1 2024/12/14 ゲージが非表示の状態でも裏で画像の状態を更新するよう修正
  1.21.0 2024/10/11 パーティの並べ替えをしたときゲージに即座に反映されるよう修正
                    ラベルの表示で%1がバトラー名に置き換わるよう修正
@@ -1082,6 +1083,7 @@
                 if (!this._prevVisible) {
                     this._value = this._targetValue;
                     this._maxValue = this._targetMaxValue;
+                    this.redraw();
                 }
             }
             super.updateBitmap();
