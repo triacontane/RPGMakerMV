@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.51.0 2025/01/11 AnimationByPoint.jsと組み合わせてカスタムメニューでアニメーションを表示できる機能を追加
+                   ピクチャを加算合成で表示したとき、背景やウィンドウに対して加算合成されない問題を修正
  1.50.1 2024/11/26 drawEnemyのメソッドで正しく敵キャラ画像が描画されない場合があった問題を修正
  1.50.0 2024/10/25 ボタンイベントのokとcancelがタッチ操作の決定とキャンセルにも反応するよう修正
  1.49.1 2024/10/13 遷移先ウィンドウ識別子が指定されていない場合でも元ウィンドウ選択解除の設定が機能するよう修正
@@ -1777,23 +1779,13 @@
 
         createSpriteset() {
             this._spriteset = new Spriteset_Menu();
-            const index = this.findSpritesetIndex();
-            if (index !== null) {
-                this.addChildAt(this._spriteset, index);
-            } else {
-                this.addChild(this._spriteset);
-            }
-        }
-
-        findSpritesetIndex() {
-            switch (this._customData.PicturePriority) {
-                case 2:
-                    return this.getChildIndex(this._windowLayer);
-                case 1:
-                    return this.getChildIndex(this._messageWindowLayer);
-                default:
-                    return null;
-            }
+            this.addChild(this._spriteset);
+            const picturePriority = this._customData.PicturePriority;
+            this._spriteset.setSceneObject(this._panorama
+                , this._backgroundSprite
+                , this._windowLayer
+                , this._messageWindowLayer
+                , picturePriority);
         }
 
         refreshActor() {
@@ -2719,7 +2711,21 @@
         createBaseSprite() {
             super.createBaseSprite();
             this._blackScreen.opacity = 0;
+            this._effectsContainer = this;
         }
+
+        setSceneObject(panorama, backGroundSprite, windowLayer, messageWindowLayer, picturePriority) {
+            this._baseSprite.addChild(panorama);
+            this._baseSprite.addChild(backGroundSprite);
+            this.addChild(windowLayer);
+            if (picturePriority === 1) {
+                this.addChild(this._pictureContainer);
+            }
+            this.addChild(messageWindowLayer);
+            if (picturePriority === 0) {
+                this.addChild(this._pictureContainer);
+            }
+        };
 
         createToneChanger() {
         };
@@ -2730,5 +2736,13 @@
         // for MOG_Weather_EX.js
         createWeatherEX() {
         };
+
+        findTargetSprite(target) {
+            if (this.findPointTargetSprite) {
+                return this.findPointTargetSprite(target);
+            } else {
+                return null;
+            }
+        }
     }
 })();
