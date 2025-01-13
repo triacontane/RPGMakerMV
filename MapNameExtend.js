@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.9.0 2025/01/13 メッセージ表示中もマップ名を表示したままにしておける設定を追加
 // 1.8.0 2024/05/26 総フレーム数をInfinityにしているとき、スイッチやイベント実行を条件にマップ名を一時的に非表示にできる機能を追加
 // 1.7.0 2023/10/18 マップ名の表示フォーマットを指定できる機能を追加
 // 1.6.0 2023/10/16 マップ名の表示をセンタリングする機能を追加
@@ -145,6 +146,13 @@
  * @param hideInEventRunning
  * @text イベント実行中非表示
  * @desc 総フレーム数をInfinityにしている場合に、イベント実行中はマップ名を非表示にします。
+ * @default false
+ * @type boolean
+ *
+ *
+ * @param showOnMessage
+ * @text メッセージ表示中も表示
+ * @desc メッセージウィンドウが表示されている間もマップ名を表示します。(デフォルト仕様では自動で非表示になります)
  * @default false
  * @type boolean
  *
@@ -427,6 +435,14 @@
         if (param.noSameNameDisplay && $gameMap.isSameDisplayName()) {
             this._mapNameWindow.close();
         }
+    };
+
+    const _Scene_Map_updateMapNameWindow = Scene_Map.prototype.updateMapNameWindow;
+    Scene_Map.prototype.updateMapNameWindow = function() {
+        if (param.showOnMessage) {
+            return;
+        }
+        _Scene_Map_updateMapNameWindow.apply(this, arguments);
     };
 })();
 
