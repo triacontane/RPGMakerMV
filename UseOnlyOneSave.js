@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2025/01/13 最新データをロードするプラグインコマンドを作成
 // 1.2.0 2023/06/25 MZで動作するよう修正
 // 1.1.4 2018/01/06 1.1.3の修正でセーブ画面に遷移するとゲームが停止する不具合を修正
 // 1.1.3 2018/01/05 マップ画面からスクリプトでロード実行されたときに、エラーが発生する場合がある問題を修正
@@ -32,6 +33,11 @@
  * @text セーブメッセージ
  * @desc メニュー画面でのセーブ実行時に表示するメッセージです。指定しない場合は表示されません。
  * @default プレイデータをセーブしました。
+ * @type string
+ *
+ * @command Load
+ * @text セーブデータのロード
+ * @desc 最新データをロードします。
  *
  * @help UseOnlyOneSave.js
  *
@@ -52,6 +58,12 @@
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+
+    PluginManagerEx.registerCommand(script, 'Load', args => {
+        if (DataManager.isAnySavefileExists()) {
+            SceneManager.push(Scene_Load);
+        }
+    });
 
     //=============================================================================
     // SceneManager
@@ -79,7 +91,7 @@
             sceneFile.onSavefileOk();
             if (sceneClass === Scene_Load && this._scene instanceof Scene_Map) {
                 $dataMap.loadFromMap = true;
-                $gameSystem.onAfterLoad();
+                sceneFile.requestOnAfterLoad();
             }
             return true;
         }
@@ -92,6 +104,19 @@
             return true;
         }
         return _Scene_File_isSavefileEnabled.apply(this, arguments);
+    };
+
+    Scene_File.prototype.requestOnAfterLoad = function() {
+        this._requestAfterLoad = true;
+    };
+
+    const _Scene_Load_onLoadSuccess = Scene_Load.prototype.onLoadSuccess;
+    Scene_Load.prototype.onLoadSuccess = function() {
+        _Scene_Load_onLoadSuccess.apply(this, arguments);
+        if (this._requestAfterLoad) {
+            $gameSystem.onAfterLoad();
+            this._requestAfterLoad = false;
+        }
     };
 
     //=============================================================================
