@@ -37,7 +37,7 @@
  *
  * @command Load
  * @text セーブデータのロード
- * @desc 最新データをロードします。
+ * @desc 最新データをロードします。セーブデータがひとつもない状態で実行しても何も起こりません。
  *
  * @help UseOnlyOneSave.js
  *
