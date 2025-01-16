@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.51.1 2025/01/16 1.51.0の修正で公式プラグインExtraImage.jsと併用できなくなっていた問題を修正
  1.51.0 2025/01/11 AnimationByPoint.jsと組み合わせてカスタムメニューでアニメーションを表示できる機能を追加
                    ピクチャを加算合成で表示したとき、背景やウィンドウに対して加算合成されない問題を修正
  1.50.1 2024/11/26 drawEnemyのメソッドで正しく敵キャラ画像が描画されない場合があった問題を修正
@@ -1786,6 +1787,14 @@
                 , this._windowLayer
                 , this._messageWindowLayer
                 , picturePriority);
+        }
+
+        getChildIndex(displayObject) {
+            if (displayObject === this._windowLayer) {
+                return 0;
+            } else {
+                return super.getChildIndex(displayObject);
+            }
         }
 
         refreshActor() {
