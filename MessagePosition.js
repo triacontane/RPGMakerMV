@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.4 2025/01/16 フキダシウィンドウと併用したときフキダシを無効にして文章を表示した直後に選択肢の表示を行うと文章が消えてしまう問題を修正
 // 1.1.3 2023/02/06 MZから移植した際に不要なコードが混じっていたので削除
 // 1.1.2 2022/11/20 1.1.1の修正でメッセージの自動ページ送りが機能しなくなっていた問題を修正
 // 1.1.1 2022/11/09 MV向けに作成
@@ -110,7 +111,7 @@
 
 	var param = createPluginParameter('MessagePosition');
 
-	const _Window_Message_initialize = Window_Message.prototype.initialize;
+	var _Window_Message_initialize = Window_Message.prototype.initialize;
 	Window_Message.prototype.initialize = function() {
 		_Window_Message_initialize.apply(this, arguments);
 		this._originalWidth = this.windowWidth();
@@ -118,7 +119,7 @@
 		this._originalX = (Graphics.boxWidth - this._originalWidth) / 2;
 	};
 
-	const _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
+	var _Window_Message_updatePlacement = Window_Message.prototype.updatePlacement;
 	Window_Message.prototype.updatePlacement = function() {
 		if (this.isPopup && this.isPopup()) {
 			_Window_Message_updatePlacement.apply(this, arguments);
@@ -130,10 +131,10 @@
 		const width = this.width;
 		const height = this.height;
 		if (param.width) {
-			this.width = (param.relative ? this._originalWidth : 0) + param.width;
+			this.width =　this.windowWidth();
 		}
 		if (param.height) {
-			this.height = (param.relative ? this._originalHeight : 0) + param.height;
+			this.height = this.windowHeight();
 		}
 		if (this.width !== width || this.height !== height) {
 			this.createContents();
@@ -142,6 +143,24 @@
 		const posit = [param.yTop, param.yMiddle, param.yBottom];
 		if (posit[this._positionType]) {
 			this.y = (param.relative ? this.y : 0) + posit[this._positionType];
+		}
+	};
+
+	var _Window_Message_windowWidth = Window_Message.prototype.windowWidth;
+	Window_Message.prototype.windowWidth = function() {
+		if (this._originalWidth) {
+			return (param.relative ? this._originalWidth : 0) + param.width;
+		} else {
+			return _Window_Message_windowWidth.apply(this, arguments);
+		}
+	};
+
+	var _Window_Message_windowHeight = Window_Message.prototype.windowHeight;
+	Window_Message.prototype.windowHeight = function() {
+		if (this._originalHeight) {
+			return (param.relative ? this._originalHeight : 0) + param.height;
+		} else {
+			return _Window_Message_windowHeight.apply(this, arguments);
 		}
 	};
 })();
