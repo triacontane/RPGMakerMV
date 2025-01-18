@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.51.2 2025/01/18
  1.51.1 2025/01/16 1.51.0の修正で公式プラグインExtraImage.jsと併用できなくなっていた問題を修正
  1.51.0 2025/01/11 AnimationByPoint.jsと組み合わせてカスタムメニューでアニメーションを表示できる機能を追加
                    ピクチャを加算合成で表示したとき、背景やウィンドウに対して加算合成されない問題を修正
@@ -1463,9 +1464,7 @@
                 this.createHelpWindow();
             }
             this.createCustomMenuWindowList();
-            if (!this._messageWindow) {
-                this.createAllMessageWindow();
-            }
+            this.createAllMessageWindow();
             this.createSpriteset();
             if (this._customData.Panorama) {
                 this.setPanoramaBitmap();
@@ -1782,11 +1781,18 @@
             this._spriteset = new Spriteset_Menu();
             this.addChild(this._spriteset);
             const picturePriority = this._customData.PicturePriority;
-            this._spriteset.setSceneObject(this._panorama
-                , this._backgroundSprite
-                , this._windowLayer
-                , this._messageWindowLayer
-                , picturePriority);
+            const lowerContainers = [this._backgroundSprite, this._panorama];
+            const upperContainers = [];
+            // for CharacterPictureManager.js
+            if (this._standSpriteContainer) {
+                const priority = this._standSpriteScene.Priority;
+                if (priority === 0) {
+                    upperContainers.push(this._standSpriteContainer);
+                } else {
+                    lowerContainers.push(this._standSpriteContainer);
+                }
+            }
+            this._spriteset.setSceneObject(lowerContainers, upperContainers, this._windowLayer, this._messageWindowLayer, picturePriority);
         }
 
         getChildIndex(displayObject) {
@@ -2723,9 +2729,8 @@
             this._effectsContainer = this;
         }
 
-        setSceneObject(panorama, backGroundSprite, windowLayer, messageWindowLayer, picturePriority) {
-            this._baseSprite.addChild(panorama);
-            this._baseSprite.addChild(backGroundSprite);
+        setSceneObject(lowerContainers, upperContainers, windowLayer, messageWindowLayer, picturePriority) {
+            lowerContainers.forEach(container => this.addChild(container));
             this.addChild(windowLayer);
             if (picturePriority === 1) {
                 this.addChild(this._pictureContainer);
@@ -2734,6 +2739,7 @@
             if (picturePriority === 0) {
                 this.addChild(this._pictureContainer);
             }
+            upperContainers.forEach(container => this.addChild(container));
         };
 
         createToneChanger() {
