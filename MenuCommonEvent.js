@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.3 2025/01/18 最新版のSceneCustomMenu.jsと併用できるよう修正
 // 1.5.2 2024/10/20 オプション画面にコモンイベントを設定してタイトル画面から開くとエラーになる問題を修正
 // 1.5.1 2022/10/06 メニュー画面のサブコマンドプラグインとの定義順の制約アノテーションを追加
 // 1.5.0 2022/09/17 ピクチャのボタン化プラグインで指定したコモンイベントがメニュー画面中で実行されるよう仕様変更
@@ -378,10 +379,12 @@
         if (!this.hasCommonEvent()) {
             return;
         }
-        this.createSpriteset();
-        if (!this._messageWindow) {
-            this.createAllMessageWindow();
+        // Resolve conflict for SceneCustomMenu.js
+        if (this._customData) {
+            return;
         }
+        this.createSpriteset();
+        this.createAllMessageWindow();
     };
 
     Scene_MenuBase.prototype.hasCommonEvent = function() {
