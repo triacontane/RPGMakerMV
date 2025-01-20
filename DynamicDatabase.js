@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.4 2025/01/20 2.1.3の修正に一部対応不備があったので修正
 // 2.1.3 2025/01/19 二つ名などに\n[n]を使うとゲーム開始時にエラーになる問題を修正
 // 2.1.2 2024/03/12 敵キャラの最大HPに動的データを適用しているとき、戦闘テスト時にHPが最大値にならない問題を修正
 // 2.1.1 2022/07/22 ヘルプに注釈を追記
@@ -126,15 +127,15 @@
     // Game_Actor
     //  アクター名、二つ名、プロフィールについて変更されるまではDBから再取得するよう修正
     //=============================================================================
-    let processSetup = false;
+    let processSetupActorIdList = [];
     const _Game_Actor_setup = Game_Actor.prototype.setup;
     Game_Actor.prototype.setup = function(actorId) {
-        if (processSetup) {
+        if (processSetupActorIdList[actorId]) {
             return;
         }
-        processSetup = true;
+        processSetupActorIdList[actorId] = true;
         _Game_Actor_setup.apply(this, arguments);
-        processSetup = false;
+        processSetupActorIdList[actorId] = false;
         this.__nickname = null;
         this.__profile = null;
         this.__name = null;
