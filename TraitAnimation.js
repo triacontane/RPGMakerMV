@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2025/01/20 誤って混入していたログ出力を削除
  1.2.0 2021/04/11 複数のアニメーションを同時に表示できるよう修正
  1.1.1 2020/12/16 アニメーション解放処理を微修正
  1.1.0 2020/12/15 MZ版として全面的に修正
@@ -162,7 +163,6 @@
         this._traitAnimationSprite.clone().forEach(sprite => {
             const playing = sprite.isPlaying();
             if (!playing) {
-                console.log('remove');
                 this._traitAnimationSprite.remove(sprite);
             } else if (sprite.animationId === animationId) {
                 result = true;
