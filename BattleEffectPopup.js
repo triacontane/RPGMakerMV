@@ -579,6 +579,16 @@
         return rate;
     };
 
+    const _Game_Battler_debuffRate = Game_Battler.prototype.debuffRate;
+    Game_Battler.prototype.debuffRate = function(paramId) {
+        const rate = _Game_Battler_debuffRate.apply(this, arguments);
+        console.log(rate);
+        if (rate === 0) {
+            this.result().guarded = true;
+        }
+        return rate;
+    };
+
     Game_Battler.prototype.hasAppointPopup = function() {
         return !!this._appointPopup;
     };
