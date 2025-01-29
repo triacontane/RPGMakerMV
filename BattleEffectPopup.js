@@ -582,7 +582,6 @@
     const _Game_Battler_debuffRate = Game_Battler.prototype.debuffRate;
     Game_Battler.prototype.debuffRate = function(paramId) {
         const rate = _Game_Battler_debuffRate.apply(this, arguments);
-        console.log(rate);
         if (rate === 0) {
             this.result().guarded = true;
         }
