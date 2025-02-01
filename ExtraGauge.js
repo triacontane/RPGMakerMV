@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.22.0 2025/02/02 ゲージの表示優先度をキャラクターの下やバトラーの下に表示できるよう修正
  1.21.2 2025/01/07 1.21.1の修正でゲージ画像を指定した場合の初期表示が正常でない問題を修正
  1.21.1 2024/12/14 ゲージが非表示の状態でも裏で画像の状態を更新するよう修正
  1.21.0 2024/10/11 パーティの並べ替えをしたときゲージに即座に反映されるよう修正
@@ -68,17 +69,37 @@
  * @default []
  * @type struct<Gauge>[]
  *
- * @param Priority
- * @text 表示優先度
- * @desc マップ画面および戦闘画面におけるゲージ画像の表示優先度です。
+ * @param PriorityMap
+ * @text 表示優先度(マップ)
+ * @desc マップ画面におけるゲージ画像の表示優先度です。
  * @default 0
  * @type select
  * @option 0:最前面(画面のフェードアウトの影響を受けない)
  * @value 0
- * @option 1:ピクチャの下
+ * @option 1:ピクチャの上
  * @value 1
- * @option 2:ピクチャの上
+ * @option 2:ピクチャの下
  * @value 2
+ * @option 3:キャラクターの上
+ * @value 3
+ * @option 4:キャラクターと同じ
+ * @value 4
+ * @option 5:キャラクターの下
+ * @value 5
+ *
+ * @param PriorityBattle
+ * @text 表示優先度(バトル)
+ * @desc 戦闘画面におけるゲージ画像の表示優先度です。
+ * @default 0
+ * @type select
+ * @option 0:最前面(画面のフェードアウトの影響を受けない)
+ * @value 0
+ * @option 1:ピクチャの上
+ * @value 1
+ * @option 2:ピクチャの下
+ * @value 2
+ * @option 3:バトラーの下
+ * @value 3
  *
  * @help ExtraGauge.js
  *
@@ -786,6 +807,7 @@
 
     Scene_Base.prototype.addChildExtraGauge = function(extraGauge) {
         const parentName = extraGauge.getParentWindowName();
+        const priority = this.findGaugePriority();
         if (parentName && this._windowLayer) {
             const win = this._windowLayer.children.find(window =>
                 window instanceof Window && window.findWindowClassName() === parentName);
@@ -794,19 +816,49 @@
             } else {
                 PluginManagerEx.throwError('Window is not found : ' + parentName, script);
             }
-        } else if (param.Priority > 0 && !!this._spriteset) {
-            this._spriteset.addChildExtraGauge(extraGauge);
+        } else if (priority > 0) {
+            this._spriteset.addChildExtraGauge(extraGauge, priority);
         } else {
             this.addChild(extraGauge);
         }
     };
 
-    Spriteset_Base.prototype.addChildExtraGauge = function(extraGauge) {
+    Scene_Base.prototype.findGaugePriority = function() {
+        return 0;
+    };
+
+    Scene_Battle.prototype.findGaugePriority = function() {
+        return param.PriorityBattle;
+    };
+
+    Scene_Map.prototype.findGaugePriority = function() {
+        return param.PriorityMap;
+    };
+
+    Spriteset_Base.prototype.addChildExtraGauge = function(extraGauge, priority) {
         let index = this.getChildIndex(this._pictureContainer);
-        if (param.Priority === 2) {
+        if (priority === 1) {
             index++;
         }
         this.addChildAt(extraGauge, index);
+    };
+
+    Spriteset_Battle.prototype.addChildExtraGauge = function(extraGauge, priority) {
+        if (priority === 3) {
+            const index = this._baseSprite.getChildIndex(this._battleField);
+            this._baseSprite.addChildAt(extraGauge, index);
+        } else {
+            Spriteset_Base.prototype.addChildExtraGauge.apply(this, arguments);
+        }
+    };
+
+    Spriteset_Map.prototype.addChildExtraGauge = function(extraGauge, priority) {
+        if (priority >= 3) {
+            extraGauge.z = 7 - priority;
+            this._tilemap.addChild(extraGauge);
+        } else {
+            Spriteset_Base.prototype.addChildExtraGauge.apply(this, arguments);
+        }
     };
 
     Scene_Base.prototype.findExtraGaugeList = function() {
