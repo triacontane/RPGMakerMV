@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.4.0 2025/02/01 項目の隠しフラグをプラグインコマンドから再設定できる機能を追加
 // 3.3.0 2024/03/30 追加項目同士の並び順を変更できる機能を追加
 // 3.2.0 2021/12/21 項目に余白を設定できる機能を追加
 // 3.1.3 2021/08/09 セーブデータをロードした際に、追加オプションの設定値がゲーム変数に反映されない問題を修正
@@ -76,8 +77,17 @@
  * @value VolumeOptions
  *
  * @command UNLOCK
- * @text オプション任意項目の隠し解除
+ * @text 項目の隠し解除
  * @desc 指定した項目の隠しフラグを解除します。
+ *
+ * @arg name
+ * @text 項目名
+ * @desc 対象の項目名称です。
+ * @default
+ *
+ * @command LOCK
+ * @text 項目の隠し再設定
+ * @desc 指定した項目の隠しフラグを再設定します。
  *
  * @arg name
  * @text 項目名
@@ -392,7 +402,11 @@
     var script = document.currentScript;
 
     PluginManagerEx.registerCommand(script, 'UNLOCK', function(args) {
-        ConfigManager.customParamUnlock(args.name);
+        ConfigManager.customParamUnlock(args.name, false);
+    });
+
+    PluginManagerEx.registerCommand(script, 'LOCK', function(args) {
+        ConfigManager.customParamUnlock(args.name, true);
     });
 
     var iterate = function(that, handler) {
@@ -529,9 +543,9 @@
         }.bind(this));
     };
 
-    ConfigManager.customParamUnlock = function(name) {
+    ConfigManager.customParamUnlock = function(name, lock) {
         iterate(this.getCustomParams(), function(symbol, item) {
-            if (item.name === name) this.hiddenInfo[symbol] = false;
+            if (item.name === name) this.hiddenInfo[symbol] = lock;
         }.bind(this));
         this.save();
     };
@@ -623,9 +637,11 @@
 
     var _Scene_Options_maxCommands = Scene_Options.prototype.maxCommands;
     Scene_Options.prototype.maxCommands = function() {
-        return _Scene_Options_maxCommands.apply(this, arguments) +
-            param.NumberOptions.length + param.StringOptions.length +
-            param.SwitchOptions.length + param.VolumeOptions.length;
+        var count =  _Scene_Options_maxCommands.apply(this, arguments);
+        var params = ConfigManager.getCustomParams();
+        return count + Object.keys(params).reduce(function (prev, key) {
+            return ConfigManager.hiddenInfo[key] ? prev : prev + 1;
+        }, 0);
     };
 
     var _Scene_Options_maxVisibleCommands = Scene_Options.prototype.maxVisibleCommands;
@@ -644,6 +660,9 @@
     Scene_Options.prototype.findPaddingHeight = function() {
         var params = ConfigManager.getCustomParams();
         return Object.keys(params).reduce(function (prev, key) {
+            if (ConfigManager.hiddenInfo[key]) {
+                return prev;
+            }
             return prev + (params[key].padding || 0);
         }, 0);
     };
