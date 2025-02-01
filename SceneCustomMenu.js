@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.51.3 2025/02/01 セーブデータ作成のプリセットを一覧に指定したとき、本来の数より多くファイル数が表示される問題を修正
  1.51.2 2025/01/18 1.51.0用の競合対策コードを追加
  1.51.1 2025/01/16 1.51.0の修正で公式プラグインExtraImage.jsと併用できなくなっていた問題を修正
  1.51.0 2025/01/11 AnimationByPoint.jsと組み合わせてカスタムメニューでアニメーションを表示できる機能を追加
@@ -2526,9 +2527,9 @@
 
         createSaveFiles() {
             const autoSave = $gameSystem.isAutosaveEnabled();
-            const count =  DataManager.maxSavefiles() + (autoSave ? 1 : 0);
+            const count =  DataManager.maxSavefiles() - (autoSave ? 0 : 1);
             const list = [];
-            for (let i = 0; i <= count; i++) {
+            for (let i = 0; i < count; i++) {
                 const savefileId = $gameSystem.indexToSavefileId(i);
                 list.push(DataManager.savefileInfo(savefileId));
             }
