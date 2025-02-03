@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.51.4 2025/02/03 マップ画面でロードしたときに色調やピクチャの情報がロードされない問題を修正
  1.51.3 2025/02/01 セーブデータ作成のプリセットを一覧に指定したとき、本来の数より多くファイル数が表示される問題を修正
  1.51.2 2025/01/18 1.51.0用の競合対策コードを追加
  1.51.1 2025/01/16 1.51.0の修正で公式プラグインExtraImage.jsと併用できなくなっていた問題を修正
@@ -1419,8 +1420,9 @@
             super.terminate();
             if (this._loadSuccess) {
                 $gameSystem.onAfterLoad();
+            } else {
+                this.restoreGameObject();
             }
-            this.restoreGameObject();
         }
 
         stop() {
