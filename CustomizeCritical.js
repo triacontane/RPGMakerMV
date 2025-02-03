@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2025/02/03 会心の計算式や確率をスキルではなく特徴単位でも取得できるよう修正
 // 1.4.1 2022/01/30 スキルのダメージの会心を「あり」に設定したあとで、ダメージタイプを「なし」に変更した場合、会心判定されてしまう問題を修正
 // 1.4.0 2022/01/26 専用のクリティカルメッセージが表示されたとき、デフォルトのクリティカルメッセージを抑制する機能を追加
 // 1.3.1 2021/08/22 1.3.0の修正により会心でないときにも効果音が演奏されてしまう不具合を修正
@@ -62,7 +63,8 @@
  *
  * @help 会心（クリティカルヒット）の確率とダメージ、演出をカスタマイズします。
  *
- * スキルのメモ欄に以下の通り記述してください。
+ * スキル、アクター、職業、敵キャラ、武器、防具、ステートのメモ欄に
+ * 以下の通り記述してください。
  *
  * ・会心に専用計算式を適用します。書式はダメージ計算式と同様です。
  * 　計算式を適用した場合、デフォルトのダメージ3倍は無効になります。
@@ -170,7 +172,7 @@
     };
 
     Game_Action.prototype.findCriticalFormula = function() {
-        return PluginManagerEx.findMetaValue(this.item(), ['CC計算式', 'CCFormula']) || param.commonFormula;
+        return this.subject().findCriticalTagValue(['CC計算式', 'CCFormula'], this.item()) || param.commonFormula;
     };
 
     const _Game_Action_itemCri            = Game_Action.prototype.itemCri;
@@ -184,7 +186,7 @@
     };
 
     Game_Action.prototype.judgeCritical = function(target) {
-        const changeValue = PluginManagerEx.findMetaValue(this.item(), ['CC確率変更', 'CCProbChange']);
+        const changeValue = this.subject().findCriticalTagValue(['CC確率変更', 'CCProbChange'], this.item());
         let itemCritical;
         if (changeValue) {
             itemCritical = changeValue / 100;
@@ -192,7 +194,7 @@
             if (this.item().damage.type === 0) {
                 return;
             }
-            const addValue = PluginManagerEx.findMetaValue(this.item(), ['CC確率加算', 'CCProbAdd']);
+            const addValue = this.subject().findCriticalTagValue(['CC確率加算', 'CCProbAdd'], this.item());
             itemCritical = _Game_Action_itemCri.apply(this, arguments) + (addValue ? addValue / 100 : 0);
         }
         this._criticalQueue.push(Math.random() < itemCritical);
@@ -221,11 +223,15 @@
     // Game_Battler
     //  データオブジェクトを取得します。
     //=============================================================================
-    Game_Battler.prototype.findCriticalEffect = function(tags) {
+    Game_Battler.prototype.findCriticalTagValue = function(tags, item = null) {
         let result = null;
-        this.traitObjects().some(obj => {
+        const objects = this.traitObjects();
+        if (item) {
+            objects.unshift(item);
+        }
+        objects.some(obj => {
             result = PluginManagerEx.findMetaValue(obj, tags);
-            return result !== null;
+            return result !== undefined;
         });
         return result;
     };
@@ -252,7 +258,7 @@
         BattleManager.judgeCritical(action, targets);
         if (action.isCritical()) {
             this.showCriticalEffect(subject);
-            const animationId = PluginManagerEx.findMetaValue(action.item(), ['CCアニメ', 'CCAnimation']);
+            const animationId = subject.findCriticalTagValue(['CCアニメ', 'CCAnimation'], action.item());
             if (animationId) {
                 this._noCritialAnimationId = action.item().animationId;
                 action.item().animationId  = animationId;
@@ -284,14 +290,14 @@
     };
 
     Window_BattleLog.prototype.showCriticalEffect = function(subject) {
-        const message = subject.findCriticalEffect(['CCメッセージ', 'CCMessage']) || param.commonMessage;
+        const message = subject.findCriticalTagValue(['CCメッセージ', 'CCMessage']) || param.commonMessage;
         if (message) {
             if (param.suppressDefault) {
                 this._suppressCritialMessage = true;
             }
             this.push('addText', message);
         }
-        const animationId = subject.findCriticalEffect(['CC演出', 'CCエフェクト']) || param.commonAnimation;
+        const animationId = subject.findCriticalTagValue(['CC演出', 'CCエフェクト']) || param.commonAnimation;
         if (animationId > 0 && $dataAnimations[animationId]) {
             this.push('showNormalAnimation', [subject], animationId);
             this.push('waitForAnimation');
