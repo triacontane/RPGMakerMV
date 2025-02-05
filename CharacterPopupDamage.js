@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2025/02/05 ポップアップ後に画面スクロールしたときにポップアップが追従してしまう問題を修正
 // 2.1.0 2023/02/16 文字列をポップアップできる機能を追加
 // 2.0.1 2021/03/20 コマンドの設定が空の状態でもポップアップされるよう修正
 // 2.0.0 2021/03/19 MZ向けに全面的に修正
@@ -528,6 +529,7 @@
         if (this._damages && this._damages.length > 0) {
             for (let i = 0; i < this._damages.length; i++) {
                 this._damages[i].update();
+                this.updateDamagePopupPlacement(this._damages[i]);
             }
             if (!this._damages[0].isPlaying()) {
                 this.getPopupParent().removeChild(this._damages[0]);
@@ -537,6 +539,11 @@
         if (this._popupFlash) {
             this.updateDamagePopupFlash();
         }
+    };
+
+    Sprite_Character.prototype.updateDamagePopupPlacement = function(sprite) {
+        sprite.x = this.x + this.damageOffsetX();
+        sprite.y = this.y + this.damageOffsetY();
     };
 
     Sprite_Character.prototype.updateDamagePopupFlash = function() {
@@ -551,8 +558,7 @@
     Sprite_Character.prototype.setupDamagePopup = function() {
         if (!this._character.isDamagePopupRequested()) return;
         const sprite = new Sprite_CharacterDamage();
-        sprite.x   = this.x + this.damageOffsetX();
-        sprite.y   = this.y + this.damageOffsetY();
+        this.updateDamagePopupPlacement(sprite);
         if (!sprite.z) sprite.z = 9;
         sprite.setupCharacter(this._character);
         if (!this._damages) this._damages = [];
