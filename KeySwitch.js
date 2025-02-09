@@ -22,7 +22,7 @@
  *
  * @param keyList
  * @text キー設定リスト
- * @desc パラメータ説明
+ * @desc キースイッチの設定です。スイッチ制御するキー情報を登録します。
  * @default []
  * @type struct<Key>[]
  *
