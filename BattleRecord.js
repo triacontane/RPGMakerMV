@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2025/02/09 $gameActorsを使ったスクリプトで最大値を取得するものについて取得内容を変更
 // 1.5.1 2024/07/08 1.5.0で追加した機能でアクター全員の合計値を取得するスクリプトが存在していなかった問題を修正
 // 1.5.0 2022/02/08 スキルタイプごとの使用回数を取得できる機能を追加
 // 1.4.1 2021/08/28 戦闘不能ステートを直接付与したときに撃破数がカウントされない問題を修正
@@ -92,6 +93,10 @@
  * $gameActors.actor(n)を$gameActorsに置き換えて実行する。
  * (例)
  * $gameActors.getKillEnemyCounter(4); # 全アクターの敵キャラ[4]撃破数合計
+ *
+ * ・以下はすべてのアクターの中から最大のダメージを返します。
+ * $gameActors.attackDamageMax;    # 全アクターの最大与ダメージ
+ * $gameActors.acceptDamageMax;    # 全アクターの最大被ダメージ
  *
  * ・パーティごとに管理される戦績を取得する場合
  * $gameParty.gainGoldSum;         # 入手ゴールド合計
@@ -393,6 +398,13 @@ function Game_TradeRecord() {
         }.bind(this), 0);
     };
 
+    Game_Actors.prototype.getMaxRecord = function(propertyName, args) {
+        const values = this._data
+            .map(actor => this.getActorProperty(actor, propertyName, args))
+            .filter(item => !!item);
+        return Math.max.apply(this, values);
+    };
+
     Game_Actors.prototype.getActorProperty = function(actor, propertyName, args) {
         if (!actor) {
             return 0;
@@ -433,7 +445,7 @@ function Game_TradeRecord() {
 
     Object.defineProperty(Game_Actors.prototype, 'attackDamageMax', {
         get: function() {
-            return this.getSumRecord('attackDamageMax');
+            return this.getMaxRecord('attackDamageMax');
         }
     });
 
@@ -445,7 +457,7 @@ function Game_TradeRecord() {
 
     Object.defineProperty(Game_Actors.prototype, 'acceptDamageMax', {
         get: function() {
-            return this.getSumRecord('acceptDamageMax');
+            return this.getMaxRecord('acceptDamageMax');
         }
     });
 
