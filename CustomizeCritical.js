@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.0 2025/02/11 会心発生判定に計算式を適用できる機能を追加
 // 1.5.0 2025/02/03 会心の計算式や確率をスキルではなく特徴単位でも取得できるよう修正
 // 1.4.1 2022/01/30 スキルのダメージの会心を「あり」に設定したあとで、ダメージタイプを「なし」に変更した場合、会心判定されてしまう問題を修正
 // 1.4.0 2022/01/26 専用のクリティカルメッセージが表示されたとき、デフォルトのクリティカルメッセージを抑制する機能を追加
@@ -35,6 +36,12 @@
  * @param commonFormula
  * @text 共通計算式
  * @desc 会心が発生したときの共通計算式です。メモ欄の指定があればそちらが優先されます。
+ * @default
+ * @type multiline_string
+ *
+ * @param probabilityFormula
+ * @text 会心判定計算式
+ * @desc 会心が発生するかどうかを返す共通計算式です。真偽値を返します。メモ欄の指定があればそちらが優先されます。
  * @default
  * @type multiline_string
  *
@@ -196,8 +203,23 @@
             }
             const addValue = this.subject().findCriticalTagValue(['CC確率加算', 'CCProbAdd'], this.item());
             itemCritical = _Game_Action_itemCri.apply(this, arguments) + (addValue ? addValue / 100 : 0);
+            if (addValue === undefined && param.probabilityFormula) {
+                this._criticalQueue.push(this.judgeCriticalFormula(target));
+                return;
+            }
         }
         this._criticalQueue.push(Math.random() < itemCritical);
+    };
+
+    Game_Action.prototype.judgeCriticalFormula = function(target) {
+        try {
+            const a     = this.subject();
+            const b     = target;
+            const v = $gameVariables._data;
+            return !!eval(param.probabilityFormula)
+        } catch (e) {
+            return false;
+        }
     };
 
     Game_Action.prototype.initCriticalQueue = function() {
@@ -224,7 +246,7 @@
     //  データオブジェクトを取得します。
     //=============================================================================
     Game_Battler.prototype.findCriticalTagValue = function(tags, item = null) {
-        let result = null;
+        let result = undefined;
         const objects = this.traitObjects();
         if (item) {
             objects.unshift(item);
