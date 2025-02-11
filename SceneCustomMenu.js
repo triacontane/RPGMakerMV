@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.52.0 2025/02/11 1.51.0でサポートした加算合成を無効にすることで競合回避できる設定を追加
  1.51.5 2025/02/07 アクター変更イベントではフォーカス移動しないよう仕様変更
  1.51.4 2025/02/03 マップ画面でロードしたときに色調やピクチャの情報がロードされない問題を修正
  1.51.3 2025/02/01 セーブデータ作成のプリセットを一覧に指定したとき、本来の数より多くファイル数が表示される問題を修正
@@ -274,6 +275,12 @@
  * @desc メインメニューを指定した識別子のカスタムメニューに差し替えます。
  * @default []
  * @type struct<ReplacementScene>[]
+ *
+ * @param NoUseBlendAdd
+ * @text 加算合成を使用しない
+ * @desc ピクチャやアニメーション表示において加算合成が無効になります。有効にすることで競合を回避できる可能性があります。
+ * @default false
+ * @type boolean
  *
  * @command CALL_SCENE
  * @text シーン呼び出し
@@ -1784,6 +1791,9 @@
         createSpriteset() {
             this._spriteset = new Spriteset_Menu();
             this.addChild(this._spriteset);
+            if (param.NoUseBlendAdd) {
+                return;
+            }
             const picturePriority = this._customData.PicturePriority;
             const lowerContainers = [this._backgroundSprite, this._panorama];
             const upperContainers = [];
