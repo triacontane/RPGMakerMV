@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.1 2025/02/13 スキルによる追加倍率の計算が間違っていた問題を修正
 // 3.0.0 2024/10/12 MZ対応版としてリファクタリングのうえ仕様刷新
 // 2.3.0 2020/03/22 対象者が指定したメモ欄を保持している場合のみコンボ継続する設定を追加
 // 2.2.0 2020/02/26 戦闘終了時、チェイン表示が残っている場合はフェードアウトするよう仕様変更
@@ -422,7 +423,7 @@ function Sprite_ChainDamage() {
 
     Game_Action.prototype.getAdditionalChainRate = function() {
         const data = this.findAttackChainData();
-        return data ? data.rate : 100;
+        return (data ? data.rate : 100) / 100;
     };
 
     Game_Action.prototype.isForceEndChain = function() {
