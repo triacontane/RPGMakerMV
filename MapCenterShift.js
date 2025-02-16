@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2025/02/16 本プラグインの機能を一時的に無効化するコマンドを追加
  1.0.1 2024/10/22 マップの端に場所移動したとき、スクロール位置がおかしい場合がある問題を修正
  1.0.0 2024/04/24 初版
 ----------------------------------------------------------------------------
@@ -44,7 +45,15 @@
  * @default true
  * @type boolean
  *
- * @param
+ * @command VALID_SETTING
+ * @text 有効化の設定
+ * @desc マップ中央座標のシフト有無を一時的に変更します。
+ *
+ * @arg valid
+ * @text 有効設定
+ * @desc 無効にするとマップが本プラグインの機能が無効になります。
+ * @default true
+ * @type boolean
  *
  * @help MapCenterShift.js
  *
@@ -68,17 +77,37 @@
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
-    const shiftX = (param.shiftX || 0);
-    const shiftY = (param.shiftY || 0);
+
+    PluginManagerEx.registerCommand(script, 'VALID_SETTING', args => {
+        $gamePlayer.setMapCenterInvalid(!args.valid);
+    });
+
+    Game_Player.prototype.setMapCenterInvalid = function(value) {
+        this._mapCenterInvalid = value;
+        this.locate(this.x, this.y);
+        console.log(this._mapCenterInvalid);
+    };
+
+    Game_Player.prototype.isMapCenterInvalid = function() {
+        return this._mapCenterInvalid || false;
+    };
+
+    Game_Player.prototype.shiftX = function() {
+        return this.isMapCenterInvalid() ? 0 : param.shiftX;
+    };
+
+    Game_Player.prototype.shiftY = function() {
+        return this.isMapCenterInvalid() ? 0 : param.shiftY;
+    };
 
     const _Game_Player_centerX = Game_Player.prototype.centerX;
     Game_Player.prototype.centerX = function() {
-        return _Game_Player_centerX.apply(this, arguments) + shiftX;
+        return _Game_Player_centerX.apply(this, arguments) + this.shiftX();
     };
 
     const _Game_Player_centerY = Game_Player.prototype.centerY;
     Game_Player.prototype.centerY = function() {
-        return _Game_Player_centerY.apply(this, arguments) + shiftY;
+        return _Game_Player_centerY.apply(this, arguments) + this.shiftY();
     };
 
     if (!param.considerEdge) {
@@ -89,7 +118,7 @@
     Game_Map.prototype.setDisplayPos = function(x, y) {
         _Game_Map_setDisplayPos.apply(this, arguments);
         if (!this.isLoopHorizontal()) {
-            const sx = shiftX;
+            const sx = $gamePlayer.shiftX();
             const endX = this.width() - this.screenTileX();
             if (sx > 0) {
                 this._displayX = endX < 0 ? endX / 2 : x.clamp(-sx * 2, endX);
@@ -99,7 +128,7 @@
             this._parallaxX = this._displayX;
         }
         if (!this.isLoopVertical()) {
-            const sy = shiftY;
+            const sy = $gamePlayer.shiftY();
             const endY = this.height() - this.screenTileY() - sy;
             if (sy > 0) {
                 this._displayY = endY < 0 ? endY / 2 : y.clamp(-sy * 2, endY);
@@ -112,6 +141,7 @@
 
     const _Game_Map_scrollLeft = Game_Map.prototype.scrollLeft;
     Game_Map.prototype.scrollLeft = function(distance) {
+        const shiftX = $gamePlayer.shiftX();
         if (!this.isLoopHorizontal() && this.width() >= this.screenTileX() && shiftX > 0) {
             const lastX = this._displayX;
             this._displayX = Math.max(this._displayX - distance, -shiftX * 2);
@@ -123,6 +153,7 @@
 
     const _Game_Map_scrollRight = Game_Map.prototype.scrollRight;
     Game_Map.prototype.scrollRight = function(distance) {
+        const shiftX = $gamePlayer.shiftX();
         if (!this.isLoopHorizontal() && this.width() >= this.screenTileX() && shiftX < 0) {
             const lastX = this._displayX;
             this._displayX = Math.min(this._displayX + distance, this.width() - this.screenTileX() - shiftX * 2);
@@ -134,6 +165,7 @@
 
     const _Game_Map_scrollUp = Game_Map.prototype.scrollUp;
     Game_Map.prototype.scrollUp = function(distance) {
+        const shiftY = $gamePlayer.shiftY();
         if (!this.isLoopVertical() && this.height() >= this.screenTileY() && shiftY > 0) {
             const lastY = this._displayY;
             this._displayY = Math.max(this._displayY - distance, -shiftY * 2);
@@ -145,6 +177,7 @@
 
     const _Game_Map_scrollDown = Game_Map.prototype.scrollDown;
     Game_Map.prototype.scrollDown = function(distance) {
+        const shiftY = $gamePlayer.shiftY();
         if (!this.isLoopVertical() && this.height() >= this.screenTileY() && shiftY < 0) {
             const lastY = this._displayY;
             this._displayY = Math.min(this._displayY + distance, this.height() - this.screenTileY() - shiftY * 2);
