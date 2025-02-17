@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2025/02/17 プラグインパラメータのマップ指定に対応
  1.2.3 2024/12/20 パラメータ「メモ欄統合」で「統合」を選択した場合の挙動が正常でない問題を修正
  1.2.2 2023/10/07 パラメータ「メモ欄統合」で「何もしない」を選択した場合、テンプレートイベントデータをセーブデータに含めないよう修正
  1.2.1 2023/04/26 テンプレートイベントの処理を呼び出したとき、呼び出しもとのイベントIDが保持されない問題を修正
@@ -42,7 +43,7 @@
  * @text Template Map ID
  * @desc Template event is a map ID where the template event exists.
  * @default 1
- * @type number
+ * @type map
  *
  * @param KeepEventId
  * @text Keep Event ID
@@ -320,7 +321,7 @@
  * @text テンプレートマップID
  * @desc テンプレートイベントが存在するマップIDです。
  * @default 1
- * @type number
+ * @type map
  *
  * @param KeepEventId
  * @text イベントIDを維持
