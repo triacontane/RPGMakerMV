@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.0 2025/02/17 コアスクリプトv1.9.0に対応
  1.4.4 2024/12/28 余白設定がフキダシウィンドウを無効にしたときも反映されていた問題を修正
  1.4.3 2024/10/25 英語版ヘルプのプラグインコマンドのキャラクターID下限を削除
  1.4.2 2023/12/27 フキダシ位置の自動設定に関する説明を追記
@@ -1363,8 +1364,12 @@
     // ImageManager
     //  ポップアップ用のフェイスグラフィックサイズを設定します。
     //=============================================================================
-    ImageManager.popUpfaceWidth  = Math.floor(ImageManager.faceWidth * param.FaceScale / 100);
-    ImageManager.popUpfaceHeight = Math.floor(ImageManager.faceHeight * param.FaceScale / 100);
+    const _Scene_Boot_onDatabaseLoaded = Scene_Boot.prototype.onDatabaseLoaded;
+    Scene_Boot.prototype.onDatabaseLoaded = function() {
+        _Scene_Boot_onDatabaseLoaded.apply(this, arguments);
+        ImageManager.popUpfaceWidth  = Math.floor(ImageManager.faceWidth * param.FaceScale / 100);
+        ImageManager.popUpfaceHeight = Math.floor(ImageManager.faceHeight * param.FaceScale / 100);
+    };
 
     //=============================================================================
     // Window_Message
