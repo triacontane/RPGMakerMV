@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.1.0 2025/02/17 パフォーマンスを改善するプラグイン設定を追加
 // 4.0.1 2025/01/02 直前の修正でフラッシュが点滅せず光り続ける動作になっていた問題を修正
 // 4.0.0 2024/11/11 後方互換性のために残しておいたタグ設定の実装を削除
 //                  センサー条件にセルフスイッチを追加
@@ -87,6 +88,12 @@
  * @param EraseWhenAway
  * @text 離れたら消去
  * @desc イベントから離れたらエフェクトを消去します。
+ * @default false
+ * @type boolean
+ *
+ * @param performanceOption
+ * @text パフォーマンス設定
+ * @desc 有効にするとパラメータに制御文字が使えなくなりますが、パフォーマンスが改善する可能性があります。
  * @default false
  * @type boolean
  *
@@ -282,6 +289,16 @@
     const param = PluginManagerEx.createParameter(script);
     if (!param.DetailList) {
         param.DetailList = [];
+    }
+    if (param.performanceOption) {
+        param.DetailList = param.DetailList.map(detail => {
+            const data = {};
+            const prevData = detail._parameter;
+            for (const key in prevData) {
+                data[key] = prevData[key];
+            }
+            return data;
+        });
     }
 
     //=============================================================================
