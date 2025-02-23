@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2025/02/23 1.1.0でデフォルトのフラッシュ表示が元に戻っていた問題を修正
  1.1.0 2025/02/23 アニメーションにフォロワーを含める場合、床ダメージが無効なアクターにはアニメーションを表示しないよう修正
                   地形タグを0で指定した場合、全ての地形で無効になっていた問題を修正
  1.0.0 2024/01/04 初版
@@ -162,14 +163,17 @@
     const _Game_Actor_performMapDamage = Game_Actor.prototype.performMapDamage;
     Game_Actor.prototype.performMapDamage = function() {
         _Game_Actor_performMapDamage.apply(this, arguments);
-        if ($gameParty.inBattle() || Graphics.frameCount === executeFrame) {
+        if ($gameParty.inBattle()) {
+            return;
+        }
+        $gameScreen.clearFlash();
+        if (Graphics.frameCount === executeFrame) {
             return;
         }
         executeFrame = Graphics.frameCount;
         const tag = $gamePlayer.terrainTag();
         const list = param.floorDamageList.filter(item => !item.terrainTag || item.terrainTag === tag);
         if (list.length > 0) {
-            $gameScreen.clearFlash();
             list.forEach(item => this.performMapDamageCustomize(item));
         }
     };
