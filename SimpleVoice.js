@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.5 2025/02/24 config.rmmzsaveが存在しない状態でゲーム開始したとき、ボイス音量のデフォルト値が反映されない問題を修正
 // 2.0.4 2024/11/12 オプションウィンドウの項目数をボイス音量の項目に合わせてひとつ追加
 // 2.0.3 2023/07/27 サブフォルダを指定したボイス停止ができていなかった問題を修正
 // 2.0.2 2022/02/19 ボイスファイルに制御文字\v[n]が指定できるよう修正
@@ -162,11 +163,19 @@
         return config;
     };
 
+    const _ConfigManager_load = ConfigManager.load;
+    ConfigManager.load = function () {
+        this.voiceVolume = param.optionValue;
+        _ConfigManager_load.apply(this, arguments);
+    };
+
     const _ConfigManager_applyData = ConfigManager.applyData;
     ConfigManager.applyData      = function(config) {
         _ConfigManager_applyData.apply(this, arguments);
         const symbol       = 'voiceVolume';
-        this.voiceVolume = config.hasOwnProperty(symbol) ? this.readVolume(config, symbol) : param.optionValue;
+        if (config.hasOwnProperty(symbol)) {
+            this.voiceVolume = this.readVolume(config, symbol);
+        }
     };
 
     //=============================================================================
