@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.3.0 2025/02/25 本体v1.9.0のロケーションのダイアログ指定機能に対応
 // 4.2.1 2024/11/24 タイトルヘルププラグインに合わせた調整
 // 4.2.0 2023/06/11 タイトルコマンドのカーソル初期位置を設定、変更できる機能を追加
 // 4.1.0 2023/05/28 タイトル画面で無操作状態が続くと自動で専用ニューゲームを開始できる機能を追加
@@ -124,23 +125,11 @@
  * @desc タイトル画面に表示されるコマンド名です。
  * @default Another New Game
  *
- * @param mapId
- * @text マップID
- * @desc 移動先のマップIDです。0を指定した場合、場所移動しません。
- * @default 1
- * @type number
- *
- * @param mapX
- * @text X座標
- * @desc 移動先のX座標です。
- * @default 1
- * @type number
- *
- * @param mapY
- * @text Y座標
- * @desc 移動先のY座標です。
- * @default 1
- * @type number
+ * @param location
+ * @text マップ座標
+ * @desc 移動先のマップ座標です。指定がない場合、場所移動しません。
+ * @default {}
+ * @type location
  *
  * @param hidden
  * @text デフォルト非表示
@@ -317,11 +306,11 @@
             const preMapId  = $dataSystem.startMapId;
             const preStartX = $dataSystem.startX;
             const preStartY = $dataSystem.startY;
-            const newMapId  = command.mapId;
-            if (newMapId > 0) {
-                $dataSystem.startMapId = newMapId;
-                $dataSystem.startX     = command.mapX || 1;
-                $dataSystem.startY     = command.mapY || 1;
+            const location  = command.location;
+            if (location) {
+                $dataSystem.startMapId = location.mapId;
+                $dataSystem.startX     = location.x || 1;
+                $dataSystem.startY     = location.y || 1;
             }
             this.commandNewGame();
             $dataSystem.startMapId = preMapId;
