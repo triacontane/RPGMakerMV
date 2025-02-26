@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2025/02/26 トリガーに押し続け以外の選択肢を追加、トグルスイッチ用の設定を追加
  1.0.0 2025/02/09 初版
 ----------------------------------------------------------------------------
  [X]      : https://x.com/triacontane/
@@ -96,6 +97,26 @@
  * @desc スイッチのON/OFFを反転させ、キー入力でスイッチをOFFにします。
  * @default false
  * @type boolean
+ *
+ * @param toggle
+ * @text トグル
+ * @desc キー入力が有効になるたびにスイッチのON/OFFを切り替えます。有効にした場合、反転と自動OFFの設定は無効になります。
+ * @default false
+ * @type boolean
+ *
+ * @param trigger
+ * @text トリガー
+ * @desc キー入力のトリガーです。
+ * @type select
+ * @option 押し続け
+ * @value isPressed
+ * @option 押した瞬間
+ * @value isTriggered
+ * @option 長押し
+ * @value isLongPressed
+ * @option リピート
+ * @value isRepeated
+ * @default isPressed
  */
 
 /*~struct~Code:
@@ -126,13 +147,12 @@
         Input.keyMapper[item.code] = item.keyName;
     });
     const keyList = param.keyList.map(item => {
-        return {
-            keyName: item.keyName,
-            switchId: item.switchId,
-            conditionSwitchId: item.conditionSwitchId,
-            autoOff: item.autoOff,
-            reverse: item.reverse
-        };
+        const data = {};
+        const prevData = item._parameter;
+        for (const key in prevData) {
+            data[key] = prevData[key];
+        }
+        return data;
     });
 
     const _SceneManager_updateMain = SceneManager.updateMain;
@@ -146,12 +166,16 @@
     SceneManager.updateKeySwitch = function() {
         keyList.forEach(item => {
             const keyValue = this.findKeySwitchValue(item);
-            if (keyValue !== undefined) {
-                const prevValue = $gameSwitches.value(item.switchId);
-                const newValue = item.reverse ? !keyValue : keyValue;
-                if (prevValue !== newValue) {
-                    $gameSwitches.setValue(item.switchId, newValue);
-                }
+            if (keyValue === undefined) {
+                return;
+            }
+            const prevValue = $gameSwitches.value(item.switchId);
+            let newValue = item.reverse ? !keyValue : keyValue;
+            if (item.toggle) {
+                newValue = !prevValue;
+            }
+            if (prevValue !== newValue) {
+                $gameSwitches.setValue(item.switchId, newValue);
             }
         });
     };
@@ -159,12 +183,17 @@
     SceneManager.findKeySwitchValue = function(item) {
         if (item.conditionSwitchId > 0 && !$gameSwitches.value(item.conditionSwitchId)) {
             return false;
-        } else if (Input.isPressed(item.keyName)) {
+        } else if (Input.isKeySwitchTriggered(item)) {
             return true;
-        } else if (item.autoOff) {
+        } else if (item.autoOff && !item.toggle) {
             return false;
         } else {
             return undefined;
         }
+    };
+
+    Input.isKeySwitchTriggered = function(item) {
+        const method = item.trigger;
+        return this[method] ? this[method](item.keyName) : this.isPressed(item.keyName);
     };
 })();
