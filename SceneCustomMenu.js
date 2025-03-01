@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.52.1 2025/03/01 ピクチャの表示優先度を「すべてのウィンドウの下」にしたとき背景よりは上に表示されるよう変更
  1.52.0 2025/02/11 1.51.0でサポートした加算合成を無効にすることで競合回避できる設定を追加
  1.51.5 2025/02/07 アクター変更イベントではフォーカス移動しないよう仕様変更
  1.51.4 2025/02/03 マップ画面でロードしたときに色調やピクチャの情報がロードされない問題を修正
@@ -2745,6 +2746,9 @@
 
         setSceneObject(lowerContainers, upperContainers, windowLayer, messageWindowLayer, picturePriority) {
             lowerContainers.forEach(container => this.addChild(container));
+            if (picturePriority === 2) {
+                this.addChild(this._pictureContainer);
+            }
             this.addChild(windowLayer);
             if (picturePriority === 1) {
                 this.addChild(this._pictureContainer);
