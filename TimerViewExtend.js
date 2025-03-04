@@ -6,11 +6,12 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2025/03/05 アウトラインカラーが正しく設定できない問題を修正
+                  アウトライン幅を設定できる機能を追加
  1.1.0 2024/03/11 フォントサイズを変数指定したとき即時反映されるよう修正
  1.0.0 2023/11/29 初版
 ----------------------------------------------------------------------------
- [Blog]   : https://triacontane.blogspot.jp/
- [Twitter]: https://twitter.com/triacontane/
+ [X]      : https://x.com/triacontane/
  [GitHub] : https://github.com/triacontane/
 =============================================================================*/
 
@@ -45,6 +46,12 @@
  * @desc タイマーのアウトラインカラーです。システム色もしくはCSS形式で直接指定します。
  * @default 0
  * @type color
+ *
+ * @param outlineWidth
+ * @text アウトライン幅
+ * @desc タイマーのアウトライン幅です。0を指定するとアウトライン無しになります。
+ * @default 3
+ * @type number
  *
  * @param format
  * @text フォーマット
@@ -139,11 +146,20 @@
     Sprite_Timer.prototype.redraw = function() {
         this.bitmap.fontFace = this.fontFace();
         this.bitmap.fontSize = this.fontSize();
-        this.bitmap.outlineColor = ColorManager.outlineColor();
-        if (param.fontColor) {
-            this.bitmap.textColor = isFinite(param.outlineColor) ? ColorManager.textColor(param.fontColor) : param.fontColor;
+        const outlineColor = param.outlineColor;
+        if (outlineColor) {
+            this.bitmap.outlineColor = ColorManager.cssColor(outlineColor);
         }
+        const fontColor = param.fontColor;
+        if (fontColor) {
+            this.bitmap.textColor = ColorManager.cssColor(fontColor);
+        }
+        this.bitmap.outlineWidth = param.outlineWidth || 0;
         _Sprite_Timer_redraw.apply(this, arguments);
+    };
+
+    ColorManager.cssColor = function(color) {
+        return isFinite(color) ? this.textColor(color) : color;
     };
 
     const _Sprite_Timer_fontFace = Sprite_Timer.prototype.fontFace;
@@ -156,18 +172,6 @@
     Sprite_Timer.prototype.fontSize = function() {
         const size = _Sprite_Timer_fontSize.apply(this, arguments);
         return param.fontSize || size;
-    };
-
-    const _Sprite_Timer_outlineColor = Sprite_Timer.prototype.outlineColor;
-    Sprite_Timer.prototype.outlineColor = function() {
-        const color = _Sprite_Timer_outlineColor.apply(this, arguments);
-        if (isFinite(param.outlineColor)) {
-            return ColorManager.textColor(param.outlineColor);
-        } else if (param.outlineColor) {
-            return param.outlineColor;
-        } else {
-            return color;
-        }
     };
 
     const _Sprite_Timer_updatePosition = Sprite_Timer.prototype.updatePosition;
