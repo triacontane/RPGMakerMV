@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2025/03/09 マップおよびテンプレートイベントの呼び出しコマンドでラベルを指定して呼び出せる機能を追加
  1.3.0 2025/02/17 プラグインパラメータのマップ指定に対応
  1.2.3 2024/12/20 パラメータ「メモ欄統合」で「統合」を選択した場合の挙動が正常でない問題を修正
  1.2.2 2023/10/07 パラメータ「メモ欄統合」で「何もしない」を選択した場合、テンプレートイベントデータをセーブデータに含めないよう修正
@@ -378,6 +379,12 @@
  * @desc 呼び出すイベントのIDもしくはイベント名です。0を指定すると実行中のイベントが対象になります。
  * @default 0
  *
+ * @arg label
+ * @text ラベル
+ * @desc 指定した場合、イベント呼び出し後に指定ラベルにジャンプします。
+ * @default
+ * @type string
+ *
  * @command CALL_TEMPLATE_EVENT
  * @text テンプレートイベント呼び出し
  * @desc テンプレートイベントの処理を呼び出します。
@@ -393,6 +400,12 @@
  * @text イベントID(もしくは名称)
  * @desc 呼び出すイベントのIDもしくはイベント名です。0を指定すると実行中のイベントが対象になります。
  * @default 1
+ *
+ * @arg label
+ * @text ラベル
+ * @desc 指定した場合、イベント呼び出し後に指定ラベルにジャンプします。
+ * @default
+ * @type string
  *
  * @command SET_SELF_VARIABLE
  * @text セルフ変数の操作
@@ -668,6 +681,9 @@ let $dataTemplateEvents = null;
     PluginManagerEx.registerCommand(script, 'CALL_MAP_EVENT', function(args) {
         const pageIndex = args.pageIndex;
         const eventId   = args.eventId;
+        if (args.label) {
+            this._callEventLabel = args.label;
+        }
         if ($gameMap.event(eventId)) {
             this.callMapEventById(pageIndex, eventId);
         } else if (eventId !== 0) {
@@ -680,6 +696,9 @@ let $dataTemplateEvents = null;
     PluginManagerEx.registerCommand(script, 'CALL_TEMPLATE_EVENT', function(args) {
         const pageIndex = args.pageIndex;
         const eventId   = args.eventId;
+        if (args.label) {
+            this._callEventLabel = args.label;
+        }
         if ($dataTemplateEvents[eventId]) {
             this.callTemplateEventById(pageIndex, eventId);
         } else {
@@ -786,6 +805,7 @@ let $dataTemplateEvents = null;
         }
         if (!eventId) eventId = this.isOnCurrentMap() ? this._eventId : 0;
         this.setupChild(page.list, eventId);
+        this.setupChildLabel();
     };
 
     Game_Interpreter.prototype.controlSelfVariable = function(index, type, operand, formulaFlg) {
@@ -805,6 +825,13 @@ let $dataTemplateEvents = null;
     Game_Interpreter.prototype.getSelfVariable = function(selfVariableIndex) {
         const character = this.character(0);
         return character ? character.getSelfVariable(selfVariableIndex) : 0;
+    };
+
+    Game_Interpreter.prototype.setupChildLabel = function() {
+        if (this._callEventLabel) {
+            this._childInterpreter.command119([this._callEventLabel]);
+            this._callEventLabel = null;
+        }
     };
 
     //=============================================================================
