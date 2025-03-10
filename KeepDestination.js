@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.0 2025/03/10 タッチ移動でタッチしたまま移動した状態でイベントを通過したとき、タッチ状態がキャンセルされる問題を修正
 // 1.0.0 2018/01/06 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
@@ -53,8 +54,13 @@
     Scene_Map.prototype.updateDestination = function() {
         if ($gamePlayer.canPassStraight() && !$gamePlayer.isTransferring()) {
             $gameTemp.keepDestination();
+            this._prevTouchCount = this._touchCount;
         }
         _Scene_Map_updateDestination.apply(this, arguments);
+        if (this._prevTouchCount && !this.isMapTouchOk()) {
+            this._touchCount = this._prevTouchCount;
+        }
+        this._prevTouchCount = 0;
         $gameTemp.clearKeepDestination();
     };
 
