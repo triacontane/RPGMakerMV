@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.2.0 2025/03/15 足音が演奏されるタイミングを選択できる設定を追加
 // 3.1.0 2024/10/13 足音が演奏されるタイミングを変更
 // 3.0.8 2023/12/13 intervalの説明が間違っていたので修正
 // 3.0.7 2022/02/13 足音の優先度に関するヘルプを追記
@@ -111,6 +112,16 @@
  * @desc 他の条件を満たしていないときの足音セットです。
  * @type struct<SoundSet>
  * @default {"interval":"1","walk1":"","walk2":"","dash1":"","dash2":""}
+ *
+ * @param timing
+ * @text 足音のタイミング
+ * @desc 足音が演奏されるタイミングです。
+ * @default step
+ * @type select
+ * @option パターン変更(キャラクターのパターンが変わった瞬間)
+ * @value pattern
+ * @option 歩数増加(歩き出した瞬間)
+ * @value step
  *
  * @command INVALID_SOUND
  * @text 足音無効化
@@ -277,29 +288,39 @@
         this._stepCountForSound = null;
     };
 
+    var _Game_CharacterBase_increaseSteps = Game_CharacterBase.prototype.increaseSteps;
+    Game_CharacterBase.prototype.increaseSteps = function () {
+        _Game_CharacterBase_increaseSteps.apply(this, arguments);
+        if (param.timing !== 'pattern') {
+            this.callStepSound();
+        }
+    }
+
     var _Game_CharacterBase_updatePattern = Game_CharacterBase.prototype.updatePattern;
     Game_CharacterBase.prototype.updatePattern = function () {
         _Game_CharacterBase_updatePattern.apply(this, arguments);
-        if (this._pattern === 0 || this._pattern === 2) {
-            if (this.isInvalidFootStepSound()) {
-                return;
-            }
-            var soundsHash = [
-                { key: 'airship', condition: this.isInAirship.bind(this) },
-                { key: 'ship', condition: this.isInShip.bind(this) },
-                { key: 'boat', condition: this.isInBoat.bind(this) },
-                { key: 'regionList', condition: findListItem.bind(this, this.regionId()) },
-                { key: 'damageFloor', condition: this.isOnDamageFloor.bind(this) },
-                { key: 'bush', condition: this.isOnBush.bind(this) },
-                { key: 'counter', condition: this.isOnCounter.bind(this) },
-                { key: 'ladder', condition: this.isOnLadder.bind(this) },
-                { key: 'terrainTagList', condition: findListItem.bind(this, this.terrainTag()) },
-                { key: 'always', condition: this.noCondition.bind(this) }
-            ];
-            soundsHash.some(function (data) {
-                return this.updateStepSound(data.key, data.condition);
-            }.bind(this));
+        if (param.timing === 'pattern' && (this._pattern === 0 || this._pattern === 2)) {
+            this.callStepSound();
         }
+    };
+
+    Game_CharacterBase.prototype.callStepSound = function () {
+        if (this.isInvalidFootStepSound()) {
+            return;
+        }
+        var soundsHash = [
+            { key: 'airship', condition: this.isInAirship.bind(this) },
+            { key: 'ship', condition: this.isInShip.bind(this) },
+            { key: 'boat', condition: this.isInBoat.bind(this) },
+            { key: 'regionList', condition: findListItem.bind(this, this.regionId()) },
+            { key: 'damageFloor', condition: this.isOnDamageFloor.bind(this) },
+            { key: 'bush', condition: this.isOnBush.bind(this) },
+            { key: 'counter', condition: this.isOnCounter.bind(this) },
+            { key: 'ladder', condition: this.isOnLadder.bind(this) },
+            { key: 'terrainTagList', condition: findListItem.bind(this, this.terrainTag()) },
+            { key: 'always', condition: this.noCondition.bind(this) }
+        ];
+        soundsHash.some(data => this.updateStepSound(data.key, data.condition));
     };
 
     Game_CharacterBase.prototype.isInvalidFootStepSound = function () {
