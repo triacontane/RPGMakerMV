@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.3.1 2025/03/15 ニューゲームの移動先座標を0に指定すると1に移動してしまう問題を修正
 // 4.3.0 2025/02/25 本体v1.9.0のロケーションのダイアログ指定機能に対応
 // 4.2.1 2024/11/24 タイトルヘルププラグインに合わせた調整
 // 4.2.0 2023/06/11 タイトルコマンドのカーソル初期位置を設定、変更できる機能を追加
@@ -308,8 +309,8 @@
             const location  = command.location;
             if (location) {
                 $dataSystem.startMapId = location.mapId;
-                $dataSystem.startX     = location.x || 1;
-                $dataSystem.startY     = location.y || 1;
+                $dataSystem.startX     = location.x || 0;
+                $dataSystem.startY     = location.y || 0;
             }
             this.commandNewGame();
             $dataSystem.startMapId = preMapId;
