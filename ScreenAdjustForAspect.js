@@ -13,7 +13,7 @@
 =============================================================================*/
 
 /*:
- * @plugindesc ウィンドウ縮小のアスペクト比を考慮プラグイン
+ * @plugindesc ウィンドウ縮小のアスペクト比考慮プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ScreenAdjustForAspect.js
  * @base PluginCommonBase
