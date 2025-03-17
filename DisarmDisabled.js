@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2025/03/17 最強装備を選択すると、装備解除ができてしまう場合がある問題を修正
  1.0.0 2022/11/01 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -60,10 +61,17 @@
         this._clearEquipments = false;
     };
 
+    const _optimizeEquipments = Game_Actor.prototype.optimizeEquipments;
+    Game_Actor.prototype.optimizeEquipments = function() {
+        this._optimizeEquipments = true;
+        _optimizeEquipments.apply(this, arguments);
+        this._optimizeEquipments = false;
+    };
+
     const _Game_Actor_isEquipChangeOk = Game_Actor.prototype.isEquipChangeOk;
     Game_Actor.prototype.isEquipChangeOk = function(slotId) {
         const result = _Game_Actor_isEquipChangeOk.apply(this, arguments);
-        if (this._clearEquipments) {
+        if (this._clearEquipments || this._optimizeEquipments) {
             const eTypeId = this.equipSlots()[slotId];
             if (param.equipTypes.includes(eTypeId)) {
                 return false;
