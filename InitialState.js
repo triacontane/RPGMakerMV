@@ -14,8 +14,7 @@
 // 1.0.1 2017/02/07 端末依存の記述を削除
 // 1.0.0 2017/01/12 初版
 // ----------------------------------------------------------------------------
-// [Blog]   : https://triacontane.blogspot.jp/
-// [Twitter]: https://twitter.com/triacontane/
+// [X]      : https://x.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
