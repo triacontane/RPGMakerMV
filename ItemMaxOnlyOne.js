@@ -6,11 +6,11 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2025/03/20 所持数非表示の設定が正しく機能していなかった問題を修正
  1.0.1 2025/01/26 所持制限アイテムの仕様を初期装備やショップでの購入にも正しく反映するよう修正
  1.0.0 2024/03/01 初版
 ----------------------------------------------------------------------------
- [Blog]   : https://triacontane.blogspot.jp/
- [Twitter]: https://twitter.com/triacontane/
+ [X]: https://x.com/triacontane/
  [GitHub] : https://github.com/triacontane/
 =============================================================================*/
 
@@ -121,14 +121,13 @@
         this._targetItem = null;
     };
 
-
     const _Window_ItemList_needsNumber = Window_ItemList.prototype.needsNumber;
     Window_ItemList.prototype.needsNumber = function() {
         const result = _Window_ItemList_needsNumber.apply(this, arguments);
-        if (!result || !this._targetItem || param.itemNumberHidden) {
+        if (!result || !this._targetItem || !param.itemNumberHidden) {
             return result;
         } else {
-            return !$gameParty.isOnlyOneItem(this._targetItem);
+            return !DataManager.isOnlyOneItem(this._targetItem);
         }
     };
 })();
