@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2025/03/20 隠れ状態(途中から出現)の敵キャラには初期ステートを適用せず、出現した時点で適用する設定を追加
 // 1.4.0 2022/10/09 変身後の敵キャラにも初期ステートを適用できる機能を追加
 // 1.3.0 2022/08/21 すべての敵キャラに適用できる初期ステートをパラメータで指定できる機能を追加
 // 1.2.0 2022/01/07 MZで動作するよう修正
@@ -35,6 +36,12 @@
  * @param applyTransform
  * @text 変身に適用
  * @desc 敵キャラが変身したあとにも初期ステートを適用
+ * @default false
+ * @type boolean
+ *
+ * @param noApplyHidden
+ * @text 隠れ状態には適用しない
+ * @desc 隠れ状態の敵キャラには初期ステートは適用せず、出現した時点で適用されます。
  * @default false
  * @type boolean
  *
@@ -92,6 +99,26 @@
         if (param.applyTransform) {
             this.setupInitialState();
         }
+    };
+
+    const _Game_BattlerBase_hide = Game_BattlerBase.prototype.hide;
+    Game_BattlerBase.prototype.hide = function() {
+        _Game_BattlerBase_hide.apply(this, arguments);
+        if (param.noApplyHidden && this.isEnemy()) {
+            this.clearStates();
+        }
+    };
+
+    const _Game_BattlerBase_appear = Game_BattlerBase.prototype.appear;
+    Game_BattlerBase.prototype.appear = function() {
+        _Game_BattlerBase_appear.apply(this, arguments);
+        if (param.noApplyHidden && this.isEnemy()) {
+            this.setupInitialState();
+        }
+    };
+
+    Game_BattlerBase.prototype.setupInitialState = function() {
+        // do nothing
     };
 
     Game_Enemy.prototype.setupInitialState = function() {
