@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.14.0 2025/03/24 反撃スキルにのみ適用される専用のダメージ倍率を設定できる機能を追加
 // 2.13.2 2024/08/19 反撃頻度の判定が特定条件下で複数回行われていた問題を修正
 // 2.13.1 2024/06/17 反撃頻度に関するヘルプを少し修正
 // 2.13.0 2024/03/17 自分自身や味方を対象にした行動でも反撃(リアクション)が発動できる機能を追加
@@ -116,11 +117,16 @@
  * 反撃の詳細設定はプラグインパラメータから入力します。
  * 通常の反撃とは異なり、相手の行動が終わってから発動します。
  *
+ * 反撃スキルの対象者は以下の条件で決定されます。
+ * ・反撃スキルの対象が「敵」系の場合、攻撃してきた相手
+ * ・反撃スキルの対象が「味方」系の場合、反撃の実行者
+ * ・反撃スキルの対象が「全体」系の場合、スキル通り
+ *
  * 複数の反撃タグを同時に満たしたときは以下の順で発動します。
  * ステート(優先度順) > アクター、敵キャラ > 職業 > 装備品
  *
  * メモ欄に以下の通り入力したスキル、アイテムは相手の反撃頻度を
- * 指定した値だけ減らすことができます。
+ * 指定した値だけ減らせます。
  * <CounterEvasion:100>
  * <反撃回避:100>
  *
@@ -245,6 +251,12 @@
  * @desc 有効にした場合、相手が使用したスキルを使って反撃します。
  * @type boolean
  * @default false
+ *
+ * @param DamageRate
+ * @text ダメージ倍率
+ * @desc 反撃時にのみ適用される専用のダメージ倍率(%)です。
+ * @type number
+ * @default 100
  *
  * @param IdCondition
  * @text 反撃条件(スキルID)
@@ -451,6 +463,8 @@
         }
 
         setCounterSkill(skill, triggerSkill) {
+            const rate = skill.DamageRate;
+            this._damageRate = isFinite(rate) ? rate : null;
             if (skill.ItemId > 0) {
                 this.setItem(skill.ItemId);
                 return;
@@ -479,6 +493,11 @@
         apply(target) {
             super.apply(target);
             this.removeCounterState(target.result());
+        }
+
+        makeDamageValue(target, critical) {
+            const value = super.makeDamageValue(target, critical);
+            return this._damageRate !== null ? Math.floor(value * this._damageRate / 100) : value;
         }
 
         removeCounterState(result) {
