@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.0 2025/03/25 特定の敵キャラを撃破したときだけボーナスが貰える設定を追加
 // 2.2.0 2024/12/30 スキルのメモ欄からも撃破ボーナスのタグを取得できるよう修正
 // 2.1.1 2023/07/07 経験値とゴールドのレートを変更したとき、小数値になってしまう場合がある問題を修正
 // 2.1.0 2023/01/09 撃破ボーナスの適用条件に「特定のスキルを使った場合」を追加
@@ -255,6 +256,12 @@
  * @desc 特定のスキルで撃破したとき条件を満たします。
  * @default 0
  * @type skill
+ *
+ * @param enemyId
+ * @text 敵キャラID
+ * @desc 特定の敵キャラを撃破したとき条件を満たします。
+ * @default 0
+ * @type enemy
  * 
  * @param turnCount
  * @text ターン数
@@ -264,8 +271,9 @@
  * 
  * @param script
  * @text スクリプト
- * @desc 指定したスクリプトがtrueを返したとき条件を満たします。
- * @default 
+ * @desc 指定したスクリプトがtrueを返したとき条件を満たします。targetに撃破された敵キャラが入ります。
+ * @default
+ * @type multiline_string
  *
  */
 
@@ -314,10 +322,10 @@
         this._usedSkillId = skillId
     };
 
-    Game_BattlerBase.prototype.findKillBonusParamList = function(critical) {
+    Game_BattlerBase.prototype.findKillBonusParamList = function(critical, target) {
         return this.traitObjects().concat(this.actorSkills())
             .map(obj => this.findKillBonusParam(obj))
-            .filter(data => !!data && this.checkDataForKillBonus(data, critical));
+            .filter(data => !!data && this.checkDataForKillBonus(data, critical, target));
     };
 
     Game_BattlerBase.prototype.actorSkills = function() {
@@ -333,7 +341,7 @@
         return param.bonusList.filter(item => item.id === id)[0] || null;
     };
 
-    Game_BattlerBase.prototype.checkDataForKillBonus = function(data, critical) {
+    Game_BattlerBase.prototype.checkDataForKillBonus = function(data, critical, target) {
         const condition = data.condition;
         if (!condition) {
             return true;
@@ -343,6 +351,7 @@
         conditions.push(() => condition.noSkill && !this._noSkill);
         conditions.push(() => condition.noDeath && !this._noDeath);
         conditions.push(() => condition.skillId && this._usedSkillId !== condition.skillId);
+        conditions.push(() => condition.enemyId && target.isEnemy() && target.enemyId() !== condition.enemyId);
         conditions.push(() => condition.critical && !critical);
         conditions.push(() => condition.turnCount > 0 && condition.turnCount < $gameTroop.turnCount());
         conditions.push(() => condition.switchId > 0 && !$gameSwitches.value(condition.switchId));
@@ -408,7 +417,7 @@
         this._gainMp = 0;
         this._gainTp = 0;
         target.clearRewardRate();
-        subject.findKillBonusParamList(this._criticalForKillBonus).forEach(data => {
+        subject.findKillBonusParamList(this._criticalForKillBonus, target).forEach(data => {
             this.executeKillBonusRecover(data, subject);
             this.executeKillBonusState(data, subject);
             this.executeKillBonusVariable(data);
