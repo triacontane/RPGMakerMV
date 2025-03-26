@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2025/03/26 仕様レベルが2のときタッチ移動で移動不可タイルに存在するイベントを起動できるよう修正
 // 1.2.2 2024/02/19 仕様レベルが2のときに乗り物の乗降ができない問題を修正
 // 1.2.1 2023/08/27 メニューボタンを押したタイミングではタッチ移動しないよう修正
 // 1.2.0 2022/10/14 MZで動作するよう修正
@@ -191,6 +192,7 @@
                 $gameTemp.setMoveStart(true);
             } else {
                 $gamePlayer.setDirection(d);
+                $gamePlayer.checkEventTriggerThere([0, 1, 2]);
             }
             if (!$gameTemp.isDestinationValid()) {
                 $gamePlayer.getOnOffVehicle();
