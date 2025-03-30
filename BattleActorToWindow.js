@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2025/03/20 ステータスウィンドウが敵キャラ画像より前面に表示されるよう修正
  1.0.0 2025/01/20 初版
 ----------------------------------------------------------------------------
  [X]      : https://x.com/triacontane/
@@ -90,7 +91,8 @@
     Spriteset_Battle.prototype.setStatusWindow = function(statusWindow) {
         this._statusWindow = statusWindow;
         statusWindow.y -= this._battleField.y;
-        this._battleField.addChildAt(this._statusWindow, 0);
+        const actorSpriteIndex = this._battleField.children.findIndex(sprite => sprite instanceof Sprite_Actor);
+        this._battleField.addChildAt(this._statusWindow, actorSpriteIndex);
     };
 
     const _Scene_Battle_createStatusWindow = Scene_Battle.prototype.createStatusWindow;
