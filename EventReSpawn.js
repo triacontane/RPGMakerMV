@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.4 2025/04/02 動的生成イベントに対して2回連続でイベントの消去を実行するとエラーになる問題を修正
  1.3.3 2024/11/27 1.3.2 の修正ロジックに誤りがあった問題を修正
  1.3.2 2024/11/26 1.3.1の修正でイベントIDが0のイベントが生成される可能性がある問題を修正
  1.3.1 2024/11/24 イベントの生成と破棄を繰り返したときに徐々に動作が重くなっていく問題を修正
@@ -579,8 +580,11 @@ function Game_PrefabEvent() {
 
     const _Game_Map_eraseEvent    = Game_Map.prototype.eraseEvent;
     Game_Map.prototype.eraseEvent = function(eventId) {
+        if (!this.event(eventId)) {
+            return;
+        }
         _Game_Map_eraseEvent.apply(this, arguments);
-        if (this._events[eventId].isExtinct()) {
+        if (this.event(eventId).isExtinct()) {
             delete this._events[eventId];
         }
     };
