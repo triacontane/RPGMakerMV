@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.0 2025/04/05 コマンドスキルのヘルプウィンドウを、スキルコマンド以外では非表示にできる機能を追加
  1.4.1 2024/10/29 コマンド記憶の設定が有効かつコマンドスキルが二つ以上存在するとき、前回使用したコマンドスキルにカーソルが合わない問題を修正
  1.4.0 2022/10/06 コマンドスキルにコスト表示できる機能を追加
  1.3.2 2022/08/28 ActorCommandHelp.jsと併用するための修正
@@ -46,6 +47,12 @@
  * @text ヘルプ表示
  * @desc コマンドスキル選択時にヘルプを表示します。
  * @default false
+ * @type boolean
+ *
+ * @param showHelpAlways
+ * @text 常時ヘルプ表示
+ * @desc ヘルプ表示が有効なとき、コマンドスキル選択時以外でもヘルプを表示します。
+ * @default true
  * @type boolean
  *
  * @param showCost
@@ -155,6 +162,9 @@
             this.addCommand(skill.name, `special`, this._actor.canUse(skill), skill);
             this._list.splice(param.index, 0, this._list.pop());
         });
+        if (param.showHelpAlways) {
+            this.showHelpWindow();
+        }
     };
 
     const _Window_ActorCommand_selectLast = Window_ActorCommand.prototype.selectLast;
@@ -206,6 +216,8 @@
         if (skill && skill.id > 0) {
             this.setHelpWindowItem(skill);
             this.showHelpWindow();
+        } else if (!param.showHelpAlways) {
+            this.hideHelpWindow();
         }
     };
 
