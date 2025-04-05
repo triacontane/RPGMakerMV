@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.1 2025/04/05 1.6.0の機能で、デフォルトの会心設定が無効なスキルにも会心判定式が適用されていた問題を修正
 // 1.6.0 2025/02/11 会心発生判定に計算式を適用できる機能を追加
 // 1.5.0 2025/02/03 会心の計算式や確率をスキルではなく特徴単位でも取得できるよう修正
 // 1.4.1 2022/01/30 スキルのダメージの会心を「あり」に設定したあとで、ダメージタイプを「なし」に変更した場合、会心判定されてしまう問題を修正
@@ -193,6 +194,10 @@
     };
 
     Game_Action.prototype.judgeCritical = function(target) {
+        if (!this.item().damage.critical) {
+            this._criticalQueue.push(false);
+            return;
+        }
         const changeValue = this.subject().findCriticalTagValue(['CC確率変更', 'CCProbChange'], this.item());
         let itemCritical;
         if (changeValue) {
