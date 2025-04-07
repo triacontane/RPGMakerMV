@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.0 2025/04/07 蓄積された免疫状態を解除するコマンドを追加
 // 2.5.0 2024/04/10 蓄積ステートの解除条件に「戦闘終了時に解除」がある場合、蓄積率も同時にリセットできる機能を追加
 // 2.4.2 2023/02/12 プラグイン未適用のセーブデータをロードしたときエラーになる場合がある問題を修正
 // 2.4.1 2022/05/25 2.4.0の修正で不要なゲージが表示される場合がある問題を修正
@@ -106,6 +107,16 @@
  * @min -100
  * @max 100
  *
+ * @command CLEAR_IMMUNITY
+ * @text 免疫状態解除
+ * @desc 指定したアクターのステート免疫状態を解除します。
+ *
+ * @arg actorId
+ * @text アクターID
+ * @desc 対象のアクターIDです。0を指定した場合、パーティメンバ全員の免疫状態を解除します。
+ * @default 0
+ * @type actor
+ *
  * @help 特定のステートを蓄積型に変更します。
  * 蓄積型のステートにしたい場合、メモ欄に以下の通り設定してください。
  * <蓄積型>
@@ -173,6 +184,19 @@
         }
     });
 
+    PluginManagerEx.registerCommand(script, 'CLEAR_IMMUNITY', args => {
+        if (args.actorId > 0) {
+            const actor = $gameActors.actor(args.actorId);
+            if (actor) {
+                actor.clearImmunity();
+            }
+        } else {
+            $gameParty.members().forEach(actor => {
+                actor.clearImmunity();
+            });
+        }
+    });
+
     //=============================================================================
     // Game_BattlerBase
     //  ステート蓄積量を管理します。
@@ -182,8 +206,12 @@
             this._stateAccumulations = {};
         }
         if (!this._stateImmunity) {
-            this._stateImmunity = {};
+            this.clearImmunity();
         }
+    };
+
+    Game_BattlerBase.prototype.clearImmunity = function () {
+        this._stateImmunity = {};
     };
 
     const _Game_BattlerBase_clearStates = Game_BattlerBase.prototype.clearStates;
