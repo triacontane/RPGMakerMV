@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2025/04/08 独自画像を設定したとき、メニュー画面を開いて戻ったときに画像が初期化されてしまう問題を修正
 // 1.2.0 2023/08/26 点滅速度のパラメータを追加
 // 1.1.0 2021/08/05 MZ向けにリファクタリング
 // 1.0.0 2017/02/24 初版
@@ -96,6 +97,15 @@
 
     Sprite_Destination.prototype.createOriginalBitmap = function() {
         this.bitmap = ImageManager.loadPicture(param.originalImage);
+    };
+
+    const _Sprite_Destination_destroy = Sprite_Destination.prototype.destroy;
+    Sprite_Destination.prototype.destroy = function(options) {
+        if (param.originalImage && this.bitmap) {
+            Sprite.prototype.destroy.call(this, options);
+        } else {
+            _Sprite_Destination_destroy.apply(this, arguments);
+        }
     };
 
     const _Sprite_Destination_updateAnimation = Sprite_Destination.prototype.updateAnimation;
