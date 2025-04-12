@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2025/04/12 The play() request was interrupted by a call to pause()のエラー抑制
 // 2.3.0 2025/02/19 プラグインコマンドの動画ファイル指定で@fileに対応
 // 2.2.2 2024/09/15 敵キャラを動画表示する機能で、敵キャラの変身に対応できていなかった問題を修正
 // 2.2.1 2024/09/11 サブファオルダに配置された動画ファイルを再生できない問題を修正
@@ -766,7 +767,9 @@
     };
 
     Bitmap_Video.prototype.pause = function() {
-        this._video.pause();
+        if (this.isLoaded()) {
+            this._video.pause();
+        }
     };
 
     Bitmap_Video.prototype.play = function() {
@@ -823,6 +826,10 @@
 
     Bitmap_Video.prototype._onEnded = function() {
         this._ended = true;
+    };
+
+    Bitmap_Video.prototype.isLoaded = function() {
+        return this._video && this._loadingState === 'loaded';
     };
 
     Bitmap_Video.prototype._onError = function() {
