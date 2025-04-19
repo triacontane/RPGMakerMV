@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.2 2025/04/19 引数を削除しない設定を追加
  1.1.1 2025/04/19 制御文字の入れ子に対応
  1.1.0 2025/04/19 制御文字をコンボボックスから指定できる機能を追加、記号の制御文字を自動でエスケープするよう修正
  1.0.0 2025/04/19 初版
@@ -30,7 +31,7 @@
  *
  * @help EscapeInvalidate.js
  *
- * 指定したスイッチがONの時、制御文字を無効化します。
+ * 指定したスイッチがONのとき、制御文字をテキストから除去します。
  * 制御文字ごとに無効化状況を設定できます。
  *
  * 他のプラグインで追加された制御文字や
@@ -77,6 +78,12 @@
  * @desc 指定したスイッチがONの時、制御文字を無効化します。指定が無い場合は、常に無効化します。
  * @default 0
  * @type switch
+ *
+ * @param noArgument
+ * @text 引数を消去しない
+ * @desc 制御文字に続く[n]や<aaa>などが削除対象になりません。想定外の文字が削除された場合のみ有効にします。
+ * @default false
+ * @type boolean
  */
 
 (() => {
@@ -94,10 +101,15 @@
         }).forEach(item => {
             const code = item.escapeCode;
             const escapedCode = code.match(/^\W$/) ? '\\' + code : code;
-            arguments[0] =  arguments[0]
-                .replace(new RegExp('\\\\' + escapedCode + '[\\<\\[][0-9]+[\\]\\>]', 'mgi'), '')
-                .replace(new RegExp('\\\\' + escapedCode + '[\\<\\[].*?[\\]\\>]', 'mgi'), '')
-                .replace(new RegExp('\\\\' + escapedCode, 'mgi'), '');
+            if (item.noArgument) {
+                arguments[0] =  arguments[0]
+                    .replace(new RegExp('\\\\' + escapedCode, 'mgi'), '');
+            } else {
+                arguments[0] =  arguments[0]
+                    .replace(new RegExp('\\\\' + escapedCode + '[\\<\\[][0-9]+[\\]\\>]', 'mgi'), '')
+                    .replace(new RegExp('\\\\' + escapedCode + '[\\<\\[].*?[\\]\\>]', 'mgi'), '')
+                    .replace(new RegExp('\\\\' + escapedCode, 'mgi'), '');
+            }
         });
         return _Window_Base_convertEscapeCharacters.apply(this, arguments);
     };
