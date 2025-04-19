@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2025/04/19 制御文字をコンボボックスから指定できる機能を追加、記号の制御文字を自動でエスケープするよう修正
  1.0.0 2025/04/19 初版
 ----------------------------------------------------------------------------
  [X]      : https://x.com/triacontane/
@@ -51,6 +52,24 @@
  * @text 制御文字
  * @desc 無効化する制御文字のコードを設定します。\v[n]を無効化する場合は、vを指定してください。
  * @default
+ * @type combo
+ * @option v
+ * @option n
+ * @option c
+ * @option i
+ * @option g
+ * @option !
+ * @option fs
+ * @option px
+ * @option py
+ * @option {
+ * @option }
+ * @option <
+ * @option >
+ * @option $
+ * @option |
+ * @option ^
+ * @option .
  *
  * @param switchId
  * @text スイッチID
@@ -72,9 +91,11 @@
         param.escapeList.filter(item => {
             return !item.switchId || $gameSwitches.value(item.switchId);
         }).forEach(item => {
+            const code = item.escapeCode;
+            const escapedCode = code.match(/^\W$/) ? '\\' + code : code;
             arguments[0] =  arguments[0]
-                .replace(new RegExp('\\\\' + item.escapeCode + '\\[.+?]', 'mgi'), '')
-                .replace(new RegExp('\\\\' + item.escapeCode, 'mgi'), '');
+                .replace(new RegExp('\\\\' + escapedCode + '[\\<\\[].+?[\\]\\>]', 'mgi'), '')
+                .replace(new RegExp('\\\\' + escapedCode, 'mgi'), '');
         });
         return _Window_Base_convertEscapeCharacters.apply(this, arguments);
     };
