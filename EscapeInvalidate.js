@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2025/04/19 制御文字の入れ子に対応
  1.1.0 2025/04/19 制御文字をコンボボックスから指定できる機能を追加、記号の制御文字を自動でエスケープするよう修正
  1.0.0 2025/04/19 初版
 ----------------------------------------------------------------------------
@@ -94,7 +95,8 @@
             const code = item.escapeCode;
             const escapedCode = code.match(/^\W$/) ? '\\' + code : code;
             arguments[0] =  arguments[0]
-                .replace(new RegExp('\\\\' + escapedCode + '[\\<\\[].+?[\\]\\>]', 'mgi'), '')
+                .replace(new RegExp('\\\\' + escapedCode + '[\\<\\[][0-9]+[\\]\\>]', 'mgi'), '')
+                .replace(new RegExp('\\\\' + escapedCode + '[\\<\\[].*?[\\]\\>]', 'mgi'), '')
                 .replace(new RegExp('\\\\' + escapedCode, 'mgi'), '');
         });
         return _Window_Base_convertEscapeCharacters.apply(this, arguments);
