@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.0 2025/04/22 敵キャラのフキダシ表示位置を調整できるタグを追加
 // 2.0.1 2021/07/20 スキルが空の敵キャラと戦闘するとエラーになる問題を修正
 // 2.0.0 2021/04/03 MZで動作するよう全面的に修正
 // 1.0.0 2017/02/25 初版
@@ -203,6 +204,17 @@
  * <使用時フキダシ:6>
  * <BalloonUsing:6>
  *
+ * 敵キャラのフキダシ表示位置を調整できます。
+ * 敵キャラのメモ欄に以下の通り記述してください。
+ *
+ * フキダシのX座標を[5]ピクセル右に調整
+ * <フキダシX:5>
+ * <BalloonX:5>
+ *
+ * フキダシのY座標を[5]ピクセル下に調整
+ * <フキダシY:5>
+ * <BalloonY:5>
+ *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
  * 以下のフォルダに格納されています。
@@ -377,6 +389,20 @@
         }
     };
 
+    Game_Enemy.prototype.balloonX = function() {
+        if (!this.enemy()) {
+            return undefined;
+        }
+        return PluginManagerEx.findMetaValue(this.enemy(), ['BalloonX', 'フキダシX']);
+    };
+
+    Game_Enemy.prototype.balloonY = function() {
+        if (!this.enemy()) {
+            return undefined;
+        }
+        return PluginManagerEx.findMetaValue(this.enemy(), ['BalloonY', 'フキダシY']);
+    };
+
     //=============================================================================
     // Game_Action
     //  バルーン情報のメモ欄を取得します。
@@ -390,6 +416,15 @@
 
     Game_Action.prototype.getBalloonIdForUsing = function() {
         return PluginManagerEx.findMetaValue(this.item(),['BalloonUsing', '使用時フキダシ']);
+    };
+
+    const _Sprite_Balloon_updatePosition = Sprite_Balloon.prototype.updatePosition;
+    Sprite_Balloon.prototype.updatePosition = function() {
+        _Sprite_Balloon_updatePosition.apply(this, arguments);
+        if (this.targetObject && this.targetObject instanceof Game_Enemy) {
+            this.x += (this.targetObject.balloonX() || 0);
+            this.y += (this.targetObject.balloonY() || 0);
+        }
     };
 
     const _Sprite_Balloon_speed = Sprite_Balloon.prototype.speed;
