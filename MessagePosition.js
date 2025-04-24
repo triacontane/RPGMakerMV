@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2025/04/24 スイッチの状態によってウィンドウの位置を変更できる機能を追加
 // 1.6.0 2024/08/04 Y座標の初期パラメータのデフォルト値を、デフォルト解像度におけるデフォルト値で設定するよう変更
 // 1.3.0 2024/06/20 メッセージの表示位置ごとにX座標とY座標を調整する機能を追加
 // 1.2.1 2023/11/30 MessageWindowPopup.jsと併用したとき、特定条件下で表示したメッセージが一瞬で消えてしまう問題を修正
@@ -73,6 +74,12 @@
  * @type number
  * @min -2000
  *
+ * @param positionList
+ * @text 位置リスト
+ * @desc 指定したスイッチがONのときに有効になるウィンドウの位置リストです。複数の条件を満たした場合はリストの上が優先されます。
+ * @default []
+ * @type struct<Position>[]
+ *
  * @param width
  * @text 横幅
  * @desc 横幅です。
@@ -123,10 +130,35 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~Position:
+ * @param x
+ * @text X座標
+ * @desc ウィンドウのX座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ *
+ * @param y
+ * @text Y座標
+ * @desc ウィンドウのY座標です。
+ * @default 0
+ * @type number
+ * @min -2000
+ *
+ * @param switchId
+ * @text スイッチID
+ * @desc 位置変更が有効になる条件スイッチIDです。
+ * @default 0
+ * @type switch
+ */
+
 (()=> {
 	'use strict';
 	const script = document.currentScript;
 	const param = PluginManagerEx.createParameter(script);
+	if (!param.positionList) {
+		param.positionList = [];
+	}
 
 	const _Window_Message_initialize = Window_Message.prototype.initialize;
 	Window_Message.prototype.initialize = function(rect) {
@@ -159,16 +191,28 @@
 			this.createContents();
 		}
 		_Window_Message_updatePlacement.apply(this, arguments);
-		const posXList = [param.xTop, param.xMiddle, param.xBottom];
-		const x = posXList[this._positionType];
+		const pos = this.findCustomPosition();
+		const x = pos.x;
+		const y = pos.y;
 		if (x !== undefined) {
 			this.x = (param.relative ? this._originalX : 0) + x;
 		}
-		const posYList = [param.yTop, param.yMiddle, param.yBottom];
-		const y = posYList[this._positionType];
 		if (y !== undefined) {
 			this.y = (param.relative ? this.y : 0) + y;
 		}
+	};
+
+	Window_Message.prototype.findCustomPosition = function() {
+		const customPos = param.positionList.find(pos => $gameSwitches.value(pos.switchId));
+		if (customPos) {
+			return customPos;
+		}
+		const posXList = [param.xTop, param.xMiddle, param.xBottom];
+		const posYList = [param.yTop, param.yMiddle, param.yBottom];
+		return {
+			x: posXList[this._positionType],
+			y: posYList[this._positionType]
+		};
 	};
 
 	const _Window_NameBox_updatePlacement = Window_NameBox.prototype.updatePlacement;
