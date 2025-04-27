@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.18.0 2025/04/27 立ち絵のシェイク機能を立ち絵ごとに行う仕様に変更
 // 3.17.3 2025/01/19 表示優先度に関するヘルプを追記
 // 3.17.2 2024/08/08 誤って購入したログを削除
 // 3.17.1 2024/08/07 パラメータにスクリプトを使ったときアクター変数[a]が使えない問題を修正
@@ -287,9 +288,15 @@
  * @type number
  * @max 1000
  *
+ * @param ShakeSwitch
+ * @text シェイクスイッチ
+ * @desc 指定したスイッチにONになると立ち絵がシェイクします。シェイク後、スイッチは自動でOFFになります。
+ * @default 0
+ * @type switch
+ *
  * @param OutOfShake
  * @text シェイク対象外
- * @desc この画像を立ち絵シェイクの対象から外します。
+ * @desc この画像パーツを立ち絵シェイクの対象から外します。
  * @default false
  * @type boolean
  *
@@ -666,12 +673,6 @@
  * @default 0
  * @type switch
  *
- * @param ShakeSwitch
- * @text シェイクスイッチ
- * @desc 指定したスイッチにONになると立ち絵がシェイクします。シェイク後、スイッチは自動でOFFになります。
- * @default 0
- * @type switch
- *
  * @param UnFocusSwitch
  * @text アンフォーカススイッチ
  * @desc 指定した場合、スイッチがONのとき立ち絵が暗くなります。
@@ -838,6 +839,7 @@
                 return false;
             }
             this._standPictures.forEach(picture => this.setupSceneParam(picture, scene));
+            this._shakeSwitch = this._standPictures.find(picture => picture.ShakeSwitch).ShakeSwitch;
             this.createCondition();
             this.updatePictureFiles();
             return true;
@@ -1388,8 +1390,11 @@
             }
             const shakeSwitch = this._pictures.getShakeSwitch();
             if ($gameSwitches.value(shakeSwitch)) {
-                $gameSwitches.setValue(shakeSwitch, false);
-                this.shake();
+                if (this._shakeDuration <= 0) {
+                    this.shake();
+                } else {
+                    $gameSwitches.setValue(shakeSwitch, false);
+                }
             }
         }
 
