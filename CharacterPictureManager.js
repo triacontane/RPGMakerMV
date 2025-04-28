@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.18.2 2025/04/28 アクターが複数のStandPictureのタグを持てるよう変更
 // 3.18.1 2025/04/28 3.18.0の機能でシェイクスイッチを一切指定していない立ち絵を表示させようとするとエラーになる問題を修正
 // 3.18.0 2025/04/27 立ち絵のシェイク機能を立ち絵ごとに行う仕様に変更
 // 3.17.3 2025/01/19 表示優先度に関するヘルプを追記
@@ -181,7 +182,7 @@
  * 立ち絵をアニメーションできます。ただし、使いすぎに注意してください。
  * APNGはクロスフェード機能の対象外となります。
  *
- * ●メモ欄条件に指定方法
+ * ●メモ欄条件の指定方法
  * 表示条件のメモ欄に『aaa』と指定した場合、対象アクターのデータベース(※)に
  * 以下のメモ欄が含まれているときに立ち絵が表示されます。
  * <StandPicture:aaa>
@@ -864,7 +865,7 @@
             conditions.push(file => !file.Weapon || this._actor.hasWeapon($dataWeapons[file.Weapon]));
             conditions.push(file => !file.Armor || this._actor.hasArmor($dataArmors[file.Armor]));
             conditions.push(file => !file.Scene || SceneManager._scene.isStandPictureScene(file.Scene));
-            conditions.push(file => !file.Note || this.findStandPictureMeta() === file.Note);
+            conditions.push(file => !file.Note || this.hasStandPictureMeta(file.Note));
             conditions.push(file => !file.Message || $gameMessage.isBusy());
             conditions.push(file => !file.Face || $gameMessage.isFaceActor(this._actor));
             conditions.push(file => !file.Speaker || $gameMessage.isSpeakerActor(this._actor));
@@ -1007,6 +1008,11 @@
                 return !!meta;
             });
             return meta;
+        }
+
+        hasStandPictureMeta(meta) {
+            return this._actor.traitObjects().some(obj =>
+                PluginManagerEx.findMetaValue(obj, 'StandPicture') === meta);
         }
 
         isDamage() {
