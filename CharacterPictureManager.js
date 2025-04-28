@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.18.1 2025/04/28 3.18.0の機能でシェイクスイッチを一切指定していない立ち絵を表示させようとするとエラーになる問題を修正
 // 3.18.0 2025/04/27 立ち絵のシェイク機能を立ち絵ごとに行う仕様に変更
 // 3.17.3 2025/01/19 表示優先度に関するヘルプを追記
 // 3.17.2 2024/08/08 誤って購入したログを削除
@@ -829,7 +830,6 @@
             if (!this._base) {
                 return false;
             }
-            this._shakeSwitch = scene.ShakeSwitch;
             this._standPictures = param.PictureList.filter(picture => picture.ActorId === actor.actorId());
             this._updateCondition = {
                 UpdateInterval: scene.UpdateInterval,
@@ -839,7 +839,7 @@
                 return false;
             }
             this._standPictures.forEach(picture => this.setupSceneParam(picture, scene));
-            this._shakeSwitch = this._standPictures.find(picture => picture.ShakeSwitch).ShakeSwitch;
+            this._shakeSwitch = this._standPictures.find(picture => picture.ShakeSwitch)?.ShakeSwitch || 0;
             this.createCondition();
             this.updatePictureFiles();
             return true;
