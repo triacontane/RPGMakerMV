@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.3 2025/04/29 スプライトシートなどフレーム設定されたピクチャのタッチに対応
 // 1.6.2 2024/12/10 1.6.1の修正で拡大率をマイナスに設定したピクチャのタッチイベントが発生しなくなっていた問題を修正
 // 1.6.1 2024/06/04 ボタンピクチャを極めて小さい拡大率（負の値への移動も含む）で表示しようとするとエラーになる場合がある問題を修正
 // 1.6.0 2023/11/16 プラグインコマンドを「ピクチャの操作拡張プラグイン」が提供する一括指定機能に対応させました。
@@ -568,7 +569,11 @@
             if (pic._apngSprite || preference?.includeOpacityZero) {
                 return bx >= 0 && by >= 0 && bx <= pic.bitmap.width && by <= pic.bitmap.height;
             }
-            return pic.bitmap.getAlphaPixel(bx, by) !== 0;
+            const frame = this._picture._frame;
+            if (bx > frame.width || by > frame.height) {
+                return false;
+            }
+            return pic.bitmap.getAlphaPixel(bx + frame.x, by + frame.y) !== 0;
         }
 
         // for DTextPicture.js
