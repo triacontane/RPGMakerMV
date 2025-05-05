@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 4.3.3 2025/05/05 非表示のコマンドを含む複数のコマンドを定義したとき、コマンドの選択が正常にできない場合がある問題を修正
 // 4.3.2 2025/05/04 プラグインコマンドのパラメータ「インデックス」の説明が分かりづらかったので修正
 // 4.3.1 2025/03/15 ニューゲームの移動先座標を0に指定すると1に移動してしまう問題を修正
 // 4.3.0 2025/02/25 本体v1.9.0のロケーションのダイアログ指定機能に対応
@@ -291,11 +292,10 @@
     };
 
     const _Scene_Title_commandNewGameSecond    = Scene_Title.prototype.commandNewGameSecond;
-    Scene_Title.prototype.commandNewGameSecond = function(index) {
+    Scene_Title.prototype.commandNewGameSecond = function(index, command) {
         if (_Scene_Title_commandNewGameSecond) {
             _Scene_Title_commandNewGameSecond.apply(this, arguments);
         }
-        const command = ANGSettingManager.findList(false)[index];
         this.callAnotherNewGame(command);
     };
 
@@ -331,9 +331,10 @@
     const _Scene_Title_createCommandWindow    = Scene_Title.prototype.createCommandWindow;
     Scene_Title.prototype.createCommandWindow = function() {
         _Scene_Title_createCommandWindow.call(this);
-        ANGSettingManager.findList(false).forEach((command, index) => {
+        ANGSettingManager.findList(false).forEach(command => {
+            const index = parameters.anotherDataList.indexOf(command);
             this._commandWindow.setHandler('nameGame2_' + index,
-                this.commandNewGameSecond.bind(this, index));
+                this.commandNewGameSecond.bind(this, index, command));
         });
     };
 
