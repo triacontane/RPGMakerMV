@@ -182,8 +182,8 @@
  * @max 150
  *
  * @param TitleBgmPan
- * @text タイトルBGM位相
- * @desc タイトルBGMの位相(左右バランス)です。-100～100の範囲で指定してください。
+ * @text タイトルBGM定位
+ * @desc タイトルBGMの定位(パンポット)です。-100～100の範囲で指定してください。
  * @default 0
  * @type number
  * @min -100
