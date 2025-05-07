@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.3.0 2025/05/07 タイトルBGMの音量、ピッチ、左右バランスを指定できる機能を追加
 // 3.2.0 2024/07/28 タイトル画面2を進行状況に応じて変更する機能を追加
 // 3.1.0 2024/07/27 タイトルコールと組み合わせてタイトルコールを演奏する機能を追加
 // 3.0.2 2022/05/20 進行度をクリアするコマンドを追加
@@ -164,6 +165,30 @@
  * @dir audio/bgm/
  * @type file
  *
+ * @param TitleBgmVolume
+ * @text タイトルBGM音量
+ * @desc タイトルBGMの音量です。0～100の範囲で指定してください。
+ * @default 90
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param TitleBgmPitch
+ * @text タイトルBGMピッチ
+ * @desc タイトルBGMのピッチです。50～150の範囲で指定してください。
+ * @default 100
+ * @type number
+ * @min 50
+ * @max 150
+ *
+ * @param TitleBgmPan
+ * @text タイトルBGM位相
+ * @desc タイトルBGMの位相(左右バランス)です。-100～100の範囲で指定してください。
+ * @default 0
+ * @type number
+ * @min -100
+ * @max 100
+ *
  * @param TitleCall
  * @text タイトルコール
  * @desc 条件を満たしたときに演奏されるタイトルコールです。別途「タイトルコールプラグイン」が必要です。
@@ -300,6 +325,15 @@
             if (set.TitleBgm && storyPhase >= set.StoryPhaseCondition) {
                 $dataSystem.titleBgm.originalName = $dataSystem.titleBgm.name;
                 $dataSystem.titleBgm.name = set.TitleBgm;
+                if (set.TitleBgmVolume !== undefined) {
+                    $dataSystem.titleBgm.volume = set.TitleBgmVolume;
+                }
+                if (set.TitleBgmPitch !== undefined) {
+                    $dataSystem.titleBgm.pitch = set.TitleBgmPitch;
+                }
+                if (set.TitleBgmPan !== undefined) {
+                    $dataSystem.titleBgm.pan = set.TitleBgmPan;
+                }
             }
         });
     };
