@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.52.2 2025/05/14 加算合成を使用しない場合の処理を1.50と同様になるよう修正
  1.52.1 2025/03/01 ピクチャの表示優先度を「すべてのウィンドウの下」にしたとき背景よりは上に表示されるよう変更
  1.52.0 2025/02/11 1.51.0でサポートした加算合成を無効にすることで競合回避できる設定を追加
  1.51.5 2025/02/07 アクター変更イベントではフォーカス移動しないよう仕様変更
@@ -1791,7 +1792,12 @@
 
         createSpriteset() {
             this._spriteset = new Spriteset_Menu();
-            this.addChild(this._spriteset);
+            const index = this.findSpritesetIndex();
+            if (index !== null) {
+                this.addChildAt(this._spriteset, index);
+            } else {
+                this.addChild(this._spriteset);
+            }
             if (param.NoUseBlendAdd) {
                 return;
             }
@@ -1810,11 +1816,14 @@
             this._spriteset.setSceneObject(lowerContainers, upperContainers, this._windowLayer, this._messageWindowLayer, picturePriority);
         }
 
-        getChildIndex(displayObject) {
-            if (displayObject === this._windowLayer) {
-                return 0;
-            } else {
-                return super.getChildIndex(displayObject);
+        findSpritesetIndex() {
+            switch (this._customData.PicturePriority) {
+                case 2:
+                    return this.getChildIndex(this._windowLayer);
+                case 1:
+                    return this.getChildIndex(this._messageWindowLayer);
+                default:
+                    return null;
             }
         }
 
