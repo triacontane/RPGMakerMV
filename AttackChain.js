@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.2 2025/05/13 チェインの対象ユニットが切り替わったとき、表示数値が同値だとスキンが切り替わらない問題を修正
 // 3.0.1 2025/02/13 スキルによる追加倍率の計算が間違っていた問題を修正
 // 3.0.0 2024/10/12 MZ対応版としてリファクタリングのうえ仕様刷新
 // 2.3.0 2020/03/22 対象者が指定したメモ欄を保持している場合のみコンボ継続する設定を追加
@@ -544,6 +545,7 @@ function Sprite_ChainDamage() {
     Sprite_ChainCount.prototype.initialize = function() {
         Sprite.prototype.initialize.call(this);
         this._chainValue = 0;
+        this._partyChain = null;
         this._duration   = 0;
         this.loadStaticBitmap();
         this.update();
@@ -623,8 +625,10 @@ function Sprite_ChainDamage() {
 
     Sprite_ChainCount.prototype.updateChainValue = function() {
         const chainValue = this.getChainValue();
-        if (chainValue !== this._chainValue) {
+        const partyChain = this.isPartyChain();
+        if (chainValue !== this._chainValue || this._partyChain !== partyChain) {
             this._chainValue = chainValue;
+            this._partyChain = partyChain;
             this.refresh();
         }
     };
