@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.4 2025/05/17 2.6.3の修正方法が誤っていたので再修正
 // 2.6.3 2025/05/11 フェイスとキャラクター画像の番号（インデックス）指定を0にしたときに、もとのアクター設定のインデックスが採用されてしまう問題を修正
 // 2.6.2 2023/03/22 2.6.1の修正方針が不十分だった問題を修正
 // 2.6.1 2023/03/16 動的グラフィックが設定されているとき各種ゲージの増減が一瞬で行われてしまう現象を修正
@@ -385,7 +386,7 @@
 
     const _Game_Actor_characterIndex    = Game_Actor.prototype.characterIndex;
     Game_Actor.prototype.characterIndex = function() {
-        if (this._characterIndexCustom >= 0) {
+        if (this._characterIndexCustom !== null) {
             return this._characterIndexCustom;
         } else {
             return _Game_Actor_characterIndex.apply(this, arguments);
@@ -399,7 +400,7 @@
 
     const _Game_Actor_faceIndex    = Game_Actor.prototype.faceIndex;
     Game_Actor.prototype.faceIndex = function() {
-        if (this._faceIndexCustom >= 0) {
+        if (this._faceIndexCustom !== null) {
             return this._faceIndexCustom;
         } else {
             return _Game_Actor_faceIndex.apply(this, arguments);
