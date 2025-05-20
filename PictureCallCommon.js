@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.6.4 2025/05/20 1.6.3の修正で一部不十分な点があり修正
 // 1.6.3 2025/04/29 スプライトシートなどフレーム設定されたピクチャのタッチに対応
 // 1.6.2 2024/12/10 1.6.1の修正で拡大率をマイナスに設定したピクチャのタッチイベントが発生しなくなっていた問題を修正
 // 1.6.1 2024/06/04 ボタンピクチャを極めて小さい拡大率（負の値への移動も含む）で表示しようとするとエラーになる場合がある問題を修正
@@ -570,7 +571,7 @@
                 return bx >= 0 && by >= 0 && bx <= pic.bitmap.width && by <= pic.bitmap.height;
             }
             const frame = this._picture._frame;
-            if (bx > frame.width || by > frame.height) {
+            if (bx > frame.width || by > frame.height || bx < 0 || by < 0) {
                 return false;
             }
             return pic.bitmap.getAlphaPixel(bx + frame.x, by + frame.y) !== 0;
