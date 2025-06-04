@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.6.1 2025/06/04 戦闘行動の強制で対象限定スキルを対象「ランダム」で使用したとき、一部の敵キャラが対象にならない問題を修正
 // 2.6.0 2024/08/03 対象が誰もいないスキルを発動しようとしたとき、発動自体をスキップする機能を追加
 // 2.5.12 2024/07/11 効果範囲「使用者」のスキルには本プラグインは適用されないことを明記
 // 2.5.11 2024/04/23 ヘルプの記述を修正し、PluginCommonBaseのbaseアノテーションを追加
@@ -317,13 +318,6 @@
         const targets = _Game_Action_makeTargets.apply(this, arguments);
         BattleManager.setTargetAction(null);
         return targets;
-    };
-
-    const _Game_Action_decideRandomTarget      = Game_Action.prototype.decideRandomTarget;
-    Game_Action.prototype.decideRandomTarget = function() {
-        BattleManager.setTargetAction(this);
-        _Game_Action_decideRandomTarget.apply(this, arguments);
-        BattleManager.setTargetAction(null);
     };
 
     const _Game_Action_targetsForDeadAndAlive = Game_Action.prototype.targetsForDeadAndAlive;
