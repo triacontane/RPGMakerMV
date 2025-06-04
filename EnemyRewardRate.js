@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2025/06/04 経験値とゴールドのレートが0になったとき、1として計算されてしまう問題を修正
  1.1.1 2023/07/07 経験値とゴールドのレートを変更したとき、小数値になってしまう場合がある問題を修正
  1.0.1 2022/06/05 撃破前に経験値やお金を参照しようとしたとき正常に取得できない問題を修正
  1.0.0 2022/03/08 初版
@@ -72,11 +73,13 @@
 
     const _Game_Enemy_exp = Game_Enemy.prototype.exp;
     Game_Enemy.prototype.exp = function() {
-        return Math.floor(_Game_Enemy_exp.apply(this, arguments) * (this._expRate || 1));
+        const rate = this._expRate !== undefined ? this._expRate : 1;
+        return Math.floor(_Game_Enemy_exp.apply(this, arguments) * rate);
     };
 
     const _Game_Enemy_gold = Game_Enemy.prototype.gold;
     Game_Enemy.prototype.gold = function() {
-        return Math.floor(_Game_Enemy_gold.apply(this, arguments) * (this._goldRate || 1));
+        const rate = this._goldRate !== undefined ? this._goldRate : 1;
+        return Math.floor(_Game_Enemy_gold.apply(this, arguments) * rate);
     };
 })();
