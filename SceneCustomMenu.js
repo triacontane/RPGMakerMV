@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.53.0 2025/06/10 drawItemNameのコメント修正
  1.52.2 2025/05/14 加算合成を使用しない場合の処理を1.50と同様になるよう修正
  1.52.1 2025/03/01 ピクチャの表示優先度を「すべてのウィンドウの下」にしたとき背景よりは上に表示されるよう変更
  1.52.0 2025/02/11 1.51.0でサポートした加算合成を無効にすることで競合回避できる設定を追加
@@ -693,7 +694,7 @@
  * @option this.drawActorSimpleStatus(item, r.x, r.y, r.width); // アクターのステータス
  * @option this.drawEnemy(r.x, r.y, 'center', 'bottom'); // 敵キャラの画像
  * @option this.drawParam(0, r.x, r.y, 'right'); // DBパラメータ(0:HP 1:MP...)
- * @option this.drawItemName(item, r.x, r.y, r.width); // アイテムやスキルの名称
+ * @option this.drawItemName(item, r.x, r.y, r.width); // アイテム、スキル名称(アイコン含む)
  * @option this.drawText($gameParty.numItems(item), r.x, r.y, r.width, 'right'); // アイテムの所持数
  * @option this.drawTextEx(`Text:${item.name}`, r.x, r.y, r.width); // 任意のテキスト描画(制御文字変換あり)
  * @option this.drawText(`Text:${item.name}`, r.x, r.y, r.width, 'right'); // 任意のテキスト描画(制御文字変換なし。右揃え)
