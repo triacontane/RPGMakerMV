@@ -17,6 +17,8 @@
  * @plugindesc タッチ操作無効化プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MouseInvalidate.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
  * @param switchId
@@ -28,6 +30,11 @@
  * @help MouseInvalidate.js
  *　
  * ゲーム中の全ての局面でマウスやタッチ操作を完全に無効化します。
+ *
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
