@@ -6,10 +6,10 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2025/06/16 指定したスイッチがONの時のみマウスやタッチ操作を無効化する機能を追加
  1.0.0 2022/07/07 初版
 ----------------------------------------------------------------------------
- [Blog]   : https://triacontane.blogspot.jp/
- [Twitter]: https://twitter.com/triacontane/
+ [X]      : https://x.com/triacontane/
  [GitHub] : https://github.com/triacontane/
 =============================================================================*/
 
@@ -18,6 +18,12 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MouseInvalidate.js
  * @author トリアコンタン
+ *
+ * @param switchId
+ * @text 無効化スイッチID
+ * @desc 指定した場合、スイッチがONの時のみマウスやタッチ操作を無効化します。
+ * @default 0
+ * @type switch
  *
  * @help MouseInvalidate.js
  *　
@@ -29,8 +35,26 @@
  *  このプラグインはもうあなたのものです。
  */
 
-(() => {
+(()=> {
     'use strict';
+    const script = document.currentScript;
+    const param = PluginManagerEx.createParameter(script);
+    const switchId = param.switchId;
 
-    TouchInput.update = function() {};
+    const _TouchInput_update = TouchInput.update;
+    TouchInput.update = function() {
+        if (this.isTouchInvalid()) {
+            if (this._wasValid) {
+                this.clear();
+                this._wasValid = false;
+            }
+            return;
+        }
+        this._wasValid = true;
+        _TouchInput_update.apply(this, arguments);
+    };
+
+    TouchInput.isTouchInvalid = function() {
+        return !switchId || $gameSwitches?.value(switchId);
+    };
 })();
