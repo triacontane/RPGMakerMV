@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.15.0 2025/06/25 反撃条件に「ダメージタイプ」を追加
 // 2.14.0 2025/03/24 反撃スキルにのみ適用される専用のダメージ倍率を設定できる機能を追加
 // 2.13.2 2024/08/19 反撃頻度の判定が特定条件下で複数回行われていた問題を修正
 // 2.13.1 2024/06/17 反撃頻度に関するヘルプを少し修正
@@ -276,6 +277,26 @@
  * @option 魔法攻撃
  * @value 2
  *
+ * @param DamageTypeCondition
+ * @text 反撃条件(ダメージ)
+ * @desc 指定した場合、特定のダメージタイプのスキルに対してのみ反撃します。
+ * @type select[]
+ * @default []
+ * @option なし
+ * @value 0
+ * @option HPダメージ
+ * @value 1
+ * @option MPダメージ
+ * @value 2
+ * @option HP回復
+ * @value 3
+ * @option MP回復
+ * @value 4
+ * @option HP吸収
+ * @value 5
+ * @option MP吸収
+ * @value 6
+ *
  * @param SkillTypeCondition
  * @text 反撃条件(スキルタイプ)
  * @desc 指定した場合、特定のスキルタイプのスキルに対してのみ反撃します。
@@ -418,6 +439,8 @@
             conditions.push(() => checkParam(skill.IdCondition, triggerSkill.id));
             conditions.push(() => checkParam(skill.HitTypeCondition, triggerSkill.hitType));
             conditions.push(() => checkParam(skill.SkillTypeCondition, triggerSkill.stypeId));
+            const damageTypes = skill.DamageTypeCondition || [];
+            conditions.push(() => damageTypes.length > 0 && !this.checkDamageType(damageTypes));
             conditions.push(() => skill.ElementCondition && !triggerAction.hasElement(skill.ElementCondition));
             conditions.push(() => skill.WeakCondition && !this.hasWeakResistance(triggerAction, subject, skill.WeakCondition));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
