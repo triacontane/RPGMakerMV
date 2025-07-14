@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2025/07/14 自動戦闘の行動と対象を、行動直前に再度更新する設定を追加
  1.0.0 2025/04/15 初版
 ----------------------------------------------------------------------------
  [X]      : https://x.com/triacontane/
@@ -27,6 +28,12 @@
  * @type number
  * @min 0
  * @max 100
+ *
+ * @param updateBeforeAction
+ * @text 開始直前に更新
+ * @desc 自動戦闘の行動と対象を、行動直前に再度更新します。
+ * @type boolean
+ * @default false
  *
  * @help AutoBattleCustomize.js
  *
@@ -74,5 +81,14 @@
             const recovery = Math.min(-value, target.mmp - target.mp);
             return recovery / target.mmp;
         }
+    };
+
+    const _BattleManager_processTurn = BattleManager.processTurn;
+    BattleManager.processTurn = function() {
+        const subject = this._subject;
+        if (param.updateBeforeAction && subject instanceof Game_Actor && subject.isAutoBattle()) {
+            subject.makeAutoBattleActions();
+        }
+        _BattleManager_processTurn.apply(this, arguments);
     };
 })();
