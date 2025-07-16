@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.0 2025/07/16 ステート付与の条件をレートではなく直接値にできるタグを追加
 // 1.2.1 2024/05/39 1.2.0の修正で戦闘画面に入るとエラーになっていた問題を修正
 // 1.2.0 2024/05/30 装備品にタグを付けていたとき、その装備品を外したときにステートが解除されない問題を修正
 // 1.1.1 2023/02/26 1.1.0の修正が一部不完全だった問題を修正
@@ -43,6 +44,20 @@
  * <CS_UpperTp:30,4> # 同上
  * <CS_下限TP:40,5>  # 現在のTPが40%を下回るとステート[5]を付与
  * <CS_LowerTp:40,5> # 同上
+ *
+ * 条件を割合ではなく直接値で指定することもできます。
+ * <CS_上限HP値:30,4>  # 現在のHPが30を上回るとステート[4]を付与
+ * <CS_UpperHpValue:30,4> # 同上
+ * <CS_下限HP値:40,5>  # 現在のHPが40を下回るとステート[5]を付与
+ * <CS_LowerHpValue:40,5> # 同上
+ * <CS_上限MP値:30,4>  # 現在のMPが30を上回るとステート[4]を付与
+ * <CS_UpperMpValue:30,4> # 同上
+ * <CS_下限MP値:40,5>  # 現在のMPが40を下回るとステート[5]を付与
+ * <CS_LowerMpValue:40,5> # 同上
+ * <CS_上限TP値:30,4>  # 現在のTPが30を上回るとステート[4]を付与
+ * <CS_UpperTpValue:30,4> # 同上
+ * <CS_下限TP値:40,5>  # 現在のTPが40を下回るとステート[5]を付与
+ * <CS_LowerTpValue:40,5> # 同上
  *
  * 類似プラグイン「AutomaticState.js」はステート単位で設定しますが
  * こちらはバトラー単位で設定します。
@@ -152,12 +167,18 @@
         }
         const prevConditionalStates = this._conditionalStates || [];
         this._conditionalStates = [];
-        this.updateConditionalStateUpper(this.hpRate(), ['UpperHp', '上限HP']);
-        this.updateConditionalStateUpper(this.mpRate(), ['UpperMp', '上限MP']);
-        this.updateConditionalStateUpper(this.tpRate(), ['UpperTp', '上限TP']);
-        this.updateConditionalStateLower(this.hpRate(), ['LowerHp', '下限HP']);
-        this.updateConditionalStateLower(this.mpRate(), ['LowerMp', '下限MP']);
-        this.updateConditionalStateLower(this.tpRate(), ['LowerTp', '下限TP']);
+        this.updateConditionalStateUpper(this.hpRate() * 100, ['UpperHp', '上限HP']);
+        this.updateConditionalStateUpper(this.mpRate() * 100, ['UpperMp', '上限MP']);
+        this.updateConditionalStateUpper(this.tpRate() * 100, ['UpperTp', '上限TP']);
+        this.updateConditionalStateLower(this.hpRate() * 100, ['LowerHp', '下限HP']);
+        this.updateConditionalStateLower(this.mpRate() * 100, ['LowerMp', '下限MP']);
+        this.updateConditionalStateLower(this.tpRate() * 100, ['LowerTp', '下限TP']);
+        this.updateConditionalStateUpper(this.hp, ['UpperHpValue', '上限HP値']);
+        this.updateConditionalStateUpper(this.mp, ['UpperMpValue', '上限MP値']);
+        this.updateConditionalStateUpper(this.tp, ['UpperTpValue', '上限TP値']);
+        this.updateConditionalStateLower(this.hp, ['LowerHpValue', '下限HP値']);
+        this.updateConditionalStateLower(this.mp, ['LowerMpValue', '下限MP値']);
+        this.updateConditionalStateLower(this.tp, ['LowerTpValue', '下限TP値']);
         prevConditionalStates.forEach(stateId => {
             if (!this._conditionalStates.includes(stateId)) {
                 this.removeState(stateId);
@@ -170,18 +191,18 @@
         this._conditionalStates.push(stateId);
     };
 
-    Game_Battler.prototype.updateConditionalStateUpper = function(rate, names) {
+    Game_Battler.prototype.updateConditionalStateUpper = function(value, names) {
         const stateCondition = this.getMetaInfoConditionalState(names);
         if (!stateCondition) return;
-        if (stateCondition[0] < rate * 100) {
+        if (stateCondition[0] < value) {
             this.addConditionalState(stateCondition[1]);
         }
     };
 
-    Game_Battler.prototype.updateConditionalStateLower = function(rate, names) {
+    Game_Battler.prototype.updateConditionalStateLower = function(value, names) {
         const stateCondition = this.getMetaInfoConditionalState(names);
         if (!stateCondition) return;
-        if (rate * 100 < stateCondition[0]) {
+        if (value < stateCondition[0]) {
             this.addConditionalState(stateCondition[1]);
         }
     };
