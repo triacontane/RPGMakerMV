@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2025/07/19 行動不能ステートに掛かっているとき、継続メッセージが二重に表示される問題を修正
  1.0.1 2021/12/01 スリップダメージで戦闘不能になったバトラーを蘇生させた場合、対象バトラーのタイムプログレスゲージが進まなくなる問題を修正
  1.0.0 2021/05/23 初版
 ----------------------------------------------------------------------------
@@ -38,7 +39,7 @@
     const _Game_Battler_startTpbCasting = Game_Battler.prototype.startTpbCasting;
     Game_Battler.prototype.startTpbCasting = function() {
         _Game_Battler_startTpbCasting.apply(this, arguments);
-        if (this.isDead()) {
+        if (this.isDead() || this.isRestricted()) {
             return;
         }
         this.updateTpbCastTime();
