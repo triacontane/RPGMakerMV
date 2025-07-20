@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.2 2025/07/20 半歩移動禁止/許可のプラグインコマンド実行時にイベントの向きロックが解除されてしまう問題を修正
 // 2.2.1 2023/10/22 イベントの初期位置を半歩ずらしたときにアニメパターンが一瞬だけ初期化されてしまう問題を修正
 // 2.2.0 2022/07/03 プレイヤーやイベント単位で半歩移動を禁止にできる機能を追加
 // 2.1.2 2022/03/17 2.1.0の修正によりループしたマップでタッチ移動すると正しい場所へ移動できない問題を修正
@@ -697,8 +698,14 @@
         this._disableHalfMove = !value;
         $gamePlayer.locate($gamePlayer.x, $gamePlayer.y);
         $gameMap.events().forEach(function(event) {
-            event.locate(event.x, event.y);
+            event.locateForHalfMove(event.x, event.y);
         }.bind(this));
+    };
+
+    Game_Event.prototype.locateForHalfMove = function(x, y) {
+        const dir = this._prelockDirection;
+        this.locate(x, y);
+        this._prelockDirection = dir;
     };
 
     var _Game_System_onAfterLoad      = Game_System.prototype.onAfterLoad;
