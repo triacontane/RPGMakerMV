@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.17.1 2025/07/20 半歩移動禁止/許可のプラグインコマンド実行時にイベントの向きロックが解除されてしまう問題を修正
 // 1.17.0 2022/07/03 プレイヤーやイベント単位で半歩移動を禁止にできる機能を追加
 // 1.16.1 2020/07/02 スクリプトからキャラクターの座標を0.5以外の端数にするとエラーになる問題を修正
 // 1.16.0 2020/04/18 右上、右下、左上、左下のみ移動可能な地形、リージョンの設定を追加
@@ -715,8 +716,14 @@
         this._disableHalfMove = !value;
         $gamePlayer.locate($gamePlayer.x, $gamePlayer.y);
         $gameMap.events().forEach(function(event) {
-            event.locate(event.x, event.y);
+            event.locateForHalfMove(event.x, event.y);
         }.bind(this));
+    };
+
+    Game_Event.prototype.locateForHalfMove = function(x, y) {
+        var dir = this._prelockDirection;
+        this.locate(x, y);
+        this._prelockDirection = dir;
     };
 
     var _Game_System_onAfterLoad      = Game_System.prototype.onAfterLoad;
