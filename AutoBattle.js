@@ -94,9 +94,16 @@
             member.setAutoBattle();
             if (!this.isTpb()) {
                 member.makeAutoBattleActions();
+            } else {
+                member.setAutoBattleUntilEnd();
             }
         });
         this.startTurn();
+    };
+
+    Game_BattlerBase.prototype.setAutoBattleUntilEnd = function() {
+        this.setAutoBattle();
+        this._autoBattleUntilEnd = true;
     };
 
     Game_BattlerBase.prototype.setAutoBattle = function() {
@@ -110,7 +117,7 @@
 
     const _Game_Battler_onTurnEnd = Game_Battler.prototype.onTurnEnd;
     Game_Battler.prototype.onTurnEnd = function() {
-        if (!BattleManager.isTpb()) {
+        if (!this._autoBattleUntilEnd) {
             this._autoBattle = false;
         }
         _Game_Battler_onTurnEnd.apply(this, arguments);
@@ -120,6 +127,7 @@
     Game_Battler.prototype.onBattleEnd = function() {
         _Game_Battler_onBattleEnd.apply(this, arguments);
         this._autoBattle = false;
+        this._autoBattleUntilEnd = false;
     };
 
     //=============================================================================
