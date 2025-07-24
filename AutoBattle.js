@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.0 2025/07/24 AutoBattleCustomize.jsと連携できるよう修正
 // 1.3.0 2023/01/31 コマンド記憶がONのとき、パーティコマンドの選択を記憶するよう仕様変更
 // 1.2.1 2022/09/22 1.2.0の修正によりオートスイッチが有効なときにタイムプログレス戦闘を開始するとエラーになる問題を修正
 // 1.2.0 2022/09/22 パーティコマンドのオートがタイムプログレス戦闘に対応していなかった問題を修正
@@ -83,14 +84,15 @@
     //  オートバトルの実装を追加定義します。
     //=============================================================================
     BattleManager.processActorAuto = function() {
-        this.actor().makeAutoBattleActions();
+        const actor = this.actor();
+        actor.makeAutoBattleActions();
+        actor.setAutoBattle();
     };
 
     BattleManager.processPartyAuto = function() {
         $gameParty.members().forEach(member => {
-            if (this.isTpb()) {
-                member.setAutoBattle();
-            } else {
+            member.setAutoBattle();
+            if (!this.isTpb()) {
                 member.makeAutoBattleActions();
             }
         });
@@ -104,6 +106,14 @@
     const _Game_BattlerBase_isAutoBattle = Game_BattlerBase.prototype.isAutoBattle;
     Game_BattlerBase.prototype.isAutoBattle = function() {
         return _Game_BattlerBase_isAutoBattle.apply(this, arguments) || this._autoBattle;
+    };
+
+    const _Game_Battler_onTurnEnd = Game_Battler.prototype.onTurnEnd;
+    Game_Battler.prototype.onTurnEnd = function() {
+        if (!BattleManager.isTpb()) {
+            this._autoBattle = false;
+        }
+        _Game_Battler_onTurnEnd.apply(this, arguments);
     };
 
     const _Game_Battler_onBattleEnd = Game_Battler.prototype.onBattleEnd;
