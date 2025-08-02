@@ -61,7 +61,7 @@
             this._commandWindow.deactivate();
             this.commandPersonal();
         }
-    }
+    };
 
     const _Scene_Menu_onPersonalOk = Scene_Menu.prototype.onPersonalOk;
     Scene_Menu.prototype.onPersonalOk = function() {
