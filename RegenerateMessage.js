@@ -15,7 +15,7 @@
 /*:
  * @plugindesc 再生メッセージプラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ReganerateMessage.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/RegenerateMessage.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
