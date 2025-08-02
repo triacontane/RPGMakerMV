@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.4.1 2025/08/03 1.4.0の修正により、オートを選択後にキャンセルできなくなっていた問題を修正
 // 1.4.0 2025/07/24 AutoBattleCustomize.jsと連携できるよう修正
 // 1.3.0 2023/01/31 コマンド記憶がONのとき、パーティコマンドの選択を記憶するよう仕様変更
 // 1.2.1 2022/09/22 1.2.0の修正によりオートスイッチが有効なときにタイムプログレス戦闘を開始するとエラーになる問題を修正
@@ -78,6 +79,7 @@
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+    let autoBattleSuppress = false;
 
     //=============================================================================
     // BattleManager
@@ -110,9 +112,14 @@
         this._autoBattle = true;
     };
 
+    Game_BattlerBase.prototype.cancelAutoBattle = function() {
+        this._autoBattle = false;
+        this._autoBattleUntilEnd = false;
+    };
+
     const _Game_BattlerBase_isAutoBattle = Game_BattlerBase.prototype.isAutoBattle;
     Game_BattlerBase.prototype.isAutoBattle = function() {
-        return _Game_BattlerBase_isAutoBattle.apply(this, arguments) || this._autoBattle;
+        return _Game_BattlerBase_isAutoBattle.apply(this, arguments) || (!autoBattleSuppress && this._autoBattle);
     };
 
     const _Game_Battler_onTurnEnd = Game_Battler.prototype.onTurnEnd;
@@ -189,6 +196,16 @@
             return true;
         }
         return result;
+    };
+
+    const _BattleManager_selectPreviousCommand = BattleManager.selectPreviousCommand;
+    BattleManager.selectPreviousCommand = function() {
+        autoBattleSuppress = true;
+        _BattleManager_selectPreviousCommand.apply(this, arguments);
+        autoBattleSuppress = false;
+        if (this._currentActor) {
+            this._currentActor.cancelAutoBattle();
+        }
     };
 
     BattleManager.isValidAutoSwitch = function() {
