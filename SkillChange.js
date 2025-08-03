@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.1 2025/08/03 アイテム変化したとき、変化前のアイテムを消費するよう仕様変更
  1.2.0 2025/08/03 アイテム変化機能を追加
  1.1.0 2024/10/12 AttackChain.jsとの連携機能を追加
  1.0.0 2024/09/16 初版
@@ -245,9 +246,9 @@
         if (action && action.isItem()) {
             const newItemId = this.findItemChangeId(action);
             if (newItemId && this.canUse($dataItems[newItemId])) {
-                const oldItemId = action.item().id;
+                this._oldItemId = action.item().id;
                 action.setItem(newItemId);
-                return { newSkillName: $dataItems[newItemId].name, oldSkillName: $dataItems[oldItemId].name};
+                return { newSkillName: $dataItems[newItemId].name, oldSkillName: $dataItems[this._oldItemId].name};
             }
         }
         return null;
@@ -275,6 +276,15 @@
         const item = param.itemList.find(data => data.itemId === itemId && this.meetsSkillChangeCondition(data.condition));
         return item.changeItemId || null;
     }
+
+    const _Game_Battler_consumeItem = Game_Battler.prototype.consumeItem;
+    Game_Battler.prototype.consumeItem = function(item) {
+        if (this._oldItemId) {
+            arguments[0] = $dataItems[this._oldItemId];
+            this._oldItemId = null;
+        }
+        _Game_Battler_consumeItem.apply(this, arguments);
+    };
 
     Game_Battler.prototype.meetsSkillChangeCondition = function(cData) {
         const conditions = [];
