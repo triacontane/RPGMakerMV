@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2025/08/03 禁止スイッチを指定しなかった場合、イベント高速化禁止が常に無効になる問題を修正
  1.0.0 2024/12/16 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -27,7 +28,7 @@
  * @default 0
  * @type switch
  *
- * @help DisableFastForward.js.js
+ * @help DisableFastForward.js
  *
  * イベント中に決定ボタンを押し続けることでゲームスピードを2倍速にする機能を
  * 無効にできます。
@@ -51,6 +52,10 @@
 
     const _Scene_Map_isFastForward = Scene_Map.prototype.isFastForward;
     Scene_Map.prototype.isFastForward = function() {
-        return _Scene_Map_isFastForward.apply(this, arguments) && !$gameSwitches.value(param.disableSwitchId);
+        return _Scene_Map_isFastForward.apply(this, arguments) && !this.isDisableFastForward();
+    };
+
+    Scene_Map.prototype.isDisableFastForward = function() {
+        return !param.disableSwitchId || $gameSwitches.value(param.disableSwitchId);
     };
 })();
