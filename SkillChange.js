@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2025/08/03 アイテム変化機能を追加
  1.1.0 2024/10/12 AttackChain.jsとの連携機能を追加
  1.0.0 2024/09/16 初版
 ----------------------------------------------------------------------------
@@ -27,6 +28,12 @@
  * @desc スキル変化する条件と変化後のスキルのリストです。同一のスキルIDを複数指定した場合、リストの下が優先されます。
  * @default []
  * @type struct<Skill>[]
+ *
+ * @param itemList
+ * @text アイテム変化リスト
+ * @desc アイテム変化する条件と変化後のアイテムのリストです。同一のアイテムIDを複数指定した場合、リストの下が優先されます。
+ * @default []
+ * @type struct<Item>[]
  *
  * @param changeMessage
  * @text 変化メッセージ
@@ -75,6 +82,26 @@
  * @desc 有効にすると変化後のスキルが直前に誰かが使用したスキルになります。
  * @default false
  * @type boolean
+ *
+ * @param condition
+ * @text 変化条件
+ * @desc スキル変化の条件です。何も指定しない場合は常にスキル変化します。
+ * @default {}
+ * @type struct<Condition>
+ */
+
+/*~struct~Item:
+ * @param itemId
+ * @text アイテムID
+ * @desc 変化する元となるスキルIDです。
+ * @default 1
+ * @type item
+ *
+ * @param changeItemId
+ * @text 変化後アイテムID
+ * @desc 変化した後のアイテムIDです。
+ * @default 0
+ * @type item
  *
  * @param condition
  * @text 変化条件
@@ -215,6 +242,14 @@
                 return { newSkillName: $dataSkills[newSkillId].name, oldSkillName: $dataSkills[oldSkillId].name};
             }
         }
+        if (action && action.isItem()) {
+            const newItemId = this.findItemChangeId(action);
+            if (newItemId && this.canUse($dataItems[newItemId])) {
+                const oldItemId = action.item().id;
+                action.setItem(newItemId);
+                return { newSkillName: $dataItems[newItemId].name, oldSkillName: $dataItems[oldItemId].name};
+            }
+        }
         return null;
     };
 
@@ -234,6 +269,12 @@
         }
         return null;
     };
+
+    Game_Battler.prototype.findItemChangeId = function(action) {
+        const itemId = action.item().id;
+        const item = param.itemList.find(data => data.itemId === itemId && this.meetsSkillChangeCondition(data.condition));
+        return item.changeItemId || null;
+    }
 
     Game_Battler.prototype.meetsSkillChangeCondition = function(cData) {
         const conditions = [];
