@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2025/08/07 行動を受けることでステート解除できる機能を追加
  1.2.0 2024/02/22 魔法反射や回避など特定行動でステート解除できる機能を追加
                   ステートの付与によって別のステートを解除できる機能を追加
  1.1.1 2023/10/23 解除条件に属性を指定したとき、スキルの指定が「通常攻撃」の場合、解除の対象にならない問題を修正
@@ -28,6 +29,12 @@
  * @param byDamageList
  * @text ダメージで解除のリスト
  * @desc ダメージを受けたときのステート解除を条件付きにします。データベースの当該項目とは独立して動作します。
+ * @default []
+ * @type struct<DAMAGE>[]
+ *
+ * @param byAcceptedList
+ * @text 受けた行動で解除のリスト
+ * @desc 行動を受けたときにステートを解除します。味方や自分自身の行動も対象に含まれます。
  * @default []
  * @type struct<DAMAGE>[]
  *
@@ -74,9 +81,15 @@
  * @default 1
  * @type state
  *
+ * @param skillId
+ * @text スキルID
+ * @desc 受けた行動が特定のスキルを使用したときに解除されます。0を指定すると全てのスキルが対象になります。
+ * @default 0
+ * @type skill
+ *
  * @param elementId
  * @text 属性ID
- * @desc 相手の攻撃が特定の属性を含んでいたときに解除されます。
+ * @desc 受けた行動が特定の属性を含んでいたときに解除されます。
  * @default 0
  * @type number
  *
@@ -91,6 +104,8 @@
  * @value 1
  * @option 魔法攻撃
  * @value 2
+ * @option 必中
+ * @value 3
  *
  * @param hpRate
  * @text HP割合(%)
@@ -192,6 +207,9 @@
     if (!param.byAddList) {
         param.byAddList = [];
     }
+    if (!param.byAcceptedList) {
+        param.byAcceptedList = [];
+    }
 
     const _Game_BattlerBase_updateStateTurns = Game_BattlerBase.prototype.updateStateTurns;
     Game_BattlerBase.prototype.updateStateTurns = function() {
@@ -260,15 +278,26 @@
         }
     };
 
+    const _Game_Action_applyItemUserEffect = Game_Action.prototype.applyItemUserEffect;
+    Game_Action.prototype.applyItemUserEffect = function(target) {
+        _Game_Action_applyItemUserEffect.apply(this, arguments);
+        if (target) {
+            target.removeStatesByDamageExtend(param.byAcceptedList);
+        }
+    };
+
     const _Game_Battler_removeStatesByDamage = Game_Battler.prototype.removeStatesByDamage;
     Game_Battler.prototype.removeStatesByDamage = function() {
         _Game_Battler_removeStatesByDamage.apply(this, arguments);
+        this.removeStatesByDamageExtend(param.byDamageList);
+    };
+
+    Game_Battler.prototype.removeStatesByDamageExtend = function(list) {
         if (!this._acceptAction) {
             return;
         }
         this.states().forEach(state => {
-            param.byDamageList
-                .filter(item => this.isRemoveStateExtend(state, item))
+            list.filter(item => this.isRemoveStateExtend(state, item))
                 .forEach(item => this.removeState(item.stateId));
         });
     };
@@ -280,6 +309,9 @@
         const acceptItem = this._acceptAction.item();
         let result = true;
         if (paramItem.elementId && !this._acceptAction.hasElement(paramItem.elementId)) {
+            result = false;
+        }
+        if (paramItem.skillId && acceptItem.id !== paramItem.skillId) {
             result = false;
         }
         if (paramItem.hitType && acceptItem.hitType !== paramItem.hitType) {
@@ -327,10 +359,10 @@
         }
     };
 
-    const _Game_Action_executeHpDamage = Game_Action.prototype.executeHpDamage;
-    Game_Action.prototype.executeHpDamage = function(target, value) {
+    const _Game_Action_apply = Game_Action.prototype.apply;
+    Game_Action.prototype.apply = function(target) {
         target.setAcceptedAction(this);
-        _Game_Action_executeHpDamage.apply(this, arguments);
+        _Game_Action_apply.apply(this, arguments);
         target.setAcceptedAction(null);
     };
 })();
