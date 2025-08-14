@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.9.2 2025/08/15 シーンのAPNGでGIFを使用できない問題を修正
  1.9.1 2022/06/06 apngのフレーム数を指定したとき停止スイッチが機能しない問題を修正
  1.9.0 2022/02/05 apngピクチャのキャッシュを手動削除する機能を追加
  1.8.4 2021/02/01 数字のみのファイルをapng指定して起動するとエラーになる問題を修正
@@ -1145,7 +1146,8 @@
        }
 
        setup(item) {
-           this.addApngChild(item.FileName);
+           const name = item.FileName.replace(/\.gif$/gi, '');
+           this.addApngChild(name);
            this.x = item.X;
            this.y = item.Y;
            if (item.Origin === 1) {
