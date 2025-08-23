@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2025/08/23 共有変数、共有スイッチの個別指定機能を追加
  1.0.0 2024/04/30 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -33,6 +34,12 @@
  * @default 0
  * @type variable
  *
+ * @param variableList
+ * @text 共有変数リスト
+ * @desc 共有変数として扱う変数のIDリストです。個別で変数を指定したいときに設定します。
+ * @default []
+ * @type variable[]
+ *
  * @param startSwitchId
  * @text 共有スイッチID(開始)
  * @desc 指定した範囲内のスイッチが共有スイッチとして扱われます。
@@ -44,6 +51,12 @@
  * @desc 指定した範囲内のスイッチが共有スイッチとして扱われます。
  * @default 0
  * @type switch
+ *
+ * @param switchList
+ * @text 共有スイッチリスト
+ * @desc 共有スイッチとして扱うスイッチのIDリストです。個別でスイッチを指定したいときに設定します。
+ * @default []
+ * @type switch[]
  *
  * @command SAVE_COMMON_VARIABLE
  * @text 共有変数の保存
@@ -74,6 +87,12 @@
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+    if (!param.variableList) {
+        param.variableList = [];
+    }
+    if (!param.switchList) {
+        param.switchList = [];
+    }
 
     PluginManagerEx.registerCommand(script, 'SAVE_COMMON_VARIABLE', () => {
         ConfigManager.saveCommonVariables();
@@ -84,6 +103,7 @@
         for (let i = param.startVariableId; i <= param.endVariableId; i++) {
             map[i] = this.value(i);
         }
+        param.variableList.forEach(id => map[id] = this.value(id));
         return map;
     };
 
@@ -93,6 +113,7 @@
                 this.setValue(key, map[key]);
             }
         }
+        param.variableList.forEach(id => this.setValue(id, map[id]));
     };
 
     Game_Switches.prototype.findCommonSwitches = function() {
@@ -100,6 +121,7 @@
         for (let i = param.startSwitchId; i <= param.endSwitchId; i++) {
             map[i] = this.value(i);
         }
+        param.switchList.forEach(id => map[id] = this.value(id));
         return map;
     };
 
@@ -109,6 +131,7 @@
                 this.setValue(key, map[key]);
             }
         }
+        param.switchList.forEach(id => this.setValue(id, map[id]));
     };
 
     const _ConfigManager_makeData = ConfigManager.makeData;
