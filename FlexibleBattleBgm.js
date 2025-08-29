@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2025/08/30 マップから戦闘開始したとき、BGMの冒頭が重複して再生される問題を修正
  1.1.0 2024/01/12 敵グループIDの範囲指定機能を追加
  1.0.0 2024/01/06 初版
 ----------------------------------------------------------------------------
@@ -109,17 +110,11 @@
         param.bgmList = [];
     }
 
-    const _BattleManager_playBattleBgm = BattleManager.playBattleBgm;
-    BattleManager.playBattleBgm = function() {
-        _BattleManager_playBattleBgm.apply(this, arguments);
-        $gameTroop.playTroopBattleBgm();
-    };
-
-    Game_Troop.prototype.playTroopBattleBgm = function() {
-        const bgm = param.bgmList.find(bgm => this.isFlexibleBattleBgm(bgm));
-        if (bgm) {
-            AudioManager.playBgm(bgm);
-        }
+    const _Game_System_battleBgm = Game_System.prototype.battleBgm;
+    Game_System.prototype.battleBgm = function() {
+        const bgm = _Game_System_battleBgm.apply(this, arguments);
+        const flexibleBgm = param.bgmList.find(bgm => $gameTroop.isFlexibleBattleBgm(bgm));
+        return flexibleBgm || bgm;
     };
 
     Game_Troop.prototype.isFlexibleBattleBgm = function(bgm) {
