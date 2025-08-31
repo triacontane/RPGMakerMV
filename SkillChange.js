@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.2 2025/08/31 1.2.0の機能追加以後、アイテムリストが登録されていない状態でアイテムを使用するとエラーになる問題を修正
  1.2.1 2025/08/03 アイテム変化したとき、変化前のアイテムを消費するよう仕様変更
  1.2.0 2025/08/03 アイテム変化機能を追加
  1.1.0 2024/10/12 AttackChain.jsとの連携機能を追加
@@ -274,7 +275,7 @@
     Game_Battler.prototype.findItemChangeId = function(action) {
         const itemId = action.item().id;
         const item = param.itemList.find(data => data.itemId === itemId && this.meetsSkillChangeCondition(data.condition));
-        return item.changeItemId || null;
+        return item?.changeItemId || null;
     }
 
     const _Game_Battler_consumeItem = Game_Battler.prototype.consumeItem;
