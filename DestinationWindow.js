@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.2.1 2025/09/03 2.2.0の修正で行動目標ウィンドウを通常表示にすると、マップ表示のタイミングで一瞬表示される問題を修正
 // 2.2.0 2024/07/12 行動目標ウィンドウの背景タイプを設定できる機能を追加
 // 2.1.0 2021/11/10 フェードインを有効にしているとメニュー画面のウィンドウでも適用される問題を修正
 //                  一部のパラメータの初期値を修正、ヘルプを微修正
@@ -131,7 +132,7 @@
  * @text 表示フレーム数
  * @desc 行動目標ウィンドウの表示フレーム数です。0を指定すると常時表示されます。
  * @default 0
- * @type number
+ * @type icon
  *
  * @param textAlign
  * @text 文字列揃え
@@ -345,9 +346,9 @@
         this._text      = '';
         this._textList  = [];
         this._iconIndex = 0;
-        this.opacity = this.isVisible() ? 255 : 0;
         this.setBackgroundType(this.findWindowBackType());
         this.update();
+        this.initOpacity();
     };
 
     Window_Destination.prototype.findWindowBackType = function() {
@@ -388,6 +389,13 @@
         if (!this.windowskin.isReady()) return;
         this.updateText();
         this.updateOpacity();
+    };
+
+    Window_Destination.prototype.initOpacity = function() {
+        if (this.findWindowBackType() === 0) {
+            const opacity = this.isVisible() ? 255 : 0;
+            this.setOpacity(opacity);
+        }
     };
 
     Window_Destination.prototype.updateOpacity = function() {
