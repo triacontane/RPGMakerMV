@@ -20,9 +20,10 @@
  *
  * @help SaveFileCheckByGameId.js
  *
- * ローカル環境実行時、セーブデータのゲームIDをチェックして
+ * ロード画面表示時にセーブデータのゲームIDをチェックして
  * 異なる場合はロードできないようにします。
  * 本プラグインを適用前にセーブしたデータもロードできなくなります。
+ * ゲームIDはRPGツクールMZのシステム設定で変更できます。
  *
  * 利用規約：
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
@@ -32,8 +33,6 @@
 
 (() => {
     'use strict';
-    const script = document.currentScript;
-    const param = PluginManagerEx.createParameter(script);
 
     const _DataManager_makeSavefileInfo = DataManager.makeSavefileInfo;
     DataManager.makeSavefileInfo = function() {
