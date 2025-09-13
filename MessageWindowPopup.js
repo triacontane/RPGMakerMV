@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.5.1 2025/09/13 フキダシウィンドウの右端、下端の基準をUIサイズではなく画面サイズに変更
  1.5.0 2025/02/17 コアスクリプトv1.9.0に対応
  1.4.4 2024/12/28 余白設定がフキダシウィンドウを無効にしたときも反映されていた問題を修正
  1.4.3 2024/10/25 英語版ヘルプのプラグインコマンドのキャラクターID下限を削除
@@ -1236,7 +1237,7 @@
     Window_Base.prototype.adjustPopupPositionX = function() {
         let deltaX = 0;
         const minX = param.lowerLimitX || 0;
-        const maxX = param.upperLimitX || Graphics.boxWidth;
+        const maxX = param.upperLimitX || Graphics.width;
         if (this.x < minX) {
             deltaX = this.x - minX;
             this.x = minX;
@@ -1254,7 +1255,7 @@
         if (this.y < minY) {
             this.y = minY;
         }
-        const maxY = (param.upperLimitY || Graphics.boxHeight) - this._pauseSignSprite.height / 2;
+        const maxY = (param.upperLimitY || Graphics.height) - this._pauseSignSprite.height / 2;
         if (this.y + this.height > maxY) {
             this.y = maxY - this.height;
         }
