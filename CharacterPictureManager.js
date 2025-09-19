@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.19.0 2025/09/19 立ち絵のフェード時に表示位置をスライドさせる機能を追加
 // 3.18.2 2025/04/28 アクターが複数のStandPictureのタグを持てるよう変更
 // 3.18.1 2025/04/28 3.18.0の機能でシェイクスイッチを一切指定していない立ち絵を表示させようとするとエラーになる問題を修正
 // 3.18.0 2025/04/27 立ち絵のシェイク機能を立ち絵ごとに行う仕様に変更
@@ -717,6 +718,20 @@
  * @default 0
  * @type number
  *
+ * @param FadeX
+ * @text スライドフェードX
+ * @desc フェード時間を指定したとき、フェード時間中にX方向に移動するピクセルです。
+ * @default 0
+ * @type number
+ * @min -9999
+ *
+ * @param FadeY
+ * @text スライドフェードY
+ * @desc フェード時間を指定したとき、フェード時間中にY方向に移動するピクセルです。
+ * @default 0
+ * @type number
+ * @min -9999
+ *
  * @param UpdateInterval
  * @text 更新間隔
  * @desc 立ち絵の表示条件を確認するインターバルです。多数の立ち絵を表示してパフォーマンスが低下する場合に変更します。
@@ -896,6 +911,8 @@
             picture.SceneScaleX = scene.ScaleX;
             picture.SceneScaleY = scene.ScaleY;
             picture.FadeFrame = scene.FadeFrame;
+            picture.FadeX = scene.FadeX;
+            picture.FadeY = scene.FadeY;
             picture.CrossFadeFrame = scene.CrossFadeFrame;
             picture.SceneUnFocusSwitch = scene.UnFocusSwitch;
             picture.SceneTouchSwitch = scene.TouchSwitch;
@@ -1566,6 +1583,14 @@
 
         updateVisibility() {
             this._openness = (this._openness + this.calcDeltaOpenness()).clamp(0, 1);
+            const deltaX = Math.floor(this._picture.FadeX * (1 - this._openness));
+            const deltaY = Math.floor(this._picture.FadeY * (1 - this._openness));
+            if (deltaX) {
+                this.x -= (this.isMirror() ? -deltaX : deltaX);
+            }
+            if (deltaY) {
+                this.y -= deltaY;
+            }
             this.opacity = this._picture.Opacity * this._openness;
             if (this._crossFadeSprite) {
                 this.updateCrossFadeVisibility();
