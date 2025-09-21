@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.20.0 2025/09/21 サイドビューでも戦闘アニメの表示対象を立ち絵にできるよう仕様変更
+//                   立ち絵のフェード機能を画像単位で無効にできる機能を追加
 // 3.19.0 2025/09/19 立ち絵のフェード時に表示位置をスライドさせる機能を追加
 // 3.18.2 2025/04/28 アクターが複数のStandPictureのタグを持てるよう変更
 // 3.18.1 2025/04/28 3.18.0の機能でシェイクスイッチを一切指定していない立ち絵を表示させようとするとエラーになる問題を修正
@@ -165,7 +167,7 @@
  *
  * @param UseAnimationTarget
  * @text 戦闘アニメ対象にする
- * @desc フロントビューの戦闘アニメの対象が立ち絵になります。立ち絵の表示優先度を『アニメーションの下』に設定してください。
+ * @desc 戦闘アニメの対象が立ち絵になります。立ち絵の表示優先度を『アニメーションの下』に設定してください。
  * @default false
  * @type boolean
  *
@@ -332,6 +334,12 @@
  * @desc 指定した場合、スイッチがONのときのみ立ち絵が表示されます。
  * @default 0
  * @type switch
+ *
+ * @param NoFade
+ * @text フェードなし
+ * @desc 指定した場合、シーン設定でフェードを有効にしていても、表示時にフェードせず瞬間表示されます。
+ * @default false
+ * @type boolean
  *
  * @param UnFocusSwitch
  * @text アンフォーカススイッチ
@@ -910,9 +918,11 @@
             picture.SceneMirrorSwitch = scene.MirrorSwitch;
             picture.SceneScaleX = scene.ScaleX;
             picture.SceneScaleY = scene.ScaleY;
-            picture.FadeFrame = scene.FadeFrame;
-            picture.FadeX = scene.FadeX;
-            picture.FadeY = scene.FadeY;
+            if (!picture.NoFade) {
+                picture.FadeFrame = scene.FadeFrame;
+                picture.FadeX = scene.FadeX;
+                picture.FadeY = scene.FadeY;
+            }
             picture.CrossFadeFrame = scene.CrossFadeFrame;
             picture.SceneUnFocusSwitch = scene.UnFocusSwitch;
             picture.SceneTouchSwitch = scene.TouchSwitch;
@@ -1154,7 +1164,7 @@
 
     const _Spriteset_Battle_findTargetSprite = Spriteset_Battle.prototype.findTargetSprite;
     Spriteset_Battle.prototype.findTargetSprite = function(target) {
-        if (!$gameSystem.isSideView() && param.UseAnimationTarget) {
+        if (param.UseAnimationTarget) {
             const sprite = this.findTargetStand(target);
             if (sprite) {
                 return sprite;
