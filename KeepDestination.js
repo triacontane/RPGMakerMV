@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.1 2025/09/30 フェード「なし」で場所移動するとタッチ移動が移動後も維持されてしまう問題を修正
 // 1.2.0 2025/09/07 移動ルート強制を行うとタッチ移動を中断する機能を追加
 // 1.1.0 2025/03/11 MZ版としてリファクタリング
 // 1.0.0 2018/01/06 初版
@@ -69,6 +70,13 @@
 
     Game_Player.prototype.isDestinationAbortByRouteForce = function() {
         return this._moveRouteForcing && param.abortByRouteForce;
+    };
+
+    const _Game_Player_reserveTransfer = Game_Player.prototype.reserveTransfer;
+    Game_Player.prototype.reserveTransfer = function(mapId, x, y, d, fadeType) {
+        _Game_Player_reserveTransfer.apply(this, arguments);
+        $gameTemp.clearKeepDestination();
+        $gameTemp.clearDestination();
     };
 
     //=============================================================================
