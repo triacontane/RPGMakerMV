@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2025/09/30 マウスオーバーでアイコン説明を表示できる機能を追加
+                  画面左上にアイコン説明が誤って表示される場合がある問題を修正
  1.0.3 2024/12/26 ヘルプテキストやメッセージウィンドウにアイコンを表示したとき、切り替わり後も判定が残ってしまう問題を修正
                   スクロールするウィンドウでアイコン判定の位置がずれる問題を修正
  1.0.2 2023/08/20 アイコンが一度表示され消去された後もクリック判定残ってしまう場合がある問題を修正
@@ -51,13 +53,15 @@
  *
  * @param triggerType
  * @text トリガータイプ
- * @desc アイコン説明ウィンドウを表示するトリガーです。
+ * @desc アイコン説明ウィンドウを表示するトリガーです。マウスオーバーはPC環境でのみ有効に動作します。
  * @default click
  * @type select
  * @option クリック
  * @value click
  * @option 押し続け
  * @value press
+ * @option マウスオーバー
+ * @value hover
  *
  * @param se
  * @text 効果音
@@ -226,6 +230,13 @@
     Sprite_StateIcon.prototype.isBeingTouched = function() {
         const touchPos = new Point(TouchInput.x, TouchInput.y);
         const localPos = this.worldTransform.applyInverse(touchPos);
+        // applyInverseがtouchPosと同じ値を返すケースがあり原因不明のため対症療法
+        if (touchPos.x === localPos.x && touchPos.y === localPos.y) {
+            const win = this.parent.parent;
+            if (win.x !== 0 || win.y !== 0) {
+                return false;
+            }
+        }
         return this.hitTest(localPos.x, localPos.y);
     };
 
@@ -242,6 +253,8 @@
     SceneManager.isTriggeredIconCaption = function() {
         if (param.triggerType === 'press') {
             return TouchInput.isPressed();
+        } else if (param.triggerType === 'hover') {
+            return true;
         } else {
             return TouchInput.isTriggered();
         }
@@ -253,6 +266,8 @@
         }
         if (param.triggerType === 'press') {
             return !TouchInput.isPressed();
+        } else if (param.triggerType === 'hover') {
+            return this._iconDescFrame + 10 < Graphics.frameCount;
         } else {
             return TouchInput.isTriggered();
         }
@@ -274,6 +289,7 @@
         if (!findIconCaptionParam(index)) {
             return;
         }
+        this._iconDescFrame = Graphics.frameCount;
         if (this._iconCaption?.isSameCaption(index, x, y)) {
             return;
         }
