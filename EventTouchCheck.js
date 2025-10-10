@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2025/10/10 場所移動時にエラーになる問題を修正
  1.0.0 2024/03/13 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -80,7 +81,7 @@
     Game_Interpreter.prototype.terminate = function() {
         _Game_Interpreter_terminate.apply(this, arguments);
         if (this._eventId > 0 && this._depth === 0) {
-            this.character(0).clearStartByTouch();
+            this.character(0)?.clearStartByTouch();
         }
     };
 })();
