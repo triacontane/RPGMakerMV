@@ -13,7 +13,7 @@
 =============================================================================*/
 
 /*:
- * @plugindesc フレーム画像プラグイン
+ * @plugindesc 常駐フレーム画像プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/FrameImage.js
  * @base PluginCommonBase
