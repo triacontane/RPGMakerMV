@@ -456,6 +456,245 @@
  * @max 100
  */
 
+/*:zh
+ * @target MZ
+ * @plugindesc 图片动画插件
+ * @author triacontane
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url
+ * 
+ * @param returnToFirstCell
+ * @text 返回到第一个单元格
+ * @desc 非循环动画结束后是否返回第一个单元格。若禁用，将停在最后一个单元格。
+ * @default true
+ * @type boolean
+ *
+ * @command INIT
+ * @text 动画准备
+ * @desc 准备将图片设为动画目标。请在“显示图片”之前执行。
+ *
+ * @arg cellNumber
+ * @text 单元格数量
+ * @desc 动画中包含的单元格数量。
+ * @type number
+ * @default 1
+ * @max 200
+ * @min 1
+ *
+ * @arg frameNumber
+ * @text 帧数
+ * @desc 每个动画间隔的帧数。
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg direction
+ * @text 单元格排列方式
+ * @desc 单元格图片的排列方式。
+ * @type select
+ * @default vertical
+ * @option 纵向排列
+ * @value vertical
+ * @option 横向排列
+ * @value horizon
+ * @option 按编号顺序
+ * @value number
+ *
+ * @arg fade
+ * @text 淡入淡出时间
+ * @desc 切换图片所需的帧数（设为0则不进行淡入淡出）。
+ * @type number
+ * @default 0
+ *
+ * @command START
+ * @text 开始动画
+ * @desc 启动指定图片编号的动画。
+ *
+ * @arg pictureNumber
+ * @text 图片ID
+ * @desc 图片的ID编号。
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg loop
+ * @text 是否循环
+ * @desc 动画是否循环播放。
+ * @type boolean
+ * @default false
+ *
+ * @arg wait
+ * @text 等待完成
+ * @desc 若启用，则事件将在动画播放完毕后继续。
+ * @type boolean
+ * @default false
+ *
+ * @arg animationType
+ * @text 动画类型
+ * @desc 动画的播放顺序类型。
+ * @type select
+ * @default 1
+ * @option 1→2→3→4→1→2→3→4...（若单元格数为4）
+ * @value 1
+ * @option 1→2→3→4→3→2→1→2...（若单元格数为4）
+ * @value 2
+ * @option 自定义模式
+ * @value 3
+ *
+ * @arg customPattern
+ * @text 自定义模式
+ * @desc 若动画类型为“自定义模式”，请在此设定播放顺序。
+ * @type number[]
+ * @default ["1"]
+ *
+ * @command STOP
+ * @text 结束动画
+ * @desc 停止指定图片编号的动画。
+ *
+ * @arg pictureNumber
+ * @text 图片ID
+ * @desc 图片的ID编号。
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg force
+ * @text 强制停止
+ * @desc 若启用，将立即停止动画；若禁用，将在当前循环结束后停止。
+ * @type boolean
+ * @default false
+ *
+ * @command SET_CELL
+ * @text 设置动画单元格
+ * @desc 直接设置动画单元格编号。可在任意时机切换动画。
+ *
+ * @arg pictureNumber
+ * @text 图片ID
+ * @desc 图片的ID编号。
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg cellNumber
+ * @text 单元格编号
+ * @desc 要指定的单元格编号。起始编号为1，若设置为0，则向后推进一帧。
+ * @type number
+ * @default 0
+ *
+ * @arg wait
+ * @text 是否等待
+ * @desc 若启用，将在淡入淡出期间暂停事件执行。
+ * @type boolean
+ * @default false
+ *
+ * @command LINK_VARIABLE
+ * @text 单元格变量链接
+ * @desc 将动画单元格与变量同步。变量值变化时，显示的单元格将自动变化。
+ *
+ * @arg pictureNumber
+ * @text 图片ID
+ * @desc 图片的ID编号。
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg variableId
+ * @text 变量编号
+ * @desc 要链接的变量编号。
+ * @type variable
+ * @default 1
+ *
+ * @command LINK_SOUND
+ * @text 音效设置
+ * @desc 在动画单元格切换时播放指定音效。
+ *
+ * @arg cellNumber
+ * @text 单元格编号
+ * @desc 要触发音效的单元格编号。
+ * @type number
+ * @default 1
+ * @min 1
+ *
+ * @arg se
+ * @text 音效
+ * @desc 播放的音效。
+ * @type struct<SE>
+ * @default
+ *
+ * @help 该插件可在指定帧间隔下为图片播放动画。
+ * 请准备要动画化的单元格图片（※），并按以下顺序执行命令：
+ *
+ * 1. 动画准备（插件命令）
+ * 2. 显示图片（事件命令）
+ * 3. 开始动画（插件命令）
+ * 4. 结束动画（插件命令）
+ *
+ * 【排列方式】
+ * 纵向排列：将所有单元格纵向组合为一张图片。
+ * 横向排列：将所有单元格横向组合为一张图片。
+ * 按编号顺序：准备多个依次编号的图片文件。例如：
+ *   original00.png（显示图片中指定的原始文件）
+ *   original01.png
+ *   original02.png……
+ *
+ * 【注意事项】
+ * 若使用“排除未使用文件”功能进行部署，可能导致部分序列图片被误删。
+ * 若发生此问题，请手动将被删除的图片文件重新加入项目。
+ *
+ * 除了基本的动画播放外，还可以：
+ * - 通过插件命令直接指定单元格编号；
+ * - 将变量的值与动画单元格关联，实现自动变化。
+ *
+ * 这在例如立绘表情切换或分镜演出中非常实用。
+ *
+ * 【脚本使用说明】
+ * 可通过脚本获取正在播放动画的图片当前单元格编号：
+ * （在“变量操作”或“条件分支”中可使用）
+ * 若图片未显示时调用此语句会报错。
+ * $gameScreen.picture(1).cell; // 获取图片编号[1]的单元格编号。
+ *
+ * 【使用条款】
+ *  您可以自由修改或重新分发本插件，无需作者许可。
+ *  使用形式（如商业用途或18禁游戏）没有任何限制。
+ *  现在，这个插件完全属于您。
+ */
+
+/*~struct~SE:zh
+ * @param name
+ * @text 音效文件名
+ * @desc 音效文件的名称。
+ * @default Book1
+ * @require 1
+ * @dir audio/se/
+ * @type file
+ *
+ * @param volume
+ * @text 音量
+ * @desc 播放音效的音量。
+ * @default 90
+ * @type number
+ * @min 0
+ * @max 100
+ *
+ * @param pitch
+ * @text 音调
+ * @desc 播放音效的音调。
+ * @default 100
+ * @type number
+ * @min 50
+ * @max 150
+ *
+ * @param pan
+ * @text 声道平衡
+ * @desc 声音的左右平衡。
+ * @default 0
+ * @type number
+ * @min -100
+ * @max 100
+ */
+
+
 (function() {
     'use strict';
     const script = document.currentScript;

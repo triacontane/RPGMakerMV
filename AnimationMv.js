@@ -126,6 +126,59 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*:zh
+ * @target MZ
+ * @plugindesc MV 动画插件
+ * @author Triacontane
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AnimationMv.js
+ *
+ * @param AnimationList
+ * @text 动画列表
+ * @desc 要使用的动画素材列表。注册后，它们将不会被“排除未使用文件”选项删除。
+ * @default []
+ * @dir img/animations/
+ * @type file[]
+ *
+ * @param SeList
+ * @text 音效列表
+ * @desc 要使用的音效素材列表。注册后，它们将不会被“排除未使用文件”选项删除。
+ * @default []
+ * @dir audio/se/
+ * @type file[]
+ *
+ * @param MvProjectPathText
+ * @text MV 工程的绝对路径
+ * @desc 用于编辑动画的 MV 工程路径。如果留空，将禁用自动复制功能。
+ * @default
+ *
+ * @param NoCopyImageFile
+ * @text 不复制图像文件
+ * @desc 不再自动复制动画图像文件。当复制过程耗时较长时可启用此选项。
+ * @default false
+ * @type boolean
+ *
+ * @help AnimationMv.js
+ * 该插件可同时使用 RPG Maker MV 的动画播放方式与 MZ 的新播放方式。
+ *
+ * 在 RPG Maker MV 编辑器中编辑动画数据，
+ * 并通过参数指定你的 MV 工程路径。
+ * 测试游戏时，「img/animations」下的图像文件与「data/Animations.json」文件
+ * 将自动复制到 MZ 工程中。
+ * 「Animations.json」会被复制到「mv/Animations.json」中。
+ *
+ * 若在 MZ 数据库中创建的「粒子特效」「音效」「闪光」均为空（即新建状态），
+ * 则会播放 MV 的动画。
+ *
+ * 本插件使用全局变量「$dataMvAnimations」。
+ *
+ * 使用协议：
+ *  你可以自由修改或再分发本插件，无需获得作者许可。
+ *  对使用形式（例如商用或成人游戏）没有任何限制。
+ *  现在，这个插件完全属于你。
+ */
+
 (() => {
     'use strict';
     const script = document.currentScript;

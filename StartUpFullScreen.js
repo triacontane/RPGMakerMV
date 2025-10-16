@@ -140,6 +140,66 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*:zh
+ * @plugindesc 启动时自动全屏显示的插件
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StartUpFullScreen.js
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @orderAfter ElectronForMz
+ * @author triacontane
+ *
+ * @param Shutdown
+ * @text 关闭游戏
+ * @desc 在标题画面中添加“关闭游戏”选项。仅在本地运行环境下显示。
+ * @default 关闭游戏
+ *
+ * @param DefaultFullScreen
+ * @text 默认全屏启动
+ * @desc 若启用，则游戏启动时默认以全屏模式运行。
+ * @default false
+ * @type boolean
+ *
+ * @param Immediate
+ * @text 即时生效
+ * @desc 若启用，则在“选项”中更改全屏设置时立即生效。
+ * @default false
+ * @type boolean
+ *
+ * @param StartUpFullScreen
+ * @text 启动时全屏
+ * @desc 在选项菜单中添加“启动时全屏”选项。仅在本地运行环境下显示。
+ * @default 启动时全屏
+ *
+ * @param UseGameEnd
+ * @text 添加到“游戏结束”菜单
+ * @desc 在“游戏结束”菜单中添加“关闭游戏”选项。
+ * @default true
+ * @type boolean
+ *
+ * @help StartUpFullScreen.js
+ *
+ * 本插件在选项菜单中添加“启动时全屏”选项。
+ * 启用后，游戏将在启动时自动以全屏模式运行。
+ * 同时会在标题画面中添加“关闭游戏”功能。
+ *
+ * 【功能说明】
+ * - 仅在本地运行环境中有效。
+ * - 事件测试执行时将禁用全屏功能，以优先保证运行速度。
+ * - 若启用“即时生效”选项，当玩家在选项菜单中修改全屏设置时，
+ *   游戏画面会立即切换显示模式。
+ *
+ * 【必要插件】
+ * 运行此插件需要官方基础插件「PluginCommonBase.js」。
+ * 该插件位于 RPG Maker MZ 安装目录下：
+ * `dlc/BasicResources/plugins/official`
+ *
+ * 【许可证】
+ * 本插件基于 MIT 许可证发布。
+ * 您可以自由修改、再分发，或将其用于任何形式的作品（包括商业和成人游戏）。
+ * http://opensource.org/licenses/mit-license.php
+ */
+
 function Scene_Terminate() {
     this.initialize.apply(this, arguments);
 }

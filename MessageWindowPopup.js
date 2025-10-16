@@ -668,6 +668,308 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*:zh
+ * @plugindesc 对话气泡窗口插件
+ * @author triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageWindowPopup.js
+ *
+ * * @param FontSize
+ * @text 字体大小
+ * @desc 气泡窗口的默认字体大小。默认窗口字体大小：28
+ * @default 22
+ * @type number
+ *
+ * @param Padding
+ * @text 边距
+ * @desc 气泡窗口的边距大小。默认窗口边距：18
+ * @default 10
+ * @type number
+ *
+ * @param AutoPopup
+ * @text 自动设置
+ * @desc 当事件启动时，自动将气泡的目标设置为启动的事件。关闭时，则使用普通消息窗口。
+ * @default true
+ * @type boolean
+ *
+ * @param FaceScale
+ * @text 头像缩放倍率
+ * @desc 在气泡窗口中显示头像的缩放比例（1-100%）
+ * @default 75
+ * @type number
+ *
+ * @param WindowLinkage
+ * @text 窗口联动
+ * @desc 将选项窗口和数值输入窗口与气泡窗口进行联动。
+ * @default true
+ * @type boolean
+ *
+ * @param BetweenLines
+ * @text 行间距
+ * @desc 设置行与行之间的像素间距。
+ * @default 4
+ * @type number
+ *
+ * @param FontSizeRange
+ * @text 字体增减范围
+ * @desc 使用控制字符“\{”或“\}”时，字体大小增减的范围。默认值为12。
+ * @default 12
+ * @type number
+ *
+ * @param FontUpperLimit
+ * @text 字体大小上限
+ * @desc 使用控制字符“\{”或“\}”时的字体最大值。默认96。
+ * @default 96
+ * @type number
+ *
+ * @param FontLowerLimit
+ * @text 字体大小下限
+ * @desc 使用控制字符“\{”或“\}”时的字体最小值。默认24。
+ * @default 24
+ * @type number
+ *
+ * @param InnerScreen
+ * @text 适应屏幕
+ * @desc 调整位置，使气泡窗口在水平方向和垂直方向上都不会超出屏幕。
+ * @default false
+ * @type boolean
+ *
+ * @param ShakeSpeed
+ * @text 震动速度
+ * @desc 气泡窗口震动的速度。
+ * @default 5
+ * @type number
+ *
+ * @param ShakeDuration
+ * @text 震动时间
+ * @desc 窗口震动的帧数，设为0表示持续震动。
+ * @default 60
+ * @type number
+ *
+ * @param NoUseTail
+ * @text 不使用尾巴
+ * @desc 禁用气泡的尾巴显示功能，将在默认位置显示。
+ * @default false
+ * @type boolean
+ *
+ * @param MinWidthVariableId
+ * @text 最小宽度变量ID
+ * @desc 指定的变量的值将作为气泡窗口的最小宽度（像素）。
+ * @default 0
+ * @type variable
+ *
+ * @param MinHeightVariableId
+ * @text 最小高度变量ID
+ * @desc 指定的变量的值将作为气泡窗口的最小高度（像素）。
+ * @default 0
+ * @type variable
+ *
+ * @param lowerLimitX
+ * @text X坐标下限
+ * @desc 气泡窗口的X坐标下限。
+ * @default 0
+ * @type number
+ *
+ * @param upperLimitX
+ * @text X坐标上限
+ * @desc 气泡窗口的X坐标上限。
+ * @default 0
+ * @type number
+ *
+ * @param lowerLimitY
+ * @text Y坐标下限
+ * @desc 气泡窗口的Y坐标下限。
+ * @default 0
+ * @type number
+ *
+ * @param upperLimitY
+ * @text Y坐标上限
+ * @desc 气泡窗口的Y坐标上限。
+ * @default 0
+ * @type number
+ *
+ * @param tailImage
+ * @text 尾巴图像
+ * @desc 指定要使用的尾巴图像（系统图像）。
+ * @default
+ * @dir img/system/
+ * @type file
+ *
+ * @param tailImageAdjustY
+ * @text 尾巴图像Y坐标修正
+ * @desc 尾巴图像的Y坐标修正值。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @param FixedLeftX
+ * @desc
+ * @default 0
+ * @type number
+ *
+ * @command POPUP_VALID
+ * @text 启用气泡窗口
+ * @desc 激活指定ID的气泡窗口。
+ *
+ * @arg id
+ * @text 角色ID
+ * @desc 气泡目标ID。[ -1 ] 玩家 [ 0 ] 本事件 [ 1.. ] 指定事件ID
+ * @default 0
+ * @type number
+ *
+ * @arg name
+ * @text 事件名称
+ * @desc 指定气泡目标的事件名称（如果通过名称指定目标）。
+ * @default
+ * @type string
+ *
+ * @arg windowPosition
+ * @text 窗口位置
+ * @desc 气泡窗口的位置。
+ * @default auto
+ * @type select
+ * @option 自动
+ * @value auto
+ * @option 角色上方
+ * @value upper
+ * @option 角色下方
+ * @value lower
+ *
+ * @command POPUP_INVALID
+ * @text 禁用气泡窗口
+ * @desc 关闭气泡窗口并恢复普通窗口显示。
+ *
+ * @command FREE_POPUP_VALID
+ * @text 启用自由气泡窗口
+ * @desc 在指定坐标启用气泡窗口。
+ *
+ * @arg x
+ * @text X坐标
+ * @desc 气泡窗口的X坐标。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @arg y
+ * @text Y坐标
+ * @desc 气泡窗口的Y坐标。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @command POPUP_WINDOW_SETTING
+ * @text 气泡窗口显示设置
+ * @desc 修改气泡窗口的显示设置。
+ *
+ * @arg windowPosition
+ * @text 窗口位置
+ * @desc 气泡窗口的位置。
+ * @default none
+ * @type select
+ * @option 不更改
+ * @value none
+ * @option 自动
+ * @value auto
+ * @option 角色上方
+ * @value upper
+ * @option 角色下方
+ * @value lower
+ *
+ * @arg skin
+ * @text 窗口皮肤
+ * @desc 如果要更改气泡窗口皮肤，请指定。
+ * @default
+ * @dir img/system/
+ * @type file
+ *
+ * @command SUB_WINDOW_SETTING
+ * @text 子窗口显示设置
+ * @desc 设置子窗口的显示方式。
+ *
+ * @arg type
+ * @text 显示类型
+ * @desc 子窗口的显示方式。
+ * @default 0
+ * @type select
+ * @option 普通
+ * @value 0
+ * @option 玩家上方
+ * @value 1
+ * @option 右侧
+ * @value 3
+ *
+ * @command POPUP_ADJUST_POSITION
+ * @text 气泡窗口位置调整
+ * @desc 调整气泡窗口的显示坐标。
+ *
+ * @arg x
+ * @text X坐标
+ * @desc 相对于原始坐标的调整值。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @arg y
+ * @text Y坐标
+ * @desc 相对于原始坐标的调整值。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @command POPUP_ADJUST_SIZE
+ * @text 气泡窗口大小调整
+ * @desc 调整气泡窗口的显示大小。
+ *
+ * @arg width
+ * @text 宽度
+ * @desc 相对于原始大小的调整值。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @arg height
+ * @text 高度
+ * @desc 相对于原始大小的调整值。
+ * @default 0
+ * @type number
+ * @min -2000
+ * @max 2000
+ *
+ * @command CHANGE_TAIL
+ * @text 更改尾巴图像
+ * @desc 将尾巴图像更改为其他图像。
+ *
+ * @arg tailImage
+ * @text 尾巴图像
+ * @desc 指定使用的尾巴图像（系统图像）。如果留空，将恢复为参数中指定的尾巴图像。
+ * @default
+ * @dir img/system/
+ * @type file
+ *
+ * @help
+ * 本插件将消息窗口修改为气泡窗口，显示在指定角色的头顶上方。
+ * 可以通过插件命令进行各种设置。
+ *
+ * - 可用控制字符
+ * \sh[5]  # 以强度[5]震动气泡窗口。
+ *
+ * 使用本插件需要基础插件“PluginCommonBase.js”。
+ * “PluginCommonBase.js” 位于 RPG Maker MZ 安装目录：
+ * dlc/BasicResources/plugins/official
+ *
+ * 使用协议：
+ *  你可以自由修改或再分发本插件，无需获得许可。
+ *  不限制使用形式（包括成人或商业用途）。
+ *  本插件完全归你所有。
+ */
+
 (() => {
     'use strict';
     const script = document.currentScript;

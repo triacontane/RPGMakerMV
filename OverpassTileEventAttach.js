@@ -61,6 +61,30 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*:zh
+ * @target MZ
+ * @plugindesc 立体交叉图块插件的事件附加模块
+ * @author triacontane
+ * @base OverpassTile
+ * @orderAfter OverpassTile
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/OverpassTileEventAttach.js
+ *
+ * @help OverpassTileEventAttach.js
+ * 本插件是官方插件「OverpassTile.js」的立体交叉事件附加组件。
+ * 只需在事件的备注栏中写入以下内容，即可将该事件视为立体交叉事件：
+ *
+ * <Overpass>
+ *
+ * 但请注意，如果事件页未指定图像，或当前没有有效页，
+ * 则该事件不会被视为立体交叉事件。
+ * 一般情况下，请将事件的“优先级”设置为“高于普通角色”。
+ *
+ * 【使用条款】
+ *  您可以自由修改或重新分发本插件，无需作者许可。
+ *  使用形式（如商业用途或18禁游戏）没有任何限制。
+ *  现在，这个插件完全属于您。
+ */
+
 (() => {
     'use strict';
 

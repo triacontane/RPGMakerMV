@@ -347,6 +347,164 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*:zh
+ * @plugindesc 事件动态生成
+ * @author Triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @orderAfter TemplateEvent
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/EventReSpawn.js
+ *
+ * @param keepSelfSwitch
+ * @text 保持独立开关
+ * @desc 启用后，在移动场所时不会清除独立开关。如果执行事件清除，开关也会被清除。
+ * @default false
+ * @type boolean
+ *
+ * @param variableSpawnEventId
+ * @text 生成事件ID存储变量
+ * @desc 将最后生成的事件ID存储在指定的变量中。
+ * @default 0
+ * @type variable
+ *
+ * @command MAKE
+ * @text 事件生成
+ * @desc 动态生成事件。
+ *
+ * @arg id
+ * @text 事件ID
+ * @desc 要复制的事件的ID或名称。数字会被解释为ID。
+ * @default 1
+ * @type string
+ *
+ * @arg x
+ * @text X坐标
+ * @desc 生成目标的X坐标。
+ * @default 1
+ * @type number
+ *
+ * @arg y
+ * @text Y坐标
+ * @desc 生成目标的Y坐标。
+ * @default 1
+ * @type number
+ *
+ * @arg xByVariableId
+ * @text X坐标变量ID（当使用变量指定时）
+ * @desc 指定存储X坐标值的变量ID。若指定为0，则不使用变量。
+ * @default 0
+ * @type number
+ *
+ * @arg yByVariableId
+ * @text Y坐标变量ID（当使用变量指定时）
+ * @desc 指定存储Y坐标值的变量ID。若指定为0，则不使用变量。
+ * @default 0
+ * @type number
+ *
+ * @arg template
+ * @text 模板生成
+ * @desc 启用时将生成模板事件。需要另外的模板事件插件。
+ * @default false
+ * @type boolean
+ *
+ * @command MAKE_RANDOM
+ * @text 条件随机生成
+ * @desc 根据指定条件在随机位置动态生成事件。如果没有符合条件的位置，则不会生成。
+ *
+ * @arg id
+ * @text 事件ID
+ * @desc 要复制的事件的ID或名称。数字会被解释为ID。
+ * @default 1
+ * @type string
+ *
+ * @arg passable
+ * @text 仅可通行地形
+ * @desc 仅在可通行地形上生成事件。
+ * @default false
+ * @type boolean
+ *
+ * @arg screen
+ * @text 屏幕条件
+ * @desc 仅在屏幕内或屏幕外生成。
+ * @default 0
+ * @type select
+ * @option 不判断
+ * @value 0
+ * @option 屏幕内
+ * @value 1
+ * @option 屏幕外（距离屏幕显示边界超过2格）
+ * @value 2
+ *
+ * @arg overlap
+ * @text 角色与位置重叠
+ * @desc 生成时避免与已有事件或玩家位置重叠。
+ * @default 0
+ * @type select
+ * @option 不判断
+ * @value 0
+ * @option 不与玩家重叠
+ * @value 1
+ * @option 不与事件重叠
+ * @value 2
+ * @option 不与事件和玩家重叠
+ * @value 3
+ *
+ * @arg terrainTags
+ * @text 地形标签
+ * @desc 仅在指定地形标签上生成。
+ * @default []
+ * @type number[]
+ *
+ * @arg regions
+ * @text 区域
+ * @desc 仅在指定区域上生成。
+ * @default []
+ * @type number[]
+ *
+ * @arg template
+ * @text 模板生成
+ * @desc 启用时生成模板事件。需要 TemplateEvent.js。
+ * @default false
+ * @type boolean
+ *
+ * @arg algorithm
+ * @text 生成算法
+ * @desc 决定生成坐标的方式。如果符合条件的格子不多，从左上开始查找会更快。
+ * @default 0
+ * @type select
+ * @option 随机位置查找（当候选位置较多时较快）
+ * @value 0
+ * @option 从左上开始依次查找（当候选位置较少时较快）
+ * @value 1
+ *
+ * @help EventReSpawn.js
+ *
+ * 本插件可复制、动态生成并放置事件到地图上。
+ * 可直接指定生成位置，也可以根据条件随机生成。
+ *
+ * 通过“抹除事件”命令，复制的临时事件会被完全删除，
+ * 从而释放对象与精灵的使用空间。
+ * 独立开关会单独管理，每次生成时会初始化。
+ *
+ * 若与模板事件插件（TemplateEvent.js）组合使用，
+ * 可在地图上动态生成模板事件。
+ *
+ * 另外，也可以通过在地图上放置区域来生成事件或模板事件。
+ * 只需在地图上放置区域，即可生成对应事件。
+ * 事件备注中的标签：
+ * 在放置区域 [1] 的格子上复制事件。
+ * <CP:1>
+ *
+ * 使用本插件需要基础插件“PluginCommonBase.js”。
+ * “PluginCommonBase.js” 位于 RPG Maker MZ 安装文件夹下：
+ * dlc/BasicResources/plugins/official
+ *
+ * 使用协议：
+ *  你可以自由修改或再发布本插件，无需获得许可。
+ *  不限制用途（包括成人或商业用途）。
+ *  本插件完全归你所有。
+ */
+
 /**
  * 動的生成イベントを扱うクラスです。
  * @constructor

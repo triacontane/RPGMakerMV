@@ -53,6 +53,27 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*:zh
+ * @target MZ
+ * @plugindesc 立体交叉图块插件的载具功能扩展模块
+ * @author triacontane
+ * @base OverpassTile
+ * @orderAfter OverpassTile
+ * @url https://raw.githubusercontent.com/triacontane/RPGMakerMZ/master/js/plugins/OverpassTileAttachVehicle.js
+ *
+ * @help OverpassTileVehicleAttach.js
+ * 本插件是官方插件「OverpassTile.js」的载具功能扩展附加组件。
+ *
+ * 小型船和大型船只能放置在下层，
+ * 飞行船只能放置在上层。
+ * 玩家无法从不同高度登上载具。
+ *
+ * 【使用条款】
+ *  您可以自由修改或重新分发本插件，无需作者许可。
+ *  使用形式（如商业用途或18禁游戏）没有任何限制。
+ *  现在，这个插件完全属于您。
+ */
+
 (() => {
     'use strict';
 

@@ -84,6 +84,63 @@
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
  */
+/*:zh
+ * @plugindesc 用于在测试时以可视方式调整图片位置的插件
+ * @author triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/AdjustPictureGraphical.js
+ *
+ * @param GridSize
+ * @text 网格大小
+ * @desc 调整图片时显示网格的尺寸。设为 0 可关闭网格显示。
+ * @default 48
+ * @type number
+ *
+ * @param TestMapId
+ * @text 测试地图ID
+ * @desc 指定事件测试所使用的地图ID。设置为 -1 时使用默认测试地图。
+ * @default -1
+ * @type number
+ * @min -1
+ *
+ * @help AdjustPictureGraphical.js
+ *
+ * 本插件允许在 **事件测试模式（Ctrl+R）** 下，通过鼠标拖拽来
+ * 实时调整图片（Picture）的显示位置。
+ *
+ * 左上角标题栏会显示当前选中图片的编号与坐标，
+ * 你可以在显示测试画面的同时，直观地微调图片位置。
+ *
+ * 功能说明：
+ * - 仅在“事件命令测试”中生效；
+ * - 可以用鼠标拖拽图片进行位置调整；
+ * - 支持网格吸附（按住 Ctrl 时拖动）；
+ * - 可快速复制坐标（Ctrl + C）；
+ * - 可在标题栏显示当前坐标信息；
+ * - 按 Shift 键可切换窗口显示。
+ *
+ * 操作说明：
+ * - 拖动：用鼠标左键点击图片并拖动；
+ * - 吸附：按住 Ctrl 键拖动图片，会吸附到网格；
+ * - 复制坐标：按 Ctrl + C 复制 X、Y 坐标（交替复制）；
+ * - 切换显示：按 Shift 键开关提示窗口；
+ * - 仅在事件编辑器中执行“事件命令测试（Ctrl + R）”时生效。
+ *
+ * 注意事项：
+ * 启用本插件后，请务必在执行测试前保存工程（Ctrl + S），
+ * 否则可能无法正确加载参数。
+ *
+ * 补充：
+ * 本插件仅作为调试辅助工具，不会影响正式游戏运行。
+ *
+ * 许可证：
+ * 本插件依据 MIT 协议发布。
+ * 可自由使用、修改、再分发（包括商用与成人内容）。
+ * 原作者：triacontane
+ * 许可证详情： http://opensource.org/licenses/mit-license.php
+ */
 (() => {
     'use strict';
     // イベントテスト時以外は一切の機能を無効

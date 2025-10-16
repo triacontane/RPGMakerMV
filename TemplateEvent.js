@@ -656,6 +656,291 @@
  * @default false
  */
 
+/*:zh
+ * @target MZ
+ * @base PluginCommonBase
+ * @plugindesc 模板事件插件
+ * @author triacontane
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TemplateEvent.js
+ *
+ * @param TemplateMapId
+ * @text 模板地图ID
+ * @desc 模板事件所在的地图ID。
+ * @default 1
+ * @type number
+ *
+ * @param KeepEventId
+ * @text 保持事件ID
+ * @desc 调用地图事件时，是否保持原事件的ID。改变“此事件”时的行为。
+ * @default false
+ * @type boolean
+ *
+ * @param OverrideTarget
+ * @text 覆盖目标项目
+ * @desc 当在备注中指定覆盖（优先固有事件设置而非模板事件）时，可设置要覆盖的项目。
+ * @default
+ * @type struct<override>
+ *
+ * @param AutoOverride
+ * @text 自动覆盖
+ * @desc 即使没有在备注中设置覆盖，也会应用“覆盖目标项目”的设置。
+ * @default false
+ * @type boolean
+ *
+ * @param IntegrateNote
+ * @text 备注整合
+ * @desc 将模板事件和固有事件的备注整合或覆盖。
+ * @default 0
+ * @type select
+ * @option 不进行任何操作
+ * @value 0
+ * @option 整合
+ * @value 1
+ * @option 覆盖
+ * @value 2
+ *
+ * @command CALL_ORIGIN_EVENT
+ * @text 调用原始事件
+ * @desc 调用被替换的原始事件处理。完成后返回模板事件的处理。
+ *
+ * @arg pageIndex
+ * @text 页面编号
+ * @desc 要调用的事件页面编号。指定0时，调用当前正在执行的页面。
+ * @default 0
+ * @type number
+ *
+ * @command CALL_MAP_EVENT
+ * @text 调用地图事件
+ * @desc 调用指定的地图事件处理。
+ *
+ * @arg pageIndex
+ * @text 页面编号
+ * @desc 要调用的事件页面编号。指定0时，调用当前正在执行的页面。
+ * @default 0
+ * @type number
+ *
+ * @arg eventId
+ * @text 事件ID（或名称）
+ * @desc 要调用的事件ID或事件名称。指定0时，目标为当前执行的事件。
+ * @default 0
+ *
+ * @command CALL_TEMPLATE_EVENT
+ * @text 调用模板事件
+ * @desc 调用模板事件的处理。
+ *
+ * @arg pageIndex
+ * @text 页面编号
+ * @desc 要调用的事件页面编号。
+ * @default 1
+ * @type number
+ * @min 1
+ *
+ * @arg eventId
+ * @text 事件ID（或名称）
+ * @desc 要调用的事件ID或事件名称。指定0时，目标为当前执行的事件。
+ * @default 1
+ *
+ * @command SET_SELF_VARIABLE
+ * @text 操作自变量
+ * @desc 操作事件自变量。
+ *
+ * @arg index
+ * @text 键
+ * @desc 要操作的自变量键。可指定数字或字符串。字符串区分大小写。
+ * @default 1
+ *
+ * @arg type
+ * @text 操作类型
+ * @desc 自变量的操作类型。
+ * @default 0
+ * @type select
+ * @option 0 : 赋值
+ * @value 0
+ * @option 1 : 加
+ * @value 1
+ * @option 2 : 减
+ * @value 2
+ * @option 3 : 乘
+ * @value 3
+ * @option 4 : 除
+ * @value 4
+ * @option 5 : 取余
+ * @value 5
+ *
+ * @arg operand
+ * @text 设置值
+ * @desc 要设置给自变量的值。
+ * @default 0
+ *
+ * @command SET_RANGE_SELF_VARIABLE
+ * @text 批量操作自变量
+ * @desc 批量操作事件自变量。
+ *
+ * @arg startIndex
+ * @text 起始索引
+ * @desc 要操作的自变量的起始索引（仅支持数值）。
+ * @default 1
+ * @type number
+ *
+ * @arg endIndex
+ * @text 结束索引
+ * @desc 要操作的自变量的结束索引（仅支持数值）。
+ * @default 1
+ * @type number
+ *
+ * @arg type
+ * @text 操作类型
+ * @desc 自变量的操作类型。
+ * @default 0
+ * @type select
+ * @option 0 : 赋值
+ * @value 0
+ * @option 1 : 加
+ * @value 1
+ * @option 2 : 减
+ * @value 2
+ * @option 3 : 乘
+ * @value 3
+ * @option 4 : 除
+ * @value 4
+ * @option 5 : 取余
+ * @value 5
+ *
+ * @arg operand
+ * @text 设置值
+ * @desc 要设置给自变量的值。
+ * @default 0
+ *
+ * @help TemplateEvent.js【模板事件插件】
+ *
+ * 本插件可以将通用事件模板化。
+ * 模板事件请定义在专用的“模板地图”中。
+ * 只需在实际事件的备注栏中写入特定内容，就可以动态替换为模板事件。
+ *
+ * 还可以从模板事件中调用被替换的原始事件。
+ * 例如在宝箱或传送点等仅部分逻辑不同的事件中非常实用。
+ * 将外观与共通部分写在模板事件中，
+ * 而将获取物品或传送目的地等特有部分写在原始事件中。
+ *
+ * 也可以像调用公共事件一样调用任意地图事件。
+ * 可以通过 ID 或事件名称指定调用的事件。
+ *
+ * 【使用步骤】
+ * 1. 创建模板地图，并放置模板事件。
+ * 2. 在要替换的事件备注中写入模板信息。
+ *    可以同时支持 ID 和事件名：
+ *    <TE:1>    替换为模板地图中 ID 为 [1] 的事件
+ *    <TE:aaa>  替换为模板地图中 名称为 [aaa] 的事件
+ *    <TE:\v[1]> 替换为模板地图中 ID 为变量[1]的事件
+ *
+ * 原则上，除初始位置外的所有设置都会被模板事件覆盖。
+ * 但如果在备注中写入以下内容，则固有事件的以下项目会优先生效：
+ * - 图片
+ * - 自律移动
+ * - 选项
+ * - 优先级
+ * - 触发器
+ *
+ * 固有事件备注写法：
+ * <TE上書き>
+ * <TEOverRide>
+ *
+ * 【自变量功能】
+ * 可以为事件定义“自变量”（该事件专用的变量）。
+ * 可通过插件命令操作，并可作为“显示文字”或“出现条件”使用。
+ *
+ * 显示文字中使用时：
+ * 使用控制字符“\sv[n]”来显示自变量[n]的值。
+ *
+ * 作为事件出现条件时：
+ * 将页面开头设置为“注释”并写入以下格式，可同时设置多个：
+ * \TE{条件}
+ *
+ * 条件以 JavaScript 编写，可使用控制字符。
+ * 示例：
+ * \TE{\sv[1] >= 3}      # 当自变量[1]大于等于3
+ * \TE{\sv[2] === \v[1]} # 当自变量[2]等于变量[1]
+ * \TE{\sv[3] === 'AAA'} # 当自变量[3]等于 'AAA'
+ *
+ * 在“条件分支”等脚本中使用时：
+ * this.getSelfVariable(n)
+ * 例：this.getSelfVariable(1) !== 0  # 当自变量[1]不为0
+ *
+ * 所有插件命令中均可使用 \sv[n] 控制字符。
+ *
+ * 【脚本】
+ * 在调用固有处理时，可获取模板事件的ID和名称：
+ *  this.character(0).getTemplateId();
+ *  this.character(0).getTemplateName();
+ *
+ * 获取指定索引的自变量：
+ *  this.getSelfVariable(index);
+ *
+ * 设置自变量的值（可在“设置移动路线”中执行）。
+ * 若 formulaFlg 为 true，则 operand 作为公式计算：
+ *  this.controlSelfVariable(index, type, operand, formulaFlg);
+ *
+ * 批量设置自变量（也可在“设置移动路线”中执行）：
+ *  this.controlSelfVariableRange(start, end, type, operand, formulaFlg);
+ *
+ * 操作其他事件的自变量：
+ *  $gameSelfSwitches.setVariableValue([地图ID, 事件ID, INDEX], 值);
+ *
+ * 获取其他事件的自变量：
+ *  $gameSelfSwitches.getVariableValue([地图ID, 事件ID, INDEX]);
+ *
+ * 【与 SAN_MapGenerator.js 组合使用】
+ * 请将本插件放在 SAN_MapGenerator.js 之后。
+ *
+ * 使用本插件需要基础插件“PluginCommonBase.js”。
+ * “PluginCommonBase.js”位于 RPG Maker MZ 安装目录：
+ * dlc/BasicResources/plugins/official
+ *
+ * 使用协议：
+ *  你可以自由修改或再分发本插件，无需获得作者许可。
+ *  使用形式（包括商业或成人用途）不受限制。
+ *  这个插件现在属于你了。
+ */
+
+/*~struct~override:zh
+ *
+ * @param Image
+ * @text 图像
+ * @desc 事件的图像与图像索引。
+ * @type boolean
+ * @default false
+ *
+ * @param Direction
+ * @text 朝向
+ * @desc 事件的方向与动画帧。
+ * @type boolean
+ * @default false
+ *
+ * @param Move
+ * @text 自律移动
+ * @desc 事件的自律移动设置。
+ * @type boolean
+ * @default false
+ *
+ * @param Priority
+ * @text 优先级
+ * @desc 事件的显示优先级。
+ * @type boolean
+ * @default false
+ *
+ * @param Trigger
+ * @text 触发条件
+ * @desc 事件的触发类型。
+ * @type boolean
+ * @default false
+ *
+ * @param Option
+ * @text 选项
+ * @desc 事件的各类行为选项（行走动画、穿透等）。
+ * @type boolean
+ * @default false
+ */
+
 let $dataTemplateEvents = null;
 
 (() => {

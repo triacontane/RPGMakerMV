@@ -430,6 +430,210 @@
  *
  */
 
+/*:zh
+ * @plugindesc 开发辅助插件，用于改进开发者工具的运行行为。
+ * @author triacontane
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @target MZ
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/DevToolsManage.js
+ *
+ * @param StartupDevTool
+ * @text 启动时打开开发者工具
+ * @desc 游戏启动时自动打开开发者工具（默认 F8 打开）。
+ * @default true
+ * @type boolean
+ *
+ * @param ShortcutList
+ * @text 快捷键列表
+ * @desc 可用的调试快捷功能列表。
+ * @type struct<ShortcutFunction>[]
+ *
+ * @param ShowFPS
+ * @text 显示 FPS
+ * @desc 启动时左上角显示 FPS。（FPS / MS / OFF）
+ * @default OFF
+ * @type select
+ * @option FPS
+ * @option MS
+ * @option OFF
+ *
+ * @param CutTitle
+ * @text 跳过标题画面
+ * @desc 启动时跳过标题画面。（0:无效 / 1:新游戏 / 2:读取最新存档）
+ * @default 0
+ * @type select
+ * @option 无效
+ * @value 0
+ * @option 新游戏
+ * @value 1
+ * @option 读取最新存档
+ * @value 2
+ *
+ * @param RapidStart
+ * @text 启动时启用加速模式
+ * @desc 游戏启动时以加速状态运行。（ON/OFF）
+ * @default false
+ * @type boolean
+ *
+ * @param RapidSpeed
+ * @text 加速倍率
+ * @desc 执行加速模式时的速度倍率，最高 16 倍。
+ * @default 2
+ * @type number
+ * @max 16
+ *
+ * @param SlowSpeed
+ * @text 减速倍率
+ * @desc 执行减速模式时的速度分母，最低 1/16 速度。
+ * @default 2
+ * @type number
+ * @max 16
+ *
+ * @param InvalidMessageSkip
+ * @text 禁用加速跳过文本
+ * @desc 禁用在加速模式下的消息自动跳过功能。
+ * @default false
+ * @type boolean
+ *
+ * @param MenuBarVisible
+ * @text 显示菜单栏
+ * @desc 是否显示调试菜单栏并执行各种命令。(ON/OFF)
+ * @default true
+ * @type boolean
+ *
+ * @param ClickMenu
+ * @text 右键调试菜单
+ * @desc 使用点击菜单执行调试命令。(-1:禁用 0:左键 1:滚轮 2:右键)
+ * @default 1
+ * @type select
+ * @option 禁用
+ * @value -1
+ * @option 左键
+ * @value 0
+ * @option 滚轮
+ * @value 1
+ * @option 右键
+ * @value 2
+ *
+ * @param OutputStartupInfo
+ * @text 启动时输出信息
+ * @desc 启动时输出引擎版本、用户代理等信息。
+ * @default true
+ * @type boolean
+ *
+ * @param StartupOnTop
+ * @text 最前端启动
+ * @desc 游戏窗口启动时固定在屏幕最前端。
+ * @default false
+ * @type boolean
+ *
+ * @param UseReloadData
+ * @text 启用数据重载
+ * @desc 当游戏重新获得焦点时自动重载地图与数据库。若发生冲突可禁用。
+ * @default true
+ * @type boolean
+ *
+ * @param UseBreakPoint
+ * @text 启用断点支持
+ * @desc 使用 IDE 的断点功能时防止按键状态被卡住。
+ * @default false
+ * @type boolean
+ *
+ * @help
+ * 本插件仅在本地测试环境中有效，用于支持开发调试。
+ *
+ * 【功能说明】
+ * 1. 游戏启动时自动打开开发者工具（默认 F8）。
+ *    即使关闭该选项，出现错误时也会自动打开。
+ *
+ * 2. 可将游戏窗口固定为最前端显示，方便边查看边调试。
+ *
+ * 3. 编辑器中修改地图或事件后保存，切回游戏窗口时自动重载数据。
+ *
+ * 4. 可跳过标题画面，直接开始新游戏或加载最新存档。
+ *
+ * 5. 支持加速/减速模式（最高 16 倍速 / 最低 1/16 倍速），
+ *    也可完全暂停游戏。
+ *    在窗口操作时自动恢复正常速度。
+ *
+ * 6. 可强制战斗胜利、失败或中断。
+ *    强制胜利后依然会获得奖励。
+ *
+ * 7. 可让指定脚本每帧自动执行，
+ *    当返回值变化时输出至控制台。
+ *
+ * 8. 支持外部启动战斗测试（URL 参数添加 ?btest）。
+ *
+ * 【无插件命令】
+ * 所有功能通过参数或快捷键、菜单操作实现。
+ *
+ * 【使用条款】
+ * 允许自由修改和再分发。
+ * 无论商业、非商业或成人用途均可。
+ * 作者放弃一切权利，本插件完全属于您。
+ */
+
+/*~struct~ShortcutFunction:zh
+ *
+ * @param Command
+ * @text 命令内容
+ * @desc 要执行的命令类型。
+ * @default
+ * @type select
+ * @option 置顶显示
+ * @value AlwaysOnTop
+ * @option 冻结画面
+ * @value Freeze
+ * @option 常驻脚本
+ * @value ExecuteScript
+ * @option 强制中断战斗
+ * @value ForceAbort
+ * @option 强制失败
+ * @value ForceDefeat
+ * @option 强制胜利
+ * @value ForceVictory
+ * @option 启用加速模式
+ * @value ToggleRapid
+ * @option 启用减速模式
+ * @value ToggleSlow
+ * @option 打开项目文件夹
+ * @value OpenProject
+ *
+ * @param HotKey
+ * @text 快捷键
+ * @desc 执行该命令的快捷键。
+ * @default
+ * @type select
+ * @option
+ * @option F1
+ * @option F2
+ * @option F3
+ * @option F4
+ * @option F5
+ * @option F6
+ * @option F7
+ * @option F8
+ * @option F9
+ * @option F10
+ * @option F11
+ * @option F12
+ *
+ * @param Alt
+ * @text 同时按下 ALT 键
+ * @desc 仅在按下 ALT 键的同时触发。
+ * @type boolean
+ * @default false
+ *
+ * @param Ctrl
+ * @text 同时按下 CTRL 键
+ * @desc 仅在按下 CTRL 键的同时触发。
+ * @type boolean
+ * @default false
+ *
+ */
+
+
 /**
  * Controller_NwJs
  * NW.jsのウィンドウを操作します。

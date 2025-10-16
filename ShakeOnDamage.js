@@ -15,6 +15,91 @@
 //=============================================================================
 
 /*:
+ * @plugindesc Screen shake on damage plugin
+ * @author Triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ShakeOnDamage.js
+ *
+ * @param shakePower
+ * @text Shake Power
+ * @desc The shake power when taking normal damage.
+ * @default 5
+ * @type number
+ * @min 1
+ * @max 9
+ *
+ * @param criticalShakePower
+ * @text Critical Shake Power
+ * @desc The shake power when taking critical damage.
+ * @default 9
+ * @type number
+ * @min 1
+ * @max 9
+ *
+ * @param effectiveShakePower
+ * @text Weakness Shake Power
+ * @desc The shake power when taking weakness damage.
+ * @default 9
+ * @type number
+ * @min 1
+ * @max 9
+ *
+ * @param shakeSpeed
+ * @text Shake Speed
+ * @desc The speed of the shake effect.
+ * @default 9
+ * @type number
+ * @min 1
+ * @max 9
+ *
+ * @param shakeDuration
+ * @text Shake Duration
+ * @desc The duration of the shake effect (in frames).
+ * @default 30
+ * @type number
+ *
+ * @param applyActor
+ * @text Apply to Actors
+ * @desc Shake the screen when actors take damage.
+ * @default true
+ * @type boolean
+ *
+ * @param applyEnemy
+ * @text Apply to Enemies
+ * @desc Shake the screen when enemies take damage.
+ * @default false
+ * @type boolean
+ *
+ * @param disableSwitch
+ * @text Disable Switch
+ * @desc When the specified switch is ON, the shake effect is disabled.
+ * @default 0
+ * @type switch
+ *
+ * @help ShakeOnDamage.js
+ *
+ * This plugin shakes the screen when an actor takes damage in battle.
+ * You can set different shake powers for normal and critical damage.
+ *
+ * Each parameter can accept a calculation formula.
+ * The following local variables can be used:
+ *  a : The actor who took damage.
+ *  r : The remaining HP rate (0–100) of the actor who took damage.
+ *
+ * If you want to use a calculation formula, select the “Text” tab
+ * in the parameter setting dialog before entering it.
+ *
+ * This plugin does not provide any plugin commands.
+ *
+ * Terms of Use:
+ *  You may modify and redistribute this plugin without permission.
+ *  There are no restrictions on its use, including commercial and adult use.
+ *  This plugin is now yours.
+ */
+
+/*:ja
  * @plugindesc ダメージ時の振動プラグイン
  * @author トリアコンタン
  * @target MZ
@@ -97,6 +182,91 @@
  *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
  *  についても制限はありません。
  *  このプラグインはもうあなたのものです。
+ */
+
+/*:zh
+ * @plugindesc 受到伤害时的画面震动插件
+ * @author triacontane
+ * @target MZ
+ * @base PluginCommonBase
+ * @orderAfter PluginCommonBase
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ShakeOnDamage.js
+ *
+ * @param shakePower
+ * @text 普通伤害震动强度
+ * @desc 角色受到普通伤害时的画面震动强度。
+ * @default 5
+ * @type number
+ * @min 1
+ * @max 9
+ *
+ * @param criticalShakePower
+ * @text 暴击震动强度
+ * @desc 角色受到暴击伤害时的画面震动强度。
+ * @default 9
+ * @type number
+ * @min 1
+ * @max 9
+ *
+ * @param effectiveShakePower
+ * @text 弱点震动强度
+ * @desc 角色受到克制（弱点）伤害时的画面震动强度。
+ * @default 9
+ * @type number
+ * @min 1
+ * @max 9
+ *
+ * @param shakeSpeed
+ * @text 震动速度
+ * @desc 画面震动的速度。
+ * @default 9
+ * @type number
+ * @min 1
+ * @max 9
+ *
+ * @param shakeDuration
+ * @text 震动持续时间
+ * @desc 震动的持续帧数。
+ * @default 30
+ * @type number
+ *
+ * @param applyActor
+ * @text 应用于角色
+ * @desc 当角色受到伤害时是否进行震动。
+ * @default true
+ * @type boolean
+ *
+ * @param applyEnemy
+ * @text 应用于敌人
+ * @desc 当敌人受到伤害时是否进行震动。
+ * @default false
+ * @type boolean
+ *
+ * @param disableSwitch
+ * @text 禁用开关
+ * @desc 当指定的开关为 ON 时，将禁用画面震动效果。
+ * @default 0
+ * @type switch
+ *
+ * @help ShakeOnDamage.js
+ *
+ * 当角色在战斗中受到伤害时，屏幕会震动。
+ * 普通伤害和会心伤害可以设置不同的震动强度。
+ *
+ * 各参数可使用计算公式。
+ * 可用的本地变量如下：
+ * a：受到伤害的角色对象
+ * r：受到伤害的角色当前HP比例（0-100）
+ *
+ * 如果要输入计算公式，请在参数设置窗口中
+ * 选择“文本”标签后输入。
+ *
+ * 本插件没有插件命令。
+ *
+ * 使用条款：
+ *  允许自由修改与再分发，无需获得作者许可。
+ *  使用形式（商用、18禁等）不受限制。
+ *  这个插件现在属于你了。
  */
 
 (()=> {
