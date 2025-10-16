@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2025/10/16 ヘルプの注釈を追加
 // 2.0.0 2020/09/09 MZ向けに実装を修正
 // 1.4.2 2020/08/29 RestrictionTargetSkill.jsと組み合わせたときの軽量化対策
 // 1.4.1 2019/09/16 1.4.0の機能追加により発生した問題を修正
@@ -31,64 +32,15 @@
 //=============================================================================
 
 /*:
- * @plugindesc Battler graphic extend
- * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattlerGraphicExtend.js
- * @base PluginCommonBase
- * @author triacontane
- *
- * @help 戦闘中のバトラー画像の表現方法を拡張します。
- * 宙に浮かせたり、色調やサイズを変えたり、多彩な表現が可能です。
- *
- * 特徴を有するデータベースのメモ欄に以下の通り記述してください。
- *
- * バトラーを浮遊させます。この設定はアクターのみ有効です。
- * <BGEAltitude:n> n:Altitude(pixel)
- *
- * バトラーの不透明度を設定します。
- * <BGEOpacity:n> n:Opacity(0..256)
- *
- * バトラーの色調を設定します。各要素を数値で指定します。
- * <BGETone:r,g,b,g> r:赤 g:緑 b:青(-255..255) g:グレー(0..255)
- * 例:<BGETone:255,255,255,128>
- *
- * バトラーをゆるやかに点滅させます。各要素を数値で指定します。
- * この処理はやや重いのでモバイル実行の場合は注意してください。
- * <BGEFlash:r,g,b,a> r:赤 g:緑 b:青 a:強さ(0..255)
- * 例:<BGEFlash:255,0,0,128>
- *
- * フラッシュ間隔を変更したい場合（小さいほど速く点滅し、標準は15です）
- * <BGEFlashInterval:f> f:フレーム数
- * 例:<BGEFlashInterval:30>
- *
- * バトラーの合成方法を設定します。
- * <BGEBlendMode:n> n:0[通常] n:1[加算] n:2[乗算] n:3[スクリーン]
- *
- * バトラーの拡大率を設定します。-100を指定すると画像が反転します。
- * <BGEScaleX:n> n:Scale(100%)
- * <BGEScaleY:n> n:Scale(100%)
- * 例:<BGEScaleY:150>
- *
- * バトラーのモーション速度を設定します。
- * この設定はアクターのみ有効です。
- * <BGEMotionRate:n> n:Rate(100%)
- * 例:<BGEMotionRate:150>
- *
- * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
- * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
- * 以下のフォルダに格納されています。
- * dlc/BasicResources/plugins/official
- *
- * This plugin is released under the MIT License.
- */
-/*:ja
  * @plugindesc バトラーグラフィック表示拡張プラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/BattlerGraphicExtend.js
  * @base PluginCommonBase
  * @author トリアコンタン
  *
- * @help 戦闘中のバトラー画像の表現方法を拡張します。
+ * @help BattlerGraphicExtend.js
+ *
+ * 戦闘中のバトラー画像の表現方法を拡張します。
  * 宙に浮かせたり、色調やサイズを変えたり、多彩な表現が可能です。
  *
  * 特徴を有するデータベースのメモ欄に以下の通り記述してください。
@@ -98,10 +50,12 @@
  * 例:<BGE高度:32>
  *
  * バトラーの不透明度を設定します。
+ * ステートアイコンにも変更が反映されます。
  * <BGE不透明度:n> n:不透明度(0..256)
  * 例：<BGE不透明度:128>
  *
  * バトラーの色調を設定します。各要素を数値で指定します。
+ * ステートアイコンにも変更が反映されます。
  * <BGE色調:r,g,b,g> r:赤 g:緑 b:青(-255..255) g:グレー(0..255)
  * 例:<BGE色調:255,255,255,128>
  *
