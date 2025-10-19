@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.11 2025/10/19 カスタムウィンドウで揃えを変更する制御文字を使ったとき、後続の文字列が正しく描画されない場合がある問題を修正
 // 2.10.10 2023/08/12 2.10.9の修正方法が間違っていたので修正
 // 2.10.9 2023/07/16 クラス名取得関数の実装を変更
 // 2.10.8 2020/06/21 ウィンドウ高さが項目の高さを下回った場合に項目が描画されない場合がある問題を修正
@@ -1788,7 +1789,7 @@ var $dataContainerProperties = null;
 
     Window_Custom.prototype.changeTextAlign = function(text) {
         this._textAlign = 0;
-        text            = text.replace(/\\al\[(.*)]/gi, function() {
+        text            = text.replace(/\\al\[(.*?)]/gi, function() {
             this._textAlign = Window_Custom._textAligns[arguments[1].toLowerCase()] || 0;
             return '';
         }.bind(this));
