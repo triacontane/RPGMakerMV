@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2025/10/19 成功率の加算で設定した数値が想定通りに反映されていなかった問題を修正
  1.0.0 2023/01/09 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -59,7 +60,7 @@
     Game_BattlerBase.prototype.findSuccessRatePlus = function() {
         return this.traitObjects().reduce((prev, obj) => {
             const plus = PluginManagerEx.findMetaValue(obj, ['成功率加算', 'SuccessPlus']) || 0;
-            return prev + plus;
+            return prev + plus / 100;
         }, 0);
     };
 })();
