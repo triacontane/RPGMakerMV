@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.3 2025/10/19 BGSの演奏が始まっていない状態ではSE演奏時フェードアウトが行われない仕様に変更
 // 1.1.2 2025/06/22 SE演奏中のBGSフェードアウト機能で、SEの演奏が終わる前にBGSがフェードインする場合がある問題を修正
 // 1.1.1 2021/03/06 BGMのフェードアウトのイベントコマンドでは現在のラインのBGSのみフェードアウトするよう修正
 // 1.1.0 2020/12/14 MZ向けに全面的に修正
@@ -349,7 +350,7 @@
     };
 
     AudioManager.isNeedFadeOut = function() {
-        return !this._bgsFading && this._bgsFadeForSe !== 0;
+        return !this._bgsFading && this._bgsFadeForSe !== 0 && this._bgsBuffer?._gainNode;
     };
 
     AudioManager.fadeInBgsForSe = function() {
@@ -359,7 +360,7 @@
     };
 
     AudioManager.isNeedFadeIn = function() {
-        return this._bgsFading && !this.isPlayingAnySe() && this._bgsFadeCounter === 0;
+        return this._bgsFading && !this.isPlayingAnySe() && this._bgsFadeCounter === 0 && this._bgsBuffer?._gainNode;
     };
 
     AudioManager.playDelayedSe = function() {
