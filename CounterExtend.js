@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.0 2025/10/26 クロスカウンターとインターセプターのパラメータを「反撃種別」に統合
+//                  クロスカウンターの反撃判定を攻撃を受けたあとに行うよう仕様変更
 // 2.15.0 2025/06/25 反撃条件に「ダメージタイプ」を追加
 // 2.14.0 2025/03/24 反撃スキルにのみ適用される専用のダメージ倍率を設定できる機能を追加
 // 2.13.2 2024/08/19 反撃頻度の判定が特定条件下で複数回行われていた問題を修正
@@ -76,7 +78,7 @@
 // 1.0.0 2016/11/15 初版
 // ----------------------------------------------------------------------------
 // [Blog]   : https://triacontane.blogspot.jp/
-// [Twitter]: https://twitter.com/triacontane/
+// [X]      : https://x.com/triacontane/
 // [GitHub] : https://github.com/triacontane/
 //=============================================================================
 
@@ -176,20 +178,20 @@
  * @default false
  * @type boolean
  *
- * @param CrossCounter
- * @text クロスカウンター
- * @desc 有効にした場合、攻撃を受けてから反撃します。
- * @default false
- * @type boolean
- *
- * @param Interceptor
- * @text インターセプター
- * @desc 有効にした場合、相手の攻撃を受ける前に割り込んで反撃を出します。
- * @default false
- * @type boolean
+ * @param CounterType
+ * @text 反撃種別
+ * @desc 反撃の種別です。クロスカウンターは攻撃を受けた後に反撃判定を行います。
+ * @default Normal
+ * @type select
+ * @option 通常(攻撃を無効化して反撃)
+ * @value Normal
+ * @option クロスカウンター(攻撃を受けてから反撃)
+ * @value CrossCounter
+ * @option インターセプター(攻撃に割り込んで反撃)
+ * @value Interceptor
  *
  * @param CrossCounterCondition
- * @parent CrossCounter
+ * @parent CounterType
  * @text クロスカウンター条件
  * @desc クロスカウンターが有効な場合に追加で指定する発動条件です。
  * @default 0
@@ -352,8 +354,11 @@
  * @desc 指定した場合、スクリプトの評価結果が有効なときのみ反撃します。
  * @type combo
  * @default
+ * @option subject.hpRate() <= 0.5; // 自分のHPが50%以下の場合
  * @option subject.mpRate() <= 0.5; // 自分のMPが50%以下の場合
+ * @option subject.tpRate() >= 1.0; // 自分のTPが100%の場合
  * @option triggerAction.calcElementRate(subject) > 1.0; // 弱点属性の場合
+ * @option triggerAction.calcElementRate(subject) < 1.0; // 耐性属性の場合
  *
  * @param Frequency
  * @text 反撃頻度
@@ -394,11 +399,11 @@
             super(subject, false);
         }
 
-        setup(triggerAction, target) {
+        setup(triggerAction, type) {
             if (triggerAction.isCounter() || !this.subject().canMove()) {
                 return;
             }
-            for (const counter of this.findParams()) {
+            for (const counter of this.findParams(type)) {
                 if (this.isValidSkill(counter, triggerAction)) {
                     this._counter = counter;
                     return;
@@ -407,7 +412,7 @@
             this._counter = null;
         }
 
-        findParams() {
+        findParams(type) {
             const tagList = this.subject().traitObjects().map(traitObject => {
                 return PluginManagerEx.findMetaValue(traitObject, ['反撃拡張', 'CounterExtend']);
             }).filter(tag => tag);
@@ -415,7 +420,7 @@
             tagList.forEach(tag => {
                 const tagIndex = parseInt(tag) - 1;
                 const counter = param.CounterList.find((item, index) => tag === item.Id || tagIndex === index);
-                if (counter) {
+                if (counter && counter.CounterType === type) {
                     paramList.push(counter);
                 }
             });
@@ -625,19 +630,21 @@
 
     const _BattleManager_invokeNormalAction = BattleManager.invokeNormalAction;
     BattleManager.invokeNormalAction = function(subject, target) {
-        const counterAction = this.createCounterAction(subject, this._action, target);
-        const counter = counterAction.getCounter();
-        if (!counter || counter.CrossCounter || counter.Interceptor) {
+        let counterAction = this.createCounterAction(subject, this._action, target, 'Normal');
+        let counter = counterAction.getCounter();
+        if (!counter) {
             _BattleManager_invokeNormalAction.apply(this, arguments);
+            counterAction = this.createCounterAction(subject, this._action, target, 'CrossCounter');
+            counter = counterAction.getCounter();
         }
-        if (counter && !counter.Interceptor) {
+        if (counter) {
             this.requestCounterAction(target, subject, counterAction);
         }
     };
 
-    BattleManager.createCounterAction = function(subject, action, target) {
+    BattleManager.createCounterAction = function(subject, action, target, type) {
         const counterAction = new Game_CounterAction(target);
-        counterAction.setup(action, subject);
+        counterAction.setup(action, type);
         return counterAction;
     };
 
@@ -707,7 +714,7 @@
     };
 
     BattleManager.checkCrossCounterCondition = function(result, counter) {
-        if (counter.CrossCounter) {
+        if (counter.CounterType === 'CrossCounter') {
             if (!result.isHit() && counter.CrossCounterCondition === 1) {
                 return false;
             }
@@ -758,9 +765,9 @@
         const targets = action.makeTargets();
         let intercepted = false;
         targets.forEach(target => {
-            const counterAction = this.createCounterAction(subject, action, target);
+            const counterAction = this.createCounterAction(subject, action, target, 'Interceptor');
             const counter = counterAction.getCounter();
-            if (counter && counter.Interceptor) {
+            if (counter) {
                 this.requestCounterAction(target, subject, counterAction);
                 intercepted = true;
             }
