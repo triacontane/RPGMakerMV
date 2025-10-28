@@ -675,7 +675,7 @@
  * @base PluginCommonBase
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageWindowPopup.js
  *
- * * @param FontSize
+ * @param FontSize
  * @text 字体大小
  * @desc 气泡窗口的默认字体大小。默认窗口字体大小：28
  * @default 22
