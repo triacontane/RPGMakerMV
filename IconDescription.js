@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.1 2025/10/29 ウィンドウが重なって表示されたとき、背後の隠れているウィンドウのアイコン説明が表示されてしまう問題を修正
  1.1.0 2025/09/30 マウスオーバーでアイコン説明を表示できる機能を追加
                   画面左上にアイコン説明が誤って表示される場合がある問題を修正
  1.0.3 2024/12/26 ヘルプテキストやメッセージウィンドウにアイコンを表示したとき、切り替わり後も判定が残ってしまう問題を修正
@@ -213,14 +214,62 @@
         }
     };
 
+    Window_Base.prototype.setWindowLayer = function(layer) {
+        this._windowLayer = layer;
+    };
+
+    Window_Base.prototype.isHover = function() {
+        return !this._windowLayer || this._windowLayer.isHoverWindow(this);
+    };
+
+    const _Scene_Base_addWindow = Scene_Base.prototype.addWindow;
+    Scene_Base.prototype.addWindow = function(window) {
+        _Scene_Base_addWindow.apply(this, arguments);
+        if (window instanceof Window_Base) {
+            window.setWindowLayer(this._windowLayer);
+        }
+    };
+
+    const _Window_StatusBase_placeStateIcon = Window_StatusBase.prototype.placeStateIcon;
+    Window_StatusBase.prototype.placeStateIcon = function(actor, x, y) {
+        _Window_StatusBase_placeStateIcon.apply(this, arguments);
+        const sprite = this._innerChildren[this._innerChildren.length - 1];
+        if (sprite instanceof Sprite_StateIcon) {
+            sprite.setParentWindow(this);
+        }
+    };
+
+    WindowLayer.prototype.isHoverWindow = function(win) {
+        const touchPos = new Point(TouchInput.x, TouchInput.y);
+        touchPos.x -= this.x;
+        touchPos.y -= this.y;
+        const targetWin = this.children.clone().reverse().find(child => {
+            if (child.isOpen && child.isOpen() && child.visible) {
+                const rect = new Rectangle(child.x, child.y, child.width, child.height);
+                return rect.contains(touchPos.x, touchPos.y);
+            } else {
+                return false;
+            }
+        });
+        return targetWin === win;
+    };
+
     const _Sprite_StateIcon_update = Sprite_StateIcon.prototype.update;
     Sprite_StateIcon.prototype.update = function() {
         _Sprite_StateIcon_update.apply(this, arguments);
         this.updateIconCaption();
     };
 
+    Sprite_StateIcon.prototype.setParentWindow = function(win) {
+        this._parentWindow = win;
+    };
+
+    Sprite_StateIcon.prototype.isHoverIcon = function() {
+        return !this._parentWindow || this._parentWindow.isHover();
+    };
+
     Sprite_StateIcon.prototype.updateIconCaption = function() {
-        if (SceneManager.isTriggeredIconCaption() && this.isBeingTouched()) {
+        if (SceneManager.isTriggeredIconCaption() && this.isBeingTouched() && this.isHoverIcon()) {
             const localPos = new Point(-this.anchor.x * this.width, -this.anchor.y * this.height);
             const worldPos = this.worldTransform.apply(localPos);
             SceneManager.addIconCaption(this._iconIndex, worldPos.x, worldPos.y);
