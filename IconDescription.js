@@ -205,7 +205,7 @@
                 rect.y = icon.y - (this.origin.y || 0);
                 return rect.contains(localPos.x, localPos.y);
             });
-            if (icon) {
+            if (icon && this.isHover()) {
                 const worldPos = this.worldTransform.apply(new Point(0, 0));
                 const x = worldPos.x + rect.x;
                 const y = worldPos.y + rect.y;
