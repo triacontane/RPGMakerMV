@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.0 2025/11/03 ステート一列表示の揃えを左揃えにできる機能を追加
 // 2.9.0 2024/02/29 ターン数によってアイコンを点滅表示される機能を追加
 // 2.8.0 2022/12/05 表示対象外アイコンを指定したとき、アイコンのターン数が実際の値と異なる表示になる場合がある問題を修正
 //                  パラメータのアイコンtypeに対応
@@ -55,145 +56,6 @@
 //=============================================================================
 
 /*:
- * @plugindesc StateRingIconPlugin
- * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateRingIcon.js
- * @base PluginCommonBase
- * @author triacontane
- *
- * @param RadiusX
- * @desc The value of the horizontal radius.
- * @default 64
- * @type number
- *
- * @param RadiusY
- * @desc The value of the vertical radius.
- * @default 16
- * @type number
- *
- * @param ScaleX
- * @desc The horizontal scale of the icon.
- * @default 100
- * @type number
- *
- * @param ScaleY
- * @desc The vertical scale of the icon.
- * @default 100
- * @type number
- *
- * @param CycleDuration
- * @desc The time (number of frames) it takes for the icon to rotate around the screen.
- * @default 120
- * @type number
- *
- * @param LineViewLimit
- * @desc If the number of states is less than or equal to this value, it will be displayed in a single column.
- * @default 1
- * @type number
- *
- * @param Reverse
- * @desc The direction of rotation will be counterclockwise.
- * @default false
- * @type boolean
- *
- * @param ShowTurnCount
- * @desc Displays the number of turns remaining in the state. It is displayed for both friend and foe.
- * @default true
- * @type boolean
- *
- * @param IconIndexWithoutRing
- * @desc This is an "icon index" that is not subject to the ring display.
- * @default []
- * @type icon[]
- *
- * @param IconIndexWithoutShowTurns
- * @desc The "icon index" is excluded from the display of the number of state-turns.
- * @default []
- * @type icon[]
- *
- * @param TurnCountX
- * @desc Adjusts the X coordinate display position of the number of turns.
- * @default 0
- * @type number
- * @min -1000
- * @max 1000
- *
- * @param TurnCountY
- * @desc Adjusts the Y coordinate display position of the number of turns.
- * @default 0
- * @type number
- * @min -1000
- * @max 1000
- *
- * @param TurnAdjustment
- * @desc Corrects the displayed value of the number of turns.
- * @default 0
- * @type number
- * @min -9999
- * @max 9999
- *
- * @param UseNumberFont
- * @default false
- * @type boolean
- *
- * @param FontSize
- * @desc The font size of the remaining turns display.
- * @default 24
- * @type number
- *
- * @param ActorRingIcon
- * @desc The state icons of allies will also be displayed as rings.
- * @default true
- * @type boolean
- *
- * @param ActorRingIconX
- * @desc X of the actor state icon.
- * @default 0
- * @type number
- * @min -1000
- * @max 1000
- *
- * @param ActorRingIconY
- * @desc Y of the actor state icon.
- * @default 0
- * @type number
- * @min -1000
- * @max 1000
- *
- * @param EnemyRingIconX
- * @desc X of the enemy state icon.
- * @default 0
- * @type number
- * @min -1000
- * @max 1000
- *
- * @param EnemyRingIconY
- * @desc Y of the enemy state icon.
- * @default 0
- * @type number
- * @min -1000
- * @max 1000
- *
- * @param IconHideSwitch
- * @desc When the switch is ON, the ring icon is hidden.
- * @default 0
- * @type switch
- *
- * @help StateRingIcon.js
- *
- * You can rotate the state icons of enemy characters
- * when multiple states are enabled clockwise to display
- * them in a ring or in a row.
- *
- * If you want to adjust the position of the ring state
- * for each enemy character, write the following
- * in the note of the database.
- * <RingStateX:0>
- * <RingStateY:0>
- *
- */
-
-/*:ja
  * @plugindesc リングステートプラグイン
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/StateRingIcon.js
@@ -241,6 +103,16 @@
  * @desc アクターのステート数がこの値以下の場合はリングアイコンではなく1列で表示されます。0にすると常に1列表示になります。
  * @default 1
  * @type number
+ *
+ * @param LineViewAlign
+ * @text 一列配置の揃え
+ * @desc ステートアイコンを一列に並べた場合の揃え位置です。
+ * @default center
+ * @type select
+ * @option 左揃え
+ * @value left
+ * @option 中央揃え
+ * @value center
  *
  * @param Reverse
  * @text 反時計回り
@@ -754,7 +626,11 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIconChild.prototype.setNormalPosition = function(index, max) {
-        this.x       = ((-max + 1) / 2 + index) * this.getIconWidth();
+        if (param.LineViewAlign === 'left') {
+            this.x = index * this.getIconWidth();
+        } else {
+            this.x = ((-max + 1) / 2 + index) * this.getIconWidth();
+        }
         this.y       = 0;
         this.visible = true;
     };
