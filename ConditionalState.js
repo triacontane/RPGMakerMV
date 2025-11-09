@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.3.1 2025/11/09 StateExcludeRecoverAllとの並び順のアノテーションを追加
 // 1.3.0 2025/07/16 ステート付与の条件をレートではなく直接値にできるタグを追加
 // 1.2.1 2024/05/39 1.2.0の修正で戦闘画面に入るとエラーになっていた問題を修正
 // 1.2.0 2024/05/30 装備品にタグを付けていたとき、その装備品を外したときにステートが解除されない問題を修正
@@ -27,6 +28,7 @@
  * @target MZ
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ConditionalState.js
  * @author トリアコンタン
+ * @orderAfter StateExcludeRecoverAll
  *
  * @help HPやMPの残量の条件を満たしたときにステートを付与します。
  * 特徴(※1)を有するメモ欄に以下の通り入力してください。
