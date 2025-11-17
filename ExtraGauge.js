@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.23.0 2025/11/17 指定したスイッチがONのときにゲージをフラッシュさせる機能を追加
  1.22.0 2025/02/02 ゲージの表示優先度をキャラクターの下やバトラーの下に表示できるよう修正
  1.21.2 2025/01/07 1.21.1の修正でゲージ画像を指定した場合の初期表示が正常でない問題を修正
  1.21.1 2024/12/14 ゲージが非表示の状態でも裏で画像の状態を更新するよう修正
@@ -682,6 +683,12 @@
  * @desc ゲージの現在値が最大値以上になると指定したスイッチをONにします。最大値を下回るとOFFになります。
  * @default 0
  * @type switch
+ *
+ * @param FlashSwitchId
+ * @text フラッシュスイッチID
+ * @desc 指定したスイッチがONのときゲージをフラッシュさせます。
+ * @default 0
+ * @type switch
  */
 
 /*~struct~Font:
@@ -1143,10 +1150,7 @@
         }
 
         updateFlashing() {
-            if (!this._detail.FlashIfFull) {
-                return;
-            }
-            if (this.isFull()) {
+            if (this.isNeedFlashing()) {
                 this._flashingCount++;
                 if (this._flashingCount % 20 < 10) {
                     this.setBlendColor(this.flashingColor1());
@@ -1156,6 +1160,16 @@
             } else {
                 this.setBlendColor([0, 0, 0, 0]);
             }
+        }
+
+        isNeedFlashing() {
+            const flashSwitchId = this._detail.FlashSwitchId;
+            if (flashSwitchId > 0 && $gameSwitches.value(flashSwitchId)) {
+                return true;
+            } else if (this._detail.FlashIfFull && this.isFull()) {
+                return true;
+            }
+            return false;
         }
 
         flashingColor1() {
