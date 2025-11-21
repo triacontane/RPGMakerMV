@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.7.0 2025/11/21 オプションリセットプラグイン使用時、即時反映機能を共存できる機能を追加
 // 1.6.1 2023/08/05 ElectronForMz.jsとの順序を定義するアノテーションを追加
 // 1.6.0 2023/07/23 オプション変更時にフルスクリーン状態を即時反映させる機能を追加
 // 1.5.0 2023/06/01 ElectronForMz.jsに対応
@@ -30,6 +31,7 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @orderAfter ElectronForMz
+ * @orderAfter OptionReset
  * @author triacontane
  *
  * @param Shutdown
@@ -88,6 +90,7 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @orderAfter ElectronForMz
+ * @orderAfter OptionReset
  * @author トリアコンタン
  *
  * @param Shutdown
@@ -147,6 +150,7 @@
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @orderAfter ElectronForMz
+ * @orderAfter OptionReset
  * @author triacontane
  *
  * @param Shutdown
@@ -409,6 +413,18 @@ function Scene_Terminate() {
     Window_Options.prototype.addGeneralOptions = function() {
         _Window_Options_addGeneralOptions.apply(this, arguments);
         this.addCommand(param.StartUpFullScreen, 'startUpFullScreen');
+    };
+
+    const _ConfigManager_resetData = ConfigManager.resetData;
+    ConfigManager.resetData = function() {
+        _ConfigManager_resetData.apply(this, arguments);
+        if (param.Immediate) {
+            if (this.startUpFullScreen) {
+                Graphics._requestFullScreen();
+            } else {
+                Graphics._cancelFullScreen();
+            }
+        }
     };
 
     //=============================================================================
