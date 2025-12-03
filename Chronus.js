@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.9.2 2025/12/03 アラーム設定の「年」の計算式が間違っていた問題を修正
 // 2.9.1 2025/06/13 アナログ時計を表示しているとき、メニュー画面から戻ったときに一瞬だけ時計の針が0時0分に戻る現象を修正
 // 2.9.0 2024/05/28 2.8.0の機能をプラグインコマンドに変更
 // 2.8.0 2024/05/26 現在の月名、曜日名、時間帯名を取得するスクリプトをヘルプに記載
@@ -1076,7 +1077,7 @@ function Window_Chronus() {
         var year = args.year || chronus.getYear();
         var month = args.year || chronus.getMonth();
         var day = args.day || chronus.getDay();
-        return args.minute + args.hour * 100 + day * 10000 + month * 1000000 * year + 100000000;
+        return args.minute + args.hour * 100 + day * 10000 + month * 1000000 + year * 100000000;
     };
 
     Game_Interpreter.prototype.getSwitchKey = function(switchId, selfSwitchId) {
