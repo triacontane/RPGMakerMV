@@ -1,5 +1,5 @@
 //=============================================================================
-// ChangeGameOverCondition.js
+// ChangeGameoverCondition.js
 // ----------------------------------------------------------------------------
 // (C)2016 Triacontane
 // This software is released under the MIT License.
@@ -17,7 +17,7 @@
 /*:
  * @plugindesc ゲームオーバー条件変更プラグイン
  * @target MZ
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ChangeGameOverCondition.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/ChangeGameoverCondition.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
@@ -32,7 +32,7 @@
  * @default []
  * @type actor[]
  *
- * @help ChangeGameOverCondition.js
+ * @help ChangeGameoverCondition.js
  *
  * 指定したアクターが戦闘不能になったときに
  * ゲームオーバーになるよう仕様を変更できます。
