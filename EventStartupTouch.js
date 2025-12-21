@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2025/12/21 トリガーを「リリース」にしたときの押し時間を制限する機能を追加
 // 1.4.0 2023/10/11 タッチ起動のトリガーを左クリック以外にも指定可能になる機能を追加
 // 1.3.0 2023/10/01 タッチ起動の判定をマスではなくイベント画像自体に変更できる機能を追加
 // 1.2.2 2022/05/10 ヘルプ修正
@@ -50,6 +51,12 @@
  * @value isHovered
  * @option 左リリース
  * @value isReleased
+ *
+ * @param pressedTimeLimit
+ * @text リリース時間制限
+ * @desc トリガーを「左リリース」に設定したときの時間制限(フレーム)です。指定内にリリースしないと起動しません。
+ * @default 0
+ * @type number
  *
  * @param StartupSwitchId
  * @text 起動トリガースイッチ
@@ -125,7 +132,13 @@
     TouchInput.isEventTouchTriggered = function() {
         const methods = param.TouchTriggerTypes;
         if (methods && methods.length > 0) {
-            return methods.some(method => this[method]());
+            const limit = param.pressedTimeLimit || 0;
+            return methods.some(method => {
+                if (limit && method === 'isReleased' && this._pressedTime > limit) {
+                    return false;
+                }
+                return this[method]();
+            });
         } else {
             return this.isTriggered();
         }
