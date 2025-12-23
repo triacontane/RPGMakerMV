@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.1 2025/12/23 インターセプターで妨害されたあとの攻撃が妨害した対象以外に発動する場合がある問題を修正
 // 3.0.0 2025/10/26 クロスカウンターとインターセプターのパラメータを「反撃種別」に統合
 //                  クロスカウンターの反撃判定を攻撃を受けたあとに行うよう仕様変更
 // 2.15.0 2025/06/25 反撃条件に「ダメージタイプ」を追加
@@ -583,6 +584,16 @@
         }
     };
 
+    const _Game_Action_makeTargets = Game_Action.prototype.makeTargets;
+    Game_Action.prototype.makeTargets = function() {
+        const targets = _Game_Action_makeTargets.apply(this, arguments);
+        return this._savedTargets || targets;
+    };
+
+    Game_Action.prototype.saveTargets = function(targets) {
+        this._savedTargets = targets;
+    };
+
     Object.defineProperties(Game_BattlerBase.prototype, {
         lastHpDamage: {
             get: function () {
@@ -763,6 +774,7 @@
         const subject = this._subject;
         const action = subject.currentAction();
         const targets = action.makeTargets();
+        action.saveTargets(targets);
         let intercepted = false;
         targets.forEach(target => {
             const counterAction = this.createCounterAction(subject, action, target, 'Interceptor');
@@ -776,7 +788,7 @@
             // インターセプトされた行動は、カウンターアクション扱いで実行される
             this._counterQueue.push({
                 subject: subject,
-                target: targets[0],
+                target: null,
                 action: action
             });
             this._logWindow.startInterceptedAction(subject, action);
