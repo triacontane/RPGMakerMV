@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.8.0 2026/01/04 オプション画面やロード画面からタイトル画面に戻ったときもコールを演奏する設定を追加
  1.7.1 2024/11/07 1.7.0の修正でランダム演奏のタイトルコールが演奏されなくなっていた問題を修正
  1.7.0 2024/07/27 タイトル画面変更プラグインと組み合わせて進行状況に合わせたタイトルコールを演奏する機能を追加
  1.6.0 2024/01/13 簡易ボイスプラグインと併用したとき、ボイスの音量設定でタイトルコールされるよう修正
@@ -89,6 +90,12 @@
  * @type combo
  * @option ConfigManager.Boolean1; // CustomizeConfigItem.jsのスイッチ項目
  *
+ * @param returnToTitle
+ * @text タイトル復帰時も演奏
+ * @desc オプション画面やロード画面からタイトルに戻ったときにも演奏します。
+ * @default false
+ * @type boolean
+ *
  * @help TitleCall.js
  *
  * タイトル画面を表示したときに指定した効果音を演奏します。
@@ -142,8 +149,8 @@
     };
 
     Scene_Title.prototype.isReturnToTitle = function() {
-        return SceneManager.isPreviousScene(Scene_Options) ||
-            SceneManager.isPreviousScene(Scene_Load);
+        return (SceneManager.isPreviousScene(Scene_Options) || SceneManager.isPreviousScene(Scene_Load))
+            && !param.returnToTitle;
     };
 
     Scene_Title.prototype.playTitleCall = function() {
