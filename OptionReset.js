@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2026/01/06 VariableCommon.jsと併用したとき、オプションリセット時に共有変数とスイッチが初期化されないよう修正
  1.0.0 2024/04/03 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -109,7 +110,14 @@
     };
 
     ConfigManager.resetData = function() {
-        this.applyData({});
+        const resetData = {};
+        const prevData = this.makeData();
+        this.excludePropertiesByReset().forEach(prop => resetData[prop] = prevData[prop]);
+        this.applyData(resetData);
         this.save();
+    };
+
+    ConfigManager.excludePropertiesByReset = function() {
+        return ['commonVariables', 'commonSwitches'];
     };
 })();
