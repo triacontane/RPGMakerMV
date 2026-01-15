@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.24.0 2026/01/15 ゲージごとに表示優先度を設定できる機能を追加
  1.23.0 2025/11/17 指定したスイッチがONのときにゲージをフラッシュさせる機能を追加
  1.22.0 2025/02/02 ゲージの表示優先度をキャラクターの下やバトラーの下に表示できるよう修正
  1.21.2 2025/01/07 1.21.1の修正でゲージ画像を指定した場合の初期表示が正常でない問題を修正
@@ -476,6 +477,37 @@
  * @option [数値入力画面プラグイン]数値ウィンドウ
  * @value Window_NumberEdit
  *
+ * @param PriorityMap
+ * @text 表示優先度(マップ)
+ * @desc マップ画面におけるゲージ画像の表示優先度です。
+ * @default 0
+ * @type select
+ * @option 0:最前面(画面のフェードアウトの影響を受けない)
+ * @value 0
+ * @option 1:ピクチャの上
+ * @value 1
+ * @option 2:ピクチャの下
+ * @value 2
+ * @option 3:キャラクターの上
+ * @value 3
+ * @option 4:キャラクターと同じ
+ * @value 4
+ * @option 5:キャラクターの下
+ * @value 5
+ *
+ * @param PriorityBattle
+ * @text 表示優先度(バトル)
+ * @desc 戦闘画面におけるゲージ画像の表示優先度です。
+ * @default 0
+ * @type select
+ * @option 0:最前面(画面のフェードアウトの影響を受けない)
+ * @value 0
+ * @option 1:ピクチャの上
+ * @value 1
+ * @option 2:ピクチャの下
+ * @value 2
+ * @option 3:バトラーの下
+ * @value 3
  *
  */
 
@@ -814,7 +846,8 @@
 
     Scene_Base.prototype.addChildExtraGauge = function(extraGauge) {
         const parentName = extraGauge.getParentWindowName();
-        const priority = this.findGaugePriority();
+        const priority = this.findGaugePriority(extraGauge);
+        console.log(priority);
         if (parentName && this._windowLayer) {
             const win = this._windowLayer.children.find(window =>
                 window instanceof Window && window.findWindowClassName() === parentName);
@@ -830,16 +863,18 @@
         }
     };
 
-    Scene_Base.prototype.findGaugePriority = function() {
+    Scene_Base.prototype.findGaugePriority = function(extraGauge) {
         return 0;
     };
 
-    Scene_Battle.prototype.findGaugePriority = function() {
-        return param.PriorityBattle;
+    Scene_Battle.prototype.findGaugePriority = function(extraGauge) {
+        const priority = extraGauge.findGaugePriorityForBattle();
+        return priority !== undefined && priority !== '' ? priority : param.PriorityBattle;
     };
 
-    Scene_Map.prototype.findGaugePriority = function() {
-        return param.PriorityMap;
+    Scene_Map.prototype.findGaugePriority = function(extraGauge) {
+        const priority = extraGauge.findGaugePriorityForMap();
+        return priority !== undefined && priority !== '' ? priority : param.PriorityMap;
     };
 
     Spriteset_Base.prototype.addChildExtraGauge = function(extraGauge, priority) {
@@ -939,6 +974,14 @@
 
         getParentWindowName() {
             return this._layout.ParentWindow;
+        }
+
+        findGaugePriorityForMap() {
+            return this._layout.PriorityMap;
+        }
+
+        findGaugePriorityForBattle() {
+            return this._layout.PriorityBattle;
         }
 
         create() {
