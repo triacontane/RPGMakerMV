@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2026/02/13 フェイス画像の指定がない場合は、重ね合わせ画像を表示しない設定を追加
  1.0.1 2024/11/16 重ね合わせ画像の表示優先度を変更
  1.1.0 2024/11/16 元のフェイス画像を非表示にする設定を追加
                   重ね合わせ画像の原点を変更できる機能を追加
@@ -33,6 +34,12 @@
  * @param defaultFaceHide
  * @text 元フェイス非表示
  * @desc 重ね合わせ画像表示時に元のフェイス画像を非表示にします。
+ * @default false
+ * @type boolean
+ *
+ * @param faceOnly
+ * @text フェイス画像指定時のみ描画
+ * @desc フェイス画像が指定されている場合にのみ重ね合わせ画像を描画します。
  * @default false
  * @type boolean
  *
@@ -187,6 +194,9 @@
     Window_Message.prototype.findFaceOverlay = function() {
         const faceImage = $gameMessage.faceName();
         const faceIndex = $gameMessage.faceIndex() + 1;
+        if (param.faceOnly && !faceImage) {
+            return null;
+        }
         return param.overlayList.find(overlay => {
             return (!overlay.faceImage || overlay.faceImage === faceImage) &&
                 (!overlay.faceIndex || overlay.faceIndex === faceIndex) &&
