@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.1 2026/02/15 特定の手順で操作すると売却個数選択ウィンドウが表示されない不具合を修正
  1.0.0 2024/12/13 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -50,9 +51,9 @@
         this._buyWindow.hide();
     };
 
-    const _Scene_Shop_onSellCancel = Scene_Shop.prototype.onSellCancel;
-    Scene_Shop.prototype.onSellCancel = function() {
-        _Scene_Shop_onSellCancel.apply(this, arguments);
+    const _Scene_Shop_onCategoryCancel = Scene_Shop.prototype.onCategoryCancel;
+    Scene_Shop.prototype.onCategoryCancel = function() {
+        _Scene_Shop_onCategoryCancel.apply(this, arguments);
         this.showBuyWindow();
     };
 
