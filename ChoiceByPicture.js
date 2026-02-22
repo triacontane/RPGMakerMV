@@ -391,7 +391,7 @@
             this.scale.x = scale / 100;
             this.scale.y = scale / 100;
             if (this._originalImage) {
-                this.findBasic(this._originalImage['focusImage']);
+                this.changeBackImage(this._originalImage['focusImage']);
             } else {
                 this.changeBackImage(this.findBasic('focusImage'));
             }
@@ -401,7 +401,7 @@
             this.scale.x = 1.0;
             this.scale.y = 1.0;
             if (this._originalImage) {
-                this.findBasic(this._originalImage['nonFocusImage']);
+                this.changeBackImage(this._originalImage['nonFocusImage']);
             } else {
                 this.changeBackImage(this.findBasic('nonFocusImage'));
             }
