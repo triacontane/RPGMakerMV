@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.0.1 2026/02/23 敵の共有TPを戦闘開始時に0で初期化するよう修正
  2.0.0 2026/02/23 敵のMP,TPも共有できるよう実装を刷新
  1.0.0 2025/03/16 初版
 ----------------------------------------------------------------------------
@@ -258,6 +259,9 @@
         _Game_Troop_setup.apply(this, arguments);
         if (paramTroopShared.mpShared) {
             this.setMp(this.getMaxMp());
+        }
+        if (paramTroopShared.tpShared) {
+            this.setTp(0);
         }
     };
 
