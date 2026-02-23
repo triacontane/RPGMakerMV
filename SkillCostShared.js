@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 2.0.0 2026/02/23 敵のMP,TPも共有できるよう実装を刷新
  1.0.0 2025/03/16 初版
 ----------------------------------------------------------------------------
  [X]      : https://x.com/triacontane/
@@ -20,15 +21,54 @@
  * @orderAfter PluginCommonBase
  * @author トリアコンタン
  *
+ * @param partyShared
+ * @text パーティ用設定
+ * @desc アクターのMP,TPをパーティ全体で共有する設定です。
+ * @default
+ * @type struct<SharedCost>
+ *
+ * @param troopShared
+ * @text 敵グループ用設定
+ * @desc 敵キャラのMP,TPを敵グループ全体で共有する設定です。
+ * @default
+ * @type struct<SharedCost>
+ *
+ * @param hiddenDefaultUi
+ * @text デフォルトUI非表示
+ * @desc 共有している場合、個々のアクターのMP,TPを非表示にします。
+ * @default true
+ * @type boolean
+ *
+ * @help SkillCostShared.js
+ *
+ * パーティ全体でMPやTPを共有します。MP,TP個別に利用可否を設定できます。
+ * 共有MP,TPを表示するUI（汎用ゲージプラグインなど）は別途用意してください。
+ *
+ * 個々のアクターの特徴やバフ、成長による最大MP,TPの増減設定は無効となります。
+ * 増減させたい場合は、パラメータで指定した変数値を変更してください。
+ *　
+ * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
+ * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
+ * 以下のフォルダに格納されています。
+ * dlc/BasicResources/plugins/official
+ *
+ * 利用規約：
+ *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
+ *  についても制限はありません。
+ *  このプラグインはもうあなたのものです。
+ */
+
+/*~struct~SharedCost:
+ *
  * @param mpShared
  * @text MP共有
  * @desc パーティ全体でMPを共有します。
- * @default true
+ * @default false
  * @type boolean
  *
  * @param maxMpVariableId
  * @text 最大MPの変数ID
- * @desc 最大MPの値を格納しておく変数のIDです。
+ * @desc 最大MPの値を格納しておく変数のIDです。MP共有する場合、必ず指定してください。
  * @default 1
  * @type variable
  * @parent mpShared
@@ -43,7 +83,7 @@
  * @param tpShared
  * @text TP共有
  * @desc パーティ全体でTPを共有します。
- * @default true
+ * @default false
  * @type boolean
  *
  * @param maxTpVariableId
@@ -59,50 +99,16 @@
  * @default 0
  * @type variable
  * @parent tpShared
- *
- * @param hiddenDefaultUi
- * @text デフォルトUI非表示
- * @desc 共有している場合、個々のアクターのMP,TPを非表示にします。
- * @default true
- * @type boolean
- *
- * @help SkillCostShared.js
- *
- * パーティ全体でMPやTPを共有します。MP,TP個別に利用可否を設定できます。
- * 共有MP,TPを表示するUI（汎用ゲージプラグインなど）は別途用意してください。
- *
- * 個々のアクターの特徴やバフ、成長による最大MP,TPの増減設定は無効となります。
- * 増減させたい場合は、パラメータで指定した変数値を変更してください。
- *
- * この設定はパーティのみで敵キャラ、敵グループには適用されません。
- *　
- * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
- * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
- * 以下のフォルダに格納されています。
- * dlc/BasicResources/plugins/official
- *
- * 利用規約：
- *  作者に無断で改変、再配布が可能で、利用形態（商用、18禁利用等）
- *  についても制限はありません。
- *  このプラグインはもうあなたのものです。
  */
 
 (() => {
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+    const paramPartyShared = param.partyShared || {};
+    const paramTroopShared = param.troopShared || {};
 
-    BattleManager.isSkillCostShared = function(type) {
-        if (type === 'mp') {
-            return param.mpShared;
-        } else if (type === 'tp') {
-            return param.tpShared;
-        } else {
-            return false;
-        }
-    };
-
-    if (BattleManager.isSkillCostShared('mp')) {
+    if (paramPartyShared.mpShared) {
         Object.defineProperties(Game_Actor.prototype, {
             // Magic Points
             _mp: {
@@ -122,25 +128,9 @@
                 configurable: true
             }
         });
-
-        Game_Party.prototype.setMp = function(mp) {
-            if (this._sharedMp === mp) {
-                return;
-            }
-            this._sharedMp = mp.clamp(0, this.getMaxMp());
-            $gameVariables.setValue(param.mpVariableId, this._sharedMp);
-        };
-
-        Game_Party.prototype.getMp = function() {
-            return this._sharedMp || 0;
-        };
-
-        Game_Party.prototype.getMaxMp = function() {
-            return Math.max($gameVariables.value(param.maxMpVariableId), 1);
-        };
     }
 
-    if (BattleManager.isSkillCostShared('tp')) {
+    if (paramPartyShared.tpShared) {
         Object.defineProperties(Game_Actor.prototype, {
             // Tactical Points
             _tp: {
@@ -153,41 +143,127 @@
                 configurable: true
             },
         });
-
-        const _Game_BattlerBase_maxTp = Game_BattlerBase.prototype.maxTp;
-        Game_BattlerBase.prototype.maxTp = function() {
-            const tp = _Game_BattlerBase_maxTp.apply(this, arguments);
-            if (this.isActor()) {
-                return $gameParty.getMaxTp();
-            } else {
-                return tp;
-            }
-        };
-
-        Game_Party.prototype.setTp = function(tp) {
-            if (this._sharedTp === tp) {
-                return;
-            }
-            this._sharedTp = tp.clamp(0, this.getMaxTp());
-            $gameVariables.setValue(param.tpVariableId, this._sharedTp);
-        };
-
-        Game_Party.prototype.getTp = function() {
-            return this._sharedTp || 0;
-        };
-
-        Game_Party.prototype.getMaxTp = function() {
-            if (param.maxTpVariableId > 0) {
-                return Math.max($gameVariables.value(param.maxTpVariableId), 1);
-            } else {
-                return 100;
-            }
-        };
     }
+
+    if (paramTroopShared.mpShared) {
+        Object.defineProperties(Game_Enemy.prototype, {
+            // Magic Points
+            _mp: {
+                get: function() {
+                    return $gameTroop.getMp();
+                },
+                set: function(value) {
+                    return $gameTroop.setMp(value);
+                },
+                configurable: true
+            },
+            // Maximum Magic Points
+            mmp: {
+                get: function() {
+                    return $gameTroop.getMaxMp();
+                },
+                configurable: true
+            }
+        });
+    }
+
+    if (paramTroopShared.tpShared) {
+        Object.defineProperties(Game_Enemy.prototype, {
+            // Tactical Points
+            _tp: {
+                get: function() {
+                    return $gameTroop.getTp();
+                },
+                set: function(value) {
+                    return $gameTroop.setTp(value);
+                },
+                configurable: true
+            },
+        });
+    }
+
+    Game_Unit.prototype.findShared = function() {
+        return null;
+    };
+
+    Game_Unit.prototype.isTpShared = function() {
+        return this.findShared().tpShared;
+    };
+
+    Game_Unit.prototype.isMpShared = function() {
+        return this.findShared().mpShared;
+    };
+
+    Game_Unit.prototype.isCostShared = function(type) {
+        return (type === 'mp' && this.isMpShared()) || (type === 'tp' && this.isTpShared());
+    };
+
+    Game_Party.prototype.findShared = function() {
+        return paramPartyShared;
+    };
+
+    Game_Troop.prototype.findShared = function() {
+        return paramTroopShared;
+    };
+
+    Game_Unit.prototype.setMp = function(mp) {
+        if (this._sharedMp === mp) {
+            return;
+        }
+        this._sharedMp = mp.clamp(0, this.getMaxMp());
+        $gameVariables.setValue(this.findShared().mpVariableId, this._sharedMp);
+    };
+
+    Game_Unit.prototype.getMp = function() {
+        return this._sharedMp || 0;
+    };
+
+    Game_Unit.prototype.getMaxMp = function() {
+        return Math.max($gameVariables.value(this.findShared().maxMpVariableId), 1);
+    };
+
+    Game_Unit.prototype.setTp = function(tp) {
+        if (this._sharedTp === tp) {
+            return;
+        }
+        this._sharedTp = tp.clamp(0, this.getMaxTp());
+        $gameVariables.setValue(this.findShared().tpVariableId, this._sharedTp);
+    };
+
+    Game_Unit.prototype.getTp = function() {
+        return this._sharedTp || 0;
+    };
+
+    Game_Unit.prototype.getMaxTp = function() {
+        if (this.findShared().maxTpVariableId > 0) {
+            return Math.max($gameVariables.value(this.findShared().maxTpVariableId), 1);
+        } else if (this.findShared()) {
+            return 100;
+        }
+    };
+
+    const _Game_BattlerBase_maxTp = Game_BattlerBase.prototype.maxTp;
+    Game_BattlerBase.prototype.maxTp = function() {
+        const tp = _Game_BattlerBase_maxTp.apply(this, arguments);
+        const unit = this.friendsUnit();
+        if (unit.isTpShared()) {
+            return unit.getMaxTp();
+        } else {
+            return tp;
+        }
+    };
+
+    const _Game_Troop_setup = Game_Troop.prototype.setup;
+    Game_Troop.prototype.setup = function(troopId) {
+        _Game_Troop_setup.apply(this, arguments);
+        if (paramTroopShared.mpShared) {
+            this.setMp(this.getMaxMp());
+        }
+    };
 
     const _Window_StatusBase_placeGauge = Window_StatusBase.prototype.placeGauge;
     Window_StatusBase.prototype.placeGauge = function(actor, type, x, y) {
-        if (param.hiddenDefaultUi && BattleManager.isSkillCostShared(type)) {
+        if (param.hiddenDefaultUi && $gameParty.isCostShared(type)) {
             return;
         }
         _Window_StatusBase_placeGauge.apply(this, arguments);
