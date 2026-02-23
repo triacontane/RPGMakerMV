@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2026/02/23 ヘルプを記載して正式公開
  1.0.0 2021/05/08 初版
 ----------------------------------------------------------------------------
  [Blog]   : https://triacontane.blogspot.jp/
@@ -43,6 +44,10 @@
  * @type struct<Picture>[]
  *
  * @help ChoiceByPicture.js
+ *
+ * コマンド「選択肢の表示」で文字列の代わりに画像を表示されます。
+ * 画像の配置を変えたり、フォーカスの有無で画像を切り替えることもできます。
+ * 「選択肢の表示」の直前にプラグインコマンドを実行してください。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -125,14 +130,14 @@
 /*~struct~Picture:
  *
  * @param focusImage
- * @text フォーカス時画像ファイル
+ * @text フォーカスファイル
  * @desc 選択肢にフォーカスが当たっているときの画像ファイルです。
  * @default
  * @type file
  * @dir img/pictures
  *
  * @param nonFocusImage
- * @text 非フォーカス時画像ファイル
+ * @text 非フォーカスファイル
  * @desc 選択肢にフォーカスが当たっていないときの画像ファイルです。
  * @default
  * @type file
@@ -184,6 +189,7 @@
         const choicePicture = $gameMessage.findChoicePicture();
         if (choicePicture) {
             this._choiceSprite.setup(choicePicture, this);
+            this.setUseKeyboard(true);
         }
         _Window_ChoiceList_start.apply(this, arguments);
     };
