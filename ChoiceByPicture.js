@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.2.0 2026/02/23 選択肢ピクチャの表示位置調整機能を追加
  1.1.0 2026/02/23 ヘルプを記載して正式公開
  1.0.0 2021/05/08 初版
 ----------------------------------------------------------------------------
@@ -118,6 +119,22 @@
  * @desc 選択肢全体の表示枠の拡大率(Y方向)です。小さくすると選択肢が中央に寄っていきます。
  * @default 100
  * @type number
+ *
+ * @param shiftX
+ * @text シフトX座標
+ * @desc 選択肢全体の表示枠のシフト量(X方向)です。正の値で右に、負の値で左にシフトします。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
+ *
+ * @param shiftY
+ * @text シフトY座標
+ * @desc 選択肢全体の表示枠のシフト量(Y方向)です。正の値で下に、負の値で上にシフトします。
+ * @default 0
+ * @type number
+ * @min -9999
+ * @max 9999
  *
  * @param columnNumber
  * @text カラム数
@@ -464,13 +481,21 @@
             return this.findBasic('containerScaleY') / 100;
         }
 
+        findShiftX() {
+            return this.findBasic('shiftX') || 0;
+        }
+
+        findShiftY() {
+            return this.findBasic('shiftY') || 0;
+        }
+
         update(index) {
             this._frameCount++;
             this._newIndex = index;
             const state = {
                 count: this._sprites.length,
-                centerX: Graphics.width / 2,
-                centerY: Graphics.height / 2
+                centerX: Graphics.width / 2 + this.findShiftX(),
+                centerY: Graphics.height / 2 + this.findShiftY(),
             }
             this._sprites.forEach(sprite => {
                 this.updateChild(sprite, state);
