@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2026/03/04 アイテムやスキルの使用時、アクター選択ウィンドウを表示せず常に先頭アクターを対象にする設定を追加
  1.0.0 2025/08/30 初版
 ----------------------------------------------------------------------------
  [X]      : https://x.com/triacontane/
@@ -23,6 +24,12 @@
  * @param disableActorChange
  * @text アクター変更無効
  * @desc ステータス画面などでPageUp/Downキーによるアクター変更を無効にします。
+ * @default false
+ * @type boolean
+ *
+ * @param disableItemActor
+ * @text 対象アクター選択無効
+ * @desc アイテムやスキルの使用時、アクター選択ウィンドウを表示せず常に先頭アクターを対象にします。
  * @default false
  * @type boolean
  *
@@ -102,5 +109,16 @@
     const _Scene_Equip_needsPageButtons = Scene_Equip.prototype.needsPageButtons;
     Scene_Equip.prototype.needsPageButtons = function() {
         return _Scene_Equip_needsPageButtons.apply(this, arguments) && !this.isDisableActorChange();
+    };
+
+    const _Scene_ItemBase_determineItem = Scene_ItemBase.prototype.determineItem;
+    Scene_ItemBase.prototype.determineItem = function() {
+        if (param.disableItemActor) {
+            this._actorWindow.forceSelect(0);
+            this.onActorOk();
+            this.activateItemWindow();
+        } else {
+            _Scene_ItemBase_determineItem.apply(this, arguments);
+        }
     };
 })();
