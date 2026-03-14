@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2026/03/14 売却専用ショップの場合もコマンドスキップするよう修正
  1.0.0 2025/03/11 初版
 ----------------------------------------------------------------------------
  [X]      : https://x.com/triacontane/
@@ -24,6 +25,8 @@
  *
  * 購入のみのショップではコマンドウィンドウを表示せず
  * 直接、リストウィンドウをアクティブにします。
+ * また、購入リストが空のショップは売却専用として、同じく
+ * コマンドウィンドウを表示せず、直接、リストウィンドウをアクティブにします。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -45,6 +48,10 @@
         if (this._purchaseOnly) {
             this._commandWindow.hide();
             this.commandBuy();
+        } else if (this.isSellOnly()) {
+            this._commandWindow.select(1);
+            this._commandWindow.hide();
+            this.commandSell();
         }
     };
 
@@ -54,5 +61,17 @@
         if (this._purchaseOnly) {
             this.popScene();
         }
+    };
+
+    const _Scene_Shop_onCategoryCancel = Scene_Shop.prototype.onCategoryCancel;
+    Scene_Shop.prototype.onCategoryCancel = function() {
+        _Scene_Shop_onCategoryCancel.apply(this, arguments);
+        if (this.isSellOnly()) {
+            this.popScene();
+        }
+    };
+
+    Scene_Shop.prototype.isSellOnly = function() {
+        return this._goods.length === 1 && this._goods[0][1] === 0;
     };
 })();
