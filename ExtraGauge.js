@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.24.2 2026/03/19 ゲージの現在値が最大値を超えたとき、ゲージ右端の黒枠が表示されなくなる問題を修正
  1.24.1 2026/02/15 不要なログ出力が残っていたので削除
  1.24.0 2026/01/15 ゲージごとに表示優先度を設定できる機能を追加
  1.23.0 2025/11/17 指定したスイッチがONのときにゲージをフラッシュさせる機能を追加
@@ -1190,6 +1191,13 @@
             }
             super.updateBitmap();
             this._prevVisible = visible;
+        }
+
+        gaugeRate() {
+            if (this._value > this._maxValue) {
+                this._value = this._maxValue;
+            }
+            return super.gaugeRate();
         }
 
         updateFlashing() {
