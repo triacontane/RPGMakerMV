@@ -6,6 +6,8 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.3.0 2026/03/22 非フォーカス画像を指定していないときはフォーカス画像を使用されるように仕様変更
+                  モバイル環境での注意事項を追加
  1.2.0 2026/02/23 選択肢ピクチャの表示位置調整機能を追加
  1.1.0 2026/02/23 ヘルプを記載して正式公開
  1.0.0 2021/05/08 初版
@@ -49,6 +51,7 @@
  * コマンド「選択肢の表示」で文字列の代わりに画像を表示されます。
  * 画像の配置を変えたり、フォーカスの有無で画像を切り替えることもできます。
  * 「選択肢の表示」の直前にプラグインコマンドを実行してください。
+ * モバイル端末環境では、フォーカス、非フォーカスの概念がないため、該当する機能は動作しません。
  *　
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -84,7 +87,7 @@
  *
  * @param nonFocusImage
  * @text 非フォーカス時画像
- * @desc 選択肢にフォーカスが当たっていないときの画像ファイルです。
+ * @desc 選択肢にフォーカスが当たっていないときの画像ファイルです。指定がない場合はフォーカスファイルと同じものが使用されます。
  * @default
  * @type file
  * @dir img/pictures
@@ -155,7 +158,7 @@
  *
  * @param nonFocusImage
  * @text 非フォーカスファイル
- * @desc 選択肢にフォーカスが当たっていないときの画像ファイルです。
+ * @desc 選択肢にフォーカスが当たっていないときの画像ファイルです。指定がない場合はフォーカスファイルと同じものが使用されます。
  * @default
  * @type file
  * @dir img/pictures
@@ -388,6 +391,7 @@
         }
 
         onClick() {
+            this._window.select(this._index);
             this._window.processOk();
         }
 
@@ -413,22 +417,30 @@
             const scale = this.findBasic('focusScale');
             this.scale.x = scale / 100;
             this.scale.y = scale / 100;
-            if (this._originalImage) {
-                this.changeBackImage(this._originalImage['focusImage']);
-            } else {
-                this.changeBackImage(this.findBasic('focusImage'));
-            }
+            this.changeBackImage(this.findActiveImage());
         }
 
         updateNonActive() {
             this.scale.x = 1.0;
             this.scale.y = 1.0;
-            if (this._originalImage) {
-                this.changeBackImage(this._originalImage['nonFocusImage']);
-            } else {
-                this.changeBackImage(this.findBasic('nonFocusImage'));
-            }
+            this.changeBackImage(this.findNonActiveImage());
         }
+
+        findActiveImage() {
+            return this.findImage('focusImage');
+        }
+
+        findNonActiveImage() {
+            return this.findImage('nonFocusImage') || this.findActiveImage();
+        }
+
+        findImage(activeTypeName = 'focusImage') {
+            if (this._originalImage && this._originalImage[activeTypeName]) {
+                return this._originalImage[activeTypeName];
+            } else {
+                return this.findBasic(activeTypeName);
+            }
+        };
 
         destroyIfNeed() {
             if (this._textSprite) {
