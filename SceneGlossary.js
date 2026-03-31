@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.8.3 2026/03/31 敵キャラを時点に表示するとき、色相が反映されない問題を修正
 // 3.8.1 2024/04/20 用語辞典に戻るのコマンドを使ったとき、選択中の用語までスクロールしない問題を修正
 // 3.8.0 2023/08/16 用語辞典をキャンセルしてマップに戻ったときにONになるスイッチを追加
 // 3.7.8 2023/07/09 ウィンドウクラスを外部から参照できるよう修正
@@ -2504,10 +2505,79 @@
         } else {
             if (enemy) {
                 var methodName = $gameSystem.isSideView() ? 'loadSvEnemy' : 'loadEnemy';
-                return ImageManager[methodName](enemy.battlerName, enemy.battlerHue);
+                var bitmap = ImageManager[methodName](enemy.battlerName);
+                bitmap.addLoadListener(function() {
+                    if (enemy.battlerHue) {
+                        bitmap.rotateHue(enemy.battlerHue);
+                    }
+                });
+                return bitmap;
             } else {
                 return null;
             }
+        }
+    };
+
+    Bitmap.prototype.rotateHue = function(offset) {
+        function rgbToHsl(r, g, b) {
+            var cmin = Math.min(r, g, b);
+            var cmax = Math.max(r, g, b);
+            var h = 0;
+            var s = 0;
+            var l = (cmin + cmax) / 2;
+            var delta = cmax - cmin;
+
+            if (delta > 0) {
+                if (r === cmax) {
+                    h = 60 * (((g - b) / delta + 6) % 6);
+                } else if (g === cmax) {
+                    h = 60 * ((b - r) / delta + 2);
+                } else {
+                    h = 60 * ((r - g) / delta + 4);
+                }
+                s = delta / (255 - Math.abs(2 * l - 255));
+            }
+            return [h, s, l];
+        }
+
+        function hslToRgb(h, s, l) {
+            var c = (255 - Math.abs(2 * l - 255)) * s;
+            var x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            var m = l - c / 2;
+            var cm = c + m;
+            var xm = x + m;
+
+            if (h < 60) {
+                return [cm, xm, m];
+            } else if (h < 120) {
+                return [xm, cm, m];
+            } else if (h < 180) {
+                return [m, cm, xm];
+            } else if (h < 240) {
+                return [m, xm, cm];
+            } else if (h < 300) {
+                return [xm, m, cm];
+            } else {
+                return [cm, m, xm];
+            }
+        }
+
+        if (offset && this.width > 0 && this.height > 0) {
+            offset = ((offset % 360) + 360) % 360;
+            var context = this.context;
+            var imageData = context.getImageData(0, 0, this.width, this.height);
+            var pixels = imageData.data;
+            for (var i = 0; i < pixels.length; i += 4) {
+                var hsl = rgbToHsl(pixels[i + 0], pixels[i + 1], pixels[i + 2]);
+                var h = (hsl[0] + offset) % 360;
+                var s = hsl[1];
+                var l = hsl[2];
+                var rgb = hslToRgb(h, s, l);
+                pixels[i + 0] = rgb[0];
+                pixels[i + 1] = rgb[1];
+                pixels[i + 2] = rgb[2];
+            }
+            context.putImageData(imageData, 0, 0);
         }
     };
 
