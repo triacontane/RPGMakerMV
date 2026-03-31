@@ -2505,16 +2505,33 @@
         } else {
             if (enemy) {
                 var methodName = $gameSystem.isSideView() ? 'loadSvEnemy' : 'loadEnemy';
-                var bitmap = ImageManager[methodName](enemy.battlerName);
-                bitmap.addLoadListener(function() {
-                    if (enemy.battlerHue) {
+                var bitmap = null;
+                if (enemy.battlerHue) {
+                    ImageManager.noCache = true;
+                    bitmap = ImageManager[methodName](enemy.battlerName);
+                    bitmap.addLoadListener(function() {
                         bitmap.rotateHue(enemy.battlerHue);
-                    }
-                });
+                    });
+                } else {
+                    bitmap = ImageManager[methodName](enemy.battlerName);
+                }
+
                 return bitmap;
             } else {
                 return null;
             }
+        }
+    };
+
+    ImageManager.noCache = false;
+
+    var _ImageManager_loadBitmapFromUrl = ImageManager.loadBitmapFromUrl;
+    ImageManager.loadBitmapFromUrl = function(url) {
+        if (this.noCache) {
+            this.noCache = false;
+            return Bitmap.load(url);
+        } else {
+            return _ImageManager_loadBitmapFromUrl.apply(this, arguments);
         }
     };
 
