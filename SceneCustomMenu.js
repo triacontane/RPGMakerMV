@@ -1661,6 +1661,8 @@
 
         updatePageButtons() {
             if (this._interpreter.isRunning()) {
+                this._pageupButton.visible = false;
+                this._pagedownButton.visible = false;
                 return;
             }
             super.updatePageButtons();
