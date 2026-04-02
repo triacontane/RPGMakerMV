@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.53.2 2026/04/02 ページボタン表示が有効なときにイベントを実行すると、メッセージ表示中もウィンドウからフォーカスが外れない問題を修正
  1.53.1 2025/06/19 加算合成を使用しない設定をデフォルトに変更
  1.53.0 2025/06/10 drawItemNameのコメント修正
  1.52.2 2025/05/14 加算合成を使用しない場合の処理を1.50と同様になるよう修正
@@ -1426,6 +1427,7 @@
             super.start();
             this.refresh();
             this.fireEvent(this._customData.InitialEvent);
+            this.updatePageButtons();
         }
 
         terminate() {
@@ -1655,6 +1657,13 @@
             const panorama = this._customData.Panorama;
             this._panorama.origin.x += panorama.ScrollX;
             this._panorama.origin.y += panorama.ScrollY;
+        }
+
+        updatePageButtons() {
+            if (this._interpreter.isRunning()) {
+                return;
+            }
+            super.updatePageButtons();
         }
 
         refreshWindowIfNeed() {
