@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.4.0 2026/04/09 条件付きイベント生成で条件反転の機能を追加
  1.3.4 2025/04/02 動的生成イベントに対して2回連続でイベントの消去を実行するとエラーになる問題を修正
  1.3.3 2024/11/27 1.3.2 の修正ロジックに誤りがあった問題を修正
  1.3.2 2024/11/26 1.3.1の修正でイベントIDが0のイベントが生成される可能性がある問題を修正
@@ -143,6 +144,12 @@
  * @desc Generate only for the specified region.
  * @default []
  * @type number[]
+ *
+ * @arg reverse
+ * @text Reverse of conditions
+ * @desc Reverse the content of all conditions and generate at locations that do not meet the conditions.
+ * @default false
+ * @type boolean
  *
  * @arg template
  * @text Template Generation
@@ -303,6 +310,12 @@
  * @default []
  * @type number[]
  *
+ * @arg reverse
+ * @text 条件の逆転
+ * @desc すべての条件の内容を逆転させ、条件を満たさなかった場所に生成します。判定しない、未指定の条件には影響しません。
+ * @default false
+ * @type boolean
+ *
  * @arg template
  * @text テンプレート生成
  * @desc 有効にするとテンプレートイベントを生成します。別途テンプレートイベントプラグインが必要です。
@@ -460,6 +473,12 @@
  * @desc 仅在指定区域上生成。
  * @default []
  * @type number[]
+ *
+ * @arg reverse
+ * @text 条件反转
+ * @desc 反转所有条件的内容，在不满足条件的位置生成。未判断、未指定的条件不受影响。
+ * @default false
+ * @type boolean
  *
  * @arg template
  * @text 模板生成
@@ -711,7 +730,6 @@ function Game_PrefabEvent() {
 
     Game_Map.prototype.spawnEventRandom = function(originalEventId, conditionMap, isTemplate, algorithm) {
         const conditions = [];
-        conditions.push(this.isValid.bind(this));
         if (conditionMap.passable) {
             conditions.push(this.isErsCheckAnyDirectionPassable.bind(this));
         }
@@ -727,7 +745,7 @@ function Game_PrefabEvent() {
         if (conditionMap.regions && conditionMap.regions.length > 0) {
             conditions.push(this.isErsCheckRegionId.bind(this, conditionMap.regions));
         }
-        const position = this.getConditionalValidPosition(conditions, algorithm);
+        const position = this.getConditionalValidPosition(conditions, algorithm, conditionMap.reverse);
         if (position) {
             this.spawnEvent(originalEventId, position.x, position.y, isTemplate);
         } else {
@@ -786,18 +804,18 @@ function Game_PrefabEvent() {
         return !$gamePlayer.isTransferring() || this.mapId() === $gamePlayer.newMapId();
     };
 
-    Game_Map.prototype.getConditionalValidPosition = function(conditions, algorithm) {
+    Game_Map.prototype.getConditionalValidPosition = function(conditions, algorithm, reverse) {
         if (algorithm === 0) {
             let x, y, count = 0;
             do {
                 x = Math.randomInt($dataMap.width);
                 y = Math.randomInt($dataMap.height);
-            } while (!conditions.every(this.checkValidPosition.bind(this, x, y)) && ++count < 1000);
+            } while (!conditions.every(this.checkValidPosition.bind(this, x, y, reverse)) && ++count < 1000);
             return count < 1000 ? {x: x, y: y} : null;
         } else {
             const positions = [];
             for (let ix = 0; ix < $dataMap.width; ++ix) for (let iy = 0; iy < $dataMap.height; ++iy) {
-                if (conditions.every(this.checkValidPosition.bind(this, ix, iy))) {
+                if (conditions.every(this.checkValidPosition.bind(this, ix, iy, reverse))) {
                     positions.push({x: ix, y: iy});
                 }
             }
@@ -805,8 +823,11 @@ function Game_PrefabEvent() {
         }
     };
 
-    Game_Map.prototype.checkValidPosition = function(x, y, condition) {
-        return condition(x, y);
+    Game_Map.prototype.checkValidPosition = function(x, y, reverse, condition) {
+        if (!this.isValid(x, y)) {
+            return false;
+        }
+        return reverse ? !condition(x, y) : condition(x, y);
     };
 
     Game_Map.prototype.isErsCheckAnyDirectionPassable = function(x, y) {
