@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.0.3 2026/04/21 コンボ数によるダメージ倍率の上乗せが回復にも適用されていた仕様を修正
 // 3.0.2 2025/05/13 チェインの対象ユニットが切り替わったとき、表示数値が同値だとスキンが切り替わらない問題を修正
 // 3.0.1 2025/02/13 スキルによる追加倍率の計算が間違っていた問題を修正
 // 3.0.0 2024/10/12 MZ対応版としてリファクタリングのうえ仕様刷新
@@ -409,7 +410,7 @@ function Sprite_ChainDamage() {
     const _Game_Action_makeDamageValue      = Game_Action.prototype.makeDamageValue;
     Game_Action.prototype.makeDamageValue = function(target, critical) {
         let damageValue = _Game_Action_makeDamageValue.apply(this, arguments);
-        if (this.isHpEffect()) {
+        if (this.isHpEffect() && damageValue > 0) {
             const addRate = this.getAdditionalChainRate()
             damageValue *= this.friendsUnit().getChainRate(addRate);
         }
