@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.0.2 2026/05/03 同じキャラクターに複数のアニメーションを表示していたとき、最初のアニメーションが終了したときに後続のアニメーションも終了してしまう問題を修正
  1.0.1 2023/03/27 AnimationByPoint.jsで表示したアニメーションを消去できる機能を追加
  1.0.0 2023/03/24 初版
 ----------------------------------------------------------------------------
@@ -67,20 +68,48 @@
     PluginManagerEx.registerCommand(script, 'REMOVE_ANIMATION', function(args) {
         const character = this.character(args.id);
         if (character) {
-            character.endAnimation();
+            character.abortAnimation();
         }
     });
 
     PluginManagerEx.registerCommand(script, 'REMOVE_BALLOON', function(args) {
         const character = this.character(args.id);
         if (character) {
-            character.endBalloon();
+            character.abortBalloon();
         }
     });
 
+    Game_CharacterBase.prototype.abortAnimation = function() {
+        this.endAnimation();
+        this._abort = true;
+    };
+
+    Game_CharacterBase.prototype.abortBalloon = function() {
+        this.endBalloon();
+        this._abort = true;
+    };
+
+    Game_CharacterBase.prototype.isAbort = function() {
+        return this._abort;
+    };
+
+    const _Game_CharacterBase_startAnimation = Game_CharacterBase.prototype.startAnimation;
+    Game_CharacterBase.prototype.startAnimation = function() {
+        _Game_CharacterBase_startAnimation.apply(this, arguments);
+        this._abort = false;
+    };
+
+    const _Game_CharacterBase_startBalloon = Game_CharacterBase.prototype.startBalloon;
+    Game_CharacterBase.prototype.startBalloon = function() {
+        _Game_CharacterBase_startBalloon.apply(this, arguments);
+        this._abort = false;
+    };
+
     Sprite.prototype.isAbortAnimation = function() {
         if (this.targetObjects) {
-            return this.targetObjects.every(obj => obj.isAnimationPlaying && !obj.isAnimationPlaying());
+            return this.targetObjects.every(obj => {
+                return obj.isAbort && obj.isAbort() && obj.isAnimationPlaying && !obj.isAnimationPlaying()
+            });
         } else {
             return false;
         }
@@ -115,8 +144,9 @@
     };
 
     Sprite_Balloon.prototype.isAbortBalloon = function() {
-        if (this.targetObject) {
-            return this.targetObject.isBalloonPlaying && !this.targetObject.isBalloonPlaying();
+        const obj = this.targetObject;
+        if (obj) {
+            return obj.isAbort && obj.isAbort() && obj.isBalloonPlaying && !obj.isBalloonPlaying();
         } else {
             return false;
         }
