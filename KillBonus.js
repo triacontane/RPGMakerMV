@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2026/05/03 撃破ボーナスによるMP割合回復量の計算が誤っていた問題を修正
 // 2.3.0 2025/03/25 特定の敵キャラを撃破したときだけボーナスが貰える設定を追加
 // 2.2.0 2024/12/30 スキルのメモ欄からも撃破ボーナスのタグを取得できるよう修正
 // 2.1.1 2023/07/07 経験値とゴールドのレートを変更したとき、小数値になってしまう場合がある問題を修正
@@ -448,7 +449,7 @@
             this._gainMp += data.mp;
         }
         if (data.mpRate) {
-            this._gainMp += Math.floor(subject.mhp * data.mpRate / 100);
+            this._gainMp += Math.floor(subject.mmp * data.mpRate / 100);
         }
         if (data.tp) {
             this._gainTp += data.tp;
