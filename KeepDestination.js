@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.2.3 2026/05/10 タッチ移動の到達地点でイベントを起動したとき、タッチ移動が解除されない問題を修正
 // 1.2.1 2025/09/30 フェード「なし」で場所移動するとタッチ移動が移動後も維持されてしまう問題を修正
 // 1.2.0 2025/09/07 移動ルート強制を行うとタッチ移動を中断する機能を追加
 // 1.1.0 2025/03/11 MZ版としてリファクタリング
@@ -56,7 +57,7 @@
     //=============================================================================
     const _Scene_Map_updateDestination = Scene_Map.prototype.updateDestination;
     Scene_Map.prototype.updateDestination = function() {
-        if ($gamePlayer.canPassStraight() && !$gamePlayer.isTransferring() && !$gamePlayer.isDestinationAbortByRouteForce()) {
+        if ($gamePlayer.isNeetDestinationKeep()) {
             $gameTemp.keepDestination();
             this._prevTouchCount = this._touchCount;
         }
@@ -70,6 +71,11 @@
 
     Game_Player.prototype.isDestinationAbortByRouteForce = function() {
         return this._moveRouteForcing && param.abortByRouteForce;
+    };
+
+    Game_Player.prototype.isNeetDestinationKeep = function() {
+        return this.canPassStraight() && !this.isTransferring() &&
+            !this.isDestinationAbortByRouteForce() && !$gameTemp.isDestinationArrival();
     };
 
     const _Game_Player_reserveTransfer = Game_Player.prototype.reserveTransfer;
@@ -96,6 +102,10 @@
             return;
         }
         _Game_Temp_clearDestination.apply(this, arguments);
+    };
+
+    Game_Temp.prototype.isDestinationArrival = function() {
+        return this._destinationX === $gamePlayer.x && this._destinationY === $gamePlayer.y;
     };
 
     //=============================================================================
