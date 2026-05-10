@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.0 2026/05/10 任意の蓄積値を変数に格納できる機能を追加しました。他プラグインと組み合わせて蓄積情報を可視化できます。
 // 2.6.0 2025/04/07 蓄積された免疫状態を解除するコマンドを追加
 // 2.5.0 2024/04/10 蓄積ステートの解除条件に「戦闘終了時に解除」がある場合、蓄積率も同時にリセットできる機能を追加
 // 2.4.2 2023/02/12 プラグイン未適用のセーブデータをロードしたときエラーになる場合がある問題を修正
@@ -75,6 +76,12 @@
  * @desc 蓄積ステートの解除条件「戦闘終了時に解除」が有効な場合、戦闘終了時に蓄積率をリセットします。
  * @default false
  * @type boolean
+ *
+ * @param VariableList
+ * @text 変数リスト
+ * @desc 蓄積値を格納する変数のリストです。対象の並び順とステートIDを指定してください。
+ * @default []
+ * @type struct<Variable>[]
  *
  * @command ACCUMULATE
  * @text 蓄積
@@ -168,10 +175,44 @@
  *  このプラグインはもうあなたのものです。
  */
 
+/*~struct~Variable:
+ * @param variableId
+ * @text 変数ID
+ * @desc 蓄積値を格納する変数IDです。
+ * @default 0
+ * @type variable
+ *
+ * @param target
+ * @text 対象
+ * @desc 蓄積値を取得する対象(アクター or 敵キャラ)です。
+ * @default actor
+ * @type select
+ * @option アクター
+ * @value actor
+ * @option 敵キャラ
+ * @value enemy
+ *
+ * @param index
+ * @text 対象の並び順
+ * @desc 蓄積値を取得する並び順です。先頭のバトラーであれば0を指定します。
+ * @default 0
+ * @type number
+ *
+ * @param stateId
+ * @text ステートID
+ * @desc 蓄積値を格納する対象のステートIDです。蓄積型のステートを指定してください。
+ * @default 1
+ * @type state
+ *
+ */
+
 (()=>{
     'use strict';
     const script = document.currentScript;
     const param = PluginManagerEx.createParameter(script);
+    if (!param.VariableList) {
+        param.VariableList = [];
+    }
 
     PluginManagerEx.registerCommand(script, 'ACCUMULATE', args => {
         const actor = $gameActors.actor(args.actorId);
@@ -247,6 +288,7 @@
         this.clearStateAccumulationsIfNeed();
         if (BattleManager.isStateAccumulate(stateId)) {
             this._stateAccumulations[stateId] = (this._stateAccumulations[stateId] || 0) + value;
+            this.updateAccumulateVariable(stateId);
             if (!this.isStateAffected(stateId) && this._stateAccumulations[stateId] >= 1.0) {
                 this.addState(stateId);
                 this._stateImmunity[stateId] = (this._stateImmunity[stateId] || 0) + 1;
@@ -254,6 +296,17 @@
             }
         }
         return false;
+    };
+
+    Game_Battler.prototype.updateAccumulateVariable = function(stateId) {
+        const variableInfo = param.VariableList.find(info => info.stateId === stateId);
+        if (variableInfo) {
+            const unit = variableInfo.target === 'actor' ? $gameParty : $gameTroop;
+            const battler = unit.members()[variableInfo.index];
+            if (battler === this) {
+                $gameVariables.setValue(variableInfo.variableId, battler.getStateAccumulation(stateId) * 100);
+            }
+        }
     };
 
     const _Game_Battler_removeBattleStates = Game_Battler.prototype.removeBattleStates;
