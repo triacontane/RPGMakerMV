@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.1.1 2026/05/19 MPP_ChoiceEXとの順序設定を追加
 // 2.1.0 2022/12/08 選択肢ピクチャに同一のピクチャ番号を指定できるよう修正
 // 2.0.0 2021/05/22 MZで動作するようプラグインコマンド周りの処理を修正
 // 1.2.4 2020/07/12 1.2.3の対応で選択肢をイベントコマンドの上限を超えて指定すると正常に機能しない問題を修正
@@ -31,6 +32,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/MessageSelectPicture.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
+ * @orderAfter MPP_ChoiceEX
  * @author トリアコンタン
  *
  * @command SET_UP
