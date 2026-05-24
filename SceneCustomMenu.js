@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.53.3 2026/05/24 1.53.2の修正でページボタンが無効なときにコモンイベントを実行するとエラーになる問題を修正
  1.53.2 2026/04/02 ページボタン表示が有効なときにイベントを実行すると、メッセージ表示中もウィンドウからフォーカスが外れない問題を修正
  1.53.1 2025/06/19 加算合成を使用しない設定をデフォルトに変更
  1.53.0 2025/06/10 drawItemNameのコメント修正
@@ -1660,7 +1661,7 @@
         }
 
         updatePageButtons() {
-            if (this._interpreter.isRunning()) {
+            if (this._interpreter.isRunning() && this._pageupButton && this._pagedownButton) {
                 this._pageupButton.visible = false;
                 this._pagedownButton.visible = false;
                 return;
