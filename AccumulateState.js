@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.7.1 2026/06/11 同一ステートを対象にした変数設定を複数登録している場合、すべての設定に蓄積値が反映されるよう修正
 // 2.7.0 2026/05/10 任意の蓄積値を変数に格納できる機能を追加しました。他プラグインと組み合わせて蓄積情報を可視化できます。
 // 2.6.0 2025/04/07 蓄積された免疫状態を解除するコマンドを追加
 // 2.5.0 2024/04/10 蓄積ステートの解除条件に「戦闘終了時に解除」がある場合、蓄積率も同時にリセットできる機能を追加
@@ -299,14 +300,14 @@
     };
 
     Game_Battler.prototype.updateAccumulateVariable = function(stateId) {
-        const variableInfo = param.VariableList.find(info => info.stateId === stateId);
-        if (variableInfo) {
-            const unit = variableInfo.target === 'actor' ? $gameParty : $gameTroop;
-            const battler = unit.members()[variableInfo.index];
+        const list = param.VariableList.filter(info => info.stateId === stateId);
+        list.forEach(info => {
+            const unit = info.target === 'actor' ? $gameParty : $gameTroop;
+            const battler = unit.members()[info.index];
             if (battler === this) {
-                $gameVariables.setValue(variableInfo.variableId, battler.getStateAccumulation(stateId) * 100);
+                $gameVariables.setValue(info.variableId, battler.getStateAccumulation(stateId) * 100);
             }
-        }
+        });
     };
 
     const _Game_Battler_removeBattleStates = Game_Battler.prototype.removeBattleStates;
