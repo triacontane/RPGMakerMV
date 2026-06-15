@@ -6,6 +6,7 @@
  http://opensource.org/licenses/mit-license.php
 ----------------------------------------------------------------------------
  Version
+ 1.1.0 2026/06/15 戦闘テスト、イベントテスト時にも初期値が設定されるよう修正
  1.0.0 2026/06/15 初版
 ----------------------------------------------------------------------------
  [X]      : https://x.com/triacontane/
@@ -31,6 +32,7 @@
  * ゲーム変数に初期値を設定できるプラグインです。
  * プラグインパラメータで指定した変数IDと値のリストを基に、
  * ゲーム開始時（ニューゲーム）に自動でゲーム変数へ値を設定します。
+ * 戦闘テストおよびイベントテスト開始時にも同様に初期値を設定します。
  *
  * このプラグインの利用にはベースプラグイン『PluginCommonBase.js』が必要です。
  * 『PluginCommonBase.js』は、RPGツクールMZのインストールフォルダ配下の
@@ -70,6 +72,18 @@
         this.applyVariableInitialValues();
     };
 
+    const _DataManager_setupBattleTest = DataManager.setupBattleTest;
+    DataManager.setupBattleTest = function() {
+        _DataManager_setupBattleTest.apply(this, arguments);
+        this.applyVariableInitialValues();
+    };
+
+    const _DataManager_setupEventTest = DataManager.setupEventTest;
+    DataManager.setupEventTest = function() {
+        _DataManager_setupEventTest.apply(this, arguments);
+        this.applyVariableInitialValues();
+    };
+
     DataManager.applyVariableInitialValues = function() {
         if (!param.variableList || param.variableList.length === 0) {
             return;
@@ -81,5 +95,3 @@
         }
     };
 })();
-
-
