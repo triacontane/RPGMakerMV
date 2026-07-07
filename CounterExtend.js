@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 3.1.0 2026/07/07 反撃条件に「ステート」を追加
 // 3.0.1 2025/12/23 インターセプターで妨害されたあとの攻撃が妨害した対象以外に発動する場合がある問題を修正
 // 3.0.0 2025/10/26 クロスカウンターとインターセプターのパラメータを「反撃種別」に統合
 //                  クロスカウンターの反撃判定を攻撃を受けたあとに行うよう仕様変更
@@ -329,6 +330,12 @@
  * @type switch
  * @default 0
  *
+ * @param StateCondition
+ * @text 反撃条件(ステート)
+ * @desc 指定した場合、ステートにかかっているときのみ反撃します。複数指定時はいずれかのステートにかかっていれば反撃します。
+ * @type state[]
+ * @default []
+ *
  * @param Subject
  * @text 反撃条件(使用者)
  * @desc 指定した場合、使用者が特定のバトラーのときのみ反撃します。
@@ -450,6 +457,8 @@
             conditions.push(() => skill.ElementCondition && !triggerAction.hasElement(skill.ElementCondition));
             conditions.push(() => skill.WeakCondition && !this.hasWeakResistance(triggerAction, subject, skill.WeakCondition));
             conditions.push(() => skill.SwitchCondition && !$gameSwitches.value(skill.SwitchCondition));
+            const stateConditions = skill.StateCondition || [];
+            conditions.push(() => stateConditions.length > 0 && !this.hasStateCondition(subject, stateConditions));
             conditions.push(() => skill.MemoTagCondition && !this.hasMemoTag(triggerSkill, subject, skill.MemoTagCondition));
             conditions.push(() => skill.ScriptCondition && !eval(skill.ScriptCondition));
             conditions.push(() => Math.randomInt(100) >= frequency - evasion);
@@ -484,6 +493,10 @@
             const objList = target.traitObjects();
             objList.push(skill);
             return objList.some(obj => PluginManagerEx.findMetaValue(obj, tagName));
+        }
+
+        hasStateCondition(subject, stateConditions) {
+            return stateConditions.some(stateId => subject.isStateAffected(stateId));
         }
 
         hasWeakResistance(action, target, weakCondition) {
