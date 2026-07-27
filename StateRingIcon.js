@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.1 2026/07/27 IconDescription.jsとの連携してリングステートアイコンにも説明文を表示できる機能を追加
 // 2.10.0 2025/11/03 ステート一列表示の揃えを左揃えにできる機能を追加
 // 2.9.0 2024/02/29 ターン数によってアイコンを点滅表示される機能を追加
 // 2.8.0 2022/12/05 表示対象外アイコンを指定したとき、アイコンのターン数が実際の値と異なる表示になる場合がある問題を修正
@@ -578,6 +579,10 @@ function Sprite_StateIconChild() {
         } else {
             this._frameCount = 0;
             this.opacity = 255;
+        }
+        // for IconDescription.js
+        if (this.updateIconCaption) {
+            this.updateIconCaption();
         }
     };
 
