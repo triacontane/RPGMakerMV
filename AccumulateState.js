@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.8.0final 2026/08/02 敵キャラが変身したときにステート蓄積をリセットできる機能を追加
 // 2.7.1 2026/06/11 同一ステートを対象にした変数設定を複数登録している場合、すべての設定に蓄積値が反映されるよう修正
 // 2.7.0 2026/05/10 任意の蓄積値を変数に格納できる機能を追加しました。他プラグインと組み合わせて蓄積情報を可視化できます。
 // 2.6.0 2025/04/07 蓄積された免疫状態を解除するコマンドを追加
@@ -78,6 +79,12 @@
  * @default false
  * @type boolean
  *
+ * @param ResetAccumulateTransform
+ * @text 変身時にリセット
+ * @desc 敵キャラが変身したとき、蓄積率をリセットします。
+ * @default false
+ * @type boolean
+ *
  * @param VariableList
  * @text 変数リスト
  * @desc 蓄積値を格納する変数のリストです。対象の並び順とステートIDを指定してください。
@@ -125,7 +132,11 @@
  * @default 0
  * @type actor
  *
- * @help 特定のステートを蓄積型に変更します。
+ * @help
+ *
+ * このプラグインはこれ以上の機能追加は行いません。
+ *
+ * 特定のステートを蓄積型に変更します。
  * 蓄積型のステートにしたい場合、メモ欄に以下の通り設定してください。
  * <蓄積型>
  * <Accumulate>
@@ -363,6 +374,15 @@
         return this.enemy();
     };
 
+    const _Game_Enemy_transform = Game_Enemy.prototype.transform;
+    Game_Enemy.prototype.transform = function(enemyId) {
+        _Game_Enemy_transform.apply(this, arguments);
+        if (param.ResetAccumulateTransform) {
+            this.clearStateAccumulationsIfNeed();
+            this._stateAccumulations = {};
+        }
+    };
+
     const _Game_System_onAfterLoad = Game_System.prototype.onAfterLoad;
     Game_System.prototype.onAfterLoad = function() {
         _Game_System_onAfterLoad.apply(this, arguments);
@@ -578,4 +598,3 @@
         this.y = this._battler.getGaugeY();
     };
 })();
-
