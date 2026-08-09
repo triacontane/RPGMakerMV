@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.10.2 2026/08/09 残りターン数が0の場合は点滅表示されないよう修正
 // 2.10.1 2026/07/27 IconDescription.jsとの連携してリングステートアイコンにも説明文を表示できる機能を追加
 // 2.10.0 2025/11/03 ステート一列表示の揃えを左揃えにできる機能を追加
 // 2.9.0 2024/02/29 ターン数によってアイコンを点滅表示される機能を追加
@@ -129,7 +130,7 @@
  *
  * @param BlinkTurn
  * @text 点滅表示
- * @desc 残りターン数が指定値以下になった場合、アイコンは点滅表示になります。
+ * @desc 残りターン数が指定以下になると、アイコンが点滅表示します。ターン数が0あるいは存在しない場合は点滅しません。
  * @default 0
  * @type number
  *
@@ -573,7 +574,7 @@ function Sprite_StateIconChild() {
     };
 
     Sprite_StateIconChild.prototype.update = function() {
-        if (this._turn <= param.BlinkTurn && !param.IconIndexWithoutBlink.includes(this._iconIndex)) {
+        if (this._turn > 0 && this._turn <= param.BlinkTurn && !param.IconIndexWithoutBlink.includes(this._iconIndex)) {
             this._frameCount++;
             this.opacity = (Math.sin(this._frameCount / (48 / param.BlinkSpeed)) + 1) * 256;
         } else {
