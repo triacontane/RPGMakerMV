@@ -14,7 +14,7 @@
 
 /*:
  * @plugindesc タイマー表示拡張プラグイン
- * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/TimerViewExtend.js
+ * @url https://github.com/triacontane/RPGMakerMV/tree/master/TimerViewExtend.js
  * @author トリアコンタン
  *
  * @param format
