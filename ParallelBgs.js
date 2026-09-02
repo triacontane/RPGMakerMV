@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.1.5 2026/09/02 SE演奏時フェードアウトのフェード時間設定が反映されない不具合を修正
 // 1.1.4 2026/07/27 SE演奏時フェードアウトの説明文を、同時または演奏後に開始したBGSは対象外である仕様に合わせて修正
 // 1.1.3 2025/10/19 BGSの演奏が始まっていない状態ではSE演奏時フェードアウトが行われない仕様に変更
 // 1.1.2 2025/06/22 SE演奏中のBGSフェードアウト機能で、SEの演奏が終わる前にBGSがフェードインする場合がある問題を修正
@@ -138,7 +139,7 @@
     Game_System.prototype.setBgsFadeForSe = function(se, time) {
         this._bgsFadeForPlayingSe = se;
         this._bgsFadeTime = time;
-        AudioManager.setBgsFadeForSe(se);
+        AudioManager.setBgsFadeForSe(se, time / 60);
     };
 
     Game_System.prototype.getBgsFadeTime = function() {
@@ -215,12 +216,9 @@
         this._bgsLineIndex = index;
     };
 
-    AudioManager.setBgsFadeForSe = function(value) {
+    AudioManager.setBgsFadeForSe = function(value, time) {
         this._bgsFadeForSe = value;
-    };
-
-    AudioManager.setBgsFadeTime = function(value) {
-        this._bgsFadeTime = value;
+        this._bgsFadeTime = time;
     };
 
     const _AudioManager_playBgs = AudioManager.playBgs;
