@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2026/09/27 タイトル1から3のBGMの音量、ピッチ、位相を設定できる機能を追加
 // 1.4.5 2020/03/01 進行度変数の値を戻したときに、リロードするまで元のタイトル画面に戻らない問題を修正
 // 1.4.4 2018/07/11 1.4.3の修正でタイトル画面が変更される条件を満たした状態でセーブ後にタイトルに戻るで再表示しても変更が反映されない問題を修正
 // 1.4.3 2018/06/09 セーブファイル数の上限を大きく増やしている場合にタイトル画面の表示が遅くなる現象を修正
@@ -57,6 +58,18 @@
  * @dir audio/bgm/
  * @type file
  *
+ * @param タイトル1のBGMの音量
+ * @desc 進行度変数の値がタイトル1の進行度以上のときに演奏されるBGMの音量です。
+ * @default 90
+ * 
+ * @param タイトル1のBGMのピッチ
+ * @desc 進行度変数の値がタイトル1の進行度以上のときに演奏されるBGMのピッチです。
+ * @default 100
+ * 
+ * @param タイトル1のBGMの位相
+ * @desc 進行度変数の値がタイトル1の進行度以上のときに演奏されるBGMの位相です。
+ * @default 0
+ *
  * @param タイトル2の進行度
  * @desc 進行度変数の値がこの値以上ならタイトル2の画像が表示されます。
  * @default 2
@@ -75,6 +88,18 @@
  * @dir audio/bgm/
  * @type file
  *
+ * @param タイトル2のBGMの音量
+ * @desc 進行度変数の値がタイトル2の進行度以上のときに演奏されるBGMの音量です。
+ * @default 90
+ * 
+ * @param タイトル2のBGMのピッチ
+ * @desc 進行度変数の値がタイトル2の進行度以上のときに演奏されるBGMのピッチです。
+ * @default 100
+ * 
+ * @param タイトル2のBGMの位相
+ * @desc 進行度変数の値がタイトル2の進行度以上のときに演奏されるBGMの位相です。
+ * @default 0
+ * 
  * @param タイトル3の進行度
  * @desc 進行度変数の値がこの値以上ならタイトル3の画像が表示されます。
  * @default 3
@@ -93,6 +118,18 @@
  * @dir audio/bgm/
  * @type file
  *
+ * @param タイトル3のBGMの音量
+ * @desc 進行度変数の値がタイトル3の進行度以上のときに演奏されるBGMの音量です。
+ * @default 90
+ * 
+ * @param タイトル3のBGMのピッチ
+ * @desc 進行度変数の値がタイトル3の進行度以上のときに演奏されるBGMのピッチです。
+ * @default 100
+ * 
+ * @param タイトル3のBGMの位相
+ * @desc 進行度変数の値がタイトル3の進行度以上のときに演奏されるBGMの位相です。
+ * @default 0
+ * 
  * @param 以降の進行度
  * @desc タイトルを4パターン以上使いたい場合はカンマ区切りで進行度を指定します。例(4,5,6)
  * @default
@@ -195,12 +232,25 @@
     paramTitleImages.push(getParamString(['TitleImage2', 'タイトル2の画像']));
     paramTitleImages.push(getParamString(['TitleImage3', 'タイトル3の画像']));
     var paramTitleBgms = [];
-    paramTitleBgms.push(getParamString(['TitleBgm1', 'タイトル1のBGM']));
-    paramTitleBgms.push(getParamString(['TitleBgm2', 'タイトル2のBGM']));
-    paramTitleBgms.push(getParamString(['TitleBgm3', 'タイトル3のBGM']));
-    paramTitleGrades = paramTitleGrades.concat(getParamArrayNumber(['TitleGradeAfter', '以降の進行度'])).reverse();
+    paramTitleBgms.push(getParamString(['TitleBgm1', 'タイトル1のBGM'])),
+        volume: getParamString(['TitleBgm1Vol', 'タイトル1のBGMの音量']),
+        pitch: getParamString(['TitleBgm1Pitch', 'タイトル1のBGMのピッチ']),
+        pan: getParamString(['TitleBgm1Pan', 'タイトル1のBGMの位相'])
+    });
+    paramTitleBgms.push(getParamString(['TitleBgm2', 'タイトル2のBGM'])),
+        volume: getParamString(['TitleBgm2Vol', 'タイトル2のBGMの音量']),
+        pitch: getParamString(['TitleBgm2Pitch', 'タイトル2のBGMのピッチ']),
+        pan: getParamString(['TitleBgm2Pan', 'タイトル2のBGMの位相'])
+    });
+    paramTitleBgms.push(getParamString(['TitleBgm3', 'タイトル3のBGM'])),
+        volume: getParamString(['TitleBgm3Vol', 'タイトル3のBGMの音量']),
+        pitch: getParamString(['TitleBgm3Pitch', 'タイトル3のBGMのピッチ']),
+        pan: getParamString(['TitleBgm3Pan', 'タイトル3のBGMの位相'])
+    });
+/*コード内の未実装機能の実装化でいいアプローチが見つからなかったので、万が一のエラー防止のために、コードの一部をコメントアウトしました。申し訳ありません。by沫那環*/
+    /*paramTitleGrades = paramTitleGrades.concat(getParamArrayNumber(['TitleGradeAfter', '以降の進行度'])).reverse();
     paramTitleImages = paramTitleImages.concat(getParamArrayString(['TitleImageAfter', '以降の画像'])).reverse();
-    paramTitleBgms   = paramTitleBgms.concat(getParamArrayString(['TitleBgmAfter', '以降のBGM'])).reverse();
+    paramTitleBgms   = paramTitleBgms.concat(getParamArrayString(['TitleBgmAfter', '以降のBGM'])).reverse();*/
 
     //=============================================================================
     // DataManager
@@ -316,7 +366,13 @@
         for (var i = 0, n = paramTitleGrades.length; i < n; i++) {
             if (paramTitleBgms[i] && gradeVariable >= paramTitleGrades[i]) {
                 $dataSystem.titleBgm.originalName = $dataSystem.titleBgm.name;
-                $dataSystem.titleBgm.name = paramTitleBgms[i];
+                $dataSystem.titleBgm.originalVolume = $dataSystem.titleBgm.volume;
+                $dataSystem.titleBgm.originalPitch = $dataSystem.titleBgm.pitch;
+                $dataSystem.titleBgm.originalPan = $dataSystem.titleBgm.pan;
+                $dataSystem.titleBgm.name = paramTitleBgms[i].name;
+                $dataSystem.titleBgm.volume = paramTitleBgms[i].volume;
+                $dataSystem.titleBgm.pitch = paramTitleBgms[i].pitch;
+                $dataSystem.titleBgm.pan = paramTitleBgms[i].pan;
                 break;
             }
         }
