@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.0.1 2026/11/02 ターン終了時のステート解除メッセージが表示されない問題を修正
 // 2.0.0 2023/08/02 MZ向けに全面的に修正
 // 1.10.2 2021/03/09 戦闘から逃走、敗北した際はログウィンドウが消えるよう修正
 // 1.10.1 2020/06/04 1.9.1の修正により、ステータスウィンドウを下部に配置するとメッセージの上に表示されてしまう問題を修正
@@ -204,7 +205,8 @@
         if ($gameMessage.isBusy()) {
             this._logWindow.hide();
         }
-        if (BattleManager.isInputting() || BattleManager.isBattleLogClose() || BattleManager.isStarting()) {
+        if (BattleManager.isInputting() || BattleManager.isBattleLogClose() ||
+            (BattleManager.isStarting() && !this._logWindow.isBusy())) {
             this._logWindow.close();
         } else {
             this._logWindow.open();
