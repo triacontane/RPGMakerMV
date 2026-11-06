@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 2.3.1 2026/11/06 StateExcludeRecoverAllとの競合に対処するアノテーションを追加
 // 2.3.0 2023/11/09 不要なコードを削除
 // 2.2.1 2023/07/16 ヘルプ文言追加
 // 2.2.0 2022/06/13 後衛の座標補正を敵キャラとアクターで別々に管理するよう変更
@@ -50,6 +51,7 @@
  * @url https://github.com/triacontane/RPGMakerMV/tree/mz_master/VanguardAndRearguard.js
  * @base PluginCommonBase
  * @orderAfter PluginCommonBase
+ * @orderAfter StateExcludeRecoverAll
  * @author トリアコンタン
  *
  * @param VanguardStateId
